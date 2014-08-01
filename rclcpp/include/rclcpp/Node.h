@@ -4,6 +4,7 @@
 #include "Publisher.h"
 
 #include "ros_middleware_interface/functions.h"
+#include "ros_middleware_interface/handles.h"
 
 
 namespace rclcpp
@@ -20,13 +21,13 @@ public:
   template<typename ROSMessage>
   Publisher<ROSMessage>* create_publisher(const char * topic_name)
   {
-    const rosidl_generator_cpp::MessageTypeSupportMembers & members = rosidl_generator_cpp::MessageTypeSupport<ROSMessage>::get_members();
-    void * publisher_handle = ::ros_middleware_interface::create_publisher(node_handle_, members, topic_name);
+    const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle = rosidl_generator_cpp::MessageTypeSupport<ROSMessage>::get_type_support_handle();
+    ros_middleware_interface::PublisherHandle publisher_handle = ::ros_middleware_interface::create_publisher(node_handle_, type_support_handle, topic_name);
     return new Publisher<ROSMessage>(publisher_handle);
   }
 
 private:
-  void * node_handle_;
+  ros_middleware_interface::NodeHandle node_handle_;
 };
 
 }

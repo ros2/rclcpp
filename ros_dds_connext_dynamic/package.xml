@@ -11,7 +11,9 @@
   <build_depend>libndds51-dev</build_depend>
   <build_depend>ros_middleware_interface</build_depend>
   <build_depend>rosidl_generator_cpp</build_depend>
+  <build_depend>ros_dds_cpp_dynamic_typesupport</build_depend>
 
   <build_export_depend>libndds51</build_export_depend>
   <build_export_depend>rosidl_generator_cpp</build_export_depend>
+  <build_export_depend>ros_dds_cpp_dynamic_typesupport</build_export_depend>
 </package>

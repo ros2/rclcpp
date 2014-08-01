@@ -3,14 +3,16 @@
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 
+#include "handles.h"
+
 namespace ros_middleware_interface
 {
 
-void * create_node();
+NodeHandle create_node();
 
-void * create_publisher(void * node, const rosidl_generator_cpp::MessageTypeSupportMembers & members, const char * topic_name);
+PublisherHandle create_publisher(const NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name);
 
-void publish(void * publisher, const void * ros_message);
+void publish(const PublisherHandle& publisher_handle, const void * ros_message);
 
 }
 

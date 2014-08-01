@@ -2,6 +2,7 @@
 #define __rclcpp__Publisher__h__
 
 #include "ros_middleware_interface/functions.h"
+#include "ros_middleware_interface/handles.h"
 
 
 namespace rclcpp
@@ -11,7 +12,7 @@ template<typename ROSMessage>
 class Publisher
 {
 public:
-  Publisher(void * publisher_handle)
+  Publisher(const ros_middleware_interface::PublisherHandle& publisher_handle)
     : publisher_handle_(publisher_handle)
   {}
 
@@ -21,7 +22,7 @@ public:
   }
 
 private:
-  void * publisher_handle_;
+  ros_middleware_interface::PublisherHandle publisher_handle_;
 };
 
 }
