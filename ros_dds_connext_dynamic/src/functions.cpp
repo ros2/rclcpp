@@ -10,7 +10,7 @@
 namespace ros_middleware_interface
 {
 
-const char * _rti_connext_identifier = "connext";
+const char * _rti_connext_identifier = "connext_dynamic";
 
 ros_middleware_interface::NodeHandle create_node()
 {
@@ -43,7 +43,7 @@ ros_middleware_interface::NodeHandle create_node()
     return node_handle;
 }
 
-struct TypeCodeAndDataWriter {
+struct CustomPublisherInfo {
   DDSDynamicDataWriter * dynamic_writer_;
   DDS_TypeCode * type_code_;
   ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members_;
@@ -164,14 +164,14 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 
 
     std::cout << "  create_publisher() build opaque publisher handle" << std::endl;
-    TypeCodeAndDataWriter* type_code_and_data_writer = new TypeCodeAndDataWriter();
-    type_code_and_data_writer->dynamic_writer_ = dynamic_writer;
-    type_code_and_data_writer->type_code_ = type_code;
-    type_code_and_data_writer->members_ = members;
+    CustomPublisherInfo* custom_publisher_info = new CustomPublisherInfo();
+    custom_publisher_info->dynamic_writer_ = dynamic_writer;
+    custom_publisher_info->type_code_ = type_code;
+    custom_publisher_info->members_ = members;
 
     ros_middleware_interface::PublisherHandle publisher_handle = {
         _rti_connext_identifier,
-        type_code_and_data_writer
+        custom_publisher_info
     };
     return publisher_handle;
 }
@@ -189,10 +189,10 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
     }
 
     std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
-    TypeCodeAndDataWriter * type_code_and_data_writer = (TypeCodeAndDataWriter*)publisher_handle._data;
-    DDSDynamicDataWriter * dynamic_writer = type_code_and_data_writer->dynamic_writer_;
-    DDS_TypeCode * type_code = type_code_and_data_writer->type_code_;
-    const ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members = type_code_and_data_writer->members_;
+    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
+    DDSDynamicDataWriter * dynamic_writer = custom_publisher_info->dynamic_writer_;
+    DDS_TypeCode * type_code = custom_publisher_info->type_code_;
+    const ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members = custom_publisher_info->members_;
 
     std::cout << "  publish() create " << members->_package_name << "/" << members->_message_name << " and populate dynamic data" << std::endl;
     DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);

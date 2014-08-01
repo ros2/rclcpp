@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>ros_dds_connext_static</name>
+  <version>0.0.0</version>
+  <description>Implement the ROS middleware interface using RTI Connext static code generation in C++.</description>
+  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+  <buildtool_depend>rosidl_cmake</buildtool_depend>
+
+  <buildtool_export_depend>ament_cmake</buildtool_export_depend>
+  <buildtool_export_depend>rosidl_cmake</buildtool_export_depend>
+
+  <build_depend>libndds51-dev</build_depend>
+  <build_depend>ros_middleware_interface</build_depend>
+  <build_depend>rosidl_generator_cpp</build_depend>
+  <build_depend>rosidl_generator_dds_connext_cpp</build_depend>
+  <build_depend>rosidl_generator_dds_idl</build_depend>
+
+  <build_export_depend>libndds51</build_export_depend>
+  <build_export_depend>rosidl_generator_cpp</build_export_depend>
+  <build_export_depend>rosidl_generator_dds_connext_cpp</build_export_depend>
+</package>

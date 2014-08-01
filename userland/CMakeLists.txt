@@ -14,6 +14,7 @@ find_package(std_msgs REQUIRED)
 ament_package()
 
 include_directories(${rclcpp_INCLUDE_DIRS} ${std_msgs_INCLUDE_DIRS})
+add_definitions(${rclcpp_DEFINITIONS})
 add_executable(userland src/main.cpp)
 target_link_libraries(userland ${rclcpp_LIBRARIES} ${std_msgs_LIBRARIES})
 

@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+
+from ros_dds_connext_static import generate_cpp
+
+
+def main(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description='Generate the C++ type support to statically handle ROS messages.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        '--pkg-name',
+        required=True,
+        help='The package name to generate interfaces for')
+    parser.add_argument(
+        '--interface-files',
+        nargs='*',
+        help='The ROS interface files')
+    parser.add_argument(
+        '--deps',
+        nargs='*',
+        help="The dependencies (each as '<pkgname>:<abs_interface_file>')")
+    parser.add_argument(
+        '--output-dir',
+        required=True,
+        help='The location of the generated C++ interfaces')
+    parser.add_argument(
+        '--template-dir',
+        required=True,
+        help='The location of the template files')
+    args = parser.parse_args(argv)
+
+    return generate_cpp(
+        args.pkg_name,
+        args.interface_files,
+        args.deps,
+        args.output_dir,
+        args.template_dir,
+    )
+
+
+if __name__ == '__main__':
+    sys.exit(main())
