@@ -48,6 +48,7 @@ struct CustomPublisherInfo {
   DDSDynamicDataWriter * dynamic_writer_;
   DDS_TypeCode * type_code_;
   ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members_;
+  DDS_DynamicData * dynamic_data;
 };
 
 ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
@@ -165,6 +166,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
         throw std::runtime_error("narrow datawriter failed");
     };
 
+    DDS_DynamicData * dynamic_data = ddts->create_data();
 
     std::cout << "  create_publisher() build opaque publisher handle" << std::endl;
     CustomPublisherInfo* custom_publisher_info = new CustomPublisherInfo();
@@ -172,6 +174,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     custom_publisher_info->dynamic_writer_ = dynamic_writer;
     custom_publisher_info->type_code_ = type_code;
     custom_publisher_info->members_ = members;
+    custom_publisher_info->dynamic_data = dynamic_data;
 
     ros_middleware_interface::PublisherHandle publisher_handle = {
         _rti_connext_identifier,
@@ -198,10 +201,11 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
     DDSDynamicDataWriter * dynamic_writer = custom_publisher_info->dynamic_writer_;
     DDS_TypeCode * type_code = custom_publisher_info->type_code_;
     const ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members = custom_publisher_info->members_;
+    DDS_DynamicData * dynamic_data = custom_publisher_info->dynamic_data;
 
     //std::cout << "  publish() create " << members->_package_name << "/" << members->_message_name << " and populate dynamic data" << std::endl;
     //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-    DDS_DynamicData * dynamic_data = ddts->create_data();
+    //DDS_DynamicData * dynamic_data = ddts->create_data();
     for(unsigned long i = 0; i < members->_size; ++i)
     {
         const ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMember * member = members->_members + i * sizeof(ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMember);
@@ -231,7 +235,7 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
         throw std::runtime_error("write failed");
     };
 
-    ddts->delete_data(dynamic_data);
+    //ddts->delete_data(dynamic_data);
 }
 
 }
