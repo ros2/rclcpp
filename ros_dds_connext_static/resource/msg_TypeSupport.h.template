@@ -36,7 +36,7 @@ void register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, c
 
 void convert_ros_message_to_dds__@(spec.base_type.type)(const void * untyped_ros_message, @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_& dds_message)
 {
-    std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_ros_message_to_dds__@(spec.base_type.type)()" << std::endl;
+    //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_ros_message_to_dds__@(spec.base_type.type)()" << std::endl;
     const @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(const @(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
 @[for field in spec.fields]@
     // field.name @(field.name)
@@ -74,18 +74,21 @@ void convert_ros_message_to_dds__@(spec.base_type.type)(const void * untyped_ros
 
 void publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * ros_message)
 {
-    std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
+    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
 
-    @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_ dds_message;
-    convert_ros_message_to_dds__@(spec.base_type.type)(ros_message, dds_message);
+    //@(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_ dds_message;
+    @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_TypeSupport::create_data();
+    convert_ros_message_to_dds__@(spec.base_type.type)(ros_message, *dds_message);
 
     @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_DataWriter * data_writer = @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
-    std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
-    DDS_ReturnCode_t status = data_writer->write(dds_message, DDS_HANDLE_NIL);
+    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
+    DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
     if (status != DDS_RETCODE_OK) {
         printf("write() failed. Status = %d\n", status);
         throw std::runtime_error("write failed");
     };
+
+    @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
 }
 
 

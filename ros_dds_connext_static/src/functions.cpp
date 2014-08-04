@@ -59,6 +59,8 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
         throw std::runtime_error("node handle not from this implementation");
     }
 
+    std::cout << "create_publisher() " << node_handle._implementation_identifier << std::endl;
+
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
@@ -131,7 +133,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 
 void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, const void * ros_message)
 {
-    std::cout << "publish()" << std::endl;
+    //std::cout << "publish()" << std::endl;
 
     if (publisher_handle._implementation_identifier != _rti_connext_identifier)
     {
@@ -140,13 +142,13 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
         throw std::runtime_error("publisher handle not from this implementation");
     }
 
-    std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
+    //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
     CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
     DDSDataWriter * topic_writer = custom_publisher_info->topic_writer_;
     const ros_dds_connext_static::MessageTypeSupportCallbacks * callbacks = custom_publisher_info->callbacks_;
 
 
-    std::cout << "  publish() invoke publish callback" << std::endl;
+    //std::cout << "  publish() invoke publish callback" << std::endl;
     callbacks->_publish(topic_writer, ros_message);
 }
 

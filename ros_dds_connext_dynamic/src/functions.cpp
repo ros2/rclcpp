@@ -44,6 +44,7 @@ ros_middleware_interface::NodeHandle create_node()
 }
 
 struct CustomPublisherInfo {
+  DDSDynamicDataTypeSupport * dynamic_data_type_support_;
   DDSDynamicDataWriter * dynamic_writer_;
   DDS_TypeCode * type_code_;
   ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members_;
@@ -59,6 +60,8 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
         printf("but from: %s\n", node_handle._implementation_identifier);
         throw std::runtime_error("node handle not from this implementation");
     }
+
+    std::cout << "create_publisher() " << node_handle._implementation_identifier << std::endl;
 
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
@@ -165,6 +168,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 
     std::cout << "  create_publisher() build opaque publisher handle" << std::endl;
     CustomPublisherInfo* custom_publisher_info = new CustomPublisherInfo();
+    custom_publisher_info->dynamic_data_type_support_ = ddts;
     custom_publisher_info->dynamic_writer_ = dynamic_writer;
     custom_publisher_info->type_code_ = type_code;
     custom_publisher_info->members_ = members;
@@ -178,7 +182,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 
 void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, const void * ros_message)
 {
-    std::cout << "publish()" << std::endl;
+    //std::cout << "publish()" << std::endl;
 
 
     if (publisher_handle._implementation_identifier != _rti_connext_identifier)
@@ -188,24 +192,26 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
         throw std::runtime_error("publisher handle not from this implementation");
     }
 
-    std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
+    //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
     CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
+    DDSDynamicDataTypeSupport* ddts = custom_publisher_info->dynamic_data_type_support_;
     DDSDynamicDataWriter * dynamic_writer = custom_publisher_info->dynamic_writer_;
     DDS_TypeCode * type_code = custom_publisher_info->type_code_;
     const ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members = custom_publisher_info->members_;
 
-    std::cout << "  publish() create " << members->_package_name << "/" << members->_message_name << " and populate dynamic data" << std::endl;
-    DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+    //std::cout << "  publish() create " << members->_package_name << "/" << members->_message_name << " and populate dynamic data" << std::endl;
+    //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+    DDS_DynamicData * dynamic_data = ddts->create_data();
     for(unsigned long i = 0; i < members->_size; ++i)
     {
         const ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMember * member = members->_members + i * sizeof(ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMember);
-        std::cout << "  publish() set member " << i << ": " << member->_name << "" << std::endl;
+        //std::cout << "  publish() set member " << i << ": " << member->_name << "" << std::endl;
         DDS_TypeCode * member_type_code;
         if (strcmp(member->_type, "int32") == 0)
         {
-            long value = *((long*)((char*)ros_message + member->_offset));
-            std::cout << "  publish() set member " << i << ": " << member->_name << " = " << value << std::endl;
-            DDS_ReturnCode_t status = dynamic_data.set_long(member->_name, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value);
+            long value = *((int*)((char*)ros_message + member->_offset));
+            //std::cout << "  publish() set member " << i << ": " << member->_name << " = " << value << std::endl;
+            DDS_ReturnCode_t status = dynamic_data->set_long(member->_name, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value);
             if (status != DDS_RETCODE_OK) {
                 printf("set_long() failed. Status = %d\n", status);
                 throw std::runtime_error("set member failed");
@@ -218,12 +224,14 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
         }
     }
 
-    std::cout << "  publish() write dynamic data" << std::endl;
-    DDS_ReturnCode_t status = dynamic_writer->write(dynamic_data, DDS_HANDLE_NIL);
+    //std::cout << "  publish() write dynamic data" << std::endl;
+    DDS_ReturnCode_t status = dynamic_writer->write(*dynamic_data, DDS_HANDLE_NIL);
     if (status != DDS_RETCODE_OK) {
         printf("write() failed. Status = %d\n", status);
         throw std::runtime_error("write failed");
     };
+
+    ddts->delete_data(dynamic_data);
 }
 
 }
