@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(userland)
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+set(CMAKE_CXX_FLAGS "-std=c++0x -Wall")
 
 find_package(ros_middleware_interface REQUIRED)
 find_package(ros_dds_connext_dynamic REQUIRED)

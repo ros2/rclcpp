@@ -5,10 +5,15 @@
 class DDSDomainParticipant;
 class DDSDataWriter;
 
-namespace ros_dds_connext_static
+namespace ros_middleware_interface
 {
 
-const char * _connext_static_identifier = "connext_static";
+extern const char * _rti_connext_identifier;
+
+}
+
+namespace ros_dds_connext_static
+{
 
 typedef struct MessageTypeSupportCallbacks {
   const char * _package_name;

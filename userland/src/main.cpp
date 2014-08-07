@@ -6,7 +6,7 @@
 #include "std_msgs/Int32.h"
 
 
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
   rclcpp::Node* n = create_node();
   rclcpp::Publisher<std_msgs::Int32>* p = n->create_publisher<std_msgs::Int32>("topic_name");

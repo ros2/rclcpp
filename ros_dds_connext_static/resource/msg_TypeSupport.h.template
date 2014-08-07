@@ -100,7 +100,7 @@ static ros_dds_connext_static::MessageTypeSupportCallbacks callbacks = {
 };
 
 static rosidl_generator_cpp::MessageTypeSupportHandle handle = {
-    ros_dds_connext_static::_connext_static_identifier,
+    ros_middleware_interface::_rti_connext_identifier,
     &callbacks
 };
 

@@ -10,7 +10,7 @@
 namespace ros_middleware_interface
 {
 
-const char * _rti_connext_identifier = "connext_dynamic";
+const char * _rti_connext_dynamic_identifier = "connext_dynamic";
 
 ros_middleware_interface::NodeHandle create_node()
 {
@@ -37,7 +37,7 @@ ros_middleware_interface::NodeHandle create_node()
     std::cout << "  create_node() pass opaque node handle" << std::endl;
 
     ros_middleware_interface::NodeHandle node_handle = {
-        _rti_connext_identifier,
+        _rti_connext_dynamic_identifier,
         participant
     };
     return node_handle;
@@ -55,7 +55,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 {
     std::cout << "create_publisher()" << std::endl;
 
-    if (node_handle._implementation_identifier != _rti_connext_identifier)
+    if (node_handle._implementation_identifier != _rti_connext_dynamic_identifier)
     {
         printf("node handle not from this implementation\n");
         printf("but from: %s\n", node_handle._implementation_identifier);
@@ -66,6 +66,13 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
+
+    if (type_support_handle._implementation_identifier != ros_dds_cpp_dynamic_typesupport::_dynamic_identifier)
+    {
+        printf("type support not from this implementation\n");
+        printf("but from: %s\n", type_support_handle._implementation_identifier);
+        throw std::runtime_error("type support not from this implementation");
+    }
 
     ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers * members = (ros_dds_cpp_dynamic_typesupport::MessageTypeSupportMembers*)type_support_handle._data;
     std::string type_name = std::string(members->_package_name) + "/" + members->_message_name;
@@ -177,7 +184,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     custom_publisher_info->dynamic_data = dynamic_data;
 
     ros_middleware_interface::PublisherHandle publisher_handle = {
-        _rti_connext_identifier,
+        _rti_connext_dynamic_identifier,
         custom_publisher_info
     };
     return publisher_handle;
@@ -188,7 +195,7 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
     //std::cout << "publish()" << std::endl;
 
 
-    if (publisher_handle._implementation_identifier != _rti_connext_identifier)
+    if (publisher_handle._implementation_identifier != _rti_connext_dynamic_identifier)
     {
         printf("publisher handle not from this implementation\n");
         printf("but from: %s\n", publisher_handle._implementation_identifier);
