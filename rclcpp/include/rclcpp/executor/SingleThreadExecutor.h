@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 #include <vector>
 
 #include "rclcpp/Node.h"
@@ -78,6 +79,9 @@ public:
             if (subscriber->subscriber_handle_.data_ == handle)
             {
               // Do callback
+              std::cout << "Callback for subscriber of topic: " << subscriber->topic_name_ << std::endl;
+              const void *ros_msg = 0;
+              ros_middleware_interface::take(subscriber->subscriber_handle_, ros_msg);
             }
           }
         }
