@@ -85,6 +85,7 @@ public:
               if (taken)
               {
                 std::cout << "- received message on topic: " << subscriber->topic_name_ << std::endl;
+                subscriber->handle_message(ros_msg);
               }
               subscriber->delete_message(ros_msg);
             }

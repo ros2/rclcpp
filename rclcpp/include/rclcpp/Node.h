@@ -40,11 +40,11 @@ public:
   }
 
   template<typename ROSMessage>
-  Subscriber<ROSMessage>* create_subscriber(const char * topic_name)
+  Subscriber<ROSMessage>* create_subscriber(const char * topic_name, typename Subscriber<ROSMessage>::CallbackType callback)
   {
     const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle = ::ros_middleware_interface::get_type_support_handle<ROSMessage>();
     ros_middleware_interface::SubscriberHandle subscriber_handle = ::ros_middleware_interface::create_subscriber(node_handle_, type_support_handle, topic_name);
-    SubscriberInterface *sub = new Subscriber<ROSMessage>(subscriber_handle, std::string(topic_name));
+    SubscriberInterface *sub = new Subscriber<ROSMessage>(subscriber_handle, std::string(topic_name), callback);
     this->subscribers_.push_back(sub);
     return static_cast<Subscriber<ROSMessage> *>(sub);
   }
