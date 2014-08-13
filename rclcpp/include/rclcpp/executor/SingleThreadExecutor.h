@@ -80,12 +80,13 @@ public:
             {
               // Do callback
               std::cout << "Callback for subscriber of topic: " << subscriber->topic_name_ << std::endl;
-              void * ros_msg = 0;
+              void * ros_msg = subscriber->create_message();
               bool taken = ros_middleware_interface::take(subscriber->subscriber_handle_, ros_msg);
               if (taken)
               {
                 std::cout << "- received message on topic: " << subscriber->topic_name_ << std::endl;
               }
+              subscriber->delete_message(ros_msg);
             }
           }
         }
