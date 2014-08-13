@@ -13,7 +13,7 @@ elseif(NOT "$ENV{ROS_MIDDLEWARE_IMPLEMENTATION}" STREQUAL "")
   set(_middleware_implementation "$ENV{ROS_MIDDLEWARE_IMPLEMENTATION}")
 else()
   # TODO detemine "default" implementation based on the available ones
-  list(GET _middleware_implementations 1 _middleware_implementation)
+  list(GET _middleware_implementations 0 _middleware_implementation)
 endif()
 
 list(FIND _middleware_implementations "${_middleware_implementation}" _index)
