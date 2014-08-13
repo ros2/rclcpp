@@ -81,7 +81,11 @@ public:
               // Do callback
               std::cout << "Callback for subscriber of topic: " << subscriber->topic_name_ << std::endl;
               const void *ros_msg = 0;
-              ros_middleware_interface::take(subscriber->subscriber_handle_, ros_msg);
+              bool taken = ros_middleware_interface::take(subscriber->subscriber_handle_, ros_msg);
+              if (taken)
+              {
+                std::cout << "- received message on topic: " << subscriber->topic_name_ << std::endl;
+              }
             }
           }
         }
