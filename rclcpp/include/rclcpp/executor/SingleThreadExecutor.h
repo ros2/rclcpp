@@ -63,7 +63,7 @@ public:
       guard_condition_handles.guard_condition_count_ = 0;
       guard_condition_handles.guard_conditions_ = 0;
 
-      ros_middleware_interface::wait(subscriber_handles, guard_condition_handles);
+      ros_middleware_interface::wait(subscriber_handles, guard_condition_handles, false);
 
       for (size_t index = 0; index < total_subscribers_size; ++index)
       {
