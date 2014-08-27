@@ -18,23 +18,39 @@
 
 #include <csignal>
 #include <memory>
-#include <mutex>
 
 #include <rclcpp/node.hpp>
 #include <rclcpp/executors.hpp>
 #include <rclcpp/rate.hpp>
 #include <rclcpp/utilities.hpp>
 
-namespace
-{
-  std::shared_ptr<rclcpp::executors::SingleThreadedExecutor> g_executor(0);
-  std::mutex g_executor_mutex;
-}
-
 namespace rclcpp
 {
 
+constexpr std::chrono::seconds operator ""_s(unsigned long long s)
+{
+    return std::chrono::seconds(s);
+}
+constexpr std::chrono::duration<long double> operator ""_s(long double s)
+{
+    return std::chrono::duration<long double>(s);
+}
+
+constexpr std::chrono::nanoseconds
+operator ""_ns(unsigned long long ns)
+{
+    return std::chrono::nanoseconds(ns);
+}
+constexpr std::chrono::duration<long double, std::nano>
+operator ""_ns(long double ns)
+{
+    return std::chrono::duration<long double, std::nano>(ns);
+}
+
 using rclcpp::node::Node;
+using rclcpp::publisher::Publisher;
+using rclcpp::subscription::SubscriptionBase;
+using rclcpp::subscription::Subscription;
 using rclcpp::rate::GenericRate;
 using rclcpp::rate::WallRate;
 using rclcpp::utilities::ok;
@@ -42,13 +58,8 @@ using rclcpp::utilities::init;
 
 void spin_some(Node &node)
 {
-  std::lock_guard<std::mutex> lock(g_executor_mutex);
-  if (!g_executor)
-  {
-    // Create an executor
-    g_executor.reset(new rclcpp::executors::SingleThreadedExecutor());
-  }
-  g_executor->spin_node_some(node);
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.spin_node_some(node);
 }
 
 void spin_some(Node::SharedPtr &node_ptr)

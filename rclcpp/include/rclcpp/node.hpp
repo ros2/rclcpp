@@ -16,6 +16,7 @@
 #ifndef RCLCPP_RCLCPP_NODE_HPP_
 #define RCLCPP_RCLCPP_NODE_HPP_
 
+#include <list>
 #include <memory>
 #include <string>
 
@@ -24,6 +25,7 @@
 #include <rclcpp/macros.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/subscription.hpp>
+#include <rclcpp/timer.hpp>
 
 namespace rclcpp
 {
@@ -53,15 +55,9 @@ public:
   std::string
   get_name();
 
-  /* Creates a named callback group. */
-  void
-  create_callback_group(
-    std::string group_name,
-    rclcpp::callback_group::CallbackGroupType callback_group_type);
-
-  /* Return callback group if it exists, otherwise evaluates to false. */
+  /* Create and return a callback group. */
   rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_callback_group(std::string group_name);
+  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
   /* Create and return a Publisher. */
   template<typename MessageT> rclcpp::publisher::Publisher::SharedPtr
@@ -73,7 +69,21 @@ public:
   create_subscription(
     std::string topic_name,
     size_t queue_size,
-    std::function<void(const std::shared_ptr<MessageT> &)> callback);
+    std::function<void(const std::shared_ptr<MessageT> &)> callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+
+  /* Create a timer. */
+  rclcpp::timer::WallTimer::SharedPtr
+  create_wall_timer(
+    std::chrono::nanoseconds period,
+    rclcpp::timer::CallbackType callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+
+  rclcpp::timer::WallTimer::SharedPtr
+  create_wall_timer(
+    std::chrono::duration<long double, std::nano> period,
+    rclcpp::timer::CallbackType callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
@@ -85,9 +95,10 @@ private:
   rclcpp::context::Context::SharedPtr context_;
 
   rclcpp::callback_group::CallbackGroup::SharedPtr default_callback_group_;
-  std::vector<rclcpp::callback_group::CallbackGroup::SharedPtr> callback_groups_;
+  std::list<std::weak_ptr<rclcpp::callback_group::CallbackGroup>> callback_groups_;
 
   size_t number_of_subscriptions_;
+  size_t number_of_timers_;
 
 };
 

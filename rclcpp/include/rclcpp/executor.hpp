@@ -88,8 +88,13 @@ protected:
       std::malloc(sizeof(void *) * node.number_of_subscriptions_));
     // Add subscriptions from groups
     size_t handles_index = 0;
-    for (auto group : node.callback_groups_)
+    for (auto weak_group : node.callback_groups_)
     {
+      auto group = weak_group.lock();
+      if (!group)
+      {
+        continue;
+      }
       for (auto subscription : group->subscription_ptrs_)
       {
         assert(handles_index < node.number_of_subscriptions_);
@@ -140,8 +145,13 @@ protected:
     size_t handles_index = 0;
     for (auto &node : nodes)
     {
-      for (auto group : node->callback_groups_)
+      for (auto weak_group : node->callback_groups_)
       {
+        auto group = weak_group.lock();
+        if (!group)
+        {
+          continue;
+        }
         for (auto subscription : group->subscription_ptrs_)
         {
           assert(handles_index < number_of_subscriptions);
@@ -151,7 +161,6 @@ protected:
         }
       }
     }
-    assert(handles_index == number_of_subscriptions);
   }
 
   struct AnyExecutable
@@ -186,8 +195,13 @@ protected:
       {
         continue;
       }
-      for (auto group : node->callback_groups_)
+      for (auto weak_group : node->callback_groups_)
       {
+        auto group = weak_group.lock();
+        if (!group)
+        {
+          continue;
+        }
         for (auto subscription : group->subscription_ptrs_)
         {
           if (subscription->subscription_handle_.data_ == subscriber_handle)

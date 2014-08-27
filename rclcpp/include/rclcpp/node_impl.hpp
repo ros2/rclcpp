@@ -43,14 +43,22 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
   : name_(node_name), context_(context), number_of_subscriptions_(0)
 {
   node_handle_ = ::ros_middleware_interface::create_node();
-  using rclcpp::callback_group::CallbackGroup;
   using rclcpp::callback_group::CallbackGroupType;
-  default_callback_group_.reset(new CallbackGroup(
-    "default_group", CallbackGroupType::NonThreadSafe));
-  callback_groups_.push_back(default_callback_group_);
+  default_callback_group_ = \
+    create_callback_group(CallbackGroupType::MutuallyExclusive);
 }
 
-template<typename MessageT> publisher::Publisher::SharedPtr
+rclcpp::callback_group::CallbackGroup::SharedPtr
+Node::create_callback_group(
+  rclcpp::callback_group::CallbackGroupType group_type)
+{
+  using rclcpp::callback_group::CallbackGroup;
+  using rclcpp::callback_group::CallbackGroupType;
+  return CallbackGroup::SharedPtr(new CallbackGroup(group_type));
+}
+
+template<typename MessageT>
+publisher::Publisher::SharedPtr
 Node::create_publisher(std::string topic_name, size_t queue_size)
 {
   namespace rmi = ::ros_middleware_interface;
@@ -68,7 +76,8 @@ typename subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
   std::string topic_name,
   size_t queue_size,
-  std::function<void(const std::shared_ptr<MessageT> &)> callback)
+  std::function<void(const std::shared_ptr<MessageT> &)> callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   namespace rmi = ::ros_middleware_interface;
 
@@ -83,9 +92,46 @@ Node::create_subscription(
                                                  topic_name,
                                                  callback);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
-  this->default_callback_group_->add_subscription(sub_base_ptr);
+  if (group)
+  {
+    group->add_subscription(sub_base_ptr);
+  }
+  else
+  {
+    default_callback_group_->add_subscription(sub_base_ptr);
+  }
   number_of_subscriptions_++;
   return sub;
+}
+
+rclcpp::timer::WallTimer::SharedPtr
+Node::create_wall_timer(std::chrono::nanoseconds period,
+                        rclcpp::timer::CallbackType callback,
+                        rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
+  auto timer = rclcpp::timer::WallTimer::make_shared(period);
+  if (group)
+  {
+    group->add_timer(timer);
+  }
+  else
+  {
+    default_callback_group_->add_timer(timer);
+  }
+  number_of_timers_++;
+  return timer;
+}
+
+rclcpp::timer::WallTimer::SharedPtr
+Node::create_wall_timer(
+  std::chrono::duration<long double, std::nano> period,
+  rclcpp::timer::CallbackType callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
+  return create_wall_timer(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+    callback,
+    group);
 }
 
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

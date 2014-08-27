@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include <ros_middleware_interface/functions.h>
@@ -41,6 +42,10 @@ class MultiThreadedExecutor : public executor::Executor
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(MultiThreadedExecutor);
 
+  MultiThreadedExecutor() {}
+
+  ~MultiThreadedExecutor() {}
+
   void add_node(rclcpp::node::Node::SharedPtr &node_ptr)
   {
     this->weak_nodes_.push_back(node_ptr);
@@ -48,16 +53,48 @@ public:
 
   void spin()
   {
-  }
-
-  void spin_some()
-  {
+    std::vector<std::thread> threads;
+    size_t number_of_threads = std::thread::hardware_concurrency();
+    if (number_of_threads == 0)
+    {
+      number_of_threads = 1;
+    }
+    for (; number_of_threads > 0; --number_of_threads)
+    {
+      threads.emplace_back(std::thread(&MultiThreadedExecutor::run, this));
+    }
+    for (auto &thread : threads)
+    {
+      thread.join();
+    }
   }
 
 private:
+  void run()
+  {
+    while (rclcpp::utilities::ok())
+    {
+      std::shared_ptr<AnyExecutable> any_exec;
+      {
+        std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+        if (!rclcpp::utilities::ok())
+        {
+          return;
+        }
+        any_exec = get_next_executable();
+      }
+      if (any_exec && any_exec->subscription)
+      {
+        // Do callback
+        execute_subscription(any_exec->subscription);
+      }
+    }
+  }
+
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor);
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
+  std::mutex wait_mutex_;
 
 };
 

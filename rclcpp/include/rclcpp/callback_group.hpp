@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <rclcpp/subscription.hpp>
+#include <rclcpp/timer.hpp>
 
 namespace rclcpp
 {
@@ -31,7 +32,7 @@ namespace executor {class Executor;}
 namespace callback_group
 {
 
-enum class CallbackGroupType {NonThreadSafe, ThreadSafe};
+enum class CallbackGroupType {MutuallyExclusive, Reentrant};
 
 class CallbackGroup
 {
@@ -40,21 +41,29 @@ class CallbackGroup
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(CallbackGroup);
 
-private:
-  CallbackGroup(std::string group_name, CallbackGroupType group_type)
-    : name_(group_name), type_(group_type)
+  CallbackGroup(CallbackGroupType group_type)
+    : type_(group_type)
   {}
+
+private:
   RCLCPP_DISABLE_COPY(CallbackGroup);
 
   void
-  add_subscription(subscription::SubscriptionBase::SharedPtr &subscription_ptr)
+  add_subscription(
+    const subscription::SubscriptionBase::SharedPtr &subscription_ptr)
   {
     subscription_ptrs_.push_back(subscription_ptr);
   }
 
-  std::string name_;
+  void
+  add_timer(const timer::TimerBase::SharedPtr &timer_ptr)
+  {
+    timer_ptrs_.push_back(timer_ptr);
+  }
+
   CallbackGroupType type_;
   std::vector<subscription::SubscriptionBase::SharedPtr> subscription_ptrs_;
+  std::vector<timer::TimerBase::SharedPtr> timer_ptrs_;
 
 };
 
