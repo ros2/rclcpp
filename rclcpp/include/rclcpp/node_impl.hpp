@@ -40,7 +40,8 @@ Node::Node(std::string node_name)
 {}
 
 Node::Node(std::string node_name, context::Context::SharedPtr context)
-  : name_(node_name), context_(context), number_of_subscriptions_(0)
+  : name_(node_name), context_(context),
+    number_of_subscriptions_(0), number_of_timers_(0)
 {
   node_handle_ = ::ros_middleware_interface::create_node();
   using rclcpp::callback_group::CallbackGroupType;
@@ -54,7 +55,9 @@ Node::create_callback_group(
 {
   using rclcpp::callback_group::CallbackGroup;
   using rclcpp::callback_group::CallbackGroupType;
-  return CallbackGroup::SharedPtr(new CallbackGroup(group_type));
+  auto group = CallbackGroup::SharedPtr(new CallbackGroup(group_type));
+  callback_groups_.push_back(group);
+  return group;
 }
 
 template<typename MessageT>
@@ -69,6 +72,21 @@ Node::create_publisher(std::string topic_name, size_t queue_size)
                                                 topic_name.c_str());
 
   return publisher::Publisher::make_shared(publisher_handle);
+}
+
+bool
+Node::group_in_node(callback_group::CallbackGroup::SharedPtr &group)
+{
+  bool group_belongs_to_this_node = false;
+  for (auto &weak_group : this->callback_groups_)
+  {
+    auto cur_group = weak_group.lock();
+    if (cur_group && cur_group == group)
+    {
+      group_belongs_to_this_node = true;
+    }
+  }
+  return group_belongs_to_this_node;
 }
 
 template<typename MessageT>
@@ -94,6 +112,11 @@ Node::create_subscription(
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
   if (group)
   {
+    if (!group_in_node(group))
+    {
+      // TODO: use custom exception
+      throw std::runtime_error("Cannot create timer, group not in node.");
+    }
     group->add_subscription(sub_base_ptr);
   }
   else
@@ -109,9 +132,14 @@ Node::create_wall_timer(std::chrono::nanoseconds period,
                         rclcpp::timer::CallbackType callback,
                         rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  auto timer = rclcpp::timer::WallTimer::make_shared(period);
+  auto timer = rclcpp::timer::WallTimer::make_shared(period, callback);
   if (group)
   {
+    if (!group_in_node(group))
+    {
+      // TODO: use custom exception
+      throw std::runtime_error("Cannot create timer, group not in node.");
+    }
     group->add_timer(timer);
   }
   else

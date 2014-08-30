@@ -85,8 +85,15 @@ public:
     rclcpp::timer::CallbackType callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
 
+  typedef rclcpp::callback_group::CallbackGroup CallbackGroup;
+  typedef std::weak_ptr<CallbackGroup> CallbackGroupWeakPtr;
+  typedef std::list<CallbackGroupWeakPtr> CallbackGroupWeakPtrList;
+
 private:
   RCLCPP_DISABLE_COPY(Node);
+
+  bool
+  group_in_node(callback_group::CallbackGroup::SharedPtr &group);
 
   std::string name_;
 
@@ -94,8 +101,8 @@ private:
 
   rclcpp::context::Context::SharedPtr context_;
 
-  rclcpp::callback_group::CallbackGroup::SharedPtr default_callback_group_;
-  std::list<std::weak_ptr<rclcpp::callback_group::CallbackGroup>> callback_groups_;
+  CallbackGroup::SharedPtr default_callback_group_;
+  CallbackGroupWeakPtrList callback_groups_;
 
   size_t number_of_subscriptions_;
   size_t number_of_timers_;
