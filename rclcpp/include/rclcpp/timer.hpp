@@ -21,10 +21,19 @@
 #include <memory>
 #include <thread>
 
+#include <ros_middleware_interface/functions.h>
+#include <ros_middleware_interface/handles.h>
+
 #include <rclcpp/macros.hpp>
+#include <rclcpp/rate.hpp>
+#include <rclcpp/utilities.hpp>
 
 namespace rclcpp
 {
+
+// Forward declaration is for friend statement in GenericTimer
+namespace executor {class Executor;}
+
 namespace timer
 {
 
@@ -32,58 +41,65 @@ typedef std::function<void()> CallbackType;
 
 class TimerBase
 {
+  friend class rclcpp::executor::Executor;
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(TimerBase);
 
-  virtual bool sleep() = 0;
+  TimerBase(std::chrono::nanoseconds period, CallbackType callback)
+    : period_(period),
+      callback_(callback),
+      canceled_(false)
+  {
+    guard_condition_ = ros_middleware_interface::create_guard_condition();
+  }
+
+  void
+  cancel()
+  {
+    this->canceled_ = true;
+  }
+
   virtual bool is_steady() = 0;
-  virtual void reset() = 0;
+
+protected:
+  std::chrono::nanoseconds period_;
+  CallbackType callback_;
+  ros_middleware_interface::GuardConditionHandle guard_condition_;
+
+  bool canceled_;
+
 };
 
 template<class Clock = std::chrono::high_resolution_clock>
 class GenericTimer : public TimerBase
 {
+  friend class rclcpp::executor::Executor;
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(GenericTimer);
 
-  GenericTimer(std::chrono::nanoseconds period)
-    : period_(period)
+  GenericTimer(std::chrono::nanoseconds period, CallbackType callback)
+    : TimerBase(period, callback), loop_rate_(period)
   {
+    thread_ = std::thread(&GenericTimer<Clock>::run, this);
   }
 
-  virtual bool
-  sleep()
+  ~GenericTimer()
   {
-    // Time coming into sleep
-    auto now = Clock::now();
-    // Time of next interval
-    auto next_interval = last_interval_ + period_;
-    // Detect backwards time flow
-    if (now < last_interval_)
+    cancel();
+  }
+
+  void
+  run()
+  {
+    while (rclcpp::utilities::ok() && !this->canceled_)
     {
-      // Best thing to do is to set the next_interval to now + period
-      next_interval = now + period_;
-    }
-    // Calculate the time to sleep
-    auto time_to_sleep = next_interval - now;
-    // Update the interval
-    last_interval_ += period_;
-    // If the time_to_sleep is negative or zero, don't sleep
-    if (time_to_sleep <= std::chrono::seconds(0))
-    {
-      // If an entire cycle was missed then reset next interval.
-      // This might happen if the loop took more than a cycle.
-      // Or if time jumps forward.
-      if (now > next_interval + period_)
+      loop_rate_.sleep();
+      if (!rclcpp::utilities::ok())
       {
-        last_interval_ = now + period_;
+        return;
       }
-      // Either way do not sleep and return false
-      return false;
+      ros_middleware_interface::trigger_guard_condition(guard_condition_);
     }
-    // Sleep
-    std::this_thread::sleep_for(time_to_sleep);
-    return true;
   }
 
   virtual bool
@@ -92,17 +108,11 @@ public:
     return Clock::is_steady;
   }
 
-  virtual void
-  reset()
-  {
-    last_interval_ = Clock::now();
-  }
-
 private:
   RCLCPP_DISABLE_COPY(GenericTimer);
 
-  std::chrono::nanoseconds period_;
-  std::chrono::time_point<Clock> last_interval_;
+  std::thread thread_;
+  rclcpp::rate::GenericRate<Clock> loop_rate_;
 
 };
 
