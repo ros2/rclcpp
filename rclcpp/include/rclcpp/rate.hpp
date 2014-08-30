@@ -21,6 +21,7 @@
 #include <thread>
 
 #include <rclcpp/macros.hpp>
+#include <rclcpp/utilities.hpp>
 
 namespace rclcpp
 {
@@ -37,18 +38,23 @@ public:
   virtual void reset() = 0;
 };
 
+using std::chrono::duration;
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
+
 template<class Clock = std::chrono::high_resolution_clock>
 class GenericRate : public RateBase
 {
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(GenericRate);
 
-  GenericRate(double rate) : rate_(rate), last_interval_(Clock::now())
-  {
-    typedef std::chrono::nanoseconds nanoseconds;
-    auto tmp = std::chrono::duration<double>(1.0f/rate_);
-    period_ = std::chrono::duration_cast<nanoseconds>(tmp);
-  }
+  GenericRate(double rate)
+    : GenericRate<Clock>(
+      duration_cast<nanoseconds>(duration<double>(1.0/rate)))
+  {}
+  GenericRate(std::chrono::nanoseconds period)
+    : period_(period), last_interval_(Clock::now())
+  {}
 
   virtual bool
   sleep()
@@ -80,8 +86,8 @@ public:
       // Either way do not sleep and return false
       return false;
     }
-    // Sleep
-    std::this_thread::sleep_for(time_to_sleep);
+    // Sleep (will get interrupted by ctrl-c, may not sleep full time)
+    rclcpp::utilities::sleep_for(time_to_sleep);
     return true;
   }
 
@@ -100,7 +106,6 @@ public:
 private:
   RCLCPP_DISABLE_COPY(GenericRate);
 
-  double rate_;
   std::chrono::nanoseconds period_;
   std::chrono::time_point<Clock> last_interval_;
 
