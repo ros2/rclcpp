@@ -18,7 +18,11 @@
 
 #include <iostream>
 
+#include <chrono>
+#include <condition_variable>
 #include <csignal>
+#include <mutex>
+#include <thread>
 
 #include <ros_middleware_interface/functions.h>
 #include <ros_middleware_interface/handles.h>
@@ -26,36 +30,56 @@
 namespace
 {
   volatile sig_atomic_t g_signal_status = 0;
-  ros_middleware_interface::GuardConditionHandle g_sigint_guard_cond_handle_;
+  ros_middleware_interface::GuardConditionHandle g_sigint_guard_cond_handle = \
+    ros_middleware_interface::create_guard_condition();
+  std::condition_variable g_interrupt_condition_variable;
+  std::mutex g_interrupt_mutex;
 
-  void signal_handler(int signal_value)
+  void
+  signal_handler(int signal_value)
   {
     std::cout << "signal_handler(" << signal_value << ")" << std::endl;
     g_signal_status = signal_value;
-    ros_middleware_interface::trigger_guard_condition(g_sigint_guard_cond_handle_);
+    using ros_middleware_interface::trigger_guard_condition;
+    trigger_guard_condition(g_sigint_guard_cond_handle);
+    g_interrupt_condition_variable.notify_all();
   }
 }
 
 namespace rclcpp
 {
+
+__thread size_t thread_id = 0;
+
 namespace utilities
 {
 
-void init(int argc, char *argv[])
+void
+init(int argc, char *argv[])
 {
-  ::g_sigint_guard_cond_handle_ = \
-    ros_middleware_interface::create_guard_condition();
   std::signal(SIGINT, ::signal_handler);
 }
 
-bool ok()
+bool
+ok()
 {
   return ::g_signal_status == 0;
 }
 
-ros_middleware_interface::GuardConditionHandle get_global_sigint_guard_cond()
+ros_middleware_interface::GuardConditionHandle
+get_global_sigint_guard_condition()
 {
-  return ::g_sigint_guard_cond_handle_;
+  return ::g_sigint_guard_cond_handle;
+}
+
+template<class Rep, class Period>
+bool
+sleep_for(const std::chrono::duration<Rep, Period>& sleep_duration)
+{
+  // TODO: determine if posix's nanosleep(2) is more efficient here
+  std::unique_lock<std::mutex> lock(::g_interrupt_mutex);
+  auto cvs = ::g_interrupt_condition_variable.wait_for(lock, sleep_duration);
+  return cvs == std::cv_status::no_timeout;
 }
 
 } /* namespace utilities */
