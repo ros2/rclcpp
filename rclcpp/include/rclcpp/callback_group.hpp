@@ -16,6 +16,7 @@
 #ifndef RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_
 #define RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_
 
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -42,7 +43,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(CallbackGroup);
 
   CallbackGroup(CallbackGroupType group_type)
-    : type_(group_type)
+    : type_(group_type), can_be_taken_from_(true)
   {}
 
 private:
@@ -64,6 +65,7 @@ private:
   CallbackGroupType type_;
   std::vector<subscription::SubscriptionBase::SharedPtr> subscription_ptrs_;
   std::vector<timer::TimerBase::SharedPtr> timer_ptrs_;
+  std::atomic_bool can_be_taken_from_;
 
 };
 
