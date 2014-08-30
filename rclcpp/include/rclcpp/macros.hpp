@@ -39,4 +39,6 @@
     return std::make_shared<Class>(std::forward<Args>(args)...); \
   }
 
+#define RCLCPP_INFO(Args) std::cout << Args << std::endl;
+
 #endif /* RCLCPP_RCLCPP_MACROS_HPP_ */
