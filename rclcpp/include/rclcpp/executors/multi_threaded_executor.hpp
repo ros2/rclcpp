@@ -46,11 +46,6 @@ public:
 
   ~MultiThreadedExecutor() {}
 
-  void add_node(rclcpp::node::Node::SharedPtr &node_ptr)
-  {
-    this->weak_nodes_.push_back(node_ptr);
-  }
-
   void spin()
   {
     std::vector<std::thread> threads;
@@ -59,9 +54,15 @@ public:
     {
       number_of_threads = 1;
     }
-    for (; number_of_threads > 0; --number_of_threads)
     {
-      threads.emplace_back(std::thread(&MultiThreadedExecutor::run, this));
+      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+      size_t thread_id = 1;
+      for (; number_of_threads > 0; --number_of_threads)
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id++);
+        threads.emplace_back(func);
+      }
     }
     for (auto &thread : threads)
     {
@@ -70,8 +71,9 @@ public:
   }
 
 private:
-  void run()
+  void run(size_t this_thread_id)
   {
+    rclcpp::thread_id = this_thread_id;
     while (rclcpp::utilities::ok())
     {
       std::shared_ptr<AnyExecutable> any_exec;
@@ -83,17 +85,12 @@ private:
         }
         any_exec = get_next_executable();
       }
-      if (any_exec && any_exec->subscription)
-      {
-        // Do callback
-        execute_subscription(any_exec->subscription);
-      }
+      execute_any_executable(any_exec);
     }
   }
 
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor);
 
-  std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
   std::mutex wait_mutex_;
 
 };

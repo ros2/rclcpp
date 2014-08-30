@@ -51,11 +51,7 @@ public:
     while (rclcpp::utilities::ok())
     {
       auto any_exec = get_next_executable();
-      if (any_exec->subscription)
-      {
-        // Do callback
-        execute_subscription(any_exec->subscription);
-      }
+      execute_any_executable(any_exec);
     }
   }
 
