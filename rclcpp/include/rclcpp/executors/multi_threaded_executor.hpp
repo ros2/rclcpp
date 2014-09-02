@@ -42,22 +42,25 @@ class MultiThreadedExecutor : public executor::Executor
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(MultiThreadedExecutor);
 
-  MultiThreadedExecutor() {}
+  MultiThreadedExecutor()
+  {
+    number_of_threads_ = std::thread::hardware_concurrency();
+    if (number_of_threads_ == 0)
+    {
+      number_of_threads_ = 1;
+    }
+  }
 
   ~MultiThreadedExecutor() {}
 
-  void spin()
+  void
+  spin()
   {
     std::vector<std::thread> threads;
-    size_t number_of_threads = std::thread::hardware_concurrency();
-    if (number_of_threads == 0)
-    {
-      number_of_threads = 1;
-    }
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       size_t thread_id = 1;
-      for (; number_of_threads > 0; --number_of_threads)
+      for (size_t i = number_of_threads_; i > 0; --i)
       {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id++);
@@ -68,6 +71,12 @@ public:
     {
       thread.join();
     }
+  }
+
+  size_t
+  get_number_of_threads()
+  {
+    return number_of_threads_;
   }
 
 private:
@@ -92,6 +101,7 @@ private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor);
 
   std::mutex wait_mutex_;
+  size_t number_of_threads_;
 
 };
 
