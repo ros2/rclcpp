@@ -73,8 +73,6 @@ public:
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor);
 
-  std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
-
 };
 
 } /* namespace single_threaded_executor */
