@@ -52,7 +52,6 @@ public:
   }
 
 protected:
-
   struct AnyExecutable
   {
     AnyExecutable() : subscription(0), timer(0), callback_group(0), node(0) {}
@@ -139,8 +138,9 @@ protected:
 
 /*** Populating class storage from a single node ***/
 
+  // TODO: pick a better name for this function
   void
-  populate_subscriber_handles_with_node(rclcpp::node::Node &node)
+  populate_all_handles_with_node(rclcpp::node::Node &node)
   {
     // TODO: reimplement
   }
@@ -149,6 +149,7 @@ protected:
 
 /*** Populate class storage from stored weak node pointers and wait. ***/
 
+  // TODO: pick a better name for this function
   void
   populate_all_handles(bool nonblocking)
   {
@@ -194,6 +195,7 @@ protected:
     size_t number_of_subscriptions = subs.size();
     ros_middleware_interface::SubscriberHandles subscriber_handles;
     subscriber_handles.subscriber_count_ = number_of_subscriptions;
+    // TODO: Avoid redundant malloc's
     subscriber_handles.subscribers_ = static_cast<void **>(
       std::malloc(sizeof(void *) * number_of_subscriptions));
     if (subscriber_handles.subscribers_ == NULL)
@@ -215,6 +217,7 @@ protected:
     size_t number_of_guard_conds = timers.size() + start_of_timer_guard_conds;
     ros_middleware_interface::GuardConditionHandles guard_condition_handles;
     guard_condition_handles.guard_condition_count_ = number_of_guard_conds;
+    // TODO: Avoid redundant malloc's
     guard_condition_handles.guard_conditions_ = static_cast<void **>(
       std::malloc(sizeof(void *) * number_of_guard_conds));
     if (guard_condition_handles.guard_conditions_ == NULL)
@@ -262,6 +265,7 @@ protected:
       }
     }
     // Make sure to free memory
+    // TODO: Remove theses when "Avoid redundant malloc's" todo is addressed
     std::free(subscriber_handles.subscribers_);
     std::free(guard_condition_handles.guard_conditions_);
   }

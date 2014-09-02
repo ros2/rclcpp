@@ -58,7 +58,7 @@ public:
   void spin_node_some(rclcpp::node::Node &node)
   {
     reset_subscriber_handles();
-    populate_subscriber_handles_with_node(node);
+    populate_all_handles_with_node(node);
     // non-blocking = true
     auto any_exec = get_next_executable(true);
     while (any_exec->subscription)
