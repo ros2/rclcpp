@@ -57,15 +57,10 @@ using rclcpp::utilities::ok;
 using rclcpp::utilities::init;
 using rclcpp::utilities::sleep_for;
 
-void spin_some(Node &node)
-{
-  rclcpp::executors::SingleThreadedExecutor executor;
-  executor.spin_node_some(node);
-}
-
 void spin_some(Node::SharedPtr &node_ptr)
 {
-  spin_some(*node_ptr);
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.spin_node_some(node_ptr);
 }
 
 void spin(Node::SharedPtr &node_ptr)

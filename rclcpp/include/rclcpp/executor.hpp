@@ -50,7 +50,55 @@ public:
   virtual void
   add_node(rclcpp::node::Node::SharedPtr &node_ptr)
   {
-    this->weak_nodes_.push_back(node_ptr);
+    // Check to ensure node not already added
+    for (auto &weak_node : weak_nodes_)
+    {
+      auto node = weak_node.lock();
+      if (node == node_ptr)
+      {
+        // TODO: Use a different error here?
+      throw std::runtime_error(
+        "Cannot add node to executor, node already added.");
+      }
+    }
+    weak_nodes_.push_back(node_ptr);
+    // Interrupt waiting to handle new node
+    using ros_middleware_interface::trigger_guard_condition;
+    trigger_guard_condition(interrupt_guard_condition_);
+  }
+
+  virtual void
+  remove_node(rclcpp::node::Node::SharedPtr &node_ptr)
+  {
+    bool node_removed = false;
+    weak_nodes_.erase(
+      std::remove_if(weak_nodes_.begin(), weak_nodes_.end(),
+        [&](std::weak_ptr<rclcpp::node::Node> &i)
+        {
+          bool matched = (i.lock() == node_ptr);
+          node_removed |= matched;
+          return matched;
+        }));
+    // If the node was matched and removed, interrupt waiting
+    if (node_removed)
+    {
+      using ros_middleware_interface::trigger_guard_condition;
+      trigger_guard_condition(interrupt_guard_condition_);
+    }
+  }
+
+  void spin_node_some(rclcpp::node::Node::SharedPtr &node)
+  {
+    reset_subscriber_handles();
+    this->add_node(node);
+    // non-blocking = true
+    std::shared_ptr<AnyExecutable> any_exec;
+    while ((any_exec = get_next_executable(true)))
+    {
+      execute_any_executable(any_exec);
+    }
+    this->remove_node(node);
+    reset_subscriber_handles();
   }
 
 protected:
@@ -138,22 +186,10 @@ protected:
 
 /******************************/
 
-/*** Populating class storage from a single node ***/
-
-  // TODO: pick a better name for this function
-  void
-  populate_all_handles_with_node(rclcpp::node::Node &node)
-  {
-    // TODO: reimplement
-  }
-
-/******************************/
-
 /*** Populate class storage from stored weak node pointers and wait. ***/
 
-  // TODO: pick a better name for this function
   void
-  populate_all_handles(bool nonblocking)
+  wait_for_work(bool nonblocking)
   {
     // Collect the subscriptions and timers to be waited on
     bool has_invalid_weak_nodes = false;
@@ -527,8 +563,8 @@ protected:
     // If there are none
     if (!any_exec)
     {
-      // Repopulate the subscriber handles and wait on them
-      populate_all_handles(nonblocking);
+      // Wait for subscriptions or timers to work on
+      wait_for_work(nonblocking);
       // Try again
       any_exec = get_next_ready_executable();
     }

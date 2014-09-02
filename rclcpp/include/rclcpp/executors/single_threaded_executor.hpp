@@ -55,21 +55,6 @@ public:
     }
   }
 
-  void spin_node_some(rclcpp::node::Node &node)
-  {
-    reset_subscriber_handles();
-    populate_all_handles_with_node(node);
-    // non-blocking = true
-    auto any_exec = get_next_executable(true);
-    while (any_exec->subscription)
-    {
-      execute_subscription(any_exec->subscription);
-      // non-blocking = true
-      any_exec = get_next_executable(true);
-    }
-    reset_subscriber_handles();
-  }
-
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor);
 
