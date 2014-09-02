@@ -43,7 +43,7 @@ public:
     : interrupt_guard_condition_(
         ros_middleware_interface::create_guard_condition())
   {}
-  ~Executor() {}
+  virtual ~Executor() {}
 
   void
   add_node(rclcpp::node::Node::SharedPtr &node_ptr)
