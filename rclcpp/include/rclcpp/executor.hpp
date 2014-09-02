@@ -45,7 +45,9 @@ public:
   {}
   virtual ~Executor() {}
 
-  void
+  virtual void spin() = 0;
+
+  virtual void
   add_node(rclcpp::node::Node::SharedPtr &node_ptr)
   {
     this->weak_nodes_.push_back(node_ptr);
