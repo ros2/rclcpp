@@ -79,7 +79,7 @@ protected:
     {
       execute_subscription(any_exec->subscription);
     }
-    // Reset the callback_group, reguardless of type
+    // Reset the callback_group, regardless of type
     any_exec->callback_group->can_be_taken_from_.store(true);
     // Wake the wait, because it may need to be recalculated or work that
     // was previously blocked is now available.
