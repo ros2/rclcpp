@@ -16,11 +16,14 @@
 #ifndef RCLCPP_RCLCPP_UTILITIES_HPP_
 #define RCLCPP_RCLCPP_UTILITIES_HPP_
 
+// TODO: remove
 #include <iostream>
 
+#include <cerrno>
 #include <chrono>
 #include <condition_variable>
 #include <csignal>
+#include <cstring>
 #include <mutex>
 #include <thread>
 
@@ -35,14 +38,21 @@ namespace
   std::condition_variable g_interrupt_condition_variable;
   std::mutex g_interrupt_mutex;
 
+  void (*old_signal_handler)(int) = 0;
+
   void
   signal_handler(int signal_value)
   {
+    // TODO: remove
     std::cout << "signal_handler(" << signal_value << ")" << std::endl;
     g_signal_status = signal_value;
     using ros_middleware_interface::trigger_guard_condition;
     trigger_guard_condition(g_sigint_guard_cond_handle);
     g_interrupt_condition_variable.notify_all();
+    if (old_signal_handler)
+    {
+      return old_signal_handler(signal_value);
+    }
   }
 }
 
@@ -57,7 +67,15 @@ namespace utilities
 void
 init(int argc, char *argv[])
 {
-  std::signal(SIGINT, ::signal_handler);
+  ros_middleware_interface::init();
+  ::old_signal_handler = std::signal(SIGINT, ::signal_handler);
+  if (::old_signal_handler == SIG_ERR)
+  {
+    throw std::runtime_error(
+      std::string("Failed to set SIGINT signal handler: (" +
+                  std::to_string(errno) + ")") +
+      std::strerror(errno));
+  }
 }
 
 bool

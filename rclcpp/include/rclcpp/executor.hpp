@@ -89,7 +89,6 @@ public:
 
   void spin_node_some(rclcpp::node::Node::SharedPtr &node)
   {
-    reset_subscriber_handles();
     this->add_node(node);
     // non-blocking = true
     std::shared_ptr<AnyExecutable> any_exec;
@@ -98,7 +97,6 @@ public:
       execute_any_executable(any_exec);
     }
     this->remove_node(node);
-    reset_subscriber_handles();
   }
 
 protected:
@@ -162,29 +160,6 @@ protected:
   {
     timer->callback_();
   }
-
-/*** Reseting class storage ***/
-
-  void
-  reset_all_handles()
-  {
-    reset_subscriber_handles();
-    reset_guard_condition_handles();
-  }
-
-  void
-  reset_subscriber_handles()
-  {
-    subscriber_handles_.clear();
-  }
-
-  void
-  reset_guard_condition_handles()
-  {
-    guard_condition_handles_.clear();
-  }
-
-/******************************/
 
 /*** Populate class storage from stored weak node pointers and wait. ***/
 
@@ -283,6 +258,15 @@ protected:
     ros_middleware_interface::wait(subscriber_handles,
                                    guard_condition_handles,
                                    nonblocking);
+    // If ctrl-c guard condition, return directly
+    if (guard_condition_handles.guard_conditions_[0] != 0)
+    {
+      // Make sure to free memory
+      // TODO: Remove theses when "Avoid redundant malloc's" todo is addressed
+      std::free(subscriber_handles.subscribers_);
+      std::free(guard_condition_handles.guard_conditions_);
+      return;
+    }
     // Add the new work to the class's list of things waiting to be executed
     // Starting with the subscribers
     for (size_t i = 0; i < number_of_subscriptions; ++i)
@@ -587,14 +571,15 @@ protected:
   }
 
   ros_middleware_interface::GuardConditionHandle interrupt_guard_condition_;
+
+private:
+  RCLCPP_DISABLE_COPY(Executor);
+
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
   typedef std::list<void*> SubscriberHandles;
   SubscriberHandles subscriber_handles_;
   typedef std::list<void*> GuardConditionHandles;
   GuardConditionHandles guard_condition_handles_;
-
-private:
-  RCLCPP_DISABLE_COPY(Executor);
 
 };
 
