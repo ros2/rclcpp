@@ -57,8 +57,8 @@ public:
       if (node == node_ptr)
       {
         // TODO: Use a different error here?
-      throw std::runtime_error(
-        "Cannot add node to executor, node already added.");
+        throw std::runtime_error(
+          "Cannot add node to executor, node already added.");
       }
     }
     weak_nodes_.push_back(node_ptr);
