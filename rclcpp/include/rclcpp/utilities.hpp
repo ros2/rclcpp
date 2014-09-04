@@ -1,0 +1,152 @@
+/* Copyright 2014 Open Source Robotics Foundation, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef RCLCPP_RCLCPP_UTILITIES_HPP_
+#define RCLCPP_RCLCPP_UTILITIES_HPP_
+
+// TODO: remove
+#include <iostream>
+
+#include <cerrno>
+#include <chrono>
+#include <condition_variable>
+#include <csignal>
+#include <cstring>
+#include <mutex>
+#include <thread>
+
+#include <ros_middleware_interface/functions.h>
+#include <ros_middleware_interface/handles.h>
+
+// Determine if sigaction is available
+#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
+#define HAS_SIGACTION
+#endif
+
+namespace
+{
+  volatile sig_atomic_t g_signal_status = 0;
+  ros_middleware_interface::GuardConditionHandle g_sigint_guard_cond_handle = \
+    ros_middleware_interface::create_guard_condition();
+  std::condition_variable g_interrupt_condition_variable;
+  std::mutex g_interrupt_mutex;
+
+#ifdef HAS_SIGACTION
+  struct sigaction old_action;
+#else
+  void (*old_signal_handler)(int) = 0;
+#endif
+
+  void
+#ifdef HAS_SIGACTION
+  signal_handler(int signal_value, siginfo_t *siginfo, void *context)
+#else
+  signal_handler(int signal_value)
+#endif
+  {
+    // TODO: remove
+    std::cout << "signal_handler(" << signal_value << ")" << std::endl;
+#ifdef HAS_SIGACTION
+    if (old_action.sa_flags & SA_SIGINFO)
+    {
+      if (old_action.sa_sigaction != NULL)
+      {
+        old_action.sa_sigaction(signal_value, siginfo, context);
+      }
+    }
+    else
+    {
+      if (old_action.sa_handler != NULL &&  // Is set
+          old_action.sa_handler != SIG_DFL &&  // Is not default
+          old_action.sa_handler != SIG_IGN)  // Is not ignored
+      {
+        old_action.sa_handler(signal_value);
+      }
+    }
+#else
+    if (old_signal_handler)
+    {
+      old_signal_handler(signal_value);
+    }
+#endif
+    g_signal_status = signal_value;
+    using ros_middleware_interface::trigger_guard_condition;
+    trigger_guard_condition(g_sigint_guard_cond_handle);
+    g_interrupt_condition_variable.notify_all();
+  }
+}
+
+namespace rclcpp
+{
+
+__thread size_t thread_id = 0;
+
+namespace utilities
+{
+
+void
+init(int argc, char *argv[])
+{
+  ros_middleware_interface::init();
+#ifdef HAS_SIGACTION
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  sigemptyset(&action.sa_mask);
+  action.sa_sigaction = ::signal_handler;
+  action.sa_flags = SA_SIGINFO;
+  ssize_t ret = sigaction(SIGINT, &action, &old_action);
+  if (ret == -1)
+#else
+  ::old_signal_handler = std::signal(SIGINT, ::signal_handler);
+  if (::old_signal_handler == SIG_ERR)
+#endif
+  {
+    throw std::runtime_error(
+      std::string("Failed to set SIGINT signal handler: (" +
+                  std::to_string(errno) + ")") +
+      std::strerror(errno));
+  }
+}
+
+bool
+ok()
+{
+  return ::g_signal_status == 0;
+}
+
+ros_middleware_interface::GuardConditionHandle
+get_global_sigint_guard_condition()
+{
+  return ::g_sigint_guard_cond_handle;
+}
+
+template<class Rep, class Period>
+bool
+sleep_for(const std::chrono::duration<Rep, Period>& sleep_duration)
+{
+  // TODO: determine if posix's nanosleep(2) is more efficient here
+  std::unique_lock<std::mutex> lock(::g_interrupt_mutex);
+  auto cvs = ::g_interrupt_condition_variable.wait_for(lock, sleep_duration);
+  return cvs == std::cv_status::no_timeout;
+}
+
+} /* namespace utilities */
+} /* namespace rclcpp */
+
+#ifdef HAS_SIGACTION
+#undef HAS_SIGACTION
+#endif
+
+#endif /* RCLCPP_RCLCPP_UTILITIES_HPP_ */
