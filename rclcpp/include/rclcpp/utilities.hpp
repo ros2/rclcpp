@@ -30,6 +30,11 @@
 #include <ros_middleware_interface/functions.h>
 #include <ros_middleware_interface/handles.h>
 
+// Determine if sigaction is available
+#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
+#define HAS_SIGACTION
+#endif
+
 namespace
 {
   volatile sig_atomic_t g_signal_status = 0;
@@ -38,21 +43,48 @@ namespace
   std::condition_variable g_interrupt_condition_variable;
   std::mutex g_interrupt_mutex;
 
+#ifdef HAS_SIGACTION
+  struct sigaction old_action;
+#else
   void (*old_signal_handler)(int) = 0;
+#endif
 
   void
+#ifdef HAS_SIGACTION
+  signal_handler(int signal_value, siginfo_t *siginfo, void *context)
+#else
   signal_handler(int signal_value)
+#endif
   {
     // TODO: remove
     std::cout << "signal_handler(" << signal_value << ")" << std::endl;
+#ifdef HAS_SIGACTION
+    if (old_action.sa_flags & SA_SIGINFO)
+    {
+      if (old_action.sa_sigaction != NULL)
+      {
+        old_action.sa_sigaction(signal_value, siginfo, context);
+      }
+    }
+    else
+    {
+      if (old_action.sa_handler != NULL &&  // Is set
+          old_action.sa_handler != SIG_DFL &&  // Is not default
+          old_action.sa_handler != SIG_IGN)  // Is not ignored
+      {
+        old_action.sa_handler(signal_value);
+      }
+    }
+#else
+    if (old_signal_handler)
+    {
+      old_signal_handler(signal_value);
+    }
+#endif
     g_signal_status = signal_value;
     using ros_middleware_interface::trigger_guard_condition;
     trigger_guard_condition(g_sigint_guard_cond_handle);
     g_interrupt_condition_variable.notify_all();
-    if (old_signal_handler)
-    {
-      return old_signal_handler(signal_value);
-    }
   }
 }
 
@@ -68,8 +100,18 @@ void
 init(int argc, char *argv[])
 {
   ros_middleware_interface::init();
+#ifdef HAS_SIGACTION
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  sigemptyset(&action.sa_mask);
+  action.sa_sigaction = ::signal_handler;
+  action.sa_flags = SA_SIGINFO;
+  ssize_t ret = sigaction(SIGINT, &action, &old_action);
+  if (ret == -1)
+#else
   ::old_signal_handler = std::signal(SIGINT, ::signal_handler);
   if (::old_signal_handler == SIG_ERR)
+#endif
   {
     throw std::runtime_error(
       std::string("Failed to set SIGINT signal handler: (" +
@@ -102,5 +144,9 @@ sleep_for(const std::chrono::duration<Rep, Period>& sleep_duration)
 
 } /* namespace utilities */
 } /* namespace rclcpp */
+
+#ifdef HAS_SIGACTION
+#undef HAS_SIGACTION
+#endif
 
 #endif /* RCLCPP_RCLCPP_UTILITIES_HPP_ */
