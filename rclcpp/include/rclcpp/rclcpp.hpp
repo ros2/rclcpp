@@ -27,22 +27,22 @@
 namespace rclcpp
 {
 
-constexpr std::chrono::seconds operator ""_s(unsigned long long s)
+constexpr std::chrono::seconds operator "" _s(unsigned long long s)
 {
     return std::chrono::seconds(s);
 }
-constexpr std::chrono::duration<long double> operator ""_s(long double s)
+constexpr std::chrono::duration<long double> operator "" _s(long double s)
 {
     return std::chrono::duration<long double>(s);
 }
 
 constexpr std::chrono::nanoseconds
-operator ""_ns(unsigned long long ns)
+operator "" _ns(unsigned long long ns)
 {
     return std::chrono::nanoseconds(ns);
 }
 constexpr std::chrono::duration<long double, std::nano>
-operator ""_ns(long double ns)
+operator "" _ns(long double ns)
 {
     return std::chrono::duration<long double, std::nano>(ns);
 }
