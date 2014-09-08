@@ -112,6 +112,12 @@ private:
 } /* namespace node */
 } /* namespace rclcpp */
 
+#define RCLCPP_REGISTER_NODE(Class) rclcpp::node::Node::SharedPtr \
+create_node() \
+{ \
+  return rclcpp::node::Node::SharedPtr(new Class(rclcpp::contexts::default_context::DefaultContext::make_shared())); \
+}
+
 #ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
 // Template implementations
 #include "node_impl.hpp"

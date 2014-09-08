@@ -8,9 +8,16 @@ ament_export_dependencies(ros_middleware_interface)
 
 ament_export_include_directories(include)
 
-ament_package()
+ament_package(
+  CONFIG_EXTRAS rclcpp-extras.cmake
+)
 
 install(
   DIRECTORY include/
   DESTINATION include
+)
+
+install(
+  DIRECTORY src/
+  DESTINATION src/rclcpp
 )
