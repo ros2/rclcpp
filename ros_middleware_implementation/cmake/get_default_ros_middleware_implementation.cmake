@@ -10,14 +10,14 @@
 function(get_default_ros_middleware_implementation var)
   get_available_ros_middleware_implementations(middleware_implementations)
 
-  if("${middleware_implementations}" STREQUAL "")
+  if("${middleware_implementations} " STREQUAL " ")
     message(FATAL_ERROR "Could not find any ROS middleware implementation.")
   endif()
 
   # option()
-  if(NOT "${ROS_MIDDLEWARE_IMPLEMENTATION}" STREQUAL "")
+  if(NOT "${ROS_MIDDLEWARE_IMPLEMENTATION} " STREQUAL " ")
     set(middleware_implementation "${ROS_MIDDLEWARE_IMPLEMENTATION}")
-  elseif(NOT "$ENV{ROS_MIDDLEWARE_IMPLEMENTATION}" STREQUAL "")
+  elseif(NOT "$ENV{ROS_MIDDLEWARE_IMPLEMENTATION} " STREQUAL " ")
     set(middleware_implementation "$ENV{ROS_MIDDLEWARE_IMPLEMENTATION}")
   else()
     # TODO detemine "default" implementation based on the available ones
