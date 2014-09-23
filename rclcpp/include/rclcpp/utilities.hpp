@@ -31,7 +31,7 @@
 #include <ros_middleware_interface/handles.h>
 
 // Determine if sigaction is available
-#if _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
+#if __APPLE__ || _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
 #define HAS_SIGACTION
 #endif
 
