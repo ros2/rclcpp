@@ -23,6 +23,7 @@
 #include <ros_middleware_interface/handles.h>
 
 #include <ros_middleware_interface/get_type_support_handle.h>
+#include <ros_middleware_interface/get_service_type_support_handle.h>
 
 #include <rclcpp/contexts/default_context.hpp>
 
@@ -41,7 +42,7 @@ Node::Node(std::string node_name)
 
 Node::Node(std::string node_name, context::Context::SharedPtr context)
   : name_(node_name), context_(context),
-    number_of_subscriptions_(0), number_of_timers_(0)
+    number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
   node_handle_ = ::ros_middleware_interface::create_node();
   using rclcpp::callback_group::CallbackGroupType;
@@ -160,6 +161,67 @@ Node::create_wall_timer(
     std::chrono::duration_cast<std::chrono::nanoseconds>(period),
     callback,
     group);
+}
+
+template<typename ServiceT>
+typename client::Client<ServiceT>::SharedPtr
+Node::create_client(std::string service_name)
+{
+  namespace rmi = ::ros_middleware_interface;
+
+  auto &service_type_support_handle = rmi::get_service_type_support_handle<ServiceT>();
+
+  auto client_handle = rmi::create_client(this->node_handle_,
+                                          service_type_support_handle,
+                                          service_name.c_str());
+
+  using namespace rclcpp::client;
+
+  auto cli = Client<ServiceT>::make_shared(client_handle,
+                                           service_name);
+
+  return cli;
+}
+
+template <typename ServiceT>
+typename service::Service<ServiceT>::SharedPtr
+Node::create_service(
+  std::string service_name,
+  std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
+                     std::shared_ptr<typename ServiceT::Response>&)> callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
+  namespace rmi = ::ros_middleware_interface;
+
+  auto &service_type_support_handle = rmi::get_service_type_support_handle<ServiceT>();
+
+  auto service_handle = rmi::create_service(this->node_handle_,
+                                            service_type_support_handle,
+                                            service_name.c_str());
+
+  using namespace rclcpp::service;
+
+  auto serv = Service<ServiceT>::make_shared(service_handle,
+                                             service_name,
+                                             callback);
+  auto serv_base_ptr = std::dynamic_pointer_cast<ServiceBase>(serv);
+
+  if (group)
+  {
+    if (!group_in_node(group))
+    {
+      // TODO: use custom exception
+      throw std::runtime_error("Cannot create timer, group not in node.");
+    }
+    group->add_service(serv_base_ptr);
+  }
+  else
+  {
+    default_callback_group_->add_service(serv_base_ptr);
+  }
+  number_of_services_++;
+
+  return serv;
 }
 
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

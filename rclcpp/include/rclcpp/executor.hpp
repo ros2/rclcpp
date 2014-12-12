@@ -106,6 +106,7 @@ protected:
     // Either the subscription or the timer will be set, but not both
     rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
     rclcpp::timer::TimerBase::SharedPtr timer;
+    rclcpp::service::ServiceBase::SharedPtr service;
     // These are used to keep the scope on the containing items
     rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
     rclcpp::node::Node::SharedPtr node;
@@ -125,6 +126,10 @@ protected:
     if (any_exec->subscription)
     {
       execute_subscription(any_exec->subscription);
+    }
+    if (any_exec->service)
+    {
+      execute_service(any_exec->service);
     }
     // Reset the callback_group, regardless of type
     any_exec->callback_group->can_be_taken_from_.store(true);
@@ -161,6 +166,26 @@ protected:
     timer->callback_();
   }
 
+  static void
+  execute_service(
+    rclcpp::service::ServiceBase::SharedPtr &service)
+  {
+    std::shared_ptr<void> request = service->create_request();
+    bool taken = ros_middleware_interface::take_request(
+      service->service_handle_,
+      request.get());
+    if (taken)
+    {
+      service->handle_request(request);
+    }
+    else
+    {
+      std::cout << "[rclcpp::error] take failed for service on service: "
+                << service->get_service_name()
+                << std::endl;
+    }
+  }
+
 /*** Populate class storage from stored weak node pointers and wait. ***/
 
   void
@@ -170,6 +195,7 @@ protected:
     bool has_invalid_weak_nodes = false;
     std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
     std::vector<rclcpp::timer::TimerBase::SharedPtr> timers;
+    std::vector<rclcpp::service::ServiceBase::SharedPtr> services;
     for (auto &weak_node : weak_nodes_)
     {
       auto node = weak_node.lock();
@@ -192,6 +218,10 @@ protected:
         for (auto &timer : group->timer_ptrs_)
         {
           timers.push_back(timer);
+        }
+        for (auto &service : group->service_ptrs_)
+        {
+          services.push_back(service);
         }
       }
     }
@@ -224,6 +254,28 @@ protected:
         subscription->subscription_handle_.data_;
       subscriber_handle_index += 1;
     }
+
+    // Use the number of services to allocate memory in the handles
+    size_t number_of_services = services.size();
+    ros_middleware_interface::ServiceHandles service_handles;
+    service_handles.service_count_ = number_of_services;
+    // TODO: Avoid redundant malloc's
+    service_handles.services_ = static_cast<void **>(
+      std::malloc(sizeof(void *) * number_of_services));
+    if (service_handles.services_ == NULL)
+    {
+      // TODO: Use a different error here? maybe std::bad_alloc?
+      throw std::runtime_error("Could not malloc for service pointers.");
+    }
+    // Then fill the ServiceHandles with ready services
+    size_t service_handle_index = 0;
+    for (auto &service : services)
+    {
+      service_handles.services_[service_handle_index] = \
+        service->service_handle_.data_;
+      service_handle_index += 1;
+    }
+
     // Use the number of guard conditions to allocate memory in the handles
     // Add 2 to the number for the ctrl-c guard cond and the executor's
     size_t start_of_timer_guard_conds = 2;
@@ -254,9 +306,11 @@ protected:
         timer->guard_condition_.data_;
       guard_cond_handle_index += 1;
     }
+
     // Now wait on the waitable subscriptions and timers
     ros_middleware_interface::wait(subscriber_handles,
                                    guard_condition_handles,
+                                   service_handles,
                                    nonblocking);
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions_[0] != 0)
@@ -264,6 +318,7 @@ protected:
       // Make sure to free memory
       // TODO: Remove theses when "Avoid redundant malloc's" todo is addressed
       std::free(subscriber_handles.subscribers_);
+      std::free(service_handles.services_);
       std::free(guard_condition_handles.guard_conditions_);
       return;
     }
@@ -286,9 +341,20 @@ protected:
         guard_condition_handles_.push_back(handle);
       }
     }
+    // Then the services
+    for (size_t i = 0; i < number_of_services; ++i)
+    {
+      void *handle = service_handles.services_[i];
+      if (handle)
+      {
+        service_handles_.push_back(handle);
+      }
+    }
+
     // Make sure to free memory
     // TODO: Remove theses when "Avoid redundant malloc's" todo is addressed
     std::free(subscriber_handles.subscribers_);
+    std::free(service_handles.services_);
     std::free(guard_condition_handles.guard_conditions_);
   }
 
@@ -352,6 +418,35 @@ protected:
     return rclcpp::timer::TimerBase::SharedPtr();
   }
 
+  rclcpp::service::ServiceBase::SharedPtr
+  get_service_by_handle(void * service_handle)
+  {
+    for (auto weak_node : weak_nodes_)
+    {
+      auto node = weak_node.lock();
+      if (!node)
+      {
+        continue;
+      }
+      for (auto weak_group : node->callback_groups_)
+      {
+        auto group = weak_group.lock();
+        if (!group)
+        {
+          continue;
+        }
+        for (auto service : group->service_ptrs_)
+        {
+          if (service->service_handle_.data_ == service_handle)
+          {
+            return service;
+          }
+        }
+      }
+    }
+    return rclcpp::service::ServiceBase::SharedPtr();
+  }
+
   void
   remove_subscriber_handle_from_subscriber_handles(void *handle)
   {
@@ -362,6 +457,12 @@ protected:
   remove_guard_condition_handle_from_guard_condition_handles(void *handle)
   {
     guard_condition_handles_.remove(handle);
+  }
+
+  void
+  remove_service_handle_from_service_handles(void *handle)
+  {
+    service_handles_.remove(handle);
   }
 
   rclcpp::node::Node::SharedPtr
@@ -516,6 +617,67 @@ protected:
     }
   }
 
+  rclcpp::callback_group::CallbackGroup::SharedPtr
+  get_group_by_service(
+    rclcpp::service::ServiceBase::SharedPtr &service)
+  {
+    for (auto &weak_node : weak_nodes_)
+    {
+      auto node = weak_node.lock();
+      if (!node)
+      {
+        continue;
+      }
+      for (auto &weak_group : node->callback_groups_)
+      {
+        auto group = weak_group.lock();
+        for (auto &serv : group->service_ptrs_)
+        {
+          if (serv == service)
+          {
+            return group;
+          }
+        }
+      }
+    }
+    return rclcpp::callback_group::CallbackGroup::SharedPtr();
+  }
+
+  void
+  get_next_service(std::shared_ptr<AnyExecutable> &any_exec)
+  {
+    for (auto handle : service_handles_)
+    {
+      auto service = get_service_by_handle(handle);
+      if (service)
+      {
+        // Find the group for this handle and see if it can be serviced
+        auto group = get_group_by_service(service);
+        if (!group)
+        {
+          // Group was not found, meaning the service is not valid...
+          // Remove it from the ready list and continue looking
+          remove_service_handle_from_service_handles(handle);
+          continue;
+        }
+        if (!group->can_be_taken_from_.load())
+        {
+          // Group is mutually exclusive and is being used, so skip it for now
+          // Leave it to be checked next time, but continue searching
+          continue;
+        }
+        // Otherwise it is safe to set and return the any_exec
+        any_exec->service = service;
+        any_exec->callback_group = group;
+        any_exec->node = get_node_by_group(group);
+        remove_service_handle_from_service_handles(handle);
+        return;
+      }
+      // Else, the service is no longer valid, remove it and continue
+      remove_service_handle_from_service_handles(handle);
+    }
+  }
+
   std::shared_ptr<AnyExecutable>
   get_next_ready_executable()
   {
@@ -529,6 +691,12 @@ protected:
     // Check the subscriptions to see if there are any that are ready
     get_next_subscription(any_exec);
     if (any_exec->subscription)
+    {
+      return any_exec;
+    }
+    // Check the services to see if there are any that are ready
+    get_next_service(any_exec);
+    if (any_exec->service)
     {
       return any_exec;
     }
@@ -580,6 +748,8 @@ private:
   SubscriberHandles subscriber_handles_;
   typedef std::list<void*> GuardConditionHandles;
   GuardConditionHandles guard_condition_handles_;
+  typedef std::list<void*> ServiceHandles;
+  ServiceHandles service_handles_;
 
 };
 
