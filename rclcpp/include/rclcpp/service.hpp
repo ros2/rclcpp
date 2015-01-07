@@ -70,7 +70,7 @@ class Service : public ServiceBase
 {
 public:
   typedef std::function<
-    void(const std::shared_ptr<typename ServiceT::Request> &,
+    void(const std::shared_ptr<typename ServiceT::RequestWithHeader> &,
          std::shared_ptr<typename ServiceT::Response>&)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
@@ -83,19 +83,19 @@ public:
 
   std::shared_ptr<void> create_request()
   {
-    return std::shared_ptr<void>(new typename ServiceT::Request());
+    return std::shared_ptr<void>(new typename ServiceT::RequestWithHeader());
   }
 
   void handle_request(std::shared_ptr<void> &request)
   {
-    auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
+    auto typed_request = std::static_pointer_cast<typename ServiceT::RequestWithHeader>(request);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
     callback_(typed_request, response);
     send_response(typed_request, response);
   }
 
   void send_response(
-    std::shared_ptr<typename ServiceT::Request> &request,
+    std::shared_ptr<typename ServiceT::RequestWithHeader> &request,
     std::shared_ptr<typename ServiceT::Response> &response)
   {
     ::ros_middleware_interface::send_response(get_service_handle(), request.get(), response.get());
