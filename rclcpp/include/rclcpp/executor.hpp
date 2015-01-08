@@ -171,12 +171,14 @@ protected:
     rclcpp::service::ServiceBase::SharedPtr &service)
   {
     std::shared_ptr<void> request = service->create_request();
+    std::shared_ptr<void> request_header = service->create_request_header();
     bool taken = ros_middleware_interface::take_request(
       service->service_handle_,
-      request.get());
+      request.get(),
+      request_header.get());
     if (taken)
     {
-      service->handle_request(request);
+      service->handle_request(request, request_header);
     }
     else
     {

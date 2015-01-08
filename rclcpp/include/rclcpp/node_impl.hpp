@@ -187,7 +187,8 @@ template <typename ServiceT>
 typename service::Service<ServiceT>::SharedPtr
 Node::create_service(
   std::string service_name,
-  std::function<void(const std::shared_ptr<typename ServiceT::RequestWithHeader> &,
+  std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
+                     const std::shared_ptr<userland_msgs::RequestId> &,
                      std::shared_ptr<typename ServiceT::Response>&)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {

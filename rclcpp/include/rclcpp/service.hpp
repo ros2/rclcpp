@@ -23,6 +23,8 @@
 
 #include <rclcpp/macros.hpp>
 
+#include <userland_msgs/RequestId.h>
+
 namespace rclcpp
 {
 
@@ -55,7 +57,8 @@ public:
   }
 
   virtual std::shared_ptr<void> create_request() = 0;
-  virtual void handle_request(std::shared_ptr<void> &request) = 0;
+  virtual std::shared_ptr<void> create_request_header() = 0;
+  virtual void handle_request(std::shared_ptr<void> &request, std::shared_ptr<void> &req_id) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
@@ -70,7 +73,8 @@ class Service : public ServiceBase
 {
 public:
   typedef std::function<
-    void(const std::shared_ptr<typename ServiceT::RequestWithHeader> &,
+    void(const std::shared_ptr<typename ServiceT::Request> &,
+         const std::shared_ptr<userland_msgs::RequestId> &,
          std::shared_ptr<typename ServiceT::Response>&)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
@@ -83,22 +87,28 @@ public:
 
   std::shared_ptr<void> create_request()
   {
-    return std::shared_ptr<void>(new typename ServiceT::RequestWithHeader());
+    return std::shared_ptr<void>(new typename ServiceT::Request());
   }
 
-  void handle_request(std::shared_ptr<void> &request)
+  std::shared_ptr<void> create_request_header()
   {
-    auto typed_request = std::static_pointer_cast<typename ServiceT::RequestWithHeader>(request);
+    return std::shared_ptr<void>(new userland_msgs::RequestId());
+  }
+
+  void handle_request(std::shared_ptr<void> &request, std::shared_ptr<void> &req_id)
+  {
+    auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
+    auto typed_req_id = std::static_pointer_cast<userland_msgs::RequestId>(req_id);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
-    callback_(typed_request, response);
-    send_response(typed_request, response);
+    callback_(typed_request, typed_req_id, response);
+    send_response(typed_req_id, response);
   }
 
   void send_response(
-    std::shared_ptr<typename ServiceT::RequestWithHeader> &request,
+    std::shared_ptr<userland_msgs::RequestId> &req_id,
     std::shared_ptr<typename ServiceT::Response> &response)
   {
-    ::ros_middleware_interface::send_response(get_service_handle(), request.get(), response.get());
+    ::ros_middleware_interface::send_response(get_service_handle(), req_id.get(), response.get());
   }
 
 private:
