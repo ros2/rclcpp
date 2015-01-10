@@ -20,10 +20,10 @@
 
 #include <ros_middleware_interface/functions.h>
 #include <ros_middleware_interface/handles.h>
+#include <ros_middleware_interface/rpc.h>
 
 #include <rclcpp/macros.hpp>
 
-#include <userland_msgs/RequestId.h>
 
 namespace rclcpp
 {
@@ -74,7 +74,6 @@ class Service : public ServiceBase
 public:
   typedef std::function<
     void(const std::shared_ptr<typename ServiceT::Request> &,
-         const std::shared_ptr<userland_msgs::RequestId> &,
          std::shared_ptr<typename ServiceT::Response>&)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
@@ -92,20 +91,20 @@ public:
 
   std::shared_ptr<void> create_request_header()
   {
-    return std::shared_ptr<void>(new userland_msgs::RequestId());
+    return std::shared_ptr<void>(new ros_middleware_interface::RequestId());
   }
 
   void handle_request(std::shared_ptr<void> &request, std::shared_ptr<void> &req_id)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
-    auto typed_req_id = std::static_pointer_cast<userland_msgs::RequestId>(req_id);
+    auto typed_req_id = std::static_pointer_cast<ros_middleware_interface::RequestId>(req_id);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
-    callback_(typed_request, typed_req_id, response);
+    callback_(typed_request, response);
     send_response(typed_req_id, response);
   }
 
   void send_response(
-    std::shared_ptr<userland_msgs::RequestId> &req_id,
+    std::shared_ptr<ros_middleware_interface::RequestId> &req_id,
     std::shared_ptr<typename ServiceT::Response> &response)
   {
     ::ros_middleware_interface::send_response(get_service_handle(), req_id.get(), response.get());

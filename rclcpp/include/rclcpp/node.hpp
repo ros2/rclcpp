@@ -29,8 +29,6 @@
 #include <rclcpp/subscription.hpp>
 #include <rclcpp/timer.hpp>
 
-#include <userland_msgs/RequestId.h>
-
 namespace rclcpp
 {
 
@@ -104,7 +102,6 @@ public:
   create_service(
     std::string service_name,
     std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
-                       const std::shared_ptr<userland_msgs::RequestId> &,
                        std::shared_ptr<typename ServiceT::Response>&)> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
 
