@@ -44,12 +44,12 @@ public:
   {}
 
   std::shared_ptr<typename ServiceT::Response>
-  send_request(std::shared_ptr<typename ServiceT::Request> &req, long timeout=10)
+  send_request(std::shared_ptr<typename ServiceT::Request> &req)
   {
     ::ros_middleware_interface::send_request(client_handle_, req.get());
 
     std::shared_ptr<typename ServiceT::Response> res = std::make_shared<typename ServiceT::Response>();
-    bool received = ::ros_middleware_interface::receive_response(client_handle_, res.get(), timeout);
+    bool received = ::ros_middleware_interface::receive_response(client_handle_, res.get());
     if(!received)
     {
       // TODO: use custom exception
