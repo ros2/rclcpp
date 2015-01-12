@@ -43,19 +43,13 @@ public:
     : client_handle_(client_handle), service_name_(service_name)
   {}
 
-  std::shared_ptr<typename ServiceT::Response>
-  send_request(std::shared_ptr<typename ServiceT::Request> &req)
+  ::ros_middleware_interface::ROS2_RETCODE_t send_request(
+    std::shared_ptr<typename ServiceT::Request> &req,
+    std::shared_ptr<typename ServiceT::Response> &res)
   {
     ::ros_middleware_interface::send_request(client_handle_, req.get());
 
-    std::shared_ptr<typename ServiceT::Response> res = std::make_shared<typename ServiceT::Response>();
-    bool received = ::ros_middleware_interface::receive_response(client_handle_, res.get());
-    if(!received)
-    {
-      // TODO: use custom exception
-      throw std::runtime_error("Timed out while waiting for response");
-    }
-    return res;
+    return ::ros_middleware_interface::receive_response(client_handle_, res.get());
   }
 
 private:
