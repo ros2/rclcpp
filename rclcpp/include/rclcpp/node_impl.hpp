@@ -165,7 +165,9 @@ Node::create_wall_timer(
 
 template<typename ServiceT>
 typename client::Client<ServiceT>::SharedPtr
-Node::create_client(std::string service_name)
+Node::create_client(
+  std::string service_name,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   namespace rmi = ::ros_middleware_interface;
 
@@ -179,6 +181,22 @@ Node::create_client(std::string service_name)
 
   auto cli = Client<ServiceT>::make_shared(client_handle,
                                            service_name);
+
+  auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
+  if (group)
+  {
+    if (!group_in_node(group))
+    {
+      // TODO: use custom exception
+      throw std::runtime_error("Cannot create client, group not in node.");
+    }
+    group->add_client(cli_base_ptr);
+  }
+  else
+  {
+    default_callback_group_->add_client(cli_base_ptr);
+  }
+  number_of_clients_++;
 
   return cli;
 }
@@ -211,7 +229,7 @@ Node::create_service(
     if (!group_in_node(group))
     {
       // TODO: use custom exception
-      throw std::runtime_error("Cannot create timer, group not in node.");
+      throw std::runtime_error("Cannot create service, group not in node.");
     }
     group->add_service(serv_base_ptr);
   }

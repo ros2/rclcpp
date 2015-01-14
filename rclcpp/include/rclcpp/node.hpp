@@ -94,7 +94,9 @@ public:
   /* Create and return a Client. */
   template <typename ServiceT>
   typename rclcpp::client::Client<ServiceT>::SharedPtr
-  create_client(std::string service_name);
+  create_client(
+    std::string service_name,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
 
   /* Create and return a Service. */
   template <typename ServiceT>
@@ -123,6 +125,7 @@ private:
   size_t number_of_subscriptions_;
   size_t number_of_timers_;
   size_t number_of_services_;
+  size_t number_of_clients_;
 
 };
 
