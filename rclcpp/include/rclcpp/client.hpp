@@ -74,9 +74,11 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
- typedef std::promise<typename ServiceT::Response::Ptr> Promise;
- typedef std::shared_ptr<Promise> SharedPromise;
- typedef std::shared_future<typename ServiceT::Response::Ptr> SharedFuture;
+  typedef std::promise<typename ServiceT::Response::Ptr> Promise;
+  typedef std::shared_ptr<Promise> SharedPromise;
+  typedef std::shared_future<typename ServiceT::Response::Ptr> SharedFuture;
+
+  typedef std::function<void(SharedFuture)> CallbackType;
 
   RCLCPP_MAKE_SHARED_DEFINITIONS(Client);
 
@@ -106,29 +108,39 @@ public:
     auto typed_req_id = std::static_pointer_cast<ros_middleware_interface::RequestId>(req_id);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
     int64_t sequence_number = typed_req_id->sequence_number;
-    auto pair = this->pending_requests_[sequence_number];
-    auto call_promise = pair.first;
+    auto tuple = this->pending_requests_[sequence_number];
+    auto call_promise = std::get<0>(tuple);
+    auto callback = std::get<1>(tuple);
+    auto future = std::get<2>(tuple);
     this->pending_requests_.erase(sequence_number);
     call_promise->set_value(typed_response);
+    callback(future);
   }
 
   SharedFuture async_send_request(
     typename ServiceT::Request::Ptr &request,
     typename ServiceT::Response::Ptr &response)
   {
+    return async_send_request(request, response, [] (SharedFuture f) { });
+  }
+
+  SharedFuture async_send_request(
+    typename ServiceT::Request::Ptr &request,
+    typename ServiceT::Response::Ptr &response,
+    CallbackType cb)
+  {
     int64_t sequence_number = ::ros_middleware_interface::send_request(get_client_handle(), request.get());
 
     SharedPromise call_promise = std::make_shared<Promise>();
-    pending_requests_[sequence_number] = std::make_pair(call_promise, response);
-
     SharedFuture f(call_promise->get_future());
+    pending_requests_[sequence_number] = std::make_tuple(call_promise, cb, f);
     return f;
   }
 
 private:
   RCLCPP_DISABLE_COPY(Client);
 
-  std::map<int64_t, std::pair<SharedPromise, typename ServiceT::Response::Ptr> > pending_requests_;
+  std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture> > pending_requests_;
 };
 
 } /* namespace client */
