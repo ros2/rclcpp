@@ -87,12 +87,6 @@ public:
     : ClientBase(client_handle, service_name)
   {}
 
-  std::shared_ptr<void> get_response(int64_t sequence_number)
-  {
-    auto pair = this->pending_requests_[sequence_number];
-    return pair.second;
-  }
-
   std::shared_ptr<void> create_response()
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
@@ -118,15 +112,13 @@ public:
   }
 
   SharedFuture async_send_request(
-    typename ServiceT::Request::Ptr &request,
-    typename ServiceT::Response::Ptr &response)
+    typename ServiceT::Request::Ptr &request)
   {
-    return async_send_request(request, response, [] (SharedFuture f) { });
+    return async_send_request(request, [] (SharedFuture f) { });
   }
 
   SharedFuture async_send_request(
     typename ServiceT::Request::Ptr &request,
-    typename ServiceT::Response::Ptr &response,
     CallbackType cb)
   {
     int64_t sequence_number = ::ros_middleware_interface::send_request(get_client_handle(), request.get());
