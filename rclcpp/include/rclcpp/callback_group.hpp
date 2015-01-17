@@ -22,6 +22,8 @@
 
 #include <rclcpp/subscription.hpp>
 #include <rclcpp/timer.hpp>
+#include <rclcpp/service.hpp>
+#include <rclcpp/client.hpp>
 
 namespace rclcpp
 {
@@ -62,9 +64,23 @@ private:
     timer_ptrs_.push_back(timer_ptr);
   }
 
+  void
+  add_service(const service::ServiceBase::SharedPtr &service_ptr)
+  {
+    service_ptrs_.push_back(service_ptr);
+  }
+
+  void
+  add_client(const client::ClientBase::SharedPtr &client_ptr)
+  {
+    client_ptrs_.push_back(client_ptr);
+  }
+
   CallbackGroupType type_;
   std::vector<subscription::SubscriptionBase::SharedPtr> subscription_ptrs_;
   std::vector<timer::TimerBase::SharedPtr> timer_ptrs_;
+  std::vector<service::ServiceBase::SharedPtr> service_ptrs_;
+  std::vector<client::ClientBase::SharedPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
 
 };

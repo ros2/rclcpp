@@ -21,9 +21,11 @@
 #include <string>
 
 #include <rclcpp/callback_group.hpp>
+#include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/publisher.hpp>
+#include <rclcpp/service.hpp>
 #include <rclcpp/subscription.hpp>
 #include <rclcpp/timer.hpp>
 
@@ -89,6 +91,22 @@ public:
   typedef std::weak_ptr<CallbackGroup> CallbackGroupWeakPtr;
   typedef std::list<CallbackGroupWeakPtr> CallbackGroupWeakPtrList;
 
+  /* Create and return a Client. */
+  template <typename ServiceT>
+  typename rclcpp::client::Client<ServiceT>::SharedPtr
+  create_client(
+    std::string service_name,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+
+  /* Create and return a Service. */
+  template <typename ServiceT>
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  create_service(
+    std::string service_name,
+    std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
+                       std::shared_ptr<typename ServiceT::Response>&)> callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
@@ -106,6 +124,8 @@ private:
 
   size_t number_of_subscriptions_;
   size_t number_of_timers_;
+  size_t number_of_services_;
+  size_t number_of_clients_;
 
 };
 
