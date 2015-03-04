@@ -29,6 +29,9 @@
 #include <rclcpp/subscription.hpp>
 #include <rclcpp/timer.hpp>
 
+// Forward declaration of ROS middleware class
+namespace rmw {struct rmw_node_t;}
+
 namespace rclcpp
 {
 
@@ -115,7 +118,7 @@ private:
 
   std::string name_;
 
-  ros_middleware_interface::NodeHandle node_handle_;
+  rmw_node_t * node_handle_;
 
   rclcpp::context::Context::SharedPtr context_;
 

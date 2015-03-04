@@ -20,8 +20,7 @@
 #include <memory>
 #include <string>
 
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
+#include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
 
@@ -41,7 +40,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(SubscriptionBase);
 
   SubscriptionBase(
-    ros_middleware_interface::SubscriberHandle subscription_handle,
+    rmw_subscription_t * subscription_handle,
     std::string &topic_name)
     : subscription_handle_(subscription_handle), topic_name_(topic_name)
   {}
@@ -57,7 +56,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase);
 
-  ros_middleware_interface::SubscriberHandle subscription_handle_;
+  rmw_subscription_t * subscription_handle_;
   std::string topic_name_;
 
 };
@@ -69,7 +68,7 @@ public:
   typedef std::function<void(const std::shared_ptr<MessageT> &)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Subscription);
 
-  Subscription(ros_middleware_interface::SubscriberHandle subscription_handle,
+  Subscription(rmw_subscription_t * subscription_handle,
                std::string &topic_name,
                CallbackType callback)
     : SubscriptionBase(subscription_handle, topic_name), callback_(callback)

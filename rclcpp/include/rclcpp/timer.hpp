@@ -21,8 +21,7 @@
 #include <memory>
 #include <thread>
 
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
+#include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
 #include <rclcpp/rate.hpp>
@@ -50,7 +49,7 @@ public:
       callback_(callback),
       canceled_(false)
   {
-    guard_condition_ = ros_middleware_interface::create_guard_condition();
+    guard_condition_ = rmw_create_guard_condition();
   }
 
   void
@@ -64,7 +63,7 @@ public:
 protected:
   std::chrono::nanoseconds period_;
   CallbackType callback_;
-  ros_middleware_interface::GuardConditionHandle guard_condition_;
+  rmw_guard_condition_t * guard_condition_;
 
   bool canceled_;
 
@@ -98,7 +97,7 @@ public:
       {
         return;
       }
-      ros_middleware_interface::trigger_guard_condition(guard_condition_);
+      rmw_trigger_guard_condition(guard_condition_);
     }
   }
 

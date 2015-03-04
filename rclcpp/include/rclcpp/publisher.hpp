@@ -18,8 +18,7 @@
 
 #include <memory>
 
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
+#include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
 
@@ -37,18 +36,18 @@ class Publisher
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Publisher);
 
-  Publisher(ros_middleware_interface::PublisherHandle publisher_handle)
+  Publisher(rmw_publisher_t * publisher_handle)
     : publisher_handle_(publisher_handle)
   {}
 
   template<typename MessageT> void
   publish(std::shared_ptr<MessageT> &msg)
   {
-    ::ros_middleware_interface::publish(publisher_handle_, msg.get());
+    rmw_publish(publisher_handle_, msg.get());
   }
 
 private:
-  ros_middleware_interface::PublisherHandle publisher_handle_;
+  rmw_publisher_t * publisher_handle_;
 
 };
 

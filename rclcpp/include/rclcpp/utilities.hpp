@@ -16,7 +16,7 @@
 #ifndef RCLCPP_RCLCPP_UTILITIES_HPP_
 #define RCLCPP_RCLCPP_UTILITIES_HPP_
 
-// TODO: remove
+// TODO(wjwwood): remove
 #include <iostream>
 
 #include <cerrno>
@@ -27,8 +27,7 @@
 #include <mutex>
 #include <thread>
 
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
+#include <rmw/rmw.h>
 
 // Determine if sigaction is available
 #if __APPLE__ || _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
@@ -38,8 +37,8 @@
 namespace
 {
   volatile sig_atomic_t g_signal_status = 0;
-  ros_middleware_interface::GuardConditionHandle g_sigint_guard_cond_handle = \
-    ros_middleware_interface::create_guard_condition();
+  rmw_guard_condition_t * g_sigint_guard_cond_handle = \
+    rmw_create_guard_condition();
   std::condition_variable g_interrupt_condition_variable;
   std::mutex g_interrupt_mutex;
 
@@ -56,7 +55,7 @@ namespace
   signal_handler(int signal_value)
 #endif
   {
-    // TODO: remove
+    // TODO(wjwwood): remove
     std::cout << "signal_handler(" << signal_value << ")" << std::endl;
 #ifdef HAS_SIGACTION
     if (old_action.sa_flags & SA_SIGINFO)
@@ -82,8 +81,7 @@ namespace
     }
 #endif
     g_signal_status = signal_value;
-    using ros_middleware_interface::trigger_guard_condition;
-    trigger_guard_condition(g_sigint_guard_cond_handle);
+    rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
     g_interrupt_condition_variable.notify_all();
   }
 }
@@ -99,7 +97,8 @@ namespace utilities
 void
 init(int argc, char *argv[])
 {
-  ros_middleware_interface::init();
+  // TODO(wjwwood): Handle rmw_ret_t's value.
+  rmw_init();
 #ifdef HAS_SIGACTION
   struct sigaction action;
   memset(&action, 0, sizeof(action));
@@ -126,7 +125,7 @@ ok()
   return ::g_signal_status == 0;
 }
 
-ros_middleware_interface::GuardConditionHandle
+rmw_guard_condition_t *
 get_global_sigint_guard_condition()
 {
   return ::g_sigint_guard_cond_handle;

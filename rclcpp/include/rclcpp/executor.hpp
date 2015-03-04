@@ -39,11 +39,16 @@ class Executor
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
 
-  Executor()
-    : interrupt_guard_condition_(
-        ros_middleware_interface::create_guard_condition())
-  {}
-  virtual ~Executor() {}
+  Executor() : interrupt_guard_condition_(rmw_create_guard_condition()) {}
+
+  virtual ~Executor()
+  {
+    if (interrupt_guard_condition_ != nullptr)
+    {
+      // TODO(wjwwood): Check ret code.
+      rmw_destroy_guard_condition(interrupt_guard_condition_);
+    }
+  }
 
   virtual void spin() = 0;
 
@@ -63,8 +68,7 @@ public:
     }
     weak_nodes_.push_back(node_ptr);
     // Interrupt waiting to handle new node
-    using ros_middleware_interface::trigger_guard_condition;
-    trigger_guard_condition(interrupt_guard_condition_);
+    rmw_trigger_guard_condition(interrupt_guard_condition_);
   }
 
   virtual void
@@ -82,8 +86,7 @@ public:
     // If the node was matched and removed, interrupt waiting
     if (node_removed)
     {
-      using ros_middleware_interface::trigger_guard_condition;
-      trigger_guard_condition(interrupt_guard_condition_);
+      rmw_trigger_guard_condition(interrupt_guard_condition_);
     }
   }
 
@@ -140,8 +143,7 @@ protected:
     any_exec->callback_group->can_be_taken_from_.store(true);
     // Wake the wait, because it may need to be recalculated or work that
     // was previously blocked is now available.
-    using ros_middleware_interface::trigger_guard_condition;
-    trigger_guard_condition(interrupt_guard_condition_);
+    rmw_trigger_guard_condition(interrupt_guard_condition_);
   }
 
   static void
@@ -149,9 +151,8 @@ protected:
     rclcpp::subscription::SubscriptionBase::SharedPtr &subscription)
   {
     std::shared_ptr<void> message = subscription->create_message();
-    bool taken = ros_middleware_interface::take(
-      subscription->subscription_handle_,
-      message.get());
+    auto taken = rmw_take(subscription->subscription_handle_, message.get());
+    // TODO(wjwwood): taken is no longer a boolean, check against return types.
     if (taken)
     {
       subscription->handle_message(message);
@@ -268,22 +269,22 @@ protected:
     }
     // Use the number of subscriptions to allocate memory in the handles
     size_t number_of_subscriptions = subs.size();
-    ros_middleware_interface::SubscriberHandles subscriber_handles;
-    subscriber_handles.subscriber_count_ = number_of_subscriptions;
-    // TODO: Avoid redundant malloc's
-    subscriber_handles.subscribers_ = static_cast<void **>(
+    rmw_subscriptions_t subscriber_handles;
+    subscriber_handles.subscriber_count = number_of_subscriptions;
+    // TODO(wjwwood): Avoid redundant malloc's
+    subscriber_handles.subscribers = static_cast<void **>(
       std::malloc(sizeof(void *) * number_of_subscriptions));
-    if (subscriber_handles.subscribers_ == NULL)
+    if (subscriber_handles.subscribers == NULL)
     {
-      // TODO: Use a different error here? maybe std::bad_alloc?
+      // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for subscriber pointers.");
     }
     // Then fill the SubscriberHandles with ready subscriptions
     size_t subscriber_handle_index = 0;
     for (auto &subscription : subs)
     {
-      subscriber_handles.subscribers_[subscriber_handle_index] = \
-        subscription->subscription_handle_.data_;
+      subscriber_handles.subscribers[subscriber_handle_index] = \
+        subscription->subscription_handle_->data;
       subscriber_handle_index += 1;
     }
 
@@ -333,54 +334,54 @@ protected:
     // Add 2 to the number for the ctrl-c guard cond and the executor's
     size_t start_of_timer_guard_conds = 2;
     size_t number_of_guard_conds = timers.size() + start_of_timer_guard_conds;
-    ros_middleware_interface::GuardConditionHandles guard_condition_handles;
-    guard_condition_handles.guard_condition_count_ = number_of_guard_conds;
-    // TODO: Avoid redundant malloc's
-    guard_condition_handles.guard_conditions_ = static_cast<void **>(
+    rmw_guard_conditions_t guard_condition_handles;
+    guard_condition_handles.guard_condition_count = number_of_guard_conds;
+    // TODO(wjwwood): Avoid redundant malloc's
+    guard_condition_handles.guard_conditions = static_cast<void **>(
       std::malloc(sizeof(void *) * number_of_guard_conds));
-    if (guard_condition_handles.guard_conditions_ == NULL)
+    if (guard_condition_handles.guard_conditions == NULL)
     {
-      // TODO: Use a different error here? maybe std::bad_alloc?
+      // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error(
         "Could not malloc for guard condition pointers.");
     }
     // Put the global ctrl-c guard condition in
-    assert(guard_condition_handles.guard_condition_count_ > 1);
-    guard_condition_handles.guard_conditions_[0] = \
-        rclcpp::utilities::get_global_sigint_guard_condition().data_;
+    assert(guard_condition_handles.guard_condition_count > 1);
+    guard_condition_handles.guard_conditions[0] = \
+        rclcpp::utilities::get_global_sigint_guard_condition()->data;
     // Put the executor's guard condition in
-    guard_condition_handles.guard_conditions_[1] = \
-        interrupt_guard_condition_.data_;
+    guard_condition_handles.guard_conditions[1] = \
+        interrupt_guard_condition_->data;
     // Then fill the SubscriberHandles with ready subscriptions
     size_t guard_cond_handle_index = start_of_timer_guard_conds;
     for (auto &timer : timers)
     {
-      guard_condition_handles.guard_conditions_[guard_cond_handle_index] = \
-        timer->guard_condition_.data_;
+      guard_condition_handles.guard_conditions[guard_cond_handle_index] = \
+        timer->guard_condition_->data;
       guard_cond_handle_index += 1;
     }
 
     // Now wait on the waitable subscriptions and timers
-    ros_middleware_interface::wait(subscriber_handles,
-                                   guard_condition_handles,
-                                   service_handles,
-                                   client_handles,
-                                   nonblocking);
+    rmw_wait(&subscriber_handles,
+             &guard_condition_handles,
+             &client_handles,
+             nonblocking);
     // If ctrl-c guard condition, return directly
-    if (guard_condition_handles.guard_conditions_[0] != 0)
+    if (guard_condition_handles.guard_conditions[0] != 0)
     {
       // Make sure to free memory
-      // TODO: Remove theses when "Avoid redundant malloc's" todo is addressed
-      std::free(subscriber_handles.subscribers_);
-      std::free(service_handles.services_);
-      std::free(guard_condition_handles.guard_conditions_);
+      // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
+      //                todo has been addressed.
+      std::free(subscriber_handles.subscribers);
+      std::free(service_handles.services);
+      std::free(guard_condition_handles.guard_conditions);
       return;
     }
     // Add the new work to the class's list of things waiting to be executed
     // Starting with the subscribers
     for (size_t i = 0; i < number_of_subscriptions; ++i)
     {
-      void *handle = subscriber_handles.subscribers_[i];
+      void *handle = subscriber_handles.subscribers[i];
       if (handle)
       {
         subscriber_handles_.push_back(handle);
@@ -389,7 +390,7 @@ protected:
     // Then the timers, start with start_of_timer_guard_conds
     for (size_t i = start_of_timer_guard_conds; i < number_of_guard_conds; ++i)
     {
-      void *handle = guard_condition_handles.guard_conditions_[i];
+      void *handle = guard_condition_handles.guard_conditions[i];
       if (handle)
       {
         guard_condition_handles_.push_back(handle);
@@ -415,10 +416,11 @@ protected:
     }
 
     // Make sure to free memory
-    // TODO: Remove theses when "Avoid redundant malloc's" todo is addressed
-    std::free(subscriber_handles.subscribers_);
-    std::free(service_handles.services_);
-    std::free(guard_condition_handles.guard_conditions_);
+    // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
+    //                todo has been addressed.
+    std::free(subscriber_handles.subscribers);
+    std::free(service_handles.services);
+    std::free(guard_condition_handles.guard_conditions);
   }
 
 /******************************/
@@ -442,7 +444,7 @@ protected:
         }
         for (auto subscription : group->subscription_ptrs_)
         {
-          if (subscription->subscription_handle_.data_ == subscriber_handle)
+          if (subscription->subscription_handle_->data == subscriber_handle)
           {
             return subscription;
           }
@@ -471,7 +473,7 @@ protected:
         }
         for (auto timer : group->timer_ptrs_)
         {
-          if (timer->guard_condition_.data_ == guard_condition_handle)
+          if (timer->guard_condition_->data == guard_condition_handle)
           {
             return timer;
           }
@@ -874,9 +876,8 @@ protected:
   std::shared_ptr<AnyExecutable>
   get_next_executable(bool nonblocking=false)
   {
-    namespace rmi = ros_middleware_interface;
     // Check to see if there are any subscriptions or timers needing service
-    // TODO: improve run to run efficiency of this function
+    // TODO(wjwwood): improve run to run efficiency of this function
     auto any_exec = get_next_ready_executable();
     // If there are none
     if (!any_exec)
@@ -904,7 +905,7 @@ protected:
     return any_exec;
   }
 
-  ros_middleware_interface::GuardConditionHandle interrupt_guard_condition_;
+  rmw_guard_condition_t * interrupt_guard_condition_;
 
 private:
   RCLCPP_DISABLE_COPY(Executor);

@@ -19,11 +19,8 @@
 #include <memory>
 #include <string>
 
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
-
-#include <ros_middleware_interface/get_type_support_handle.h>
-#include <ros_middleware_interface/get_service_type_support_handle.h>
+#include <rmw/rmw.h>
+#include <rosidl_generator_cpp/MessageTypeSupport.h>
 
 #include <rclcpp/contexts/default_context.hpp>
 
@@ -44,7 +41,7 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
   : name_(node_name), context_(context),
     number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
-  node_handle_ = ::ros_middleware_interface::create_node();
+  node_handle_ = rmw_create_node(name_.c_str());
   using rclcpp::callback_group::CallbackGroupType;
   default_callback_group_ = \
     create_callback_group(CallbackGroupType::MutuallyExclusive);
@@ -65,12 +62,12 @@ template<typename MessageT>
 publisher::Publisher::SharedPtr
 Node::create_publisher(std::string topic_name, size_t queue_size)
 {
-  namespace rmi = ::ros_middleware_interface;
-
-  auto type_support_handle = rmi::get_type_support_handle<MessageT>();
-  auto publisher_handle = rmi::create_publisher(this->node_handle_,
-                                                type_support_handle,
-                                                topic_name.c_str());
+  using rosidl_generator_cpp::get_type_support_handle;
+  auto type_support_handle = get_type_support_handle<MessageT>();
+  auto publisher_handle = rmw_create_publisher(node_handle_,
+                                               type_support_handle,
+                                               topic_name.c_str(),
+                                               queue_size);
 
   return publisher::Publisher::make_shared(publisher_handle);
 }
@@ -98,12 +95,12 @@ Node::create_subscription(
   std::function<void(const std::shared_ptr<MessageT> &)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  namespace rmi = ::ros_middleware_interface;
-
-  auto &type_support_handle = rmi::get_type_support_handle<MessageT>();
-  auto subscriber_handle = rmi::create_subscriber(this->node_handle_,
-                                                  type_support_handle,
-                                                  topic_name.c_str());
+  using rosidl_generator_cpp::get_type_support_handle;
+  auto type_support_handle = get_type_support_handle<MessageT>();
+  auto subscriber_handle = rmw_create_subscription(node_handle_,
+                                                   type_support_handle,
+                                                   topic_name.c_str(),
+                                                   queue_size);
 
   using namespace rclcpp::subscription;
 

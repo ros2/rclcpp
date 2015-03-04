@@ -21,8 +21,7 @@
 #include <memory>
 #include <vector>
 
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
+#include <rmw/rmw.h>
 
 #include <rclcpp/executor.hpp>
 #include <rclcpp/macros.hpp>
