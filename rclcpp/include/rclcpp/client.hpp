@@ -16,22 +16,21 @@
 #ifndef RCLCPP_RCLCPP_CLIENT_HPP_
 #define RCLCPP_RCLCPP_CLIENT_HPP_
 
-#include <memory>
-
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
-
-#include <rclcpp/utilities.hpp>
-#include <rclcpp/macros.hpp>
 #include <future>
 #include <map>
+#include <memory>
 #include <utility>
+
+#include <rmw/rmw.h>
+
+#include <rclcpp/macros.hpp>
+#include <rclcpp/utilities.hpp>
 
 namespace rclcpp
 {
 
 // Forward declaration for friend statement
-namespace node {class Node;}
+namespace executor {class Executor;}
 
 namespace client
 {
@@ -42,18 +41,26 @@ class ClientBase
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(ClientBase);
 
-  ClientBase(
-    ros_middleware_interface::ClientHandle client_handle,
-    std::string &service_name)
-    : client_handle_(client_handle), service_name_(service_name)
+  ClientBase(rmw_client_t * client_handle,
+             const std::string &service_name)
+  : client_handle_(client_handle), service_name_(service_name)
   {}
+
+  ~ClientBase()
+  {
+    if (client_handle_ != nullptr)
+    {
+      rmw_destroy_client(client_handle_);
+      client_handle_ = nullptr;
+    }
+  }
 
   std::string get_service_name()
   {
     return this->service_name_;
   }
 
-  ros_middleware_interface::ClientHandle get_client_handle()
+  const rmw_client_t * get_client_handle()
   {
     return this->client_handle_;
   }
@@ -65,7 +72,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(ClientBase);
 
-  ros_middleware_interface::ClientHandle client_handle_;
+  rmw_client_t * client_handle_;
   std::string service_name_;
 
 };
@@ -82,9 +89,9 @@ public:
 
   RCLCPP_MAKE_SHARED_DEFINITIONS(Client);
 
-  Client(ros_middleware_interface::ClientHandle client_handle,
-         std::string& service_name)
-    : ClientBase(client_handle, service_name)
+  Client(rmw_client_t * client_handle,
+         const std::string& service_name)
+  : ClientBase(client_handle, service_name)
   {}
 
   std::shared_ptr<void> create_response()
@@ -94,12 +101,14 @@ public:
 
   std::shared_ptr<void> create_request_header()
   {
-    return std::shared_ptr<void>(new ros_middleware_interface::RequestId());
+    // TODO(wjwwood): This should probably use rmw_request_id's allocator.
+    //                (since it is a C type)
+    return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
   void handle_response(std::shared_ptr<void> &response, std::shared_ptr<void> &req_id)
   {
-    auto typed_req_id = std::static_pointer_cast<ros_middleware_interface::RequestId>(req_id);
+    auto typed_req_id = std::static_pointer_cast<rmw_request_id_t>(req_id);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
     int64_t sequence_number = typed_req_id->sequence_number;
     auto tuple = this->pending_requests_[sequence_number];
@@ -121,7 +130,8 @@ public:
     typename ServiceT::Request::Ptr &request,
     CallbackType cb)
   {
-    int64_t sequence_number = ::ros_middleware_interface::send_request(get_client_handle(), request.get());
+    int64_t sequence_number =
+      rmw_send_request(get_client_handle(), request.get());
 
     SharedPromise call_promise = std::make_shared<Promise>();
     SharedFuture f(call_promise->get_future());

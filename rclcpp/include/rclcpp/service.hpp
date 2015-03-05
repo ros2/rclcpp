@@ -16,11 +16,11 @@
 #ifndef RCLCPP_RCLCPP_SERVICE_HPP_
 #define RCLCPP_RCLCPP_SERVICE_HPP_
 
+#include <functional>
 #include <memory>
+#include <string>
 
-#include <ros_middleware_interface/functions.h>
-#include <ros_middleware_interface/handles.h>
-#include <ros_middleware_interface/rpc.h>
+#include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
 
@@ -29,7 +29,7 @@ namespace rclcpp
 {
 
 // Forward declaration for friend statement
-namespace node {class Node;}
+namespace executor {class Executor;}
 
 namespace service
 {
@@ -40,18 +40,26 @@ class ServiceBase
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(ServiceBase);
 
-  ServiceBase(
-    ros_middleware_interface::ServiceHandle service_handle,
-    std::string &service_name)
-    : service_handle_(service_handle), service_name_(service_name)
+  ServiceBase(rmw_service_t * service_handle,
+              const std::string service_name)
+  : service_handle_(service_handle), service_name_(service_name)
   {}
+
+  ~ServiceBase()
+  {
+    if (service_handle_ != nullptr)
+    {
+      rmw_destroy_service(service_handle_);
+      service_handle_ = nullptr;
+    }
+  }
 
   std::string get_service_name()
   {
     return this->service_name_;
   }
 
-  ros_middleware_interface::ServiceHandle get_service_handle()
+  const rmw_service_t * get_service_handle()
   {
     return this->service_handle_;
   }
@@ -63,7 +71,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
 
-  ros_middleware_interface::ServiceHandle service_handle_;
+  rmw_service_t * service_handle_;
   std::string service_name_;
 
 };
@@ -77,11 +85,10 @@ public:
          std::shared_ptr<typename ServiceT::Response>&)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
-  Service(
-    ros_middleware_interface::ServiceHandle service_handle,
-    std::string &service_name,
-    CallbackType callback)
-    : ServiceBase(service_handle, service_name), callback_(callback)
+  Service(rmw_service_t * service_handle,
+          const std::string &service_name,
+          CallbackType callback)
+  : ServiceBase(service_handle, service_name), callback_(callback)
   {}
 
   std::shared_ptr<void> create_request()
@@ -91,23 +98,24 @@ public:
 
   std::shared_ptr<void> create_request_header()
   {
-    return std::shared_ptr<void>(new ros_middleware_interface::RequestId());
+    // TODO(wjwwood): This should probably use rmw_request_id's allocator.
+    //                (since it is a C type)
+    return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
   void handle_request(std::shared_ptr<void> &request, std::shared_ptr<void> &req_id)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
-    auto typed_req_id = std::static_pointer_cast<ros_middleware_interface::RequestId>(req_id);
+    auto typed_req_id = std::static_pointer_cast<rmw_request_id_t>(req_id);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
     callback_(typed_request, response);
     send_response(typed_req_id, response);
   }
 
-  void send_response(
-    std::shared_ptr<ros_middleware_interface::RequestId> &req_id,
-    std::shared_ptr<typename ServiceT::Response> &response)
+  void send_response(std::shared_ptr<rmw_request_id_t> &req_id,
+                     std::shared_ptr<typename ServiceT::Response> &response)
   {
-    ::ros_middleware_interface::send_response(get_service_handle(), req_id.get(), response.get());
+    rmw_send_response(get_service_handle(), req_id.get(), response.get());
   }
 
 private:

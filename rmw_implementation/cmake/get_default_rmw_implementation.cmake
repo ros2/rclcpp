@@ -7,8 +7,8 @@
 # :param var: the output variable name containing the package name
 # :type var: string
 #
-function(get_default_ros_middleware_implementation var)
-  get_available_ros_middleware_implementations(middleware_implementations)
+function(get_default_rmw_implementation var)
+  get_available_rmw_implementations(middleware_implementations)
 
   if("${middleware_implementations} " STREQUAL " ")
     message(FATAL_ERROR "Could not find any ROS middleware implementation.")

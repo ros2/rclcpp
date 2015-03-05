@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ros_middleware_implementation</name>
+  <name>rmw_implementation</name>
   <version>0.0.0</version>
   <description>The decision which ROS middleware implementation should be used for C++.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
@@ -9,7 +9,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
 
-  <exec_depend>ros_middleware_connext_cpp</exec_depend>
-  <exec_depend>ros_middleware_connext_xtypes_dynamic_cpp</exec_depend>
-  <exec_depend>ros_middleware_opensplice_cpp</exec_depend>
+  <exec_depend>rmw_connext_cpp</exec_depend>
+  <exec_depend>rmw_connext_xtypes_dynamic_cpp</exec_depend>
+  <exec_depend>rmw_opensplice_cpp</exec_depend>
 </package>

@@ -178,10 +178,9 @@ protected:
   {
     std::shared_ptr<void> request = service->create_request();
     std::shared_ptr<void> request_header = service->create_request_header();
-    bool taken = ros_middleware_interface::take_request(
-      service->service_handle_,
-      request.get(),
-      request_header.get());
+    bool taken = rmw_take_request(service->service_handle_,
+                                  request.get(),
+                                  request_header.get());
     if (taken)
     {
       service->handle_request(request, request_header);
@@ -200,10 +199,9 @@ protected:
   {
     std::shared_ptr<void> response = client->create_response();
     std::shared_ptr<void> request_header = client->create_request_header();
-    bool taken = ros_middleware_interface::take_response(
-      client->client_handle_,
-      response.get(),
-      request_header.get());
+    bool taken = rmw_take_response(client->client_handle_,
+                                   response.get(),
+                                   request_header.get());
     if (taken)
     {
       client->handle_response(response, request_header);
@@ -290,33 +288,33 @@ protected:
 
     // Use the number of services to allocate memory in the handles
     size_t number_of_services = services.size();
-    ros_middleware_interface::ServiceHandles service_handles;
-    service_handles.service_count_ = number_of_services;
-    // TODO: Avoid redundant malloc's
-    service_handles.services_ = static_cast<void **>(
+    rmw_services_t service_handles;
+    service_handles.service_count = number_of_services;
+    // TODO(esteve): Avoid redundant malloc's
+    service_handles.services = static_cast<void **>(
       std::malloc(sizeof(void *) * number_of_services));
-    if (service_handles.services_ == NULL)
+    if (service_handles.services == NULL)
     {
-      // TODO: Use a different error here? maybe std::bad_alloc?
+      // TODO(esteve): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for service pointers.");
     }
     // Then fill the ServiceHandles with ready services
     size_t service_handle_index = 0;
     for (auto &service : services)
     {
-      service_handles.services_[service_handle_index] = \
-        service->service_handle_.data_;
+      service_handles.services[service_handle_index] = \
+        service->service_handle_->data;
       service_handle_index += 1;
     }
 
     // Use the number of clients to allocate memory in the handles
     size_t number_of_clients = clients.size();
-    ros_middleware_interface::ClientHandles client_handles;
-    client_handles.client_count_ = number_of_clients;
+    rmw_clients_t client_handles;
+    client_handles.client_count = number_of_clients;
     // TODO: Avoid redundant malloc's
-    client_handles.clients_ = static_cast<void **>(
+    client_handles.clients = static_cast<void **>(
       std::malloc(sizeof(void *) * number_of_clients));
-    if (client_handles.clients_ == NULL)
+    if (client_handles.clients == NULL)
     {
       // TODO: Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for client pointers.");
@@ -325,8 +323,8 @@ protected:
     size_t client_handle_index = 0;
     for (auto &client : clients)
     {
-      client_handles.clients_[client_handle_index] = \
-        client->client_handle_.data_;
+      client_handles.clients[client_handle_index] = \
+        client->client_handle_->data;
       client_handle_index += 1;
     }
 

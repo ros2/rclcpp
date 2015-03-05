@@ -21,6 +21,7 @@
 
 #include <rmw/rmw.h>
 #include <rosidl_generator_cpp/MessageTypeSupport.h>
+#include <rosidl_generator_cpp/ServiceTypeSupport.h>
 
 #include <rclcpp/contexts/default_context.hpp>
 
@@ -166,13 +167,13 @@ Node::create_client(
   std::string service_name,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  namespace rmi = ::ros_middleware_interface;
+  using rosidl_generator_cpp::get_service_type_support_handle;
+  auto service_type_support_handle =
+    get_service_type_support_handle<ServiceT>();
 
-  auto &service_type_support_handle = rmi::get_service_type_support_handle<ServiceT>();
-
-  auto client_handle = rmi::create_client(this->node_handle_,
-                                          service_type_support_handle,
-                                          service_name.c_str());
+  auto client_handle = rmw_create_client(this->node_handle_,
+                                         service_type_support_handle,
+                                         service_name.c_str());
 
   using namespace rclcpp::client;
 
@@ -184,7 +185,7 @@ Node::create_client(
   {
     if (!group_in_node(group))
     {
-      // TODO: use custom exception
+      // TODO(esteve): use custom exception
       throw std::runtime_error("Cannot create client, group not in node.");
     }
     group->add_client(cli_base_ptr);
@@ -206,13 +207,13 @@ Node::create_service(
                      std::shared_ptr<typename ServiceT::Response>&)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  namespace rmi = ::ros_middleware_interface;
+  using rosidl_generator_cpp::get_service_type_support_handle;
+  auto service_type_support_handle =
+    get_service_type_support_handle<ServiceT>();
 
-  auto &service_type_support_handle = rmi::get_service_type_support_handle<ServiceT>();
-
-  auto service_handle = rmi::create_service(this->node_handle_,
-                                            service_type_support_handle,
-                                            service_name.c_str());
+  auto service_handle = rmw_create_service(this->node_handle_,
+                                           service_type_support_handle,
+                                           service_name.c_str());
 
   using namespace rclcpp::service;
 

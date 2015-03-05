@@ -4,7 +4,7 @@ project(rclcpp)
 
 find_package(ament_cmake REQUIRED)
 
-ament_export_dependencies(ros_middleware_interface)
+ament_export_dependencies(rmw)
 
 ament_export_include_directories(include)
 
