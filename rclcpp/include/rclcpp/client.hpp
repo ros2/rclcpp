@@ -130,8 +130,9 @@ public:
     typename ServiceT::Request::Ptr &request,
     CallbackType cb)
   {
-    int64_t sequence_number =
-      rmw_send_request(get_client_handle(), request.get());
+    int64_t sequence_number;
+    // TODO(wjwwood): Check the return code.
+    rmw_send_request(get_client_handle(), request.get(), &sequence_number);
 
     SharedPromise call_promise = std::make_shared<Promise>();
     SharedFuture f(call_promise->get_future());

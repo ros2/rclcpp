@@ -362,6 +362,7 @@ protected:
     // Now wait on the waitable subscriptions and timers
     rmw_wait(&subscriber_handles,
              &guard_condition_handles,
+             &service_handles,
              &client_handles,
              nonblocking);
     // If ctrl-c guard condition, return directly
@@ -397,7 +398,7 @@ protected:
     // Then the services
     for (size_t i = 0; i < number_of_services; ++i)
     {
-      void *handle = service_handles.services_[i];
+      void *handle = service_handles.services[i];
       if (handle)
       {
         service_handles_.push_back(handle);
@@ -406,7 +407,7 @@ protected:
     // Then the clients
     for (size_t i = 0; i < number_of_clients; ++i)
     {
-      void *handle = client_handles.clients_[i];
+      void *handle = client_handles.clients[i];
       if (handle)
       {
         client_handles_.push_back(handle);
@@ -500,7 +501,7 @@ protected:
         }
         for (auto service : group->service_ptrs_)
         {
-          if (service->service_handle_.data_ == service_handle)
+          if (service->service_handle_->data == service_handle)
           {
             return service;
           }
@@ -529,7 +530,7 @@ protected:
         }
         for (auto client : group->client_ptrs_)
         {
-          if (client->client_handle_.data_ == client_handle)
+          if (client->client_handle_->data == client_handle)
           {
             return client;
           }
