@@ -176,16 +176,16 @@ protected:
   execute_service(
     rclcpp::service::ServiceBase::SharedPtr &service)
   {
-    std::shared_ptr<void> request = service->create_request();
     std::shared_ptr<void> request_header = service->create_request_header();
+    std::shared_ptr<void> request = service->create_request();
     bool taken = false;
     rmw_take_request(service->service_handle_,
-                     request.get(),
                      request_header.get(),
+                     request.get(),
                      &taken);
     if (taken)
     {
-      service->handle_request(request, request_header);
+      service->handle_request(request_header, request);
     }
     else
     {
@@ -199,16 +199,16 @@ protected:
   execute_client(
     rclcpp::client::ClientBase::SharedPtr &client)
   {
-    std::shared_ptr<void> response = client->create_response();
     std::shared_ptr<void> request_header = client->create_request_header();
+    std::shared_ptr<void> response = client->create_response();
     bool taken = false;
-    taken = rmw_take_response(client->client_handle_,
-                              response.get(),
-                              request_header.get(),
-                              &taken);
+    rmw_take_response(client->client_handle_,
+                      request_header.get(),
+                      response.get(),
+                      &taken);
     if (taken)
     {
-      client->handle_response(response, request_header);
+      client->handle_response(request_header, response);
     }
     else
     {

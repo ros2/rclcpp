@@ -66,7 +66,8 @@ public:
 
   virtual std::shared_ptr<void> create_request() = 0;
   virtual std::shared_ptr<void> create_request_header() = 0;
-  virtual void handle_request(std::shared_ptr<void> &request, std::shared_ptr<void> &req_id) = 0;
+  virtual void handle_request(std::shared_ptr<void> &request_header,
+                              std::shared_ptr<void> &request) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
@@ -103,13 +104,13 @@ public:
     return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
-  void handle_request(std::shared_ptr<void> &request, std::shared_ptr<void> &req_id)
+  void handle_request(std::shared_ptr<void> &request_header, std::shared_ptr<void> &request)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
-    auto typed_req_id = std::static_pointer_cast<rmw_request_id_t>(req_id);
+    auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
     callback_(typed_request, response);
-    send_response(typed_req_id, response);
+    send_response(typed_request_header, response);
   }
 
   void send_response(std::shared_ptr<rmw_request_id_t> &req_id,
