@@ -65,10 +65,8 @@ Node::create_publisher(std::string topic_name, size_t queue_size)
 {
   using rosidl_generator_cpp::get_type_support_handle;
   auto type_support_handle = get_type_support_handle<MessageT>();
-  auto publisher_handle = rmw_create_publisher(node_handle_,
-                                               type_support_handle,
-                                               topic_name.c_str(),
-                                               queue_size);
+  rmw_publisher_t * publisher_handle = rmw_create_publisher(
+    node_handle_, type_support_handle, topic_name.c_str(), queue_size);
 
   return publisher::Publisher::make_shared(publisher_handle);
 }
@@ -98,10 +96,8 @@ Node::create_subscription(
 {
   using rosidl_generator_cpp::get_type_support_handle;
   auto type_support_handle = get_type_support_handle<MessageT>();
-  auto subscriber_handle = rmw_create_subscription(node_handle_,
-                                                   type_support_handle,
-                                                   topic_name.c_str(),
-                                                   queue_size);
+  rmw_subscription_t * subscriber_handle = rmw_create_subscription(
+    node_handle_, type_support_handle, topic_name.c_str(), queue_size);
 
   using namespace rclcpp::subscription;
 
@@ -171,9 +167,8 @@ Node::create_client(
   auto service_type_support_handle =
     get_service_type_support_handle<ServiceT>();
 
-  auto client_handle = rmw_create_client(this->node_handle_,
-                                         service_type_support_handle,
-                                         service_name.c_str());
+  rmw_client_t * client_handle = rmw_create_client(
+    this->node_handle_, service_type_support_handle, service_name.c_str());
 
   using namespace rclcpp::client;
 
@@ -211,9 +206,8 @@ Node::create_service(
   auto service_type_support_handle =
     get_service_type_support_handle<ServiceT>();
 
-  auto service_handle = rmw_create_service(this->node_handle_,
-                                           service_type_support_handle,
-                                           service_name.c_str());
+  rmw_service_t * service_handle = rmw_create_service(
+    this->node_handle_, service_type_support_handle, service_name.c_str());
 
   using namespace rclcpp::service;
 
