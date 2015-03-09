@@ -67,7 +67,8 @@ public:
 
   virtual std::shared_ptr<void> create_response() = 0;
   virtual std::shared_ptr<void> create_request_header() = 0;
-  virtual void handle_response(std::shared_ptr<void> &response, std::shared_ptr<void> &req_id) = 0;
+  virtual void handle_response(std::shared_ptr<void> &request_header,
+                               std::shared_ptr<void> &response) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ClientBase);
@@ -106,11 +107,11 @@ public:
     return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
-  void handle_response(std::shared_ptr<void> &response, std::shared_ptr<void> &req_id)
+  void handle_response(std::shared_ptr<void> &request_header, std::shared_ptr<void> &response)
   {
-    auto typed_req_id = std::static_pointer_cast<rmw_request_id_t>(req_id);
+    auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
-    int64_t sequence_number = typed_req_id->sequence_number;
+    int64_t sequence_number = typed_request_header->sequence_number;
     auto tuple = this->pending_requests_[sequence_number];
     auto call_promise = std::get<0>(tuple);
     auto callback = std::get<1>(tuple);
