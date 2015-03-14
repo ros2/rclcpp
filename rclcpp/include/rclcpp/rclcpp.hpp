@@ -31,9 +31,10 @@ const std::chrono::seconds operator "" _s(unsigned long long s)
 {
     return std::chrono::seconds(s);
 }
-const std::chrono::duration<long double> operator "" _s(long double s)
+const std::chrono::nanoseconds operator "" _s(long double s)
 {
-    return std::chrono::duration<long double>(s);
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+    	std::chrono::duration<long double>(s));
 }
 
 const std::chrono::nanoseconds
@@ -41,10 +42,11 @@ operator "" _ns(unsigned long long ns)
 {
     return std::chrono::nanoseconds(ns);
 }
-const std::chrono::duration<long double, std::nano>
+const std::chrono::nanoseconds
 operator "" _ns(long double ns)
 {
-    return std::chrono::duration<long double, std::nano>(ns);
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+    	std::chrono::duration<long double, std::nano>(ns));
 }
 
 using rclcpp::node::Node;
