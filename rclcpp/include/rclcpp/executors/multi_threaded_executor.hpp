@@ -58,7 +58,7 @@ public:
     std::vector<std::thread> threads;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      size_t thread_id_ = 1;
+      size_t thread_id_ = 1;  // Use a _ suffix to avoid shadowing `rclcpp::thread_id`
       for (size_t i = number_of_threads_; i > 0; --i)
       {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
