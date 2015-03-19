@@ -20,6 +20,9 @@
 #include <string>
 
 #include <rmw/rmw.h>
+#include <rmw/get_type_support_handle.h>
+#include <rmw/get_service_type_support_handle.h>
+
 #include <rosidl_generator_cpp/MessageTypeSupport.h>
 #include <rosidl_generator_cpp/ServiceTypeSupport.h>
 
@@ -63,7 +66,7 @@ template<typename MessageT>
 publisher::Publisher::SharedPtr
 Node::create_publisher(std::string topic_name, size_t queue_size)
 {
-  using rosidl_generator_cpp::get_type_support_handle;
+  using rmw::get_type_support_handle;
   auto type_support_handle = get_type_support_handle<MessageT>();
   rmw_publisher_t * publisher_handle = rmw_create_publisher(
     node_handle_, type_support_handle, topic_name.c_str(), queue_size);
@@ -94,7 +97,7 @@ Node::create_subscription(
   std::function<void(const std::shared_ptr<MessageT> &)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  using rosidl_generator_cpp::get_type_support_handle;
+  using rmw::get_type_support_handle;
   auto type_support_handle = get_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
     node_handle_, type_support_handle, topic_name.c_str(), queue_size);
