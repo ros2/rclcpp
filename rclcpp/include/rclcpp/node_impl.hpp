@@ -21,7 +21,6 @@
 
 #include <rmw/rmw.h>
 #include <rmw/get_type_support_handle.h>
-#include <rmw/get_service_type_support_handle.h>
 
 #include <rosidl_generator_cpp/MessageTypeSupport.h>
 #include <rosidl_generator_cpp/ServiceTypeSupport.h>
