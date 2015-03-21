@@ -270,7 +270,7 @@ protected:
                         }));
     }
     // Use the number of subscriptions to allocate memory in the handles
-    size_t number_of_subscriptions = subs.size();
+    unsigned long number_of_subscriptions = subs.size();
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = number_of_subscriptions;
     // TODO(wjwwood): Avoid redundant malloc's
@@ -291,7 +291,7 @@ protected:
     }
 
     // Use the number of services to allocate memory in the handles
-    size_t number_of_services = services.size();
+    unsigned long number_of_services = services.size();
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
     // TODO(esteve): Avoid redundant malloc's
@@ -312,7 +312,7 @@ protected:
     }
 
     // Use the number of clients to allocate memory in the handles
-    size_t number_of_clients = clients.size();
+    unsigned long number_of_clients = clients.size();
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
     // TODO: Avoid redundant malloc's
@@ -335,7 +335,8 @@ protected:
     // Use the number of guard conditions to allocate memory in the handles
     // Add 2 to the number for the ctrl-c guard cond and the executor's
     size_t start_of_timer_guard_conds = 2;
-    size_t number_of_guard_conds = timers.size() + start_of_timer_guard_conds;
+    unsigned long number_of_guard_conds =
+      timers.size() + start_of_timer_guard_conds;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
     // TODO(wjwwood): Avoid redundant malloc's

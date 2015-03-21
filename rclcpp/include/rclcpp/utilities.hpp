@@ -27,6 +27,7 @@
 #include <mutex>
 #include <thread>
 
+#include <rmw/macros.h>
 #include <rmw/rmw.h>
 
 // Determine if sigaction is available
@@ -89,7 +90,7 @@ namespace
 namespace rclcpp
 {
 
-__thread size_t thread_id = 0;
+RMW_THREAD_LOCAL size_t thread_id = 0;
 
 namespace utilities
 {
@@ -115,6 +116,7 @@ init(int argc, char *argv[])
     throw std::runtime_error(
       std::string("Failed to set SIGINT signal handler: (" +
                   std::to_string(errno) + ")") +
+      // TODO(wjwwood): use strerror_r on POSIX and strerror_s on Windows.
       std::strerror(errno));
   }
 }
@@ -131,13 +133,12 @@ get_global_sigint_guard_condition()
   return ::g_sigint_guard_cond_handle;
 }
 
-template<class Rep, class Period>
 bool
-sleep_for(const std::chrono::duration<Rep, Period>& sleep_duration)
+sleep_for(const std::chrono::nanoseconds& nanoseconds)
 {
   // TODO: determine if posix's nanosleep(2) is more efficient here
   std::unique_lock<std::mutex> lock(::g_interrupt_mutex);
-  auto cvs = ::g_interrupt_condition_variable.wait_for(lock, sleep_duration);
+  auto cvs = ::g_interrupt_condition_variable.wait_for(lock, nanoseconds);
   return cvs == std::cv_status::no_timeout;
 }
 

@@ -135,7 +135,8 @@ private:
 } /* namespace node */
 } /* namespace rclcpp */
 
-#define RCLCPP_REGISTER_NODE(Class) rclcpp::node::Node::SharedPtr \
+#define RCLCPP_REGISTER_NODE(Class) RMW_EXPORT \
+rclcpp::node::Node::SharedPtr \
 create_node() \
 { \
   return rclcpp::node::Node::SharedPtr(new Class(rclcpp::contexts::default_context::DefaultContext::make_shared())); \
