@@ -60,6 +60,7 @@ using rclcpp::timer::TimerBase;
 using rclcpp::timer::WallTimer;
 typedef rclcpp::context::Context::SharedPtr ContextSharedPtr;
 using rclcpp::utilities::ok;
+using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;
 using rclcpp::utilities::sleep_for;
 

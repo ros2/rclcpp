@@ -127,6 +127,15 @@ ok()
   return ::g_signal_status == 0;
 }
 
+void
+shutdown()
+{
+  g_signal_status = SIGINT;
+  rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
+  g_interrupt_condition_variable.notify_all();
+}
+
+
 rmw_guard_condition_t *
 get_global_sigint_guard_condition()
 {
