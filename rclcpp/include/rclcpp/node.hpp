@@ -124,6 +124,9 @@ public:
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  template <typename ParamTypeT>
+  ParamTypeT getParam(const std::string& key);
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
