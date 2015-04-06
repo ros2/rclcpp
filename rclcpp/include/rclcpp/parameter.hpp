@@ -27,15 +27,92 @@ namespace rclcpp
 
 namespace parameter
 {
+  // Datatype for parameter names
+  typedef std::string param_name_t;
+
+  // Datatype for storing parameter types
+  enum ParamDataType {INT_PARAM, DOUBLE_PARAM, STRING_PARAM, BOOL_PARAM};
+
+
+  // Structure to store an arbitrary parameter with templated get/set methods
   struct ParamContainer
   {
-    enum {INT, DOUBLE, STRING, BOOL} typeID;
+    ParamDataType typeID_;
     union {
-      int64_t i;
-      double d;
-      std::string s;
-      bool b;
-    }
+      int64_t i_;
+      double d_;
+      std::string s_;
+      bool b_;
+    };
+    param_name_t name_;
+
+    /* Templated getter */
+    template <class T>
+    T&
+    getValue(T& val);
+
+    inline param_name_t getName() { return name_; };
+    /* Templated setter */
+    template <class T>
+    bool
+    setValue(const param_name_t& name, T& value);
+  };
+
+  template <>
+  inline int64_t& ParamContainer::getValue(int64_t& val)
+  {
+    if (typeID_!= INT_PARAM)
+      {
+        // TODO: use custom exception
+        throw std::runtime_error("Invalid type");
+      }
+      val = i_;
+      return val;
+  }
+  template <>
+  inline double& ParamContainer::getValue(double& val)
+  {
+    if (typeID_!= DOUBLE_PARAM)
+      {
+        // TODO: use custom exception
+        throw std::runtime_error("Invalid type");
+      }
+      val = i_;
+      return val;
+  }
+  template <>
+  inline std::string& ParamContainer::getValue(std::string& val)
+  {
+    if (typeID_!= STRING_PARAM)
+      {
+        // TODO: use custom exception
+        throw std::runtime_error("Invalid type");
+      }
+      val = i_;
+      return val;
+  }
+  template <>
+  inline bool& ParamContainer::getValue(bool& val)
+  {
+    if (typeID_!= BOOL_PARAM)
+      {
+        // TODO: use custom exception
+        throw std::runtime_error("Invalid type");
+      }
+      val = i_;
+      return val;
+  }
+  struct ParamQuery
+  {
+    // TODO: make this extendable for potential regex or other dynamic queryies
+    // Possibly use a generator pattern?
+    // For now just store a single datatype and provide accessors.
+
+    inline ParamDataType getType(void){ return typeID_;};
+    inline param_name_t getName(void){ return name_;};
+
+    ParamDataType typeID_;
+    param_name_t name_;
   };
 } /* namespace parameter */
 } /* namespace rclcpp */
