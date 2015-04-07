@@ -246,4 +246,13 @@ Node::register_service(
   number_of_services_++;
 }
 
+template <typename ParamTypeT>
+ParamTypeT
+Node::get_param(const parameter::param_name_t& key)
+{
+  parameter::ParamContainer pc = this->params_[key];
+  ParamTypeT value;
+  return pc.get_value<ParamTypeT>(value);
+}
+
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

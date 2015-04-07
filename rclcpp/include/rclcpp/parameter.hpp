@@ -35,31 +35,32 @@ namespace parameter
 
 
   // Structure to store an arbitrary parameter with templated get/set methods
-  struct ParamContainer
+  class ParamContainer
   {
-    ParamDataType typeID_;
-    union {
+    public:
+      ParamDataType typeID_;
+      param_name_t name_;
+
+      /* Templated getter */
+      template <class T>
+      T&
+      get_value(T& val);
+
+      inline param_name_t getName() { return name_; };
+      /* Templated setter */
+      template <class T>
+      bool
+      set_value(const param_name_t& name, T& value);
+
+    private:
       int64_t i_;
       double d_;
       std::string s_;
       bool b_;
-    };
-    param_name_t name_;
-
-    /* Templated getter */
-    template <class T>
-    T&
-    getValue(T& val);
-
-    inline param_name_t getName() { return name_; };
-    /* Templated setter */
-    template <class T>
-    bool
-    setValue(const param_name_t& name, T& value);
   };
 
   template <>
-  inline int64_t& ParamContainer::getValue(int64_t& val)
+  inline int64_t& ParamContainer::get_value(int64_t& val)
   {
     if (typeID_!= INT_PARAM)
       {
@@ -70,36 +71,36 @@ namespace parameter
       return val;
   }
   template <>
-  inline double& ParamContainer::getValue(double& val)
+  inline double& ParamContainer::get_value(double& val)
   {
     if (typeID_!= DOUBLE_PARAM)
       {
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      val = i_;
+      val = d_;
       return val;
   }
   template <>
-  inline std::string& ParamContainer::getValue(std::string& val)
+  inline std::string& ParamContainer::get_value(std::string& val)
   {
     if (typeID_!= STRING_PARAM)
       {
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      val = i_;
+      val = s_;
       return val;
   }
   template <>
-  inline bool& ParamContainer::getValue(bool& val)
+  inline bool& ParamContainer::get_value(bool& val)
   {
     if (typeID_!= BOOL_PARAM)
       {
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      val = i_;
+      val = b_;
       return val;
   }
   struct ParamQuery
