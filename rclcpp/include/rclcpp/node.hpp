@@ -113,8 +113,9 @@ public:
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service(
     std::string service_name,
-    std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
-    std::shared_ptr<typename ServiceT::Response> &)> callback,
+    std::function<void(
+      const std::shared_ptr<typename ServiceT::Request> &,
+      std::shared_ptr<typename ServiceT::Response> &)> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
