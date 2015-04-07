@@ -63,10 +63,12 @@ signal_handler(int signal_value)
       old_action.sa_sigaction(signal_value, siginfo, context);
     }
   } else {
+    // *INDENT-OFF*
     if (
       old_action.sa_handler != NULL && // Is set
       old_action.sa_handler != SIG_DFL && // Is not default
       old_action.sa_handler != SIG_IGN) // Is not ignored
+    // *INDENT-ON*
     {
       old_action.sa_handler(signal_value);
     }
@@ -108,10 +110,12 @@ init(int argc, char * argv[])
   if (::old_signal_handler == SIG_ERR)
 #endif
   {
+    // *INDENT-OFF*
     throw std::runtime_error(
       std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
       // TODO(wjwwood): use strerror_r on POSIX and strerror_s on Windows.
       std::strerror(errno));
+    // *INDENT-ON*
   }
 }
 
