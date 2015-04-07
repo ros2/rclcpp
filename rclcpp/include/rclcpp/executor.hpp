@@ -785,7 +785,8 @@ protected:
       // If it is valid, check to see if the group is mutually exclusive or
       // not, then mark it accordingly
       if (any_exec->callback_group->type_ == \
-        callback_group::CallbackGroupType::MutuallyExclusive) {
+        callback_group::CallbackGroupType::MutuallyExclusive)
+      {
         // It should not have been taken otherwise
         assert(any_exec->callback_group->can_be_taken_from_.load());
         // Set to false to indicate something is being run from this group
