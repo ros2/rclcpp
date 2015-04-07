@@ -25,7 +25,10 @@ namespace rclcpp
 {
 
 // Forward declaration for friend statement
-namespace node {class Node;}
+namespace node
+{
+class Node;
+} // namespace node
 
 namespace publisher
 {
@@ -39,8 +42,9 @@ public:
     : publisher_handle_(publisher_handle)
   {}
 
-  template<typename MessageT> void
-  publish(std::shared_ptr<MessageT> &msg)
+  template<typename MessageT>
+  void
+  publish(std::shared_ptr<MessageT> & msg)
   {
     rmw_publish(publisher_handle_, msg.get());
   }

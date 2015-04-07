@@ -29,13 +29,19 @@
 #include <rclcpp/timer.hpp>
 
 // Forward declaration of ROS middleware class
-namespace rmw {struct rmw_node_t;}
+namespace rmw
+{
+struct rmw_node_t;
+} // namespace rmw
 
 namespace rclcpp
 {
 
 // Forward declaration for friend statement
-namespace executor {class Executor;}
+namespace executor
+{
+class Executor;
+} // namespace executor
 
 namespace node
 {
@@ -47,6 +53,7 @@ namespace node
 class Node
 {
   friend class rclcpp::executor::Executor;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Node);
 
@@ -64,7 +71,8 @@ public:
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
   /* Create and return a Publisher. */
-  template<typename MessageT> rclcpp::publisher::Publisher::SharedPtr
+  template<typename MessageT>
+  rclcpp::publisher::Publisher::SharedPtr
   create_publisher(std::string topic_name, size_t queue_size);
 
   /* Create and return a Subscription. */
@@ -74,46 +82,46 @@ public:
     std::string topic_name,
     size_t queue_size,
     std::function<void(const std::shared_ptr<MessageT> &)> callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create a timer. */
   rclcpp::timer::WallTimer::SharedPtr
   create_wall_timer(
     std::chrono::nanoseconds period,
     rclcpp::timer::CallbackType callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   rclcpp::timer::WallTimer::SharedPtr
   create_wall_timer(
     std::chrono::duration<long double, std::nano> period,
     rclcpp::timer::CallbackType callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   typedef rclcpp::callback_group::CallbackGroup CallbackGroup;
   typedef std::weak_ptr<CallbackGroup> CallbackGroupWeakPtr;
   typedef std::list<CallbackGroupWeakPtr> CallbackGroupWeakPtrList;
 
   /* Create and return a Client. */
-  template <typename ServiceT>
+  template<typename ServiceT>
   typename rclcpp::client::Client<ServiceT>::SharedPtr
   create_client(
     std::string service_name,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template <typename ServiceT>
+  template<typename ServiceT>
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service(
     std::string service_name,
     std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
-                       std::shared_ptr<typename ServiceT::Response>&)> callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group=nullptr);
+    std::shared_ptr<typename ServiceT::Response> &)> callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
 
   bool
-  group_in_node(callback_group::CallbackGroup::SharedPtr &group);
+  group_in_node(callback_group::CallbackGroup::SharedPtr & group);
 
   std::string name_;
 
@@ -135,11 +143,13 @@ private:
 } /* namespace rclcpp */
 
 #define RCLCPP_REGISTER_NODE(Class) RMW_EXPORT \
-rclcpp::node::Node::SharedPtr \
-create_node() \
-{ \
-  return rclcpp::node::Node::SharedPtr(new Class(rclcpp::contexts::default_context::DefaultContext::make_shared())); \
-}
+  rclcpp::node::Node::SharedPtr \
+  create_node() \
+  { \
+    return rclcpp::node::Node::SharedPtr(new Class( \
+               rclcpp::contexts::default_context::DefaultContext:: \
+               make_shared())); \
+  }
 
 #ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
 // Template implementations

@@ -49,7 +49,7 @@ public:
 
   GenericRate(double rate)
     : GenericRate<Clock>(
-      duration_cast<nanoseconds>(duration<double>(1.0/rate)))
+      duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
   {}
   GenericRate(std::chrono::nanoseconds period)
     : period_(period), last_interval_(Clock::now())
@@ -63,8 +63,7 @@ public:
     // Time of next interval
     auto next_interval = last_interval_ + period_;
     // Detect backwards time flow
-    if (now < last_interval_)
-    {
+    if (now < last_interval_) {
       // Best thing to do is to set the next_interval to now + period
       next_interval = now + period_;
     }
@@ -73,13 +72,11 @@ public:
     // Update the interval
     last_interval_ += period_;
     // If the time_to_sleep is negative or zero, don't sleep
-    if (time_to_sleep <= std::chrono::seconds(0))
-    {
+    if (time_to_sleep <= std::chrono::seconds(0)) {
       // If an entire cycle was missed then reset next interval.
       // This might happen if the loop took more than a cycle.
       // Or if time jumps forward.
-      if (now > next_interval + period_)
-      {
+      if (now > next_interval + period_) {
         last_interval_ = now + period_;
       }
       // Either way do not sleep and return false
@@ -113,7 +110,7 @@ private:
 typedef GenericRate<std::chrono::system_clock> Rate;
 typedef GenericRate<std::chrono::steady_clock> WallRate;
 
-}
-}
+} // namespace rate
+} // namespace rclcpp
 
 #endif /* RCLCPP_RCLCPP_RATE_HPP_ */

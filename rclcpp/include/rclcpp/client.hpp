@@ -29,7 +29,10 @@ namespace rclcpp
 {
 
 // Forward declaration for friend statement
-namespace executor {class Executor;}
+namespace executor
+{
+class Executor;
+} // namespace executor
 
 namespace client
 {
@@ -37,18 +40,17 @@ namespace client
 class ClientBase
 {
   friend class rclcpp::executor::Executor;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(ClientBase);
 
-  ClientBase(rmw_client_t * client_handle,
-             const std::string &service_name)
-  : client_handle_(client_handle), service_name_(service_name)
+  ClientBase(rmw_client_t * client_handle, const std::string & service_name)
+    : client_handle_(client_handle), service_name_(service_name)
   {}
 
   ~ClientBase()
   {
-    if (client_handle_ != nullptr)
-    {
+    if (client_handle_ != nullptr) {
       rmw_destroy_client(client_handle_);
       client_handle_ = nullptr;
     }
@@ -66,8 +68,8 @@ public:
 
   virtual std::shared_ptr<void> create_response() = 0;
   virtual std::shared_ptr<void> create_request_header() = 0;
-  virtual void handle_response(std::shared_ptr<void> &request_header,
-                               std::shared_ptr<void> &response) = 0;
+  virtual void handle_response(
+    std::shared_ptr<void> & request_header, std::shared_ptr<void> & response) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ClientBase);
@@ -85,13 +87,12 @@ public:
   typedef std::shared_ptr<Promise> SharedPromise;
   typedef std::shared_future<typename ServiceT::Response::Ptr> SharedFuture;
 
-  typedef std::function<void(SharedFuture)> CallbackType;
+  typedef std::function<void (SharedFuture)> CallbackType;
 
   RCLCPP_MAKE_SHARED_DEFINITIONS(Client);
 
-  Client(rmw_client_t * client_handle,
-         const std::string& service_name)
-  : ClientBase(client_handle, service_name)
+  Client(rmw_client_t * client_handle, const std::string & service_name)
+    : ClientBase(client_handle, service_name)
   {}
 
   std::shared_ptr<void> create_response()
@@ -106,7 +107,7 @@ public:
     return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
-  void handle_response(std::shared_ptr<void> &request_header, std::shared_ptr<void> &response)
+  void handle_response(std::shared_ptr<void> & request_header, std::shared_ptr<void> & response)
   {
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
@@ -121,13 +122,13 @@ public:
   }
 
   SharedFuture async_send_request(
-    typename ServiceT::Request::Ptr &request)
+    typename ServiceT::Request::Ptr & request)
   {
-    return async_send_request(request, [] (SharedFuture f) { });
+    return async_send_request(request, [](SharedFuture f) {});
   }
 
   SharedFuture async_send_request(
-    typename ServiceT::Request::Ptr &request,
+    typename ServiceT::Request::Ptr & request,
     CallbackType cb)
   {
     int64_t sequence_number;

@@ -28,18 +28,28 @@ namespace rclcpp
 {
 
 // Forward declarations for friend statement in class CallbackGroup
-namespace node {class Node;}
-namespace executor {class Executor;}
+namespace node
+{
+class Node;
+} // namespace node
+namespace executor
+{
+class Executor;
+} // namespace executor
 
 namespace callback_group
 {
 
-enum class CallbackGroupType {MutuallyExclusive, Reentrant};
+enum class CallbackGroupType {
+  MutuallyExclusive,
+  Reentrant
+};
 
 class CallbackGroup
 {
   friend class rclcpp::node::Node;
   friend class rclcpp::executor::Executor;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(CallbackGroup);
 
@@ -52,25 +62,25 @@ private:
 
   void
   add_subscription(
-    const subscription::SubscriptionBase::SharedPtr &subscription_ptr)
+    const subscription::SubscriptionBase::SharedPtr & subscription_ptr)
   {
     subscription_ptrs_.push_back(subscription_ptr);
   }
 
   void
-  add_timer(const timer::TimerBase::SharedPtr &timer_ptr)
+  add_timer(const timer::TimerBase::SharedPtr & timer_ptr)
   {
     timer_ptrs_.push_back(timer_ptr);
   }
 
   void
-  add_service(const service::ServiceBase::SharedPtr &service_ptr)
+  add_service(const service::ServiceBase::SharedPtr & service_ptr)
   {
     service_ptrs_.push_back(service_ptr);
   }
 
   void
-  add_client(const client::ClientBase::SharedPtr &client_ptr)
+  add_client(const client::ClientBase::SharedPtr & client_ptr)
   {
     client_ptrs_.push_back(client_ptr);
   }

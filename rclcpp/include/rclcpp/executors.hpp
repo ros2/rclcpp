@@ -26,7 +26,7 @@ namespace executors
 using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 
-}
-}
+} // namespace executors
+} // namespace rclcpp
 
 #endif /* RCLCPP_RCLCPP_EXECUTORS_HPP_ */

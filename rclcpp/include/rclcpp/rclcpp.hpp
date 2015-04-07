@@ -26,26 +26,26 @@
 namespace rclcpp
 {
 
-const std::chrono::seconds operator "" _s(unsigned long long s)
+const std::chrono::seconds operator"" _s(unsigned long long s)
 {
-    return std::chrono::seconds(s);
+  return std::chrono::seconds(s);
 }
-const std::chrono::nanoseconds operator "" _s(long double s)
+const std::chrono::nanoseconds operator"" _s(long double s)
 {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::duration<long double>(s));
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+    std::chrono::duration<long double>(s));
 }
 
 const std::chrono::nanoseconds
-operator "" _ns(unsigned long long ns)
+operator"" _ns(unsigned long long ns)
 {
-    return std::chrono::nanoseconds(ns);
+  return std::chrono::nanoseconds(ns);
 }
 const std::chrono::nanoseconds
-operator "" _ns(long double ns)
+operator"" _ns(long double ns)
 {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::duration<long double, std::nano>(ns));
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+    std::chrono::duration<long double, std::nano>(ns));
 }
 
 using rclcpp::node::Node;
@@ -63,13 +63,13 @@ using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;
 using rclcpp::utilities::sleep_for;
 
-void spin_some(Node::SharedPtr &node_ptr)
+void spin_some(Node::SharedPtr & node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.spin_node_some(node_ptr);
 }
 
-void spin(Node::SharedPtr &node_ptr)
+void spin(Node::SharedPtr & node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node_ptr);

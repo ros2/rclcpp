@@ -28,7 +28,10 @@ namespace rclcpp
 {
 
 // Forward declaration for friend statement
-namespace executor {class Executor;}
+namespace executor
+{
+class Executor;
+} // namespace executor
 
 namespace service
 {
@@ -36,18 +39,19 @@ namespace service
 class ServiceBase
 {
   friend class rclcpp::executor::Executor;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(ServiceBase);
 
-  ServiceBase(rmw_service_t * service_handle,
-              const std::string service_name)
-  : service_handle_(service_handle), service_name_(service_name)
+  ServiceBase(
+    rmw_service_t * service_handle,
+    const std::string service_name)
+    : service_handle_(service_handle), service_name_(service_name)
   {}
 
   ~ServiceBase()
   {
-    if (service_handle_ != nullptr)
-    {
+    if (service_handle_ != nullptr) {
       rmw_destroy_service(service_handle_);
       service_handle_ = nullptr;
     }
@@ -65,8 +69,9 @@ public:
 
   virtual std::shared_ptr<void> create_request() = 0;
   virtual std::shared_ptr<void> create_request_header() = 0;
-  virtual void handle_request(std::shared_ptr<void> &request_header,
-                              std::shared_ptr<void> &request) = 0;
+  virtual void handle_request(
+    std::shared_ptr<void> & request_header,
+    std::shared_ptr<void> & request) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
@@ -81,14 +86,15 @@ class Service : public ServiceBase
 {
 public:
   typedef std::function<
-    void(const std::shared_ptr<typename ServiceT::Request> &,
-         std::shared_ptr<typename ServiceT::Response>&)> CallbackType;
+      void (const std::shared_ptr<typename ServiceT::Request> &,
+      std::shared_ptr<typename ServiceT::Response> &)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
-  Service(rmw_service_t * service_handle,
-          const std::string &service_name,
-          CallbackType callback)
-  : ServiceBase(service_handle, service_name), callback_(callback)
+  Service(
+    rmw_service_t * service_handle,
+    const std::string & service_name,
+    CallbackType callback)
+    : ServiceBase(service_handle, service_name), callback_(callback)
   {}
 
   std::shared_ptr<void> create_request()
@@ -103,7 +109,7 @@ public:
     return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
-  void handle_request(std::shared_ptr<void> &request_header, std::shared_ptr<void> &request)
+  void handle_request(std::shared_ptr<void> & request_header, std::shared_ptr<void> & request)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
@@ -112,8 +118,9 @@ public:
     send_response(typed_request_header, response);
   }
 
-  void send_response(std::shared_ptr<rmw_request_id_t> &req_id,
-                     std::shared_ptr<typename ServiceT::Response> &response)
+  void send_response(
+    std::shared_ptr<rmw_request_id_t> & req_id,
+    std::shared_ptr<typename ServiceT::Response> & response)
   {
     rmw_send_response(get_service_handle(), req_id.get(), response.get());
   }

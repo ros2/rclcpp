@@ -46,8 +46,7 @@ public:
 
   void spin()
   {
-    while (rclcpp::utilities::ok())
-    {
+    while (rclcpp::utilities::ok()) {
       auto any_exec = get_next_executable();
       execute_any_executable(any_exec);
     }

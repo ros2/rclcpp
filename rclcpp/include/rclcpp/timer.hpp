@@ -30,23 +30,27 @@ namespace rclcpp
 {
 
 // Forward declaration is for friend statement in GenericTimer
-namespace executor {class Executor;}
+namespace executor
+{
+class Executor;
+} // namespace executor
 
 namespace timer
 {
 
-typedef std::function<void()> CallbackType;
+typedef std::function<void ()> CallbackType;
 
 class TimerBase
 {
   friend class rclcpp::executor::Executor;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(TimerBase);
 
   TimerBase(std::chrono::nanoseconds period, CallbackType callback)
     : period_(period),
-      callback_(callback),
-      canceled_(false)
+    callback_(callback),
+    canceled_(false)
   {
     guard_condition_ = rmw_create_guard_condition();
   }
@@ -72,6 +76,7 @@ template<class Clock = std::chrono::high_resolution_clock>
 class GenericTimer : public TimerBase
 {
   friend class rclcpp::executor::Executor;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(GenericTimer);
 
@@ -89,11 +94,9 @@ public:
   void
   run()
   {
-    while (rclcpp::utilities::ok() && !this->canceled_)
-    {
+    while (rclcpp::utilities::ok() && !this->canceled_) {
       loop_rate_.sleep();
-      if (!rclcpp::utilities::ok())
-      {
+      if (!rclcpp::utilities::ok()) {
         return;
       }
       rmw_trigger_guard_condition(guard_condition_);

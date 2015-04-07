@@ -20,8 +20,8 @@
  * Use in the private section of the class.
  */
 #define RCLCPP_DISABLE_COPY(Class) \
-  Class(const Class&) = delete; \
-  Class& operator=(const Class&) = delete;
+  Class(const Class &) = delete; \
+  Class & operator=(const Class &) = delete;
 
 /* Defines a make_shared static function on the class using perfect forwarding.
  *
@@ -31,11 +31,11 @@
 #define RCLCPP_MAKE_SHARED_DEFINITIONS(Class) \
   typedef std::shared_ptr<Class> SharedPtr; \
   \
-  template<typename...Args> \
+  template<typename ... Args> \
   static std::shared_ptr<Class> \
-  make_shared(Args &&...args) \
+  make_shared(Args && ... args) \
   { \
-    return std::make_shared<Class>(std::forward<Args>(args)...); \
+    return std::make_shared<Class>(std::forward<Args>(args) ...); \
   }
 
 #define RCLCPP_INFO(Args) std::cout << Args << std::endl;

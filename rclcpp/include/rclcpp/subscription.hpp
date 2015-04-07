@@ -27,7 +27,10 @@ namespace rclcpp
 {
 
 // Forward declaration is for friend statement in SubscriptionBase
-namespace executor {class Executor;}
+namespace executor
+{
+class Executor;
+} // namespace executor
 
 namespace subscription
 {
@@ -35,12 +38,13 @@ namespace subscription
 class SubscriptionBase
 {
   friend class rclcpp::executor::Executor;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(SubscriptionBase);
 
   SubscriptionBase(
     rmw_subscription_t * subscription_handle,
-    std::string &topic_name)
+    std::string & topic_name)
     : subscription_handle_(subscription_handle), topic_name_(topic_name)
   {}
 
@@ -50,7 +54,7 @@ public:
   }
 
   virtual std::shared_ptr<void> create_message() = 0;
-  virtual void handle_message(std::shared_ptr<void> &message) = 0;
+  virtual void handle_message(std::shared_ptr<void> & message) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase);
@@ -64,12 +68,13 @@ template<typename MessageT>
 class Subscription : public SubscriptionBase
 {
 public:
-  typedef std::function<void(const std::shared_ptr<MessageT> &)> CallbackType;
+  typedef std::function<void (const std::shared_ptr<MessageT> &)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Subscription);
 
-  Subscription(rmw_subscription_t * subscription_handle,
-               std::string &topic_name,
-               CallbackType callback)
+  Subscription(
+    rmw_subscription_t * subscription_handle,
+    std::string & topic_name,
+    CallbackType callback)
     : SubscriptionBase(subscription_handle, topic_name), callback_(callback)
   {}
 
@@ -78,7 +83,7 @@ public:
     return std::shared_ptr<void>(new MessageT());
   }
 
-  void handle_message(std::shared_ptr<void> &message)
+  void handle_message(std::shared_ptr<void> & message)
   {
     auto typed_message = std::static_pointer_cast<MessageT>(message);
     callback_(typed_message);
