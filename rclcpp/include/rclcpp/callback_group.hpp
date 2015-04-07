@@ -54,7 +54,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(CallbackGroup);
 
   CallbackGroup(CallbackGroupType group_type)
-    : type_(group_type), can_be_taken_from_(true)
+  : type_(group_type), can_be_taken_from_(true)
   {}
 
 private:

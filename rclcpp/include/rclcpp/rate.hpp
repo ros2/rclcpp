@@ -48,11 +48,11 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(GenericRate);
 
   GenericRate(double rate)
-    : GenericRate<Clock>(
+  : GenericRate<Clock>(
       duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
   {}
   GenericRate(std::chrono::nanoseconds period)
-    : period_(period), last_interval_(Clock::now())
+  : period_(period), last_interval_(Clock::now())
   {}
 
   virtual bool

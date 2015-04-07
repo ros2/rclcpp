@@ -34,11 +34,11 @@ using namespace rclcpp::node;
 using rclcpp::contexts::default_context::DefaultContext;
 
 Node::Node(std::string node_name)
-  : Node(node_name, DefaultContext::make_shared())
+: Node(node_name, DefaultContext::make_shared())
 {}
 
 Node::Node(std::string node_name, context::Context::SharedPtr context)
-  : name_(node_name), context_(context),
+: name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
   node_handle_ = rmw_create_node(name_.c_str());

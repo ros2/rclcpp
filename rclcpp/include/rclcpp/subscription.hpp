@@ -45,7 +45,7 @@ public:
   SubscriptionBase(
     rmw_subscription_t * subscription_handle,
     std::string & topic_name)
-    : subscription_handle_(subscription_handle), topic_name_(topic_name)
+  : subscription_handle_(subscription_handle), topic_name_(topic_name)
   {}
 
   std::string get_topic_name()
@@ -75,7 +75,7 @@ public:
     rmw_subscription_t * subscription_handle,
     std::string & topic_name,
     CallbackType callback)
-    : SubscriptionBase(subscription_handle, topic_name), callback_(callback)
+  : SubscriptionBase(subscription_handle, topic_name), callback_(callback)
   {}
 
   std::shared_ptr<void> create_message()

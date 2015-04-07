@@ -45,7 +45,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(ClientBase);
 
   ClientBase(rmw_client_t * client_handle, const std::string & service_name)
-    : client_handle_(client_handle), service_name_(service_name)
+  : client_handle_(client_handle), service_name_(service_name)
   {}
 
   ~ClientBase()
@@ -92,7 +92,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Client);
 
   Client(rmw_client_t * client_handle, const std::string & service_name)
-    : ClientBase(client_handle, service_name)
+  : ClientBase(client_handle, service_name)
   {}
 
   std::shared_ptr<void> create_response()

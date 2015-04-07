@@ -48,7 +48,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(TimerBase);
 
   TimerBase(std::chrono::nanoseconds period, CallbackType callback)
-    : period_(period),
+  : period_(period),
     callback_(callback),
     canceled_(false)
   {
@@ -81,7 +81,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(GenericTimer);
 
   GenericTimer(std::chrono::nanoseconds period, CallbackType callback)
-    : TimerBase(period, callback), loop_rate_(period)
+  : TimerBase(period, callback), loop_rate_(period)
   {
     thread_ = std::thread(&GenericTimer<Clock>::run, this);
   }

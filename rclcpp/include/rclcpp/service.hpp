@@ -46,7 +46,7 @@ public:
   ServiceBase(
     rmw_service_t * service_handle,
     const std::string service_name)
-    : service_handle_(service_handle), service_name_(service_name)
+  : service_handle_(service_handle), service_name_(service_name)
   {}
 
   ~ServiceBase()
@@ -94,7 +94,7 @@ public:
     rmw_service_t * service_handle,
     const std::string & service_name,
     CallbackType callback)
-    : ServiceBase(service_handle, service_name), callback_(callback)
+  : ServiceBase(service_handle, service_name), callback_(callback)
   {}
 
   std::shared_ptr<void> create_request()

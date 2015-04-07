@@ -39,7 +39,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Publisher);
 
   Publisher(rmw_publisher_t * publisher_handle)
-    : publisher_handle_(publisher_handle)
+  : publisher_handle_(publisher_handle)
   {}
 
   template<typename MessageT>

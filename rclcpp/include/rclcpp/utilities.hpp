@@ -109,8 +109,7 @@ init(int argc, char * argv[])
 #endif
   {
     throw std::runtime_error(
-      std::string("Failed to set SIGINT signal handler: (" +
-        std::to_string(errno) + ")") +
+      std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
       // TODO(wjwwood): use strerror_r on POSIX and strerror_s on Windows.
       std::strerror(errno));
   }

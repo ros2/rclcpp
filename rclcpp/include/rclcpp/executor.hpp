@@ -38,7 +38,9 @@ class Executor
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
 
-  Executor() : interrupt_guard_condition_(rmw_create_guard_condition()) {}
+  Executor()
+  : interrupt_guard_condition_(rmw_create_guard_condition())
+  {}
 
   virtual ~Executor()
   {
@@ -58,8 +60,7 @@ public:
       auto node = weak_node.lock();
       if (node == node_ptr) {
         // TODO: Use a different error here?
-        throw std::runtime_error(
-          "Cannot add node to executor, node already added.");
+        throw std::runtime_error("Cannot add node to executor, node already added.");
       }
     }
     weak_nodes_.push_back(node_ptr);
@@ -100,7 +101,9 @@ public:
 protected:
   struct AnyExecutable
   {
-    AnyExecutable() : subscription(0), timer(0), callback_group(0), node(0) {}
+    AnyExecutable()
+    : subscription(0), timer(0), callback_group(0), node(0)
+    {}
     // Either the subscription or the timer will be set, but not both
     rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
     rclcpp::timer::TimerBase::SharedPtr timer;
@@ -313,8 +316,7 @@ protected:
       std::malloc(sizeof(void *) * number_of_guard_conds));
     if (guard_condition_handles.guard_conditions == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error(
-        "Could not malloc for guard condition pointers.");
+      throw std::runtime_error("Could not malloc for guard condition pointers.");
     }
     // Put the global ctrl-c guard condition in
     assert(guard_condition_handles.guard_condition_count > 1);
