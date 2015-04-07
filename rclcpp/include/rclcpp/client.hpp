@@ -144,7 +144,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Client);
 
-  std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture> > pending_requests_;
+  std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
 };
 
 } /* namespace client */

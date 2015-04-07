@@ -801,7 +801,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(Executor);
 
-  std::vector<std::weak_ptr<rclcpp::node::Node> > weak_nodes_;
+  std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
   typedef std::list<void *> SubscriberHandles;
   SubscriberHandles subscriber_handles_;
   typedef std::list<void *> GuardConditionHandles;
