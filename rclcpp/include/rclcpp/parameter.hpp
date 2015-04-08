@@ -53,10 +53,10 @@ namespace parameter
       set_value(const ParamName& name, const T& value);
 
     private:
-      int64_t i_;
-      double d_;
-      std::string s_;
-      bool b_;
+      int64_t int_value_;
+      double double_value_;
+      std::string string_value_;
+      bool bool_value_;
   };
 
   template <>
@@ -67,7 +67,7 @@ namespace parameter
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      value = i_;
+      value = int_value_;
       return value;
   }
   template <>
@@ -78,7 +78,7 @@ namespace parameter
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      value = d_;
+      value = double_value_;
       return value;
   }
   template <>
@@ -89,7 +89,7 @@ namespace parameter
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      value = s_;
+      value = string_value_;
       return value;
   }
   template <>
@@ -100,7 +100,7 @@ namespace parameter
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      value = b_;
+      value = bool_value_;
       return value;
   }
 
@@ -108,28 +108,28 @@ namespace parameter
   inline void ParamContainer::set_value(const ParamName& name, const int64_t& value)
   {
     typeID_ = INT_PARAM;
-    i_ = value;
+    int_value_ = value;
   }
 
   template <>
   inline void ParamContainer::set_value(const ParamName& name, const double& value)
   {
     typeID_ = DOUBLE_PARAM;
-    d_ = value;
+    double_value_ = value;
   }
 
   template <>
   inline void ParamContainer::set_value(const ParamName& name, const std::string& value)
   {
     typeID_ = STRING_PARAM;
-    s_ = value;
+    string_value_ = value;
   }
 
   template <>
   inline void ParamContainer::set_value(const ParamName& name, const bool& value)
   {
     typeID_ = BOOL_PARAM;
-    b_ = value;
+    bool_value_ = value;
   }
 
   class ParamQuery
