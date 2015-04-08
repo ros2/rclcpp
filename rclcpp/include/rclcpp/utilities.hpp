@@ -36,55 +36,53 @@
 
 namespace
 {
-  volatile sig_atomic_t g_signal_status = 0;
-  rmw_guard_condition_t * g_sigint_guard_cond_handle = \
-    rmw_create_guard_condition();
-  std::condition_variable g_interrupt_condition_variable;
-  std::mutex g_interrupt_mutex;
+volatile sig_atomic_t g_signal_status = 0;
+rmw_guard_condition_t * g_sigint_guard_cond_handle = \
+  rmw_create_guard_condition();
+std::condition_variable g_interrupt_condition_variable;
+std::mutex g_interrupt_mutex;
 
 #ifdef HAS_SIGACTION
-  struct sigaction old_action;
+struct sigaction old_action;
 #else
-  void (*old_signal_handler)(int) = 0;
+void (* old_signal_handler)(int) = 0;
 #endif
 
-  void
+void
 #ifdef HAS_SIGACTION
-  signal_handler(int signal_value, siginfo_t *siginfo, void *context)
+signal_handler(int signal_value, siginfo_t * siginfo, void * context)
 #else
-  signal_handler(int signal_value)
+signal_handler(int signal_value)
 #endif
-  {
-    // TODO(wjwwood): remove
-    std::cout << "signal_handler(" << signal_value << ")" << std::endl;
+{
+  // TODO(wjwwood): remove
+  std::cout << "signal_handler(" << signal_value << ")" << std::endl;
 #ifdef HAS_SIGACTION
-    if (old_action.sa_flags & SA_SIGINFO)
-    {
-      if (old_action.sa_sigaction != NULL)
-      {
-        old_action.sa_sigaction(signal_value, siginfo, context);
-      }
+  if (old_action.sa_flags & SA_SIGINFO) {
+    if (old_action.sa_sigaction != NULL) {
+      old_action.sa_sigaction(signal_value, siginfo, context);
     }
-    else
+  } else {
+    // *INDENT-OFF*
+    if (
+      old_action.sa_handler != NULL && // Is set
+      old_action.sa_handler != SIG_DFL && // Is not default
+      old_action.sa_handler != SIG_IGN) // Is not ignored
+    // *INDENT-ON*
     {
-      if (old_action.sa_handler != NULL &&  // Is set
-          old_action.sa_handler != SIG_DFL &&  // Is not default
-          old_action.sa_handler != SIG_IGN)  // Is not ignored
-      {
-        old_action.sa_handler(signal_value);
-      }
+      old_action.sa_handler(signal_value);
     }
-#else
-    if (old_signal_handler)
-    {
-      old_signal_handler(signal_value);
-    }
-#endif
-    g_signal_status = signal_value;
-    rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
-    g_interrupt_condition_variable.notify_all();
   }
+#else
+  if (old_signal_handler) {
+    old_signal_handler(signal_value);
+  }
+#endif
+  g_signal_status = signal_value;
+  rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
+  g_interrupt_condition_variable.notify_all();
 }
+} // namespace
 
 namespace rclcpp
 {
@@ -95,7 +93,7 @@ namespace utilities
 {
 
 void
-init(int argc, char *argv[])
+init(int argc, char * argv[])
 {
   // TODO(wjwwood): Handle rmw_ret_t's value.
   rmw_init();
@@ -112,11 +110,12 @@ init(int argc, char *argv[])
   if (::old_signal_handler == SIG_ERR)
 #endif
   {
+    // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("Failed to set SIGINT signal handler: (" +
-                  std::to_string(errno) + ")") +
+      std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
       // TODO(wjwwood): use strerror_r on POSIX and strerror_s on Windows.
       std::strerror(errno));
+    // *INDENT-ON*
   }
 }
 
@@ -142,7 +141,7 @@ get_global_sigint_guard_condition()
 }
 
 bool
-sleep_for(const std::chrono::nanoseconds& nanoseconds)
+sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
   // TODO: determine if posix's nanosleep(2) is more efficient here
   std::unique_lock<std::mutex> lock(::g_interrupt_mutex);

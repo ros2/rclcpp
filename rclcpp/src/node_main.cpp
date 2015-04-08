@@ -17,7 +17,7 @@
 // This forward declaration is implemented by the RCLCPP_REGISTER_NODE macro
 RMW_IMPORT rclcpp::Node::SharedPtr create_node();
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::executors::SingleThreadedExecutor executor;

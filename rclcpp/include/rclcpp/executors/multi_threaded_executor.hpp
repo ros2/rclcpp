@@ -43,8 +43,7 @@ public:
   MultiThreadedExecutor()
   {
     number_of_threads_ = std::thread::hardware_concurrency();
-    if (number_of_threads_ == 0)
-    {
+    if (number_of_threads_ == 0) {
       number_of_threads_ = 1;
     }
   }
@@ -58,15 +57,13 @@ public:
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       size_t thread_id_ = 1;  // Use a _ suffix to avoid shadowing `rclcpp::thread_id`
-      for (size_t i = number_of_threads_; i > 0; --i)
-      {
+      for (size_t i = number_of_threads_; i > 0; --i) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id_++);
         threads.emplace_back(func);
       }
     }
-    for (auto &thread : threads)
-    {
+    for (auto & thread : threads) {
       thread.join();
     }
   }
@@ -81,13 +78,11 @@ private:
   void run(size_t this_thread_id)
   {
     rclcpp::thread_id = this_thread_id;
-    while (rclcpp::utilities::ok())
-    {
+    while (rclcpp::utilities::ok()) {
       std::shared_ptr<AnyExecutable> any_exec;
       {
         std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-        if (!rclcpp::utilities::ok())
-        {
+        if (!rclcpp::utilities::ok()) {
           return;
         }
         any_exec = get_next_executable();

@@ -33,8 +33,8 @@ public:
 
 };
 
-}
-}
-}
+} // namespace default_context
+} // namespace contexts
+} // namespace rclcpp
 
 #endif /* RCLCPP_RCLCPP_CONTEXTS_DEFAULT_CONTEXT_HPP_ */

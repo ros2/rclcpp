@@ -34,12 +34,12 @@ using namespace rclcpp::node;
 using rclcpp::contexts::default_context::DefaultContext;
 
 Node::Node(std::string node_name)
-  : Node(node_name, DefaultContext::make_shared())
+: Node(node_name, DefaultContext::make_shared())
 {}
 
 Node::Node(std::string node_name, context::Context::SharedPtr context)
-  : name_(node_name), context_(context),
-    number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
+: name_(node_name), context_(context),
+  number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
   node_handle_ = rmw_create_node(name_.c_str());
   using rclcpp::callback_group::CallbackGroupType;
@@ -71,14 +71,12 @@ Node::create_publisher(std::string topic_name, size_t queue_size)
 }
 
 bool
-Node::group_in_node(callback_group::CallbackGroup::SharedPtr &group)
+Node::group_in_node(callback_group::CallbackGroup::SharedPtr & group)
 {
   bool group_belongs_to_this_node = false;
-  for (auto &weak_group : this->callback_groups_)
-  {
+  for (auto & weak_group : this->callback_groups_) {
     auto cur_group = weak_group.lock();
-    if (cur_group && cur_group == group)
-    {
+    if (cur_group && (cur_group == group)) {
       group_belongs_to_this_node = true;
     }
   }
@@ -100,21 +98,18 @@ Node::create_subscription(
 
   using namespace rclcpp::subscription;
 
-  auto sub = Subscription<MessageT>::make_shared(subscriber_handle,
-                                                 topic_name,
-                                                 callback);
+  auto sub = Subscription<MessageT>::make_shared(
+    subscriber_handle,
+    topic_name,
+    callback);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
-  if (group)
-  {
-    if (!group_in_node(group))
-    {
+  if (group) {
+    if (!group_in_node(group)) {
       // TODO: use custom exception
       throw std::runtime_error("Cannot create timer, group not in node.");
     }
     group->add_subscription(sub_base_ptr);
-  }
-  else
-  {
+  } else {
     default_callback_group_->add_subscription(sub_base_ptr);
   }
   number_of_subscriptions_++;
@@ -122,22 +117,19 @@ Node::create_subscription(
 }
 
 rclcpp::timer::WallTimer::SharedPtr
-Node::create_wall_timer(std::chrono::nanoseconds period,
-                        rclcpp::timer::CallbackType callback,
-                        rclcpp::callback_group::CallbackGroup::SharedPtr group)
+Node::create_wall_timer(
+  std::chrono::nanoseconds period,
+  rclcpp::timer::CallbackType callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   auto timer = rclcpp::timer::WallTimer::make_shared(period, callback);
-  if (group)
-  {
-    if (!group_in_node(group))
-    {
+  if (group) {
+    if (!group_in_node(group)) {
       // TODO: use custom exception
       throw std::runtime_error("Cannot create timer, group not in node.");
     }
     group->add_timer(timer);
-  }
-  else
-  {
+  } else {
     default_callback_group_->add_timer(timer);
   }
   number_of_timers_++;
@@ -171,21 +163,18 @@ Node::create_client(
 
   using namespace rclcpp::client;
 
-  auto cli = Client<ServiceT>::make_shared(client_handle,
-                                           service_name);
+  auto cli = Client<ServiceT>::make_shared(
+    client_handle,
+    service_name);
 
   auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
-  if (group)
-  {
-    if (!group_in_node(group))
-    {
+  if (group) {
+    if (!group_in_node(group)) {
       // TODO(esteve): use custom exception
       throw std::runtime_error("Cannot create client, group not in node.");
     }
     group->add_client(cli_base_ptr);
-  }
-  else
-  {
+  } else {
     default_callback_group_->add_client(cli_base_ptr);
   }
   number_of_clients_++;
@@ -193,12 +182,12 @@ Node::create_client(
   return cli;
 }
 
-template <typename ServiceT>
+template<typename ServiceT>
 typename service::Service<ServiceT>::SharedPtr
 Node::create_service(
   std::string service_name,
   std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
-                     std::shared_ptr<typename ServiceT::Response>&)> callback,
+  std::shared_ptr<typename ServiceT::Response> &)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   using rosidl_generator_cpp::get_service_type_support_handle;
@@ -210,22 +199,19 @@ Node::create_service(
 
   using namespace rclcpp::service;
 
-  auto serv = Service<ServiceT>::make_shared(service_handle,
-                                             service_name,
-                                             callback);
+  auto serv = Service<ServiceT>::make_shared(
+    service_handle,
+    service_name,
+    callback);
   auto serv_base_ptr = std::dynamic_pointer_cast<ServiceBase>(serv);
 
-  if (group)
-  {
-    if (!group_in_node(group))
-    {
+  if (group) {
+    if (!group_in_node(group)) {
       // TODO: use custom exception
       throw std::runtime_error("Cannot create service, group not in node.");
     }
     group->add_service(serv_base_ptr);
-  }
-  else
-  {
+  } else {
     default_callback_group_->add_service(serv_base_ptr);
   }
   number_of_services_++;
