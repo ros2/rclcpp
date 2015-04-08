@@ -42,15 +42,15 @@ namespace parameter
       param_name_t name_;
 
       /* Templated getter */
-      template <class T>
+      template <typename T>
       T&
-      get_value(T& val);
+      get_value(T& value);
 
       inline param_name_t getName() { return name_; };
       /* Templated setter */
-      template <class T>
-      bool
-      set_value(const param_name_t& name, T& value);
+      template <typename T>
+      void
+      set_value(const param_name_t& name, const T& value);
 
     private:
       int64_t i_;
@@ -60,60 +60,100 @@ namespace parameter
   };
 
   template <>
-  inline int64_t& ParamContainer::get_value(int64_t& val)
+  inline int64_t& ParamContainer::get_value(int64_t& value)
   {
     if (typeID_!= INT_PARAM)
       {
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      val = i_;
-      return val;
+      value = i_;
+      return value;
   }
   template <>
-  inline double& ParamContainer::get_value(double& val)
+  inline double& ParamContainer::get_value(double& value)
   {
     if (typeID_!= DOUBLE_PARAM)
       {
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      val = d_;
-      return val;
+      value = d_;
+      return value;
   }
   template <>
-  inline std::string& ParamContainer::get_value(std::string& val)
+  inline std::string& ParamContainer::get_value(std::string& value)
   {
     if (typeID_!= STRING_PARAM)
       {
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      val = s_;
-      return val;
+      value = s_;
+      return value;
   }
   template <>
-  inline bool& ParamContainer::get_value(bool& val)
+  inline bool& ParamContainer::get_value(bool& value)
   {
     if (typeID_!= BOOL_PARAM)
       {
         // TODO: use custom exception
         throw std::runtime_error("Invalid type");
       }
-      val = b_;
-      return val;
+      value = b_;
+      return value;
   }
-  struct ParamQuery
+
+  template <>
+  inline void ParamContainer::set_value(const param_name_t& name, const int64_t& value)
   {
-    // TODO: make this extendable for potential regex or other dynamic queryies
-    // Possibly use a generator pattern?
-    // For now just store a single datatype and provide accessors.
+    typeID_ = INT_PARAM;
+    i_ = value;
+  }
 
-    inline ParamDataType getType(void){ return typeID_;};
-    inline param_name_t getName(void){ return name_;};
+  template <>
+  inline void ParamContainer::set_value(const param_name_t& name, const double& value)
+  {
+    typeID_ = DOUBLE_PARAM;
+    d_ = value;
+  }
 
-    ParamDataType typeID_;
-    param_name_t name_;
+  template <>
+  inline void ParamContainer::set_value(const param_name_t& name, const std::string& value)
+  {
+    typeID_ = STRING_PARAM;
+    s_ = value;
+  }
+
+  template <>
+  inline void ParamContainer::set_value(const param_name_t& name, const bool& value)
+  {
+    typeID_ = BOOL_PARAM;
+    b_ = value;
+  }
+
+  class ParamQuery
+  {
+    public:
+      ParamQuery(const std::string& name) : name_(name) {}
+      ParamQuery(const ParamDataType typeID) : typeID_(typeID) {}
+
+      // TODO: make this extendable for potential regex or other dynamic queryies
+      // Possibly use a generator pattern?
+      // For now just store a single datatype and provide accessors.
+
+      inline ParamDataType get_type(void) const
+      {
+        return typeID_;
+      }
+      inline param_name_t get_name(void) const
+      {
+        return name_;
+      }
+
+    private:
+      ParamDataType typeID_;
+      param_name_t name_;
   };
 } /* namespace parameter */
 } /* namespace rclcpp */

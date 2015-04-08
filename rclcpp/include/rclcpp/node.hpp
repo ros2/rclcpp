@@ -135,7 +135,7 @@ public:
   has_param(const parameter::ParamQuery& query);
 
   template <typename ParamTypeT>
-  bool set_param(const parameter::param_name_t& key, const ParamTypeT& value);
+  void set_param(const parameter::param_name_t& key, const ParamTypeT& value);
 
 private:
   RCLCPP_DISABLE_COPY(Node);

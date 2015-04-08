@@ -15,6 +15,7 @@
 #ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
 #define RCLCPP_RCLCPP_NODE_IMPL_HPP_
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -255,4 +256,34 @@ Node::get_param(const parameter::param_name_t& key)
   return pc.get_value<ParamTypeT>(value);
 }
 
+template <typename ParamTypeT>
+void
+Node::set_param(const parameter::param_name_t& key, const ParamTypeT& value)
+{
+  parameter::ParamContainer pc;
+  pc.set_value(key, value);
+  params_[key] = pc;
+}
+
+bool
+Node::has_param(const parameter::ParamQuery& query)
+{
+  const parameter::param_name_t key = query.get_name();
+  return (params_.find(key) != params_.end());
+}
+
+std::vector<parameter::ParamContainer>
+Node::get_params(const std::vector<parameter::ParamQuery>& queries)
+{
+  std::vector<parameter::ParamContainer> result;
+
+  for(auto& kv: params_) {
+    if(std::any_of(queries.cbegin(), queries.cend(),
+      [&kv](const parameter::ParamQuery& query) {
+      return kv.first == query.get_name();})) {
+      result.push_back(kv.second);
+    }
+  }
+  return result;
+}
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */
