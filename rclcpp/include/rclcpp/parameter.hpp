@@ -46,7 +46,7 @@ namespace parameter
       T&
       get_value(T& value);
 
-      inline param_name_t getName() { return name_; };
+      inline param_name_t get_name() { return name_; };
       /* Templated setter */
       template <typename T>
       void
