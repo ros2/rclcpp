@@ -249,9 +249,9 @@ Node::register_service(
 
 template <typename ParamTypeT>
 ParamTypeT
-Node::get_param(const parameter::ParamName& key)
+Node::get_param(const parameter::ParamName& key) const
 {
-  parameter::ParamContainer pc = this->params_[key];
+  const parameter::ParamContainer pc = this->params_.at(key);
   ParamTypeT value;
   return pc.get_value<ParamTypeT>(value);
 }
@@ -266,14 +266,14 @@ Node::set_param(const parameter::ParamName& key, const ParamTypeT& value)
 }
 
 bool
-Node::has_param(const parameter::ParamQuery& query)
+Node::has_param(const parameter::ParamQuery& query) const
 {
   const parameter::ParamName key = query.get_name();
   return (params_.find(key) != params_.end());
 }
 
 std::vector<parameter::ParamContainer>
-Node::get_params(const std::vector<parameter::ParamQuery>& queries)
+Node::get_params(const std::vector<parameter::ParamQuery>& queries) const
 {
   std::vector<parameter::ParamContainer> result;
 
