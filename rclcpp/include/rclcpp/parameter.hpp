@@ -142,11 +142,11 @@ namespace parameter
       // Possibly use a generator pattern?
       // For now just store a single datatype and provide accessors.
 
-      inline ParamDataType get_type(void) const
+      inline ParamDataType get_type() const
       {
         return typeID_;
       }
-      inline ParamName get_name(void) const
+      inline ParamName get_name() const
       {
         return name_;
       }
