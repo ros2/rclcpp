@@ -28,7 +28,7 @@ namespace rclcpp
 namespace parameter
 {
   // Datatype for parameter names
-  typedef std::string param_name_t;
+  typedef std::string ParamName;
 
   // Datatype for storing parameter types
   enum ParamDataType {INT_PARAM, DOUBLE_PARAM, STRING_PARAM, BOOL_PARAM};
@@ -39,18 +39,18 @@ namespace parameter
   {
     public:
       ParamDataType typeID_;
-      param_name_t name_;
+      ParamName name_;
 
       /* Templated getter */
       template <typename T>
       T&
-      get_value(T& value);
+      get_value (T& value) const;
 
-      inline param_name_t get_name() { return name_; };
+      inline ParamName get_name() const { return name_; };
       /* Templated setter */
       template <typename T>
       void
-      set_value(const param_name_t& name, const T& value);
+      set_value(const ParamName& name, const T& value);
 
     private:
       int64_t i_;
@@ -60,7 +60,7 @@ namespace parameter
   };
 
   template <>
-  inline int64_t& ParamContainer::get_value(int64_t& value)
+  inline int64_t& ParamContainer::get_value(int64_t& value) const
   {
     if (typeID_!= INT_PARAM)
       {
@@ -71,7 +71,7 @@ namespace parameter
       return value;
   }
   template <>
-  inline double& ParamContainer::get_value(double& value)
+  inline double& ParamContainer::get_value(double& value) const
   {
     if (typeID_!= DOUBLE_PARAM)
       {
@@ -82,7 +82,7 @@ namespace parameter
       return value;
   }
   template <>
-  inline std::string& ParamContainer::get_value(std::string& value)
+  inline std::string& ParamContainer::get_value(std::string& value) const
   {
     if (typeID_!= STRING_PARAM)
       {
@@ -93,7 +93,7 @@ namespace parameter
       return value;
   }
   template <>
-  inline bool& ParamContainer::get_value(bool& value)
+  inline bool& ParamContainer::get_value(bool& value) const
   {
     if (typeID_!= BOOL_PARAM)
       {
@@ -105,28 +105,28 @@ namespace parameter
   }
 
   template <>
-  inline void ParamContainer::set_value(const param_name_t& name, const int64_t& value)
+  inline void ParamContainer::set_value(const ParamName& name, const int64_t& value)
   {
     typeID_ = INT_PARAM;
     i_ = value;
   }
 
   template <>
-  inline void ParamContainer::set_value(const param_name_t& name, const double& value)
+  inline void ParamContainer::set_value(const ParamName& name, const double& value)
   {
     typeID_ = DOUBLE_PARAM;
     d_ = value;
   }
 
   template <>
-  inline void ParamContainer::set_value(const param_name_t& name, const std::string& value)
+  inline void ParamContainer::set_value(const ParamName& name, const std::string& value)
   {
     typeID_ = STRING_PARAM;
     s_ = value;
   }
 
   template <>
-  inline void ParamContainer::set_value(const param_name_t& name, const bool& value)
+  inline void ParamContainer::set_value(const ParamName& name, const bool& value)
   {
     typeID_ = BOOL_PARAM;
     b_ = value;
@@ -146,14 +146,14 @@ namespace parameter
       {
         return typeID_;
       }
-      inline param_name_t get_name(void) const
+      inline ParamName get_name(void) const
       {
         return name_;
       }
 
     private:
       ParamDataType typeID_;
-      param_name_t name_;
+      ParamName name_;
   };
 } /* namespace parameter */
 } /* namespace rclcpp */

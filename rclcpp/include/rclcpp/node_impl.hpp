@@ -249,7 +249,7 @@ Node::register_service(
 
 template <typename ParamTypeT>
 ParamTypeT
-Node::get_param(const parameter::param_name_t& key)
+Node::get_param(const parameter::ParamName& key)
 {
   parameter::ParamContainer pc = this->params_[key];
   ParamTypeT value;
@@ -258,7 +258,7 @@ Node::get_param(const parameter::param_name_t& key)
 
 template <typename ParamTypeT>
 void
-Node::set_param(const parameter::param_name_t& key, const ParamTypeT& value)
+Node::set_param(const parameter::ParamName& key, const ParamTypeT& value)
 {
   parameter::ParamContainer pc;
   pc.set_value(key, value);
@@ -268,7 +268,7 @@ Node::set_param(const parameter::param_name_t& key, const ParamTypeT& value)
 bool
 Node::has_param(const parameter::ParamQuery& query)
 {
-  const parameter::param_name_t key = query.get_name();
+  const parameter::ParamName key = query.get_name();
   return (params_.find(key) != params_.end());
 }
 

@@ -126,7 +126,7 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   template <typename ParamTypeT>
-  ParamTypeT get_param(const parameter::param_name_t& key);
+  ParamTypeT get_param(const parameter::ParamName& key);
 
   std::vector<parameter::ParamContainer>
   get_params(const std::vector<parameter::ParamQuery>& query);
@@ -135,7 +135,7 @@ public:
   has_param(const parameter::ParamQuery& query);
 
   template <typename ParamTypeT>
-  void set_param(const parameter::param_name_t& key, const ParamTypeT& value);
+  void set_param(const parameter::ParamName& key, const ParamTypeT& value);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
@@ -162,7 +162,7 @@ private:
     std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
-  std::map<parameter::param_name_t, parameter::ParamContainer> params_;
+  std::map<parameter::ParamName, parameter::ParamContainer> params_;
 };
 
 } /* namespace node */
