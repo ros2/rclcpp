@@ -31,7 +31,7 @@ namespace parameter
   typedef std::string ParamName;
 
   // Datatype for storing parameter types
-  enum ParamDataType {INT_PARAM, DOUBLE_PARAM, STRING_PARAM, BOOL_PARAM};
+  enum ParamDataType {INVALID_PARAM, INT_PARAM, DOUBLE_PARAM, STRING_PARAM, BOOL_PARAM};
 
 
   // Structure to store an arbitrary parameter with templated get/set methods
@@ -135,8 +135,8 @@ namespace parameter
   class ParamQuery
   {
     public:
-      ParamQuery(const std::string& name) : name_(name) {}
-      ParamQuery(const ParamDataType typeID) : typeID_(typeID) {}
+      ParamQuery(const std::string& name) : typeID_(INVALID_PARAM), name_(name) {}
+      ParamQuery(const ParamDataType typeID) : typeID_(typeID), name_("") {}
 
       // TODO: make this extendable for potential regex or other dynamic queryies
       // Possibly use a generator pattern?
