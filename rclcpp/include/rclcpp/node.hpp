@@ -65,7 +65,7 @@ public:
 
   /* Get the name of the node. */
   std::string
-  get_name();
+  get_name() const {return this->name_; }
 
   /* Create and return a callback group. */
   rclcpp::callback_group::CallbackGroup::SharedPtr
@@ -126,16 +126,14 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   template<typename ParamTypeT>
-  ParamTypeT get_param(const parameter::ParamName & key) const;
-
-  std::vector<parameter::ParamContainer>
-  get_params(const std::vector<parameter::ParamQuery> & query) const;
+  ParamTypeT get_param(const std::string & node_name, const parameter::ParamName & key) const;
 
   bool
-  has_param(const parameter::ParamQuery & query) const;
+  has_param(const std::string & node_name, const parameter::ParamQuery & query) const;
 
   template<typename ParamTypeT>
-  void set_param(const parameter::ParamName & key, const ParamTypeT & value);
+  void set_param(const std::string & node_name, const parameter::ParamName & key,
+    const ParamTypeT & value);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
@@ -163,6 +161,18 @@ private:
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
   std::map<parameter::ParamName, parameter::ParamContainer> params_;
+
+  template<typename ParamTypeT>
+  ParamTypeT get_param(const parameter::ParamName & key) const;
+
+  std::vector<parameter::ParamContainer>
+  get_params(const std::vector<parameter::ParamQuery> & query) const;
+
+  bool
+  has_param(const parameter::ParamQuery & query) const;
+
+  template<typename ParamTypeT>
+  void set_param(const parameter::ParamName & key, const ParamTypeT & value);
 };
 
 } /* namespace node */

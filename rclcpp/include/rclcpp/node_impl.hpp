@@ -288,4 +288,35 @@ Node::get_params(const std::vector<parameter::ParamQuery> & queries) const
   }
   return result;
 }
+
+template <typename ParamTypeT>
+ParamTypeT
+Node::get_param(const std::string& node_name, const parameter::ParamName& key) const
+{
+  if (node_name == this->get_name()) {
+    return this->get_param<ParamTypeT>(key);
+  }
+  ParamTypeT result;
+  return result;
+}
+
+template <typename ParamTypeT>
+void
+Node::set_param(const std::string& node_name, const parameter::ParamName& key,
+                const ParamTypeT& value)
+{
+  if (node_name == this->get_name()) {
+    this->set_param<ParamTypeT>(key, value);
+  }
+}
+
+bool
+Node::has_param(const std::string& node_name, const parameter::ParamQuery& query) const
+{
+  if (node_name == this->get_name()) {
+    return this->has_param(query);
+  }
+  return false;
+}
+
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */
