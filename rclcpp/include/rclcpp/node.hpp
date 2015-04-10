@@ -18,6 +18,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
@@ -126,14 +127,20 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   template<typename ParamTypeT>
-  ParamTypeT get_param(const std::string & node_name, const parameter::ParamName & key) const;
+  std::shared_future<ParamTypeT>
+  async_get_param(
+    const std::string & node_name, const parameter::ParamName & key,
+    std::function<void(std::shared_future<ParamTypeT>)> callback = nullptr);
 
-  bool
-  has_param(const std::string & node_name, const parameter::ParamQuery & query) const;
+  std::shared_future<bool>
+  async_has_param(const std::string & node_name, const parameter::ParamQuery & query,
+    std::function<void(std::shared_future<bool>)> callback = nullptr);
 
   template<typename ParamTypeT>
-  void set_param(const std::string & node_name, const parameter::ParamName & key,
-    const ParamTypeT & value);
+  std::shared_future<void>
+  async_set_param(
+    const std::string & node_name, const parameter::ParamName & key,
+    const ParamTypeT & value, std::function<void(std::shared_future<void>)> callback = nullptr);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
