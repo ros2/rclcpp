@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rclcpp)
 
 find_package(ament_cmake REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 
 ament_export_dependencies(rmw)
 

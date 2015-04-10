@@ -21,6 +21,8 @@
 
 #include <rclcpp/macros.hpp>
 
+#include <rcl_interfaces/Param.h>
+#include <rcl_interfaces/ParamDescription.h>
 
 namespace rclcpp
 {
@@ -149,9 +151,74 @@ public:
     return name_;
   }
 
+  class ParamQuery
+  {
+public:
+    ParamQuery(const std::string & name)
+    : typeID_(INVALID_PARAM), name_(name) {}
+    ParamQuery(const ParamDataType typeID)
+    : typeID_(typeID), name_("") {}
+
+    // TODO: make this extendable for potential regex or other dynamic queryies
+    // Possibly use a generator pattern?
+    // For now just store a single datatype and provide accessors.
+
+    inline ParamDataType get_type() const
+    {
+      return typeID_;
+    }
+    inline ParamName get_name() const
+    {
+      return name_;
+    }
+
 private:
-  ParamDataType typeID_;
-  ParamName name_;
+    ParamDataType typeID_;
+    ParamName name_;
+  };
+
+  template<typename T>
+  T get_parameter_value(rcl_interfaces::Param & parameter);
+
+  template<>
+  bool get_parameter_value(rcl_interfaces::Param & parameter)
+  {
+    if (parameter.description.param_type != rcl_interfaces::ParamDescription::BOOL_PARAM) {
+      // TODO: use custom exception
+      throw std::runtime_error("Parameter value is not a boolean");
+    }
+    return parameter.bool_value;
+  }
+
+  template<>
+  int64_t get_parameter_value(rcl_interfaces::Param & parameter)
+  {
+    if (parameter.description.param_type != rcl_interfaces::ParamDescription::INTEGER_PARAM) {
+      // TODO: use custom exception
+      throw std::runtime_error("Parameter value is not an integer");
+    }
+    return parameter.integer_value;
+  }
+
+  template<>
+  double get_parameter_value(rcl_interfaces::Param & parameter)
+  {
+    if (parameter.description.param_type != rcl_interfaces::ParamDescription::DOUBLE_PARAM) {
+      // TODO: use custom exception
+      throw std::runtime_error("Parameter value is not a double");
+    }
+    return parameter.double_value;
+  }
+
+  template<>
+  std::string get_parameter_value(rcl_interfaces::Param & parameter)
+  {
+    if (parameter.description.param_type != rcl_interfaces::ParamDescription::STRING_PARAM) {
+      // TODO: use custom exception
+      throw std::runtime_error("Parameter value is not a string");
+    }
+    return parameter.string_value;
+  }
 };
 } /* namespace parameter */
 } /* namespace rclcpp */
