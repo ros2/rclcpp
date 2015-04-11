@@ -335,6 +335,8 @@ Node::async_set_param(
   } else {
     auto client = this->create_client<rcl_interfaces::SetParams>("set_params");
     auto request = std::make_shared<rcl_interfaces::SetParams::Request>();
+    request->parameters[0].description.name = key;
+    rclcpp::parameter::set_parameter_value<ParamTypeT>(request->parameters[0], value);
     client->async_send_request(
       request, [&promise_result, &future_result, &callback] (
         rclcpp::client::Client<rcl_interfaces::SetParams>::SharedFuture cb_f) {
@@ -361,6 +363,7 @@ Node::async_has_param(
   } else {
     auto client = this->create_client<rcl_interfaces::HasParam>("has_param");
     auto request = std::make_shared<rcl_interfaces::HasParam::Request>();
+    request->param_description.name = query.get_name();
     client->async_send_request(
       request, [&promise_result, &future_result, &callback] (
         rclcpp::client::Client<rcl_interfaces::HasParam>::SharedFuture cb_f) {
