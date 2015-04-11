@@ -219,6 +219,37 @@ private:
     }
     return parameter.string_value;
   }
+
+  template<typename T>
+  void set_parameter_value(rcl_interfaces::Param & parameter, const T & value);
+
+  template<>
+  void set_parameter_value(rcl_interfaces::Param & parameter, const bool & value)
+  {
+    parameter.description.param_type = rcl_interfaces::ParamDescription::BOOL_PARAM;
+    parameter.bool_value = value;
+  }
+
+  template<>
+  void set_parameter_value(rcl_interfaces::Param & parameter, const int64_t & value)
+  {
+    parameter.description.param_type = rcl_interfaces::ParamDescription::INTEGER_PARAM;
+    parameter.integer_value = value;
+  }
+
+  template<>
+  void set_parameter_value(rcl_interfaces::Param & parameter, const double & value)
+  {
+    parameter.description.param_type = rcl_interfaces::ParamDescription::DOUBLE_PARAM;
+    parameter.double_value = value;
+  }
+
+  template<>
+  void set_parameter_value(rcl_interfaces::Param & parameter, const std::string & value)
+  {
+    parameter.description.param_type = rcl_interfaces::ParamDescription::STRING_PARAM;
+    parameter.string_value = value;
+  }
 };
 } /* namespace parameter */
 } /* namespace rclcpp */
