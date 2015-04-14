@@ -132,15 +132,27 @@ public:
     const std::string & node_name, const parameter::ParamName & key,
     std::function<void(std::shared_future<ParamTypeT>)> callback = nullptr);
 
+  std::shared_future<std::vector<parameter::ParamContainer>>
+  async_get_params(
+    const std::string & node_name, const std::vector<parameter::ParamName> & parameter_names,
+    std::function<void(std::shared_future<std::vector<parameter::ParamContainer>>)> callback =
+    nullptr);
+
   std::shared_future<bool>
   async_has_param(const std::string & node_name, const parameter::ParamQuery & query,
     std::function<void(std::shared_future<bool>)> callback = nullptr);
 
   template<typename ParamTypeT>
-  std::shared_future<void>
+  std::shared_future<bool>
   async_set_param(
     const std::string & node_name, const parameter::ParamName & key,
-    const ParamTypeT & value, std::function<void(std::shared_future<void>)> callback = nullptr);
+    const ParamTypeT & value, std::function<void(std::shared_future<bool>)> callback = nullptr);
+
+  std::shared_future<bool>
+  async_set_params(
+    const std::string & node_name,
+    const std::vector<parameter::ParamContainer> & key_values,
+    std::function<void(std::shared_future<bool>)> callback = nullptr);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
