@@ -35,17 +35,34 @@ typedef std::string ParamName;
 // Datatype for storing parameter types
 enum ParamDataType {INVALID_PARAM, INT_PARAM, DOUBLE_PARAM, STRING_PARAM, BOOL_PARAM};
 
-
 // Structure to store an arbitrary parameter with templated get/set methods
 class ParamContainer
 {
 public:
+  ParamContainer()
+  : typeID_(INVALID_PARAM) {}
+  ParamContainer(
+    const std::string & name, const int64_t int_value)
+  : name_(name), typeID_(INT_PARAM), int_value_(int_value) {}
+  ParamContainer(
+    const std::string & name, const double double_value)
+  : name_(name), typeID_(DOUBLE_PARAM), double_value_(double_value) {}
+  ParamContainer(
+    const std::string & name, const std::string & string_value)
+  : name_(name), typeID_(STRING_PARAM), string_value_(string_value) {}
+  ParamContainer(
+    const std::string & name, const bool bool_value)
+  : name_(name), typeID_(BOOL_PARAM), bool_value_(bool_value) {}
+
   /* Templated getter */
   template<typename T>
-  T &
-  get_value(T & value) const;
+  T
+  get_value() const;
 
   inline ParamName get_name() const {return name_; }
+
+  inline ParamDataType get_typeID() const {return typeID_; }
+
   /* Templated setter */
   template<typename T>
   void
@@ -61,72 +78,40 @@ private:
 };
 
 template<>
-inline int64_t & ParamContainer::get_value(int64_t & value) const
+inline int64_t ParamContainer::get_value() const
 {
   if (typeID_ != INT_PARAM) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = int_value_;
-  return value;
+  return int_value_;
 }
 template<>
-inline double & ParamContainer::get_value(double & value) const
+inline double ParamContainer::get_value() const
 {
   if (typeID_ != DOUBLE_PARAM) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = double_value_;
-  return value;
+  return double_value_;
 }
 template<>
-inline std::string & ParamContainer::get_value(std::string & value) const
+inline std::string ParamContainer::get_value() const
 {
   if (typeID_ != STRING_PARAM) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = string_value_;
-  return value;
+  return string_value_;
 }
 template<>
-inline bool & ParamContainer::get_value(bool & value) const
+inline bool ParamContainer::get_value() const
 {
   if (typeID_ != BOOL_PARAM) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = bool_value_;
-  return value;
-}
-
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const int64_t & value)
-{
-  typeID_ = INT_PARAM;
-  int_value_ = value;
-}
-
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const double & value)
-{
-  typeID_ = DOUBLE_PARAM;
-  double_value_ = value;
-}
-
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const std::string & value)
-{
-  typeID_ = STRING_PARAM;
-  string_value_ = value;
-}
-
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const bool & value)
-{
-  typeID_ = BOOL_PARAM;
-  bool_value_ = value;
+  return bool_value_;
 }
 
 class ParamQuery
@@ -150,31 +135,9 @@ public:
     return name_;
   }
 
-  class ParamQuery
-  {
-public:
-    ParamQuery(const std::string & name)
-    : typeID_(INVALID_PARAM), name_(name) {}
-    ParamQuery(const ParamDataType typeID)
-    : typeID_(typeID), name_("") {}
-
-    // TODO: make this extendable for potential regex or other dynamic queryies
-    // Possibly use a generator pattern?
-    // For now just store a single datatype and provide accessors.
-
-    inline ParamDataType get_type() const
-    {
-      return typeID_;
-    }
-    inline ParamName get_name() const
-    {
-      return name_;
-    }
-
 private:
-    ParamDataType typeID_;
-    ParamName name_;
-  };
+  ParamDataType typeID_;
+  ParamName name_;
 
   template<typename T>
   T get_parameter_value(rcl_interfaces::Param & parameter);
