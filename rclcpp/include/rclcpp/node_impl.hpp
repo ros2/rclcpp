@@ -355,7 +355,7 @@ Node::async_get_parameters(
       callback(future_result);
     }
   } else {
-    auto client = this->create_client<rcl_interfaces::GetParameters>("get_params");
+    auto client = this->create_client<rcl_interfaces::GetParameters>("get_parameters");
     auto request = std::make_shared<rcl_interfaces::GetParameters::Request>();
     for (auto parameter_name : parameter_names) {
       rcl_interfaces::ParameterDescription description;
@@ -437,7 +437,7 @@ Node::async_set_parameters(
       callback(future_result);
     }
   } else {
-    auto client = this->create_client<rcl_interfaces::SetParameters>("set_params");
+    auto client = this->create_client<rcl_interfaces::SetParameters>("set_parameters");
     auto request = std::make_shared<rcl_interfaces::SetParameters::Request>();
     for (auto kv: key_values) {
       rcl_interfaces::Parameter parameter;
@@ -498,18 +498,46 @@ Node::async_has_parameter(
 {
   std::promise<bool> promise_result;
   auto future_result = promise_result.get_future().share();
+  this->async_has_parameters(node_name, {{query}},
+    [&promise_result, &future_result, &callback](
+      std::shared_future<std::vector<bool>> cb_f) {
+    promise_result.set_value(cb_f.get()[0]);
+    if (callback != nullptr) {
+      callback(future_result);
+    }
+  }
+    );
+  return future_result;
+}
+
+std::shared_future<std::vector<bool>>
+Node::async_has_parameters(
+  const std::string & node_name, const std::vector<parameter::ParameterQuery> & queries,
+  std::function<void(std::shared_future<std::vector<bool>>)> callback)
+{
+  std::promise<std::vector<bool>> promise_result;
+  auto future_result = promise_result.get_future().share();
   if (node_name == this->get_name()) {
-    promise_result.set_value(this->has_parameter(query));
+    std::vector<bool> value;
+    for (auto query: queries) {
+      value.push_back(this->has_parameter(query));
+    }
+    promise_result.set_value(value);
+    if (callback != nullptr) {
+      callback(future_result);
+    }
   } else {
-    auto client = this->create_client<rcl_interfaces::HasParameters>("has_params");
+    auto client = this->create_client<rcl_interfaces::HasParameters>("has_parameters");
     auto request = std::make_shared<rcl_interfaces::HasParameters::Request>();
-    rcl_interfaces::ParameterDescription parameter_description;
-    parameter_description.name = query.get_name();
-    request->parameter_descriptions.push_back(parameter_description);
+    for (auto query: queries) {
+      rcl_interfaces::ParameterDescription parameter_description;
+      parameter_description.name = query.get_name();
+      request->parameter_descriptions.push_back(parameter_description);
+    }
     client->async_send_request(
       request, [&promise_result, &future_result, &callback](
         rclcpp::client::Client<rcl_interfaces::HasParameters>::SharedFuture cb_f) {
-      promise_result.set_value(cb_f.get()->result[0]);
+      promise_result.set_value(cb_f.get()->result);
       if (callback != nullptr) {
         callback(future_result);
       }
