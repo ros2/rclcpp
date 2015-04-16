@@ -143,6 +143,11 @@ public:
     const std::string & node_name, const parameter::ParameterQuery & query,
     std::function<void(std::shared_future<bool>)> callback = nullptr);
 
+  std::shared_future<std::vector<bool>>
+  async_has_parameters(
+    const std::string & node_name, const std::vector<parameter::ParameterQuery> & queries,
+    std::function<void(std::shared_future<std::vector<bool>>)> callback = nullptr);
+
   template<typename ParamTypeT>
   std::shared_future<bool>
   async_set_parameter(
