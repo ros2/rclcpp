@@ -128,30 +128,31 @@ public:
 
   template<typename ParamTypeT>
   std::shared_future<ParamTypeT>
-  async_get_param(
-    const std::string & node_name, const parameter::ParamName & key,
+  async_get_parameter(
+    const std::string & node_name, const parameter::ParameterName & key,
     std::function<void(std::shared_future<ParamTypeT>)> callback = nullptr);
 
-  std::shared_future<std::vector<parameter::ParamContainer>>
-  async_get_params(
-    const std::string & node_name, const std::vector<parameter::ParamName> & parameter_names,
-    std::function<void(std::shared_future<std::vector<parameter::ParamContainer>>)> callback =
+  std::shared_future<std::vector<parameter::ParameterContainer>>
+  async_get_parameters(
+    const std::string & node_name, const std::vector<parameter::ParameterName> & parameter_names,
+    std::function<void(std::shared_future<std::vector<parameter::ParameterContainer>>)> callback =
     nullptr);
 
   std::shared_future<bool>
-  async_has_param(const std::string & node_name, const parameter::ParamQuery & query,
+  async_has_parameter(
+    const std::string & node_name, const parameter::ParameterQuery & query,
     std::function<void(std::shared_future<bool>)> callback = nullptr);
 
   template<typename ParamTypeT>
   std::shared_future<bool>
-  async_set_param(
-    const std::string & node_name, const parameter::ParamName & key,
+  async_set_parameter(
+    const std::string & node_name, const parameter::ParameterName & key,
     const ParamTypeT & value, std::function<void(std::shared_future<bool>)> callback = nullptr);
 
   std::shared_future<bool>
-  async_set_params(
+  async_set_parameters(
     const std::string & node_name,
-    const std::vector<parameter::ParamContainer> & key_values,
+    const std::vector<parameter::ParameterContainer> & key_values,
     std::function<void(std::shared_future<bool>)> callback = nullptr);
 
 private:
@@ -179,19 +180,19 @@ private:
     std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
-  std::map<parameter::ParamName, parameter::ParamContainer> params_;
+  std::map<parameter::ParameterName, parameter::ParameterContainer> params_;
 
   template<typename ParamTypeT>
-  ParamTypeT get_param(const parameter::ParamName & key) const;
+  ParamTypeT get_parameter(const parameter::ParameterName & key) const;
 
-  std::vector<parameter::ParamContainer>
-  get_params(const std::vector<parameter::ParamQuery> & query) const;
+  std::vector<parameter::ParameterContainer>
+  get_parameters(const std::vector<parameter::ParameterQuery> & query) const;
 
   bool
-  has_param(const parameter::ParamQuery & query) const;
+  has_parameter(const parameter::ParameterQuery & query) const;
 
   template<typename ParamTypeT>
-  void set_param(const parameter::ParamName & key, const ParamTypeT & value);
+  void set_parameter(const parameter::ParameterName & key, const ParamTypeT & value);
 };
 
 } /* namespace node */
