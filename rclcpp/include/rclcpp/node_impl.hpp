@@ -271,10 +271,9 @@ Node::set_parameter(const parameter::ParameterName & key, const ParamTypeT & val
 }
 
 bool
-Node::has_parameter(const parameter::ParameterQuery & query) const
+Node::has_parameter(const parameter::ParameterName & parameter_name) const
 {
-  const parameter::ParameterName key = query.get_name();
-  return parameters_.find(key) != parameters_.end();
+  return parameters_.find(parameter_name) != parameters_.end();
 }
 
 std::vector<parameter::ParameterContainer>
@@ -493,12 +492,12 @@ Node::async_set_parameter(
 
 std::shared_future<bool>
 Node::async_has_parameter(
-  const std::string & node_name, const parameter::ParameterQuery & query,
+  const std::string & node_name, const parameter::ParameterName & parameter_name,
   std::function<void(std::shared_future<bool>)> callback)
 {
   std::promise<bool> promise_result;
   auto future_result = promise_result.get_future().share();
-  this->async_has_parameters(node_name, {{query}},
+  this->async_has_parameters(node_name, {{parameter_name}},
     [&promise_result, &future_result, &callback](
       std::shared_future<std::vector<bool>> cb_f) {
     promise_result.set_value(cb_f.get()[0]);
@@ -512,15 +511,15 @@ Node::async_has_parameter(
 
 std::shared_future<std::vector<bool>>
 Node::async_has_parameters(
-  const std::string & node_name, const std::vector<parameter::ParameterQuery> & queries,
+  const std::string & node_name, const std::vector<parameter::ParameterName> & parameter_names,
   std::function<void(std::shared_future<std::vector<bool>>)> callback)
 {
   std::promise<std::vector<bool>> promise_result;
   auto future_result = promise_result.get_future().share();
   if (node_name == this->get_name()) {
     std::vector<bool> value;
-    for (auto query: queries) {
-      value.push_back(this->has_parameter(query));
+    for (auto parameter_name: parameter_names) {
+      value.push_back(this->has_parameter(parameter_name));
     }
     promise_result.set_value(value);
     if (callback != nullptr) {
@@ -529,9 +528,9 @@ Node::async_has_parameters(
   } else {
     auto client = this->create_client<rcl_interfaces::HasParameters>("has_parameters");
     auto request = std::make_shared<rcl_interfaces::HasParameters::Request>();
-    for (auto query: queries) {
+    for (auto parameter_name: parameter_names) {
       rcl_interfaces::ParameterDescription parameter_description;
-      parameter_description.name = query.get_name();
+      parameter_description.name = parameter_name;
       request->parameter_descriptions.push_back(parameter_description);
     }
     client->async_send_request(
