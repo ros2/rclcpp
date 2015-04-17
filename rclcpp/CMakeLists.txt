@@ -6,6 +6,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 
 ament_export_dependencies(rmw)
+ament_export_dependencies(rcl_interfaces)
 
 ament_export_include_directories(include)
 
