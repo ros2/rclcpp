@@ -258,7 +258,7 @@ template<typename ParamTypeT>
 ParamTypeT
 Node::get_parameter(const parameter::ParameterName & key) const
 {
-  const parameter::ParameterContainer pc(this->params_.at(key));
+  const parameter::ParameterContainer pc(this->parameters_.at(key));
   return pc.get_value<ParamTypeT>();
 }
 
@@ -267,14 +267,14 @@ void
 Node::set_parameter(const parameter::ParameterName & key, const ParamTypeT & value)
 {
   parameter::ParameterContainer pc(key, value);
-  params_[key] = pc;
+  parameters_[key] = pc;
 }
 
 bool
 Node::has_parameter(const parameter::ParameterQuery & query) const
 {
   const parameter::ParameterName key = query.get_name();
-  return params_.find(key) != params_.end();
+  return parameters_.find(key) != parameters_.end();
 }
 
 std::vector<parameter::ParameterContainer>
@@ -282,7 +282,7 @@ Node::get_parameters(const std::vector<parameter::ParameterQuery> & queries) con
 {
   std::vector<parameter::ParameterContainer> result;
 
-  for (auto & kv: params_) {
+  for (auto & kv: parameters_) {
     if (std::any_of(queries.cbegin(), queries.cend(),
       [&kv](const parameter::ParameterQuery & query) {
       return kv.first == query.get_name();
