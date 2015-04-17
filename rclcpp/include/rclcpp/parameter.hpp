@@ -61,7 +61,7 @@ public:
   T
   get_value() const;
 
-  // Structure to store an arbitrary parameter with templated get/set methods
+// Structure to store an arbitrary parameter with templated get/set methods
   class ParameterContainer
   {
 public:
