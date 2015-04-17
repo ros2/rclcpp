@@ -185,7 +185,7 @@ private:
     std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
-  std::map<parameter::ParameterName, parameter::ParameterContainer> params_;
+  std::map<parameter::ParameterName, parameter::ParameterContainer> parameters_;
 
   template<typename ParamTypeT>
   ParamTypeT get_parameter(const parameter::ParameterName & key) const;
