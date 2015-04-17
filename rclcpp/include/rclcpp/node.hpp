@@ -125,17 +125,17 @@ public:
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  template <typename ParamTypeT>
-  ParamTypeT get_param(const parameter::ParamName& key) const;
+  template<typename ParamTypeT>
+  ParamTypeT get_param(const parameter::ParamName & key) const;
 
   std::vector<parameter::ParamContainer>
-  get_params(const std::vector<parameter::ParamQuery>& query) const;
+  get_params(const std::vector<parameter::ParamQuery> & query) const;
 
   bool
-  has_param(const parameter::ParamQuery& query) const;
+  has_param(const parameter::ParamQuery & query) const;
 
-  template <typename ParamTypeT>
-  void set_param(const parameter::ParamName& key, const ParamTypeT& value);
+  template<typename ParamTypeT>
+  void set_param(const parameter::ParamName & key, const ParamTypeT & value);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
