@@ -186,8 +186,7 @@ template<typename ServiceT>
 typename service::Service<ServiceT>::SharedPtr
 Node::create_service(
   std::string service_name,
-  std::function<void(const std::shared_ptr<typename ServiceT::Request> &,
-  std::shared_ptr<typename ServiceT::Response> &)> callback,
+  typename rclcpp::service::Service<ServiceT>::CallbackType callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   using rosidl_generator_cpp::get_service_type_support_handle;

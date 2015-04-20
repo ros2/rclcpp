@@ -86,8 +86,9 @@ class Service : public ServiceBase
 {
 public:
   typedef std::function<
-      void (const std::shared_ptr<typename ServiceT::Request> &,
-      std::shared_ptr<typename ServiceT::Response> &)> CallbackType;
+      void (const std::shared_ptr<rmw_request_id_t> &,
+          const std::shared_ptr<typename ServiceT::Request> &,
+          std::shared_ptr<typename ServiceT::Response> &)> CallbackType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
   Service(
@@ -114,7 +115,7 @@ public:
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
-    callback_(typed_request, response);
+    callback_(typed_request_header, typed_request, response);
     send_response(typed_request_header, response);
   }
 
