@@ -28,8 +28,7 @@
 
 #include <rcl_interfaces/GetParameters.h>
 #include <rcl_interfaces/HasParameters.h>
-#include <rcl_interfaces/Parameter.h>
-#include <rcl_interfaces/ParameterDescription.h>
+#include <rcl_interfaces/ListParameters.h>
 #include <rcl_interfaces/SetParameters.h>
 
 #ifndef RCLCPP_RCLCPP_NODE_HPP_
@@ -293,6 +292,34 @@ Node::get_parameters(const std::vector<parameter::ParameterQuery> & queries) con
   return result;
 }
 
+std::vector<parameter::ParameterName>
+Node::list_parameters(
+  const std::vector<parameter::ParameterName> & parameter_groups, bool recursive) const
+{
+  std::vector<parameter::ParameterName> result;
+
+  // TODO: define parameter separator
+  for (auto & kv: parameters_) {
+    if (std::any_of(parameter_groups.cbegin(), parameter_groups.cend(),
+      [&kv, &recursive](const parameter::ParameterName & parameter_group) {
+      if (kv.first.find(parameter_group + ".") == 0) {
+        if (recursive) {
+          return true;
+        } else {
+          size_t length = parameter_group.length();
+          std::string substr = kv.first.substr(length);
+          return substr.find_first_of(".") == substr.find_last_of(".");
+        }
+      }
+      return false;
+    }))
+    {
+      result.push_back(kv.first);
+    }
+  }
+  return result;
+}
+
 template<typename ParamTypeT>
 std::shared_future<ParamTypeT>
 Node::async_get_parameter(
@@ -546,4 +573,34 @@ Node::async_has_parameters(
   return future_result;
 }
 
+std::shared_future<std::vector<parameter::ParameterName>>
+Node::async_list_parameters(
+  const std::string & node_name,
+  const std::vector<parameter::ParameterName> & parameter_groups,
+  bool recursive,
+  std::function<void(std::shared_future<std::vector<parameter::ParameterName>>)> callback)
+{
+  std::promise<std::vector<parameter::ParameterName>> promise_result;
+  auto future_result = promise_result.get_future().share();
+  if (node_name == this->get_name()) {
+    promise_result.set_value(this->list_parameters(parameter_groups, recursive));
+    if (callback != nullptr) {
+      callback(future_result);
+    }
+  } else {
+    auto client = this->create_client<rcl_interfaces::ListParameters>("list_parameters");
+    auto request = std::make_shared<rcl_interfaces::ListParameters::Request>();
+    request->parameter_group = parameter_groups;
+    request->recurse = recursive;
+    client->async_send_request(
+      request, [&promise_result, &future_result, &callback](
+        rclcpp::client::Client<rcl_interfaces::ListParameters>::SharedFuture cb_f) {
+      promise_result.set_value(cb_f.get()->sub_groups);
+      if (callback != nullptr) {
+        callback(future_result);
+      }
+    });
+  }
+  return future_result;
+}
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

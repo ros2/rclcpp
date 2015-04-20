@@ -160,6 +160,13 @@ public:
     const std::vector<parameter::ParameterContainer> & key_values,
     std::function<void(std::shared_future<bool>)> callback = nullptr);
 
+  std::shared_future<std::vector<parameter::ParameterName>>
+  async_list_parameters(
+    const std::string & node_name,
+    const std::vector<parameter::ParameterName> & parameter_groups, bool recursive,
+    std::function<void(std::shared_future<std::vector<parameter::ParameterName>>)> callback =
+    nullptr);
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
@@ -198,6 +205,10 @@ private:
 
   template<typename ParamTypeT>
   void set_parameter(const parameter::ParameterName & key, const ParamTypeT & value);
+
+  std::vector<parameter::ParameterName>
+  list_parameters(
+    const std::vector<parameter::ParameterName> & parameter_groups, bool recursive) const;
 };
 
 } /* namespace node */
