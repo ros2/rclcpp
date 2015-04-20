@@ -151,7 +151,7 @@ Node::create_wall_timer(
 template<typename ServiceT>
 typename client::Client<ServiceT>::SharedPtr
 Node::create_client(
-  std::string service_name,
+  const std::string & service_name,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   using rosidl_generator_cpp::get_service_type_support_handle;
@@ -185,7 +185,7 @@ Node::create_client(
 template<typename ServiceT>
 typename service::Service<ServiceT>::SharedPtr
 Node::create_service(
-  std::string service_name,
+  const std::string &service_name,
   typename rclcpp::service::Service<ServiceT>::CallbackType callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
@@ -196,14 +196,44 @@ Node::create_service(
   rmw_service_t * service_handle = rmw_create_service(
     this->node_handle_, service_type_support_handle, service_name.c_str());
 
-  using namespace rclcpp::service;
-
-  auto serv = Service<ServiceT>::make_shared(
+  auto serv = service::Service<ServiceT>::make_shared(
     service_handle,
     service_name,
     callback);
-  auto serv_base_ptr = std::dynamic_pointer_cast<ServiceBase>(serv);
+  auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
+  register_service(service_name, serv_base_ptr, group);
+  return serv;
+}
 
+template<typename ServiceT>
+typename service::Service<ServiceT>::SharedPtr
+Node::create_service(
+  const std::string & service_name,
+  typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
+  using rosidl_generator_cpp::get_service_type_support_handle;
+  auto service_type_support_handle =
+    get_service_type_support_handle<ServiceT>();
+
+  rmw_service_t * service_handle = rmw_create_service(
+    this->node_handle_, service_type_support_handle, service_name.c_str());
+
+  auto serv = service::Service<ServiceT>::make_shared(
+    service_handle,
+    service_name,
+    callback_with_header);
+  auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
+  register_service(service_name, serv_base_ptr, group);
+  return serv;
+}
+
+void
+Node::register_service(
+  const std::string & service_name,
+  std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
   if (group) {
     if (!group_in_node(group)) {
       // TODO: use custom exception
@@ -214,8 +244,6 @@ Node::create_service(
     default_callback_group_->add_service(serv_base_ptr);
   }
   number_of_services_++;
-
-  return serv;
 }
 
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

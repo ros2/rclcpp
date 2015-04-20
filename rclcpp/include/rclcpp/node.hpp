@@ -105,15 +105,23 @@ public:
   template<typename ServiceT>
   typename rclcpp::client::Client<ServiceT>::SharedPtr
   create_client(
-    std::string service_name,
+    const std::string & service_name,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
   template<typename ServiceT>
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service(
-    std::string service_name,
+    const std::string & service_name,
     typename rclcpp::service::Service<ServiceT>::CallbackType callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+
+  /* Create and return a Service. */
+  template<typename ServiceT>
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  create_service(
+    const std::string & service_name,
+    typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
@@ -136,6 +144,10 @@ private:
   size_t number_of_services_;
   size_t number_of_clients_;
 
+  void register_service(
+    const std::string & service_name,
+    std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group);
 };
 
 } /* namespace node */
