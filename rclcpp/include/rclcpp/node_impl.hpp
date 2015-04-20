@@ -185,7 +185,7 @@ Node::create_client(
 template<typename ServiceT>
 typename service::Service<ServiceT>::SharedPtr
 Node::create_service(
-  const std::string &service_name,
+  const std::string & service_name,
   typename rclcpp::service::Service<ServiceT>::CallbackType callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
