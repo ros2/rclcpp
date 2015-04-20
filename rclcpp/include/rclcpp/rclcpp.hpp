@@ -76,6 +76,17 @@ void spin(Node::SharedPtr & node_ptr)
   executor.spin();
 }
 
+template <typename FutureT>
+std::shared_future<FutureT> &
+spin_until_future_complete(
+  Node::SharedPtr & node_ptr, std::shared_future<FutureT> & future)
+{
+  rclcpp::executors::SingleThreadedExecutor executor;
+  rclcpp::executors::spin_node_until_future_complete<FutureT>(
+    executor, node_ptr, future);
+  return future;
+}
+
 } /* namespace rclcpp */
 
 #endif /* RCLCPP_RCLCPP_RCLCPP_HPP_ */
