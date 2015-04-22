@@ -86,13 +86,15 @@ class Service : public ServiceBase
 {
 public:
   typedef std::function<
-      void (const std::shared_ptr<typename ServiceT::Request> &,
-      std::shared_ptr<typename ServiceT::Response> &)> CallbackType;
+      void (
+        const std::shared_ptr<typename ServiceT::Request> &,
+        std::shared_ptr<typename ServiceT::Response> &)> CallbackType;
 
   typedef std::function<
-      void (const std::shared_ptr<rmw_request_id_t> &,
-      const std::shared_ptr<typename ServiceT::Request> &,
-      std::shared_ptr<typename ServiceT::Response> &)> CallbackWithHeaderType;
+      void (
+        const std::shared_ptr<rmw_request_id_t> &,
+        const std::shared_ptr<typename ServiceT::Request> &,
+        std::shared_ptr<typename ServiceT::Response> &)> CallbackWithHeaderType;
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
   Service(
