@@ -591,7 +591,7 @@ Node::async_list_parameters(
     auto client = this->create_client<rcl_interfaces::ListParameters>("list_parameters");
     auto request = std::make_shared<rcl_interfaces::ListParameters::Request>();
     request->parameter_group = parameter_groups;
-    request->recurse = recursive;
+    request->recursive = recursive;
     client->async_send_request(
       request, [&promise_result, &future_result, &callback](
         rclcpp::client::Client<rcl_interfaces::ListParameters>::SharedFuture cb_f) {
