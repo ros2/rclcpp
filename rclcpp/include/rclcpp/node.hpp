@@ -167,6 +167,13 @@ public:
     std::function<void(std::shared_future<std::vector<parameter::ParameterName>>)> callback =
     nullptr);
 
+  std::shared_future<std::vector<rcl_interfaces::ParameterDescription>>
+  async_describe_parameters(
+    const std::string & node_name,
+    const std::vector<parameter::ParameterName> & parameter_groups, bool recursive,
+    std::function<void(std::shared_future<std::vector<rcl_interfaces::ParameterDescription>>)> callback =
+    nullptr);
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
@@ -208,6 +215,10 @@ private:
 
   std::vector<parameter::ParameterName>
   list_parameters(
+    const std::vector<parameter::ParameterName> & parameter_groups, bool recursive) const;
+
+  std::vector<rcl_interfaces::ParameterDescription>
+  describe_parameters(
     const std::vector<parameter::ParameterName> & parameter_groups, bool recursive) const;
 };
 
