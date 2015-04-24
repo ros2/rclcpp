@@ -56,9 +56,6 @@ public:
     const std::string & name, const bool bool_value)
   : name_(name), typeID_(BOOL_PARAM), bool_value_(bool_value) {}
 
-  ParamName name_;
-  ParamDataType typeID_;
-
   /* Templated getter */
   template<typename T>
   T
@@ -96,6 +93,8 @@ public:
     inline ParameterDataType get_typeID() const {return typeID_; }
 
 private:
+    ParameterName name_;
+    ParameterDataType typeID_;
     int64_t int_value_;
     double double_value_;
     std::string string_value_;
