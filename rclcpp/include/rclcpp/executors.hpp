@@ -26,6 +26,20 @@ namespace executors
 using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 
+template<typename FutureT>
+std::shared_future<FutureT> &
+spin_node_until_future_complete(
+  rclcpp::executor::Executor & executor, Node::SharedPtr & node_ptr,
+  std::shared_future<FutureT> & future)
+{
+  std::future_status status;
+  do {
+    executor.spin_node_some(node_ptr);
+    status = future.wait_for(std::chrono::seconds(0));
+  } while (status != std::future_status::ready && rclcpp::utilities::ok());
+  return future;
+}
+
 } // namespace executors
 } // namespace rclcpp
 

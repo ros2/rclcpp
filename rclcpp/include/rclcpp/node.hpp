@@ -18,11 +18,13 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/parameter.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/service.hpp>
 #include <rclcpp/subscription.hpp>
@@ -64,7 +66,7 @@ public:
 
   /* Get the name of the node. */
   std::string
-  get_name();
+  get_name() const {return this->name_; }
 
   /* Create and return a callback group. */
   rclcpp::callback_group::CallbackGroup::SharedPtr
@@ -124,6 +126,47 @@ public:
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  template<typename ParamTypeT>
+  std::shared_future<ParamTypeT>
+  async_get_parameter(
+    const std::string & node_name, const parameter::ParameterName & key,
+    std::function<void(std::shared_future<ParamTypeT>)> callback = nullptr);
+
+  std::shared_future<std::vector<parameter::ParameterContainer>>
+  async_get_parameters(
+    const std::string & node_name, const std::vector<parameter::ParameterName> & parameter_names,
+    std::function<void(std::shared_future<std::vector<parameter::ParameterContainer>>)> callback =
+    nullptr);
+
+  std::shared_future<bool>
+  async_has_parameter(
+    const std::string & node_name, const parameter::ParameterName & parameter_name,
+    std::function<void(std::shared_future<bool>)> callback = nullptr);
+
+  std::shared_future<std::vector<bool>>
+  async_has_parameters(
+    const std::string & node_name, const std::vector<parameter::ParameterName> & parameter_names,
+    std::function<void(std::shared_future<std::vector<bool>>)> callback = nullptr);
+
+  template<typename ParamTypeT>
+  std::shared_future<bool>
+  async_set_parameter(
+    const std::string & node_name, const parameter::ParameterName & key,
+    const ParamTypeT & value, std::function<void(std::shared_future<bool>)> callback = nullptr);
+
+  std::shared_future<bool>
+  async_set_parameters(
+    const std::string & node_name,
+    const std::vector<parameter::ParameterContainer> & key_values,
+    std::function<void(std::shared_future<bool>)> callback = nullptr);
+
+  std::shared_future<std::vector<parameter::ParameterName>>
+  async_list_parameters(
+    const std::string & node_name,
+    const std::vector<parameter::ParameterName> & parameter_groups, bool recursive,
+    std::function<void(std::shared_future<std::vector<parameter::ParameterName>>)> callback =
+    nullptr);
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
@@ -148,6 +191,24 @@ private:
     const std::string & service_name,
     std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
+
+  std::map<parameter::ParameterName, parameter::ParameterContainer> parameters_;
+
+  template<typename ParamTypeT>
+  ParamTypeT get_parameter(const parameter::ParameterName & key) const;
+
+  std::vector<parameter::ParameterContainer>
+  get_parameters(const std::vector<parameter::ParameterQuery> & query) const;
+
+  bool
+  has_parameter(const parameter::ParameterName & parameter_name) const;
+
+  template<typename ParamTypeT>
+  void set_parameter(const parameter::ParameterName & key, const ParamTypeT & value);
+
+  std::vector<parameter::ParameterName>
+  list_parameters(
+    const std::vector<parameter::ParameterName> & parameter_groups, bool recursive) const;
 };
 
 } /* namespace node */
