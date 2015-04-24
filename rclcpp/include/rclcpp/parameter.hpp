@@ -38,9 +38,6 @@ enum ParamDataType {INVALID_PARAM, INT_PARAM, DOUBLE_PARAM, STRING_PARAM, BOOL_P
 class ParamContainer
 {
 public:
-  ParamDataType typeID_;
-  ParamName name_;
-
   /* Templated getter */
   template<typename T>
   T &
@@ -53,6 +50,8 @@ public:
   set_value(const ParamName & name, const T & value);
 
 private:
+  ParamDataType typeID_;
+  ParamName name_;
   int64_t int_value_;
   double double_value_;
   std::string string_value_;
