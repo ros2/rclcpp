@@ -15,14 +15,22 @@
 #ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
 #define RCLCPP_RCLCPP_NODE_IMPL_HPP_
 
+#include <algorithm>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <rmw/rmw.h>
 #include <rosidl_generator_cpp/message_type_support.hpp>
 #include <rosidl_generator_cpp/service_type_support.hpp>
 
 #include <rclcpp/contexts/default_context.hpp>
+
+#include <rcl_interfaces/GetParameters.h>
+#include <rcl_interfaces/HasParameters.h>
+#include <rcl_interfaces/Parameter.h>
+#include <rcl_interfaces/ParameterDescription.h>
+#include <rcl_interfaces/SetParameters.h>
 
 #ifndef RCLCPP_RCLCPP_NODE_HPP_
 #include "node.hpp"
@@ -244,6 +252,298 @@ Node::register_service(
     default_callback_group_->add_service(serv_base_ptr);
   }
   number_of_services_++;
+}
+
+template<typename ParamTypeT>
+ParamTypeT
+Node::get_parameter(const parameter::ParameterName & key) const
+{
+  const parameter::ParameterContainer pc(this->parameters_.at(key));
+  return pc.get_value<ParamTypeT>();
+}
+
+template<typename ParamTypeT>
+void
+Node::set_parameter(const parameter::ParameterName & key, const ParamTypeT & value)
+{
+  parameter::ParameterContainer pc(key, value);
+  parameters_[key] = pc;
+}
+
+bool
+Node::has_parameter(const parameter::ParameterName & parameter_name) const
+{
+  return parameters_.find(parameter_name) != parameters_.end();
+}
+
+std::vector<parameter::ParameterContainer>
+Node::get_parameters(const std::vector<parameter::ParameterQuery> & queries) const
+{
+  std::vector<parameter::ParameterContainer> result;
+
+  for (auto & kv: parameters_) {
+    if (std::any_of(queries.cbegin(), queries.cend(),
+      [&kv](const parameter::ParameterQuery & query) {
+      return kv.first == query.get_name();
+    }))
+    {
+      result.push_back(kv.second);
+    }
+  }
+  return result;
+}
+
+template<typename ParamTypeT>
+std::shared_future<ParamTypeT>
+Node::async_get_parameter(
+  const std::string & node_name, const parameter::ParameterName & key,
+  std::function<void(std::shared_future<ParamTypeT>)> callback)
+{
+  std::promise<ParamTypeT> promise_result;
+  auto future_result = promise_result.get_future().share();
+  std::vector<parameter::ParameterName> param_names = {{key}};
+
+  this->async_get_parameters(
+    node_name, param_names,
+    [&promise_result, &future_result, &callback, &param_names](
+      std::shared_future<std::vector<parameter::ParameterContainer>> cb_f) {
+    promise_result.set_value(cb_f.get()[0].get_value<ParamTypeT>());
+    if (callback != nullptr) {
+      callback(future_result);
+    }
+  });
+
+  return future_result;
+}
+
+
+std::shared_future<std::vector<parameter::ParameterContainer>>
+Node::async_get_parameters(
+  const std::string & node_name, const std::vector<parameter::ParameterName> & parameter_names,
+  std::function<void(std::shared_future<std::vector<parameter::ParameterContainer>>)> callback)
+{
+  std::promise<std::vector<parameter::ParameterContainer>> promise_result;
+  auto future_result = promise_result.get_future().share();
+  if (node_name == this->get_name()) {
+    std::vector<parameter::ParameterContainer> value;
+    for (auto pn : parameter_names) {
+      if (this->has_parameter(pn)) {
+        try {
+          parameter::ParameterContainer param_container(pn, this->get_parameter<int64_t>(pn));
+          value.push_back(param_container);
+          // TODO: use custom exception
+        } catch (...) {
+          try {
+            parameter::ParameterContainer param_container(pn, this->get_parameter<double>(pn));
+            value.push_back(param_container);
+          } catch (...) {
+            try {
+              parameter::ParameterContainer param_container(pn,
+                this->get_parameter<std::string>(pn));
+              value.push_back(param_container);
+            } catch (...) {
+              parameter::ParameterContainer param_container(pn, this->get_parameter<bool>(pn));
+              value.push_back(param_container);
+            }
+          }
+        }
+      }
+    }
+    promise_result.set_value(value);
+    if (callback != nullptr) {
+      callback(future_result);
+    }
+  } else {
+    auto client = this->create_client<rcl_interfaces::GetParameters>("get_parameters");
+    auto request = std::make_shared<rcl_interfaces::GetParameters::Request>();
+    for (auto parameter_name : parameter_names) {
+      rcl_interfaces::ParameterDescription description;
+      description.name = parameter_name;
+      request->parameter_descriptions.push_back(description);
+    }
+
+    client->async_send_request(
+      request, [&promise_result, &future_result, &callback](
+        rclcpp::client::Client<rcl_interfaces::GetParameters>::SharedFuture cb_f) {
+      std::vector<parameter::ParameterContainer> value;
+      auto parameters = cb_f.get()->parameters;
+      for (auto parameter : parameters) {
+        switch (parameter.description.parameter_type) {
+          case rcl_interfaces::ParameterDescription::BOOL_PARAMETER:
+            value.push_back(parameter::ParameterContainer(
+              parameter.description.name,
+              rclcpp::parameter::get_parameter_value<bool>(parameter)));
+            break;
+          case rcl_interfaces::ParameterDescription::STRING_PARAMETER:
+            value.push_back(parameter::ParameterContainer(
+              parameter.description.name,
+              rclcpp::parameter::get_parameter_value<std::string>(parameter)));
+            break;
+          case rcl_interfaces::ParameterDescription::DOUBLE_PARAMETER:
+            value.push_back(parameter::ParameterContainer(
+              parameter.description.name,
+              rclcpp::parameter::get_parameter_value<double>(parameter)));
+            break;
+          case rcl_interfaces::ParameterDescription::INTEGER_PARAMETER:
+            value.push_back(parameter::ParameterContainer(
+              parameter.description.name,
+              rclcpp::parameter::get_parameter_value<int64_t>(parameter)));
+            break;
+          default:
+            // TODO: use custom exception
+            throw std::runtime_error("Invalid value type");
+        }
+      }
+      promise_result.set_value(value);
+      if (callback != nullptr) {
+        callback(future_result);
+      }
+    }
+      );
+  }
+  return future_result;
+}
+
+std::shared_future<bool>
+Node::async_set_parameters(
+  const std::string & node_name,
+  const std::vector<parameter::ParameterContainer> & key_values,
+  std::function<void(std::shared_future<bool>)> callback)
+{
+  std::promise<bool> promise_result;
+  auto future_result = promise_result.get_future().share();
+  if (node_name == this->get_name()) {
+    for (auto kv : key_values) {
+      switch (kv.get_typeID()) {
+        case parameter::ParameterDataType::INTEGER_PARAMETER:
+          this->set_parameter(kv.get_name(), kv.get_value<int64_t>());
+          break;
+        case parameter::ParameterDataType::DOUBLE_PARAMETER:
+          this->set_parameter(kv.get_name(), kv.get_value<double>());
+          break;
+        case parameter::ParameterDataType::STRING_PARAMETER:
+          this->set_parameter(kv.get_name(), kv.get_value<std::string>());
+          break;
+        case parameter::ParameterDataType::BOOL_PARAMETER:
+          this->set_parameter(kv.get_name(), kv.get_value<bool>());
+          break;
+        default:
+          throw std::runtime_error("Invalid parameter type");
+      }
+    }
+    promise_result.set_value(true);
+    if (callback != nullptr) {
+      callback(future_result);
+    }
+  } else {
+    auto client = this->create_client<rcl_interfaces::SetParameters>("set_parameters");
+    auto request = std::make_shared<rcl_interfaces::SetParameters::Request>();
+    for (auto kv: key_values) {
+      rcl_interfaces::Parameter parameter;
+      parameter.description.name = kv.get_name();
+      switch (kv.get_typeID()) {
+        case parameter::ParameterDataType::INTEGER_PARAMETER:
+          rclcpp::parameter::set_parameter_value<int64_t>(
+            parameter, kv.get_value<int64_t>());
+          break;
+        case parameter::ParameterDataType::DOUBLE_PARAMETER:
+          rclcpp::parameter::set_parameter_value<double>(
+            parameter, kv.get_value<double>());
+          break;
+        case parameter::ParameterDataType::STRING_PARAMETER:
+          rclcpp::parameter::set_parameter_value<std::string>(
+            parameter, kv.get_value<std::string>());
+          break;
+        case parameter::ParameterDataType::BOOL_PARAMETER:
+          rclcpp::parameter::set_parameter_value<bool>(
+            parameter, kv.get_value<bool>());
+          break;
+        default:
+          throw std::runtime_error("Invalid parameter type");
+      }
+      request->parameters.push_back(parameter);
+    }
+
+    client->async_send_request(
+      request, [&promise_result, &future_result, &callback](
+        rclcpp::client::Client<rcl_interfaces::SetParameters>::SharedFuture cb_f) {
+      promise_result.set_value(cb_f.get()->success);
+      if (callback != nullptr) {
+        callback(future_result);
+      }
+    }
+      );
+  }
+  return future_result;
+}
+
+template<typename ParamTypeT>
+std::shared_future<bool>
+Node::async_set_parameter(
+  const std::string & node_name, const parameter::ParameterName & key, const ParamTypeT & value,
+  std::function<void(std::shared_future<bool>)> callback)
+{
+  std::vector<parameter::ParameterContainer> param_containers = {{
+                                                                   parameter::ParameterContainer(
+                                                                     key, value)
+                                                                 }};
+  return this->async_set_parameters(node_name, param_containers, callback);
+}
+
+std::shared_future<bool>
+Node::async_has_parameter(
+  const std::string & node_name, const parameter::ParameterName & parameter_name,
+  std::function<void(std::shared_future<bool>)> callback)
+{
+  std::promise<bool> promise_result;
+  auto future_result = promise_result.get_future().share();
+  this->async_has_parameters(node_name, {{parameter_name}},
+    [&promise_result, &future_result, &callback](
+      std::shared_future<std::vector<bool>> cb_f) {
+    promise_result.set_value(cb_f.get()[0]);
+    if (callback != nullptr) {
+      callback(future_result);
+    }
+  }
+    );
+  return future_result;
+}
+
+std::shared_future<std::vector<bool>>
+Node::async_has_parameters(
+  const std::string & node_name, const std::vector<parameter::ParameterName> & parameter_names,
+  std::function<void(std::shared_future<std::vector<bool>>)> callback)
+{
+  std::promise<std::vector<bool>> promise_result;
+  auto future_result = promise_result.get_future().share();
+  if (node_name == this->get_name()) {
+    std::vector<bool> value;
+    for (auto parameter_name: parameter_names) {
+      value.push_back(this->has_parameter(parameter_name));
+    }
+    promise_result.set_value(value);
+    if (callback != nullptr) {
+      callback(future_result);
+    }
+  } else {
+    auto client = this->create_client<rcl_interfaces::HasParameters>("has_parameters");
+    auto request = std::make_shared<rcl_interfaces::HasParameters::Request>();
+    for (auto parameter_name: parameter_names) {
+      rcl_interfaces::ParameterDescription parameter_description;
+      parameter_description.name = parameter_name;
+      request->parameter_descriptions.push_back(parameter_description);
+    }
+    client->async_send_request(
+      request, [&promise_result, &future_result, &callback](
+        rclcpp::client::Client<rcl_interfaces::HasParameters>::SharedFuture cb_f) {
+      promise_result.set_value(cb_f.get()->result);
+      if (callback != nullptr) {
+        callback(future_result);
+      }
+    }
+      );
+  }
+  return future_result;
 }
 
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */
