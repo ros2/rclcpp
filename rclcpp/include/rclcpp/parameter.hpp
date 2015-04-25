@@ -21,6 +21,8 @@
 
 #include <rclcpp/macros.hpp>
 
+#include <rcl_interfaces/Parameter.h>
+#include <rcl_interfaces/ParameterDescription.h>
 
 namespace rclcpp
 {
@@ -28,30 +30,44 @@ namespace rclcpp
 namespace parameter
 {
 // Datatype for parameter names
-typedef std::string ParamName;
+typedef std::string ParameterName;
 
 // Datatype for storing parameter types
-enum ParamDataType {INVALID_PARAM, INT_PARAM, DOUBLE_PARAM, STRING_PARAM, BOOL_PARAM};
-
+enum ParameterDataType {
+  INVALID_PARAMETER, INTEGER_PARAMETER, DOUBLE_PARAMETER, STRING_PARAMETER, BOOL_PARAMETER
+};
 
 // Structure to store an arbitrary parameter with templated get/set methods
-class ParamContainer
+class ParameterContainer
 {
 public:
+  ParameterContainer()
+  : typeID_(INVALID_PARAMETER) {}
+  ParameterContainer(
+    const std::string & name, const int64_t int_value)
+  : name_(name), typeID_(INTEGER_PARAMETER), int_value_(int_value) {}
+  ParameterContainer(
+    const std::string & name, const double double_value)
+  : name_(name), typeID_(DOUBLE_PARAMETER), double_value_(double_value) {}
+  ParameterContainer(
+    const std::string & name, const std::string & string_value)
+  : name_(name), typeID_(STRING_PARAMETER), string_value_(string_value) {}
+  ParameterContainer(
+    const std::string & name, const bool bool_value)
+  : name_(name), typeID_(BOOL_PARAMETER), bool_value_(bool_value) {}
+
   /* Templated getter */
   template<typename T>
-  T &
-  get_value(T & value) const;
+  T
+  get_value() const;
 
-  inline ParamName get_name() const {return name_; }
-  /* Templated setter */
-  template<typename T>
-  void
-  set_value(const ParamName & name, const T & value);
+  inline ParameterName get_name() const {return name_; }
+
+  inline ParameterDataType get_typeID() const {return typeID_; }
 
 private:
-  ParamDataType typeID_;
-  ParamName name_;
+  ParameterName name_;
+  ParameterDataType typeID_;
   int64_t int_value_;
   double double_value_;
   std::string string_value_;
@@ -59,99 +75,149 @@ private:
 };
 
 template<>
-inline int64_t & ParamContainer::get_value(int64_t & value) const
+inline int64_t ParameterContainer::get_value() const
 {
-  if (typeID_ != INT_PARAM) {
+  if (typeID_ != INTEGER_PARAMETER) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = int_value_;
-  return value;
+  return int_value_;
 }
 template<>
-inline double & ParamContainer::get_value(double & value) const
+inline double ParameterContainer::get_value() const
 {
-  if (typeID_ != DOUBLE_PARAM) {
+  if (typeID_ != DOUBLE_PARAMETER) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = double_value_;
-  return value;
+  return double_value_;
 }
 template<>
-inline std::string & ParamContainer::get_value(std::string & value) const
+inline std::string ParameterContainer::get_value() const
 {
-  if (typeID_ != STRING_PARAM) {
+  if (typeID_ != STRING_PARAMETER) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = string_value_;
-  return value;
+  return string_value_;
 }
 template<>
-inline bool & ParamContainer::get_value(bool & value) const
+inline bool ParameterContainer::get_value() const
 {
-  if (typeID_ != BOOL_PARAM) {
+  if (typeID_ != BOOL_PARAMETER) {
     // TODO: use custom exception
     throw std::runtime_error("Invalid type");
   }
-  value = bool_value_;
-  return value;
+  return bool_value_;
 }
 
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const int64_t & value)
-{
-  typeID_ = INT_PARAM;
-  int_value_ = value;
-}
-
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const double & value)
-{
-  typeID_ = DOUBLE_PARAM;
-  double_value_ = value;
-}
-
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const std::string & value)
-{
-  typeID_ = STRING_PARAM;
-  string_value_ = value;
-}
-
-template<>
-inline void ParamContainer::set_value(const ParamName & name, const bool & value)
-{
-  typeID_ = BOOL_PARAM;
-  bool_value_ = value;
-}
-
-class ParamQuery
+class ParameterQuery
 {
 public:
-  ParamQuery(const std::string & name)
-  : typeID_(INVALID_PARAM), name_(name) {}
-  ParamQuery(const ParamDataType typeID)
+  ParameterQuery(const std::string & name)
+  : typeID_(INVALID_PARAMETER), name_(name) {}
+  ParameterQuery(const ParameterDataType typeID)
   : typeID_(typeID), name_("") {}
 
   // TODO: make this extendable for potential regex or other dynamic queryies
   // Possibly use a generator pattern?
   // For now just store a single datatype and provide accessors.
 
-  inline ParamDataType get_type() const
+  inline ParameterDataType get_type() const
   {
     return typeID_;
   }
-  inline ParamName get_name() const
+  inline ParameterName get_name() const
   {
     return name_;
   }
 
 private:
-  ParamDataType typeID_;
-  ParamName name_;
+  ParameterDataType typeID_;
+  ParameterName name_;
 };
+
+template<typename T>
+T get_parameter_value(rcl_interfaces::Parameter & parameter);
+
+template<>
+bool get_parameter_value(rcl_interfaces::Parameter & parameter)
+{
+  if (parameter.description.parameter_type !=
+    rcl_interfaces::ParameterDescription::BOOL_PARAMETER)
+  {
+    // TODO: use custom exception
+    throw std::runtime_error("Parameter value is not a boolean");
+  }
+  return parameter.bool_value;
+}
+
+template<>
+int64_t get_parameter_value(rcl_interfaces::Parameter & parameter)
+{
+  if (parameter.description.parameter_type !=
+    rcl_interfaces::ParameterDescription::INTEGER_PARAMETER)
+  {
+    // TODO: use custom exception
+    throw std::runtime_error("Parameter value is not an integer");
+  }
+  return parameter.integer_value;
+}
+
+template<>
+double get_parameter_value(rcl_interfaces::Parameter & parameter)
+{
+  if (parameter.description.parameter_type !=
+    rcl_interfaces::ParameterDescription::DOUBLE_PARAMETER)
+  {
+    // TODO: use custom exception
+    throw std::runtime_error("Parameter value is not a double");
+  }
+  return parameter.double_value;
+}
+
+template<>
+std::string get_parameter_value(rcl_interfaces::Parameter & parameter)
+{
+  if (parameter.description.parameter_type !=
+    rcl_interfaces::ParameterDescription::STRING_PARAMETER)
+  {
+    // TODO: use custom exception
+    throw std::runtime_error("Parameter value is not a string");
+  }
+  return parameter.string_value;
+}
+
+template<typename T>
+void set_parameter_value(rcl_interfaces::Parameter & parameter, const T & value);
+
+template<>
+void set_parameter_value(rcl_interfaces::Parameter & parameter, const bool & value)
+{
+  parameter.description.parameter_type = rcl_interfaces::ParameterDescription::BOOL_PARAMETER;
+  parameter.bool_value = value;
+}
+
+template<>
+void set_parameter_value(rcl_interfaces::Parameter & parameter, const int64_t & value)
+{
+  parameter.description.parameter_type = rcl_interfaces::ParameterDescription::INTEGER_PARAMETER;
+  parameter.integer_value = value;
+}
+
+template<>
+void set_parameter_value(rcl_interfaces::Parameter & parameter, const double & value)
+{
+  parameter.description.parameter_type = rcl_interfaces::ParameterDescription::DOUBLE_PARAMETER;
+  parameter.double_value = value;
+}
+
+template<>
+void set_parameter_value(rcl_interfaces::Parameter & parameter, const std::string & value)
+{
+  parameter.description.parameter_type = rcl_interfaces::ParameterDescription::STRING_PARAMETER;
+  parameter.string_value = value;
+}
 } /* namespace parameter */
 } /* namespace rclcpp */
 
