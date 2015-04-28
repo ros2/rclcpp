@@ -23,6 +23,7 @@
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/parameter.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/service.hpp>
 #include <rclcpp/subscription.hpp>
@@ -124,6 +125,18 @@ public:
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  template<typename ParamTypeT>
+  ParamTypeT get_param(const parameter::ParamName & key) const;
+
+  std::vector<parameter::ParamContainer>
+  get_params(const std::vector<parameter::ParamQuery> & query) const;
+
+  bool
+  has_param(const parameter::ParamQuery & query) const;
+
+  template<typename ParamTypeT>
+  void set_param(const parameter::ParamName & key, const ParamTypeT & value);
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
@@ -148,6 +161,8 @@ private:
     const std::string & service_name,
     std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
+
+  std::map<parameter::ParamName, parameter::ParamContainer> params_;
 };
 
 } /* namespace node */
