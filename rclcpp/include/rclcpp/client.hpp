@@ -112,6 +112,7 @@ public:
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
     int64_t sequence_number = typed_request_header->sequence_number;
+    // TODO this must check if the sequence_number is valid otherwise the call_promise will be null
     auto tuple = this->pending_requests_[sequence_number];
     auto call_promise = std::get<0>(tuple);
     auto callback = std::get<1>(tuple);
