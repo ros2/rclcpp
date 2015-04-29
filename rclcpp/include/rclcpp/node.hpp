@@ -131,8 +131,7 @@ public:
   typename function_arity<
     FunctorT,
     2,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr
-    >::type
+    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
   create_service(
     const std::string & service_name,
     FunctorT functor,
@@ -143,8 +142,7 @@ public:
   typename function_arity<
     FunctorT,
     3,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr
-    >::type
+    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
   create_service(
     const std::string & service_name,
     FunctorT functor,

@@ -186,8 +186,7 @@ template<typename ServiceT, typename FunctorT>
 typename function_arity<
   FunctorT,
   2,
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
-  >::type
+  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
 Node::create_service(
   const std::string & service_name,
   FunctorT functor,
@@ -214,8 +213,7 @@ template<typename ServiceT, typename FunctorT>
 typename function_arity<
   FunctorT,
   3,
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
-  >::type
+  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
 Node::create_service(
   const std::string & service_name,
   FunctorT functor,
