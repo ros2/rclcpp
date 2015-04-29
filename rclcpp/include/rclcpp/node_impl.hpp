@@ -182,13 +182,18 @@ Node::create_client(
   return cli;
 }
 
-template<typename ServiceT>
-typename service::Service<ServiceT>::SharedPtr
+template<typename ServiceT, typename FunctorT>
+typename function_arity<
+  FunctorT,
+  2,
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  >::type
 Node::create_service(
   const std::string & service_name,
-  typename rclcpp::service::Service<ServiceT>::CallbackType callback,
+  FunctorT functor,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
+  typename rclcpp::service::Service<ServiceT>::CallbackType callback = functor;
   using rosidl_generator_cpp::get_service_type_support_handle;
   auto service_type_support_handle =
     get_service_type_support_handle<ServiceT>();
@@ -205,13 +210,19 @@ Node::create_service(
   return serv;
 }
 
-template<typename ServiceT>
-typename service::Service<ServiceT>::SharedPtr
+template<typename ServiceT, typename FunctorT>
+typename function_arity<
+  FunctorT,
+  3,
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  >::type
 Node::create_service(
   const std::string & service_name,
-  typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
+  FunctorT functor,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
+  typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
+    functor;
   using rosidl_generator_cpp::get_service_type_support_handle;
   auto service_type_support_handle =
     get_service_type_support_handle<ServiceT>();

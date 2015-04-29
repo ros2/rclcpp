@@ -46,6 +46,24 @@ class Executor;
 namespace node
 {
 
+// TODO: add support for functors, std::function, lambdas and object members
+template<typename FunctionT>
+struct function_traits;
+
+template<typename ReturnTypeT, typename ... Args>
+struct function_traits<ReturnTypeT(Args ...)>
+{
+  static constexpr std::size_t arity = sizeof ... (Args);
+};
+
+template<typename ReturnTypeT, typename ... Args>
+struct function_traits<ReturnTypeT (*)(Args ...)>: public function_traits<ReturnTypeT(Args ...)>
+{};
+
+template<typename FunctorT, size_t arity, typename ReturnTypeT>
+struct function_arity : std::enable_if<function_traits<FunctorT>::arity == arity, ReturnTypeT>
+{};
+
 /* ROS Node Interface.
  *
  * This is the single point of entry for creating publishers and subscribers.
@@ -109,19 +127,27 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template<typename ServiceT>
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  template<typename ServiceT, typename FunctorT>
+  typename function_arity<
+    FunctorT,
+    2,
+    typename rclcpp::service::Service<ServiceT>::SharedPtr
+    >::type
   create_service(
     const std::string & service_name,
-    typename rclcpp::service::Service<ServiceT>::CallbackType callback,
+    FunctorT functor,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template<typename ServiceT>
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  template<typename ServiceT, typename FunctorT>
+  typename function_arity<
+    FunctorT,
+    3,
+    typename rclcpp::service::Service<ServiceT>::SharedPtr
+    >::type
   create_service(
     const std::string & service_name,
-    typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header,
+    FunctorT functor,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
