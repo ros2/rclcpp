@@ -212,35 +212,4 @@ Node::create_service(
   return serv;
 }
 
-template<typename ServiceT, typename FunctorT>
-typename function_arity<
-  FunctorT,
-  2,
-  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
-Node::create_service_internal(
-  rmw_service_t * service_handle,
-  const std::string & service_name,
-  FunctorT callback)
-{
-  typename rclcpp::service::Service<ServiceT>::CallbackType callback_without_header = callback;
-  return service::Service<ServiceT>::make_shared(
-    service_handle, service_name, callback_without_header);
-}
-
-template<typename ServiceT, typename FunctorT>
-typename function_arity<
-  FunctorT,
-  3,
-  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
-Node::create_service_internal(
-  rmw_service_t * service_handle,
-  const std::string & service_name,
-  FunctorT callback)
-{
-  typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
-    callback;
-  return service::Service<ServiceT>::make_shared(
-    service_handle, service_name, callback_with_header);
-}
-
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

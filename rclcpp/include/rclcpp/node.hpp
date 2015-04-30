@@ -18,6 +18,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <tuple>
 
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
@@ -54,14 +55,13 @@ template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT(Args ...)>
 {
   static constexpr std::size_t arity = sizeof ... (Args);
+
+  template<std::size_t N>
+  using argument_type = typename std::tuple_element<N, std::tuple<Args ...>>::type;
 };
 
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: public function_traits<ReturnTypeT(Args ...)>
-{};
-
-template<typename FunctorT, size_t arity, typename ReturnTypeT>
-struct function_arity : std::enable_if<function_traits<FunctorT>::arity == arity, ReturnTypeT>
 {};
 
 /* ROS Node Interface.
@@ -160,24 +160,54 @@ private:
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
   template<typename ServiceT, typename FunctorT>
-  typename function_arity<
-    FunctorT,
-    2,
+  typename std::enable_if<
+    function_traits<FunctorT>::arity == 2 &&
+    std::is_same<
+      typename function_traits<FunctorT>::template argument_type<0>,
+      typename std::shared_ptr<typename ServiceT::Request>
+      >::value &&
+    std::is_same<
+      typename function_traits<FunctorT>::template argument_type<1>,
+      typename std::shared_ptr<typename ServiceT::Response>
+      >::value,
     typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
   create_service_internal(
     rmw_service_t * service_handle,
     const std::string & service_name,
-    FunctorT callback);
+    FunctorT callback)
+  {
+    typename rclcpp::service::Service<ServiceT>::CallbackType callback_without_header =
+      callback;
+    return service::Service<ServiceT>::make_shared(
+      service_handle, service_name, callback_without_header);
+  }
 
   template<typename ServiceT, typename FunctorT>
-  typename function_arity<
-    FunctorT,
-    3,
+  typename std::enable_if<
+    function_traits<FunctorT>::arity == 3 &&
+    std::is_same<
+      typename function_traits<FunctorT>::template argument_type<0>,
+      std::shared_ptr<rmw_request_id_t>
+      >::value &&
+    std::is_same<
+      typename function_traits<FunctorT>::template argument_type<1>,
+      typename std::shared_ptr<typename ServiceT::Request>
+      >::value &&
+    std::is_same<
+      typename function_traits<FunctorT>::template argument_type<2>,
+      typename std::shared_ptr<typename ServiceT::Response>
+      >::value,
     typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
   create_service_internal(
     rmw_service_t * service_handle,
     const std::string & service_name,
-    FunctorT callback);
+    FunctorT callback)
+  {
+    typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
+      callback;
+    return service::Service<ServiceT>::make_shared(
+      service_handle, service_name, callback_with_header);
+  }
 };
 
 } /* namespace node */
