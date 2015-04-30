@@ -196,8 +196,8 @@ Node::create_service(
   rmw_service_t * service_handle = rmw_create_service(
     this->node_handle_, service_type_support_handle, service_name.c_str());
 
-  auto serv = create_service_internal<ServiceT>(service_handle, service_name,
-      callback);
+  auto serv = create_service_internal<ServiceT>(
+    service_handle, service_name, callback);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   if (group) {
     if (!group_in_node(group)) {
