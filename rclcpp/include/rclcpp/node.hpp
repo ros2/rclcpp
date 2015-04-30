@@ -159,18 +159,20 @@ private:
     std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
-  template<typename ServiceT, typename FunctorT>
-  typename std::enable_if<
-    function_traits<FunctorT>::arity == 2 &&
-    std::is_same<
-      typename function_traits<FunctorT>::template argument_type<0>,
-      typename std::shared_ptr<typename ServiceT::Request>
-      >::value &&
-    std::is_same<
-      typename function_traits<FunctorT>::template argument_type<1>,
-      typename std::shared_ptr<typename ServiceT::Response>
-      >::value,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+  template<
+    typename ServiceT,
+    typename FunctorT,
+    typename std::enable_if<
+      function_traits<FunctorT>::arity == 2 &&
+      std::is_same<
+        typename function_traits<FunctorT>::template argument_type<0>,
+        typename std::shared_ptr<typename ServiceT::Request>
+        >::value &&
+      std::is_same<
+        typename function_traits<FunctorT>::template argument_type<1>,
+        typename std::shared_ptr<typename ServiceT::Response>
+        >::value>::type * = nullptr>
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
     rmw_service_t * service_handle,
     const std::string & service_name,
@@ -182,22 +184,24 @@ private:
       service_handle, service_name, callback_without_header);
   }
 
-  template<typename ServiceT, typename FunctorT>
-  typename std::enable_if<
-    function_traits<FunctorT>::arity == 3 &&
-    std::is_same<
-      typename function_traits<FunctorT>::template argument_type<0>,
-      std::shared_ptr<rmw_request_id_t>
-      >::value &&
-    std::is_same<
-      typename function_traits<FunctorT>::template argument_type<1>,
-      typename std::shared_ptr<typename ServiceT::Request>
-      >::value &&
-    std::is_same<
-      typename function_traits<FunctorT>::template argument_type<2>,
-      typename std::shared_ptr<typename ServiceT::Response>
-      >::value,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+  template<
+    typename ServiceT,
+    typename FunctorT,
+    typename std::enable_if<
+      function_traits<FunctorT>::arity == 3 &&
+      std::is_same<
+        typename function_traits<FunctorT>::template argument_type<0>,
+        std::shared_ptr<rmw_request_id_t>
+        >::value &&
+      std::is_same<
+        typename function_traits<FunctorT>::template argument_type<1>,
+        typename std::shared_ptr<typename ServiceT::Request>
+        >::value &&
+      std::is_same<
+        typename function_traits<FunctorT>::template argument_type<2>,
+        typename std::shared_ptr<typename ServiceT::Response>
+        >::value>::type * = nullptr>
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
     rmw_service_t * service_handle,
     const std::string & service_name,
