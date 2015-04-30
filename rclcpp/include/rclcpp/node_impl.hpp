@@ -182,11 +182,11 @@ Node::create_client(
   return cli;
 }
 
-template<typename ServiceT, typename F>
+template<typename ServiceT, typename FunctorT>
 typename rclcpp::service::Service<ServiceT>::SharedPtr
 Node::create_service(
   const std::string & service_name,
-  F callback,
+  FunctorT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   using rosidl_generator_cpp::get_service_type_support_handle;
@@ -196,21 +196,9 @@ Node::create_service(
   rmw_service_t * service_handle = rmw_create_service(
     this->node_handle_, service_type_support_handle, service_name.c_str());
 
-  auto serv = service::Service<ServiceT>::make_shared(
-    service_handle,
-    service_name,
-    callback);
+  auto serv = create_service_internal<ServiceT>(service_handle, service_name,
+      callback);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
-  register_service(service_name, serv_base_ptr, group);
-  return serv;
-}
-
-void
-Node::register_service(
-  const std::string & service_name,
-  std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
-{
   if (group) {
     if (!group_in_node(group)) {
       // TODO: use custom exception
@@ -221,6 +209,38 @@ Node::register_service(
     default_callback_group_->add_service(serv_base_ptr);
   }
   number_of_services_++;
+  return serv;
+}
+
+template<typename ServiceT, typename FunctorT>
+typename function_arity<
+  FunctorT,
+  2,
+  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+Node::create_service_internal(
+  rmw_service_t * service_handle,
+  const std::string & service_name,
+  FunctorT callback)
+{
+  typename rclcpp::service::Service<ServiceT>::CallbackType callback_without_header = callback;
+  return service::Service<ServiceT>::make_shared(
+    service_handle, service_name, callback_without_header);
+}
+
+template<typename ServiceT, typename FunctorT>
+typename function_arity<
+  FunctorT,
+  3,
+  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+Node::create_service_internal(
+  rmw_service_t * service_handle,
+  const std::string & service_name,
+  FunctorT callback)
+{
+  typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
+    callback;
+  return service::Service<ServiceT>::make_shared(
+    service_handle, service_name, callback_with_header);
 }
 
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

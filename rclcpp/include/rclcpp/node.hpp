@@ -158,6 +158,26 @@ private:
     const std::string & service_name,
     std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
+
+  template<typename ServiceT, typename FunctorT>
+  typename function_arity<
+    FunctorT,
+    2,
+    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+  create_service_internal(
+    rmw_service_t * service_handle,
+    const std::string & service_name,
+    FunctorT callback);
+
+  template<typename ServiceT, typename FunctorT>
+  typename function_arity<
+    FunctorT,
+    3,
+    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+  create_service_internal(
+    rmw_service_t * service_handle,
+    const std::string & service_name,
+    FunctorT callback);
 };
 
 } /* namespace node */
