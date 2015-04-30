@@ -196,10 +196,6 @@ private:
       std::is_same<
         typename function_traits<FunctorT>::template argument_type<1>,
         typename std::shared_ptr<typename ServiceT::Request>
-        >::value &&
-      std::is_same<
-        typename function_traits<FunctorT>::template argument_type<2>,
-        typename std::shared_ptr<typename ServiceT::Response>
         >::value>::type * = nullptr>
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
