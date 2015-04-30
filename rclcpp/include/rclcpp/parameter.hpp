@@ -19,6 +19,7 @@
 
 #include <rmw/rmw.h>
 
+#include <rclcpp/executors.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node.hpp>
 
@@ -156,6 +157,8 @@ class AsyncParametersClient
 {
 
 public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(AsyncParametersClient);
+
   AsyncParametersClient(const rclcpp::node::Node::SharedPtr & node)
   : node_(node)
   {
@@ -231,6 +234,72 @@ private:
     set_parameters_atomically_client_;
   rclcpp::client::Client<rcl_interfaces::ListParameters>::SharedPtr list_parameters_client_;
   rclcpp::client::Client<rcl_interfaces::DescribeParameters>::SharedPtr describe_parameters_client_;
+};
+
+class SyncParametersClient
+{
+  friend class rclcpp::executor::Executor;
+
+public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(SyncParametersClient);
+
+  SyncParametersClient(
+    rclcpp::node::Node::SharedPtr & node)
+  : node_(node)
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);
+  }
+
+  SyncParametersClient(
+    rclcpp::executor::Executor::SharedPtr & executor,
+    rclcpp::node::Node::SharedPtr & node)
+  : executor_(executor), node_(node)
+  {
+    async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);
+  }
+
+  std::vector<ParameterVariant>
+  get_parameters(std::vector<std::string> parameter_names)
+  {
+    auto f = async_parameters_client_->get_parameters(parameter_names);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  std::vector<ParameterType>
+  get_parameter_types(std::vector<std::string> parameter_names)
+  {
+    auto f = async_parameters_client_->get_parameter_types(parameter_names);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  std::vector<rcl_interfaces::ParameterSetResult>
+  set_parameters(std::vector<ParameterVariant> parameters)
+  {
+    auto f = async_parameters_client_->set_parameters(parameters);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  rcl_interfaces::ParameterSetResult
+  set_parameters_atomically(std::vector<ParameterVariant> parameters)
+  {
+    auto f = async_parameters_client_->set_parameters_atomically(parameters);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  rcl_interfaces::ParameterListResult
+  list_parameters(
+    std::vector<std::string> parameter_prefixes,
+    uint64_t depth)
+  {
+    auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+private:
+  rclcpp::executor::Executor::SharedPtr executor_;
+  rclcpp::node::Node::SharedPtr node_;
+  AsyncParametersClient::SharedPtr async_parameters_client_;
 };
 
 } /* namespace parameter */
