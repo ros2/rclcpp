@@ -127,11 +127,11 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template<typename ServiceT, typename F>
+  template<typename ServiceT, typename FunctorT>
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
-    F callback,
+    FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
