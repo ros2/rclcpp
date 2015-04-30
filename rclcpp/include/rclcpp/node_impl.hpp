@@ -182,17 +182,13 @@ Node::create_client(
   return cli;
 }
 
-template<typename ServiceT, typename FunctorT>
-typename function_arity<
-  FunctorT,
-  2,
-  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+template<typename ServiceT, typename F>
+typename rclcpp::service::Service<ServiceT>::SharedPtr
 Node::create_service(
   const std::string & service_name,
-  FunctorT functor,
+  F callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  typename rclcpp::service::Service<ServiceT>::CallbackType callback = functor;
   using rosidl_generator_cpp::get_service_type_support_handle;
   auto service_type_support_handle =
     get_service_type_support_handle<ServiceT>();
@@ -204,34 +200,6 @@ Node::create_service(
     service_handle,
     service_name,
     callback);
-  auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
-  register_service(service_name, serv_base_ptr, group);
-  return serv;
-}
-
-template<typename ServiceT, typename FunctorT>
-typename function_arity<
-  FunctorT,
-  3,
-  typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
-Node::create_service(
-  const std::string & service_name,
-  FunctorT functor,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
-{
-  typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
-    functor;
-  using rosidl_generator_cpp::get_service_type_support_handle;
-  auto service_type_support_handle =
-    get_service_type_support_handle<ServiceT>();
-
-  rmw_service_t * service_handle = rmw_create_service(
-    this->node_handle_, service_type_support_handle, service_name.c_str());
-
-  auto serv = service::Service<ServiceT>::make_shared(
-    service_handle,
-    service_name,
-    callback_with_header);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   register_service(service_name, serv_base_ptr, group);
   return serv;

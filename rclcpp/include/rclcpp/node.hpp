@@ -127,25 +127,11 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template<typename ServiceT, typename FunctorT>
-  typename function_arity<
-    FunctorT,
-    2,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
+  template<typename ServiceT, typename F>
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
-    FunctorT functor,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
-
-  /* Create and return a Service. */
-  template<typename ServiceT, typename FunctorT>
-  typename function_arity<
-    FunctorT,
-    3,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr>::type
-  create_service(
-    const std::string & service_name,
-    FunctorT functor,
+    F callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
