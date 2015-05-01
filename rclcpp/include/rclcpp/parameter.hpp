@@ -57,31 +57,43 @@ public:
   {
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_NOT_SET;
   }
-  ParameterVariant(const std::string & name, const bool bool_value)
+  explicit ParameterVariant(const std::string & name, const bool bool_value)
   : name_(name)
   {
     value_.bool_value = bool_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_BOOL;
   }
-  ParameterVariant(const std::string & name, const int64_t int_value)
+  explicit ParameterVariant(const std::string & name, const int int_value)
   : name_(name)
   {
     value_.integer_value = int_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_INTEGER;
   }
-  ParameterVariant(const std::string & name, const double double_value)
+  explicit ParameterVariant(const std::string & name, const int64_t int_value)
+  : name_(name)
+  {
+    value_.integer_value = int_value;
+    value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_INTEGER;
+  }
+  explicit ParameterVariant(const std::string & name, const float double_value)
   : name_(name)
   {
     value_.double_value = double_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_DOUBLE;
   }
-  ParameterVariant(const std::string & name, const std::string & string_value)
+  explicit ParameterVariant(const std::string & name, const double double_value)
+  : name_(name)
+  {
+    value_.double_value = double_value;
+    value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_DOUBLE;
+  }
+  explicit ParameterVariant(const std::string & name, const std::string & string_value)
   : name_(name)
   {
     value_.string_value = string_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_STRING;
   }
-  ParameterVariant(const std::string & name, const std::vector<int8_t> & bytes_value)
+  explicit ParameterVariant(const std::string & name, const std::vector<int8_t> & bytes_value)
   : name_(name)
   {
     value_.bytes_value = bytes_value;
