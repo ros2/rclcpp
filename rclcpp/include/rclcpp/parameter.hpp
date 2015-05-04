@@ -93,7 +93,7 @@ public:
     value_.string_value = string_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_STRING;
   }
-  explicit ParameterVariant(const std::string & name, const std::vector<int8_t> & bytes_value)
+  explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & bytes_value)
   : name_(name)
   {
     value_.bytes_value = bytes_value;
@@ -156,7 +156,7 @@ inline bool ParameterVariant::get_value() const
   return value_.bool_value;
 }
 template<>
-inline std::vector<int8_t> ParameterVariant::get_value() const
+inline std::vector<uint8_t> ParameterVariant::get_value() const
 {
   if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BYTES) {
     // TODO: use custom exception
