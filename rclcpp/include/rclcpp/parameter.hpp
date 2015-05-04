@@ -250,8 +250,6 @@ private:
 
 class SyncParametersClient
 {
-  friend class rclcpp::executor::Executor;
-
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(SyncParametersClient);
 
