@@ -100,11 +100,6 @@ public:
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_BYTES;
   }
 
-  /* Templated getter */
-  template<typename T>
-  T
-  get_value() const;
-
   inline ParameterType get_type() const {return static_cast<ParameterType>(value_.parameter_type); }
 
   inline std::string get_name() const & {return name_; }
@@ -114,56 +109,61 @@ public:
     return value_;
   }
 
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, int64_t>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_INTEGER) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.integer_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, double>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_DOUBLE) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.double_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_STRING, const std::string &>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_STRING) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.string_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_BOOL, bool>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BOOL) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.bool_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_BYTES, std::vector<uint8_t>>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BYTES) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.bytes_value;
+  }
+
 private:
   std::string name_;
   rcl_interfaces::ParameterValue value_;
 };
-
-template<>
-inline int64_t ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_INTEGER) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.integer_value;
-}
-template<>
-inline double ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_DOUBLE) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.double_value;
-}
-template<>
-inline std::string ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_STRING) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.string_value;
-}
-template<>
-inline bool ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BOOL) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.bool_value;
-}
-template<>
-inline std::vector<uint8_t> ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BYTES) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.bytes_value;
-}
 
 class AsyncParametersClient
 {
