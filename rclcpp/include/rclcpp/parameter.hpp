@@ -206,34 +206,34 @@ public:
     return f;
   }
 
-  std::shared_future<std::vector<rcl_interfaces::ParameterSetResult>>
+  std::shared_future<std::vector<rcl_interfaces::SetParametersResult>>
   set_parameters(
     std::vector<ParameterVariant> parameters,
     std::function<void(
-      std::shared_future<std::vector<rcl_interfaces::ParameterSetResult>>)> callback = nullptr)
+      std::shared_future<std::vector<rcl_interfaces::SetParametersResult>>)> callback = nullptr)
   {
-    std::shared_future<std::vector<rcl_interfaces::ParameterSetResult>> f;
+    std::shared_future<std::vector<rcl_interfaces::SetParametersResult>> f;
     return f;
   }
 
-  std::shared_future<rcl_interfaces::ParameterSetResult>
+  std::shared_future<rcl_interfaces::SetParametersResult>
   set_parameters_atomically(
     std::vector<ParameterVariant> parameters,
     std::function<void(
-      std::shared_future<rcl_interfaces::ParameterSetResult>)> callback = nullptr)
+      std::shared_future<rcl_interfaces::SetParametersResult>)> callback = nullptr)
   {
-    std::shared_future<rcl_interfaces::ParameterSetResult> f;
+    std::shared_future<rcl_interfaces::SetParametersResult> f;
     return f;
   }
 
-  std::shared_future<rcl_interfaces::ParameterListResult>
+  std::shared_future<rcl_interfaces::ListParametersResult>
   list_parameters(
     std::vector<std::string> parameter_prefixes,
     uint64_t depth,
     std::function<void(
-      std::shared_future<rcl_interfaces::ParameterListResult>)> callback = nullptr)
+      std::shared_future<rcl_interfaces::ListParametersResult>)> callback = nullptr)
   {
-    std::shared_future<rcl_interfaces::ParameterListResult> f;
+    std::shared_future<rcl_interfaces::ListParametersResult> f;
     return f;
   }
 
@@ -283,21 +283,21 @@ public:
     return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
   }
 
-  std::vector<rcl_interfaces::ParameterSetResult>
+  std::vector<rcl_interfaces::SetParametersResult>
   set_parameters(std::vector<ParameterVariant> parameters)
   {
     auto f = async_parameters_client_->set_parameters(parameters);
     return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
   }
 
-  rcl_interfaces::ParameterSetResult
+  rcl_interfaces::SetParametersResult
   set_parameters_atomically(std::vector<ParameterVariant> parameters)
   {
     auto f = async_parameters_client_->set_parameters_atomically(parameters);
     return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
   }
 
-  rcl_interfaces::ParameterListResult
+  rcl_interfaces::ListParametersResult
   list_parameters(
     std::vector<std::string> parameter_prefixes,
     uint64_t depth)
