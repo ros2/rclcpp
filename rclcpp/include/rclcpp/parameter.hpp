@@ -19,6 +19,7 @@
 
 #include <rmw/rmw.h>
 
+#include <rclcpp/executors.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node.hpp>
 
@@ -56,41 +57,48 @@ public:
   {
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_NOT_SET;
   }
-  ParameterVariant(const std::string & name, const bool bool_value)
+  explicit ParameterVariant(const std::string & name, const bool bool_value)
   : name_(name)
   {
     value_.bool_value = bool_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_BOOL;
   }
-  ParameterVariant(const std::string & name, const int64_t int_value)
+  explicit ParameterVariant(const std::string & name, const int int_value)
   : name_(name)
   {
     value_.integer_value = int_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_INTEGER;
   }
-  ParameterVariant(const std::string & name, const double double_value)
+  explicit ParameterVariant(const std::string & name, const int64_t int_value)
+  : name_(name)
+  {
+    value_.integer_value = int_value;
+    value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_INTEGER;
+  }
+  explicit ParameterVariant(const std::string & name, const float double_value)
   : name_(name)
   {
     value_.double_value = double_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_DOUBLE;
   }
-  ParameterVariant(const std::string & name, const std::string & string_value)
+  explicit ParameterVariant(const std::string & name, const double double_value)
+  : name_(name)
+  {
+    value_.double_value = double_value;
+    value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_DOUBLE;
+  }
+  explicit ParameterVariant(const std::string & name, const std::string & string_value)
   : name_(name)
   {
     value_.string_value = string_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_STRING;
   }
-  ParameterVariant(const std::string & name, const std::vector<int8_t> & bytes_value)
+  explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & bytes_value)
   : name_(name)
   {
     value_.bytes_value = bytes_value;
     value_.parameter_type = rcl_interfaces::ParameterType::PARAMETER_BYTES;
   }
-
-  /* Templated getter */
-  template<typename T>
-  T
-  get_value() const;
 
   inline ParameterType get_type() const {return static_cast<ParameterType>(value_.parameter_type); }
 
@@ -101,61 +109,78 @@ public:
     return value_;
   }
 
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, int64_t>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_INTEGER) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.integer_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, double>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_DOUBLE) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.double_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_STRING, const std::string &>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_STRING) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.string_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_BOOL, bool>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BOOL) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.bool_value;
+  }
+  template<ParameterType type>
+  typename std::enable_if<type == ParameterType::PARAMETER_BYTES, std::vector<uint8_t>>::type
+  get_value() const
+  {
+    if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BYTES) {
+      // TODO: use custom exception
+      throw std::runtime_error("Invalid type");
+    }
+    return value_.bytes_value;
+  }
+
+  int64_t as_int() const {return get_value<ParameterType::PARAMETER_INTEGER>(); }
+
+  double as_double() const {return get_value<ParameterType::PARAMETER_DOUBLE>(); }
+
+  const std::string & as_string() const {return get_value<ParameterType::PARAMETER_STRING>(); }
+
+  bool as_bool() const {return get_value<ParameterType::PARAMETER_BOOL>(); }
+
+  std::vector<uint8_t> as_bytes() const {return get_value<ParameterType::PARAMETER_BYTES>(); }
+
 private:
   std::string name_;
   rcl_interfaces::ParameterValue value_;
 };
 
-template<>
-inline int64_t ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_INTEGER) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.integer_value;
-}
-template<>
-inline double ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_DOUBLE) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.double_value;
-}
-template<>
-inline std::string ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_STRING) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.string_value;
-}
-template<>
-inline bool ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BOOL) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.bool_value;
-}
-template<>
-inline std::vector<int8_t> ParameterVariant::get_value() const
-{
-  if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BYTES) {
-    // TODO: use custom exception
-    throw std::runtime_error("Invalid type");
-  }
-  return value_.bytes_value;
-}
-
 class AsyncParametersClient
 {
 
 public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(AsyncParametersClient);
+
   AsyncParametersClient(const rclcpp::node::Node::SharedPtr & node)
   : node_(node)
   {
@@ -191,34 +216,34 @@ public:
     return f;
   }
 
-  std::shared_future<std::vector<rcl_interfaces::ParameterSetResult>>
+  std::shared_future<std::vector<rcl_interfaces::SetParametersResult>>
   set_parameters(
     std::vector<ParameterVariant> parameters,
     std::function<void(
-      std::shared_future<std::vector<rcl_interfaces::ParameterSetResult>>)> callback = nullptr)
+      std::shared_future<std::vector<rcl_interfaces::SetParametersResult>>)> callback = nullptr)
   {
-    std::shared_future<std::vector<rcl_interfaces::ParameterSetResult>> f;
+    std::shared_future<std::vector<rcl_interfaces::SetParametersResult>> f;
     return f;
   }
 
-  std::shared_future<rcl_interfaces::ParameterSetResult>
+  std::shared_future<rcl_interfaces::SetParametersResult>
   set_parameters_atomically(
     std::vector<ParameterVariant> parameters,
     std::function<void(
-      std::shared_future<rcl_interfaces::ParameterSetResult>)> callback = nullptr)
+      std::shared_future<rcl_interfaces::SetParametersResult>)> callback = nullptr)
   {
-    std::shared_future<rcl_interfaces::ParameterSetResult> f;
+    std::shared_future<rcl_interfaces::SetParametersResult> f;
     return f;
   }
 
-  std::shared_future<rcl_interfaces::ParameterListResult>
+  std::shared_future<rcl_interfaces::ListParametersResult>
   list_parameters(
     std::vector<std::string> parameter_prefixes,
     uint64_t depth,
     std::function<void(
-      std::shared_future<rcl_interfaces::ParameterListResult>)> callback = nullptr)
+      std::shared_future<rcl_interfaces::ListParametersResult>)> callback = nullptr)
   {
-    std::shared_future<rcl_interfaces::ParameterListResult> f;
+    std::shared_future<rcl_interfaces::ListParametersResult> f;
     return f;
   }
 
@@ -231,6 +256,70 @@ private:
     set_parameters_atomically_client_;
   rclcpp::client::Client<rcl_interfaces::ListParameters>::SharedPtr list_parameters_client_;
   rclcpp::client::Client<rcl_interfaces::DescribeParameters>::SharedPtr describe_parameters_client_;
+};
+
+class SyncParametersClient
+{
+public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(SyncParametersClient);
+
+  SyncParametersClient(
+    rclcpp::node::Node::SharedPtr & node)
+  : node_(node)
+  {
+    executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);
+  }
+
+  SyncParametersClient(
+    rclcpp::executor::Executor::SharedPtr & executor,
+    rclcpp::node::Node::SharedPtr & node)
+  : executor_(executor), node_(node)
+  {
+    async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);
+  }
+
+  std::vector<ParameterVariant>
+  get_parameters(std::vector<std::string> parameter_names)
+  {
+    auto f = async_parameters_client_->get_parameters(parameter_names);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  std::vector<ParameterType>
+  get_parameter_types(std::vector<std::string> parameter_names)
+  {
+    auto f = async_parameters_client_->get_parameter_types(parameter_names);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  std::vector<rcl_interfaces::SetParametersResult>
+  set_parameters(std::vector<ParameterVariant> parameters)
+  {
+    auto f = async_parameters_client_->set_parameters(parameters);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  rcl_interfaces::SetParametersResult
+  set_parameters_atomically(std::vector<ParameterVariant> parameters)
+  {
+    auto f = async_parameters_client_->set_parameters_atomically(parameters);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+  rcl_interfaces::ListParametersResult
+  list_parameters(
+    std::vector<std::string> parameter_prefixes,
+    uint64_t depth)
+  {
+    auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
+    return rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f).get();
+  }
+
+private:
+  rclcpp::executor::Executor::SharedPtr executor_;
+  rclcpp::node::Node::SharedPtr node_;
+  AsyncParametersClient::SharedPtr async_parameters_client_;
 };
 
 } /* namespace parameter */
