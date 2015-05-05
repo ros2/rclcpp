@@ -160,6 +160,16 @@ public:
     return value_.bytes_value;
   }
 
+  int64_t as_int() const {return get_value<ParameterType::PARAMETER_INTEGER>(); }
+
+  double as_double() const {return get_value<ParameterType::PARAMETER_DOUBLE>(); }
+
+  const std::string & as_string() const {return get_value<ParameterType::PARAMETER_STRING>(); }
+
+  bool as_bool() const {return get_value<ParameterType::PARAMETER_BOOL>(); }
+
+  std::vector<uint8_t> as_bytes() const {return get_value<ParameterType::PARAMETER_BYTES>(); }
+
 private:
   std::string name_;
   rcl_interfaces::ParameterValue value_;
