@@ -150,7 +150,8 @@ public:
     return value_.bool_value;
   }
   template<ParameterType type>
-  typename std::enable_if<type == ParameterType::PARAMETER_BYTES, std::vector<uint8_t>>::type
+  typename std::enable_if<type == ParameterType::PARAMETER_BYTES,
+  const std::vector<uint8_t> &>::type
   get_value() const
   {
     if (value_.parameter_type != rcl_interfaces::ParameterType::PARAMETER_BYTES) {
@@ -168,7 +169,10 @@ public:
 
   bool as_bool() const {return get_value<ParameterType::PARAMETER_BOOL>(); }
 
-  std::vector<uint8_t> as_bytes() const {return get_value<ParameterType::PARAMETER_BYTES>(); }
+  const std::vector<uint8_t> & as_bytes() const
+  {
+    return get_value<ParameterType::PARAMETER_BYTES>();
+  }
 
 private:
   std::string name_;
