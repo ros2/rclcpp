@@ -170,8 +170,9 @@ public:
     return get_value<ParameterType::PARAMETER_BYTES>();
   }
 
-  static ParameterVariant from_parameter(const rcl_interfaces::Parameter & parameter) {
-    switch(parameter.value.parameter_type) {
+  static ParameterVariant from_parameter(const rcl_interfaces::Parameter & parameter)
+  {
+    switch (parameter.value.parameter_type) {
       case PARAMETER_BOOL:
         return ParameterVariant(parameter.name, parameter.value.bool_value);
       case PARAMETER_INTEGER:
@@ -188,6 +189,7 @@ public:
         throw std::runtime_error("Invalid type from ParameterValue");
     }
   }
+
 private:
   std::string name_;
   rcl_interfaces::ParameterValue value_;
