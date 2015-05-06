@@ -20,6 +20,7 @@
 
 #include <rclcpp/node.hpp>
 #include <rclcpp/parameter.hpp>
+#include <rclcpp/parameter_client.hpp>
 #include <rclcpp/executors.hpp>
 #include <rclcpp/rate.hpp>
 #include <rclcpp/utilities.hpp>

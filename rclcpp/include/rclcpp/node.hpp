@@ -29,6 +29,9 @@
 #include <rclcpp/subscription.hpp>
 #include <rclcpp/timer.hpp>
 
+
+#include <rcl_interfaces/SetParameters.h>
+
 // Forward declaration of ROS middleware class
 namespace rmw
 {
@@ -146,6 +149,20 @@ public:
     FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  const std::vector<rcl_interfaces::SetParametersResult> set_parameters(
+    const std::vector<rcl_interfaces::Parameter> & parameters)
+  {
+    std::vector<rcl_interfaces::SetParametersResult> results;
+    for (auto p : parameters) {
+//      parameters_[p.name] = ParameterVariant::from_parameter_value(p.value);
+      rcl_interfaces::SetParametersResult result;
+      result.successful = true;
+      // TODO: handle parameter constraints
+      results.push_back(result);
+    }
+    return results;
+  }
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
@@ -166,10 +183,9 @@ private:
   size_t number_of_services_;
   size_t number_of_clients_;
 
-  void register_service(
-    const std::string & service_name,
-    std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group);
+  std::mutex mutex_;
+
+//  std::map<std::string, ParameterVariant> parameters_;
 
   template<
     typename ServiceT,
