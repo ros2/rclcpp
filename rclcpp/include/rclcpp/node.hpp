@@ -24,6 +24,7 @@
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/parameter.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/service.hpp>
 #include <rclcpp/subscription.hpp>
@@ -154,7 +155,7 @@ public:
   {
     std::vector<rcl_interfaces::SetParametersResult> results;
     for (auto p : parameters) {
-//      parameters_[p.name] = ParameterVariant::from_parameter_value(p.value);
+      parameters_[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
       rcl_interfaces::SetParametersResult result;
       result.successful = true;
       // TODO: handle parameter constraints
@@ -185,7 +186,7 @@ private:
 
   std::mutex mutex_;
 
-//  std::map<std::string, ParameterVariant> parameters_;
+  std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
   template<
     typename ServiceT,
