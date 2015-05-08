@@ -151,18 +151,22 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   const std::vector<rcl_interfaces::SetParametersResult> set_parameters(
-    const std::vector<rcl_interfaces::Parameter> & parameters)
-  {
-    std::vector<rcl_interfaces::SetParametersResult> results;
-    for (auto p : parameters) {
-      parameters_[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
-      rcl_interfaces::SetParametersResult result;
-      result.successful = true;
-      // TODO: handle parameter constraints
-      results.push_back(result);
-    }
-    return results;
-  }
+    const std::vector<rcl_interfaces::Parameter> & parameters);
+
+  const rcl_interfaces::SetParametersResult set_parameters_atomically(
+    const std::vector<rcl_interfaces::Parameter> & parameters);
+
+  const std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
+    const std::vector<std::string> & names);
+
+  const std::vector<rcl_interfaces::ParameterDescriptor> describe_parameters(
+    const std::vector<std::string> & names);
+
+  const std::vector<uint8_t> get_parameter_types(
+    const std::vector<std::string> & names);
+
+  const std::vector<rcl_interfaces::ListParametersResult> list_parameters(
+    const std::vector<std::string> & prefixes, uint64_t depth);
 
 private:
   RCLCPP_DISABLE_COPY(Node);
