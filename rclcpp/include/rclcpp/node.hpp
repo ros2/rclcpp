@@ -31,8 +31,6 @@
 #include <rclcpp/timer.hpp>
 
 
-#include <rcl_interfaces/SetParameters.h>
-
 // Forward declaration of ROS middleware class
 namespace rmw
 {
