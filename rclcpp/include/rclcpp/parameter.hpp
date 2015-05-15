@@ -190,6 +190,14 @@ public:
     }
   }
 
+  rcl_interfaces::Parameter to_parameter()
+  {
+    rcl_interfaces::Parameter parameter;
+    parameter.name = name_;
+    parameter.value = value_;
+    return parameter;
+  }
+
 private:
   std::string name_;
   rcl_interfaces::ParameterValue value_;
