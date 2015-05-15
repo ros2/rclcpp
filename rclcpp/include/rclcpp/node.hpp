@@ -95,8 +95,8 @@ public:
   Node(std::string node_name, rclcpp::context::Context::SharedPtr context);
 
   /* Get the name of the node. */
-  std::string
-  get_name();
+  const std::string &
+  get_name() const {return name_; }
 
   /* Create and return a callback group. */
   rclcpp::callback_group::CallbackGroup::SharedPtr
@@ -148,23 +148,23 @@ public:
     FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  const std::vector<rcl_interfaces::SetParametersResult> set_parameters(
-    const std::vector<rcl_interfaces::Parameter> & parameters);
+  std::vector<rcl_interfaces::SetParametersResult> set_parameters(
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
-  const rcl_interfaces::SetParametersResult set_parameters_atomically(
-    const std::vector<rcl_interfaces::Parameter> & parameters);
+  rcl_interfaces::SetParametersResult set_parameters_atomically(
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
-  const std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
-    const std::vector<std::string> & names);
+  std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
+    const std::vector<std::string> & names) const;
 
-  const std::vector<rcl_interfaces::ParameterDescriptor> describe_parameters(
-    const std::vector<std::string> & names);
+  std::vector<rcl_interfaces::ParameterDescriptor> describe_parameters(
+    const std::vector<std::string> & names) const;
 
-  const std::vector<uint8_t> get_parameter_types(
-    const std::vector<std::string> & names);
+  std::vector<uint8_t> get_parameter_types(
+    const std::vector<std::string> & names) const;
 
-  const std::vector<rcl_interfaces::ListParametersResult> list_parameters(
-    const std::vector<std::string> & prefixes, uint64_t depth);
+  rcl_interfaces::ListParametersResult list_parameters(
+    const std::vector<std::string> & prefixes, uint64_t depth) const;
 
 private:
   RCLCPP_DISABLE_COPY(Node);
@@ -186,7 +186,7 @@ private:
   size_t number_of_services_;
   size_t number_of_clients_;
 
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 

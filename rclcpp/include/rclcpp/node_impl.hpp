@@ -213,14 +213,14 @@ Node::create_service(
   return serv;
 }
 
-const std::vector<rcl_interfaces::SetParametersResult>
+std::vector<rcl_interfaces::SetParametersResult>
 Node::set_parameters(
-  const std::vector<rcl_interfaces::Parameter> & parameters)
+  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::SetParametersResult> results;
   for (auto p : parameters) {
-    parameters_[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
+    parameters_[p.get_name()] = p;
     rcl_interfaces::SetParametersResult result;
     result.successful = true;
     // TODO: handle parameter constraints
@@ -229,14 +229,14 @@ Node::set_parameters(
   return results;
 }
 
-const rcl_interfaces::SetParametersResult
+rcl_interfaces::SetParametersResult
 Node::set_parameters_atomically(
-  const std::vector<rcl_interfaces::Parameter> & parameters)
+  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::map<std::string, rclcpp::parameter::ParameterVariant> tmp_map;
   for (auto p : parameters) {
-    tmp_map[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
+    tmp_map[p.get_name()] = p;
   }
   tmp_map.insert(parameters_.begin(), parameters_.end());
   std::swap(tmp_map, parameters_);
@@ -246,9 +246,9 @@ Node::set_parameters_atomically(
   return result;
 }
 
-const std::vector<rclcpp::parameter::ParameterVariant>
+std::vector<rclcpp::parameter::ParameterVariant>
 Node::get_parameters(
-  const std::vector<std::string> & names)
+  const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rclcpp::parameter::ParameterVariant> results;
@@ -263,9 +263,9 @@ Node::get_parameters(
   return results;
 }
 
-const std::vector<rcl_interfaces::ParameterDescriptor>
+std::vector<rcl_interfaces::ParameterDescriptor>
 Node::describe_parameters(
-  const std::vector<std::string> & names)
+  const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::ParameterDescriptor> results;
@@ -283,9 +283,9 @@ Node::describe_parameters(
   return results;
 }
 
-const std::vector<uint8_t>
+std::vector<uint8_t>
 Node::get_parameter_types(
-  const std::vector<std::string> & names)
+  const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<uint8_t> results;
@@ -302,12 +302,12 @@ Node::get_parameter_types(
   return results;
 }
 
-const std::vector<rcl_interfaces::ListParametersResult>
+rcl_interfaces::ListParametersResult
 Node::list_parameters(
-  const std::vector<std::string> & prefixes, uint64_t depth)
+  const std::vector<std::string> & prefixes, uint64_t depth) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<rcl_interfaces::ListParametersResult> results;
+  rcl_interfaces::ListParametersResult result;
 
   // TODO: define parameter separator, use "." for now
   for (auto & kv : parameters_) {
@@ -320,7 +320,6 @@ Node::list_parameters(
       return false;
     }))
     {
-      rcl_interfaces::ListParametersResult result;
       result.parameter_names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of('.');
       std::string prefix = kv.first.substr(0, last_separator);
@@ -329,9 +328,8 @@ Node::list_parameters(
       {
         result.parameter_prefixes.push_back(prefix);
       }
-      results.push_back(result);
     }
   }
-  return results;
+  return result;
 }
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */
