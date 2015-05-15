@@ -217,6 +217,7 @@ const std::vector<rcl_interfaces::SetParametersResult>
 Node::set_parameters(
   const std::vector<rcl_interfaces::Parameter> & parameters)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::SetParametersResult> results;
   for (auto p : parameters) {
     parameters_[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
@@ -249,6 +250,7 @@ const std::vector<rclcpp::parameter::ParameterVariant>
 Node::get_parameters(
   const std::vector<std::string> & names)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rclcpp::parameter::ParameterVariant> results;
   for (auto & kv : parameters_) {
     if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
@@ -265,6 +267,7 @@ const std::vector<rcl_interfaces::ParameterDescriptor>
 Node::describe_parameters(
   const std::vector<std::string> & names)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::ParameterDescriptor> results;
   for (auto & kv : parameters_) {
     if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
@@ -284,6 +287,7 @@ const std::vector<uint8_t>
 Node::get_parameter_types(
   const std::vector<std::string> & names)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   std::vector<uint8_t> results;
   for (auto & kv : parameters_) {
     if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
@@ -302,6 +306,7 @@ const std::vector<rcl_interfaces::ListParametersResult>
 Node::list_parameters(
   const std::vector<std::string> & prefixes, uint64_t depth)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::ListParametersResult> results;
 
   // TODO: define parameter separator, use "." for now
