@@ -47,9 +47,16 @@ class Executor;
 namespace node
 {
 
-// TODO: add support for functors, std::function, lambdas and object members
 template<typename FunctionT>
-struct function_traits;
+struct function_traits
+{
+  static constexpr std::size_t arity =
+    function_traits<decltype( & FunctionT::operator())>::arity - 1;
+
+  template<std::size_t N>
+  using argument_type =
+      typename function_traits<decltype( & FunctionT::operator())>::template argument_type<N + 1>;
+};
 
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT(Args ...)>
@@ -62,6 +69,11 @@ struct function_traits<ReturnTypeT(Args ...)>
 
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: public function_traits<ReturnTypeT(Args ...)>
+{};
+
+template<typename ClassT, typename ReturnTypeT, typename ... Args>
+struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
+  : public function_traits<ReturnTypeT(ClassT &, Args ...)>
 {};
 
 /* ROS Node Interface.
