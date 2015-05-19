@@ -215,12 +215,12 @@ Node::create_service(
 
 const std::vector<rcl_interfaces::SetParametersResult>
 Node::set_parameters(
-  const std::vector<rcl_interfaces::Parameter> & parameters)
+  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::SetParametersResult> results;
   for (auto p : parameters) {
-    parameters_[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
+    parameters_[p.get_name()] = p;
     rcl_interfaces::SetParametersResult result;
     result.successful = true;
     // TODO: handle parameter constraints
@@ -231,12 +231,12 @@ Node::set_parameters(
 
 const rcl_interfaces::SetParametersResult
 Node::set_parameters_atomically(
-  const std::vector<rcl_interfaces::Parameter> & parameters)
+  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::map<std::string, rclcpp::parameter::ParameterVariant> tmp_map;
   for (auto p : parameters) {
-    tmp_map[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
+    tmp_map[p.get_name()] = p;
   }
   tmp_map.insert(parameters_.begin(), parameters_.end());
   std::swap(tmp_map, parameters_);

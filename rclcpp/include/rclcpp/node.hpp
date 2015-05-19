@@ -149,10 +149,10 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   const std::vector<rcl_interfaces::SetParametersResult> set_parameters(
-    const std::vector<rcl_interfaces::Parameter> & parameters);
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
   const rcl_interfaces::SetParametersResult set_parameters_atomically(
-    const std::vector<rcl_interfaces::Parameter> & parameters);
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
   const std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
     const std::vector<std::string> & names);
