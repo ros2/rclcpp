@@ -302,12 +302,12 @@ Node::get_parameter_types(
   return results;
 }
 
-const std::vector<rcl_interfaces::ListParametersResult>
+const rcl_interfaces::ListParametersResult
 Node::list_parameters(
   const std::vector<std::string> & prefixes, uint64_t depth)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<rcl_interfaces::ListParametersResult> results;
+  rcl_interfaces::ListParametersResult result;
 
   // TODO: define parameter separator, use "." for now
   for (auto & kv : parameters_) {
@@ -320,7 +320,6 @@ Node::list_parameters(
       return false;
     }))
     {
-      rcl_interfaces::ListParametersResult result;
       result.parameter_names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of('.');
       std::string prefix = kv.first.substr(0, last_separator);
@@ -329,9 +328,8 @@ Node::list_parameters(
       {
         result.parameter_prefixes.push_back(prefix);
       }
-      results.push_back(result);
     }
   }
-  return results;
+  return result;
 }
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

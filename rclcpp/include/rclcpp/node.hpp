@@ -163,7 +163,7 @@ public:
   const std::vector<uint8_t> get_parameter_types(
     const std::vector<std::string> & names);
 
-  const std::vector<rcl_interfaces::ListParametersResult> list_parameters(
+  const rcl_interfaces::ListParametersResult list_parameters(
     const std::vector<std::string> & prefixes, uint64_t depth);
 
 private:
