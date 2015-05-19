@@ -95,8 +95,8 @@ public:
   Node(std::string node_name, rclcpp::context::Context::SharedPtr context);
 
   /* Get the name of the node. */
-  std::string
-  get_name();
+  const std::string &
+  get_name() const {return name_; }
 
   /* Create and return a callback group. */
   rclcpp::callback_group::CallbackGroup::SharedPtr
