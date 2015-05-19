@@ -15,6 +15,7 @@
 #ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
 #define RCLCPP_RCLCPP_NODE_IMPL_HPP_
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
@@ -212,4 +213,125 @@ Node::create_service(
   return serv;
 }
 
+const std::vector<rcl_interfaces::SetParametersResult>
+Node::set_parameters(
+  const std::vector<rcl_interfaces::Parameter> & parameters)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<rcl_interfaces::SetParametersResult> results;
+  for (auto p : parameters) {
+    parameters_[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
+    rcl_interfaces::SetParametersResult result;
+    result.successful = true;
+    // TODO: handle parameter constraints
+    results.push_back(result);
+  }
+  return results;
+}
+
+const rcl_interfaces::SetParametersResult
+Node::set_parameters_atomically(
+  const std::vector<rcl_interfaces::Parameter> & parameters)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::map<std::string, rclcpp::parameter::ParameterVariant> tmp_map;
+  for (auto p : parameters) {
+    tmp_map[p.name] = rclcpp::parameter::ParameterVariant::from_parameter(p);
+  }
+  tmp_map.insert(parameters_.begin(), parameters_.end());
+  std::swap(tmp_map, parameters_);
+  // TODO: handle parameter constraints
+  rcl_interfaces::SetParametersResult result;
+  result.successful = true;
+  return result;
+}
+
+const std::vector<rclcpp::parameter::ParameterVariant>
+Node::get_parameters(
+  const std::vector<std::string> & names)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<rclcpp::parameter::ParameterVariant> results;
+  for (auto & kv : parameters_) {
+    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
+      return name == kv.first;
+    }))
+    {
+      results.push_back(kv.second);
+    }
+  }
+  return results;
+}
+
+const std::vector<rcl_interfaces::ParameterDescriptor>
+Node::describe_parameters(
+  const std::vector<std::string> & names)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<rcl_interfaces::ParameterDescriptor> results;
+  for (auto & kv : parameters_) {
+    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
+      return name == kv.first;
+    }))
+    {
+      rcl_interfaces::ParameterDescriptor parameter_descriptor;
+      parameter_descriptor.name = kv.first;
+      parameter_descriptor.parameter_type = kv.second.get_type();
+      results.push_back(parameter_descriptor);
+    }
+  }
+  return results;
+}
+
+const std::vector<uint8_t>
+Node::get_parameter_types(
+  const std::vector<std::string> & names)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<uint8_t> results;
+  for (auto & kv : parameters_) {
+    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
+      return name == kv.first;
+    }))
+    {
+      results.push_back(kv.second.get_type());
+    } else {
+      results.push_back(rcl_interfaces::ParameterType::PARAMETER_NOT_SET);
+    }
+  }
+  return results;
+}
+
+const std::vector<rcl_interfaces::ListParametersResult>
+Node::list_parameters(
+  const std::vector<std::string> & prefixes, uint64_t depth)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<rcl_interfaces::ListParametersResult> results;
+
+  // TODO: define parameter separator, use "." for now
+  for (auto & kv : parameters_) {
+    if (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
+      if (kv.first.find(prefix + ".") == 0) {
+        size_t length = prefix.length();
+        std::string substr = kv.first.substr(length);
+        return std::count(substr.begin(), substr.end(), '.') < depth;
+      }
+      return false;
+    }))
+    {
+      rcl_interfaces::ListParametersResult result;
+      result.parameter_names.push_back(kv.first);
+      size_t last_separator = kv.first.find_last_of('.');
+      std::string prefix = kv.first.substr(0, last_separator);
+      if (std::find(result.parameter_prefixes.cbegin(), result.parameter_prefixes.cend(),
+        prefix) == result.parameter_prefixes.cend())
+      {
+        result.parameter_prefixes.push_back(prefix);
+      }
+      results.push_back(result);
+    }
+  }
+  return results;
+}
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

@@ -24,10 +24,12 @@
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/parameter.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/service.hpp>
 #include <rclcpp/subscription.hpp>
 #include <rclcpp/timer.hpp>
+
 
 // Forward declaration of ROS middleware class
 namespace rmw
@@ -146,6 +148,24 @@ public:
     FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  const std::vector<rcl_interfaces::SetParametersResult> set_parameters(
+    const std::vector<rcl_interfaces::Parameter> & parameters);
+
+  const rcl_interfaces::SetParametersResult set_parameters_atomically(
+    const std::vector<rcl_interfaces::Parameter> & parameters);
+
+  const std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
+    const std::vector<std::string> & names);
+
+  const std::vector<rcl_interfaces::ParameterDescriptor> describe_parameters(
+    const std::vector<std::string> & names);
+
+  const std::vector<uint8_t> get_parameter_types(
+    const std::vector<std::string> & names);
+
+  const std::vector<rcl_interfaces::ListParametersResult> list_parameters(
+    const std::vector<std::string> & prefixes, uint64_t depth);
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
@@ -166,10 +186,9 @@ private:
   size_t number_of_services_;
   size_t number_of_clients_;
 
-  void register_service(
-    const std::string & service_name,
-    std::shared_ptr<rclcpp::service::ServiceBase> serv_base_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group);
+  std::mutex mutex_;
+
+  std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
   template<
     typename ServiceT,
