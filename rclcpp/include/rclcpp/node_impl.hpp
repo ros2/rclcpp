@@ -213,7 +213,7 @@ Node::create_service(
   return serv;
 }
 
-const std::vector<rcl_interfaces::SetParametersResult>
+std::vector<rcl_interfaces::SetParametersResult>
 Node::set_parameters(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
@@ -229,7 +229,7 @@ Node::set_parameters(
   return results;
 }
 
-const rcl_interfaces::SetParametersResult
+rcl_interfaces::SetParametersResult
 Node::set_parameters_atomically(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
@@ -246,9 +246,9 @@ Node::set_parameters_atomically(
   return result;
 }
 
-const std::vector<rclcpp::parameter::ParameterVariant>
+std::vector<rclcpp::parameter::ParameterVariant>
 Node::get_parameters(
-  const std::vector<std::string> & names)
+  const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rclcpp::parameter::ParameterVariant> results;
@@ -263,9 +263,9 @@ Node::get_parameters(
   return results;
 }
 
-const std::vector<rcl_interfaces::ParameterDescriptor>
+std::vector<rcl_interfaces::ParameterDescriptor>
 Node::describe_parameters(
-  const std::vector<std::string> & names)
+  const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::ParameterDescriptor> results;
@@ -283,9 +283,9 @@ Node::describe_parameters(
   return results;
 }
 
-const std::vector<uint8_t>
+std::vector<uint8_t>
 Node::get_parameter_types(
-  const std::vector<std::string> & names)
+  const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<uint8_t> results;
@@ -302,9 +302,9 @@ Node::get_parameter_types(
   return results;
 }
 
-const rcl_interfaces::ListParametersResult
+rcl_interfaces::ListParametersResult
 Node::list_parameters(
-  const std::vector<std::string> & prefixes, uint64_t depth)
+  const std::vector<std::string> & prefixes, uint64_t depth) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   rcl_interfaces::ListParametersResult result;
