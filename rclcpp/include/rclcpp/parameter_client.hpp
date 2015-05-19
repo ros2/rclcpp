@@ -46,19 +46,25 @@ class AsyncParametersClient
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(AsyncParametersClient);
 
-  AsyncParametersClient(const rclcpp::node::Node::SharedPtr & node)
+  AsyncParametersClient(const rclcpp::node::Node::SharedPtr & node,
+    const std::string & remote_node_name = "")
   : node_(node)
   {
+    if (remote_node_name != "") {
+      remote_node_name_ = remote_node_name;
+    } else {
+      remote_node_name_ = node_->get_name();
+    }
     get_parameters_client_ = node_->create_client<rcl_interfaces::GetParameters>(
-      "get_parameters");
+      "get_parameters_" + remote_node_name_);
     get_parameter_types_client_ = node_->create_client<rcl_interfaces::GetParameterTypes>(
-      "get_parameter_types");
+      "get_parameter_types_" + remote_node_name_);
     set_parameters_client_ = node_->create_client<rcl_interfaces::SetParameters>(
-      "set_parameters");
+      "set_parameters_" + remote_node_name_);
     list_parameters_client_ = node_->create_client<rcl_interfaces::ListParameters>(
-      "list_parameters");
+      "list_parameters_" + remote_node_name_);
     describe_parameters_client_ = node_->create_client<rcl_interfaces::DescribeParameters>(
-      "describe_parameters");
+      "describe_parameters_" + remote_node_name_);
   }
 
   std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
@@ -223,6 +229,7 @@ private:
     set_parameters_atomically_client_;
   rclcpp::client::Client<rcl_interfaces::ListParameters>::SharedPtr list_parameters_client_;
   rclcpp::client::Client<rcl_interfaces::DescribeParameters>::SharedPtr describe_parameters_client_;
+  std::string remote_node_name_;
 };
 
 class SyncParametersClient
