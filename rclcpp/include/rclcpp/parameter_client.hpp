@@ -56,15 +56,15 @@ public:
       remote_node_name_ = node_->get_name();
     }
     get_parameters_client_ = node_->create_client<rcl_interfaces::GetParameters>(
-      "get_parameters_" + remote_node_name_);
+      remote_node_name_ + "__get_parameters");
     get_parameter_types_client_ = node_->create_client<rcl_interfaces::GetParameterTypes>(
-      "get_parameter_types_" + remote_node_name_);
+      remote_node_name_ + "__get_parameter_types");
     set_parameters_client_ = node_->create_client<rcl_interfaces::SetParameters>(
-      "set_parameters_" + remote_node_name_);
+      remote_node_name_ + "__set_parameters");
     list_parameters_client_ = node_->create_client<rcl_interfaces::ListParameters>(
-      "list_parameters_" + remote_node_name_);
+      remote_node_name_ + "__list_parameters");
     describe_parameters_client_ = node_->create_client<rcl_interfaces::DescribeParameters>(
-      "describe_parameters_" + remote_node_name_);
+      remote_node_name_ + "__describe_parameters");
   }
 
   std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
