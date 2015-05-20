@@ -50,7 +50,7 @@ public:
   : node_(node)
   {
     get_parameters_service_ = node_->create_service<rcl_interfaces::GetParameters>(
-      "get_parameters_" + node_->get_name(), [&node](
+      node_->get_name() + "__get_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<rcl_interfaces::GetParameters::Request> request,
         std::shared_ptr<rcl_interfaces::GetParameters::Response> response)
@@ -65,7 +65,7 @@ public:
       );
 
     get_parameter_types_service_ = node_->create_service<rcl_interfaces::GetParameterTypes>(
-      "get_parameter_types_" + node_->get_name(), [&node](
+      node_->get_name() + "__get_parameter_types", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<rcl_interfaces::GetParameterTypes::Request> request,
         std::shared_ptr<rcl_interfaces::GetParameterTypes::Response> response)
@@ -79,7 +79,7 @@ public:
       );
 
     set_parameters_service_ = node_->create_service<rcl_interfaces::SetParameters>(
-      "set_parameters_" + node_->get_name(), [&node](
+      node_->get_name() + "__set_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<rcl_interfaces::SetParameters::Request> request,
         std::shared_ptr<rcl_interfaces::SetParameters::Response> response)
@@ -98,7 +98,7 @@ public:
 
     set_parameters_atomically_service_ =
       node_->create_service<rcl_interfaces::SetParametersAtomically>(
-      "set_parameters_atomically_" + node_->get_name(), [&node](
+      node_->get_name() + "__set_parameters_atomically", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<rcl_interfaces::SetParametersAtomically::Request> request,
         std::shared_ptr<rcl_interfaces::SetParametersAtomically::Response> response)
@@ -116,7 +116,7 @@ public:
       );
 
     describe_parameters_service_ = node_->create_service<rcl_interfaces::DescribeParameters>(
-      "describe_parameters_" + node_->get_name(), [&node](
+      node_->get_name() + "__describe_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<rcl_interfaces::DescribeParameters::Request> request,
         std::shared_ptr<rcl_interfaces::DescribeParameters::Response> response)
@@ -127,7 +127,7 @@ public:
       );
 
     list_parameters_service_ = node_->create_service<rcl_interfaces::ListParameters>(
-      "describe_parameters_" + node_->get_name(), [&node](
+      node_->get_name() + "__describe_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<rcl_interfaces::ListParameters::Request> request,
         std::shared_ptr<rcl_interfaces::ListParameters::Response> response)
