@@ -99,7 +99,7 @@ public:
             callback(future_result);
           }
         }
-      );
+    );
 
     return future_result;
   }
@@ -129,7 +129,7 @@ public:
             callback(future_result);
           }
         }
-      );
+    );
 
     return future_result;
   }
@@ -158,7 +158,7 @@ public:
             callback(future_result);
           }
         }
-      );
+    );
 
     return future_result;
   }
@@ -187,7 +187,7 @@ public:
             callback(future_result);
           }
         }
-      );
+    );
 
     return future_result;
   }
@@ -215,7 +215,7 @@ public:
             callback(future_result);
           }
         }
-      );
+    );
 
     return future_result;
   }

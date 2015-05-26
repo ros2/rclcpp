@@ -149,9 +149,8 @@ protected:
     if (taken) {
       subscription->handle_message(message);
     } else {
-      std::cout << "[rclcpp::error] take failed for subscription on topic: "
-                << subscription->get_topic_name()
-                << std::endl;
+      std::cout << "[rclcpp::error] take failed for subscription on topic: " <<
+        subscription->get_topic_name() << std::endl;
     }
   }
 
@@ -177,9 +176,8 @@ protected:
     if (taken) {
       service->handle_request(request_header, request);
     } else {
-      std::cout << "[rclcpp::error] take failed for service on service: "
-                << service->get_service_name()
-                << std::endl;
+      std::cout << "[rclcpp::error] take failed for service on service: " <<
+        service->get_service_name() << std::endl;
     }
   }
 

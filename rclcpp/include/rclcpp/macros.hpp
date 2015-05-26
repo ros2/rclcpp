@@ -30,7 +30,7 @@
  */
 #define RCLCPP_MAKE_SHARED_DEFINITIONS(Class) \
   typedef std::shared_ptr<Class> SharedPtr; \
-  \
+ \
   template<typename ... Args> \
   static std::shared_ptr<Class> \
   make_shared(Args && ... args) \
