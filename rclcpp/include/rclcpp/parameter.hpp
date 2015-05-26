@@ -35,7 +35,8 @@ namespace rclcpp
 namespace parameter
 {
 
-enum ParameterType {
+enum ParameterType
+{
   PARAMETER_NOT_SET=rcl_interfaces::ParameterType::PARAMETER_NOT_SET,
   PARAMETER_BOOL=rcl_interfaces::ParameterType::PARAMETER_BOOL,
   PARAMETER_INTEGER=rcl_interfaces::ParameterType::PARAMETER_INTEGER,

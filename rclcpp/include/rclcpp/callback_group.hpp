@@ -40,7 +40,8 @@ class Executor;
 namespace callback_group
 {
 
-enum class CallbackGroupType {
+enum class CallbackGroupType
+{
   MutuallyExclusive,
   Reentrant
 };
