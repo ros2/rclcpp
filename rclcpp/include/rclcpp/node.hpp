@@ -20,6 +20,10 @@
 #include <string>
 #include <tuple>
 
+#include <rcl_interfaces/msg/list_parameters_result.hpp>
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
+#include <rcl_interfaces/msg/set_parameters_result.hpp>
+
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
@@ -148,22 +152,22 @@ public:
     FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  std::vector<rcl_interfaces::SetParametersResult> set_parameters(
+  std::vector<rcl_interfaces::msg::SetParametersResult> set_parameters(
     const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
-  rcl_interfaces::SetParametersResult set_parameters_atomically(
+  rcl_interfaces::msg::SetParametersResult set_parameters_atomically(
     const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
   std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
     const std::vector<std::string> & names) const;
 
-  std::vector<rcl_interfaces::ParameterDescriptor> describe_parameters(
+  std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
     const std::vector<std::string> & names) const;
 
   std::vector<uint8_t> get_parameter_types(
     const std::vector<std::string> & names) const;
 
-  rcl_interfaces::ListParametersResult list_parameters(
+  rcl_interfaces::msg::ListParametersResult list_parameters(
     const std::vector<std::string> & prefixes, uint64_t depth) const;
 
 private:

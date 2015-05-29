@@ -213,15 +213,15 @@ Node::create_service(
   return serv;
 }
 
-std::vector<rcl_interfaces::SetParametersResult>
+std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<rcl_interfaces::SetParametersResult> results;
+  std::vector<rcl_interfaces::msg::SetParametersResult> results;
   for (auto p : parameters) {
     parameters_[p.get_name()] = p;
-    rcl_interfaces::SetParametersResult result;
+    rcl_interfaces::msg::SetParametersResult result;
     result.successful = true;
     // TODO: handle parameter constraints
     results.push_back(result);
@@ -229,7 +229,7 @@ Node::set_parameters(
   return results;
 }
 
-rcl_interfaces::SetParametersResult
+rcl_interfaces::msg::SetParametersResult
 Node::set_parameters_atomically(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
@@ -241,7 +241,7 @@ Node::set_parameters_atomically(
   tmp_map.insert(parameters_.begin(), parameters_.end());
   std::swap(tmp_map, parameters_);
   // TODO: handle parameter constraints
-  rcl_interfaces::SetParametersResult result;
+  rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
   return result;
 }
@@ -263,18 +263,18 @@ Node::get_parameters(
   return results;
 }
 
-std::vector<rcl_interfaces::ParameterDescriptor>
+std::vector<rcl_interfaces::msg::ParameterDescriptor>
 Node::describe_parameters(
   const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<rcl_interfaces::ParameterDescriptor> results;
+  std::vector<rcl_interfaces::msg::ParameterDescriptor> results;
   for (auto & kv : parameters_) {
     if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
       return name == kv.first;
     }))
     {
-      rcl_interfaces::ParameterDescriptor parameter_descriptor;
+      rcl_interfaces::msg::ParameterDescriptor parameter_descriptor;
       parameter_descriptor.name = kv.first;
       parameter_descriptor.parameter_type = kv.second.get_type();
       results.push_back(parameter_descriptor);
@@ -296,18 +296,18 @@ Node::get_parameter_types(
     {
       results.push_back(kv.second.get_type());
     } else {
-      results.push_back(rcl_interfaces::ParameterType::PARAMETER_NOT_SET);
+      results.push_back(rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     }
   }
   return results;
 }
 
-rcl_interfaces::ListParametersResult
+rcl_interfaces::msg::ListParametersResult
 Node::list_parameters(
   const std::vector<std::string> & prefixes, uint64_t depth) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  rcl_interfaces::ListParametersResult result;
+  rcl_interfaces::msg::ListParametersResult result;
 
   // TODO: define parameter separator, use "." for now
   for (auto & kv : parameters_) {
