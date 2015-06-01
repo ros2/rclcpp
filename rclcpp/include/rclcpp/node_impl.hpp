@@ -309,13 +309,14 @@ Node::list_parameters(
   std::lock_guard<std::mutex> lock(mutex_);
   rcl_interfaces::ListParametersResult result;
 
-  // TODO: define parameter separator, use "." for now
+  // TODO(esteve): define parameter separator, use "." for now
   for (auto & kv : parameters_) {
     if (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
       if (kv.first.find(prefix + ".") == 0) {
         size_t length = prefix.length();
         std::string substr = kv.first.substr(length);
-        return std::count(substr.begin(), substr.end(), '.') < depth;
+        // Cast as unsigned integer to avoid warning
+        return static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth;
       }
       return false;
     }))
