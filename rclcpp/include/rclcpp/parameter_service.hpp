@@ -24,15 +24,12 @@
 #include <rclcpp/node.hpp>
 #include <rclcpp/parameter.hpp>
 
-#include <rcl_interfaces/GetParameters.h>
-#include <rcl_interfaces/GetParameterTypes.h>
-#include <rcl_interfaces/Parameter.h>
-#include <rcl_interfaces/ParameterDescriptor.h>
-#include <rcl_interfaces/ParameterType.h>
-#include <rcl_interfaces/SetParameters.h>
-#include <rcl_interfaces/SetParametersAtomically.h>
-#include <rcl_interfaces/ListParameters.h>
-#include <rcl_interfaces/DescribeParameters.h>
+#include <rcl_interfaces/srv/describe_parameters.hpp>
+#include <rcl_interfaces/srv/get_parameters.hpp>
+#include <rcl_interfaces/srv/get_parameter_types.hpp>
+#include <rcl_interfaces/srv/list_parameters.hpp>
+#include <rcl_interfaces/srv/set_parameters.hpp>
+#include <rcl_interfaces/srv/set_parameters_atomically.hpp>
 
 namespace rclcpp
 {
@@ -49,11 +46,11 @@ public:
   ParameterService(const rclcpp::node::Node::SharedPtr & node)
   : node_(node)
   {
-    get_parameters_service_ = node_->create_service<rcl_interfaces::GetParameters>(
+    get_parameters_service_ = node_->create_service<rcl_interfaces::srv::GetParameters>(
       node_->get_name() + "__get_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
-        const std::shared_ptr<rcl_interfaces::GetParameters::Request> request,
-        std::shared_ptr<rcl_interfaces::GetParameters::Response> response)
+        const std::shared_ptr<rcl_interfaces::srv::GetParameters::Request> request,
+        std::shared_ptr<rcl_interfaces::srv::GetParameters::Response> response)
         {
           auto values = node->get_parameters(request->names);
           std::transform(values.cbegin(), values.cend(), std::back_inserter(response->values),
@@ -64,11 +61,11 @@ public:
         }
       );
 
-    get_parameter_types_service_ = node_->create_service<rcl_interfaces::GetParameterTypes>(
+    get_parameter_types_service_ = node_->create_service<rcl_interfaces::srv::GetParameterTypes>(
       node_->get_name() + "__get_parameter_types", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
-        const std::shared_ptr<rcl_interfaces::GetParameterTypes::Request> request,
-        std::shared_ptr<rcl_interfaces::GetParameterTypes::Response> response)
+        const std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Request> request,
+        std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Response> response)
         {
           auto types = node->get_parameter_types(request->parameter_names);
           std::transform(types.cbegin(), types.cend(),
@@ -78,16 +75,16 @@ public:
         }
       );
 
-    set_parameters_service_ = node_->create_service<rcl_interfaces::SetParameters>(
+    set_parameters_service_ = node_->create_service<rcl_interfaces::srv::SetParameters>(
       node_->get_name() + "__set_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
-        const std::shared_ptr<rcl_interfaces::SetParameters::Request> request,
-        std::shared_ptr<rcl_interfaces::SetParameters::Response> response)
+        const std::shared_ptr<rcl_interfaces::srv::SetParameters::Request> request,
+        std::shared_ptr<rcl_interfaces::srv::SetParameters::Response> response)
         {
           std::vector<rclcpp::parameter::ParameterVariant> pvariants;
           std::transform(request->parameters.cbegin(), request->parameters.cend(),
           std::back_inserter(pvariants),
-          [](const rcl_interfaces::Parameter & p) {
+          [](const rcl_interfaces::msg::Parameter & p) {
             return rclcpp::parameter::ParameterVariant::
             from_parameter(p);
           });
@@ -97,16 +94,16 @@ public:
       );
 
     set_parameters_atomically_service_ =
-      node_->create_service<rcl_interfaces::SetParametersAtomically>(
+      node_->create_service<rcl_interfaces::srv::SetParametersAtomically>(
       node_->get_name() + "__set_parameters_atomically", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
-        const std::shared_ptr<rcl_interfaces::SetParametersAtomically::Request> request,
-        std::shared_ptr<rcl_interfaces::SetParametersAtomically::Response> response)
+        const std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Request> request,
+        std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Response> response)
         {
           std::vector<rclcpp::parameter::ParameterVariant> pvariants;
           std::transform(request->parameters.cbegin(), request->parameters.cend(),
           std::back_inserter(pvariants),
-          [](const rcl_interfaces::Parameter & p) {
+          [](const rcl_interfaces::msg::Parameter & p) {
             return rclcpp::parameter::ParameterVariant::
             from_parameter(p);
           });
@@ -115,22 +112,22 @@ public:
         }
       );
 
-    describe_parameters_service_ = node_->create_service<rcl_interfaces::DescribeParameters>(
+    describe_parameters_service_ = node_->create_service<rcl_interfaces::srv::DescribeParameters>(
       node_->get_name() + "__describe_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
-        const std::shared_ptr<rcl_interfaces::DescribeParameters::Request> request,
-        std::shared_ptr<rcl_interfaces::DescribeParameters::Response> response)
+        const std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Request> request,
+        std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Response> response)
         {
           auto descriptors = node->describe_parameters(request->names);
           response->descriptors = descriptors;
         }
       );
 
-    list_parameters_service_ = node_->create_service<rcl_interfaces::ListParameters>(
+    list_parameters_service_ = node_->create_service<rcl_interfaces::srv::ListParameters>(
       node_->get_name() + "__describe_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
-        const std::shared_ptr<rcl_interfaces::ListParameters::Request> request,
-        std::shared_ptr<rcl_interfaces::ListParameters::Response> response)
+        const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request> request,
+        std::shared_ptr<rcl_interfaces::srv::ListParameters::Response> response)
         {
           auto result = node->list_parameters(request->parameter_prefixes, request->depth);
           response->result = result;
@@ -142,15 +139,15 @@ public:
 
 private:
   const rclcpp::node::Node::SharedPtr node_;
-  rclcpp::service::Service<rcl_interfaces::GetParameters>::SharedPtr get_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::GetParameterTypes>::SharedPtr
+  rclcpp::service::Service<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_service_;
+  rclcpp::service::Service<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
     get_parameter_types_service_;
-  rclcpp::service::Service<rcl_interfaces::SetParameters>::SharedPtr set_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::SetParametersAtomically>::SharedPtr
+  rclcpp::service::Service<rcl_interfaces::srv::SetParameters>::SharedPtr set_parameters_service_;
+  rclcpp::service::Service<rcl_interfaces::srv::SetParametersAtomically>::SharedPtr
     set_parameters_atomically_service_;
-  rclcpp::service::Service<rcl_interfaces::DescribeParameters>::SharedPtr
+  rclcpp::service::Service<rcl_interfaces::srv::DescribeParameters>::SharedPtr
     describe_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::ListParameters>::SharedPtr list_parameters_service_;
+  rclcpp::service::Service<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_service_;
 };
 
 } /* namespace parameter_service */
