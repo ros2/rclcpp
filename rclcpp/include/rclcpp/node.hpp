@@ -53,6 +53,13 @@ class Executor;
 namespace node
 {
 
+/* NOTE(esteve):
+ * We support service callbacks that can optionally take the request id,
+ * which should be possible with two overloaded create_service methods,
+ * but unfortunately std::function's constructor on VS2015 is too greedy,
+ * so we need a mechanism for checking the arity and the type of each argument
+ * in a callback function.
+*/
 template<typename FunctionT>
 struct function_traits
 {
@@ -242,13 +249,21 @@ private:
         typename function_traits<FunctorT>::template argument_type<1>,
         typename std::shared_ptr<typename ServiceT::Request>
       >::value
-    >::type * = nullptr,
+    >::type * = nullptr
+/*
+  TODO(esteve): reenable this block of code when VS2015 gets better support
+  for SFINAE and remove the static_assert from the body of this method. For
+  more info about the current support for SFINAE in VS2015 RC:
+
+  http://blogs.msdn.com/b/vcblog/archive/2015/04/29/c-11-14-17-features-in-vs-2015-rc.aspx
+  ,
     typename std::enable_if<
       std::is_same<
         typename function_traits<FunctorT>::template argument_type<2>,
         typename std::shared_ptr<typename ServiceT::Response>
       >::value
     >::type * = nullptr
+*/
   >
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
@@ -256,6 +271,12 @@ private:
     const std::string & service_name,
     FunctorT callback)
   {
+    static_assert(
+      std::is_same<
+        typename function_traits<FunctorT>::template argument_type<2>,
+        typename std::shared_ptr<typename ServiceT::Response>
+      >::value, "Third argument must be of type std::shared_ptr<ServiceT::Response>");
+
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
       callback;
     return service::Service<ServiceT>::make_shared(
