@@ -22,6 +22,7 @@
 
 #include <rcl_interfaces/msg/list_parameters_result.hpp>
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
+#include <rcl_interfaces/msg/parameter_event.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
 
 #include <rclcpp/callback_group.hpp>
@@ -200,6 +201,8 @@ private:
   mutable std::mutex mutex_;
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
+
+  publisher::Publisher::SharedPtr events_publisher_;
 
   template<
     typename ServiceT,

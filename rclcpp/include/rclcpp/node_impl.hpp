@@ -46,6 +46,9 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
   using rclcpp::callback_group::CallbackGroupType;
   default_callback_group_ = \
     create_callback_group(CallbackGroupType::MutuallyExclusive);
+  // TODO(esteve): remove hardcoded values
+  events_publisher_ =
+    create_publisher<rcl_interfaces::msg::ParameterEvent>("parameter_events", 1000);
 }
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
@@ -217,13 +220,9 @@ std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
   for (auto p : parameters) {
-    parameters_[p.get_name()] = p;
-    rcl_interfaces::msg::SetParametersResult result;
-    result.successful = true;
-    // TODO: handle parameter constraints
+    auto result = set_parameters_atomically({{p}});
     results.push_back(result);
   }
   return results;
@@ -235,14 +234,31 @@ Node::set_parameters_atomically(
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::map<std::string, rclcpp::parameter::ParameterVariant> tmp_map;
+  auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
+
   for (auto p : parameters) {
+    if (parameters_.find(p.get_name()) == parameters_.end()) {
+      if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+        parameter_event->new_parameters.push_back(p.to_parameter());
+      }
+    } else if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+      parameter_event->changed_parameters.push_back(p.to_parameter());
+    } else {
+      parameter_event->deleted_parameters.push_back(p.to_parameter());
+    }
     tmp_map[p.get_name()] = p;
   }
+  // std::map::insert will not overwrite elements, so we'll keep the new
+  // ones and add only those that already exist in the Node's internal map
   tmp_map.insert(parameters_.begin(), parameters_.end());
   std::swap(tmp_map, parameters_);
+
   // TODO: handle parameter constraints
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
+
+  events_publisher_->publish(parameter_event);
+
   return result;
 }
 

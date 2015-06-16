@@ -25,6 +25,7 @@
 #include <rclcpp/parameter.hpp>
 
 #include <rcl_interfaces/msg/parameter.hpp>
+#include <rcl_interfaces/msg/parameter_event.hpp>
 #include <rcl_interfaces/msg/parameter_value.hpp>
 #include <rcl_interfaces/srv/describe_parameters.hpp>
 #include <rcl_interfaces/srv/get_parameters.hpp>
@@ -136,9 +137,8 @@ public:
   std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
   set_parameters(
     std::vector<rclcpp::parameter::ParameterVariant> parameters,
-    std::function<
-      void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
-    > callback = nullptr)
+    std::function<void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)> callback =
+    nullptr)
   {
     std::promise<std::vector<rcl_interfaces::msg::SetParametersResult>> promise_result;
     auto future_result = promise_result.get_future().share();
@@ -166,8 +166,8 @@ public:
   std::shared_future<rcl_interfaces::msg::SetParametersResult>
   set_parameters_atomically(
     std::vector<rclcpp::parameter::ParameterVariant> parameters,
-    std::function<void(
-      std::shared_future<rcl_interfaces::msg::SetParametersResult>)> callback = nullptr)
+    std::function<void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)> callback =
+    nullptr)
   {
     std::promise<rcl_interfaces::msg::SetParametersResult> promise_result;
     auto future_result = promise_result.get_future().share();
@@ -196,8 +196,8 @@ public:
   list_parameters(
     std::vector<std::string> prefixes,
     uint64_t depth,
-    std::function<void(
-      std::shared_future<rcl_interfaces::msg::ListParametersResult>)> callback = nullptr)
+    std::function<void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)> callback =
+    nullptr)
   {
     std::promise<rcl_interfaces::msg::ListParametersResult> promise_result;
     auto future_result = promise_result.get_future().share();
@@ -218,6 +218,15 @@ public:
     );
 
     return future_result;
+  }
+
+  template<typename FunctorT>
+  typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  on_parameter_event(FunctorT callback)
+  {
+    // TODO(esteve): remove hardcoded values
+    return node_->create_subscription<rcl_interfaces::msg::ParameterEvent>("parameter_events",
+             1000, callback);
   }
 
 private:
