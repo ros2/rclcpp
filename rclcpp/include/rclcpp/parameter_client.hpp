@@ -105,7 +105,7 @@ public:
 
   std::shared_future<std::vector<rclcpp::parameter::ParameterType>>
   get_parameter_types(
-    std::vector<std::string> parameter_names,
+    std::vector<std::string> names,
     std::function<void(
       std::shared_future<std::vector<rclcpp::parameter::ParameterType>>)> callback = nullptr)
   {
@@ -113,17 +113,17 @@ public:
     auto future_result = promise_result.get_future().share();
 
     auto request = std::make_shared<rcl_interfaces::srv::GetParameterTypes::Request>();
-    request->parameter_names = parameter_names;
+    request->names = names;
 
     get_parameter_types_client_->async_send_request(
       request,
       [&promise_result, &future_result, &callback](
         rclcpp::client::Client<rcl_interfaces::srv::GetParameterTypes>::SharedFuture cb_f) {
-          std::vector<rclcpp::parameter::ParameterType> parameter_types;
-          auto & pts = cb_f.get()->parameter_types;
-          std::transform(pts.begin(), pts.end(), std::back_inserter(parameter_types),
+          std::vector<rclcpp::parameter::ParameterType> types;
+          auto & pts = cb_f.get()->types;
+          std::transform(pts.begin(), pts.end(), std::back_inserter(types),
           [](uint8_t pt) {return static_cast<rclcpp::parameter::ParameterType>(pt); });
-          promise_result.set_value(parameter_types);
+          promise_result.set_value(types);
           if (callback != nullptr) {
             callback(future_result);
           }
@@ -194,7 +194,7 @@ public:
 
   std::shared_future<rcl_interfaces::msg::ListParametersResult>
   list_parameters(
-    std::vector<std::string> parameter_prefixes,
+    std::vector<std::string> prefixes,
     uint64_t depth,
     std::function<void(
       std::shared_future<rcl_interfaces::msg::ListParametersResult>)> callback = nullptr)
@@ -203,7 +203,7 @@ public:
     auto future_result = promise_result.get_future().share();
 
     auto request = std::make_shared<rcl_interfaces::srv::ListParameters::Request>();
-    request->parameter_prefixes = parameter_prefixes;
+    request->prefixes = prefixes;
     request->depth = depth;
 
     list_parameters_client_->async_send_request(

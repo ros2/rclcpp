@@ -276,7 +276,7 @@ Node::describe_parameters(
     {
       rcl_interfaces::msg::ParameterDescriptor parameter_descriptor;
       parameter_descriptor.name = kv.first;
-      parameter_descriptor.parameter_type = kv.second.get_type();
+      parameter_descriptor.type = kv.second.get_type();
       results.push_back(parameter_descriptor);
     }
   }
@@ -321,13 +321,13 @@ Node::list_parameters(
       return false;
     }))
     {
-      result.parameter_names.push_back(kv.first);
+      result.names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of('.');
       std::string prefix = kv.first.substr(0, last_separator);
-      if (std::find(result.parameter_prefixes.cbegin(), result.parameter_prefixes.cend(),
-        prefix) == result.parameter_prefixes.cend())
+      if (std::find(result.prefixes.cbegin(), result.prefixes.cend(),
+        prefix) == result.prefixes.cend())
       {
-        result.parameter_prefixes.push_back(prefix);
+        result.prefixes.push_back(prefix);
       }
     }
   }

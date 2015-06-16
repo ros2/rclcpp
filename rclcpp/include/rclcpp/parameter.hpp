@@ -46,52 +46,52 @@ public:
   ParameterVariant()
   : name_("")
   {
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET;
   }
   explicit ParameterVariant(const std::string & name, const bool bool_value)
   : name_(name)
   {
     value_.bool_value = bool_value;
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
   }
   explicit ParameterVariant(const std::string & name, const int int_value)
   : name_(name)
   {
     value_.integer_value = int_value;
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
   }
   explicit ParameterVariant(const std::string & name, const int64_t int_value)
   : name_(name)
   {
     value_.integer_value = int_value;
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
   }
   explicit ParameterVariant(const std::string & name, const float double_value)
   : name_(name)
   {
     value_.double_value = double_value;
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
   }
   explicit ParameterVariant(const std::string & name, const double double_value)
   : name_(name)
   {
     value_.double_value = double_value;
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
   }
   explicit ParameterVariant(const std::string & name, const std::string & string_value)
   : name_(name)
   {
     value_.string_value = string_value;
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
   }
   explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & bytes_value)
   : name_(name)
   {
     value_.bytes_value = bytes_value;
-    value_.parameter_type = rcl_interfaces::msg::ParameterType::PARAMETER_BYTES;
+    value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BYTES;
   }
 
-  inline ParameterType get_type() const {return static_cast<ParameterType>(value_.parameter_type); }
+  inline ParameterType get_type() const {return static_cast<ParameterType>(value_.type); }
 
   inline std::string get_name() const & {return name_; }
 
@@ -104,7 +104,7 @@ public:
   typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, int64_t>::type
   get_value() const
   {
-    if (value_.parameter_type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER) {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER) {
       // TODO: use custom exception
       throw std::runtime_error("Invalid type");
     }
@@ -114,7 +114,7 @@ public:
   typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, double>::type
   get_value() const
   {
-    if (value_.parameter_type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
       // TODO: use custom exception
       throw std::runtime_error("Invalid type");
     }
@@ -124,7 +124,7 @@ public:
   typename std::enable_if<type == ParameterType::PARAMETER_STRING, const std::string &>::type
   get_value() const
   {
-    if (value_.parameter_type != rcl_interfaces::msg::ParameterType::PARAMETER_STRING) {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_STRING) {
       // TODO: use custom exception
       throw std::runtime_error("Invalid type");
     }
@@ -134,7 +134,7 @@ public:
   typename std::enable_if<type == ParameterType::PARAMETER_BOOL, bool>::type
   get_value() const
   {
-    if (value_.parameter_type != rcl_interfaces::msg::ParameterType::PARAMETER_BOOL) {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BOOL) {
       // TODO: use custom exception
       throw std::runtime_error("Invalid type");
     }
@@ -145,7 +145,7 @@ public:
   const std::vector<uint8_t> &>::type
   get_value() const
   {
-    if (value_.parameter_type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTES) {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTES) {
       // TODO: use custom exception
       throw std::runtime_error("Invalid type");
     }
@@ -167,7 +167,7 @@ public:
 
   static ParameterVariant from_parameter(const rcl_interfaces::msg::Parameter & parameter)
   {
-    switch (parameter.value.parameter_type) {
+    switch (parameter.value.type) {
       case PARAMETER_BOOL:
         return ParameterVariant(parameter.name, parameter.value.bool_value);
       case PARAMETER_INTEGER:

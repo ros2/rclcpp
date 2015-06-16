@@ -67,9 +67,9 @@ public:
         const std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Request> request,
         std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Response> response)
         {
-          auto types = node->get_parameter_types(request->parameter_names);
+          auto types = node->get_parameter_types(request->names);
           std::transform(types.cbegin(), types.cend(),
-          std::back_inserter(response->parameter_types), [](const uint8_t & type) {
+          std::back_inserter(response->types), [](const uint8_t & type) {
             return static_cast<rclcpp::parameter::ParameterType>(type);
           });
         }
@@ -129,7 +129,7 @@ public:
         const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request> request,
         std::shared_ptr<rcl_interfaces::srv::ListParameters::Response> response)
         {
-          auto result = node->list_parameters(request->parameter_prefixes, request->depth);
+          auto result = node->list_parameters(request->prefixes, request->depth);
           response->result = result;
         }
       );
