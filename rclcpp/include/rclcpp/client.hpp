@@ -83,9 +83,9 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
-  typedef std::promise<typename ServiceT::Response::Ptr> Promise;
+  typedef std::promise<typename ServiceT::Response::SharedPtr> Promise;
   typedef std::shared_ptr<Promise> SharedPromise;
-  typedef std::shared_future<typename ServiceT::Response::Ptr> SharedFuture;
+  typedef std::shared_future<typename ServiceT::Response::SharedPtr> SharedFuture;
 
   typedef std::function<void (SharedFuture)> CallbackType;
 
@@ -123,13 +123,13 @@ public:
   }
 
   SharedFuture async_send_request(
-    typename ServiceT::Request::Ptr & request)
+    typename ServiceT::Request::SharedPtr & request)
   {
     return async_send_request(request, [](SharedFuture f) {});
   }
 
   SharedFuture async_send_request(
-    typename ServiceT::Request::Ptr & request,
+    typename ServiceT::Request::SharedPtr & request,
     CallbackType cb)
   {
     int64_t sequence_number;
