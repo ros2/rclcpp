@@ -36,7 +36,7 @@ spin_node_until_future_complete(
   std::shared_future<FutureT> & future)
 {
   std::future_status status;
-  // TODO: does not work recursively right, can't call spin_node_until_future_complete
+  // TODO(wjwwood): does not work recursively right, can't call spin_node_until_future_complete
   // inside a callback executed by an executor.
   do {
     executor.spin_node_some(node_ptr);
