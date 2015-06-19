@@ -17,8 +17,10 @@
 
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <string>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 #include <rosidl_generator_cpp/message_type_support.hpp>
 #include <rosidl_generator_cpp/service_type_support.hpp>
@@ -43,6 +45,12 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
   node_handle_ = rmw_create_node(name_.c_str());
+  if (!node_handle_) {
+    throw std::runtime_error(
+      std::string("could not create node: ") +
+      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+  }
+
   using rclcpp::callback_group::CallbackGroupType;
   default_callback_group_ = \
     create_callback_group(CallbackGroupType::MutuallyExclusive);
@@ -70,6 +78,11 @@ Node::create_publisher(std::string topic_name, size_t queue_size)
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_publisher_t * publisher_handle = rmw_create_publisher(
     node_handle_, type_support_handle, topic_name.c_str(), queue_size);
+  if (!publisher_handle) {
+    throw std::runtime_error(
+      std::string("could not create publisher: ") +
+      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+  }
 
   return publisher::Publisher::make_shared(publisher_handle);
 }
@@ -99,6 +112,11 @@ Node::create_subscription(
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
     node_handle_, type_support_handle, topic_name.c_str(), queue_size);
+  if (!subscriber_handle) {
+    throw std::runtime_error(
+      std::string("could not create subscription: ") +
+      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+  }
 
   using namespace rclcpp::subscription;
 
@@ -164,6 +182,11 @@ Node::create_client(
 
   rmw_client_t * client_handle = rmw_create_client(
     this->node_handle_, service_type_support_handle, service_name.c_str());
+  if (!client_handle) {
+    throw std::runtime_error(
+      std::string("could not create client: ") +
+      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+  }
 
   using namespace rclcpp::client;
 
@@ -199,6 +222,11 @@ Node::create_service(
 
   rmw_service_t * service_handle = rmw_create_service(
     this->node_handle_, service_type_support_handle, service_name.c_str());
+  if (!service_handle) {
+    throw std::runtime_error(
+      std::string("could not create service: ") +
+      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+  }
 
   auto serv = create_service_internal<ServiceT>(
     service_handle, service_name, callback);
