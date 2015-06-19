@@ -15,6 +15,8 @@
 #ifndef RCLCPP_RCLCPP_PARAMETER_HPP_
 #define RCLCPP_RCLCPP_PARAMETER_HPP_
 
+#include <ostream>
+#include <sstream>
 #include <string>
 
 #include <rmw/rmw.h>
@@ -92,6 +94,27 @@ public:
   }
 
   inline ParameterType get_type() const {return static_cast<ParameterType>(value_.type); }
+
+  inline std::string get_type_name() const
+  {
+    switch (get_type()) {
+      case rclcpp::parameter::ParameterType::PARAMETER_BOOL:
+        return "bool";
+      case rclcpp::parameter::ParameterType::PARAMETER_INTEGER:
+        return "integer";
+      case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE:
+        return "double";
+      case rclcpp::parameter::ParameterType::PARAMETER_STRING:
+        return "string";
+      case rclcpp::parameter::ParameterType::PARAMETER_BYTES:
+        return "bytes";
+      case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
+        return "not set";
+      default:
+        throw std::runtime_error(
+          "Unexpected type from ParameterVariant: " + std::to_string(get_type()));
+    }
+  }
 
   inline std::string get_name() const & {return name_; }
 
@@ -193,10 +216,51 @@ public:
     return parameter;
   }
 
+  std::string to_string() const
+  {
+    switch (get_type()) {
+      case rclcpp::parameter::ParameterType::PARAMETER_BOOL:
+        return as_bool() ? "true" : "false";
+      case rclcpp::parameter::ParameterType::PARAMETER_INTEGER:
+        return std::to_string(as_int());
+      case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE:
+        return std::to_string(as_double());
+      case rclcpp::parameter::ParameterType::PARAMETER_STRING:
+        return as_string();
+      case rclcpp::parameter::ParameterType::PARAMETER_BYTES:
+        {
+          std::stringstream bytes;
+          bool first_byte = true;
+          bytes << "[" << std::hex;
+          for (auto & byte : as_bytes())
+          {
+            bytes << "0x" << byte;
+            if (!first_byte) {
+              bytes << ", ";
+            } else {
+              first_byte = false;
+            }
+          }
+          return bytes.str();
+        }
+      case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
+        return "not set";
+      default:
+        throw std::runtime_error(
+          "Unexpected type from ParameterVariant: " + std::to_string(get_type()));
+    }
+  }
+
 private:
   std::string name_;
   rcl_interfaces::msg::ParameterValue value_;
 };
+
+std::ostream & operator<<(std::ostream & os, const ParameterVariant & pv)
+{
+  os << pv.to_string();
+  return os;
+}
 
 } /* namespace parameter */
 
