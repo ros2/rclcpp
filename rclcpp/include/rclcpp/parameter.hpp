@@ -234,8 +234,7 @@ public:
           std::stringstream bytes;
           bool first_byte = true;
           bytes << "[" << std::hex;
-          for (auto & byte : as_bytes())
-          {
+          for (auto & byte : as_bytes()) {
             bytes << "0x" << byte;
             if (!first_byte) {
               bytes << ", ";
