@@ -202,9 +202,11 @@ public:
       case PARAMETER_BYTES:
         return ParameterVariant(parameter.name, parameter.value.bytes_value);
       case PARAMETER_NOT_SET:
+        throw std::runtime_error("Type from ParameterValue is not set");
       default:
         // TODO: use custom exception
-        throw std::runtime_error("Invalid type from ParameterValue");
+        throw std::runtime_error(
+          "Unexpected type from ParameterVariant: " + std::to_string(parameter.value.type));
     }
   }
 
