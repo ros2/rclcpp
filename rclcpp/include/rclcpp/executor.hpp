@@ -87,6 +87,17 @@ public:
     }
   }
 
+  void spin_node_once(rclcpp::node::Node::SharedPtr & node, bool nonblocking = false)
+  {
+    this->add_node(node);
+    // non-blocking = true
+    std::shared_ptr<AnyExecutable> any_exec = get_next_executable(nonblocking);
+    if (any_exec) {
+      execute_any_executable(any_exec);
+    }
+    this->remove_node(node);
+  }
+
   void spin_node_some(rclcpp::node::Node::SharedPtr & node)
   {
     this->add_node(node);
