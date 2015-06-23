@@ -383,8 +383,8 @@ Node::list_parameters(
       size_t last_separator = kv.first.find_last_of('.');
       if (std::string::npos != last_separator) {
         std::string prefix = kv.first.substr(0, last_separator);
-        if (std::find(result.prefixes.cbegin(), result.prefixes.cend(),
-          prefix) == result.prefixes.cend())
+        if (std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
+          result.prefixes.cend())
         {
           result.prefixes.push_back(prefix);
         }
