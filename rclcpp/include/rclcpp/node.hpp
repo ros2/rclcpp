@@ -126,7 +126,8 @@ public:
     std::string topic_name,
     size_t queue_size,
     std::function<void(const std::shared_ptr<MessageT> &)> callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    bool ignore_local_publications = false);
 
   /* Create a timer. */
   rclcpp::timer::WallTimer::SharedPtr

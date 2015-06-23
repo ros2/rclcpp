@@ -106,12 +106,13 @@ Node::create_subscription(
   std::string topic_name,
   size_t queue_size,
   std::function<void(const std::shared_ptr<MessageT> &)> callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
-    node_handle_, type_support_handle, topic_name.c_str(), queue_size);
+    node_handle_, type_support_handle, topic_name.c_str(), queue_size, ignore_local_publications);
   if (!subscriber_handle) {
     throw std::runtime_error(
       std::string("could not create subscription: ") +
@@ -123,6 +124,7 @@ Node::create_subscription(
   auto sub = Subscription<MessageT>::make_shared(
     subscriber_handle,
     topic_name,
+    ignore_local_publications,
     callback);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
   if (group) {

@@ -44,8 +44,11 @@ public:
 
   SubscriptionBase(
     rmw_subscription_t * subscription_handle,
-    std::string & topic_name)
-  : subscription_handle_(subscription_handle), topic_name_(topic_name)
+    std::string & topic_name,
+    bool ignore_local_publications)
+  : subscription_handle_(subscription_handle),
+    topic_name_(topic_name),
+    ignore_local_publications_(ignore_local_publications)
   {}
 
   std::string get_topic_name()
@@ -61,6 +64,7 @@ private:
 
   rmw_subscription_t * subscription_handle_;
   std::string topic_name_;
+  bool ignore_local_publications_;
 
 };
 
@@ -74,8 +78,10 @@ public:
   Subscription(
     rmw_subscription_t * subscription_handle,
     std::string & topic_name,
+    bool ignore_local_publications,
     CallbackType callback)
-  : SubscriptionBase(subscription_handle, topic_name), callback_(callback)
+  : SubscriptionBase(subscription_handle, topic_name, ignore_local_publications),
+    callback_(callback)
   {}
 
   std::shared_ptr<void> create_message()
