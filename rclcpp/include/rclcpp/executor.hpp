@@ -156,9 +156,11 @@ protected:
   {
     std::shared_ptr<void> message = subscription->create_message();
     bool taken = false;
-    rmw_take(subscription->subscription_handle_, message.get(), &taken);
-    if (taken) {
-      subscription->handle_message(message);
+    rmw_ret_t status = rmw_take(subscription->subscription_handle_, message.get(), &taken);
+    if (status == RMW_RET_OK) {
+      if (taken) {
+        subscription->handle_message(message);
+      }
     } else {
       std::cout << "[rclcpp::error] take failed for subscription on topic: " <<
         subscription->get_topic_name() << std::endl;
@@ -179,13 +181,15 @@ protected:
     std::shared_ptr<void> request_header = service->create_request_header();
     std::shared_ptr<void> request = service->create_request();
     bool taken = false;
-    rmw_take_request(
+    rmw_ret_t status = rmw_take_request(
       service->service_handle_,
       request_header.get(),
       request.get(),
       &taken);
-    if (taken) {
-      service->handle_request(request_header, request);
+    if (status == RMW_RET_OK) {
+      if (taken) {
+        service->handle_request(request_header, request);
+      }
     } else {
       std::cout << "[rclcpp::error] take failed for service on service: " <<
         service->get_service_name() << std::endl;
