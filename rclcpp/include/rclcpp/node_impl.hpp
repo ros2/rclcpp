@@ -46,9 +46,11 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
 {
   node_handle_ = rmw_create_node(name_.c_str());
   if (!node_handle_) {
+    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create node: ") +
       (rmw_get_error_string() ? rmw_get_error_string() : ""));
+    // *INDENT-ON*
   }
 
   using rclcpp::callback_group::CallbackGroupType;
@@ -79,9 +81,11 @@ Node::create_publisher(std::string topic_name, size_t queue_size)
   rmw_publisher_t * publisher_handle = rmw_create_publisher(
     node_handle_, type_support_handle, topic_name.c_str(), queue_size);
   if (!publisher_handle) {
+    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create publisher: ") +
       (rmw_get_error_string() ? rmw_get_error_string() : ""));
+    // *INDENT-ON*
   }
 
   return publisher::Publisher::make_shared(publisher_handle);
@@ -114,9 +118,11 @@ Node::create_subscription(
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
     node_handle_, type_support_handle, topic_name.c_str(), queue_size, ignore_local_publications);
   if (!subscriber_handle) {
+    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create subscription: ") +
       (rmw_get_error_string() ? rmw_get_error_string() : ""));
+    // *INDENT-ON*
   }
 
   using namespace rclcpp::subscription;
@@ -185,9 +191,11 @@ Node::create_client(
   rmw_client_t * client_handle = rmw_create_client(
     this->node_handle_, service_type_support_handle, service_name.c_str());
   if (!client_handle) {
+    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create client: ") +
       (rmw_get_error_string() ? rmw_get_error_string() : ""));
+    // *INDENT-ON*
   }
 
   using namespace rclcpp::client;
@@ -225,9 +233,11 @@ Node::create_service(
   rmw_service_t * service_handle = rmw_create_service(
     this->node_handle_, service_type_support_handle, service_name.c_str());
   if (!service_handle) {
+    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create service: ") +
       (rmw_get_error_string() ? rmw_get_error_string() : ""));
+    // *INDENT-ON*
   }
 
   auto serv = create_service_internal<ServiceT>(
