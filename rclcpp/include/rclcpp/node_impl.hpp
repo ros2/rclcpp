@@ -76,11 +76,10 @@ Node::Node(const std::string & node_name, context::Context::SharedPtr context)
   });
 
   using rclcpp::callback_group::CallbackGroupType;
-  default_callback_group_ =
-    create_callback_group(CallbackGroupType::MutuallyExclusive);
-  // TODO(esteve): remove hardcoded values
-  events_publisher_ =
-    create_publisher<rcl_interfaces::msg::ParameterEvent>("parameter_events", 1000);
+  default_callback_group_ = create_callback_group(
+    CallbackGroupType::MutuallyExclusive);
+  events_publisher_ = create_publisher<rcl_interfaces::msg::ParameterEvent>(
+    "parameter_events", rmw_qos_profile_parameter_events);
 }
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
@@ -96,12 +95,13 @@ Node::create_callback_group(
 
 template<typename MessageT>
 publisher::Publisher::SharedPtr
-Node::create_publisher(const std::string & topic_name, size_t queue_size)
+Node::create_publisher(
+  const std::string & topic_name, const rmw_qos_profile_t & qos_profile)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_publisher_t * publisher_handle = rmw_create_publisher(
-    node_handle_.get(), type_support_handle, topic_name.c_str(), queue_size);
+    node_handle_.get(), type_support_handle, topic_name.c_str(), qos_profile);
   if (!publisher_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
@@ -130,7 +130,7 @@ template<typename MessageT>
 typename subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
-  size_t queue_size,
+  const rmw_qos_profile_t & qos_profile,
   std::function<void(const std::shared_ptr<MessageT> &)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
@@ -146,7 +146,7 @@ Node::create_subscription(
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
     node_handle_.get(), type_support_handle,
-    topic_name.c_str(), queue_size, ignore_local_publications);
+    topic_name.c_str(), qos_profile, ignore_local_publications);
   if (!subscriber_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
