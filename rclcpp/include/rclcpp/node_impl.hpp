@@ -368,7 +368,9 @@ Node::list_parameters(
   // TODO(esteve): define parameter separator, use "." for now
   for (auto & kv : parameters_) {
     if (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
-      if (kv.first.find(prefix + ".") == 0) {
+      if (kv.first == prefix) {
+        return true;
+      } else if (kv.first.find(prefix + ".") == 0) {
         size_t length = prefix.length();
         std::string substr = kv.first.substr(length);
         // Cast as unsigned integer to avoid warning
@@ -379,11 +381,13 @@ Node::list_parameters(
     {
       result.names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of('.');
-      std::string prefix = kv.first.substr(0, last_separator);
-      if (std::find(result.prefixes.cbegin(), result.prefixes.cend(),
-        prefix) == result.prefixes.cend())
-      {
-        result.prefixes.push_back(prefix);
+      if (std::string::npos != last_separator) {
+        std::string prefix = kv.first.substr(0, last_separator);
+        if (std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
+          result.prefixes.cend())
+        {
+          result.prefixes.push_back(prefix);
+        }
       }
     }
   }

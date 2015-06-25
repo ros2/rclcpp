@@ -124,7 +124,7 @@ public:
       );
 
     list_parameters_service_ = node_->create_service<rcl_interfaces::srv::ListParameters>(
-      node_->get_name() + "__describe_parameters", [&node](
+      node_->get_name() + "__list_parameters", [&node](
         const std::shared_ptr<rmw_request_id_t> request_header,
         const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request> request,
         std::shared_ptr<rcl_interfaces::srv::ListParameters::Response> response)
