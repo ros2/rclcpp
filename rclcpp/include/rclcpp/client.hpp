@@ -16,10 +16,12 @@
 #define RCLCPP_RCLCPP_CLIENT_HPP_
 
 #include <future>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <utility>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -44,15 +46,21 @@ class ClientBase
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(ClientBase);
 
-  ClientBase(rmw_client_t * client_handle, const std::string & service_name)
-  : client_handle_(client_handle), service_name_(service_name)
+  ClientBase(
+    std::shared_ptr<rmw_node_t> node_handle,
+    rmw_client_t * client_handle,
+    const std::string & service_name)
+  : node_handle_(node_handle), client_handle_(client_handle), service_name_(service_name)
   {}
 
   ~ClientBase()
   {
-    if (client_handle_ != nullptr) {
-      rmw_destroy_client(client_handle_);
-      client_handle_ = nullptr;
+    if (client_handle_) {
+      if (rmw_destroy_client(client_handle_) == RMW_RET_ERROR) {
+        std::cerr << "Error in destruction of rmw client handle: " <<
+        (rmw_get_error_string() ? rmw_get_error_string() : "") <<
+          std::endl;
+      }
     }
   }
 
@@ -74,6 +82,8 @@ public:
 private:
   RCLCPP_DISABLE_COPY(ClientBase);
 
+  std::shared_ptr<rmw_node_t> node_handle_;
+
   rmw_client_t * client_handle_;
   std::string service_name_;
 
@@ -91,8 +101,11 @@ public:
 
   RCLCPP_MAKE_SHARED_DEFINITIONS(Client);
 
-  Client(rmw_client_t * client_handle, const std::string & service_name)
-  : ClientBase(client_handle, service_name)
+  Client(
+    std::shared_ptr<rmw_node_t> node_handle,
+    rmw_client_t * client_handle,
+    const std::string & service_name)
+  : ClientBase(node_handle, client_handle, service_name)
   {}
 
   std::shared_ptr<void> create_response()

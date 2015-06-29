@@ -16,9 +16,11 @@
 #define RCLCPP_RCLCPP_SERVICE_HPP_
 
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <string>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -44,16 +46,20 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(ServiceBase);
 
   ServiceBase(
+    std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
     const std::string service_name)
-  : service_handle_(service_handle), service_name_(service_name)
+  : node_handle_(node_handle), service_handle_(service_handle), service_name_(service_name)
   {}
 
   ~ServiceBase()
   {
-    if (service_handle_ != nullptr) {
-      rmw_destroy_service(service_handle_);
-      service_handle_ = nullptr;
+    if (service_handle_) {
+      if (rmw_destroy_service(service_handle_) == RMW_RET_ERROR) {
+        std::cerr << "Error in destruction of rmw service_handle_ handle: " <<
+        (rmw_get_error_string() ? rmw_get_error_string() : "") <<
+          std::endl;
+      }
     }
   }
 
@@ -75,6 +81,8 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
+
+  std::shared_ptr<rmw_node_t> node_handle_;
 
   rmw_service_t * service_handle_;
   std::string service_name_;
@@ -98,17 +106,20 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
 
   Service(
+    std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
     const std::string & service_name,
     CallbackType callback)
-  : ServiceBase(service_handle, service_name), callback_(callback), callback_with_header_(nullptr)
+  : ServiceBase(node_handle, service_handle, service_name), callback_(callback),
+    callback_with_header_(nullptr)
   {}
 
   Service(
+    std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
     const std::string & service_name,
     CallbackWithHeaderType callback_with_header)
-  : ServiceBase(service_handle, service_name), callback_(nullptr),
+  : ServiceBase(node_handle, service_handle, service_name), callback_(nullptr),
     callback_with_header_(callback_with_header)
   {}
 

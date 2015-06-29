@@ -15,8 +15,10 @@
 #ifndef RCLCPP_RCLCPP_PUBLISHER_HPP_
 #define RCLCPP_RCLCPP_PUBLISHER_HPP_
 
+#include <iostream>
 #include <memory>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -38,9 +40,20 @@ class Publisher
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Publisher);
 
-  Publisher(rmw_publisher_t * publisher_handle)
-  : publisher_handle_(publisher_handle)
+  Publisher(std::shared_ptr<rmw_node_t> node_handle, rmw_publisher_t * publisher_handle)
+  : node_handle_(node_handle), publisher_handle_(publisher_handle)
   {}
+
+  ~Publisher()
+  {
+    if (publisher_handle_) {
+      if (rmw_destroy_publisher(node_handle_.get(), publisher_handle_) == RMW_RET_ERROR) {
+        std::cerr << "Error in destruction of rmw publisher handle: "
+                  << (rmw_get_error_string() ? rmw_get_error_string() : "")
+                  << std::endl;
+      }
+    }
+  }
 
   template<typename MessageT>
   void
@@ -50,6 +63,8 @@ public:
   }
 
 private:
+  std::shared_ptr<rmw_node_t> node_handle_;
+
   rmw_publisher_t * publisher_handle_;
 
 };

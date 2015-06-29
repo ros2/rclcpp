@@ -16,9 +16,11 @@
 #define RCLCPP_RCLCPP_SUBSCRIPTION_HPP_
 
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <string>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -43,13 +45,26 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(SubscriptionBase);
 
   SubscriptionBase(
+    std::shared_ptr<rmw_node_t> node_handle,
     rmw_subscription_t * subscription_handle,
     std::string & topic_name,
     bool ignore_local_publications)
-  : subscription_handle_(subscription_handle),
+  : node_handle_(node_handle),
+    subscription_handle_(subscription_handle),
     topic_name_(topic_name),
     ignore_local_publications_(ignore_local_publications)
   {}
+
+  ~SubscriptionBase()
+  {
+    if (subscription_handle_) {
+      if (rmw_destroy_subscription(node_handle_.get(), subscription_handle_) == RMW_RET_ERROR) {
+        std::cerr << "Error in destruction of rmw subscription handle: " <<
+        (rmw_get_error_string() ? rmw_get_error_string() : "") <<
+          std::endl;
+      }
+    }
+  }
 
   std::string get_topic_name()
   {
@@ -61,6 +76,8 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase);
+
+  std::shared_ptr<rmw_node_t> node_handle_;
 
   rmw_subscription_t * subscription_handle_;
   std::string topic_name_;
@@ -76,11 +93,12 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Subscription);
 
   Subscription(
+    std::shared_ptr<rmw_node_t> node_handle,
     rmw_subscription_t * subscription_handle,
     std::string & topic_name,
     bool ignore_local_publications,
     CallbackType callback)
-  : SubscriptionBase(subscription_handle, topic_name, ignore_local_publications),
+  : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     callback_(callback)
   {}
 
