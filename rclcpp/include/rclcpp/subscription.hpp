@@ -53,7 +53,10 @@ public:
     subscription_handle_(subscription_handle),
     topic_name_(topic_name),
     ignore_local_publications_(ignore_local_publications)
-  {}
+  {
+    // To avoid unused private member warnings.
+    (void)ignore_local_publications_;
+  }
 
   ~SubscriptionBase()
   {

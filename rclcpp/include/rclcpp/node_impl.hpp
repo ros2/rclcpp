@@ -50,14 +50,16 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
     if (node_handle_) {
       auto ret = rmw_destroy_node(node);
       if (ret != RMW_RET_OK) {
+        // *INDENT-OFF*
         std::cerr << "Error in destruction of rmw node handle: "
                   << (rmw_get_error_string() ? rmw_get_error_string() : "")
                   << std::endl;
+        // *INDENT-ON*
       }
     }
   });
   if (!node_handle_) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+    // *INDENT-OFF*
     throw std::runtime_error(
       std::string("could not create node: ") +
       (rmw_get_error_string() ? rmw_get_error_string() : ""));
@@ -127,7 +129,8 @@ Node::create_subscription(
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
-    node_handle_.get(), type_support_handle, topic_name.c_str(), queue_size, ignore_local_publications);
+    node_handle_.get(), type_support_handle,
+    topic_name.c_str(), queue_size, ignore_local_publications);
   if (!subscriber_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(

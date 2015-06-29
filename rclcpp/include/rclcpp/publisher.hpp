@@ -48,9 +48,11 @@ public:
   {
     if (publisher_handle_) {
       if (rmw_destroy_publisher(node_handle_.get(), publisher_handle_) == RMW_RET_ERROR) {
+        // *INDENT-OFF*
         std::cerr << "Error in destruction of rmw publisher handle: "
                   << (rmw_get_error_string() ? rmw_get_error_string() : "")
                   << std::endl;
+        // *INDENT-ON*
       }
     }
   }
