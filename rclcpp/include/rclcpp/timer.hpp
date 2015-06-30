@@ -58,7 +58,7 @@ public:
       // TODO(wjwwood): use custom exception
       throw std::runtime_error(
               std::string("failed to create guard condition: ") +
-              (rmw_get_error_string() ? rmw_get_error_string() : "")
+              rmw_get_error_string_safe()
       );
     }
   }
@@ -68,7 +68,7 @@ public:
     if (guard_condition_) {
       if (rmw_destroy_guard_condition(guard_condition_) == RMW_RET_ERROR) {
         std::cerr << "Error in TimerBase destructor, rmw_destroy_guard_condition failed: " <<
-        (rmw_get_error_string() ? rmw_get_error_string() : "") <<
+          rmw_get_error_string_safe() <<
           std::endl;
       }
     }

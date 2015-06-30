@@ -52,7 +52,7 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
       if (ret != RMW_RET_OK) {
         // *INDENT-OFF*
         std::cerr << "Error in destruction of rmw node handle: "
-                  << (rmw_get_error_string() ? rmw_get_error_string() : "")
+                  << rmw_get_error_string_safe()
                   << std::endl;
         // *INDENT-ON*
       }
@@ -62,7 +62,7 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
     // *INDENT-OFF*
     throw std::runtime_error(
       std::string("could not create node: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
@@ -97,7 +97,7 @@ Node::create_publisher(std::string topic_name, size_t queue_size)
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create publisher: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
@@ -135,7 +135,7 @@ Node::create_subscription(
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create subscription: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
@@ -209,7 +209,7 @@ Node::create_client(
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create client: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
@@ -252,7 +252,7 @@ Node::create_service(
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create service: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 

@@ -63,7 +63,7 @@ public:
     if (subscription_handle_) {
       if (rmw_destroy_subscription(node_handle_.get(), subscription_handle_) == RMW_RET_ERROR) {
         std::cerr << "Error in destruction of rmw subscription handle: " <<
-        (rmw_get_error_string() ? rmw_get_error_string() : "") <<
+          rmw_get_error_string_safe() <<
           std::endl;
       }
     }

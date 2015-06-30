@@ -59,7 +59,7 @@ public:
       if (rmw_destroy_client(client_handle_) == RMW_RET_ERROR) {
         // *INDENT-OFF*
         std::cerr << "Error in destruction of rmw client handle: "
-                  << (rmw_get_error_string() ? rmw_get_error_string() : "")
+                  << rmw_get_error_string_safe()
                   << std::endl;
         // *INDENT-ON*
       }

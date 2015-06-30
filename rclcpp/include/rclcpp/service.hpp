@@ -57,7 +57,7 @@ public:
     if (service_handle_) {
       if (rmw_destroy_service(service_handle_) == RMW_RET_ERROR) {
         std::cerr << "Error in destruction of rmw service_handle_ handle: " <<
-        (rmw_get_error_string() ? rmw_get_error_string() : "") <<
+          rmw_get_error_string_safe() <<
           std::endl;
       }
     }
