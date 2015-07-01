@@ -18,6 +18,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <thread>
 
 #include <rmw/error_handling.h>
@@ -66,10 +67,11 @@ public:
   ~TimerBase()
   {
     if (guard_condition_) {
-      if (rmw_destroy_guard_condition(guard_condition_) == RMW_RET_ERROR) {
-        std::cerr << "Error in TimerBase destructor, rmw_destroy_guard_condition failed: " <<
-          rmw_get_error_string_safe() <<
-          std::endl;
+      if (rmw_destroy_guard_condition(guard_condition_) != RMW_RET_OK) {
+        std::stringstream ss;
+        ss << "Error in TimerBase destructor, rmw_destroy_guard_condition failed: " <<
+          rmw_get_error_string_safe() << '\n';
+        (std::cerr << ss.str()).flush();
       }
     }
   }

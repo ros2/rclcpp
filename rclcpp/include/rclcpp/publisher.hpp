@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <memory>
+#include <sstream>
 
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
@@ -47,12 +48,13 @@ public:
   ~Publisher()
   {
     if (publisher_handle_) {
-      if (rmw_destroy_publisher(node_handle_.get(), publisher_handle_) == RMW_RET_ERROR) {
+      if (rmw_destroy_publisher(node_handle_.get(), publisher_handle_) != RMW_RET_OK) {
         // *INDENT-OFF*
-        std::cerr << "Error in destruction of rmw publisher handle: "
-                  << rmw_get_error_string_safe()
-                  << std::endl;
+        std::stringstream ss;
+        ss << "Error in destruction of rmw publisher handle: "
+           << rmw_get_error_string_safe() << '\n';
         // *INDENT-ON*
+        (std::cerr << ss.str()).flush();
       }
     }
   }

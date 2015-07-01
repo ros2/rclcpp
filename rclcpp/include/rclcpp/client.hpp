@@ -19,6 +19,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 #include <rmw/error_handling.h>
@@ -56,12 +57,9 @@ public:
   ~ClientBase()
   {
     if (client_handle_) {
-      if (rmw_destroy_client(client_handle_) == RMW_RET_ERROR) {
-        // *INDENT-OFF*
-        std::cerr << "Error in destruction of rmw client handle: "
-                  << rmw_get_error_string_safe()
-                  << std::endl;
-        // *INDENT-ON*
+      if (rmw_destroy_client(client_handle_) != RMW_RET_OK) {
+        fprintf(stderr,
+          "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
       }
     }
   }

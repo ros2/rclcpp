@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -51,10 +52,11 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
       auto ret = rmw_destroy_node(node);
       if (ret != RMW_RET_OK) {
         // *INDENT-OFF*
-        std::cerr << "Error in destruction of rmw node handle: "
-                  << rmw_get_error_string_safe()
-                  << std::endl;
+        std::stringstream ss;
+        ss << "Error in destruction of rmw node handle: "
+           << rmw_get_error_string_safe() << '\n';
         // *INDENT-ON*
+        (std::cerr << ss.str()).flush();
       }
     }
   });

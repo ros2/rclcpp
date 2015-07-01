@@ -18,6 +18,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include <rmw/error_handling.h>
@@ -55,10 +56,11 @@ public:
   ~ServiceBase()
   {
     if (service_handle_) {
-      if (rmw_destroy_service(service_handle_) == RMW_RET_ERROR) {
-        std::cerr << "Error in destruction of rmw service_handle_ handle: " <<
-          rmw_get_error_string_safe() <<
-          std::endl;
+      if (rmw_destroy_service(service_handle_) != RMW_RET_OK) {
+        std::stringstream ss;
+        ss << "Error in destruction of rmw service_handle_ handle: " <<
+          rmw_get_error_string_safe() << '\n';
+        (std::cerr << ss.str()).flush();
       }
     }
   }
