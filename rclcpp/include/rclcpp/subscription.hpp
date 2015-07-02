@@ -59,7 +59,7 @@ public:
     (void)ignore_local_publications_;
   }
 
-  ~SubscriptionBase()
+  virtual ~SubscriptionBase()
   {
     if (subscription_handle_) {
       if (rmw_destroy_subscription(node_handle_.get(), subscription_handle_) != RMW_RET_OK) {

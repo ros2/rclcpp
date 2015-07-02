@@ -53,7 +53,7 @@ public:
   : node_handle_(node_handle), service_handle_(service_handle), service_name_(service_name)
   {}
 
-  ~ServiceBase()
+  virtual ~ServiceBase()
   {
     if (service_handle_) {
       if (rmw_destroy_service(service_handle_) != RMW_RET_OK) {

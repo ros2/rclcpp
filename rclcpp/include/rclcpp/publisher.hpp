@@ -45,7 +45,7 @@ public:
   : node_handle_(node_handle), publisher_handle_(publisher_handle)
   {}
 
-  ~Publisher()
+  virtual ~Publisher()
   {
     if (publisher_handle_) {
       if (rmw_destroy_publisher(node_handle_.get(), publisher_handle_) != RMW_RET_OK) {

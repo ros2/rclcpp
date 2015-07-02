@@ -54,7 +54,7 @@ public:
   : node_handle_(node_handle), client_handle_(client_handle), service_name_(service_name)
   {}
 
-  ~ClientBase()
+  virtual ~ClientBase()
   {
     if (client_handle_) {
       if (rmw_destroy_client(client_handle_) != RMW_RET_OK) {

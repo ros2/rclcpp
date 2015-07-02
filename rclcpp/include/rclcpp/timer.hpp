@@ -64,7 +64,7 @@ public:
     }
   }
 
-  ~TimerBase()
+  virtual ~TimerBase()
   {
     if (guard_condition_) {
       if (rmw_destroy_guard_condition(guard_condition_) != RMW_RET_OK) {
@@ -107,7 +107,7 @@ public:
     thread_ = std::thread(&GenericTimer<Clock>::run, this);
   }
 
-  ~GenericTimer()
+  virtual ~GenericTimer()
   {
     cancel();
     thread_.join();
