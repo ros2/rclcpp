@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -134,7 +135,14 @@ public:
   {
     int64_t sequence_number;
     // TODO(wjwwood): Check the return code.
-    rmw_send_request(get_client_handle(), request.get(), &sequence_number);
+    rmw_ret_t status = rmw_send_request(get_client_handle(), request.get(), &sequence_number);
+    if (status != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to send request: ") +
+        (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      // *INDENT-ON*
+    }
 
     SharedPromise call_promise = std::make_shared<Promise>();
     SharedFuture f(call_promise->get_future());

@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -141,7 +142,14 @@ public:
     std::shared_ptr<rmw_request_id_t> & req_id,
     std::shared_ptr<typename ServiceT::Response> & response)
   {
-    rmw_send_response(get_service_handle(), req_id.get(), response.get());
+    rmw_ret_t status = rmw_send_response(get_service_handle(), req_id.get(), response.get());
+    if (status != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to send response: ") +
+        (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      // *INDENT-ON*
+    }
   }
 
 private:
