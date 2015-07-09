@@ -162,8 +162,9 @@ protected:
         subscription->handle_message(message);
       }
     } else {
-      std::cout << "[rclcpp::error] take failed for subscription on topic: " <<
-        subscription->get_topic_name() << std::endl;
+      fprintf(stderr, "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
+        subscription->get_topic_name().c_str(),
+        rmw_get_error_string() ? rmw_get_error_string() : "");
     }
   }
 
@@ -191,8 +192,8 @@ protected:
         service->handle_request(request_header, request);
       }
     } else {
-      std::cout << "[rclcpp::error] take failed for service on service: " <<
-        service->get_service_name() << std::endl;
+      fprintf(stderr, "[rclcpp::error] take failed for service '%s': %s\n",
+        service->get_service_name().c_str(), rmw_get_error_string() ? rmw_get_error_string() : "");
     }
   }
 
@@ -211,7 +212,8 @@ protected:
     if (taken) {
       client->handle_response(request_header, response);
     } else {
-      std::cout << "[rclcpp::error] take failed for service on client" << std::endl;
+      fprintf(stderr, "[rclcpp::error] take failed for service on client: %s\n",
+        rmw_get_error_string() ? rmw_get_error_string() : "");
     }
   }
 
