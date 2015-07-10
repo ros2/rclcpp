@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -46,7 +47,14 @@ public:
   void
   publish(std::shared_ptr<MessageT> & msg)
   {
-    rmw_publish(publisher_handle_, msg.get());
+    rmw_ret_t status = rmw_publish(publisher_handle_, msg.get());
+    if (status != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to publish message: ") +
+        (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      // *INDENT-ON*
+    }
   }
 
 private:
