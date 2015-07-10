@@ -33,6 +33,8 @@ namespace rclcpp
 namespace executor
 {
 
+enum executor_handle_t {subscriber_handle, service_handle, client_handle, guard_cond_handle};
+
 class Executor
 {
 public:
@@ -215,6 +217,25 @@ protected:
     }
   }
 
+  /* The default implementation of Executor::get_allocated_handles dynamically
+     allocates the requested handle array, and ignores the parent pointer. */
+  virtual void **get_allocated_handles(executor_handle_t /*handle_type*/, unsigned long size)
+  {
+    void **handles = static_cast<void **>(std::malloc(sizeof(void *) * size));
+    if (handles == NULL) {
+      // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
+      throw std::runtime_error("Could not malloc for handle pointers.");
+    }
+    return handles;
+  }
+
+  /* The default implementation of Executor::remove_allocated_handles uses
+     dynamic memory deallocation. */
+  virtual void remove_allocated_handles(void **handle, size_t /*size*/)
+  {
+    std::free(handle);
+  }
+
 /*** Populate class storage from stored weak node pointers and wait. ***/
 
   void
@@ -260,17 +281,12 @@ protected:
             return i.expired();
           }));
     }
-    // Use the number of subscriptions to allocate memory in the handles
+    // Use the number of subscriptions to retrieve allocated memory in the handles
     unsigned long number_of_subscriptions = subs.size();
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = number_of_subscriptions;
-    // TODO(wjwwood): Avoid redundant malloc's
-    subscriber_handles.subscribers = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_subscriptions));
-    if (subscriber_handles.subscribers == NULL) {
-      // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error("Could not malloc for subscriber pointers.");
-    }
+    subscriber_handles.subscribers =
+        get_allocated_handles(subscriber_handle, number_of_subscriptions);
     // Then fill the SubscriberHandles with ready subscriptions
     size_t subscriber_handle_index = 0;
     for (auto & subscription : subs) {
@@ -279,17 +295,12 @@ protected:
       subscriber_handle_index += 1;
     }
 
-    // Use the number of services to allocate memory in the handles
+    // Use the number of services to retrieve allocated memory in the handles
     unsigned long number_of_services = services.size();
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
-    // TODO(esteve): Avoid redundant malloc's
-    service_handles.services = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_services));
-    if (service_handles.services == NULL) {
-      // TODO(esteve): Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error("Could not malloc for service pointers.");
-    }
+    service_handles.services =
+        get_allocated_handles(service_handle, number_of_services);
     // Then fill the ServiceHandles with ready services
     size_t service_handle_index = 0;
     for (auto & service : services) {
@@ -298,17 +309,13 @@ protected:
       service_handle_index += 1;
     }
 
-    // Use the number of clients to allocate memory in the handles
+    // Use the number of clients to retrieve allocated memory in the handles
     unsigned long number_of_clients = clients.size();
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
-    // TODO: Avoid redundant malloc's
-    client_handles.clients = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_clients));
-    if (client_handles.clients == NULL) {
-      // TODO: Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error("Could not malloc for client pointers.");
-    }
+    client_handles.clients =
+        get_allocated_handles(client_handle, number_of_clients);
+
     // Then fill the ServiceHandles with ready clients
     size_t client_handle_index = 0;
     for (auto & client : clients) {
@@ -317,20 +324,16 @@ protected:
       client_handle_index += 1;
     }
 
-    // Use the number of guard conditions to allocate memory in the handles
+    // Use the number of guard conditions to retrieve allocated memory in the handles
     // Add 2 to the number for the ctrl-c guard cond and the executor's
     size_t start_of_timer_guard_conds = 2;
     unsigned long number_of_guard_conds =
       timers.size() + start_of_timer_guard_conds;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
-    // TODO(wjwwood): Avoid redundant malloc's
-    guard_condition_handles.guard_conditions = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_guard_conds));
-    if (guard_condition_handles.guard_conditions == NULL) {
-      // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error("Could not malloc for guard condition pointers.");
-    }
+    guard_condition_handles.guard_conditions =
+        get_allocated_handles(guard_cond_handle, number_of_guard_conds);
+
     // Put the global ctrl-c guard condition in
     assert(guard_condition_handles.guard_condition_count > 1);
     guard_condition_handles.guard_conditions[0] = \
@@ -356,11 +359,10 @@ protected:
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
       // Make sure to free memory
-      // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
-      //                todo has been addressed.
-      std::free(subscriber_handles.subscribers);
-      std::free(service_handles.services);
-      std::free(guard_condition_handles.guard_conditions);
+      remove_allocated_handles(subscriber_handles.subscribers, subscriber_handles.subscriber_count);
+      remove_allocated_handles(service_handles.services, service_handles.service_count);
+      remove_allocated_handles(client_handles.clients, client_handles.client_count);
+      remove_allocated_handles(guard_condition_handles.guard_conditions, guard_condition_handles.guard_condition_count);
       return;
     }
     // Add the new work to the class's list of things waiting to be executed
@@ -394,11 +396,10 @@ protected:
     }
 
     // Make sure to free memory
-    // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
-    //                todo has been addressed.
-    std::free(subscriber_handles.subscribers);
-    std::free(service_handles.services);
-    std::free(guard_condition_handles.guard_conditions);
+    remove_allocated_handles(subscriber_handles.subscribers, subscriber_handles.subscriber_count);
+    remove_allocated_handles(service_handles.services, service_handles.service_count);
+    remove_allocated_handles(client_handles.clients, client_handles.client_count);
+    remove_allocated_handles(guard_condition_handles.guard_conditions, guard_condition_handles.guard_condition_count);
   }
 
 /******************************/
