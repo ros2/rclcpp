@@ -219,7 +219,8 @@ protected:
 
   /* The default implementation of Executor::get_allocated_handles dynamically
      allocates the requested handle array, and ignores the parent pointer. */
-  virtual void **get_allocated_handles(executor_handle_t /*handle_type*/, unsigned long size)
+  virtual void **get_allocated_handles(executor_handle_t /*handle_type*/,
+                                       size_t size)
   {
     void **handles = static_cast<void **>(std::malloc(sizeof(void *) * size));
     if (handles == NULL) {

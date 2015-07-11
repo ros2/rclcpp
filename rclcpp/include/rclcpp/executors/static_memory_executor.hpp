@@ -17,10 +17,10 @@
 
 #include <cassert>
 #include <cstdlib>
-#include <memory>
-#include <vector>
 
 #include <rmw/rmw.h>
+#include <memory>
+#include <vector>
 
 #include <rclcpp/executor.hpp>
 #include <rclcpp/macros.hpp>
@@ -33,24 +33,19 @@
 #define MAX_CLIENTS 16
 #define MAX_GUARD_CONDS 100
 
-namespace rclcpp
-{
-namespace executors
-{
-namespace static_memory_executor
-{
+namespace rclcpp {
+namespace executors {
+namespace static_memory_executor {
 
 /* StaticMemoryExecutor provides separate statically allocated arrays
    for subscriptions, services, clients, and guard conditions and reimplements
    get_allocated_handles and remove_allocated_handles.
    The size of these arrays is defined at compile time. */
-class StaticMemoryExecutor : public executor::Executor
-{
-public:
+class StaticMemoryExecutor : public executor::Executor {
+ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(StaticMemoryExecutor);
 
-  StaticMemoryExecutor()
-  {
+  StaticMemoryExecutor() {
     memset(subscriptions, 0, MAX_SUBSCRIPTIONS);
     memset(services, 0, MAX_SERVICES);
     memset(clients, 0, MAX_CLIENTS);
@@ -59,65 +54,63 @@ public:
 
   ~StaticMemoryExecutor() {}
 
-  virtual void spin()
-  {
+  virtual void spin() {
     while (rclcpp::utilities::ok()) {
       auto any_exec = get_next_executable();
       execute_any_executable(any_exec);
     }
   }
 
-protected:
-  void **get_allocated_handles(executor::executor_handle_t handle_type, unsigned long size)
-  {
-    switch(handle_type)
-    {
+ protected:
+  void **get_allocated_handles(executor::executor_handle_t handle_type,
+                               size_t size) {
+    switch (handle_type) {
       case executor::subscriber_handle:
-        if (size > MAX_SUBSCRIPTIONS)
-        {
+        if (size > MAX_SUBSCRIPTIONS) {
           std::cout << "subscriber error" << std::endl;
-          throw std::runtime_error("Size of requested handle pointer exceeded allocated memory for subscribers.");
+          throw std::runtime_error("Size of requested handle pointer exceeded" +
+                                   " allocated memory for subscribers.");
         }
         return this->subscriptions;
       case executor::service_handle:
-        if (size > MAX_SERVICES)
-        {
+        if (size > MAX_SERVICES) {
           // TODO(jacquelinekay) change error if default impl is changed
-          throw std::runtime_error("Size of requested handle pointer exceeded allocated memory for services.");
+          throw std::runtime_error("Size of requested handle pointer exceeded" +
+                                   " allocated memory for services.");
         }
         return this->services;
       case executor::client_handle:
-        if (size > MAX_CLIENTS)
-        {
+        if (size > MAX_CLIENTS) {
           // TODO(jacquelinekay) change error if default impl is changed
-          throw std::runtime_error("Size of requested handle pointer exceeded allocated memory for clients.");
+          throw std::runtime_error("Size of requested handle pointer exceeded" +
+                                   " allocated memory for clients.");
         }
         return this->clients;
       case executor::guard_cond_handle:
-        if (size > MAX_GUARD_CONDS)
-        {
+        if (size > MAX_GUARD_CONDS) {
           // TODO(jacquelinekay) change error if default impl is changed
-          throw std::runtime_error("Size of requested handle pointer exceeded allocated memory for guard conditions.");
+          throw std::runtime_error("Size of requested handle pointer exceeded" +
+                                   " allocated memory for guard conditions.");
         }
         return this->guard_conds;
       default:
         break;
     }
-    throw std::runtime_error("Invalid enum type in StaticMemoryExecutor::get_allocated_handles");
+    throw std::runtime_error
+        ("Invalid enum type in StaticMemoryExecutor::get_allocated_handles");
   }
 
-  void remove_allocated_handles(void **handle, size_t size)
-  {
-    if (handle == NULL)
-    {
-      std::cout << "warning: Null pointer passed to StaticMemoryAllocator::remove_allocated_handles" << std::endl;
+  void remove_allocated_handles(void **handle, size_t size) {
+    if (handle == NULL) {
+      std::cout << "warning: Null pointer passed to remove_allocated_handles."
+                << std::endl;
       return;
     }
 
     memset(handle, 0, size);
   }
 
-private:
+ private:
   RCLCPP_DISABLE_COPY(StaticMemoryExecutor);
   void *subscriptions[MAX_SUBSCRIPTIONS];
   void *services[MAX_SERVICES];
