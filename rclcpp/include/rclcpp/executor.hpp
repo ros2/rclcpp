@@ -219,10 +219,10 @@ protected:
 
   /* The default implementation of Executor::get_allocated_handles dynamically
      allocates the requested handle array, and ignores the parent pointer. */
-  virtual void **get_allocated_handles(executor_handle_t /*handle_type*/,
-                                       size_t size)
+  virtual void ** get_allocated_handles(executor_handle_t /*handle_type*/,
+    size_t size)
   {
-    void **handles = static_cast<void **>(std::malloc(sizeof(void *) * size));
+    void ** handles = static_cast<void **>(std::malloc(sizeof(void *) * size));
     if (handles == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for handle pointers.");
@@ -232,7 +232,7 @@ protected:
 
   /* The default implementation of Executor::remove_allocated_handles uses
      dynamic memory deallocation. */
-  virtual void remove_allocated_handles(void **handle, size_t /*size*/)
+  virtual void remove_allocated_handles(void ** handle, size_t /*size*/)
   {
     std::free(handle);
   }
@@ -287,7 +287,7 @@ protected:
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = number_of_subscriptions;
     subscriber_handles.subscribers =
-        get_allocated_handles(subscriber_handle, number_of_subscriptions);
+      get_allocated_handles(subscriber_handle, number_of_subscriptions);
     // Then fill the SubscriberHandles with ready subscriptions
     size_t subscriber_handle_index = 0;
     for (auto & subscription : subs) {
@@ -301,7 +301,7 @@ protected:
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
     service_handles.services =
-        get_allocated_handles(service_handle, number_of_services);
+      get_allocated_handles(service_handle, number_of_services);
     // Then fill the ServiceHandles with ready services
     size_t service_handle_index = 0;
     for (auto & service : services) {
@@ -315,7 +315,7 @@ protected:
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
     client_handles.clients =
-        get_allocated_handles(client_handle, number_of_clients);
+      get_allocated_handles(client_handle, number_of_clients);
 
     // Then fill the ServiceHandles with ready clients
     size_t client_handle_index = 0;
@@ -333,7 +333,7 @@ protected:
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
     guard_condition_handles.guard_conditions =
-        get_allocated_handles(guard_cond_handle, number_of_guard_conds);
+      get_allocated_handles(guard_cond_handle, number_of_guard_conds);
 
     // Put the global ctrl-c guard condition in
     assert(guard_condition_handles.guard_condition_count > 1);
@@ -360,10 +360,12 @@ protected:
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
       // Make sure to free memory
-      remove_allocated_handles(subscriber_handles.subscribers, subscriber_handles.subscriber_count);
+      remove_allocated_handles(subscriber_handles.subscribers,
+        subscriber_handles.subscriber_count);
       remove_allocated_handles(service_handles.services, service_handles.service_count);
       remove_allocated_handles(client_handles.clients, client_handles.client_count);
-      remove_allocated_handles(guard_condition_handles.guard_conditions, guard_condition_handles.guard_condition_count);
+      remove_allocated_handles(guard_condition_handles.guard_conditions,
+        guard_condition_handles.guard_condition_count);
       return;
     }
     // Add the new work to the class's list of things waiting to be executed
@@ -400,7 +402,8 @@ protected:
     remove_allocated_handles(subscriber_handles.subscribers, subscriber_handles.subscriber_count);
     remove_allocated_handles(service_handles.services, service_handles.service_count);
     remove_allocated_handles(client_handles.clients, client_handles.client_count);
-    remove_allocated_handles(guard_condition_handles.guard_conditions, guard_condition_handles.guard_condition_count);
+    remove_allocated_handles(guard_condition_handles.guard_conditions,
+      guard_condition_handles.guard_condition_count);
   }
 
 /******************************/
