@@ -18,6 +18,7 @@
 #include <future>
 #include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/executors/single_threaded_executor.hpp>
+#include <rclcpp/executors/static_memory_executor.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
 
@@ -28,6 +29,7 @@ namespace executors
 
 using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
+using rclcpp::executors::static_memory_executor::StaticMemoryExecutor;
 
 template<typename FutureT>
 std::shared_future<FutureT> &
