@@ -23,23 +23,23 @@ namespace rclcpp
 {
 namespace executor
 {
-  struct AnyExecutable
-  {
+struct AnyExecutable
+{
 
-    AnyExecutable()
-    : subscription(0), timer(0), callback_group(0), node(0)
-    {}
-    // Either the subscription or the timer will be set, but not both
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
-    rclcpp::timer::TimerBase::SharedPtr timer;
-    rclcpp::service::ServiceBase::SharedPtr service;
-    rclcpp::client::ClientBase::SharedPtr client;
-    // These are used to keep the scope on the containing items
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
-    rclcpp::node::Node::SharedPtr node;
-  };
+  AnyExecutable()
+  : subscription(0), timer(0), callback_group(0), node(0)
+  {}
+  // Either the subscription or the timer will be set, but not both
+  rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
+  rclcpp::timer::TimerBase::SharedPtr timer;
+  rclcpp::service::ServiceBase::SharedPtr service;
+  rclcpp::client::ClientBase::SharedPtr client;
+  // These are used to keep the scope on the containing items
+  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
+  rclcpp::node::Node::SharedPtr node;
+};
 
-  typedef std::shared_ptr<AnyExecutable> AnyExecutableSharedPtr;
+typedef std::shared_ptr<AnyExecutable> AnyExecutableSharedPtr;
 }
 }
 

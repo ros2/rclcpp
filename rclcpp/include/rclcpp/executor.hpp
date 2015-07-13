@@ -43,7 +43,7 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
 
   Executor(memory_strategy::MemoryStrategySharedPtr ms =
-              memory_strategy::create_default_strategy())
+    memory_strategy::create_default_strategy())
   : interrupt_guard_condition_(rmw_create_guard_condition()),
     _memory_strategy(ms)
   {
@@ -120,15 +120,13 @@ public:
   void
   set_memory_strategy(memory_strategy::MemoryStrategySharedPtr memory_strategy)
   {
-    if (memory_strategy == nullptr)
-    {
+    if (memory_strategy == nullptr) {
       throw std::runtime_error("Received NULL memory strategy in executor.");
     }
     _memory_strategy = memory_strategy;
   }
 
 protected:
-
   void
   execute_any_executable(AnyExecutableSharedPtr & any_exec)
   {

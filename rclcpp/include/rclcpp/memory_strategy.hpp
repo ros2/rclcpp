@@ -20,12 +20,12 @@ namespace rclcpp
 {
 
 // TODO move HandleType somewhere where it makes sense
-enum class HandleType{subscriber_handle, service_handle, client_handle, guard_condition_handle};
+enum class HandleType {subscriber_handle, service_handle, client_handle, guard_condition_handle};
 
 namespace executor
 {
-  class Executor;
-};
+class Executor;
+}
 
 namespace memory_strategy
 {
@@ -36,13 +36,12 @@ class MemoryStrategy
   friend class executor::Executor;
 
 public:
-
-  virtual void** borrow_handles(HandleType type, size_t number_of_handles)
+  virtual void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
-    return static_cast<void**>(rcl_malloc(sizeof(void *) * number_of_handles));
+    return static_cast<void **>(rcl_malloc(sizeof(void *) * number_of_handles));
   }
 
-  virtual void return_handles(HandleType type, void** handles)
+  virtual void return_handles(HandleType type, void ** handles)
   {
     this->rcl_free(handles);
   }
@@ -52,20 +51,18 @@ public:
     return executor::AnyExecutableSharedPtr(new executor::AnyExecutable);
   }
 
-  virtual void *rcl_malloc(size_t size)
+  virtual void * rcl_malloc(size_t size)
   {
     return std::malloc(size);
   }
 
-  virtual void rcl_free(void *ptr)
+  virtual void rcl_free(void * ptr)
   {
     return std::free(ptr);
   }
 
 protected:
-
 private:
-
 };
 
 typedef std::shared_ptr<MemoryStrategy> MemoryStrategySharedPtr;

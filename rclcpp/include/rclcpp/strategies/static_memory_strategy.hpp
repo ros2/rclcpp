@@ -1,4 +1,3 @@
-
 // Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +30,6 @@ class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 
 public:
-
   StaticMemoryStrategy()
   {
     memset(_memory_pool, 0, _pool_size);
@@ -42,21 +40,18 @@ public:
     _pool_seq = 0;
     _exec_seq = 0;
 
-    for (size_t i = 0; i < _pool_size; ++i)
-    {
+    for (size_t i = 0; i < _pool_size; ++i) {
       _memory_map[_memory_pool[i]] = 0;
     }
 
-    for (size_t i = 0; i < _max_executables; ++i)
-    {
+    for (size_t i = 0; i < _max_executables; ++i) {
       _executable_pool[i] = std::make_shared<executor::AnyExecutable>(executor::AnyExecutable());
     }
   }
 
-  void** borrow_handles(HandleType type, size_t number_of_handles)
+  void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
-    switch(type)
-    {
+    switch (type) {
       case HandleType::subscriber_handle:
         return _subscriber_pool;
       case HandleType::service_handle:
@@ -71,10 +66,9 @@ public:
     throw std::runtime_error("Unrecognized enum, could not borrow handle memory.");
   }
 
-  void return_handles(HandleType type, void** handles)
+  void return_handles(HandleType type, void ** handles)
   {
-    switch(type)
-    {
+    switch (type) {
       case HandleType::subscriber_handle:
         memset(_subscriber_pool, 0, _max_subscribers);
         break;
@@ -95,8 +89,7 @@ public:
 
   executor::AnyExecutableSharedPtr instantiate_next_executable()
   {
-    if (_exec_seq >= _max_executables)
-    {
+    if (_exec_seq >= _max_executables) {
       // wrap around
       _exec_seq = 0;
     }
@@ -106,18 +99,16 @@ public:
     return _executable_pool[prev_exec_seq];
   }
 
-  void *rcl_malloc(size_t size)
+  void * rcl_malloc(size_t size)
   {
     // Extremely naive static allocation strategy
     // Keep track of block size at a given pointer
-    if (_pool_seq + size > _pool_size)
-    {
+    if (_pool_seq + size > _pool_size) {
       // Start at 0
       _pool_seq = 0;
     }
-    void *ptr = _memory_pool[_pool_seq];
-    if (_memory_map.count(ptr) == 0)
-    {
+    void * ptr = _memory_pool[_pool_seq];
+    if (_memory_map.count(ptr) == 0) {
       // We expect to have the state for all blocks pre-mapped into _memory_map
       throw std::runtime_error("Unexpected pointer in rcl_malloc.");
     }
@@ -127,10 +118,9 @@ public:
     return _memory_pool[prev_pool_seq];
   }
 
-  void rcl_free(void *ptr)
+  void rcl_free(void * ptr)
   {
-    if (_memory_map.count(ptr) == 0)
-    {
+    if (_memory_map.count(ptr) == 0) {
       // We expect to have the state for all blocks pre-mapped into _memory_map
       throw std::runtime_error("Unexpected pointer in rcl_free.");
     }
@@ -139,8 +129,6 @@ public:
   }
 
 protected:
-
-
 private:
   static const size_t _pool_size = 1024;
   static const size_t _max_subscribers = 10;
@@ -149,17 +137,17 @@ private:
   static const size_t _max_guard_conditions = 50;
   static const size_t _max_executables = 1;
 
-  void *_memory_pool[_pool_size];
-  void *_subscriber_pool[_max_subscribers];
-  void *_service_pool[_max_services];
-  void *_client_pool[_max_clients];
-  void *_guard_condition_pool[_max_guard_conditions];
+  void * _memory_pool[_pool_size];
+  void * _subscriber_pool[_max_subscribers];
+  void * _service_pool[_max_services];
+  void * _client_pool[_max_clients];
+  void * _guard_condition_pool[_max_guard_conditions];
   executor::AnyExecutableSharedPtr _executable_pool[_max_executables];
 
   size_t _pool_seq;
   size_t _exec_seq;
 
-  std::map<void*, size_t> _memory_map;
+  std::map<void *, size_t> _memory_map;
 };
 
 }
