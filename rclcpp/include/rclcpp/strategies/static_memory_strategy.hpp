@@ -154,7 +154,7 @@ private:
   std::unordered_map<void *, size_t> _memory_map;
 };
 
-}
+}  /* static_memory_strategy */
 
 }  /* memory_strategies */
 

@@ -24,7 +24,7 @@ namespace memory_strategies
 
 using rclcpp::memory_strategies::static_memory_strategy::StaticMemoryStrategy;
 
-}
-}
+}  /* memory_strategies */
+}  /* rclcpp */
 
 #endif
