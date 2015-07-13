@@ -45,7 +45,7 @@ public:
   Executor(memory_strategy::MemoryStrategy::SharedPtr ms =
     memory_strategy::create_default_strategy())
   : interrupt_guard_condition_(rmw_create_guard_condition()),
-    _memory_strategy(ms)
+    memory_strategy_(ms)
   {
   }
 
@@ -98,7 +98,7 @@ public:
   {
     this->add_node(node);
     // non-blocking = true
-    AnyExecutable::SharedPtr any_exec = get_next_executable(nonblocking);
+    auto any_exec = get_next_executable(nonblocking);
     if (any_exec) {
       execute_any_executable(any_exec);
     }
@@ -109,8 +109,7 @@ public:
   {
     this->add_node(node);
     // non-blocking = true
-    AnyExecutable::SharedPtr any_exec;
-    while ((any_exec = get_next_executable(true))) {
+    while (AnyExecutable::SharedPtr any_exec = get_next_executable(true)) {
       execute_any_executable(any_exec);
     }
     this->remove_node(node);
@@ -123,7 +122,7 @@ public:
     if (memory_strategy == nullptr) {
       throw std::runtime_error("Received NULL memory strategy in executor.");
     }
-    _memory_strategy = memory_strategy;
+    memory_strategy_ = memory_strategy;
   }
 
 protected:
@@ -268,7 +267,7 @@ protected:
     subscriber_handles.subscriber_count = number_of_subscriptions;
     // TODO(wjwwood): Avoid redundant malloc's
     subscriber_handles.subscribers =
-      _memory_strategy->borrow_handles(HandleType::subscriber_handle, number_of_subscriptions);
+      memory_strategy_->borrow_handles(HandleType::subscriber_handle, number_of_subscriptions);
     if (subscriber_handles.subscribers == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for subscriber pointers.");
@@ -286,7 +285,7 @@ protected:
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
     service_handles.services =
-      _memory_strategy->borrow_handles(HandleType::service_handle, number_of_services);
+      memory_strategy_->borrow_handles(HandleType::service_handle, number_of_services);
     if (service_handles.services == NULL) {
       // TODO(esteve): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for service pointers.");
@@ -304,7 +303,7 @@ protected:
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
     client_handles.clients =
-      _memory_strategy->borrow_handles(HandleType::client_handle, number_of_clients);
+      memory_strategy_->borrow_handles(HandleType::client_handle, number_of_clients);
     if (client_handles.clients == NULL) {
       // TODO: Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for client pointers.");
@@ -325,7 +324,7 @@ protected:
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
     guard_condition_handles.guard_conditions =
-      _memory_strategy->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);
+      memory_strategy_->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);
     if (guard_condition_handles.guard_conditions == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for guard condition pointers.");
@@ -355,13 +354,13 @@ protected:
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
       // Make sure to free or clean memory
-      _memory_strategy->return_handles(HandleType::subscriber_handle,
+      memory_strategy_->return_handles(HandleType::subscriber_handle,
         subscriber_handles.subscribers);
-      _memory_strategy->return_handles(HandleType::service_handle,
+      memory_strategy_->return_handles(HandleType::service_handle,
         service_handles.services);
-      _memory_strategy->return_handles(HandleType::client_handle,
+      memory_strategy_->return_handles(HandleType::client_handle,
         client_handles.clients);
-      _memory_strategy->return_handles(HandleType::guard_condition_handle,
+      memory_strategy_->return_handles(HandleType::guard_condition_handle,
         guard_condition_handles.guard_conditions);
       return;
     }
@@ -395,13 +394,13 @@ protected:
       }
     }
 
-    _memory_strategy->return_handles(HandleType::subscriber_handle,
+    memory_strategy_->return_handles(HandleType::subscriber_handle,
       subscriber_handles.subscribers);
-    _memory_strategy->return_handles(HandleType::service_handle,
+    memory_strategy_->return_handles(HandleType::service_handle,
       service_handles.services);
-    _memory_strategy->return_handles(HandleType::client_handle,
+    memory_strategy_->return_handles(HandleType::client_handle,
       client_handles.clients);
-    _memory_strategy->return_handles(HandleType::guard_condition_handle,
+    memory_strategy_->return_handles(HandleType::guard_condition_handle,
       guard_condition_handles.guard_conditions);
 
   }
@@ -760,7 +759,7 @@ protected:
   AnyExecutable::SharedPtr
   get_next_ready_executable()
   {
-    return get_next_ready_executable(this->_memory_strategy->instantiate_next_executable());
+    return get_next_ready_executable(this->memory_strategy_->instantiate_next_executable());
   }
 
   AnyExecutable::SharedPtr
@@ -823,7 +822,7 @@ protected:
 
   rmw_guard_condition_t * interrupt_guard_condition_;
 
-  memory_strategy::MemoryStrategy::SharedPtr _memory_strategy;
+  memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
 private:
   RCLCPP_DISABLE_COPY(Executor);

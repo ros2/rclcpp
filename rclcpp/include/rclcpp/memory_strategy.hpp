@@ -61,9 +61,6 @@ public:
   {
     return std::free(ptr);
   }
-
-protected:
-private:
 };
 
 

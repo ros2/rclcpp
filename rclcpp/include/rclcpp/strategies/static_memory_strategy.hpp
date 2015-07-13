@@ -34,22 +34,22 @@ class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
 public:
   StaticMemoryStrategy()
   {
-    memset(_memory_pool, 0, _pool_size);
-    memset(_subscriber_pool, 0, _max_subscribers);
-    memset(_service_pool, 0, _max_services);
-    memset(_client_pool, 0, _max_clients);
-    memset(_guard_condition_pool, 0, _max_guard_conditions);
-    _pool_seq = 0;
-    _exec_seq = 0;
+    memset(memory_pool_, 0, pool_size_);
+    memset(subscriber_pool_, 0, max_subscribers_);
+    memset(service_pool_, 0, max_services_);
+    memset(client_pool_, 0, max_clients_);
+    memset(guard_condition_pool_, 0, max_guard_conditions_);
+    pool_seq_ = 0;
+    exec_seq_ = 0;
 
-    // Reserve _pool_size buckets in the memory map.
-    _memory_map.reserve(_pool_size);
-    for (size_t i = 0; i < _pool_size; ++i) {
-      _memory_map[_memory_pool[i]] = 0;
+    // Reserve pool_size_ buckets in the memory map.
+    memory_map_.reserve(pool_size_);
+    for (size_t i = 0; i < pool_size_; ++i) {
+      memory_map_[memory_pool_[i]] = 0;
     }
 
-    for (size_t i = 0; i < _max_executables; ++i) {
-      _executable_pool[i] = std::make_shared<executor::AnyExecutable>(executor::AnyExecutable());
+    for (size_t i = 0; i < max_executables_; ++i) {
+      executable_pool_[i] = std::make_shared<executor::AnyExecutable>(executor::AnyExecutable());
     }
   }
 
@@ -57,13 +57,29 @@ public:
   {
     switch (type) {
       case HandleType::subscriber_handle:
-        return _subscriber_pool;
+        if (number_of_handles > max_subscribers_) {
+          throw std::runtime_error("Requested size exceeded maximum subscribers.");
+        }
+
+        return subscriber_pool_;
       case HandleType::service_handle:
-        return _service_pool;
+        if (number_of_handles > max_services_) {
+          throw std::runtime_error("Requested size exceeded maximum services.");
+        }
+
+        return service_pool_;
       case HandleType::client_handle:
-        return _client_pool;
+        if (number_of_handles > max_clients_) {
+          throw std::runtime_error("Requested size exceeded maximum clients.");
+        }
+
+        return client_pool_;
       case HandleType::guard_condition_handle:
-        return _guard_condition_pool;
+        if (number_of_handles > max_guard_conditions_) {
+          throw std::runtime_error("Requested size exceeded maximum guard conditions.");
+        }
+
+        return guard_condition_pool_;
       default:
         break;
     }
@@ -74,84 +90,82 @@ public:
   {
     switch (type) {
       case HandleType::subscriber_handle:
-        memset(_subscriber_pool, 0, _max_subscribers);
+        memset(subscriber_pool_, 0, max_subscribers_);
         break;
       case HandleType::service_handle:
-        memset(_service_pool, 0, _max_services);
+        memset(service_pool_, 0, max_services_);
         break;
       case HandleType::client_handle:
-        memset(_client_pool, 0, _max_clients);
+        memset(client_pool_, 0, max_clients_);
         break;
       case HandleType::guard_condition_handle:
-        memset(_guard_condition_pool, 0, _max_guard_conditions);
+        memset(guard_condition_pool_, 0, max_guard_conditions_);
         break;
       default:
         throw std::runtime_error("Unrecognized enum, could not return handle memory.");
-        break;
     }
   }
 
   executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
-    if (_exec_seq >= _max_executables) {
+    if (exec_seq_ >= max_executables_) {
       // wrap around
-      _exec_seq = 0;
+      exec_seq_ = 0;
     }
-    size_t prev_exec_seq = _exec_seq;
-    ++_exec_seq;
+    size_t prev_exec_seq_ = exec_seq_;
+    ++exec_seq_;
 
-    return _executable_pool[prev_exec_seq];
+    return executable_pool_[prev_exec_seq_];
   }
 
   void * alloc(size_t size)
   {
     // Extremely naive static allocation strategy
     // Keep track of block size at a given pointer
-    if (_pool_seq + size > _pool_size) {
+    if (pool_seq_ + size > pool_size_) {
       // Start at 0
-      _pool_seq = 0;
+      pool_seq_ = 0;
     }
-    void * ptr = _memory_pool[_pool_seq];
-    if (_memory_map.count(ptr) == 0) {
-      // We expect to have the state for all blocks pre-mapped into _memory_map
+    void * ptr = memory_pool_[pool_seq_];
+    if (memory_map_.count(ptr) == 0) {
+      // We expect to have the state for all blocks pre-mapped into memory_map_
       throw std::runtime_error("Unexpected pointer in rcl_malloc.");
     }
-    _memory_map[ptr] = size;
-    size_t prev_pool_seq = _pool_seq;
-    _pool_seq += size;
-    return _memory_pool[prev_pool_seq];
+    memory_map_[ptr] = size;
+    size_t prev_pool_seq = pool_seq_;
+    pool_seq_ += size;
+    return memory_pool_[prev_pool_seq];
   }
 
   void free(void * ptr)
   {
-    if (_memory_map.count(ptr) == 0) {
-      // We expect to have the state for all blocks pre-mapped into _memory_map
+    if (memory_map_.count(ptr) == 0) {
+      // We expect to have the state for all blocks pre-mapped into memory_map_
       throw std::runtime_error("Unexpected pointer in rcl_free.");
     }
 
-    memset(ptr, 0, _memory_map[ptr]);
+    memset(ptr, 0, memory_map_[ptr]);
   }
 
-protected:
 private:
-  static const size_t _pool_size = 1024;
-  static const size_t _max_subscribers = 10;
-  static const size_t _max_services = 5;
-  static const size_t _max_clients = 10;
-  static const size_t _max_guard_conditions = 50;
-  static const size_t _max_executables = 1;
+  static const size_t pool_size_ = 1024;
+  static const size_t max_subscribers_ = 10;
+  static const size_t max_services_ = 5;
+  static const size_t max_clients_ = 10;
+  static const size_t max_guard_conditions_ = 50;
+  static const size_t max_executables_ = 1;
 
-  void * _memory_pool[_pool_size];
-  void * _subscriber_pool[_max_subscribers];
-  void * _service_pool[_max_services];
-  void * _client_pool[_max_clients];
-  void * _guard_condition_pool[_max_guard_conditions];
-  executor::AnyExecutable::SharedPtr _executable_pool[_max_executables];
+  void * memory_pool_[pool_size_];
+  void * subscriber_pool_[max_subscribers_];
+  void * service_pool_[max_services_];
+  void * client_pool_[max_clients_];
+  void * guard_condition_pool_[max_guard_conditions_];
+  executor::AnyExecutable::SharedPtr executable_pool_[max_executables_];
 
-  size_t _pool_seq;
-  size_t _exec_seq;
+  size_t pool_seq_;
+  size_t exec_seq_;
 
-  std::unordered_map<void *, size_t> _memory_map;
+  std::unordered_map<void *, size_t> memory_map_;
 };
 
 }  /* static_memory_strategy */
