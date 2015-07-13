@@ -27,6 +27,7 @@
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
+#include <rclcpp/memory_strategies.hpp>
 
 namespace rclcpp
 {
@@ -39,8 +40,14 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
 
   Executor()
-  : interrupt_guard_condition_(rmw_create_guard_condition())
-  {}
+  : interrupt_guard_condition_(rmw_create_guard_condition()),
+    _memory_strategy(memory_strategies::create_default_strategy())
+  {
+    if (_memory_strategy == nullptr)
+    {
+      throw std::runtime_error("Received NULL memory strategy in executor constructor.");
+    }
+  }
 
   virtual ~Executor()
   {
@@ -107,6 +114,18 @@ public:
       execute_any_executable(any_exec);
     }
     this->remove_node(node);
+  }
+
+  // Support dynamic switching of memory strategy
+  void
+  set_memory_strategy(memory_strategies::MemoryStrategySharedPtr memory_strategy)
+  {
+    if (memory_strategy == nullptr)
+    {
+      throw std::runtime_error("Received NULL memory strategy in executor.");
+    }
+    std::cout << "called set_memory_strategy" << std::endl;
+    _memory_strategy = memory_strategy;
   }
 
 protected:
@@ -265,8 +284,8 @@ protected:
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = number_of_subscriptions;
     // TODO(wjwwood): Avoid redundant malloc's
-    subscriber_handles.subscribers = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_subscriptions));
+    subscriber_handles.subscribers =
+      _memory_strategy->borrow_handles(HandleType::subscriber_handle, number_of_subscriptions);
     if (subscriber_handles.subscribers == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for subscriber pointers.");
@@ -283,9 +302,8 @@ protected:
     unsigned long number_of_services = services.size();
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
-    // TODO(esteve): Avoid redundant malloc's
-    service_handles.services = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_services));
+    service_handles.services =
+      _memory_strategy->borrow_handles(HandleType::service_handle, number_of_services);
     if (service_handles.services == NULL) {
       // TODO(esteve): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for service pointers.");
@@ -302,9 +320,8 @@ protected:
     unsigned long number_of_clients = clients.size();
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
-    // TODO: Avoid redundant malloc's
-    client_handles.clients = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_clients));
+    client_handles.clients =
+      _memory_strategy->borrow_handles(HandleType::client_handle, number_of_clients);
     if (client_handles.clients == NULL) {
       // TODO: Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for client pointers.");
@@ -324,9 +341,8 @@ protected:
       timers.size() + start_of_timer_guard_conds;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
-    // TODO(wjwwood): Avoid redundant malloc's
-    guard_condition_handles.guard_conditions = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_guard_conds));
+    guard_condition_handles.guard_conditions =
+      _memory_strategy->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);
     if (guard_condition_handles.guard_conditions == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for guard condition pointers.");
@@ -355,12 +371,15 @@ protected:
       nonblocking);
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
-      // Make sure to free memory
-      // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
-      //                todo has been addressed.
-      std::free(subscriber_handles.subscribers);
-      std::free(service_handles.services);
-      std::free(guard_condition_handles.guard_conditions);
+      // Make sure to free or clean memory
+      _memory_strategy->return_handles(HandleType::subscriber_handle,
+        subscriber_handles.subscribers);
+      _memory_strategy->return_handles(HandleType::service_handle,
+        service_handles.services);
+      _memory_strategy->return_handles(HandleType::client_handle,
+        client_handles.clients);
+      _memory_strategy->return_handles(HandleType::guard_condition_handle,
+        guard_condition_handles.guard_conditions);
       return;
     }
     // Add the new work to the class's list of things waiting to be executed
@@ -393,12 +412,15 @@ protected:
       }
     }
 
-    // Make sure to free memory
-    // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
-    //                todo has been addressed.
-    std::free(subscriber_handles.subscribers);
-    std::free(service_handles.services);
-    std::free(guard_condition_handles.guard_conditions);
+    _memory_strategy->return_handles(HandleType::subscriber_handle,
+      subscriber_handles.subscribers);
+    _memory_strategy->return_handles(HandleType::service_handle,
+      service_handles.services);
+    _memory_strategy->return_handles(HandleType::client_handle,
+      client_handles.clients);
+    _memory_strategy->return_handles(HandleType::guard_condition_handle,
+      guard_condition_handles.guard_conditions);
+
   }
 
 /******************************/
@@ -815,6 +837,8 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(Executor);
+
+  std::shared_ptr<memory_strategy::MemoryStrategy> _memory_strategy;
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
   typedef std::list<void *> SubscriberHandles;
