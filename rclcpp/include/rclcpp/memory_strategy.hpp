@@ -36,27 +36,28 @@ class MemoryStrategy
   friend class executor::Executor;
 
 public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(MemoryStrategy);
   virtual void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
-    return static_cast<void **>(rcl_malloc(sizeof(void *) * number_of_handles));
+    return static_cast<void **>(alloc(sizeof(void *) * number_of_handles));
   }
 
   virtual void return_handles(HandleType type, void ** handles)
   {
-    this->rcl_free(handles);
+    this->free(handles);
   }
 
-  virtual executor::AnyExecutableSharedPtr instantiate_next_executable()
+  virtual executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
-    return executor::AnyExecutableSharedPtr(new executor::AnyExecutable);
+    return executor::AnyExecutable::SharedPtr(new executor::AnyExecutable);
   }
 
-  virtual void * rcl_malloc(size_t size)
+  virtual void * alloc(size_t size)
   {
     return std::malloc(size);
   }
 
-  virtual void rcl_free(void * ptr)
+  virtual void free(void * ptr)
   {
     return std::free(ptr);
   }
@@ -65,9 +66,8 @@ protected:
 private:
 };
 
-typedef std::shared_ptr<MemoryStrategy> MemoryStrategySharedPtr;
 
-MemoryStrategySharedPtr create_default_strategy()
+MemoryStrategy::SharedPtr create_default_strategy()
 {
   return std::make_shared<MemoryStrategy>(MemoryStrategy());
 }

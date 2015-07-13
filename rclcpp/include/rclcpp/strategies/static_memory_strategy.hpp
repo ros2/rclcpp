@@ -15,6 +15,8 @@
 #ifndef RCLCPP_RCLCPP_STATIC_MEMORY_STRATEGY_HPP_
 #define RCLCPP_RCLCPP_STATIC_MEMORY_STRATEGY_HPP_
 
+#include <unordered_map>
+
 #include <rclcpp/memory_strategy.hpp>
 
 namespace rclcpp
@@ -40,6 +42,8 @@ public:
     _pool_seq = 0;
     _exec_seq = 0;
 
+    // Reserve _pool_size buckets in the memory map.
+    _memory_map.reserve(_pool_size);
     for (size_t i = 0; i < _pool_size; ++i) {
       _memory_map[_memory_pool[i]] = 0;
     }
@@ -87,7 +91,7 @@ public:
     }
   }
 
-  executor::AnyExecutableSharedPtr instantiate_next_executable()
+  executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
     if (_exec_seq >= _max_executables) {
       // wrap around
@@ -99,7 +103,7 @@ public:
     return _executable_pool[prev_exec_seq];
   }
 
-  void * rcl_malloc(size_t size)
+  void * alloc(size_t size)
   {
     // Extremely naive static allocation strategy
     // Keep track of block size at a given pointer
@@ -118,7 +122,7 @@ public:
     return _memory_pool[prev_pool_seq];
   }
 
-  void rcl_free(void * ptr)
+  void free(void * ptr)
   {
     if (_memory_map.count(ptr) == 0) {
       // We expect to have the state for all blocks pre-mapped into _memory_map
@@ -142,12 +146,12 @@ private:
   void * _service_pool[_max_services];
   void * _client_pool[_max_clients];
   void * _guard_condition_pool[_max_guard_conditions];
-  executor::AnyExecutableSharedPtr _executable_pool[_max_executables];
+  executor::AnyExecutable::SharedPtr _executable_pool[_max_executables];
 
   size_t _pool_seq;
   size_t _exec_seq;
 
-  std::map<void *, size_t> _memory_map;
+  std::unordered_map<void *, size_t> _memory_map;
 };
 
 }

@@ -17,15 +17,17 @@
 
 #include <memory>
 
+#include <rclcpp/macros.hpp>
 #include <rclcpp/node.hpp>
 
 namespace rclcpp
 {
 namespace executor
 {
+
 struct AnyExecutable
 {
-
+  RCLCPP_MAKE_SHARED_DEFINITIONS(AnyExecutable);
   AnyExecutable()
   : subscription(0), timer(0), callback_group(0), node(0)
   {}
@@ -39,8 +41,7 @@ struct AnyExecutable
   rclcpp::node::Node::SharedPtr node;
 };
 
-typedef std::shared_ptr<AnyExecutable> AnyExecutableSharedPtr;
-}
-}
+} /* executor */
+} /* rclcpp */
 
 #endif
