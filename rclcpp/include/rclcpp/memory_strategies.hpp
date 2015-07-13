@@ -15,7 +15,6 @@
 #ifndef RCLCPP_RCLCPP_MEMORY_STRATEGIES_HPP_
 #define RCLCPP_RCLCPP_MEMORY_STRATEGIES_HPP_
 
-#include <rclcpp/strategies/dynamic_memory_strategy.hpp>
 #include <rclcpp/strategies/static_memory_strategy.hpp>
 
 namespace rclcpp
@@ -23,15 +22,7 @@ namespace rclcpp
 namespace memory_strategies
 {
 
-typedef std::shared_ptr<memory_strategy::MemoryStrategy> MemoryStrategySharedPtr;
-
-using rclcpp::memory_strategies::dynamic_memory_strategy::DynamicMemoryStrategy;
 using rclcpp::memory_strategies::static_memory_strategy::StaticMemoryStrategy;
-
-MemoryStrategySharedPtr create_default_strategy()
-{
-  return std::make_shared<DynamicMemoryStrategy>(DynamicMemoryStrategy());
-}
 
 }
 }

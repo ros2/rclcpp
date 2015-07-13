@@ -40,10 +40,16 @@ public:
     memset(_client_pool, 0, _max_clients);
     memset(_guard_condition_pool, 0, _max_guard_conditions);
     _pool_seq = 0;
+    _exec_seq = 0;
 
     for (size_t i = 0; i < _pool_size; ++i)
     {
       _memory_map[_memory_pool[i]] = 0;
+    }
+
+    for (size_t i = 0; i < _max_executables; ++i)
+    {
+      _executable_pool[i] = std::make_shared<executor::AnyExecutable>(executor::AnyExecutable());
     }
   }
 
@@ -85,6 +91,20 @@ public:
         throw std::runtime_error("Unrecognized enum, could not return handle memory.");
         break;
     }
+  }
+
+  executor::AnyExecutableSharedPtr instantiate_next_executable()
+  {
+    if (_exec_seq >= _max_executables)
+    {
+      // wrap around
+      _exec_seq = 0;
+    }
+    size_t prev_exec_seq = _exec_seq;
+    ++_exec_seq;
+
+    return _executable_pool[prev_exec_seq];
+  }
 
   void *rcl_malloc(size_t size)
   {
@@ -102,9 +122,9 @@ public:
       throw std::runtime_error("Unexpected pointer in rcl_malloc.");
     }
     _memory_map[ptr] = size;
-    size_t prev__pool_seq = _pool_seq;
+    size_t prev_pool_seq = _pool_seq;
     _pool_seq += size;
-    return _memory_pool[prev__pool_seq];
+    return _memory_pool[prev_pool_seq];
   }
 
   void rcl_free(void *ptr)
@@ -127,13 +147,18 @@ private:
   static const size_t _max_services = 5;
   static const size_t _max_clients = 10;
   static const size_t _max_guard_conditions = 50;
+  static const size_t _max_executables = 1;
 
   void *_memory_pool[_pool_size];
   void *_subscriber_pool[_max_subscribers];
   void *_service_pool[_max_services];
   void *_client_pool[_max_clients];
   void *_guard_condition_pool[_max_guard_conditions];
+  executor::AnyExecutableSharedPtr _executable_pool[_max_executables];
+
   size_t _pool_seq;
+  size_t _exec_seq;
+
   std::map<void*, size_t> _memory_map;
 };
 

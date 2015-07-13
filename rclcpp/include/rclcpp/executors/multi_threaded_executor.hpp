@@ -79,7 +79,7 @@ private:
   {
     rclcpp::thread_id = this_thread_id;
     while (rclcpp::utilities::ok()) {
-      std::shared_ptr<AnyExecutable> any_exec;
+      std::shared_ptr<executor::AnyExecutable> any_exec;
       {
         std::lock_guard<std::mutex> wait_lock(wait_mutex_);
         if (!rclcpp::utilities::ok()) {

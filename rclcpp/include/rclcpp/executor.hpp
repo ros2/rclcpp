@@ -24,10 +24,11 @@
 #include <memory>
 #include <vector>
 
+#include <rclcpp/any_executable.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/memory_strategy.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
-#include <rclcpp/memory_strategies.hpp>
 
 namespace rclcpp
 {
@@ -36,17 +37,16 @@ namespace executor
 
 class Executor
 {
+  friend class memory_strategy::MemoryStrategy;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
 
-  Executor()
+  Executor(memory_strategy::MemoryStrategySharedPtr ms =
+              memory_strategy::create_default_strategy())
   : interrupt_guard_condition_(rmw_create_guard_condition()),
-    _memory_strategy(memory_strategies::create_default_strategy())
+    _memory_strategy(ms)
   {
-    if (_memory_strategy == nullptr)
-    {
-      throw std::runtime_error("Received NULL memory strategy in executor constructor.");
-    }
   }
 
   virtual ~Executor()
@@ -98,7 +98,7 @@ public:
   {
     this->add_node(node);
     // non-blocking = true
-    std::shared_ptr<AnyExecutable> any_exec = get_next_executable(nonblocking);
+    AnyExecutableSharedPtr any_exec = get_next_executable(nonblocking);
     if (any_exec) {
       execute_any_executable(any_exec);
     }
@@ -109,7 +109,7 @@ public:
   {
     this->add_node(node);
     // non-blocking = true
-    std::shared_ptr<AnyExecutable> any_exec;
+    AnyExecutableSharedPtr any_exec;
     while ((any_exec = get_next_executable(true))) {
       execute_any_executable(any_exec);
     }
@@ -118,34 +118,19 @@ public:
 
   // Support dynamic switching of memory strategy
   void
-  set_memory_strategy(memory_strategies::MemoryStrategySharedPtr memory_strategy)
+  set_memory_strategy(memory_strategy::MemoryStrategySharedPtr memory_strategy)
   {
     if (memory_strategy == nullptr)
     {
       throw std::runtime_error("Received NULL memory strategy in executor.");
     }
-    std::cout << "called set_memory_strategy" << std::endl;
     _memory_strategy = memory_strategy;
   }
 
 protected:
-  struct AnyExecutable
-  {
-    AnyExecutable()
-    : subscription(0), timer(0), callback_group(0), node(0)
-    {}
-    // Either the subscription or the timer will be set, but not both
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
-    rclcpp::timer::TimerBase::SharedPtr timer;
-    rclcpp::service::ServiceBase::SharedPtr service;
-    rclcpp::client::ClientBase::SharedPtr client;
-    // These are used to keep the scope on the containing items
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
-    rclcpp::node::Node::SharedPtr node;
-  };
 
   void
-  execute_any_executable(std::shared_ptr<AnyExecutable> & any_exec)
+  execute_any_executable(AnyExecutableSharedPtr & any_exec)
   {
     if (!any_exec) {
       return;
@@ -588,7 +573,7 @@ protected:
   }
 
   void
-  get_next_timer(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_timer(AnyExecutableSharedPtr & any_exec)
   {
     for (auto handle : guard_condition_handles_) {
       auto timer = get_timer_by_handle(handle);
@@ -640,7 +625,7 @@ protected:
   }
 
   void
-  get_next_subscription(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_subscription(AnyExecutableSharedPtr & any_exec)
   {
     for (auto handle : subscriber_handles_) {
       auto subscription = get_subscription_by_handle(handle);
@@ -692,7 +677,7 @@ protected:
   }
 
   void
-  get_next_service(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_service(AnyExecutableSharedPtr & any_exec)
   {
     for (auto handle : service_handles_) {
       auto service = get_service_by_handle(handle);
@@ -744,7 +729,7 @@ protected:
   }
 
   void
-  get_next_client(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_client(AnyExecutableSharedPtr & any_exec)
   {
     for (auto handle : client_handles_) {
       auto client = get_client_by_handle(handle);
@@ -774,10 +759,15 @@ protected:
     }
   }
 
-  std::shared_ptr<AnyExecutable>
+  AnyExecutableSharedPtr
   get_next_ready_executable()
   {
-    std::shared_ptr<AnyExecutable> any_exec(new AnyExecutable());
+    return get_next_ready_executable(this->_memory_strategy->instantiate_next_executable());
+  }
+
+  AnyExecutableSharedPtr
+  get_next_ready_executable(AnyExecutableSharedPtr any_exec)
+  {
     // Check the timers to see if there are any that are ready, if so return
     get_next_timer(any_exec);
     if (any_exec->timer) {
@@ -803,7 +793,7 @@ protected:
     return any_exec;
   }
 
-  std::shared_ptr<AnyExecutable>
+  AnyExecutableSharedPtr
   get_next_executable(bool nonblocking = false)
   {
     // Check to see if there are any subscriptions or timers needing service
@@ -835,10 +825,10 @@ protected:
 
   rmw_guard_condition_t * interrupt_guard_condition_;
 
+  memory_strategy::MemoryStrategySharedPtr _memory_strategy;
+
 private:
   RCLCPP_DISABLE_COPY(Executor);
-
-  std::shared_ptr<memory_strategy::MemoryStrategy> _memory_strategy;
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
   typedef std::list<void *> SubscriberHandles;
