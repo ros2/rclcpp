@@ -24,7 +24,9 @@
 #include <memory>
 #include <vector>
 
+#include <rclcpp/any_executable.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/memory_strategy.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
 
@@ -35,12 +37,17 @@ namespace executor
 
 class Executor
 {
+  friend class memory_strategy::MemoryStrategy;
+
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
 
-  Executor()
-  : interrupt_guard_condition_(rmw_create_guard_condition())
-  {}
+  Executor(memory_strategy::MemoryStrategy::SharedPtr ms =
+    memory_strategy::create_default_strategy())
+  : interrupt_guard_condition_(rmw_create_guard_condition()),
+    memory_strategy_(ms)
+  {
+  }
 
   virtual ~Executor()
   {
@@ -91,7 +98,7 @@ public:
   {
     this->add_node(node);
     // non-blocking = true
-    std::shared_ptr<AnyExecutable> any_exec = get_next_executable(nonblocking);
+    auto any_exec = get_next_executable(nonblocking);
     if (any_exec) {
       execute_any_executable(any_exec);
     }
@@ -102,31 +109,25 @@ public:
   {
     this->add_node(node);
     // non-blocking = true
-    std::shared_ptr<AnyExecutable> any_exec;
-    while ((any_exec = get_next_executable(true))) {
+    while (AnyExecutable::SharedPtr any_exec = get_next_executable(true)) {
       execute_any_executable(any_exec);
     }
     this->remove_node(node);
   }
 
-protected:
-  struct AnyExecutable
-  {
-    AnyExecutable()
-    : subscription(0), timer(0), callback_group(0), node(0)
-    {}
-    // Either the subscription or the timer will be set, but not both
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
-    rclcpp::timer::TimerBase::SharedPtr timer;
-    rclcpp::service::ServiceBase::SharedPtr service;
-    rclcpp::client::ClientBase::SharedPtr client;
-    // These are used to keep the scope on the containing items
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
-    rclcpp::node::Node::SharedPtr node;
-  };
-
+  // Support dynamic switching of memory strategy
   void
-  execute_any_executable(std::shared_ptr<AnyExecutable> & any_exec)
+  set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
+  {
+    if (memory_strategy == nullptr) {
+      throw std::runtime_error("Received NULL memory strategy in executor.");
+    }
+    memory_strategy_ = memory_strategy;
+  }
+
+protected:
+  void
+  execute_any_executable(AnyExecutable::SharedPtr & any_exec)
   {
     if (!any_exec) {
       return;
@@ -265,8 +266,8 @@ protected:
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = number_of_subscriptions;
     // TODO(wjwwood): Avoid redundant malloc's
-    subscriber_handles.subscribers = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_subscriptions));
+    subscriber_handles.subscribers =
+      memory_strategy_->borrow_handles(HandleType::subscriber_handle, number_of_subscriptions);
     if (subscriber_handles.subscribers == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for subscriber pointers.");
@@ -283,9 +284,8 @@ protected:
     unsigned long number_of_services = services.size();
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
-    // TODO(esteve): Avoid redundant malloc's
-    service_handles.services = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_services));
+    service_handles.services =
+      memory_strategy_->borrow_handles(HandleType::service_handle, number_of_services);
     if (service_handles.services == NULL) {
       // TODO(esteve): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for service pointers.");
@@ -302,9 +302,8 @@ protected:
     unsigned long number_of_clients = clients.size();
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
-    // TODO: Avoid redundant malloc's
-    client_handles.clients = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_clients));
+    client_handles.clients =
+      memory_strategy_->borrow_handles(HandleType::client_handle, number_of_clients);
     if (client_handles.clients == NULL) {
       // TODO: Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for client pointers.");
@@ -324,9 +323,8 @@ protected:
       timers.size() + start_of_timer_guard_conds;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
-    // TODO(wjwwood): Avoid redundant malloc's
-    guard_condition_handles.guard_conditions = static_cast<void **>(
-      std::malloc(sizeof(void *) * number_of_guard_conds));
+    guard_condition_handles.guard_conditions =
+      memory_strategy_->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);
     if (guard_condition_handles.guard_conditions == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for guard condition pointers.");
@@ -355,12 +353,15 @@ protected:
       nonblocking);
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
-      // Make sure to free memory
-      // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
-      //                todo has been addressed.
-      std::free(subscriber_handles.subscribers);
-      std::free(service_handles.services);
-      std::free(guard_condition_handles.guard_conditions);
+      // Make sure to free or clean memory
+      memory_strategy_->return_handles(HandleType::subscriber_handle,
+        subscriber_handles.subscribers);
+      memory_strategy_->return_handles(HandleType::service_handle,
+        service_handles.services);
+      memory_strategy_->return_handles(HandleType::client_handle,
+        client_handles.clients);
+      memory_strategy_->return_handles(HandleType::guard_condition_handle,
+        guard_condition_handles.guard_conditions);
       return;
     }
     // Add the new work to the class's list of things waiting to be executed
@@ -393,12 +394,15 @@ protected:
       }
     }
 
-    // Make sure to free memory
-    // TODO(wjwwood): Remove theses when the "Avoid redundant malloc's"
-    //                todo has been addressed.
-    std::free(subscriber_handles.subscribers);
-    std::free(service_handles.services);
-    std::free(guard_condition_handles.guard_conditions);
+    memory_strategy_->return_handles(HandleType::subscriber_handle,
+      subscriber_handles.subscribers);
+    memory_strategy_->return_handles(HandleType::service_handle,
+      service_handles.services);
+    memory_strategy_->return_handles(HandleType::client_handle,
+      client_handles.clients);
+    memory_strategy_->return_handles(HandleType::guard_condition_handle,
+      guard_condition_handles.guard_conditions);
+
   }
 
 /******************************/
@@ -566,7 +570,7 @@ protected:
   }
 
   void
-  get_next_timer(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_timer(AnyExecutable::SharedPtr & any_exec)
   {
     for (auto handle : guard_condition_handles_) {
       auto timer = get_timer_by_handle(handle);
@@ -618,7 +622,7 @@ protected:
   }
 
   void
-  get_next_subscription(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_subscription(AnyExecutable::SharedPtr & any_exec)
   {
     for (auto handle : subscriber_handles_) {
       auto subscription = get_subscription_by_handle(handle);
@@ -670,7 +674,7 @@ protected:
   }
 
   void
-  get_next_service(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_service(AnyExecutable::SharedPtr & any_exec)
   {
     for (auto handle : service_handles_) {
       auto service = get_service_by_handle(handle);
@@ -722,7 +726,7 @@ protected:
   }
 
   void
-  get_next_client(std::shared_ptr<AnyExecutable> & any_exec)
+  get_next_client(AnyExecutable::SharedPtr & any_exec)
   {
     for (auto handle : client_handles_) {
       auto client = get_client_by_handle(handle);
@@ -752,10 +756,15 @@ protected:
     }
   }
 
-  std::shared_ptr<AnyExecutable>
+  AnyExecutable::SharedPtr
   get_next_ready_executable()
   {
-    std::shared_ptr<AnyExecutable> any_exec(new AnyExecutable());
+    return get_next_ready_executable(this->memory_strategy_->instantiate_next_executable());
+  }
+
+  AnyExecutable::SharedPtr
+  get_next_ready_executable(AnyExecutable::SharedPtr any_exec)
+  {
     // Check the timers to see if there are any that are ready, if so return
     get_next_timer(any_exec);
     if (any_exec->timer) {
@@ -781,7 +790,7 @@ protected:
     return any_exec;
   }
 
-  std::shared_ptr<AnyExecutable>
+  AnyExecutable::SharedPtr
   get_next_executable(bool nonblocking = false)
   {
     // Check to see if there are any subscriptions or timers needing service
@@ -812,6 +821,8 @@ protected:
   }
 
   rmw_guard_condition_t * interrupt_guard_condition_;
+
+  memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
 private:
   RCLCPP_DISABLE_COPY(Executor);
