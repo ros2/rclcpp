@@ -48,7 +48,7 @@ public:
     }
   }
 
-  ~MultiThreadedExecutor() {}
+  virtual ~MultiThreadedExecutor() {}
 
   void
   spin()

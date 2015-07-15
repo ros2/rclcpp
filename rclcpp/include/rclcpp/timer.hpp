@@ -18,8 +18,10 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <thread>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -50,9 +52,28 @@ public:
   TimerBase(std::chrono::nanoseconds period, CallbackType callback)
   : period_(period),
     callback_(callback),
+    guard_condition_(rmw_create_guard_condition()),
     canceled_(false)
   {
-    guard_condition_ = rmw_create_guard_condition();
+    if (!guard_condition_) {
+      // TODO(wjwwood): use custom exception
+      throw std::runtime_error(
+              std::string("failed to create guard condition: ") +
+              rmw_get_error_string_safe()
+      );
+    }
+  }
+
+  virtual ~TimerBase()
+  {
+    if (guard_condition_) {
+      if (rmw_destroy_guard_condition(guard_condition_) != RMW_RET_OK) {
+        std::stringstream ss;
+        ss << "Error in TimerBase destructor, rmw_destroy_guard_condition failed: " <<
+          rmw_get_error_string_safe() << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    }
   }
 
   void
@@ -86,9 +107,10 @@ public:
     thread_ = std::thread(&GenericTimer<Clock>::run, this);
   }
 
-  ~GenericTimer()
+  virtual ~GenericTimer()
   {
     cancel();
+    thread_.join();
   }
 
   void

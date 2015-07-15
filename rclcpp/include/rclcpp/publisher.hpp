@@ -15,8 +15,11 @@
 #ifndef RCLCPP_RCLCPP_PUBLISHER_HPP_
 #define RCLCPP_RCLCPP_PUBLISHER_HPP_
 
+#include <iostream>
 #include <memory>
+#include <sstream>
 
+#include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
@@ -38,18 +41,40 @@ class Publisher
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Publisher);
 
-  Publisher(rmw_publisher_t * publisher_handle)
-  : publisher_handle_(publisher_handle)
+  Publisher(std::shared_ptr<rmw_node_t> node_handle, rmw_publisher_t * publisher_handle)
+  : node_handle_(node_handle), publisher_handle_(publisher_handle)
   {}
+
+  virtual ~Publisher()
+  {
+    if (publisher_handle_) {
+      if (rmw_destroy_publisher(node_handle_.get(), publisher_handle_) != RMW_RET_OK) {
+        // *INDENT-OFF*
+        std::stringstream ss;
+        ss << "Error in destruction of rmw publisher handle: "
+           << rmw_get_error_string_safe() << '\n';
+        // *INDENT-ON*
+        (std::cerr << ss.str()).flush();
+      }
+    }
+  }
 
   template<typename MessageT>
   void
   publish(std::shared_ptr<MessageT> & msg)
   {
-    rmw_publish(publisher_handle_, msg.get());
+    rmw_ret_t status = rmw_publish(publisher_handle_, msg.get());
+    if (status != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to publish message: ") + rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
   }
 
 private:
+  std::shared_ptr<rmw_node_t> node_handle_;
+
   rmw_publisher_t * publisher_handle_;
 
 };

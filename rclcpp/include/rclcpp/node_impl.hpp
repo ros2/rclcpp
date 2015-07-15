@@ -16,7 +16,9 @@
 #define RCLCPP_RCLCPP_NODE_IMPL_HPP_
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -44,17 +46,30 @@ Node::Node(std::string node_name, context::Context::SharedPtr context)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
-  node_handle_ = rmw_create_node(name_.c_str());
+  // Initialize node handle shared_ptr with custom deleter.
+  node_handle_.reset(rmw_create_node(name_.c_str()), [ = ](rmw_node_t * node) {
+    if (node_handle_) {
+      auto ret = rmw_destroy_node(node);
+      if (ret != RMW_RET_OK) {
+        // *INDENT-OFF*
+        std::stringstream ss;
+        ss << "Error in destruction of rmw node handle: "
+           << rmw_get_error_string_safe() << '\n';
+        // *INDENT-ON*
+        (std::cerr << ss.str()).flush();
+      }
+    }
+  });
   if (!node_handle_) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+    // *INDENT-OFF*
     throw std::runtime_error(
       std::string("could not create node: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
   using rclcpp::callback_group::CallbackGroupType;
-  default_callback_group_ = \
+  default_callback_group_ =
     create_callback_group(CallbackGroupType::MutuallyExclusive);
   // TODO(esteve): remove hardcoded values
   events_publisher_ =
@@ -79,16 +94,16 @@ Node::create_publisher(std::string topic_name, size_t queue_size)
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_publisher_t * publisher_handle = rmw_create_publisher(
-    node_handle_, type_support_handle, topic_name.c_str(), queue_size);
+    node_handle_.get(), type_support_handle, topic_name.c_str(), queue_size);
   if (!publisher_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create publisher: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
-  return publisher::Publisher::make_shared(publisher_handle);
+  return publisher::Publisher::make_shared(node_handle_, publisher_handle);
 }
 
 bool
@@ -116,18 +131,20 @@ Node::create_subscription(
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
-    node_handle_, type_support_handle, topic_name.c_str(), queue_size, ignore_local_publications);
+    node_handle_.get(), type_support_handle,
+    topic_name.c_str(), queue_size, ignore_local_publications);
   if (!subscriber_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create subscription: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
   using namespace rclcpp::subscription;
 
   auto sub = Subscription<MessageT>::make_shared(
+    node_handle_,
     subscriber_handle,
     topic_name,
     ignore_local_publications,
@@ -189,18 +206,19 @@ Node::create_client(
     get_service_type_support_handle<ServiceT>();
 
   rmw_client_t * client_handle = rmw_create_client(
-    this->node_handle_, service_type_support_handle, service_name.c_str());
+    this->node_handle_.get(), service_type_support_handle, service_name.c_str());
   if (!client_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create client: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
   using namespace rclcpp::client;
 
   auto cli = Client<ServiceT>::make_shared(
+    node_handle_,
     client_handle,
     service_name);
 
@@ -231,17 +249,17 @@ Node::create_service(
     get_service_type_support_handle<ServiceT>();
 
   rmw_service_t * service_handle = rmw_create_service(
-    this->node_handle_, service_type_support_handle, service_name.c_str());
+    node_handle_.get(), service_type_support_handle, service_name.c_str());
   if (!service_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
       std::string("could not create service: ") +
-      (rmw_get_error_string() ? rmw_get_error_string() : ""));
+      rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 
   auto serv = create_service_internal<ServiceT>(
-    service_handle, service_name, callback);
+    node_handle_, service_handle, service_name, callback);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   if (group) {
     if (!group_in_node(group)) {

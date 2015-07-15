@@ -43,7 +43,7 @@ public:
 
   SingleThreadedExecutor() {}
 
-  ~SingleThreadedExecutor() {}
+  virtual ~SingleThreadedExecutor() {}
 
   void spin()
   {

@@ -187,7 +187,7 @@ private:
 
   std::string name_;
 
-  rmw_node_t * node_handle_;
+  std::shared_ptr<rmw_node_t> node_handle_;
 
   rclcpp::context::Context::SharedPtr context_;
 
@@ -226,6 +226,7 @@ private:
   >
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
+    std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
     const std::string & service_name,
     FunctorT callback)
@@ -233,7 +234,7 @@ private:
     typename rclcpp::service::Service<ServiceT>::CallbackType callback_without_header =
       callback;
     return service::Service<ServiceT>::make_shared(
-      service_handle, service_name, callback_without_header);
+      node_handle, service_handle, service_name, callback_without_header);
   }
 
   template<
@@ -271,6 +272,7 @@ private:
   >
   typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
+    std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
     const std::string & service_name,
     FunctorT callback)
@@ -284,7 +286,7 @@ private:
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
       callback;
     return service::Service<ServiceT>::make_shared(
-      service_handle, service_name, callback_with_header);
+      node_handle, service_handle, service_name, callback_with_header);
   }
 };
 
