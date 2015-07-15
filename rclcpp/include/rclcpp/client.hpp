@@ -146,8 +146,12 @@ public:
     CallbackType cb)
   {
     int64_t sequence_number;
-    // TODO(wjwwood): Check the return code.
-    rmw_send_request(get_client_handle(), request.get(), &sequence_number);
+    if (RMW_RET_OK != rmw_send_request(get_client_handle(), request.get(), &sequence_number)) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to send request: ") + rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
 
     SharedPromise call_promise = std::make_shared<Promise>();
     SharedFuture f(call_promise->get_future());

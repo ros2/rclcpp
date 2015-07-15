@@ -162,8 +162,9 @@ protected:
         subscription->handle_message(message);
       }
     } else {
-      std::cout << "[rclcpp::error] take failed for subscription on topic: " <<
-        subscription->get_topic_name() << std::endl;
+      fprintf(stderr,
+        "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
+        subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
     }
   }
 
@@ -191,8 +192,9 @@ protected:
         service->handle_request(request_header, request);
       }
     } else {
-      std::cout << "[rclcpp::error] take failed for service on service: " <<
-        service->get_service_name() << std::endl;
+      fprintf(stderr,
+        "[rclcpp::error] take request failed for server of service '%s': %s\n",
+        service->get_service_name().c_str(), rmw_get_error_string_safe());
     }
   }
 
@@ -203,15 +205,19 @@ protected:
     std::shared_ptr<void> request_header = client->create_request_header();
     std::shared_ptr<void> response = client->create_response();
     bool taken = false;
-    rmw_take_response(
+    rmw_ret_t status = rmw_take_response(
       client->client_handle_,
       request_header.get(),
       response.get(),
       &taken);
-    if (taken) {
-      client->handle_response(request_header, response);
+    if (status == RMW_RET_OK) {
+      if (taken) {
+        client->handle_response(request_header, response);
+      }
     } else {
-      std::cout << "[rclcpp::error] take failed for service on client" << std::endl;
+      fprintf(stderr,
+        "[rclcpp::error] take response failed for client of service '%s': %s\n",
+        client->get_service_name().c_str(), rmw_get_error_string_safe());
     }
   }
 
