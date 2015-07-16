@@ -72,7 +72,10 @@ public:
     }
     weak_nodes_.push_back(node_ptr);
     // Interrupt waiting to handle new node
-    rmw_trigger_guard_condition(interrupt_guard_condition_);
+    rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
+    if (status != RMW_RET_OK) {
+      throw std::runtime_error(rmw_get_error_string_safe());
+    }
   }
 
   virtual void
@@ -90,7 +93,10 @@ public:
         }));
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
-      rmw_trigger_guard_condition(interrupt_guard_condition_);
+      rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
+      if (status != RMW_RET_OK) {
+        throw std::runtime_error(rmw_get_error_string_safe());
+      }
     }
   }
 
@@ -148,7 +154,10 @@ protected:
     any_exec->callback_group->can_be_taken_from_.store(true);
     // Wake the wait, because it may need to be recalculated or work that
     // was previously blocked is now available.
-    rmw_trigger_guard_condition(interrupt_guard_condition_);
+    rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
+    if (status != RMW_RET_OK) {
+      throw std::runtime_error(rmw_get_error_string_safe());
+    }
   }
 
   static void
@@ -351,12 +360,15 @@ protected:
     }
 
     // Now wait on the waitable subscriptions and timers
-    rmw_wait(
+    rmw_ret_t status = rmw_wait(
       &subscriber_handles,
       &guard_condition_handles,
       &service_handles,
       &client_handles,
       nonblocking);
+    if (status != RMW_RET_OK) {
+      throw std::runtime_error(rmw_get_error_string_safe());
+    }
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
       // Make sure to free or clean memory
