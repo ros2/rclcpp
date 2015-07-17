@@ -48,7 +48,7 @@ public:
   SubscriptionBase(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_subscription_t * subscription_handle,
-    std::string & topic_name,
+    const std::string & topic_name,
     bool ignore_local_publications)
   : node_handle_(node_handle),
     subscription_handle_(subscription_handle),
@@ -71,7 +71,7 @@ public:
     }
   }
 
-  std::string get_topic_name()
+  const std::string & get_topic_name() const
   {
     return this->topic_name_;
   }
@@ -100,7 +100,7 @@ public:
   Subscription(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_subscription_t * subscription_handle,
-    std::string & topic_name,
+    const std::string & topic_name,
     bool ignore_local_publications,
     CallbackType callback)
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),

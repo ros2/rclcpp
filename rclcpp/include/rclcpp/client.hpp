@@ -64,12 +64,12 @@ public:
     }
   }
 
-  std::string get_service_name()
+  const std::string & get_service_name() const
   {
     return this->service_name_;
   }
 
-  const rmw_client_t * get_client_handle()
+  const rmw_client_t * get_client_handle() const
   {
     return this->client_handle_;
   }
