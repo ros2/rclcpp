@@ -60,7 +60,7 @@ public:
   virtual void spin() = 0;
 
   virtual void
-  add_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify=true)
+  add_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify = true)
   {
     // Check to ensure node not already added
     for (auto & weak_node : weak_nodes_) {
@@ -81,7 +81,7 @@ public:
   }
 
   virtual void
-  remove_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify=true)
+  remove_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify = true)
   {
     bool node_removed = false;
     weak_nodes_.erase(
