@@ -60,7 +60,7 @@ public:
   virtual void spin() = 0;
 
   virtual void
-  add_node(rclcpp::node::Node::SharedPtr & node_ptr)
+  add_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify=true)
   {
     // Check to ensure node not already added
     for (auto & weak_node : weak_nodes_) {
@@ -71,15 +71,17 @@ public:
       }
     }
     weak_nodes_.push_back(node_ptr);
-    // Interrupt waiting to handle new node
-    rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-    if (status != RMW_RET_OK) {
-      throw std::runtime_error(rmw_get_error_string_safe());
+    if (notify) {
+      // Interrupt waiting to handle new node
+      rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
+      if (status != RMW_RET_OK) {
+        throw std::runtime_error(rmw_get_error_string_safe());
+      }
     }
   }
 
   virtual void
-  remove_node(rclcpp::node::Node::SharedPtr & node_ptr)
+  remove_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify=true)
   {
     bool node_removed = false;
     weak_nodes_.erase(
@@ -91,34 +93,36 @@ public:
           node_removed |= matched;
           return matched;
         }));
-    // If the node was matched and removed, interrupt waiting
-    if (node_removed) {
-      rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-      if (status != RMW_RET_OK) {
-        throw std::runtime_error(rmw_get_error_string_safe());
+    if (notify) {
+      // If the node was matched and removed, interrupt waiting
+      if (node_removed) {
+        rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
+        if (status != RMW_RET_OK) {
+          throw std::runtime_error(rmw_get_error_string_safe());
+        }
       }
     }
   }
 
   void spin_node_once(rclcpp::node::Node::SharedPtr & node, bool nonblocking = false)
   {
-    this->add_node(node);
+    this->add_node(node, false);
     // non-blocking = true
     auto any_exec = get_next_executable(nonblocking);
     if (any_exec) {
       execute_any_executable(any_exec);
     }
-    this->remove_node(node);
+    this->remove_node(node, false);
   }
 
   void spin_node_some(rclcpp::node::Node::SharedPtr & node)
   {
-    this->add_node(node);
+    this->add_node(node, false);
     // non-blocking = true
     while (AnyExecutable::SharedPtr any_exec = get_next_executable(true)) {
       execute_any_executable(any_exec);
     }
-    this->remove_node(node);
+    this->remove_node(node, false);
   }
 
   // Support dynamic switching of memory strategy
