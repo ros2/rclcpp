@@ -38,11 +38,11 @@ using namespace rclcpp::node;
 
 using rclcpp::contexts::default_context::DefaultContext;
 
-Node::Node(std::string node_name)
+Node::Node(const std::string & node_name)
 : Node(node_name, DefaultContext::make_shared())
 {}
 
-Node::Node(std::string node_name, context::Context::SharedPtr context)
+Node::Node(const std::string & node_name, context::Context::SharedPtr context)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
@@ -89,7 +89,7 @@ Node::create_callback_group(
 
 template<typename MessageT>
 publisher::Publisher::SharedPtr
-Node::create_publisher(std::string topic_name, size_t queue_size)
+Node::create_publisher(const std::string & topic_name, size_t queue_size)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
@@ -122,7 +122,7 @@ Node::group_in_node(callback_group::CallbackGroup::SharedPtr & group)
 template<typename MessageT>
 typename subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
-  std::string topic_name,
+  const std::string & topic_name,
   size_t queue_size,
   std::function<void(const std::shared_ptr<MessageT> &)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,

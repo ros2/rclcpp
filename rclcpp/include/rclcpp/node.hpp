@@ -102,9 +102,9 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Node);
 
   /* Create a node based on the node name. */
-  Node(std::string node_name);
+  Node(const std::string & node_name);
   /* Create a node based on the node name and a rclcpp::context::Context. */
-  Node(std::string node_name, rclcpp::context::Context::SharedPtr context);
+  Node(const std::string & node_name, rclcpp::context::Context::SharedPtr context);
 
   /* Get the name of the node. */
   const std::string &
@@ -117,13 +117,13 @@ public:
   /* Create and return a Publisher. */
   template<typename MessageT>
   rclcpp::publisher::Publisher::SharedPtr
-  create_publisher(std::string topic_name, size_t queue_size);
+  create_publisher(const std::string & topic_name, size_t queue_size);
 
   /* Create and return a Subscription. */
   template<typename MessageT>
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription(
-    std::string topic_name,
+    const std::string & topic_name,
     size_t queue_size,
     std::function<void(const std::shared_ptr<MessageT> &)> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
