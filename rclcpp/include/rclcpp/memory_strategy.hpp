@@ -39,11 +39,13 @@ public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(MemoryStrategy);
   virtual void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
+    (void)type;
     return static_cast<void **>(alloc(sizeof(void *) * number_of_handles));
   }
 
   virtual void return_handles(HandleType type, void ** handles)
   {
+    (void)type;
     this->free(handles);
   }
 

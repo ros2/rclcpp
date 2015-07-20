@@ -95,6 +95,8 @@ namespace utilities
 void
 init(int argc, char * argv[])
 {
+  (void)argc;
+  (void)argv;
   // TODO(wjwwood): Handle rmw_ret_t's value.
   rmw_init();
 #ifdef HAS_SIGACTION

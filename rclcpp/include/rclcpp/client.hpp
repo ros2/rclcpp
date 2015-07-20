@@ -138,7 +138,7 @@ public:
   SharedFuture async_send_request(
     typename ServiceT::Request::SharedPtr & request)
   {
-    return async_send_request(request, [](SharedFuture f) {});
+    return async_send_request(request, [](SharedFuture) {});
   }
 
   SharedFuture async_send_request(
