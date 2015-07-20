@@ -55,6 +55,7 @@ public:
 
   void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
+    std::cout << "static borrow handles" << std::endl;
     switch (type) {
       case HandleType::subscriber_handle:
         if (number_of_handles > max_subscribers_) {
