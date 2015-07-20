@@ -46,27 +46,22 @@ Node::Node(const std::string & node_name, context::Context::SharedPtr context)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
-  // Initialize node handle shared_ptr with custom deleter.
-  node_handle_.reset(rmw_create_node(name_.c_str()), [ = ](rmw_node_t * node) {
-    if (node_handle_) {
-      auto ret = rmw_destroy_node(node);
-      if (ret != RMW_RET_OK) {
-        // *INDENT-OFF*
-        std::stringstream ss;
-        ss << "Error in destruction of rmw node handle: "
-           << rmw_get_error_string_safe() << '\n';
-        // *INDENT-ON*
-        (std::cerr << ss.str()).flush();
-      }
-    }
-  });
-  if (!node_handle_) {
+  auto node = rmw_create_node(name_.c_str());
+  if (!node) {
     // *INDENT-OFF*
     throw std::runtime_error(
       std::string("could not create node: ") +
       rmw_get_error_string_safe());
     // *INDENT-ON*
   }
+  // Initialize node handle shared_ptr with custom deleter.
+  node_handle_.reset(node, [](rmw_node_t * node) {
+    auto ret = rmw_destroy_node(node);
+    if (ret != RMW_RET_OK) {
+      fprintf(
+        stderr, "Error in destruction of rmw node handle: %s\n", rmw_get_error_string_safe());
+    }
+  });
 
   using rclcpp::callback_group::CallbackGroupType;
   default_callback_group_ =
