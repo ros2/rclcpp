@@ -79,7 +79,11 @@ signal_handler(int signal_value)
   }
 #endif
   g_signal_status = signal_value;
-  rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
+  rmw_ret_t status = rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
+  if (status != RMW_RET_OK) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
+  }
   g_interrupt_condition_variable.notify_all();
 }
 } // namespace
@@ -97,8 +101,13 @@ init(int argc, char * argv[])
 {
   (void)argc;
   (void)argv;
-  // TODO(wjwwood): Handle rmw_ret_t's value.
-  rmw_init();
+  rmw_ret_t status = rmw_init();
+  if (status != RMW_RET_OK) {
+    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+    throw std::runtime_error(
+      std::string("failed to initialize rmw implementation: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
 #ifdef HAS_SIGACTION
   struct sigaction action;
   memset(&action, 0, sizeof(action));
@@ -131,7 +140,11 @@ void
 shutdown()
 {
   g_signal_status = SIGINT;
-  rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
+  rmw_ret_t status = rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
+  if (status != RMW_RET_OK) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
+  }
   g_interrupt_condition_variable.notify_all();
 }
 

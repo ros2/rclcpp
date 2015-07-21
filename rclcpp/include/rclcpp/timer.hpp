@@ -121,7 +121,11 @@ public:
       if (!rclcpp::utilities::ok()) {
         return;
       }
-      rmw_trigger_guard_condition(guard_condition_);
+      rmw_ret_t status = rmw_trigger_guard_condition(guard_condition_);
+      if (status != RMW_RET_OK) {
+        fprintf(stderr,
+          "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
+      }
     }
   }
 
