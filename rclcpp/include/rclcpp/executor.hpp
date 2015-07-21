@@ -42,7 +42,7 @@ class Executor
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
 
-  Executor(memory_strategy::MemoryStrategy::SharedPtr ms =
+  explicit Executor(memory_strategy::MemoryStrategy::SharedPtr ms =
     memory_strategy::create_default_strategy())
   : interrupt_guard_condition_(rmw_create_guard_condition()),
     memory_strategy_(ms)
