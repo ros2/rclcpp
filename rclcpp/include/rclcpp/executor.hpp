@@ -52,8 +52,11 @@ public:
   virtual ~Executor()
   {
     if (interrupt_guard_condition_ != nullptr) {
-      // TODO(wjwwood): Check ret code.
-      rmw_destroy_guard_condition(interrupt_guard_condition_);
+      rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
+      if (status != RMW_RET_OK) {
+        fprintf(stderr,
+          "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
+      }
     }
   }
 
