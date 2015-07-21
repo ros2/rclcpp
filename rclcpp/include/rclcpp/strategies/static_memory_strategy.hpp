@@ -47,10 +47,6 @@ public:
     for (size_t i = 0; i < pool_size_; ++i) {
       memory_map_[memory_pool_[i]] = 0;
     }
-
-    for (size_t i = 0; i < max_executables_; ++i) {
-      executable_pool_[i] = std::make_shared<executor::AnyExecutable>(executor::AnyExecutable());
-    }
   }
 
   void ** borrow_handles(HandleType type, size_t number_of_handles)
@@ -116,7 +112,7 @@ public:
     size_t prev_exec_seq_ = exec_seq_;
     ++exec_seq_;
 
-    return executable_pool_[prev_exec_seq_];
+    return std::make_shared<executor::AnyExecutable>(executable_pool_[prev_exec_seq_]);
   }
 
   void * alloc(size_t size)
@@ -161,7 +157,7 @@ private:
   void * service_pool_[max_services_];
   void * client_pool_[max_clients_];
   void * guard_condition_pool_[max_guard_conditions_];
-  executor::AnyExecutable::SharedPtr executable_pool_[max_executables_];
+  executor::AnyExecutable executable_pool_[max_executables_];
 
   size_t pool_seq_;
   size_t exec_seq_;
