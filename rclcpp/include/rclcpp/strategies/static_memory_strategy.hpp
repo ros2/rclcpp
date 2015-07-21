@@ -88,6 +88,7 @@ public:
 
   void return_handles(HandleType type, void ** handles)
   {
+    (void)handles;
     switch (type) {
       case HandleType::subscriber_handle:
         memset(subscriber_pool_, 0, max_subscribers_);
