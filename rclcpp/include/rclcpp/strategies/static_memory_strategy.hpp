@@ -22,6 +22,66 @@
 namespace rclcpp
 {
 
+namespace memory_strategy
+{
+
+template<typename T, size_t S>
+class StaticContainerInterface : public ContainerInterface<T>
+{
+public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(StaticContainerInterface);
+  T& operator[](size_t pos)
+  {
+    return container_[pos];
+  }
+  T& at(size_t pos)
+  {
+    return container_.at(pos);
+  }
+  size_t size() const
+  {
+    return container_.size();
+  }
+
+  T* data()
+  {
+    return container_.data();
+  }
+
+  T* begin()
+  {
+    return data();
+  }
+
+  T* end()
+  {
+    return data() + seq;
+  }
+
+  void add_vector(std::vector<T> &vec)
+  {
+    if (vec.size() > size())
+    {
+      throw std::runtime_error("Requested size exceeded maximum number of subscribers.");
+    }
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+      at(i) = vec[i];
+    }
+    if (vec.size() > 0)
+      seq = vec.size() - 1;
+    else
+      seq = 0;
+  }
+
+  size_t seq = 0;
+
+private:
+  std::array<T, S> container_;
+};
+
+}
+
 namespace memory_strategies
 {
 
@@ -30,7 +90,6 @@ namespace static_memory_strategy
 
 class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
 {
-
 public:
   StaticMemoryStrategy()
   {
@@ -144,6 +203,48 @@ public:
     memset(ptr, 0, memory_map_[ptr]);
   }
 
+  /*
+  template<>
+  std::shared_ptr<memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>>
+  get_container_interface()
+  {
+    return std::make_shared<memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>>(subscription_container_);
+  }
+
+  template<>
+  std::shared_ptr<memory_strategy::ContainerInterface<service::ServiceBase::SharedPtr>>
+  get_container_interface()
+  {
+    return std::make_shared<memory_strategy::ContainerInterface<service::ServiceBase::SharedPtr>>(services_container_);
+  }
+
+  template<>
+  std::shared_ptr<memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>>
+  get_container_interface()
+  {
+    return std::make_shared<memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>>(clients_container_);
+  }
+
+  template<>
+  std::shared_ptr<memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>>
+  get_container_interface()
+  {
+    return std::make_shared<memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>>(timers_container_);
+  }
+
+  template<typename T>
+  void return_container_interface(std::shared_ptr<memory_strategy::ContainerInterface<T>> container)
+  {
+    auto static_container = dynamic_cast<memory_strategy::StaticContainerInterface<T>>(container);
+    if (!static_container)
+    {
+      throw std::runtime_error("Failed to downcast container to static type");
+    }
+    static_container->seq = 0;
+  }
+
+*/
+
 private:
   static const size_t pool_size_ = 1024;
   static const size_t max_subscribers_ = 10;
@@ -163,6 +264,11 @@ private:
   size_t exec_seq_;
 
   std::unordered_map<void *, size_t> memory_map_;
+
+  memory_strategy::StaticContainerInterface<subscription::SubscriptionBase::SharedPtr, max_subscribers_> subscription_container_;
+  memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_> services_container_;
+  memory_strategy::StaticContainerInterface<client::ClientBase::SharedPtr, max_clients_> clients_container_;
+  memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_guard_conditions_> timers_container_;
 };
 
 }  /* static_memory_strategy */

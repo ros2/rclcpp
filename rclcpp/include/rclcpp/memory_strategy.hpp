@@ -14,6 +14,10 @@
 
 #ifndef RCLCPP_RCLCPP_MEMORY_STRATEGY_HPP_
 #define RCLCPP_RCLCPP_MEMORY_STRATEGY_HPP_
+
+#include <iterator>
+#include <vector>
+
 #include <rclcpp/any_executable.hpp>
 
 namespace rclcpp
@@ -29,6 +33,73 @@ class Executor;
 
 namespace memory_strategy
 {
+
+template<typename T>
+class ContainerInterface
+{
+  RCLCPP_MAKE_SHARED_DEFINITIONS(ContainerInterface);
+public:
+  virtual T& operator[](size_t pos) = 0;
+  virtual T& at(size_t pos) = 0;
+  virtual size_t size() const = 0;
+  virtual T* data() = 0;
+  virtual T* begin() = 0;
+  virtual T* end() = 0;
+  virtual void add_vector(std::vector<T> &vec) = 0;
+
+protected:
+
+};
+
+template<typename T>
+class DefaultContainerInterface : public ContainerInterface<T>
+{
+public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(DefaultContainerInterface);
+  T& operator[](size_t pos)
+  {
+    return container_[pos];
+  }
+  T& at(size_t pos)
+  {
+    return container_.at(pos);
+  }
+  size_t size() const
+  {
+    return container_.size();
+  }
+
+  void push_back(T& item)
+  {
+    container_.push_back(item);
+  }
+
+  T* data()
+  {
+    return container_.data();
+  }
+
+  T* begin()
+  {
+    return data();
+  }
+
+  T* end()
+  {
+    return data() + size();
+  }
+
+  void add_vector(std::vector<T> &vec)
+  {
+    for (auto & entry : vec)
+    {
+      push_back(entry);
+    }
+  }
+
+private:
+  std::vector<T> container_;
+};
 
 class MemoryStrategy
 {
@@ -62,6 +133,18 @@ public:
   virtual void free(void * ptr)
   {
     return std::free(ptr);
+  }
+
+  template<typename T>
+  typename std::shared_ptr<ContainerInterface<T>> get_container_interface()
+  {
+    return std::shared_ptr<ContainerInterface<T>>(new DefaultContainerInterface<T>);
+  }
+
+  template<typename T>
+  void return_container_interface(std::shared_ptr<ContainerInterface<T>> container)
+  {
+    container.reset();
   }
 };
 
