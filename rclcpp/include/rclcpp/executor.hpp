@@ -262,7 +262,9 @@ protected:
         has_invalid_weak_nodes = false;
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+
+      for (auto & weak_group : node->callback_groups_)
+      {
         auto group = weak_group.lock();
         if (!group || !group->can_be_taken_from_.load()) {
           continue;
@@ -284,7 +286,7 @@ protected:
           }));
     }
     // Use the number of subscriptions to allocate memory in the handles
-    size_t number_of_subscriptions = subs.size();
+    size_t number_of_subscriptions = subs->size();
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = number_of_subscriptions;
     // TODO(wjwwood): Avoid redundant malloc's
@@ -342,6 +344,7 @@ protected:
     // Add 2 to the number for the ctrl-c guard cond and the executor's
     size_t start_of_timer_guard_conds = 2;
     size_t number_of_guard_conds = timers.size() + start_of_timer_guard_conds;
+
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
     guard_condition_handles.guard_conditions =
