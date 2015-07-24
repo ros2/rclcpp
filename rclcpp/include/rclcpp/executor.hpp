@@ -262,7 +262,6 @@ protected:
         has_invalid_weak_nodes = false;
         continue;
       }
-
       for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
         if (!group || !group->can_be_taken_from_.load()) {
