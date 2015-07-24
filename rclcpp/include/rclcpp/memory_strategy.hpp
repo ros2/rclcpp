@@ -46,14 +46,11 @@ public:
   virtual T* begin() = 0;
   virtual T* end() = 0;
   virtual void add_vector(std::vector<T> &vec) = 0;
-
-protected:
-  MemoryStrategy::SharedPtr memory_strategy_;
 };
 
 
 template<typename T>
-class DefaultContainerInterface : ContainerInterface<T>
+class DefaultContainerInterface : public ContainerInterface<T>
 {
 public:
 
@@ -156,7 +153,7 @@ public:
     return get_default_container_interface<timer::TimerBase::SharedPtr>();
   }
 
-  virtual void return_container_interface(std::shared_ptr<void> container)
+  virtual void return_container_interface(std::shared_ptr<void*> & container)
   {
     container.reset();
   }

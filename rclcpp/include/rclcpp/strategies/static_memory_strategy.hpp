@@ -206,38 +206,60 @@ public:
   std::shared_ptr<memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>>
   get_subscription_container_interface()
   {
-    return std::make_shared<memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>>(subscription_container_);
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<subscription::SubscriptionBase::SharedPtr, max_subscribers_>>(&subscription_container_);
   }
 
   std::shared_ptr<memory_strategy::ContainerInterface<service::ServiceBase::SharedPtr>>
   get_service_container_interface()
   {
-    return std::make_shared<memory_strategy::ContainerInterface<service::ServiceBase::SharedPtr>>(services_container_);
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_>>(&services_container_);
   }
 
   std::shared_ptr<memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>>
   get_client_container_interface()
   {
-    return std::make_shared<memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>>(clients_container_);
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<client::ClientBase::SharedPtr, max_clients_>>(&clients_container_);
   }
 
   std::shared_ptr<memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>>
   get_timer_container_interface()
   {
-    return std::make_shared<memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>>(timers_container_);
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_guard_conditions_>>(&timers_container_);
   }
 
-  template<typename T>
-  void return_container_interface(std::shared_ptr<void> container)
+/*
+  void return_container_interface(std::shared_ptr<void*> &container)
   {
-    auto static_container = dynamic_cast<memory_strategy::StaticContainerInterface<T>>(container);
-    if (!static_container)
+    auto sub_container = dynamic_cast<memory_strategy::StaticContainerInterface<subscription::SubscriptionBase::SharedPtr, max_subscribers_>>(container);
+    if (sub_container)
     {
-      throw std::runtime_error("Failed to downcast container to static type");
+      sub_container->seq = 0;
+      return;
     }
-    static_container->seq = 0;
-  }
+    auto service_container = dynamic_cast<memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_>>(container);
+    if (service_container)
+    {
+      service_container->seq = 0;
+      return;
+    }
 
+    auto client_container = dynamic_cast<memory_strategy::StaticContainerInterface<client::ClientBase::SharedPtr, max_clients_>>(container);
+    if (client_container)
+    {
+      client_container->seq = 0;
+      return;
+    }
+
+    auto timer_container = dynamic_cast<memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_guard_conditions_>>(container);
+    if (timer_container)
+    {
+      timer_container->seq = 0;
+      return;
+    }
+
+    throw std::runtime_error("Failed to downcast container to static type");
+  }
+*/
 
 private:
   static const size_t pool_size_ = 1024;
