@@ -52,10 +52,9 @@ protected:
 };
 
 template<typename T>
-class DefaultContainerInterface : public ContainerInterface<T>
+class ContainerInterface<T, MemoryStrategy>
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(DefaultContainerInterface);
   T& operator[](size_t pos)
   {
     return container_[pos];
@@ -135,6 +134,7 @@ public:
     return std::free(ptr);
   }
 
+  /*
   template<typename T>
   typename std::shared_ptr<ContainerInterface<T>> get_container_interface()
   {
@@ -146,6 +146,7 @@ public:
   {
     container.reset();
   }
+  */
 };
 
 
