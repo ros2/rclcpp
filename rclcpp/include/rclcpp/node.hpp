@@ -29,6 +29,7 @@
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/message_memory_strategy.hpp>
 #include <rclcpp/parameter.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/service.hpp>
@@ -120,6 +121,7 @@ public:
   create_publisher(const std::string & topic_name, size_t queue_size);
 
   /* Create and return a Subscription. */
+
   template<typename MessageT>
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription(
@@ -127,7 +129,10 @@ public:
     size_t queue_size,
     std::function<void(const std::shared_ptr<MessageT> &)> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
-    bool ignore_local_publications = false);
+    bool ignore_local_publications = false,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+    msg_mem_strat =
+    rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default());
 
   /* Create a timer. */
   rclcpp::timer::WallTimer::SharedPtr

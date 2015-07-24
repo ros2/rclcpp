@@ -25,6 +25,7 @@
 #include <rmw/rmw.h>
 
 #include <rclcpp/macros.hpp>
+#include <rclcpp/message_memory_strategy.hpp>
 
 namespace rclcpp
 {
@@ -102,26 +103,38 @@ public:
     rmw_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications,
-    CallbackType callback)
+    CallbackType callback,
+    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr memory_strategy =
+    message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default())
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
-    callback_(callback)
+    callback_(callback),
+    message_memory_strategy_(memory_strategy)
   {}
+
+  void set_message_memory_strategy(
+    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr message_memory_strategy)
+  {
+    message_memory_strategy_ = message_memory_strategy;
+  }
 
   std::shared_ptr<void> create_message()
   {
-    return std::shared_ptr<void>(new MessageT());
+    return message_memory_strategy_->borrow_message();
   }
 
   void handle_message(std::shared_ptr<void> & message)
   {
     auto typed_message = std::static_pointer_cast<MessageT>(message);
     callback_(typed_message);
+    message_memory_strategy_->return_message(typed_message);
   }
 
 private:
   RCLCPP_DISABLE_COPY(Subscription);
 
   CallbackType callback_;
+  typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+  message_memory_strategy_;
 
 };
 

@@ -121,7 +121,8 @@ Node::create_subscription(
   size_t queue_size,
   std::function<void(const std::shared_ptr<MessageT> &)> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  bool ignore_local_publications)
+  bool ignore_local_publications,
+  typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
@@ -143,7 +144,8 @@ Node::create_subscription(
     subscriber_handle,
     topic_name,
     ignore_local_publications,
-    callback);
+    callback,
+    msg_mem_strat);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
   if (group) {
     if (!group_in_node(group)) {
