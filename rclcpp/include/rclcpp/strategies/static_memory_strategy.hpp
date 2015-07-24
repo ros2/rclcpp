@@ -30,6 +30,7 @@ class StaticSharedPtrContainer : public SharedPtrContainer<T>
 {
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(StaticSharedPtrContainer);
+
   std::shared_ptr<T> & operator[](size_t pos)
   {
     return container_[pos];
@@ -42,7 +43,7 @@ public:
 
   size_t size() const
   {
-    return seq;
+    return effective_size_;
   }
 
   std::shared_ptr<T> * data()
@@ -57,33 +58,33 @@ public:
 
   std::shared_ptr<T> * end()
   {
-    if (seq > container_.size()) {
+    if (effective_size_ > container_.size()) {
       throw std::runtime_error("End of data exceeded maximum.");
     }
-    return data() + seq;
+    return data() + effective_size_;
   }
 
   void add_vector(const std::vector<std::shared_ptr<T>> & vec)
   {
-    if (vec.size() + seq > container_.size()) {
+    if (vec.size() + effective_size_ > container_.size()) {
       throw std::runtime_error("Requested size exceeded maximum.");
     }
     for (size_t i = 0; i < vec.size(); ++i) {
-      at(i + seq) = vec[i];
+      at(i + effective_size_) = vec[i];
     }
-    seq += vec.size();
+    effective_size_ += vec.size();
   }
 
   void reset_container()
   {
-    seq = 0;
+    effective_size_ = 0;
     for (auto & entry : container_) {
       entry.reset();
     }
   }
 
 private:
-  size_t seq = 0;
+  size_t effective_size_ = 0;
   std::array<std::shared_ptr<T>, S> container_;
 };
 

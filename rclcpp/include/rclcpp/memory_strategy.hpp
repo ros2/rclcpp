@@ -15,7 +15,6 @@
 #ifndef RCLCPP_RCLCPP_MEMORY_STRATEGY_HPP_
 #define RCLCPP_RCLCPP_MEMORY_STRATEGY_HPP_
 
-#include <iterator>
 #include <vector>
 
 #include <rclcpp/any_executable.hpp>
