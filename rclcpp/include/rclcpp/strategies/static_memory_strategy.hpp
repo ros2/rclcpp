@@ -235,25 +235,25 @@ public:
   memory_strategy::SharedPtrContainer<subscription::SubscriptionBase>::SharedPtr
   get_subscription_container_interface()
   {
-    return subscription_container_;
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<subscription::SubscriptionBase::SharedPtr, max_subscribers_>>(&subscription_container_);
   }
 
   std::shared_ptr<memory_strategy::SharedPtrContainer<service::ServiceBase>>
   get_service_container_interface()
   {
-    return services_container_;
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_>>(&services_container_);
   }
 
   memory_strategy::SharedPtrContainer<client::ClientBase>::SharedPtr
   get_client_container_interface()
   {
-    return clients_container_;
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<client::ClientBase::SharedPtr, max_clients_>>(&clients_container_);
   }
 
   memory_strategy::SharedPtrContainer<timer::TimerBase>::SharedPtr
   get_timer_container_interface()
   {
-    return timers_container_;
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_guard_conditions_>>(&timers_container_);
   }
 
 private:
