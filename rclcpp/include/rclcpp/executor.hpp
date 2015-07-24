@@ -255,12 +255,6 @@ protected:
     auto timers = memory_strategy_->get_timer_container_interface();
     auto services = memory_strategy_->get_service_container_interface();
     auto clients = memory_strategy_->get_client_container_interface();
-    /*
-    ContainerInterface<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
-    ContainerInterface<rclcpp::timer::TimerBase::SharedPtr> timers;
-    ContainerInterface<rclcpp::service::ServiceBase::SharedPtr> services;
-    ContainerInterface<rclcpp::client::ClientBase::SharedPtr>() clients;
-    */
 
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
@@ -447,6 +441,10 @@ protected:
     memory_strategy_->return_handles(HandleType::guard_condition_handle,
       guard_condition_handles.guard_conditions);
 
+    subs->reset_container();
+    timers->reset_container();
+    services->reset_container();
+    clients->reset_container();
   }
 
 /******************************/

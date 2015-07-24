@@ -37,15 +37,16 @@ namespace memory_strategy
 template<typename T>
 class ContainerInterface
 {
-  RCLCPP_MAKE_SHARED_DEFINITIONS(ContainerInterface);
 public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(ContainerInterface);
   virtual T& operator[](size_t pos) = 0;
   virtual T& at(size_t pos) = 0;
   virtual size_t size() const = 0;
   virtual T* data() = 0;
   virtual T* begin() = 0;
   virtual T* end() = 0;
-  virtual void add_vector(std::vector<T> &vec) = 0;
+  virtual void add_vector(const std::vector<T> &vec) = 0;
+  virtual void reset_container() = 0;
 };
 
 
@@ -53,6 +54,7 @@ template<typename T>
 class DefaultContainerInterface : public ContainerInterface<T>
 {
 public:
+  RCLCPP_MAKE_SHARED_DEFINITIONS(DefaultContainerInterface);
 
   T& operator[](size_t pos)
   {
@@ -65,11 +67,6 @@ public:
   size_t size() const
   {
     return container_.size();
-  }
-
-  void push_back(T& item)
-  {
-    container_.push_back(item);
   }
 
   T* data()
@@ -87,12 +84,17 @@ public:
     return data() + size();
   }
 
-  void add_vector(std::vector<T> &vec)
+  void add_vector(const std::vector<T> &vec)
   {
     for (auto & entry : vec)
     {
-      push_back(entry);
+      container_.push_back(entry);
     }
+  }
+
+  void reset_container()
+  {
+    container_.clear();
   }
 
 private:
@@ -133,34 +135,31 @@ public:
     return std::free(ptr);
   }
 
-  virtual std::shared_ptr<ContainerInterface<subscription::SubscriptionBase::SharedPtr>> get_subscription_container_interface()
+  virtual ContainerInterface<subscription::SubscriptionBase::SharedPtr>::SharedPtr get_subscription_container_interface()
   {
     return get_default_container_interface<subscription::SubscriptionBase::SharedPtr>();
   }
 
-  virtual std::shared_ptr<ContainerInterface<service::ServiceBase::SharedPtr>> get_service_container_interface()
+  virtual ContainerInterface<service::ServiceBase::SharedPtr>::SharedPtr get_service_container_interface()
   {
     return get_default_container_interface<service::ServiceBase::SharedPtr>();
   }
 
-  virtual std::shared_ptr<ContainerInterface<client::ClientBase::SharedPtr>> get_client_container_interface()
+  virtual ContainerInterface<client::ClientBase::SharedPtr>::SharedPtr get_client_container_interface()
   {
     return get_default_container_interface<client::ClientBase::SharedPtr>();
   }
 
-  virtual std::shared_ptr<ContainerInterface<timer::TimerBase::SharedPtr>> get_timer_container_interface()
+  virtual ContainerInterface<timer::TimerBase::SharedPtr>::SharedPtr get_timer_container_interface()
   {
     return get_default_container_interface<timer::TimerBase::SharedPtr>();
   }
 
-  virtual void return_container_interface(std::shared_ptr<void*> & container)
-  {
-    container.reset();
-  }
-
+private:
   template<typename T>
-  std::shared_ptr<ContainerInterface<T>> get_default_container_interface()
+  typename ContainerInterface<T>::SharedPtr get_default_container_interface()
   {
+    printf("Got default container interface\n");
     return std::shared_ptr<ContainerInterface<T>>(new DefaultContainerInterface<T>);
   }
 };

@@ -34,13 +34,15 @@ public:
   {
     return container_[pos];
   }
+
   T& at(size_t pos)
   {
     return container_.at(pos);
   }
+
   size_t size() const
   {
-    return container_.size();
+    return seq;
   }
 
   T* data()
@@ -55,28 +57,31 @@ public:
 
   T* end()
   {
+    if (seq > container_.size())
+      throw std::runtime_error("End of data exceeded maximum.");
     return data() + seq;
   }
 
-  void add_vector(std::vector<T> &vec)
+  void add_vector(const std::vector<T> &vec)
   {
-    if (vec.size() > size())
+    if (vec.size() + seq > container_.size())
     {
-      throw std::runtime_error("Requested size exceeded maximum number of subscribers.");
+      throw std::runtime_error("Requested size exceeded maximum.");
     }
     for (size_t i = 0; i < vec.size(); ++i)
     {
-      at(i) = vec[i];
+      at(i+seq) = vec[i];
     }
-    if (vec.size() > 0)
-      seq = vec.size() - 1;
-    else
-      seq = 0;
+    seq += vec.size();
   }
 
-  size_t seq = 0;
+  void reset_container()
+  {
+    seq = 0;
+  }
 
 private:
+  size_t seq = 0;
   std::array<T, S> container_;
 };
 
@@ -113,25 +118,25 @@ public:
     switch (type) {
       case HandleType::subscriber_handle:
         if (number_of_handles > max_subscribers_) {
-          throw std::runtime_error("Requested size exceeded maximum subscribers.");
+          throw std::runtime_error(std::string("Requested size exceeded maximum subscribers by: ") + std::to_string(number_of_handles - max_subscribers_));
         }
 
         return subscriber_pool_;
       case HandleType::service_handle:
         if (number_of_handles > max_services_) {
-          throw std::runtime_error("Requested size exceeded maximum services.");
+          throw std::runtime_error(std::string("Requested size exceeded maximum services by: ") + std::to_string(number_of_handles - max_services_));
         }
 
         return service_pool_;
       case HandleType::client_handle:
         if (number_of_handles > max_clients_) {
-          throw std::runtime_error("Requested size exceeded maximum clients.");
+          throw std::runtime_error(std::string("Requested size exceeded maximum clients by: ") + std::to_string(number_of_handles - max_clients_));
         }
 
         return client_pool_;
       case HandleType::guard_condition_handle:
         if (number_of_handles > max_guard_conditions_) {
-          throw std::runtime_error("Requested size exceeded maximum guard conditions.");
+          throw std::runtime_error(std::string("Requested size exceeded maximum guard conditions by: ") + std::to_string(number_of_handles - max_guard_conditions_));
         }
 
         return guard_condition_pool_;
@@ -203,7 +208,7 @@ public:
     memset(ptr, 0, memory_map_[ptr]);
   }
 
-  std::shared_ptr<memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>>
+  memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>::SharedPtr
   get_subscription_container_interface()
   {
     return std::shared_ptr<memory_strategy::StaticContainerInterface<subscription::SubscriptionBase::SharedPtr, max_subscribers_>>(&subscription_container_);
@@ -212,61 +217,29 @@ public:
   std::shared_ptr<memory_strategy::ContainerInterface<service::ServiceBase::SharedPtr>>
   get_service_container_interface()
   {
-    return std::shared_ptr<memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_>>(&services_container_);
+    return memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_>::SharedPtr(&services_container_);
   }
 
-  std::shared_ptr<memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>>
+  memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>::SharedPtr
   get_client_container_interface()
   {
     return std::shared_ptr<memory_strategy::StaticContainerInterface<client::ClientBase::SharedPtr, max_clients_>>(&clients_container_);
   }
 
-  std::shared_ptr<memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>>
+  memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>::SharedPtr
   get_timer_container_interface()
   {
-    return std::shared_ptr<memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_guard_conditions_>>(&timers_container_);
+    return std::shared_ptr<memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_timers_>>(&timers_container_);
   }
 
-/*
-  void return_container_interface(std::shared_ptr<void*> &container)
-  {
-    auto sub_container = dynamic_cast<memory_strategy::StaticContainerInterface<subscription::SubscriptionBase::SharedPtr, max_subscribers_>>(container);
-    if (sub_container)
-    {
-      sub_container->seq = 0;
-      return;
-    }
-    auto service_container = dynamic_cast<memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_>>(container);
-    if (service_container)
-    {
-      service_container->seq = 0;
-      return;
-    }
-
-    auto client_container = dynamic_cast<memory_strategy::StaticContainerInterface<client::ClientBase::SharedPtr, max_clients_>>(container);
-    if (client_container)
-    {
-      client_container->seq = 0;
-      return;
-    }
-
-    auto timer_container = dynamic_cast<memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_guard_conditions_>>(container);
-    if (timer_container)
-    {
-      timer_container->seq = 0;
-      return;
-    }
-
-    throw std::runtime_error("Failed to downcast container to static type");
-  }
-*/
 
 private:
   static const size_t pool_size_ = 1024;
   static const size_t max_subscribers_ = 10;
   static const size_t max_services_ = 5;
   static const size_t max_clients_ = 10;
-  static const size_t max_guard_conditions_ = 50;
+  static const size_t max_timers_ = 50;
+  static const size_t max_guard_conditions_ = max_timers_ + 2;
   static const size_t max_executables_ = 1;
 
   void * memory_pool_[pool_size_];
@@ -284,7 +257,7 @@ private:
   memory_strategy::StaticContainerInterface<subscription::SubscriptionBase::SharedPtr, max_subscribers_> subscription_container_;
   memory_strategy::StaticContainerInterface<service::ServiceBase::SharedPtr, max_services_> services_container_;
   memory_strategy::StaticContainerInterface<client::ClientBase::SharedPtr, max_clients_> clients_container_;
-  memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_guard_conditions_> timers_container_;
+  memory_strategy::StaticContainerInterface<timer::TimerBase::SharedPtr, max_timers_> timers_container_;
 };
 
 }  /* static_memory_strategy */
