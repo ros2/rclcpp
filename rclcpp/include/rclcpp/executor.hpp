@@ -263,8 +263,7 @@ protected:
         continue;
       }
 
-      for (auto & weak_group : node->callback_groups_)
-      {
+      for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
         if (!group || !group->can_be_taken_from_.load()) {
           continue;
@@ -298,7 +297,7 @@ protected:
     }
     // Then fill the SubscriberHandles with ready subscriptions
     size_t subscriber_handle_index = 0;
-    for (auto & subscription : *subs) {
+    for (auto & subscription : * subs) {
       subscriber_handles.subscribers[subscriber_handle_index] = \
         subscription->subscription_handle_->data;
       subscriber_handle_index += 1;
@@ -316,7 +315,7 @@ protected:
     }
     // Then fill the ServiceHandles with ready services
     size_t service_handle_index = 0;
-    for (auto & service : *services) {
+    for (auto & service : * services) {
       service_handles.services[service_handle_index] = \
         service->service_handle_->data;
       service_handle_index += 1;
@@ -334,7 +333,7 @@ protected:
     }
     // Then fill the ServiceHandles with ready clients
     size_t client_handle_index = 0;
-    for (auto & client : *clients) {
+    for (auto & client : * clients) {
       client_handles.clients[client_handle_index] = \
         client->client_handle_->data;
       client_handle_index += 1;
@@ -361,7 +360,7 @@ protected:
       interrupt_guard_condition_->data;
     // Then fill the SubscriberHandles with ready subscriptions
     size_t guard_cond_handle_index = start_of_timer_guard_conds;
-    for (auto & timer : *timers) {
+    for (auto & timer : * timers) {
       guard_condition_handles.guard_conditions[guard_cond_handle_index] = \
         timer->guard_condition_->data;
       guard_cond_handle_index += 1;
