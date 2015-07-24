@@ -251,17 +251,16 @@ protected:
     // Collect the subscriptions and timers to be waited on
     bool has_invalid_weak_nodes = false;
 
+    auto subs = memory_strategy_->get_subscription_container_interface();
+    auto timers = memory_strategy_->get_timer_container_interface();
+    auto services = memory_strategy_->get_service_container_interface();
+    auto clients = memory_strategy_->get_client_container_interface();
     /*
-    auto subs = memory_strategy_->get_container_interface<rclcpp::subscription::SubscriptionBase::SharedPtr>();
-    auto timers = memory_strategy_->get_container_interface<rclcpp::timer::TimerBase::SharedPtr>();
-    auto services = memory_strategy_->get_container_interface<rclcpp::service::ServiceBase::SharedPtr>();
-    auto clients = memory_strategy_->get_container_interface<rclcpp::client::ClientBase::SharedPtr>();
-    */
     ContainerInterface<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
     ContainerInterface<rclcpp::timer::TimerBase::SharedPtr> timers;
     ContainerInterface<rclcpp::service::ServiceBase::SharedPtr> services;
     ContainerInterface<rclcpp::client::ClientBase::SharedPtr>() clients;
-
+    */
 
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();

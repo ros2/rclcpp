@@ -203,37 +203,32 @@ public:
     memset(ptr, 0, memory_map_[ptr]);
   }
 
-  /*
-  template<>
   std::shared_ptr<memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>>
-  get_container_interface()
+  get_subscription_container_interface()
   {
     return std::make_shared<memory_strategy::ContainerInterface<subscription::SubscriptionBase::SharedPtr>>(subscription_container_);
   }
 
-  template<>
   std::shared_ptr<memory_strategy::ContainerInterface<service::ServiceBase::SharedPtr>>
-  get_container_interface()
+  get_service_container_interface()
   {
     return std::make_shared<memory_strategy::ContainerInterface<service::ServiceBase::SharedPtr>>(services_container_);
   }
 
-  template<>
   std::shared_ptr<memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>>
-  get_container_interface()
+  get_client_container_interface()
   {
     return std::make_shared<memory_strategy::ContainerInterface<client::ClientBase::SharedPtr>>(clients_container_);
   }
 
-  template<>
   std::shared_ptr<memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>>
-  get_container_interface()
+  get_timer_container_interface()
   {
     return std::make_shared<memory_strategy::ContainerInterface<timer::TimerBase::SharedPtr>>(timers_container_);
   }
 
   template<typename T>
-  void return_container_interface(std::shared_ptr<memory_strategy::ContainerInterface<T>> container)
+  void return_container_interface(std::shared_ptr<void> container)
   {
     auto static_container = dynamic_cast<memory_strategy::StaticContainerInterface<T>>(container);
     if (!static_container)
@@ -243,7 +238,6 @@ public:
     static_container->seq = 0;
   }
 
-*/
 
 private:
   static const size_t pool_size_ = 1024;
