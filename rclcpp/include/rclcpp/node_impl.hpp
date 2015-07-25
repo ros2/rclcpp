@@ -125,6 +125,12 @@ Node::create_subscription(
   typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
+
+  if (!msg_mem_strat) {
+    msg_mem_strat =
+      rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default();
+  }
+
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
     node_handle_.get(), type_support_handle,
