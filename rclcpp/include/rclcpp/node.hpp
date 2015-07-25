@@ -122,6 +122,10 @@ public:
 
   /* Create and return a Subscription. */
 
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
   template<typename MessageT>
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription(
@@ -131,8 +135,7 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat =
-    rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default());
+    msg_mem_strat = nullptr);
 
   /* Create a timer. */
   rclcpp::timer::WallTimer::SharedPtr
