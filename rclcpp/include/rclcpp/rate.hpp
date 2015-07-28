@@ -99,6 +99,11 @@ public:
     last_interval_ = Clock::now();
   }
 
+  std::chrono::nanoseconds period() const
+  {
+    return period_;
+  }
+
 private:
   RCLCPP_DISABLE_COPY(GenericRate);
 

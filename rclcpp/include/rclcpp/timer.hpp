@@ -53,28 +53,12 @@ public:
   TimerBase(std::chrono::nanoseconds period, CallbackType callback)
   : period_(period),
     callback_(callback),
-    guard_condition_(rmw_create_guard_condition()),
     canceled_(false)
   {
-    if (!guard_condition_) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error(
-              std::string("failed to create guard condition: ") +
-              rmw_get_error_string_safe()
-      );
-    }
   }
 
   virtual ~TimerBase()
   {
-    if (guard_condition_) {
-      if (rmw_destroy_guard_condition(guard_condition_) != RMW_RET_OK) {
-        std::stringstream ss;
-        ss << "Error in TimerBase destructor, rmw_destroy_guard_condition failed: " <<
-          rmw_get_error_string_safe() << '\n';
-        (std::cerr << ss.str()).flush();
-      }
-    }
   }
 
   void
@@ -83,12 +67,17 @@ public:
     this->canceled_ = true;
   }
 
+  virtual std::chrono::nanoseconds
+  time_until_trigger() = 0;
+
   virtual bool is_steady() = 0;
+
+  // Interface for externally triggering the timer event
+  virtual bool check_and_trigger() = 0;
 
 protected:
   std::chrono::nanoseconds period_;
   CallbackType callback_;
-  rmw_guard_condition_t * guard_condition_;
 
   bool canceled_;
 
@@ -106,29 +95,48 @@ public:
   GenericTimer(std::chrono::nanoseconds period, CallbackType callback)
   : TimerBase(period, callback), loop_rate_(period)
   {
-    thread_ = std::thread(&GenericTimer<Clock>::run, this);
+    /* Subtracting the loop rate period ensures that the callback gets triggered
+       on the first call to check_and_trigger. */
+    last_triggered_time_ = Clock::now() - period;
   }
 
   virtual ~GenericTimer()
   {
     cancel();
-    thread_.join();
   }
 
-  void
-  run()
+  // return: true to trigger callback on the next "execute_timer" call in executor
+  bool
+  check_and_trigger()
   {
-    while (rclcpp::utilities::ok() && !this->canceled_) {
-      loop_rate_.sleep();
-      if (!rclcpp::utilities::ok()) {
-        return;
-      }
-      rmw_ret_t status = rmw_trigger_guard_condition(guard_condition_);
-      if (status != RMW_RET_OK) {
-        fprintf(stderr,
-          "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
-      }
+    if (canceled_) {
+      return false;
     }
+    if (Clock::now() < last_triggered_time_) {
+      return false;
+    }
+    if (std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() - last_triggered_time_) >=
+      loop_rate_.period())
+    {
+      last_triggered_time_ = Clock::now();
+      return true;
+    }
+    return false;
+  }
+
+  std::chrono::nanoseconds
+  time_until_trigger()
+  {
+    std::chrono::nanoseconds time_until_trigger;
+    // Calculate the time between the next trigger and the current time
+    if (last_triggered_time_ + loop_rate_.period() < Clock::now()) {
+      // time is overdue, need to trigger immediately
+      time_until_trigger = std::chrono::nanoseconds::zero();
+    } else {
+      time_until_trigger = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        last_triggered_time_ - Clock::now()) + loop_rate_.period();
+    }
+    return time_until_trigger;
   }
 
   virtual bool
@@ -140,8 +148,8 @@ public:
 private:
   RCLCPP_DISABLE_COPY(GenericTimer);
 
-  std::thread thread_;
   rclcpp::rate::GenericRate<Clock> loop_rate_;
+  std::chrono::time_point<Clock> last_triggered_time_;
 
 };
 
