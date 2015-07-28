@@ -27,24 +27,46 @@ namespace memory_strategies
 
 namespace static_memory_strategy
 {
+  struct ObjectPoolBounds
+  {
+  public:
+    size_t max_subscriptions_;
+    size_t max_services_;
+    size_t max_clients_;
+    size_t max_executables_;
+    size_t pool_size_;
+
+    ObjectPoolBounds(size_t subs = 10, size_t services = 10, size_t clients = 10,
+      size_t executables = 1, size_t pool = 1024)
+    : max_subscriptions_(subs), max_services_(services), max_clients_(clients), max_executables_(
+        executables), pool_size_(pool)
+    {}
+  };
+
 
 class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
 {
-
 public:
-  StaticMemoryStrategy()
+  StaticMemoryStrategy(ObjectPoolBounds bounds = ObjectPoolBounds())
+  : bounds_(bounds)
   {
-    memset(memory_pool_, 0, pool_size_);
-    memset(subscriber_pool_, 0, max_subscribers_);
-    memset(service_pool_, 0, max_services_);
-    memset(client_pool_, 0, max_clients_);
-    memset(guard_condition_pool_, 0, max_guard_conditions_);
+    memory_pool_ = static_cast<void **>(malloc(bounds_.pool_size_));
+    subscription_pool_ = static_cast<void **>(malloc(bounds_.max_subscriptions_));
+    service_pool_ = static_cast<void **>(malloc(bounds_.max_services_));
+    client_pool_ = static_cast<void **>(malloc(bounds_.max_clients_));
+    executable_pool_ = static_cast<executor::AnyExecutable *>(malloc(bounds_.max_executables_));
+
+    memset(memory_pool_, 0, bounds_.pool_size_);
+    memset(subscription_pool_, 0, bounds_.max_subscriptions_);
+    memset(service_pool_, 0, bounds_.max_services_);
+    memset(client_pool_, 0, bounds_.max_clients_);
+    memset(executable_pool_, 0, bounds_.max_executables_);
     pool_seq_ = 0;
     exec_seq_ = 0;
 
     // Reserve pool_size_ buckets in the memory map.
-    memory_map_.reserve(pool_size_);
-    for (size_t i = 0; i < pool_size_; ++i) {
+    memory_map_.reserve(bounds_.pool_size_);
+    for (size_t i = 0; i < bounds_.pool_size_; ++i) {
       memory_map_[memory_pool_[i]] = 0;
     }
   }
@@ -52,30 +74,24 @@ public:
   void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
     switch (type) {
-      case HandleType::subscriber_handle:
-        if (number_of_handles > max_subscribers_) {
-          throw std::runtime_error("Requested size exceeded maximum subscribers.");
+      case HandleType::subscription_handle:
+        if (number_of_handles > bounds_.max_subscriptions_) {
+          throw std::runtime_error("Requested size exceeded maximum subscriptions.");
         }
 
-        return subscriber_pool_;
+        return subscription_pool_;
       case HandleType::service_handle:
-        if (number_of_handles > max_services_) {
+        if (number_of_handles > bounds_.max_services_) {
           throw std::runtime_error("Requested size exceeded maximum services.");
         }
 
         return service_pool_;
       case HandleType::client_handle:
-        if (number_of_handles > max_clients_) {
+        if (number_of_handles > bounds_.max_clients_) {
           throw std::runtime_error("Requested size exceeded maximum clients.");
         }
 
         return client_pool_;
-      case HandleType::guard_condition_handle:
-        if (number_of_handles > max_guard_conditions_) {
-          throw std::runtime_error("Requested size exceeded maximum guard conditions.");
-        }
-
-        return guard_condition_pool_;
       default:
         break;
     }
@@ -86,17 +102,14 @@ public:
   {
     (void)handles;
     switch (type) {
-      case HandleType::subscriber_handle:
-        memset(subscriber_pool_, 0, max_subscribers_);
+      case HandleType::subscription_handle:
+        memset(subscription_pool_, 0, bounds_.max_subscriptions_);
         break;
       case HandleType::service_handle:
-        memset(service_pool_, 0, max_services_);
+        memset(service_pool_, 0, bounds_.max_services_);
         break;
       case HandleType::client_handle:
-        memset(client_pool_, 0, max_clients_);
-        break;
-      case HandleType::guard_condition_handle:
-        memset(guard_condition_pool_, 0, max_guard_conditions_);
+        memset(client_pool_, 0, bounds_.max_clients_);
         break;
       default:
         throw std::runtime_error("Unrecognized enum, could not return handle memory.");
@@ -105,7 +118,7 @@ public:
 
   executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
-    if (exec_seq_ >= max_executables_) {
+    if (exec_seq_ >= bounds_.max_executables_) {
       // wrap around
       exec_seq_ = 0;
     }
@@ -119,7 +132,7 @@ public:
   {
     // Extremely naive static allocation strategy
     // Keep track of block size at a given pointer
-    if (pool_seq_ + size > pool_size_) {
+    if (pool_seq_ + size > bounds_.pool_size_) {
       // Start at 0
       pool_seq_ = 0;
     }
@@ -145,19 +158,13 @@ public:
   }
 
 private:
-  static const size_t pool_size_ = 1024;
-  static const size_t max_subscribers_ = 10;
-  static const size_t max_services_ = 5;
-  static const size_t max_clients_ = 10;
-  static const size_t max_guard_conditions_ = 50;
-  static const size_t max_executables_ = 1;
+  ObjectPoolBounds bounds_;
 
-  void * memory_pool_[pool_size_];
-  void * subscriber_pool_[max_subscribers_];
-  void * service_pool_[max_services_];
-  void * client_pool_[max_clients_];
-  void * guard_condition_pool_[max_guard_conditions_];
-  executor::AnyExecutable executable_pool_[max_executables_];
+  void ** memory_pool_;
+  void ** subscription_pool_;
+  void ** service_pool_;
+  void ** client_pool_;
+  executor::AnyExecutable * executable_pool_;
 
   size_t pool_seq_;
   size_t exec_seq_;
