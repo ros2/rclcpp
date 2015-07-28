@@ -251,7 +251,6 @@ protected:
     // Collect the subscriptions and timers to be waited on
     bool has_invalid_weak_nodes = false;
     std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
-    std::vector<rclcpp::timer::TimerBase::SharedPtr> timers;
     std::vector<rclcpp::service::ServiceBase::SharedPtr> services;
     std::vector<rclcpp::client::ClientBase::SharedPtr> clients;
     for (auto & weak_node : weak_nodes_) {
@@ -269,12 +268,6 @@ protected:
           auto subscription = weak_subscription.lock();
           if (subscription) {
             subs.push_back(subscription);
-          }
-        }
-        for (auto & weak_timer : group->timer_ptrs_) {
-          auto timer = weak_timer.lock();
-          if (timer) {
-            timers.push_back(timer);
           }
         }
         for (auto & service : group->service_ptrs_) {
@@ -349,10 +342,9 @@ protected:
       client_handle_index += 1;
     }
 
-    // Use the number of guard conditions to allocate memory in the handles
-    // Add 2 to the number for the ctrl-c guard cond and the executor's
-    size_t start_of_timer_guard_conds = 2;
-    size_t number_of_guard_conds = timers.size() + start_of_timer_guard_conds;
+    // The number of guard conditions is fixed at 2: 1 for the ctrl-c guard cond,
+    // and one for the executor's guard cond (interrupt_guard_condition_)
+    size_t number_of_guard_conds = 2;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
     guard_condition_handles.guard_conditions =
@@ -368,21 +360,25 @@ protected:
     // Put the executor's guard condition in
     guard_condition_handles.guard_conditions[1] = \
       interrupt_guard_condition_->data;
-    // Then fill the SubscriberHandles with ready subscriptions
-    size_t guard_cond_handle_index = start_of_timer_guard_conds;
-    for (auto & timer : timers) {
-      guard_condition_handles.guard_conditions[guard_cond_handle_index] = \
-        timer->guard_condition_->data;
-      guard_cond_handle_index += 1;
-    }
 
     rmw_time_t * wait_timeout = NULL;
     rmw_time_t rmw_timeout;
 
-    if (timeout >= std::chrono::duration<int64_t, T>::zero()) {
+    auto next_timer_duration = get_earliest_timer();
+    // If the next timer timeout must preempt the requested timeout
+    // or if the requested timeout blocks forever, and there exists a valid timer,
+    // replace the requested timeout with the next timeout.
+    bool has_valid_timer = next_timer_duration >= std::chrono::nanoseconds::zero();
+    if ((next_timer_duration < timeout ||
+      timeout < std::chrono::duration<int64_t, T>::zero()) && has_valid_timer)
+    {
+      rmw_timeout.sec =
+        std::chrono::duration_cast<std::chrono::seconds>(next_timer_duration).count();
+      rmw_timeout.nsec = next_timer_duration.count() % (1000 * 1000 * 1000);
+      wait_timeout = &rmw_timeout;
+    } else if (timeout >= std::chrono::duration<int64_t, T>::zero()) {
       // Convert timeout representation to rmw_time
-      auto timeout_sec = std::chrono::duration_cast<std::chrono::seconds>(timeout);
-      rmw_timeout.sec = timeout_sec.count();
+      rmw_timeout.sec = std::chrono::duration_cast<std::chrono::seconds>(timeout).count();
       rmw_timeout.nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count() %
         (1000 * 1000 * 1000);
       wait_timeout = &rmw_timeout;
@@ -417,13 +413,6 @@ protected:
       void * handle = subscriber_handles.subscribers[i];
       if (handle) {
         subscriber_handles_.push_back(handle);
-      }
-    }
-    // Then the timers, start with start_of_timer_guard_conds
-    for (size_t i = start_of_timer_guard_conds; i < number_of_guard_conds; ++i) {
-      void * handle = guard_condition_handles.guard_conditions[i];
-      if (handle) {
-        guard_condition_handles_.push_back(handle);
       }
     }
     // Then the services
@@ -478,30 +467,6 @@ protected:
     return rclcpp::subscription::SubscriptionBase::SharedPtr();
   }
 
-  rclcpp::timer::TimerBase::SharedPtr
-  get_timer_by_handle(void * guard_condition_handle)
-  {
-    for (auto weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto weak_group : node->callback_groups_) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto weak_timer : group->timer_ptrs_) {
-          auto timer = weak_timer.lock();
-          if (timer && timer->guard_condition_->data == guard_condition_handle) {
-            return timer;
-          }
-        }
-      }
-    }
-    return rclcpp::timer::TimerBase::SharedPtr();
-  }
-
   rclcpp::service::ServiceBase::SharedPtr
   get_service_by_handle(void * service_handle)
   {
@@ -547,7 +512,6 @@ protected:
     }
     return rclcpp::client::ClientBase::SharedPtr();
   }
-
 
   rclcpp::node::Node::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr & group)
@@ -598,34 +562,58 @@ protected:
   void
   get_next_timer(AnyExecutable::SharedPtr & any_exec)
   {
-    auto it = guard_condition_handles_.begin();
-    while (it != guard_condition_handles_.end()) {
-      auto timer = get_timer_by_handle(*it);
-      if (timer) {
-        // Find the group for this handle and see if it can be serviced
-        auto group = get_group_by_timer(timer);
-        if (!group) {
-          // Group was not found, meaning the timer is not valid...
-          // Remove it from the ready list and continue looking
-          guard_condition_handles_.erase(it++);
-          continue;
-        }
-        if (!group->can_be_taken_from_.load()) {
-          // Group is mutually exclusive and is being used, so skip it for now
-          // Leave it to be checked next time, but continue searching
-          ++it;
-          continue;
-        }
-        // Otherwise it is safe to set and return the any_exec
-        any_exec->timer = timer;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group);
-        guard_condition_handles_.erase(it++);
-        return;
+    for (auto & weak_node : weak_nodes_) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
       }
-      // Else, the timer is no longer valid, remove it and continue
-      guard_condition_handles_.erase(it++);
+      for (auto & weak_group : node->callback_groups_) {
+        auto group = weak_group.lock();
+        if (!group || !group->can_be_taken_from_.load()) {
+          continue;
+        }
+        for (auto & timer_ref : group->timer_ptrs_) {
+          auto timer = timer_ref.lock();
+          if (timer && timer->check_and_trigger()) {
+            any_exec->timer = timer;
+            any_exec->callback_group = group;
+            node = get_node_by_group(group);
+            return;
+          }
+        }
+      }
     }
+  }
+
+  std::chrono::nanoseconds
+  get_earliest_timer()
+  {
+    std::chrono::nanoseconds latest = std::chrono::nanoseconds::max();
+    bool timers_empty = true;
+    for (auto & weak_node : weak_nodes_) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->callback_groups_) {
+        auto group = weak_group.lock();
+        if (!group || !group->can_be_taken_from_.load()) {
+          continue;
+        }
+        for (auto & timer_ref : group->timer_ptrs_) {
+          timers_empty = false;
+          // Check the expected trigger time
+          auto timer = timer_ref.lock();
+          if (timer && timer->time_until_trigger() < latest) {
+            latest = timer->time_until_trigger();
+          }
+        }
+      }
+    }
+    if (timers_empty) {
+      return std::chrono::nanoseconds(-1);
+    }
+    return latest;
   }
 
   rclcpp::callback_group::CallbackGroup::SharedPtr
@@ -867,8 +855,6 @@ private:
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
   typedef std::list<void *> SubscriberHandles;
   SubscriberHandles subscriber_handles_;
-  typedef std::list<void *> GuardConditionHandles;
-  GuardConditionHandles guard_condition_handles_;
   typedef std::list<void *> ServiceHandles;
   ServiceHandles service_handles_;
   typedef std::list<void *> ClientHandles;
