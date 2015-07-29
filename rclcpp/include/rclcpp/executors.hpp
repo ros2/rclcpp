@@ -39,7 +39,7 @@ spin_node_until_future_complete(
   // TODO(wjwwood): does not work recursively right, can't call spin_node_until_future_complete
   // inside a callback executed by an executor.
   do {
-    executor.spin_node_some(node_ptr);
+    executor.spin_node_once(node_ptr);
     status = future.wait_for(std::chrono::seconds(0));
   } while (status != std::future_status::ready && rclcpp::utilities::ok());
   return future;
