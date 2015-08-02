@@ -426,4 +426,65 @@ Node::list_parameters(
   }
   return result;
 }
+
+std::map<std::string, std::string>
+Node::get_topic_names_and_types() const
+{
+  rmw_topic_names_and_types_t topic_names_and_types;
+  topic_names_and_types.topic_count = 0;
+  topic_names_and_types.topic_names = nullptr;
+  topic_names_and_types.type_names = nullptr;
+
+  auto ret = rmw_get_topic_names_and_types(node_handle_.get(), &topic_names_and_types);
+  if (ret != RMW_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("could not get topic names and types: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
+
+  std::map<std::string, std::string> topics;
+  for (size_t i = 0; i < topic_names_and_types.topic_count; ++i) {
+    topics[topic_names_and_types.topic_names[i]] = topic_names_and_types.type_names[i];
+  }
+
+  ret = rmw_destroy_topic_names_and_types(&topic_names_and_types);
+  if (ret != RMW_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("could not destroy topic names and types: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
+
+  return topics;
+}
+
+size_t
+Node::count_publishers(const std::string & topic_name) const
+{
+  size_t count;
+  auto ret = rmw_count_publishers(node_handle_.get(), topic_name.c_str(), &count);
+  if (ret != RMW_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("could not count publishers: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
+  return count;
+}
+
+size_t
+Node::count_subscribers(const std::string & topic_name) const
+{
+  size_t count;
+  auto ret = rmw_count_subscribers(node_handle_.get(), topic_name.c_str(), &count);
+  if (ret != RMW_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("could not count subscribers: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
+  return count;
+}
+
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

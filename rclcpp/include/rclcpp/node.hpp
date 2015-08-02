@@ -188,6 +188,12 @@ public:
   rcl_interfaces::msg::ListParametersResult list_parameters(
     const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  std::map<std::string, std::string> get_topic_names_and_types() const;
+
+  size_t count_publishers(const std::string & topic_name) const;
+
+  size_t count_subscribers(const std::string & topic_name) const;
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 
