@@ -87,8 +87,8 @@ private:
   }
 
   CallbackGroupType type_;
-  std::vector<subscription::SubscriptionBase::SharedPtr> subscription_ptrs_;
-  std::vector<timer::TimerBase::SharedPtr> timer_ptrs_;
+  std::vector<subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
+  std::vector<timer::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<service::ServiceBase::SharedPtr> service_ptrs_;
   std::vector<client::ClientBase::SharedPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
