@@ -48,6 +48,7 @@ class TimerBase
 
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(TimerBase);
+  typedef std::weak_ptr<TimerBase> WeakPtr;
 
   TimerBase(std::chrono::nanoseconds period, CallbackType callback)
   : period_(period),
@@ -100,6 +101,7 @@ class GenericTimer : public TimerBase
 
 public:
   RCLCPP_MAKE_SHARED_DEFINITIONS(GenericTimer);
+  typedef std::weak_ptr<GenericTimer> WeakPtr;
 
   GenericTimer(std::chrono::nanoseconds period, CallbackType callback)
   : TimerBase(period, callback), loop_rate_(period)

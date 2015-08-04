@@ -260,11 +260,17 @@ protected:
         if (!group || !group->can_be_taken_from_.load()) {
           continue;
         }
-        for (auto & subscription : group->subscription_ptrs_) {
-          subs.push_back(subscription);
+        for (auto & weak_subscription : group->subscription_ptrs_) {
+          auto subscription = weak_subscription.lock();
+          if (subscription) {
+            subs.push_back(subscription);
+          }
         }
-        for (auto & timer : group->timer_ptrs_) {
-          timers.push_back(timer);
+        for (auto & weak_timer : group->timer_ptrs_) {
+          auto timer = weak_timer.lock();
+          if (timer) {
+            timers.push_back(timer);
+          }
         }
         for (auto & service : group->service_ptrs_) {
           services.push_back(service);
@@ -444,8 +450,9 @@ protected:
         if (!group) {
           continue;
         }
-        for (auto subscription : group->subscription_ptrs_) {
-          if (subscription->subscription_handle_->data == subscriber_handle) {
+        for (auto weak_subscription : group->subscription_ptrs_) {
+          auto subscription = weak_subscription.lock();
+          if (subscription && subscription->subscription_handle_->data == subscriber_handle) {
             return subscription;
           }
         }
@@ -467,8 +474,9 @@ protected:
         if (!group) {
           continue;
         }
-        for (auto timer : group->timer_ptrs_) {
-          if (timer->guard_condition_->data == guard_condition_handle) {
+        for (auto weak_timer : group->timer_ptrs_) {
+          auto timer = weak_timer.lock();
+          if (timer && timer->guard_condition_->data == guard_condition_handle) {
             return timer;
           }
         }
@@ -583,7 +591,8 @@ protected:
       }
       for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
-        for (auto & t : group->timer_ptrs_) {
+        for (auto & weak_timer : group->timer_ptrs_) {
+          auto t = weak_timer.lock();
           if (t == timer) {
             return group;
           }
@@ -635,7 +644,8 @@ protected:
       }
       for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
-        for (auto & sub : group->subscription_ptrs_) {
+        for (auto & weak_sub : group->subscription_ptrs_) {
+          auto sub = weak_sub.lock();
           if (sub == subscription) {
             return group;
           }
