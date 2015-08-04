@@ -86,6 +86,8 @@ public:
     value_.string_value = string_value;
     value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
   }
+  explicit ParameterVariant(const std::string & name, const char * string_value)
+  : ParameterVariant(name, std::string(string_value)) {}
   explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & bytes_value)
   : name_(name)
   {
