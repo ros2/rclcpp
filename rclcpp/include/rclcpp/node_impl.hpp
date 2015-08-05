@@ -16,7 +16,9 @@
 #define RCLCPP_RCLCPP_NODE_IMPL_HPP_
 
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -46,7 +48,19 @@ Node::Node(const std::string & node_name, context::Context::SharedPtr context)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
-  auto node = rmw_create_node(name_.c_str());
+  size_t domain_id = 0;
+  char * ros_domain_id = getenv("ROS_DOMAIN_ID");
+  if (ros_domain_id) {
+    unsigned long number = strtoul(ros_domain_id, NULL, 0);
+    if (number == (std::numeric_limits<unsigned long>::max)()) {
+      fprintf(stderr,
+        "Failed to interpret ROS_DOMAIN_ID '%s' as integral number\n", ros_domain_id);
+    } else {
+      domain_id = static_cast<size_t>(number);
+    }
+  }
+
+  auto node = rmw_create_node(name_.c_str(), domain_id);
   if (!node) {
     // *INDENT-OFF*
     throw std::runtime_error(
