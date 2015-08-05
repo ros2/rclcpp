@@ -53,11 +53,9 @@ Node::Node(const std::string & node_name, context::Context::SharedPtr context)
   if (ros_domain_id) {
     unsigned long number = strtoul(ros_domain_id, NULL, 0);
     if (number == (std::numeric_limits<unsigned long>::max)()) {
-      fprintf(stderr,
-        "Failed to interpret ROS_DOMAIN_ID '%s' as integral number\n", ros_domain_id);
-    } else {
-      domain_id = static_cast<size_t>(number);
+      throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
+    domain_id = static_cast<size_t>(number);
   }
 
   auto node = rmw_create_node(name_.c_str(), domain_id);
