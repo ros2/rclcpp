@@ -549,30 +549,6 @@ protected:
   }
 
 
-  void
-  remove_subscriber_handle_from_subscriber_handles(void * handle)
-  {
-    subscriber_handles_.remove(handle);
-  }
-
-  void
-  remove_guard_condition_handle_from_guard_condition_handles(void * handle)
-  {
-    guard_condition_handles_.remove(handle);
-  }
-
-  void
-  remove_service_handle_from_service_handles(void * handle)
-  {
-    service_handles_.remove(handle);
-  }
-
-  void
-  remove_client_handle_from_client_handles(void * handle)
-  {
-    client_handles_.remove(handle);
-  }
-
   rclcpp::node::Node::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr & group)
   {
@@ -622,31 +598,33 @@ protected:
   void
   get_next_timer(AnyExecutable::SharedPtr & any_exec)
   {
-    for (auto handle : guard_condition_handles_) {
-      auto timer = get_timer_by_handle(handle);
+    auto it = guard_condition_handles_.begin();
+    while (it != guard_condition_handles_.end()) {
+      auto timer = get_timer_by_handle(*it);
       if (timer) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_timer(timer);
         if (!group) {
           // Group was not found, meaning the timer is not valid...
           // Remove it from the ready list and continue looking
-          remove_guard_condition_handle_from_guard_condition_handles(handle);
+          guard_condition_handles_.erase(it++);
           continue;
         }
         if (!group->can_be_taken_from_.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
+          ++it;
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
         any_exec->timer = timer;
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group);
-        remove_guard_condition_handle_from_guard_condition_handles(handle);
+        guard_condition_handles_.erase(it++);
         return;
       }
       // Else, the timer is no longer valid, remove it and continue
-      remove_guard_condition_handle_from_guard_condition_handles(handle);
+      guard_condition_handles_.erase(it++);
     }
   }
 
@@ -675,31 +653,33 @@ protected:
   void
   get_next_subscription(AnyExecutable::SharedPtr & any_exec)
   {
-    for (auto handle : subscriber_handles_) {
-      auto subscription = get_subscription_by_handle(handle);
+    auto it = subscriber_handles_.begin();
+    while (it != subscriber_handles_.end()) {
+      auto subscription = get_subscription_by_handle(*it);
       if (subscription) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_subscription(subscription);
         if (!group) {
           // Group was not found, meaning the subscription is not valid...
           // Remove it from the ready list and continue looking
-          remove_subscriber_handle_from_subscriber_handles(handle);
+          subscriber_handles_.erase(it++);
           continue;
         }
         if (!group->can_be_taken_from_.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
+          ++it;
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
         any_exec->subscription = subscription;
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group);
-        remove_subscriber_handle_from_subscriber_handles(handle);
+        subscriber_handles_.erase(it++);
         return;
       }
       // Else, the subscription is no longer valid, remove it and continue
-      remove_subscriber_handle_from_subscriber_handles(handle);
+      subscriber_handles_.erase(it++);
     }
   }
 
@@ -727,31 +707,33 @@ protected:
   void
   get_next_service(AnyExecutable::SharedPtr & any_exec)
   {
-    for (auto handle : service_handles_) {
-      auto service = get_service_by_handle(handle);
+    auto it = service_handles_.begin();
+    while (it != service_handles_.end()) {
+      auto service = get_service_by_handle(*it);
       if (service) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_service(service);
         if (!group) {
           // Group was not found, meaning the service is not valid...
           // Remove it from the ready list and continue looking
-          remove_service_handle_from_service_handles(handle);
+          service_handles_.erase(it++);
           continue;
         }
         if (!group->can_be_taken_from_.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
+          ++it;
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
         any_exec->service = service;
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group);
-        remove_service_handle_from_service_handles(handle);
+        service_handles_.erase(it++);
         return;
       }
       // Else, the service is no longer valid, remove it and continue
-      remove_service_handle_from_service_handles(handle);
+      service_handles_.erase(it++);
     }
   }
 
@@ -779,31 +761,33 @@ protected:
   void
   get_next_client(AnyExecutable::SharedPtr & any_exec)
   {
-    for (auto handle : client_handles_) {
-      auto client = get_client_by_handle(handle);
+    auto it = client_handles_.begin();
+    while (it != client_handles_.end()) {
+      auto client = get_client_by_handle(*it);
       if (client) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_client(client);
         if (!group) {
           // Group was not found, meaning the service is not valid...
           // Remove it from the ready list and continue looking
-          remove_client_handle_from_client_handles(handle);
+          client_handles_.erase(it++);
           continue;
         }
         if (!group->can_be_taken_from_.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
+          ++it;
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
         any_exec->client = client;
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group);
-        remove_client_handle_from_client_handles(handle);
+        client_handles_.erase(it++);
         return;
       }
       // Else, the service is no longer valid, remove it and continue
-      remove_client_handle_from_client_handles(handle);
+      client_handles_.erase(it++);
     }
   }
 
