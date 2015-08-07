@@ -250,10 +250,12 @@ protected:
   {
     // Collect the subscriptions and timers to be waited on
     bool has_invalid_weak_nodes = false;
-    std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
-    std::vector<rclcpp::timer::TimerBase::SharedPtr> timers;
-    std::vector<rclcpp::service::ServiceBase::SharedPtr> services;
-    std::vector<rclcpp::client::ClientBase::SharedPtr> clients;
+
+    auto subs = memory_strategy_->get_subscription_container_interface();
+    auto timers = memory_strategy_->get_timer_container_interface();
+    auto services = memory_strategy_->get_service_container_interface();
+    auto clients = memory_strategy_->get_client_container_interface();
+
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
       if (!node) {
@@ -265,26 +267,13 @@ protected:
         if (!group || !group->can_be_taken_from_.load()) {
           continue;
         }
-        for (auto & weak_subscription : group->subscription_ptrs_) {
-          auto subscription = weak_subscription.lock();
-          if (subscription) {
-            subs.push_back(subscription);
-          }
-        }
-        for (auto & weak_timer : group->timer_ptrs_) {
-          auto timer = weak_timer.lock();
-          if (timer) {
-            timers.push_back(timer);
-          }
-        }
-        for (auto & service : group->service_ptrs_) {
-          services.push_back(service);
-        }
-        for (auto & client : group->client_ptrs_) {
-          clients.push_back(client);
-        }
+        subs->add_vector(group->subscription_ptrs_);
+        timers->add_vector(group->timer_ptrs_);
+        services->add_vector(group->service_ptrs_);
+        clients->add_vector(group->client_ptrs_);
       }
     }
+
     // Clean up any invalid nodes, if they were detected
     if (has_invalid_weak_nodes) {
       weak_nodes_.erase(
@@ -295,7 +284,7 @@ protected:
           }));
     }
     // Use the number of subscriptions to allocate memory in the handles
-    size_t number_of_subscriptions = subs.size();
+    size_t number_of_subscriptions = subs->size();
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = number_of_subscriptions;
     // TODO(wjwwood): Avoid redundant malloc's
@@ -307,14 +296,14 @@ protected:
     }
     // Then fill the SubscriberHandles with ready subscriptions
     size_t subscriber_handle_index = 0;
-    for (auto & subscription : subs) {
+    for (auto & subscription : * subs) {
       subscriber_handles.subscribers[subscriber_handle_index] = \
         subscription->subscription_handle_->data;
       subscriber_handle_index += 1;
     }
 
     // Use the number of services to allocate memory in the handles
-    size_t number_of_services = services.size();
+    size_t number_of_services = services->size();
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
     service_handles.services =
@@ -325,14 +314,14 @@ protected:
     }
     // Then fill the ServiceHandles with ready services
     size_t service_handle_index = 0;
-    for (auto & service : services) {
+    for (auto & service : * services) {
       service_handles.services[service_handle_index] = \
         service->service_handle_->data;
       service_handle_index += 1;
     }
 
     // Use the number of clients to allocate memory in the handles
-    size_t number_of_clients = clients.size();
+    size_t number_of_clients = clients->size();
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
     client_handles.clients =
@@ -343,7 +332,7 @@ protected:
     }
     // Then fill the ServiceHandles with ready clients
     size_t client_handle_index = 0;
-    for (auto & client : clients) {
+    for (auto & client : * clients) {
       client_handles.clients[client_handle_index] = \
         client->client_handle_->data;
       client_handle_index += 1;
@@ -352,7 +341,7 @@ protected:
     // Use the number of guard conditions to allocate memory in the handles
     // Add 2 to the number for the ctrl-c guard cond and the executor's
     size_t start_of_timer_guard_conds = 2;
-    size_t number_of_guard_conds = timers.size() + start_of_timer_guard_conds;
+    size_t number_of_guard_conds = timers->size() + start_of_timer_guard_conds;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
     guard_condition_handles.guard_conditions =
@@ -370,7 +359,7 @@ protected:
       interrupt_guard_condition_->data;
     // Then fill the SubscriberHandles with ready subscriptions
     size_t guard_cond_handle_index = start_of_timer_guard_conds;
-    for (auto & timer : timers) {
+    for (auto & timer : * timers) {
       guard_condition_handles.guard_conditions[guard_cond_handle_index] = \
         timer->guard_condition_->data;
       guard_cond_handle_index += 1;
@@ -450,6 +439,10 @@ protected:
     memory_strategy_->return_handles(HandleType::guard_condition_handle,
       guard_condition_handles.guard_conditions);
 
+    subs->reset_container();
+    timers->reset_container();
+    services->reset_container();
+    clients->reset_container();
   }
 
 /******************************/
