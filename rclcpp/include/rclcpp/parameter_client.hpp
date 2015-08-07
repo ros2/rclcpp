@@ -231,9 +231,8 @@ public:
   typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(FunctorT & callback)
   {
-    // TODO(esteve): remove hardcoded values
-    return node_->create_subscription<rcl_interfaces::msg::ParameterEvent>("parameter_events",
-             1000, callback);
+    return node_->create_subscription<rcl_interfaces::msg::ParameterEvent>(
+      "parameter_events", rmw_qos_profile_parameter_events, callback);
   }
 
 private:

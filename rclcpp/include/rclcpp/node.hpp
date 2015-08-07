@@ -118,7 +118,8 @@ public:
   /* Create and return a Publisher. */
   template<typename MessageT>
   rclcpp::publisher::Publisher::SharedPtr
-  create_publisher(const std::string & topic_name, size_t queue_size);
+  create_publisher(
+    const std::string & topic_name, const rmw_qos_profile_t & qos_profile);
 
   /* Create and return a Subscription. */
 
@@ -130,7 +131,7 @@ public:
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription(
     const std::string & topic_name,
-    size_t queue_size,
+    const rmw_qos_profile_t & qos_profile,
     std::function<void(const std::shared_ptr<MessageT> &)> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
