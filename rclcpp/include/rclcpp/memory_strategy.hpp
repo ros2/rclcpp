@@ -20,7 +20,7 @@ namespace rclcpp
 {
 
 // TODO move HandleType somewhere where it makes sense
-enum class HandleType {subscriber_handle, service_handle, client_handle, guard_condition_handle};
+enum class HandleType {subscription_handle, service_handle, client_handle, guard_condition_handle};
 
 namespace executor
 {

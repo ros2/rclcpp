@@ -293,7 +293,7 @@ protected:
     subscriber_handles.subscriber_count = number_of_subscriptions;
     // TODO(wjwwood): Avoid redundant malloc's
     subscriber_handles.subscribers =
-      memory_strategy_->borrow_handles(HandleType::subscriber_handle, number_of_subscriptions);
+      memory_strategy_->borrow_handles(HandleType::subscription_handle, number_of_subscriptions);
     if (subscriber_handles.subscribers == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for subscriber pointers.");
@@ -397,7 +397,7 @@ protected:
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
       // Make sure to free or clean memory
-      memory_strategy_->return_handles(HandleType::subscriber_handle,
+      memory_strategy_->return_handles(HandleType::subscription_handle,
         subscriber_handles.subscribers);
       memory_strategy_->return_handles(HandleType::service_handle,
         service_handles.services);
@@ -430,7 +430,7 @@ protected:
       }
     }
 
-    memory_strategy_->return_handles(HandleType::subscriber_handle,
+    memory_strategy_->return_handles(HandleType::subscription_handle,
       subscriber_handles.subscribers);
     memory_strategy_->return_handles(HandleType::service_handle,
       service_handles.services);
@@ -446,17 +446,17 @@ protected:
   rclcpp::subscription::SubscriptionBase::SharedPtr
   get_subscription_by_handle(void * subscriber_handle)
   {
-    for (auto weak_node : weak_nodes_) {
+    for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
       if (!node) {
         continue;
       }
-      for (auto weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto weak_subscription : group->subscription_ptrs_) {
+        for (auto & weak_subscription : group->subscription_ptrs_) {
           auto subscription = weak_subscription.lock();
           if (subscription && subscription->subscription_handle_->data == subscriber_handle) {
             return subscription;
@@ -470,17 +470,17 @@ protected:
   rclcpp::service::ServiceBase::SharedPtr
   get_service_by_handle(void * service_handle)
   {
-    for (auto weak_node : weak_nodes_) {
+    for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
       if (!node) {
         continue;
       }
-      for (auto weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto service : group->service_ptrs_) {
+        for (auto & service : group->service_ptrs_) {
           if (service->service_handle_->data == service_handle) {
             return service;
           }
@@ -493,17 +493,17 @@ protected:
   rclcpp::client::ClientBase::SharedPtr
   get_client_by_handle(void * client_handle)
   {
-    for (auto weak_node : weak_nodes_) {
+    for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
       if (!node) {
         continue;
       }
-      for (auto weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto client : group->client_ptrs_) {
+        for (auto & client : group->client_ptrs_) {
           if (client->client_handle_->data == client_handle) {
             return client;
           }
@@ -526,9 +526,6 @@ protected:
       }
       for (auto & weak_group : node->callback_groups_) {
         auto callback_group = weak_group.lock();
-        if (!callback_group) {
-          continue;
-        }
         if (callback_group == group) {
           return node;
         }
@@ -548,6 +545,9 @@ protected:
       }
       for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
         for (auto & weak_timer : group->timer_ptrs_) {
           auto t = weak_timer.lock();
           if (t == timer) {
@@ -627,6 +627,9 @@ protected:
       }
       for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
         for (auto & weak_sub : group->subscription_ptrs_) {
           auto sub = weak_sub.lock();
           if (sub == subscription) {
@@ -682,6 +685,9 @@ protected:
       }
       for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
         for (auto & serv : group->service_ptrs_) {
           if (serv == service) {
             return group;
@@ -736,6 +742,9 @@ protected:
       }
       for (auto & weak_group : node->callback_groups_) {
         auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
         for (auto & cli : group->client_ptrs_) {
           if (cli == client) {
             return group;
