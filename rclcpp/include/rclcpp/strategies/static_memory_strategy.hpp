@@ -80,11 +80,11 @@ public:
 
   ~StaticMemoryStrategy()
   {
-    std::free(memory_pool_);
-    std::free(subscription_pool_);
-    std::free(service_pool_);
-    std::free(client_pool_);
-    std::free(guard_condition_pool_);
+    delete memory_pool_;
+    delete subscription_pool_;
+    delete service_pool_;
+    delete client_pool_;
+    delete guard_condition_pool_;
   }
 
   void ** borrow_handles(HandleType type, size_t number_of_handles)

@@ -169,7 +169,6 @@ protected:
     if (status != RMW_RET_OK) {
       throw std::runtime_error(rmw_get_error_string_safe());
     }
-    any_exec.reset();
   }
 
   static void
@@ -815,8 +814,7 @@ protected:
       return any_exec;
     }
     // If there is no ready executable, return a null ptr
-    any_exec.reset();
-    return any_exec;
+    return std::shared_ptr<AnyExecutable>();
   }
 
   template<typename T = std::milli>
