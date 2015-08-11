@@ -34,12 +34,13 @@ namespace static_memory_strategy
     size_t max_services_;
     size_t max_clients_;
     size_t max_executables_;
+    size_t max_guard_conditions_;
     size_t pool_size_;
 
     ObjectPoolBounds(size_t subs = 10, size_t services = 10, size_t clients = 10,
-      size_t executables = 1, size_t pool = 1024)
-    : max_subscriptions_(subs), max_services_(services), max_clients_(clients), max_executables_(
-        executables), pool_size_(pool)
+      size_t executables = 1, size_t guard_conditions = 2, size_t pool = 1024)
+    : max_subscriptions_(subs), max_services_(services), max_clients_(clients),
+        max_executables_(executables), max_guard_conditions_(guard_conditions), pool_size_(pool)
     {}
   };
 
@@ -54,12 +55,14 @@ public:
     subscription_pool_ = static_cast<void **>(malloc(bounds_.max_subscriptions_));
     service_pool_ = static_cast<void **>(malloc(bounds_.max_services_));
     client_pool_ = static_cast<void **>(malloc(bounds_.max_clients_));
+    guard_condition_pool_ = static_cast<void **>(malloc(bounds_.max_guard_conditions_));
     executable_pool_ = static_cast<executor::AnyExecutable *>(malloc(bounds_.max_executables_));
 
     memset(memory_pool_, 0, bounds_.pool_size_);
     memset(subscription_pool_, 0, bounds_.max_subscriptions_);
     memset(service_pool_, 0, bounds_.max_services_);
     memset(client_pool_, 0, bounds_.max_clients_);
+    memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_);
     memset(executable_pool_, 0, bounds_.max_executables_);
     pool_seq_ = 0;
     exec_seq_ = 0;
@@ -92,6 +95,12 @@ public:
         }
 
         return client_pool_;
+      case HandleType::guard_condition_handle:
+        if (number_of_handles > bounds_.max_guard_conditions_) {
+          throw std::runtime_error("Requested size exceeded maximum guard_conditions.");
+        }
+
+        return guard_condition_pool_;
       default:
         break;
     }
@@ -110,6 +119,9 @@ public:
         break;
       case HandleType::client_handle:
         memset(client_pool_, 0, bounds_.max_clients_);
+        break;
+      case HandleType::guard_condition_handle:
+        memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_);
         break;
       default:
         throw std::runtime_error("Unrecognized enum, could not return handle memory.");
@@ -164,6 +176,7 @@ private:
   void ** subscription_pool_;
   void ** service_pool_;
   void ** client_pool_;
+  void ** guard_condition_pool_;
   executor::AnyExecutable * executable_pool_;
 
   size_t pool_seq_;
