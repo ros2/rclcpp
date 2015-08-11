@@ -154,6 +154,13 @@ public:
       throw std::runtime_error("Executable pool member was NULL");
     }
 
+    executable_pool_[prev_exec_seq_]->subscription.reset();
+    executable_pool_[prev_exec_seq_]->timer.reset();
+    executable_pool_[prev_exec_seq_]->service.reset();
+    executable_pool_[prev_exec_seq_]->client.reset();
+    executable_pool_[prev_exec_seq_]->callback_group.reset();
+    executable_pool_[prev_exec_seq_]->node.reset();
+
     return executable_pool_[prev_exec_seq_];
   }
 
