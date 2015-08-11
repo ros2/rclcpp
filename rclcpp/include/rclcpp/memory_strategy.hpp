@@ -49,9 +49,9 @@ public:
     this->free(handles);
   }
 
-  virtual executor::AnyExecutable * instantiate_next_executable()
+  virtual executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
-    return new executor::AnyExecutable;
+    return std::make_shared<executor::AnyExecutable>();
   }
 
   virtual void * alloc(size_t size)

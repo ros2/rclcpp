@@ -51,22 +51,21 @@ public:
   StaticMemoryStrategy(ObjectPoolBounds bounds = ObjectPoolBounds())
   : bounds_(bounds)
   {
-    memory_pool_ = static_cast<void **>(malloc(bounds_.pool_size_));
-    subscription_pool_ = static_cast<void **>(malloc(bounds_.max_subscriptions_*sizeof(void*)));
-    service_pool_ = static_cast<void **>(malloc(bounds_.max_services_*sizeof(void*)));
-    client_pool_ = static_cast<void **>(malloc(bounds_.max_clients_*sizeof(void*)));
-    guard_condition_pool_ = static_cast<void **>(malloc(bounds_.max_guard_conditions_*sizeof(void*)));
+    memory_pool_ = new void *[bounds_.pool_size_];
+    subscription_pool_ = new void *[bounds_.max_subscriptions_];
+    service_pool_ = new void *[bounds_.max_services_];
+    client_pool_ = new void *[bounds_.max_clients_];
+    guard_condition_pool_ = new void *[bounds_.max_guard_conditions_];
 
-    memset(memory_pool_, 0, bounds_.pool_size_*sizeof(void*));
-    memset(subscription_pool_, 0, bounds_.max_subscriptions_*sizeof(void*));
-    memset(service_pool_, 0, bounds_.max_services_*sizeof(void*));
-    memset(client_pool_, 0, bounds_.max_clients_*sizeof(void*));
-    memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_*sizeof(void*));
+    memset(memory_pool_, 0, bounds_.pool_size_ * sizeof(void *));
+    memset(subscription_pool_, 0, bounds_.max_subscriptions_ * sizeof(void *));
+    memset(service_pool_, 0, bounds_.max_services_ * sizeof(void *));
+    memset(client_pool_, 0, bounds_.max_clients_ * sizeof(void *));
+    memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_ * sizeof(void *));
 
-    executable_pool_ = static_cast<executor::AnyExecutable **>(malloc(bounds_.max_executables_));
-    for (size_t i = 0; i < bounds_.max_executables_; ++i)
-    {
-      executable_pool_[i] = new executor::AnyExecutable();
+    executable_pool_ = new executor::AnyExecutable::SharedPtr[bounds_.max_executables_];
+    for (size_t i = 0; i < bounds_.max_executables_; ++i) {
+      executable_pool_[i] = std::make_shared<executor::AnyExecutable>();
     }
 
     pool_seq_ = 0;
@@ -86,13 +85,6 @@ public:
     std::free(service_pool_);
     std::free(client_pool_);
     std::free(guard_condition_pool_);
-    for (size_t i = 0; i < bounds_.max_executables_; ++i)
-    {
-      delete executable_pool_[i];
-    }
-
-
-    std::free(executable_pool_);
   }
 
   void ** borrow_handles(HandleType type, size_t number_of_handles)
@@ -133,23 +125,23 @@ public:
     (void)handles;
     switch (type) {
       case HandleType::subscription_handle:
-        memset(subscription_pool_, 0, bounds_.max_subscriptions_*sizeof(void*));
+        memset(subscription_pool_, 0, bounds_.max_subscriptions_ * sizeof(void *));
         break;
       case HandleType::service_handle:
-        memset(service_pool_, 0, bounds_.max_services_*sizeof(void*));
+        memset(service_pool_, 0, bounds_.max_services_ * sizeof(void *));
         break;
       case HandleType::client_handle:
-        memset(client_pool_, 0, bounds_.max_clients_*sizeof(void*));
+        memset(client_pool_, 0, bounds_.max_clients_ * sizeof(void *));
         break;
       case HandleType::guard_condition_handle:
-        memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_*sizeof(void*));
+        memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_ * sizeof(void *));
         break;
       default:
         throw std::runtime_error("Unrecognized enum, could not return handle memory.");
     }
   }
 
-  executor::AnyExecutable* instantiate_next_executable()
+  executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
     if (exec_seq_ >= bounds_.max_executables_) {
       // wrap around
@@ -158,12 +150,9 @@ public:
     size_t prev_exec_seq_ = exec_seq_;
     ++exec_seq_;
 
-    executable_pool_[prev_exec_seq_]->subscription.reset();
-    executable_pool_[prev_exec_seq_]->timer.reset();
-    executable_pool_[prev_exec_seq_]->service.reset();
-    executable_pool_[prev_exec_seq_]->client.reset();
-    executable_pool_[prev_exec_seq_]->callback_group.reset();
-    executable_pool_[prev_exec_seq_]->node.reset();
+    if (!executable_pool_[prev_exec_seq_]) {
+      throw std::runtime_error("Executable pool member was NULL");
+    }
 
     return executable_pool_[prev_exec_seq_];
   }
@@ -205,7 +194,7 @@ private:
   void ** service_pool_;
   void ** client_pool_;
   void ** guard_condition_pool_;
-  executor::AnyExecutable ** executable_pool_;
+  executor::AnyExecutable::SharedPtr * executable_pool_;
 
   size_t pool_seq_;
   size_t exec_seq_;

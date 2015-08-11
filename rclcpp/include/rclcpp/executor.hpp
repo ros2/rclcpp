@@ -169,6 +169,7 @@ protected:
     if (status != RMW_RET_OK) {
       throw std::runtime_error(rmw_get_error_string_safe());
     }
+    any_exec.reset();
   }
 
   static void
@@ -187,6 +188,7 @@ protected:
         "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
         subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
     }
+    subscription->return_message(message);
   }
 
   static void
@@ -791,13 +793,7 @@ protected:
   AnyExecutable::SharedPtr
   get_next_ready_executable()
   {
-    auto any_exec = AnyExecutable::SharedPtr(this->memory_strategy_->instantiate_next_executable());
-    return get_next_ready_executable(any_exec);
-  }
-
-  AnyExecutable::SharedPtr
-  get_next_ready_executable(AnyExecutable::SharedPtr any_exec)
-  {
+    auto any_exec = this->memory_strategy_->instantiate_next_executable();
     // Check the timers to see if there are any that are ready, if so return
     get_next_timer(any_exec);
     if (any_exec->timer) {
@@ -818,7 +814,7 @@ protected:
     if (any_exec->client) {
       return any_exec;
     }
-    // If there is neither a ready timer nor subscription, return a null ptr
+    // If there is no ready executable, return a null ptr
     any_exec.reset();
     return any_exec;
   }
