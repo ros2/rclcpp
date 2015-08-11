@@ -791,7 +791,8 @@ protected:
   AnyExecutable::SharedPtr
   get_next_ready_executable()
   {
-    return get_next_ready_executable(this->memory_strategy_->instantiate_next_executable());
+    auto any_exec = AnyExecutable::SharedPtr(this->memory_strategy_->instantiate_next_executable());
+    return get_next_ready_executable(any_exec);
   }
 
   AnyExecutable::SharedPtr
@@ -842,7 +843,7 @@ protected:
     if (any_exec) {
       // If it is valid, check to see if the group is mutually exclusive or
       // not, then mark it accordingly
-      if (any_exec->callback_group->type_ == \
+      if (any_exec->callback_group && any_exec->callback_group->type_ == \
         callback_group::CallbackGroupType::MutuallyExclusive)
       {
         // It should not have been taken otherwise
