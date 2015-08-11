@@ -51,7 +51,7 @@ public:
 
   virtual executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
-    return executor::AnyExecutable::SharedPtr(new executor::AnyExecutable);
+    return std::make_shared<executor::AnyExecutable>();
   }
 
   virtual void * alloc(size_t size)

@@ -80,6 +80,7 @@ public:
 
   virtual std::shared_ptr<void> create_message() = 0;
   virtual void handle_message(std::shared_ptr<void> & message) = 0;
+  virtual void return_message(std::shared_ptr<void> & message) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase);
@@ -128,6 +129,11 @@ public:
   {
     auto typed_message = std::static_pointer_cast<MessageT>(message);
     callback_(typed_message);
+  }
+
+  void return_message(std::shared_ptr<void> & message)
+  {
+    auto typed_message = std::static_pointer_cast<MessageT>(message);
     message_memory_strategy_->return_message(typed_message);
   }
 

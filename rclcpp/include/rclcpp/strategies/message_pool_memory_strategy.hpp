@@ -25,7 +25,7 @@ namespace strategies
 namespace message_pool_memory_strategy
 {
 
-template<typename MessageT, size_t size,
+template<typename MessageT, size_t Size,
 typename std::enable_if<rosidl_generator_traits::has_fixed_size<MessageT>::value>::type * =
 nullptr>
 class MessagePoolMemoryStrategy
@@ -36,7 +36,7 @@ public:
   MessagePoolMemoryStrategy()
   : next_array_index_(0)
   {
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < Size; ++i) {
       pool_[i].msg_ptr_ = std::make_shared<MessageT>();
       pool_[i].used = false;
     }
@@ -45,7 +45,7 @@ public:
   std::shared_ptr<MessageT> borrow_message()
   {
     size_t current_index = next_array_index_;
-    next_array_index_ = (next_array_index_ + 1) % size;
+    next_array_index_ = (next_array_index_ + 1) % Size;
     if (pool_[current_index].used) {
       throw std::runtime_error("Tried to access message that was still in use! Abort.");
     }
@@ -58,7 +58,7 @@ public:
 
   void return_message(std::shared_ptr<MessageT> & msg)
   {
-    for (size_t i = 0; i < size; ++i) {
+    for (size_t i = 0; i < Size; ++i) {
       if (pool_[i].msg_ptr_ == msg) {
         pool_[i].used = false;
         return;
@@ -74,7 +74,7 @@ protected:
     bool used;
   };
 
-  std::array<PoolMember, size> pool_;
+  std::array<PoolMember, Size> pool_;
   size_t next_array_index_;
 
 };
