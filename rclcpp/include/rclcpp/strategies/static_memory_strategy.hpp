@@ -51,19 +51,42 @@ public:
   StaticMemoryStrategy(ObjectPoolBounds bounds = ObjectPoolBounds())
   : bounds_(bounds)
   {
-    memory_pool_ = new void *[bounds_.pool_size_];
-    subscription_pool_ = new void *[bounds_.max_subscriptions_];
-    service_pool_ = new void *[bounds_.max_services_];
-    client_pool_ = new void *[bounds_.max_clients_];
-    guard_condition_pool_ = new void *[bounds_.max_guard_conditions_];
+    if (bounds_.pool_size_) {
+      memory_pool_ = new void *[bounds_.pool_size_];
+    } else {
+      memory_pool_ = 0;
+    }
 
-    memset(memory_pool_, 0, bounds_.pool_size_ * sizeof(void *));
-    memset(subscription_pool_, 0, bounds_.max_subscriptions_ * sizeof(void *));
-    memset(service_pool_, 0, bounds_.max_services_ * sizeof(void *));
-    memset(client_pool_, 0, bounds_.max_clients_ * sizeof(void *));
-    memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_ * sizeof(void *));
+    if (bounds_.max_subscriptions_) {
+      subscriptions_pool_ = new void *[bounds_.max_subscriptions_];
+    } else {
+      subscriptions_pool_ = 0;
+    }
 
-    executable_pool_ = new executor::AnyExecutable::SharedPtr[bounds_.max_executables_];
+    if (bounds_.max_services_) {
+      services_pool_ = new void *[bounds_.max_services_];
+    } else {
+      services_pool_ = 0;
+    }
+
+    if (bounds_.max_clients_) {
+      clients_pool_ = new void *[bounds_.max_clients_];
+    } else {
+      clients_pool_ = 0;
+    }
+
+    if (bounds_.max_guard_conditions_) {
+      guard_conditions_pool_ = new void *[bounds_.max_guard_conditions_];
+    } else {
+      guard_conditions_pool_ = 0;
+    }
+
+    if (bounds_.max_executables_) {
+      executable_pool_ = new executor::AnyExecutable::SharedPtr[bounds_.max_executables_];
+    } else {
+      executable_pool_ = 0;
+    }
+
     for (size_t i = 0; i < bounds_.max_executables_; ++i) {
       executable_pool_[i] = std::make_shared<executor::AnyExecutable>();
     }
@@ -80,19 +103,19 @@ public:
 
   ~StaticMemoryStrategy()
   {
-    if (bounds_.pool_size_ > 0) {
+    if (bounds_.pool_size_) {
       delete[] memory_pool_;
     }
-    if (bounds_.max_subscriptions_ > 0) {
+    if (bounds_.max_subscriptions_) {
       delete[] subscription_pool_;
     }
-    if (bounds_.max_services_ > 0) {
+    if (bounds_.max_services_) {
       delete[] service_pool_;
     }
-    if (bounds_.max_clients_ > 0) {
+    if (bounds_.max_clients_) {
       delete[] client_pool_;
     }
-    if (bounds_.max_guard_conditions_ > 0) {
+    if (bounds_.max_guard_conditions_) {
       delete[] guard_condition_pool_;
     }
   }
