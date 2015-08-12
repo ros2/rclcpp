@@ -58,27 +58,27 @@ public:
     }
 
     if (bounds_.max_subscriptions_) {
-      subscriptions_pool_ = new void *[bounds_.max_subscriptions_];
+      subscription_pool_ = new void *[bounds_.max_subscriptions_];
     } else {
-      subscriptions_pool_ = 0;
+      subscription_pool_ = 0;
     }
 
     if (bounds_.max_services_) {
-      services_pool_ = new void *[bounds_.max_services_];
+      service_pool_ = new void *[bounds_.max_services_];
     } else {
-      services_pool_ = 0;
+      service_pool_ = 0;
     }
 
     if (bounds_.max_clients_) {
-      clients_pool_ = new void *[bounds_.max_clients_];
+      client_pool_ = new void *[bounds_.max_clients_];
     } else {
-      clients_pool_ = 0;
+      client_pool_ = 0;
     }
 
     if (bounds_.max_guard_conditions_) {
-      guard_conditions_pool_ = new void *[bounds_.max_guard_conditions_];
+      guard_condition_pool_ = new void *[bounds_.max_guard_conditions_];
     } else {
-      guard_conditions_pool_ = 0;
+      guard_condition_pool_ = 0;
     }
 
     if (bounds_.max_executables_) {
