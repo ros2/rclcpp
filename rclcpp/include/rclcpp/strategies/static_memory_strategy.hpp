@@ -54,22 +54,27 @@ public:
   {
     if (bounds_.pool_size_) {
       memory_pool_ = new void *[bounds_.pool_size_];
+      memset(memory_pool_, 0, bounds_.pool_size_ * sizeof(void *));
     }
 
     if (bounds_.max_subscriptions_) {
       subscription_pool_ = new void *[bounds_.max_subscriptions_];
+      memset(subscription_pool_, 0, bounds_.max_subscriptions_ * sizeof(void *));
     }
 
     if (bounds_.max_services_) {
       service_pool_ = new void *[bounds_.max_services_];
+      memset(service_pool_, 0, bounds_.max_services_ * sizeof(void *));
     }
 
     if (bounds_.max_clients_) {
       client_pool_ = new void *[bounds_.max_clients_];
+      memset(client_pool_, 0, bounds_.max_clients_ * sizeof(void *));
     }
 
     if (bounds_.max_guard_conditions_) {
       guard_condition_pool_ = new void *[bounds_.max_guard_conditions_];
+      memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_ * sizeof(void *));
     }
 
     if (bounds_.max_executables_) {
