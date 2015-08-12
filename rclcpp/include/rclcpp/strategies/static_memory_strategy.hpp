@@ -80,11 +80,21 @@ public:
 
   ~StaticMemoryStrategy()
   {
-    delete memory_pool_;
-    delete subscription_pool_;
-    delete service_pool_;
-    delete client_pool_;
-    delete guard_condition_pool_;
+    if (bounds_.pool_size_ > 0) {
+      delete memory_pool_;
+    }
+    if (bounds_.max_subscriptions_ > 0) {
+      delete subscription_pool_;
+    }
+    if (bounds_.max_services_ > 0) {
+      delete service_pool_;
+    }
+    if (bounds_.max_clients_ > 0) {
+      delete client_pool_;
+    }
+    if (bounds_.max_guard_conditions_ > 0) {
+      delete guard_condition_pool_;
+    }
   }
 
   void ** borrow_handles(HandleType type, size_t number_of_handles)
