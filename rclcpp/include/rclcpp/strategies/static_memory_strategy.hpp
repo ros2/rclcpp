@@ -49,42 +49,31 @@ class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 public:
   StaticMemoryStrategy(ObjectPoolBounds bounds = ObjectPoolBounds())
-  : bounds_(bounds)
+  : bounds_(bounds), memory_pool_(nullptr), subscription_pool_(nullptr),
+    service_pool_(nullptr), guard_condition_pool_(nullptr), executable_pool_(nullptr)
   {
     if (bounds_.pool_size_) {
       memory_pool_ = new void *[bounds_.pool_size_];
-    } else {
-      memory_pool_ = 0;
     }
 
     if (bounds_.max_subscriptions_) {
       subscription_pool_ = new void *[bounds_.max_subscriptions_];
-    } else {
-      subscription_pool_ = 0;
     }
 
     if (bounds_.max_services_) {
       service_pool_ = new void *[bounds_.max_services_];
-    } else {
-      service_pool_ = 0;
     }
 
     if (bounds_.max_clients_) {
       client_pool_ = new void *[bounds_.max_clients_];
-    } else {
-      client_pool_ = 0;
     }
 
     if (bounds_.max_guard_conditions_) {
       guard_condition_pool_ = new void *[bounds_.max_guard_conditions_];
-    } else {
-      guard_condition_pool_ = 0;
     }
 
     if (bounds_.max_executables_) {
       executable_pool_ = new executor::AnyExecutable::SharedPtr[bounds_.max_executables_];
-    } else {
-      executable_pool_ = 0;
     }
 
     for (size_t i = 0; i < bounds_.max_executables_; ++i) {
@@ -158,16 +147,24 @@ public:
     (void)handles;
     switch (type) {
       case HandleType::subscription_handle:
-        memset(subscription_pool_, 0, bounds_.max_subscriptions_ * sizeof(void *));
+        if (bounds_.max_subscriptions_) {
+          memset(subscription_pool_, 0, bounds_.max_subscriptions_ * sizeof(void *));
+        }
         break;
       case HandleType::service_handle:
-        memset(service_pool_, 0, bounds_.max_services_ * sizeof(void *));
+        if (bounds_.max_services_) {
+          memset(service_pool_, 0, bounds_.max_services_ * sizeof(void *));
+        }
         break;
       case HandleType::client_handle:
-        memset(client_pool_, 0, bounds_.max_clients_ * sizeof(void *));
+        if (bounds_.max_clients_) {
+          memset(client_pool_, 0, bounds_.max_clients_ * sizeof(void *));
+        }
         break;
       case HandleType::guard_condition_handle:
-        memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_ * sizeof(void *));
+        if (bounds_.max_guard_conditions_) {
+          memset(guard_condition_pool_, 0, bounds_.max_guard_conditions_ * sizeof(void *));
+        }
         break;
       default:
         throw std::runtime_error("Unrecognized enum, could not return handle memory.");
