@@ -123,13 +123,17 @@ public:
   void spin_node_some(rclcpp::node::Node::SharedPtr & node)
   {
     this->add_node(node, false);
-    // non-blocking = true
+    spin_some();
+    this->remove_node(node, false);
+  }
+
+  virtual void spin_some()
+  {
     while (AnyExecutable::SharedPtr any_exec =
       get_next_executable(std::chrono::milliseconds::zero()))
     {
       execute_any_executable(any_exec);
     }
-    this->remove_node(node, false);
   }
 
   // Support dynamic switching of memory strategy
