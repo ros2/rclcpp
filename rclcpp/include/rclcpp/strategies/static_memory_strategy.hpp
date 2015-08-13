@@ -27,21 +27,21 @@ namespace memory_strategies
 
 namespace static_memory_strategy
 {
-  struct ObjectPoolBounds
-  {
-  public:
-    size_t max_subscriptions_;
-    size_t max_services_;
-    size_t max_clients_;
-    size_t max_executables_;
-    size_t pool_size_;
+struct ObjectPoolBounds
+{
+public:
+  size_t max_subscriptions_;
+  size_t max_services_;
+  size_t max_clients_;
+  size_t max_executables_;
+  size_t pool_size_;
 
-    ObjectPoolBounds(size_t subs = 10, size_t services = 10, size_t clients = 10,
-      size_t executables = 1, size_t pool = 1024)
-    : max_subscriptions_(subs), max_services_(services), max_clients_(clients), max_executables_(
-        executables), pool_size_(pool)
-    {}
-  };
+  ObjectPoolBounds(size_t subs = 10, size_t services = 10, size_t clients = 10,
+    size_t executables = 1, size_t pool = 1024)
+  : max_subscriptions_(subs), max_services_(services), max_clients_(clients), max_executables_(
+      executables), pool_size_(pool)
+  {}
+};
 
 
 class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
