@@ -40,7 +40,7 @@ class Executor
   friend class memory_strategy::MemoryStrategy;
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(Executor);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Executor);
 
   explicit Executor(memory_strategy::MemoryStrategy::SharedPtr ms =
     memory_strategy::create_default_strategy())

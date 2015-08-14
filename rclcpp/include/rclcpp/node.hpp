@@ -100,7 +100,7 @@ class Node
   friend class rclcpp::executor::Executor;
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(Node);
+  RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
   /* Create a node based on the node name. */
   Node(const std::string & node_name);

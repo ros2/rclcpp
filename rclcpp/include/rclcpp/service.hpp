@@ -44,7 +44,7 @@ class ServiceBase
   friend class rclcpp::executor::Executor;
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(ServiceBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase);
 
   ServiceBase(
     std::shared_ptr<rmw_node_t> node_handle,
@@ -105,7 +105,7 @@ public:
         const std::shared_ptr<rmw_request_id_t> &,
         const std::shared_ptr<typename ServiceT::Request> &,
         std::shared_ptr<typename ServiceT::Response> &)> CallbackWithHeaderType;
-  RCLCPP_MAKE_SHARED_DEFINITIONS(Service);
+  RCLCPP_SMART_PTR_DEFINITIONS(Service);
 
   Service(
     std::shared_ptr<rmw_node_t> node_handle,

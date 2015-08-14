@@ -39,7 +39,7 @@ namespace publisher
 class Publisher
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(Publisher);
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
 
   Publisher(std::shared_ptr<rmw_node_t> node_handle, rmw_publisher_t * publisher_handle)
   : node_handle_(node_handle), publisher_handle_(publisher_handle)

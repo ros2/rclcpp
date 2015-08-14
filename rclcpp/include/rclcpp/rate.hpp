@@ -30,7 +30,7 @@ namespace rate
 class RateBase
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(RateBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(RateBase);
 
   virtual bool sleep() = 0;
   virtual bool is_steady() = 0;
@@ -45,7 +45,7 @@ template<class Clock = std::chrono::high_resolution_clock>
 class GenericRate : public RateBase
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(GenericRate);
+  RCLCPP_SMART_PTR_DEFINITIONS(GenericRate);
 
   GenericRate(double rate)
   : GenericRate<Clock>(

@@ -23,20 +23,63 @@
   Class(const Class &) = delete; \
   Class & operator=(const Class &) = delete;
 
-/* Defines a make_shared static function on the class using perfect forwarding.
+/* Defines aliases and static functions for using the Class with smart pointers.
  *
  * Use in the public section of the class.
  * Make sure to include <memory> in the header when using this.
  */
-#define RCLCPP_MAKE_SHARED_DEFINITIONS(Class) \
-  typedef std::shared_ptr<Class> SharedPtr; \
- \
+#define RCLCPP_SMART_PTR_DEFINITIONS(Class) \
+  RCLCPP_SHARED_PTR_DEFINITIONS(Class) \
+  RCLCPP_WEAK_PTR_DEFINITIONS(Class) \
+  RCLCPP_UNIQUE_PTR_DEFINITIONS(Class)
+
+/* Defines aliases and static functions for using the Class with smart pointers.
+ *
+ * Same as RCLCPP_SMART_PTR_DEFINITIONS expect it excludes the static
+ * Class::make_unique() method definition which does not work on classes which
+ * are not CopyConstructable.
+ *
+ * Use in the public section of the class.
+ * Make sure to include <memory> in the header when using this.
+ */
+#define RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Class) \
+  RCLCPP_SHARED_PTR_DEFINITIONS(Class) \
+  RCLCPP_WEAK_PTR_DEFINITIONS(Class) \
+  __RCLCPP_UNIQUE_PTR_ALIAS(Class)
+
+#define __RCLCPP_SHARED_PTR_ALIAS(Class) using SharedPtr = std::shared_ptr<Class>;
+
+#define __RCLCPP_MAKE_SHARED_DEFINITION(Class) \
   template<typename ... Args> \
   static std::shared_ptr<Class> \
   make_shared(Args && ... args) \
   { \
     return std::make_shared<Class>(std::forward<Args>(args) ...); \
   }
+
+/// Defines aliases and static functions for using the Class with shared_ptrs.
+#define RCLCPP_SHARED_PTR_DEFINITIONS(Class) \
+  __RCLCPP_SHARED_PTR_ALIAS(Class) \
+  __RCLCPP_MAKE_SHARED_DEFINITION(Class)
+
+#define __RCLCPP_WEAK_PTR_ALIAS(Class) using WeakPtr = std::weak_ptr<Class>;
+
+/// Defines aliases and static functions for using the Class with weak_ptrs.
+#define RCLCPP_WEAK_PTR_DEFINITIONS(Class) __RCLCPP_WEAK_PTR_ALIAS(Class)
+
+#define __RCLCPP_UNIQUE_PTR_ALIAS(Class) using UniquePtr = std::unique_ptr<Class>;
+
+#define __RCLCPP_MAKE_UNIQUE_DEFINITION(Class) \
+  template<typename ... Args> \
+  static std::unique_ptr<Class> \
+  make_unique(Args && ... args) \
+  { \
+    return std::unique_ptr<Class>(new Class(std::forward<Args>(args) ...)); \
+  }
+/// Defines aliases and static functions for using the Class with unique_ptrs.
+#define RCLCPP_UNIQUE_PTR_DEFINITIONS(Class) \
+  __RCLCPP_UNIQUE_PTR_ALIAS(Class) \
+  __RCLCPP_MAKE_UNIQUE_DEFINITION(Class)
 
 #define RCLCPP_INFO(Args) std::cout << Args << std::endl;
 

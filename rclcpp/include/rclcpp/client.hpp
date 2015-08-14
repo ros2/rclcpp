@@ -45,7 +45,7 @@ class ClientBase
   friend class rclcpp::executor::Executor;
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(ClientBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase);
 
   ClientBase(
     std::shared_ptr<rmw_node_t> node_handle,
@@ -99,7 +99,7 @@ public:
 
   typedef std::function<void (SharedFuture)> CallbackType;
 
-  RCLCPP_MAKE_SHARED_DEFINITIONS(Client);
+  RCLCPP_SMART_PTR_DEFINITIONS(Client);
 
   Client(
     std::shared_ptr<rmw_node_t> node_handle,

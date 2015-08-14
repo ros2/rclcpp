@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ namespace executor
 
 struct AnyExecutable
 {
-  RCLCPP_MAKE_SHARED_DEFINITIONS(AnyExecutable);
+  RCLCPP_SMART_PTR_DEFINITIONS(AnyExecutable);
   AnyExecutable()
   : subscription(0), timer(0), callback_group(0), node(0)
   {}
-  // Either the subscription or the timer will be set, but not both
+  // Only one of the following pointers will be set.
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
   rclcpp::timer::TimerBase::SharedPtr timer;
   rclcpp::service::ServiceBase::SharedPtr service;

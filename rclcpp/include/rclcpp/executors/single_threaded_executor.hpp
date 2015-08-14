@@ -39,7 +39,7 @@ namespace single_threaded_executor
 class SingleThreadedExecutor : public executor::Executor
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(SingleThreadedExecutor);
+  RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor);
 
   SingleThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms =
     memory_strategy::create_default_strategy())

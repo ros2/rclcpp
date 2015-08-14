@@ -29,7 +29,7 @@ class MessageMemoryStrategy
 {
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(MessageMemoryStrategy);
+  RCLCPP_SMART_PTR_DEFINITIONS(MessageMemoryStrategy);
 
   static SharedPtr create_default()
   {

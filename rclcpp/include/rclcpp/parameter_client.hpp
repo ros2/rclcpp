@@ -44,7 +44,7 @@ class AsyncParametersClient
 {
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(AsyncParametersClient);
+  RCLCPP_SMART_PTR_DEFINITIONS(AsyncParametersClient);
 
   AsyncParametersClient(const rclcpp::node::Node::SharedPtr & node,
     const std::string & remote_node_name = "")
@@ -252,7 +252,7 @@ private:
 class SyncParametersClient
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(SyncParametersClient);
+  RCLCPP_SMART_PTR_DEFINITIONS(SyncParametersClient);
 
   SyncParametersClient(
     rclcpp::node::Node::SharedPtr & node)

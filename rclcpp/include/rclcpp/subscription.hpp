@@ -44,8 +44,7 @@ class SubscriptionBase
   friend class rclcpp::executor::Executor;
 
 public:
-  typedef std::weak_ptr<SubscriptionBase> WeakPtr;
-  RCLCPP_MAKE_SHARED_DEFINITIONS(SubscriptionBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase);
 
   SubscriptionBase(
     std::shared_ptr<rmw_node_t> node_handle,
@@ -98,8 +97,7 @@ class Subscription : public SubscriptionBase
 {
 public:
   typedef std::function<void (const std::shared_ptr<MessageT> &)> CallbackType;
-  RCLCPP_MAKE_SHARED_DEFINITIONS(Subscription);
-  typedef std::weak_ptr<Subscription> WeakPtr;
+  RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
 
   Subscription(
     std::shared_ptr<rmw_node_t> node_handle,
