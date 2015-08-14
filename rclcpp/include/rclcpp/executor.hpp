@@ -861,11 +861,11 @@ private:
   RCLCPP_DISABLE_COPY(Executor);
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
-  typedef std::list<void *> SubscriberHandles;
+  using SubscriberHandles = std::list<void *>;
   SubscriberHandles subscriber_handles_;
-  typedef std::list<void *> ServiceHandles;
+  using ServiceHandles = std::list<void *>;
   ServiceHandles service_handles_;
-  typedef std::list<void *> ClientHandles;
+  using ClientHandles = std::list<void *>;
   ClientHandles client_handles_;
 
 };

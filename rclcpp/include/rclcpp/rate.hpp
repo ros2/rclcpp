@@ -112,8 +112,8 @@ private:
 
 };
 
-typedef GenericRate<std::chrono::system_clock> Rate;
-typedef GenericRate<std::chrono::steady_clock> WallRate;
+using Rate = GenericRate<std::chrono::system_clock>;
+using WallRate = GenericRate<std::chrono::steady_clock>;
 
 } // namespace rate
 } // namespace rclcpp

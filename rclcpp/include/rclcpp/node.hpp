@@ -151,9 +151,9 @@ public:
     rclcpp::timer::CallbackType callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  typedef rclcpp::callback_group::CallbackGroup CallbackGroup;
-  typedef std::weak_ptr<CallbackGroup> CallbackGroupWeakPtr;
-  typedef std::list<CallbackGroupWeakPtr> CallbackGroupWeakPtrList;
+  using CallbackGroup = rclcpp::callback_group::CallbackGroup;
+  using CallbackGroupWeakPtr = std::weak_ptr<CallbackGroup>;
+  using CallbackGroupWeakPtrList = std::list<CallbackGroupWeakPtr>;
 
   /* Create and return a Client. */
   template<typename ServiceT>

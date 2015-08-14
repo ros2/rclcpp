@@ -95,16 +95,16 @@ template<typename ServiceT>
 class Service : public ServiceBase
 {
 public:
-  typedef std::function<
-      void (
+  using CallbackType = std::function<
+      void(
         const std::shared_ptr<typename ServiceT::Request> &,
-        std::shared_ptr<typename ServiceT::Response> &)> CallbackType;
+        std::shared_ptr<typename ServiceT::Response> &)>;
 
-  typedef std::function<
-      void (
+  using CallbackWithHeaderType = std::function<
+      void(
         const std::shared_ptr<rmw_request_id_t> &,
         const std::shared_ptr<typename ServiceT::Request> &,
-        std::shared_ptr<typename ServiceT::Response> &)> CallbackWithHeaderType;
+        std::shared_ptr<typename ServiceT::Response> &)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Service);
 
   Service(

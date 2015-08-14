@@ -60,7 +60,7 @@ using rclcpp::rate::WallRate;
 using rclcpp::timer::GenericTimer;
 using rclcpp::timer::TimerBase;
 using rclcpp::timer::WallTimer;
-typedef rclcpp::context::Context::SharedPtr ContextSharedPtr;
+using ContextSharedPtr = rclcpp::context::Context::SharedPtr;
 using rclcpp::utilities::ok;
 using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;
