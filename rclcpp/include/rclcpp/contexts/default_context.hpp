@@ -27,7 +27,7 @@ namespace default_context
 class DefaultContext : public rclcpp::context::Context
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(DefaultContext);
+  RCLCPP_SMART_PTR_DEFINITIONS(DefaultContext);
 
   DefaultContext() {}
 

@@ -36,7 +36,7 @@ class MemoryStrategy
   friend class executor::Executor;
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(MemoryStrategy);
+  RCLCPP_SMART_PTR_DEFINITIONS(MemoryStrategy);
   virtual void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
     (void)type;

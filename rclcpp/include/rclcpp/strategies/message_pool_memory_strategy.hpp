@@ -32,7 +32,7 @@ class MessagePoolMemoryStrategy
   : public message_memory_strategy::MessageMemoryStrategy<MessageT>
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(MessagePoolMemoryStrategy);
+  RCLCPP_SMART_PTR_DEFINITIONS(MessagePoolMemoryStrategy);
   MessagePoolMemoryStrategy()
   : next_array_index_(0)
   {

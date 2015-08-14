@@ -41,7 +41,7 @@ class ParameterService
 {
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(ParameterService);
+  RCLCPP_SMART_PTR_DEFINITIONS(ParameterService);
 
   ParameterService(const rclcpp::node::Node::SharedPtr & node)
   : node_(node)

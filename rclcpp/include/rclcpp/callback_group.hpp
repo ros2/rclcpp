@@ -52,7 +52,7 @@ class CallbackGroup
   friend class rclcpp::executor::Executor;
 
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(CallbackGroup);
+  RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup);
 
   CallbackGroup(CallbackGroupType group_type)
   : type_(group_type), can_be_taken_from_(true)

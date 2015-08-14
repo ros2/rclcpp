@@ -28,7 +28,7 @@ namespace context
 class Context
 {
 public:
-  RCLCPP_MAKE_SHARED_DEFINITIONS(Context);
+  RCLCPP_SMART_PTR_DEFINITIONS(Context);
 
   Context() {}
 
