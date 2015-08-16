@@ -24,6 +24,7 @@
 #include <csignal>
 #include <cstring>
 #include <mutex>
+#include <string.h>
 #include <thread>
 
 #include <rmw/macros.h>
@@ -121,11 +122,17 @@ init(int argc, char * argv[])
   if (::old_signal_handler == SIG_ERR)
 #endif
   {
+    const size_t error_length = 1024;
+    char error_string[error_length];
+#ifndef _WIN32
+    strerror_r(errno, error_string, error_length);
+#else
+    strerror_s(error_string, error_length, errno);
+#endif
     // *INDENT-OFF*
     throw std::runtime_error(
       std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
-      // TODO(wjwwood): use strerror_r on POSIX and strerror_s on Windows.
-      std::strerror(errno));
+      error_string);
     // *INDENT-ON*
   }
 }

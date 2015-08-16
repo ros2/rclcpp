@@ -49,7 +49,14 @@ Node::Node(const std::string & node_name, context::Context::SharedPtr context)
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
 {
   size_t domain_id = 0;
-  char * ros_domain_id = getenv("ROS_DOMAIN_ID");
+  char * ros_domain_id = nullptr;
+  const char * env_var = "ROS_DOMAIN_ID";
+#ifndef _WIN32
+  getenv(env_var);
+#else
+  size_t ros_domain_id_size;
+  _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
+#endif
   if (ros_domain_id) {
     unsigned long number = strtoul(ros_domain_id, NULL, 0);
     if (number == (std::numeric_limits<unsigned long>::max)()) {
@@ -57,6 +64,11 @@ Node::Node(const std::string & node_name, context::Context::SharedPtr context)
     }
     domain_id = static_cast<size_t>(number);
   }
+#ifdef _WIN32
+  if (ros_domain_id) {
+    free(ros_domain_id);
+  }
+#endif
 
   auto node = rmw_create_node(name_.c_str(), domain_id);
   if (!node) {
