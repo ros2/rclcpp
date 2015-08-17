@@ -97,11 +97,11 @@ namespace utilities
 {
 
 void
-init(int argc, char * argv[])
+init(int argc, char * argv[], const std::string & qos_xml_filename = "")
 {
   (void)argc;
   (void)argv;
-  rmw_ret_t status = rmw_init();
+  rmw_ret_t status = rmw_init(qos_xml_filename.c_str());
   if (status != RMW_RET_OK) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
