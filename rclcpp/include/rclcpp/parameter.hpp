@@ -265,6 +265,44 @@ private:
   rcl_interfaces::msg::ParameterValue value_;
 };
 
+/* Return a json encoded version of the parameter intended for a list. */
+std::string to_json(const ParameterVariant & param)
+{
+  std::stringstream ss;
+  ss << "{\"name\": \"" << param.get_name() << "\", ";
+  ss << "\"type\": \"" << param.get_type_name() << "\", ";
+  ss << "\"value\": \"" << param.to_string() << "\"}";
+  return ss.str();
+}
+
+/* Return a json encoded version of the parameter intended for a dict. */
+std::string to_json_dict_entry(const ParameterVariant & param)
+{
+  std::stringstream ss;
+  ss << "\"" << param.get_name() << "\": ";
+  ss << "{\"type\": \"" << param.get_type_name() << "\", ";
+  ss << "\"value\": \"" << param.to_string() << "\"}";
+  return ss.str();
+}
+
+/* Return a json encoded version of a vector of parameters, */
+std::string to_json(const std::vector<ParameterVariant> & parameters)
+{
+  std::stringstream ss;
+  ss << "{";
+  bool first = true;
+  for (const auto & pv : parameters) {
+    if (first == false) {
+      ss << ", ";
+    } else {
+      first = false;
+    }
+    ss << to_json_dict_entry(pv);
+  }
+  ss << "}";
+  return ss.str();
+}
+
 std::ostream & operator<<(std::ostream & os, const ParameterVariant & pv)
 {
   os << pv.to_string();
