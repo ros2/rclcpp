@@ -53,11 +53,9 @@ public:
         std::shared_ptr<rcl_interfaces::srv::GetParameters::Response> response)
         {
           auto values = node->get_parameters(request->names);
-          std::transform(values.cbegin(), values.cend(), std::back_inserter(response->values),
-          [](const rclcpp::parameter::ParameterVariant & pvariant) {
-            return pvariant.
-            get_parameter_value();
-          });
+          for (auto & pvariant : values) {
+            response->values.push_back(pvariant.get_parameter_value());
+          }
         }
       );
 
@@ -82,12 +80,9 @@ public:
         std::shared_ptr<rcl_interfaces::srv::SetParameters::Response> response)
         {
           std::vector<rclcpp::parameter::ParameterVariant> pvariants;
-          std::transform(request->parameters.cbegin(), request->parameters.cend(),
-          std::back_inserter(pvariants),
-          [](const rcl_interfaces::msg::Parameter & p) {
-            return rclcpp::parameter::ParameterVariant::
-            from_parameter(p);
-          });
+          for (auto & p : request->parameters) {
+            pvariants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(p));
+          }
           auto results = node->set_parameters(pvariants);
           response->results = results;
         }

@@ -30,6 +30,7 @@
 #include <rosidl_generator_cpp/service_type_support.hpp>
 
 #include <rclcpp/contexts/default_context.hpp>
+#include <rclcpp/parameter.hpp>
 
 #ifndef RCLCPP_RCLCPP_NODE_HPP_
 #include "node.hpp"
@@ -353,12 +354,14 @@ Node::get_parameters(
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rclcpp::parameter::ParameterVariant> results;
-  for (auto & kv : parameters_) {
-    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
+
+  for (auto & name : names) {
+    if (std::any_of(parameters_.cbegin(), parameters_.cend(),
+      [&name](const std::pair<std::string, rclcpp::parameter::ParameterVariant> & kv) {
       return name == kv.first;
     }))
     {
-      results.push_back(kv.second);
+      results.push_back(parameters_.at(name));
     }
   }
   return results;
