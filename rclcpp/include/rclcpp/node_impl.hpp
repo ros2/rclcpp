@@ -52,7 +52,7 @@ Node::Node(const std::string & node_name, context::Context::SharedPtr context)
   char * ros_domain_id = nullptr;
   const char * env_var = "ROS_DOMAIN_ID";
 #ifndef _WIN32
-  getenv(env_var);
+  ros_domain_id = getenv(env_var);
 #else
   size_t ros_domain_id_size;
   _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
