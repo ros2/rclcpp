@@ -40,7 +40,7 @@ class Executor;
 namespace timer
 {
 
-typedef std::function<void ()> CallbackType;
+using CallbackType = std::function<void()>;
 
 class TimerBase
 {
@@ -151,7 +151,7 @@ private:
 
 };
 
-typedef GenericTimer<std::chrono::steady_clock> WallTimer;
+using WallTimer = GenericTimer<std::chrono::steady_clock>;
 
 } /* namespace timer */
 } /* namespace rclcpp */

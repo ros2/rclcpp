@@ -96,7 +96,7 @@ template<typename MessageT>
 class Subscription : public SubscriptionBase
 {
 public:
-  typedef std::function<void (const std::shared_ptr<MessageT> &)> CallbackType;
+  using CallbackType = std::function<void(const std::shared_ptr<MessageT> &)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
 
   Subscription(

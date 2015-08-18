@@ -93,11 +93,11 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
-  typedef std::promise<typename ServiceT::Response::SharedPtr> Promise;
-  typedef std::shared_ptr<Promise> SharedPromise;
-  typedef std::shared_future<typename ServiceT::Response::SharedPtr> SharedFuture;
+  using Promise = std::promise<typename ServiceT::Response::SharedPtr>;
+  using SharedPromise = std::shared_ptr<Promise>;
+  using SharedFuture = std::shared_future<typename ServiceT::Response::SharedPtr>;
 
-  typedef std::function<void (SharedFuture)> CallbackType;
+  using CallbackType = std::function<void(SharedFuture)>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
 
