@@ -59,9 +59,10 @@ public:
   /// Constructor.
   /* The constructor will allocate memory while reserving space.
    *
-   * /param size size of the ring buffer; must be positive and non-zero.
+   * \param size size of the ring buffer; must be positive and non-zero.
    */
-  MappedRingBuffer(size_t size) : elements_(size), head_(0)
+  MappedRingBuffer(size_t size)
+  : elements_(size), head_(0)
   {
     if (size == 0) {
       throw std::invalid_argument("size must be a positive, non-zero value");
@@ -75,8 +76,10 @@ public:
    *
    * The key is not guaranteed to be unique, see the class docs for more.
    *
-   * /param key the key associated with the stored value
-   * /param value if the key is found, the value is stored in this parameter
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
    */
   void
   get_copy_at_key(uint64_t key, std::unique_ptr<T> & value)
@@ -102,8 +105,10 @@ public:
    * originally stored object, since it was returned by the first call to this
    * method.
    *
-   * /param key the key associated with the stored value
-   * /param value if the key is found, the value is stored in this parameter
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
    */
   void
   get_ownership_at_key(uint64_t key, std::unique_ptr<T> & value)
@@ -125,8 +130,10 @@ public:
    *
    * The key is not guaranteed to be unique, see the class docs for more.
    *
-   * /param key the key associated with the stored value
-   * /param value if the key is found, the value is stored in this parameter
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
    */
   void
   pop_at_key(uint64_t key, std::unique_ptr<T> & value)
@@ -147,8 +154,8 @@ public:
    * After insertion, if a pair was replaced, then value will contain ownership
    * of that displaced value. Otherwise it will be a nullptr.
    *
-   * /param key the key associated with the value to be stored
-   * /param value the value to store, and optionally the value displaced
+   * \param key the key associated with the value to be stored
+   * \param value the value to store, and optionally the value displaced
    */
   bool
   push_and_replace(uint64_t key, std::unique_ptr<T> & value)
@@ -188,9 +195,11 @@ private:
   typename std::vector<element>::iterator
   get_iterator_of_key(uint64_t key)
   {
-    auto it = std::find_if(elements_.begin(), elements_.end(), [key] (element & e) -> bool {
+    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+    auto it = std::find_if(elements_.begin(), elements_.end(), [key](element & e) -> bool {
       return e.key == key && e.in_use;
     });
+    // *INDENT-ON*
     return it;
   }
 

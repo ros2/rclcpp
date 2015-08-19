@@ -12,46 +12,76 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+
 #include <gtest/gtest.h>
 
 #include <rclcpp/macros.hpp>
 
 // Mock up publisher and subscription base to avoid needing an rmw impl.
-namespace rclcpp { namespace publisher { namespace mock {
+namespace rclcpp
+{
+namespace publisher
+{
+namespace mock
+{
 
 class Publisher
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
 
-  Publisher() : mock_topic_name(""), mock_queue_size(0) {}
+  Publisher()
+  : mock_topic_name(""), mock_queue_size(0) {}
 
-  std::string get_topic_name() const {return mock_topic_name;}
-  size_t get_queue_size() const {return mock_queue_size;}
+  const std::string & get_topic_name() const
+  {
+    return mock_topic_name;
+  }
+  size_t get_queue_size() const
+  {
+    return mock_queue_size;
+  }
 
   std::string mock_topic_name;
   size_t mock_queue_size;
 };
 
-}}}
+}
+}
+}
 
-namespace rclcpp { namespace subscription { namespace mock {
+namespace rclcpp
+{
+namespace subscription
+{
+namespace mock
+{
 
 class SubscriptionBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionBase);
 
-  SubscriptionBase() : mock_topic_name(""), mock_queue_size(0) {}
+  SubscriptionBase()
+  : mock_topic_name(""), mock_queue_size(0) {}
 
-  std::string get_topic_name() const {return mock_topic_name;}
-  size_t get_queue_size() const {return mock_queue_size;}
+  const std::string & get_topic_name() const
+  {
+    return mock_topic_name;
+  }
+  size_t get_queue_size() const
+  {
+    return mock_queue_size;
+  }
 
   std::string mock_topic_name;
   size_t mock_queue_size;
 };
 
-}}}
+}
+}
+}
 
 // Prevent rclcpp/publisher.hpp and rclcpp/subscription.hpp from being imported.
 #define RCLCPP_RCLCPP_PUBLISHER_HPP_
@@ -66,16 +96,16 @@ public:
 #include <rcl_interfaces/msg/intra_process_message.hpp>
 
 /*
-This tests the "normal" usage of the class:
- - Creates two publishers on different topics.
- - Creates a subscription which matches one of them.
- - Publishes on each publisher with different message content.
- - Try's to take the message from the non-matching publish, should fail.
- - Try's to take the message from the matching publish, should work.
- - Asserts the message it got back was the one that went in (since there's only one subscription).
- - Try's to take the message again, should fail.
-*/
-TEST(test_intra_process_manager, nominal) {
+   This tests the "normal" usage of the class:
+   - Creates two publishers on different topics.
+   - Creates a subscription which matches one of them.
+   - Publishes on each publisher with different message content.
+   - Try's to take the message from the non-matching publish, should fail.
+   - Try's to take the message from the matching publish, should work.
+   - Asserts the message it got back was the one that went in (since there's only one subscription).
+   - Try's to take the message again, should fail.
+ */
+TEST(TestIntraProcessManager, nominal) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -97,8 +127,9 @@ TEST(test_intra_process_manager, nominal) {
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto p1_m1_original_address = unique_msg.get();
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
@@ -153,13 +184,13 @@ TEST(test_intra_process_manager, nominal) {
 }
 
 /*
-Simulates the case where a publisher is removed between publishing and the matching take.
- - Creates a publisher and subscription on the same topic.
- - Publishes a message.
- - Remove the publisher.
- - Try's to take the message, should fail since the publisher (and its storage) is gone.
-*/
-TEST(test_intra_process_manager, remove_publisher_before_trying_to_take) {
+   Simulates the case where a publisher is removed between publishing and the matching take.
+   - Creates a publisher and subscription on the same topic.
+   - Publishes a message.
+   - Remove the publisher.
+   - Try's to take the message, should fail since the publisher (and its storage) is gone.
+ */
+TEST(TestIntraProcessManager, remove_publisher_before_trying_to_take) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -176,8 +207,9 @@ TEST(test_intra_process_manager, remove_publisher_before_trying_to_take) {
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
   ASSERT_EQ(nullptr, unique_msg);
@@ -189,15 +221,15 @@ TEST(test_intra_process_manager, remove_publisher_before_trying_to_take) {
 }
 
 /*
-Tests whether or not removed subscriptions affect take behavior.
- - Creates a publisher and three subscriptions on the same topic.
- - Publish a message, keep the original point for later comparison.
- - Take with one subscription, should work.
- - Remove a different subscription.
- - Take with the final subscription, should work.
- - Assert the previous take returned ownership of the original object published.
-*/
-TEST(test_intra_process_manager, removed_subscription_affects_take) {
+   Tests whether or not removed subscriptions affect take behavior.
+   - Creates a publisher and three subscriptions on the same topic.
+   - Publish a message, keep the original point for later comparison.
+   - Take with one subscription, should work.
+   - Remove a different subscription.
+   - Take with the final subscription, should work.
+   - Assert the previous take returned ownership of the original object published.
+ */
+TEST(TestIntraProcessManager, removed_subscription_affects_take) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -224,8 +256,9 @@ TEST(test_intra_process_manager, removed_subscription_affects_take) {
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto original_message_pointer = unique_msg.get();
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
@@ -259,12 +292,12 @@ TEST(test_intra_process_manager, removed_subscription_affects_take) {
 }
 
 /*
-This tests normal operation with multiple subscriptions and one publisher.
- - Creates a publisher and three subscriptions on the same topic.
- - Publish a message.
- - Take with each subscription, checking that the last takes the original back.
-*/
-TEST(test_intra_process_manager, multiple_subscriptions_one_publisher) {
+   This tests normal operation with multiple subscriptions and one publisher.
+   - Creates a publisher and three subscriptions on the same topic.
+   - Publish a message.
+   - Take with each subscription, checking that the last takes the original back.
+ */
+TEST(TestIntraProcessManager, multiple_subscriptions_one_publisher) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -291,8 +324,9 @@ TEST(test_intra_process_manager, multiple_subscriptions_one_publisher) {
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto original_message_pointer = unique_msg.get();
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
@@ -327,12 +361,12 @@ TEST(test_intra_process_manager, multiple_subscriptions_one_publisher) {
 }
 
 /*
-This tests normal operation with multiple publishers and one subscription.
- - Creates a publisher and three subscriptions on the same topic.
- - Publish a message.
- - Take with each subscription, checking that the last takes the original back.
-*/
-TEST(test_intra_process_manager, multiple_publishers_one_subscription) {
+   This tests normal operation with multiple publishers and one subscription.
+   - Creates a publisher and three subscriptions on the same topic.
+   - Publish a message.
+   - Take with each subscription, checking that the last takes the original back.
+ */
+TEST(TestIntraProcessManager, multiple_publishers_one_subscription) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -360,8 +394,9 @@ TEST(test_intra_process_manager, multiple_publishers_one_subscription) {
   // First publish
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto original_message_pointer1 = unique_msg.get();
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
@@ -417,12 +452,12 @@ TEST(test_intra_process_manager, multiple_publishers_one_subscription) {
 }
 
 /*
-This tests normal operation with multiple publishers and subscriptions.
- - Creates three publishers and three subscriptions on the same topic.
- - Publish a message on each publisher.
- - Take from each publisher with each subscription, checking the pointer.
-*/
-TEST(test_intra_process_manager, multiple_publishers_multiple_subscription) {
+   This tests normal operation with multiple publishers and subscriptions.
+   - Creates three publishers and three subscriptions on the same topic.
+   - Publish a message on each publisher.
+   - Take from each publisher with each subscription, checking the pointer.
+ */
+TEST(TestIntraProcessManager, multiple_publishers_multiple_subscription) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -460,8 +495,9 @@ TEST(test_intra_process_manager, multiple_publishers_multiple_subscription) {
   // First publish
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto original_message_pointer1 = unique_msg.get();
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
@@ -571,15 +607,15 @@ TEST(test_intra_process_manager, multiple_publishers_multiple_subscription) {
 }
 
 /*
-Tests displacing a message from the ring buffer before take is called.
- - Creates a publisher (buffer_size = 2) and a subscription on the same topic.
- - Publish a message on the publisher.
- - Publish another message.
- - Take the second message.
- - Publish a message.
- - Try to take the first message, should fail.
-*/
-TEST(test_intra_process_manager, ring_buffer_displacement) {
+   Tests displacing a message from the ring buffer before take is called.
+   - Creates a publisher (buffer_size = 2) and a subscription on the same topic.
+   - Publish a message on the publisher.
+   - Publish another message.
+   - Take the second message.
+   - Publish a message.
+   - Try to take the first message, should fail.
+ */
+TEST(TestIntraProcessManager, ring_buffer_displacement) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -596,8 +632,9 @@ TEST(test_intra_process_manager, ring_buffer_displacement) {
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto original_message_pointer1 = unique_msg.get();
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
@@ -640,13 +677,13 @@ TEST(test_intra_process_manager, ring_buffer_displacement) {
 }
 
 /*
-Simulates race condition where a subscription is created after publish.
- - Creates a publisher.
- - Publish a message on the publisher.
- - Create a subscription on the same topic.
- - Try to take the message with the newly created subscription, should fail.
-*/
-TEST(test_intra_process_manager, subscription_creation_race_condition) {
+   Simulates race condition where a subscription is created after publish.
+   - Creates a publisher.
+   - Publish a message on the publisher.
+   - Create a subscription on the same topic.
+   - Try to take the message with the newly created subscription, should fail.
+ */
+TEST(TestIntraProcessManager, subscription_creation_race_condition) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto p1 = std::make_shared<rclcpp::publisher::mock::Publisher>();
@@ -658,8 +695,9 @@ TEST(test_intra_process_manager, subscription_creation_race_condition) {
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
   ASSERT_EQ(nullptr, unique_msg);
@@ -675,14 +713,14 @@ TEST(test_intra_process_manager, subscription_creation_race_condition) {
 }
 
 /*
-Simulates race condition where a publisher goes out of scope before take.
- - Create a subscription.
- - Creates a publisher on the same topic in a scope.
- - Publish a message on the publisher in a scope.
- - Let the scope expire.
- - Try to take the message with the subscription, should fail.
-*/
-TEST(test_intra_process_manager, publisher_out_of_scope_take) {
+   Simulates race condition where a publisher goes out of scope before take.
+   - Create a subscription.
+   - Creates a publisher on the same topic in a scope.
+   - Publish a message on the publisher in a scope.
+   - Let the scope expire.
+   - Try to take the message with the subscription, should fail.
+ */
+TEST(TestIntraProcessManager, publisher_out_of_scope_take) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
@@ -703,8 +741,9 @@ TEST(test_intra_process_manager, publisher_out_of_scope_take) {
     auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
     ipm_msg->message_sequence = 42;
     ipm_msg->publisher_id = 42;
-    rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-    unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+    rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+      new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+    );
 
     p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
     ASSERT_EQ(nullptr, unique_msg);
@@ -720,12 +759,12 @@ TEST(test_intra_process_manager, publisher_out_of_scope_take) {
 }
 
 /*
-Simulates race condition where a publisher goes out of scope before store.
- - Creates a publisher in a scope.
- - Let the scope expire.
- - Publish a message on the publisher in a scope, should throw.
-*/
-TEST(test_intra_process_manager, publisher_out_of_scope_store) {
+   Simulates race condition where a publisher goes out of scope before store.
+   - Creates a publisher in a scope.
+   - Let the scope expire.
+   - Publish a message on the publisher in a scope, should throw.
+ */
+TEST(TestIntraProcessManager, publisher_out_of_scope_store) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
   uint64_t p1_id;
@@ -740,8 +779,9 @@ TEST(test_intra_process_manager, publisher_out_of_scope_store) {
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
   ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
+    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
+  );
 
   EXPECT_THROW(ipm.store_intra_process_message(p1_id, unique_msg), std::runtime_error);
   ASSERT_EQ(nullptr, unique_msg);

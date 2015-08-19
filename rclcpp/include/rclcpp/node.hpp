@@ -200,7 +200,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Node);
 
-  static const rosidl_message_type_support_t * ipm_ts;
+  static const rosidl_message_type_support_t * ipm_ts_;
 
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr & group);
@@ -312,10 +312,8 @@ private:
   }
 };
 
-const rosidl_message_type_support_t * Node::ipm_ts =
-  rosidl_generator_cpp::get_message_type_support_handle<
-    rcl_interfaces::msg::IntraProcessMessage
-  >();
+const rosidl_message_type_support_t * Node::ipm_ts_ =
+  rosidl_generator_cpp::get_message_type_support_handle<rcl_interfaces::msg::IntraProcessMessage>();
 
 } /* namespace node */
 } /* namespace rclcpp */

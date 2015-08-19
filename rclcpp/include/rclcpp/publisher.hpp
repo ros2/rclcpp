@@ -42,6 +42,7 @@ namespace publisher
 class Publisher
 {
   friend rclcpp::node::Node;
+
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
 
@@ -107,7 +108,7 @@ public:
     }
   }
 
-  std::string
+  const std::string &
   get_topic_name() const
   {
     return topic_;
@@ -119,7 +120,8 @@ public:
     return queue_size_;
   }
 
-  typedef std::function<uint64_t (uint64_t, std::shared_ptr<void>)> StoreSharedMessageCallbackT;
+  typedef std::function<uint64_t(uint64_t, std::shared_ptr<void>)> StoreSharedMessageCallbackT;
+
 protected:
   void
   setup_intra_process(

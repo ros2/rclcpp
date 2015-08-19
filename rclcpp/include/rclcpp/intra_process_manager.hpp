@@ -21,8 +21,9 @@
 #include <rclcpp/subscription.hpp>
 
 #include <algorithm>
-#include <cassert>
+#include <atomic>
 #include <cstdint>
+#include <exception>
 #include <limits>
 #include <map>
 #include <unordered_map>
@@ -115,6 +116,7 @@ class IntraProcessManager
 {
 private:
   RCLCPP_DISABLE_COPY(IntraProcessManager);
+
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManager);
 
@@ -129,8 +131,8 @@ public:
    *
    * This method will allocate memory.
    *
-   * /param subscription the Subscription to register.
-   * /return an unsigned 64-bit integer which is the subscription's unique id.
+   * \param subscription the Subscription to register.
+   * \return an unsigned 64-bit integer which is the subscription's unique id.
    */
   uint64_t
   add_subscription(subscription::SubscriptionBase::SharedPtr subscription)
@@ -144,7 +146,7 @@ public:
   /// Unregister a subscription using the subscription's unique id.
   /* This method does not allocate memory.
    *
-   * /param intra_process_subscription_id id of the subscription to remove.
+   * \param intra_process_subscription_id id of the subscription to remove.
    */
   void
   remove_subscription(uint64_t intra_process_subscription_id)
@@ -180,19 +182,21 @@ public:
    *
    * This method will allocate memory.
    *
-   * /param publisher publisher to be registered with the manager.
-   * /param buffer_size if 0 (default) a size is calculated based on the QoS.
-   * /return an unsigned 64-bit integer which is the publisher's unique id.
+   * \param publisher publisher to be registered with the manager.
+   * \param buffer_size if 0 (default) a size is calculated based on the QoS.
+   * \return an unsigned 64-bit integer which is the publisher's unique id.
    */
   template<typename MessageT>
   uint64_t
-  add_publisher(publisher::Publisher::SharedPtr publisher, size_t buffer_size=0)
+  add_publisher(publisher::Publisher::SharedPtr publisher, size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     publishers_[id].publisher = publisher;
     size_t size = buffer_size > 0 ? buffer_size : publisher->get_queue_size();
     // As long as the size of the ring buffer is less than the max sequence number, we're safe.
-    assert(size <= std::numeric_limits<uint64_t>::max());
+    if (size > std::numeric_limits<uint64_t>::max()) {
+      throw std::invalid_argument("the calculated buffer size is too large");
+    }
     publishers_[id].sequence_number.store(0);
     publishers_[id].buffer = mapped_ring_buffer::MappedRingBuffer<MessageT>::make_shared(size);
     publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
@@ -202,7 +206,7 @@ public:
   /// Unregister a publisher using the publisher's unique id.
   /* This method does not allocate memory.
    *
-   * /param intra_process_publisher_id id of the publisher to remove.
+   * \param intra_process_publisher_id id of the publisher to remove.
    */
   void
   remove_publisher(uint64_t intra_process_publisher_id)
@@ -236,9 +240,9 @@ public:
    *
    * This method does allocate memory.
    *
-   * /param intra_process_publisher_id the id of the publisher of this message.
-   * /param message the message that is being stored.
-   * /return the message sequence number.
+   * \param intra_process_publisher_id the id of the publisher of this message.
+   * \param message the message that is being stored.
+   * \return the message sequence number.
    */
   template<typename MessageT>
   uint64_t
@@ -250,7 +254,7 @@ public:
     if (it == publishers_.end()) {
       throw std::runtime_error("store_intra_process_message called with invalid publisher id");
     }
-    publisher_info & info = it->second;
+    PublisherInfo & info = it->second;
     // Calculate the next message sequence number.
     uint64_t message_seq = info.sequence_number.fetch_add(1, std::memory_order_relaxed);
     // Insert the message into the ring buffer using the message_seq to identify it.
@@ -309,10 +313,10 @@ public:
    *
    * This method may allocate memory to copy the stored message.
    *
-   * /param intra_process_publisher_id the id of the message's publisher.
-   * /param message_sequence_number the sequence number of the message.
-   * /param requesting_subscriptions_intra_process_id the subscription's id.
-   * /param message the message typed unique_ptr used to return the message.
+   * \param intra_process_publisher_id the id of the message's publisher.
+   * \param message_sequence_number the sequence number of the message.
+   * \param requesting_subscriptions_intra_process_id the subscription's id.
+   * \param message the message typed unique_ptr used to return the message.
    */
   template<typename MessageT>
   void
@@ -323,7 +327,7 @@ public:
     std::unique_ptr<MessageT> & message)
   {
     message = nullptr;
-    publisher_info * info;
+    PublisherInfo * info;
     {
       auto it = publishers_.find(intra_process_publisher_id);
       if (it == publishers_.end()) {
@@ -377,9 +381,11 @@ private:
       // So around 585 million years. Even at 1 GHz, it would take 585 years.
       // I think it's safe to avoid trying to handle overflow.
       // If we roll over then it's most likely a bug.
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::overflow_error(
         "exhausted the unique id's for publishers and subscribers in this process "
         "(congratulations your computer is either extremely fast or extremely old)");
+      // *INDENT-ON*
     }
     return next_id;
   }
@@ -389,11 +395,11 @@ private:
   std::unordered_map<uint64_t, subscription::SubscriptionBase::WeakPtr> subscriptions_;
   std::map<std::string, std::set<uint64_t>> subscription_ids_by_topic_;
 
-  struct publisher_info
+  struct PublisherInfo
   {
-    RCLCPP_DISABLE_COPY(publisher_info);
+    RCLCPP_DISABLE_COPY(PublisherInfo);
 
-    publisher_info() = default;
+    PublisherInfo() = default;
 
     publisher::Publisher::WeakPtr publisher;
     std::atomic<uint64_t> sequence_number;
@@ -401,11 +407,11 @@ private:
     std::unordered_map<uint64_t, std::set<uint64_t>> target_subscriptions_by_message_sequence;
   };
 
-  std::unordered_map<uint64_t, publisher_info> publishers_;
+  std::unordered_map<uint64_t, PublisherInfo> publishers_;
 
 };
 
-std::atomic<uint64_t> IntraProcessManager::next_unique_id_{1};
+std::atomic<uint64_t> IntraProcessManager::next_unique_id_ {1};
 
 } /* namespace intra_process_manager */
 } /* namespace rclcpp */

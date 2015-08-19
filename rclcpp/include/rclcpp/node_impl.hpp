@@ -43,9 +43,9 @@ using namespace rclcpp::node;
 
 Node::Node(const std::string & node_name, bool use_intra_process_comms)
 : Node(
-  node_name,
-  rclcpp::contexts::default_context::get_global_default_context(),
-  use_intra_process_comms)
+    node_name,
+    rclcpp::contexts::default_context::get_global_default_context(),
+    use_intra_process_comms)
 {}
 
 Node::Node(
@@ -87,6 +87,7 @@ Node::Node(
     // *INDENT-ON*
   }
   // Initialize node handle shared_ptr with custom deleter.
+  // *INDENT-OFF*
   node_handle_.reset(node, [](rmw_node_t * node) {
     auto ret = rmw_destroy_node(node);
     if (ret != RMW_RET_OK) {
@@ -94,6 +95,7 @@ Node::Node(
         stderr, "Error in destruction of rmw node handle: %s\n", rmw_get_error_string_safe());
     }
   });
+  // *INDENT-ON*
 
   using rclcpp::callback_group::CallbackGroupType;
   default_callback_group_ = create_callback_group(
@@ -135,7 +137,7 @@ Node::create_publisher(
 
   if (use_intra_process_comms_) {
     rmw_publisher_t * intra_process_publisher_handle = rmw_create_publisher(
-      node_handle_.get(), ipm_ts, (topic_name + "__intra").c_str(), qos_profile);
+      node_handle_.get(), ipm_ts_, (topic_name + "__intra").c_str(), qos_profile);
     if (!intra_process_publisher_handle) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
@@ -149,8 +151,9 @@ Node::create_publisher(
     uint64_t intra_process_publisher_id =
       intra_process_manager->add_publisher<MessageT>(publisher);
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
+    // *INDENT-OFF*
     auto shared_publish_callback =
-      [weak_ipm] (uint64_t publisher_id, std::shared_ptr<void> msg) -> uint64_t
+      [weak_ipm](uint64_t publisher_id, std::shared_ptr<void> msg) -> uint64_t
     {
       auto ipm = weak_ipm.lock();
       if (!ipm) {
@@ -163,6 +166,7 @@ Node::create_publisher(
       uint64_t message_seq = ipm->store_intra_process_message(publisher_id, unique_msg);
       return message_seq;
     };
+    // *INDENT-ON*
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,
@@ -225,7 +229,7 @@ Node::create_subscription(
   // Setup intra process.
   if (use_intra_process_comms_) {
     rmw_subscription_t * intra_process_subscriber_handle = rmw_create_subscription(
-      node_handle_.get(), ipm_ts,
+      node_handle_.get(), ipm_ts_,
       (topic_name + "__intra").c_str(), qos_profile, false);
     if (!subscriber_handle) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -238,10 +242,11 @@ Node::create_subscription(
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
     uint64_t intra_process_subscription_id =
       intra_process_manager->add_subscription(sub_base_ptr);
+    // *INDENT-OFF*
     sub->setup_intra_process(
       intra_process_subscription_id,
       intra_process_subscriber_handle,
-      [weak_ipm] (
+      [weak_ipm](
         uint64_t publisher_id,
         uint64_t message_sequence,
         uint64_t subscription_id,
@@ -255,6 +260,7 @@ Node::create_subscription(
         }
         ipm->take_intra_process_message(publisher_id, message_sequence, subscription_id, message);
     });
+    // *INDENT-ON*
   }
   // Assign to a group.
   if (group) {

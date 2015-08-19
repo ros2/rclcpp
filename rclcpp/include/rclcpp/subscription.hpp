@@ -185,9 +185,9 @@ public:
 
 private:
   typedef
-  std::function<
-    void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT> &)
-  > GetMessageCallbackType;
+    std::function<
+      void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT> &)
+    > GetMessageCallbackType;
 
   void setup_intra_process(
     uint64_t intra_process_subscription_id,

@@ -17,9 +17,9 @@
 #include <rclcpp/mapped_ring_buffer.hpp>
 
 /*
-Tests get_copy and pop on an empty mrb.
-*/
-TEST(test_mapped_ring_buffer, empty) {
+   Tests get_copy and pop on an empty mrb.
+ */
+TEST(TestMappedRingBuffer, empty) {
   // Cannot create a buffer of size zero.
   EXPECT_THROW(rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(0), std::invalid_argument);
   // Getting or popping an empty buffer should result in a nullptr.
@@ -34,9 +34,9 @@ TEST(test_mapped_ring_buffer, empty) {
 }
 
 /*
-Tests push_and_replace with a temporary object.
-*/
-TEST(test_mapped_ring_buffer, temporary_l_value) {
+   Tests push_and_replace with a temporary object.
+ */
+TEST(TestMappedRingBuffer, temporary_l_value) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   // Pass in value with temporary object
   mrb.push_and_replace(1, std::unique_ptr<char>(new char('a')));
@@ -53,9 +53,9 @@ TEST(test_mapped_ring_buffer, temporary_l_value) {
 }
 
 /*
-Tests normal usage of the mrb.
-*/
-TEST(test_mapped_ring_buffer, nominal) {
+   Tests normal usage of the mrb.
+ */
+TEST(TestMappedRingBuffer, nominal) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   std::unique_ptr<char> expected(new char('a'));
   // Store expected value's address for later comparison.
@@ -66,12 +66,16 @@ TEST(test_mapped_ring_buffer, nominal) {
   std::unique_ptr<char> actual;
   mrb.get_copy_at_key(1, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('a', *actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
   EXPECT_NE(expected_orig, actual.get());
 
   mrb.pop_at_key(1, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('a', *actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
   EXPECT_EQ(expected_orig, actual.get());
 
   mrb.get_copy_at_key(1, actual);
@@ -91,17 +95,21 @@ TEST(test_mapped_ring_buffer, nominal) {
 
   mrb.get_copy_at_key(2, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('b', *actual);
+  if (actual) {
+    EXPECT_EQ('b', *actual);
+  }
 
   mrb.get_copy_at_key(3, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('c', *actual);
+  if (actual) {
+    EXPECT_EQ('c', *actual);
+  }
 }
 
 /*
-Tests get_ownership on a normal mrb.
-*/
-TEST(test_mapped_ring_buffer, get_ownership) {
+   Tests get_ownership on a normal mrb.
+ */
+TEST(TestMappedRingBuffer, get_ownership) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   std::unique_ptr<char> expected(new char('a'));
   // Store expected value's address for later comparison.
@@ -112,17 +120,23 @@ TEST(test_mapped_ring_buffer, get_ownership) {
   std::unique_ptr<char> actual;
   mrb.get_copy_at_key(1, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('a', *actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
   EXPECT_NE(expected_orig, actual.get());
 
   mrb.get_ownership_at_key(1, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('a', *actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
   EXPECT_EQ(expected_orig, actual.get());
 
   mrb.pop_at_key(1, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('a', *actual);  // The value should be the same.
+  if (actual) {
+    EXPECT_EQ('a', *actual);  // The value should be the same.
+  }
   EXPECT_NE(expected_orig, actual.get());  // Even though we pop'ed, we didn't get the original.
 
   mrb.get_copy_at_key(1, actual);
@@ -130,9 +144,9 @@ TEST(test_mapped_ring_buffer, get_ownership) {
 }
 
 /*
-Tests the affect of reusing keys (non-unique keys) in a mrb.
-*/
-TEST(test_mapped_ring_buffer, non_unique_keys) {
+   Tests the affect of reusing keys (non-unique keys) in a mrb.
+ */
+TEST(TestMappedRingBuffer, non_unique_keys) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
 
   std::unique_ptr<char> input(new char('a'));
@@ -145,10 +159,14 @@ TEST(test_mapped_ring_buffer, non_unique_keys) {
   std::unique_ptr<char> actual;
   mrb.pop_at_key(1, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('a', *actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
 
   actual = nullptr;
   mrb.pop_at_key(1, actual);
   EXPECT_NE(nullptr, actual);
-  if (actual) EXPECT_EQ('b', *actual);
+  if (actual) {
+    EXPECT_EQ('b', *actual);
+  }
 }
