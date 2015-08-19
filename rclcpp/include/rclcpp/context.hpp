@@ -15,16 +15,24 @@
 #ifndef RCLCPP_RCLCPP_CONTEXT_HPP_
 #define RCLCPP_RCLCPP_CONTEXT_HPP_
 
-#include <memory>
-
 #include <rclcpp/macros.hpp>
+
+#include <iostream>
+
+#include <memory>
+#include <mutex>
+#include <typeinfo>
+#include <typeindex>
+#include <unordered_map>
+
+#include <rmw/rmw.h>
 
 namespace rclcpp
 {
+
 namespace context
 {
 
-/* ROS Context */
 class Context
 {
 public:
@@ -32,8 +40,35 @@ public:
 
   Context() {}
 
+  template<typename SubContext, typename ... Args>
+  std::shared_ptr<SubContext>
+  get_sub_context(Args && ... args)
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    std::type_index type_i(typeid(SubContext));
+    std::shared_ptr<SubContext> sub_context;
+    auto it = sub_contexts_.find(type_i);
+    if (it == sub_contexts_.end()) {
+      // It doesn't exist yet, make it
+      sub_context = std::shared_ptr<SubContext>(
+        new SubContext(std::forward<Args>(args) ...),
+        [] (SubContext * sub_context_ptr) {
+          delete sub_context_ptr;
+        });
+      sub_contexts_[type_i] = sub_context;
+    } else {
+      // It exists, get it out and cast it.
+      sub_context = std::static_pointer_cast<SubContext>(it->second);
+    }
+    return sub_context;
+  }
+
 private:
   RCLCPP_DISABLE_COPY(Context);
+
+  std::unordered_map<std::type_index, std::shared_ptr<void>> sub_contexts_;
+  std::mutex mutex_;
 
 };
 
