@@ -15,14 +15,15 @@
 #ifndef RCLCPP_RCLCPP_EXECUTOR_HPP_
 #define RCLCPP_RCLCPP_EXECUTOR_HPP_
 
-#include <iostream>
-
 #include <algorithm>
 #include <cassert>
 #include <cstdlib>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <vector>
+
+#include <rcl_interfaces/msg/intra_process_message.hpp>
 
 #include <rclcpp/any_executable.hpp>
 #include <rclcpp/macros.hpp>
@@ -159,6 +160,9 @@ protected:
     if (any_exec->subscription) {
       execute_subscription(any_exec->subscription);
     }
+    if (any_exec->subscription_intra_process) {
+      execute_intra_process_subscription(any_exec->subscription_intra_process);
+    }
     if (any_exec->service) {
       execute_service(any_exec->service);
     }
@@ -192,6 +196,24 @@ protected:
         subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
     }
     subscription->return_message(message);
+  }
+
+  static void
+  execute_intra_process_subscription(
+    rclcpp::subscription::SubscriptionBase::SharedPtr & subscription)
+  {
+    rcl_interfaces::msg::IntraProcessMessage ipm;
+    bool taken = false;
+    rmw_ret_t status = rmw_take(subscription->intra_process_subscription_handle_, &ipm, &taken);
+    if (status == RMW_RET_OK) {
+      if (taken) {
+        subscription->handle_intra_process_message(ipm);
+      }
+    } else {
+      fprintf(stderr,
+        "[rclcpp::error] take failed for intra process subscription on topic '%s': %s\n",
+        subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
+    }
   }
 
   static void
@@ -293,22 +315,24 @@ protected:
           }));
     }
     // Use the number of subscriptions to allocate memory in the handles
-    size_t number_of_subscriptions = subs.size();
+    size_t max_number_of_subscriptions = subs.size() * 2;  // Times two for intra-process.
     rmw_subscriptions_t subscriber_handles;
-    subscriber_handles.subscriber_count = number_of_subscriptions;
+    subscriber_handles.subscriber_count = 0;
     // TODO(wjwwood): Avoid redundant malloc's
-    subscriber_handles.subscribers =
-      memory_strategy_->borrow_handles(HandleType::subscription_handle, number_of_subscriptions);
+    subscriber_handles.subscribers = memory_strategy_->borrow_handles(
+      HandleType::subscription_handle, max_number_of_subscriptions);
     if (subscriber_handles.subscribers == NULL) {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for subscriber pointers.");
     }
     // Then fill the SubscriberHandles with ready subscriptions
-    size_t subscriber_handle_index = 0;
     for (auto & subscription : subs) {
-      subscriber_handles.subscribers[subscriber_handle_index] = \
+      subscriber_handles.subscribers[subscriber_handles.subscriber_count++] =
         subscription->subscription_handle_->data;
-      subscriber_handle_index += 1;
+      if (subscription->intra_process_subscription_handle_) {
+        subscriber_handles.subscribers[subscriber_handles.subscriber_count++] =
+          subscription->intra_process_subscription_handle_->data;
+      }
     }
 
     // Use the number of services to allocate memory in the handles
@@ -414,7 +438,7 @@ protected:
     }
     // Add the new work to the class's list of things waiting to be executed
     // Starting with the subscribers
-    for (size_t i = 0; i < number_of_subscriptions; ++i) {
+    for (size_t i = 0; i < subscriber_handles.subscriber_count; ++i) {
       void * handle = subscriber_handles.subscribers[i];
       if (handle) {
         subscriber_handles_.push_back(handle);
@@ -463,13 +487,18 @@ protected:
         }
         for (auto & weak_subscription : group->subscription_ptrs_) {
           auto subscription = weak_subscription.lock();
-          if (subscription && subscription->subscription_handle_->data == subscriber_handle) {
-            return subscription;
+          if (subscription) {
+            if (subscription->subscription_handle_->data == subscriber_handle) {
+              return subscription;
+            }
+            if (subscription->intra_process_subscription_handle_->data == subscriber_handle) {
+              return subscription;
+            }
           }
         }
       }
     }
-    return rclcpp::subscription::SubscriptionBase::SharedPtr();
+    return nullptr;
   }
 
   rclcpp::service::ServiceBase::SharedPtr
@@ -653,6 +682,11 @@ protected:
     while (it != subscriber_handles_.end()) {
       auto subscription = get_subscription_by_handle(*it);
       if (subscription) {
+        // Figure out if this is for intra-process or not.
+        bool is_intra_process = false;
+        if (subscription->intra_process_subscription_handle_) {
+          is_intra_process = subscription->intra_process_subscription_handle_->data == *it;
+        }
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_subscription(subscription);
         if (!group) {
@@ -668,7 +702,11 @@ protected:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->subscription = subscription;
+        if (is_intra_process) {
+          any_exec->subscription_intra_process = subscription;
+        } else {
+          any_exec->subscription = subscription;
+        }
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group);
         subscriber_handles_.erase(it++);
@@ -804,7 +842,7 @@ protected:
     }
     // Check the subscriptions to see if there are any that are ready
     get_next_subscription(any_exec);
-    if (any_exec->subscription) {
+    if (any_exec->subscription || any_exec->subscription_intra_process) {
       return any_exec;
     }
     // Check the services to see if there are any that are ready

@@ -24,6 +24,7 @@
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
 #include <rcl_interfaces/msg/parameter_event.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <rosidl_generator_cpp/message_type_support.hpp>
 
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
@@ -199,6 +200,8 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Node);
 
+  static const rosidl_message_type_support_t * ipm_ts;
+
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr & group);
 
@@ -308,6 +311,11 @@ private:
       node_handle, service_handle, service_name, callback_with_header);
   }
 };
+
+const rosidl_message_type_support_t * Node::ipm_ts =
+  rosidl_generator_cpp::get_message_type_support_handle<
+    rcl_interfaces::msg::IntraProcessMessage
+  >();
 
 } /* namespace node */
 } /* namespace rclcpp */

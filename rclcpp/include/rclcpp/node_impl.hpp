@@ -24,12 +24,14 @@
 #include <stdexcept>
 #include <string>
 
+#include <rcl_interfaces/msg/intra_process_message.hpp>
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 #include <rosidl_generator_cpp/message_type_support.hpp>
 #include <rosidl_generator_cpp/service_type_support.hpp>
 
 #include <rclcpp/contexts/default_context.hpp>
+#include <rclcpp/intra_process_manager.hpp>
 #include <rclcpp/parameter.hpp>
 
 #ifndef RCLCPP_RCLCPP_NODE_HPP_
@@ -128,7 +130,45 @@ Node::create_publisher(
     // *INDENT-ON*
   }
 
-  return publisher::Publisher::make_shared(node_handle_, publisher_handle);
+  auto publisher = publisher::Publisher::make_shared(
+    node_handle_, publisher_handle, topic_name, qos_profile.depth);
+
+  if (use_intra_process_comms_) {
+    rmw_publisher_t * intra_process_publisher_handle = rmw_create_publisher(
+      node_handle_.get(), ipm_ts, (topic_name + "__intra").c_str(), qos_profile);
+    if (!intra_process_publisher_handle) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("could not create intra process publisher: ") +
+        rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
+
+    auto intra_process_manager =
+      context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+    uint64_t intra_process_publisher_id =
+      intra_process_manager->add_publisher<MessageT>(publisher);
+    rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
+    auto shared_publish_callback =
+      [weak_ipm] (uint64_t publisher_id, std::shared_ptr<void> msg) -> uint64_t
+    {
+      auto ipm = weak_ipm.lock();
+      if (!ipm) {
+        // TODO(wjwwood): should this just return silently? Or maybe return with a logged warning?
+        throw std::runtime_error(
+          "intra process publish called after destruction of intra process manager");
+      }
+      auto typed_msg = std::static_pointer_cast<const MessageT>(msg);
+      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_msg));
+      uint64_t message_seq = ipm->store_intra_process_message(publisher_id, unique_msg);
+      return message_seq;
+    };
+    publisher->setup_intra_process(
+      intra_process_publisher_id,
+      shared_publish_callback,
+      intra_process_publisher_handle);
+  }
+  return publisher;
 }
 
 bool
@@ -182,10 +222,45 @@ Node::create_subscription(
     callback,
     msg_mem_strat);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
+  // Setup intra process.
+  if (use_intra_process_comms_) {
+    rmw_subscription_t * intra_process_subscriber_handle = rmw_create_subscription(
+      node_handle_.get(), ipm_ts,
+      (topic_name + "__intra").c_str(), qos_profile, false);
+    if (!subscriber_handle) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("could not create intra process subscription: ") + rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
+    auto intra_process_manager =
+      context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+    rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
+    uint64_t intra_process_subscription_id =
+      intra_process_manager->add_subscription(sub_base_ptr);
+    sub->setup_intra_process(
+      intra_process_subscription_id,
+      intra_process_subscriber_handle,
+      [weak_ipm] (
+        uint64_t publisher_id,
+        uint64_t message_sequence,
+        uint64_t subscription_id,
+        std::unique_ptr<MessageT> & message)
+      {
+        auto ipm = weak_ipm.lock();
+        if (!ipm) {
+          // TODO(wjwwood): should this just return silently? Or maybe return with a logged warning?
+          throw std::runtime_error(
+            "intra process take called after destruction of intra process manager");
+        }
+        ipm->take_intra_process_message(publisher_id, message_sequence, subscription_id, message);
+    });
+  }
+  // Assign to a group.
   if (group) {
     if (!group_in_node(group)) {
       // TODO: use custom exception
-      throw std::runtime_error("Cannot create timer, group not in node.");
+      throw std::runtime_error("Cannot create subscription, group not in node.");
     }
     group->add_subscription(sub_base_ptr);
   } else {
