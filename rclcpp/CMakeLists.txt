@@ -21,6 +21,8 @@ if(AMENT_ENABLE_TESTING)
   include_directories(include)
 
   ament_add_gtest(test_mapped_ring_buffer test/test_mapped_ring_buffer.cpp)
+  ament_add_gtest(test_intra_process_manager test/test_intra_process_manager.cpp)
+  target_include_directories(test_intra_process_manager PUBLIC "${rcl_interfaces_INCLUDE_DIRS}")
 endif()
 
 ament_package(
