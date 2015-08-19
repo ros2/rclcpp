@@ -39,15 +39,20 @@
 using namespace rclcpp;
 using namespace rclcpp::node;
 
-using rclcpp::contexts::default_context::DefaultContext;
-
-Node::Node(const std::string & node_name)
-: Node(node_name, DefaultContext::make_shared())
+Node::Node(const std::string & node_name, bool use_intra_process_comms)
+: Node(
+  node_name,
+  rclcpp::contexts::default_context::get_global_default_context(),
+  use_intra_process_comms)
 {}
 
-Node::Node(const std::string & node_name, context::Context::SharedPtr context)
+Node::Node(
+  const std::string & node_name,
+  context::Context::SharedPtr context,
+  bool use_intra_process_comms)
 : name_(node_name), context_(context),
-  number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0)
+  number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
+  use_intra_process_comms_(use_intra_process_comms)
 {
   size_t domain_id = 0;
   char * ros_domain_id = nullptr;
@@ -163,8 +168,7 @@ Node::create_subscription(
   if (!subscriber_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
-      std::string("could not create subscription: ") +
-      rmw_get_error_string_safe());
+      std::string("could not create subscription: ") + rmw_get_error_string_safe());
     // *INDENT-ON*
   }
 

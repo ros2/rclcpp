@@ -103,9 +103,11 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
   /* Create a node based on the node name. */
-  Node(const std::string & node_name);
+  Node(const std::string & node_name, bool use_intra_process_comms = false);
   /* Create a node based on the node name and a rclcpp::context::Context. */
-  Node(const std::string & node_name, rclcpp::context::Context::SharedPtr context);
+  Node(
+    const std::string & node_name, rclcpp::context::Context::SharedPtr context,
+    bool use_intra_process_comms = false);
 
   /* Get the name of the node. */
   const std::string &
@@ -213,6 +215,8 @@ private:
   size_t number_of_timers_;
   size_t number_of_services_;
   size_t number_of_clients_;
+
+  bool use_intra_process_comms_;
 
   mutable std::mutex mutex_;
 
