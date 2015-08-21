@@ -33,6 +33,13 @@ public:
 
 };
 
+DefaultContext::SharedPtr
+get_global_default_context()
+{
+  static DefaultContext::SharedPtr default_context = DefaultContext::make_shared();
+  return default_context;
+}
+
 } // namespace default_context
 } // namespace contexts
 } // namespace rclcpp

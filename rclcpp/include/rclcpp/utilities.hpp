@@ -27,6 +27,7 @@
 #include <string.h>
 #include <thread>
 
+#include <rmw/error_handling.h>
 #include <rmw/macros.h>
 #include <rmw/rmw.h>
 

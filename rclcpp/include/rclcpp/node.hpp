@@ -24,6 +24,7 @@
 #include <rcl_interfaces/msg/parameter_descriptor.hpp>
 #include <rcl_interfaces/msg/parameter_event.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <rosidl_generator_cpp/message_type_support.hpp>
 
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
@@ -103,9 +104,11 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
   /* Create a node based on the node name. */
-  Node(const std::string & node_name);
+  Node(const std::string & node_name, bool use_intra_process_comms = false);
   /* Create a node based on the node name and a rclcpp::context::Context. */
-  Node(const std::string & node_name, rclcpp::context::Context::SharedPtr context);
+  Node(
+    const std::string & node_name, rclcpp::context::Context::SharedPtr context,
+    bool use_intra_process_comms = false);
 
   /* Get the name of the node. */
   const std::string &
@@ -197,6 +200,8 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Node);
 
+  static const rosidl_message_type_support_t * ipm_ts_;
+
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr & group);
 
@@ -213,6 +218,8 @@ private:
   size_t number_of_timers_;
   size_t number_of_services_;
   size_t number_of_clients_;
+
+  bool use_intra_process_comms_;
 
   mutable std::mutex mutex_;
 
@@ -304,6 +311,9 @@ private:
       node_handle, service_handle, service_name, callback_with_header);
   }
 };
+
+const rosidl_message_type_support_t * Node::ipm_ts_ =
+  rosidl_generator_cpp::get_message_type_support_handle<rcl_interfaces::msg::IntraProcessMessage>();
 
 } /* namespace node */
 } /* namespace rclcpp */
