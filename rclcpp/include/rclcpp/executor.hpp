@@ -321,7 +321,9 @@ protected:
     // TODO(wjwwood): Avoid redundant malloc's
     subscriber_handles.subscribers = memory_strategy_->borrow_handles(
       HandleType::subscription_handle, max_number_of_subscriptions);
-    if (subscriber_handles.subscribers == NULL) {
+    if (subscriber_handles.subscribers == NULL &&
+      max_number_of_subscriptions > 0)
+    {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for subscriber pointers.");
     }
@@ -341,7 +343,9 @@ protected:
     service_handles.service_count = number_of_services;
     service_handles.services =
       memory_strategy_->borrow_handles(HandleType::service_handle, number_of_services);
-    if (service_handles.services == NULL) {
+    if (service_handles.services == NULL &&
+      number_of_services > 0)
+    {
       // TODO(esteve): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for service pointers.");
     }
@@ -359,7 +363,7 @@ protected:
     client_handles.client_count = number_of_clients;
     client_handles.clients =
       memory_strategy_->borrow_handles(HandleType::client_handle, number_of_clients);
-    if (client_handles.clients == NULL) {
+    if (client_handles.clients == NULL && number_of_clients > 0) {
       // TODO: Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for client pointers.");
     }
@@ -378,7 +382,9 @@ protected:
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
     guard_condition_handles.guard_conditions =
       memory_strategy_->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);
-    if (guard_condition_handles.guard_conditions == NULL) {
+    if (guard_condition_handles.guard_conditions == NULL &&
+      number_of_guard_conds > 0)
+    {
       // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
       throw std::runtime_error("Could not malloc for guard condition pointers.");
     }
