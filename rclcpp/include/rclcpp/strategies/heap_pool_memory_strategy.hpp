@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_STATIC_MEMORY_STRATEGY_HPP_
-#define RCLCPP_RCLCPP_STATIC_MEMORY_STRATEGY_HPP_
+#ifndef RCLCPP_RCLCPP_HEAP_POOL_MEMORY_STRATEGY_HPP_
+#define RCLCPP_RCLCPP_HEAP_POOL_MEMORY_STRATEGY_HPP_
 
 #include <unordered_map>
 
@@ -25,7 +25,7 @@ namespace rclcpp
 namespace memory_strategies
 {
 
-namespace static_memory_strategy
+namespace heap_pool_memory_strategy
 {
 
 /// Representation of the upper bounds on the memory pools managed by StaticMemoryStrategy.
@@ -115,21 +115,18 @@ public:
 };
 
 
-/// Static memory allocation alternative to the default memory strategy.
+/// Heap-based memory pool allocation strategy, an alternative to the default memory strategy.
 /**
- * The name is a bit of a misnomer. The memory managed by this class is actually allocated
- * dynamically in the constructor, but no subsequent accesses to the class (besides the destructor)
- * allocate or free memory.
- * StaticMemoryStrategy puts a hard limit on the number of subscriptions, etc. that can be executed
+ * The memory managed by this class is allocated dynamically in the constructor, but no subsequent
+ * accesses to the class (besides the destructor) allocate or free memory.
+ * HeapPoolMemoryStrategy puts a hard limit on the number of subscriptions, etc. that can be executed
  * in one iteration of `Executor::spin`. Thus it allows for memory allocation optimization for
  * situations where a limit on the number of such entities is known.
  */
-class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
+class HeapPoolMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 public:
-  /// Default constructor.
-  // \param[in] bounds Representation of the limits on memory managed by this class.
-  StaticMemoryStrategy(ObjectPoolBounds bounds = ObjectPoolBounds())
+  HeapPoolMemoryStrategy(ObjectPoolBounds bounds = ObjectPoolBounds())
   : bounds_(bounds), memory_pool_(nullptr), subscription_pool_(nullptr),
     service_pool_(nullptr), guard_condition_pool_(nullptr), executable_pool_(nullptr)
   {
@@ -177,7 +174,7 @@ public:
   }
 
   /// Default destructor. Free all allocated memory.
-  ~StaticMemoryStrategy()
+  ~HeapPoolMemoryStrategy()
   {
     if (bounds_.pool_size) {
       delete[] memory_pool_;
@@ -196,12 +193,6 @@ public:
     }
   }
 
-  /// Borrow handles by returning a pointer to the preallocated object pool for the specified type.
-  /**
-   * \param[in] The type of entity that this function is requesting for.
-   * \param[in] The number of handles to borrow.
-   * \return Pointer to the allocated handles.
-   */
   void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
     switch (type) {
@@ -235,11 +226,6 @@ public:
     throw std::runtime_error("Unrecognized enum, could not borrow handle memory.");
   }
 
-  /// Return the borrowed handles by clearing the object pool for the correspondign type.
-  /**
-   * \param[in] The type of entity that this function is returning.
-   * \param[in] Pointer to the handles returned.
-   */
   void return_handles(HandleType type, void ** handles)
   {
     (void)handles;
@@ -269,12 +255,10 @@ public:
     }
   }
 
-  /// Instantiate the next executable by borrowing space from the preallocated executables pool.
-  // \return Shared pointer to the executable.
   executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
     if (exec_seq_ >= bounds_.max_executables) {
-      // wrap around (ring buffer logic)
+      // wrap around
       exec_seq_ = 0;
     }
     size_t prev_exec_seq_ = exec_seq_;
@@ -284,7 +268,6 @@ public:
       throw std::runtime_error("Executable pool member was NULL");
     }
 
-    // Make sure to clear the executable fields.
     executable_pool_[prev_exec_seq_]->subscription.reset();
     executable_pool_[prev_exec_seq_]->timer.reset();
     executable_pool_[prev_exec_seq_]->service.reset();
@@ -295,11 +278,6 @@ public:
     return executable_pool_[prev_exec_seq_];
   }
 
-  /// General allocate: reserve space in the memory pool reserved by this function.
-  /**
-   * \param[in] size Number of bytes to allocate.
-   * \return Pointer to the allocated chunk of memory.
-   */
   void * alloc(size_t size)
   {
     // Extremely naive static allocation strategy
@@ -311,7 +289,7 @@ public:
     void * ptr = memory_pool_[pool_seq_];
     if (memory_map_.count(ptr) == 0) {
       // We expect to have the state for all blocks pre-mapped into memory_map_
-      throw std::runtime_error("Unexpected pointer in StaticMemoryStrategy::alloc.");
+      throw std::runtime_error("Unexpected pointer in HeapPoolMemoryStrategy::alloc.");
     }
     memory_map_[ptr] = size;
     size_t prev_pool_seq = pool_seq_;
@@ -319,15 +297,11 @@ public:
     return memory_pool_[prev_pool_seq];
   }
 
-  /// Release the allocated memory in the memory pool.
-  /**
-   * \param[in] Pointer to deallocate.
-   */
   void free(void * ptr)
   {
     if (memory_map_.count(ptr) == 0) {
       // We expect to have the state for all blocks pre-mapped into memory_map_
-      throw std::runtime_error("Unexpected pointer in StaticMemoryStrategy::free.");
+      throw std::runtime_error("Unexpected pointer in HeapPoolMemoryStrategy::free.");
     }
 
     memset(ptr, 0, memory_map_[ptr]);
@@ -349,7 +323,7 @@ private:
   std::unordered_map<void *, size_t> memory_map_;
 };
 
-}  /* static_memory_strategy */
+}  /* heap_pool_memory_strategy */
 
 }  /* memory_strategies */
 
