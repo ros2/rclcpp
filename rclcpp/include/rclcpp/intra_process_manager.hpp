@@ -29,6 +29,8 @@
 #include <unordered_map>
 #include <set>
 
+#include <rmw/types.h>
+
 namespace rclcpp
 {
 namespace intra_process_manager
@@ -366,6 +368,22 @@ public:
       // This is the last one to be returned, transfer ownership.
       typed_buffer->pop_at_key(message_sequence_number, message);
     }
+  }
+
+  /// Return true if the given rmw_gid_t matches any stored Publishers.
+  bool
+  matches_any_publishers(const rmw_gid_t * id) const
+  {
+    for (auto & publisher_pair : publishers_) {
+      auto publisher = publisher_pair.second.publisher.lock();
+      if (!publisher) {
+        continue;
+      }
+      if (*publisher.get() == id) {
+        return true;
+      }
+    }
+    return false;
   }
 
 private:

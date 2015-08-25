@@ -259,7 +259,16 @@ Node::create_subscription(
             "intra process take called after destruction of intra process manager");
         }
         ipm->take_intra_process_message(publisher_id, message_sequence, subscription_id, message);
-    });
+      },
+      [weak_ipm](const rmw_gid_t * sender_gid) -> bool {
+        auto ipm = weak_ipm.lock();
+        if (!ipm) {
+          throw std::runtime_error(
+            "intra process publisher check called after destruction of intra process manager");
+        }
+        return ipm->matches_any_publishers(sender_gid);
+      }
+    );
     // *INDENT-ON*
   }
   // Assign to a group.
