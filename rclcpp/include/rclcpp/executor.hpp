@@ -491,7 +491,9 @@ protected:
             if (subscription->subscription_handle_->data == subscriber_handle) {
               return subscription;
             }
-            if (subscription->intra_process_subscription_handle_->data == subscriber_handle) {
+            if (subscription->intra_process_subscription_handle_ &&
+              subscription->intra_process_subscription_handle_->data == subscriber_handle)
+            {
               return subscription;
             }
           }
