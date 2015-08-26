@@ -39,10 +39,12 @@ class Node;
 namespace publisher
 {
 
+// TODO
 class Publisher
 {
   friend rclcpp::node::Node;
 
+// TODO
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
 

@@ -27,6 +27,7 @@ namespace memory_strategies
 
 namespace static_memory_strategy
 {
+// TODO
 struct ObjectPoolBounds
 {
 public:
@@ -80,6 +81,7 @@ public:
 };
 
 
+// TODO
 class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 public:

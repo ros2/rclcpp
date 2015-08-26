@@ -82,6 +82,7 @@ protected:
 
 };
 
+// TODO
 template<class Clock = std::chrono::high_resolution_clock>
 class GenericTimer : public TimerBase
 {

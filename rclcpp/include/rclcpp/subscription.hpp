@@ -49,6 +49,7 @@ class SubscriptionBase
 {
   friend class rclcpp::executor::Executor;
 
+// TODO
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase);
 
@@ -113,11 +114,13 @@ private:
 
 };
 
+// TODO
 template<typename MessageT>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node::Node;
 
+// TODO
 public:
   using CallbackType = std::function<void(const std::shared_ptr<MessageT> &)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);

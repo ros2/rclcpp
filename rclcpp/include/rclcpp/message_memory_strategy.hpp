@@ -24,6 +24,7 @@ namespace rclcpp
 namespace message_memory_strategy
 {
 
+// TODO
 template<typename MessageT>
 class MessageMemoryStrategy
 {

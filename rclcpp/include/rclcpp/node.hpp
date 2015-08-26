@@ -96,6 +96,7 @@ struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
  *
  * This is the single point of entry for creating publishers and subscribers.
  */
+// TODO
 class Node
 {
   friend class rclcpp::executor::Executor;
@@ -103,6 +104,7 @@ class Node
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
+// TODO: ALL public functions
   /* Create a node based on the node name. */
   Node(const std::string & node_name, bool use_intra_process_comms = false);
   /* Create a node based on the node name and a rclcpp::context::Context. */

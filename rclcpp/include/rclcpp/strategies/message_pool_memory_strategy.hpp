@@ -25,6 +25,7 @@ namespace strategies
 namespace message_pool_memory_strategy
 {
 
+// TODO
 template<typename MessageT, size_t Size,
 typename std::enable_if<rosidl_generator_traits::has_fixed_size<MessageT>::value>::type * =
 nullptr>

@@ -98,6 +98,7 @@ RMW_THREAD_LOCAL size_t thread_id = 0;
 namespace utilities
 {
 
+// TODO
 void
 init(int argc, char * argv[])
 {
@@ -138,12 +139,14 @@ init(int argc, char * argv[])
   }
 }
 
+// TODO
 bool
 ok()
 {
   return ::g_signal_status == 0;
 }
 
+// TODO
 void
 shutdown()
 {
@@ -163,6 +166,7 @@ get_global_sigint_guard_condition()
   return ::g_sigint_guard_cond_handle;
 }
 
+// TODO
 bool
 sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
