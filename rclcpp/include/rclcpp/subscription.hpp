@@ -94,7 +94,7 @@ public:
   }
 
   virtual std::shared_ptr<void> create_message() = 0;
-  virtual void handle_message(std::shared_ptr<void> & message) = 0;
+  virtual void handle_message(std::shared_ptr<void> & message, const rmw_gid_t * sender_id) = 0;
   virtual void return_message(std::shared_ptr<void> & message) = 0;
   virtual void handle_intra_process_message(rcl_interfaces::msg::IntraProcessMessage & ipm) = 0;
 
@@ -132,7 +132,9 @@ public:
     message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default())
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     callback_(callback),
-    message_memory_strategy_(memory_strategy)
+    message_memory_strategy_(memory_strategy),
+    get_intra_process_message_callback_(nullptr),
+    matches_any_intra_process_publishers_(nullptr)
   {}
 
   void set_message_memory_strategy(
@@ -146,8 +148,15 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  void handle_message(std::shared_ptr<void> & message)
+  void handle_message(std::shared_ptr<void> & message, const rmw_gid_t * sender_id)
   {
+    if (matches_any_intra_process_publishers_) {
+      if (matches_any_intra_process_publishers_(sender_id)) {
+        // In this case, the message will be delivered via intra process and
+        // we should ignore this copy of the message.
+        return;
+      }
+    }
     auto typed_message = std::static_pointer_cast<MessageT>(message);
     callback_(typed_message);
   }
@@ -188,15 +197,18 @@ private:
     std::function<
       void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT> &)
     > GetMessageCallbackType;
+  typedef std::function<bool (const rmw_gid_t *)> MatchesAnyPublishersCallbackType;
 
   void setup_intra_process(
     uint64_t intra_process_subscription_id,
     rmw_subscription_t * intra_process_subscription,
-    GetMessageCallbackType callback)
+    GetMessageCallbackType get_message_callback,
+    MatchesAnyPublishersCallbackType matches_any_publisher_callback)
   {
     intra_process_subscription_id_ = intra_process_subscription_id;
     intra_process_subscription_handle_ = intra_process_subscription;
-    get_intra_process_message_callback_ = callback;
+    get_intra_process_message_callback_ = get_message_callback;
+    matches_any_intra_process_publishers_ = matches_any_publisher_callback;
   }
 
   RCLCPP_DISABLE_COPY(Subscription);
@@ -206,6 +218,7 @@ private:
   message_memory_strategy_;
 
   GetMessageCallbackType get_intra_process_message_callback_;
+  MatchesAnyPublishersCallbackType matches_any_intra_process_publishers_;
   uint64_t intra_process_subscription_id_;
 
 };

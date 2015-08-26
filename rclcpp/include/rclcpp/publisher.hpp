@@ -55,7 +55,15 @@ public:
     intra_process_publisher_handle_(nullptr),
     topic_(topic), queue_size_(queue_size),
     intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
-  {}
+  {
+    // Life time of this object is tied to the publisher handle.
+    if (rmw_get_gid_for_publisher(publisher_handle_, &rmw_gid_) != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
+  }
 
   virtual ~Publisher()
   {
@@ -82,16 +90,12 @@ public:
   publish(std::shared_ptr<MessageT> & msg)
   {
     rmw_ret_t status;
-    if (!store_intra_process_message_) {
-      // TODO(wjwwood): for now, make intra process and inter process mutually exclusive.
-      // Later we'll have them together, when we have a way to filter more efficiently.
-      status = rmw_publish(publisher_handle_, msg.get());
-      if (status != RMW_RET_OK) {
-        // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-        throw std::runtime_error(
-          std::string("failed to publish message: ") + rmw_get_error_string_safe());
-        // *INDENT-ON*
-      }
+    status = rmw_publish(publisher_handle_, msg.get());
+    if (status != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to publish message: ") + rmw_get_error_string_safe());
+      // *INDENT-ON*
     }
     if (store_intra_process_message_) {
       uint64_t message_seq = store_intra_process_message_(intra_process_publisher_id_, msg);
@@ -120,6 +124,43 @@ public:
     return queue_size_;
   }
 
+  const rmw_gid_t &
+  get_gid() const
+  {
+    return rmw_gid_;
+  }
+
+  const rmw_gid_t &
+  get_intra_process_gid() const
+  {
+    return intra_process_rmw_gid_;
+  }
+
+  bool
+  operator==(const rmw_gid_t & gid) const
+  {
+    return *this == &gid;
+  }
+
+  bool
+  operator==(const rmw_gid_t * gid) const
+  {
+    bool result = false;
+    auto ret = rmw_compare_gids_equal(gid, &this->get_gid(), &result);
+    if (ret != RMW_RET_OK) {
+      throw std::runtime_error(
+              std::string("failed to compare gids: ") + rmw_get_error_string_safe());
+    }
+    if (!result) {
+      ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
+      if (ret != RMW_RET_OK) {
+        throw std::runtime_error(
+                std::string("failed to compare gids: ") + rmw_get_error_string_safe());
+      }
+    }
+    return result;
+  }
+
   typedef std::function<uint64_t(uint64_t, std::shared_ptr<void>)> StoreSharedMessageCallbackT;
 
 protected:
@@ -132,6 +173,15 @@ protected:
     intra_process_publisher_id_ = intra_process_publisher_id;
     store_intra_process_message_ = callback;
     intra_process_publisher_handle_ = intra_process_publisher_handle;
+    // Life time of this object is tied to the publisher handle.
+    auto ret = rmw_get_gid_for_publisher(intra_process_publisher_handle_, &intra_process_rmw_gid_);
+    if (ret != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to create intra process publisher gid: ") +
+        rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
   }
 
 private:
@@ -145,6 +195,9 @@ private:
 
   uint64_t intra_process_publisher_id_;
   StoreSharedMessageCallbackT store_intra_process_message_;
+
+  rmw_gid_t rmw_gid_;
+  rmw_gid_t intra_process_rmw_gid_;
 
 };
 

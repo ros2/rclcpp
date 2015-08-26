@@ -185,10 +185,12 @@ protected:
   {
     std::shared_ptr<void> message = subscription->create_message();
     bool taken = false;
-    rmw_ret_t status = rmw_take(subscription->subscription_handle_, message.get(), &taken);
-    if (status == RMW_RET_OK) {
+    rmw_message_info_t message_info;
+    auto ret =
+      rmw_take_with_info(subscription->subscription_handle_, message.get(), &taken, &message_info);
+    if (ret == RMW_RET_OK) {
       if (taken) {
-        subscription->handle_message(message);
+        subscription->handle_message(message, &message_info.publisher_gid);
       }
     } else {
       fprintf(stderr,

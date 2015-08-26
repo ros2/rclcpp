@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <rclcpp/macros.hpp>
+#include <rmw/types.h>
 
 // Mock up publisher and subscription base to avoid needing an rmw impl.
 namespace rclcpp
@@ -41,6 +42,13 @@ public:
   size_t get_queue_size() const
   {
     return mock_queue_size;
+  }
+
+  bool
+  operator==(const rmw_gid_t * gid) const
+  {
+    (void)gid;
+    return false;
   }
 
   std::string mock_topic_name;
