@@ -37,7 +37,7 @@ namespace executor
 {
 
 /// Coordinates the order and timing of available communication tasks.
-/* Executor provides spin functions (including spin_node_once and spin_some). 
+/* Executor provides spin functions (including spin_node_once and spin_some).
  * It coordinates the nodes and callback groups by looking for available work and completing it,
  * based on the threading or concurrency scheme provided by the subclass implementation.
  * An example of available work is executing a subscription callback, or a timer callback.

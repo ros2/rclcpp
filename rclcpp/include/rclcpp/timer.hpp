@@ -101,7 +101,7 @@ public:
 
   /// Default constructor.
   /* \param[in] period The interval at which the timer fires.
-   * \param[in] callback User-specified callback function. 
+   * \param[in] callback User-specified callback function.
    */
   GenericTimer(std::chrono::nanoseconds period, CallbackType callback)
   : TimerBase(period, callback), loop_rate_(period)
