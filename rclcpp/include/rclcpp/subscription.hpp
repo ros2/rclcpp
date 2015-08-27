@@ -55,7 +55,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase);
 
   /// Default constructor.
-  /* \param[in] node_handle The rmw representation of the node that owns this subscription.
+  /**
+   * \param[in] node_handle The rmw representation of the node that owns this subscription.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] ignore_local_publications True to ignore local publications (unused).
    */
@@ -107,7 +108,8 @@ public:
   virtual std::shared_ptr<void> create_message() = 0;
 
   /// Check if we need to handle the message, and execute the callback if we do.
-  /* \param[in] message Shared pointer to the message to handle.
+  /**
+   * \param[in] message Shared pointer to the message to handle.
    * \param[in] sender_id Global identifier of the entity that sent this message.
    */
   virtual void handle_message(std::shared_ptr<void> & message, const rmw_gid_t * sender_id) = 0;
@@ -144,7 +146,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
 
   /// Default constructor.
-  /* The constructor for a subscription is almost never called directly. Instead, subscriptions
+  /**
+   * The constructor for a subscription is almost never called directly. Instead, subscriptions
    * should be instantiated through Node::create_subscription.
    * \param[in] node_handle rmw representation of the node that owns this subscription.
    * \param[in] topic_name Name of the topic to subscribe to.
@@ -168,7 +171,8 @@ public:
   {}
 
   /// Support dynamically setting the message memory strategy.
-  /* Behavior may be undefined if called while the subscription could be executing.
+  /**
+   * Behavior may be undefined if called while the subscription could be executing.
    * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
    */
   void set_message_memory_strategy(

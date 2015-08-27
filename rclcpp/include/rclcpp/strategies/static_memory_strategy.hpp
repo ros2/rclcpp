@@ -48,7 +48,8 @@ public:
   // Setters implement named parameter idiom/method chaining
 
   /// Set the maximum number of subscriptions.
-  /* \param[in] subscriptions Maximum number of subscriptions.
+  /**
+   * \param[in] subscriptions Maximum number of subscriptions.
    * \return Reference to this object, for method chaining.
    */
   ObjectPoolBounds & set_max_subscriptions(size_t subscriptions)
@@ -58,7 +59,8 @@ public:
   }
 
   /// Set the maximum number of services.
-  /* \param[in] services Maximum number of services.
+  /**
+   * \param[in] services Maximum number of services.
    * \return Reference to this object, for method chaining.
    */
   ObjectPoolBounds & set_max_services(size_t services)
@@ -68,7 +70,8 @@ public:
   }
 
   /// Set the maximum number of clients.
-  /* \param[in] clients Maximum number of clients.
+  /**
+   * \param[in] clients Maximum number of clients.
    * \return Reference to this object, for method chaining.
    */
   ObjectPoolBounds & set_max_clients(size_t clients)
@@ -78,7 +81,8 @@ public:
   }
 
   /// Set the maximum number of guard conditions.
-  /* \param[in] guard conditions Maximum number of guard conditions.
+  /**
+   * \param[in] guard conditions Maximum number of guard conditions.
    * \return Reference to this object, for method chaining.
    */
   ObjectPoolBounds & set_max_guard_conditions(size_t guard_conditions)
@@ -88,7 +92,8 @@ public:
   }
 
   /// Set the maximum number of executables.
-  /* \param[in] executables Maximum number of executables.
+  /**
+   * \param[in] executables Maximum number of executables.
    * \return Reference to this object, for method chaining.
    */
   ObjectPoolBounds & set_max_executables(size_t executables)
@@ -98,7 +103,8 @@ public:
   }
 
   /// Set the maximum memory pool size.
-  /* \param[in] executables Maximum memory pool size.
+  /**
+   * \param[in] executables Maximum memory pool size.
    * \return Reference to this object, for method chaining.
    */
   ObjectPoolBounds & set_memory_pool_size(size_t pool)
@@ -110,7 +116,8 @@ public:
 
 
 /// Static memory allocation alternative to the default memory strategy.
-/* The name is a bit of a misnomer. The memory managed by this class is actually allocated
+/**
+ * The name is a bit of a misnomer. The memory managed by this class is actually allocated
  * dynamically in the constructor, but no subsequent accesses to the class (besides the destructor)
  * allocate or free memory.
  * StaticMemoryStrategy puts a hard limit on the number of subscriptions, etc. that can be executed
@@ -190,7 +197,8 @@ public:
   }
 
   /// Borrow handles by returning a pointer to the preallocated object pool for the specified type.
-  /* \param[in] The type of entity that this function is requesting for.
+  /**
+   * \param[in] The type of entity that this function is requesting for.
    * \param[in] The number of handles to borrow.
    * \return Pointer to the allocated handles.
    */
@@ -228,7 +236,8 @@ public:
   }
 
   /// Return the borrowed handles by clearing the object pool for the correspondign type.
-  /* \param[in] The type of entity that this function is returning.
+  /**
+   * \param[in] The type of entity that this function is returning.
    * \param[in] Pointer to the handles returned.
    */
   void return_handles(HandleType type, void ** handles)
@@ -287,7 +296,8 @@ public:
   }
 
   /// General allocate: reserve space in the memory pool reserved by this function.
-  /* \param[in] size Number of bytes to allocate.
+  /**
+   * \param[in] size Number of bytes to allocate.
    * \return Pointer to the allocated chunk of memory.
    */
   void * alloc(size_t size)
@@ -310,7 +320,8 @@ public:
   }
 
   /// Release the allocated memory in the memory pool.
-  /* \param[in] Pointer to deallocate.
+  /**
+   * \param[in] Pointer to deallocate.
    */
   void free(void * ptr)
   {

@@ -31,7 +31,8 @@ namespace memory_strategy
 {
 
 /// Delegate for handling memory allocations while the Executor is executing.
-/* By default, the memory strategy dynamically allocates memory for structures that come in from
+/**
+ * By default, the memory strategy dynamically allocates memory for structures that come in from
  * the rmw implementation after the executor waits for work, based on the number of entities that
  * come through.
  */
@@ -44,7 +45,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(MemoryStrategy);
 
   /// Borrow memory for storing data for subscriptions, services, clients, or guard conditions.
-  /* The default implementation ignores the handle type and dynamically allocates the memory.
+  /**
+   * The default implementation ignores the handle type and dynamically allocates the memory.
    * \param[in] The type of entity that this function is requesting for.
    * \param[in] The number of handles to borrow.
    * \return Pointer to the allocated handles.
@@ -56,7 +58,8 @@ public:
   }
 
   /// Return the memory borrowed in borrow_handles.
-  /* return_handles should always mirror the way memory was borrowed in borrow_handles.
+  /**
+   * return_handles should always mirror the way memory was borrowed in borrow_handles.
    * \param[in] The type of entity that this function is returning.
    * \param[in] Pointer to the handles returned.
    */
@@ -74,7 +77,8 @@ public:
   }
 
   /// Implementation of a general-purpose allocation function.
-  /* \param[in] size Number of bytes to allocate.
+  /**
+   * \param[in] size Number of bytes to allocate.
    * \return Pointer to the allocated chunk of memory.
    */
   virtual void * alloc(size_t size)
@@ -86,7 +90,8 @@ public:
   }
 
   /// Implementation of a general-purpose free.
-  /* \param[in] Pointer to deallocate.
+  /**
+   * \param[in] Pointer to deallocate.
    */
   virtual void free(void * ptr)
   {

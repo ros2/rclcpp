@@ -54,9 +54,11 @@ struct sigaction old_action;
 void (* old_signal_handler)(int) = 0;
 #endif
 
-/// When the interrupt signal fires, the signal handler notifies the condition variable to wake up
-/// and triggers the interrupt guard condition, so that all global threads managed by rclcpp
-/// are interrupted.
+/// Handle the interrupt signal.
+/** When the interrupt signal fires, the signal handler notifies the condition variable to wake up
+ * and triggers the interrupt guard condition, so that all global threads managed by rclcpp
+ * are interrupted.
+ */
 void
 #ifdef HAS_SIGACTION
 signal_handler(int signal_value, siginfo_t * siginfo, void * context)
@@ -106,7 +108,8 @@ namespace utilities
 {
 
 /// Initialize communications via the rmw implementation and set up a global signal handler.
-/* \param[in] argc Number of arguments.
+/**
+ * \param[in] argc Number of arguments.
  * \param[in] argv Argument vector. Will eventually be used for passing options to rclcpp.
  */
 void
@@ -179,7 +182,8 @@ get_global_sigint_guard_condition()
 }
 
 /// Use the global condition variable to block for the specified amount of time.
-/* \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
+/**
+ * \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
  * \return True if the condition variable did not timeout.
  */
 bool

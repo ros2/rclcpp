@@ -48,7 +48,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
 
   /// Default constructor.
-  /* Typically, a publisher is not created through this method, but instead is created through a
+  /**
+   * Typically, a publisher is not created through this method, but instead is created through a
    * call to `Node::create_publisher`.
    * \param[in] node_handle The corresponding rmw representation of the owner node.
    * \param[in] publisher_handle The rmw publisher handle corresponding to this publisher.
@@ -96,7 +97,8 @@ public:
   }
 
   /// Send a message to the topic for this publisher.
-  /* This function is templated on the input message type, MessageT.
+  /**
+   * This function is templated on the input message type, MessageT.
    * \param[in] msg A shared pointer to the message to send.
    */
   template<typename MessageT>
@@ -159,7 +161,8 @@ public:
   }
 
   /// Compare this publisher to a gid.
-  /* Note that this function calls the next function.
+  /**
+   * Note that this function calls the next function.
    * \param[in] gid Reference to a gid.
    * \return True if the publisher's gid matches the input.
    */
@@ -170,7 +173,8 @@ public:
   }
 
   /// Compare this publisher to a pointer gid.
-  /* A wrapper for comparing this publisher's gid to the input using rmw_compare_gids_equal.
+  /**
+   * A wrapper for comparing this publisher's gid to the input using rmw_compare_gids_equal.
    * \param[in] gid A pointer to a gid.
    * \return True if this publisher's gid matches the input.
    */

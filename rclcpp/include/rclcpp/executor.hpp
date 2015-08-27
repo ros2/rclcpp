@@ -36,8 +36,9 @@ namespace rclcpp
 namespace executor
 {
 
-/// Coordinates the order and timing of available communication tasks.
-/* Executor provides spin functions (including spin_node_once and spin_some).
+/// Coordinate the order and timing of available communication tasks.
+/**
+ * Executor provides spin functions (including spin_node_once and spin_some).
  * It coordinates the nodes and callback groups by looking for available work and completing it,
  * based on the threading or concurrency scheme provided by the subclass implementation.
  * An example of available work is executing a subscription callback, or a timer callback.
@@ -79,7 +80,8 @@ public:
   virtual void spin() = 0;
 
   /// Add a node to the executor.
-  /* An executor can have zero or more nodes which provide work during `spin` functions.
+  /**
+   * An executor can have zero or more nodes which provide work during `spin` functions.
    * \param[in] node_ptr Shared pointer to the node to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
@@ -107,7 +109,8 @@ public:
   }
 
   /// Remove a node from the executor.
-  /* \param[in] node_ptr Shared pointer to the node to remove.
+  /**
+   * \param[in] node_ptr Shared pointer to the node to remove.
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
    * waiting for work in another thread, because otherwise the executor would never be notified.
@@ -137,7 +140,8 @@ public:
   }
 
   /// Add a node to executor, execute the next available unit of work, and remove the node.
-  /* \param[in] node Shared pointer to the node to add.
+  /**
+   * \param[in] node Shared pointer to the node to add.
    * \param[in] timeout How long to wait for work to become available. Negative values cause
    * spin_node_once to block indefinitely (the default behavior). A timeout of 0 causes this
    * function to be non-blocking.
@@ -156,7 +160,8 @@ public:
   }
 
   /// Add a node, complete all immediately available work, and remove the node.
-  /* \param[in] node Shared pointer to the node to add.
+  /**
+   * \param[in] node Shared pointer to the node to add.
    */
   void spin_node_some(rclcpp::node::Node::SharedPtr & node)
   {
@@ -166,7 +171,8 @@ public:
   }
 
   /// Complete all available queued work without blocking.
-  /* This function can be overridden. The default implementation is suitable for a
+  /**
+   * This function can be overridden. The default implementation is suitable for a
    * single-threaded model of execution.
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
@@ -181,7 +187,8 @@ public:
   }
 
   /// Support dynamic switching of the memory strategy.
-  /* Switching the memory strategy while the executor is spinning in another threading could have
+  /**
+   * Switching the memory strategy while the executor is spinning in another threading could have
    * unintended consequences.
    * \param[in] memory_strategy Shared pointer to the memory strategy to set.
    */
@@ -196,8 +203,9 @@ public:
 
 protected:
   /// Find the next available executable and do the work associated with it.
-  // \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
-  // service, client).
+  /** \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
+   * service, client).
+   */
   void
   execute_any_executable(AnyExecutable::SharedPtr & any_exec)
   {

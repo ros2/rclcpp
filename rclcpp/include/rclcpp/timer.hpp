@@ -76,7 +76,8 @@ public:
   virtual bool is_steady() = 0;
 
   /// Check if the timer needs to trigger the callback.
-  /* This function expects its caller to immediately trigger the callback after this function,
+  /**
+   * This function expects its caller to immediately trigger the callback after this function,
    * since it maintains the last time the callback was triggered.
    * \return True if the timer needs to trigger.
    */
@@ -100,7 +101,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericTimer);
 
   /// Default constructor.
-  /* \param[in] period The interval at which the timer fires.
+  /**
+   * \param[in] period The interval at which the timer fires.
    * \param[in] callback User-specified callback function.
    */
   GenericTimer(std::chrono::nanoseconds period, CallbackType callback)

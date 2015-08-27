@@ -101,14 +101,16 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
   /// Create a new node with the specified name.
-  /* \param[in] node_name Name of the node.
+  /**
+   * \param[in] node_name Name of the node.
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
   Node(const std::string & node_name, bool use_intra_process_comms = false);
 
   /// Create a node based on the node name and a rclcpp::context::Context.
-  /* \param[in] node_name Name of the node.
+  /**
+   * \param[in] node_name Name of the node.
    * \param[in] context The context for the node (usually represents the state of a process).
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
@@ -127,7 +129,8 @@ public:
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
   /// Create and return a Publisher.
-  /* \param[in] topic_name The topic for this publisher to publish on.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \return Shared pointer to the created publisher.
    */
@@ -137,7 +140,8 @@ public:
     const std::string & topic_name, const rmw_qos_profile_t & qos_profile);
 
   /// Create and return a Subscription.
-  /* \param[in] topic_name The topic to subscribe on.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \param[in] callback The user-defined callback function.
    * \param[in] group The callback group for this subscription. NULL for no callback group.
@@ -161,7 +165,8 @@ public:
     msg_mem_strat = nullptr);
 
   /// Create a timer.
-  /* \param[in] period Time interval between triggers of the callback.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
@@ -172,7 +177,8 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create a timer with a sub-nanosecond precision update period.
-  /* \param[in] period Time interval between triggers of the callback.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
