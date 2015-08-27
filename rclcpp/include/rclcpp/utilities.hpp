@@ -38,10 +38,14 @@
 
 namespace
 {
+/// Represent the status of the global interrupt signal.
 volatile sig_atomic_t g_signal_status = 0;
+/// Guard condition for interrupting the rmw implementation when the global interrupt signal fired.
 rmw_guard_condition_t * g_sigint_guard_cond_handle = \
   rmw_create_guard_condition();
+/// Condition variable for timed sleep (see sleep_for).
 std::condition_variable g_interrupt_condition_variable;
+/// Mutex for protecting the global condition variable.
 std::mutex g_interrupt_mutex;
 
 #ifdef HAS_SIGACTION
@@ -50,6 +54,9 @@ struct sigaction old_action;
 void (* old_signal_handler)(int) = 0;
 #endif
 
+/// When the interrupt signal fires, the signal handler notifies the condition variable to wake up
+/// and triggers the interrupt guard condition, so that all global threads managed by rclcpp
+/// are interrupted.
 void
 #ifdef HAS_SIGACTION
 signal_handler(int signal_value, siginfo_t * siginfo, void * context)
@@ -98,7 +105,10 @@ RMW_THREAD_LOCAL size_t thread_id = 0;
 namespace utilities
 {
 
-// TODO
+/// Initialize communications via the rmw implementation and set up a global signal handler.
+/* \param[in] argc Number of arguments.
+ * \param[in] argv Argument vector. Will eventually be used for passing options to rclcpp.
+ */
 void
 init(int argc, char * argv[])
 {
@@ -139,14 +149,15 @@ init(int argc, char * argv[])
   }
 }
 
-// TODO
+/// Check rclcpp's status.
+// \return True if SIGINT hasn't fired yet, false otherwise.
 bool
 ok()
 {
   return ::g_signal_status == 0;
 }
 
-// TODO
+/// Notify the signal handler and rmw that rclcpp is shutting down.
 void
 shutdown()
 {
@@ -160,13 +171,17 @@ shutdown()
 }
 
 
+/// Get a handle to the rmw guard condition that manages the signal handler.
 rmw_guard_condition_t *
 get_global_sigint_guard_condition()
 {
   return ::g_sigint_guard_cond_handle;
 }
 
-// TODO
+/// Use the global condition variable to block for the specified amount of time.
+/* \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
+ * \return True if the condition variable did not timeout.
+ */
 bool
 sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {

@@ -136,10 +136,11 @@ public:
     }
   }
 
-  /// Add a node to executor, complete the next available unit of work, and remove the node.
+  /// Add a node to executor, execute the next available unit of work, and remove the node.
   /* \param[in] node Shared pointer to the node to add.
    * \param[in] timeout How long to wait for work to become available. Negative values cause
-   * spin_node_once to block indefinitely 
+   * spin_node_once to block indefinitely (the default behavior). A timeout of 0 causes this
+   * function to be non-blocking.
    */
   template<typename T = std::milli>
   void spin_node_once(rclcpp::node::Node::SharedPtr & node,
@@ -154,7 +155,9 @@ public:
     this->remove_node(node, false);
   }
 
-// TODO
+  /// Add a node, complete all immediately available work, and remove the node.
+  /* \param[in] node Shared pointer to the node to add.
+   */
   void spin_node_some(rclcpp::node::Node::SharedPtr & node)
   {
     this->add_node(node, false);
@@ -162,7 +165,12 @@ public:
     this->remove_node(node, false);
   }
 
-// TODO
+  /// Complete all available queued work without blocking.
+  /* This function can be overridden. The default implementation is suitable for a
+   * single-threaded model of execution.
+   * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
+   * to block (which may have unintended consequences).
+   */
   virtual void spin_some()
   {
     while (AnyExecutable::SharedPtr any_exec =
@@ -172,8 +180,11 @@ public:
     }
   }
 
-// TODO
-  // Support dynamic switching of memory strategy
+  /// Support dynamic switching of the memory strategy.
+  /* Switching the memory strategy while the executor is spinning in another threading could have
+   * unintended consequences.
+   * \param[in] memory_strategy Shared pointer to the memory strategy to set.
+   */
   void
   set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
   {
@@ -184,8 +195,10 @@ public:
   }
 
 protected:
+  /// Find the next available executable and do the work associated with it.
+  // \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
+  // service, client).
   void
-// TODO
   execute_any_executable(AnyExecutable::SharedPtr & any_exec)
   {
     if (!any_exec) {
@@ -938,8 +951,10 @@ protected:
     return any_exec;
   }
 
+  /// Guard condition for signaling the rmw layer to wake up for special events.
   rmw_guard_condition_t * interrupt_guard_condition_;
 
+  /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
 private:

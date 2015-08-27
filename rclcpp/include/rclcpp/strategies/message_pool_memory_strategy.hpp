@@ -25,7 +25,12 @@ namespace strategies
 namespace message_pool_memory_strategy
 {
 
-// TODO
+/// Completely static memory allocation strategy for messages.
+/* Templated on the type of message pooled by this class and the size of the message pool.
+ * Templating allows the program to determine the memory required for this object at compile time.
+ * The size of the message pool should be at least the largest number of concurrent accesses to
+ * the subscription (usually the number of threads).
+ */
 template<typename MessageT, size_t Size,
 typename std::enable_if<rosidl_generator_traits::has_fixed_size<MessageT>::value>::type * =
 nullptr>
@@ -34,6 +39,8 @@ class MessagePoolMemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MessagePoolMemoryStrategy);
+
+  /// Default constructor
   MessagePoolMemoryStrategy()
   : next_array_index_(0)
   {
@@ -43,6 +50,11 @@ public:
     }
   }
 
+  /// Borrow a message from the message pool.
+  /* Manage the message pool ring buffer.
+   * Throw an exception if the next message was not available.
+   * \return Shared pointer to the borrowed message.
+   */
   std::shared_ptr<MessageT> borrow_message()
   {
     size_t current_index = next_array_index_;
@@ -57,6 +69,10 @@ public:
     return pool_[current_index].msg_ptr_;
   }
 
+  /// Return a message to the message pool.
+  /* Manage metadata in the message pool ring buffer to release the message.
+   * \param[in] msg Shared pointer to the message to return.
+   */
   void return_message(std::shared_ptr<MessageT> & msg)
   {
     for (size_t i = 0; i < Size; ++i) {

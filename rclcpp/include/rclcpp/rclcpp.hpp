@@ -51,6 +51,8 @@ operator"" _ns(long double ns)
     std::chrono::duration<long double, std::nano>(ns));
 }
 
+// Namespace escalations.
+// For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
 using rclcpp::publisher::Publisher;
 using rclcpp::subscription::SubscriptionBase;
@@ -66,12 +68,16 @@ using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;
 using rclcpp::utilities::sleep_for;
 
+/// Create a default single-threaded executor and execute any immediately available work.
+// \param[in] node_ptr Shared pointer to the node to spin.
 void spin_some(Node::SharedPtr & node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.spin_node_some(node_ptr);
 }
 
+/// Create a default single-threaded executor and spin the specified node.
+// \param[in] node_ptr Shared pointer to the node to spin.
 void spin(Node::SharedPtr & node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor executor;

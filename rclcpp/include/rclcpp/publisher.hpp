@@ -39,15 +39,22 @@ class Node;
 namespace publisher
 {
 
-// TODO
+/// A publisher publishes messages of any type to a topic.
 class Publisher
 {
   friend rclcpp::node::Node;
 
-// TODO
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
 
+  /// Default constructor.
+  /* Typically, a publisher is not created through this method, but instead is created through a
+   * call to `Node::create_publisher`.
+   * \param[in] node_handle The corresponding rmw representation of the owner node.
+   * \param[in] publisher_handle The rmw publisher handle corresponding to this publisher.
+   * \param[in] topic The topic that this publisher publishes on.
+   * \param[in] queue_size The maximum number of unpublished messages to queue.
+   */
   Publisher(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_publisher_t * publisher_handle,
@@ -67,6 +74,7 @@ public:
     }
   }
 
+  /// Default destructor.
   virtual ~Publisher()
   {
     if (intra_process_publisher_handle_) {
@@ -87,6 +95,10 @@ public:
     }
   }
 
+  /// Send a message to the topic for this publisher.
+  /* This function is templated on the input message type, MessageT.
+   * \param[in] msg A shared pointer to the message to send.
+   */
   template<typename MessageT>
   void
   publish(std::shared_ptr<MessageT> & msg)
@@ -114,36 +126,54 @@ public:
     }
   }
 
+  /// Get the topic that this publisher publishes on.
+  // \return The topic name.
   const std::string &
   get_topic_name() const
   {
     return topic_;
   }
 
+  /// Get the queue size for this publisher.
+  // \return The queue size.
   size_t
   get_queue_size() const
   {
     return queue_size_;
   }
 
+  /// Get the global identifier for this publisher (used in rmw and by DDS).
+  // \return The gid.
   const rmw_gid_t &
   get_gid() const
   {
     return rmw_gid_;
   }
 
+  /// Get the global identifier for this publisher used by intra-process communication.
+  // \return The intra-process gid.
   const rmw_gid_t &
   get_intra_process_gid() const
   {
     return intra_process_rmw_gid_;
   }
 
+  /// Compare this publisher to a gid.
+  /* Note that this function calls the next function.
+   * \param[in] gid Reference to a gid.
+   * \return True if the publisher's gid matches the input.
+   */
   bool
   operator==(const rmw_gid_t & gid) const
   {
     return *this == &gid;
   }
 
+  /// Compare this publisher to a pointer gid.
+  /* A wrapper for comparing this publisher's gid to the input using rmw_compare_gids_equal.
+   * \param[in] gid A pointer to a gid.
+   * \return True if this publisher's gid matches the input.
+   */
   bool
   operator==(const rmw_gid_t * gid) const
   {

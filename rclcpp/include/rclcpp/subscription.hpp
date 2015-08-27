@@ -45,14 +45,20 @@ class Node;
 namespace subscription
 {
 
+/// Virtual base class for subscriptions. This pattern allows us to iterate over different template
+/// specializations of Subscription, among other things.
 class SubscriptionBase
 {
   friend class rclcpp::executor::Executor;
 
-// TODO
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase);
 
+  /// Default constructor.
+  /* \param[in] node_handle The rmw representation of the node that owns this subscription.
+   * \param[in] topic_name Name of the topic to subscribe to.
+   * \param[in] ignore_local_publications True to ignore local publications (unused).
+   */
   SubscriptionBase(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_subscription_t * subscription_handle,
@@ -68,6 +74,7 @@ public:
     (void)ignore_local_publications_;
   }
 
+  /// Default destructor.
   virtual ~SubscriptionBase()
   {
     if (subscription_handle_) {
@@ -89,14 +96,26 @@ public:
     }
   }
 
+  /// Get the topic that this subscription is subscribed on.
   const std::string & get_topic_name() const
   {
     return this->topic_name_;
   }
 
+  /// Borrow a new message.
+  // \return Shared pointer to the fresh message.
   virtual std::shared_ptr<void> create_message() = 0;
+
+  /// Check if we need to handle the message, and execute the callback if we do.
+  /* \param[in] message Shared pointer to the message to handle.
+   * \param[in] sender_id Global identifier of the entity that sent this message.
+   */
   virtual void handle_message(std::shared_ptr<void> & message, const rmw_gid_t * sender_id) = 0;
+
+  /// Return the message borrowed in create_message.
+  // \param[in] Shared pointer to the returned message.
   virtual void return_message(std::shared_ptr<void> & message) = 0;
+
   virtual void handle_intra_process_message(rcl_interfaces::msg::IntraProcessMessage & ipm) = 0;
 
 protected:
@@ -114,17 +133,25 @@ private:
 
 };
 
-// TODO
+/// Subscription implementation, templated on the type of message this subscription receives.
 template<typename MessageT>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node::Node;
 
-// TODO
 public:
   using CallbackType = std::function<void(const std::shared_ptr<MessageT> &)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
 
+  /// Default constructor.
+  /* The constructor for a subscription is almost never called directly. Instead, subscriptions
+   * should be instantiated through Node::create_subscription.
+   * \param[in] node_handle rmw representation of the node that owns this subscription.
+   * \param[in] topic_name Name of the topic to subscribe to.
+   * \param[in] ignore_local_publications True to ignore local publications (unused).
+   * \param[in] callback User-defined callback to call when a message is received.
+   * \param[in] memory_strategy The memory strategy to be used for managing message memory.
+   */
   Subscription(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_subscription_t * subscription_handle,
@@ -140,14 +167,21 @@ public:
     matches_any_intra_process_publishers_(nullptr)
   {}
 
+  /// Support dynamically setting the message memory strategy.
+  /* Behavior may be undefined if called while the subscription could be executing.
+   * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
+   */
   void set_message_memory_strategy(
     typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr message_memory_strategy)
   {
     message_memory_strategy_ = message_memory_strategy;
   }
-
   std::shared_ptr<void> create_message()
   {
+    /* The default message memory strategy provides a dynamically allocated message on each call to
+     * create_message, though alternative memory strategies that re-use a preallocated message may be
+     * used (see rclcpp/strategies/message_pool_memory_strategy.hpp).
+     */
     return message_memory_strategy_->borrow_message();
   }
 
