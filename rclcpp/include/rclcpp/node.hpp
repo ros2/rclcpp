@@ -213,7 +213,7 @@ private:
   static const rosidl_message_type_support_t * ipm_ts_;
 
   bool
-  group_in_node(callback_group::CallbackGroup::SharedPtr & group);
+  group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
   std::string name_;
 

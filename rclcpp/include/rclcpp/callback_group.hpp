@@ -63,25 +63,25 @@ private:
 
   void
   add_subscription(
-    const subscription::SubscriptionBase::SharedPtr & subscription_ptr)
+    const subscription::SubscriptionBase::SharedPtr subscription_ptr)
   {
     subscription_ptrs_.push_back(subscription_ptr);
   }
 
   void
-  add_timer(const timer::TimerBase::SharedPtr & timer_ptr)
+  add_timer(const timer::TimerBase::SharedPtr timer_ptr)
   {
     timer_ptrs_.push_back(timer_ptr);
   }
 
   void
-  add_service(const service::ServiceBase::SharedPtr & service_ptr)
+  add_service(const service::ServiceBase::SharedPtr service_ptr)
   {
     service_ptrs_.push_back(service_ptr);
   }
 
   void
-  add_client(const client::ClientBase::SharedPtr & client_ptr)
+  add_client(const client::ClientBase::SharedPtr client_ptr)
   {
     client_ptrs_.push_back(client_ptr);
   }

@@ -43,7 +43,7 @@ class ParameterService
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterService);
 
-  ParameterService(const rclcpp::node::Node::SharedPtr & node)
+  ParameterService(const rclcpp::node::Node::SharedPtr node)
   : node_(node)
   {
     get_parameters_service_ = node_->create_service<rcl_interfaces::srv::GetParameters>(
