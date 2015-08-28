@@ -82,7 +82,7 @@ using rclcpp::utilities::sleep_for;
 
 /// Create a default single-threaded executor and execute any immediately available work.
 // \param[in] node_ptr Shared pointer to the node to spin.
-void spin_some(Node::SharedPtr & node_ptr)
+void spin_some(Node::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.spin_node_some(node_ptr);
@@ -90,7 +90,7 @@ void spin_some(Node::SharedPtr & node_ptr)
 
 /// Create a default single-threaded executor and spin the specified node.
 // \param[in] node_ptr Shared pointer to the node to spin.
-void spin(Node::SharedPtr & node_ptr)
+void spin(Node::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node_ptr);
@@ -100,7 +100,7 @@ void spin(Node::SharedPtr & node_ptr)
 template<typename FutureT>
 std::shared_future<FutureT> &
 spin_until_future_complete(
-  Node::SharedPtr & node_ptr, std::shared_future<FutureT> & future)
+  Node::SharedPtr node_ptr, std::shared_future<FutureT> & future)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   rclcpp::executors::spin_node_until_future_complete<FutureT>(

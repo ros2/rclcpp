@@ -136,13 +136,13 @@ public:
   }
 
   SharedFuture async_send_request(
-    typename ServiceT::Request::SharedPtr & request)
+    typename ServiceT::Request::SharedPtr request)
   {
     return async_send_request(request, [](SharedFuture) {});
   }
 
   SharedFuture async_send_request(
-    typename ServiceT::Request::SharedPtr & request,
+    typename ServiceT::Request::SharedPtr request,
     CallbackType cb)
   {
     int64_t sequence_number;

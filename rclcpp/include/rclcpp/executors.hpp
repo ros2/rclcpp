@@ -32,7 +32,7 @@ using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 template<typename FutureT>
 std::shared_future<FutureT> &
 spin_node_until_future_complete(
-  rclcpp::executor::Executor & executor, rclcpp::node::Node::SharedPtr & node_ptr,
+  rclcpp::executor::Executor & executor, rclcpp::node::Node::SharedPtr node_ptr,
   std::shared_future<FutureT> & future)
 {
   std::future_status status;

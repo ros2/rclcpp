@@ -185,7 +185,7 @@ Node::create_publisher(
 }
 
 bool
-Node::group_in_node(callback_group::CallbackGroup::SharedPtr & group)
+Node::group_in_node(callback_group::CallbackGroup::SharedPtr group)
 {
   bool group_belongs_to_this_node = false;
   for (auto & weak_group : this->callback_groups_) {

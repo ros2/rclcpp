@@ -46,7 +46,7 @@ class AsyncParametersClient
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AsyncParametersClient);
 
-  AsyncParametersClient(const rclcpp::node::Node::SharedPtr & node,
+  AsyncParametersClient(const rclcpp::node::Node::SharedPtr node,
     const std::string & remote_node_name = "")
   : node_(node)
   {
@@ -255,7 +255,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(SyncParametersClient);
 
   SyncParametersClient(
-    rclcpp::node::Node::SharedPtr & node)
+    rclcpp::node::Node::SharedPtr node)
   : node_(node)
   {
     executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
@@ -263,8 +263,8 @@ public:
   }
 
   SyncParametersClient(
-    rclcpp::executor::Executor::SharedPtr & executor,
-    rclcpp::node::Node::SharedPtr & node)
+    rclcpp::executor::Executor::SharedPtr executor,
+    rclcpp::node::Node::SharedPtr node)
   : executor_(executor), node_(node)
   {
     async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);

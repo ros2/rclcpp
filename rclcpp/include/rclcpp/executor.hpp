@@ -116,7 +116,7 @@ public:
    * waiting for work in another thread, because otherwise the executor would never be notified.
    */
   virtual void
-  remove_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify = true)
+  remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify = true)
   {
     bool node_removed = false;
     weak_nodes_.erase(
@@ -147,7 +147,7 @@ public:
    * function to be non-blocking.
    */
   template<typename T = std::milli>
-  void spin_node_once(rclcpp::node::Node::SharedPtr & node,
+  void spin_node_once(rclcpp::node::Node::SharedPtr node,
     std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
   {
     this->add_node(node, false);
@@ -163,7 +163,7 @@ public:
   /**
    * \param[in] node Shared pointer to the node to add.
    */
-  void spin_node_some(rclcpp::node::Node::SharedPtr & node)
+  void spin_node_some(rclcpp::node::Node::SharedPtr node)
   {
     this->add_node(node, false);
     spin_some();
@@ -207,7 +207,7 @@ protected:
    * service, client).
    */
   void
-  execute_any_executable(AnyExecutable::SharedPtr & any_exec)
+  execute_any_executable(AnyExecutable::SharedPtr any_exec)
   {
     if (!any_exec) {
       return;
@@ -239,7 +239,7 @@ protected:
 
   static void
   execute_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr & subscription)
+    rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
   {
     std::shared_ptr<void> message = subscription->create_message();
     bool taken = false;
@@ -261,7 +261,7 @@ protected:
 
   static void
   execute_intra_process_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr & subscription)
+    rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
   {
     rcl_interfaces::msg::IntraProcessMessage ipm;
     bool taken = false;
@@ -285,14 +285,14 @@ protected:
 
   static void
   execute_timer(
-    rclcpp::timer::TimerBase::SharedPtr & timer)
+    rclcpp::timer::TimerBase::SharedPtr timer)
   {
     timer->callback_();
   }
 
   static void
   execute_service(
-    rclcpp::service::ServiceBase::SharedPtr & service)
+    rclcpp::service::ServiceBase::SharedPtr service)
   {
     std::shared_ptr<void> request_header = service->create_request_header();
     std::shared_ptr<void> request = service->create_request();
@@ -315,7 +315,7 @@ protected:
 
   static void
   execute_client(
-    rclcpp::client::ClientBase::SharedPtr & client)
+    rclcpp::client::ClientBase::SharedPtr client)
   {
     std::shared_ptr<void> request_header = client->create_request_header();
     std::shared_ptr<void> response = client->create_response();
@@ -623,7 +623,7 @@ protected:
   }
 
   rclcpp::node::Node::SharedPtr
-  get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr & group)
+  get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group)
   {
     if (!group) {
       return rclcpp::node::Node::SharedPtr();
@@ -645,7 +645,7 @@ protected:
 
   rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_timer(
-    rclcpp::timer::TimerBase::SharedPtr & timer)
+    rclcpp::timer::TimerBase::SharedPtr timer)
   {
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
@@ -669,7 +669,7 @@ protected:
   }
 
   void
-  get_next_timer(AnyExecutable::SharedPtr & any_exec)
+  get_next_timer(AnyExecutable::SharedPtr any_exec)
   {
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
@@ -727,7 +727,7 @@ protected:
 
   rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr & subscription)
+    rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
   {
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
@@ -751,7 +751,7 @@ protected:
   }
 
   void
-  get_next_subscription(AnyExecutable::SharedPtr & any_exec)
+  get_next_subscription(AnyExecutable::SharedPtr any_exec)
   {
     auto it = subscriber_handles_.begin();
     while (it != subscriber_handles_.end()) {
@@ -794,7 +794,7 @@ protected:
 
   rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_service(
-    rclcpp::service::ServiceBase::SharedPtr & service)
+    rclcpp::service::ServiceBase::SharedPtr service)
   {
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
@@ -817,7 +817,7 @@ protected:
   }
 
   void
-  get_next_service(AnyExecutable::SharedPtr & any_exec)
+  get_next_service(AnyExecutable::SharedPtr any_exec)
   {
     auto it = service_handles_.begin();
     while (it != service_handles_.end()) {
@@ -851,7 +851,7 @@ protected:
 
   rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_client(
-    rclcpp::client::ClientBase::SharedPtr & client)
+    rclcpp::client::ClientBase::SharedPtr client)
   {
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
@@ -874,7 +874,7 @@ protected:
   }
 
   void
-  get_next_client(AnyExecutable::SharedPtr & any_exec)
+  get_next_client(AnyExecutable::SharedPtr any_exec)
   {
     auto it = client_handles_.begin();
     while (it != client_handles_.end()) {
