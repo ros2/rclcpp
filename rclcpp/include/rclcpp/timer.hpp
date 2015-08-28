@@ -66,12 +66,21 @@ public:
     this->canceled_ = true;
   }
 
+  /// Check how long the timer has until its next scheduled callback.
+  // \return A std::chrono::duration representing the relative time until the next callback.
   virtual std::chrono::nanoseconds
   time_until_trigger() = 0;
 
+  /// Is the clock steady (i.e. is the time between ticks constant?)
+  // \return True if the clock used by this timer is steady.
   virtual bool is_steady() = 0;
 
-  // Interface for externally triggering the timer event
+  /// Check if the timer needs to trigger the callback.
+  /**
+   * This function expects its caller to immediately trigger the callback after this function,
+   * since it maintains the last time the callback was triggered.
+   * \return True if the timer needs to trigger.
+   */
   virtual bool check_and_trigger() = 0;
 
 protected:
@@ -82,6 +91,7 @@ protected:
 
 };
 
+/// Generic timer templated on the clock type. Periodically executes a user-specified callback.
 template<class Clock = std::chrono::high_resolution_clock>
 class GenericTimer : public TimerBase
 {
@@ -90,6 +100,11 @@ class GenericTimer : public TimerBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericTimer);
 
+  /// Default constructor.
+  /**
+   * \param[in] period The interval at which the timer fires.
+   * \param[in] callback User-specified callback function.
+   */
   GenericTimer(std::chrono::nanoseconds period, CallbackType callback)
   : TimerBase(period, callback), loop_rate_(period)
   {
@@ -98,12 +113,13 @@ public:
     last_triggered_time_ = Clock::now() - period;
   }
 
+  /// Default destructor.
   virtual ~GenericTimer()
   {
+    // Stop the timer from running.
     cancel();
   }
 
-  // return: true to trigger callback on the next "execute_timer" call in executor
   bool
   check_and_trigger()
   {

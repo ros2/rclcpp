@@ -56,11 +56,7 @@ class Executor;
 
 namespace node
 {
-
-/* ROS Node Interface.
- *
- * This is the single point of entry for creating publishers and subscribers.
- */
+/// Node is the single point of entry for creating publishers and subscribers.
 class Node
 {
   friend class rclcpp::executor::Executor;
@@ -68,29 +64,55 @@ class Node
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
-  /* Create a node based on the node name. */
+  /// Create a new node with the specified name.
+  /**
+   * \param[in] node_name Name of the node.
+   * \param[in] use_intra_process_comms True to use the optimized intra-process communication
+   * pipeline to pass messages between nodes in the same process using shared memory.
+   */
   Node(const std::string & node_name, bool use_intra_process_comms = false);
-  /* Create a node based on the node name and a rclcpp::context::Context. */
+
+  /// Create a node based on the node name and a rclcpp::context::Context.
+  /**
+   * \param[in] node_name Name of the node.
+   * \param[in] context The context for the node (usually represents the state of a process).
+   * \param[in] use_intra_process_comms True to use the optimized intra-process communication
+   * pipeline to pass messages between nodes in the same process using shared memory.
+   */
   Node(
     const std::string & node_name, rclcpp::context::Context::SharedPtr context,
     bool use_intra_process_comms = false);
 
-  /* Get the name of the node. */
+  /// Get the name of the node.
+  // \return The name of the node.
   const std::string &
   get_name() const {return name_; }
 
-  /* Create and return a callback group. */
+  /// Create and return a callback group.
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
-  /* Create and return a Publisher. */
+  /// Create and return a Publisher.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
+   * \return Shared pointer to the created publisher.
+   */
   template<typename MessageT>
   rclcpp::publisher::Publisher::SharedPtr
   create_publisher(
     const std::string & topic_name, const rmw_qos_profile_t & qos_profile);
 
-  /* Create and return a Subscription. */
-
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
+   * \param[in] callback The user-defined callback function.
+   * \param[in] group The callback group for this subscription. NULL for no callback group.
+   * \param[in] ignore_local_publications True to ignore local publications.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
   /* TODO(jacquelinekay):
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
@@ -117,13 +139,24 @@ public:
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
     msg_mem_strat = nullptr);
 
-  /* Create a timer. */
+  /// Create a timer.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   */
   rclcpp::timer::WallTimer::SharedPtr
   create_wall_timer(
     std::chrono::nanoseconds period,
     rclcpp::timer::CallbackType callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  /// Create a timer with a sub-nanosecond precision update period.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   */
   // TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
   // rclcpp::timer::WallTimer::SharedPtr
   // create_wall_timer(

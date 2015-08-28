@@ -24,6 +24,8 @@ namespace rclcpp
 namespace message_memory_strategy
 {
 
+/// Default allocation strategy for messages received by subscriptions.
+// A message memory strategy must be templated on the type of the subscription it belongs to.
 template<typename MessageT>
 class MessageMemoryStrategy
 {
@@ -31,16 +33,21 @@ class MessageMemoryStrategy
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MessageMemoryStrategy);
 
+  /// Default factory method
   static SharedPtr create_default()
   {
     return SharedPtr(new MessageMemoryStrategy<MessageT>);
   }
 
+  /// By default, dynamically allocate a new message.
+  // \return Shared pointer to the new message.
   virtual std::shared_ptr<MessageT> borrow_message()
   {
     return std::shared_ptr<MessageT>(new MessageT);
   }
 
+  /// Release ownership of the message, which will deallocate it if it has no more owners.
+  // \param[in] Shared pointer to the message we are returning.
   virtual void return_message(std::shared_ptr<MessageT> & msg)
   {
     msg.reset();

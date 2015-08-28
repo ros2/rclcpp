@@ -27,6 +27,8 @@ namespace memory_strategies
 
 namespace static_memory_strategy
 {
+
+/// Representation of the upper bounds on the memory pools managed by StaticMemoryStrategy.
 struct ObjectPoolBounds
 {
 public:
@@ -37,41 +39,74 @@ public:
   size_t max_guard_conditions;
   size_t pool_size;
 
+  /// Default constructor attempts to set reasonable default limits on the fields.
   ObjectPoolBounds()
   : max_subscriptions(10), max_services(10), max_clients(10),
     max_executables(1), max_guard_conditions(2), pool_size(1024)
   {}
 
+  // Setters implement named parameter idiom/method chaining
+
+  /// Set the maximum number of subscriptions.
+  /**
+   * \param[in] subscriptions Maximum number of subscriptions.
+   * \return Reference to this object, for method chaining.
+   */
   ObjectPoolBounds & set_max_subscriptions(size_t subscriptions)
   {
     max_subscriptions = subscriptions;
     return *this;
   }
 
+  /// Set the maximum number of services.
+  /**
+   * \param[in] services Maximum number of services.
+   * \return Reference to this object, for method chaining.
+   */
   ObjectPoolBounds & set_max_services(size_t services)
   {
     max_services = services;
     return *this;
   }
 
+  /// Set the maximum number of clients.
+  /**
+   * \param[in] clients Maximum number of clients.
+   * \return Reference to this object, for method chaining.
+   */
   ObjectPoolBounds & set_max_clients(size_t clients)
   {
     max_clients = clients;
     return *this;
   }
 
+  /// Set the maximum number of guard conditions.
+  /**
+   * \param[in] guard conditions Maximum number of guard conditions.
+   * \return Reference to this object, for method chaining.
+   */
   ObjectPoolBounds & set_max_guard_conditions(size_t guard_conditions)
   {
     max_guard_conditions = guard_conditions;
     return *this;
   }
 
+  /// Set the maximum number of executables.
+  /**
+   * \param[in] executables Maximum number of executables.
+   * \return Reference to this object, for method chaining.
+   */
   ObjectPoolBounds & set_max_executables(size_t executables)
   {
     max_executables = executables;
     return *this;
   }
 
+  /// Set the maximum memory pool size.
+  /**
+   * \param[in] executables Maximum memory pool size.
+   * \return Reference to this object, for method chaining.
+   */
   ObjectPoolBounds & set_memory_pool_size(size_t pool)
   {
     pool_size = pool;
@@ -80,9 +115,20 @@ public:
 };
 
 
+/// Static memory allocation alternative to the default memory strategy.
+/**
+ * The name is a bit of a misnomer. The memory managed by this class is actually allocated
+ * dynamically in the constructor, but no subsequent accesses to the class (besides the destructor)
+ * allocate or free memory.
+ * StaticMemoryStrategy puts a hard limit on the number of subscriptions, etc. that can be executed
+ * in one iteration of `Executor::spin`. Thus it allows for memory allocation optimization for
+ * situations where a limit on the number of such entities is known.
+ */
 class StaticMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 public:
+  /// Default constructor.
+  // \param[in] bounds Representation of the limits on memory managed by this class.
   StaticMemoryStrategy(ObjectPoolBounds bounds = ObjectPoolBounds())
   : bounds_(bounds), memory_pool_(nullptr), subscription_pool_(nullptr),
     service_pool_(nullptr), guard_condition_pool_(nullptr), executable_pool_(nullptr)
@@ -130,6 +176,7 @@ public:
     }
   }
 
+  /// Default destructor. Free all allocated memory.
   ~StaticMemoryStrategy()
   {
     if (bounds_.pool_size) {
@@ -149,6 +196,12 @@ public:
     }
   }
 
+  /// Borrow handles by returning a pointer to the preallocated object pool for the specified type.
+  /**
+   * \param[in] The type of entity that this function is requesting for.
+   * \param[in] The number of handles to borrow.
+   * \return Pointer to the allocated handles.
+   */
   void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
     switch (type) {
@@ -182,6 +235,11 @@ public:
     throw std::runtime_error("Unrecognized enum, could not borrow handle memory.");
   }
 
+  /// Return the borrowed handles by clearing the object pool for the correspondign type.
+  /**
+   * \param[in] The type of entity that this function is returning.
+   * \param[in] Pointer to the handles returned.
+   */
   void return_handles(HandleType type, void ** handles)
   {
     (void)handles;
@@ -211,10 +269,12 @@ public:
     }
   }
 
+  /// Instantiate the next executable by borrowing space from the preallocated executables pool.
+  // \return Shared pointer to the executable.
   executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
     if (exec_seq_ >= bounds_.max_executables) {
-      // wrap around
+      // wrap around (ring buffer logic)
       exec_seq_ = 0;
     }
     size_t prev_exec_seq_ = exec_seq_;
@@ -224,6 +284,7 @@ public:
       throw std::runtime_error("Executable pool member was NULL");
     }
 
+    // Make sure to clear the executable fields.
     executable_pool_[prev_exec_seq_]->subscription.reset();
     executable_pool_[prev_exec_seq_]->timer.reset();
     executable_pool_[prev_exec_seq_]->service.reset();
@@ -234,6 +295,11 @@ public:
     return executable_pool_[prev_exec_seq_];
   }
 
+  /// General allocate: reserve space in the memory pool reserved by this function.
+  /**
+   * \param[in] size Number of bytes to allocate.
+   * \return Pointer to the allocated chunk of memory.
+   */
   void * alloc(size_t size)
   {
     // Extremely naive static allocation strategy
@@ -253,6 +319,10 @@ public:
     return memory_pool_[prev_pool_seq];
   }
 
+  /// Release the allocated memory in the memory pool.
+  /**
+   * \param[in] Pointer to deallocate.
+   */
   void free(void * ptr)
   {
     if (memory_map_.count(ptr) == 0) {
