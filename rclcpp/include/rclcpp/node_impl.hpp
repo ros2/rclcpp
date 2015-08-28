@@ -153,7 +153,7 @@ Node::create_publisher(
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
     // *INDENT-OFF*
     auto shared_publish_callback =
-      [weak_ipm](uint64_t publisher_id, std::shared_ptr<void> msg) -> uint64_t
+      [weak_ipm](uint64_t publisher_id, void * msg, const std::type_info & type_info) -> uint64_t
     {
       auto ipm = weak_ipm.lock();
       if (!ipm) {
@@ -161,8 +161,17 @@ Node::create_publisher(
         throw std::runtime_error(
           "intra process publish called after destruction of intra process manager");
       }
-      auto typed_msg = std::static_pointer_cast<const MessageT>(msg);
-      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_msg));
+      if (!msg) {
+        throw std::runtime_error("cannot publisher msg which is a null pointer");
+      }
+      auto & message_type_info = typeid(MessageT);
+      if (message_type_info != type_info) {
+        throw std::runtime_error(
+          std::string("published type '") + type_info.name() +
+          "' is incompatible from the publisher type '" + message_type_info.name() + "'");
+      }
+      MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
+      std::unique_ptr<MessageT> unique_msg(typed_message_ptr);
       uint64_t message_seq = ipm->store_intra_process_message(publisher_id, unique_msg);
       return message_seq;
     };
@@ -188,12 +197,56 @@ Node::group_in_node(callback_group::CallbackGroup::SharedPtr & group)
   return group_belongs_to_this_node;
 }
 
-template<typename MessageT>
-typename subscription::Subscription<MessageT>::SharedPtr
+template<typename MessageT, typename CallbackT>
+typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
-  std::function<void(const std::shared_ptr<MessageT> &)> callback,
+  CallbackT callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+  msg_mem_strat)
+{
+  rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
+  any_subscription_callback.set(callback);
+  return this->create_subscription_internal(
+    topic_name,
+    qos_profile,
+    any_subscription_callback,
+    group,
+    ignore_local_publications,
+    msg_mem_strat);
+}
+
+template<typename MessageT>
+typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+Node::create_subscription_with_unique_ptr_callback(
+  const std::string & topic_name,
+  const rmw_qos_profile_t & qos_profile,
+  typename rclcpp::subscription::AnySubscriptionCallback<MessageT>::UniquePtrCallback callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+  msg_mem_strat)
+{
+  rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
+  any_subscription_callback.unique_ptr_callback = callback;
+  return this->create_subscription_internal(
+    topic_name,
+    qos_profile,
+    any_subscription_callback,
+    group,
+    ignore_local_publications,
+    msg_mem_strat);
+}
+
+template<typename MessageT>
+typename subscription::Subscription<MessageT>::SharedPtr
+Node::create_subscription_internal(
+  const std::string & topic_name,
+  const rmw_qos_profile_t & qos_profile,
+  rclcpp::subscription::AnySubscriptionCallback<MessageT> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat)
@@ -305,17 +358,18 @@ Node::create_wall_timer(
   return timer;
 }
 
-rclcpp::timer::WallTimer::SharedPtr
-Node::create_wall_timer(
-  std::chrono::duration<long double, std::nano> period,
-  rclcpp::timer::CallbackType callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
-{
-  return create_wall_timer(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
-    callback,
-    group);
-}
+// TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
+// rclcpp::timer::WallTimer::SharedPtr
+// Node::create_wall_timer(
+//   std::chrono::duration<long double, std::nano> period,
+//   rclcpp::timer::CallbackType callback,
+//   rclcpp::callback_group::CallbackGroup::SharedPtr group)
+// {
+//   return create_wall_timer(
+//     std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+//     callback,
+//     group);
+// }
 
 template<typename ServiceT>
 typename client::Client<ServiceT>::SharedPtr

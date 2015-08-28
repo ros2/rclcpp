@@ -169,7 +169,8 @@ sleep_for(const std::chrono::nanoseconds & nanoseconds)
   // TODO: determine if posix's nanosleep(2) is more efficient here
   std::unique_lock<std::mutex> lock(::g_interrupt_mutex);
   auto cvs = ::g_interrupt_condition_variable.wait_for(lock, nanoseconds);
-  return cvs == std::cv_status::no_timeout;
+  // Return true if the timeout elapsed successfully, otherwise false.
+  return cvs != std::cv_status::no_timeout;
 }
 
 } /* namespace utilities */

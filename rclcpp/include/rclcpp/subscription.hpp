@@ -27,6 +27,7 @@
 
 #include <rclcpp/macros.hpp>
 #include <rclcpp/message_memory_strategy.hpp>
+#include <rclcpp/any_subscription_callback.hpp>
 
 namespace rclcpp
 {
@@ -94,9 +95,13 @@ public:
   }
 
   virtual std::shared_ptr<void> create_message() = 0;
-  virtual void handle_message(std::shared_ptr<void> & message, const rmw_gid_t * sender_id) = 0;
+  virtual void handle_message(
+    std::shared_ptr<void> & message,
+    const rmw_message_info_t & message_info) = 0;
   virtual void return_message(std::shared_ptr<void> & message) = 0;
-  virtual void handle_intra_process_message(rcl_interfaces::msg::IntraProcessMessage & ipm) = 0;
+  virtual void handle_intra_process_message(
+    rcl_interfaces::msg::IntraProcessMessage & ipm,
+    const rmw_message_info_t & message_info) = 0;
 
 protected:
   rmw_subscription_t * intra_process_subscription_handle_;
@@ -113,13 +118,14 @@ private:
 
 };
 
+using namespace any_subscription_callback;
+
 template<typename MessageT>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node::Node;
 
 public:
-  using CallbackType = std::function<void(const std::shared_ptr<MessageT> &)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
 
   Subscription(
@@ -127,11 +133,11 @@ public:
     rmw_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications,
-    CallbackType callback,
+    AnySubscriptionCallback<MessageT> callback,
     typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr memory_strategy =
     message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default())
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
-    callback_(callback),
+    any_callback_(callback),
     message_memory_strategy_(memory_strategy),
     get_intra_process_message_callback_(nullptr),
     matches_any_intra_process_publishers_(nullptr)
@@ -148,17 +154,29 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  void handle_message(std::shared_ptr<void> & message, const rmw_gid_t * sender_id)
+  void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
   {
     if (matches_any_intra_process_publishers_) {
-      if (matches_any_intra_process_publishers_(sender_id)) {
+      if (matches_any_intra_process_publishers_(&message_info.publisher_gid)) {
         // In this case, the message will be delivered via intra process and
         // we should ignore this copy of the message.
         return;
       }
     }
     auto typed_message = std::static_pointer_cast<MessageT>(message);
-    callback_(typed_message);
+    if (any_callback_.shared_ptr_callback) {
+      any_callback_.shared_ptr_callback(typed_message);
+    } else if (any_callback_.shared_ptr_with_info_callback) {
+      any_callback_.shared_ptr_with_info_callback(typed_message, message_info);
+    } else if (any_callback_.unique_ptr_callback) {
+      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
+      any_callback_.unique_ptr_callback(unique_msg);
+    } else if (any_callback_.unique_ptr_with_info_callback) {
+      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
+      any_callback_.unique_ptr_with_info_callback(unique_msg, message_info);
+    } else {
+      throw std::runtime_error("unexpected message without any callback set");
+    }
   }
 
   void return_message(std::shared_ptr<void> & message)
@@ -167,7 +185,9 @@ public:
     message_memory_strategy_->return_message(typed_message);
   }
 
-  void handle_intra_process_message(rcl_interfaces::msg::IntraProcessMessage & ipm)
+  void handle_intra_process_message(
+    rcl_interfaces::msg::IntraProcessMessage & ipm,
+    const rmw_message_info_t & message_info)
   {
     if (!get_intra_process_message_callback_) {
       // throw std::runtime_error(
@@ -188,8 +208,19 @@ public:
       // TODO(wjwwood): should we notify someone of this? log error, log warning?
       return;
     }
-    typename MessageT::SharedPtr shared_msg = std::move(msg);
-    callback_(shared_msg);
+    if (any_callback_.shared_ptr_callback) {
+      typename MessageT::SharedPtr shared_msg = std::move(msg);
+      any_callback_.shared_ptr_callback(shared_msg);
+    } else if (any_callback_.shared_ptr_with_info_callback) {
+      typename MessageT::SharedPtr shared_msg = std::move(msg);
+      any_callback_.shared_ptr_with_info_callback(shared_msg, message_info);
+    } else if (any_callback_.unique_ptr_callback) {
+      any_callback_.unique_ptr_callback(msg);
+    } else if (any_callback_.unique_ptr_with_info_callback) {
+      any_callback_.unique_ptr_with_info_callback(msg, message_info);
+    } else {
+      throw std::runtime_error("unexpected message without any callback set");
+    }
   }
 
 private:
@@ -213,7 +244,7 @@ private:
 
   RCLCPP_DISABLE_COPY(Subscription);
 
-  CallbackType callback_;
+  AnySubscriptionCallback<MessageT> any_callback_;
   typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
   message_memory_strategy_;
 

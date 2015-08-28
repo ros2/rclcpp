@@ -64,7 +64,7 @@ public:
   virtual void spin() = 0;
 
   virtual void
-  add_node(rclcpp::node::Node::SharedPtr & node_ptr, bool notify = true)
+  add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify = true)
   {
     // Check to ensure node not already added
     for (auto & weak_node : weak_nodes_) {
@@ -190,7 +190,8 @@ protected:
       rmw_take_with_info(subscription->subscription_handle_, message.get(), &taken, &message_info);
     if (ret == RMW_RET_OK) {
       if (taken) {
-        subscription->handle_message(message, &message_info.publisher_gid);
+        message_info.from_intra_process = false;
+        subscription->handle_message(message, message_info);
       }
     } else {
       fprintf(stderr,
@@ -206,10 +207,16 @@ protected:
   {
     rcl_interfaces::msg::IntraProcessMessage ipm;
     bool taken = false;
-    rmw_ret_t status = rmw_take(subscription->intra_process_subscription_handle_, &ipm, &taken);
+    rmw_message_info_t message_info;
+    rmw_ret_t status = rmw_take_with_info(
+      subscription->intra_process_subscription_handle_,
+      &ipm,
+      &taken,
+      &message_info);
     if (status == RMW_RET_OK) {
       if (taken) {
-        subscription->handle_intra_process_message(ipm);
+        message_info.from_intra_process = true;
+        subscription->handle_intra_process_message(ipm, message_info);
       }
     } else {
       fprintf(stderr,
