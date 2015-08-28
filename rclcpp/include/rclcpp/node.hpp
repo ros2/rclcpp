@@ -29,6 +29,7 @@
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
+#include <rclcpp/function_traits.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/message_memory_strategy.hpp>
 #include <rclcpp/parameter.hpp>
@@ -55,43 +56,6 @@ class Executor;
 
 namespace node
 {
-
-/* NOTE(esteve):
- * We support service callbacks that can optionally take the request id,
- * which should be possible with two overloaded create_service methods,
- * but unfortunately std::function's constructor on VS2015 is too greedy,
- * so we need a mechanism for checking the arity and the type of each argument
- * in a callback function.
- */
-template<typename FunctionT>
-struct function_traits
-{
-  static constexpr std::size_t arity =
-    function_traits<decltype( & FunctionT::operator())>::arity - 1;
-
-  template<std::size_t N>
-  using argument_type =
-      typename function_traits<decltype( & FunctionT::operator())>::template argument_type<N + 1>;
-};
-
-template<typename ReturnTypeT, typename ... Args>
-struct function_traits<ReturnTypeT(Args ...)>
-{
-  static constexpr std::size_t arity = sizeof ... (Args);
-
-  template<std::size_t N>
-  using argument_type = typename std::tuple_element<N, std::tuple<Args ...>>::type;
-};
-
-template<typename ReturnTypeT, typename ... Args>
-struct function_traits<ReturnTypeT (*)(Args ...)>: public function_traits<ReturnTypeT(Args ...)>
-{};
-
-template<typename ClassT, typename ReturnTypeT, typename ... Args>
-struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
-  : public function_traits<ReturnTypeT(ClassT &, Args ...)>
-{};
-
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node
 {
@@ -153,12 +117,23 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT>
+  template<typename MessageT, typename CallbackT>
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
-    std::function<void(const std::shared_ptr<MessageT> &)> callback,
+    CallbackT callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    bool ignore_local_publications = false,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+    msg_mem_strat = nullptr);
+
+  template<typename MessageT>
+  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  create_subscription_with_unique_ptr_callback(
+    const std::string & topic_name,
+    const rmw_qos_profile_t & qos_profile,
+    typename rclcpp::subscription::AnySubscriptionCallback<MessageT>::UniquePtrCallback callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
@@ -182,11 +157,12 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
-  rclcpp::timer::WallTimer::SharedPtr
-  create_wall_timer(
-    std::chrono::duration<long double, std::nano> period,
-    rclcpp::timer::CallbackType callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+  // TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
+  // rclcpp::timer::WallTimer::SharedPtr
+  // create_wall_timer(
+  //   std::chrono::duration<long double, std::nano> period,
+  //   rclcpp::timer::CallbackType callback,
+  //   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   using CallbackGroup = rclcpp::callback_group::CallbackGroup;
   using CallbackGroupWeakPtr = std::weak_ptr<CallbackGroup>;
@@ -260,6 +236,16 @@ private:
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
   publisher::Publisher::SharedPtr events_publisher_;
+
+  template<typename MessageT>
+  typename subscription::Subscription<MessageT>::SharedPtr
+  create_subscription_internal(
+    const std::string & topic_name,
+    const rmw_qos_profile_t & qos_profile,
+    rclcpp::subscription::AnySubscriptionCallback<MessageT> callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group,
+    bool ignore_local_publications,
+    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat);
 
   template<
     typename ServiceT,

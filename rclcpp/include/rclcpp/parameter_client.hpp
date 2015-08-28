@@ -229,7 +229,7 @@ public:
 
   template<typename FunctorT>
   typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
-  on_parameter_event(FunctorT & callback)
+  on_parameter_event(FunctorT callback)
   {
     return node_->create_subscription<rcl_interfaces::msg::ParameterEvent>(
       "parameter_events", rmw_qos_profile_parameter_events, callback);

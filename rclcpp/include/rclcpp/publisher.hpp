@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 
@@ -103,29 +104,71 @@ public:
    */
   template<typename MessageT>
   void
-  publish(std::shared_ptr<MessageT> & msg)
+  publish(std::unique_ptr<MessageT> & msg)
   {
-    rmw_ret_t status;
-    status = rmw_publish(publisher_handle_, msg.get());
-    if (status != RMW_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to publish message: ") + rmw_get_error_string_safe());
-      // *INDENT-ON*
-    }
+    this->do_inter_process_publish<MessageT>(msg.get());
     if (store_intra_process_message_) {
-      uint64_t message_seq = store_intra_process_message_(intra_process_publisher_id_, msg);
+      // Take the pointer from the unique_msg, release it and pass as a void *
+      // to the ipm. The ipm should then capture it again as a unique_ptr of
+      // the correct type.
+      // TODO(wjwwood):
+      //   investigate how to transfer the custom deleter (if there is one)
+      //   from the incoming unique_ptr through to the ipm's unique_ptr.
+      //   See: http://stackoverflow.com/questions/11002641/dynamic-casting-for-unique-ptr
+      MessageT * msg_ptr = msg.get();
+      msg.release();
+      uint64_t message_seq;
+      {
+        std::lock_guard<std::mutex> lock(intra_process_publish_mutex_);
+        message_seq =
+          store_intra_process_message_(intra_process_publisher_id_, msg_ptr, typeid(MessageT));
+      }
       rcl_interfaces::msg::IntraProcessMessage ipm;
       ipm.publisher_id = intra_process_publisher_id_;
       ipm.message_sequence = message_seq;
-      status = rmw_publish(intra_process_publisher_handle_, &ipm);
+      auto status = rmw_publish(intra_process_publisher_handle_, &ipm);
       if (status != RMW_RET_OK) {
         // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
         throw std::runtime_error(
           std::string("failed to publish intra process message: ") + rmw_get_error_string_safe());
         // *INDENT-ON*
       }
+    } else {
+      // Always destroy the message, even if we don't consume it, for consistency.
+      msg.reset();
     }
+  }
+
+  template<typename MessageT>
+  void
+  publish(const std::shared_ptr<MessageT> & msg)
+  {
+    // Avoid allocating when not using intra process.
+    if (!store_intra_process_message_) {
+      // In this case we're not using intra process.
+      return this->do_inter_process_publish(msg.get());
+    }
+    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
+    // TODO(wjwwood):
+    //   The intra process manager should probably also be able to store
+    //   shared_ptr's and do the "smart" thing based on other intra process
+    //   subscriptions. For now call the other publish().
+    std::unique_ptr<MessageT> unique_msg(new MessageT(*msg.get()));
+    return this->publish(unique_msg);
+  }
+
+  template<typename MessageT>
+  void
+  publish(const MessageT & msg)
+  {
+    // Avoid allocating when not using intra process.
+    if (!store_intra_process_message_) {
+      // In this case we're not using intra process.
+      return this->do_inter_process_publish(msg.get());
+    }
+    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
+    std::unique_ptr<MessageT> unique_msg(new MessageT(msg));
+    return this->publish(unique_msg);
   }
 
   /// Get the topic that this publisher publishes on.
@@ -197,13 +240,27 @@ public:
     return result;
   }
 
-  typedef std::function<uint64_t(uint64_t, std::shared_ptr<void>)> StoreSharedMessageCallbackT;
+  typedef std::function<uint64_t(uint64_t, void *, const std::type_info &)> StoreMessageCallbackT;
 
 protected:
+  template<typename MessageT>
+  void
+  do_inter_process_publish(MessageT * msg)
+  {
+    auto status = rmw_publish(publisher_handle_, msg);
+    if (status != RMW_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to publish message: ") + rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
+  }
+
+
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,
-    StoreSharedMessageCallbackT callback,
+    StoreMessageCallbackT callback,
     rmw_publisher_t * intra_process_publisher_handle)
   {
     intra_process_publisher_id_ = intra_process_publisher_id;
@@ -230,10 +287,12 @@ private:
   size_t queue_size_;
 
   uint64_t intra_process_publisher_id_;
-  StoreSharedMessageCallbackT store_intra_process_message_;
+  StoreMessageCallbackT store_intra_process_message_;
 
   rmw_gid_t rmw_gid_;
   rmw_gid_t intra_process_rmw_gid_;
+
+  std::mutex intra_process_publish_mutex_;
 
 };
 

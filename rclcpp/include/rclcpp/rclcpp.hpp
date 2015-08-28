@@ -40,6 +40,18 @@ const std::chrono::nanoseconds operator"" _s(long double s)
 }
 
 const std::chrono::nanoseconds
+operator"" _ms(unsigned long long ms)
+{
+  return std::chrono::milliseconds(ms);
+}
+const std::chrono::nanoseconds
+operator"" _ms(long double ms)
+{
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+    std::chrono::duration<long double, std::milli>(ms));
+}
+
+const std::chrono::nanoseconds
 operator"" _ns(unsigned long long ns)
 {
   return std::chrono::nanoseconds(ns);
