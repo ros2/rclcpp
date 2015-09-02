@@ -78,8 +78,8 @@ public:
   virtual std::shared_ptr<void> create_request() = 0;
   virtual std::shared_ptr<void> create_request_header() = 0;
   virtual void handle_request(
-    std::shared_ptr<void> & request_header,
-    std::shared_ptr<void> & request) = 0;
+    std::shared_ptr<void> request_header,
+    std::shared_ptr<void> request) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
@@ -97,14 +97,14 @@ class Service : public ServiceBase
 public:
   using CallbackType = std::function<
       void(
-        const std::shared_ptr<typename ServiceT::Request> &,
-        std::shared_ptr<typename ServiceT::Response> &)>;
+        const std::shared_ptr<typename ServiceT::Request>,
+        std::shared_ptr<typename ServiceT::Response>)>;
 
   using CallbackWithHeaderType = std::function<
       void(
-        const std::shared_ptr<rmw_request_id_t> &,
-        const std::shared_ptr<typename ServiceT::Request> &,
-        std::shared_ptr<typename ServiceT::Response> &)>;
+        const std::shared_ptr<rmw_request_id_t>,
+        const std::shared_ptr<typename ServiceT::Request>,
+        std::shared_ptr<typename ServiceT::Response>)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Service);
 
   Service(
@@ -137,7 +137,7 @@ public:
     return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
-  void handle_request(std::shared_ptr<void> & request_header, std::shared_ptr<void> & request)
+  void handle_request(std::shared_ptr<void> request_header, std::shared_ptr<void> request)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
@@ -151,8 +151,8 @@ public:
   }
 
   void send_response(
-    std::shared_ptr<rmw_request_id_t> & req_id,
-    std::shared_ptr<typename ServiceT::Response> & response)
+    std::shared_ptr<rmw_request_id_t> req_id,
+    std::shared_ptr<typename ServiceT::Response> response)
   {
     rmw_ret_t status = rmw_send_response(get_service_handle(), req_id.get(), response.get());
     if (status != RMW_RET_OK) {
