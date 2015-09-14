@@ -98,14 +98,13 @@ void spin(Node::SharedPtr node_ptr)
 }
 
 template<typename FutureT>
-std::shared_future<FutureT> &
+rclcpp::executors::FutureReturnCode
 spin_until_future_complete(
   Node::SharedPtr node_ptr, std::shared_future<FutureT> & future)
 {
   rclcpp::executors::SingleThreadedExecutor executor;
-  rclcpp::executors::spin_node_until_future_complete<FutureT>(
+  return rclcpp::executors::spin_node_until_future_complete<FutureT>(
     executor, node_ptr, future);
-  return future;
 }
 
 } /* namespace rclcpp */
