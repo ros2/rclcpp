@@ -15,14 +15,16 @@
 #ifndef RCLCPP_RCLCPP_MEMORY_STRATEGIES_HPP_
 #define RCLCPP_RCLCPP_MEMORY_STRATEGIES_HPP_
 
-#include <rclcpp/strategies/static_memory_strategy.hpp>
+#include <rclcpp/strategies/heap_pool_memory_strategy.hpp>
+#include <rclcpp/strategies/stack_pool_memory_strategy.hpp>
 
 namespace rclcpp
 {
 namespace memory_strategies
 {
 
-using rclcpp::memory_strategies::static_memory_strategy::StaticMemoryStrategy;
+using rclcpp::memory_strategies::heap_pool_memory_strategy::HeapPoolMemoryStrategy;
+using rclcpp::memory_strategies::stack_pool_memory_strategy::StackPoolMemoryStrategy;
 
 }  /* memory_strategies */
 }  /* rclcpp */
