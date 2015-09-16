@@ -97,14 +97,15 @@ void spin(Node::SharedPtr node_ptr)
   executor.spin();
 }
 
-template<typename FutureT>
+template<typename FutureT, typename TimeT = std::milli>
 rclcpp::executors::FutureReturnCode
 spin_until_future_complete(
-  Node::SharedPtr node_ptr, std::shared_future<FutureT> & future)
+  Node::SharedPtr node_ptr, std::shared_future<FutureT> & future,
+  std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   return rclcpp::executors::spin_node_until_future_complete<FutureT>(
-    executor, node_ptr, future);
+    executor, node_ptr, future, timeout);
 }
 
 } /* namespace rclcpp */
