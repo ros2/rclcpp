@@ -71,12 +71,10 @@ Node::Node(
       throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
     domain_id = static_cast<size_t>(number);
-  }
 #ifdef _WIN32
-  if (ros_domain_id) {
     free(ros_domain_id);
-  }
 #endif
+  }
 
   auto node = rmw_create_node(name_.c_str(), domain_id);
   if (!node) {
