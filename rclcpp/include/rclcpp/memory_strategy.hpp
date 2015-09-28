@@ -97,6 +97,10 @@ public:
   {
     return std::free(ptr);
   }
+
+  std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
+  std::vector<rclcpp::service::ServiceBase::SharedPtr> services;
+  std::vector<rclcpp::client::ClientBase::SharedPtr> clients;
 };
 
 

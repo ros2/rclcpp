@@ -76,6 +76,9 @@ public:
     for (size_t i = 0; i < PoolSize; ++i) {
       memory_map_[memory_pool_[i]] = 0;
     }
+    subs.reserve(MaxSubscriptions);
+    clients.reserve(MaxClients);
+    services.reserve(MaxServices);
   }
 
   void ** borrow_handles(HandleType type, size_t number_of_handles)

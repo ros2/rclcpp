@@ -171,6 +171,10 @@ public:
     for (size_t i = 0; i < bounds_.pool_size; ++i) {
       memory_map_[memory_pool_[i]] = 0;
     }
+
+    subs.reserve(bounds_.max_subscriptions);
+    clients.reserve(bounds_.max_clients);
+    services.reserve(bounds_.max_services);
   }
 
   /// Default destructor. Free all allocated memory.
