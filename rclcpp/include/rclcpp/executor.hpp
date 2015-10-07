@@ -342,11 +342,11 @@ protected:
   void
   wait_for_work(std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
   {
+    memory_strategy_->subs.clear();
+    memory_strategy_->services.clear();
+    memory_strategy_->clients.clear();
     // Collect the subscriptions and timers to be waited on
     bool has_invalid_weak_nodes = false;
-    std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
-    std::vector<rclcpp::service::ServiceBase::SharedPtr> services;
-    std::vector<rclcpp::client::ClientBase::SharedPtr> clients;
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
       if (!node) {
@@ -361,14 +361,14 @@ protected:
         for (auto & weak_subscription : group->subscription_ptrs_) {
           auto subscription = weak_subscription.lock();
           if (subscription) {
-            subs.push_back(subscription);
+            memory_strategy_->subs.push_back(subscription);
           }
         }
         for (auto & service : group->service_ptrs_) {
-          services.push_back(service);
+          memory_strategy_->services.push_back(service);
         }
         for (auto & client : group->client_ptrs_) {
-          clients.push_back(client);
+          memory_strategy_->clients.push_back(client);
         }
       }
     }
@@ -382,7 +382,7 @@ protected:
           }));
     }
     // Use the number of subscriptions to allocate memory in the handles
-    size_t max_number_of_subscriptions = subs.size() * 2;  // Times two for intra-process.
+    size_t max_number_of_subscriptions = memory_strategy_->subs.size() * 2;  // Times two for intra-process.
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = 0;
     // TODO(wjwwood): Avoid redundant malloc's
@@ -395,7 +395,7 @@ protected:
       throw std::runtime_error("Could not malloc for subscriber pointers.");
     }
     // Then fill the SubscriberHandles with ready subscriptions
-    for (auto & subscription : subs) {
+    for (auto & subscription : memory_strategy_->subs) {
       subscriber_handles.subscribers[subscriber_handles.subscriber_count++] =
         subscription->subscription_handle_->data;
       if (subscription->intra_process_subscription_handle_) {
@@ -405,7 +405,7 @@ protected:
     }
 
     // Use the number of services to allocate memory in the handles
-    size_t number_of_services = services.size();
+    size_t number_of_services = memory_strategy_->services.size();
     rmw_services_t service_handles;
     service_handles.service_count = number_of_services;
     service_handles.services =
@@ -418,14 +418,14 @@ protected:
     }
     // Then fill the ServiceHandles with ready services
     size_t service_handle_index = 0;
-    for (auto & service : services) {
+    for (auto & service : memory_strategy_->services) {
       service_handles.services[service_handle_index] = \
         service->service_handle_->data;
       service_handle_index += 1;
     }
 
     // Use the number of clients to allocate memory in the handles
-    size_t number_of_clients = clients.size();
+    size_t number_of_clients = memory_strategy_->clients.size();
     rmw_clients_t client_handles;
     client_handles.client_count = number_of_clients;
     client_handles.clients =
@@ -436,7 +436,7 @@ protected:
     }
     // Then fill the ServiceHandles with ready clients
     size_t client_handle_index = 0;
-    for (auto & client : clients) {
+    for (auto & client : memory_strategy_->clients) {
       client_handles.clients[client_handle_index] = \
         client->client_handle_->data;
       client_handle_index += 1;
@@ -541,6 +541,9 @@ protected:
     memory_strategy_->return_handles(HandleType::guard_condition_handle,
       guard_condition_handles.guard_conditions);
 
+    memory_strategy_->subs.clear();
+    memory_strategy_->services.clear();
+    memory_strategy_->clients.clear();
   }
 
 /******************************/
@@ -982,7 +985,6 @@ private:
   ServiceHandles service_handles_;
   using ClientHandles = std::list<void *>;
   ClientHandles client_handles_;
-
 };
 
 } /* executor */
