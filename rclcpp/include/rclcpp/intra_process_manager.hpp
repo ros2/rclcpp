@@ -190,7 +190,7 @@ public:
    */
   template<typename MessageT, typename Allocator = std::allocator<MessageT>>
   uint64_t
-  add_publisher(publisher::Publisher::SharedPtr publisher, size_t buffer_size = 0)
+  add_publisher(publisher::Publisher::SharedPtr publisher, Allocator * message_allocator, size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     publishers_[id].publisher = publisher;
@@ -200,7 +200,7 @@ public:
       throw std::invalid_argument("the calculated buffer size is too large");
     }
     publishers_[id].sequence_number.store(0);
-    publishers_[id].buffer = mapped_ring_buffer::MappedRingBuffer<MessageT, Allocator>::make_shared(size);
+    publishers_[id].buffer = mapped_ring_buffer::MappedRingBuffer<MessageT, Allocator>::make_shared(size, message_allocator);
     publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
     return id;
   }

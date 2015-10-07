@@ -61,11 +61,14 @@ public:
    *
    * \param size size of the ring buffer; must be positive and non-zero.
    */
-  MappedRingBuffer(size_t size)
-  : elements_(size), head_(0)
+  MappedRingBuffer(size_t size, Allocator * message_allocator)
+  : elements_(size), head_(0), allocator_(message_allocator)
   {
     if (size == 0) {
       throw std::invalid_argument("size must be a positive, non-zero value");
+    }
+    if (!allocator_) {
+      throw std::invalid_argument("NULL allocator received in MappedRingBuffer constructor!");
     }
   }
   virtual ~MappedRingBuffer() {}
@@ -87,8 +90,8 @@ public:
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      auto ptr = allocator_.allocate(1);
-      std::allocator_traits<Allocator>::construct(allocator_, ptr, *it->value);
+      auto ptr = allocator_->allocate(1);
+      std::allocator_traits<Allocator>::construct(*allocator_, ptr, *it->value);
       value = std::unique_ptr<T>(ptr);
     }
   }
@@ -119,8 +122,8 @@ public:
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       // Make a copy.
-      auto ptr = allocator_.allocate(1);
-      std::allocator_traits<Allocator>::construct(allocator_, ptr, *it->value);
+      auto ptr = allocator_->allocate(1);
+      std::allocator_traits<Allocator>::construct(*allocator_, ptr, *it->value);
       auto copy = std::unique_ptr<T>(ptr);
       // Return the original.
       value.swap(it->value);
@@ -189,8 +192,6 @@ public:
 private:
   RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Allocator>);
 
-  Allocator allocator_;
-
   struct element
   {
     uint64_t key;
@@ -213,6 +214,8 @@ private:
 
   ElementVector elements_;
   size_t head_;
+
+  Allocator * allocator_;
 
 };
 

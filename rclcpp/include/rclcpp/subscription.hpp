@@ -140,8 +140,23 @@ private:
 
 using namespace any_subscription_callback;
 
+template<typename T, typename Allocator>
+class AllocatorDeleter
+{
+public:
+  AllocatorDeleter(Allocator* a) : allocator_(a) {
+  }
+
+  void operator()(T* ptr) {
+    std::allocator_traits<Allocator>::destroy(*allocator_, ptr);
+  }
+private:
+
+  Allocator * allocator_;
+};
+
 /// Subscription implementation, templated on the type of message this subscription receives.
-template<typename MessageT>
+template<typename MessageT, typename Allocator = std::allocator<MessageT>>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node::Node;
@@ -165,32 +180,27 @@ public:
     const std::string & topic_name,
     bool ignore_local_publications,
     AnySubscriptionCallback<MessageT> callback,
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr memory_strategy =
-    message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default())
+    Allocator * message_allocator)
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     any_callback_(callback),
-    message_memory_strategy_(memory_strategy),
+    message_allocator_(message_allocator),
     get_intra_process_message_callback_(nullptr),
     matches_any_intra_process_publishers_(nullptr)
-  {}
-
-  /// Support dynamically setting the message memory strategy.
-  /**
-   * Behavior may be undefined if called while the subscription could be executing.
-   * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
-   */
-  void set_message_memory_strategy(
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr message_memory_strategy)
   {
-    message_memory_strategy_ = message_memory_strategy;
+    if (!message_allocator_) {
+      throw std::invalid_argument("NULL allocator received in Subscription constructor!");
+    }
   }
+
   std::shared_ptr<void> create_message()
   {
-    /* The default message memory strategy provides a dynamically allocated message on each call to
-     * create_message, though alternative memory strategies that re-use a preallocated message may be
-     * used (see rclcpp/strategies/message_pool_memory_strategy.hpp).
-     */
-    return message_memory_strategy_->borrow_message();
+    // Allocate a message according to the default subscription allocator.
+    MessageT * ptr = message_allocator_->allocate(1);
+    std::allocator_traits<Allocator>::construct(*message_allocator_, ptr);
+
+    AllocatorDeleter<MessageT, Allocator> deleter(message_allocator_);
+
+    return std::shared_ptr<MessageT>(ptr, deleter);
   }
 
   void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
@@ -220,8 +230,12 @@ public:
 
   void return_message(std::shared_ptr<void> & message)
   {
-    auto typed_message = std::static_pointer_cast<MessageT>(message);
-    message_memory_strategy_->return_message(typed_message);
+    (void)message;
+    //auto typed_message = std::static_pointer_cast<MessageT>(message);
+    //std::allocator_traits<Allocator>::destroy(*message_allocator_, typed_message.get());
+    //message_allocator_->deallocate(typed_message.get(), sizeof(MessageT));
+    //typed_message.reset();
+    //typed_message = nullptr;
   }
 
   void handle_intra_process_message(
@@ -284,8 +298,7 @@ private:
   RCLCPP_DISABLE_COPY(Subscription);
 
   AnySubscriptionCallback<MessageT> any_callback_;
-  typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  message_memory_strategy_;
+  Allocator * message_allocator_;
 
   GetMessageCallbackType get_intra_process_message_callback_;
   MatchesAnyPublishersCallbackType matches_any_intra_process_publishers_;

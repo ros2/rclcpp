@@ -101,7 +101,8 @@ public:
   template<typename MessageT, typename Allocator = std::allocator<MessageT>>
   rclcpp::publisher::Publisher::SharedPtr
   create_publisher(
-    const std::string & topic_name, const rmw_qos_profile_t & qos_profile);
+    const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
+    Allocator * message_allocator = new Allocator());
 
   /// Create and return a Subscription.
   /**
@@ -118,26 +119,24 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template<typename MessageT, typename CallbackT, typename Allocator = std::allocator<MessageT>>
-  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
   create_subscription(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
     CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat = nullptr);
+    Allocator * message_allocator = new Allocator());
 
   template<typename MessageT, typename Allocator = std::allocator<MessageT>>
-  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
   create_subscription_with_unique_ptr_callback(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
     typename rclcpp::subscription::AnySubscriptionCallback<MessageT>::UniquePtrCallback callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat = nullptr);
+    Allocator * message_allocator = new Allocator());
 
   /// Create a timer.
   /**
@@ -238,14 +237,14 @@ private:
   publisher::Publisher::SharedPtr events_publisher_;
 
   template<typename MessageT, typename Allocator = std::allocator<MessageT>>
-  typename subscription::Subscription<MessageT>::SharedPtr
+  typename subscription::Subscription<MessageT, Allocator>::SharedPtr
   create_subscription_internal(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
     rclcpp::subscription::AnySubscriptionCallback<MessageT> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group,
     bool ignore_local_publications,
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat);
+    Allocator * message_allocator);
 
   template<
     typename ServiceT,

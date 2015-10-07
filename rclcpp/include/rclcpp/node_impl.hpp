@@ -116,7 +116,8 @@ Node::create_callback_group(
 template<typename MessageT, typename Allocator>
 publisher::Publisher::SharedPtr
 Node::create_publisher(
-  const std::string & topic_name, const rmw_qos_profile_t & qos_profile)
+  const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
+  Allocator * message_allocator)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
@@ -147,7 +148,7 @@ Node::create_publisher(
     auto intra_process_manager =
       context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     uint64_t intra_process_publisher_id =
-      intra_process_manager->add_publisher<MessageT, Allocator>(publisher);
+      intra_process_manager->add_publisher<MessageT, Allocator>(publisher, message_allocator);
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
     // *INDENT-OFF*
     auto shared_publish_callback =
@@ -196,15 +197,14 @@ Node::group_in_node(callback_group::CallbackGroup::SharedPtr group)
 }
 
 template<typename MessageT, typename CallbackT, typename Allocator>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
+  Allocator * message_allocator)
 {
   rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
   any_subscription_callback.set(callback);
@@ -214,19 +214,18 @@ Node::create_subscription(
     any_subscription_callback,
     group,
     ignore_local_publications,
-    msg_mem_strat);
+    message_allocator);
 }
 
 template<typename MessageT, typename Allocator>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
 Node::create_subscription_with_unique_ptr_callback(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
   typename rclcpp::subscription::AnySubscriptionCallback<MessageT>::UniquePtrCallback callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
+  Allocator * message_allocator)
 {
   rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
   any_subscription_callback.unique_ptr_callback = callback;
@@ -236,25 +235,20 @@ Node::create_subscription_with_unique_ptr_callback(
     any_subscription_callback,
     group,
     ignore_local_publications,
-    msg_mem_strat);
+    message_allocator);
 }
 
 template<typename MessageT, typename Allocator>
-typename subscription::Subscription<MessageT>::SharedPtr
+typename subscription::Subscription<MessageT, Allocator>::SharedPtr
 Node::create_subscription_internal(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::subscription::AnySubscriptionCallback<MessageT> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat)
+  Allocator * message_allocator)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
-
-  if (!msg_mem_strat) {
-    msg_mem_strat =
-      rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default();
-  }
 
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
@@ -269,13 +263,13 @@ Node::create_subscription_internal(
 
   using namespace rclcpp::subscription;
 
-  auto sub = Subscription<MessageT>::make_shared(
+  auto sub = Subscription<MessageT, Allocator>::make_shared(
     node_handle_,
     subscriber_handle,
     topic_name,
     ignore_local_publications,
     callback,
-    msg_mem_strat);
+    message_allocator);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
   // Setup intra process.
   if (use_intra_process_comms_) {
