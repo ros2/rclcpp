@@ -88,7 +88,7 @@ public:
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       auto ptr = allocator_.allocate(1);
-      allocator_.construct(ptr, *it->value);
+      std::allocator_traits<Allocator>::construct(allocator_, ptr, *it->value);
       value = std::unique_ptr<T>(ptr);
     }
   }
@@ -120,7 +120,7 @@ public:
     if (it != elements_.end() && it->in_use) {
       // Make a copy.
       auto ptr = allocator_.allocate(1);
-      allocator_.construct(ptr, *it->value);
+      std::allocator_traits<Allocator>::construct(allocator_, ptr, *it->value);
       auto copy = std::unique_ptr<T>(ptr);
       // Return the original.
       value.swap(it->value);
