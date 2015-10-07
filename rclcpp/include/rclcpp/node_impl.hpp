@@ -113,7 +113,7 @@ Node::create_callback_group(
   return group;
 }
 
-template<typename MessageT>
+template<typename MessageT, typename Allocator>
 publisher::Publisher::SharedPtr
 Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile)
@@ -147,7 +147,7 @@ Node::create_publisher(
     auto intra_process_manager =
       context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     uint64_t intra_process_publisher_id =
-      intra_process_manager->add_publisher<MessageT>(publisher);
+      intra_process_manager->add_publisher<MessageT, Allocator>(publisher);
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
     // *INDENT-OFF*
     auto shared_publish_callback =
@@ -170,7 +170,7 @@ Node::create_publisher(
       }
       MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
       std::unique_ptr<MessageT> unique_msg(typed_message_ptr);
-      uint64_t message_seq = ipm->store_intra_process_message(publisher_id, unique_msg);
+      uint64_t message_seq = ipm->store_intra_process_message<MessageT, Allocator>(publisher_id, unique_msg);
       return message_seq;
     };
     // *INDENT-ON*
@@ -195,7 +195,7 @@ Node::group_in_node(callback_group::CallbackGroup::SharedPtr group)
   return group_belongs_to_this_node;
 }
 
-template<typename MessageT, typename CallbackT>
+template<typename MessageT, typename CallbackT, typename Allocator>
 typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
@@ -208,7 +208,7 @@ Node::create_subscription(
 {
   rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
   any_subscription_callback.set(callback);
-  return this->create_subscription_internal(
+  return this->create_subscription_internal<MessageT, Allocator>(
     topic_name,
     qos_profile,
     any_subscription_callback,
@@ -217,7 +217,7 @@ Node::create_subscription(
     msg_mem_strat);
 }
 
-template<typename MessageT>
+template<typename MessageT, typename Allocator>
 typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription_with_unique_ptr_callback(
   const std::string & topic_name,
@@ -230,7 +230,7 @@ Node::create_subscription_with_unique_ptr_callback(
 {
   rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
   any_subscription_callback.unique_ptr_callback = callback;
-  return this->create_subscription_internal(
+  return this->create_subscription_internal<MessageT, Allocator>(
     topic_name,
     qos_profile,
     any_subscription_callback,
@@ -239,7 +239,7 @@ Node::create_subscription_with_unique_ptr_callback(
     msg_mem_strat);
 }
 
-template<typename MessageT>
+template<typename MessageT, typename Allocator>
 typename subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription_internal(
   const std::string & topic_name,
@@ -309,7 +309,7 @@ Node::create_subscription_internal(
           throw std::runtime_error(
             "intra process take called after destruction of intra process manager");
         }
-        ipm->take_intra_process_message(publisher_id, message_sequence, subscription_id, message);
+        ipm->take_intra_process_message<MessageT, Allocator>(publisher_id, message_sequence, subscription_id, message);
       },
       [weak_ipm](const rmw_gid_t * sender_gid) -> bool {
         auto ipm = weak_ipm.lock();

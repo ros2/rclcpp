@@ -50,11 +50,11 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template<typename T>
+template<typename T, typename Allocator = std::allocator<T>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T>);
+  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Allocator>);
 
   /// Constructor.
   /* The constructor will allocate memory while reserving space.
@@ -87,7 +87,9 @@ public:
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      value = std::unique_ptr<T>(new T(*it->value));
+      auto ptr = allocator_.allocate(1);
+      allocator_.construct(ptr, *it->value);
+      value = std::unique_ptr<T>(ptr);
     }
   }
 
@@ -117,7 +119,9 @@ public:
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       // Make a copy.
-      auto copy = std::unique_ptr<T>(new T(*it->value));
+      auto ptr = allocator_.allocate(1);
+      allocator_.construct(ptr, *it->value);
+      auto copy = std::unique_ptr<T>(ptr);
       // Return the original.
       value.swap(it->value);
       // Store the copy.
@@ -183,7 +187,9 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(MappedRingBuffer<T>);
+  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Allocator>);
+
+  Allocator allocator_;
 
   struct element
   {
@@ -192,7 +198,9 @@ private:
     bool in_use;
   };
 
-  typename std::vector<element>::iterator
+  typedef std::vector<element, Allocator> ElementVector;
+
+  typename ElementVector::iterator
   get_iterator_of_key(uint64_t key)
   {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -203,7 +211,7 @@ private:
     return it;
   }
 
-  std::vector<element> elements_;
+  ElementVector elements_;
   size_t head_;
 
 };

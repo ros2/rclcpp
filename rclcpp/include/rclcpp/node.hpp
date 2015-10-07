@@ -98,7 +98,7 @@ public:
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT>
+  template<typename MessageT, typename Allocator = std::allocator<MessageT>>
   rclcpp::publisher::Publisher::SharedPtr
   create_publisher(
     const std::string & topic_name, const rmw_qos_profile_t & qos_profile);
@@ -117,7 +117,7 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT>
+  template<typename MessageT, typename CallbackT, typename Allocator = std::allocator<MessageT>>
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription(
     const std::string & topic_name,
@@ -128,7 +128,7 @@ public:
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
     msg_mem_strat = nullptr);
 
-  template<typename MessageT>
+  template<typename MessageT, typename Allocator = std::allocator<MessageT>>
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription_with_unique_ptr_callback(
     const std::string & topic_name,
@@ -237,7 +237,7 @@ private:
 
   publisher::Publisher::SharedPtr events_publisher_;
 
-  template<typename MessageT>
+  template<typename MessageT, typename Allocator = std::allocator<MessageT>>
   typename subscription::Subscription<MessageT>::SharedPtr
   create_subscription_internal(
     const std::string & topic_name,
