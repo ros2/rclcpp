@@ -40,10 +40,116 @@ class Node;
 namespace publisher
 {
 
+class PublisherBase
+{
+
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(PublisherBase);
+  PublisherBase(
+    std::shared_ptr<rmw_node_t> node_handle,
+    rmw_publisher_t * publisher_handle,
+    std::string topic,
+    size_t queue_size
+  ) : node_handle_(node_handle), publisher_handle_(publisher_handle),
+      topic_(topic), queue_size_(queue_size),
+    intra_process_publisher_handle_(nullptr),
+    intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
+  {
+  }
+
+  /// Get the topic that this publisher publishes on.
+  // \return The topic name.
+  const std::string &
+  get_topic_name() const
+  {
+    return topic_;
+  }
+
+  /// Get the queue size for this publisher.
+  // \return The queue size.
+  size_t
+  get_queue_size() const
+  {
+    return queue_size_;
+  }
+
+  /// Get the global identifier for this publisher (used in rmw and by DDS).
+  // \return The gid.
+  const rmw_gid_t &
+  get_gid() const
+  {
+    return rmw_gid_;
+  }
+
+  /// Compare this publisher to a pointer gid.
+  /**
+   * A wrapper for comparing this publisher's gid to the input using rmw_compare_gids_equal.
+   * \param[in] gid A pointer to a gid.
+   * \return True if this publisher's gid matches the input.
+   */
+  bool
+  operator==(const rmw_gid_t * gid) const
+  {
+    bool result = false;
+    auto ret = rmw_compare_gids_equal(gid, &this->get_gid(), &result);
+    if (ret != RMW_RET_OK) {
+      throw std::runtime_error(
+              std::string("failed to compare gids: ") + rmw_get_error_string_safe());
+    }
+    if (!result) {
+      ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
+      if (ret != RMW_RET_OK) {
+        throw std::runtime_error(
+                std::string("failed to compare gids: ") + rmw_get_error_string_safe());
+      }
+    }
+    return result;
+  }
+
+  typedef std::function<uint64_t(uint64_t, void *, const std::type_info &)> StoreMessageCallbackT;
+
+  /// Get the global identifier for this publisher used by intra-process communication.
+  // \return The intra-process gid.
+  const rmw_gid_t &
+  get_intra_process_gid() const
+  {
+    return intra_process_rmw_gid_;
+  }
+
+  /// Compare this publisher to a gid.
+  /**
+   * Note that this function calls the next function.
+   * \param[in] gid Reference to a gid.
+   * \return True if the publisher's gid matches the input.
+   */
+  bool
+  operator==(const rmw_gid_t & gid) const
+  {
+    return *this == &gid;
+  }
+protected:
+
+  std::shared_ptr<rmw_node_t> node_handle_;
+
+  rmw_publisher_t * publisher_handle_;
+  std::string topic_;
+  size_t queue_size_;
+
+  rmw_gid_t rmw_gid_;
+  rmw_gid_t intra_process_rmw_gid_;
+
+  rmw_publisher_t * intra_process_publisher_handle_;
+
+  uint64_t intra_process_publisher_id_;
+  StoreMessageCallbackT store_intra_process_message_;
+};
+
 /// A publisher publishes messages of any type to a topic.
-class Publisher
+template<typename MessageT, typename Allocator = std::allocator<MessageT>>
+class Publisher : public PublisherBase
 {
   friend rclcpp::node::Node;
+  typedef AllocatorDeleter<MessageT, Allocator> Deleter;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
@@ -61,12 +167,14 @@ public:
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_publisher_t * publisher_handle,
     std::string topic,
-    size_t queue_size)
-  : node_handle_(node_handle), publisher_handle_(publisher_handle),
-    intra_process_publisher_handle_(nullptr),
-    topic_(topic), queue_size_(queue_size),
-    intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
+    size_t queue_size,
+    Allocator * allocator)
+  : PublisherBase(node_handle, publisher_handle, topic, queue_size),
+    message_allocator_(allocator)
   {
+    if (!message_allocator_) {
+      throw std::invalid_argument("Allocator was null in publisher constructor!");
+    }
     // Life time of this object is tied to the publisher handle.
     if (rmw_get_gid_for_publisher(publisher_handle_, &rmw_gid_) != RMW_RET_OK) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -102,11 +210,11 @@ public:
    * This function is templated on the input message type, MessageT.
    * \param[in] msg A shared pointer to the message to send.
    */
-  template<typename MessageT>
+  template<typename Deleter>
   void
-  publish(std::unique_ptr<MessageT> & msg)
+  publish(std::unique_ptr<MessageT, Deleter> & msg)
   {
-    this->do_inter_process_publish<MessageT>(msg.get());
+    this->do_inter_process_publish(msg.get());
     if (store_intra_process_message_) {
       // Take the pointer from the unique_msg, release it and pass as a void *
       // to the ipm. The ipm should then capture it again as a unique_ptr of
@@ -139,7 +247,6 @@ public:
     }
   }
 
-  template<typename MessageT>
   void
   publish(const std::shared_ptr<MessageT> & msg)
   {
@@ -153,11 +260,13 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    std::unique_ptr<MessageT> unique_msg(new MessageT(*msg.get()));
+    MessageT * ptr = std::allocator_traits<Allocator>::allocate(*message_allocator_, 1);
+    std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, *msg.get());
+    Deleter deleter(message_allocator_);
+    std::unique_ptr<MessageT, Deleter> unique_msg(ptr, message_allocator_);
     return this->publish(unique_msg);
   }
 
-  template<typename MessageT>
   void
   publish(const MessageT & msg)
   {
@@ -167,83 +276,15 @@ public:
       return this->do_inter_process_publish(msg.get());
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    std::unique_ptr<MessageT> unique_msg(new MessageT(msg));
+    MessageT * ptr = std::allocator_traits<Allocator>::allocate(*message_allocator_, 1);
+    std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, msg);
+    Deleter deleter(message_allocator_);
+    std::unique_ptr<MessageT, Deleter> unique_msg(ptr, message_allocator_);
     return this->publish(unique_msg);
   }
 
-  /// Get the topic that this publisher publishes on.
-  // \return The topic name.
-  const std::string &
-  get_topic_name() const
-  {
-    return topic_;
-  }
-
-  /// Get the queue size for this publisher.
-  // \return The queue size.
-  size_t
-  get_queue_size() const
-  {
-    return queue_size_;
-  }
-
-  /// Get the global identifier for this publisher (used in rmw and by DDS).
-  // \return The gid.
-  const rmw_gid_t &
-  get_gid() const
-  {
-    return rmw_gid_;
-  }
-
-  /// Get the global identifier for this publisher used by intra-process communication.
-  // \return The intra-process gid.
-  const rmw_gid_t &
-  get_intra_process_gid() const
-  {
-    return intra_process_rmw_gid_;
-  }
-
-  /// Compare this publisher to a gid.
-  /**
-   * Note that this function calls the next function.
-   * \param[in] gid Reference to a gid.
-   * \return True if the publisher's gid matches the input.
-   */
-  bool
-  operator==(const rmw_gid_t & gid) const
-  {
-    return *this == &gid;
-  }
-
-  /// Compare this publisher to a pointer gid.
-  /**
-   * A wrapper for comparing this publisher's gid to the input using rmw_compare_gids_equal.
-   * \param[in] gid A pointer to a gid.
-   * \return True if this publisher's gid matches the input.
-   */
-  bool
-  operator==(const rmw_gid_t * gid) const
-  {
-    bool result = false;
-    auto ret = rmw_compare_gids_equal(gid, &this->get_gid(), &result);
-    if (ret != RMW_RET_OK) {
-      throw std::runtime_error(
-              std::string("failed to compare gids: ") + rmw_get_error_string_safe());
-    }
-    if (!result) {
-      ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
-      if (ret != RMW_RET_OK) {
-        throw std::runtime_error(
-                std::string("failed to compare gids: ") + rmw_get_error_string_safe());
-      }
-    }
-    return result;
-  }
-
-  typedef std::function<uint64_t(uint64_t, void *, const std::type_info &)> StoreMessageCallbackT;
 
 protected:
-  template<typename MessageT>
   void
   do_inter_process_publish(MessageT * msg)
   {
@@ -278,21 +319,9 @@ protected:
   }
 
 private:
-  std::shared_ptr<rmw_node_t> node_handle_;
-
-  rmw_publisher_t * publisher_handle_;
-  rmw_publisher_t * intra_process_publisher_handle_;
-
-  std::string topic_;
-  size_t queue_size_;
-
-  uint64_t intra_process_publisher_id_;
-  StoreMessageCallbackT store_intra_process_message_;
-
-  rmw_gid_t rmw_gid_;
-  rmw_gid_t intra_process_rmw_gid_;
 
   std::mutex intra_process_publish_mutex_;
+  Allocator * message_allocator_;
 
 };
 

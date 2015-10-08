@@ -29,15 +29,17 @@ namespace rclcpp
 namespace any_subscription_callback
 {
 
-template<typename MessageT>
+template<typename MessageT, typename Deleter = std::default_delete<MessageT>>
 struct AnySubscriptionCallback
 {
   using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT> &)>;
   using SharedPtrWithInfoCallback =
       std::function<void(const std::shared_ptr<MessageT> &, const rmw_message_info_t &)>;
-  using UniquePtrCallback = std::function<void(std::unique_ptr<MessageT> &)>;
+
+  using UniquePtrCallback = std::function<void(std::unique_ptr<MessageT, Deleter> &)>;
+
   using UniquePtrWithInfoCallback =
-      std::function<void(std::unique_ptr<MessageT> &, const rmw_message_info_t &)>;
+      std::function<void(std::unique_ptr<MessageT, Deleter> &, const rmw_message_info_t &)>;
 
   SharedPtrCallback shared_ptr_callback;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback;

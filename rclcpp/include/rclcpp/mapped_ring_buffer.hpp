@@ -15,6 +15,7 @@
 #ifndef RCLCPP_RCLCPP_RING_BUFFER_HPP_
 #define RCLCPP_RCLCPP_RING_BUFFER_HPP_
 
+#include <rclcpp/allocator_deleter.hpp>
 #include <rclcpp/macros.hpp>
 
 #include <algorithm>
@@ -53,6 +54,8 @@ public:
 template<typename T, typename Allocator = std::allocator<T>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
+  //typedef AllocatorDeleter<T, Allocator> Deleter;
+  using Deleter = AllocatorDeleter<T, Allocator>;
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Allocator>);
 
@@ -85,14 +88,14 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_copy_at_key(uint64_t key, std::unique_ptr<T> & value)
+  get_copy_at_key(uint64_t key, std::unique_ptr<T, Deleter> & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       auto ptr = allocator_->allocate(1);
       std::allocator_traits<Allocator>::construct(*allocator_, ptr, *it->value);
-      value = std::unique_ptr<T>(ptr);
+      value = std::unique_ptr<T, Deleter>(ptr);
     }
   }
 
@@ -116,7 +119,7 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_ownership_at_key(uint64_t key, std::unique_ptr<T> & value)
+  get_ownership_at_key(uint64_t key, std::unique_ptr<T, Deleter> & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
@@ -124,7 +127,7 @@ public:
       // Make a copy.
       auto ptr = allocator_->allocate(1);
       std::allocator_traits<Allocator>::construct(*allocator_, ptr, *it->value);
-      auto copy = std::unique_ptr<T>(ptr);
+      auto copy = std::unique_ptr<T, Deleter>(ptr);
       // Return the original.
       value.swap(it->value);
       // Store the copy.
@@ -143,7 +146,7 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  pop_at_key(uint64_t key, std::unique_ptr<T> & value)
+  pop_at_key(uint64_t key, std::unique_ptr<T, Deleter> & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
@@ -165,7 +168,7 @@ public:
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T> & value)
+  push_and_replace(uint64_t key, std::unique_ptr<T, Deleter> & value)
   {
     bool did_replace = elements_[head_].in_use;
     elements_[head_].key = key;
@@ -176,9 +179,9 @@ public:
   }
 
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T> && value)
+  push_and_replace(uint64_t key, std::unique_ptr<T, Deleter> && value)
   {
-    std::unique_ptr<T> temp = std::move(value);
+    std::unique_ptr<T, Deleter> temp = std::move(value);
     return push_and_replace(key, temp);
   }
 
@@ -195,7 +198,7 @@ private:
   struct element
   {
     uint64_t key;
-    std::unique_ptr<T> value;
+    std::unique_ptr<T, Deleter> value;
     bool in_use;
   };
 

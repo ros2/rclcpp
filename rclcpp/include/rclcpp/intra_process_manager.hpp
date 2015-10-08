@@ -190,7 +190,7 @@ public:
    */
   template<typename MessageT, typename Allocator = std::allocator<MessageT>>
   uint64_t
-  add_publisher(publisher::Publisher::SharedPtr publisher, Allocator * message_allocator, size_t buffer_size = 0)
+  add_publisher(typename publisher::Publisher<MessageT, Allocator>::SharedPtr publisher, Allocator * message_allocator, size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     publishers_[id].publisher = publisher;
@@ -246,11 +246,11 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template<typename MessageT, typename Allocator = std::allocator<MessageT>>
+  template<typename MessageT, typename Allocator = std::allocator<MessageT>, typename Deleter = AllocatorDeleter<MessageT, Allocator>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::unique_ptr<MessageT> & message)
+    std::unique_ptr<MessageT, Deleter> & message)
   {
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
@@ -320,13 +320,13 @@ public:
    * \param requesting_subscriptions_intra_process_id the subscription's id.
    * \param message the message typed unique_ptr used to return the message.
    */
-  template<typename MessageT, typename Allocator = std::allocator<MessageT>>
+  template<typename MessageT, typename Allocator = std::allocator<MessageT>, typename Deleter = AllocatorDeleter<MessageT, Allocator>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    std::unique_ptr<MessageT> & message)
+    std::unique_ptr<MessageT, Deleter> & message)
   {
     message = nullptr;
     PublisherInfo * info;
@@ -419,7 +419,7 @@ private:
 
     PublisherInfo() = default;
 
-    publisher::Publisher::WeakPtr publisher;
+    typename publisher::PublisherBase::WeakPtr publisher;
     std::atomic<uint64_t> sequence_number;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
     std::unordered_map<uint64_t, std::set<uint64_t>> target_subscriptions_by_message_sequence;

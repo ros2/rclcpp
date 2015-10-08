@@ -25,6 +25,7 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
+#include <rclcpp/allocator_deleter.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/message_memory_strategy.hpp>
 #include <rclcpp/any_subscription_callback.hpp>
@@ -118,7 +119,6 @@ public:
 
   /// Return the message borrowed in create_message.
   // \param[in] Shared pointer to the returned message.
-  virtual void return_message(std::shared_ptr<void> & message) = 0;
   virtual void handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
@@ -140,27 +140,13 @@ private:
 
 using namespace any_subscription_callback;
 
-template<typename T, typename Allocator>
-class AllocatorDeleter
-{
-public:
-  AllocatorDeleter(Allocator* a) : allocator_(a) {
-  }
-
-  void operator()(T* ptr) {
-    std::allocator_traits<Allocator>::destroy(*allocator_, ptr);
-  }
-private:
-
-  Allocator * allocator_;
-};
-
 /// Subscription implementation, templated on the type of message this subscription receives.
 template<typename MessageT, typename Allocator = std::allocator<MessageT>>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node::Node;
 
+  typedef AllocatorDeleter<MessageT, Allocator> Deleter;
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
 
@@ -179,7 +165,7 @@ public:
     rmw_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications,
-    AnySubscriptionCallback<MessageT> callback,
+    AnySubscriptionCallback<MessageT, Deleter> callback,
     Allocator * message_allocator)
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     any_callback_(callback),
@@ -198,9 +184,9 @@ public:
     MessageT * ptr = message_allocator_->allocate(1);
     std::allocator_traits<Allocator>::construct(*message_allocator_, ptr);
 
-    AllocatorDeleter<MessageT, Allocator> deleter(message_allocator_);
+    Deleter deleter(message_allocator_);
 
-    return std::shared_ptr<MessageT>(ptr, deleter);
+    return std::shared_ptr<MessageT>(ptr, deleter, *message_allocator_);
   }
 
   void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
@@ -218,24 +204,21 @@ public:
     } else if (any_callback_.shared_ptr_with_info_callback) {
       any_callback_.shared_ptr_with_info_callback(typed_message, message_info);
     } else if (any_callback_.unique_ptr_callback) {
-      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
+      MessageT *  ptr = std::allocator_traits<Allocator>::allocate(*message_allocator_, 1);
+      // TODO: std::forward the argument
+      //std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, typed_message.get());
+      Deleter deleter(message_allocator_);
+      std::unique_ptr<MessageT, Deleter> unique_msg(ptr, deleter);
       any_callback_.unique_ptr_callback(unique_msg);
     } else if (any_callback_.unique_ptr_with_info_callback) {
-      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
+      MessageT * ptr = std::allocator_traits<Allocator>::allocate(*message_allocator_, 1);
+      //std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, typed_message.get());
+      Deleter deleter(message_allocator_);
+      std::unique_ptr<MessageT, Deleter> unique_msg(ptr, deleter);
       any_callback_.unique_ptr_with_info_callback(unique_msg, message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
-  }
-
-  void return_message(std::shared_ptr<void> & message)
-  {
-    (void)message;
-    //auto typed_message = std::static_pointer_cast<MessageT>(message);
-    //std::allocator_traits<Allocator>::destroy(*message_allocator_, typed_message.get());
-    //message_allocator_->deallocate(typed_message.get(), sizeof(MessageT));
-    //typed_message.reset();
-    //typed_message = nullptr;
   }
 
   void handle_intra_process_message(
@@ -249,7 +232,7 @@ public:
       // However, this can only really happen if this node has it disabled, but the other doesn't.
       return;
     }
-    std::unique_ptr<MessageT> msg;
+    std::unique_ptr<MessageT, Deleter> msg;
     get_intra_process_message_callback_(
       ipm.publisher_id,
       ipm.message_sequence,
@@ -279,7 +262,7 @@ public:
 private:
   typedef
     std::function<
-      void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT> &)
+      void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT, Deleter> &)
     > GetMessageCallbackType;
   typedef std::function<bool (const rmw_gid_t *)> MatchesAnyPublishersCallbackType;
 
@@ -297,7 +280,7 @@ private:
 
   RCLCPP_DISABLE_COPY(Subscription);
 
-  AnySubscriptionCallback<MessageT> any_callback_;
+  AnySubscriptionCallback<MessageT, Deleter> any_callback_;
   Allocator * message_allocator_;
 
   GetMessageCallbackType get_intra_process_message_callback_;
