@@ -185,7 +185,8 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT, typename AllocWrapper = DefaultAllocator<MessageT>>
+  template<typename MessageT, typename CallbackT,
+  typename AllocWrapper = DefaultAllocator<MessageT>>
   typename rclcpp::subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
   create_subscription(
     const std::string & topic_name,
@@ -200,7 +201,8 @@ public:
   create_subscription_with_unique_ptr_callback(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
-    typename rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter>::UniquePtrCallback callback,
+    typename rclcpp::subscription::AnySubscriptionCallback<MessageT,
+    typename AllocWrapper::Deleter>::UniquePtrCallback callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     AllocWrapper * allocator = new AllocWrapper());
@@ -309,7 +311,8 @@ private:
   create_subscription_internal(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
-    rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> callback,
+    rclcpp::subscription::AnySubscriptionCallback<MessageT,
+    typename AllocWrapper::Deleter> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group,
     bool ignore_local_publications,
     AllocWrapper * allocator);

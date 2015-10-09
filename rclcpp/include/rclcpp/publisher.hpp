@@ -51,8 +51,9 @@ public:
     rmw_publisher_t * publisher_handle,
     std::string topic,
     size_t queue_size
-  ) : node_handle_(node_handle), publisher_handle_(publisher_handle),
-      topic_(topic), queue_size_(queue_size),
+  )
+  : node_handle_(node_handle), publisher_handle_(publisher_handle),
+    topic_(topic), queue_size_(queue_size),
     intra_process_publisher_handle_(nullptr),
     intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
   {
@@ -128,8 +129,8 @@ public:
   {
     return *this == &gid;
   }
-protected:
 
+protected:
   std::shared_ptr<rmw_node_t> node_handle_;
 
   rmw_publisher_t * publisher_handle_;
@@ -263,7 +264,8 @@ public:
     MessageT * ptr = allocator_->allocate(1);
     allocator_->construct(ptr, *msg.get());
 
-    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr, *allocator_->get_deleter());
+    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr,
+      *allocator_->get_deleter());
     return this->publish(unique_msg);
   }
 
@@ -278,10 +280,10 @@ public:
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     MessageT * ptr = allocator_->allocate(1);
     allocator_->construct(ptr, msg);
-    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr, *allocator_->get_deleter());
+    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr,
+      *allocator_->get_deleter());
     return this->publish(unique_msg);
   }
-
 
 protected:
   void
@@ -318,7 +320,6 @@ protected:
   }
 
 private:
-
   std::mutex intra_process_publish_mutex_;
   AllocWrapper * allocator_;
 

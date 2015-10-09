@@ -202,15 +202,17 @@ public:
     } else if (any_callback_.shared_ptr_with_info_callback) {
       any_callback_.shared_ptr_with_info_callback(typed_message, message_info);
     } else if (any_callback_.unique_ptr_callback) {
-      MessageT *  ptr = allocator_->allocate(1);
+      MessageT * ptr = allocator_->allocate(1);
       // TODO: std::forward the argument
       //std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, typed_message.get());
-      std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr, *allocator_->get_deleter());
+      std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr,
+        *allocator_->get_deleter());
       any_callback_.unique_ptr_callback(unique_msg);
     } else if (any_callback_.unique_ptr_with_info_callback) {
-      MessageT *  ptr = allocator_->allocate(1);
+      MessageT * ptr = allocator_->allocate(1);
       //std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, typed_message.get());
-      std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr, *allocator_->get_deleter());
+      std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr,
+        *allocator_->get_deleter());
       any_callback_.unique_ptr_with_info_callback(unique_msg, message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
@@ -259,7 +261,8 @@ public:
 private:
   typedef
     std::function<
-      void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT, typename AllocWrapper::Deleter> &)
+      void (uint64_t, uint64_t, uint64_t,
+      std::unique_ptr<MessageT, typename AllocWrapper::Deleter> &)
     > GetMessageCallbackType;
   typedef std::function<bool (const rmw_gid_t *)> MatchesAnyPublishersCallbackType;
 

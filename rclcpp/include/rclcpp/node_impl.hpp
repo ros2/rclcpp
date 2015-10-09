@@ -136,7 +136,8 @@ Node::create_subscription(
   bool ignore_local_publications,
   AllocWrapper * allocator)
 {
-  rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> any_subscription_callback;
+  rclcpp::subscription::AnySubscriptionCallback<MessageT,
+  typename AllocWrapper::Deleter> any_subscription_callback;
   any_subscription_callback.set(callback);
   return this->create_subscription_internal<MessageT, AllocWrapper>(
     topic_name,
@@ -152,12 +153,14 @@ typename rclcpp::subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
 Node::create_subscription_with_unique_ptr_callback(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
-  typename rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter>::UniquePtrCallback callback,
+  typename rclcpp::subscription::AnySubscriptionCallback<MessageT,
+  typename AllocWrapper::Deleter>::UniquePtrCallback callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   AllocWrapper * allocator)
 {
-  rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> any_subscription_callback;
+  rclcpp::subscription::AnySubscriptionCallback<MessageT,
+  typename AllocWrapper::Deleter> any_subscription_callback;
   any_subscription_callback.unique_ptr_callback = callback;
   return this->create_subscription_internal<MessageT, AllocWrapper>(
     topic_name,

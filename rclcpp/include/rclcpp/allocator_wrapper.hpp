@@ -21,14 +21,16 @@
 
 
 template<typename Alloc, typename T, typename D>
-void initialize_deleter(D* deleter, Alloc* alloc) {
+void initialize_deleter(D * deleter, Alloc * alloc)
+{
   (void) deleter;
   (void) alloc;
   throw std::runtime_error("Reached unexpected template specialization");
 }
 
 template<typename T>
-void initialize_deleter(std::default_delete<T> * deleter, std::allocator<T>* alloc) {
+void initialize_deleter(std::default_delete<T> * deleter, std::allocator<T> * alloc)
+{
   (void) alloc;
   std::cout << "calling default specialization of initialize_deleter" << std::endl;
   deleter = new std::default_delete<T>;
@@ -38,7 +40,8 @@ void initialize_deleter(std::default_delete<T> * deleter, std::allocator<T>* all
 }
 
 template<typename Alloc, typename T>
-void initialize_deleter(AllocatorDeleter<T, Alloc> * deleter, Alloc* alloc) {
+void initialize_deleter(AllocatorDeleter<T, Alloc> * deleter, Alloc * alloc)
+{
   if (!alloc) {
     throw std::invalid_argument("Allocator argument was NULL");
   }
@@ -49,15 +52,17 @@ void initialize_deleter(AllocatorDeleter<T, Alloc> * deleter, Alloc* alloc) {
 }
 
 template<typename T, typename Alloc>
-class AllocatorWrapper{
+class AllocatorWrapper
+{
 public:
   using Deleter = typename std::conditional<
-                    std::is_same<Alloc, std::allocator<T>>::value,
-                    std::default_delete<T>,
-                    AllocatorDeleter<T, Alloc>
-                  >::type;
+      std::is_same<Alloc, std::allocator<T>>::value,
+      std::default_delete<T>,
+      AllocatorDeleter<T, Alloc>
+      >::type;
 
-  AllocatorWrapper(Alloc * allocator) : allocator_(allocator)
+  AllocatorWrapper(Alloc * allocator)
+  : allocator_(allocator)
   {
     std::cout << "constructor 1" << std::endl;
     if (!allocator_) {
@@ -69,8 +74,8 @@ public:
     }
   }
 
-  AllocatorWrapper(Alloc * allocator, Deleter * deleter) :
-    allocator_(allocator), deleter_(deleter)
+  AllocatorWrapper(Alloc * allocator, Deleter * deleter)
+  : allocator_(allocator), deleter_(deleter)
   {
     std::cout << "constructor 2" << std::endl;
     if (!allocator_) {
@@ -105,28 +110,32 @@ public:
     }
   }
 
-  T * allocate(size_t size) {
+  T * allocate(size_t size)
+  {
     return std::allocator_traits<Alloc>::allocate(*allocator_, size);
   }
 
-  T * deallocate(void * pointer, size_t size) {
+  T * deallocate(void * pointer, size_t size)
+  {
     std::allocator_traits<Alloc>::deallocate(*allocator_, pointer, size);
   }
 
-  template<class... Args>
-  void construct(T * pointer, Args &&... args) {
-    std::allocator_traits<Alloc>::construct(*allocator_, pointer, std::forward<Args>(args)...);
+  template<class ... Args>
+  void construct(T * pointer, Args && ... args)
+  {
+    std::allocator_traits<Alloc>::construct(*allocator_, pointer, std::forward<Args>(args) ...);
   }
 
-  Deleter * get_deleter() const {
+  Deleter * get_deleter() const
+  {
     return deleter_;
   }
-  Alloc * get_underlying_allocator() const {
+  Alloc * get_underlying_allocator() const
+  {
     return allocator_;
   }
 
 private:
-
   Alloc * allocator_;
   Deleter * deleter_;
 };
