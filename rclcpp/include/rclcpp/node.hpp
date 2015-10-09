@@ -33,7 +33,6 @@
 #include <rclcpp/function_traits.hpp>
 #include <rclcpp/intra_process_manager.hpp>
 #include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
 #include <rclcpp/parameter.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/service.hpp>

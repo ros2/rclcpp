@@ -27,7 +27,6 @@
 
 #include <rclcpp/allocator_wrapper.hpp>
 #include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
 #include <rclcpp/any_subscription_callback.hpp>
 
 namespace rclcpp
