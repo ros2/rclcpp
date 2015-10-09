@@ -38,9 +38,9 @@ struct AnySubscriptionCallback
   using ConstSharedPtrCallback = std::function<void(const std::shared_ptr<const MessageT>)>;
   using ConstSharedPtrWithInfoCallback =
       std::function<void(const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
-  using UniquePtrCallback = std::function<void(std::unique_ptr<MessageT> &)>;
+  using UniquePtrCallback = std::function<void(std::unique_ptr<MessageT>)>;
   using UniquePtrWithInfoCallback =
-      std::function<void(std::unique_ptr<MessageT> &, const rmw_message_info_t &)>;
+      std::function<void(std::unique_ptr<MessageT>, const rmw_message_info_t &)>;
 
   SharedPtrCallback shared_ptr_callback;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback;

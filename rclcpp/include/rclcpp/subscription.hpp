@@ -208,11 +208,10 @@ public:
     } else if (any_callback_.shared_ptr_with_info_callback) {
       any_callback_.shared_ptr_with_info_callback(typed_message, message_info);
     } else if (any_callback_.unique_ptr_callback) {
-      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
-      any_callback_.unique_ptr_callback(unique_msg);
+      any_callback_.unique_ptr_callback(std::unique_ptr<MessageT>(new MessageT(*typed_message)));
     } else if (any_callback_.unique_ptr_with_info_callback) {
-      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
-      any_callback_.unique_ptr_with_info_callback(unique_msg, message_info);
+      any_callback_.unique_ptr_with_info_callback(std::unique_ptr<MessageT>(new MessageT(*
+        typed_message)), message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
@@ -260,9 +259,9 @@ public:
       typename MessageT::ConstSharedPtr const_shared_msg = std::move(msg);
       any_callback_.const_shared_ptr_with_info_callback(const_shared_msg, message_info);
     } else if (any_callback_.unique_ptr_callback) {
-      any_callback_.unique_ptr_callback(msg);
+      any_callback_.unique_ptr_callback(std::move(msg));
     } else if (any_callback_.unique_ptr_with_info_callback) {
-      any_callback_.unique_ptr_with_info_callback(msg, message_info);
+      any_callback_.unique_ptr_with_info_callback(std::move(msg), message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
