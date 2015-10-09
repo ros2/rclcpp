@@ -32,12 +32,12 @@ namespace any_subscription_callback
 template<typename MessageT>
 struct AnySubscriptionCallback
 {
-  using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT> &)>;
+  using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT>)>;
   using SharedPtrWithInfoCallback =
-      std::function<void(const std::shared_ptr<MessageT> &, const rmw_message_info_t &)>;
-  using ConstSharedPtrCallback = std::function<void(const std::shared_ptr<const MessageT> &)>;
+      std::function<void(const std::shared_ptr<MessageT>, const rmw_message_info_t &)>;
+  using ConstSharedPtrCallback = std::function<void(const std::shared_ptr<const MessageT>)>;
   using ConstSharedPtrWithInfoCallback =
-      std::function<void(const std::shared_ptr<const MessageT> &, const rmw_message_info_t &)>;
+      std::function<void(const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
   using UniquePtrCallback = std::function<void(std::unique_ptr<MessageT> &)>;
   using UniquePtrWithInfoCallback =
       std::function<void(std::unique_ptr<MessageT> &, const rmw_message_info_t &)>;
