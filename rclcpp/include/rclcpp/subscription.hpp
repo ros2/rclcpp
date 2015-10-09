@@ -253,6 +253,12 @@ public:
     } else if (any_callback_.shared_ptr_with_info_callback) {
       typename MessageT::SharedPtr shared_msg = std::move(msg);
       any_callback_.shared_ptr_with_info_callback(shared_msg, message_info);
+    } else if (any_callback_.const_shared_ptr_callback) {
+      typename MessageT::ConstSharedPtr const_shared_msg = std::move(msg);
+      any_callback_.const_shared_ptr_callback(const_shared_msg);
+    } else if (any_callback_.const_shared_ptr_with_info_callback) {
+      typename MessageT::ConstSharedPtr const_shared_msg = std::move(msg);
+      any_callback_.const_shared_ptr_with_info_callback(const_shared_msg, message_info);
     } else if (any_callback_.unique_ptr_callback) {
       any_callback_.unique_ptr_callback(msg);
     } else if (any_callback_.unique_ptr_with_info_callback) {
