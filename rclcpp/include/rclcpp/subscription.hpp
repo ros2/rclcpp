@@ -207,6 +207,10 @@ public:
       any_callback_.shared_ptr_callback(typed_message);
     } else if (any_callback_.shared_ptr_with_info_callback) {
       any_callback_.shared_ptr_with_info_callback(typed_message, message_info);
+    } else if (any_callback_.const_shared_ptr_callback) {
+      any_callback_.const_shared_ptr_callback(typed_message);
+    } else if (any_callback_.const_shared_ptr_with_info_callback) {
+      any_callback_.const_shared_ptr_with_info_callback(typed_message, message_info);
     } else if (any_callback_.unique_ptr_callback) {
       any_callback_.unique_ptr_callback(std::unique_ptr<MessageT>(new MessageT(*typed_message)));
     } else if (any_callback_.unique_ptr_with_info_callback) {
