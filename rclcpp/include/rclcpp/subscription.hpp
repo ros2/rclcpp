@@ -205,11 +205,13 @@ public:
     } else if (any_callback_.const_shared_ptr_with_info_callback) {
       any_callback_.const_shared_ptr_with_info_callback(typed_message, message_info);
     } else if (any_callback_.unique_ptr_callback) {
-      // TODO: use allocator
-      any_callback_.unique_ptr_callback(std::unique_ptr<MessageT>(new MessageT(*typed_message)));
+      auto ptr = allocator_->allocate(1);
+      allocator_->construct(ptr, *typed_message);
+      any_callback_.unique_ptr_callback(std::unique_ptr<MessageT, typename AllocWrapper::Deleter>(ptr));
     } else if (any_callback_.unique_ptr_with_info_callback) {
-      any_callback_.unique_ptr_with_info_callback(std::unique_ptr<MessageT>(new MessageT(*
-        typed_message)), message_info);
+      auto ptr = allocator_->allocate(1);
+      allocator_->construct(ptr, *typed_message);
+      any_callback_.unique_ptr_with_info_callback(std::unique_ptr<MessageT, typename AllocWrapper::Deleter>(ptr), message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }

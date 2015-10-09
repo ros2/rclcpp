@@ -15,7 +15,7 @@
 #ifndef RCLCPP_RCLCPP_RING_BUFFER_HPP_
 #define RCLCPP_RCLCPP_RING_BUFFER_HPP_
 
-#include <rclcpp/allocator_deleter.hpp>
+#include <rclcpp/allocator_wrapper.hpp>
 #include <rclcpp/macros.hpp>
 
 #include <algorithm>
@@ -51,7 +51,7 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template<typename T, typename AllocWrapper>
+template<typename T, typename AllocWrapper = DefaultAllocator<T>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:
@@ -62,7 +62,7 @@ public:
    *
    * \param size size of the ring buffer; must be positive and non-zero.
    */
-  MappedRingBuffer(size_t size, AllocWrapper * allocator)
+  MappedRingBuffer(size_t size, AllocWrapper * allocator = new AllocWrapper())
   : elements_(size), head_(0), allocator_(allocator)
   {
     if (size == 0) {

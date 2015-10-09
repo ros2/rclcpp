@@ -15,6 +15,7 @@
 #ifndef RCLCPP_RCLCPP_INTRA_PROCESS_MANAGER_HPP_
 #define RCLCPP_RCLCPP_INTRA_PROCESS_MANAGER_HPP_
 
+#include <rclcpp/allocator_wrapper.hpp>
 #include <rclcpp/mapped_ring_buffer.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/publisher.hpp>
@@ -188,10 +189,10 @@ public:
    * \param buffer_size if 0 (default) a size is calculated based on the QoS.
    * \return an unsigned 64-bit integer which is the publisher's unique id.
    */
-  template<typename MessageT, typename AllocWrapper>
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
   uint64_t
   add_publisher(typename publisher::Publisher<MessageT, AllocWrapper>::SharedPtr publisher,
-    AllocWrapper * allocator, size_t buffer_size = 0)
+    AllocWrapper * allocator = new AllocWrapper(), size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     publishers_[id].publisher = publisher;
@@ -249,7 +250,7 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template<typename MessageT, typename AllocWrapper>
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
@@ -323,7 +324,7 @@ public:
    * \param requesting_subscriptions_intra_process_id the subscription's id.
    * \param message the message typed unique_ptr used to return the message.
    */
-  template<typename MessageT, typename AllocWrapper>
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,
