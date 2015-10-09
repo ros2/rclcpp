@@ -51,21 +51,19 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template<typename T, typename Allocator = std::allocator<T>>
+template<typename T, typename AllocWrapper>
 class MappedRingBuffer : public MappedRingBufferBase
 {
-  //typedef AllocatorDeleter<T, Allocator> Deleter;
-  using Deleter = AllocatorDeleter<T, Allocator>;
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Allocator>);
+  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, AllocWrapper>);
 
   /// Constructor.
   /* The constructor will allocate memory while reserving space.
    *
    * \param size size of the ring buffer; must be positive and non-zero.
    */
-  MappedRingBuffer(size_t size, Allocator * message_allocator)
-  : elements_(size), head_(0), allocator_(message_allocator)
+  MappedRingBuffer(size_t size, AllocWrapper * allocator)
+  : elements_(size), head_(0), allocator_(allocator)
   {
     if (size == 0) {
       throw std::invalid_argument("size must be a positive, non-zero value");
@@ -88,14 +86,14 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_copy_at_key(uint64_t key, std::unique_ptr<T, Deleter> & value)
+  get_copy_at_key(uint64_t key, std::unique_ptr<T, typename AllocWrapper::Deleter> & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       auto ptr = allocator_->allocate(1);
-      std::allocator_traits<Allocator>::construct(*allocator_, ptr, *it->value);
-      value = std::unique_ptr<T, Deleter>(ptr);
+      allocator_->construct(ptr, *it->value);
+      value = std::unique_ptr<T, typename AllocWrapper::Deleter>(ptr, value.get_deleter());
     }
   }
 
@@ -119,15 +117,15 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_ownership_at_key(uint64_t key, std::unique_ptr<T, Deleter> & value)
+  get_ownership_at_key(uint64_t key, std::unique_ptr<T, typename AllocWrapper::Deleter> & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       // Make a copy.
       auto ptr = allocator_->allocate(1);
-      std::allocator_traits<Allocator>::construct(*allocator_, ptr, *it->value);
-      auto copy = std::unique_ptr<T, Deleter>(ptr);
+      allocator_->construct(ptr, *it->value);
+      auto copy = std::unique_ptr<T, typename AllocWrapper::Deleter>(ptr, value.get_deleter());
       // Return the original.
       value.swap(it->value);
       // Store the copy.
@@ -146,7 +144,7 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  pop_at_key(uint64_t key, std::unique_ptr<T, Deleter> & value)
+  pop_at_key(uint64_t key, std::unique_ptr<T, typename AllocWrapper::Deleter> & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
@@ -168,7 +166,7 @@ public:
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T, Deleter> & value)
+  push_and_replace(uint64_t key, std::unique_ptr<T, typename AllocWrapper::Deleter> & value)
   {
     bool did_replace = elements_[head_].in_use;
     elements_[head_].key = key;
@@ -179,9 +177,9 @@ public:
   }
 
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T, Deleter> && value)
+  push_and_replace(uint64_t key, std::unique_ptr<T, typename AllocWrapper::Deleter> && value)
   {
-    std::unique_ptr<T, Deleter> temp = std::move(value);
+    std::unique_ptr<T, typename AllocWrapper::Deleter> temp = std::move(value);
     return push_and_replace(key, temp);
   }
 
@@ -193,16 +191,17 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Allocator>);
+  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, AllocWrapper>);
 
   struct element
   {
     uint64_t key;
-    std::unique_ptr<T, Deleter> value;
+    std::unique_ptr<T, typename AllocWrapper::Deleter> value;
     bool in_use;
   };
 
-  typedef std::vector<element, Allocator> ElementVector;
+  // TODO Use same allocator type for this vector
+  typedef std::vector<element> ElementVector;
 
   typename ElementVector::iterator
   get_iterator_of_key(uint64_t key)
@@ -218,7 +217,7 @@ private:
   ElementVector elements_;
   size_t head_;
 
-  Allocator * allocator_;
+  AllocWrapper * allocator_;
 
 };
 

@@ -26,6 +26,7 @@
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
 #include <rosidl_generator_cpp/message_type_support.hpp>
 
+#include <rclcpp/allocator_wrapper.hpp>
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
@@ -99,11 +100,11 @@ public:
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT, typename Allocator = std::allocator<MessageT>, typename Deleter = AllocatorDeleter<MessageT, Allocator>>
-  typename rclcpp::publisher::Publisher<MessageT, Allocator>::SharedPtr
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
+  typename rclcpp::publisher::Publisher<MessageT, AllocWrapper>::SharedPtr
   create_publisher(
     const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
-    Allocator * message_allocator = new Allocator())
+    AllocWrapper * allocator = new AllocWrapper())
   {
     using rosidl_generator_cpp::get_message_type_support_handle;
     auto type_support_handle = get_message_type_support_handle<MessageT>();
@@ -117,8 +118,8 @@ public:
       // *INDENT-ON*
     }
 
-    auto publisher = publisher::Publisher<MessageT, Allocator>::make_shared(
-      node_handle_, publisher_handle, topic_name, qos_profile.depth, message_allocator);
+    auto publisher = publisher::Publisher<MessageT, AllocWrapper>::make_shared(
+      node_handle_, publisher_handle, topic_name, qos_profile.depth, allocator);
 
     if (use_intra_process_comms_) {
       rmw_publisher_t * intra_process_publisher_handle = rmw_create_publisher(
@@ -134,11 +135,11 @@ public:
       auto intra_process_manager =
         context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
       uint64_t intra_process_publisher_id =
-        intra_process_manager->add_publisher<MessageT, Allocator>(publisher, message_allocator);
+        intra_process_manager->add_publisher<MessageT, AllocWrapper>(publisher, allocator);
       rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
       // *INDENT-OFF*
       auto shared_publish_callback =
-        [weak_ipm, message_allocator](uint64_t publisher_id, void * msg, const std::type_info & type_info) -> uint64_t
+        [weak_ipm, allocator](uint64_t publisher_id, void * msg, const std::type_info & type_info) -> uint64_t
       {
         auto ipm = weak_ipm.lock();
         if (!ipm) {
@@ -156,9 +157,9 @@ public:
             "' is incompatible from the publisher type '" + message_type_info.name() + "'");
         }
         MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
-        Deleter deleter(message_allocator);
-        std::unique_ptr<MessageT, Deleter> unique_msg(typed_message_ptr, deleter);
-        uint64_t message_seq = ipm->store_intra_process_message<MessageT, Allocator>(publisher_id, unique_msg);
+        // Constructs a default Deleter, may allocate memory.
+        std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(typed_message_ptr, *allocator->get_deleter());
+        uint64_t message_seq = ipm->store_intra_process_message<MessageT, AllocWrapper>(publisher_id, unique_msg);
         return message_seq;
       };
       // *INDENT-ON*
@@ -184,25 +185,25 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT, typename Allocator = std::allocator<MessageT>, typename Deleter = AllocatorDeleter<MessageT, Allocator>>
-  typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
+  template<typename MessageT, typename CallbackT, typename AllocWrapper = DefaultAllocator<MessageT>>
+  typename rclcpp::subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
   create_subscription(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
     CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    Allocator * message_allocator = new Allocator());
+    AllocWrapper * allocator = new AllocWrapper());
 
-  template<typename MessageT, typename Allocator = std::allocator<MessageT>, typename Deleter = AllocatorDeleter<MessageT, Allocator>>
-  typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
+  typename rclcpp::subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
   create_subscription_with_unique_ptr_callback(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
-    typename rclcpp::subscription::AnySubscriptionCallback<MessageT, Deleter>::UniquePtrCallback callback,
+    typename rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter>::UniquePtrCallback callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    Allocator * message_allocator = new Allocator());
+    AllocWrapper * allocator = new AllocWrapper());
 
   /// Create a timer.
   /**
@@ -303,15 +304,15 @@ private:
   // TODO pass allocator type
   publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 
-  template<typename MessageT, typename Allocator = std::allocator<MessageT>, typename Deleter = AllocatorDeleter<MessageT, Allocator>>
-  typename subscription::Subscription<MessageT, Allocator>::SharedPtr
+  template<typename MessageT, typename AllocWrapper>
+  typename subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
   create_subscription_internal(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
-    rclcpp::subscription::AnySubscriptionCallback<MessageT, Deleter> callback,
+    rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group,
     bool ignore_local_publications,
-    Allocator * message_allocator);
+    AllocWrapper * allocator);
 
   template<
     typename ServiceT,

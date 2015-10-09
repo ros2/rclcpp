@@ -27,15 +27,22 @@ public:
   AllocatorDeleter(Allocator* a) : allocator_(a) {
   }
 
-  template<typename U>
-  AllocatorDeleter(const AllocatorDeleter<U, Allocator> & a){
-    allocator_ = a.allocator_;
+  template<typename U, typename B>
+  AllocatorDeleter(const AllocatorDeleter<U, B> & a){
+    allocator_ = a.get_allocator();
   }
 
   void operator()(T* ptr) {
     std::allocator_traits<Allocator>::destroy(*allocator_, ptr);
     std::allocator_traits<Allocator>::deallocate(*allocator_, ptr, sizeof(T));
+    ptr = NULL;
   }
+
+  Allocator * get_allocator() const {
+    return allocator_;
+  }
+
+private:
 
   Allocator * allocator_;
 };

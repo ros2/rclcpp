@@ -15,6 +15,7 @@
 #ifndef RCLCPP_RCLCPP_PUBLISHER_HPP_
 #define RCLCPP_RCLCPP_PUBLISHER_HPP_
 
+#include <rclcpp/allocator_wrapper.hpp>
 #include <rclcpp/macros.hpp>
 
 #include <iostream>
@@ -145,11 +146,10 @@ protected:
 };
 
 /// A publisher publishes messages of any type to a topic.
-template<typename MessageT, typename Allocator = std::allocator<MessageT>>
+template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
 class Publisher : public PublisherBase
 {
   friend rclcpp::node::Node;
-  typedef AllocatorDeleter<MessageT, Allocator> Deleter;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher);
@@ -168,11 +168,11 @@ public:
     rmw_publisher_t * publisher_handle,
     std::string topic,
     size_t queue_size,
-    Allocator * allocator)
+    AllocWrapper * allocator)
   : PublisherBase(node_handle, publisher_handle, topic, queue_size),
-    message_allocator_(allocator)
+    allocator_(allocator)
   {
-    if (!message_allocator_) {
+    if (!allocator_) {
       throw std::invalid_argument("Allocator was null in publisher constructor!");
     }
     // Life time of this object is tied to the publisher handle.
@@ -260,10 +260,10 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    MessageT * ptr = std::allocator_traits<Allocator>::allocate(*message_allocator_, 1);
-    std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, *msg.get());
-    Deleter deleter(message_allocator_);
-    std::unique_ptr<MessageT, Deleter> unique_msg(ptr, message_allocator_);
+    MessageT * ptr = allocator_->allocate(1);
+    allocator_->construct(ptr, *msg.get());
+
+    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr, *allocator_->get_deleter());
     return this->publish(unique_msg);
   }
 
@@ -276,10 +276,9 @@ public:
       return this->do_inter_process_publish(msg.get());
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    MessageT * ptr = std::allocator_traits<Allocator>::allocate(*message_allocator_, 1);
-    std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, msg);
-    Deleter deleter(message_allocator_);
-    std::unique_ptr<MessageT, Deleter> unique_msg(ptr, message_allocator_);
+    MessageT * ptr = allocator_->allocate(1);
+    allocator_->construct(ptr, msg);
+    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr, *allocator_->get_deleter());
     return this->publish(unique_msg);
   }
 
@@ -321,7 +320,7 @@ protected:
 private:
 
   std::mutex intra_process_publish_mutex_;
-  Allocator * message_allocator_;
+  AllocWrapper * allocator_;
 
 };
 

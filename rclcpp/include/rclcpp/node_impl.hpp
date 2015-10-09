@@ -126,57 +126,57 @@ Node::group_in_node(callback_group::CallbackGroup::SharedPtr group)
   return group_belongs_to_this_node;
 }
 
-template<typename MessageT, typename CallbackT, typename Allocator, typename Deleter>
-typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
+template<typename MessageT, typename CallbackT, typename AllocWrapper>
+typename rclcpp::subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  Allocator * message_allocator)
+  AllocWrapper * allocator)
 {
-  rclcpp::subscription::AnySubscriptionCallback<MessageT, Deleter> any_subscription_callback;
+  rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> any_subscription_callback;
   any_subscription_callback.set(callback);
-  return this->create_subscription_internal<MessageT, Allocator>(
+  return this->create_subscription_internal<MessageT, AllocWrapper>(
     topic_name,
     qos_profile,
     any_subscription_callback,
     group,
     ignore_local_publications,
-    message_allocator);
+    allocator);
 }
 
-template<typename MessageT, typename Allocator, typename Deleter>
-typename rclcpp::subscription::Subscription<MessageT, Allocator>::SharedPtr
+template<typename MessageT, typename AllocWrapper>
+typename rclcpp::subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
 Node::create_subscription_with_unique_ptr_callback(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
-  typename rclcpp::subscription::AnySubscriptionCallback<MessageT, Deleter>::UniquePtrCallback callback,
+  typename rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter>::UniquePtrCallback callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  Allocator * message_allocator)
+  AllocWrapper * allocator)
 {
-  rclcpp::subscription::AnySubscriptionCallback<MessageT, Deleter> any_subscription_callback;
+  rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> any_subscription_callback;
   any_subscription_callback.unique_ptr_callback = callback;
-  return this->create_subscription_internal<MessageT, Allocator>(
+  return this->create_subscription_internal<MessageT, AllocWrapper>(
     topic_name,
     qos_profile,
     any_subscription_callback,
     group,
     ignore_local_publications,
-    message_allocator);
+    allocator);
 }
 
-template<typename MessageT, typename Allocator, typename Deleter>
-typename subscription::Subscription<MessageT, Allocator>::SharedPtr
+template<typename MessageT, typename AllocWrapper>
+typename subscription::Subscription<MessageT, AllocWrapper>::SharedPtr
 Node::create_subscription_internal(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::subscription::AnySubscriptionCallback<MessageT, Deleter> callback,
+  rclcpp::subscription::AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  Allocator * message_allocator)
+  AllocWrapper * allocator)
 {
   using rosidl_generator_cpp::get_message_type_support_handle;
 
@@ -193,13 +193,14 @@ Node::create_subscription_internal(
 
   using namespace rclcpp::subscription;
 
-  auto sub = Subscription<MessageT, Allocator>::make_shared(
+  auto sub = Subscription<MessageT, AllocWrapper>::make_shared(
     node_handle_,
     subscriber_handle,
     topic_name,
     ignore_local_publications,
     callback,
-    message_allocator);
+    allocator);
+
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
   // Setup intra process.
   if (use_intra_process_comms_) {
@@ -225,7 +226,7 @@ Node::create_subscription_internal(
         uint64_t publisher_id,
         uint64_t message_sequence,
         uint64_t subscription_id,
-        std::unique_ptr<MessageT, Deleter> & message)
+        std::unique_ptr<MessageT, typename AllocWrapper::Deleter> & message)
       {
         auto ipm = weak_ipm.lock();
         if (!ipm) {
@@ -233,7 +234,7 @@ Node::create_subscription_internal(
           throw std::runtime_error(
             "intra process take called after destruction of intra process manager");
         }
-        ipm->take_intra_process_message<MessageT, Allocator>(publisher_id, message_sequence, subscription_id, message);
+        ipm->take_intra_process_message<MessageT, AllocWrapper>(publisher_id, message_sequence, subscription_id, message);
       },
       [weak_ipm](const rmw_gid_t * sender_gid) -> bool {
         auto ipm = weak_ipm.lock();
