@@ -86,6 +86,10 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
+    static_assert(std::is_same<
+        typename function_traits<CallbackT>::template argument_type<1>,
+        const rmw_message_info_t &>::value,
+      "Passed incorrect argument type to callback, should be rmw_message_info_t");
     shared_ptr_with_info_callback = callback;
   }
 
@@ -118,6 +122,10 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
+    static_assert(std::is_same<
+        typename function_traits<CallbackT>::template argument_type<1>,
+        const rmw_message_info_t &>::value,
+      "Passed incorrect argument type to callback, should be rmw_message_info_t");
     const_shared_ptr_with_info_callback = callback;
   }
 /*
