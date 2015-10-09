@@ -203,13 +203,13 @@ public:
     } else if (any_callback_.unique_ptr_callback) {
       MessageT * ptr = allocator_->allocate(1);
       // TODO: std::forward the argument
-      //std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, typed_message.get());
+      allocator_->construct(ptr, *typed_message);
       std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr,
         *allocator_->get_deleter());
       any_callback_.unique_ptr_callback(unique_msg);
     } else if (any_callback_.unique_ptr_with_info_callback) {
       MessageT * ptr = allocator_->allocate(1);
-      //std::allocator_traits<Allocator>::construct(*message_allocator_, ptr, typed_message.get());
+      allocator_->construct(ptr, *typed_message);
       std::unique_ptr<MessageT, typename AllocWrapper::Deleter> unique_msg(ptr,
         *allocator_->get_deleter());
       any_callback_.unique_ptr_with_info_callback(unique_msg, message_info);

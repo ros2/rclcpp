@@ -32,7 +32,6 @@ template<typename T>
 void initialize_deleter(std::default_delete<T> * deleter, std::allocator<T> * alloc)
 {
   (void) alloc;
-  std::cout << "calling default specialization of initialize_deleter" << std::endl;
   deleter = new std::default_delete<T>;
   if (!deleter) {
     throw std::runtime_error("initialize_deleter failed");
@@ -64,7 +63,6 @@ public:
   AllocatorWrapper(Alloc * allocator)
   : allocator_(allocator)
   {
-    std::cout << "constructor 1" << std::endl;
     if (!allocator_) {
       throw std::invalid_argument("Allocator argument was NULL");
     }
@@ -77,7 +75,6 @@ public:
   AllocatorWrapper(Alloc * allocator, Deleter * deleter)
   : allocator_(allocator), deleter_(deleter)
   {
-    std::cout << "constructor 2" << std::endl;
     if (!allocator_) {
       throw std::invalid_argument("Allocator argument was NULL");
     }
@@ -88,7 +85,6 @@ public:
 
   AllocatorWrapper(Alloc & allocator)
   {
-    std::cout << "constructor 3" << std::endl;
     allocator_ = &allocator;
     if (!allocator_) {
       throw std::invalid_argument("Allocator argument was NULL");
@@ -101,7 +97,6 @@ public:
 
   AllocatorWrapper()
   {
-    std::cout << "constructor 4" << std::endl;
     allocator_ = new Alloc();
     initialize_deleter(deleter_, allocator_);
     if (!deleter_) {
@@ -123,7 +118,7 @@ public:
   template<class ... Args>
   void construct(T * pointer, Args && ... args)
   {
-    std::allocator_traits<Alloc>::construct(*allocator_, pointer, std::forward<Args>(args) ...);
+    std::allocator_traits<Alloc>::construct(*allocator_, pointer, std::forward<Args>(args)...);
   }
 
   Deleter * get_deleter() const
