@@ -15,6 +15,7 @@
 #ifndef RCLCPP_RCLCPP_INTRA_PROCESS_MANAGER_HPP_
 #define RCLCPP_RCLCPP_INTRA_PROCESS_MANAGER_HPP_
 
+#include <rclcpp/allocator_wrapper.hpp>
 #include <rclcpp/mapped_ring_buffer.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/publisher.hpp>
@@ -188,9 +189,10 @@ public:
    * \param buffer_size if 0 (default) a size is calculated based on the QoS.
    * \return an unsigned 64-bit integer which is the publisher's unique id.
    */
-  template<typename MessageT>
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
   uint64_t
-  add_publisher(publisher::Publisher::SharedPtr publisher, size_t buffer_size = 0)
+  add_publisher(typename publisher::Publisher<MessageT, AllocWrapper>::SharedPtr publisher,
+    AllocWrapper * allocator = new AllocWrapper(), size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     publishers_[id].publisher = publisher;
@@ -200,7 +202,9 @@ public:
       throw std::invalid_argument("the calculated buffer size is too large");
     }
     publishers_[id].sequence_number.store(0);
-    publishers_[id].buffer = mapped_ring_buffer::MappedRingBuffer<MessageT>::make_shared(size);
+    publishers_[id].buffer =
+      mapped_ring_buffer::MappedRingBuffer<MessageT, AllocWrapper>::make_shared(size,
+        allocator);
     publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
     return id;
   }
@@ -246,11 +250,11 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template<typename MessageT>
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::unique_ptr<MessageT> & message)
+    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> & message)
   {
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
@@ -260,7 +264,7 @@ public:
     // Calculate the next message sequence number.
     uint64_t message_seq = info.sequence_number.fetch_add(1, std::memory_order_relaxed);
     // Insert the message into the ring buffer using the message_seq to identify it.
-    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT> TypedMRB;
+    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, AllocWrapper> TypedMRB;
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(info.buffer);
     bool did_replace = typed_buffer->push_and_replace(message_seq, message);
     // TODO(wjwwood): do something when a message was displaced. log debug?
@@ -320,13 +324,13 @@ public:
    * \param requesting_subscriptions_intra_process_id the subscription's id.
    * \param message the message typed unique_ptr used to return the message.
    */
-  template<typename MessageT>
+  template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    std::unique_ptr<MessageT> & message)
+    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> & message)
   {
     message = nullptr;
     PublisherInfo * info;
@@ -358,7 +362,7 @@ public:
       }
       target_subs->erase(it);
     }
-    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT> TypedMRB;
+    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, AllocWrapper> TypedMRB;
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(info->buffer);
     // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
     if (target_subs->size()) {
@@ -419,7 +423,7 @@ private:
 
     PublisherInfo() = default;
 
-    publisher::Publisher::WeakPtr publisher;
+    typename publisher::PublisherBase::WeakPtr publisher;
     std::atomic<uint64_t> sequence_number;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
     std::unordered_map<uint64_t, std::set<uint64_t>> target_subscriptions_by_message_sequence;

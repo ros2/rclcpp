@@ -256,7 +256,6 @@ protected:
         "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
         subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
     }
-    subscription->return_message(message);
   }
 
   static void

@@ -25,8 +25,8 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
+#include <rclcpp/allocator_wrapper.hpp>
 #include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
 #include <rclcpp/any_subscription_callback.hpp>
 
 namespace rclcpp
@@ -118,7 +118,6 @@ public:
 
   /// Return the message borrowed in create_message.
   // \param[in] Shared pointer to the returned message.
-  virtual void return_message(std::shared_ptr<void> & message) = 0;
   virtual void handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
@@ -141,7 +140,7 @@ private:
 using namespace any_subscription_callback;
 
 /// Subscription implementation, templated on the type of message this subscription receives.
-template<typename MessageT>
+template<typename MessageT, typename AllocWrapper = DefaultAllocator<MessageT>>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node::Node;
@@ -164,33 +163,27 @@ public:
     rmw_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications,
-    AnySubscriptionCallback<MessageT> callback,
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr memory_strategy =
-    message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default())
+    AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> callback,
+    AllocWrapper * allocator)
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     any_callback_(callback),
-    message_memory_strategy_(memory_strategy),
+    allocator_(allocator),
     get_intra_process_message_callback_(nullptr),
     matches_any_intra_process_publishers_(nullptr)
-  {}
-
-  /// Support dynamically setting the message memory strategy.
-  /**
-   * Behavior may be undefined if called while the subscription could be executing.
-   * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
-   */
-  void set_message_memory_strategy(
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr message_memory_strategy)
   {
-    message_memory_strategy_ = message_memory_strategy;
+    if (!allocator_) {
+      throw std::invalid_argument("NULL allocator received in Subscription constructor!");
+    }
   }
+
   std::shared_ptr<void> create_message()
   {
-    /* The default message memory strategy provides a dynamically allocated message on each call to
-     * create_message, though alternative memory strategies that re-use a preallocated message may be
-     * used (see rclcpp/strategies/message_pool_memory_strategy.hpp).
-     */
-    return message_memory_strategy_->borrow_message();
+    // Allocate a message according to the default subscription allocator.
+    MessageT * ptr = allocator_->allocate(1);
+    allocator_->construct(ptr);
+
+    //return std::shared_ptr<MessageT>(ptr, *allocator_->get_deleter(), *allocator_->get_underlying_allocator());
+    return std::shared_ptr<MessageT>(ptr, *allocator_->get_deleter());
   }
 
   void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
@@ -207,21 +200,21 @@ public:
       any_callback_.shared_ptr_callback(typed_message);
     } else if (any_callback_.shared_ptr_with_info_callback) {
       any_callback_.shared_ptr_with_info_callback(typed_message, message_info);
+    } else if (any_callback_.const_shared_ptr_callback) {
+      any_callback_.const_shared_ptr_callback(typed_message);
+    } else if (any_callback_.const_shared_ptr_with_info_callback) {
+      any_callback_.const_shared_ptr_with_info_callback(typed_message, message_info);
     } else if (any_callback_.unique_ptr_callback) {
-      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
-      any_callback_.unique_ptr_callback(unique_msg);
+      auto ptr = allocator_->allocate(1);
+      allocator_->construct(ptr, *typed_message);
+      any_callback_.unique_ptr_callback(std::unique_ptr<MessageT, typename AllocWrapper::Deleter>(ptr));
     } else if (any_callback_.unique_ptr_with_info_callback) {
-      std::unique_ptr<MessageT> unique_msg(new MessageT(*typed_message));
-      any_callback_.unique_ptr_with_info_callback(unique_msg, message_info);
+      auto ptr = allocator_->allocate(1);
+      allocator_->construct(ptr, *typed_message);
+      any_callback_.unique_ptr_with_info_callback(std::unique_ptr<MessageT, typename AllocWrapper::Deleter>(ptr), message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
-  }
-
-  void return_message(std::shared_ptr<void> & message)
-  {
-    auto typed_message = std::static_pointer_cast<MessageT>(message);
-    message_memory_strategy_->return_message(typed_message);
   }
 
   void handle_intra_process_message(
@@ -235,7 +228,8 @@ public:
       // However, this can only really happen if this node has it disabled, but the other doesn't.
       return;
     }
-    std::unique_ptr<MessageT> msg;
+    // TODO: caution, need to alloc this message before sending it?
+    std::unique_ptr<MessageT, typename AllocWrapper::Deleter> msg;
     get_intra_process_message_callback_(
       ipm.publisher_id,
       ipm.message_sequence,
@@ -253,10 +247,16 @@ public:
     } else if (any_callback_.shared_ptr_with_info_callback) {
       typename MessageT::SharedPtr shared_msg = std::move(msg);
       any_callback_.shared_ptr_with_info_callback(shared_msg, message_info);
+    } else if (any_callback_.const_shared_ptr_callback) {
+      typename MessageT::ConstSharedPtr const_shared_msg = std::move(msg);
+      any_callback_.const_shared_ptr_callback(const_shared_msg);
+    } else if (any_callback_.const_shared_ptr_with_info_callback) {
+      typename MessageT::ConstSharedPtr const_shared_msg = std::move(msg);
+      any_callback_.const_shared_ptr_with_info_callback(const_shared_msg, message_info);
     } else if (any_callback_.unique_ptr_callback) {
-      any_callback_.unique_ptr_callback(msg);
+      any_callback_.unique_ptr_callback(std::move(msg));
     } else if (any_callback_.unique_ptr_with_info_callback) {
-      any_callback_.unique_ptr_with_info_callback(msg, message_info);
+      any_callback_.unique_ptr_with_info_callback(std::move(msg), message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
@@ -265,7 +265,8 @@ public:
 private:
   typedef
     std::function<
-      void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT> &)
+      void (uint64_t, uint64_t, uint64_t,
+      std::unique_ptr<MessageT, typename AllocWrapper::Deleter> &)
     > GetMessageCallbackType;
   typedef std::function<bool (const rmw_gid_t *)> MatchesAnyPublishersCallbackType;
 
@@ -283,9 +284,8 @@ private:
 
   RCLCPP_DISABLE_COPY(Subscription);
 
-  AnySubscriptionCallback<MessageT> any_callback_;
-  typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  message_memory_strategy_;
+  AnySubscriptionCallback<MessageT, typename AllocWrapper::Deleter> any_callback_;
+  AllocWrapper * allocator_;
 
   GetMessageCallbackType get_intra_process_message_callback_;
   MatchesAnyPublishersCallbackType matches_any_intra_process_publishers_;
