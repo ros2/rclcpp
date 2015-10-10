@@ -114,7 +114,7 @@ Node::create_callback_group(
 }
 
 template<typename MessageT>
-publisher::Publisher::SharedPtr
+typename publisher::Publisher<MessageT>::SharedPtr
 Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile)
 {
@@ -130,7 +130,7 @@ Node::create_publisher(
     // *INDENT-ON*
   }
 
-  auto publisher = publisher::Publisher::make_shared(
+  auto publisher = publisher::Publisher<MessageT>::make_shared(
     node_handle_, publisher_handle, topic_name, qos_profile.depth);
 
   if (use_intra_process_comms_) {

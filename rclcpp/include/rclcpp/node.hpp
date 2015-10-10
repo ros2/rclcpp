@@ -99,7 +99,7 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT>
-  rclcpp::publisher::Publisher::SharedPtr
+  typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
   create_publisher(
     const std::string & topic_name, const rmw_qos_profile_t & qos_profile);
 
@@ -235,7 +235,7 @@ private:
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
-  publisher::Publisher::SharedPtr events_publisher_;
+  publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 
   template<typename MessageT>
   typename subscription::Subscription<MessageT>::SharedPtr
