@@ -250,9 +250,17 @@ private:
   template<
     typename ServiceT,
     typename FunctorT,
-    typename std::enable_if<
-      function_traits<FunctorT>::arity == 2
-    >::type * = nullptr,
+    std::size_t Arity = 2
+  >
+  typename std::enable_if<
+    rclcpp::arity_comparator<Arity, FunctorT>::value,
+    typename rclcpp::service::Service<ServiceT>::SharedPtr
+  >::type
+  create_service_internal(
+    std::shared_ptr<rmw_node_t> node_handle,
+    rmw_service_t * service_handle,
+    const std::string & service_name,
+    FunctorT callback,
     typename std::enable_if<
       std::is_same<
         typename function_traits<FunctorT>::template argument_type<0>,
@@ -264,14 +272,7 @@ private:
         typename function_traits<FunctorT>::template argument_type<1>,
         typename std::shared_ptr<typename ServiceT::Response>
       >::value
-    >::type * = nullptr
-  >
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
-  create_service_internal(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
-    const std::string & service_name,
-    FunctorT callback)
+    >::type * = nullptr)
   {
     typename rclcpp::service::Service<ServiceT>::CallbackType callback_without_header =
       callback;
@@ -282,9 +283,17 @@ private:
   template<
     typename ServiceT,
     typename FunctorT,
-    typename std::enable_if<
-      function_traits<FunctorT>::arity == 3
-    >::type * = nullptr,
+    std::size_t Arity = 3
+  >
+  typename std::enable_if<
+    arity_comparator<Arity, FunctorT>::value,
+    typename rclcpp::service::Service<ServiceT>::SharedPtr
+  >::type
+  create_service_internal(
+    std::shared_ptr<rmw_node_t> node_handle,
+    rmw_service_t * service_handle,
+    const std::string & service_name,
+    FunctorT callback,
     typename std::enable_if<
       std::is_same<
         typename function_traits<FunctorT>::template argument_type<0>,
@@ -296,35 +305,14 @@ private:
         typename function_traits<FunctorT>::template argument_type<1>,
         typename std::shared_ptr<typename ServiceT::Request>
       >::value
-    >::type * = nullptr
-/*
-   TODO(esteve): reenable this block of code when VS2015 gets better support
-   for SFINAE and remove the static_assert from the body of this method. For
-   more info about the current support for SFINAE in VS2015 RC:
-
-   http://blogs.msdn.com/b/vcblog/archive/2015/04/29/c-11-14-17-features-in-vs-2015-rc.aspx
-   ,
+    >::type * = nullptr,
     typename std::enable_if<
       std::is_same<
         typename function_traits<FunctorT>::template argument_type<2>,
         typename std::shared_ptr<typename ServiceT::Response>
       >::value
-    >::type * = nullptr
- */
-  >
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
-  create_service_internal(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
-    const std::string & service_name,
-    FunctorT callback)
+    >::type * = nullptr)
   {
-    static_assert(
-      std::is_same<
-        typename function_traits<FunctorT>::template argument_type<2>,
-        typename std::shared_ptr<typename ServiceT::Response>
-      >::value, "Third argument must be of type std::shared_ptr<ServiceT::Response>");
-
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
       callback;
     return service::Service<ServiceT>::make_shared(

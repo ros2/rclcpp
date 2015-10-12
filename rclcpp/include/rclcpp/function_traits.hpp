@@ -58,6 +58,12 @@ struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
   : public function_traits<ReturnTypeT(ClassT &, Args ...)>
 {};
 
+template<std::size_t Arity, typename FunctorT>
+struct arity_comparator
+{
+  static constexpr bool value = (Arity == function_traits<FunctorT>::arity);
+};
+
 } /* namespace rclcpp */
 
 #endif /* RCLCPP_RCLCPP_FUNCTION_TRAITS_HPP_ */
