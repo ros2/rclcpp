@@ -247,6 +247,16 @@ private:
     bool ignore_local_publications,
     typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat);
 
+/* NOTE(esteve):
+ * The following template machinery works around VS2015's lack of support for expression SFINAE:
+ * - We first declare the arity we want to match, i.e. 2 or 3.
+ * - Then we use the arity_comparator template to SFINAE on the arity of the passed functor.
+ * - Lastly, we SFINAE on the types of the arguments of the functor.
+ * These steps happen in different parts of the function signature because we want to stagger
+ * instantation of the templates because VS2015 can't conditionally enable templates that depend
+ * on another template.
+ * See test_function_traits.cpp for streamlined examples of how to use this pattern.
+ */
   template<
     typename ServiceT,
     typename FunctorT,
