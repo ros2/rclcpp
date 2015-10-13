@@ -90,7 +90,7 @@ struct AnySubscriptionCallback
     typename std::enable_if<
       std::is_same<
         typename function_traits<CallbackT>::template argument_type<1>,
-        rmw_message_info_t
+        const rmw_message_info_t &
       >::value
     >::type * = nullptr)
   {
