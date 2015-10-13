@@ -32,20 +32,26 @@ namespace any_subscription_callback
 template<typename MessageT>
 struct AnySubscriptionCallback
 {
-  using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT> &)>;
+  using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT>)>;
   using SharedPtrWithInfoCallback =
-      std::function<void(const std::shared_ptr<MessageT> &, const rmw_message_info_t &)>;
-  using UniquePtrCallback = std::function<void(std::unique_ptr<MessageT> &)>;
+      std::function<void(const std::shared_ptr<MessageT>, const rmw_message_info_t &)>;
+  using ConstSharedPtrCallback = std::function<void(const std::shared_ptr<const MessageT>)>;
+  using ConstSharedPtrWithInfoCallback =
+      std::function<void(const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
+  using UniquePtrCallback = std::function<void(std::unique_ptr<MessageT>)>;
   using UniquePtrWithInfoCallback =
-      std::function<void(std::unique_ptr<MessageT> &, const rmw_message_info_t &)>;
+      std::function<void(std::unique_ptr<MessageT>, const rmw_message_info_t &)>;
 
   SharedPtrCallback shared_ptr_callback;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback;
+  ConstSharedPtrCallback const_shared_ptr_callback;
+  ConstSharedPtrWithInfoCallback const_shared_ptr_with_info_callback;
   UniquePtrCallback unique_ptr_callback;
   UniquePtrWithInfoCallback unique_ptr_with_info_callback;
 
   AnySubscriptionCallback()
   : shared_ptr_callback(nullptr), shared_ptr_with_info_callback(nullptr),
+    const_shared_ptr_callback(nullptr), const_shared_ptr_with_info_callback(nullptr),
     unique_ptr_callback(nullptr), unique_ptr_with_info_callback(nullptr)
   {}
 
@@ -80,7 +86,47 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
+    static_assert(std::is_same<
+        typename function_traits<CallbackT>::template argument_type<1>,
+        const rmw_message_info_t &>::value,
+      "Passed incorrect argument type to callback, should be rmw_message_info_t");
     shared_ptr_with_info_callback = callback;
+  }
+
+  template<typename CallbackT,
+  typename std::enable_if<
+    function_traits<CallbackT>::arity == 1
+  >::type * = nullptr,
+  typename std::enable_if<
+    std::is_same<
+      typename function_traits<CallbackT>::template argument_type<0>,
+      typename std::shared_ptr<const MessageT>
+    >::value
+  >::type * = nullptr
+  >
+  void set(CallbackT callback)
+  {
+    const_shared_ptr_callback = callback;
+  }
+
+  template<typename CallbackT,
+  typename std::enable_if<
+    function_traits<CallbackT>::arity == 2
+  >::type * = nullptr,
+  typename std::enable_if<
+    std::is_same<
+      typename function_traits<CallbackT>::template argument_type<0>,
+      typename std::shared_ptr<const MessageT>
+    >::value
+  >::type * = nullptr
+  >
+  void set(CallbackT callback)
+  {
+    static_assert(std::is_same<
+        typename function_traits<CallbackT>::template argument_type<1>,
+        const rmw_message_info_t &>::value,
+      "Passed incorrect argument type to callback, should be rmw_message_info_t");
+    const_shared_ptr_with_info_callback = callback;
   }
 /*
   template<typename CallbackT,
