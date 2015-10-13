@@ -57,75 +57,83 @@ struct AnySubscriptionCallback
 
   AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
 
-  template<typename CallbackT,
-  typename std::enable_if<
-    function_traits<CallbackT>::arity == 1
-  >::type * = nullptr,
-  typename std::enable_if<
-    std::is_same<
-      typename function_traits<CallbackT>::template argument_type<0>,
-      typename std::shared_ptr<MessageT>
-    >::value
-  >::type * = nullptr
+  template<
+    typename CallbackT,
+    std::size_t Arity = 1
   >
-  void set(CallbackT callback)
+  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
+  set(
+    CallbackT callback,
+    typename std::enable_if<
+      std::is_same<
+        typename function_traits<CallbackT>::template argument_type<0>,
+        typename std::shared_ptr<MessageT>
+      >::value
+    >::type * = nullptr)
   {
     shared_ptr_callback = callback;
   }
 
-  template<typename CallbackT,
-  typename std::enable_if<
-    function_traits<CallbackT>::arity == 2
-  >::type * = nullptr,
-  typename std::enable_if<
-    std::is_same<
-      typename function_traits<CallbackT>::template argument_type<0>,
-      typename std::shared_ptr<MessageT>
-    >::value
-  >::type * = nullptr
+  template<
+    typename CallbackT,
+    std::size_t Arity = 2
   >
-  void set(CallbackT callback)
-  {
-    static_assert(std::is_same<
+  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
+  set(
+    CallbackT callback,
+    typename std::enable_if<
+      std::is_same<
+        typename function_traits<CallbackT>::template argument_type<0>,
+        typename std::shared_ptr<MessageT>
+      >::value
+    >::type * = nullptr,
+    typename std::enable_if<
+      std::is_same<
         typename function_traits<CallbackT>::template argument_type<1>,
-        const rmw_message_info_t &>::value,
-      "Passed incorrect argument type to callback, should be rmw_message_info_t");
+        const rmw_message_info_t &
+      >::value
+    >::type * = nullptr)
+  {
     shared_ptr_with_info_callback = callback;
   }
 
-  template<typename CallbackT,
-  typename std::enable_if<
-    function_traits<CallbackT>::arity == 1
-  >::type * = nullptr,
-  typename std::enable_if<
-    std::is_same<
-      typename function_traits<CallbackT>::template argument_type<0>,
-      typename std::shared_ptr<const MessageT>
-    >::value
-  >::type * = nullptr
+  template<
+    typename CallbackT,
+    std::size_t Arity = 1
   >
-  void set(CallbackT callback)
+  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
+  set(
+    CallbackT callback,
+    typename std::enable_if<
+      std::is_same<
+        typename function_traits<CallbackT>::template argument_type<0>,
+        typename std::shared_ptr<const MessageT>
+      >::value
+    >::type * = nullptr)
   {
     const_shared_ptr_callback = callback;
   }
 
-  template<typename CallbackT,
-  typename std::enable_if<
-    function_traits<CallbackT>::arity == 2
-  >::type * = nullptr,
-  typename std::enable_if<
-    std::is_same<
-      typename function_traits<CallbackT>::template argument_type<0>,
-      typename std::shared_ptr<const MessageT>
-    >::value
-  >::type * = nullptr
+  template<
+    typename CallbackT,
+    std::size_t Arity = 2
   >
-  void set(CallbackT callback)
-  {
-    static_assert(std::is_same<
+  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
+  set(
+    CallbackT callback,
+    typename std::enable_if<
+      std::is_same<
+        typename function_traits<CallbackT>::template argument_type<0>,
+        typename std::shared_ptr<const MessageT>
+      >::value
+    >::type * = nullptr,
+    typename std::enable_if<
+      std::is_same<
         typename function_traits<CallbackT>::template argument_type<1>,
-        const rmw_message_info_t &>::value,
-      "Passed incorrect argument type to callback, should be rmw_message_info_t");
+        const rmw_message_info_t &
+      >::value
+    >::type * = nullptr)
+  {
     const_shared_ptr_with_info_callback = callback;
   }
 /*

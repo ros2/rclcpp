@@ -22,6 +22,7 @@ if(AMENT_ENABLE_TESTING)
 
   include_directories(include)
 
+  ament_add_gtest(test_function_traits test/test_function_traits.cpp)
   ament_add_gtest(test_mapped_ring_buffer test/test_mapped_ring_buffer.cpp)
   ament_add_gtest(test_intra_process_manager test/test_intra_process_manager.cpp)
   if(TARGET test_intra_process_manager)

@@ -25,6 +25,7 @@ namespace rclcpp
  * but unfortunately std::function's constructor on VS2015 is too greedy,
  * so we need a mechanism for checking the arity and the type of each argument
  * in a callback function.
+ * See http://blogs.msdn.com/b/vcblog/archive/2015/06/19/c-11-14-17-features-in-vs-2015-rtm.aspx
  */
 
 
@@ -57,6 +58,16 @@ template<typename ClassT, typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
   : public function_traits<ReturnTypeT(ClassT &, Args ...)>
 {};
+
+/* NOTE(esteve):
+ * VS2015 does not support expression SFINAE, so we're using this template to evaluate
+ * the arity of a function.
+ */
+template<std::size_t Arity, typename FunctorT>
+struct arity_comparator
+{
+  static constexpr bool value = (Arity == function_traits<FunctorT>::arity);
+};
 
 } /* namespace rclcpp */
 
