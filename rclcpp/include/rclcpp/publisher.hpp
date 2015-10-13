@@ -159,6 +159,24 @@ public:
 
   template<typename MessageT>
   void
+  publish(std::shared_ptr<const MessageT> msg)
+  {
+    // Avoid allocating when not using intra process.
+    if (!store_intra_process_message_) {
+      // In this case we're not using intra process.
+      return this->do_inter_process_publish(msg.get());
+    }
+    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
+    // TODO(wjwwood):
+    //   The intra process manager should probably also be able to store
+    //   shared_ptr's and do the "smart" thing based on other intra process
+    //   subscriptions. For now call the other publish().
+    std::unique_ptr<MessageT> unique_msg(new MessageT(*msg.get()));
+    return this->publish(unique_msg);
+  }
+
+  template<typename MessageT>
+  void
   publish(const MessageT & msg)
   {
     // Avoid allocating when not using intra process.
