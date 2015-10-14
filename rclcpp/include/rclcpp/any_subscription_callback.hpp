@@ -59,80 +59,58 @@ struct AnySubscriptionCallback
 
   template<
     typename CallbackT,
-    std::size_t Arity = 1
-  >
-  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
-  set(
-    CallbackT callback,
     typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<0>,
+      rclcpp::check_argument_types<
+        CallbackT,
         typename std::shared_ptr<MessageT>
       >::value
-    >::type * = nullptr)
+    >::type * = nullptr
+  >
+  void set(CallbackT callback)
   {
     shared_ptr_callback = callback;
   }
 
   template<
     typename CallbackT,
-    std::size_t Arity = 2
-  >
-  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
-  set(
-    CallbackT callback,
     typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<0>,
-        typename std::shared_ptr<MessageT>
-      >::value
-    >::type * = nullptr,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<1>,
+      rclcpp::check_argument_types<
+        CallbackT,
+        typename std::shared_ptr<MessageT>,
         const rmw_message_info_t &
       >::value
-    >::type * = nullptr)
+    >::type * = nullptr
+  >
+  void set(CallbackT callback)
   {
     shared_ptr_with_info_callback = callback;
   }
 
   template<
     typename CallbackT,
-    std::size_t Arity = 1
-  >
-  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
-  set(
-    CallbackT callback,
     typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<0>,
+      rclcpp::check_argument_types<
+        CallbackT,
         typename std::shared_ptr<const MessageT>
       >::value
-    >::type * = nullptr)
+    >::type * = nullptr
+  >
+  void set(CallbackT callback)
   {
     const_shared_ptr_callback = callback;
   }
 
   template<
     typename CallbackT,
-    std::size_t Arity = 2
-  >
-  typename std::enable_if<rclcpp::arity_comparator<Arity, CallbackT>::value, void>::type
-  set(
-    CallbackT callback,
     typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<0>,
-        typename std::shared_ptr<const MessageT>
-      >::value
-    >::type * = nullptr,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<1>,
+      rclcpp::check_argument_types<
+        CallbackT,
+        typename std::shared_ptr<const MessageT>,
         const rmw_message_info_t &
       >::value
-    >::type * = nullptr)
+    >::type * = nullptr
+  >
+  void set(CallbackT callback)
   {
     const_shared_ptr_with_info_callback = callback;
   }

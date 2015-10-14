@@ -70,17 +70,21 @@ struct FunctionObjectOneIntOneChar
 
 template<
   typename FunctorT,
-  std::size_t Arity = 1
+  std::size_t Arity = 0,
+  typename std::enable_if<rclcpp::arity_comparator<Arity, FunctorT>::value>::type * = nullptr
 >
-typename std::enable_if<rclcpp::arity_comparator<Arity, FunctorT>::value, int>::type
-func_accept_callback(FunctorT callback,
+int func_accept_callback(FunctorT callback)
+{
+  return callback();
+}
+
+template<
+  typename FunctorT,
   typename std::enable_if<
-    std::is_same<
-      int,
-      typename rclcpp::function_traits<FunctorT>::template argument_type<0>
-    >::value
+    rclcpp::check_argument_types<FunctorT, int>::value
   >::type * = nullptr
-)
+>
+int func_accept_callback(FunctorT callback)
 {
   int a = 4;
   return callback(a);
@@ -88,22 +92,11 @@ func_accept_callback(FunctorT callback,
 
 template<
   typename FunctorT,
-  std::size_t Arity = 2
+  typename std::enable_if<
+    rclcpp::check_argument_types<FunctorT, int, int>::value
+  >::type * = nullptr
 >
-typename std::enable_if<rclcpp::arity_comparator<Arity, FunctorT>::value, int>::type
-func_accept_callback(FunctorT callback,
-  typename std::enable_if<
-    std::is_same<
-      int,
-      typename rclcpp::function_traits<FunctorT>::template argument_type<0>
-    >::value
-  >::type * = nullptr,
-  typename std::enable_if<
-    std::is_same<
-      int,
-      typename rclcpp::function_traits<FunctorT>::template argument_type<1>
-    >::value
-  >::type * = nullptr)
+int func_accept_callback(FunctorT callback)
 {
   int a = 5;
   int b = 6;
@@ -112,22 +105,11 @@ func_accept_callback(FunctorT callback,
 
 template<
   typename FunctorT,
-  std::size_t Arity = 2
+  typename std::enable_if<
+    rclcpp::check_argument_types<FunctorT, int, char>::value
+  >::type * = nullptr
 >
-typename std::enable_if<rclcpp::arity_comparator<Arity, FunctorT>::value, int>::type
-func_accept_callback(FunctorT callback,
-  typename std::enable_if<
-    std::is_same<
-      int,
-      typename rclcpp::function_traits<FunctorT>::template argument_type<0>
-    >::value
-  >::type * = nullptr,
-  typename std::enable_if<
-    std::is_same<
-      char,
-      typename rclcpp::function_traits<FunctorT>::template argument_type<1>
-    >::value
-  >::type * = nullptr)
+int func_accept_callback(FunctorT callback)
 {
   int a = 7;
   char b = 8;
@@ -317,12 +299,122 @@ TEST(TestFunctionTraits, argument_types) {
 }
 
 /*
+   Tests that funcion_traits checks the types of the arguments of several functors.
+ */
+TEST(TestFunctionTraits, check_argument_types) {
+  // Test regular functions
+  static_assert(
+    rclcpp::check_argument_types<decltype(func_one_int), int>::value,
+    "Functor accepts a single int as arguments");
+
+  static_assert(
+    !rclcpp::check_argument_types<decltype(func_one_int), char>::value,
+    "Functor does not accept a char as argument");
+
+  static_assert(
+    !rclcpp::check_argument_types<decltype(func_one_int), char, int>::value,
+    "Functor does not accept two arguments");
+
+  static_assert(
+    !rclcpp::check_argument_types<decltype(func_two_ints), int>::value,
+    "Functor accepts two ints as arguments");
+
+  static_assert(
+    rclcpp::check_argument_types<decltype(func_two_ints), int, int>::value,
+    "Functor accepts two ints as arguments");
+
+  static_assert(
+    !rclcpp::check_argument_types<decltype(func_two_ints), bool, int>::value,
+    "Functor accepts two ints as arguments");
+
+  static_assert(
+    !rclcpp::check_argument_types<decltype(func_two_ints), int, char>::value,
+    "Functor accepts two ints as arguments");
+
+  static_assert(
+    rclcpp::check_argument_types<decltype(func_one_int_one_char), int, char>::value,
+    "Functor accepts an int and a char as arguments");
+
+  // Test lambdas
+  auto lambda_one_int = [](int) {
+      return 1;
+    };
+
+  auto lambda_two_ints = [](int, int) {
+      return 2;
+    };
+
+  auto lambda_one_int_one_char = [](int, char) {
+      return 3;
+    };
+
+  static_assert(
+    rclcpp::check_argument_types<decltype(lambda_one_int), int>::value,
+    "Functor accepts an int as the only argument");
+
+  static_assert(
+    rclcpp::check_argument_types<decltype(lambda_two_ints), int, int>::value,
+    "Functor accepts two ints as arguments");
+
+  static_assert(
+    rclcpp::check_argument_types<decltype(lambda_one_int_one_char), int, char>::value,
+    "Functor accepts an int and a char as arguments");
+
+  // Test objects that have a call operator
+  static_assert(
+    rclcpp::check_argument_types<FunctionObjectOneInt, int>::value,
+    "Functor accepts an int as the only argument");
+
+  static_assert(
+    rclcpp::check_argument_types<FunctionObjectTwoInts, int, int>::value,
+    "Functor accepts two ints as arguments");
+
+  static_assert(
+    rclcpp::check_argument_types<FunctionObjectOneIntOneChar, int, char>::value,
+    "Functor accepts an int and a char as arguments");
+}
+
+/*
    Tests that functions are matched via SFINAE.
  */
 TEST(TestFunctionTraits, sfinae_match) {
+  EXPECT_EQ(0, func_accept_callback(func_no_args));
+
   EXPECT_EQ(1, func_accept_callback(func_one_int));
 
   EXPECT_EQ(2, func_accept_callback(func_two_ints));
 
   EXPECT_EQ(3, func_accept_callback(func_one_int_one_char));
+
+  auto lambda_no_args = []() {
+      return 0;
+    };
+
+  auto lambda_one_int = [](int) {
+      return 1;
+    };
+
+  auto lambda_two_ints = [](int, int) {
+      return 2;
+    };
+
+  auto lambda_one_int_one_char = [](int, char) {
+      return 3;
+    };
+
+  EXPECT_EQ(0, func_accept_callback(lambda_no_args));
+
+  EXPECT_EQ(1, func_accept_callback(lambda_one_int));
+
+  EXPECT_EQ(2, func_accept_callback(lambda_two_ints));
+
+  EXPECT_EQ(3, func_accept_callback(lambda_one_int_one_char));
+
+  EXPECT_EQ(0, func_accept_callback(FunctionObjectNoArgs()));
+
+  EXPECT_EQ(1, func_accept_callback(FunctionObjectOneInt()));
+
+  EXPECT_EQ(2, func_accept_callback(FunctionObjectTwoInts()));
+
+  EXPECT_EQ(3, func_accept_callback(FunctionObjectOneIntOneChar()));
 }
