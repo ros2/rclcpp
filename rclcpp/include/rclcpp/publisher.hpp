@@ -295,14 +295,13 @@ public:
     return this->publish(unique_msg);
   }
 
-
   void
   publish(const MessageT & msg)
   {
     // Avoid allocating when not using intra process.
     if (!store_intra_process_message_) {
       // In this case we're not using intra process.
-      return this->do_inter_process_publish(msg.get());
+      return this->do_inter_process_publish(&msg);
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     std::unique_ptr<MessageT> unique_msg(new MessageT(msg));
