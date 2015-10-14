@@ -117,6 +117,31 @@ public:
   /// Create and return a Subscription.
   /**
    * \param[in] topic_name The topic to subscribe on.
+   * \param[in] qos_history_depth The depth of the subscription's incoming message queue.
+   * \param[in] callback The user-defined callback function.
+   * \param[in] group The callback group for this subscription. NULL for no callback group.
+   * \param[in] ignore_local_publications True to ignore local publications.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
+  template<typename MessageT, typename CallbackT>
+  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  create_subscription(
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    CallbackT callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    bool ignore_local_publications = false,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+    msg_mem_strat = nullptr);
+
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \param[in] callback The user-defined callback function.
    * \param[in] group The callback group for this subscription. NULL for no callback group.

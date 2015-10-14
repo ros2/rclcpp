@@ -209,6 +209,30 @@ template<typename MessageT, typename CallbackT>
 typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
+  size_t qos_history_depth,
+  CallbackT callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+  msg_mem_strat)
+{
+  rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
+  any_subscription_callback.set(callback);
+  rmw_qos_profile_t qos = rmw_qos_profile_default;
+  qos.depth = qos_history_depth;
+  return this->create_subscription_internal(
+    topic_name,
+    qos,
+    any_subscription_callback,
+    group,
+    ignore_local_publications,
+    msg_mem_strat);
+}
+
+template<typename MessageT, typename CallbackT>
+typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+Node::create_subscription(
+  const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
