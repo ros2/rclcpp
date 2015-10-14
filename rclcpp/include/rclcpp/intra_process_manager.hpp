@@ -190,7 +190,8 @@ public:
    */
   template<typename MessageT>
   uint64_t
-  add_publisher(publisher::Publisher::SharedPtr publisher, size_t buffer_size = 0)
+  add_publisher(typename publisher::Publisher<MessageT>::SharedPtr publisher,
+    size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     publishers_[id].publisher = publisher;
@@ -419,7 +420,7 @@ private:
 
     PublisherInfo() = default;
 
-    publisher::Publisher::WeakPtr publisher;
+    publisher::PublisherBase::WeakPtr publisher;
     std::atomic<uint64_t> sequence_number;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
     std::unordered_map<uint64_t, std::set<uint64_t>> target_subscriptions_by_message_sequence;
