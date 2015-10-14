@@ -28,6 +28,8 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
+#include <rclcpp/allocator/allocator_factory.hpp>
+
 namespace rclcpp
 {
 
@@ -203,13 +205,13 @@ protected:
 };
 
 /// A publisher publishes messages of any type to a topic.
-template<typename MessageT>
+template<typename MessageT, template<typename> class Alloc = std::allocator>
 class Publisher : public PublisherBase
 {
   friend rclcpp::node::Node;
 
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT>);
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>);
 
   Publisher(
     std::shared_ptr<rmw_node_t> node_handle,
@@ -217,7 +219,10 @@ public:
     std::string topic,
     size_t queue_size)
   : PublisherBase(node_handle, publisher_handle, topic, queue_size)
-  {}
+  {
+    // TODO: avoid messy initialization
+    message_deleter_ = initialize_deleter(&message_allocator_);
+  }
 
 
   /// Send a message to the topic for this publisher.
@@ -274,7 +279,9 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    std::unique_ptr<MessageT> unique_msg(new MessageT(*msg.get()));
+    auto ptr = std::allocator_traits<Alloc<MessageT>>::allocate(message_allocator_, 1);
+    std::allocator_traits<Alloc<MessageT>>::construct(message_allocator_, ptr, *msg.get());
+    std::unique_ptr<MessageT, Deleter<MessageT, Alloc>> unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -291,7 +298,9 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    std::unique_ptr<MessageT> unique_msg(new MessageT(*msg.get()));
+    auto ptr = std::allocator_traits<Alloc<MessageT>>::allocate(message_allocator_, 1);
+    std::allocator_traits<Alloc<MessageT>>::construct(message_allocator_, ptr, *msg.get());
+    std::unique_ptr<MessageT, Deleter<MessageT, Alloc>> unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -304,7 +313,9 @@ public:
       return this->do_inter_process_publish(&msg);
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    std::unique_ptr<MessageT> unique_msg(new MessageT(msg));
+    auto ptr = std::allocator_traits<Alloc<MessageT>>::allocate(message_allocator_, 1);
+    std::allocator_traits<Alloc<MessageT>>::construct(message_allocator_, ptr, msg);
+    std::unique_ptr<MessageT, Deleter<MessageT, Alloc>> unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -320,6 +331,9 @@ protected:
       // *INDENT-ON*
     }
   }
+
+  Alloc<MessageT> message_allocator_;
+  Deleter<MessageT, Alloc> message_deleter_;
 
 };
 
