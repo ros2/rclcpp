@@ -114,35 +114,28 @@ struct AnySubscriptionCallback
   {
     const_shared_ptr_with_info_callback = callback;
   }
-/*
-  template<typename CallbackT,
+
+  template<
+    typename CallbackT,
     typename std::enable_if<
-      function_traits<CallbackT>::arity == 1
-    >::type * = nullptr,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<0>,
+      rclcpp::check_argument_types<
+        CallbackT,
         typename std::unique_ptr<MessageT>
       >::value
     >::type * = nullptr
   >
   void set(CallbackT callback)
   {
-    static_assert(std::is_same<
-        typename function_traits<CallbackT>::template argument_type<0>,
-        typename std::unique_ptr<MessageT>
-      >::value, "Not a unique pointer");
     unique_ptr_callback = callback;
   }
 
-  template<typename CallbackT,
+  template<
+    typename CallbackT,
     typename std::enable_if<
-      function_traits<CallbackT>::arity == 2
-    >::type * = nullptr,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<CallbackT>::template argument_type<0>,
-        typename std::unique_ptr<MessageT>
+      rclcpp::check_argument_types<
+        CallbackT,
+        typename std::unique_ptr<MessageT>,
+        const rmw_message_info_t &
       >::value
     >::type * = nullptr
   >
@@ -150,7 +143,6 @@ struct AnySubscriptionCallback
   {
     unique_ptr_with_info_callback = callback;
   }
-  */
 };
 
 } /* namespace any_subscription_callback */

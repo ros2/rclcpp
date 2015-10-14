@@ -252,28 +252,6 @@ Node::create_subscription(
 }
 
 template<typename MessageT>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
-Node::create_subscription_with_unique_ptr_callback(
-  const std::string & topic_name,
-  const rmw_qos_profile_t & qos_profile,
-  typename rclcpp::subscription::AnySubscriptionCallback<MessageT>::UniquePtrCallback callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
-{
-  rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
-  any_subscription_callback.unique_ptr_callback = callback;
-  return this->create_subscription_internal(
-    topic_name,
-    qos_profile,
-    any_subscription_callback,
-    group,
-    ignore_local_publications,
-    msg_mem_strat);
-}
-
-template<typename MessageT>
 typename subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription_internal(
   const std::string & topic_name,

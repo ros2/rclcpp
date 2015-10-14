@@ -164,17 +164,6 @@ public:
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
     msg_mem_strat = nullptr);
 
-  template<typename MessageT>
-  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
-  create_subscription_with_unique_ptr_callback(
-    const std::string & topic_name,
-    const rmw_qos_profile_t & qos_profile,
-    typename rclcpp::subscription::AnySubscriptionCallback<MessageT>::UniquePtrCallback callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
-    bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat = nullptr);
-
   /// Create a timer.
   /**
    * \param[in] period Time interval between triggers of the callback.
