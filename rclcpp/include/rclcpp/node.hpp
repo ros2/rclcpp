@@ -95,6 +95,17 @@ public:
   /// Create and return a Publisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \return Shared pointer to the created publisher.
+   */
+  template<typename MessageT>
+  typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
+  create_publisher(
+    const std::string & topic_name, size_t qos_history_depth);
+
+  /// Create and return a Publisher.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \return Shared pointer to the created publisher.
    */

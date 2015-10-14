@@ -114,6 +114,16 @@ Node::create_callback_group(
 }
 
 template<typename MessageT>
+typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
+Node::create_publisher(
+  const std::string & topic_name, size_t qos_history_depth)
+{
+  rmw_qos_profile_t qos = rmw_qos_profile_default;
+  qos.depth = qos_history_depth;
+  return this->create_publisher<MessageT>(topic_name, qos);
+}
+
+template<typename MessageT>
 typename publisher::Publisher<MessageT>::SharedPtr
 Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile)
