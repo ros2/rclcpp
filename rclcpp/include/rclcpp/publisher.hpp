@@ -311,7 +311,7 @@ public:
 
 protected:
   void
-  do_inter_process_publish(MessageT * msg)
+  do_inter_process_publish(const MessageT * msg)
   {
     auto status = rmw_publish(publisher_handle_, msg);
     if (status != RMW_RET_OK) {
