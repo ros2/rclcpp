@@ -53,8 +53,31 @@ public:
    */
   virtual void ** borrow_handles(HandleType type, size_t number_of_handles)
   {
-    (void)type;
-    return static_cast<void **>(alloc(sizeof(void *) * number_of_handles));
+    switch (type) {
+      case HandleType::subscription_handle:
+        if (subscription_handles.size() < number_of_handles) {
+          subscription_handles.resize(number_of_handles, 0);
+        }
+        return static_cast<void **>(subscription_handles.data());
+      case HandleType::service_handle:
+        if (service_handles.size() < number_of_handles) {
+          service_handles.resize(number_of_handles, 0);
+        }
+        return static_cast<void **>(service_handles.data());
+      case HandleType::client_handle:
+        if (client_handles.size() < number_of_handles) {
+          client_handles.resize(number_of_handles, 0);
+        }
+        return static_cast<void **>(client_handles.data());
+      case HandleType::guard_condition_handle:
+        if (number_of_handles > 2) {
+          throw std::runtime_error("Too many guard condition handles requested!");
+        }
+        return guard_cond_handles.data();
+      default:
+        throw std::runtime_error("Unknown HandleType " + std::to_string(static_cast<int>(type)) +
+                ", could not borrow handle memory.");
+    }
   }
 
   /// Return the memory borrowed in borrow_handles.
@@ -65,8 +88,39 @@ public:
    */
   virtual void return_handles(HandleType type, void ** handles)
   {
-    (void)type;
-    this->free(handles);
+    switch (type) {
+      case HandleType::subscription_handle:
+        if (handles != subscription_handles.data()) {
+          throw std::runtime_error(
+                  "tried to return memory that isn't handled by this MemoryStrategy");
+        }
+        memset(handles, 0, subscription_handles.size());
+        break;
+      case HandleType::service_handle:
+        if (handles != service_handles.data()) {
+          throw std::runtime_error(
+                  "tried to return memory that isn't handled by this MemoryStrategy");
+        }
+        memset(handles, 0, service_handles.size());
+        break;
+      case HandleType::client_handle:
+        if (handles != client_handles.data()) {
+          throw std::runtime_error(
+                  "tried to return memory that isn't handled by this MemoryStrategy");
+        }
+        memset(handles, 0, client_handles.size());
+        break;
+      case HandleType::guard_condition_handle:
+        if (handles != guard_cond_handles.data()) {
+          throw std::runtime_error(
+                  "tried to return memory that isn't handled by this MemoryStrategy");
+        }
+        guard_cond_handles.fill(0);
+        break;
+      default:
+        throw std::runtime_error("Unknown HandleType " + std::to_string(static_cast<int>(type)) +
+                ", could not borrow handle memory.");
+    }
   }
 
   /// Provide a newly initialized AnyExecutable object.
@@ -101,6 +155,11 @@ public:
   std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
   std::vector<rclcpp::service::ServiceBase::SharedPtr> services;
   std::vector<rclcpp::client::ClientBase::SharedPtr> clients;
+
+  std::vector<void *> subscription_handles;
+  std::vector<void *> service_handles;
+  std::vector<void *> client_handles;
+  std::array<void *, 2> guard_cond_handles;
 };
 
 
