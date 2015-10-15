@@ -283,42 +283,23 @@ private:
     bool ignore_local_publications,
     typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat);
 
-/* NOTE(esteve):
- * The following template machinery works around VS2015's lack of support for expression SFINAE:
- * - We first declare the arity we want to match, i.e. 2 or 3.
- * - Then we use the arity_comparator template to SFINAE on the arity of the passed functor.
- * - Lastly, we SFINAE on the types of the arguments of the functor.
- * These steps happen in different parts of the function signature because we want to stagger
- * instantation of the templates because VS2015 can't conditionally enable templates that depend
- * on another template.
- * See test_function_traits.cpp for streamlined examples of how to use this pattern.
- */
   template<
     typename ServiceT,
     typename FunctorT,
-    std::size_t Arity = 2
+    typename std::enable_if<
+      rclcpp::check_argument_types<
+        FunctorT,
+        typename std::shared_ptr<typename ServiceT::Request>,
+        typename std::shared_ptr<typename ServiceT::Response>
+      >::value
+    >::type * = nullptr
   >
-  typename std::enable_if<
-    rclcpp::arity_comparator<Arity, FunctorT>::value,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr
-  >::type
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
     const std::string & service_name,
-    FunctorT callback,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<FunctorT>::template argument_type<0>,
-        typename std::shared_ptr<typename ServiceT::Request>
-      >::value
-    >::type * = nullptr,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<FunctorT>::template argument_type<1>,
-        typename std::shared_ptr<typename ServiceT::Response>
-      >::value
-    >::type * = nullptr)
+    FunctorT callback)
   {
     typename rclcpp::service::Service<ServiceT>::CallbackType callback_without_header =
       callback;
@@ -329,35 +310,21 @@ private:
   template<
     typename ServiceT,
     typename FunctorT,
-    std::size_t Arity = 3
+    typename std::enable_if<
+      rclcpp::check_argument_types<
+        FunctorT,
+        std::shared_ptr<rmw_request_id_t>,
+        typename std::shared_ptr<typename ServiceT::Request>,
+        typename std::shared_ptr<typename ServiceT::Response>
+      >::value
+    >::type * = nullptr
   >
-  typename std::enable_if<
-    arity_comparator<Arity, FunctorT>::value,
-    typename rclcpp::service::Service<ServiceT>::SharedPtr
-  >::type
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
   create_service_internal(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
     const std::string & service_name,
-    FunctorT callback,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<FunctorT>::template argument_type<0>,
-        std::shared_ptr<rmw_request_id_t>
-      >::value
-    >::type * = nullptr,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<FunctorT>::template argument_type<1>,
-        typename std::shared_ptr<typename ServiceT::Request>
-      >::value
-    >::type * = nullptr,
-    typename std::enable_if<
-      std::is_same<
-        typename function_traits<FunctorT>::template argument_type<2>,
-        typename std::shared_ptr<typename ServiceT::Response>
-      >::value
-    >::type * = nullptr)
+    FunctorT callback)
   {
     typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
       callback;

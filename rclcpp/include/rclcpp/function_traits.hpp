@@ -64,10 +64,36 @@ struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
  * the arity of a function.
  */
 template<std::size_t Arity, typename FunctorT>
-struct arity_comparator
-{
-  static constexpr bool value = (Arity == function_traits<FunctorT>::arity);
-};
+struct arity_comparator : std::integral_constant<
+    bool, (Arity == function_traits<FunctorT>::arity)>{};
+
+template<typename FunctorT, typename First, typename ... Last>
+struct check_argument_types_recursive : std::conditional<
+    std::is_same<
+      typename function_traits<FunctorT>::template argument_type<
+        function_traits<FunctorT>::arity - sizeof ... (Last) -1
+      >,
+      First
+    >::value,
+    check_argument_types_recursive<FunctorT, Last ...>,
+    std::false_type>::type
+{};
+
+template<typename FunctorT, typename Arg>
+struct check_argument_types_recursive<FunctorT, Arg>: std::is_same<
+    typename function_traits<FunctorT>::template argument_type<
+      function_traits<FunctorT>::arity - 1
+    >,
+    Arg
+  >
+{};
+
+template<typename FunctorT, typename ... Args>
+struct check_argument_types : std::conditional<
+    arity_comparator<sizeof ... (Args), FunctorT>::value,
+    check_argument_types_recursive<FunctorT, Args ...>,
+    std::false_type>::type
+{};
 
 } /* namespace rclcpp */
 
