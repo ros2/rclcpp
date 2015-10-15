@@ -317,7 +317,7 @@ TEST(TestFunctionTraits, check_argument_types) {
 
   static_assert(
     !rclcpp::check_argument_types<decltype(func_two_ints), int>::value,
-    "Functor accepts two ints as arguments");
+    "Functor does not accept a single int as argument, requires two ints");
 
   static_assert(
     rclcpp::check_argument_types<decltype(func_two_ints), int, int>::value,
@@ -325,11 +325,11 @@ TEST(TestFunctionTraits, check_argument_types) {
 
   static_assert(
     !rclcpp::check_argument_types<decltype(func_two_ints), bool, int>::value,
-    "Functor accepts two ints as arguments");
+    "Functor does not accept a bool and an int as arguments, requires two ints");
 
   static_assert(
     !rclcpp::check_argument_types<decltype(func_two_ints), int, char>::value,
-    "Functor accepts two ints as arguments");
+    "Functor does not accept an int and a char as arguments, requires two ints");
 
   static_assert(
     rclcpp::check_argument_types<decltype(func_one_int_one_char), int, char>::value,
