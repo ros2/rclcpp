@@ -46,7 +46,8 @@ public:
 
   /// Borrow memory for storing data for subscriptions, services, clients, or guard conditions.
   /**
-   * The default implementation ignores the handle type and dynamically allocates the memory.
+   * The default implementation stores std::vectors for each handle type and resizes the vectors
+   * as necessary based on the requested number of handles.
    * \param[in] The type of entity that this function is requesting for.
    * \param[in] The number of handles to borrow.
    * \return Pointer to the allocated handles.
