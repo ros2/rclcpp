@@ -209,30 +209,6 @@ template<typename MessageT, typename CallbackT>
 typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
-  size_t qos_history_depth,
-  CallbackT callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
-{
-  rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
-  any_subscription_callback.set(callback);
-  rmw_qos_profile_t qos = rmw_qos_profile_default;
-  qos.depth = qos_history_depth;
-  return this->create_subscription_internal(
-    topic_name,
-    qos,
-    any_subscription_callback,
-    group,
-    ignore_local_publications,
-    msg_mem_strat);
-}
-
-template<typename MessageT, typename CallbackT>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
-Node::create_subscription(
-  const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
@@ -242,47 +218,7 @@ Node::create_subscription(
 {
   rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
   any_subscription_callback.set(callback);
-  return this->create_subscription_internal(
-    topic_name,
-    qos_profile,
-    any_subscription_callback,
-    group,
-    ignore_local_publications,
-    msg_mem_strat);
-}
 
-template<typename MessageT>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
-Node::create_subscription_with_unique_ptr_callback(
-  const std::string & topic_name,
-  const rmw_qos_profile_t & qos_profile,
-  typename rclcpp::subscription::AnySubscriptionCallback<MessageT>::UniquePtrCallback callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
-{
-  rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
-  any_subscription_callback.unique_ptr_callback = callback;
-  return this->create_subscription_internal(
-    topic_name,
-    qos_profile,
-    any_subscription_callback,
-    group,
-    ignore_local_publications,
-    msg_mem_strat);
-}
-
-template<typename MessageT>
-typename subscription::Subscription<MessageT>::SharedPtr
-Node::create_subscription_internal(
-  const std::string & topic_name,
-  const rmw_qos_profile_t & qos_profile,
-  rclcpp::subscription::AnySubscriptionCallback<MessageT> callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  bool ignore_local_publications,
-  typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr msg_mem_strat)
-{
   using rosidl_generator_cpp::get_message_type_support_handle;
 
   if (!msg_mem_strat) {
@@ -308,7 +244,7 @@ Node::create_subscription_internal(
     subscriber_handle,
     topic_name,
     ignore_local_publications,
-    callback,
+    any_subscription_callback,
     msg_mem_strat);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
   // Setup intra process.
@@ -368,6 +304,28 @@ Node::create_subscription_internal(
   }
   number_of_subscriptions_++;
   return sub;
+}
+
+template<typename MessageT, typename CallbackT>
+typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+Node::create_subscription(
+  const std::string & topic_name,
+  size_t qos_history_depth,
+  CallbackT callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+  msg_mem_strat)
+{
+  rmw_qos_profile_t qos = rmw_qos_profile_default;
+  qos.depth = qos_history_depth;
+  return this->create_subscription<MessageT, CallbackT>(
+    topic_name,
+    qos,
+    callback,
+    group,
+    ignore_local_publications,
+    msg_mem_strat);
 }
 
 rclcpp::timer::WallTimer::SharedPtr
