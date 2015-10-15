@@ -209,28 +209,6 @@ template<typename MessageT, typename CallbackT>
 typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
-  size_t qos_history_depth,
-  CallbackT callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
-{
-  rmw_qos_profile_t qos = rmw_qos_profile_default;
-  qos.depth = qos_history_depth;
-  return this->create_subscription(
-    topic_name,
-    qos,
-    callback,
-    group,
-    ignore_local_publications,
-    msg_mem_strat);
-}
-
-template<typename MessageT, typename CallbackT>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
-Node::create_subscription(
-  const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
@@ -326,6 +304,28 @@ Node::create_subscription(
   }
   number_of_subscriptions_++;
   return sub;
+}
+
+template<typename MessageT, typename CallbackT>
+typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+Node::create_subscription(
+  const std::string & topic_name,
+  size_t qos_history_depth,
+  CallbackT callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+  msg_mem_strat)
+{
+  rmw_qos_profile_t qos = rmw_qos_profile_default;
+  qos.depth = qos_history_depth;
+  return this->create_subscription<MessageT, CallbackT>(
+    topic_name,
+    qos,
+    callback,
+    group,
+    ignore_local_publications,
+    msg_mem_strat);
 }
 
 rclcpp::timer::WallTimer::SharedPtr
