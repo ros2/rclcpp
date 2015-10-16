@@ -28,7 +28,7 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
-#include <rclcpp/allocator/allocator_factory.hpp>
+#include <rclcpp/allocator/allocator_deleter.hpp>
 
 namespace rclcpp
 {
@@ -221,7 +221,7 @@ public:
   : PublisherBase(node_handle, publisher_handle, topic, queue_size)
   {
     // TODO: avoid messy initialization
-    message_deleter_ = initialize_deleter(&message_allocator_);
+    allocator::set_allocator_for_deleter(&message_deleter_, &message_allocator_);
   }
 
 
@@ -281,7 +281,7 @@ public:
     //   subscriptions. For now call the other publish().
     auto ptr = std::allocator_traits<Alloc<MessageT>>::allocate(message_allocator_, 1);
     std::allocator_traits<Alloc<MessageT>>::construct(message_allocator_, ptr, *msg.get());
-    std::unique_ptr<MessageT, Deleter<MessageT, Alloc>> unique_msg(ptr, message_deleter_);
+    std::unique_ptr<MessageT, allocator::Deleter<Alloc<MessageT>, MessageT>> unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -300,7 +300,7 @@ public:
     //   subscriptions. For now call the other publish().
     auto ptr = std::allocator_traits<Alloc<MessageT>>::allocate(message_allocator_, 1);
     std::allocator_traits<Alloc<MessageT>>::construct(message_allocator_, ptr, *msg.get());
-    std::unique_ptr<MessageT, Deleter<MessageT, Alloc>> unique_msg(ptr, message_deleter_);
+    std::unique_ptr<MessageT, allocator::Deleter<Alloc<MessageT>, MessageT>> unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -315,7 +315,7 @@ public:
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     auto ptr = std::allocator_traits<Alloc<MessageT>>::allocate(message_allocator_, 1);
     std::allocator_traits<Alloc<MessageT>>::construct(message_allocator_, ptr, msg);
-    std::unique_ptr<MessageT, Deleter<MessageT, Alloc>> unique_msg(ptr, message_deleter_);
+    std::unique_ptr<MessageT, allocator::Deleter<Alloc<MessageT>, MessageT>> unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -333,7 +333,8 @@ protected:
   }
 
   Alloc<MessageT> message_allocator_;
-  Deleter<MessageT, Alloc> message_deleter_;
+
+  allocator::Deleter<Alloc<MessageT>, MessageT> message_deleter_;
 
 };
 

@@ -17,50 +17,39 @@
 
 #include <memory>
 #include <iostream>
-#include <rclcpp/allocator_deleter.hpp>
+#include <rclcpp/allocator/allocator_deleter.hpp>
 
-
-template<typename Alloc, typename T, typename D>
-void initialize_deleter(D * deleter, Alloc * alloc)
+namespace rclcpp
 {
-  (void) deleter;
-  (void) alloc;
-  throw std::runtime_error("Reached unexpected template specialization");
-}
 
-template<typename T>
-void initialize_deleter(std::default_delete<T> * deleter, std::allocator<T> * alloc)
+namespace allocator
 {
-  (void) alloc;
-  deleter = new std::default_delete<T>;
-  if (!deleter) {
-    throw std::runtime_error("initialize_deleter failed");
-  }
-}
 
-template<typename Alloc, typename T>
-void initialize_deleter(AllocatorDeleter<T, Alloc> * deleter, Alloc * alloc)
+// Type-erased interface to AllocatorWrapper
+class AllocatorWrapper
 {
-  if (!alloc) {
-    throw std::invalid_argument("Allocator argument was NULL");
-  }
-  deleter = new AllocatorDeleter<T, Alloc>(alloc);
-  if (!deleter) {
-    throw std::runtime_error("initialize_deleter failed");
-  }
+  virtual void * allocate(size_t size) = 0;
+  virtual void deallocate(void * pointer, size_t size) = 0;
+  // Construct will have to be through placement new, since pure virtual function can't be templated
+
+  virtual void destroy(T* pointer) = 0;
 }
 
 template<typename T, typename Alloc>
-class AllocatorWrapper
+class TypedAllocatorWrapper : public AllocatorWrapper
 {
 public:
+  /*
   using Deleter = typename std::conditional<
       std::is_same<Alloc, std::allocator<T>>::value,
       std::default_delete<T>,
       AllocatorDeleter<T, Alloc>
       >::type;
+  */
 
-  AllocatorWrapper(Alloc * allocator)
+  using DeleterT = Deleter<Alloc, T>;
+
+  TypedAllocatorWrapper(Alloc * allocator)
   : allocator_(allocator)
   {
     if (!allocator_) {
@@ -72,7 +61,7 @@ public:
     }
   }
 
-  AllocatorWrapper(Alloc * allocator, Deleter * deleter)
+  TypedAllocatorWrapper(Alloc * allocator, DeleterT * deleter)
   : allocator_(allocator), deleter_(deleter)
   {
     if (!allocator_) {
@@ -83,7 +72,7 @@ public:
     }
   }
 
-  AllocatorWrapper(Alloc & allocator)
+  TypedAllocatorWrapper(Alloc & allocator)
   {
     allocator_ = &allocator;
     if (!allocator_) {
@@ -95,22 +84,27 @@ public:
     }
   }
 
-  AllocatorWrapper()
+  TypedAllocatorWrapper()
   {
     allocator_ = new Alloc();
     initialize_deleter(deleter_, allocator_);
     if (!deleter_) {
       //throw std::invalid_argument("Failed to initialize deleter");
-      deleter_ = new Deleter;
+      deleter_ = new DeleterT;
     }
   }
 
-  T * allocate(size_t size)
+  void * allocate(size_t size)
   {
     return std::allocator_traits<Alloc>::allocate(*allocator_, size);
   }
 
-  T * deallocate(void * pointer, size_t size)
+  void deallocate(void * pointer, size_t size)
+  {
+    deallocate(static_cast<T*>(pointer), size);
+  }
+
+  void deallocate(T * pointer, size_t size)
   {
     std::allocator_traits<Alloc>::deallocate(*allocator_, pointer, size);
   }
@@ -121,7 +115,18 @@ public:
     std::allocator_traits<Alloc>::construct(*allocator_, pointer, std::forward<Args>(args)...);
   }
 
-  Deleter * get_deleter() const
+  void destroy(void * pointer)
+  {
+    destroy(static_cast<T*>(pointer));
+  }
+
+  template<class T>
+  void destroy(T * pointer)
+  {
+    std::allocator_traits<Alloc>::destroy(*allocator_, pointer);
+  }
+
+  DeleterT * get_deleter() const
   {
     return deleter_;
   }
@@ -132,10 +137,13 @@ public:
 
 private:
   Alloc * allocator_;
-  Deleter * deleter_;
+  DeleterT * deleter_;
 };
 
 template<typename T>
-using DefaultAllocator = AllocatorWrapper<T, std::allocator<T>>;
+using DefaultAllocator = TypedAllocatorWrapper<T, std::allocator<T>>;
+
+}
+}
 
 #endif

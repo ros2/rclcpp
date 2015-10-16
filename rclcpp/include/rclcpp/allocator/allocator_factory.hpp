@@ -42,23 +42,6 @@ AllocatorDeleter<T, Alloc<T>> initialize_deleter(Alloc<T> * alloc)
   return AllocatorDeleter<T, Alloc<T>>(alloc);
 }
 
-/*
-class AllocatorFactoryBase
-{
-public:
-  // Hmm
-  template<typename T, typename AllocT>
-  virtual void AllocT<typename T> * request_allocator(...) = 0;
-
-  template<typename T, typename AllocT>
-  virtual void return_allocator(AllocT<typename T> * allocator);
-
-  template<typename T, typename AllocT, typename DeleterT>
-  virtual DeleterT<T> * get_deleter_for_allocator(AllocT<typename T> * allocator) = 0;
-
-};
-*/
-
 template<typename T, template<typename> class Alloc>
 using Deleter = typename std::conditional<
     std::is_same<Alloc<T>, std::allocator<T>>::value,

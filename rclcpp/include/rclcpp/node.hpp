@@ -202,25 +202,34 @@ public:
     FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  std::vector<rcl_interfaces::msg::SetParametersResult> set_parameters(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  template<typename Alloc>
+  using StringRebind = typename Alloc::template rebind<std::string>::other;
 
+  template<typename Alloc = std::allocator<rclcpp::parameter::ParameterVariant>>
+  typename std::vector<rcl_interfaces::msg::SetParametersResult, Alloc> set_parameters(
+    const typename std::vector<rclcpp::parameter::ParameterVariant, Alloc> & parameters);
+
+  template<typename Alloc = std::allocator<rclcpp::parameter::ParameterVariant>>
   rcl_interfaces::msg::SetParametersResult set_parameters_atomically(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+    const typename std::vector<rclcpp::parameter::ParameterVariant, Alloc> & parameters);
 
-  std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
-    const std::vector<std::string> & names) const;
+  template<typename Alloc = std::allocator<rclcpp::parameter::ParameterVariant>>
+  typename std::vector<rclcpp::parameter::ParameterVariant, Alloc> get_parameters(
+    const typename std::vector<std::string, StringRebind<Alloc>> & names) const;
 
-  std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
-    const std::vector<std::string> & names) const;
+  template<typename Alloc = std::allocator<rcl_interfaces::msg::ParameterDescriptor>>
+  typename std::vector<rcl_interfaces::msg::ParameterDescriptor, Alloc> describe_parameters(
+    const typename std::vector<std::string, StringRebind<Alloc>>> & names) const;
 
-  std::vector<uint8_t> get_parameter_types(
-    const std::vector<std::string> & names) const;
+  template<typename Alloc = std::allocator<uint8_t>>
+  typename std::vector<uint8_t, Alloc> get_parameter_types(
+    const typename std::vector<std::string, StringRebind<Alloc>>> & names) const;
 
   rcl_interfaces::msg::ListParametersResult list_parameters(
     const std::vector<std::string> & prefixes, uint64_t depth) const;
 
-  std::map<std::string, std::string> get_topic_names_and_types() const;
+  template<typename Alloc = std::allocator<std::pair<const std::string, std::string>>>
+  typename std::map<std::string, std::string, Alloc> get_topic_names_and_types() const;
 
   size_t count_publishers(const std::string & topic_name) const;
 

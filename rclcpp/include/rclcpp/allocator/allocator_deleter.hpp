@@ -17,12 +17,18 @@
 
 #include <memory>
 
+namespace rclcpp
+{
+
+namespace allocator
+{
+
 template<typename T, typename Allocator>
 class AllocatorDeleter
 {
 public:
   AllocatorDeleter()
-  : allocator_(new Allocator)
+  : allocator_(NULL)
   {
   }
 
@@ -49,8 +55,71 @@ public:
     return allocator_;
   }
 
+  void set_allocator(Allocator * alloc)
+  {
+    allocator_ = alloc;
+  }
+
 private:
   Allocator * allocator_;
 };
+
+/*
+template<template<typename> class Alloc, typename T, typename D>
+D initialize_deleter(Alloc<T> * alloc)
+{
+  (void) alloc;
+  throw std::runtime_error("Reached unexpected template specialization");
+}
+
+template<typename T>
+std::default_delete<T> initialize_deleter(std::allocator<T> * alloc)
+{
+  (void) alloc;
+  return std::default_delete<T>();
+}
+
+template<template<typename> class Alloc, typename T>
+AllocatorDeleter<T, Alloc<T>> initialize_deleter(Alloc<T> * alloc)
+{
+  if (!alloc) {
+    throw std::invalid_argument("Allocator argument was NULL");
+  }
+  return AllocatorDeleter<T, Alloc<T>>(alloc);
+}
+*/
+template<template<typename> class Alloc, typename T, typename D>
+void set_allocator_for_deleter(D * deleter, Alloc<T> * alloc)
+{
+  (void) alloc;
+  throw std::runtime_error("Reached unexpected template specialization");
+}
+
+template<typename T>
+void set_allocator_for_deleter(std::default_delete<T> * deleter, std::allocator<T> * alloc)
+{
+  (void) deleter;
+  (void) alloc;
+}
+
+template<template<typename> class Alloc, typename T>
+void set_allocator_for_deleter(AllocatorDeleter<T, Alloc<T>> * deleter, Alloc<T> * alloc)
+{
+  if (!deleter || !alloc) {
+    throw std::invalid_argument("Argument was NULL to set_allocator_for_deleter");
+  }
+  //return AllocatorDeleter<T, Alloc<T>>(alloc);
+  deleter->set_allocator(alloc);
+}
+
+template<typename Alloc, typename T>
+using Deleter = typename std::conditional<
+    std::is_same<Alloc, std::allocator<T>>::value,
+    std::default_delete<T>,
+    AllocatorDeleter<T, Alloc>
+    >::type;
+
+}
+}
 
 #endif

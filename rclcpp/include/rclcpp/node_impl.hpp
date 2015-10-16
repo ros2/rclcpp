@@ -443,6 +443,7 @@ Node::create_service(
   return serv;
 }
 
+template<typename Alloc>
 std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
@@ -455,6 +456,7 @@ Node::set_parameters(
   return results;
 }
 
+template<typename Alloc>
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameters_atomically(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
@@ -489,6 +491,7 @@ Node::set_parameters_atomically(
   return result;
 }
 
+template<typename Alloc>
 std::vector<rclcpp::parameter::ParameterVariant>
 Node::get_parameters(
   const std::vector<std::string> & names) const
@@ -508,6 +511,7 @@ Node::get_parameters(
   return results;
 }
 
+template<typename Alloc>
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
 Node::describe_parameters(
   const std::vector<std::string> & names) const
@@ -528,6 +532,7 @@ Node::describe_parameters(
   return results;
 }
 
+template<typename Alloc>
 std::vector<uint8_t>
 Node::get_parameter_types(
   const std::vector<std::string> & names) const
