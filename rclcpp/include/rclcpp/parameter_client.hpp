@@ -232,7 +232,7 @@ public:
   on_parameter_event(FunctorT callback)
   {
     return node_->create_subscription<rcl_interfaces::msg::ParameterEvent>(
-      "parameter_events", rmw_qos_profile_parameter_events, callback);
+      "parameter_events", callback, rmw_qos_profile_parameter_events);
   }
 
 private:
