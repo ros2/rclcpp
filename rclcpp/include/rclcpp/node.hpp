@@ -112,13 +112,14 @@ public:
   template<typename MessageT>
   typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
   create_publisher(
-    const std::string & topic_name, const rmw_qos_profile_t & qos_profile);
+    const std::string & topic_name,
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default);
 
   /// Create and return a Subscription.
   /**
    * \param[in] topic_name The topic to subscribe on.
-   * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \param[in] callback The user-defined callback function.
+   * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \param[in] group The callback group for this subscription. NULL for no callback group.
    * \param[in] ignore_local_publications True to ignore local publications.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
@@ -132,8 +133,8 @@ public:
   typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
   create_subscription(
     const std::string & topic_name,
-    const rmw_qos_profile_t & qos_profile,
     CallbackT callback,
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
