@@ -29,7 +29,6 @@
 #include <rclcpp/callback_group.hpp>
 #include <rclcpp/client.hpp>
 #include <rclcpp/context.hpp>
-#include <rclcpp/function_traits.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/message_memory_strategy.hpp>
 #include <rclcpp/parameter.hpp>
@@ -262,55 +261,6 @@ private:
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
   publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
-
-  template<
-    typename ServiceT,
-    typename FunctorT,
-    typename std::enable_if<
-      rclcpp::check_argument_types<
-        FunctorT,
-        typename std::shared_ptr<typename ServiceT::Request>,
-        typename std::shared_ptr<typename ServiceT::Response>
-      >::value
-    >::type * = nullptr
-  >
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
-  create_service_internal(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
-    const std::string & service_name,
-    FunctorT callback)
-  {
-    typename rclcpp::service::Service<ServiceT>::CallbackType callback_without_header =
-      callback;
-    return service::Service<ServiceT>::make_shared(
-      node_handle, service_handle, service_name, callback_without_header);
-  }
-
-  template<
-    typename ServiceT,
-    typename FunctorT,
-    typename std::enable_if<
-      rclcpp::check_argument_types<
-        FunctorT,
-        std::shared_ptr<rmw_request_id_t>,
-        typename std::shared_ptr<typename ServiceT::Request>,
-        typename std::shared_ptr<typename ServiceT::Response>
-      >::value
-    >::type * = nullptr
-  >
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
-  create_service_internal(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
-    const std::string & service_name,
-    FunctorT callback)
-  {
-    typename rclcpp::service::Service<ServiceT>::CallbackWithHeaderType callback_with_header =
-      callback;
-    return service::Service<ServiceT>::make_shared(
-      node_handle, service_handle, service_name, callback_with_header);
-  }
 };
 
 const rosidl_message_type_support_t * Node::ipm_ts_ =

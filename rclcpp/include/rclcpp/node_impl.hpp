@@ -414,6 +414,9 @@ Node::create_service(
   auto service_type_support_handle =
     get_service_type_support_handle<ServiceT>();
 
+  rclcpp::service::AnyServiceCallback<ServiceT> any_service_callback;
+  any_service_callback.set(callback);
+
   rmw_service_t * service_handle = rmw_create_service(
     node_handle_.get(), service_type_support_handle, service_name.c_str());
   if (!service_handle) {
@@ -424,8 +427,8 @@ Node::create_service(
     // *INDENT-ON*
   }
 
-  auto serv = create_service_internal<ServiceT>(
-    node_handle_, service_handle, service_name, callback);
+  auto serv = service::Service<ServiceT>::make_shared(
+    node_handle_, service_handle, service_name, any_service_callback);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   if (group) {
     if (!group_in_node(group)) {
