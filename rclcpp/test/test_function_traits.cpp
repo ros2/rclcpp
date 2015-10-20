@@ -81,7 +81,7 @@ int func_accept_callback(FunctorT callback)
 template<
   typename FunctorT,
   typename std::enable_if<
-    rclcpp::check_argument_types<FunctorT, int>::value
+    rclcpp::check_arguments<FunctorT, int>::value
   >::type * = nullptr
 >
 int func_accept_callback(FunctorT callback)
@@ -93,7 +93,7 @@ int func_accept_callback(FunctorT callback)
 template<
   typename FunctorT,
   typename std::enable_if<
-    rclcpp::check_argument_types<FunctorT, int, int>::value
+    rclcpp::check_arguments<FunctorT, int, int>::value
   >::type * = nullptr
 >
 int func_accept_callback(FunctorT callback)
@@ -106,7 +106,7 @@ int func_accept_callback(FunctorT callback)
 template<
   typename FunctorT,
   typename std::enable_if<
-    rclcpp::check_argument_types<FunctorT, int, char>::value
+    rclcpp::check_arguments<FunctorT, int, char>::value
   >::type * = nullptr
 >
 int func_accept_callback(FunctorT callback)
@@ -301,38 +301,38 @@ TEST(TestFunctionTraits, argument_types) {
 /*
    Tests that funcion_traits checks the types of the arguments of several functors.
  */
-TEST(TestFunctionTraits, check_argument_types) {
+TEST(TestFunctionTraits, check_arguments) {
   // Test regular functions
   static_assert(
-    rclcpp::check_argument_types<decltype(func_one_int), int>::value,
+    rclcpp::check_arguments<decltype(func_one_int), int>::value,
     "Functor accepts a single int as arguments");
 
   static_assert(
-    !rclcpp::check_argument_types<decltype(func_one_int), char>::value,
+    !rclcpp::check_arguments<decltype(func_one_int), char>::value,
     "Functor does not accept a char as argument");
 
   static_assert(
-    !rclcpp::check_argument_types<decltype(func_one_int), char, int>::value,
+    !rclcpp::check_arguments<decltype(func_one_int), char, int>::value,
     "Functor does not accept two arguments");
 
   static_assert(
-    !rclcpp::check_argument_types<decltype(func_two_ints), int>::value,
+    !rclcpp::check_arguments<decltype(func_two_ints), int>::value,
     "Functor does not accept a single int as argument, requires two ints");
 
   static_assert(
-    rclcpp::check_argument_types<decltype(func_two_ints), int, int>::value,
+    rclcpp::check_arguments<decltype(func_two_ints), int, int>::value,
     "Functor accepts two ints as arguments");
 
   static_assert(
-    !rclcpp::check_argument_types<decltype(func_two_ints), bool, int>::value,
+    !rclcpp::check_arguments<decltype(func_two_ints), bool, int>::value,
     "Functor does not accept a bool and an int as arguments, requires two ints");
 
   static_assert(
-    !rclcpp::check_argument_types<decltype(func_two_ints), int, char>::value,
+    !rclcpp::check_arguments<decltype(func_two_ints), int, char>::value,
     "Functor does not accept an int and a char as arguments, requires two ints");
 
   static_assert(
-    rclcpp::check_argument_types<decltype(func_one_int_one_char), int, char>::value,
+    rclcpp::check_arguments<decltype(func_one_int_one_char), int, char>::value,
     "Functor accepts an int and a char as arguments");
 
   // Test lambdas
@@ -349,29 +349,66 @@ TEST(TestFunctionTraits, check_argument_types) {
     };
 
   static_assert(
-    rclcpp::check_argument_types<decltype(lambda_one_int), int>::value,
+    rclcpp::check_arguments<decltype(lambda_one_int), int>::value,
     "Functor accepts an int as the only argument");
 
   static_assert(
-    rclcpp::check_argument_types<decltype(lambda_two_ints), int, int>::value,
+    rclcpp::check_arguments<decltype(lambda_two_ints), int, int>::value,
     "Functor accepts two ints as arguments");
 
   static_assert(
-    rclcpp::check_argument_types<decltype(lambda_one_int_one_char), int, char>::value,
+    rclcpp::check_arguments<decltype(lambda_one_int_one_char), int, char>::value,
     "Functor accepts an int and a char as arguments");
 
   // Test objects that have a call operator
   static_assert(
-    rclcpp::check_argument_types<FunctionObjectOneInt, int>::value,
+    rclcpp::check_arguments<FunctionObjectOneInt, int>::value,
     "Functor accepts an int as the only argument");
 
   static_assert(
-    rclcpp::check_argument_types<FunctionObjectTwoInts, int, int>::value,
+    rclcpp::check_arguments<FunctionObjectTwoInts, int, int>::value,
     "Functor accepts two ints as arguments");
 
   static_assert(
-    rclcpp::check_argument_types<FunctionObjectOneIntOneChar, int, char>::value,
+    rclcpp::check_arguments<FunctionObjectOneIntOneChar, int, char>::value,
     "Functor accepts an int and a char as arguments");
+}
+
+/*
+   Tests that same_arguments work.
+*/
+TEST(TestFunctionTraits, same_arguments) {
+  auto lambda_one_int = [](int) {
+      return 1;
+    };
+
+  auto lambda_two_ints = [](int, int) {
+      return 1;
+    };
+
+  static_assert(
+    rclcpp::same_arguments<decltype(lambda_one_int), decltype(func_one_int)>::value,
+    "Lambda and function have the same arguments");
+
+  static_assert(
+    !rclcpp::same_arguments<decltype(lambda_two_ints), decltype(func_one_int)>::value,
+    "Lambda and function have different arguments");
+
+  static_assert(
+    !rclcpp::same_arguments<decltype(func_one_int_one_char), decltype(func_two_ints)>::value,
+    "Functions have different arguments");
+
+  static_assert(
+    !rclcpp::same_arguments<decltype(lambda_one_int), decltype(lambda_two_ints)>::value,
+    "Lambdas have different arguments");
+
+  static_assert(
+    rclcpp::same_arguments<FunctionObjectTwoInts, decltype(func_two_ints)>::value,
+    "Functor and function have the same arguments");
+
+  static_assert(
+    rclcpp::same_arguments<FunctionObjectTwoInts, decltype(lambda_two_ints)>::value,
+    "Functor and lambda have the same arguments");
 }
 
 /*

@@ -28,32 +28,47 @@ namespace rclcpp
  * See http://blogs.msdn.com/b/vcblog/archive/2015/06/19/c-11-14-17-features-in-vs-2015-rtm.aspx
  */
 
+// Remove the first item in a tuple
+template<typename T>
+struct tuple_tail;
 
+template<typename Head, typename ... Tail>
+struct tuple_tail<std::tuple<Head, Tail ...>>
+{
+  using type = std::tuple<Tail ...>;
+};
+
+// std::function
 template<typename FunctionT>
 struct function_traits
 {
-  static constexpr std::size_t arity =
-    function_traits<decltype( & FunctionT::operator())>::arity - 1;
+  using arguments = typename tuple_tail<
+      typename function_traits<decltype( & FunctionT::operator())>::arguments>::type;
 
+  static constexpr std::size_t arity = std::tuple_size<arguments>::value;
 
   template<std::size_t N>
-  using argument_type =
-      typename function_traits<decltype( & FunctionT::operator())>::template argument_type<N + 1>;
+  using argument_type = typename std::tuple_element<N, arguments>::type;
 };
 
+// Free functions
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT(Args ...)>
 {
-  static constexpr std::size_t arity = sizeof ... (Args);
+  using arguments = std::tuple<Args ...>;
+
+  static constexpr std::size_t arity = std::tuple_size<arguments>::value;
 
   template<std::size_t N>
-  using argument_type = typename std::tuple_element<N, std::tuple<Args ...>>::type;
+  using argument_type = typename std::tuple_element<N, arguments>::type;
 };
 
+// Function pointers
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: public function_traits<ReturnTypeT(Args ...)>
 {};
 
+// Lambdas
 template<typename ClassT, typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
   : public function_traits<ReturnTypeT(ClassT &, Args ...)>
@@ -67,34 +82,19 @@ template<std::size_t Arity, typename FunctorT>
 struct arity_comparator : std::integral_constant<
     bool, (Arity == function_traits<FunctorT>::arity)>{};
 
-template<typename FunctorT, typename First, typename ... Last>
-struct check_argument_types_recursive : std::conditional<
-    std::is_same<
-      typename function_traits<FunctorT>::template argument_type<
-        function_traits<FunctorT>::arity - sizeof ... (Last) -1
-      >,
-      First
-    >::value,
-    check_argument_types_recursive<FunctorT, Last ...>,
-    std::false_type>::type
-{};
-
-template<typename FunctorT, typename Arg>
-struct check_argument_types_recursive<FunctorT, Arg>: std::is_same<
-    typename function_traits<FunctorT>::template argument_type<
-      function_traits<FunctorT>::arity - 1
-    >,
-    Arg
+template<typename FunctorT, typename ... Args>
+struct check_arguments : std::is_same<
+    typename function_traits<FunctorT>::arguments,
+    std::tuple<Args ...>
   >
 {};
 
-template<typename FunctorT, typename ... Args>
-struct check_argument_types : std::conditional<
-    arity_comparator<sizeof ... (Args), FunctorT>::value,
-    check_argument_types_recursive<FunctorT, Args ...>,
-    std::false_type>::type
+template<typename FunctorAT, typename FunctorBT>
+struct same_arguments : std::is_same<
+    typename function_traits<FunctorAT>::arguments,
+    typename function_traits<FunctorBT>::arguments
+  >
 {};
-
 } /* namespace rclcpp */
 
 #endif /* RCLCPP_RCLCPP_FUNCTION_TRAITS_HPP_ */
