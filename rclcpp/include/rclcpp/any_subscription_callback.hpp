@@ -30,7 +30,7 @@ namespace any_subscription_callback
 {
 
 template<typename MessageT>
-struct AnySubscriptionCallback
+class AnySubscriptionCallback
 {
   using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT>)>;
   using SharedPtrWithInfoCallback =
@@ -42,17 +42,18 @@ struct AnySubscriptionCallback
   using UniquePtrWithInfoCallback =
       std::function<void(std::unique_ptr<MessageT>, const rmw_message_info_t &)>;
 
-  SharedPtrCallback shared_ptr_callback;
-  SharedPtrWithInfoCallback shared_ptr_with_info_callback;
-  ConstSharedPtrCallback const_shared_ptr_callback;
-  ConstSharedPtrWithInfoCallback const_shared_ptr_with_info_callback;
-  UniquePtrCallback unique_ptr_callback;
-  UniquePtrWithInfoCallback unique_ptr_with_info_callback;
+  SharedPtrCallback shared_ptr_callback_;
+  SharedPtrWithInfoCallback shared_ptr_with_info_callback_;
+  ConstSharedPtrCallback const_shared_ptr_callback_;
+  ConstSharedPtrWithInfoCallback const_shared_ptr_with_info_callback_;
+  UniquePtrCallback unique_ptr_callback_;
+  UniquePtrWithInfoCallback unique_ptr_with_info_callback_;
 
+public:
   AnySubscriptionCallback()
-  : shared_ptr_callback(nullptr), shared_ptr_with_info_callback(nullptr),
-    const_shared_ptr_callback(nullptr), const_shared_ptr_with_info_callback(nullptr),
-    unique_ptr_callback(nullptr), unique_ptr_with_info_callback(nullptr)
+  : shared_ptr_callback_(nullptr), shared_ptr_with_info_callback_(nullptr),
+    const_shared_ptr_callback_(nullptr), const_shared_ptr_with_info_callback_(nullptr),
+    unique_ptr_callback_(nullptr), unique_ptr_with_info_callback_(nullptr)
   {}
 
   AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
@@ -68,7 +69,7 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
-    shared_ptr_callback = callback;
+    shared_ptr_callback_ = callback;
   }
 
   template<
@@ -83,7 +84,7 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
-    shared_ptr_with_info_callback = callback;
+    shared_ptr_with_info_callback_ = callback;
   }
 
   template<
@@ -97,7 +98,7 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
-    const_shared_ptr_callback = callback;
+    const_shared_ptr_callback_ = callback;
   }
 
   template<
@@ -112,7 +113,7 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
-    const_shared_ptr_with_info_callback = callback;
+    const_shared_ptr_with_info_callback_ = callback;
   }
 
   template<
@@ -126,7 +127,7 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
-    unique_ptr_callback = callback;
+    unique_ptr_callback_ = callback;
   }
 
   template<
@@ -141,7 +142,54 @@ struct AnySubscriptionCallback
   >
   void set(CallbackT callback)
   {
-    unique_ptr_with_info_callback = callback;
+    unique_ptr_with_info_callback_ = callback;
+  }
+
+  void dispatch(
+    std::shared_ptr<MessageT> message, const rmw_message_info_t & message_info)
+  {
+    (void)message_info;
+    if (shared_ptr_callback_) {
+      shared_ptr_callback_(message);
+    } else if (shared_ptr_with_info_callback_) {
+      shared_ptr_with_info_callback_(message, message_info);
+    } else if (const_shared_ptr_callback_) {
+      const_shared_ptr_callback_(message);
+    } else if (const_shared_ptr_with_info_callback_) {
+      const_shared_ptr_with_info_callback_(message, message_info);
+    } else if (unique_ptr_callback_) {
+      unique_ptr_callback_(std::unique_ptr<MessageT>(new MessageT(*message)));
+    } else if (unique_ptr_with_info_callback_) {
+      unique_ptr_with_info_callback_(std::unique_ptr<MessageT>(new MessageT(*
+        message)), message_info);
+    } else {
+      throw std::runtime_error("unexpected message without any callback set");
+    }
+  }
+
+  void dispatch_intra_process(
+    std::unique_ptr<MessageT> & message, const rmw_message_info_t & message_info)
+  {
+    (void)message_info;
+    if (shared_ptr_callback_) {
+      typename MessageT::SharedPtr shared_message = std::move(message);
+      shared_ptr_callback_(shared_message);
+    } else if (shared_ptr_with_info_callback_) {
+      typename MessageT::SharedPtr shared_message = std::move(message);
+      shared_ptr_with_info_callback_(shared_message, message_info);
+    } else if (const_shared_ptr_callback_) {
+      typename MessageT::ConstSharedPtr const_shared_message = std::move(message);
+      const_shared_ptr_callback_(const_shared_message);
+    } else if (const_shared_ptr_with_info_callback_) {
+      typename MessageT::ConstSharedPtr const_shared_message = std::move(message);
+      const_shared_ptr_with_info_callback_(const_shared_message, message_info);
+    } else if (unique_ptr_callback_) {
+      unique_ptr_callback_(std::move(message));
+    } else if (unique_ptr_with_info_callback_) {
+      unique_ptr_with_info_callback_(std::move(message), message_info);
+    } else {
+      throw std::runtime_error("unexpected message without any callback set");
+    }
   }
 };
 

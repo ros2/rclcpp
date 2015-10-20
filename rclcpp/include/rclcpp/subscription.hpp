@@ -203,22 +203,7 @@ public:
       }
     }
     auto typed_message = std::static_pointer_cast<MessageT>(message);
-    if (any_callback_.shared_ptr_callback) {
-      any_callback_.shared_ptr_callback(typed_message);
-    } else if (any_callback_.shared_ptr_with_info_callback) {
-      any_callback_.shared_ptr_with_info_callback(typed_message, message_info);
-    } else if (any_callback_.const_shared_ptr_callback) {
-      any_callback_.const_shared_ptr_callback(typed_message);
-    } else if (any_callback_.const_shared_ptr_with_info_callback) {
-      any_callback_.const_shared_ptr_with_info_callback(typed_message, message_info);
-    } else if (any_callback_.unique_ptr_callback) {
-      any_callback_.unique_ptr_callback(std::unique_ptr<MessageT>(new MessageT(*typed_message)));
-    } else if (any_callback_.unique_ptr_with_info_callback) {
-      any_callback_.unique_ptr_with_info_callback(std::unique_ptr<MessageT>(new MessageT(*
-        typed_message)), message_info);
-    } else {
-      throw std::runtime_error("unexpected message without any callback set");
-    }
+    any_callback_.dispatch(typed_message, message_info);
   }
 
   void return_message(std::shared_ptr<void> & message)
@@ -250,25 +235,7 @@ public:
       // TODO(wjwwood): should we notify someone of this? log error, log warning?
       return;
     }
-    if (any_callback_.shared_ptr_callback) {
-      typename MessageT::SharedPtr shared_msg = std::move(msg);
-      any_callback_.shared_ptr_callback(shared_msg);
-    } else if (any_callback_.shared_ptr_with_info_callback) {
-      typename MessageT::SharedPtr shared_msg = std::move(msg);
-      any_callback_.shared_ptr_with_info_callback(shared_msg, message_info);
-    } else if (any_callback_.const_shared_ptr_callback) {
-      typename MessageT::ConstSharedPtr const_shared_msg = std::move(msg);
-      any_callback_.const_shared_ptr_callback(const_shared_msg);
-    } else if (any_callback_.const_shared_ptr_with_info_callback) {
-      typename MessageT::ConstSharedPtr const_shared_msg = std::move(msg);
-      any_callback_.const_shared_ptr_with_info_callback(const_shared_msg, message_info);
-    } else if (any_callback_.unique_ptr_callback) {
-      any_callback_.unique_ptr_callback(std::move(msg));
-    } else if (any_callback_.unique_ptr_with_info_callback) {
-      any_callback_.unique_ptr_with_info_callback(std::move(msg), message_info);
-    } else {
-      throw std::runtime_error("unexpected message without any callback set");
-    }
+    any_callback_.dispatch_intra_process(msg, message_info);
   }
 
 private:
