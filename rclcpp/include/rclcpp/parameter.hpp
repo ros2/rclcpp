@@ -224,7 +224,7 @@ public:
     return parameter;
   }
 
-  std::string to_string() const
+  std::string value_to_string() const
   {
     switch (get_type()) {
       case rclcpp::parameter::ParameterType::PARAMETER_BOOL:
@@ -265,9 +265,68 @@ private:
   rcl_interfaces::msg::ParameterValue value_;
 };
 
-std::ostream & operator<<(std::ostream & os, const ParameterVariant & pv)
+
+/* Return a json encoded version of the parameter intended for a dict. */
+std::string _to_json_dict_entry(const ParameterVariant & param)
 {
-  os << pv.to_string();
+  std::stringstream ss;
+  ss << "\"" << param.get_name() << "\": ";
+  ss << "{\"type\": \"" << param.get_type_name() << "\", ";
+  ss << "\"value\": \"" << param.value_to_string() << "\"}";
+  return ss.str();
+}
+
+
+} /* namespace parameter */
+
+} /* namespace rclcpp */
+
+namespace std
+{
+/* Return a json encoded version of the parameter intended for a list. */
+inline std::string to_string(const rclcpp::parameter::ParameterVariant & param)
+{
+  std::stringstream ss;
+  ss << "{\"name\": \"" << param.get_name() << "\", ";
+  ss << "\"type\": \"" << param.get_type_name() << "\", ";
+  ss << "\"value\": \"" << param.value_to_string() << "\"}";
+  return ss.str();
+}
+
+/* Return a json encoded version of a vector of parameters, as a string*/
+inline std::string to_string(const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+{
+  std::stringstream ss;
+  ss << "{";
+  bool first = true;
+  for (const auto & pv : parameters) {
+    if (first == false) {
+      ss << ", ";
+    } else {
+      first = false;
+    }
+    ss << rclcpp::parameter::_to_json_dict_entry(pv);
+  }
+  ss << "}";
+  return ss.str();
+}
+
+} /* namespace std */
+
+namespace rclcpp
+{
+namespace parameter
+{
+
+std::ostream & operator<<(std::ostream & os, const rclcpp::parameter::ParameterVariant & pv)
+{
+  os << std::to_string(pv);
+  return os;
+}
+
+std::ostream & operator<<(std::ostream & os, const std::vector<ParameterVariant> & parameters)
+{
+  os << std::to_string(parameters);
   return os;
 }
 
