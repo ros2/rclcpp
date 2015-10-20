@@ -50,11 +50,12 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template<typename T>
+template<typename T, typename Deleter = std::default_delete<T>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T>);
+  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Deleter>);
+  using ElemUniquePtr = std::unique_ptr<T, Deleter>;
 
   /// Constructor.
   /* The constructor will allocate memory while reserving space.
@@ -82,12 +83,12 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_copy_at_key(uint64_t key, std::unique_ptr<T> & value)
+  get_copy_at_key(uint64_t key, ElemUniquePtr & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      value = std::unique_ptr<T>(new T(*it->value));
+      value = ElemUniquePtr(new T(*it->value));
     }
   }
 
@@ -111,13 +112,13 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_ownership_at_key(uint64_t key, std::unique_ptr<T> & value)
+  get_ownership_at_key(uint64_t key, ElemUniquePtr & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       // Make a copy.
-      auto copy = std::unique_ptr<T>(new T(*it->value));
+      auto copy = ElemUniquePtr(new T(*it->value));
       // Return the original.
       value.swap(it->value);
       // Store the copy.
@@ -136,7 +137,7 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  pop_at_key(uint64_t key, std::unique_ptr<T> & value)
+  pop_at_key(uint64_t key, ElemUniquePtr & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
@@ -158,7 +159,7 @@ public:
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T> & value)
+  push_and_replace(uint64_t key, ElemUniquePtr & value)
   {
     bool did_replace = elements_[head_].in_use;
     elements_[head_].key = key;
@@ -169,9 +170,9 @@ public:
   }
 
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T> && value)
+  push_and_replace(uint64_t key, ElemUniquePtr && value)
   {
-    std::unique_ptr<T> temp = std::move(value);
+    ElemUniquePtr temp = std::move(value);
     return push_and_replace(key, temp);
   }
 
@@ -183,12 +184,12 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(MappedRingBuffer<T>);
+  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Deleter>);
 
   struct element
   {
     uint64_t key;
-    std::unique_ptr<T> value;
+    ElemUniquePtr value;
     bool in_use;
   };
 

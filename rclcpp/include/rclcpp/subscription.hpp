@@ -144,12 +144,16 @@ private:
 using namespace any_subscription_callback;
 
 /// Subscription implementation, templated on the type of message this subscription receives.
-template<typename MessageT>
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node::Node;
 
 public:
+  using MessageAlloc = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, MessageT>;
+  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
+
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
 
   /// Default constructor.
@@ -167,15 +171,17 @@ public:
     rmw_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications,
-    AnySubscriptionCallback<MessageT> callback,
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr memory_strategy =
-    message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default())
+    AnySubscriptionCallback<MessageT, Alloc> callback,
+    typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr memory_strategy =
+    message_memory_strategy::MessageMemoryStrategy<MessageT,
+    Alloc>::create_default())
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy),
     get_intra_process_message_callback_(nullptr),
     matches_any_intra_process_publishers_(nullptr)
-  {}
+  {
+  }
 
   /// Support dynamically setting the message memory strategy.
   /**
@@ -183,7 +189,8 @@ public:
    * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
    */
   void set_message_memory_strategy(
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr message_memory_strategy)
+    typename message_memory_strategy::MessageMemoryStrategy<MessageT,
+    Alloc>::SharedPtr message_memory_strategy)
   {
     message_memory_strategy_ = message_memory_strategy;
   }
@@ -226,7 +233,7 @@ public:
       // However, this can only really happen if this node has it disabled, but the other doesn't.
       return;
     }
-    std::unique_ptr<MessageT> msg;
+    MessageUniquePtr msg;
     get_intra_process_message_callback_(
       ipm.publisher_id,
       ipm.message_sequence,
@@ -244,7 +251,7 @@ public:
 private:
   typedef
     std::function<
-      void (uint64_t, uint64_t, uint64_t, std::unique_ptr<MessageT> &)
+      void (uint64_t, uint64_t, uint64_t, MessageUniquePtr &)
     > GetMessageCallbackType;
   typedef std::function<bool (const rmw_gid_t *)> MatchesAnyPublishersCallbackType;
 
@@ -262,14 +269,13 @@ private:
 
   RCLCPP_DISABLE_COPY(Subscription);
 
-  AnySubscriptionCallback<MessageT> any_callback_;
-  typename message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
+  AnySubscriptionCallback<MessageT, Alloc> any_callback_;
+  typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
   message_memory_strategy_;
 
   GetMessageCallbackType get_intra_process_message_callback_;
   MatchesAnyPublishersCallbackType matches_any_intra_process_publishers_;
   uint64_t intra_process_subscription_id_;
-
 };
 
 } /* namespace subscription */

@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include <rclcpp/allocator/allocator_common.hpp>
 #include <rclcpp/macros.hpp>
 
 namespace rclcpp
@@ -26,24 +27,34 @@ namespace message_memory_strategy
 
 /// Default allocation strategy for messages received by subscriptions.
 // A message memory strategy must be templated on the type of the subscription it belongs to.
-template<typename MessageT>
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class MessageMemoryStrategy
 {
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MessageMemoryStrategy);
 
+  using MessageAlloc = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, MessageT>;
+
+  MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
+  {
+    message_allocator_ = new typename MessageAlloc::allocator_type(*allocator.get());
+  }
+
   /// Default factory method
   static SharedPtr create_default()
   {
-    return SharedPtr(new MessageMemoryStrategy<MessageT>);
+    return std::make_shared<MessageMemoryStrategy<MessageT, Alloc>>(std::make_shared<Alloc>());
   }
 
   /// By default, dynamically allocate a new message.
   // \return Shared pointer to the new message.
   virtual std::shared_ptr<MessageT> borrow_message()
   {
-    return std::shared_ptr<MessageT>(new MessageT);
+    auto ptr = MessageAlloc::allocate(*message_allocator_, 1);
+    MessageAlloc::construct(*message_allocator_, ptr);
+    return std::shared_ptr<MessageT>(ptr, message_deleter_);
   }
 
   /// Release ownership of the message, which will deallocate it if it has no more owners.
@@ -52,6 +63,9 @@ public:
   {
     msg.reset();
   }
+
+  typename MessageAlloc::allocator_type * message_allocator_;
+  MessageDeleter message_deleter_;
 };
 
 }  /* message_memory_strategy */

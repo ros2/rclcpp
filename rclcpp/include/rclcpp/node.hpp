@@ -91,10 +91,11 @@ public:
    * \param[in] qos_history_depth The depth of the publisher message queue.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT>
-  typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
+  template<typename MessageT, typename Alloc = std::allocator<void>>
+  typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
   create_publisher(
-    const std::string & topic_name, size_t qos_history_depth);
+    const std::string & topic_name, size_t qos_history_depth,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Publisher.
   /**
@@ -102,11 +103,12 @@ public:
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT>
-  typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
+  template<typename MessageT, typename Alloc = std::allocator<void>>
+  typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
   create_publisher(
     const std::string & topic_name,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default);
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -122,16 +124,17 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT>
-  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  template<typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>>
+  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
   create_subscription(
     const std::string & topic_name,
     CallbackT callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat = nullptr);
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -147,16 +150,17 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT>
-  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  template<typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>>
+  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
   create_subscription(
     const std::string & topic_name,
     size_t qos_history_depth,
     CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat = nullptr);
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create a timer.
   /**
@@ -202,34 +206,25 @@ public:
     FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  template<typename Alloc>
-  using StringRebind = typename Alloc::template rebind<std::string>::other;
+  std::vector<rcl_interfaces::msg::SetParametersResult> set_parameters(
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
-  template<typename Alloc = std::allocator<rclcpp::parameter::ParameterVariant>>
-  typename std::vector<rcl_interfaces::msg::SetParametersResult, Alloc> set_parameters(
-    const typename std::vector<rclcpp::parameter::ParameterVariant, Alloc> & parameters);
-
-  template<typename Alloc = std::allocator<rclcpp::parameter::ParameterVariant>>
   rcl_interfaces::msg::SetParametersResult set_parameters_atomically(
-    const typename std::vector<rclcpp::parameter::ParameterVariant, Alloc> & parameters);
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
-  template<typename Alloc = std::allocator<rclcpp::parameter::ParameterVariant>>
-  typename std::vector<rclcpp::parameter::ParameterVariant, Alloc> get_parameters(
-    const typename std::vector<std::string, StringRebind<Alloc>> & names) const;
+  std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
+    const std::vector<std::string> & names) const;
 
-  template<typename Alloc = std::allocator<rcl_interfaces::msg::ParameterDescriptor>>
-  typename std::vector<rcl_interfaces::msg::ParameterDescriptor, Alloc> describe_parameters(
-    const typename std::vector<std::string, StringRebind<Alloc>>> & names) const;
+  std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
+    const std::vector<std::string> & names) const;
 
-  template<typename Alloc = std::allocator<uint8_t>>
-  typename std::vector<uint8_t, Alloc> get_parameter_types(
-    const typename std::vector<std::string, StringRebind<Alloc>>> & names) const;
+  std::vector<uint8_t> get_parameter_types(
+    const std::vector<std::string> & names) const;
 
   rcl_interfaces::msg::ListParametersResult list_parameters(
     const std::vector<std::string> & prefixes, uint64_t depth) const;
 
-  template<typename Alloc = std::allocator<std::pair<const std::string, std::string>>>
-  typename std::map<std::string, std::string, Alloc> get_topic_names_and_types() const;
+  std::map<std::string, std::string> get_topic_names_and_types() const;
 
   size_t count_publishers(const std::string & topic_name) const;
 
