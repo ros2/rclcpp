@@ -236,7 +236,8 @@ public:
    * \param[in] msg A shared pointer to the message to send.
    */
   void
-  publish(MessageUniquePtr & msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
+  //publish(MessageUniquePtr & msg)
   {
     this->do_inter_process_publish(msg.get());
     if (store_intra_process_message_) {

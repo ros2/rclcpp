@@ -37,6 +37,11 @@ public:
   using MessageAlloc = allocator::AllocRebind<MessageT, Alloc>;
   using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, MessageT>;
 
+  MessageMemoryStrategy()
+  {
+    message_allocator_ = new typename MessageAlloc::allocator_type();
+  }
+
   MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
     message_allocator_ = new typename MessageAlloc::allocator_type(*allocator.get());

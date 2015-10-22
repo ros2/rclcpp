@@ -15,7 +15,7 @@
 #include <memory>
 
 #include <gtest/gtest.h>
-
+#include <rclcpp/allocator/allocator_common.hpp>
 #include <rclcpp/macros.hpp>
 #include <rmw/types.h>
 
@@ -59,6 +59,9 @@ template<typename T, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:
+  using MessageAlloc = allocator::AllocRebind<T, Alloc>;
+  using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, T>;
+
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>);
 };
 
