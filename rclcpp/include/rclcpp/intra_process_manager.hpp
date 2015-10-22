@@ -201,9 +201,10 @@ public:
       throw std::invalid_argument("the calculated buffer size is too large");
     }
     publishers_[id].sequence_number.store(0);
-    using Deleter = typename publisher::Publisher<MessageT, Alloc>::MessageDeleter;
-    publishers_[id].buffer = mapped_ring_buffer::MappedRingBuffer<MessageT, Deleter>::make_shared(
-      size);
+    publishers_[id].buffer =
+      mapped_ring_buffer::MappedRingBuffer<MessageT,
+      typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>::make_shared(
+      size, publisher->get_allocator());
     publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
     return id;
   }
@@ -249,11 +250,13 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template<typename MessageT, typename Deleter = std::default_delete<MessageT>>
+  template<typename MessageT, typename Alloc = std::allocator<void>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::unique_ptr<MessageT, Deleter> & message)
+    std::unique_ptr<MessageT,
+    typename allocator::Deleter<typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>,
+    MessageT>> & message)
   {
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
@@ -263,7 +266,8 @@ public:
     // Calculate the next message sequence number.
     uint64_t message_seq = info.sequence_number.fetch_add(1, std::memory_order_relaxed);
     // Insert the message into the ring buffer using the message_seq to identify it.
-    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, Deleter> TypedMRB;
+    using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
+    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc> TypedMRB;
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(info.buffer);
     bool did_replace = typed_buffer->push_and_replace(message_seq, message);
     // TODO(wjwwood): do something when a message was displaced. log debug?
@@ -323,13 +327,15 @@ public:
    * \param requesting_subscriptions_intra_process_id the subscription's id.
    * \param message the message typed unique_ptr used to return the message.
    */
-  template<typename MessageT, typename Deleter = std::default_delete<MessageT>>
+  template<typename MessageT, typename Alloc = std::allocator<void>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    std::unique_ptr<MessageT, Deleter> & message)
+    std::unique_ptr<MessageT,
+    typename allocator::Deleter<typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>,
+    MessageT>> & message)
   {
     message = nullptr;
     PublisherInfo * info;
@@ -361,7 +367,8 @@ public:
       }
       target_subs->erase(it);
     }
-    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, Deleter> TypedMRB;
+    using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
+    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc> TypedMRB;
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(info->buffer);
     // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
     if (target_subs->size()) {

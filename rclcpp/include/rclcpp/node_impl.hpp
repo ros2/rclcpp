@@ -187,8 +187,9 @@ Node::create_publisher(
           "' is incompatible from the publisher type '" + message_type_info.name() + "'");
       }
       MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
-      std::unique_ptr<MessageT> unique_msg(typed_message_ptr);
-      uint64_t message_seq = ipm->store_intra_process_message(publisher_id, unique_msg);
+      using MessageDeleter = typename publisher::Publisher<MessageT, Alloc>::MessageDeleter;
+      std::unique_ptr<MessageT, MessageDeleter> unique_msg(typed_message_ptr);
+      uint64_t message_seq = ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);
       return message_seq;
     };
     // *INDENT-ON*
@@ -293,7 +294,7 @@ Node::create_subscription(
           throw std::runtime_error(
             "intra process take called after destruction of intra process manager");
         }
-        ipm->take_intra_process_message(publisher_id, message_sequence, subscription_id, message);
+        ipm->take_intra_process_message<MessageT, Alloc>(publisher_id, message_sequence, subscription_id, message);
       },
       [weak_ipm](const rmw_gid_t * sender_gid) -> bool {
         auto ipm = weak_ipm.lock();

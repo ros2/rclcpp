@@ -15,6 +15,7 @@
 #ifndef RCLCPP_RCLCPP_RING_BUFFER_HPP_
 #define RCLCPP_RCLCPP_RING_BUFFER_HPP_
 
+#include <rclcpp/allocator/allocator_common.hpp>
 #include <rclcpp/macros.hpp>
 
 #include <algorithm>
@@ -50,25 +51,35 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template<typename T, typename Deleter = std::default_delete<T>>
+template<typename T, typename Alloc = std::allocator<void>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Deleter>);
-  using ElemUniquePtr = std::unique_ptr<T, Deleter>;
+  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Alloc>);
+  using ElemAllocTraits = allocator::AllocRebind<T, Alloc>;
+  using ElemAlloc = typename ElemAllocTraits::allocator_type;
+  using ElemDeleter = allocator::Deleter<ElemAlloc, T>;
+
+  using ElemUniquePtr = std::unique_ptr<T, ElemDeleter>;
 
   /// Constructor.
   /* The constructor will allocate memory while reserving space.
    *
    * \param size size of the ring buffer; must be positive and non-zero.
    */
-  MappedRingBuffer(size_t size)
+  MappedRingBuffer(size_t size, std::shared_ptr<Alloc> allocator = nullptr)
   : elements_(size), head_(0)
   {
     if (size == 0) {
       throw std::invalid_argument("size must be a positive, non-zero value");
     }
+    if (!allocator) {
+      allocator_ = std::make_shared<ElemAlloc>();
+    } else {
+      allocator_ = std::make_shared<ElemAlloc>(*allocator.get());
+    }
   }
+
   virtual ~MappedRingBuffer() {}
 
   /// Return a copy of the value stored in the ring buffer at the given key.
@@ -88,7 +99,9 @@ public:
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      value = ElemUniquePtr(new T(*it->value));
+      auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
+      ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
+      value = ElemUniquePtr(ptr);
     }
   }
 
@@ -118,7 +131,9 @@ public:
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       // Make a copy.
-      auto copy = ElemUniquePtr(new T(*it->value));
+      auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
+      ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
+      auto copy = ElemUniquePtr(ptr);
       // Return the original.
       value.swap(it->value);
       // Store the copy.
@@ -184,7 +199,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Deleter>);
+  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Alloc>);
 
   struct element
   {
@@ -193,7 +208,9 @@ private:
     bool in_use;
   };
 
-  typename std::vector<element>::iterator
+  using VectorAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<element>;
+
+  typename std::vector<element, VectorAlloc>::iterator
   get_iterator_of_key(uint64_t key)
   {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -204,8 +221,9 @@ private:
     return it;
   }
 
-  std::vector<element> elements_;
+  std::vector<element, VectorAlloc> elements_;
   size_t head_;
+  std::shared_ptr<ElemAlloc> allocator_;
 
 };
 

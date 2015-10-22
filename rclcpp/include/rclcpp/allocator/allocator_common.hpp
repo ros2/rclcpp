@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_ALLOCATOR_COMMON_HPP_
-#define RCLCPP_RCLCPP_ALLOCATOR_COMMON_HPP_
+#ifndef RCLCPP_RCLCPP__ALLOCATOR_COMMON__HPP_
+#define RCLCPP_RCLCPP__ALLOCATOR_COMMON__HPP_
 
 #include <memory>
 

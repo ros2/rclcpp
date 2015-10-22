@@ -211,8 +211,9 @@ class Publisher : public PublisherBase
   friend rclcpp::node::Node;
 
 public:
-  using MessageAlloc = allocator::AllocRebind<MessageT, Alloc>;
-  using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, MessageT>;
+  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>);
@@ -225,8 +226,8 @@ public:
     std::shared_ptr<Alloc> allocator)
   : PublisherBase(node_handle, publisher_handle, topic, queue_size)
   {
-    message_allocator_ = new typename MessageAlloc::allocator_type(*allocator.get());
-    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_);
+    message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
   }
 
 
@@ -237,7 +238,6 @@ public:
    */
   void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
-  //publish(MessageUniquePtr & msg)
   {
     this->do_inter_process_publish(msg.get());
     if (store_intra_process_message_) {
@@ -285,8 +285,8 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    auto ptr = MessageAlloc::allocate(*message_allocator_, 1);
-    MessageAlloc::construct(*message_allocator_, ptr, *msg.get());
+    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg.get());
     MessageUniquePtr unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
@@ -304,8 +304,8 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    auto ptr = MessageAlloc::allocate(*message_allocator_, 1);
-    MessageAlloc::construct(*message_allocator_, ptr, *msg.get());
+    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg.get());
     MessageUniquePtr unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
@@ -319,10 +319,15 @@ public:
       return this->do_inter_process_publish(&msg);
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    auto ptr = MessageAlloc::allocate(*message_allocator_, 1);
-    MessageAlloc::construct(*message_allocator_, ptr, msg);
+    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
     MessageUniquePtr unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
+  }
+
+  std::shared_ptr<MessageAlloc> get_allocator() const
+  {
+    return message_allocator_;
   }
 
 protected:
@@ -338,7 +343,7 @@ protected:
     }
   }
 
-  typename MessageAlloc::allocator_type * message_allocator_;
+  std::shared_ptr<MessageAlloc> message_allocator_;
 
   MessageDeleter message_deleter_;
 

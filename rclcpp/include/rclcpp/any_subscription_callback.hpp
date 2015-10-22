@@ -33,9 +33,10 @@ namespace any_subscription_callback
 template<typename MessageT, typename Alloc>
 class AnySubscriptionCallback
 {
-  using MessageAlloc = allocator::AllocRebind<MessageT, Alloc>;
-  using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, MessageT>;
-  using UniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
+  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
+  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT>)>;
   using SharedPtrWithInfoCallback =
@@ -43,8 +44,8 @@ class AnySubscriptionCallback
   using ConstSharedPtrCallback = std::function<void(const std::shared_ptr<const MessageT>)>;
   using ConstSharedPtrWithInfoCallback =
       std::function<void(const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
-  using UniquePtrCallback = std::function<void(UniquePtr)>;
-  using UniquePtrWithInfoCallback = std::function<void(UniquePtr, const rmw_message_info_t &)>;
+  using UniquePtrCallback = std::function<void(MessageUniquePtr)>;
+  using UniquePtrWithInfoCallback = std::function<void(MessageUniquePtr, const rmw_message_info_t &)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback_;
@@ -59,8 +60,8 @@ public:
     const_shared_ptr_callback_(nullptr), const_shared_ptr_with_info_callback_(nullptr),
     unique_ptr_callback_(nullptr), unique_ptr_with_info_callback_(nullptr)
   {
-    message_allocator_ = new typename MessageAlloc::allocator_type(*allocator.get());
-    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_);
+    message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
   }
 
   AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
@@ -162,20 +163,20 @@ public:
     } else if (const_shared_ptr_with_info_callback_) {
       const_shared_ptr_with_info_callback_(message, message_info);
     } else if (unique_ptr_callback_) {
-      auto ptr = MessageAlloc::allocate(*message_allocator_, 1);
-      MessageAlloc::construct(*message_allocator_, ptr, *message);
-      unique_ptr_callback_(UniquePtr(ptr, message_deleter_));
+      auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+      MessageAllocTraits::construct(*message_allocator_.get(), ptr, *message);
+      unique_ptr_callback_(MessageUniquePtr(ptr, message_deleter_));
     } else if (unique_ptr_with_info_callback_) {
-      auto ptr = MessageAlloc::allocate(*message_allocator_, 1);
-      MessageAlloc::construct(*message_allocator_, ptr, *message);
-      unique_ptr_with_info_callback_(UniquePtr(ptr, message_deleter_), message_info);
+      auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+      MessageAllocTraits::construct(*message_allocator_.get(), ptr, *message);
+      unique_ptr_with_info_callback_(MessageUniquePtr(ptr, message_deleter_), message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
   }
 
   void dispatch_intra_process(
-    UniquePtr & message, const rmw_message_info_t & message_info)
+    MessageUniquePtr & message, const rmw_message_info_t & message_info)
   {
     (void)message_info;
     if (shared_ptr_callback_) {
@@ -200,7 +201,7 @@ public:
   }
 
 private:
-  typename MessageAlloc::allocator_type * message_allocator_;
+  std::shared_ptr<MessageAlloc> message_allocator_;
   MessageDeleter message_deleter_;
 };
 

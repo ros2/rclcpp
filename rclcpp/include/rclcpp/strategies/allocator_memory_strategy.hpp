@@ -35,21 +35,22 @@ namespace allocator_memory_strategy
  * come through.
  */
 template<typename Alloc>
-class AllocatorMemoryStrategy : public MemoryStrategy
+class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>);
 
-  using ExecAlloc = allocator::AllocRebind<executor::AnyExecutable, Alloc>;
-  using ExecDeleter =
-      allocator::Deleter<typename ExecAlloc::allocator_type, executor::AnyExecutable>;
-  using VoidAlloc = allocator::AllocRebind<void *, Alloc>;
+  using ExecAllocTraits = allocator::AllocRebind<executor::AnyExecutable, Alloc>;
+  using ExecAlloc = typename ExecAllocTraits::allocator_type;
+  using ExecDeleter = allocator::Deleter<ExecAlloc, executor::AnyExecutable>;
+  using VoidAllocTraits = typename allocator::AllocRebind<void *, Alloc>;
+  using VoidAlloc = typename VoidAllocTraits::allocator_type;
 
   AllocatorMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
-    executable_allocator_ = new ExecAlloc(*allocator.get());
-    allocator_ = new VoidAlloc(*allocator.get());
+    executable_allocator_ = std::make_shared<ExecAlloc>(*allocator.get());
+    allocator_ = std::make_shared<VoidAlloc>(*allocator.get());
   }
 
   /// Borrow memory for storing data for subscriptions, services, clients, or guard conditions.
@@ -137,8 +138,8 @@ public:
   virtual executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
     //return std::make_shared<executor::AnyExecutable>();
-    auto ptr = ExecAlloc::allocate(*executable_allocator_, 1);
-    ExecAlloc::construct(*executable_allocator_);
+    auto ptr = ExecAllocTraits::allocate(*executable_allocator_.get(), 1);
+    ExecAllocTraits::construct(*executable_allocator_.get(), ptr);
     return std::shared_ptr<executor::AnyExecutable>(ptr, executable_deleter_);
   }
 
@@ -152,7 +153,9 @@ public:
     if (size == 0) {
       return NULL;
     }
-    return VoidAlloc::allocate(*allocator_, size);
+    auto ptr = VoidAllocTraits::allocate(*allocator_.get(), size);
+    alloc_map[ptr] = size;
+    return ptr;
   }
 
   /// Implementation of a general-purpose free.
@@ -161,22 +164,34 @@ public:
    */
   virtual void free(void * ptr)
   {
-    VoidAlloc::deallocate(*allocator, ptr);
+    if (alloc_map.count(ptr) == 0) {
+      // do nothing, the pointer is not in the alloc'd map
+      return;
+    }
+    VoidAllocTraits::deallocate(*allocator_.get(), &ptr, alloc_map[ptr]);
   }
 
-  std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr, Alloc> subs;
-  std::vector<rclcpp::service::ServiceBase::SharedPtr, Alloc> services;
-  std::vector<rclcpp::client::ClientBase::SharedPtr, Alloc> clients;
+  template<typename U>
+  using VectorRebind = typename std::allocator_traits<Alloc>::template rebind_alloc<U>;
 
-  std::vector<void *, Alloc> subscription_handles;
-  std::vector<void *, Alloc> service_handles;
-  std::vector<void *, Alloc> client_handles;
+  std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr,
+  VectorRebind<rclcpp::subscription::SubscriptionBase::SharedPtr>> subs;
+  std::vector<rclcpp::service::ServiceBase::SharedPtr,
+  VectorRebind<rclcpp::service::ServiceBase::SharedPtr>> services;
+  std::vector<rclcpp::client::ClientBase::SharedPtr,
+  VectorRebind<rclcpp::client::ClientBase::SharedPtr>> clients;
+
+  std::vector<void *, VoidAlloc> subscription_handles;
+  std::vector<void *, VoidAlloc> service_handles;
+  std::vector<void *, VoidAlloc> client_handles;
   std::array<void *, 2> guard_cond_handles;
 
+  std::unordered_map<void *, size_t> alloc_map;
+
 private:
-  typename ExecAlloc::allocator_type * executable_allocator_;
+  std::shared_ptr<ExecAlloc> executable_allocator_;
   ExecDeleter executable_deleter_;
-  typename VoidAlloc::allocator_type * allocator_;
+  std::shared_ptr<VoidAlloc> allocator_;
 };
 
 }  /* allocator_memory_strategy */

@@ -59,10 +59,21 @@ template<typename T, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:
-  using MessageAlloc = allocator::AllocRebind<T, Alloc>;
-  using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, T>;
+  using MessageAllocTraits = allocator::AllocRebind<T, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, T>;
+  using MessageUniquePtr = std::unique_ptr<T, MessageDeleter>;
+  std::shared_ptr<MessageAlloc> allocator_;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>);
+
+  Publisher() {
+    allocator_ = std::make_shared<MessageAlloc>();
+  }
+
+  std::shared_ptr<MessageAlloc> get_allocator() {
+    return allocator_;
+  }
 };
 
 }

@@ -50,7 +50,8 @@ public:
   void operator()(U * ptr)
   {
     std::allocator_traits<AllocRebind<U>>::destroy(*allocator_, ptr);
-    std::allocator_traits<AllocRebind<U>>::deallocate(*allocator_, ptr, sizeof(U));
+    // TODO: figure out if we're guaranteed to be destroying only 1 item here
+    std::allocator_traits<AllocRebind<U>>::deallocate(*allocator_, ptr, 1);
     ptr = NULL;
   }
 

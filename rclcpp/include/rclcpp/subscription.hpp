@@ -150,8 +150,9 @@ class Subscription : public SubscriptionBase
   friend class rclcpp::node::Node;
 
 public:
-  using MessageAlloc = allocator::AllocRebind<MessageT, Alloc>;
-  using MessageDeleter = allocator::Deleter<typename MessageAlloc::allocator_type, MessageT>;
+  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
