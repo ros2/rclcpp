@@ -61,9 +61,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        typename std::shared_ptr<MessageT>
+        SharedPtrCallback
       >::value
     >::type * = nullptr
   >
@@ -75,10 +75,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        typename std::shared_ptr<MessageT>,
-        const rmw_message_info_t &
+        SharedPtrWithInfoCallback
       >::value
     >::type * = nullptr
   >
@@ -90,9 +89,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        typename std::shared_ptr<const MessageT>
+        ConstSharedPtrCallback
       >::value
     >::type * = nullptr
   >
@@ -104,10 +103,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        typename std::shared_ptr<const MessageT>,
-        const rmw_message_info_t &
+        ConstSharedPtrWithInfoCallback
       >::value
     >::type * = nullptr
   >
@@ -119,9 +117,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        typename std::unique_ptr<MessageT>
+        UniquePtrCallback
       >::value
     >::type * = nullptr
   >
@@ -133,10 +131,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        typename std::unique_ptr<MessageT>,
-        const rmw_message_info_t &
+        UniquePtrWithInfoCallback
       >::value
     >::type * = nullptr
   >

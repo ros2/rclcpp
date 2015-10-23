@@ -56,10 +56,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        std::shared_ptr<typename ServiceT::Request>,
-        std::shared_ptr<typename ServiceT::Response>
+        SharedPtrCallback
       >::value
     >::type * = nullptr
   >
@@ -71,11 +70,9 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::check_argument_types<
+      rclcpp::same_arguments<
         CallbackT,
-        std::shared_ptr<rmw_request_id_t>,
-        std::shared_ptr<typename ServiceT::Request>,
-        std::shared_ptr<typename ServiceT::Response>
+        SharedPtrWithRequestHeaderCallback
       >::value
     >::type * = nullptr
   >
