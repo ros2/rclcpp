@@ -137,10 +137,7 @@ public:
   // \return Shared pointer to the fresh executable.
   virtual executor::AnyExecutable::SharedPtr instantiate_next_executable()
   {
-    //return std::make_shared<executor::AnyExecutable>();
-    auto ptr = ExecAllocTraits::allocate(*executable_allocator_.get(), 1);
-    ExecAllocTraits::construct(*executable_allocator_.get(), ptr);
-    return std::shared_ptr<executor::AnyExecutable>(ptr, executable_deleter_);
+    return std::allocate_shared<executor::AnyExecutable>(*executable_allocator_.get());
   }
 
   /// Implementation of a general-purpose allocation function.
@@ -190,7 +187,6 @@ public:
 
 private:
   std::shared_ptr<ExecAlloc> executable_allocator_;
-  ExecDeleter executable_deleter_;
   std::shared_ptr<VoidAlloc> allocator_;
 };
 

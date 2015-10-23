@@ -58,10 +58,7 @@ public:
   // \return Shared pointer to the new message.
   virtual std::shared_ptr<MessageT> borrow_message()
   {
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr);
-    return std::shared_ptr<MessageT>(ptr, message_deleter_);
-    //return std::allocate_shared<MessageT, typename MessageAlloc::allocator_type>(*message_allocator_);
+    return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_.get());
   }
 
   /// Release ownership of the message, which will deallocate it if it has no more owners.
