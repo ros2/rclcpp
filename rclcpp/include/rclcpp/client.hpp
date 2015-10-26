@@ -31,18 +31,11 @@
 namespace rclcpp
 {
 
-// Forward declaration for friend statement
-namespace executor
-{
-class Executor;
-} // namespace executor
-
 namespace client
 {
 
 class ClientBase
 {
-  friend class rclcpp::executor::Executor;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase);

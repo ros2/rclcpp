@@ -47,18 +47,12 @@ struct rmw_node_t;
 namespace rclcpp
 {
 
-// Forward declaration for friend statement
-namespace executor
-{
-class Executor;
-} // namespace executor
 
 namespace node
 {
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node
 {
-  friend class rclcpp::executor::Executor;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
@@ -231,6 +225,8 @@ public:
   size_t count_publishers(const std::string & topic_name) const;
 
   size_t count_subscribers(const std::string & topic_name) const;
+
+  const CallbackGroupWeakPtrList & get_callback_groups() const;
 
 private:
   RCLCPP_DISABLE_COPY(Node);

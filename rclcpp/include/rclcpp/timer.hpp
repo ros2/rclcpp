@@ -31,12 +31,6 @@
 namespace rclcpp
 {
 
-// Forward declaration is for friend statement in GenericTimer
-namespace executor
-{
-class Executor;
-} // namespace executor
-
 namespace timer
 {
 
@@ -44,7 +38,6 @@ using CallbackType = std::function<void()>;
 
 class TimerBase
 {
-  friend class rclcpp::executor::Executor;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase);
@@ -64,6 +57,16 @@ public:
   cancel()
   {
     this->canceled_ = true;
+  }
+
+  void execute_callback() const
+  {
+    callback_();
+  }
+
+  const CallbackType & get_callback() const
+  {
+    return callback_;
   }
 
   /// Check how long the timer has until its next scheduled callback.
@@ -95,7 +98,6 @@ protected:
 template<class Clock = std::chrono::high_resolution_clock>
 class GenericTimer : public TimerBase
 {
-  friend class rclcpp::executor::Executor;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericTimer);

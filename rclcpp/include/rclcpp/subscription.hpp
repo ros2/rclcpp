@@ -32,12 +32,6 @@
 namespace rclcpp
 {
 
-// Forward declaration is for friend statement in SubscriptionBase
-namespace executor
-{
-class Executor;
-} // namespace executor
-
 namespace node
 {
 class Node;
@@ -50,7 +44,6 @@ namespace subscription
 /// specializations of Subscription, among other things.
 class SubscriptionBase
 {
-  friend class rclcpp::executor::Executor;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase);
@@ -102,6 +95,16 @@ public:
   const std::string & get_topic_name() const
   {
     return this->topic_name_;
+  }
+
+  const rmw_subscription_t * get_subscription_handle() const
+  {
+    return subscription_handle_;
+  }
+
+  const rmw_subscription_t * get_intra_process_subscription_handle() const
+  {
+    return intra_process_subscription_handle_;
   }
 
   /// Borrow a new message.
