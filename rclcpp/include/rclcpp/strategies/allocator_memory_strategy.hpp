@@ -20,6 +20,7 @@
 
 #include <rclcpp/allocator/allocator_common.hpp>
 #include <rclcpp/memory_strategy.hpp>
+#include <rclcpp/node.hpp>
 
 namespace rclcpp
 {
@@ -43,14 +44,13 @@ class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>);
 
-
   using ExecAllocTraits = allocator::AllocRebind<executor::AnyExecutable, Alloc>;
   using ExecAlloc = typename ExecAllocTraits::allocator_type;
   using ExecDeleter = allocator::Deleter<ExecAlloc, executor::AnyExecutable>;
   using VoidAllocTraits = typename allocator::AllocRebind<void *, Alloc>;
   using VoidAlloc = typename VoidAllocTraits::allocator_type;
 
-  using NodeVector = typename std::vector<std::weak_ptr<rclcpp::node::Node>>>;
+  using WeakNodeVector = std::vector<std::weak_ptr<node::Node>>;
 
   AllocatorMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
@@ -64,11 +64,10 @@ public:
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
-  size_t fill_subscriber_handles(void ** ptr) {
+  size_t fill_subscriber_handles(void ** & ptr)
+  {
     size_t max_size = subscriptions_.size();
-    if (subscriber_handles_.size() < max_size) {
-      subscriber_handles_.resize(max_size);
-    }
+    subscriber_handles_.resize(max_size);
     size_t count = 0;
     for (auto & subscription : subscriptions_) {
       subscriber_handles_[count++] = subscription->get_subscription_handle()->data;
@@ -77,12 +76,13 @@ public:
           subscription->get_intra_process_subscription_handle()->data;
       }
     }
-    ptr = static_cast<void**>(subscriber_handles_.data());
+    ptr = subscriber_handles_.data();
     return count;
   }
 
   // return the new number of services
-  size_t fill_service_handles(void ** ptr) {
+  size_t fill_service_handles(void ** & ptr)
+  {
     size_t max_size = services_.size();
     if (service_handles_.size() < max_size) {
       service_handles_.resize(max_size);
@@ -91,12 +91,13 @@ public:
     for (auto & service : services_) {
       service_handles_[count++] = service->get_service_handle()->data;
     }
-    ptr = static_cast<void**>(service_handles_.data());
+    ptr = service_handles_.data();
     return count;
   }
 
   // return the new number of clients
-  size_t fill_client_handles(void ** ptr) {
+  size_t fill_client_handles(void ** & ptr)
+  {
     size_t max_size = clients_.size();
     if (client_handles_.size() < max_size) {
       client_handles_.resize(max_size);
@@ -105,23 +106,26 @@ public:
     for (auto & client : clients_) {
       client_handles_[count++] = client->get_client_handle()->data;
     }
-    ptr = static_cast<void**>(client_handles_.data());
+    ptr = client_handles_.data();
     return count;
   }
 
-  void clear_active_entities() {
+  void clear_active_entities()
+  {
     subscriptions_.clear();
     services_.clear();
     clients_.clear();
   }
 
-  void clear_handles() {
+  void clear_handles()
+  {
     subscriber_handles_.clear();
     service_handles_.clear();
     client_handles_.clear();
   }
 
-  bool collect_entities(const NodeVector & weak_nodes) {
+  bool collect_entities(const WeakNodeVector & weak_nodes)
+  {
     bool has_invalid_weak_nodes = false;
     for (auto & weak_node : weak_nodes) {
       auto node = weak_node.lock();
@@ -159,143 +163,15 @@ public:
     return std::allocate_shared<executor::AnyExecutable>(*executable_allocator_.get());
   }
 
-  static rclcpp::subscription::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(void * subscriber_handle,
-    const NodeVector & weak_nodes)
-  {
-    for (auto & weak_node : weak_nodes) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & weak_subscription : group->get_subscription_ptrs()) {
-          auto subscription = weak_subscription.lock();
-          if (subscription) {
-            if (subscription->get_subscription_handle()->data == subscriber_handle) {
-              return subscription;
-            }
-            if (subscription->get_intra_process_subscription_handle() &&
-              subscription->get_intra_process_subscription_handle()->data == subscriber_handle)
-            {
-              return subscription;
-            }
-          }
-        }
-      }
-    }
-    return nullptr;
-  }
-
-  static rclcpp::service::ServiceBase::SharedPtr
-  get_service_by_handle(void * service_handle,
-    const NodeVector & weak_nodes)
-  {
-    for (auto & weak_node : weak_nodes) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & service : group->get_service_ptrs()) {
-          if (service->get_service_handle()->data == service_handle) {
-            return service;
-          }
-        }
-      }
-    }
-    return rclcpp::service::ServiceBase::SharedPtr();
-  }
-
-  static rclcpp::client::ClientBase::SharedPtr
-  get_client_by_handle(void * client_handle,
-    const NodeVector & weak_nodes)
-  {
-    for (auto & weak_node : weak_nodes) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & client : group->get_client_ptrs()) {
-          if (client->get_client_handle()->data == client_handle) {
-            return client;
-          }
-        }
-      }
-    }
-    return rclcpp::client::ClientBase::SharedPtr();
-  }
-
-  static rclcpp::node::Node::SharedPtr
-  get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,
-    const NodeVector & weak_nodes)
-  {
-    if (!group) {
-      return rclcpp::node::Node::SharedPtr();
-    }
-    for (auto & weak_node : weak_nodes) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto callback_group = weak_group.lock();
-        if (callback_group == group) {
-          return node;
-        }
-      }
-    }
-    return rclcpp::node::Node::SharedPtr();
-  }
-
-  static rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
-    const NodeVector & weak_nodes)
-  {
-    for (auto & weak_node : weak_nodes) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & weak_sub : group->get_subscription_ptrs()) {
-          auto sub = weak_sub.lock();
-          if (sub == subscription) {
-            return group;
-          }
-        }
-      }
-    }
-    return rclcpp::callback_group::CallbackGroup::SharedPtr();
-  }
-
-
-
   virtual void
   get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
-    const NodeVector & weak_nodes)
+    const WeakNodeVector & weak_nodes)
   {
     auto it = subscriber_handles_.begin();
+    VectorRebind<typename VectorRebind<void *>::iterator> to_erase;
     while (it != subscriber_handles_.end()) {
-      auto subscription = get_subscription_by_handle(*it, weak_nodes);
+      auto subscription = memory_strategy::MemoryStrategy::get_subscription_by_handle(*it,
+          weak_nodes);
       if (subscription) {
         // Figure out if this is for intra-process or not.
         bool is_intra_process = false;
@@ -307,7 +183,8 @@ public:
         if (!group) {
           // Group was not found, meaning the subscription is not valid...
           // Remove it from the ready list and continue looking
-          subscriber_handles_.erase(it++);
+          //subscriber_handles_.erase(it++);
+          to_erase.push_back(it++);
           continue;
         }
         if (!group->can_be_taken_from().load()) {
@@ -324,18 +201,25 @@ public:
         }
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group, weak_nodes);
-        subscriber_handles_.erase(it++);
+        to_erase.push_back(it++);
         return;
       }
       // Else, the subscription is no longer valid, remove it and continue
-      subscriber_handles_.erase(it++);
+      // TODO
+      to_erase.push_back(it++);
     }
+    for (auto & entry : to_erase) {
+      if (entry != subscriber_handles_.end()) {
+        subscriber_handles_.erase(entry);
+      }
+    }
+
   }
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_service(
     rclcpp::service::ServiceBase::SharedPtr service,
-    const NodeVector & weak_nodes)
+    const WeakNodeVector & weak_nodes)
   {
     for (auto & weak_node : weak_nodes) {
       auto node = weak_node.lock();
@@ -359,11 +243,11 @@ public:
 
   virtual void
   get_next_service(executor::AnyExecutable::SharedPtr any_exec,
-    const NodeVector & weak_nodes)
+    const WeakNodeVector & weak_nodes)
   {
     auto it = service_handles_.begin();
     while (it != service_handles_.end()) {
-      auto service = get_service_by_handle(*it, weak_nodes);
+      auto service = memory_strategy::MemoryStrategy::get_service_by_handle(*it, weak_nodes);
       if (service) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_service(service, weak_nodes);
@@ -394,7 +278,7 @@ public:
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_client(
     rclcpp::client::ClientBase::SharedPtr client,
-    const NodeVector & weak_nodes)
+    const WeakNodeVector & weak_nodes)
   {
     for (auto & weak_node : weak_nodes) {
       auto node = weak_node.lock();
@@ -418,11 +302,11 @@ public:
 
   virtual void
   get_next_client(executor::AnyExecutable::SharedPtr any_exec,
-    const NodeVector & weak_nodes)
+    const WeakNodeVector & weak_nodes)
   {
     auto it = client_handles_.begin();
     while (it != client_handles_.end()) {
-      auto client = get_client_by_handle(*it, weak_nodes);
+      auto client = memory_strategy::MemoryStrategy::get_client_by_handle(*it, weak_nodes);
       if (client) {
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_client(client, weak_nodes);
@@ -450,22 +334,18 @@ public:
     }
   }
 
-
-
 private:
   template<typename U>
-  using VectorRebind = typename std::allocator_traits<Alloc>::template rebind_alloc<U>;
+  using VectorRebind =
+      std::vector<U, typename std::allocator_traits<Alloc>::template rebind_alloc<U>>;
 
-  std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr,
-  VectorRebind<rclcpp::subscription::SubscriptionBase::SharedPtr>> subscriptions_;
-  std::vector<rclcpp::service::ServiceBase::SharedPtr,
-  VectorRebind<rclcpp::service::ServiceBase::SharedPtr>> services_;
-  std::vector<rclcpp::client::ClientBase::SharedPtr,
-  VectorRebind<rclcpp::client::ClientBase::SharedPtr>> clients_;
+  VectorRebind<rclcpp::subscription::SubscriptionBase::SharedPtr> subscriptions_;
+  VectorRebind<rclcpp::service::ServiceBase::SharedPtr> services_;
+  VectorRebind<rclcpp::client::ClientBase::SharedPtr> clients_;
 
-  std::vector<void *, VoidAlloc> subscriber_handles_;
-  std::vector<void *, VoidAlloc> service_handles_;
-  std::vector<void *, VoidAlloc> client_handles_;
+  VectorRebind<void *> subscriber_handles_;
+  VectorRebind<void *> service_handles_;
+  VectorRebind<void *> client_handles_;
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;

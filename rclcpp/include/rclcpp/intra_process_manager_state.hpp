@@ -32,7 +32,8 @@ namespace rclcpp
 namespace intra_process_manager
 {
 
-class IntraProcessManagerStateBase {
+class IntraProcessManagerStateBase
+{
 public:
   //RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManagerStateBase);
   using SharedPtr = std::shared_ptr<IntraProcessManagerStateBase>;
@@ -44,9 +45,9 @@ public:
   remove_subscription(uint64_t intra_process_subscription_id) = 0;
 
   virtual void add_publisher(uint64_t id,
-      publisher::PublisherBase::WeakPtr publisher,
-      mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
-      size_t size) = 0;
+    publisher::PublisherBase::WeakPtr publisher,
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
+    size_t size) = 0;
 
   virtual void
   remove_publisher(uint64_t intra_process_publisher_id) = 0;
@@ -70,17 +71,19 @@ public:
 };
 
 template<typename Allocator = std::allocator<void>>
-class IntraProcessManagerState : public IntraProcessManagerStateBase {
+class IntraProcessManagerState : public IntraProcessManagerStateBase
+{
 public:
-
   void
-  add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription) {
+  add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription)
+  {
     subscriptions_[id] = subscription;
     subscription_ids_by_topic_[subscription->get_topic_name()].insert(id);
   }
 
   void
-  remove_subscription(uint64_t intra_process_subscription_id) {
+  remove_subscription(uint64_t intra_process_subscription_id)
+  {
     subscriptions_.erase(intra_process_subscription_id);
     for (auto & pair : subscription_ids_by_topic_) {
       pair.second.erase(intra_process_subscription_id);
@@ -96,9 +99,10 @@ public:
   }
 
   void add_publisher(uint64_t id,
-      publisher::PublisherBase::WeakPtr publisher,
-      mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
-      size_t size) {
+    publisher::PublisherBase::WeakPtr publisher,
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
+    size_t size)
+  {
 
     publishers_[id].publisher = publisher;
     // As long as the size of the ring buffer is less than the max sequence number, we're safe.
@@ -112,7 +116,8 @@ public:
   }
 
   void
-  remove_publisher(uint64_t intra_process_publisher_id) {
+  remove_publisher(uint64_t intra_process_publisher_id)
+  {
     publishers_.erase(intra_process_publisher_id);
   }
 
@@ -220,7 +225,6 @@ public:
     return false;
   }
 
-
 private:
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
@@ -229,10 +233,10 @@ private:
   using AllocString = std::string;
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
   using SubscriptionMap = std::unordered_map<uint64_t, subscription::SubscriptionBase::WeakPtr,
-    std::hash<uint64_t>, std::equal_to<uint64_t>,
-    RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
+      std::hash<uint64_t>, std::equal_to<uint64_t>,
+      RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
   using IDTopicMap = std::map<AllocString, AllocSet,
-    std::less<AllocString>, RebindAlloc<std::pair<AllocString, AllocSet>>>;
+      std::less<AllocString>, RebindAlloc<std::pair<AllocString, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
@@ -249,19 +253,21 @@ private:
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
 
     using TargetSubscriptionsMap = std::unordered_map<uint64_t, AllocSet,
-      std::hash<uint64_t>, std::equal_to<uint64_t>, RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
+        std::hash<uint64_t>, std::equal_to<uint64_t>,
+        RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
     TargetSubscriptionsMap target_subscriptions_by_message_sequence;
   };
 
   using PublisherMap = std::unordered_map<uint64_t, PublisherInfo,
-    std::hash<uint64_t>, std::equal_to<uint64_t>,
-    RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
+      std::hash<uint64_t>, std::equal_to<uint64_t>,
+      RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
 
   PublisherMap publishers_;
 
 };
 
-static IntraProcessManagerStateBase::SharedPtr create_default_state() {
+static IntraProcessManagerStateBase::SharedPtr create_default_state()
+{
   return std::make_shared<IntraProcessManagerState<>>();
 }
 

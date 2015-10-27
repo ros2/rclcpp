@@ -45,7 +45,7 @@ public:
 
   /// Default constructor. See the default constructor for Executor.
   SingleThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms =
-    memory_strategy::create_default_strategy())
+    memory_strategies::create_default_strategy())
   : executor::Executor(ms) {}
 
   /// Default destrcutor.

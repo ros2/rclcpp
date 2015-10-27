@@ -24,9 +24,9 @@
 
 namespace rclcpp
 {
-
 namespace memory_strategy
 {
+
 
 /// Delegate for handling memory allocations while the Executor is executing.
 /**
@@ -38,16 +38,16 @@ class MemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy);
-  using WeakNodeVector = typename std::vector<std::weak_ptr<rclcpp::node::Node>>>;
+  using WeakNodeVector = std::vector<std::weak_ptr<node::Node>>;
 
   // return the new number of subscribers
-  virtual size_t fill_subscriber_handles(void ** ptr) = 0;
+  virtual size_t fill_subscriber_handles(void ** & ptr) = 0;
 
   // return the new number of services
-  virtual size_t fill_service_handles(void ** ptr) = 0;
+  virtual size_t fill_service_handles(void ** & ptr) = 0;
 
   // return the new number of clients
-  virtual size_t fill_client_handles(void ** ptr) = 0;
+  virtual size_t fill_client_handles(void ** & ptr) = 0;
 
   virtual void clear_active_entities() = 0;
 
@@ -69,6 +69,134 @@ public:
   virtual void
   get_next_client(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
+
+  static rclcpp::subscription::SubscriptionBase::SharedPtr
+  get_subscription_by_handle(void * subscriber_handle,
+    const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & weak_subscription : group->get_subscription_ptrs()) {
+          auto subscription = weak_subscription.lock();
+          if (subscription) {
+            if (subscription->get_subscription_handle()->data == subscriber_handle) {
+              return subscription;
+            }
+            if (subscription->get_intra_process_subscription_handle() &&
+              subscription->get_intra_process_subscription_handle()->data == subscriber_handle)
+            {
+              return subscription;
+            }
+          }
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  static rclcpp::service::ServiceBase::SharedPtr
+  get_service_by_handle(void * service_handle,
+    const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & service : group->get_service_ptrs()) {
+          if (service->get_service_handle()->data == service_handle) {
+            return service;
+          }
+        }
+      }
+    }
+    return rclcpp::service::ServiceBase::SharedPtr();
+  }
+
+  static rclcpp::client::ClientBase::SharedPtr
+  get_client_by_handle(void * client_handle,
+    const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & client : group->get_client_ptrs()) {
+          if (client->get_client_handle()->data == client_handle) {
+            return client;
+          }
+        }
+      }
+    }
+    return rclcpp::client::ClientBase::SharedPtr();
+  }
+
+  static rclcpp::node::Node::SharedPtr
+  get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,
+    const WeakNodeVector & weak_nodes)
+  {
+    if (!group) {
+      return rclcpp::node::Node::SharedPtr();
+    }
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto callback_group = weak_group.lock();
+        if (callback_group == group) {
+          return node;
+        }
+      }
+    }
+    return rclcpp::node::Node::SharedPtr();
+  }
+
+  static rclcpp::callback_group::CallbackGroup::SharedPtr
+  get_group_by_subscription(
+    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & weak_sub : group->get_subscription_ptrs()) {
+          auto sub = weak_sub.lock();
+          if (sub == subscription) {
+            return group;
+          }
+        }
+      }
+    }
+    return rclcpp::callback_group::CallbackGroup::SharedPtr();
+  }
 
 
 };

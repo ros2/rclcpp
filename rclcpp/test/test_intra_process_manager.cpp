@@ -67,11 +67,13 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>);
 
-  Publisher() {
+  Publisher()
+  {
     allocator_ = std::make_shared<MessageAlloc>();
   }
 
-  std::shared_ptr<MessageAlloc> get_allocator() {
+  std::shared_ptr<MessageAlloc> get_allocator()
+  {
     return allocator_;
   }
 };

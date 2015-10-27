@@ -45,7 +45,8 @@ class AnySubscriptionCallback
   using ConstSharedPtrWithInfoCallback =
       std::function<void(const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
   using UniquePtrCallback = std::function<void(MessageUniquePtr)>;
-  using UniquePtrWithInfoCallback = std::function<void(MessageUniquePtr, const rmw_message_info_t &)>;
+  using UniquePtrWithInfoCallback =
+      std::function<void(MessageUniquePtr, const rmw_message_info_t &)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback_;

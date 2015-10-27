@@ -124,7 +124,8 @@ public:
 
   //IntraProcessManager() = default;
   IntraProcessManager(IntraProcessManagerStateBase::SharedPtr state = create_default_state())
-    : state_(state) {
+  : state_(state)
+  {
   }
 
   /// Register a subscription with the manager, returns subscriptions unique id.
@@ -317,7 +318,7 @@ public:
       message_sequence_number,
       requesting_subscriptions_intra_process_id,
       buffer
-    );
+      );
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       return;

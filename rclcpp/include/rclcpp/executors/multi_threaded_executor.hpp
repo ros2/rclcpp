@@ -41,7 +41,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(MultiThreadedExecutor);
 
   MultiThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms =
-    memory_strategy::create_default_strategy())
+    memory_strategies::create_default_strategy())
   : executor::Executor(ms)
   {
     number_of_threads_ = std::thread::hardware_concurrency();
