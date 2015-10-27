@@ -643,4 +643,11 @@ Node::count_subscribers(const std::string & topic_name) const
   return count;
 }
 
+
+const Node::CallbackGroupWeakPtrList &
+Node::get_callback_groups() const
+{
+  return callback_groups_;
+}
+
 #endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */

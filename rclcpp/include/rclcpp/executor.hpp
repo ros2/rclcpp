@@ -228,7 +228,7 @@ protected:
       execute_client(any_exec->client);
     }
     // Reset the callback_group, regardless of type
-    any_exec->callback_group->can_be_taken_from_.store(true);
+    any_exec->callback_group->can_be_taken_from().store(true);
     // Wake the wait, because it may need to be recalculated or work that
     // was previously blocked is now available.
     rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
@@ -245,7 +245,8 @@ protected:
     bool taken = false;
     rmw_message_info_t message_info;
     auto ret =
-      rmw_take_with_info(subscription->subscription_handle_, message.get(), &taken, &message_info);
+      rmw_take_with_info(subscription->get_subscription_handle(),
+        message.get(), &taken, &message_info);
     if (ret == RMW_RET_OK) {
       if (taken) {
         message_info.from_intra_process = false;
@@ -267,7 +268,7 @@ protected:
     bool taken = false;
     rmw_message_info_t message_info;
     rmw_ret_t status = rmw_take_with_info(
-      subscription->intra_process_subscription_handle_,
+      subscription->get_intra_process_subscription_handle(),
       &ipm,
       &taken,
       &message_info);
@@ -287,7 +288,7 @@ protected:
   execute_timer(
     rclcpp::timer::TimerBase::SharedPtr timer)
   {
-    timer->callback_();
+    timer->execute_callback();
   }
 
   static void
@@ -298,7 +299,7 @@ protected:
     std::shared_ptr<void> request = service->create_request();
     bool taken = false;
     rmw_ret_t status = rmw_take_request(
-      service->service_handle_,
+      service->get_service_handle(),
       request_header.get(),
       request.get(),
       &taken);
@@ -321,7 +322,7 @@ protected:
     std::shared_ptr<void> response = client->create_response();
     bool taken = false;
     rmw_ret_t status = rmw_take_response(
-      client->client_handle_,
+      client->get_client_handle(),
       request_header.get(),
       response.get(),
       &taken);
@@ -353,21 +354,21 @@ protected:
         has_invalid_weak_nodes = false;
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
-        if (!group || !group->can_be_taken_from_.load()) {
+        if (!group || !group->can_be_taken_from().load()) {
           continue;
         }
-        for (auto & weak_subscription : group->subscription_ptrs_) {
+        for (auto & weak_subscription : group->get_subscription_ptrs()) {
           auto subscription = weak_subscription.lock();
           if (subscription) {
             memory_strategy_->subs.push_back(subscription);
           }
         }
-        for (auto & service : group->service_ptrs_) {
+        for (auto & service : group->get_service_ptrs()) {
           memory_strategy_->services.push_back(service);
         }
-        for (auto & client : group->client_ptrs_) {
+        for (auto & client : group->get_client_ptrs()) {
           memory_strategy_->clients.push_back(client);
         }
       }
@@ -397,10 +398,10 @@ protected:
     // Then fill the SubscriberHandles with ready subscriptions
     for (auto & subscription : memory_strategy_->subs) {
       subscriber_handles.subscribers[subscriber_handles.subscriber_count++] =
-        subscription->subscription_handle_->data;
-      if (subscription->intra_process_subscription_handle_) {
+        subscription->get_subscription_handle()->data;
+      if (subscription->get_intra_process_subscription_handle()) {
         subscriber_handles.subscribers[subscriber_handles.subscriber_count++] =
-          subscription->intra_process_subscription_handle_->data;
+          subscription->get_intra_process_subscription_handle()->data;
       }
     }
 
@@ -420,7 +421,7 @@ protected:
     size_t service_handle_index = 0;
     for (auto & service : memory_strategy_->services) {
       service_handles.services[service_handle_index] = \
-        service->service_handle_->data;
+        service->get_service_handle()->data;
       service_handle_index += 1;
     }
 
@@ -438,7 +439,7 @@ protected:
     size_t client_handle_index = 0;
     for (auto & client : memory_strategy_->clients) {
       client_handles.clients[client_handle_index] = \
-        client->client_handle_->data;
+        client->get_client_handle()->data;
       client_handle_index += 1;
     }
 
@@ -556,19 +557,19 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto & weak_subscription : group->subscription_ptrs_) {
+        for (auto & weak_subscription : group->get_subscription_ptrs()) {
           auto subscription = weak_subscription.lock();
           if (subscription) {
-            if (subscription->subscription_handle_->data == subscriber_handle) {
+            if (subscription->get_subscription_handle()->data == subscriber_handle) {
               return subscription;
             }
-            if (subscription->intra_process_subscription_handle_ &&
-              subscription->intra_process_subscription_handle_->data == subscriber_handle)
+            if (subscription->get_intra_process_subscription_handle() &&
+              subscription->get_intra_process_subscription_handle()->data == subscriber_handle)
             {
               return subscription;
             }
@@ -587,13 +588,13 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto & service : group->service_ptrs_) {
-          if (service->service_handle_->data == service_handle) {
+        for (auto & service : group->get_service_ptrs()) {
+          if (service->get_service_handle()->data == service_handle) {
             return service;
           }
         }
@@ -610,13 +611,13 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto & client : group->client_ptrs_) {
-          if (client->client_handle_->data == client_handle) {
+        for (auto & client : group->get_client_ptrs()) {
+          if (client->get_client_handle()->data == client_handle) {
             return client;
           }
         }
@@ -636,7 +637,7 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto callback_group = weak_group.lock();
         if (callback_group == group) {
           return node;
@@ -655,12 +656,12 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto & weak_timer : group->timer_ptrs_) {
+        for (auto & weak_timer : group->get_timer_ptrs()) {
           auto t = weak_timer.lock();
           if (t == timer) {
             return group;
@@ -679,12 +680,12 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
-        if (!group || !group->can_be_taken_from_.load()) {
+        if (!group || !group->can_be_taken_from().load()) {
           continue;
         }
-        for (auto & timer_ref : group->timer_ptrs_) {
+        for (auto & timer_ref : group->get_timer_ptrs()) {
           auto timer = timer_ref.lock();
           if (timer && timer->check_and_trigger()) {
             any_exec->timer = timer;
@@ -707,12 +708,12 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
-        if (!group || !group->can_be_taken_from_.load()) {
+        if (!group || !group->can_be_taken_from().load()) {
           continue;
         }
-        for (auto & timer_ref : group->timer_ptrs_) {
+        for (auto & timer_ref : group->get_timer_ptrs()) {
           timers_empty = false;
           // Check the expected trigger time
           auto timer = timer_ref.lock();
@@ -737,12 +738,12 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto & weak_sub : group->subscription_ptrs_) {
+        for (auto & weak_sub : group->get_subscription_ptrs()) {
           auto sub = weak_sub.lock();
           if (sub == subscription) {
             return group;
@@ -762,8 +763,8 @@ protected:
       if (subscription) {
         // Figure out if this is for intra-process or not.
         bool is_intra_process = false;
-        if (subscription->intra_process_subscription_handle_) {
-          is_intra_process = subscription->intra_process_subscription_handle_->data == *it;
+        if (subscription->get_intra_process_subscription_handle()) {
+          is_intra_process = subscription->get_intra_process_subscription_handle()->data == *it;
         }
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_subscription(subscription);
@@ -773,7 +774,7 @@ protected:
           subscriber_handles_.erase(it++);
           continue;
         }
-        if (!group->can_be_taken_from_.load()) {
+        if (!group->can_be_taken_from().load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
@@ -804,12 +805,12 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto & serv : group->service_ptrs_) {
+        for (auto & serv : group->get_service_ptrs()) {
           if (serv == service) {
             return group;
           }
@@ -834,7 +835,7 @@ protected:
           service_handles_.erase(it++);
           continue;
         }
-        if (!group->can_be_taken_from_.load()) {
+        if (!group->can_be_taken_from().load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
@@ -861,12 +862,12 @@ protected:
       if (!node) {
         continue;
       }
-      for (auto & weak_group : node->callback_groups_) {
+      for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
         if (!group) {
           continue;
         }
-        for (auto & cli : group->client_ptrs_) {
+        for (auto & cli : group->get_client_ptrs()) {
           if (cli == client) {
             return group;
           }
@@ -891,7 +892,7 @@ protected:
           client_handles_.erase(it++);
           continue;
         }
-        if (!group->can_be_taken_from_.load()) {
+        if (!group->can_be_taken_from().load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
@@ -957,13 +958,13 @@ protected:
     if (any_exec) {
       // If it is valid, check to see if the group is mutually exclusive or
       // not, then mark it accordingly
-      if (any_exec->callback_group && any_exec->callback_group->type_ == \
+      if (any_exec->callback_group && any_exec->callback_group->type() == \
         callback_group::CallbackGroupType::MutuallyExclusive)
       {
         // It should not have been taken otherwise
-        assert(any_exec->callback_group->can_be_taken_from_.load());
+        assert(any_exec->callback_group->can_be_taken_from().load());
         // Set to false to indicate something is being run from this group
-        any_exec->callback_group->can_be_taken_from_.store(false);
+        any_exec->callback_group->can_be_taken_from().store(false);
       }
     }
     return any_exec;

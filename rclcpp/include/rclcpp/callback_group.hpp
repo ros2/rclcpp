@@ -32,10 +32,6 @@ namespace node
 {
 class Node;
 } // namespace node
-namespace executor
-{
-class Executor;
-} // namespace executor
 
 namespace callback_group
 {
@@ -49,7 +45,6 @@ enum class CallbackGroupType
 class CallbackGroup
 {
   friend class rclcpp::node::Node;
-  friend class rclcpp::executor::Executor;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup);
@@ -57,6 +52,40 @@ public:
   CallbackGroup(CallbackGroupType group_type)
   : type_(group_type), can_be_taken_from_(true)
   {}
+
+  const std::vector<subscription::SubscriptionBase::WeakPtr> &
+  get_subscription_ptrs() const
+  {
+    return subscription_ptrs_;
+  }
+
+  const std::vector<timer::TimerBase::WeakPtr> &
+  get_timer_ptrs() const
+  {
+    return timer_ptrs_;
+  }
+
+  const std::vector<service::ServiceBase::SharedPtr> &
+  get_service_ptrs() const
+  {
+    return service_ptrs_;
+  }
+
+  const std::vector<client::ClientBase::SharedPtr> &
+  get_client_ptrs() const
+  {
+    return client_ptrs_;
+  }
+
+  std::atomic_bool & can_be_taken_from()
+  {
+    return can_be_taken_from_;
+  }
+
+  const CallbackGroupType & type() const
+  {
+    return type_;
+  }
 
 private:
   RCLCPP_DISABLE_COPY(CallbackGroup);
