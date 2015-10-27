@@ -43,14 +43,14 @@ class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>);
 
-  using WeakNode = std::weak_ptr<rclcpp::node::Node>>;
-  using NodeVector = std::vector<WeakNode>;
 
   using ExecAllocTraits = allocator::AllocRebind<executor::AnyExecutable, Alloc>;
   using ExecAlloc = typename ExecAllocTraits::allocator_type;
   using ExecDeleter = allocator::Deleter<ExecAlloc, executor::AnyExecutable>;
   using VoidAllocTraits = typename allocator::AllocRebind<void *, Alloc>;
   using VoidAlloc = typename VoidAllocTraits::allocator_type;
+
+  using NodeVector = typename std::vector<std::weak_ptr<rclcpp::node::Node>>>;
 
   AllocatorMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {

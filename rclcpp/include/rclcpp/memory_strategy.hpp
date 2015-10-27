@@ -38,7 +38,7 @@ class MemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy);
-  using WeakNodeVector = std::vector<std::weak_ptr<rclcpp::node::Node>>>;
+  using WeakNodeVector = typename std::vector<std::weak_ptr<rclcpp::node::Node>>>;
 
   // return the new number of subscribers
   virtual size_t fill_subscriber_handles(void ** ptr) = 0;

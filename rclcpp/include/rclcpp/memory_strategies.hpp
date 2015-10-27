@@ -31,10 +31,10 @@ using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrat
 }  /* memory_strategies */
 
 namespace memory_strategy {
-  MemoryStrategy::SharedPtr create_default_strategy() {
+  static MemoryStrategy::SharedPtr create_default_strategy() {
     return std::make_shared<memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
   }
-}
+} /* memory_strategy */
 
 }  /* rclcpp */
 
