@@ -27,7 +27,7 @@
 
 #include <rclcpp/any_executable.hpp>
 #include <rclcpp/macros.hpp>
-#include <rclcpp/memory_strategy.hpp>
+#include <rclcpp/memory_strategies.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
 
@@ -343,10 +343,17 @@ protected:
   void
   wait_for_work(std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
   {
+    /*
     memory_strategy_->subs.clear();
     memory_strategy_->services.clear();
     memory_strategy_->clients.clear();
+    */
+    memory_strategy_->clear_active_entities();
+
     // Collect the subscriptions and timers to be waited on
+    bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
+
+    /*
     bool has_invalid_weak_nodes = false;
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
@@ -373,6 +380,8 @@ protected:
         }
       }
     }
+    */
+
     // Clean up any invalid nodes, if they were detected
     if (has_invalid_weak_nodes) {
       weak_nodes_.erase(
@@ -382,7 +391,22 @@ protected:
             return i.expired();
           }));
     }
+
+
     // Use the number of subscriptions to allocate memory in the handles
+    rmw_subscriptions_t subscriber_handles;
+    subscriber_handles.subscriber_count =
+      memory_strategy_->fill_subscriber_handles(subscriber_handles.subscribers);
+
+    rmw_services_t service_handles;
+    service_handles.service_count =
+      memory_strategy_->fill_service_handles(service_handles.services);
+
+    rmw_clients_t client_handles;
+    client_handles.client_count =
+      memory_strategy_->fill_client_handles(client_handles.clients);
+
+    /*
     size_t max_number_of_subscriptions = memory_strategy_->subs.size() * 2;  // Times two for intra-process.
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count = 0;
@@ -442,14 +466,16 @@ protected:
         client->get_client_handle()->data;
       client_handle_index += 1;
     }
+    */
 
     // The number of guard conditions is fixed at 2: 1 for the ctrl-c guard cond,
     // and one for the executor's guard cond (interrupt_guard_condition_)
     size_t number_of_guard_conds = 2;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
-    guard_condition_handles.guard_conditions =
-      memory_strategy_->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);
+    /*guard_condition_handles.guard_conditions =
+      memory_strategy_->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);*/
+    guard_condition_handles.guard_conditions = static_cast<void**>(guard_cond_handles_.data());
     if (guard_condition_handles.guard_conditions == NULL &&
       number_of_guard_conds > 0)
     {
@@ -500,6 +526,7 @@ protected:
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
       // Make sure to free or clean memory
+      /*
       memory_strategy_->return_handles(HandleType::subscription_handle,
         subscriber_handles.subscribers);
       memory_strategy_->return_handles(HandleType::service_handle,
@@ -508,10 +535,13 @@ protected:
         client_handles.clients);
       memory_strategy_->return_handles(HandleType::guard_condition_handle,
         guard_condition_handles.guard_conditions);
+      */
+      memory_strategy_->clear_handles();
       return;
     }
     // Add the new work to the class's list of things waiting to be executed
     // Starting with the subscribers
+    /*
     for (size_t i = 0; i < subscriber_handles.subscriber_count; ++i) {
       void * handle = subscriber_handles.subscribers[i];
       if (handle) {
@@ -545,10 +575,13 @@ protected:
     memory_strategy_->subs.clear();
     memory_strategy_->services.clear();
     memory_strategy_->clients.clear();
+    */
+    memory_strategy_->clear_active_entities();
   }
 
 /******************************/
 
+/*
   rclcpp::subscription::SubscriptionBase::SharedPtr
   get_subscription_by_handle(void * subscriber_handle)
   {
@@ -579,6 +612,7 @@ protected:
     }
     return nullptr;
   }
+*/
 
   rclcpp::service::ServiceBase::SharedPtr
   get_service_by_handle(void * service_handle)
@@ -729,6 +763,7 @@ protected:
     return latest;
   }
 
+  /*
   rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_subscription(
     rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
@@ -909,28 +944,29 @@ protected:
       client_handles_.erase(it++);
     }
   }
+*/
 
   AnyExecutable::SharedPtr
   get_next_ready_executable()
   {
-    auto any_exec = this->memory_strategy_->instantiate_next_executable();
+    auto any_exec = memory_strategy_->instantiate_next_executable();
     // Check the timers to see if there are any that are ready, if so return
     get_next_timer(any_exec);
     if (any_exec->timer) {
       return any_exec;
     }
     // Check the subscriptions to see if there are any that are ready
-    get_next_subscription(any_exec);
+    memory_strategy_->get_next_subscription(any_exec, weak_nodes_);
     if (any_exec->subscription || any_exec->subscription_intra_process) {
       return any_exec;
     }
     // Check the services to see if there are any that are ready
-    get_next_service(any_exec);
+    memory_strategy_->get_next_service(any_exec, weak_nodes_);
     if (any_exec->service) {
       return any_exec;
     }
     // Check the clients to see if there are any that are ready
-    get_next_client(any_exec);
+    memory_strategy_->get_next_client(any_exec, weak_nodes_);
     if (any_exec->client) {
       return any_exec;
     }
@@ -980,12 +1016,15 @@ private:
   RCLCPP_DISABLE_COPY(Executor);
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
+  std::array<void*, 2> guard_cond_handles_;
+  /*
   using SubscriberHandles = std::list<void *>;
   SubscriberHandles subscriber_handles_;
   using ServiceHandles = std::list<void *>;
   ServiceHandles service_handles_;
   using ClientHandles = std::list<void *>;
   ClientHandles client_handles_;
+  */
 };
 
 } /* executor */
