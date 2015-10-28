@@ -28,7 +28,7 @@
 
 namespace rclcpp
 {
-
+// NOLINTNEXTLINE(runtime/int)
 const std::chrono::seconds operator"" _s(unsigned long long s)
 {
   return std::chrono::seconds(s);
@@ -40,6 +40,7 @@ const std::chrono::nanoseconds operator"" _s(long double s)
 }
 
 const std::chrono::nanoseconds
+// NOLINTNEXTLINE(runtime/int)
 operator"" _ms(unsigned long long ms)
 {
   return std::chrono::milliseconds(ms);
@@ -52,6 +53,7 @@ operator"" _ms(long double ms)
 }
 
 const std::chrono::nanoseconds
+// NOLINTNEXTLINE(runtime/int)
 operator"" _ns(unsigned long long ns)
 {
   return std::chrono::nanoseconds(ns);
