@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_EXECUTORS_MULTI_THREADED_EXECUTOR_HPP_
-#define RCLCPP_RCLCPP_EXECUTORS_MULTI_THREADED_EXECUTOR_HPP_
+#ifndef RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
+#define RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
+
+#include <rmw/rmw.h>
 
 #include <cassert>
 #include <cstdlib>
@@ -21,12 +23,10 @@
 #include <mutex>
 #include <vector>
 
-#include <rmw/rmw.h>
-
-#include <rclcpp/executor.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/executor.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 
 namespace rclcpp
 {
@@ -97,11 +97,10 @@ private:
 
   std::mutex wait_mutex_;
   size_t number_of_threads_;
-
 };
 
-} /* namespace multi_threaded_executor */
-} /* namespace executors */
-} /* namespace rclcpp */
+}  // namespace multi_threaded_executor
+}  // namespace executors
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_EXECUTORS_MULTI_THREADED_EXECUTOR_HPP_ */
+#endif  // RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_

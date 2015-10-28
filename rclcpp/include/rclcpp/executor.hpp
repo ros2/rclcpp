@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_EXECUTOR_HPP_
-#define RCLCPP_RCLCPP_EXECUTOR_HPP_
+#ifndef RCLCPP__EXECUTOR_HPP_
+#define RCLCPP__EXECUTOR_HPP_
 
 #include <algorithm>
 #include <cassert>
@@ -23,14 +23,14 @@
 #include <memory>
 #include <vector>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
+#include "rcl_interfaces/msg/intra_process_message.hpp"
 
-#include <rclcpp/any_executable.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/memory_strategy.hpp>
-#include <rclcpp/memory_strategies.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/any_executable.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/memory_strategies.hpp"
+#include "rclcpp/memory_strategy.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 
 namespace rclcpp
 {
@@ -49,7 +49,6 @@ namespace executor
  */
 class Executor
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Executor);
 
@@ -94,7 +93,7 @@ public:
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
       if (node == node_ptr) {
-        // TODO: Use a different error here?
+        // TODO(jacquelinekay): Use a different error here?
         throw std::runtime_error("Cannot add node to executor, node already added.");
       }
     }
@@ -358,7 +357,6 @@ protected:
           }));
     }
 
-
     // Use the number of subscriptions to allocate memory in the handles
     rmw_subscriptions_t subscriber_handles;
     subscriber_handles.subscriber_count =
@@ -431,9 +429,8 @@ protected:
       memory_strategy_->clear_handles();
       return;
     }
-    // Add the new work to the class's list of things waiting to be executed
-    // Starting with the subscribers
-    memory_strategy_->clear_active_entities();
+
+    memory_strategy_->revalidate_handles();
   }
 
 /******************************/
@@ -565,7 +562,7 @@ protected:
       return any_exec;
     }
     // If there is no ready executable, return a null ptr
-    return std::shared_ptr<AnyExecutable>();
+    return nullptr;
   }
 
   template<typename T = std::milli>
@@ -613,7 +610,7 @@ private:
   std::array<void *, 2> guard_cond_handles_;
 };
 
-} /* executor */
-} /* rclcpp */
+}  // namespace executor
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_EXECUTOR_HPP_ */
+#endif  // RCLCPP__EXECUTOR_HPP_

@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_MSG_MEMORY_STRATEGY_HPP_
-#define RCLCPP_RCLCPP_MSG_MEMORY_STRATEGY_HPP_
+#ifndef RCLCPP__MESSAGE_MEMORY_STRATEGY_HPP_
+#define RCLCPP__MESSAGE_MEMORY_STRATEGY_HPP_
 
 #include <memory>
 
-#include <rclcpp/allocator/allocator_common.hpp>
-#include <rclcpp/macros.hpp>
+#include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
@@ -30,7 +30,6 @@ namespace message_memory_strategy
 template<typename MessageT, typename Alloc = std::allocator<void>>
 class MessageMemoryStrategy
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MessageMemoryStrategy);
 
@@ -43,7 +42,7 @@ public:
     message_allocator_ = std::make_shared<MessageAlloc>();
   }
 
-  MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
+  explicit MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
   }
@@ -72,7 +71,7 @@ public:
   MessageDeleter message_deleter_;
 };
 
-}  /* message_memory_strategy */
-}  /* rclcpp */
+}  // namespace message_memory_strategy
+}  // namespace rclcpp
 
-#endif  /* RCLCPP_RCLCPP_MSG_MEMORY_STRATEGY_HPP_ */
+#endif  // RCLCPP__MESSAGE_MEMORY_STRATEGY_HPP_

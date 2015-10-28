@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_SUBSCRIPTION_HPP_
-#define RCLCPP_RCLCPP_SUBSCRIPTION_HPP_
+#ifndef RCLCPP__SUBSCRIPTION_HPP_
+#define RCLCPP__SUBSCRIPTION_HPP_
+
+#include <rmw/error_handling.h>
+#include <rmw/rmw.h>
 
 #include <functional>
 #include <iostream>
@@ -21,13 +24,11 @@
 #include <sstream>
 #include <string>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
+#include "rcl_interfaces/msg/intra_process_message.hpp"
 
-#include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
-#include <rclcpp/any_subscription_callback.hpp>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/any_subscription_callback.hpp"
 
 namespace rclcpp
 {
@@ -35,7 +36,7 @@ namespace rclcpp
 namespace node
 {
 class Node;
-} // namespace node
+}  // namespace node
 
 namespace subscription
 {
@@ -44,7 +45,6 @@ namespace subscription
 /// specializations of Subscription, among other things.
 class SubscriptionBase
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase);
 
@@ -138,7 +138,6 @@ private:
 
   std::string topic_name_;
   bool ignore_local_publications_;
-
 };
 
 using namespace any_subscription_callback;
@@ -279,7 +278,7 @@ private:
   uint64_t intra_process_subscription_id_;
 };
 
-} /* namespace subscription */
-} /* namespace rclcpp */
+}  // namespace subscription
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_SUBSCRIPTION_HPP_ */
+#endif  // RCLCPP__SUBSCRIPTION_HPP_

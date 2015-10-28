@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP__ALLOCATOR_COMMON__HPP_
-#define RCLCPP_RCLCPP__ALLOCATOR_COMMON__HPP_
+#ifndef RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
+#define RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
 
 #include <memory>
 
-#include <rclcpp/allocator/allocator_deleter.hpp>
+#include "rclcpp/allocator/allocator_deleter.hpp"
 
 namespace rclcpp
 {
 namespace allocator
 {
 
-template<typename U, typename Alloc>
-using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<U>;
+template<typename T, typename Alloc>
+using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
 
-}
-}
+}  // namespace allocator
+}  // namespace rclcpp
 
-#endif
+#endif  // RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_

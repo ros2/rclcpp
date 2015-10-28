@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_ALLOCATOR_DELETER_HPP_
-#define RCLCPP_RCLCPP_ALLOCATOR_DELETER_HPP_
+#ifndef RCLCPP__ALLOCATOR__ALLOCATOR_DELETER_HPP_
+#define RCLCPP__ALLOCATOR__ALLOCATOR_DELETER_HPP_
 
 #include <memory>
 
@@ -26,33 +26,32 @@ namespace allocator
 template<typename Allocator>
 class AllocatorDeleter
 {
-  template<typename U>
-  using AllocRebind = typename std::allocator_traits<Allocator>::template rebind_alloc<U>;
+  template<typename T>
+  using AllocRebind = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
 public:
   AllocatorDeleter()
-  : allocator_(NULL)
+  : allocator_(nullptr)
   {
   }
 
-  AllocatorDeleter(Allocator * a)
+  explicit AllocatorDeleter(Allocator * a)
   : allocator_(a)
   {
   }
 
-  template<typename U>
-  AllocatorDeleter(const AllocatorDeleter<U> & a)
+  template<typename T>
+  AllocatorDeleter(const AllocatorDeleter<T> & a)
   {
     allocator_ = a.get_allocator();
   }
 
-  template<typename U>
-  void operator()(U * ptr)
+  template<typename T>
+  void operator()(T * ptr)
   {
-    std::allocator_traits<AllocRebind<U>>::destroy(*allocator_, ptr);
-    // TODO: figure out if we're guaranteed to be destroying only 1 item here
-    std::allocator_traits<AllocRebind<U>>::deallocate(*allocator_, ptr, 1);
-    ptr = NULL;
+    std::allocator_traits<AllocRebind<T>>::destroy(*allocator_, ptr);
+    std::allocator_traits<AllocRebind<T>>::deallocate(*allocator_, ptr, 1);
+    ptr = nullptr;
   }
 
   Allocator * get_allocator() const
@@ -100,7 +99,7 @@ using Deleter = typename std::conditional<
     std::default_delete<T>,
     AllocatorDeleter<Alloc>
     >::type;
-}
-}
+}  // namespace allocator
+}  // namespace rclcpp
 
-#endif
+#endif  // RCLCPP__ALLOCATOR__ALLOCATOR_DELETER_HPP_

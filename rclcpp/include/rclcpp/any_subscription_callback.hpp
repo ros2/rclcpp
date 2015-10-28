@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_ANY_SUBSCRIPTION_CALLBACK_HPP_
-#define RCLCPP_RCLCPP_ANY_SUBSCRIPTION_CALLBACK_HPP_
+#ifndef RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
+#define RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
 
-#include <rclcpp/allocator/allocator_common.hpp>
-#include <rclcpp/function_traits.hpp>
+#include <rmw/types.h>
 
 #include <functional>
 #include <memory>
 #include <type_traits>
 
-#include <rmw/types.h>
+#include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/function_traits.hpp"
 
 namespace rclcpp
 {
@@ -56,7 +56,7 @@ class AnySubscriptionCallback
   UniquePtrWithInfoCallback unique_ptr_with_info_callback_;
 
 public:
-  AnySubscriptionCallback(std::shared_ptr<Alloc> allocator)
+  explicit AnySubscriptionCallback(std::shared_ptr<Alloc> allocator)
   : shared_ptr_callback_(nullptr), shared_ptr_with_info_callback_(nullptr),
     const_shared_ptr_callback_(nullptr), const_shared_ptr_with_info_callback_(nullptr),
     unique_ptr_callback_(nullptr), unique_ptr_with_info_callback_(nullptr)
@@ -206,7 +206,7 @@ private:
   MessageDeleter message_deleter_;
 };
 
-} /* namespace any_subscription_callback */
-} /* namespace rclcpp */
+}  // namespace any_subscription_callback
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_ANY_SUBSCRIPTION_CALLBACK_HPP_ */
+#endif  // RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_

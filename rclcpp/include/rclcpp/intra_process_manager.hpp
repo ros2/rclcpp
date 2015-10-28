@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_INTRA_PROCESS_MANAGER_HPP_
-#define RCLCPP_RCLCPP_INTRA_PROCESS_MANAGER_HPP_
+#ifndef RCLCPP__INTRA_PROCESS_MANAGER_HPP_
+#define RCLCPP__INTRA_PROCESS_MANAGER_HPP_
 
-#include <rclcpp/intra_process_manager_state.hpp>
-#include <rclcpp/mapped_ring_buffer.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/subscription.hpp>
+#include <rmw/types.h>
 
 #include <algorithm>
 #include <atomic>
 #include <cstdint>
 #include <exception>
 #include <map>
+#include <memory>
 #include <unordered_map>
 #include <set>
 
-#include <rmw/types.h>
+#include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/intra_process_manager_state.hpp"
+#include "rclcpp/mapped_ring_buffer.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/subscription.hpp"
 
 namespace rclcpp
 {
@@ -122,8 +124,9 @@ private:
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManager);
 
-  //IntraProcessManager() = default;
-  IntraProcessManager(IntraProcessManagerStateBase::SharedPtr state = create_default_state())
+  explicit IntraProcessManager(
+    IntraProcessManagerStateBase::SharedPtr state = create_default_state()
+  )
   : state_(state)
   {
   }
@@ -236,19 +239,18 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template<typename MessageT, typename Alloc = std::allocator<void>>
+  template<typename MessageT, typename Alloc = std::allocator<void>,
+  typename Deleter = std::default_delete<MessageT>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::unique_ptr<MessageT,
-    typename allocator::Deleter<typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>,
-    MessageT>> & message)
+    std::unique_ptr<MessageT, Deleter> & message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
-    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc> TypedMRB;
-
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
-    auto message_seq = state_->get_publisher_info_for_id(intra_process_publisher_id, buffer);
+    using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+    uint64_t message_seq = 0;
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = state_->get_publisher_info_for_id(
+      intra_process_publisher_id, message_seq);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       throw std::runtime_error("Typecast failed due to incorrect message type");
@@ -299,25 +301,25 @@ public:
    * \param requesting_subscriptions_intra_process_id the subscription's id.
    * \param message the message typed unique_ptr used to return the message.
    */
-  template<typename MessageT, typename Alloc = std::allocator<void>>
+  template<typename MessageT, typename Alloc = std::allocator<void>,
+  typename Deleter = std::default_delete<MessageT>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    std::unique_ptr<MessageT,
-    typename allocator::Deleter<typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>,
-    MessageT>> & message)
+    std::unique_ptr<MessageT, Deleter> & message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
-    typedef typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc> TypedMRB;
+    using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+    message = nullptr;
 
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
-    size_t target_subs_size = state_->take_intra_process_message(
+    size_t target_subs_size = 0;
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = state_->take_intra_process_message(
       intra_process_publisher_id,
       message_sequence_number,
       requesting_subscriptions_intra_process_id,
-      buffer
+      target_subs_size
       );
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
@@ -365,12 +367,11 @@ private:
   static std::atomic<uint64_t> next_unique_id_;
 
   IntraProcessManagerStateBase::SharedPtr state_;
-
 };
 
 std::atomic<uint64_t> IntraProcessManager::next_unique_id_ {1};
 
-} /* namespace intra_process_manager */
-} /* namespace rclcpp */
+}  // namespace intra_process_manager
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_INTRA_PROCESS_MANAGER_HPP_ */
+#endif  // RCLCPP__INTRA_PROCESS_MANAGER_HPP_

@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_EXECUTORS_SINGLE_THREADED_EXECUTOR_HPP_
-#define RCLCPP_RCLCPP_EXECUTORS_SINGLE_THREADED_EXECUTOR_HPP_
+#ifndef RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_
+#define RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_
+
+#include <rmw/rmw.h>
 
 #include <cassert>
 #include <cstdlib>
 #include <memory>
 #include <vector>
 
-#include <rmw/rmw.h>
-
-#include <rclcpp/executor.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/memory_strategies.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/utilities.hpp>
-#include <rclcpp/rate.hpp>
+#include "rclcpp/executor.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/memory_strategies.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
+#include "rclcpp/rate.hpp"
 
 namespace rclcpp
 {
@@ -64,11 +64,10 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor);
-
 };
 
-} /* namespace single_threaded_executor */
-} /* namespace executors */
-} /* namespace rclcpp */
+}  // namespace single_threaded_executor
+}  // namespace executors
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_EXECUTORS_SINGLE_THREADED_EXECUTOR_HPP_ */
+#endif  // RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_

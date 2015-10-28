@@ -12,34 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
-#define RCLCPP_RCLCPP_NODE_IMPL_HPP_
+#ifndef RCLCPP__NODE_IMPL_HPP_
+#define RCLCPP__NODE_IMPL_HPP_
+
+#include <rmw/error_handling.h>
+#include <rmw/rmw.h>
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-#include <rosidl_generator_cpp/message_type_support.hpp>
-#include <rosidl_generator_cpp/service_type_support.hpp>
+#include "rcl_interfaces/msg/intra_process_message.hpp"
+#include "rosidl_generator_cpp/message_type_support.hpp"
+#include "rosidl_generator_cpp/service_type_support.hpp"
 
-#include <rclcpp/contexts/default_context.hpp>
-#include <rclcpp/intra_process_manager.hpp>
-#include <rclcpp/parameter.hpp>
+#include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/parameter.hpp"
 
-#ifndef RCLCPP_RCLCPP_NODE_HPP_
+#ifndef RCLCPP__NODE_HPP_
 #include "node.hpp"
 #endif
 
 using namespace rclcpp;
-using namespace rclcpp::node;
+using namespace node;
 
 Node::Node(const std::string & node_name, bool use_intra_process_comms)
 : Node(
@@ -189,7 +193,8 @@ Node::create_publisher(
       MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
       using MessageDeleter = typename publisher::Publisher<MessageT, Alloc>::MessageDeleter;
       std::unique_ptr<MessageT, MessageDeleter> unique_msg(typed_message_ptr);
-      uint64_t message_seq = ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);
+      uint64_t message_seq =
+        ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);
       return message_seq;
     };
     // *INDENT-ON*
@@ -294,7 +299,8 @@ Node::create_subscription(
           throw std::runtime_error(
             "intra process take called after destruction of intra process manager");
         }
-        ipm->take_intra_process_message<MessageT, Alloc>(publisher_id, message_sequence, subscription_id, message);
+        ipm->take_intra_process_message<MessageT, Alloc>(
+          publisher_id, message_sequence, subscription_id, message);
       },
       [weak_ipm](const rmw_gid_t * sender_gid) -> bool {
         auto ipm = weak_ipm.lock();
@@ -310,7 +316,7 @@ Node::create_subscription(
   // Assign to a group.
   if (group) {
     if (!group_in_node(group)) {
-      // TODO: use custom exception
+      // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create subscription, group not in node.");
     }
     group->add_subscription(sub_base_ptr);
@@ -354,7 +360,7 @@ Node::create_wall_timer(
   auto timer = rclcpp::timer::WallTimer::make_shared(period, callback);
   if (group) {
     if (!group_in_node(group)) {
-      // TODO: use custom exception
+      // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create timer, group not in node.");
     }
     group->add_timer(timer);
@@ -449,7 +455,7 @@ Node::create_service(
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   if (group) {
     if (!group_in_node(group)) {
-      // TODO: use custom exception
+      // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create service, group not in node.");
     }
     group->add_service(serv_base_ptr);
@@ -497,7 +503,7 @@ Node::set_parameters_atomically(
   tmp_map.insert(parameters_.begin(), parameters_.end());
   std::swap(tmp_map, parameters_);
 
-  // TODO: handle parameter constraints
+  // TODO(jacquelinekay): handle parameter constraints
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
 
@@ -667,4 +673,4 @@ Node::get_callback_groups() const
   return callback_groups_;
 }
 
-#endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */
+#endif  // RCLCPP__NODE_IMPL_HPP_

@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_PUBLISHER_HPP_
-#define RCLCPP_RCLCPP_PUBLISHER_HPP_
+#ifndef RCLCPP__PUBLISHER_HPP_
+#define RCLCPP__PUBLISHER_HPP_
 
-#include <rclcpp/macros.hpp>
+#include <rmw/error_handling.h>
+#include <rmw/rmw.h>
 
 #include <iostream>
 #include <memory>
@@ -23,12 +24,11 @@
 #include <sstream>
 #include <string>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
-#include <rmw/impl/cpp/demangle.hpp>
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
+#include "rcl_interfaces/msg/intra_process_message.hpp"
+#include "rmw/impl/cpp/demangle.hpp"
 
-#include <rclcpp/allocator/allocator_deleter.hpp>
+#include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
@@ -37,7 +37,7 @@ namespace rclcpp
 namespace node
 {
 class Node;
-} // namespace node
+}  // namespace node
 
 namespace publisher
 {
@@ -346,10 +346,9 @@ protected:
   std::shared_ptr<MessageAlloc> message_allocator_;
 
   MessageDeleter message_deleter_;
-
 };
 
-} /* namespace publisher */
-} /* namespace rclcpp */
+}  // namespace publisher
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_PUBLISHER_HPP_ */
+#endif  // RCLCPP__PUBLISHER_HPP_

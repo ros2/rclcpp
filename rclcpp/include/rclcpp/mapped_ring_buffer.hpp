@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_RING_BUFFER_HPP_
-#define RCLCPP_RCLCPP_RING_BUFFER_HPP_
-
-#include <rclcpp/allocator/allocator_common.hpp>
-#include <rclcpp/macros.hpp>
+#ifndef RCLCPP__MAPPED_RING_BUFFER_HPP_
+#define RCLCPP__MAPPED_RING_BUFFER_HPP_
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
@@ -67,7 +67,7 @@ public:
    *
    * \param size size of the ring buffer; must be positive and non-zero.
    */
-  MappedRingBuffer(size_t size, std::shared_ptr<Alloc> allocator = nullptr)
+  explicit MappedRingBuffer(size_t size, std::shared_ptr<Alloc> allocator = nullptr)
   : elements_(size), head_(0)
   {
     if (size == 0) {
@@ -224,10 +224,9 @@ private:
   std::vector<element, VectorAlloc> elements_;
   size_t head_;
   std::shared_ptr<ElemAlloc> allocator_;
-
 };
 
-} /* namespace ring_buffer */
-} /* namespace rclcpp */
+}  // namespace mapped_ring_buffer
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_RING_BUFFER_HPP_ */
+#endif  // RCLCPP__MAPPED_RING_BUFFER_HPP_

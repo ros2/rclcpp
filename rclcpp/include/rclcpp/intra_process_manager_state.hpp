@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
-#define RCLCPP__RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
+#ifndef RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
+#define RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
 
 #include <rclcpp/mapped_ring_buffer.hpp>
 #include <rclcpp/publisher.hpp>
@@ -21,11 +21,14 @@
 
 #include <algorithm>
 #include <atomic>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <map>
 #include <unordered_map>
 #include <set>
+#include <string>
+#include <utility>
 
 namespace rclcpp
 {
@@ -35,8 +38,7 @@ namespace intra_process_manager
 class IntraProcessManagerStateBase
 {
 public:
-  //RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManagerStateBase);
-  using SharedPtr = std::shared_ptr<IntraProcessManagerStateBase>;
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(IntraProcessManagerStateBase);
 
   virtual void
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription) = 0;
@@ -52,19 +54,19 @@ public:
   virtual void
   remove_publisher(uint64_t intra_process_publisher_id) = 0;
 
-  virtual uint64_t
+  virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   get_publisher_info_for_id(
     uint64_t intra_process_publisher_id,
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr & mrb) = 0;
+    uint64_t & message_seq) = 0;
 
   virtual void
   store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq) = 0;
 
-  virtual size_t
+  virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   take_intra_process_message(uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr & mrb) = 0;
+    size_t & size) = 0;
 
   virtual bool
   matches_any_publishers(const rmw_gid_t * id) const = 0;
@@ -95,7 +97,6 @@ public:
         sub_pair.second.erase(intra_process_subscription_id);
       }
     }
-
   }
 
   void add_publisher(uint64_t id,
@@ -103,7 +104,6 @@ public:
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
     size_t size)
   {
-
     publishers_[id].publisher = publisher;
     // As long as the size of the ring buffer is less than the max sequence number, we're safe.
     if (size > std::numeric_limits<uint64_t>::max()) {
@@ -121,23 +121,21 @@ public:
     publishers_.erase(intra_process_publisher_id);
   }
 
-  // TODO
   // return message_seq and mrb
-  uint64_t
+  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   get_publisher_info_for_id(
     uint64_t intra_process_publisher_id,
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr & mrb)
+    uint64_t & message_seq)
   {
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
       throw std::runtime_error("store_intra_process_message called with invalid publisher id");
     }
     PublisherInfo & info = it->second;
-    mrb = info.buffer;
     // Calculate the next message sequence number.
-    uint64_t message_seq = info.sequence_number.fetch_add(1, std::memory_order_relaxed);
+    message_seq = info.sequence_number.fetch_add(1, std::memory_order_relaxed);
 
-    return message_seq;
+    return info.buffer;
   }
 
   void
@@ -166,17 +164,15 @@ public:
         info.target_subscriptions_by_message_sequence[message_seq].end()
       )
     );
-
   }
 
-  size_t
+  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   take_intra_process_message(uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr & mrb
+    size_t & size
   )
   {
-    mrb = nullptr;
     PublisherInfo * info;
     {
       auto it = publishers_.find(intra_process_publisher_id);
@@ -206,8 +202,8 @@ public:
       }
       target_subs->erase(it);
     }
-    mrb = info->buffer;
-    return target_subs->size();
+    size = target_subs->size();
+    return info->buffer;
   }
 
   bool
@@ -229,14 +225,12 @@ private:
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
-  //using AllocString = std::basic_string<char, std::char_traits<char>, RebindAlloc<char>>;
-  using AllocString = std::string;
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
   using SubscriptionMap = std::unordered_map<uint64_t, subscription::SubscriptionBase::WeakPtr,
       std::hash<uint64_t>, std::equal_to<uint64_t>,
       RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
-  using IDTopicMap = std::map<AllocString, AllocSet,
-      std::less<AllocString>, RebindAlloc<std::pair<AllocString, AllocSet>>>;
+  using IDTopicMap = std::map<std::string, AllocSet,
+      std::less<std::string>, RebindAlloc<std::pair<std::string, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
@@ -263,7 +257,6 @@ private:
       RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
 
   PublisherMap publishers_;
-
 };
 
 static IntraProcessManagerStateBase::SharedPtr create_default_state()
@@ -271,7 +264,7 @@ static IntraProcessManagerStateBase::SharedPtr create_default_state()
   return std::make_shared<IntraProcessManagerState<>>();
 }
 
-}
-}
+}  // namespace intra_process_manager
+}  // namespace rclcpp
 
-#endif
+#endif  // RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_

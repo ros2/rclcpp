@@ -12,48 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_NODE_HPP_
-#define RCLCPP_RCLCPP_NODE_HPP_
+#ifndef RCLCPP__NODE_HPP_
+#define RCLCPP__NODE_HPP_
 
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
 #include <tuple>
+#include <vector>
 
-#include <rcl_interfaces/msg/list_parameters_result.hpp>
-#include <rcl_interfaces/msg/parameter_descriptor.hpp>
-#include <rcl_interfaces/msg/parameter_event.hpp>
-#include <rcl_interfaces/msg/set_parameters_result.hpp>
-#include <rosidl_generator_cpp/message_type_support.hpp>
+#include "rcl_interfaces/msg/list_parameters_result.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+#include "rcl_interfaces/msg/parameter_event.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
+#include "rosidl_generator_cpp/message_type_support.hpp"
 
-#include <rclcpp/callback_group.hpp>
-#include <rclcpp/client.hpp>
-#include <rclcpp/context.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
-#include <rclcpp/parameter.hpp>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/service.hpp>
-#include <rclcpp/subscription.hpp>
-#include <rclcpp/timer.hpp>
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/context.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/timer.hpp"
 
 
 // Forward declaration of ROS middleware class
 namespace rmw
 {
 struct rmw_node_t;
-} // namespace rmw
+}  // namespace rmw
 
 namespace rclcpp
 {
-
 
 namespace node
 {
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
@@ -63,7 +63,7 @@ public:
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
-  Node(const std::string & node_name, bool use_intra_process_comms = false);
+  explicit Node(const std::string & node_name, bool use_intra_process_comms = false);
 
   /// Create a node based on the node name and a rclcpp::context::Context.
   /**
@@ -278,9 +278,9 @@ const rosidl_message_type_support_t * Node::ipm_ts_ =
                make_shared())); \
   }
 
-#ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
+#ifndef RCLCPP__NODE_IMPL_HPP_
 // Template implementations
 #include "node_impl.hpp"
 #endif
 
-#endif /* RCLCPP_RCLCPP_NODE_HPP_ */
+#endif  // RCLCPP__NODE_HPP_
