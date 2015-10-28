@@ -66,8 +66,8 @@ Node::Node(
   _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
 #endif
   if (ros_domain_id) {
-    unsigned long number = strtoul(ros_domain_id, NULL, 0);
-    if (number == (std::numeric_limits<unsigned long>::max)()) {
+    uint32_t number = strtoul(ros_domain_id, NULL, 0);
+    if (number == (std::numeric_limits<uint32_t>::max)()) {
       throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
     domain_id = static_cast<size_t>(number);
