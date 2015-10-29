@@ -113,27 +113,27 @@ public:
   {
     {
       VectorRebind<void *> temp;
-      for (size_t i = 0; i < subscriptions_.size() * 2; i++) {
-        if (subscriber_handles_[i]) {
-          temp.push_back(subscriber_handles_[i]);
+      for (auto & subscriber_handle : subscriber_handles_) {
+        if (subscriber_handle) {
+          temp.push_back(subscriber_handle);
         }
       }
       subscriber_handles_.swap(temp);
     }
     {
       VectorRebind<void *> temp;
-      for (size_t i = 0; i < services_.size(); i++) {
-        if (service_handles_[i]) {
-          temp.push_back(service_handles_[i]);
+      for (auto & service_handle : service_handles_) {
+        if (service_handle) {
+          temp.push_back(service_handle);
         }
       }
       service_handles_.swap(temp);
     }
     {
       VectorRebind<void *> temp;
-      for (size_t i = 0; i < clients_.size(); i++) {
-        if (client_handles_[i]) {
-          temp.push_back(client_handles_[i]);
+      for (auto & client_handle : client_handles_) {
+        if (client_handle) {
+          temp.push_back(client_handle);
         }
       }
       client_handles_.swap(temp);
