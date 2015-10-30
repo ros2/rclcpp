@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_EXECUTOR_HPP_
-#define RCLCPP_RCLCPP_EXECUTOR_HPP_
+#ifndef RCLCPP__EXECUTOR_HPP_
+#define RCLCPP__EXECUTOR_HPP_
 
 #include <algorithm>
 #include <cassert>
@@ -23,13 +23,14 @@
 #include <memory>
 #include <vector>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
+#include "rcl_interfaces/msg/intra_process_message.hpp"
 
-#include <rclcpp/any_executable.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/memory_strategy.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/any_executable.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/memory_strategies.hpp"
+#include "rclcpp/memory_strategy.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 
 namespace rclcpp
 {
@@ -48,15 +49,13 @@ namespace executor
  */
 class Executor
 {
-  friend class memory_strategy::MemoryStrategy;
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Executor);
 
   /// Default constructor.
   // \param[in] ms The memory strategy to be used with this executor.
   explicit Executor(memory_strategy::MemoryStrategy::SharedPtr ms =
-    memory_strategy::create_default_strategy())
+    memory_strategies::create_default_strategy())
   : interrupt_guard_condition_(rmw_create_guard_condition()),
     memory_strategy_(ms)
   {
@@ -94,7 +93,7 @@ public:
     for (auto & weak_node : weak_nodes_) {
       auto node = weak_node.lock();
       if (node == node_ptr) {
-        // TODO: Use a different error here?
+        // TODO(jacquelinekay): Use a different error here?
         throw std::runtime_error("Cannot add node to executor, node already added.");
       }
     }
@@ -343,36 +342,11 @@ protected:
   void
   wait_for_work(std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
   {
-    memory_strategy_->subs.clear();
-    memory_strategy_->services.clear();
-    memory_strategy_->clients.clear();
+    memory_strategy_->clear_active_entities();
+
     // Collect the subscriptions and timers to be waited on
-    bool has_invalid_weak_nodes = false;
-    for (auto & weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        has_invalid_weak_nodes = false;
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group || !group->can_be_taken_from().load()) {
-          continue;
-        }
-        for (auto & weak_subscription : group->get_subscription_ptrs()) {
-          auto subscription = weak_subscription.lock();
-          if (subscription) {
-            memory_strategy_->subs.push_back(subscription);
-          }
-        }
-        for (auto & service : group->get_service_ptrs()) {
-          memory_strategy_->services.push_back(service);
-        }
-        for (auto & client : group->get_client_ptrs()) {
-          memory_strategy_->clients.push_back(client);
-        }
-      }
-    }
+    bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
+
     // Clean up any invalid nodes, if they were detected
     if (has_invalid_weak_nodes) {
       weak_nodes_.erase(
@@ -382,74 +356,26 @@ protected:
             return i.expired();
           }));
     }
+
     // Use the number of subscriptions to allocate memory in the handles
-    size_t max_number_of_subscriptions = memory_strategy_->subs.size() * 2;  // Times two for intra-process.
     rmw_subscriptions_t subscriber_handles;
-    subscriber_handles.subscriber_count = 0;
-    // TODO(wjwwood): Avoid redundant malloc's
-    subscriber_handles.subscribers = memory_strategy_->borrow_handles(
-      HandleType::subscription_handle, max_number_of_subscriptions);
-    if (subscriber_handles.subscribers == NULL &&
-      max_number_of_subscriptions > 0)
-    {
-      // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error("Could not malloc for subscriber pointers.");
-    }
-    // Then fill the SubscriberHandles with ready subscriptions
-    for (auto & subscription : memory_strategy_->subs) {
-      subscriber_handles.subscribers[subscriber_handles.subscriber_count++] =
-        subscription->get_subscription_handle()->data;
-      if (subscription->get_intra_process_subscription_handle()) {
-        subscriber_handles.subscribers[subscriber_handles.subscriber_count++] =
-          subscription->get_intra_process_subscription_handle()->data;
-      }
-    }
+    subscriber_handles.subscriber_count =
+      memory_strategy_->fill_subscriber_handles(subscriber_handles.subscribers);
 
-    // Use the number of services to allocate memory in the handles
-    size_t number_of_services = memory_strategy_->services.size();
     rmw_services_t service_handles;
-    service_handles.service_count = number_of_services;
-    service_handles.services =
-      memory_strategy_->borrow_handles(HandleType::service_handle, number_of_services);
-    if (service_handles.services == NULL &&
-      number_of_services > 0)
-    {
-      // TODO(esteve): Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error("Could not malloc for service pointers.");
-    }
-    // Then fill the ServiceHandles with ready services
-    size_t service_handle_index = 0;
-    for (auto & service : memory_strategy_->services) {
-      service_handles.services[service_handle_index] = \
-        service->get_service_handle()->data;
-      service_handle_index += 1;
-    }
+    service_handles.service_count =
+      memory_strategy_->fill_service_handles(service_handles.services);
 
-    // Use the number of clients to allocate memory in the handles
-    size_t number_of_clients = memory_strategy_->clients.size();
     rmw_clients_t client_handles;
-    client_handles.client_count = number_of_clients;
-    client_handles.clients =
-      memory_strategy_->borrow_handles(HandleType::client_handle, number_of_clients);
-    if (client_handles.clients == NULL && number_of_clients > 0) {
-      // TODO: Use a different error here? maybe std::bad_alloc?
-      throw std::runtime_error("Could not malloc for client pointers.");
-    }
-    // Then fill the ServiceHandles with ready clients
-    size_t client_handle_index = 0;
-    for (auto & client : memory_strategy_->clients) {
-      client_handles.clients[client_handle_index] = \
-        client->get_client_handle()->data;
-      client_handle_index += 1;
-    }
+    client_handles.client_count =
+      memory_strategy_->fill_client_handles(client_handles.clients);
 
     // The number of guard conditions is fixed at 2: 1 for the ctrl-c guard cond,
     // and one for the executor's guard cond (interrupt_guard_condition_)
     size_t number_of_guard_conds = 2;
     rmw_guard_conditions_t guard_condition_handles;
     guard_condition_handles.guard_condition_count = number_of_guard_conds;
-    guard_condition_handles.guard_conditions =
-      memory_strategy_->borrow_handles(HandleType::guard_condition_handle, number_of_guard_conds);
+    guard_condition_handles.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
     if (guard_condition_handles.guard_conditions == NULL &&
       number_of_guard_conds > 0)
     {
@@ -500,132 +426,14 @@ protected:
     // If ctrl-c guard condition, return directly
     if (guard_condition_handles.guard_conditions[0] != 0) {
       // Make sure to free or clean memory
-      memory_strategy_->return_handles(HandleType::subscription_handle,
-        subscriber_handles.subscribers);
-      memory_strategy_->return_handles(HandleType::service_handle,
-        service_handles.services);
-      memory_strategy_->return_handles(HandleType::client_handle,
-        client_handles.clients);
-      memory_strategy_->return_handles(HandleType::guard_condition_handle,
-        guard_condition_handles.guard_conditions);
+      memory_strategy_->clear_handles();
       return;
     }
-    // Add the new work to the class's list of things waiting to be executed
-    // Starting with the subscribers
-    for (size_t i = 0; i < subscriber_handles.subscriber_count; ++i) {
-      void * handle = subscriber_handles.subscribers[i];
-      if (handle) {
-        subscriber_handles_.push_back(handle);
-      }
-    }
-    // Then the services
-    for (size_t i = 0; i < number_of_services; ++i) {
-      void * handle = service_handles.services[i];
-      if (handle) {
-        service_handles_.push_back(handle);
-      }
-    }
-    // Then the clients
-    for (size_t i = 0; i < number_of_clients; ++i) {
-      void * handle = client_handles.clients[i];
-      if (handle) {
-        client_handles_.push_back(handle);
-      }
-    }
 
-    memory_strategy_->return_handles(HandleType::subscription_handle,
-      subscriber_handles.subscribers);
-    memory_strategy_->return_handles(HandleType::service_handle,
-      service_handles.services);
-    memory_strategy_->return_handles(HandleType::client_handle,
-      client_handles.clients);
-    memory_strategy_->return_handles(HandleType::guard_condition_handle,
-      guard_condition_handles.guard_conditions);
-
-    memory_strategy_->subs.clear();
-    memory_strategy_->services.clear();
-    memory_strategy_->clients.clear();
+    memory_strategy_->revalidate_handles();
   }
 
 /******************************/
-
-  rclcpp::subscription::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(void * subscriber_handle)
-  {
-    for (auto & weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & weak_subscription : group->get_subscription_ptrs()) {
-          auto subscription = weak_subscription.lock();
-          if (subscription) {
-            if (subscription->get_subscription_handle()->data == subscriber_handle) {
-              return subscription;
-            }
-            if (subscription->get_intra_process_subscription_handle() &&
-              subscription->get_intra_process_subscription_handle()->data == subscriber_handle)
-            {
-              return subscription;
-            }
-          }
-        }
-      }
-    }
-    return nullptr;
-  }
-
-  rclcpp::service::ServiceBase::SharedPtr
-  get_service_by_handle(void * service_handle)
-  {
-    for (auto & weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & service : group->get_service_ptrs()) {
-          if (service->get_service_handle()->data == service_handle) {
-            return service;
-          }
-        }
-      }
-    }
-    return rclcpp::service::ServiceBase::SharedPtr();
-  }
-
-  rclcpp::client::ClientBase::SharedPtr
-  get_client_by_handle(void * client_handle)
-  {
-    for (auto & weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & client : group->get_client_ptrs()) {
-          if (client->get_client_handle()->data == client_handle) {
-            return client;
-          }
-        }
-      }
-    }
-    return rclcpp::client::ClientBase::SharedPtr();
-  }
-
   rclcpp::node::Node::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group)
   {
@@ -729,213 +537,32 @@ protected:
     return latest;
   }
 
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
-  {
-    for (auto & weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & weak_sub : group->get_subscription_ptrs()) {
-          auto sub = weak_sub.lock();
-          if (sub == subscription) {
-            return group;
-          }
-        }
-      }
-    }
-    return rclcpp::callback_group::CallbackGroup::SharedPtr();
-  }
-
-  void
-  get_next_subscription(AnyExecutable::SharedPtr any_exec)
-  {
-    auto it = subscriber_handles_.begin();
-    while (it != subscriber_handles_.end()) {
-      auto subscription = get_subscription_by_handle(*it);
-      if (subscription) {
-        // Figure out if this is for intra-process or not.
-        bool is_intra_process = false;
-        if (subscription->get_intra_process_subscription_handle()) {
-          is_intra_process = subscription->get_intra_process_subscription_handle()->data == *it;
-        }
-        // Find the group for this handle and see if it can be serviced
-        auto group = get_group_by_subscription(subscription);
-        if (!group) {
-          // Group was not found, meaning the subscription is not valid...
-          // Remove it from the ready list and continue looking
-          subscriber_handles_.erase(it++);
-          continue;
-        }
-        if (!group->can_be_taken_from().load()) {
-          // Group is mutually exclusive and is being used, so skip it for now
-          // Leave it to be checked next time, but continue searching
-          ++it;
-          continue;
-        }
-        // Otherwise it is safe to set and return the any_exec
-        if (is_intra_process) {
-          any_exec->subscription_intra_process = subscription;
-        } else {
-          any_exec->subscription = subscription;
-        }
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group);
-        subscriber_handles_.erase(it++);
-        return;
-      }
-      // Else, the subscription is no longer valid, remove it and continue
-      subscriber_handles_.erase(it++);
-    }
-  }
-
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_service(
-    rclcpp::service::ServiceBase::SharedPtr service)
-  {
-    for (auto & weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & serv : group->get_service_ptrs()) {
-          if (serv == service) {
-            return group;
-          }
-        }
-      }
-    }
-    return rclcpp::callback_group::CallbackGroup::SharedPtr();
-  }
-
-  void
-  get_next_service(AnyExecutable::SharedPtr any_exec)
-  {
-    auto it = service_handles_.begin();
-    while (it != service_handles_.end()) {
-      auto service = get_service_by_handle(*it);
-      if (service) {
-        // Find the group for this handle and see if it can be serviced
-        auto group = get_group_by_service(service);
-        if (!group) {
-          // Group was not found, meaning the service is not valid...
-          // Remove it from the ready list and continue looking
-          service_handles_.erase(it++);
-          continue;
-        }
-        if (!group->can_be_taken_from().load()) {
-          // Group is mutually exclusive and is being used, so skip it for now
-          // Leave it to be checked next time, but continue searching
-          ++it;
-          continue;
-        }
-        // Otherwise it is safe to set and return the any_exec
-        any_exec->service = service;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group);
-        service_handles_.erase(it++);
-        return;
-      }
-      // Else, the service is no longer valid, remove it and continue
-      service_handles_.erase(it++);
-    }
-  }
-
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_client(
-    rclcpp::client::ClientBase::SharedPtr client)
-  {
-    for (auto & weak_node : weak_nodes_) {
-      auto node = weak_node.lock();
-      if (!node) {
-        continue;
-      }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group) {
-          continue;
-        }
-        for (auto & cli : group->get_client_ptrs()) {
-          if (cli == client) {
-            return group;
-          }
-        }
-      }
-    }
-    return rclcpp::callback_group::CallbackGroup::SharedPtr();
-  }
-
-  void
-  get_next_client(AnyExecutable::SharedPtr any_exec)
-  {
-    auto it = client_handles_.begin();
-    while (it != client_handles_.end()) {
-      auto client = get_client_by_handle(*it);
-      if (client) {
-        // Find the group for this handle and see if it can be serviced
-        auto group = get_group_by_client(client);
-        if (!group) {
-          // Group was not found, meaning the service is not valid...
-          // Remove it from the ready list and continue looking
-          client_handles_.erase(it++);
-          continue;
-        }
-        if (!group->can_be_taken_from().load()) {
-          // Group is mutually exclusive and is being used, so skip it for now
-          // Leave it to be checked next time, but continue searching
-          ++it;
-          continue;
-        }
-        // Otherwise it is safe to set and return the any_exec
-        any_exec->client = client;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group);
-        client_handles_.erase(it++);
-        return;
-      }
-      // Else, the service is no longer valid, remove it and continue
-      client_handles_.erase(it++);
-    }
-  }
-
   AnyExecutable::SharedPtr
   get_next_ready_executable()
   {
-    auto any_exec = this->memory_strategy_->instantiate_next_executable();
+    auto any_exec = memory_strategy_->instantiate_next_executable();
     // Check the timers to see if there are any that are ready, if so return
     get_next_timer(any_exec);
     if (any_exec->timer) {
       return any_exec;
     }
     // Check the subscriptions to see if there are any that are ready
-    get_next_subscription(any_exec);
+    memory_strategy_->get_next_subscription(any_exec, weak_nodes_);
     if (any_exec->subscription || any_exec->subscription_intra_process) {
       return any_exec;
     }
     // Check the services to see if there are any that are ready
-    get_next_service(any_exec);
+    memory_strategy_->get_next_service(any_exec, weak_nodes_);
     if (any_exec->service) {
       return any_exec;
     }
     // Check the clients to see if there are any that are ready
-    get_next_client(any_exec);
+    memory_strategy_->get_next_client(any_exec, weak_nodes_);
     if (any_exec->client) {
       return any_exec;
     }
     // If there is no ready executable, return a null ptr
-    return std::shared_ptr<AnyExecutable>();
+    return nullptr;
   }
 
   template<typename T = std::milli>
@@ -980,15 +607,10 @@ private:
   RCLCPP_DISABLE_COPY(Executor);
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
-  using SubscriberHandles = std::list<void *>;
-  SubscriberHandles subscriber_handles_;
-  using ServiceHandles = std::list<void *>;
-  ServiceHandles service_handles_;
-  using ClientHandles = std::list<void *>;
-  ClientHandles client_handles_;
+  std::array<void *, 2> guard_cond_handles_;
 };
 
-} /* executor */
-} /* rclcpp */
+}  // namespace executor
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_EXECUTOR_HPP_ */
+#endif  // RCLCPP__EXECUTOR_HPP_

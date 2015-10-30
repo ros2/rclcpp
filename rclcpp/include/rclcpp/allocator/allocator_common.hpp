@@ -12,25 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__MEMORY_STRATEGIES_HPP_
-#define RCLCPP__MEMORY_STRATEGIES_HPP_
+#ifndef RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
+#define RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_
 
-#include <rclcpp/memory_strategy.hpp>
-#include <rclcpp/strategies/allocator_memory_strategy.hpp>
+#include <memory>
+
+#include "rclcpp/allocator/allocator_deleter.hpp"
 
 namespace rclcpp
 {
-namespace memory_strategies
+namespace allocator
 {
 
-using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
+template<typename T, typename Alloc>
+using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
 
-static memory_strategy::MemoryStrategy::SharedPtr create_default_strategy()
-{
-  return std::make_shared<AllocatorMemoryStrategy<>>();
-}
-
-}  // namespace memory_strategies
+}  // namespace allocator
 }  // namespace rclcpp
 
-#endif  // RCLCPP__MEMORY_STRATEGIES_HPP_
+#endif  // RCLCPP__ALLOCATOR__ALLOCATOR_COMMON_HPP_

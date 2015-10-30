@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_MSG_POOL_MEMORY_STRATEGY_HPP_
-#define RCLCPP_RCLCPP_MSG_POOL_MEMORY_STRATEGY_HPP_
+#ifndef RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
+#define RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 
 #include <rclcpp/macros.hpp>
 #include <rclcpp/message_memory_strategy.hpp>
@@ -96,10 +96,9 @@ protected:
 
   std::array<PoolMember, Size> pool_;
   size_t next_array_index_;
-
 };
 
-}  /* message_pool_memory_strategy */
-}  /* strategies */
-}  /* rclcpp */
-#endif  /* RCLCPP_RCLCPP_MSG_POOL_MEMORY_STRATEGY_HPP_ */
+}  // namespace message_pool_memory_strategy
+}  // namespace strategies
+}  // namespace rclcpp
+#endif  // RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_

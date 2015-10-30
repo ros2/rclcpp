@@ -12,21 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_MEMORY_STRATEGY_HPP_
-#define RCLCPP_RCLCPP_MEMORY_STRATEGY_HPP_
-#include <rclcpp/any_executable.hpp>
+#ifndef RCLCPP__MEMORY_STRATEGY_HPP_
+#define RCLCPP__MEMORY_STRATEGY_HPP_
+
+#include <memory>
+#include <vector>
+
+#include "rclcpp/any_executable.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/node.hpp"
 
 namespace rclcpp
 {
-
-// TODO move HandleType somewhere where it makes sense
-enum class HandleType {subscription_handle, service_handle, client_handle, guard_condition_handle};
-
-namespace executor
-{
-class Executor;
-}
-
 namespace memory_strategy
 {
 
@@ -38,139 +35,221 @@ namespace memory_strategy
  */
 class MemoryStrategy
 {
-
-  friend class executor::Executor;
-
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MemoryStrategy);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy);
+  using WeakNodeVector = std::vector<std::weak_ptr<node::Node>>;
 
-  /// Borrow memory for storing data for subscriptions, services, clients, or guard conditions.
-  /**
-   * The default implementation stores std::vectors for each handle type and resizes the vectors
-   * as necessary based on the requested number of handles.
-   * \param[in] The type of entity that this function is requesting for.
-   * \param[in] The number of handles to borrow.
-   * \return Pointer to the allocated handles.
-   */
-  virtual void ** borrow_handles(HandleType type, size_t number_of_handles)
-  {
-    switch (type) {
-      case HandleType::subscription_handle:
-        if (subscription_handles.size() < number_of_handles) {
-          subscription_handles.resize(number_of_handles, 0);
-        }
-        return static_cast<void **>(subscription_handles.data());
-      case HandleType::service_handle:
-        if (service_handles.size() < number_of_handles) {
-          service_handles.resize(number_of_handles, 0);
-        }
-        return static_cast<void **>(service_handles.data());
-      case HandleType::client_handle:
-        if (client_handles.size() < number_of_handles) {
-          client_handles.resize(number_of_handles, 0);
-        }
-        return static_cast<void **>(client_handles.data());
-      case HandleType::guard_condition_handle:
-        if (number_of_handles > 2) {
-          throw std::runtime_error("Too many guard condition handles requested!");
-        }
-        return guard_cond_handles.data();
-      default:
-        throw std::runtime_error("Unknown HandleType " + std::to_string(static_cast<int>(type)) +
-                ", could not borrow handle memory.");
-    }
-  }
+  // return the new number of subscribers
+  virtual size_t fill_subscriber_handles(void ** & ptr) = 0;
 
-  /// Return the memory borrowed in borrow_handles.
-  /**
-   * return_handles should always mirror the way memory was borrowed in borrow_handles.
-   * \param[in] The type of entity that this function is returning.
-   * \param[in] Pointer to the handles returned.
-   */
-  virtual void return_handles(HandleType type, void ** handles)
-  {
-    switch (type) {
-      case HandleType::subscription_handle:
-        if (handles != subscription_handles.data()) {
-          throw std::runtime_error(
-                  "tried to return memory that isn't handled by this MemoryStrategy");
-        }
-        memset(handles, 0, subscription_handles.size());
-        break;
-      case HandleType::service_handle:
-        if (handles != service_handles.data()) {
-          throw std::runtime_error(
-                  "tried to return memory that isn't handled by this MemoryStrategy");
-        }
-        memset(handles, 0, service_handles.size());
-        break;
-      case HandleType::client_handle:
-        if (handles != client_handles.data()) {
-          throw std::runtime_error(
-                  "tried to return memory that isn't handled by this MemoryStrategy");
-        }
-        memset(handles, 0, client_handles.size());
-        break;
-      case HandleType::guard_condition_handle:
-        if (handles != guard_cond_handles.data()) {
-          throw std::runtime_error(
-                  "tried to return memory that isn't handled by this MemoryStrategy");
-        }
-        guard_cond_handles.fill(0);
-        break;
-      default:
-        throw std::runtime_error("Unknown HandleType " + std::to_string(static_cast<int>(type)) +
-                ", could not borrow handle memory.");
-    }
-  }
+  // return the new number of services
+  virtual size_t fill_service_handles(void ** & ptr) = 0;
+
+  // return the new number of clients
+  virtual size_t fill_client_handles(void ** & ptr) = 0;
+
+  virtual void clear_active_entities() = 0;
+
+  virtual void clear_handles() = 0;
+  virtual void revalidate_handles() = 0;
+  virtual bool collect_entities(const WeakNodeVector & weak_nodes) = 0;
 
   /// Provide a newly initialized AnyExecutable object.
   // \return Shared pointer to the fresh executable.
-  virtual executor::AnyExecutable::SharedPtr instantiate_next_executable()
-  {
-    return std::make_shared<executor::AnyExecutable>();
-  }
+  virtual executor::AnyExecutable::SharedPtr instantiate_next_executable() = 0;
 
-  /// Implementation of a general-purpose allocation function.
-  /**
-   * \param[in] size Number of bytes to allocate.
-   * \return Pointer to the allocated chunk of memory.
-   */
-  virtual void * alloc(size_t size)
+  virtual void
+  get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
+  virtual void
+  get_next_service(executor::AnyExecutable::SharedPtr any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
+  virtual void
+  get_next_client(executor::AnyExecutable::SharedPtr any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
+  static rclcpp::subscription::SubscriptionBase::SharedPtr
+  get_subscription_by_handle(void * subscriber_handle,
+    const WeakNodeVector & weak_nodes)
   {
-    if (size == 0) {
-      return NULL;
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & weak_subscription : group->get_subscription_ptrs()) {
+          auto subscription = weak_subscription.lock();
+          if (subscription) {
+            if (subscription->get_subscription_handle()->data == subscriber_handle) {
+              return subscription;
+            }
+            if (subscription->get_intra_process_subscription_handle() &&
+              subscription->get_intra_process_subscription_handle()->data == subscriber_handle)
+            {
+              return subscription;
+            }
+          }
+        }
+      }
     }
-    return std::malloc(size);
+    return nullptr;
   }
 
-  /// Implementation of a general-purpose free.
-  /**
-   * \param[in] Pointer to deallocate.
-   */
-  virtual void free(void * ptr)
+  static rclcpp::service::ServiceBase::SharedPtr
+  get_service_by_handle(void * service_handle, const WeakNodeVector & weak_nodes)
   {
-    return std::free(ptr);
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & service : group->get_service_ptrs()) {
+          if (service->get_service_handle()->data == service_handle) {
+            return service;
+          }
+        }
+      }
+    }
+    return nullptr;
   }
 
-  std::vector<rclcpp::subscription::SubscriptionBase::SharedPtr> subs;
-  std::vector<rclcpp::service::ServiceBase::SharedPtr> services;
-  std::vector<rclcpp::client::ClientBase::SharedPtr> clients;
+  static rclcpp::client::ClientBase::SharedPtr
+  get_client_by_handle(void * client_handle, const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & client : group->get_client_ptrs()) {
+          if (client->get_client_handle()->data == client_handle) {
+            return client;
+          }
+        }
+      }
+    }
+    return nullptr;
+  }
 
-  std::vector<void *> subscription_handles;
-  std::vector<void *> service_handles;
-  std::vector<void *> client_handles;
-  std::array<void *, 2> guard_cond_handles;
+  static rclcpp::node::Node::SharedPtr
+  get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,
+    const WeakNodeVector & weak_nodes)
+  {
+    if (!group) {
+      return nullptr;
+    }
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto callback_group = weak_group.lock();
+        if (callback_group == group) {
+          return node;
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  static rclcpp::callback_group::CallbackGroup::SharedPtr
+  get_group_by_subscription(
+    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & weak_sub : group->get_subscription_ptrs()) {
+          auto sub = weak_sub.lock();
+          if (sub == subscription) {
+            return group;
+          }
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  static rclcpp::callback_group::CallbackGroup::SharedPtr
+  get_group_by_service(
+    rclcpp::service::ServiceBase::SharedPtr service,
+    const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & serv : group->get_service_ptrs()) {
+          if (serv == service) {
+            return group;
+          }
+        }
+      }
+    }
+    return nullptr;
+  }
+
+  static rclcpp::callback_group::CallbackGroup::SharedPtr
+  get_group_by_client(rclcpp::client::ClientBase::SharedPtr client,
+    const WeakNodeVector & weak_nodes)
+  {
+    for (auto & weak_node : weak_nodes) {
+      auto node = weak_node.lock();
+      if (!node) {
+        continue;
+      }
+      for (auto & weak_group : node->get_callback_groups()) {
+        auto group = weak_group.lock();
+        if (!group) {
+          continue;
+        }
+        for (auto & cli : group->get_client_ptrs()) {
+          if (cli == client) {
+            return group;
+          }
+        }
+      }
+    }
+    return nullptr;
+  }
+
+
 };
 
+}  // namespace memory_strategy
 
-MemoryStrategy::SharedPtr create_default_strategy()
-{
-  return std::make_shared<MemoryStrategy>(MemoryStrategy());
-}
+}  // namespace rclcpp
 
-}  /* memory_strategy */
-
-}  /* rclcpp */
-
-#endif
+#endif  // RCLCPP__MEMORY_STRATEGY_HPP_

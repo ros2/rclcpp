@@ -12,48 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_NODE_HPP_
-#define RCLCPP_RCLCPP_NODE_HPP_
+#ifndef RCLCPP__NODE_HPP_
+#define RCLCPP__NODE_HPP_
 
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
 #include <tuple>
+#include <vector>
 
-#include <rcl_interfaces/msg/list_parameters_result.hpp>
-#include <rcl_interfaces/msg/parameter_descriptor.hpp>
-#include <rcl_interfaces/msg/parameter_event.hpp>
-#include <rcl_interfaces/msg/set_parameters_result.hpp>
-#include <rosidl_generator_cpp/message_type_support.hpp>
+#include "rcl_interfaces/msg/list_parameters_result.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+#include "rcl_interfaces/msg/parameter_event.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
+#include "rosidl_generator_cpp/message_type_support.hpp"
 
-#include <rclcpp/callback_group.hpp>
-#include <rclcpp/client.hpp>
-#include <rclcpp/context.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
-#include <rclcpp/parameter.hpp>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/service.hpp>
-#include <rclcpp/subscription.hpp>
-#include <rclcpp/timer.hpp>
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/context.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/timer.hpp"
 
 
 // Forward declaration of ROS middleware class
 namespace rmw
 {
 struct rmw_node_t;
-} // namespace rmw
+}  // namespace rmw
 
 namespace rclcpp
 {
-
 
 namespace node
 {
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);
 
@@ -63,7 +63,7 @@ public:
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
-  Node(const std::string & node_name, bool use_intra_process_comms = false);
+  explicit Node(const std::string & node_name, bool use_intra_process_comms = false);
 
   /// Create a node based on the node name and a rclcpp::context::Context.
   /**
@@ -91,10 +91,11 @@ public:
    * \param[in] qos_history_depth The depth of the publisher message queue.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT>
-  typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
+  template<typename MessageT, typename Alloc = std::allocator<void>>
+  typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
   create_publisher(
-    const std::string & topic_name, size_t qos_history_depth);
+    const std::string & topic_name, size_t qos_history_depth,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Publisher.
   /**
@@ -102,11 +103,12 @@ public:
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT>
-  typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
+  template<typename MessageT, typename Alloc = std::allocator<void>>
+  typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
   create_publisher(
     const std::string & topic_name,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default);
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -122,16 +124,17 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT>
-  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  template<typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>>
+  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
   create_subscription(
     const std::string & topic_name,
     CallbackT callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat = nullptr);
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -147,16 +150,17 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT>
-  typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+  template<typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>>
+  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
   create_subscription(
     const std::string & topic_name,
     size_t qos_history_depth,
     CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-    msg_mem_strat = nullptr);
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create a timer.
   /**
@@ -274,9 +278,9 @@ const rosidl_message_type_support_t * Node::ipm_ts_ =
                make_shared())); \
   }
 
-#ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
+#ifndef RCLCPP__NODE_IMPL_HPP_
 // Template implementations
 #include "node_impl.hpp"
 #endif
 
-#endif /* RCLCPP_RCLCPP_NODE_HPP_ */
+#endif  // RCLCPP__NODE_HPP_

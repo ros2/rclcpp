@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_PUBLISHER_HPP_
-#define RCLCPP_RCLCPP_PUBLISHER_HPP_
+#ifndef RCLCPP__PUBLISHER_HPP_
+#define RCLCPP__PUBLISHER_HPP_
 
-#include <rclcpp/macros.hpp>
+#include <rmw/error_handling.h>
+#include <rmw/rmw.h>
 
 #include <iostream>
 #include <memory>
@@ -23,10 +24,11 @@
 #include <sstream>
 #include <string>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
-#include <rmw/impl/cpp/demangle.hpp>
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
+#include "rcl_interfaces/msg/intra_process_message.hpp"
+#include "rmw/impl/cpp/demangle.hpp"
+
+#include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
@@ -35,7 +37,7 @@ namespace rclcpp
 namespace node
 {
 class Node;
-} // namespace node
+}  // namespace node
 
 namespace publisher
 {
@@ -203,21 +205,30 @@ protected:
 };
 
 /// A publisher publishes messages of any type to a topic.
-template<typename MessageT>
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
   friend rclcpp::node::Node;
 
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT>);
+  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
+  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
+
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>);
 
   Publisher(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_publisher_t * publisher_handle,
     std::string topic,
-    size_t queue_size)
+    size_t queue_size,
+    std::shared_ptr<Alloc> allocator)
   : PublisherBase(node_handle, publisher_handle, topic, queue_size)
-  {}
+  {
+    message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
+  }
 
 
   /// Send a message to the topic for this publisher.
@@ -226,7 +237,7 @@ public:
    * \param[in] msg A shared pointer to the message to send.
    */
   void
-  publish(std::unique_ptr<MessageT> & msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
     this->do_inter_process_publish(msg.get());
     if (store_intra_process_message_) {
@@ -274,7 +285,9 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    std::unique_ptr<MessageT> unique_msg(new MessageT(*msg.get()));
+    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg.get());
+    MessageUniquePtr unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -291,7 +304,9 @@ public:
     //   The intra process manager should probably also be able to store
     //   shared_ptr's and do the "smart" thing based on other intra process
     //   subscriptions. For now call the other publish().
-    std::unique_ptr<MessageT> unique_msg(new MessageT(*msg.get()));
+    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg.get());
+    MessageUniquePtr unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
   }
 
@@ -304,8 +319,15 @@ public:
       return this->do_inter_process_publish(&msg);
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    std::unique_ptr<MessageT> unique_msg(new MessageT(msg));
+    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
+    MessageUniquePtr unique_msg(ptr, message_deleter_);
     return this->publish(unique_msg);
+  }
+
+  std::shared_ptr<MessageAlloc> get_allocator() const
+  {
+    return message_allocator_;
   }
 
 protected:
@@ -321,9 +343,12 @@ protected:
     }
   }
 
+  std::shared_ptr<MessageAlloc> message_allocator_;
+
+  MessageDeleter message_deleter_;
 };
 
-} /* namespace publisher */
-} /* namespace rclcpp */
+}  // namespace publisher
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_PUBLISHER_HPP_ */
+#endif  // RCLCPP__PUBLISHER_HPP_

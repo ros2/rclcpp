@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_MSG_MEMORY_STRATEGY_HPP_
-#define RCLCPP_RCLCPP_MSG_MEMORY_STRATEGY_HPP_
+#ifndef RCLCPP__MESSAGE_MEMORY_STRATEGY_HPP_
+#define RCLCPP__MESSAGE_MEMORY_STRATEGY_HPP_
 
 #include <memory>
 
-#include <rclcpp/macros.hpp>
+#include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
@@ -26,24 +27,37 @@ namespace message_memory_strategy
 
 /// Default allocation strategy for messages received by subscriptions.
 // A message memory strategy must be templated on the type of the subscription it belongs to.
-template<typename MessageT>
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class MessageMemoryStrategy
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MessageMemoryStrategy);
+
+  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
+
+  MessageMemoryStrategy()
+  {
+    message_allocator_ = std::make_shared<MessageAlloc>();
+  }
+
+  explicit MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
+  {
+    message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+  }
 
   /// Default factory method
   static SharedPtr create_default()
   {
-    return SharedPtr(new MessageMemoryStrategy<MessageT>);
+    return std::make_shared<MessageMemoryStrategy<MessageT, Alloc>>(std::make_shared<Alloc>());
   }
 
   /// By default, dynamically allocate a new message.
   // \return Shared pointer to the new message.
   virtual std::shared_ptr<MessageT> borrow_message()
   {
-    return std::shared_ptr<MessageT>(new MessageT);
+    return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_.get());
   }
 
   /// Release ownership of the message, which will deallocate it if it has no more owners.
@@ -52,9 +66,12 @@ public:
   {
     msg.reset();
   }
+
+  std::shared_ptr<MessageAlloc> message_allocator_;
+  MessageDeleter message_deleter_;
 };
 
-}  /* message_memory_strategy */
-}  /* rclcpp */
+}  // namespace message_memory_strategy
+}  // namespace rclcpp
 
-#endif  /* RCLCPP_RCLCPP_MSG_MEMORY_STRATEGY_HPP_ */
+#endif  // RCLCPP__MESSAGE_MEMORY_STRATEGY_HPP_

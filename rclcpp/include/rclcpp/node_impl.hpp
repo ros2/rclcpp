@@ -12,34 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_NODE_IMPL_HPP_
-#define RCLCPP_RCLCPP_NODE_IMPL_HPP_
+#ifndef RCLCPP__NODE_IMPL_HPP_
+#define RCLCPP__NODE_IMPL_HPP_
+
+#include <rmw/error_handling.h>
+#include <rmw/rmw.h>
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-#include <rosidl_generator_cpp/message_type_support.hpp>
-#include <rosidl_generator_cpp/service_type_support.hpp>
+#include "rcl_interfaces/msg/intra_process_message.hpp"
+#include "rosidl_generator_cpp/message_type_support.hpp"
+#include "rosidl_generator_cpp/service_type_support.hpp"
 
-#include <rclcpp/contexts/default_context.hpp>
-#include <rclcpp/intra_process_manager.hpp>
-#include <rclcpp/parameter.hpp>
+#include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/parameter.hpp"
 
-#ifndef RCLCPP_RCLCPP_NODE_HPP_
+#ifndef RCLCPP__NODE_HPP_
 #include "node.hpp"
 #endif
 
 using namespace rclcpp;
-using namespace rclcpp::node;
+using namespace node;
 
 Node::Node(const std::string & node_name, bool use_intra_process_comms)
 : Node(
@@ -113,21 +117,29 @@ Node::create_callback_group(
   return group;
 }
 
-template<typename MessageT>
-typename rclcpp::publisher::Publisher<MessageT>::SharedPtr
+template<typename MessageT, typename Alloc>
+typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
 Node::create_publisher(
-  const std::string & topic_name, size_t qos_history_depth)
+  const std::string & topic_name, size_t qos_history_depth,
+  std::shared_ptr<Alloc> allocator)
 {
+  if (!allocator) {
+    allocator = std::make_shared<Alloc>();
+  }
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_publisher<MessageT>(topic_name, qos);
+  return this->create_publisher<MessageT, Alloc>(topic_name, qos, allocator);
 }
 
-template<typename MessageT>
-typename publisher::Publisher<MessageT>::SharedPtr
+template<typename MessageT, typename Alloc>
+typename publisher::Publisher<MessageT, Alloc>::SharedPtr
 Node::create_publisher(
-  const std::string & topic_name, const rmw_qos_profile_t & qos_profile)
+  const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
+  std::shared_ptr<Alloc> allocator)
 {
+  if (!allocator) {
+    allocator = std::make_shared<Alloc>();
+  }
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_publisher_t * publisher_handle = rmw_create_publisher(
@@ -140,8 +152,8 @@ Node::create_publisher(
     // *INDENT-ON*
   }
 
-  auto publisher = publisher::Publisher<MessageT>::make_shared(
-    node_handle_, publisher_handle, topic_name, qos_profile.depth);
+  auto publisher = publisher::Publisher<MessageT, Alloc>::make_shared(
+    node_handle_, publisher_handle, topic_name, qos_profile.depth, allocator);
 
   if (use_intra_process_comms_) {
     rmw_publisher_t * intra_process_publisher_handle = rmw_create_publisher(
@@ -157,7 +169,7 @@ Node::create_publisher(
     auto intra_process_manager =
       context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     uint64_t intra_process_publisher_id =
-      intra_process_manager->add_publisher<MessageT>(publisher);
+      intra_process_manager->add_publisher<MessageT, Alloc>(publisher);
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
     // *INDENT-OFF*
     auto shared_publish_callback =
@@ -179,8 +191,10 @@ Node::create_publisher(
           "' is incompatible from the publisher type '" + message_type_info.name() + "'");
       }
       MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
-      std::unique_ptr<MessageT> unique_msg(typed_message_ptr);
-      uint64_t message_seq = ipm->store_intra_process_message(publisher_id, unique_msg);
+      using MessageDeleter = typename publisher::Publisher<MessageT, Alloc>::MessageDeleter;
+      std::unique_ptr<MessageT, MessageDeleter> unique_msg(typed_message_ptr);
+      uint64_t message_seq =
+        ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);
       return message_seq;
     };
     // *INDENT-ON*
@@ -205,25 +219,31 @@ Node::group_in_node(callback_group::CallbackGroup::SharedPtr group)
   return group_belongs_to_this_node;
 }
 
-template<typename MessageT, typename CallbackT>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+template<typename MessageT, typename CallbackT, typename Alloc>
+typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
   CallbackT callback,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  msg_mem_strat,
+  typename std::shared_ptr<Alloc> allocator)
 {
-  rclcpp::subscription::AnySubscriptionCallback<MessageT> any_subscription_callback;
+  if (!allocator) {
+    allocator = std::make_shared<Alloc>();
+  }
+
+  rclcpp::subscription::AnySubscriptionCallback<MessageT,
+  Alloc> any_subscription_callback(allocator);
   any_subscription_callback.set(callback);
 
   using rosidl_generator_cpp::get_message_type_support_handle;
 
   if (!msg_mem_strat) {
     msg_mem_strat =
-      rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::create_default();
+      rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::create_default();
   }
 
   auto type_support_handle = get_message_type_support_handle<MessageT>();
@@ -239,7 +259,7 @@ Node::create_subscription(
 
   using namespace rclcpp::subscription;
 
-  auto sub = Subscription<MessageT>::make_shared(
+  auto sub = Subscription<MessageT, Alloc>::make_shared(
     node_handle_,
     subscriber_handle,
     topic_name,
@@ -271,7 +291,7 @@ Node::create_subscription(
         uint64_t publisher_id,
         uint64_t message_sequence,
         uint64_t subscription_id,
-        std::unique_ptr<MessageT> & message)
+        typename Subscription<MessageT, Alloc>::MessageUniquePtr & message)
       {
         auto ipm = weak_ipm.lock();
         if (!ipm) {
@@ -279,7 +299,8 @@ Node::create_subscription(
           throw std::runtime_error(
             "intra process take called after destruction of intra process manager");
         }
-        ipm->take_intra_process_message(publisher_id, message_sequence, subscription_id, message);
+        ipm->take_intra_process_message<MessageT, Alloc>(
+          publisher_id, message_sequence, subscription_id, message);
       },
       [weak_ipm](const rmw_gid_t * sender_gid) -> bool {
         auto ipm = weak_ipm.lock();
@@ -295,7 +316,7 @@ Node::create_subscription(
   // Assign to a group.
   if (group) {
     if (!group_in_node(group)) {
-      // TODO: use custom exception
+      // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create subscription, group not in node.");
     }
     group->add_subscription(sub_base_ptr);
@@ -306,26 +327,28 @@ Node::create_subscription(
   return sub;
 }
 
-template<typename MessageT, typename CallbackT>
-typename rclcpp::subscription::Subscription<MessageT>::SharedPtr
+template<typename MessageT, typename CallbackT, typename Alloc>
+typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
   size_t qos_history_depth,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT>::SharedPtr
-  msg_mem_strat)
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  msg_mem_strat,
+  std::shared_ptr<Alloc> allocator)
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_subscription<MessageT, CallbackT>(
+  return this->create_subscription<MessageT, CallbackT, Alloc>(
     topic_name,
     callback,
     qos,
     group,
     ignore_local_publications,
-    msg_mem_strat);
+    msg_mem_strat,
+    allocator);
 }
 
 rclcpp::timer::WallTimer::SharedPtr
@@ -337,7 +360,7 @@ Node::create_wall_timer(
   auto timer = rclcpp::timer::WallTimer::make_shared(period, callback);
   if (group) {
     if (!group_in_node(group)) {
-      // TODO: use custom exception
+      // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create timer, group not in node.");
     }
     group->add_timer(timer);
@@ -432,7 +455,7 @@ Node::create_service(
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   if (group) {
     if (!group_in_node(group)) {
-      // TODO: use custom exception
+      // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create service, group not in node.");
     }
     group->add_service(serv_base_ptr);
@@ -480,7 +503,7 @@ Node::set_parameters_atomically(
   tmp_map.insert(parameters_.begin(), parameters_.end());
   std::swap(tmp_map, parameters_);
 
-  // TODO: handle parameter constraints
+  // TODO(jacquelinekay): handle parameter constraints
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
 
@@ -650,4 +673,4 @@ Node::get_callback_groups() const
   return callback_groups_;
 }
 
-#endif /* RCLCPP_RCLCPP_NODE_IMPL_HPP_ */
+#endif  // RCLCPP__NODE_IMPL_HPP_

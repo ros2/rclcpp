@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 
+#include <rclcpp/allocator/allocator_common.hpp>
 #include <rclcpp/macros.hpp>
 #include <rmw/types.h>
 
@@ -55,11 +56,27 @@ public:
   size_t mock_queue_size;
 };
 
-template<typename T>
+template<typename T, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T>);
+  using MessageAllocTraits = allocator::AllocRebind<T, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, T>;
+  using MessageUniquePtr = std::unique_ptr<T, MessageDeleter>;
+  std::shared_ptr<MessageAlloc> allocator_;
+
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>);
+
+  Publisher()
+  {
+    allocator_ = std::make_shared<MessageAlloc>();
+  }
+
+  std::shared_ptr<MessageAlloc> get_allocator()
+  {
+    return allocator_;
+  }
 };
 
 }
@@ -99,8 +116,8 @@ public:
 }
 
 // Prevent rclcpp/publisher.hpp and rclcpp/subscription.hpp from being imported.
-#define RCLCPP_RCLCPP_PUBLISHER_HPP_
-#define RCLCPP_RCLCPP_SUBSCRIPTION_HPP_
+#define RCLCPP__PUBLISHER_HPP_
+#define RCLCPP__SUBSCRIPTION_HPP_
 // Force ipm to use our mock publisher class.
 #define Publisher mock::Publisher
 #define PublisherBase mock::PublisherBase
@@ -139,8 +156,10 @@ TEST(TestIntraProcessManager, nominal) {
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
-  auto p2_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p2);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
+  auto p2_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p2);
   auto s1_id = ipm.add_subscription(s1);
 
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
@@ -221,7 +240,8 @@ TEST(TestIntraProcessManager, remove_publisher_before_trying_to_take) {
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
   auto s1_id = ipm.add_subscription(s1);
 
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
@@ -269,7 +289,8 @@ TEST(TestIntraProcessManager, removed_subscription_affects_take) {
   s3->mock_topic_name = "nominal1";
   s3->mock_queue_size = 10;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
   auto s1_id = ipm.add_subscription(s1);
   auto s2_id = ipm.add_subscription(s2);
   auto s3_id = ipm.add_subscription(s3);
@@ -338,7 +359,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_one_publisher) {
   s3->mock_topic_name = "nominal1";
   s3->mock_queue_size = 10;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
   auto s1_id = ipm.add_subscription(s1);
   auto s2_id = ipm.add_subscription(s2);
   auto s3_id = ipm.add_subscription(s3);
@@ -410,9 +432,12 @@ TEST(TestIntraProcessManager, multiple_publishers_one_subscription) {
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
-  auto p2_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p2);
-  auto p3_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p3);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
+  auto p2_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p2);
+  auto p3_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p3);
   auto s1_id = ipm.add_subscription(s1);
 
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
@@ -512,9 +537,12 @@ TEST(TestIntraProcessManager, multiple_publishers_multiple_subscription) {
   s3->mock_topic_name = "nominal1";
   s3->mock_queue_size = 10;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
-  auto p2_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p2);
-  auto p3_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p3);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
+  auto p2_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p2);
+  auto p3_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p3);
   auto s1_id = ipm.add_subscription(s1);
   auto s2_id = ipm.add_subscription(s2);
   auto s3_id = ipm.add_subscription(s3);
@@ -655,7 +683,8 @@ TEST(TestIntraProcessManager, ring_buffer_displacement) {
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
   auto s1_id = ipm.add_subscription(s1);
 
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
@@ -720,7 +749,8 @@ TEST(TestIntraProcessManager, subscription_creation_race_condition) {
   p1->mock_topic_name = "nominal1";
   p1->mock_queue_size = 2;
 
-  auto p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
+  auto p1_id =
+    ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
 
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
   ipm_msg->message_sequence = 42;
@@ -767,7 +797,7 @@ TEST(TestIntraProcessManager, publisher_out_of_scope_take) {
     p1->mock_topic_name = "nominal1";
     p1->mock_queue_size = 2;
 
-    p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
+    p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
 
     auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
     ipm_msg->message_sequence = 42;
@@ -805,7 +835,7 @@ TEST(TestIntraProcessManager, publisher_out_of_scope_store) {
     p1->mock_topic_name = "nominal1";
     p1->mock_queue_size = 2;
 
-    p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage>(p1);
+    p1_id = ipm.add_publisher<rcl_interfaces::msg::IntraProcessMessage, std::allocator<void>>(p1);
   }
 
   auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();

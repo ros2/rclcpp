@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_RING_BUFFER_HPP_
-#define RCLCPP_RCLCPP_RING_BUFFER_HPP_
-
-#include <rclcpp/macros.hpp>
+#ifndef RCLCPP__MAPPED_RING_BUFFER_HPP_
+#define RCLCPP__MAPPED_RING_BUFFER_HPP_
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
+
+#include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
@@ -50,24 +51,35 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template<typename T>
+template<typename T, typename Alloc = std::allocator<void>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T>);
+  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Alloc>);
+  using ElemAllocTraits = allocator::AllocRebind<T, Alloc>;
+  using ElemAlloc = typename ElemAllocTraits::allocator_type;
+  using ElemDeleter = allocator::Deleter<ElemAlloc, T>;
+
+  using ElemUniquePtr = std::unique_ptr<T, ElemDeleter>;
 
   /// Constructor.
   /* The constructor will allocate memory while reserving space.
    *
    * \param size size of the ring buffer; must be positive and non-zero.
    */
-  MappedRingBuffer(size_t size)
+  explicit MappedRingBuffer(size_t size, std::shared_ptr<Alloc> allocator = nullptr)
   : elements_(size), head_(0)
   {
     if (size == 0) {
       throw std::invalid_argument("size must be a positive, non-zero value");
     }
+    if (!allocator) {
+      allocator_ = std::make_shared<ElemAlloc>();
+    } else {
+      allocator_ = std::make_shared<ElemAlloc>(*allocator.get());
+    }
   }
+
   virtual ~MappedRingBuffer() {}
 
   /// Return a copy of the value stored in the ring buffer at the given key.
@@ -82,12 +94,14 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_copy_at_key(uint64_t key, std::unique_ptr<T> & value)
+  get_copy_at_key(uint64_t key, ElemUniquePtr & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      value = std::unique_ptr<T>(new T(*it->value));
+      auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
+      ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
+      value = ElemUniquePtr(ptr);
     }
   }
 
@@ -111,13 +125,15 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_ownership_at_key(uint64_t key, std::unique_ptr<T> & value)
+  get_ownership_at_key(uint64_t key, ElemUniquePtr & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
       // Make a copy.
-      auto copy = std::unique_ptr<T>(new T(*it->value));
+      auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
+      ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
+      auto copy = ElemUniquePtr(ptr);
       // Return the original.
       value.swap(it->value);
       // Store the copy.
@@ -136,7 +152,7 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  pop_at_key(uint64_t key, std::unique_ptr<T> & value)
+  pop_at_key(uint64_t key, ElemUniquePtr & value)
   {
     auto it = get_iterator_of_key(key);
     value = nullptr;
@@ -158,7 +174,7 @@ public:
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T> & value)
+  push_and_replace(uint64_t key, ElemUniquePtr & value)
   {
     bool did_replace = elements_[head_].in_use;
     elements_[head_].key = key;
@@ -169,9 +185,9 @@ public:
   }
 
   bool
-  push_and_replace(uint64_t key, std::unique_ptr<T> && value)
+  push_and_replace(uint64_t key, ElemUniquePtr && value)
   {
-    std::unique_ptr<T> temp = std::move(value);
+    ElemUniquePtr temp = std::move(value);
     return push_and_replace(key, temp);
   }
 
@@ -183,16 +199,18 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(MappedRingBuffer<T>);
+  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Alloc>);
 
   struct element
   {
     uint64_t key;
-    std::unique_ptr<T> value;
+    ElemUniquePtr value;
     bool in_use;
   };
 
-  typename std::vector<element>::iterator
+  using VectorAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<element>;
+
+  typename std::vector<element, VectorAlloc>::iterator
   get_iterator_of_key(uint64_t key)
   {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -203,12 +221,12 @@ private:
     return it;
   }
 
-  std::vector<element> elements_;
+  std::vector<element, VectorAlloc> elements_;
   size_t head_;
-
+  std::shared_ptr<ElemAlloc> allocator_;
 };
 
-} /* namespace ring_buffer */
-} /* namespace rclcpp */
+}  // namespace mapped_ring_buffer
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_RING_BUFFER_HPP_ */
+#endif  // RCLCPP__MAPPED_RING_BUFFER_HPP_
