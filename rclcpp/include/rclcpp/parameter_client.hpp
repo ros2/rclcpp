@@ -69,7 +69,7 @@ public:
 
   std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
   get_parameters(
-    std::vector<std::string> names,
+    const std::vector<std::string> & names,
     std::function<void(
       std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>)> callback = nullptr)
   {
@@ -108,7 +108,7 @@ public:
 
   std::shared_future<std::vector<rclcpp::parameter::ParameterType>>
   get_parameter_types(
-    std::vector<std::string> names,
+    const std::vector<std::string> & names,
     std::function<void(
       std::shared_future<std::vector<rclcpp::parameter::ParameterType>>)> callback = nullptr)
   {
@@ -140,7 +140,7 @@ public:
 
   std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
   set_parameters(
-    std::vector<rclcpp::parameter::ParameterVariant> parameters,
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
     std::function<void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)> callback =
     nullptr)
   {
@@ -170,7 +170,7 @@ public:
 
   std::shared_future<rcl_interfaces::msg::SetParametersResult>
   set_parameters_atomically(
-    std::vector<rclcpp::parameter::ParameterVariant> parameters,
+    const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
     std::function<void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)> callback =
     nullptr)
   {
@@ -200,7 +200,7 @@ public:
 
   std::shared_future<rcl_interfaces::msg::ListParametersResult>
   list_parameters(
-    std::vector<std::string> prefixes,
+    const std::vector<std::string> & prefixes,
     uint64_t depth,
     std::function<void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)> callback =
     nullptr)
@@ -271,7 +271,7 @@ public:
   }
 
   std::vector<rclcpp::parameter::ParameterVariant>
-  get_parameters(std::vector<std::string> parameter_names)
+  get_parameters(const std::vector<std::string> & parameter_names)
   {
     auto f = async_parameters_client_->get_parameters(parameter_names);
     if (rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f) ==
@@ -284,7 +284,7 @@ public:
   }
 
   std::vector<rclcpp::parameter::ParameterType>
-  get_parameter_types(std::vector<std::string> parameter_names)
+  get_parameter_types(const std::vector<std::string> & parameter_names)
   {
     auto f = async_parameters_client_->get_parameter_types(parameter_names);
 
@@ -297,7 +297,7 @@ public:
   }
 
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(std::vector<rclcpp::parameter::ParameterVariant> parameters)
+  set_parameters(const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
   {
     auto f = async_parameters_client_->set_parameters(parameters);
 
@@ -310,7 +310,7 @@ public:
   }
 
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(std::vector<rclcpp::parameter::ParameterVariant> parameters)
+  set_parameters_atomically(const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
   {
     auto f = async_parameters_client_->set_parameters_atomically(parameters);
 
@@ -325,7 +325,7 @@ public:
 
   rcl_interfaces::msg::ListParametersResult
   list_parameters(
-    std::vector<std::string> parameter_prefixes,
+    const std::vector<std::string> & parameter_prefixes,
     uint64_t depth)
   {
     auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
