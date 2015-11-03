@@ -341,7 +341,7 @@ public:
 
   template<typename FunctorT>
   typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
-  on_parameter_event(FunctorT & callback)
+  on_parameter_event(FunctorT callback)
   {
     return async_parameters_client_->on_parameter_event(callback);
   }
