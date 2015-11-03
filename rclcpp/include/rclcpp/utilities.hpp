@@ -140,7 +140,15 @@ init(int argc, char * argv[])
     const size_t error_length = 1024;
     char error_string[error_length];
 #ifndef _WIN32
-    strerror_r(errno, error_string, error_length);
+    auto rc = strerror_r(errno, error_string, error_length);
+    if (rc) {
+      // *INDENT-OFF*
+      throw std::runtime_error(
+        "Failed to set SIGINT signal handler: (" + std::to_string(errno) +
+        ") unable to retrieve error string");
+      // *INDENT-ON*
+    }
+
 #else
     strerror_s(error_string, error_length, errno);
 #endif
