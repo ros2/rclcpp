@@ -45,7 +45,7 @@ rmw_guard_condition_t * g_sigint_guard_cond_handle = \
   rmw_create_guard_condition();
 /// Condition variable for timed sleep (see sleep_for).
 std::condition_variable g_interrupt_condition_variable;
-std::atomic<bool> g_is_interrupted = false;
+std::atomic<bool> g_is_interrupted(false);
 /// Mutex for protecting the global condition variable.
 std::mutex g_interrupt_mutex;
 
