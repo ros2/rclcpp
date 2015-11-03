@@ -45,6 +45,7 @@ rmw_guard_condition_t * g_sigint_guard_cond_handle = \
   rmw_create_guard_condition();
 /// Condition variable for timed sleep (see sleep_for).
 std::condition_variable g_interrupt_condition_variable;
+std::atomic<bool> g_is_interrupted = false;
 /// Mutex for protecting the global condition variable.
 std::mutex g_interrupt_mutex;
 
@@ -95,6 +96,7 @@ signal_handler(int signal_value)
     fprintf(stderr,
       "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
   }
+  g_is_interrupted.store(true);
   g_interrupt_condition_variable.notify_all();
 }
 } // namespace
@@ -117,6 +119,7 @@ init(int argc, char * argv[])
 {
   (void)argc;
   (void)argv;
+  g_is_interrupted.store(false);
   rmw_ret_t status = rmw_init();
   if (status != RMW_RET_OK) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -170,6 +173,7 @@ shutdown()
     fprintf(stderr,
       "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
   }
+  g_is_interrupted.store(true);
   g_interrupt_condition_variable.notify_all();
 }
 
@@ -190,10 +194,18 @@ bool
 sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
   // TODO: determine if posix's nanosleep(2) is more efficient here
-  std::unique_lock<std::mutex> lock(::g_interrupt_mutex);
-  auto cvs = ::g_interrupt_condition_variable.wait_for(lock, nanoseconds);
+  std::chrono::nanoseconds time_left = nanoseconds;
+  {
+    std::unique_lock<std::mutex> lock(::g_interrupt_mutex);
+    auto start = std::chrono::steady_clock::now();
+    ::g_interrupt_condition_variable.wait_for(lock, nanoseconds);
+    time_left -= std::chrono::steady_clock::now() - start;
+  }
+  if (time_left > std::chrono::nanoseconds::zero() && !g_is_interrupted) {
+    return sleep_for(time_left);
+  }
   // Return true if the timeout elapsed successfully, otherwise false.
-  return cvs != std::cv_status::no_timeout;
+  return !g_is_interrupted;
 }
 
 } /* namespace utilities */
