@@ -15,8 +15,7 @@
 #ifndef RCLCPP__MEMORY_STRATEGIES_HPP_
 #define RCLCPP__MEMORY_STRATEGIES_HPP_
 
-#include <rclcpp/memory_strategy.hpp>
-#include <rclcpp/strategies/allocator_memory_strategy.hpp>
+#include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

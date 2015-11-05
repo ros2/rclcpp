@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_UTILITIES_HPP_
-#define RCLCPP_RCLCPP_UTILITIES_HPP_
+#ifndef RCLCPP__UTILITIES_HPP_
+#define RCLCPP__UTILITIES_HPP_
 
 #include <chrono>
 
@@ -64,4 +64,4 @@ sleep_for(const std::chrono::nanoseconds & nanoseconds);
 }  // namespace utilities
 }  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_UTILITIES_HPP_ */
+#endif  // RCLCPP__UTILITIES_HPP_

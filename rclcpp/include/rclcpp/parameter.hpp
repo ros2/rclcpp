@@ -12,35 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_PARAMETER_HPP_
-#define RCLCPP_RCLCPP_PARAMETER_HPP_
+#ifndef RCLCPP__PARAMETER_HPP_
+#define RCLCPP__PARAMETER_HPP_
 
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <vector>
 
-#include <rmw/rmw.h>
-
-#include <rcl_interfaces/msg/parameter.hpp>
-#include <rcl_interfaces/msg/parameter_type.hpp>
-#include <rcl_interfaces/msg/parameter_value.hpp>
+#include "rcl_interfaces/msg/parameter.hpp"
+#include "rcl_interfaces/msg/parameter_type.hpp"
+#include "rcl_interfaces/msg/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/rmw.h"
 
 namespace rclcpp
 {
-
 namespace parameter
 {
 
 enum ParameterType
 {
-  PARAMETER_NOT_SET=rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET,
-  PARAMETER_BOOL=rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
-  PARAMETER_INTEGER=rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
-  PARAMETER_DOUBLE=rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
-  PARAMETER_STRING=rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
-  PARAMETER_BYTES=rcl_interfaces::msg::ParameterType::PARAMETER_BYTES,
+  PARAMETER_NOT_SET = rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET,
+  PARAMETER_BOOL = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
+  PARAMETER_INTEGER = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
+  PARAMETER_DOUBLE = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
+  PARAMETER_STRING = rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
+  PARAMETER_BYTES = rcl_interfaces::msg::ParameterType::PARAMETER_BYTES,
 };
 
 // Structure to store an arbitrary parameter with templated get/set methods
@@ -87,48 +85,52 @@ public:
   get_value() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER) {
-      // TODO: use custom exception
+      // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
     return value_.integer_value;
   }
+
   template<ParameterType type>
   typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, double>::type
   get_value() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
-      // TODO: use custom exception
+      // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
     return value_.double_value;
   }
+
   template<ParameterType type>
   typename std::enable_if<type == ParameterType::PARAMETER_STRING, const std::string &>::type
   get_value() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_STRING) {
-      // TODO: use custom exception
+      // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
     return value_.string_value;
   }
+
   template<ParameterType type>
   typename std::enable_if<type == ParameterType::PARAMETER_BOOL, bool>::type
   get_value() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BOOL) {
-      // TODO: use custom exception
+      // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
     return value_.bool_value;
   }
+
   template<ParameterType type>
   typename std::enable_if<type == ParameterType::PARAMETER_BYTES,
   const std::vector<uint8_t> &>::type
   get_value() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTES) {
-      // TODO: use custom exception
+      // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
     return value_.bytes_value;
@@ -203,4 +205,4 @@ to_string(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
 }  // namespace std
 
-#endif /* RCLCPP_RCLCPP_PARAMETER_HPP_ */
+#endif  // RCLCPP__PARAMETER_HPP_

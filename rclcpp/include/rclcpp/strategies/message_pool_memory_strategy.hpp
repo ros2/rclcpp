@@ -15,8 +15,8 @@
 #ifndef RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 
-#include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -106,4 +106,5 @@ protected:
 }  // namespace message_pool_memory_strategy
 }  // namespace strategies
 }  // namespace rclcpp
+
 #endif  // RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_

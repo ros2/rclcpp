@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CONTEXTS_DEFAULT_CONTEXT_HPP_
-#define RCLCPP_RCLCPP_CONTEXTS_DEFAULT_CONTEXT_HPP_
+#ifndef RCLCPP__CONTEXTS__DEFAULT_CONTEXT_HPP_
+#define RCLCPP__CONTEXTS__DEFAULT_CONTEXT_HPP_
 
-#include <rclcpp/context.hpp>
+#include "rclcpp/context.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -38,8 +38,8 @@ RCLCPP_PUBLIC
 DefaultContext::SharedPtr
 get_global_default_context();
 
-} // namespace default_context
-} // namespace contexts
-} // namespace rclcpp
+}  // namespace default_context
+}  // namespace contexts
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_CONTEXTS_DEFAULT_CONTEXT_HPP_ */
+#endif  // RCLCPP__CONTEXTS__DEFAULT_CONTEXT_HPP_

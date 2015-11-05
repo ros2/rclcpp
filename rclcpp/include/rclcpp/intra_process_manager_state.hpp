@@ -15,21 +15,21 @@
 #ifndef RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
 #define RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
 
-#include <rclcpp/mapped_ring_buffer.hpp>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/subscription.hpp>
-
 #include <algorithm>
 #include <atomic>
 #include <functional>
 #include <limits>
-#include <memory>
 #include <map>
-#include <unordered_map>
+#include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
+#include "rclcpp/macros.hpp"
+#include "rclcpp/mapped_ring_buffer.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/subscription.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

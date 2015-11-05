@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_PARAMETER_CLIENT_HPP_
-#define RCLCPP_RCLCPP_PARAMETER_CLIENT_HPP_
+#ifndef RCLCPP__PARAMETER_CLIENT_HPP_
+#define RCLCPP__PARAMETER_CLIENT_HPP_
 
 #include <string>
 #include <vector>
@@ -162,8 +162,7 @@ private:
   AsyncParametersClient::SharedPtr async_parameters_client_;
 };
 
-} /* namespace parameter_client */
+}  // namespace parameter_client
+}  // namespace rclcpp
 
-} /* namespace rclcpp */
-
-#endif /* RCLCPP_RCLCPP_PARAMETER_CLIENT_HPP_ */
+#endif  // RCLCPP__PARAMETER_CLIENT_HPP_

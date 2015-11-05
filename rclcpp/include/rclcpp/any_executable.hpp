@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_ANY_EXECUTABLE_HPP_
-#define RCLCPP_RCLCPP_ANY_EXECUTABLE_HPP_
+#ifndef RCLCPP__ANY_EXECUTABLE_HPP_
+#define RCLCPP__ANY_EXECUTABLE_HPP_
 
 #include <memory>
 
-#include <rclcpp/macros.hpp>
-#include <rclcpp/node.hpp>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -44,7 +44,7 @@ struct AnyExecutable
   rclcpp::node::Node::SharedPtr node;
 };
 
-} /* executor */
-} /* rclcpp */
+}  // namespace executor
+}  // namespace rclcpp
 
-#endif
+#endif  // RCLCPP__ANY_EXECUTABLE_HPP_

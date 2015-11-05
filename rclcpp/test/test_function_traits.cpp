@@ -21,6 +21,7 @@ int func_no_args()
   return 0;
 }
 
+// NOLINTNEXTLINE(readability/casting)
 int func_one_int(int)
 {
   return 1;
@@ -142,15 +143,20 @@ TEST(TestFunctionTraits, arity) {
       return 0;
     };
 
-  auto lambda_one_int = [](int) {
+  auto lambda_one_int = [](int one) {
+      (void)one;
       return 1;
     };
 
-  auto lambda_two_ints = [](int, int) {
+  auto lambda_two_ints = [](int one, int two) {
+      (void)one;
+      (void)two;
       return 2;
     };
 
-  auto lambda_one_int_one_char = [](int, char) {
+  auto lambda_one_int_one_char = [](int one, char two) {
+      (void)one;
+      (void)two;
       return 3;
     };
 
@@ -224,15 +230,20 @@ TEST(TestFunctionTraits, argument_types) {
     >::value, "Functor accepts a char as second argument");
 
   // Test lambdas
-  auto lambda_one_int = [](int) {
+  auto lambda_one_int = [](int one) {
+      (void)one;
       return 1;
     };
 
-  auto lambda_two_ints = [](int, int) {
+  auto lambda_two_ints = [](int one, int two) {
+      (void)one;
+      (void)two;
       return 2;
     };
 
-  auto lambda_one_int_one_char = [](int, char) {
+  auto lambda_one_int_one_char = [](int one, char two) {
+      (void)one;
+      (void)two;
       return 3;
     };
 
@@ -336,15 +347,20 @@ TEST(TestFunctionTraits, check_arguments) {
     "Functor accepts an int and a char as arguments");
 
   // Test lambdas
-  auto lambda_one_int = [](int) {
+  auto lambda_one_int = [](int one) {
+      (void)one;
       return 1;
     };
 
-  auto lambda_two_ints = [](int, int) {
+  auto lambda_two_ints = [](int one, int two) {
+      (void)one;
+      (void)two;
       return 2;
     };
 
-  auto lambda_one_int_one_char = [](int, char) {
+  auto lambda_one_int_one_char = [](int one, char two) {
+      (void)one;
+      (void)two;
       return 3;
     };
 
@@ -378,11 +394,14 @@ TEST(TestFunctionTraits, check_arguments) {
    Tests that same_arguments work.
 */
 TEST(TestFunctionTraits, same_arguments) {
-  auto lambda_one_int = [](int) {
+  auto lambda_one_int = [](int one) {
+      (void)one;
       return 1;
     };
 
-  auto lambda_two_ints = [](int, int) {
+  auto lambda_two_ints = [](int one, int two) {
+      (void)one;
+      (void)two;
       return 1;
     };
 
@@ -427,15 +446,20 @@ TEST(TestFunctionTraits, sfinae_match) {
       return 0;
     };
 
-  auto lambda_one_int = [](int) {
+  auto lambda_one_int = [](int one) {
+      (void)one;
       return 1;
     };
 
-  auto lambda_two_ints = [](int, int) {
+  auto lambda_two_ints = [](int one, int two) {
+      (void)one;
+      (void)two;
       return 2;
     };
 
-  auto lambda_one_int_one_char = [](int, char) {
+  auto lambda_one_int_one_char = [](int one, char two) {
+      (void)one;
+      (void)two;
       return 3;
     };
 

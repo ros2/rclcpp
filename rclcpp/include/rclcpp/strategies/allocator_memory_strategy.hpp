@@ -25,10 +25,8 @@
 
 namespace rclcpp
 {
-
 namespace memory_strategies
 {
-
 namespace allocator_memory_strategy
 {
 
@@ -313,7 +311,6 @@ private:
 
 }  // namespace allocator_memory_strategy
 }  // namespace memory_strategies
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_

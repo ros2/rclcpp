@@ -147,7 +147,7 @@ public:
     bool ignore_local_publications,
     AnySubscriptionCallback<MessageT, Alloc> callback,
     typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
-      memory_strategy = message_memory_strategy::MessageMemoryStrategy<MessageT,
+    memory_strategy = message_memory_strategy::MessageMemoryStrategy<MessageT,
     Alloc>::create_default())
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     any_callback_(callback),

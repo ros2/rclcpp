@@ -19,6 +19,7 @@
 
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
 #include "rclcpp/allocator/allocator_common.hpp"

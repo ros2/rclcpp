@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_MACROS_HPP_
-#define RCLCPP_RCLCPP_MACROS_HPP_
+#ifndef RCLCPP__MACROS_HPP_
+#define RCLCPP__MACROS_HPP_
 
 /* Disables the copy constructor and operator= for the given class.
  *
@@ -76,6 +76,7 @@
   { \
     return std::unique_ptr<__VA_ARGS__>(new __VA_ARGS__(std::forward<Args>(args) ...)); \
   }
+
 /// Defines aliases and static functions for using the Class with unique_ptrs.
 #define RCLCPP_UNIQUE_PTR_DEFINITIONS(...) \
   __RCLCPP_UNIQUE_PTR_ALIAS(__VA_ARGS__) \
@@ -83,4 +84,4 @@
 
 #define RCLCPP_INFO(Args) std::cout << Args << std::endl;
 
-#endif /* RCLCPP_RCLCPP_MACROS_HPP_ */
+#endif  // RCLCPP__MACROS_HPP_

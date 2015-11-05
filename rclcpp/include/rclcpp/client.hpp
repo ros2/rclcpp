@@ -12,32 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CLIENT_HPP_
-#define RCLCPP_RCLCPP_CLIENT_HPP_
+#ifndef RCLCPP__CLIENT_HPP_
+#define RCLCPP__CLIENT_HPP_
 
 #include <future>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <tuple>
 #include <utility>
 
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-
-#include <rclcpp/macros.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/error_handling.h"
+#include "rmw/rmw.h"
 
 namespace rclcpp
 {
-
 namespace client
 {
 
 class ClientBase
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase);
 
@@ -70,7 +68,6 @@ private:
 
   rmw_client_t * client_handle_;
   std::string service_name_;
-
 };
 
 template<typename ServiceT>
@@ -109,7 +106,8 @@ public:
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
     int64_t sequence_number = typed_request_header->sequence_number;
-    // TODO this must check if the sequence_number is valid otherwise the call_promise will be null
+    // TODO(esteve) this must check if the sequence_number is valid otherwise the
+    // call_promise will be null
     auto tuple = this->pending_requests_[sequence_number];
     auto call_promise = std::get<0>(tuple);
     auto callback = std::get<1>(tuple);
@@ -149,7 +147,7 @@ private:
   std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
 };
 
-} /* namespace client */
-} /* namespace rclcpp */
+}  // namespace client
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_CLIENT_HPP_ */
+#endif  // RCLCPP__CLIENT_HPP_

@@ -15,18 +15,12 @@
 #ifndef RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
 
-#include <rmw/rmw.h>
-
-#include <cassert>
-#include <cstdlib>
-#include <memory>
 #include <mutex>
-#include <vector>
+#include <thread>
+#include <unordered_map>
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/node.hpp"
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/visibility_control.hpp"
 

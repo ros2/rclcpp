@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_RCLCPP_HPP_
-#define RCLCPP_RCLCPP_RCLCPP_HPP_
+#ifndef RCLCPP__RCLCPP_HPP_
+#define RCLCPP__RCLCPP_HPP_
 
 #include <csignal>
 #include <memory>
 
-#include <rclcpp/node.hpp>
-#include <rclcpp/parameter.hpp>
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_service.hpp>
-#include <rclcpp/executors.hpp>
-#include <rclcpp/rate.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/executors.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_client.hpp"
+#include "rclcpp/parameter_service.hpp"
+#include "rclcpp/rate.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 // NOLINTNEXTLINE(runtime/int)
@@ -80,6 +80,6 @@ using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;
 using rclcpp::utilities::sleep_for;
 
-} /* namespace rclcpp */
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_RCLCPP_HPP_ */
+#endif  // RCLCPP__RCLCPP_HPP_

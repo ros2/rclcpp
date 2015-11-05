@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_
-#define RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_
+#ifndef RCLCPP__CALLBACK_GROUP_HPP_
+#define RCLCPP__CALLBACK_GROUP_HPP_
 
 #include <atomic>
 #include <string>
 #include <vector>
 
-#include <rclcpp/subscription.hpp>
-#include <rclcpp/timer.hpp>
-#include <rclcpp/service.hpp>
-#include <rclcpp/client.hpp>
+#include "rclcpp/client.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -32,7 +32,7 @@ namespace rclcpp
 namespace node
 {
 class Node;
-} // namespace node
+}  // namespace node
 
 namespace callback_group
 {
@@ -102,10 +102,9 @@ private:
   std::vector<rclcpp::service::ServiceBase::SharedPtr> service_ptrs_;
   std::vector<rclcpp::client::ClientBase::SharedPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
-
 };
 
-} /* namespace callback_group */
-} /* namespace rclcpp */
+}  // namespace callback_group
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_ */
+#endif  // RCLCPP__CALLBACK_GROUP_HPP_

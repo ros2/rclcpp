@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_PARAMETER_SERVICE_HPP_
-#define RCLCPP_RCLCPP_PARAMETER_SERVICE_HPP_
+#ifndef RCLCPP__PARAMETER_SERVICE_HPP_
+#define RCLCPP__PARAMETER_SERVICE_HPP_
 
 #include <string>
 
@@ -32,13 +32,11 @@
 
 namespace rclcpp
 {
-
 namespace parameter_service
 {
 
 class ParameterService
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterService);
 
@@ -58,8 +56,7 @@ private:
   rclcpp::service::Service<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_service_;
 };
 
-} /* namespace parameter_service */
+}  // namespace parameter_service
+}  // namespace rclcpp
 
-} /* namespace rclcpp */
-
-#endif /* RCLCPP_RCLCPP_PARAMETER_SERVICE_HPP_ */
+#endif  // RCLCPP__PARAMETER_SERVICE_HPP_

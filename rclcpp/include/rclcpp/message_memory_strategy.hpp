@@ -16,6 +16,7 @@
 #define RCLCPP__MESSAGE_MEMORY_STRATEGY_HPP_
 
 #include <memory>
+#include <stdexcept>
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/macros.hpp"

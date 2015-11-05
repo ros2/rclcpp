@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_SERVICE_HPP_
-#define RCLCPP_RCLCPP_SERVICE_HPP_
+#ifndef RCLCPP__SERVICE_HPP_
+#define RCLCPP__SERVICE_HPP_
 
 #include <functional>
 #include <iostream>
@@ -21,22 +21,19 @@
 #include <sstream>
 #include <string>
 
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-
-#include <rclcpp/macros.hpp>
-#include <rclcpp/any_service_callback.hpp>
+#include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/error_handling.h"
+#include "rmw/rmw.h"
 
 namespace rclcpp
 {
-
 namespace service
 {
 
 class ServiceBase
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase);
 
@@ -70,10 +67,9 @@ private:
 
   rmw_service_t * service_handle_;
   std::string service_name_;
-
 };
 
-using namespace any_service_callback;
+using any_service_callback::AnyServiceCallback;
 
 template<typename ServiceT>
 class Service : public ServiceBase
@@ -141,7 +137,7 @@ private:
   AnyServiceCallback<ServiceT> any_callback_;
 };
 
-} /* namespace service */
-} /* namespace rclcpp */
+}  // namespace service
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_SERVICE_HPP_ */
+#endif  // RCLCPP__SERVICE_HPP_

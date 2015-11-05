@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_EXECUTORS_HPP_
-#define RCLCPP_RCLCPP_EXECUTORS_HPP_
+#ifndef RCLCPP__EXECUTORS_HPP_
+#define RCLCPP__EXECUTORS_HPP_
 
 #include <future>
-#include <rclcpp/executors/multi_threaded_executor.hpp>
-#include <rclcpp/executors/single_threaded_executor.hpp>
-#include <rclcpp/node.hpp>
-#include <rclcpp/utilities.hpp>
+
+#include "rclcpp/executors/multi_threaded_executor.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -108,4 +109,4 @@ spin_until_future_complete(
 
 }  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_EXECUTORS_HPP_ */
+#endif  // RCLCPP__EXECUTORS_HPP_
