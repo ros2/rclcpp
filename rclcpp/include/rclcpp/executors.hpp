@@ -44,14 +44,6 @@ namespace executors
 using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 
-/// Return codes to be used with spin_until_future_complete.
-/**
- * SUCCESS: The future is complete and can be accessed with "get" without blocking.
- * INTERRUPTED: The future is not complete, spinning was interrupted by Ctrl-C or another error.
- * TIMEOUT: Spinning timed out.
- */
-enum FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
-
 /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
 /**
  * \param[in] executor The executor which will spin the node.
@@ -63,7 +55,7 @@ enum FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
  * \return The return code, one of SUCCESS, INTERRUPTED, or TIMEOUT.
  */
 template<typename ResponseT, typename TimeT = std::milli>
-FutureReturnCode
+rclcpp::executor::FutureReturnCode
 spin_node_until_future_complete(
   rclcpp::executor::Executor & executor, rclcpp::node::Node::SharedPtr node_ptr,
   std::shared_future<ResponseT> & future,
@@ -71,34 +63,16 @@ spin_node_until_future_complete(
 {
   // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
   // inside a callback executed by an executor.
-
-  // Check the future before entering the while loop.
-  // If the future is already complete, don't try to spin.
-  std::future_status status = future.wait_for(std::chrono::seconds(0));
-
-  auto start_time = std::chrono::system_clock::now();
-
-  while (status != std::future_status::ready && rclcpp::utilities::ok()) {
-    executor.spin_node_once(node_ptr, timeout);
-    if (timeout.count() >= 0) {
-      if (start_time + timeout < std::chrono::system_clock::now()) {
-        return TIMEOUT;
-      }
-    }
-    status = future.wait_for(std::chrono::seconds(0));
-  }
-
-  // If the future completed, and we weren't interrupted by ctrl-C, return the response
-  if (status == std::future_status::ready) {
-    return FutureReturnCode::SUCCESS;
-  }
-  return FutureReturnCode::INTERRUPTED;
+  executor.add_node(node_ptr);
+  auto retcode = executor.spin_until_future_complete(future, timeout);
+  executor.remove_node(node_ptr);
+  return retcode;
 }
 
 }  // namespace executors
 
 template<typename FutureT, typename TimeT = std::milli>
-rclcpp::executors::FutureReturnCode
+rclcpp::executor::FutureReturnCode
 spin_until_future_complete(
   node::Node::SharedPtr node_ptr, std::shared_future<FutureT> & future,
   std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))

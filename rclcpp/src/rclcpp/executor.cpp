@@ -93,10 +93,7 @@ Executor::spin_node_once_nanoseconds(
 {
   this->add_node(node, false);
   // non-blocking = true
-  auto any_exec = get_next_executable(timeout);
-  if (any_exec) {
-    execute_any_executable(any_exec);
-  }
+  spin_once(timeout);
   this->remove_node(node, false);
 }
 
@@ -114,6 +111,15 @@ Executor::spin_some()
   while (AnyExecutable::SharedPtr any_exec =
     get_next_executable(std::chrono::milliseconds::zero()))
   {
+    execute_any_executable(any_exec);
+  }
+}
+
+void
+Executor::spin_once(std::chrono::nanoseconds timeout)
+{
+  auto any_exec = get_next_executable(timeout);
+  if (any_exec) {
     execute_any_executable(any_exec);
   }
 }
