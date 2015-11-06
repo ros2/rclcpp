@@ -97,9 +97,8 @@ public:
   GenericTimer(std::chrono::nanoseconds period, CallbackType callback)
   : TimerBase(period, callback), loop_rate_(period)
   {
-    /* Subtracting the loop rate period ensures that the callback gets triggered
-       on the first call to check_and_trigger. */
-    last_triggered_time_ = Clock::now() - period;
+    /* Set last_triggered_time_ so that the timer fires at least one period after being created. */
+    last_triggered_time_ = Clock::now();
   }
 
   /// Default destructor.
