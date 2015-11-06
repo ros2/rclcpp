@@ -20,9 +20,23 @@
 #include <rclcpp/executors/single_threaded_executor.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/utilities.hpp>
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
+
+/// Create a default single-threaded executor and execute any immediately available work.
+// \param[in] node_ptr Shared pointer to the node to spin.
+RCLCPP_PUBLIC
+void
+spin_some(node::Node::SharedPtr node_ptr);
+
+/// Create a default single-threaded executor and spin the specified node.
+// \param[in] node_ptr Shared pointer to the node to spin.
+RCLCPP_PUBLIC
+void
+spin(node::Node::SharedPtr node_ptr);
+
 namespace executors
 {
 
@@ -37,8 +51,7 @@ using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
  */
 enum FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
 
-/// Spin (blocking) until the future is complete, until the function times out (if applicable),
-/// or until rclcpp is interrupted.
+/// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
 /**
  * \param[in] executor The executor which will spin the node.
  * \param[in] node_ptr The node to spin.
@@ -55,7 +68,7 @@ spin_node_until_future_complete(
   std::shared_future<ResponseT> & future,
   std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
 {
-  // TODO(wjwwood): does not work recursively right, can't call spin_node_until_future_complete
+  // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
   // inside a callback executed by an executor.
 
   // Check the future before entering the while loop.
@@ -81,7 +94,18 @@ spin_node_until_future_complete(
   return FutureReturnCode::INTERRUPTED;
 }
 
-} // namespace executors
-} // namespace rclcpp
+}  // namespace executors
+
+template<typename FutureT, typename TimeT = std::milli>
+rclcpp::executors::FutureReturnCode
+spin_until_future_complete(
+  node::Node::SharedPtr node_ptr, std::shared_future<FutureT> & future,
+  std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
+{
+  rclcpp::executors::SingleThreadedExecutor executor;
+  return executors::spin_node_until_future_complete<FutureT>(executor, node_ptr, future, timeout);
+}
+
+}  // namespace rclcpp
 
 #endif /* RCLCPP_RCLCPP_EXECUTORS_HPP_ */

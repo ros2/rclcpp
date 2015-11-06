@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,153 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CLIENT_HPP_
-#define RCLCPP_RCLCPP_CLIENT_HPP_
+#include "rclcpp/client.hpp"
 
-#include <future>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <sstream>
-#include <utility>
+#include <cstdio>
+#include <string>
 
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
+#include "rmw/rmw.h"
 
-#include <rclcpp/macros.hpp>
-#include <rclcpp/utilities.hpp>
+using rclcpp::client::ClientBase;
 
-namespace rclcpp
+ClientBase::ClientBase(
+  std::shared_ptr<rmw_node_t> node_handle,
+  rmw_client_t * client_handle,
+  const std::string & service_name)
+: node_handle_(node_handle), client_handle_(client_handle), service_name_(service_name)
+{}
+
+ClientBase::~ClientBase()
 {
-
-namespace client
-{
-
-class ClientBase
-{
-
-public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase);
-
-  ClientBase(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_client_t * client_handle,
-    const std::string & service_name)
-  : node_handle_(node_handle), client_handle_(client_handle), service_name_(service_name)
-  {}
-
-  virtual ~ClientBase()
-  {
-    if (client_handle_) {
-      if (rmw_destroy_client(client_handle_) != RMW_RET_OK) {
-        fprintf(stderr,
-          "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
-      }
+  if (client_handle_) {
+    if (rmw_destroy_client(client_handle_) != RMW_RET_OK) {
+      fprintf(stderr,
+        "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
     }
   }
+}
 
-  const std::string & get_service_name() const
-  {
-    return this->service_name_;
-  }
-
-  const rmw_client_t * get_client_handle() const
-  {
-    return this->client_handle_;
-  }
-
-  virtual std::shared_ptr<void> create_response() = 0;
-  virtual std::shared_ptr<void> create_request_header() = 0;
-  virtual void handle_response(
-    std::shared_ptr<void> & request_header, std::shared_ptr<void> & response) = 0;
-
-private:
-  RCLCPP_DISABLE_COPY(ClientBase);
-
-  std::shared_ptr<rmw_node_t> node_handle_;
-
-  rmw_client_t * client_handle_;
-  std::string service_name_;
-
-};
-
-template<typename ServiceT>
-class Client : public ClientBase
+const std::string &
+ClientBase::get_service_name() const
 {
-public:
-  using Promise = std::promise<typename ServiceT::Response::SharedPtr>;
-  using SharedPromise = std::shared_ptr<Promise>;
-  using SharedFuture = std::shared_future<typename ServiceT::Response::SharedPtr>;
+  return this->service_name_;
+}
 
-  using CallbackType = std::function<void(SharedFuture)>;
-
-  RCLCPP_SMART_PTR_DEFINITIONS(Client);
-
-  Client(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_client_t * client_handle,
-    const std::string & service_name)
-  : ClientBase(node_handle, client_handle, service_name)
-  {}
-
-  std::shared_ptr<void> create_response()
-  {
-    return std::shared_ptr<void>(new typename ServiceT::Response());
-  }
-
-  std::shared_ptr<void> create_request_header()
-  {
-    // TODO(wjwwood): This should probably use rmw_request_id's allocator.
-    //                (since it is a C type)
-    return std::shared_ptr<void>(new rmw_request_id_t);
-  }
-
-  void handle_response(std::shared_ptr<void> & request_header, std::shared_ptr<void> & response)
-  {
-    auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
-    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
-    int64_t sequence_number = typed_request_header->sequence_number;
-    // TODO this must check if the sequence_number is valid otherwise the call_promise will be null
-    auto tuple = this->pending_requests_[sequence_number];
-    auto call_promise = std::get<0>(tuple);
-    auto callback = std::get<1>(tuple);
-    auto future = std::get<2>(tuple);
-    this->pending_requests_.erase(sequence_number);
-    call_promise->set_value(typed_response);
-    callback(future);
-  }
-
-  SharedFuture async_send_request(
-    typename ServiceT::Request::SharedPtr request)
-  {
-    return async_send_request(request, [](SharedFuture) {});
-  }
-
-  SharedFuture async_send_request(
-    typename ServiceT::Request::SharedPtr request,
-    CallbackType cb)
-  {
-    int64_t sequence_number;
-    if (RMW_RET_OK != rmw_send_request(get_client_handle(), request.get(), &sequence_number)) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to send request: ") + rmw_get_error_string_safe());
-      // *INDENT-ON*
-    }
-
-    SharedPromise call_promise = std::make_shared<Promise>();
-    SharedFuture f(call_promise->get_future());
-    pending_requests_[sequence_number] = std::make_tuple(call_promise, cb, f);
-    return f;
-  }
-
-private:
-  RCLCPP_DISABLE_COPY(Client);
-
-  std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
-};
-
-} /* namespace client */
-} /* namespace rclcpp */
-
-#endif /* RCLCPP_RCLCPP_CLIENT_HPP_ */
+const rmw_client_t *
+ClientBase::get_client_handle() const
+{
+  return this->client_handle_;
+}

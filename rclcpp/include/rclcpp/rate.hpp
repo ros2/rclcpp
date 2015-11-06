@@ -21,6 +21,7 @@
 
 #include <rclcpp/macros.hpp>
 #include <rclcpp/utilities.hpp>
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -47,11 +48,11 @@ class GenericRate : public RateBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericRate);
 
-  GenericRate(double rate)
+  explicit GenericRate(double rate)
   : GenericRate<Clock>(
       duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
   {}
-  GenericRate(std::chrono::nanoseconds period)
+  explicit GenericRate(std::chrono::nanoseconds period)
   : period_(period), last_interval_(Clock::now())
   {}
 

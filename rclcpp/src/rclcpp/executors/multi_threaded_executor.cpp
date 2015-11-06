@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,95 +12,64 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
-#define RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
+#include "rclcpp/executors/multi_threaded_executor.hpp"
 
-#include <rmw/rmw.h>
-
-#include <cassert>
-#include <cstdlib>
-#include <memory>
-#include <mutex>
+#include <chrono>
+#include <functional>
 #include <vector>
 
-#include "rclcpp/executor.hpp"
-#include "rclcpp/macros.hpp"
-#include "rclcpp/node.hpp"
 #include "rclcpp/utilities.hpp"
 
-namespace rclcpp
-{
-namespace executors
-{
-namespace multi_threaded_executor
-{
+using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 
-class MultiThreadedExecutor : public executor::Executor
+MultiThreadedExecutor::MultiThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms)
+: executor::Executor(ms)
 {
-public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MultiThreadedExecutor);
+  number_of_threads_ = std::thread::hardware_concurrency();
+  if (number_of_threads_ == 0) {
+    number_of_threads_ = 1;
+  }
+}
 
-  MultiThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms =
-    memory_strategies::create_default_strategy())
-  : executor::Executor(ms)
+MultiThreadedExecutor::~MultiThreadedExecutor() {}
+
+void
+MultiThreadedExecutor::spin()
+{
+  std::vector<std::thread> threads;
   {
-    number_of_threads_ = std::thread::hardware_concurrency();
-    if (number_of_threads_ == 0) {
-      number_of_threads_ = 1;
+    std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+    size_t thread_id = 1;
+    for (size_t i = number_of_threads_; i > 0; --i) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id++);
+      threads.emplace_back(func);
     }
   }
+  for (auto & thread : threads) {
+    thread.join();
+  }
+}
 
-  virtual ~MultiThreadedExecutor() {}
+size_t
+MultiThreadedExecutor::get_number_of_threads()
+{
+  return number_of_threads_;
+}
 
-  void
-  spin()
-  {
-    std::vector<std::thread> threads;
+void
+MultiThreadedExecutor::run(size_t this_thread_number)
+{
+  thread_number_by_thread_id_[std::this_thread::get_id()] = this_thread_number;
+  while (rclcpp::utilities::ok()) {
+    executor::AnyExecutable::SharedPtr any_exec;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      size_t thread_id_ = 1;  // Use a _ suffix to avoid shadowing `rclcpp::thread_id`
-      for (size_t i = number_of_threads_; i > 0; --i) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id_++);
-        threads.emplace_back(func);
+      if (!rclcpp::utilities::ok()) {
+        return;
       }
+      any_exec = get_next_executable();
     }
-    for (auto & thread : threads) {
-      thread.join();
-    }
+    execute_any_executable(any_exec);
   }
-
-  size_t
-  get_number_of_threads()
-  {
-    return number_of_threads_;
-  }
-
-private:
-  void run(size_t this_thread_id)
-  {
-    rclcpp::thread_id = this_thread_id;
-    while (rclcpp::utilities::ok()) {
-      executor::AnyExecutable::SharedPtr any_exec;
-      {
-        std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-        if (!rclcpp::utilities::ok()) {
-          return;
-        }
-        any_exec = get_next_executable();
-      }
-      execute_any_executable(any_exec);
-    }
-  }
-
-  RCLCPP_DISABLE_COPY(MultiThreadedExecutor);
-
-  std::mutex wait_mutex_;
-  size_t number_of_threads_;
-};
-
-}  // namespace multi_threaded_executor
-}  // namespace executors
-}  // namespace rclcpp
-
-#endif  // RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
+}

@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,62 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_
-#define RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_
+#include <rclcpp/executors/single_threaded_executor.hpp>
 
-#include <rmw/rmw.h>
+using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 
-#include <cassert>
-#include <cstdlib>
-#include <memory>
-#include <vector>
+SingleThreadedExecutor::SingleThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms)
+: executor::Executor(ms) {}
 
-#include "rclcpp/executor.hpp"
-#include "rclcpp/macros.hpp"
-#include "rclcpp/memory_strategies.hpp"
-#include "rclcpp/node.hpp"
-#include "rclcpp/utilities.hpp"
-#include "rclcpp/rate.hpp"
 
-namespace rclcpp
+SingleThreadedExecutor::~SingleThreadedExecutor() {}
+
+void
+SingleThreadedExecutor::spin()
 {
-namespace executors
-{
-namespace single_threaded_executor
-{
-
-/// Single-threaded executor implementation
-// This is the default executor created by rclcpp::spin.
-class SingleThreadedExecutor : public executor::Executor
-{
-public:
-  RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor);
-
-  /// Default constructor. See the default constructor for Executor.
-  SingleThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms =
-    memory_strategies::create_default_strategy())
-  : executor::Executor(ms) {}
-
-  /// Default destrcutor.
-  virtual ~SingleThreadedExecutor() {}
-
-  /// Single-threaded implementation of spin.
-  // This function will block until work comes in, execute it, and keep blocking.
-  // It will only be interrupt by a CTRL-C (managed by the global signal handler).
-  void spin()
-  {
-    while (rclcpp::utilities::ok()) {
-      auto any_exec = get_next_executable();
-      execute_any_executable(any_exec);
-    }
+  while (rclcpp::utilities::ok()) {
+    auto any_exec = get_next_executable();
+    execute_any_executable(any_exec);
   }
-
-private:
-  RCLCPP_DISABLE_COPY(SingleThreadedExecutor);
-};
-
-}  // namespace single_threaded_executor
-}  // namespace executors
-}  // namespace rclcpp
-
-#endif  // RCLCPP__EXECUTORS__SINGLE_THREADED_EXECUTOR_HPP_
+}

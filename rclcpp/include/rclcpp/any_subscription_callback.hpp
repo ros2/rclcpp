@@ -23,6 +23,7 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/function_traits.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {

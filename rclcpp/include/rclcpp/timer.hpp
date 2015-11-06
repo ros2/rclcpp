@@ -27,6 +27,7 @@
 #include <rclcpp/macros.hpp>
 #include <rclcpp/rate.hpp>
 #include <rclcpp/utilities.hpp>
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -42,32 +43,23 @@ class TimerBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase);
 
-  TimerBase(std::chrono::nanoseconds period, CallbackType callback)
-  : period_(period),
-    callback_(callback),
-    canceled_(false)
-  {
-  }
+  RCLCPP_PUBLIC
+  TimerBase(std::chrono::nanoseconds period, CallbackType callback);
 
-  virtual ~TimerBase()
-  {
-  }
+  RCLCPP_PUBLIC
+  virtual ~TimerBase();
 
+  RCLCPP_PUBLIC
   void
-  cancel()
-  {
-    this->canceled_ = true;
-  }
+  cancel();
 
-  void execute_callback() const
-  {
-    callback_();
-  }
+  RCLCPP_PUBLIC
+  void
+  execute_callback() const;
 
-  const CallbackType & get_callback() const
-  {
-    return callback_;
-  }
+  RCLCPP_PUBLIC
+  const CallbackType &
+  get_callback() const;
 
   /// Check how long the timer has until its next scheduled callback.
   // \return A std::chrono::duration representing the relative time until the next callback.

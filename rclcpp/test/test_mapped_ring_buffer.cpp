@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#define RCLCPP_BUILDING_LIBRARY 1  // Prevent including unavailable symbols
 #include <rclcpp/mapped_ring_buffer.hpp>
 
 /*

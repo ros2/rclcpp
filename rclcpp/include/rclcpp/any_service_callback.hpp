@@ -22,6 +22,8 @@
 #include <type_traits>
 
 #include <rmw/types.h>
+#include "rclcpp/function_traits.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {

@@ -26,6 +26,8 @@
 #include <unordered_map>
 
 #include <rmw/rmw.h>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -38,7 +40,7 @@ class Context
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Context);
 
-  Context() {}
+  Context();
 
   template<typename SubContext, typename ... Args>
   std::shared_ptr<SubContext>

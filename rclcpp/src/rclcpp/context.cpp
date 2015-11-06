@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,69 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CONTEXT_HPP_
-#define RCLCPP_RCLCPP_CONTEXT_HPP_
+#include "rclcpp/context.hpp"
 
-#include <rclcpp/macros.hpp>
+using rclcpp::context::Context;
 
-#include <iostream>
-
-#include <memory>
-#include <mutex>
-#include <typeinfo>
-#include <typeindex>
-#include <unordered_map>
-
-#include <rmw/rmw.h>
-
-namespace rclcpp
-{
-
-namespace context
-{
-
-class Context
-{
-public:
-  RCLCPP_SMART_PTR_DEFINITIONS(Context);
-
-  Context() {}
-
-  template<typename SubContext, typename ... Args>
-  std::shared_ptr<SubContext>
-  get_sub_context(Args && ... args)
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    std::type_index type_i(typeid(SubContext));
-    std::shared_ptr<SubContext> sub_context;
-    auto it = sub_contexts_.find(type_i);
-    if (it == sub_contexts_.end()) {
-      // It doesn't exist yet, make it
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      sub_context = std::shared_ptr<SubContext>(
-        new SubContext(std::forward<Args>(args) ...),
-        [] (SubContext * sub_context_ptr) {
-          delete sub_context_ptr;
-        });
-      // *INDENT-ON*
-      sub_contexts_[type_i] = sub_context;
-    } else {
-      // It exists, get it out and cast it.
-      sub_context = std::static_pointer_cast<SubContext>(it->second);
-    }
-    return sub_context;
-  }
-
-private:
-  RCLCPP_DISABLE_COPY(Context);
-
-  std::unordered_map<std::type_index, std::shared_ptr<void>> sub_contexts_;
-  std::mutex mutex_;
-
-};
-
-} /* namespace context */
-} /* namespace rclcpp */
-
-#endif /* RCLCPP_RCLCPP_CONTEXT_HPP_ */
+Context::Context() {}

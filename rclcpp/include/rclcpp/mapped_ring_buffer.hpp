@@ -23,13 +23,14 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
 namespace mapped_ring_buffer
 {
 
-class MappedRingBufferBase
+class RCLCPP_PUBLIC MappedRingBufferBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBufferBase);

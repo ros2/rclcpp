@@ -118,11 +118,13 @@ public:
 // Prevent rclcpp/publisher.hpp and rclcpp/subscription.hpp from being imported.
 #define RCLCPP__PUBLISHER_HPP_
 #define RCLCPP__SUBSCRIPTION_HPP_
+#define RCLCPP_BUILDING_LIBRARY 1
 // Force ipm to use our mock publisher class.
 #define Publisher mock::Publisher
 #define PublisherBase mock::PublisherBase
 #define SubscriptionBase mock::SubscriptionBase
-#include <rclcpp/intra_process_manager.hpp>
+#include "../src/rclcpp/intra_process_manager.cpp"
+#include "../src/rclcpp/intra_process_manager_state.cpp"
 #undef SubscriptionBase
 #undef Publisher
 #undef PublisherBase

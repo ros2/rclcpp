@@ -12,16 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/any_executable.hpp"
-
-using rclcpp::executor::AnyExecutable;
-
-AnyExecutable::AnyExecutable()
-: subscription(nullptr),
-  subscription_intra_process(nullptr),
-  timer(nullptr),
-  service(nullptr),
-  client(nullptr),
-  callback_group(nullptr),
-  node(nullptr)
-{}
+#if defined(WIN32)
+#include "rclcpp/type_support_def.hpp"
+#endif

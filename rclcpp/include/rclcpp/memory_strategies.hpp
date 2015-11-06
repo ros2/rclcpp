@@ -17,18 +17,16 @@
 
 #include <rclcpp/memory_strategy.hpp>
 #include <rclcpp/strategies/allocator_memory_strategy.hpp>
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
 namespace memory_strategies
 {
 
-using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
-
-static memory_strategy::MemoryStrategy::SharedPtr create_default_strategy()
-{
-  return std::make_shared<AllocatorMemoryStrategy<>>();
-}
+RCLCPP_PUBLIC
+memory_strategy::MemoryStrategy::SharedPtr
+create_default_strategy();
 
 }  // namespace memory_strategies
 }  // namespace rclcpp

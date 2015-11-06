@@ -23,6 +23,7 @@
 #include <rclcpp/timer.hpp>
 #include <rclcpp/service.hpp>
 #include <rclcpp/client.hpp>
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -49,77 +50,57 @@ class CallbackGroup
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup);
 
-  CallbackGroup(CallbackGroupType group_type)
-  : type_(group_type), can_be_taken_from_(true)
-  {}
+  RCLCPP_PUBLIC
+  explicit CallbackGroup(CallbackGroupType group_type);
 
-  const std::vector<subscription::SubscriptionBase::WeakPtr> &
-  get_subscription_ptrs() const
-  {
-    return subscription_ptrs_;
-  }
+  RCLCPP_PUBLIC
+  const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
+  get_subscription_ptrs() const;
 
-  const std::vector<timer::TimerBase::WeakPtr> &
-  get_timer_ptrs() const
-  {
-    return timer_ptrs_;
-  }
+  RCLCPP_PUBLIC
+  const std::vector<rclcpp::timer::TimerBase::WeakPtr> &
+  get_timer_ptrs() const;
 
-  const std::vector<service::ServiceBase::SharedPtr> &
-  get_service_ptrs() const
-  {
-    return service_ptrs_;
-  }
+  RCLCPP_PUBLIC
+  const std::vector<rclcpp::service::ServiceBase::SharedPtr> &
+  get_service_ptrs() const;
 
-  const std::vector<client::ClientBase::SharedPtr> &
-  get_client_ptrs() const
-  {
-    return client_ptrs_;
-  }
+  RCLCPP_PUBLIC
+  const std::vector<rclcpp::client::ClientBase::SharedPtr> &
+  get_client_ptrs() const;
 
-  std::atomic_bool & can_be_taken_from()
-  {
-    return can_be_taken_from_;
-  }
+  RCLCPP_PUBLIC
+  std::atomic_bool &
+  can_be_taken_from();
 
-  const CallbackGroupType & type() const
-  {
-    return type_;
-  }
+  RCLCPP_PUBLIC
+  const CallbackGroupType &
+  type() const;
 
 private:
   RCLCPP_DISABLE_COPY(CallbackGroup);
 
+  RCLCPP_PUBLIC
   void
-  add_subscription(
-    const subscription::SubscriptionBase::SharedPtr subscription_ptr)
-  {
-    subscription_ptrs_.push_back(subscription_ptr);
-  }
+  add_subscription(const rclcpp::subscription::SubscriptionBase::SharedPtr subscription_ptr);
 
+  RCLCPP_PUBLIC
   void
-  add_timer(const timer::TimerBase::SharedPtr timer_ptr)
-  {
-    timer_ptrs_.push_back(timer_ptr);
-  }
+  add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr);
 
+  RCLCPP_PUBLIC
   void
-  add_service(const service::ServiceBase::SharedPtr service_ptr)
-  {
-    service_ptrs_.push_back(service_ptr);
-  }
+  add_service(const rclcpp::service::ServiceBase::SharedPtr service_ptr);
 
+  RCLCPP_PUBLIC
   void
-  add_client(const client::ClientBase::SharedPtr client_ptr)
-  {
-    client_ptrs_.push_back(client_ptr);
-  }
+  add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr);
 
   CallbackGroupType type_;
-  std::vector<subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
-  std::vector<timer::TimerBase::WeakPtr> timer_ptrs_;
-  std::vector<service::ServiceBase::SharedPtr> service_ptrs_;
-  std::vector<client::ClientBase::SharedPtr> client_ptrs_;
+  std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
+  std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
+  std::vector<rclcpp::service::ServiceBase::SharedPtr> service_ptrs_;
+  std::vector<rclcpp::client::ClientBase::SharedPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
 
 };

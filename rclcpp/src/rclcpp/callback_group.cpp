@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,119 +12,74 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_
-#define RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_
+#include "rclcpp/callback_group.hpp"
 
-#include <atomic>
-#include <string>
 #include <vector>
 
-#include <rclcpp/subscription.hpp>
-#include <rclcpp/timer.hpp>
-#include <rclcpp/service.hpp>
-#include <rclcpp/client.hpp>
+using rclcpp::callback_group::CallbackGroup;
+using rclcpp::callback_group::CallbackGroupType;
 
-namespace rclcpp
+CallbackGroup::CallbackGroup(CallbackGroupType group_type)
+: type_(group_type), can_be_taken_from_(true)
+{}
+
+const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
+CallbackGroup::get_subscription_ptrs() const
 {
+  return subscription_ptrs_;
+}
 
-// Forward declarations for friend statement in class CallbackGroup
-namespace node
+const std::vector<rclcpp::timer::TimerBase::WeakPtr> &
+CallbackGroup::get_timer_ptrs() const
 {
-class Node;
-} // namespace node
+  return timer_ptrs_;
+}
 
-namespace callback_group
+const std::vector<rclcpp::service::ServiceBase::SharedPtr> &
+CallbackGroup::get_service_ptrs() const
 {
+  return service_ptrs_;
+}
 
-enum class CallbackGroupType
+const std::vector<rclcpp::client::ClientBase::SharedPtr> &
+CallbackGroup::get_client_ptrs() const
 {
-  MutuallyExclusive,
-  Reentrant
-};
+  return client_ptrs_;
+}
 
-class CallbackGroup
+std::atomic_bool &
+CallbackGroup::can_be_taken_from()
 {
-  friend class rclcpp::node::Node;
+  return can_be_taken_from_;
+}
 
-public:
-  RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup);
+const CallbackGroupType &
+CallbackGroup::type() const
+{
+  return type_;
+}
 
-  CallbackGroup(CallbackGroupType group_type)
-  : type_(group_type), can_be_taken_from_(true)
-  {}
+void
+CallbackGroup::add_subscription(
+  const rclcpp::subscription::SubscriptionBase::SharedPtr subscription_ptr)
+{
+  subscription_ptrs_.push_back(subscription_ptr);
+}
 
-  const std::vector<subscription::SubscriptionBase::WeakPtr> &
-  get_subscription_ptrs() const
-  {
-    return subscription_ptrs_;
-  }
+void
+CallbackGroup::add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr)
+{
+  timer_ptrs_.push_back(timer_ptr);
+}
 
-  const std::vector<timer::TimerBase::WeakPtr> &
-  get_timer_ptrs() const
-  {
-    return timer_ptrs_;
-  }
+void
+CallbackGroup::add_service(const rclcpp::service::ServiceBase::SharedPtr service_ptr)
+{
+  service_ptrs_.push_back(service_ptr);
+}
 
-  const std::vector<service::ServiceBase::SharedPtr> &
-  get_service_ptrs() const
-  {
-    return service_ptrs_;
-  }
-
-  const std::vector<client::ClientBase::SharedPtr> &
-  get_client_ptrs() const
-  {
-    return client_ptrs_;
-  }
-
-  std::atomic_bool & can_be_taken_from()
-  {
-    return can_be_taken_from_;
-  }
-
-  const CallbackGroupType & type() const
-  {
-    return type_;
-  }
-
-private:
-  RCLCPP_DISABLE_COPY(CallbackGroup);
-
-  void
-  add_subscription(
-    const subscription::SubscriptionBase::SharedPtr subscription_ptr)
-  {
-    subscription_ptrs_.push_back(subscription_ptr);
-  }
-
-  void
-  add_timer(const timer::TimerBase::SharedPtr timer_ptr)
-  {
-    timer_ptrs_.push_back(timer_ptr);
-  }
-
-  void
-  add_service(const service::ServiceBase::SharedPtr service_ptr)
-  {
-    service_ptrs_.push_back(service_ptr);
-  }
-
-  void
-  add_client(const client::ClientBase::SharedPtr client_ptr)
-  {
-    client_ptrs_.push_back(client_ptr);
-  }
-
-  CallbackGroupType type_;
-  std::vector<subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
-  std::vector<timer::TimerBase::WeakPtr> timer_ptrs_;
-  std::vector<service::ServiceBase::SharedPtr> service_ptrs_;
-  std::vector<client::ClientBase::SharedPtr> client_ptrs_;
-  std::atomic_bool can_be_taken_from_;
-
-};
-
-} /* namespace callback_group */
-} /* namespace rclcpp */
-
-#endif /* RCLCPP_RCLCPP_CALLBACK_GROUP_HPP_ */
+void
+CallbackGroup::add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr)
+{
+  client_ptrs_.push_back(client_ptr);
+}

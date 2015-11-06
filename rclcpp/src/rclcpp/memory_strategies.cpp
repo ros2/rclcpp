@@ -12,25 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__MEMORY_STRATEGIES_HPP_
-#define RCLCPP__MEMORY_STRATEGIES_HPP_
+#include "rclcpp/memory_strategies.hpp"
 
-#include <rclcpp/memory_strategy.hpp>
-#include <rclcpp/strategies/allocator_memory_strategy.hpp>
-
-namespace rclcpp
-{
-namespace memory_strategies
-{
+#include "rclcpp/strategies/allocator_memory_strategy.hpp"
 
 using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
 
-static memory_strategy::MemoryStrategy::SharedPtr create_default_strategy()
+rclcpp::memory_strategy::MemoryStrategy::SharedPtr
+rclcpp::memory_strategies::create_default_strategy()
 {
   return std::make_shared<AllocatorMemoryStrategy<>>();
 }
-
-}  // namespace memory_strategies
-}  // namespace rclcpp
-
-#endif  // RCLCPP__MEMORY_STRATEGIES_HPP_

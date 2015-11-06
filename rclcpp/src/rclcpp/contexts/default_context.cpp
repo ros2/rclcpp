@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2015 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,36 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CONTEXTS_DEFAULT_CONTEXT_HPP_
-#define RCLCPP_RCLCPP_CONTEXTS_DEFAULT_CONTEXT_HPP_
+#include "rclcpp/contexts/default_context.hpp"
 
-#include <rclcpp/context.hpp>
+using rclcpp::contexts::default_context::DefaultContext;
 
-namespace rclcpp
-{
-namespace contexts
-{
-namespace default_context
-{
-
-class DefaultContext : public rclcpp::context::Context
-{
-public:
-  RCLCPP_SMART_PTR_DEFINITIONS(DefaultContext);
-
-  DefaultContext() {}
-
-};
+DefaultContext::DefaultContext()
+{}
 
 DefaultContext::SharedPtr
-get_global_default_context()
+rclcpp::contexts::default_context::get_global_default_context()
 {
   static DefaultContext::SharedPtr default_context = DefaultContext::make_shared();
   return default_context;
 }
-
-} // namespace default_context
-} // namespace contexts
-} // namespace rclcpp
-
-#endif /* RCLCPP_RCLCPP_CONTEXTS_DEFAULT_CONTEXT_HPP_ */

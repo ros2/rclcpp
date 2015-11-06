@@ -26,7 +26,6 @@
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
-#include "rosidl_generator_cpp/message_type_support.hpp"
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
@@ -38,7 +37,7 @@
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/timer.hpp"
-
+#include "rclcpp/visibility_control.hpp"
 
 // Forward declaration of ROS middleware class
 namespace rmw
@@ -63,6 +62,7 @@ public:
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
+  RCLCPP_PUBLIC
   explicit Node(const std::string & node_name, bool use_intra_process_comms = false);
 
   /// Create a node based on the node name and a rclcpp::context::Context.
@@ -72,16 +72,19 @@ public:
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
+  RCLCPP_PUBLIC
   Node(
     const std::string & node_name, rclcpp::context::Context::SharedPtr context,
     bool use_intra_process_comms = false);
 
   /// Get the name of the node.
   // \return The name of the node.
+  RCLCPP_PUBLIC
   const std::string &
-  get_name() const {return name_; }
+  get_name() const;
 
   /// Create and return a callback group.
+  RCLCPP_PUBLIC
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
@@ -168,13 +171,14 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
+  RCLCPP_PUBLIC
   rclcpp::timer::WallTimer::SharedPtr
   create_wall_timer(
     std::chrono::nanoseconds period,
     rclcpp::timer::CallbackType callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  /// Create a timer with a sub-nanosecond precision update period.
+  /// Create a timer.
   /**
    * \param[in] period Time interval between triggers of the callback.
    * \param[in] callback User-defined callback function.
@@ -206,37 +210,50 @@ public:
     FunctorT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  std::vector<rcl_interfaces::msg::SetParametersResult> set_parameters(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  set_parameters(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
-  rcl_interfaces::msg::SetParametersResult set_parameters_atomically(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
-  std::vector<rclcpp::parameter::ParameterVariant> get_parameters(
-    const std::vector<std::string> & names) const;
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::parameter::ParameterVariant>
+  get_parameters(const std::vector<std::string> & names) const;
 
-  std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
-    const std::vector<std::string> & names) const;
+  RCLCPP_PUBLIC
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(const std::vector<std::string> & names) const;
 
-  std::vector<uint8_t> get_parameter_types(
-    const std::vector<std::string> & names) const;
+  RCLCPP_PUBLIC
+  std::vector<uint8_t>
+  get_parameter_types(const std::vector<std::string> & names) const;
 
-  rcl_interfaces::msg::ListParametersResult list_parameters(
-    const std::vector<std::string> & prefixes, uint64_t depth) const;
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::ListParametersResult
+  list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
-  std::map<std::string, std::string> get_topic_names_and_types() const;
+  RCLCPP_PUBLIC
+  std::map<std::string, std::string>
+  get_topic_names_and_types() const;
 
-  size_t count_publishers(const std::string & topic_name) const;
+  RCLCPP_PUBLIC
+  size_t
+  count_publishers(const std::string & topic_name) const;
 
-  size_t count_subscribers(const std::string & topic_name) const;
+  RCLCPP_PUBLIC
+  size_t
+  count_subscribers(const std::string & topic_name) const;
 
-  const CallbackGroupWeakPtrList & get_callback_groups() const;
+  RCLCPP_PUBLIC
+  const CallbackGroupWeakPtrList &
+  get_callback_groups() const;
 
 private:
   RCLCPP_DISABLE_COPY(Node);
 
-  static const rosidl_message_type_support_t * ipm_ts_;
-
+  RCLCPP_PUBLIC
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
@@ -263,20 +280,8 @@ private:
   publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 };
 
-const rosidl_message_type_support_t * Node::ipm_ts_ =
-  rosidl_generator_cpp::get_message_type_support_handle<rcl_interfaces::msg::IntraProcessMessage>();
-
-} /* namespace node */
-} /* namespace rclcpp */
-
-#define RCLCPP_REGISTER_NODE(Class) RMW_EXPORT \
-  rclcpp::node::Node::SharedPtr \
-  create_node() \
-  { \
-    return rclcpp::node::Node::SharedPtr(new Class( \
-               rclcpp::contexts::default_context::DefaultContext:: \
-               make_shared())); \
-  }
+}  // namespace node
+}  // namespace rclcpp
 
 #ifndef RCLCPP__NODE_IMPL_HPP_
 // Template implementations
