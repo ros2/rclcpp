@@ -125,7 +125,7 @@ public:
 
   SharedFuture async_send_request(
     typename ServiceT::Request::SharedPtr request,
-    CallbackType cb)
+    CallbackType && cb)
   {
     int64_t sequence_number;
     if (RMW_RET_OK != rmw_send_request(get_client_handle(), request.get(), &sequence_number)) {
@@ -137,7 +137,8 @@ public:
 
     SharedPromise call_promise = std::make_shared<Promise>();
     SharedFuture f(call_promise->get_future());
-    pending_requests_[sequence_number] = std::make_tuple(call_promise, cb, f);
+    pending_requests_[sequence_number] =
+      std::make_tuple(call_promise, std::forward<CallbackType>(cb), f);
     return f;
   }
 
