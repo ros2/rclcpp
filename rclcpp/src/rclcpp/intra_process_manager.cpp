@@ -21,7 +21,8 @@ namespace intra_process_manager
 
 static std::atomic<uint64_t> _next_unique_id {1};
 
-IntraProcessManager::IntraProcessManager(rclcpp::intra_process_manager::IntraProcessManagerStateBase::SharedPtr state)
+IntraProcessManager::IntraProcessManager(
+  rclcpp::intra_process_manager::IntraProcessManagerStateBase::SharedPtr state)
 : state_(state)
 {}
 
