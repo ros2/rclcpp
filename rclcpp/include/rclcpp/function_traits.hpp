@@ -18,8 +18,6 @@
 #include <memory>
 #include <tuple>
 
-#include "rclcpp/visibility_control.hpp"
-
 namespace rclcpp
 {
 
