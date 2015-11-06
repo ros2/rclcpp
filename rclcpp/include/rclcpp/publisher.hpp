@@ -27,8 +27,10 @@
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 #include "rmw/impl/cpp/demangle.hpp"
 
+#include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -55,77 +57,40 @@ public:
    * \param[in] topic The topic that this publisher publishes on.
    * \param[in] queue_size The maximum number of unpublished messages to queue.
    */
+  RCLCPP_PUBLIC
   PublisherBase(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_publisher_t * publisher_handle,
     std::string topic,
-    size_t queue_size)
-  : node_handle_(node_handle), publisher_handle_(publisher_handle),
-    intra_process_publisher_handle_(nullptr),
-    topic_(topic), queue_size_(queue_size),
-    intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
-  {
-    // Life time of this object is tied to the publisher handle.
-    if (rmw_get_gid_for_publisher(publisher_handle_, &rmw_gid_) != RMW_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
-      // *INDENT-ON*
-    }
-  }
+    size_t queue_size);
 
   /// Default destructor.
-  virtual ~PublisherBase()
-  {
-    if (intra_process_publisher_handle_) {
-      if (rmw_destroy_publisher(node_handle_.get(), intra_process_publisher_handle_)) {
-        fprintf(
-          stderr,
-          "Error in destruction of intra process rmw publisher handle: %s\n",
-          rmw_get_error_string_safe());
-      }
-    }
-    if (publisher_handle_) {
-      if (rmw_destroy_publisher(node_handle_.get(), publisher_handle_) != RMW_RET_OK) {
-        fprintf(
-          stderr,
-          "Error in destruction of rmw publisher handle: %s\n",
-          rmw_get_error_string_safe());
-      }
-    }
-  }
+  RCLCPP_PUBLIC
+  virtual ~PublisherBase();
 
   /// Get the topic that this publisher publishes on.
   // \return The topic name.
+  RCLCPP_PUBLIC
   const std::string &
-  get_topic_name() const
-  {
-    return topic_;
-  }
+  get_topic_name() const;
 
   /// Get the queue size for this publisher.
   // \return The queue size.
+  RCLCPP_PUBLIC
   size_t
-  get_queue_size() const
-  {
-    return queue_size_;
-  }
+  get_queue_size() const;
 
   /// Get the global identifier for this publisher (used in rmw and by DDS).
   // \return The gid.
+  RCLCPP_PUBLIC
   const rmw_gid_t &
-  get_gid() const
-  {
-    return rmw_gid_;
-  }
+  get_gid() const;
 
   /// Get the global identifier for this publisher used by intra-process communication.
   // \return The intra-process gid.
+  RCLCPP_PUBLIC
   const rmw_gid_t &
-  get_intra_process_gid() const
-  {
-    return intra_process_rmw_gid_;
-  }
+  get_intra_process_gid() const;
 
   /// Compare this publisher to a gid.
   /**
@@ -133,11 +98,9 @@ public:
    * \param[in] gid Reference to a gid.
    * \return True if the publisher's gid matches the input.
    */
+  RCLCPP_PUBLIC
   bool
-  operator==(const rmw_gid_t & gid) const
-  {
-    return *this == &gid;
-  }
+  operator==(const rmw_gid_t & gid) const;
 
   /// Compare this publisher to a pointer gid.
   /**
@@ -145,47 +108,19 @@ public:
    * \param[in] gid A pointer to a gid.
    * \return True if this publisher's gid matches the input.
    */
+  RCLCPP_PUBLIC
   bool
-  operator==(const rmw_gid_t * gid) const
-  {
-    bool result = false;
-    auto ret = rmw_compare_gids_equal(gid, &this->get_gid(), &result);
-    if (ret != RMW_RET_OK) {
-      throw std::runtime_error(
-              std::string("failed to compare gids: ") + rmw_get_error_string_safe());
-    }
-    if (!result) {
-      ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
-      if (ret != RMW_RET_OK) {
-        throw std::runtime_error(
-                std::string("failed to compare gids: ") + rmw_get_error_string_safe());
-      }
-    }
-    return result;
-  }
+  operator==(const rmw_gid_t * gid) const;
 
   typedef std::function<uint64_t(uint64_t, void *, const std::type_info &)> StoreMessageCallbackT;
 
 protected:
+  RCLCPP_PUBLIC
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,
     StoreMessageCallbackT callback,
-    rmw_publisher_t * intra_process_publisher_handle)
-  {
-    intra_process_publisher_id_ = intra_process_publisher_id;
-    store_intra_process_message_ = callback;
-    intra_process_publisher_handle_ = intra_process_publisher_handle;
-    // Life time of this object is tied to the publisher handle.
-    auto ret = rmw_get_gid_for_publisher(intra_process_publisher_handle_, &intra_process_rmw_gid_);
-    if (ret != RMW_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to create intra process publisher gid: ") +
-        rmw_get_error_string_safe());
-      // *INDENT-ON*
-    }
-  }
+    rmw_publisher_t * intra_process_publisher_handle);
 
   std::shared_ptr<rmw_node_t> node_handle_;
 

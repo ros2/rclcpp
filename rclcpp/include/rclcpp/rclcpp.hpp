@@ -12,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_RCLCPP_HPP_
-#define RCLCPP_RCLCPP_RCLCPP_HPP_
+#ifndef RCLCPP__RCLCPP_HPP_
+#define RCLCPP__RCLCPP_HPP_
 
 #include <csignal>
 #include <memory>
 
-#include <rclcpp/node.hpp>
-#include <rclcpp/parameter.hpp>
-#include <rclcpp/parameter_client.hpp>
-#include <rclcpp/parameter_service.hpp>
-#include <rclcpp/executors.hpp>
-#include <rclcpp/rate.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/executors.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/parameter_client.hpp"
+#include "rclcpp/parameter_service.hpp"
+#include "rclcpp/rate.hpp"
+#include "rclcpp/utilities.hpp"
+#include "rclcpp/visibility_control.hpp"
 
-namespace rclcpp
-{
 // NOLINTNEXTLINE(runtime/int)
 const std::chrono::seconds operator"" _s(unsigned long long s)
 {
@@ -39,31 +38,30 @@ const std::chrono::nanoseconds operator"" _s(long double s)
     std::chrono::duration<long double>(s));
 }
 
-const std::chrono::nanoseconds
 // NOLINTNEXTLINE(runtime/int)
-operator"" _ms(unsigned long long ms)
+const std::chrono::nanoseconds operator"" _ms(unsigned long long ms)
 {
   return std::chrono::milliseconds(ms);
 }
-const std::chrono::nanoseconds
-operator"" _ms(long double ms)
+const std::chrono::nanoseconds operator"" _ms(long double ms)
 {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
     std::chrono::duration<long double, std::milli>(ms));
 }
 
-const std::chrono::nanoseconds
 // NOLINTNEXTLINE(runtime/int)
-operator"" _ns(unsigned long long ns)
+const std::chrono::nanoseconds operator"" _ns(unsigned long long ns)
 {
   return std::chrono::nanoseconds(ns);
 }
-const std::chrono::nanoseconds
-operator"" _ns(long double ns)
+const std::chrono::nanoseconds operator"" _ns(long double ns)
 {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
     std::chrono::duration<long double, std::nano>(ns));
 }
+
+namespace rclcpp
+{
 
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
@@ -82,34 +80,6 @@ using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;
 using rclcpp::utilities::sleep_for;
 
-/// Create a default single-threaded executor and execute any immediately available work.
-// \param[in] node_ptr Shared pointer to the node to spin.
-void spin_some(Node::SharedPtr node_ptr)
-{
-  rclcpp::executors::SingleThreadedExecutor executor;
-  executor.spin_node_some(node_ptr);
-}
+}  // namespace rclcpp
 
-/// Create a default single-threaded executor and spin the specified node.
-// \param[in] node_ptr Shared pointer to the node to spin.
-void spin(Node::SharedPtr node_ptr)
-{
-  rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node_ptr);
-  executor.spin();
-}
-
-template<typename FutureT, typename TimeT = std::milli>
-rclcpp::executors::FutureReturnCode
-spin_until_future_complete(
-  Node::SharedPtr node_ptr, std::shared_future<FutureT> & future,
-  std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
-{
-  rclcpp::executors::SingleThreadedExecutor executor;
-  return rclcpp::executors::spin_node_until_future_complete<FutureT>(
-    executor, node_ptr, future, timeout);
-}
-
-} /* namespace rclcpp */
-
-#endif /* RCLCPP_RCLCPP_RCLCPP_HPP_ */
+#endif  // RCLCPP__RCLCPP_HPP_

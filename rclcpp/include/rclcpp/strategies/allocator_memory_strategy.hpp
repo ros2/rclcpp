@@ -21,13 +21,12 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
-
 namespace memory_strategies
 {
-
 namespace allocator_memory_strategy
 {
 
@@ -312,7 +311,6 @@ private:
 
 }  // namespace allocator_memory_strategy
 }  // namespace memory_strategies
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_

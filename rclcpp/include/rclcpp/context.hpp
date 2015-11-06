@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_CONTEXT_HPP_
-#define RCLCPP_RCLCPP_CONTEXT_HPP_
-
-#include <rclcpp/macros.hpp>
+#ifndef RCLCPP__CONTEXT_HPP_
+#define RCLCPP__CONTEXT_HPP_
 
 #include <iostream>
-
 #include <memory>
 #include <mutex>
-#include <typeinfo>
 #include <typeindex>
+#include <typeinfo>
 #include <unordered_map>
 
-#include <rmw/rmw.h>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/visibility_control.hpp"
+#include "rmw/rmw.h"
 
 namespace rclcpp
 {
@@ -38,7 +37,7 @@ class Context
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Context);
 
-  Context() {}
+  Context();
 
   template<typename SubContext, typename ... Args>
   std::shared_ptr<SubContext>
@@ -71,10 +70,9 @@ private:
 
   std::unordered_map<std::type_index, std::shared_ptr<void>> sub_contexts_;
   std::mutex mutex_;
-
 };
 
-} /* namespace context */
-} /* namespace rclcpp */
+}  // namespace context
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_CONTEXT_HPP_ */
+#endif  // RCLCPP__CONTEXT_HPP_

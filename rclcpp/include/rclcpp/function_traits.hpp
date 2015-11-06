@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_FUNCTION_TRAITS_HPP_
-#define RCLCPP_RCLCPP_FUNCTION_TRAITS_HPP_
+#ifndef RCLCPP__FUNCTION_TRAITS_HPP_
+#define RCLCPP__FUNCTION_TRAITS_HPP_
+
 #include <memory>
+#include <tuple>
 
 namespace rclcpp
 {
@@ -95,6 +97,7 @@ struct same_arguments : std::is_same<
     typename function_traits<FunctorBT>::arguments
   >
 {};
-} /* namespace rclcpp */
 
-#endif /* RCLCPP_RCLCPP_FUNCTION_TRAITS_HPP_ */
+}  // namespace rclcpp
+
+#endif  // RCLCPP__FUNCTION_TRAITS_HPP_

@@ -28,6 +28,7 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/rate.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -44,23 +45,20 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor);
 
   /// Default constructor. See the default constructor for Executor.
-  SingleThreadedExecutor(memory_strategy::MemoryStrategy::SharedPtr ms =
-    memory_strategies::create_default_strategy())
-  : executor::Executor(ms) {}
+  RCLCPP_PUBLIC
+  SingleThreadedExecutor(
+    memory_strategy::MemoryStrategy::SharedPtr ms = memory_strategies::create_default_strategy());
 
   /// Default destrcutor.
-  virtual ~SingleThreadedExecutor() {}
+  RCLCPP_PUBLIC
+  virtual ~SingleThreadedExecutor();
 
   /// Single-threaded implementation of spin.
   // This function will block until work comes in, execute it, and keep blocking.
   // It will only be interrupt by a CTRL-C (managed by the global signal handler).
-  void spin()
-  {
-    while (rclcpp::utilities::ok()) {
-      auto any_exec = get_next_executable();
-      execute_any_executable(any_exec);
-    }
-  }
+  RCLCPP_PUBLIC
+  void
+  spin();
 
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor);

@@ -32,6 +32,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -124,12 +125,12 @@ private:
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManager);
 
+  RCLCPP_PUBLIC
   explicit IntraProcessManager(
-    IntraProcessManagerStateBase::SharedPtr state = create_default_state()
-  )
-  : state_(state)
-  {
-  }
+    IntraProcessManagerStateBase::SharedPtr state = create_default_state());
+
+  RCLCPP_PUBLIC
+  virtual ~IntraProcessManager();
 
   /// Register a subscription with the manager, returns subscriptions unique id.
   /* In addition to generating a unique intra process id for the subscription,
@@ -143,24 +144,18 @@ public:
    * \param subscription the Subscription to register.
    * \return an unsigned 64-bit integer which is the subscription's unique id.
    */
+  RCLCPP_PUBLIC
   uint64_t
-  add_subscription(subscription::SubscriptionBase::SharedPtr subscription)
-  {
-    auto id = IntraProcessManager::get_next_unique_id();
-    state_->add_subscription(id, subscription);
-    return id;
-  }
+  add_subscription(subscription::SubscriptionBase::SharedPtr subscription);
 
   /// Unregister a subscription using the subscription's unique id.
   /* This method does not allocate memory.
    *
    * \param intra_process_subscription_id id of the subscription to remove.
    */
+  RCLCPP_PUBLIC
   void
-  remove_subscription(uint64_t intra_process_subscription_id)
-  {
-    state_->remove_subscription(intra_process_subscription_id);
-  }
+  remove_subscription(uint64_t intra_process_subscription_id);
 
   /// Register a publisher with the manager, returns the publisher unique id.
   /* In addition to generating and returning a unique id for the publisher,
@@ -203,11 +198,9 @@ public:
    *
    * \param intra_process_publisher_id id of the publisher to remove.
    */
+  RCLCPP_PUBLIC
   void
-  remove_publisher(uint64_t intra_process_publisher_id)
-  {
-    state_->remove_publisher(intra_process_publisher_id);
-  }
+  remove_publisher(uint64_t intra_process_publisher_id);
 
   /// Store a message in the manager, and return the message sequence number.
   /* The given message is stored in internal storage using the given publisher
@@ -336,40 +329,17 @@ public:
   }
 
   /// Return true if the given rmw_gid_t matches any stored Publishers.
+  RCLCPP_PUBLIC
   bool
-  matches_any_publishers(const rmw_gid_t * id) const
-  {
-    return state_->matches_any_publishers(id);
-  }
+  matches_any_publishers(const rmw_gid_t * id) const;
 
 private:
-  static uint64_t get_next_unique_id()
-  {
-    auto next_id = next_unique_id_.fetch_add(1, std::memory_order_relaxed);
-    // Check for rollover (we started at 1).
-    if (0 == next_id) {
-      // This puts a technical limit on the number of times you can add a publisher or subscriber.
-      // But even if you could add (and remove) them at 1 kHz (very optimistic rate)
-      // it would still be a very long time before you could exhaust the pool of id's:
-      //   2^64 / 1000 times per sec / 60 sec / 60 min / 24 hours / 365 days = 584,942,417 years
-      // So around 585 million years. Even at 1 GHz, it would take 585 years.
-      // I think it's safe to avoid trying to handle overflow.
-      // If we roll over then it's most likely a bug.
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::overflow_error(
-        "exhausted the unique id's for publishers and subscribers in this process "
-        "(congratulations your computer is either extremely fast or extremely old)");
-      // *INDENT-ON*
-    }
-    return next_id;
-  }
-
-  static std::atomic<uint64_t> next_unique_id_;
+  RCLCPP_PUBLIC
+  static uint64_t
+  get_next_unique_id();
 
   IntraProcessManagerStateBase::SharedPtr state_;
 };
-
-std::atomic<uint64_t> IntraProcessManager::next_unique_id_ {1};
 
 }  // namespace intra_process_manager
 }  // namespace rclcpp

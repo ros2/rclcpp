@@ -11,7 +11,11 @@
   <build_export_depend>rmw</build_export_depend>
 
   <build_depend>rcl_interfaces</build_depend>
+  <!-- This ensures the rmw impls are built first. -->
+  <build_depend>rmw_implementation</build_depend>
+  <build_depend>rosidl_generator_cpp</build_depend>
   <build_export_depend>rcl_interfaces</build_export_depend>
+  <build_export_depend>rosidl_generator_cpp</build_export_depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>

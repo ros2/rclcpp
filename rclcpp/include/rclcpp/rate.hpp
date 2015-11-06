@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_RATE_HPP_
-#define RCLCPP_RCLCPP_RATE_HPP_
+#ifndef RCLCPP__RATE_HPP_
+#define RCLCPP__RATE_HPP_
 
 #include <chrono>
 #include <memory>
 #include <thread>
 
-#include <rclcpp/macros.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/utilities.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -47,11 +48,11 @@ class GenericRate : public RateBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericRate);
 
-  GenericRate(double rate)
+  explicit GenericRate(double rate)
   : GenericRate<Clock>(
       duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
   {}
-  GenericRate(std::chrono::nanoseconds period)
+  explicit GenericRate(std::chrono::nanoseconds period)
   : period_(period), last_interval_(Clock::now())
   {}
 
@@ -109,13 +110,12 @@ private:
 
   std::chrono::nanoseconds period_;
   std::chrono::time_point<Clock> last_interval_;
-
 };
 
 using Rate = GenericRate<std::chrono::system_clock>;
 using WallRate = GenericRate<std::chrono::steady_clock>;
 
-} // namespace rate
-} // namespace rclcpp
+}  // namespace rate
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_RATE_HPP_ */
+#endif  // RCLCPP__RATE_HPP_

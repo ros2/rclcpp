@@ -15,8 +15,9 @@
 #ifndef RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 
-#include <rclcpp/macros.hpp>
-#include <rclcpp/message_memory_strategy.hpp>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -32,9 +33,13 @@ namespace message_pool_memory_strategy
  * The size of the message pool should be at least the largest number of concurrent accesses to
  * the subscription (usually the number of threads).
  */
-template<typename MessageT, size_t Size,
-typename std::enable_if<rosidl_generator_traits::has_fixed_size<MessageT>::value>::type * =
-nullptr>
+template<
+  typename MessageT,
+  size_t Size,
+  typename std::enable_if<
+    rosidl_generator_traits::has_fixed_size<MessageT>::value
+  >::type * = nullptr
+>
 class MessagePoolMemoryStrategy
   : public message_memory_strategy::MessageMemoryStrategy<MessageT>
 {
@@ -101,4 +106,5 @@ protected:
 }  // namespace message_pool_memory_strategy
 }  // namespace strategies
 }  // namespace rclcpp
+
 #endif  // RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_

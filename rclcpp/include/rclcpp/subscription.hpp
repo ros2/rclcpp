@@ -29,6 +29,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -54,75 +55,48 @@ public:
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] ignore_local_publications True to ignore local publications (unused).
    */
+  RCLCPP_PUBLIC
   SubscriptionBase(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_subscription_t * subscription_handle,
     const std::string & topic_name,
-    bool ignore_local_publications)
-  : intra_process_subscription_handle_(nullptr),
-    node_handle_(node_handle),
-    subscription_handle_(subscription_handle),
-    topic_name_(topic_name),
-    ignore_local_publications_(ignore_local_publications)
-  {
-    // To avoid unused private member warnings.
-    (void)ignore_local_publications_;
-  }
+    bool ignore_local_publications);
 
   /// Default destructor.
-  virtual ~SubscriptionBase()
-  {
-    if (subscription_handle_) {
-      if (rmw_destroy_subscription(node_handle_.get(), subscription_handle_) != RMW_RET_OK) {
-        std::stringstream ss;
-        ss << "Error in destruction of rmw subscription handle: " <<
-          rmw_get_error_string_safe() << '\n';
-        (std::cerr << ss.str()).flush();
-      }
-    }
-    if (intra_process_subscription_handle_) {
-      auto ret = rmw_destroy_subscription(node_handle_.get(), intra_process_subscription_handle_);
-      if (ret != RMW_RET_OK) {
-        std::stringstream ss;
-        ss << "Error in destruction of rmw intra process subscription handle: " <<
-          rmw_get_error_string_safe() << '\n';
-        (std::cerr << ss.str()).flush();
-      }
-    }
-  }
+  RCLCPP_PUBLIC
+  virtual ~SubscriptionBase();
 
   /// Get the topic that this subscription is subscribed on.
-  const std::string & get_topic_name() const
-  {
-    return this->topic_name_;
-  }
+  RCLCPP_PUBLIC
+  const std::string &
+  get_topic_name() const;
 
-  const rmw_subscription_t * get_subscription_handle() const
-  {
-    return subscription_handle_;
-  }
+  RCLCPP_PUBLIC
+  const rmw_subscription_t *
+  get_subscription_handle() const;
 
-  const rmw_subscription_t * get_intra_process_subscription_handle() const
-  {
-    return intra_process_subscription_handle_;
-  }
+  RCLCPP_PUBLIC
+  const rmw_subscription_t *
+  get_intra_process_subscription_handle() const;
 
   /// Borrow a new message.
   // \return Shared pointer to the fresh message.
-  virtual std::shared_ptr<void> create_message() = 0;
+  virtual std::shared_ptr<void>
+  create_message() = 0;
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.
    * \param[in] message_info Metadata associated with this message.
    */
-  virtual void handle_message(
-    std::shared_ptr<void> & message,
-    const rmw_message_info_t & message_info) = 0;
+  virtual void
+  handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   // \param[in] Shared pointer to the returned message.
-  virtual void return_message(std::shared_ptr<void> & message) = 0;
-  virtual void handle_intra_process_message(
+  virtual void
+  return_message(std::shared_ptr<void> & message) = 0;
+  virtual void
+  handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
 
@@ -140,7 +114,7 @@ private:
   bool ignore_local_publications_;
 };
 
-using namespace any_subscription_callback;
+using any_subscription_callback::AnySubscriptionCallback;
 
 /// Subscription implementation, templated on the type of message this subscription receives.
 template<typename MessageT, typename Alloc = std::allocator<void>>
@@ -172,8 +146,8 @@ public:
     const std::string & topic_name,
     bool ignore_local_publications,
     AnySubscriptionCallback<MessageT, Alloc> callback,
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr memory_strategy =
-    message_memory_strategy::MessageMemoryStrategy<MessageT,
+    typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    memory_strategy = message_memory_strategy::MessageMemoryStrategy<MessageT,
     Alloc>::create_default())
   : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
     any_callback_(callback),

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_SERVICE_HPP_
-#define RCLCPP_RCLCPP_SERVICE_HPP_
+#ifndef RCLCPP__SERVICE_HPP_
+#define RCLCPP__SERVICE_HPP_
 
 #include <functional>
 #include <iostream>
@@ -21,52 +21,38 @@
 #include <sstream>
 #include <string>
 
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-
-#include <rclcpp/macros.hpp>
-#include <rclcpp/any_service_callback.hpp>
+#include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/visibility_control.hpp"
+#include "rmw/error_handling.h"
+#include "rmw/rmw.h"
 
 namespace rclcpp
 {
-
 namespace service
 {
 
 class ServiceBase
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase);
 
+  RCLCPP_PUBLIC
   ServiceBase(
     std::shared_ptr<rmw_node_t> node_handle,
     rmw_service_t * service_handle,
-    const std::string service_name)
-  : node_handle_(node_handle), service_handle_(service_handle), service_name_(service_name)
-  {}
+    const std::string service_name);
 
-  virtual ~ServiceBase()
-  {
-    if (service_handle_) {
-      if (rmw_destroy_service(service_handle_) != RMW_RET_OK) {
-        std::stringstream ss;
-        ss << "Error in destruction of rmw service_handle_ handle: " <<
-          rmw_get_error_string_safe() << '\n';
-        (std::cerr << ss.str()).flush();
-      }
-    }
-  }
+  RCLCPP_PUBLIC
+  virtual ~ServiceBase();
 
-  std::string get_service_name()
-  {
-    return this->service_name_;
-  }
+  RCLCPP_PUBLIC
+  std::string
+  get_service_name();
 
-  const rmw_service_t * get_service_handle()
-  {
-    return this->service_handle_;
-  }
+  RCLCPP_PUBLIC
+  const rmw_service_t *
+  get_service_handle();
 
   virtual std::shared_ptr<void> create_request() = 0;
   virtual std::shared_ptr<void> create_request_header() = 0;
@@ -81,10 +67,9 @@ private:
 
   rmw_service_t * service_handle_;
   std::string service_name_;
-
 };
 
-using namespace any_service_callback;
+using any_service_callback::AnyServiceCallback;
 
 template<typename ServiceT>
 class Service : public ServiceBase
@@ -152,7 +137,7 @@ private:
   AnyServiceCallback<ServiceT> any_callback_;
 };
 
-} /* namespace service */
-} /* namespace rclcpp */
+}  // namespace service
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_SERVICE_HPP_ */
+#endif  // RCLCPP__SERVICE_HPP_

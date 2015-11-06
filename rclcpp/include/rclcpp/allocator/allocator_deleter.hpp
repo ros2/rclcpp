@@ -16,10 +16,10 @@
 #define RCLCPP__ALLOCATOR__ALLOCATOR_DELETER_HPP_
 
 #include <memory>
+#include <stdexcept>
 
 namespace rclcpp
 {
-
 namespace allocator
 {
 

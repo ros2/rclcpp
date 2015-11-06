@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_TIMER_HPP_
-#define RCLCPP_RCLCPP_TIMER_HPP_
+#ifndef RCLCPP__TIMER_HPP_
+#define RCLCPP__TIMER_HPP_
 
 #include <chrono>
 #include <functional>
@@ -21,16 +21,15 @@
 #include <sstream>
 #include <thread>
 
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-
-#include <rclcpp/macros.hpp>
-#include <rclcpp/rate.hpp>
-#include <rclcpp/utilities.hpp>
+#include "rclcpp/macros.hpp"
+#include "rclcpp/rate.hpp"
+#include "rclcpp/utilities.hpp"
+#include "rclcpp/visibility_control.hpp"
+#include "rmw/error_handling.h"
+#include "rmw/rmw.h"
 
 namespace rclcpp
 {
-
 namespace timer
 {
 
@@ -38,36 +37,26 @@ using CallbackType = std::function<void()>;
 
 class TimerBase
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase);
 
-  TimerBase(std::chrono::nanoseconds period, CallbackType callback)
-  : period_(period),
-    callback_(callback),
-    canceled_(false)
-  {
-  }
+  RCLCPP_PUBLIC
+  TimerBase(std::chrono::nanoseconds period, CallbackType callback);
 
-  virtual ~TimerBase()
-  {
-  }
+  RCLCPP_PUBLIC
+  virtual ~TimerBase();
 
+  RCLCPP_PUBLIC
   void
-  cancel()
-  {
-    this->canceled_ = true;
-  }
+  cancel();
 
-  void execute_callback() const
-  {
-    callback_();
-  }
+  RCLCPP_PUBLIC
+  void
+  execute_callback() const;
 
-  const CallbackType & get_callback() const
-  {
-    return callback_;
-  }
+  RCLCPP_PUBLIC
+  const CallbackType &
+  get_callback() const;
 
   /// Check how long the timer has until its next scheduled callback.
   // \return A std::chrono::duration representing the relative time until the next callback.
@@ -91,14 +80,12 @@ protected:
   CallbackType callback_;
 
   bool canceled_;
-
 };
 
 /// Generic timer templated on the clock type. Periodically executes a user-specified callback.
 template<class Clock = std::chrono::high_resolution_clock>
 class GenericTimer : public TimerBase
 {
-
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericTimer);
 
@@ -166,7 +153,6 @@ private:
 
   rclcpp::rate::GenericRate<Clock> loop_rate_;
   std::chrono::time_point<Clock> last_triggered_time_;
-
 };
 
 using WallTimer = GenericTimer<std::chrono::steady_clock>;
@@ -174,4 +160,4 @@ using WallTimer = GenericTimer<std::chrono::steady_clock>;
 } /* namespace timer */
 } /* namespace rclcpp */
 
-#endif /* RCLCPP_RCLCPP_TIMER_HPP_ */
+#endif  // RCLCPP__TIMER_HPP_

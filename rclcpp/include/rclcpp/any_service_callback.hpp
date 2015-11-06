@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_RCLCPP_ANY_SERVICE_CALLBACK_HPP_
-#define RCLCPP_RCLCPP_ANY_SERVICE_CALLBACK_HPP_
-
-#include <rclcpp/function_traits.hpp>
+#ifndef RCLCPP__ANY_SERVICE_CALLBACK_HPP_
+#define RCLCPP__ANY_SERVICE_CALLBACK_HPP_
 
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <type_traits>
 
-#include <rmw/types.h>
+#include "rclcpp/function_traits.hpp"
+#include "rclcpp/visibility_control.hpp"
+#include "rmw/types.h"
 
 namespace rclcpp
 {
@@ -97,7 +98,7 @@ public:
   }
 };
 
-} /* namespace any_service_callback */
-} /* namespace rclcpp */
+}  // namespace any_service_callback
+}  // namespace rclcpp
 
-#endif /* RCLCPP_RCLCPP_ANY_SERVICE_CALLBACK_HPP_ */
+#endif  // RCLCPP__ANY_SERVICE_CALLBACK_HPP_

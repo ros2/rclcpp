@@ -15,20 +15,22 @@
 #ifndef RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
 #define RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
 
-#include <rclcpp/mapped_ring_buffer.hpp>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/subscription.hpp>
-
 #include <algorithm>
 #include <atomic>
 #include <functional>
 #include <limits>
-#include <memory>
 #include <map>
-#include <unordered_map>
+#include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
+
+#include "rclcpp/macros.hpp"
+#include "rclcpp/mapped_ring_buffer.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -39,6 +41,9 @@ class IntraProcessManagerStateBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(IntraProcessManagerStateBase);
+
+  IntraProcessManagerStateBase() = default;
+  ~IntraProcessManagerStateBase() = default;
 
   virtual void
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription) = 0;
@@ -70,12 +75,18 @@ public:
 
   virtual bool
   matches_any_publishers(const rmw_gid_t * id) const = 0;
+
+private:
+  RCLCPP_DISABLE_COPY(IntraProcessManagerStateBase);
 };
 
 template<typename Allocator = std::allocator<void>>
 class IntraProcessManagerState : public IntraProcessManagerStateBase
 {
 public:
+  IntraProcessManagerState() = default;
+  ~IntraProcessManagerState() = default;
+
   void
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription)
   {
@@ -222,6 +233,8 @@ public:
   }
 
 private:
+  RCLCPP_DISABLE_COPY(IntraProcessManagerState);
+
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
@@ -259,10 +272,9 @@ private:
   PublisherMap publishers_;
 };
 
-static IntraProcessManagerStateBase::SharedPtr create_default_state()
-{
-  return std::make_shared<IntraProcessManagerState<>>();
-}
+RCLCPP_PUBLIC
+IntraProcessManagerStateBase::SharedPtr
+create_default_state();
 
 }  // namespace intra_process_manager
 }  // namespace rclcpp
