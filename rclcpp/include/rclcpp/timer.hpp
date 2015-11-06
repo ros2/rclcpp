@@ -156,7 +156,7 @@ private:
 
 using WallTimer = GenericTimer<std::chrono::steady_clock>;
 
-} /* namespace timer */
-} /* namespace rclcpp */
+}  // namespace timer
+}  // namespace rclcpp
 
 #endif  // RCLCPP__TIMER_HPP_
