@@ -16,7 +16,8 @@
 
 using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 
-SingleThreadedExecutor::SingleThreadedExecutor(rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
+SingleThreadedExecutor::SingleThreadedExecutor(
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
 : executor::Executor(ms) {}
 
 
