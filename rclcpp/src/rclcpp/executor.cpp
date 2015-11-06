@@ -19,7 +19,7 @@
 using rclcpp::executor::AnyExecutable;
 using rclcpp::executor::Executor;
 
-Executor::Executor(memory_strategy::MemoryStrategy::SharedPtr ms)
+Executor::Executor(rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
 : interrupt_guard_condition_(rmw_create_guard_condition()),
   memory_strategy_(ms)
 {
@@ -119,7 +119,7 @@ Executor::spin_some()
 }
 
 void
-Executor::set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
+Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
 {
   if (memory_strategy == nullptr) {
     throw std::runtime_error("Received NULL memory strategy in executor.");

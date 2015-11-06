@@ -69,7 +69,7 @@ Node::Node(const std::string & node_name, bool use_intra_process_comms)
 
 Node::Node(
   const std::string & node_name,
-  context::Context::SharedPtr context,
+  rclcpp::context::Context::SharedPtr context,
   bool use_intra_process_comms)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
@@ -139,7 +139,7 @@ Node::create_callback_group(
 }
 
 bool
-Node::group_in_node(callback_group::CallbackGroup::SharedPtr group)
+Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   bool group_belongs_to_this_node = false;
   for (auto & weak_group : this->callback_groups_) {

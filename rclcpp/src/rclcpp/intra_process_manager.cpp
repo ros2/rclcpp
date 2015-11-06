@@ -14,11 +14,14 @@
 
 #include "rclcpp/intra_process_manager.hpp"
 
-using rclcpp::intra_process_manager::IntraProcessManager;
+namespace rclcpp
+{
+namespace intra_process_manager
+{
 
 static std::atomic<uint64_t> _next_unique_id {1};
 
-IntraProcessManager::IntraProcessManager(IntraProcessManagerStateBase::SharedPtr state)
+IntraProcessManager::IntraProcessManager(rclcpp::intra_process_manager::IntraProcessManagerStateBase::SharedPtr state)
 : state_(state)
 {}
 
@@ -73,3 +76,6 @@ IntraProcessManager::get_next_unique_id()
   }
   return next_id;
 }
+
+}  // namespace intra_process_manager
+}  // namespace rclcpp
