@@ -299,7 +299,7 @@ SyncParametersClient::get_parameters(const std::vector<std::string> & parameter_
 {
   auto f = async_parameters_client_->get_parameters(parameter_names);
   if (rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f) ==
-    rclcpp::executors::FutureReturnCode::SUCCESS)
+    rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -313,7 +313,7 @@ SyncParametersClient::get_parameter_types(const std::vector<std::string> & param
   auto f = async_parameters_client_->get_parameter_types(parameter_names);
 
   if (rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f) ==
-    rclcpp::executors::FutureReturnCode::SUCCESS)
+    rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -327,7 +327,7 @@ SyncParametersClient::set_parameters(
   auto f = async_parameters_client_->set_parameters(parameters);
 
   if (rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f) ==
-    rclcpp::executors::FutureReturnCode::SUCCESS)
+    rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -341,7 +341,7 @@ SyncParametersClient::set_parameters_atomically(
   auto f = async_parameters_client_->set_parameters_atomically(parameters);
 
   if (rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f) ==
-    rclcpp::executors::FutureReturnCode::SUCCESS)
+    rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -357,7 +357,7 @@ SyncParametersClient::list_parameters(
   auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
 
   if (rclcpp::executors::spin_node_until_future_complete(*executor_, node_, f) ==
-    rclcpp::executors::FutureReturnCode::SUCCESS)
+    rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
