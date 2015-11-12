@@ -127,6 +127,7 @@ rclcpp::utilities::init(int argc, char * argv[])
       error_string);
     // *INDENT-ON*
   }
+  ::g_signal_status = 0;
 }
 
 bool
