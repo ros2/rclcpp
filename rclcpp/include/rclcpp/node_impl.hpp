@@ -274,6 +274,7 @@ template<typename ServiceT>
 typename client::Client<ServiceT>::SharedPtr
 Node::create_client(
   const std::string & service_name,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   using rosidl_generator_cpp::get_service_type_support_handle;
@@ -281,7 +282,7 @@ Node::create_client(
     get_service_type_support_handle<ServiceT>();
 
   rmw_client_t * client_handle = rmw_create_client(
-    this->node_handle_.get(), service_type_support_handle, service_name.c_str());
+    this->node_handle_.get(), service_type_support_handle, service_name.c_str(), qos_profile);
   if (!client_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
@@ -318,6 +319,7 @@ typename rclcpp::service::Service<ServiceT>::SharedPtr
 Node::create_service(
   const std::string & service_name,
   CallbackT && callback,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   using rosidl_generator_cpp::get_service_type_support_handle;
@@ -328,7 +330,7 @@ Node::create_service(
   any_service_callback.set(std::forward<CallbackT>(callback));
 
   rmw_service_t * service_handle = rmw_create_service(
-    node_handle_.get(), service_type_support_handle, service_name.c_str());
+    node_handle_.get(), service_type_support_handle, service_name.c_str(), qos_profile);
   if (!service_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
