@@ -180,7 +180,7 @@ public:
     return FutureReturnCode::INTERRUPTED;
   }
 
-  /// Cancels any running spin* function, causing it to return.
+  /// Cancel any running spin* function, causing it to return.
   /* This function can be called asynchonously from any thread. */
   RCLCPP_PUBLIC
   void
