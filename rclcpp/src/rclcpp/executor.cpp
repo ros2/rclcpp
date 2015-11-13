@@ -21,6 +21,7 @@ using rclcpp::executor::Executor;
 
 Executor::Executor(rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
 : interrupt_guard_condition_(rmw_create_guard_condition()),
+  canceled(false),
   memory_strategy_(ms)
 {
 }
@@ -108,9 +109,9 @@ Executor::spin_node_some(rclcpp::node::Node::SharedPtr node)
 void
 Executor::spin_some()
 {
-  while (AnyExecutable::SharedPtr any_exec =
-    get_next_executable(std::chrono::milliseconds::zero()))
-  {
+  canceled = false;
+  AnyExecutable::SharedPtr any_exec;
+  while ((any_exec = get_next_executable(std::chrono::milliseconds::zero())) && !canceled) {
     execute_any_executable(any_exec);
   }
 }
@@ -121,6 +122,16 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
   auto any_exec = get_next_executable(timeout);
   if (any_exec) {
     execute_any_executable(any_exec);
+  }
+}
+
+void
+Executor::cancel()
+{
+  canceled = true;
+  rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
+  if (status != RMW_RET_OK) {
+    throw std::runtime_error(rmw_get_error_string_safe());
   }
 }
 
@@ -503,8 +514,14 @@ Executor::get_next_executable(std::chrono::nanoseconds timeout)
   if (!any_exec) {
     // Wait for subscriptions or timers to work on
     wait_for_work(timeout);
+    if (canceled) {
+      return nullptr;
+    }
     // Try again
     any_exec = get_next_ready_executable();
+  }
+  if (canceled) {
+    return nullptr;
   }
   // At this point any_exec should be valid with either a valid subscription
   // or a valid timer, or it should be a null shared_ptr

@@ -180,6 +180,13 @@ public:
     return FutureReturnCode::INTERRUPTED;
   }
 
+  /// Stop everything
+  /**
+   */
+  RCLCPP_PUBLIC
+  void
+  cancel();
+
   /// Support dynamic switching of the memory strategy.
   /**
    * Switching the memory strategy while the executor is spinning in another threading could have
@@ -252,6 +259,9 @@ protected:
   RCLCPP_PUBLIC
   AnyExecutable::SharedPtr
   get_next_executable(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  /// For cancelling execution mid-spin.
+  std::atomic_bool canceled;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rmw_guard_condition_t * interrupt_guard_condition_;

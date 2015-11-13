@@ -36,6 +36,7 @@ MultiThreadedExecutor::~MultiThreadedExecutor() {}
 void
 MultiThreadedExecutor::spin()
 {
+  canceled = false;
   std::vector<std::thread> threads;
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);
@@ -61,7 +62,7 @@ void
 MultiThreadedExecutor::run(size_t this_thread_number)
 {
   thread_number_by_thread_id_[std::this_thread::get_id()] = this_thread_number;
-  while (rclcpp::utilities::ok()) {
+  while (rclcpp::utilities::ok() && !canceled) {
     executor::AnyExecutable::SharedPtr any_exec;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);

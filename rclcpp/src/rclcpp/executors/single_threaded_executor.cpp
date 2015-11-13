@@ -26,7 +26,8 @@ SingleThreadedExecutor::~SingleThreadedExecutor() {}
 void
 SingleThreadedExecutor::spin()
 {
-  while (rclcpp::utilities::ok()) {
+  canceled = false;
+  while (rclcpp::utilities::ok() && !canceled) {
     auto any_exec = get_next_executable();
     execute_any_executable(any_exec);
   }
