@@ -33,6 +33,9 @@ struct AnyExecutable
   RCLCPP_PUBLIC
   AnyExecutable();
 
+  RCLCPP_PUBLIC
+  virtual ~AnyExecutable();
+
   // Only one of the following pointers will be set.
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription_intra_process;

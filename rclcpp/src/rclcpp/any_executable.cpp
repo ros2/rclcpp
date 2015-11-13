@@ -25,3 +25,13 @@ AnyExecutable::AnyExecutable()
   callback_group(nullptr),
   node(nullptr)
 {}
+
+AnyExecutable::~AnyExecutable()
+{
+  // Make sure that discarded (taken but not executed) AnyExecutable's have
+  // their callback groups reset. This can happen when an executor is canceled
+  // between taking an AnyExecutable and executing it.
+  if (callback_group) {
+    callback_group->can_be_taken_from().store(true);
+  }
+}

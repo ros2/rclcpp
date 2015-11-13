@@ -36,7 +36,9 @@ MultiThreadedExecutor::~MultiThreadedExecutor() {}
 void
 MultiThreadedExecutor::spin()
 {
-  canceled = false;
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin() called while already spinning");
+  }
   std::vector<std::thread> threads;
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);
@@ -50,6 +52,7 @@ MultiThreadedExecutor::spin()
   for (auto & thread : threads) {
     thread.join();
   }
+  spinning.store(false);
 }
 
 size_t
@@ -62,11 +65,11 @@ void
 MultiThreadedExecutor::run(size_t this_thread_number)
 {
   thread_number_by_thread_id_[std::this_thread::get_id()] = this_thread_number;
-  while (rclcpp::utilities::ok() && !canceled) {
+  while (rclcpp::utilities::ok() && spinning.load()) {
     executor::AnyExecutable::SharedPtr any_exec;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      if (!rclcpp::utilities::ok()) {
+      if (!rclcpp::utilities::ok() || !spinning.load()) {
         return;
       }
       any_exec = get_next_executable();
