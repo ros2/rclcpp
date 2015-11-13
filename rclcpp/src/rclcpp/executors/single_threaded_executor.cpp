@@ -26,9 +26,12 @@ SingleThreadedExecutor::~SingleThreadedExecutor() {}
 void
 SingleThreadedExecutor::spin()
 {
-  canceled = false;
-  while (rclcpp::utilities::ok() && !canceled) {
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_some() called while already spinning");
+  }
+  while (rclcpp::utilities::ok() && spinning.load()) {
     auto any_exec = get_next_executable();
     execute_any_executable(any_exec);
   }
+  spinning.store(false);
 }

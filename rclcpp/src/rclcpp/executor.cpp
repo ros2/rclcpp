@@ -20,8 +20,7 @@ using rclcpp::executor::AnyExecutable;
 using rclcpp::executor::Executor;
 
 Executor::Executor(rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
-: interrupt_guard_condition_(rmw_create_guard_condition()),
-  canceled(false),
+: spinning(false), interrupt_guard_condition_(rmw_create_guard_condition()),
   memory_strategy_(ms)
 {
 }
@@ -109,26 +108,33 @@ Executor::spin_node_some(rclcpp::node::Node::SharedPtr node)
 void
 Executor::spin_some()
 {
-  canceled = false;
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_some() called while already spinning");
+  }
   AnyExecutable::SharedPtr any_exec;
-  while ((any_exec = get_next_executable(std::chrono::milliseconds::zero())) && !canceled) {
+  while ((any_exec = get_next_executable(std::chrono::milliseconds::zero())) && spinning.load()) {
     execute_any_executable(any_exec);
   }
+  spinning.store(false);
 }
 
 void
 Executor::spin_once(std::chrono::nanoseconds timeout)
 {
+  if (spinning.exchange(true)) {
+    throw std::runtime_error("spin_once() called while already spinning");
+  }
   auto any_exec = get_next_executable(timeout);
   if (any_exec) {
     execute_any_executable(any_exec);
   }
+  spinning.store(false);
 }
 
 void
 Executor::cancel()
 {
-  canceled = true;
+  spinning.store(false);
   rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
   if (status != RMW_RET_OK) {
     throw std::runtime_error(rmw_get_error_string_safe());
@@ -147,7 +153,7 @@ Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr
 void
 Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
 {
-  if (!any_exec) {
+  if (!any_exec || !spinning.load()) {
     return;
   }
   if (any_exec->timer) {
@@ -514,14 +520,11 @@ Executor::get_next_executable(std::chrono::nanoseconds timeout)
   if (!any_exec) {
     // Wait for subscriptions or timers to work on
     wait_for_work(timeout);
-    if (canceled) {
+    if (!spinning.load()) {
       return nullptr;
     }
     // Try again
     any_exec = get_next_ready_executable();
-  }
-  if (canceled) {
-    return nullptr;
   }
   // At this point any_exec should be valid with either a valid subscription
   // or a valid timer, or it should be a null shared_ptr
@@ -534,6 +537,8 @@ Executor::get_next_executable(std::chrono::nanoseconds timeout)
       // It should not have been taken otherwise
       assert(any_exec->callback_group->can_be_taken_from().load());
       // Set to false to indicate something is being run from this group
+      // This is reset to true either when the any_exec is executed or when the
+      // any_exec is destructued
       any_exec->callback_group->can_be_taken_from().store(false);
     }
   }
