@@ -90,14 +90,12 @@ public:
   void
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription)
   {
-    subscriptions_[id] = subscription;
     subscription_ids_by_topic_[subscription->get_topic_name()].insert(id);
   }
 
   void
   remove_subscription(uint64_t intra_process_subscription_id)
   {
-    subscriptions_.erase(intra_process_subscription_id);
     for (auto & pair : subscription_ids_by_topic_) {
       pair.second.erase(intra_process_subscription_id);
     }
@@ -239,13 +237,8 @@ private:
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
-  using SubscriptionMap = std::unordered_map<uint64_t, subscription::SubscriptionBase::WeakPtr,
-      std::hash<uint64_t>, std::equal_to<uint64_t>,
-      RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
   using IDTopicMap = std::map<std::string, AllocSet,
       std::less<std::string>, RebindAlloc<std::pair<std::string, AllocSet>>>;
-
-  SubscriptionMap subscriptions_;
 
   IDTopicMap subscription_ids_by_topic_;
 

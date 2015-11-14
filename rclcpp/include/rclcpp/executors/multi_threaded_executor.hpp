@@ -62,6 +62,7 @@ private:
   std::mutex wait_mutex_;
   size_t number_of_threads_;
   std::unordered_map<std::thread::id, size_t> thread_number_by_thread_id_;
+  std::vector<executor::AnyExecutable::SharedPtr> thread_executables;
 };
 
 }  // namespace multi_threaded_executor
