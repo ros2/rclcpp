@@ -32,7 +32,7 @@ MultiThreadedExecutor::MultiThreadedExecutor(rclcpp::memory_strategy::MemoryStra
   if (number_of_threads_ == 0) {
     number_of_threads_ = 1;
   }
-  thread_executables.resize(number_of_threads_);
+  thread_executables.resize(number_of_threads_, nullptr);
 }
 
 MultiThreadedExecutor::~MultiThreadedExecutor() {}
@@ -47,7 +47,6 @@ MultiThreadedExecutor::spin()
   std::vector<std::thread> threads;
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-    //for (size_t i = number_of_threads_-1; i >= 0; --i) {
     for(size_t i = 0; i < number_of_threads_; ++i) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
       auto func = std::bind(&MultiThreadedExecutor::run, this, i);
