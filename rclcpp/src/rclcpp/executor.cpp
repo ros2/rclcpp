@@ -16,6 +16,8 @@
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "./scope_exit.hpp"
+
 using rclcpp::executor::AnyExecutable;
 using rclcpp::executor::Executor;
 
@@ -108,6 +110,7 @@ Executor::spin_node_some(rclcpp::node::Node::SharedPtr node)
 void
 Executor::spin_some()
 {
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
@@ -121,6 +124,7 @@ Executor::spin_some()
 void
 Executor::spin_once(std::chrono::nanoseconds timeout)
 {
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }

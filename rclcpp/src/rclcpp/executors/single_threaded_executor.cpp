@@ -14,6 +14,8 @@
 
 #include <rclcpp/executors/single_threaded_executor.hpp>
 
+#include "../scope_exit.hpp"
+
 using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 
 SingleThreadedExecutor::SingleThreadedExecutor(
@@ -26,6 +28,7 @@ SingleThreadedExecutor::~SingleThreadedExecutor() {}
 void
 SingleThreadedExecutor::spin()
 {
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }

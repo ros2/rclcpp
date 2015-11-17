@@ -20,6 +20,8 @@
 
 #include "rclcpp/utilities.hpp"
 
+#include "../scope_exit.hpp"
+
 using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 
 MultiThreadedExecutor::MultiThreadedExecutor(rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
@@ -36,6 +38,7 @@ MultiThreadedExecutor::~MultiThreadedExecutor() {}
 void
 MultiThreadedExecutor::spin()
 {
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
