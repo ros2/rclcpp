@@ -47,7 +47,9 @@
   RCLCPP_WEAK_PTR_DEFINITIONS(__VA_ARGS__) \
   __RCLCPP_UNIQUE_PTR_ALIAS(__VA_ARGS__)
 
-#define __RCLCPP_SHARED_PTR_ALIAS(...) using SharedPtr = std::shared_ptr<__VA_ARGS__>;
+#define __RCLCPP_SHARED_PTR_ALIAS(...)\
+  using SharedPtr = std::shared_ptr<__VA_ARGS__>; \
+  using ConstSharedPtr = std::shared_ptr<const __VA_ARGS__>;
 
 #define __RCLCPP_MAKE_SHARED_DEFINITION(...) \
   template<typename ... Args> \

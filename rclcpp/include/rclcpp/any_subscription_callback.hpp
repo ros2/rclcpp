@@ -154,7 +154,7 @@ public:
   }
 
   void dispatch(
-    std::shared_ptr<MessageT> message, const rmw_message_info_t & message_info)
+    std::shared_ptr<MessageT> message, const rmw_message_info_t & message_info) const
   {
     (void)message_info;
     if (shared_ptr_callback_) {
@@ -179,7 +179,7 @@ public:
   }
 
   void dispatch_intra_process(
-    MessageUniquePtr & message, const rmw_message_info_t & message_info)
+    MessageUniquePtr & message, const rmw_message_info_t & message_info) const
   {
     (void)message_info;
     if (shared_ptr_callback_) {

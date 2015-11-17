@@ -239,6 +239,7 @@ public:
     uint64_t intra_process_publisher_id,
     std::unique_ptr<MessageT, Deleter> & message)
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
     uint64_t message_seq = 0;
@@ -303,6 +304,7 @@ public:
     uint64_t requesting_subscriptions_intra_process_id,
     std::unique_ptr<MessageT, Deleter> & message)
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
     message = nullptr;
@@ -339,6 +341,7 @@ private:
   get_next_unique_id();
 
   IntraProcessManagerStateBase::SharedPtr state_;
+  std::mutex mutex_;
 };
 
 }  // namespace intra_process_manager

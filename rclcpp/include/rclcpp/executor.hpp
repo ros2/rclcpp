@@ -207,21 +207,21 @@ protected:
    */
   RCLCPP_PUBLIC
   void
-  execute_any_executable(AnyExecutable::SharedPtr any_exec);
+  execute_any_executable(AnyExecutable::ConstSharedPtr any_exec) const;
 
   RCLCPP_PUBLIC
   static void
   execute_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription);
+    rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription);
 
   RCLCPP_PUBLIC
   static void
   execute_intra_process_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription);
+    rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription);
 
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::timer::TimerBase::SharedPtr timer);
+  execute_timer(rclcpp::timer::TimerBase::ConstSharedPtr timer);
 
   RCLCPP_PUBLIC
   static void
@@ -263,7 +263,7 @@ protected:
   std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  rmw_guard_condition_t * interrupt_guard_condition_;
+  std::atomic<rmw_guard_condition_t *> interrupt_guard_condition_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;

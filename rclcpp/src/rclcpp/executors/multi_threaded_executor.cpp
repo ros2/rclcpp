@@ -47,8 +47,7 @@ MultiThreadedExecutor::spin()
   std::vector<std::thread> threads;
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-    for(size_t i = 0; i < number_of_threads_; ++i) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    for (size_t i = 0; i < number_of_threads_; ++i) {
       auto func = std::bind(&MultiThreadedExecutor::run, this, i);
       threads.emplace_back(func);
     }
@@ -75,15 +74,9 @@ MultiThreadedExecutor::run(size_t this_thread_number)
       if (!rclcpp::utilities::ok() || !spinning.load()) {
         return;
       }
-      assert(this_thread_number < thread_executables.size());
       thread_executables[this_thread_number] = get_next_executable();
     }
 
     execute_any_executable(thread_executables[this_thread_number]);
-
-    {
-      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      thread_executables[this_thread_number] = nullptr;
-    }
   }
 }

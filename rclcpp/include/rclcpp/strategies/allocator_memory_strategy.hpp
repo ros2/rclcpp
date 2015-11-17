@@ -15,6 +15,7 @@
 #ifndef RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -173,6 +174,7 @@ public:
   get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
+    assert(any_exec);
     auto it = subscriber_handles_.begin();
     while (it != subscriber_handles_.end()) {
       auto subscription = get_subscription_by_handle(*it, weak_nodes);
