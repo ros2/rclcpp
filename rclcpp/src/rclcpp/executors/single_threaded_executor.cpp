@@ -36,5 +36,4 @@ SingleThreadedExecutor::spin()
     auto any_exec = get_next_executable();
     execute_any_executable(any_exec);
   }
-  spinning.store(false);
 }

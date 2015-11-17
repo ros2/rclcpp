@@ -118,7 +118,6 @@ Executor::spin_some()
   while ((any_exec = get_next_executable(std::chrono::milliseconds::zero())) && spinning.load()) {
     execute_any_executable(any_exec);
   }
-  spinning.store(false);
 }
 
 void
@@ -132,7 +131,6 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
   if (any_exec) {
     execute_any_executable(any_exec);
   }
-  spinning.store(false);
 }
 
 void

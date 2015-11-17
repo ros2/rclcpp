@@ -55,7 +55,6 @@ MultiThreadedExecutor::spin()
   for (auto & thread : threads) {
     thread.join();
   }
-  spinning.store(false);
 }
 
 size_t
