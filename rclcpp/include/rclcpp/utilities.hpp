@@ -46,7 +46,6 @@ RCLCPP_PUBLIC
 void
 shutdown();
 
-
 /// Get a handle to the rmw guard condition that manages the signal handler.
 RCLCPP_PUBLIC
 rmw_guard_condition_t *

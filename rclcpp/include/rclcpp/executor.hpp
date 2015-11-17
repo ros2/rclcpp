@@ -180,6 +180,12 @@ public:
     return FutureReturnCode::INTERRUPTED;
   }
 
+  /// Cancel any running spin* function, causing it to return.
+  /* This function can be called asynchonously from any thread. */
+  RCLCPP_PUBLIC
+  void
+  cancel();
+
   /// Support dynamic switching of the memory strategy.
   /**
    * Switching the memory strategy while the executor is spinning in another threading could have
@@ -252,6 +258,9 @@ protected:
   RCLCPP_PUBLIC
   AnyExecutable::SharedPtr
   get_next_executable(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+
+  /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
+  std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rmw_guard_condition_t * interrupt_guard_condition_;
