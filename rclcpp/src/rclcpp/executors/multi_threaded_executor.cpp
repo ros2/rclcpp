@@ -38,10 +38,10 @@ MultiThreadedExecutor::~MultiThreadedExecutor() {}
 void
 MultiThreadedExecutor::spin()
 {
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   std::vector<std::thread> threads;
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);

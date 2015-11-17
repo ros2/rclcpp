@@ -28,10 +28,10 @@ SingleThreadedExecutor::~SingleThreadedExecutor() {}
 void
 SingleThreadedExecutor::spin()
 {
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   while (rclcpp::utilities::ok() && spinning.load()) {
     auto any_exec = get_next_executable();
     execute_any_executable(any_exec);

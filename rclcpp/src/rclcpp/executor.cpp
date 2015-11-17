@@ -110,10 +110,10 @@ Executor::spin_node_some(rclcpp::node::Node::SharedPtr node)
 void
 Executor::spin_some()
 {
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   AnyExecutable::SharedPtr any_exec;
   while ((any_exec = get_next_executable(std::chrono::milliseconds::zero())) && spinning.load()) {
     execute_any_executable(any_exec);
@@ -123,10 +123,10 @@ Executor::spin_some()
 void
 Executor::spin_once(std::chrono::nanoseconds timeout)
 {
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   auto any_exec = get_next_executable(timeout);
   if (any_exec) {
     execute_any_executable(any_exec);
