@@ -118,7 +118,7 @@ MemoryStrategy::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedP
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+  const rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
   const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
@@ -132,7 +132,7 @@ MemoryStrategy::get_group_by_subscription(
         continue;
       }
       for (auto & weak_sub : group->get_subscription_ptrs()) {
-        auto sub = weak_sub.lock();
+        const rclcpp::subscription::SubscriptionBase::SharedPtr sub = weak_sub.lock();
         if (sub == subscription) {
           return group;
         }

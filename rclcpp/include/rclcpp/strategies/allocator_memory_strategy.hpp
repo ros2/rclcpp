@@ -170,14 +170,13 @@ public:
     return std::allocate_shared<executor::AnyExecutable>(*executable_allocator_.get());
   }
 
-  virtual void
+  virtual bool
   get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
-    assert(any_exec);
     auto it = subscriber_handles_.begin();
     while (it != subscriber_handles_.end()) {
-      auto subscription = get_subscription_by_handle(*it, weak_nodes);
+      const subscription::SubscriptionBase::SharedPtr subscription = get_subscription_by_handle(*it, weak_nodes);
       if (subscription) {
         // Figure out if this is for intra-process or not.
         bool is_intra_process = false;
@@ -200,21 +199,22 @@ public:
         }
         // Otherwise it is safe to set and return the any_exec
         if (is_intra_process) {
-          any_exec->subscription_intra_process = subscription;
+          any_exec->set_subscription_intra_process(subscription);
         } else {
-          any_exec->subscription = subscription;
+          any_exec->set_subscription(subscription);
         }
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->set_callback_group(group);
+        any_exec->set_node(get_node_by_group(group, weak_nodes));
         subscriber_handles_.erase(it);
-        return;
+        return true;
       }
       // Else, the subscription is no longer valid, remove it and continue
       subscriber_handles_.erase(it);
     }
+    return false;
   }
 
-  virtual void
+  virtual bool
   get_next_service(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
@@ -237,18 +237,19 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->service = service;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->set_service(service);
+        any_exec->set_callback_group(group);
+        any_exec->set_node(get_node_by_group(group, weak_nodes));
         service_handles_.erase(it);
-        return;
+        return true;
       }
       // Else, the service is no longer valid, remove it and continue
       service_handles_.erase(it);
     }
+    return false;
   }
 
-  virtual void
+  virtual bool
   get_next_client(executor::AnyExecutable::SharedPtr any_exec, const WeakNodeVector & weak_nodes)
   {
     auto it = client_handles_.begin();
@@ -270,15 +271,16 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->client = client;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->set_client(client);
+        any_exec->set_callback_group(group);
+        any_exec->set_node(get_node_by_group(group, weak_nodes));
         client_handles_.erase(it);
-        return;
+        return true;
       }
       // Else, the service is no longer valid, remove it and continue
       client_handles_.erase(it);
     }
+    return false;
   }
 
 private:

@@ -333,7 +333,7 @@ public:
   /// Return true if the given rmw_gid_t matches any stored Publishers.
   RCLCPP_PUBLIC
   bool
-  matches_any_publishers(const rmw_gid_t * id) const;
+  matches_any_publishers(const rmw_gid_t * id);
 
 private:
   RCLCPP_PUBLIC

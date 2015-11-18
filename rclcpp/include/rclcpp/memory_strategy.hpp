@@ -59,15 +59,15 @@ public:
   // \return Shared pointer to the fresh executable.
   virtual rclcpp::executor::AnyExecutable::SharedPtr instantiate_next_executable() = 0;
 
-  virtual void
+  virtual bool
   get_next_subscription(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
-  virtual void
+  virtual bool
   get_next_service(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
-  virtual void
+  virtual bool
   get_next_client(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
@@ -87,7 +87,7 @@ public:
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    const rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr

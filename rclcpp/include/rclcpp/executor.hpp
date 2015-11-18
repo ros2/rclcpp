@@ -21,6 +21,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "rclcpp/any_executable.hpp"
@@ -207,21 +208,21 @@ protected:
    */
   RCLCPP_PUBLIC
   void
-  execute_any_executable(AnyExecutable::ConstSharedPtr any_exec) const;
+  execute_any_executable(const AnyExecutable::ConstSharedPtr any_exec);
 
   RCLCPP_PUBLIC
   static void
   execute_subscription(
-    rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription);
+    const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription);
 
   RCLCPP_PUBLIC
   static void
   execute_intra_process_subscription(
-    rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription);
+    const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription);
 
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::timer::TimerBase::ConstSharedPtr timer);
+  execute_timer(const rclcpp::timer::TimerBase::ConstSharedPtr timer);
 
   RCLCPP_PUBLIC
   static void
@@ -244,7 +245,7 @@ protected:
   get_group_by_timer(rclcpp::timer::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
-  void
+  bool
   get_next_timer(AnyExecutable::SharedPtr any_exec);
 
   RCLCPP_PUBLIC
@@ -263,7 +264,8 @@ protected:
   std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  std::atomic<rmw_guard_condition_t *> interrupt_guard_condition_;
+  rmw_guard_condition_t * interrupt_guard_condition_;
+  std::mutex trigger_guard_condition_mutex_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;

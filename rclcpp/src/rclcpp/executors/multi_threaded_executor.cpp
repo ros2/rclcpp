@@ -32,7 +32,7 @@ MultiThreadedExecutor::MultiThreadedExecutor(rclcpp::memory_strategy::MemoryStra
   if (number_of_threads_ == 0) {
     number_of_threads_ = 1;
   }
-  thread_executables.resize(number_of_threads_, nullptr);
+  //thread_executables.resize(number_of_threads_, nullptr);
 }
 
 MultiThreadedExecutor::~MultiThreadedExecutor() {}
@@ -74,9 +74,29 @@ MultiThreadedExecutor::run(size_t this_thread_number)
       if (!rclcpp::utilities::ok() || !spinning.load()) {
         return;
       }
-      thread_executables[this_thread_number] = get_next_executable();
+      //printf("Create executable in thread %u\n", this_thread_number);
+      //fflush(stdout);
+      any_exec = get_next_executable();
+      /*
+      if (any_exec) {
+        assert(any_exec->is_one_field_set());
+      }
+      */
     }
 
-    execute_any_executable(thread_executables[this_thread_number]);
+    // Argh.
+    execute_any_executable(any_exec);
+    //printf("Execute executable in thread %u\n", this_thread_number);
+    //fflush(stdout);
+
+      /*
+    if (any_exec) {
+      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+      if (any_exec) {
+        assert(any_exec->is_one_field_set());
+      }
+      any_exec.reset();
+    }
+      */
   }
 }

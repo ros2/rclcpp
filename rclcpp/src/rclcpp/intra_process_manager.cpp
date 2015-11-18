@@ -51,8 +51,9 @@ IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 }
 
 bool
-IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
+IntraProcessManager::matches_any_publishers(const rmw_gid_t * id)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   return state_->matches_any_publishers(id);
 }
 
