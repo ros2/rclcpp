@@ -67,13 +67,21 @@ struct function_traits<ReturnTypeT(Args ...)>
 
 // Function pointers
 template<typename ReturnTypeT, typename ... Args>
-struct function_traits<ReturnTypeT (*)(Args ...)>: public function_traits<ReturnTypeT(Args ...)>
+struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(Args ...)>
 {};
 
 // Lambdas
 template<typename ClassT, typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
-  : public function_traits<ReturnTypeT(ClassT &, Args ...)>
+  : function_traits<ReturnTypeT(ClassT &, Args ...)>
+{};
+
+template<typename FunctionT>
+struct function_traits<FunctionT &>: function_traits<FunctionT>
+{};
+
+template<typename FunctionT>
+struct function_traits<FunctionT &&>: function_traits<FunctionT>
 {};
 
 /* NOTE(esteve):
