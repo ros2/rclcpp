@@ -39,35 +39,35 @@ AnyExecutable::~AnyExecutable()
 }
 
 bool AnyExecutable::is_one_field_set() const {
-  size_t fields_set = 0;
+  std::atomic<size_t> fields_set(0);
   if (timer_) {
-    ++fields_set;
+    fields_set.fetch_add(1, std::memory_order_relaxed);
   }
   if (subscription_) {
-    ++fields_set;
+    fields_set.fetch_add(1, std::memory_order_relaxed);
   }
   if (subscription_intra_process_) {
-    ++fields_set;
+    fields_set.fetch_add(1, std::memory_order_relaxed);
   }
   if (service_) {
-    ++fields_set;
+    fields_set.fetch_add(1, std::memory_order_relaxed);
   }
   if (client_) {
-    ++fields_set;
+    fields_set.fetch_add(1, std::memory_order_relaxed);
   }
-  return fields_set == 1;
+  return fields_set <= 1;
 }
 
-rclcpp::subscription::SubscriptionBase::SharedPtr AnyExecutable::get_subscription() const {
+rclcpp::subscription::SubscriptionBase::ConstSharedPtr AnyExecutable::get_subscription() const {
   return subscription_;
 }
 
-rclcpp::subscription::SubscriptionBase::SharedPtr
+rclcpp::subscription::SubscriptionBase::ConstSharedPtr
 AnyExecutable::get_subscription_intra_process() const {
   return subscription_intra_process_;
 }
 
-rclcpp::timer::TimerBase::SharedPtr AnyExecutable::get_timer() const {
+rclcpp::timer::TimerBase::ConstSharedPtr AnyExecutable::get_timer() const {
   return timer_;
 }
 

@@ -32,7 +32,6 @@ MultiThreadedExecutor::MultiThreadedExecutor(rclcpp::memory_strategy::MemoryStra
   if (number_of_threads_ == 0) {
     number_of_threads_ = 1;
   }
-  //thread_executables.resize(number_of_threads_, nullptr);
 }
 
 MultiThreadedExecutor::~MultiThreadedExecutor() {}
@@ -68,35 +67,25 @@ MultiThreadedExecutor::run(size_t this_thread_number)
 {
   thread_number_by_thread_id_[std::this_thread::get_id()] = this_thread_number;
   while (rclcpp::utilities::ok() && spinning.load()) {
-    executor::AnyExecutable::SharedPtr any_exec;
+    executor::AnyExecutable::SharedPtr any_exec = nullptr;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       if (!rclcpp::utilities::ok() || !spinning.load()) {
         return;
       }
-      //printf("Create executable in thread %u\n", this_thread_number);
-      //fflush(stdout);
       any_exec = get_next_executable();
-      /*
       if (any_exec) {
         assert(any_exec->is_one_field_set());
       }
-      */
     }
 
     // Argh.
     execute_any_executable(any_exec);
-    //printf("Execute executable in thread %u\n", this_thread_number);
-    //fflush(stdout);
 
-      /*
     if (any_exec) {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      if (any_exec) {
-        assert(any_exec->is_one_field_set());
-      }
+      assert(any_exec->is_one_field_set());
       any_exec.reset();
     }
-      */
   }
 }

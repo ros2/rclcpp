@@ -157,7 +157,7 @@ Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr
 }
 
 void
-Executor::execute_any_executable(const AnyExecutable::ConstSharedPtr any_exec)
+Executor::execute_any_executable(const AnyExecutable::ConstSharedPtr & any_exec)
 {
   if (!any_exec || !spinning.load()) {
     return;
@@ -185,6 +185,7 @@ Executor::execute_any_executable(const AnyExecutable::ConstSharedPtr any_exec)
       throw std::runtime_error(rmw_get_error_string_safe());
     }
   }
+  //assert(any_exec->is_one_field_set());
 }
 
 void
@@ -493,6 +494,8 @@ AnyExecutable::SharedPtr
 Executor::get_next_ready_executable()
 {
   auto any_exec = memory_strategy_->instantiate_next_executable();
+  assert(any_exec->is_one_field_set());
+
   // Check the timers to see if there are any that are ready, if so return
   if (get_next_timer(any_exec)) {
     return any_exec;

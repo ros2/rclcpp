@@ -39,9 +39,9 @@ struct AnyExecutable
 
   bool is_one_field_set() const;
 
-  rclcpp::subscription::SubscriptionBase::SharedPtr get_subscription() const;
-  rclcpp::subscription::SubscriptionBase::SharedPtr get_subscription_intra_process() const;
-  rclcpp::timer::TimerBase::SharedPtr get_timer() const;
+  rclcpp::subscription::SubscriptionBase::ConstSharedPtr get_subscription() const;
+  rclcpp::subscription::SubscriptionBase::ConstSharedPtr get_subscription_intra_process() const;
+  rclcpp::timer::TimerBase::ConstSharedPtr get_timer() const;
   rclcpp::service::ServiceBase::SharedPtr get_service() const;
   rclcpp::client::ClientBase::SharedPtr get_client() const;
   // These are used to keep the scope on the containing items

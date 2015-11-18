@@ -208,7 +208,7 @@ protected:
    */
   RCLCPP_PUBLIC
   void
-  execute_any_executable(const AnyExecutable::ConstSharedPtr any_exec);
+  execute_any_executable(const AnyExecutable::ConstSharedPtr & any_exec);
 
   RCLCPP_PUBLIC
   static void
