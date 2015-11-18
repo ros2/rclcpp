@@ -118,7 +118,7 @@ Executor::spin_some()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   AnyExecutable::SharedPtr any_exec;
-  while ((any_exec = get_next_executable(std::chrono::milliseconds::zero())) && spinning.load()) {
+  while ((any_exec = get_next_executable(std::chrono::milliseconds(0))) && spinning.load()) {
     execute_any_executable(any_exec);
   }
 }
@@ -160,10 +160,6 @@ void
 Executor::execute_any_executable(const AnyExecutable::ConstSharedPtr any_exec)
 {
   if (!any_exec || !spinning.load()) {
-    return;
-  }
-
-  if (any_exec->get_callback_group() && any_exec->get_callback_group()->can_be_taken_from().load()) {
     return;
   }
 
