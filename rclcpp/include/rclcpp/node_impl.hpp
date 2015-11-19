@@ -270,6 +270,28 @@ Node::create_subscription(
     allocator);
 }
 
+template<typename CallbackType>
+typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
+Node::create_wall_timer(
+  std::chrono::nanoseconds period,
+  CallbackType && callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
+  auto timer = rclcpp::timer::WallTimer<CallbackType>::make_shared(
+    period, std::forward<CallbackType>(callback));
+  if (group) {
+    if (!group_in_node(group)) {
+      // TODO(jacquelinekay): use custom exception
+      throw std::runtime_error("Cannot create timer, group not in node.");
+    }
+    group->add_timer(timer);
+  } else {
+    default_callback_group_->add_timer(timer);
+  }
+  number_of_timers_++;
+  return timer;
+}
+
 template<typename ServiceT>
 typename client::Client<ServiceT>::SharedPtr
 Node::create_client(

@@ -151,26 +151,6 @@ Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
   return group_belongs_to_this_node;
 }
 
-rclcpp::timer::WallTimer::SharedPtr
-Node::create_wall_timer(
-  std::chrono::nanoseconds period,
-  rclcpp::timer::CallbackType callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
-{
-  auto timer = rclcpp::timer::WallTimer::make_shared(period, callback);
-  if (group) {
-    if (!group_in_node(group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create timer, group not in node.");
-    }
-    group->add_timer(timer);
-  } else {
-    default_callback_group_->add_timer(timer);
-  }
-  number_of_timers_++;
-  return timer;
-}
-
 // TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
 // rclcpp::timer::WallTimer::SharedPtr
 // Node::create_wall_timer(

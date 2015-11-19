@@ -16,12 +16,10 @@
 
 #include <chrono>
 
-using rclcpp::timer::CallbackType;
 using rclcpp::timer::TimerBase;
 
-TimerBase::TimerBase(std::chrono::nanoseconds period, CallbackType callback)
+TimerBase::TimerBase(std::chrono::nanoseconds period)
 : period_(period),
-  callback_(callback),
   canceled_(false)
 {}
 
@@ -32,16 +30,4 @@ void
 TimerBase::cancel()
 {
   this->canceled_ = true;
-}
-
-void
-TimerBase::execute_callback() const
-{
-  callback_();
-}
-
-const CallbackType &
-TimerBase::get_callback() const
-{
-  return callback_;
 }
