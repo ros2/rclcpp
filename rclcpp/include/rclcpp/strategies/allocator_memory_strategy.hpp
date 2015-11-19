@@ -108,35 +108,22 @@ public:
     client_handles_.clear();
   }
 
-  void revalidate_handles()
+  void remove_null_handles()
   {
-    {
-      VectorRebind<void *> temp;
-      for (auto & subscriber_handle : subscriber_handles_) {
-        if (subscriber_handle) {
-          temp.push_back(subscriber_handle);
-        }
-      }
-      subscriber_handles_.swap(temp);
-    }
-    {
-      VectorRebind<void *> temp;
-      for (auto & service_handle : service_handles_) {
-        if (service_handle) {
-          temp.push_back(service_handle);
-        }
-      }
-      service_handles_.swap(temp);
-    }
-    {
-      VectorRebind<void *> temp;
-      for (auto & client_handle : client_handles_) {
-        if (client_handle) {
-          temp.push_back(client_handle);
-        }
-      }
-      client_handles_.swap(temp);
-    }
+    subscriber_handles_.erase(
+      std::remove(subscriber_handles_.begin(), subscriber_handles_.end(), nullptr),
+      subscriber_handles_.end()
+    );
+
+    service_handles_.erase(
+      std::remove(service_handles_.begin(), service_handles_.end(), nullptr),
+      service_handles_.end()
+    );
+
+    client_handles_.erase(
+      std::remove(client_handles_.begin(), client_handles_.end(), nullptr),
+      client_handles_.end()
+    );
   }
 
   bool collect_entities(const WeakNodeVector & weak_nodes)
