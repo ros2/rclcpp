@@ -42,10 +42,14 @@ bool AnyExecutable::is_one_field_set() const {
   std::atomic<size_t> fields_set(0);
   if (timer_) {
     fields_set.fetch_add(1, std::memory_order_relaxed);
-  }
+  }/* else {
+    assert(timer_.use_count() == 0);
+  }*/
   if (subscription_) {
     fields_set.fetch_add(1, std::memory_order_relaxed);
-  }
+  }/* else {
+    assert(subscription_.use_count() == 0);
+  }*/
   if (subscription_intra_process_) {
     fields_set.fetch_add(1, std::memory_order_relaxed);
   }
@@ -89,19 +93,19 @@ rclcpp::node::Node::SharedPtr AnyExecutable::get_node() const {
 
 void
 AnyExecutable::set_subscription(
-  const rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription)
 {
   subscription_ = subscription;
 }
 
 void
 AnyExecutable::set_subscription_intra_process(
-  const rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription)
 {
   subscription_intra_process_ = subscription;
 }
 
-void AnyExecutable::set_timer(const rclcpp::timer::TimerBase::SharedPtr timer) {
+void AnyExecutable::set_timer(const rclcpp::timer::TimerBase::ConstSharedPtr timer) {
   timer_ = timer;
 }
 

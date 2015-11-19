@@ -15,6 +15,7 @@
 #ifndef RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 
+#include <atomic>
 #include <cassert>
 #include <memory>
 #include <vector>
@@ -65,7 +66,7 @@ public:
 
   size_t fill_subscriber_handles(void ** & ptr)
   {
-    for (auto & subscription : subscriptions_) {
+    for (const auto subscription : subscriptions_) {
       subscriber_handles_.push_back(subscription->get_subscription_handle()->data);
       if (subscription->get_intra_process_subscription_handle()) {
         subscriber_handles_.push_back(subscription->get_intra_process_subscription_handle()->data);
@@ -131,18 +132,18 @@ public:
   {
     bool has_invalid_weak_nodes = false;
     for (auto & weak_node : weak_nodes) {
-      auto node = weak_node.lock();
+      const auto node = weak_node.lock();
       if (!node) {
         has_invalid_weak_nodes = false;
         continue;
       }
       for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
+        const auto group = weak_group.lock();
         if (!group || !group->can_be_taken_from().load()) {
           continue;
         }
         for (auto & weak_subscription : group->get_subscription_ptrs()) {
-          auto subscription = weak_subscription.lock();
+          const auto subscription = weak_subscription.lock();
           if (subscription) {
             subscriptions_.push_back(subscription);
           }
@@ -176,7 +177,7 @@ public:
   {
     auto it = subscriber_handles_.begin();
     while (it != subscriber_handles_.end()) {
-      const subscription::SubscriptionBase::SharedPtr subscription = get_subscription_by_handle(*it, weak_nodes);
+      const subscription::SubscriptionBase::ConstSharedPtr subscription = get_subscription_by_handle(*it, weak_nodes);
       if (subscription) {
         // Figure out if this is for intra-process or not.
         bool is_intra_process = false;
@@ -184,7 +185,7 @@ public:
           is_intra_process = subscription->get_intra_process_subscription_handle()->data == *it;
         }
         // Find the group for this handle and see if it can be serviced
-        auto group = get_group_by_subscription(subscription, weak_nodes);
+        const auto group = get_group_by_subscription(subscription, weak_nodes);
         if (!group) {
           // Group was not found, meaning the subscription is not valid...
           // Remove it from the ready list and continue looking
@@ -298,6 +299,8 @@ private:
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;
+
+  std::mutex subscription_mutex_;
 };
 
 }  // namespace allocator_memory_strategy

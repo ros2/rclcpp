@@ -16,22 +16,22 @@
 
 using rclcpp::memory_strategy::MemoryStrategy;
 
-rclcpp::subscription::SubscriptionBase::SharedPtr
+rclcpp::subscription::SubscriptionBase::ConstSharedPtr
 MemoryStrategy::get_subscription_by_handle(
   void * subscriber_handle, const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group) {
         continue;
       }
       for (auto & weak_subscription : group->get_subscription_ptrs()) {
-        auto subscription = weak_subscription.lock();
+        const auto subscription = weak_subscription.lock();
         if (subscription) {
           if (subscription->get_subscription_handle()->data == subscriber_handle) {
             return subscription;
@@ -102,12 +102,12 @@ MemoryStrategy::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedP
     return nullptr;
   }
   for (auto & weak_node : weak_nodes) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto callback_group = weak_group.lock();
+      const auto callback_group = weak_group.lock();
       if (callback_group == group) {
         return node;
       }
@@ -118,16 +118,16 @@ MemoryStrategy::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedP
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_subscription(
-  const rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+  const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription,
   const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group) {
         continue;
       }

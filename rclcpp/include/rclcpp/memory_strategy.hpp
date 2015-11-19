@@ -71,7 +71,7 @@ public:
   get_next_client(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
-  static rclcpp::subscription::SubscriptionBase::SharedPtr
+  static rclcpp::subscription::SubscriptionBase::ConstSharedPtr
   get_subscription_by_handle(void * subscriber_handle,
     const WeakNodeVector & weak_nodes);
 
@@ -87,7 +87,7 @@ public:
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_subscription(
-    const rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr

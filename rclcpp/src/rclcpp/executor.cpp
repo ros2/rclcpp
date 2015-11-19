@@ -157,17 +157,17 @@ Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr
 }
 
 void
-Executor::execute_any_executable(const AnyExecutable::ConstSharedPtr & any_exec)
+Executor::execute_any_executable(const AnyExecutable::ConstSharedPtr any_exec)
 {
   if (!any_exec || !spinning.load()) {
     return;
   }
 
-  if (timer::TimerBase::ConstSharedPtr timer = any_exec->get_timer()) {
+  if (const timer::TimerBase::ConstSharedPtr timer = any_exec->get_timer()) {
     execute_timer(timer);
-  } else if (subscription::SubscriptionBase::ConstSharedPtr subscription = any_exec->get_subscription()) {
+  } else if (const subscription::SubscriptionBase::ConstSharedPtr subscription = any_exec->get_subscription()) {
     execute_subscription(subscription);
-  } else if (subscription::SubscriptionBase::ConstSharedPtr subscription_intra_process = any_exec->get_subscription_intra_process()) {
+  } else if (const subscription::SubscriptionBase::ConstSharedPtr subscription_intra_process = any_exec->get_subscription_intra_process()) {
     execute_intra_process_subscription(subscription_intra_process);
   } else if (any_exec->get_service()) {
     execute_service(any_exec->get_service());
@@ -341,8 +341,12 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   guard_condition_handles.guard_conditions[0] = \
     rclcpp::utilities::get_global_sigint_guard_condition()->data;
   // Put the executor's guard condition in
-  guard_condition_handles.guard_conditions[1] = \
-    interrupt_guard_condition_->data;
+
+  {
+    std::lock_guard<std::mutex> lock(trigger_guard_condition_mutex_);
+    guard_condition_handles.guard_conditions[1] = \
+      interrupt_guard_condition_->data;
+  }
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -394,12 +398,12 @@ Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr gro
     return rclcpp::node::Node::SharedPtr();
   }
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto callback_group = weak_group.lock();
+      const auto callback_group = weak_group.lock();
       if (callback_group == group) {
         return node;
       }
@@ -412,17 +416,17 @@ rclcpp::callback_group::CallbackGroup::SharedPtr
 Executor::get_group_by_timer(rclcpp::timer::TimerBase::SharedPtr timer)
 {
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group) {
         continue;
       }
       for (auto & weak_timer : group->get_timer_ptrs()) {
-        auto t = weak_timer.lock();
+        const auto t = weak_timer.lock();
         if (t == timer) {
           return group;
         }
@@ -436,17 +440,17 @@ bool
 Executor::get_next_timer(AnyExecutable::SharedPtr any_exec)
 {
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group || !group->can_be_taken_from().load()) {
         continue;
       }
       for (auto & timer_ref : group->get_timer_ptrs()) {
-        auto timer = timer_ref.lock();
+        const auto timer = timer_ref.lock();
         if (timer && timer->check_and_trigger()) {
           any_exec->set_timer(timer);
           any_exec->set_callback_group(group);
@@ -465,19 +469,19 @@ Executor::get_earliest_timer()
   std::chrono::nanoseconds latest = std::chrono::nanoseconds::max();
   bool timers_empty = true;
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group || !group->can_be_taken_from().load()) {
         continue;
       }
       for (auto & timer_ref : group->get_timer_ptrs()) {
         timers_empty = false;
         // Check the expected trigger time
-        auto timer = timer_ref.lock();
+        const auto timer = timer_ref.lock();
         if (timer && timer->time_until_trigger() < latest) {
           latest = timer->time_until_trigger();
         }
