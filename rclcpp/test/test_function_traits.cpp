@@ -72,7 +72,8 @@ struct FunctionObjectOneIntOneChar
 template<
   typename FunctorT,
   std::size_t Arity = 0,
-  typename std::enable_if<rclcpp::arity_comparator<Arity, FunctorT>::value>::type * = nullptr
+  typename std::enable_if<
+    rclcpp::function_traits::arity_comparator<Arity, FunctorT>::value>::type * = nullptr
 >
 int func_accept_callback(FunctorT callback)
 {
@@ -82,7 +83,7 @@ int func_accept_callback(FunctorT callback)
 template<
   typename FunctorT,
   typename std::enable_if<
-    rclcpp::check_arguments<FunctorT, int>::value
+    rclcpp::function_traits::check_arguments<FunctorT, int>::value
   >::type * = nullptr
 >
 int func_accept_callback(FunctorT callback)
@@ -94,7 +95,7 @@ int func_accept_callback(FunctorT callback)
 template<
   typename FunctorT,
   typename std::enable_if<
-    rclcpp::check_arguments<FunctorT, int, int>::value
+    rclcpp::function_traits::check_arguments<FunctorT, int, int>::value
   >::type * = nullptr
 >
 int func_accept_callback(FunctorT callback)
@@ -107,7 +108,7 @@ int func_accept_callback(FunctorT callback)
 template<
   typename FunctorT,
   typename std::enable_if<
-    rclcpp::check_arguments<FunctorT, int, char>::value
+    rclcpp::function_traits::check_arguments<FunctorT, int, char>::value
   >::type * = nullptr
 >
 int func_accept_callback(FunctorT callback)
@@ -123,19 +124,19 @@ int func_accept_callback(FunctorT callback)
 TEST(TestFunctionTraits, arity) {
   // Test regular functions
   static_assert(
-    rclcpp::function_traits<decltype(func_no_args)>::arity == 0,
+    rclcpp::function_traits::function_traits<decltype(func_no_args)>::arity == 0,
     "Functor does not accept arguments");
 
   static_assert(
-    rclcpp::function_traits<decltype(func_one_int)>::arity == 1,
+    rclcpp::function_traits::function_traits<decltype(func_one_int)>::arity == 1,
     "Functor only accepts one argument");
 
   static_assert(
-    rclcpp::function_traits<decltype(func_two_ints)>::arity == 2,
+    rclcpp::function_traits::function_traits<decltype(func_two_ints)>::arity == 2,
     "Functor only accepts two arguments");
 
   static_assert(
-    rclcpp::function_traits<decltype(func_one_int_one_char)>::arity == 2,
+    rclcpp::function_traits::function_traits<decltype(func_one_int_one_char)>::arity == 2,
     "Functor only accepts two arguments");
 
   // Test lambdas
@@ -161,36 +162,36 @@ TEST(TestFunctionTraits, arity) {
     };
 
   static_assert(
-    rclcpp::function_traits<decltype(lambda_no_args)>::arity == 0,
+    rclcpp::function_traits::function_traits<decltype(lambda_no_args)>::arity == 0,
     "Functor does not accept arguments");
 
   static_assert(
-    rclcpp::function_traits<decltype(lambda_one_int)>::arity == 1,
+    rclcpp::function_traits::function_traits<decltype(lambda_one_int)>::arity == 1,
     "Functor only accepts one argument");
 
   static_assert(
-    rclcpp::function_traits<decltype(lambda_two_ints)>::arity == 2,
+    rclcpp::function_traits::function_traits<decltype(lambda_two_ints)>::arity == 2,
     "Functor only accepts two arguments");
 
   static_assert(
-    rclcpp::function_traits<decltype(lambda_one_int_one_char)>::arity == 2,
+    rclcpp::function_traits::function_traits<decltype(lambda_one_int_one_char)>::arity == 2,
     "Functor only accepts two arguments");
 
   // Test objects that have a call operator
   static_assert(
-    rclcpp::function_traits<FunctionObjectNoArgs>::arity == 0,
+    rclcpp::function_traits::function_traits<FunctionObjectNoArgs>::arity == 0,
     "Functor does not accept arguments");
 
   static_assert(
-    rclcpp::function_traits<FunctionObjectOneInt>::arity == 1,
+    rclcpp::function_traits::function_traits<FunctionObjectOneInt>::arity == 1,
     "Functor only accepts one argument");
 
   static_assert(
-    rclcpp::function_traits<FunctionObjectTwoInts>::arity == 2,
+    rclcpp::function_traits::function_traits<FunctionObjectTwoInts>::arity == 2,
     "Functor only accepts two arguments");
 
   static_assert(
-    rclcpp::function_traits<FunctionObjectOneIntOneChar>::arity == 2,
+    rclcpp::function_traits::function_traits<FunctionObjectOneIntOneChar>::arity == 2,
     "Functor only accepts two arguments");
 }
 
@@ -202,31 +203,35 @@ TEST(TestFunctionTraits, argument_types) {
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(func_one_int)>::template argument_type<0>
+      rclcpp::function_traits::function_traits<decltype(func_one_int)>::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(func_two_ints)>::template argument_type<0>
+      rclcpp::function_traits::function_traits<decltype(func_two_ints)>::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(func_two_ints)>::template argument_type<1>
+      rclcpp::function_traits::function_traits<decltype(func_two_ints)>::template argument_type<1>
     >::value, "Functor accepts an int as second argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(func_one_int_one_char)>::template argument_type<0>
+      rclcpp::function_traits::function_traits<
+        decltype(func_one_int_one_char)
+      >::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       char,
-      rclcpp::function_traits<decltype(func_one_int_one_char)>::template argument_type<1>
+      rclcpp::function_traits::function_traits<
+        decltype(func_one_int_one_char)
+      >::template argument_type<1>
     >::value, "Functor accepts a char as second argument");
 
   // Test lambdas
@@ -250,62 +255,70 @@ TEST(TestFunctionTraits, argument_types) {
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(lambda_one_int)>::template argument_type<0>
+      rclcpp::function_traits::function_traits<decltype(lambda_one_int)>::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(lambda_two_ints)>::template argument_type<0>
+      rclcpp::function_traits::function_traits<decltype(lambda_two_ints)>::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(lambda_two_ints)>::template argument_type<1>
+      rclcpp::function_traits::function_traits<decltype(lambda_two_ints)>::template argument_type<1>
     >::value, "Functor accepts an int as second argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<decltype(lambda_one_int_one_char)>::template argument_type<0>
+      rclcpp::function_traits::function_traits<
+        decltype(lambda_one_int_one_char)
+      >::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       char,
-      rclcpp::function_traits<decltype(lambda_one_int_one_char)>::template argument_type<1>
+      rclcpp::function_traits::function_traits<
+        decltype(lambda_one_int_one_char)
+      >::template argument_type<1>
     >::value, "Functor accepts a char as second argument");
 
   // Test objects that have a call operator
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<FunctionObjectOneInt>::template argument_type<0>
+      rclcpp::function_traits::function_traits<FunctionObjectOneInt>::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<FunctionObjectTwoInts>::template argument_type<0>
+      rclcpp::function_traits::function_traits<FunctionObjectTwoInts>::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<FunctionObjectTwoInts>::template argument_type<1>
+      rclcpp::function_traits::function_traits<FunctionObjectTwoInts>::template argument_type<1>
     >::value, "Functor accepts an int as second argument");
 
   static_assert(
     std::is_same<
       int,
-      rclcpp::function_traits<FunctionObjectOneIntOneChar>::template argument_type<0>
+      rclcpp::function_traits::function_traits<
+        FunctionObjectOneIntOneChar
+      >::template argument_type<0>
     >::value, "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
       char,
-      rclcpp::function_traits<FunctionObjectOneIntOneChar>::template argument_type<1>
+      rclcpp::function_traits::function_traits<
+        FunctionObjectOneIntOneChar
+      >::template argument_type<1>
     >::value, "Functor accepts a char as second argument");
 }
 
@@ -315,35 +328,35 @@ TEST(TestFunctionTraits, argument_types) {
 TEST(TestFunctionTraits, check_arguments) {
   // Test regular functions
   static_assert(
-    rclcpp::check_arguments<decltype(func_one_int), int>::value,
+    rclcpp::function_traits::check_arguments<decltype(func_one_int), int>::value,
     "Functor accepts a single int as arguments");
 
   static_assert(
-    !rclcpp::check_arguments<decltype(func_one_int), char>::value,
+    !rclcpp::function_traits::check_arguments<decltype(func_one_int), char>::value,
     "Functor does not accept a char as argument");
 
   static_assert(
-    !rclcpp::check_arguments<decltype(func_one_int), char, int>::value,
+    !rclcpp::function_traits::check_arguments<decltype(func_one_int), char, int>::value,
     "Functor does not accept two arguments");
 
   static_assert(
-    !rclcpp::check_arguments<decltype(func_two_ints), int>::value,
+    !rclcpp::function_traits::check_arguments<decltype(func_two_ints), int>::value,
     "Functor does not accept a single int as argument, requires two ints");
 
   static_assert(
-    rclcpp::check_arguments<decltype(func_two_ints), int, int>::value,
+    rclcpp::function_traits::check_arguments<decltype(func_two_ints), int, int>::value,
     "Functor accepts two ints as arguments");
 
   static_assert(
-    !rclcpp::check_arguments<decltype(func_two_ints), bool, int>::value,
+    !rclcpp::function_traits::check_arguments<decltype(func_two_ints), bool, int>::value,
     "Functor does not accept a bool and an int as arguments, requires two ints");
 
   static_assert(
-    !rclcpp::check_arguments<decltype(func_two_ints), int, char>::value,
+    !rclcpp::function_traits::check_arguments<decltype(func_two_ints), int, char>::value,
     "Functor does not accept an int and a char as arguments, requires two ints");
 
   static_assert(
-    rclcpp::check_arguments<decltype(func_one_int_one_char), int, char>::value,
+    rclcpp::function_traits::check_arguments<decltype(func_one_int_one_char), int, char>::value,
     "Functor accepts an int and a char as arguments");
 
   // Test lambdas
@@ -365,28 +378,28 @@ TEST(TestFunctionTraits, check_arguments) {
     };
 
   static_assert(
-    rclcpp::check_arguments<decltype(lambda_one_int), int>::value,
+    rclcpp::function_traits::check_arguments<decltype(lambda_one_int), int>::value,
     "Functor accepts an int as the only argument");
 
   static_assert(
-    rclcpp::check_arguments<decltype(lambda_two_ints), int, int>::value,
+    rclcpp::function_traits::check_arguments<decltype(lambda_two_ints), int, int>::value,
     "Functor accepts two ints as arguments");
 
   static_assert(
-    rclcpp::check_arguments<decltype(lambda_one_int_one_char), int, char>::value,
+    rclcpp::function_traits::check_arguments<decltype(lambda_one_int_one_char), int, char>::value,
     "Functor accepts an int and a char as arguments");
 
   // Test objects that have a call operator
   static_assert(
-    rclcpp::check_arguments<FunctionObjectOneInt, int>::value,
+    rclcpp::function_traits::check_arguments<FunctionObjectOneInt, int>::value,
     "Functor accepts an int as the only argument");
 
   static_assert(
-    rclcpp::check_arguments<FunctionObjectTwoInts, int, int>::value,
+    rclcpp::function_traits::check_arguments<FunctionObjectTwoInts, int, int>::value,
     "Functor accepts two ints as arguments");
 
   static_assert(
-    rclcpp::check_arguments<FunctionObjectOneIntOneChar, int, char>::value,
+    rclcpp::function_traits::check_arguments<FunctionObjectOneIntOneChar, int, char>::value,
     "Functor accepts an int and a char as arguments");
 }
 
@@ -406,27 +419,36 @@ TEST(TestFunctionTraits, same_arguments) {
     };
 
   static_assert(
-    rclcpp::same_arguments<decltype(lambda_one_int), decltype(func_one_int)>::value,
+    rclcpp::function_traits::same_arguments<
+      decltype(lambda_one_int), decltype(func_one_int)
+    >::value,
     "Lambda and function have the same arguments");
 
   static_assert(
-    !rclcpp::same_arguments<decltype(lambda_two_ints), decltype(func_one_int)>::value,
+    !rclcpp::function_traits::same_arguments<
+      decltype(lambda_two_ints), decltype(func_one_int)
+    >::value,
     "Lambda and function have different arguments");
 
   static_assert(
-    !rclcpp::same_arguments<decltype(func_one_int_one_char), decltype(func_two_ints)>::value,
+    !rclcpp::function_traits::same_arguments<
+      decltype(func_one_int_one_char), decltype(func_two_ints)
+    >::value,
     "Functions have different arguments");
 
   static_assert(
-    !rclcpp::same_arguments<decltype(lambda_one_int), decltype(lambda_two_ints)>::value,
+    !rclcpp::function_traits::same_arguments<
+      decltype(lambda_one_int), decltype(lambda_two_ints)
+    >::value,
     "Lambdas have different arguments");
 
   static_assert(
-    rclcpp::same_arguments<FunctionObjectTwoInts, decltype(func_two_ints)>::value,
+    rclcpp::function_traits::same_arguments<FunctionObjectTwoInts, decltype(func_two_ints)>::value,
     "Functor and function have the same arguments");
 
   static_assert(
-    rclcpp::same_arguments<FunctionObjectTwoInts, decltype(lambda_two_ints)>::value,
+    rclcpp::function_traits::same_arguments<
+      FunctionObjectTwoInts, decltype(lambda_two_ints)>::value,
     "Functor and lambda have the same arguments");
 }
 

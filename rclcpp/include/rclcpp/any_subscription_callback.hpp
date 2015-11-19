@@ -72,7 +72,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrCallback
       >::value
@@ -86,7 +86,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         SharedPtrWithInfoCallback
       >::value
@@ -100,7 +100,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         ConstSharedPtrCallback
       >::value
@@ -114,7 +114,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         ConstSharedPtrWithInfoCallback
       >::value
@@ -128,7 +128,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         UniquePtrCallback
       >::value
@@ -142,7 +142,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         UniquePtrWithInfoCallback
       >::value

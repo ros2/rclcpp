@@ -23,6 +23,7 @@
 #include <tuple>
 #include <utility>
 
+#include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -74,11 +75,20 @@ template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
-  using Promise = std::promise<typename ServiceT::Response::SharedPtr>;
+  using SharedRequest = typename ServiceT::Request::SharedPtr;
+  using SharedResponse = typename ServiceT::Response::SharedPtr;
+
+  using Promise = std::promise<SharedResponse>;
+  using PromiseWithRequest = std::promise<std::pair<SharedRequest, SharedResponse>>;
+
   using SharedPromise = std::shared_ptr<Promise>;
-  using SharedFuture = std::shared_future<typename ServiceT::Response::SharedPtr>;
+  using SharedPromiseWithRequest = std::shared_ptr<PromiseWithRequest>;
+
+  using SharedFuture = std::shared_future<SharedResponse>;
+  using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
 
   using CallbackType = std::function<void(SharedFuture)>;
+  using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
 
@@ -117,15 +127,21 @@ public:
     callback(future);
   }
 
-  SharedFuture async_send_request(
-    typename ServiceT::Request::SharedPtr request)
+  SharedFuture async_send_request(SharedRequest request)
   {
     return async_send_request(request, [](SharedFuture) {});
   }
 
-  SharedFuture async_send_request(
-    typename ServiceT::Request::SharedPtr request,
-    CallbackType && cb)
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CallbackType
+      >::value
+    >::type * = nullptr
+  >
+  SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
   {
     int64_t sequence_number;
     if (RMW_RET_OK != rmw_send_request(get_client_handle(), request.get(), &sequence_number)) {
@@ -140,6 +156,31 @@ public:
     pending_requests_[sequence_number] =
       std::make_tuple(call_promise, std::forward<CallbackType>(cb), f);
     return f;
+  }
+
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        CallbackWithRequestType
+      >::value
+    >::type * = nullptr
+  >
+  SharedFutureWithRequest async_send_request(SharedRequest request, CallbackT && cb)
+  {
+    SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
+    SharedFutureWithRequest future_with_request(promise->get_future());
+
+    auto wrapping_cb = [future_with_request, promise, request, &cb](SharedFuture future) {
+        auto response = future.get();
+        promise->set_value(std::make_pair(request, response));
+        cb(future_with_request);
+      };
+
+    async_send_request(request, wrapping_cb);
+
+    return future_with_request;
   }
 
 private:
