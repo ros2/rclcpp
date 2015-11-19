@@ -379,7 +379,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     return;
   }
 
-  memory_strategy_->revalidate_handles();
+  memory_strategy_->remove_null_handles();
 }
 
 rclcpp::node::Node::SharedPtr

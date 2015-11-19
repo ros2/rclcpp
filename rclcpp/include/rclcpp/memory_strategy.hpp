@@ -52,7 +52,7 @@ public:
   virtual void clear_active_entities() = 0;
 
   virtual void clear_handles() = 0;
-  virtual void revalidate_handles() = 0;
+  virtual void remove_null_handles() = 0;
   virtual bool collect_entities(const WeakNodeVector & weak_nodes) = 0;
 
   /// Provide a newly initialized AnyExecutable object.
