@@ -22,7 +22,6 @@ namespace rclcpp
 {
 
 namespace function_traits
-
 {
 
 /* NOTE(esteve):
