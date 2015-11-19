@@ -82,10 +82,12 @@ MultiThreadedExecutor::run(size_t this_thread_number)
     // Argh.
     execute_any_executable(any_exec);
 
+    /*
     if (any_exec) {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       assert(any_exec->is_one_field_set());
       any_exec.reset();
     }
+    */
   }
 }
