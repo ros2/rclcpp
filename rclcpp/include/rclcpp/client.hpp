@@ -135,7 +135,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         CallbackType
       >::value
@@ -161,7 +161,7 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::same_arguments<
+      rclcpp::function_traits::same_arguments<
         CallbackT,
         CallbackWithRequestType
       >::value

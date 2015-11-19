@@ -21,6 +21,10 @@
 namespace rclcpp
 {
 
+namespace function_traits
+
+{
+
 /* NOTE(esteve):
  * We support service callbacks that can optionally take the request id,
  * which should be possible with two overloaded create_service methods,
@@ -105,6 +109,8 @@ struct same_arguments : std::is_same<
     typename function_traits<FunctorBT>::arguments
   >
 {};
+
+}  // namespace function_traits
 
 }  // namespace rclcpp
 
