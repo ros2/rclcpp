@@ -14,7 +14,9 @@
 
 #include <gtest/gtest.h>
 
-#include <rclcpp/function_traits.hpp>
+#include <string>
+
+#include "rclcpp/function_traits.hpp"
 
 int func_no_args()
 {
@@ -116,6 +118,42 @@ int func_accept_callback(FunctorT callback)
   int a = 7;
   char b = 8;
   return callback(a, b);
+}
+
+template<
+  typename FunctorT,
+  std::size_t Arity = 0,
+  typename std::enable_if<
+    rclcpp::function_traits::arity_comparator<Arity, FunctorT>::value
+  >::type * = nullptr,
+  typename std::enable_if<
+    std::is_same<
+      typename rclcpp::function_traits::function_traits<FunctorT>::return_type,
+      double
+    >::value
+  >::type * = nullptr
+>
+double func_accept_callback_return_type(FunctorT callback)
+{
+  return callback();
+}
+
+template<
+  typename FunctorT,
+  std::size_t Arity = 0,
+  typename std::enable_if<
+    rclcpp::function_traits::arity_comparator<Arity, FunctorT>::value
+  >::type * = nullptr,
+  typename std::enable_if<
+    std::is_same<
+      typename rclcpp::function_traits::function_traits<FunctorT>::return_type,
+      std::string
+    >::value
+  >::type * = nullptr
+>
+std::string func_accept_callback_return_type(FunctorT callback)
+{
+  return callback();
 }
 
 /*
@@ -452,6 +490,39 @@ TEST(TestFunctionTraits, same_arguments) {
     "Functor and lambda have the same arguments");
 }
 
+TEST(TestFunctionTraits, return_type) {
+  // Test regular function
+  static_assert(
+    std::is_same<
+      rclcpp::function_traits::function_traits<decltype(func_no_args)>::return_type,
+      int
+    >::value,
+    "Functor return ints");
+
+  // Test lambda
+  auto lambda_one_int_return_double = [](int one) -> double {
+      (void)one;
+      return 1.0;
+    };
+
+  static_assert(
+    std::is_same<
+      rclcpp::function_traits::function_traits<
+        decltype(lambda_one_int_return_double)
+      >::return_type,
+      double
+    >::value,
+    "Lambda returns a double");
+
+  // Test objects that have a call operator
+  static_assert(
+    std::is_same<
+      rclcpp::function_traits::function_traits<FunctionObjectNoArgs>::return_type,
+      int
+    >::value,
+    "Functor return ints");
+}
+
 /*
    Tests that functions are matched via SFINAE.
  */
@@ -500,4 +571,16 @@ TEST(TestFunctionTraits, sfinae_match) {
   EXPECT_EQ(2, func_accept_callback(FunctionObjectTwoInts()));
 
   EXPECT_EQ(3, func_accept_callback(FunctionObjectOneIntOneChar()));
+
+  auto lambda_no_args_double = []() -> double {
+      return 123.45;
+    };
+
+  auto lambda_no_args_string = []() -> std::string {
+      return std::string("foo");
+    };
+
+  EXPECT_EQ(123.45, func_accept_callback_return_type(lambda_no_args_double));
+
+  EXPECT_EQ("foo", func_accept_callback_return_type(lambda_no_args_string));
 }
