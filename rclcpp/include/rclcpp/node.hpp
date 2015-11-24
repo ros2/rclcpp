@@ -171,11 +171,12 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
+  template<typename CallbackType>
   RCLCPP_PUBLIC
-  rclcpp::timer::WallTimer::SharedPtr
+  typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
   create_wall_timer(
     std::chrono::nanoseconds period,
-    rclcpp::timer::CallbackType callback,
+    CallbackType && callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create a timer.
