@@ -41,7 +41,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase);
 
   RCLCPP_PUBLIC
-  TimerBase(std::chrono::nanoseconds period);
+  explicit TimerBase(std::chrono::nanoseconds period);
 
   RCLCPP_PUBLIC
   virtual ~TimerBase();
@@ -142,7 +142,6 @@ public:
   void
   execute_callback_delegate()
   {
-    //callback_(std::move(std::shared_ptr<TimerBase>(this)));
     callback_(*this);
   }
 
