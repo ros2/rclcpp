@@ -183,16 +183,16 @@ public:
   {
     (void)message_info;
     if (shared_ptr_callback_) {
-      typename MessageT::SharedPtr shared_message = std::move(message);
+      typename std::shared_ptr<MessageT> shared_message = std::move(message);
       shared_ptr_callback_(shared_message);
     } else if (shared_ptr_with_info_callback_) {
-      typename MessageT::SharedPtr shared_message = std::move(message);
+      typename std::shared_ptr<MessageT> shared_message = std::move(message);
       shared_ptr_with_info_callback_(shared_message, message_info);
     } else if (const_shared_ptr_callback_) {
-      typename MessageT::ConstSharedPtr const_shared_message = std::move(message);
+      typename std::shared_ptr<MessageT const> const_shared_message = std::move(message);
       const_shared_ptr_callback_(const_shared_message);
     } else if (const_shared_ptr_with_info_callback_) {
-      typename MessageT::ConstSharedPtr const_shared_message = std::move(message);
+      typename std::shared_ptr<MessageT const> const_shared_message = std::move(message);
       const_shared_ptr_with_info_callback_(const_shared_message, message_info);
     } else if (unique_ptr_callback_) {
       unique_ptr_callback_(std::move(message));
