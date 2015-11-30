@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rclcpp/executors/single_threaded_executor.hpp>
-
-#include "../scope_exit.hpp"
+#include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 
