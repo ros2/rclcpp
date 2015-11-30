@@ -19,8 +19,7 @@
 #include <vector>
 
 #include "rclcpp/utilities.hpp"
-
-#include "../scope_exit.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 

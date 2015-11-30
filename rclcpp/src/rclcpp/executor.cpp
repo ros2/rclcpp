@@ -13,10 +13,9 @@
 // limitations under the License.
 
 #include "rclcpp/executor.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
-
-#include "./scope_exit.hpp"
 
 using rclcpp::executor::AnyExecutable;
 using rclcpp::executor::Executor;
