@@ -57,8 +57,8 @@ public:
   const rmw_client_t *
   get_client_handle() const;
 
-  virtual std::shared_ptr<void> create_response() = 0;
-  virtual std::shared_ptr<void> create_request_header() = 0;
+  virtual std::shared_ptr<void> create_response() const = 0;
+  virtual std::shared_ptr<void> create_request_header() const = 0;
   virtual void handle_response(
     std::shared_ptr<void> & request_header, std::shared_ptr<void> & response) = 0;
 
@@ -99,12 +99,12 @@ public:
   : ClientBase(node_handle, client_handle, service_name)
   {}
 
-  std::shared_ptr<void> create_response()
+  std::shared_ptr<void> create_response() const
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
   }
 
-  std::shared_ptr<void> create_request_header()
+  std::shared_ptr<void> create_request_header() const
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)

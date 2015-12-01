@@ -75,6 +75,6 @@ MultiThreadedExecutor::run(size_t this_thread_number)
       }
       any_exec = get_next_executable();
     }
-    execute_any_executable(any_exec);
+    execute_any_executable(*any_exec.get());
   }
 }

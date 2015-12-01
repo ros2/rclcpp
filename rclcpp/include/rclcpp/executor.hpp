@@ -207,29 +207,29 @@ protected:
    */
   RCLCPP_PUBLIC
   void
-  execute_any_executable(AnyExecutable::SharedPtr any_exec);
+  execute_any_executable(const AnyExecutable & any_exec) const;
 
   RCLCPP_PUBLIC
   static void
   execute_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription);
+    const rclcpp::subscription::SubscriptionBase * subscription);
 
   RCLCPP_PUBLIC
   static void
   execute_intra_process_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription);
+    const rclcpp::subscription::SubscriptionBase * subscription);
 
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::timer::TimerBase::SharedPtr timer);
+  execute_timer(rclcpp::timer::TimerBase * timer);
 
   RCLCPP_PUBLIC
   static void
-  execute_service(rclcpp::service::ServiceBase::SharedPtr service);
+  execute_service(rclcpp::service::ServiceBase * service);
 
   RCLCPP_PUBLIC
   static void
-  execute_client(rclcpp::client::ClientBase::SharedPtr client);
+  execute_client(rclcpp::client::ClientBase * client);
 
   RCLCPP_PUBLIC
   void

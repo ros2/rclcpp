@@ -85,7 +85,7 @@ public:
   void dispatch(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<typename ServiceT::Request> request,
-    std::shared_ptr<typename ServiceT::Response> response)
+    std::shared_ptr<typename ServiceT::Response> response) const
   {
     if (shared_ptr_callback_ != nullptr) {
       (void)request_header;

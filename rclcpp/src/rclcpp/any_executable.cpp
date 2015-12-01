@@ -17,21 +17,22 @@
 using rclcpp::executor::AnyExecutable;
 
 AnyExecutable::AnyExecutable()
-: subscription(nullptr),
-  subscription_intra_process(nullptr),
-  timer(nullptr),
-  service(nullptr),
-  client(nullptr),
-  callback_group(nullptr),
-  node(nullptr)
-{}
+{
+  state.subscription = nullptr;
+  state.subscription_intra_process = nullptr;
+  state.timer = nullptr;
+  state.service = nullptr;
+  state.client = nullptr;
+  state.callback_group = nullptr;
+  state.node = nullptr;
+}
 
 AnyExecutable::~AnyExecutable()
 {
   // Make sure that discarded (taken but not executed) AnyExecutable's have
   // their callback groups reset. This can happen when an executor is canceled
   // between taking an AnyExecutable and executing it.
-  if (callback_group) {
-    callback_group->can_be_taken_from().store(true);
+  if (state.callback_group) {
+    state.callback_group->can_be_taken_from.store(true);
   }
 }

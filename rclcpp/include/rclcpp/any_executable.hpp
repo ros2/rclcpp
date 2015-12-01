@@ -26,8 +26,22 @@ namespace rclcpp
 namespace executor
 {
 
-struct AnyExecutable
+struct AnyExecutableState
 {
+  // Only one of the following pointers will be set.
+  rclcpp::subscription::SubscriptionBase * subscription;
+  rclcpp::subscription::SubscriptionBase * subscription_intra_process;
+  rclcpp::timer::TimerBase * timer;
+  rclcpp::service::ServiceBase * service;
+  rclcpp::client::ClientBase * client;
+  // These are used to keep the scope on the containing items
+  rclcpp::callback_group::CallbackGroup * callback_group;
+  rclcpp::node::Node * node;
+};
+
+class AnyExecutable
+{
+public:
   RCLCPP_SMART_PTR_DEFINITIONS(AnyExecutable);
 
   RCLCPP_PUBLIC
@@ -36,15 +50,7 @@ struct AnyExecutable
   RCLCPP_PUBLIC
   virtual ~AnyExecutable();
 
-  // Only one of the following pointers will be set.
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription_intra_process;
-  rclcpp::timer::TimerBase::SharedPtr timer;
-  rclcpp::service::ServiceBase::SharedPtr service;
-  rclcpp::client::ClientBase::SharedPtr client;
-  // These are used to keep the scope on the containing items
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
-  rclcpp::node::Node::SharedPtr node;
+  AnyExecutableState state;
 };
 
 }  // namespace executor

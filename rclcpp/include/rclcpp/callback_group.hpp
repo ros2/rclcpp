@@ -69,9 +69,11 @@ public:
   const std::vector<rclcpp::client::ClientBase::SharedPtr> &
   get_client_ptrs() const;
 
+  /*
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
+  */
 
   RCLCPP_PUBLIC
   const CallbackGroupType &
@@ -101,7 +103,8 @@ private:
   std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::service::ServiceBase::SharedPtr> service_ptrs_;
   std::vector<rclcpp::client::ClientBase::SharedPtr> client_ptrs_;
-  std::atomic_bool can_be_taken_from_;
+public:
+  std::atomic_bool can_be_taken_from;
 };
 
 }  // namespace callback_group

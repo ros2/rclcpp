@@ -137,7 +137,7 @@ public:
       }
       for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
-        if (!group || !group->can_be_taken_from().load()) {
+        if (!group || !group->can_be_taken_from.load()) {
           continue;
         }
         for (auto & weak_subscription : group->get_subscription_ptrs()) {
@@ -190,7 +190,7 @@ public:
           subscriber_handles_.erase(it);
           continue;
         }
-        if (!group->can_be_taken_from().load()) {
+        if (!group->can_be_taken_from.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
@@ -198,12 +198,12 @@ public:
         }
         // Otherwise it is safe to set and return the any_exec
         if (is_intra_process) {
-          any_exec->subscription_intra_process = subscription;
+          any_exec->state.subscription_intra_process = subscription.get();
         } else {
-          any_exec->subscription = subscription;
+          any_exec->state.subscription = subscription.get();
         }
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->state.callback_group = group.get();
+        any_exec->state.node = get_node_by_group(group, weak_nodes).get();
         subscriber_handles_.erase(it);
         return;
       }
@@ -228,16 +228,16 @@ public:
           service_handles_.erase(it);
           continue;
         }
-        if (!group->can_be_taken_from().load()) {
+        if (!group->can_be_taken_from.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->service = service;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->state.service = service.get();
+        any_exec->state.callback_group = group.get();
+        any_exec->state.node = get_node_by_group(group, weak_nodes).get();
         service_handles_.erase(it);
         return;
       }
@@ -261,16 +261,16 @@ public:
           client_handles_.erase(it);
           continue;
         }
-        if (!group->can_be_taken_from().load()) {
+        if (!group->can_be_taken_from.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->client = client;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->state.client = client.get();
+        any_exec->state.callback_group = group.get();
+        any_exec->state.node = get_node_by_group(group, weak_nodes).get();
         client_handles_.erase(it);
         return;
       }
