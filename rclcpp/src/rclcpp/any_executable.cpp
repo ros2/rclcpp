@@ -32,6 +32,6 @@ AnyExecutable::~AnyExecutable()
   // their callback groups reset. This can happen when an executor is canceled
   // between taking an AnyExecutable and executing it.
   if (callback_group) {
-    callback_group->can_be_taken_from().store(true);
+    callback_group->can_be_taken_from.store(true);
   }
 }

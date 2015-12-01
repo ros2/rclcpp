@@ -20,7 +20,7 @@ using rclcpp::callback_group::CallbackGroup;
 using rclcpp::callback_group::CallbackGroupType;
 
 CallbackGroup::CallbackGroup(CallbackGroupType group_type)
-: type_(group_type), can_be_taken_from_(true)
+: type_(group_type), can_be_taken_from(true)
 {}
 
 const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
@@ -47,11 +47,13 @@ CallbackGroup::get_client_ptrs() const
   return client_ptrs_;
 }
 
+/*
 std::atomic_bool &
 CallbackGroup::can_be_taken_from()
 {
   return can_be_taken_from_;
 }
+*/
 
 const CallbackGroupType &
 CallbackGroup::type() const

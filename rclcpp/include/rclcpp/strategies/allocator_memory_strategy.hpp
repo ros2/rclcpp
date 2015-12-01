@@ -137,7 +137,7 @@ public:
       }
       for (auto & weak_group : node->get_callback_groups()) {
         auto group = weak_group.lock();
-        if (!group || !group->can_be_taken_from().load()) {
+        if (!group || !group->can_be_taken_from.load()) {
           continue;
         }
         for (auto & weak_subscription : group->get_subscription_ptrs()) {
@@ -190,7 +190,7 @@ public:
           subscriber_handles_.erase(it);
           continue;
         }
-        if (!group->can_be_taken_from().load()) {
+        if (!group->can_be_taken_from.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
@@ -228,7 +228,7 @@ public:
           service_handles_.erase(it);
           continue;
         }
-        if (!group->can_be_taken_from().load()) {
+        if (!group->can_be_taken_from.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
@@ -261,7 +261,7 @@ public:
           client_handles_.erase(it);
           continue;
         }
-        if (!group->can_be_taken_from().load()) {
+        if (!group->can_be_taken_from.load()) {
           // Group is mutually exclusive and is being used, so skip it for now
           // Leave it to be checked next time, but continue searching
           ++it;
