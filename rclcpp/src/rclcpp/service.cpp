@@ -47,13 +47,13 @@ ServiceBase::~ServiceBase()
 }
 
 std::string
-ServiceBase::get_service_name()
+ServiceBase::get_service_name() const
 {
   return this->service_name_;
 }
 
 const rmw_service_t *
-ServiceBase::get_service_handle()
+ServiceBase::get_service_handle() const
 {
   return this->service_handle_;
 }

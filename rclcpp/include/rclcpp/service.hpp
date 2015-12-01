@@ -48,17 +48,17 @@ public:
 
   RCLCPP_PUBLIC
   std::string
-  get_service_name();
+  get_service_name() const;
 
   RCLCPP_PUBLIC
   const rmw_service_t *
-  get_service_handle();
+  get_service_handle() const;
 
-  virtual std::shared_ptr<void> create_request() = 0;
-  virtual std::shared_ptr<void> create_request_header() = 0;
+  virtual std::shared_ptr<void> create_request() const = 0;
+  virtual std::shared_ptr<void> create_request_header() const = 0;
   virtual void handle_request(
     std::shared_ptr<void> request_header,
-    std::shared_ptr<void> request) = 0;
+    std::shared_ptr<void> request) const = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
@@ -97,19 +97,19 @@ public:
 
   Service() = delete;
 
-  std::shared_ptr<void> create_request()
+  std::shared_ptr<void> create_request() const
   {
     return std::shared_ptr<void>(new typename ServiceT::Request());
   }
 
-  std::shared_ptr<void> create_request_header()
+  std::shared_ptr<void> create_request_header() const
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
     return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
-  void handle_request(std::shared_ptr<void> request_header, std::shared_ptr<void> request)
+  void handle_request(std::shared_ptr<void> request_header, std::shared_ptr<void> request) const
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
@@ -120,7 +120,7 @@ public:
 
   void send_response(
     std::shared_ptr<rmw_request_id_t> req_id,
-    std::shared_ptr<typename ServiceT::Response> response)
+    std::shared_ptr<typename ServiceT::Response> response) const
   {
     rmw_ret_t status = rmw_send_response(get_service_handle(), req_id.get(), response.get());
     if (status != RMW_RET_OK) {

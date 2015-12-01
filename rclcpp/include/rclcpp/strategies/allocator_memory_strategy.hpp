@@ -198,12 +198,12 @@ public:
         }
         // Otherwise it is safe to set and return the any_exec
         if (is_intra_process) {
-          any_exec->subscription_intra_process = subscription;
+          any_exec->state.subscription_intra_process = subscription.get();
         } else {
-          any_exec->subscription = subscription;
+          any_exec->state.subscription = subscription.get();
         }
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->state.callback_group = group.get();
+        any_exec->state.node = get_node_by_group(group, weak_nodes).get();
         subscriber_handles_.erase(it);
         return;
       }
@@ -235,9 +235,9 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->service = service;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->state.service = service.get();
+        any_exec->state.callback_group = group.get();
+        any_exec->state.node = get_node_by_group(group, weak_nodes).get();
         service_handles_.erase(it);
         return;
       }
@@ -268,9 +268,9 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->client = client;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->state.client = client.get();
+        any_exec->state.callback_group = group.get();
+        any_exec->state.node = get_node_by_group(group, weak_nodes).get();
         client_handles_.erase(it);
         return;
       }
