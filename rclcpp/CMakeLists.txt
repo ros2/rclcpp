@@ -24,7 +24,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
   src/rclcpp/intra_process_manager.cpp
-  src/rclcpp/intra_process_manager_state.cpp
+  src/rclcpp/intra_process_manager_impl.cpp
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
   src/rclcpp/parameter.cpp

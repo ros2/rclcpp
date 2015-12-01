@@ -124,7 +124,7 @@ public:
 #define PublisherBase mock::PublisherBase
 #define SubscriptionBase mock::SubscriptionBase
 #include "../src/rclcpp/intra_process_manager.cpp"
-#include "../src/rclcpp/intra_process_manager_state.cpp"
+#include "../src/rclcpp/intra_process_manager_impl.cpp"
 #undef SubscriptionBase
 #undef Publisher
 #undef PublisherBase

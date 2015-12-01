@@ -22,8 +22,8 @@ namespace intra_process_manager
 static std::atomic<uint64_t> _next_unique_id {1};
 
 IntraProcessManager::IntraProcessManager(
-  rclcpp::intra_process_manager::IntraProcessManagerStateBase::SharedPtr state)
-: state_(state)
+  rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr impl)
+: impl_(impl)
 {}
 
 IntraProcessManager::~IntraProcessManager()
@@ -34,26 +34,26 @@ IntraProcessManager::add_subscription(
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
 {
   auto id = IntraProcessManager::get_next_unique_id();
-  state_->add_subscription(id, subscription);
+  impl_->add_subscription(id, subscription);
   return id;
 }
 
 void
 IntraProcessManager::remove_subscription(uint64_t intra_process_subscription_id)
 {
-  state_->remove_subscription(intra_process_subscription_id);
+  impl_->remove_subscription(intra_process_subscription_id);
 }
 
 void
 IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 {
-  state_->remove_publisher(intra_process_publisher_id);
+  impl_->remove_publisher(intra_process_publisher_id);
 }
 
 bool
 IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
 {
-  return state_->matches_any_publishers(id);
+  return impl_->matches_any_publishers(id);
 }
 
 uint64_t

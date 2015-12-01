@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/intra_process_manager_state.hpp"
+#include "rclcpp/intra_process_manager_impl.hpp"
 
 #include <memory>
 
-rclcpp::intra_process_manager::IntraProcessManagerStateBase::SharedPtr
-rclcpp::intra_process_manager::create_default_state()
+rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr
+rclcpp::intra_process_manager::create_default_impl()
 {
-  return std::make_shared<IntraProcessManagerState<>>();
+  return std::make_shared<IntraProcessManagerImpl<>>();
 }
