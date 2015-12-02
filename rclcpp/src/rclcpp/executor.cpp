@@ -30,6 +30,7 @@ Executor::~Executor()
 {
   // Try to deallocate the interrupt guard condition.
   if (interrupt_guard_condition_ != nullptr) {
+    std::lock_guard<std::mutex> lock(trigger_guard_condition_mutex_);
     rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
     if (status != RMW_RET_OK) {
       fprintf(stderr,
@@ -51,6 +52,7 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   }
   weak_nodes_.push_back(node_ptr);
   if (notify) {
+    std::lock_guard<std::mutex> lock(trigger_guard_condition_mutex_);
     // Interrupt waiting to handle new node
     rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
     if (status != RMW_RET_OK) {
@@ -79,6 +81,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
+      std::lock_guard<std::mutex> lock(trigger_guard_condition_mutex_);
       rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
       if (status != RMW_RET_OK) {
         throw std::runtime_error(rmw_get_error_string_safe());
@@ -114,7 +117,7 @@ Executor::spin_some()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   AnyExecutable::SharedPtr any_exec;
-  while ((any_exec = get_next_executable(std::chrono::milliseconds::zero())) && spinning.load()) {
+  while ((any_exec = get_next_executable(std::chrono::milliseconds(0))) && spinning.load()) {
     execute_any_executable(any_exec);
   }
 }
@@ -136,6 +139,7 @@ void
 Executor::cancel()
 {
   spinning.store(false);
+  std::lock_guard<std::mutex> lock(trigger_guard_condition_mutex_);
   rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
   if (status != RMW_RET_OK) {
     throw std::runtime_error(rmw_get_error_string_safe());
@@ -152,39 +156,40 @@ Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr
 }
 
 void
-Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
+Executor::execute_any_executable(const AnyExecutable::ConstSharedPtr any_exec)
 {
   if (!any_exec || !spinning.load()) {
     return;
   }
-  if (any_exec->timer) {
-    execute_timer(any_exec->timer);
-  }
-  if (any_exec->subscription) {
-    execute_subscription(any_exec->subscription);
-  }
-  if (any_exec->subscription_intra_process) {
-    execute_intra_process_subscription(any_exec->subscription_intra_process);
-  }
-  if (any_exec->service) {
-    execute_service(any_exec->service);
-  }
-  if (any_exec->client) {
-    execute_client(any_exec->client);
+
+  if (const timer::TimerBase::ConstSharedPtr timer = any_exec->get_timer()) {
+    execute_timer(timer);
+  } else if (const subscription::SubscriptionBase::ConstSharedPtr subscription = any_exec->get_subscription()) {
+    execute_subscription(subscription);
+  } else if (const subscription::SubscriptionBase::ConstSharedPtr subscription_intra_process = any_exec->get_subscription_intra_process()) {
+    execute_intra_process_subscription(subscription_intra_process);
+  } else if (any_exec->get_service()) {
+    execute_service(any_exec->get_service());
+  } else if (any_exec->get_client()) {
+    execute_client(any_exec->get_client());
   }
   // Reset the callback_group, regardless of type
-  any_exec->callback_group->can_be_taken_from().store(true);
+  any_exec->get_callback_group()->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-  if (status != RMW_RET_OK) {
-    throw std::runtime_error(rmw_get_error_string_safe());
+  {
+    std::lock_guard<std::mutex> lock(trigger_guard_condition_mutex_);
+    rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
+    if (status != RMW_RET_OK) {
+      throw std::runtime_error(rmw_get_error_string_safe());
+    }
   }
+  //assert(any_exec->is_one_field_set());
 }
 
 void
 Executor::execute_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription)
 {
   std::shared_ptr<void> message = subscription->create_message();
   bool taken = false;
@@ -207,7 +212,7 @@ Executor::execute_subscription(
 
 void
 Executor::execute_intra_process_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  const rclcpp::subscription::SubscriptionBase::ConstSharedPtr subscription)
 {
   rcl_interfaces::msg::IntraProcessMessage ipm;
   bool taken = false;
@@ -231,7 +236,7 @@ Executor::execute_intra_process_subscription(
 
 void
 Executor::execute_timer(
-  rclcpp::timer::TimerBase::SharedPtr timer)
+  const rclcpp::timer::TimerBase::ConstSharedPtr timer)
 {
   timer->execute_callback();
 }
@@ -335,8 +340,12 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   guard_condition_handles.guard_conditions[0] = \
     rclcpp::utilities::get_global_sigint_guard_condition()->data;
   // Put the executor's guard condition in
-  guard_condition_handles.guard_conditions[1] = \
-    interrupt_guard_condition_->data;
+
+  {
+    std::lock_guard<std::mutex> lock(trigger_guard_condition_mutex_);
+    guard_condition_handles.guard_conditions[1] = \
+      interrupt_guard_condition_->data;
+  }
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -388,12 +397,12 @@ Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr gro
     return rclcpp::node::Node::SharedPtr();
   }
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto callback_group = weak_group.lock();
+      const auto callback_group = weak_group.lock();
       if (callback_group == group) {
         return node;
       }
@@ -406,17 +415,17 @@ rclcpp::callback_group::CallbackGroup::SharedPtr
 Executor::get_group_by_timer(rclcpp::timer::TimerBase::SharedPtr timer)
 {
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group) {
         continue;
       }
       for (auto & weak_timer : group->get_timer_ptrs()) {
-        auto t = weak_timer.lock();
+        const auto t = weak_timer.lock();
         if (t == timer) {
           return group;
         }
@@ -426,30 +435,31 @@ Executor::get_group_by_timer(rclcpp::timer::TimerBase::SharedPtr timer)
   return rclcpp::callback_group::CallbackGroup::SharedPtr();
 }
 
-void
+bool
 Executor::get_next_timer(AnyExecutable::SharedPtr any_exec)
 {
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group || !group->can_be_taken_from().load()) {
         continue;
       }
       for (auto & timer_ref : group->get_timer_ptrs()) {
-        auto timer = timer_ref.lock();
+        const auto timer = timer_ref.lock();
         if (timer && timer->check_and_trigger()) {
-          any_exec->timer = timer;
-          any_exec->callback_group = group;
-          node = get_node_by_group(group);
-          return;
+          any_exec->set_timer(timer);
+          any_exec->set_callback_group(group);
+          any_exec->set_node(get_node_by_group(group));
+          return true;
         }
       }
     }
   }
+  return false;
 }
 
 std::chrono::nanoseconds
@@ -458,19 +468,19 @@ Executor::get_earliest_timer()
   std::chrono::nanoseconds latest = std::chrono::nanoseconds::max();
   bool timers_empty = true;
   for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
+    const auto node = weak_node.lock();
     if (!node) {
       continue;
     }
     for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
+      const auto group = weak_group.lock();
       if (!group || !group->can_be_taken_from().load()) {
         continue;
       }
       for (auto & timer_ref : group->get_timer_ptrs()) {
         timers_empty = false;
         // Check the expected trigger time
-        auto timer = timer_ref.lock();
+        const auto timer = timer_ref.lock();
         if (timer && timer->time_until_trigger() < latest) {
           latest = timer->time_until_trigger();
         }
@@ -487,24 +497,22 @@ AnyExecutable::SharedPtr
 Executor::get_next_ready_executable()
 {
   auto any_exec = memory_strategy_->instantiate_next_executable();
+  assert(any_exec->is_one_field_set());
+
   // Check the timers to see if there are any that are ready, if so return
-  get_next_timer(any_exec);
-  if (any_exec->timer) {
+  if (get_next_timer(any_exec)) {
     return any_exec;
   }
   // Check the subscriptions to see if there are any that are ready
-  memory_strategy_->get_next_subscription(any_exec, weak_nodes_);
-  if (any_exec->subscription || any_exec->subscription_intra_process) {
+  if (memory_strategy_->get_next_subscription(any_exec, weak_nodes_)) {
     return any_exec;
   }
   // Check the services to see if there are any that are ready
-  memory_strategy_->get_next_service(any_exec, weak_nodes_);
-  if (any_exec->service) {
+  if (memory_strategy_->get_next_service(any_exec, weak_nodes_)) {
     return any_exec;
   }
   // Check the clients to see if there are any that are ready
-  memory_strategy_->get_next_client(any_exec, weak_nodes_);
-  if (any_exec->client) {
+  if (memory_strategy_->get_next_client(any_exec, weak_nodes_)) {
     return any_exec;
   }
   // If there is no ready executable, return a null ptr
@@ -532,15 +540,15 @@ Executor::get_next_executable(std::chrono::nanoseconds timeout)
   if (any_exec) {
     // If it is valid, check to see if the group is mutually exclusive or
     // not, then mark it accordingly
-    if (any_exec->callback_group && any_exec->callback_group->type() == \
+    if (any_exec->get_callback_group() && any_exec->get_callback_group()->type() == \
       callback_group::CallbackGroupType::MutuallyExclusive)
     {
       // It should not have been taken otherwise
-      assert(any_exec->callback_group->can_be_taken_from().load());
+      //assert(any_exec->callback_group->can_be_taken_from().load());
       // Set to false to indicate something is being run from this group
       // This is reset to true either when the any_exec is executed or when the
       // any_exec is destructued
-      any_exec->callback_group->can_be_taken_from().store(false);
+      any_exec->get_callback_group()->can_be_taken_from().store(false);
     }
   }
   return any_exec;

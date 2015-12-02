@@ -15,6 +15,8 @@
 #ifndef RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__ALLOCATOR_MEMORY_STRATEGY_HPP_
 
+#include <atomic>
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -64,7 +66,7 @@ public:
 
   size_t fill_subscriber_handles(void ** & ptr)
   {
-    for (auto & subscription : subscriptions_) {
+    for (const auto subscription : subscriptions_) {
       subscriber_handles_.push_back(subscription->get_subscription_handle()->data);
       if (subscription->get_intra_process_subscription_handle()) {
         subscriber_handles_.push_back(subscription->get_intra_process_subscription_handle()->data);
@@ -130,18 +132,18 @@ public:
   {
     bool has_invalid_weak_nodes = false;
     for (auto & weak_node : weak_nodes) {
-      auto node = weak_node.lock();
+      const auto node = weak_node.lock();
       if (!node) {
         has_invalid_weak_nodes = false;
         continue;
       }
       for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
+        const auto group = weak_group.lock();
         if (!group || !group->can_be_taken_from().load()) {
           continue;
         }
         for (auto & weak_subscription : group->get_subscription_ptrs()) {
-          auto subscription = weak_subscription.lock();
+          const auto subscription = weak_subscription.lock();
           if (subscription) {
             subscriptions_.push_back(subscription);
           }
@@ -169,13 +171,13 @@ public:
     return std::allocate_shared<executor::AnyExecutable>(*executable_allocator_.get());
   }
 
-  virtual void
+  virtual bool
   get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
     auto it = subscriber_handles_.begin();
     while (it != subscriber_handles_.end()) {
-      auto subscription = get_subscription_by_handle(*it, weak_nodes);
+      const subscription::SubscriptionBase::ConstSharedPtr subscription = get_subscription_by_handle(*it, weak_nodes);
       if (subscription) {
         // Figure out if this is for intra-process or not.
         bool is_intra_process = false;
@@ -183,7 +185,7 @@ public:
           is_intra_process = subscription->get_intra_process_subscription_handle()->data == *it;
         }
         // Find the group for this handle and see if it can be serviced
-        auto group = get_group_by_subscription(subscription, weak_nodes);
+        const auto group = get_group_by_subscription(subscription, weak_nodes);
         if (!group) {
           // Group was not found, meaning the subscription is not valid...
           // Remove it from the ready list and continue looking
@@ -198,21 +200,22 @@ public:
         }
         // Otherwise it is safe to set and return the any_exec
         if (is_intra_process) {
-          any_exec->subscription_intra_process = subscription;
+          any_exec->set_subscription_intra_process(subscription);
         } else {
-          any_exec->subscription = subscription;
+          any_exec->set_subscription(subscription);
         }
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->set_callback_group(group);
+        any_exec->set_node(get_node_by_group(group, weak_nodes));
         subscriber_handles_.erase(it);
-        return;
+        return true;
       }
       // Else, the subscription is no longer valid, remove it and continue
       subscriber_handles_.erase(it);
     }
+    return false;
   }
 
-  virtual void
+  virtual bool
   get_next_service(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
@@ -235,18 +238,19 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->service = service;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->set_service(service);
+        any_exec->set_callback_group(group);
+        any_exec->set_node(get_node_by_group(group, weak_nodes));
         service_handles_.erase(it);
-        return;
+        return true;
       }
       // Else, the service is no longer valid, remove it and continue
       service_handles_.erase(it);
     }
+    return false;
   }
 
-  virtual void
+  virtual bool
   get_next_client(executor::AnyExecutable::SharedPtr any_exec, const WeakNodeVector & weak_nodes)
   {
     auto it = client_handles_.begin();
@@ -268,15 +272,16 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->client = client;
-        any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        any_exec->set_client(client);
+        any_exec->set_callback_group(group);
+        any_exec->set_node(get_node_by_group(group, weak_nodes));
         client_handles_.erase(it);
-        return;
+        return true;
       }
       // Else, the service is no longer valid, remove it and continue
       client_handles_.erase(it);
     }
+    return false;
   }
 
 private:
@@ -294,6 +299,8 @@ private:
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;
+
+  std::mutex subscription_mutex_;
 };
 
 }  // namespace allocator_memory_strategy

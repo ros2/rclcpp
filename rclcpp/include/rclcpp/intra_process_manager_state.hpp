@@ -21,6 +21,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -90,20 +91,19 @@ public:
   void
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription)
   {
-    subscriptions_[id] = subscription;
     subscription_ids_by_topic_[subscription->get_topic_name()].insert(id);
   }
 
   void
   remove_subscription(uint64_t intra_process_subscription_id)
   {
-    subscriptions_.erase(intra_process_subscription_id);
     for (auto & pair : subscription_ids_by_topic_) {
       pair.second.erase(intra_process_subscription_id);
     }
     // Iterate over all publisher infos and all stored subscription id's and
     // remove references to this subscription's id.
     for (auto & publisher_pair : publishers_) {
+      std::lock_guard<std::mutex> lock(publisher_pair.second.target_subscriptions_mutex_);
       for (auto & sub_pair : publisher_pair.second.target_subscriptions_by_message_sequence) {
         sub_pair.second.erase(intra_process_subscription_id);
       }
@@ -123,7 +123,10 @@ public:
     publishers_[id].sequence_number.store(0);
 
     publishers_[id].buffer = mrb;
-    publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
+    {
+      std::lock_guard<std::mutex> lock(publishers_[id].target_subscriptions_mutex_);
+      publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
+    }
   }
 
   void
@@ -138,6 +141,7 @@ public:
     uint64_t intra_process_publisher_id,
     uint64_t & message_seq)
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
       throw std::runtime_error("store_intra_process_message called with invalid publisher id");
@@ -152,6 +156,7 @@ public:
   void
   store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq)
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
       throw std::runtime_error("store_intra_process_message called with invalid publisher id");
@@ -165,16 +170,19 @@ public:
     // Figure out what subscriptions should receive the message.
     auto & destined_subscriptions = subscription_ids_by_topic_[publisher->get_topic_name()];
     // Store the list for later comparison.
-    info.target_subscriptions_by_message_sequence[message_seq].clear();
-    std::copy(
-      destined_subscriptions.begin(), destined_subscriptions.end(),
-      // Memory allocation occurs in info.target_subscriptions_by_message_sequence[message_seq]
-      std::inserter(
-        info.target_subscriptions_by_message_sequence[message_seq],
-        // This ends up only being a hint to std::set, could also be .begin().
-        info.target_subscriptions_by_message_sequence[message_seq].end()
-      )
-    );
+    {
+      std::lock_guard<std::mutex> lock(info.target_subscriptions_mutex_);
+      info.target_subscriptions_by_message_sequence[message_seq].clear();
+      std::copy(
+        destined_subscriptions.begin(), destined_subscriptions.end(),
+        // Memory allocation occurs in info.target_subscriptions_by_message_sequence[message_seq]
+        std::inserter(
+          info.target_subscriptions_by_message_sequence[message_seq],
+          // This ends up only being a hint to std::set, could also be .begin().
+          info.target_subscriptions_by_message_sequence[message_seq].end()
+        )
+      );
+    }
   }
 
   mapped_ring_buffer::MappedRingBufferBase::SharedPtr
@@ -184,6 +192,7 @@ public:
     size_t & size
   )
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     PublisherInfo * info;
     {
       auto it = publishers_.find(intra_process_publisher_id);
@@ -196,6 +205,7 @@ public:
     // Figure out how many subscriptions are left.
     AllocSet * target_subs;
     {
+      std::lock_guard<std::mutex> lock(info->target_subscriptions_mutex_);
       auto it = info->target_subscriptions_by_message_sequence.find(message_sequence_number);
       if (it == info->target_subscriptions_by_message_sequence.end()) {
         // Message is no longer being stored by this publisher.
@@ -239,13 +249,8 @@ private:
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
-  using SubscriptionMap = std::unordered_map<uint64_t, subscription::SubscriptionBase::WeakPtr,
-      std::hash<uint64_t>, std::equal_to<uint64_t>,
-      RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
   using IDTopicMap = std::map<std::string, AllocSet,
       std::less<std::string>, RebindAlloc<std::pair<std::string, AllocSet>>>;
-
-  SubscriptionMap subscriptions_;
 
   IDTopicMap subscription_ids_by_topic_;
 
@@ -263,6 +268,7 @@ private:
         std::hash<uint64_t>, std::equal_to<uint64_t>,
         RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
     TargetSubscriptionsMap target_subscriptions_by_message_sequence;
+    std::mutex target_subscriptions_mutex_;
   };
 
   using PublisherMap = std::unordered_map<uint64_t, PublisherInfo,
@@ -270,6 +276,8 @@ private:
       RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
 
   PublisherMap publishers_;
+
+  std::mutex mutex_;
 };
 
 RCLCPP_PUBLIC

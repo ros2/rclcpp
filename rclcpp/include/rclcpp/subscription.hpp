@@ -82,23 +82,23 @@ public:
   /// Borrow a new message.
   // \return Shared pointer to the fresh message.
   virtual std::shared_ptr<void>
-  create_message() = 0;
+  create_message() const = 0;
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.
    * \param[in] message_info Metadata associated with this message.
    */
   virtual void
-  handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
+  handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) const = 0;
 
   /// Return the message borrowed in create_message.
   // \param[in] Shared pointer to the returned message.
   virtual void
-  return_message(std::shared_ptr<void> & message) = 0;
+  return_message(std::shared_ptr<void> & message) const = 0;
   virtual void
   handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info) = 0;
+    const rmw_message_info_t & message_info) const = 0;
 
 protected:
   rmw_subscription_t * intra_process_subscription_handle_;
@@ -168,7 +168,7 @@ public:
   {
     message_memory_strategy_ = message_memory_strategy;
   }
-  std::shared_ptr<void> create_message()
+  std::shared_ptr<void> create_message() const
   {
     /* The default message memory strategy provides a dynamically allocated message on each call to
      * create_message, though alternative memory strategies that re-use a preallocated message may be
@@ -177,7 +177,7 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
+  void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) const
   {
     if (matches_any_intra_process_publishers_) {
       if (matches_any_intra_process_publishers_(&message_info.publisher_gid)) {
@@ -190,7 +190,7 @@ public:
     any_callback_.dispatch(typed_message, message_info);
   }
 
-  void return_message(std::shared_ptr<void> & message)
+  void return_message(std::shared_ptr<void> & message) const
   {
     auto typed_message = std::static_pointer_cast<MessageT>(message);
     message_memory_strategy_->return_message(typed_message);
@@ -198,7 +198,7 @@ public:
 
   void handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info)
+    const rmw_message_info_t & message_info) const
   {
     if (!get_intra_process_message_callback_) {
       // throw std::runtime_error(

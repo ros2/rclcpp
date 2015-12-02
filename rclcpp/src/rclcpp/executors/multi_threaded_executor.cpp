@@ -14,6 +14,7 @@
 
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 
+#include <cassert>
 #include <chrono>
 #include <functional>
 #include <vector>
@@ -44,10 +45,8 @@ MultiThreadedExecutor::spin()
   std::vector<std::thread> threads;
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-    size_t thread_id = 1;
-    for (size_t i = number_of_threads_; i > 0; --i) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id++);
+    for (size_t i = 0; i < number_of_threads_; ++i) {
+      auto func = std::bind(&MultiThreadedExecutor::run, this, i);
       threads.emplace_back(func);
     }
   }
@@ -67,14 +66,27 @@ MultiThreadedExecutor::run(size_t this_thread_number)
 {
   thread_number_by_thread_id_[std::this_thread::get_id()] = this_thread_number;
   while (rclcpp::utilities::ok() && spinning.load()) {
-    executor::AnyExecutable::SharedPtr any_exec;
+    executor::AnyExecutable::SharedPtr any_exec = nullptr;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       if (!rclcpp::utilities::ok() || !spinning.load()) {
         return;
       }
       any_exec = get_next_executable();
+      if (any_exec) {
+        assert(any_exec->is_one_field_set());
+      }
     }
+
+    // Argh.
     execute_any_executable(any_exec);
+
+    /*
+    if (any_exec) {
+      std::lock_guard<std::mutex> wait_lock(wait_mutex_);
+      assert(any_exec->is_one_field_set());
+      any_exec.reset();
+    }
+    */
   }
 }
