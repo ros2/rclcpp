@@ -47,7 +47,7 @@ public:
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
   SingleThreadedExecutor(
-    memory_strategy::MemoryStrategy::SharedPtr ms = memory_strategies::create_default_strategy());
+    const executor::ExecutorArgs & args = rclcpp::executor::create_default_executor_arguments());
 
   /// Default destrcutor.
   RCLCPP_PUBLIC

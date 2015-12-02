@@ -44,6 +44,24 @@ namespace executor
  */
 enum FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
 
+///
+/**
+ * Options to be passed to the executor constructor.
+ */
+struct ExecutorArgs
+{
+  memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
+  size_t max_conditions = 0;
+};
+
+static inline ExecutorArgs create_default_executor_arguments()
+{
+  ExecutorArgs args;
+  args.memory_strategy = memory_strategies::create_default_strategy();
+  args.max_conditions = 0;
+  return args;
+}
+
 /// Coordinate the order and timing of available communication tasks.
 /**
  * Executor provides spin functions (including spin_node_once and spin_some).
@@ -62,8 +80,7 @@ public:
   /// Default constructor.
   // \param[in] ms The memory strategy to be used with this executor.
   RCLCPP_PUBLIC
-  explicit Executor(
-    memory_strategy::MemoryStrategy::SharedPtr ms = memory_strategies::create_default_strategy());
+  explicit Executor(const ExecutorArgs & args = create_default_executor_arguments());
 
   /// Default destructor.
   RCLCPP_PUBLIC
@@ -262,8 +279,13 @@ protected:
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
+  rmw_guard_conditions_t fixed_guard_conditions_;
+
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rmw_guard_condition_t * interrupt_guard_condition_;
+
+  /// Waitset for managing entities that the rmw layer waits on.
+  rmw_waitset_t * waitset_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;

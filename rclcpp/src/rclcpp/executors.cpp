@@ -27,4 +27,5 @@ rclcpp::spin(node::Node::SharedPtr node_ptr)
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(node_ptr);
   exec.spin();
+  exec.remove_node(node_ptr);
 }

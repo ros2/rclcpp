@@ -38,6 +38,7 @@ Node::Node(
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
   use_intra_process_comms_(use_intra_process_comms)
 {
+  has_executor.store(false);
   size_t domain_id = 0;
   char * ros_domain_id = nullptr;
   const char * env_var = "ROS_DOMAIN_ID";
