@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
-#define RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
+#ifndef RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
+#define RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
 
 #include <algorithm>
 #include <atomic>
@@ -21,6 +21,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -37,13 +38,13 @@ namespace rclcpp
 namespace intra_process_manager
 {
 
-class IntraProcessManagerStateBase
+class IntraProcessManagerImplBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(IntraProcessManagerStateBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(IntraProcessManagerImplBase);
 
-  IntraProcessManagerStateBase() = default;
-  ~IntraProcessManagerStateBase() = default;
+  IntraProcessManagerImplBase() = default;
+  ~IntraProcessManagerImplBase() = default;
 
   virtual void
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription) = 0;
@@ -77,15 +78,15 @@ public:
   matches_any_publishers(const rmw_gid_t * id) const = 0;
 
 private:
-  RCLCPP_DISABLE_COPY(IntraProcessManagerStateBase);
+  RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase);
 };
 
 template<typename Allocator = std::allocator<void>>
-class IntraProcessManagerState : public IntraProcessManagerStateBase
+class IntraProcessManagerImpl : public IntraProcessManagerImplBase
 {
 public:
-  IntraProcessManagerState() = default;
-  ~IntraProcessManagerState() = default;
+  IntraProcessManagerImpl() = default;
+  ~IntraProcessManagerImpl() = default;
 
   void
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription)
@@ -152,6 +153,7 @@ public:
   void
   store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq)
   {
+    std::lock_guard<std::mutex> lock(runtime_mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
       throw std::runtime_error("store_intra_process_message called with invalid publisher id");
@@ -184,6 +186,7 @@ public:
     size_t & size
   )
   {
+    std::lock_guard<std::mutex> lock(runtime_mutex_);
     PublisherInfo * info;
     {
       auto it = publishers_.find(intra_process_publisher_id);
@@ -233,7 +236,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(IntraProcessManagerState);
+  RCLCPP_DISABLE_COPY(IntraProcessManagerImpl);
 
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
@@ -270,13 +273,15 @@ private:
       RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
 
   PublisherMap publishers_;
+
+  std::mutex runtime_mutex_;
 };
 
 RCLCPP_PUBLIC
-IntraProcessManagerStateBase::SharedPtr
-create_default_state();
+IntraProcessManagerImplBase::SharedPtr
+create_default_impl();
 
 }  // namespace intra_process_manager
 }  // namespace rclcpp
 
-#endif  // RCLCPP__INTRA_PROCESS_MANAGER_STATE_HPP_
+#endif  // RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_

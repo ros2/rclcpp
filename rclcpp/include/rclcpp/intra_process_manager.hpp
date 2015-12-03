@@ -27,7 +27,7 @@
 #include <set>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
-#include "rclcpp/intra_process_manager_state.hpp"
+#include "rclcpp/intra_process_manager_impl.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/publisher.hpp"
@@ -127,7 +127,7 @@ public:
 
   RCLCPP_PUBLIC
   explicit IntraProcessManager(
-    IntraProcessManagerStateBase::SharedPtr state = create_default_state());
+    IntraProcessManagerImplBase::SharedPtr state = create_default_impl());
 
   RCLCPP_PUBLIC
   virtual ~IntraProcessManager();
@@ -189,7 +189,7 @@ public:
     auto mrb = mapped_ring_buffer::MappedRingBuffer<MessageT,
       typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>::make_shared(
       size, publisher->get_allocator());
-    state_->add_publisher(id, publisher, mrb, size);
+    impl_->add_publisher(id, publisher, mrb, size);
     return id;
   }
 
@@ -242,7 +242,7 @@ public:
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
     uint64_t message_seq = 0;
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = state_->get_publisher_info_for_id(
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->get_publisher_info_for_id(
       intra_process_publisher_id, message_seq);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
@@ -254,7 +254,7 @@ public:
     // TODO(wjwwood): do something when a message was displaced. log debug?
     (void)did_replace;  // Avoid unused variable warning.
 
-    state_->store_intra_process_message(intra_process_publisher_id, message_seq);
+    impl_->store_intra_process_message(intra_process_publisher_id, message_seq);
 
     // Return the message sequence which is sent to the subscription.
     return message_seq;
@@ -308,7 +308,7 @@ public:
     message = nullptr;
 
     size_t target_subs_size = 0;
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = state_->take_intra_process_message(
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->take_intra_process_message(
       intra_process_publisher_id,
       message_sequence_number,
       requesting_subscriptions_intra_process_id,
@@ -338,7 +338,7 @@ private:
   static uint64_t
   get_next_unique_id();
 
-  IntraProcessManagerStateBase::SharedPtr state_;
+  IntraProcessManagerImplBase::SharedPtr impl_;
 };
 
 }  // namespace intra_process_manager
