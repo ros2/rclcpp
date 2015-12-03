@@ -37,6 +37,7 @@ class Context
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Context);
 
+  RCLCPP_PUBLIC
   Context();
 
   template<typename SubContext, typename ... Args>
