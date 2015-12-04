@@ -117,7 +117,18 @@ rclcpp::utilities::init(int argc, char * argv[])
     // NOLINTNEXTLINE(runtime/arrays)
     char error_string[error_length];
 #ifndef _WIN32
-    strerror_r(errno, error_string, error_length);
+#ifdef _GNU_SOURCE
+    char * msg = strerror_r(errno, error_string, error_length);
+    if (msg != error_string) {
+      strncpy(error_string, msg, error_length);
+      msg[error_length - 1] = '\0';
+    }
+#else
+    int error_status = strerror_r(errno, error_string, error_length);
+    if (error_status != 0) {
+      throw std::runtime_error("Failed to get error string for errno: " + std::to_string(errno));
+    }
+#endif
 #else
     strerror_s(error_string, error_length, errno);
 #endif
