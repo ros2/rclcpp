@@ -42,15 +42,17 @@ MultiThreadedExecutor::spin()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   std::vector<std::thread> threads;
+  size_t thread_id = 0;
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-    size_t thread_id = 1;
-    for (size_t i = number_of_threads_; i > 0; --i) {
+    for (; thread_id < number_of_threads_ - 1; ++thread_id) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id++);
+      auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
       threads.emplace_back(func);
     }
   }
+
+  run(thread_id);
   for (auto & thread : threads) {
     thread.join();
   }
