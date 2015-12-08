@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include "rclcpp/allocator/allocator_common.hpp"
@@ -97,6 +98,7 @@ public:
   void
   get_copy_at_key(uint64_t key, ElemUniquePtr & value)
   {
+    std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
@@ -128,6 +130,7 @@ public:
   void
   get_ownership_at_key(uint64_t key, ElemUniquePtr & value)
   {
+    std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
@@ -155,6 +158,7 @@ public:
   void
   pop_at_key(uint64_t key, ElemUniquePtr & value)
   {
+    std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
@@ -177,6 +181,7 @@ public:
   bool
   push_and_replace(uint64_t key, ElemUniquePtr & value)
   {
+    std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
     elements_[head_].key = key;
     elements_[head_].value.swap(value);
@@ -196,6 +201,7 @@ public:
   bool
   has_key(uint64_t key)
   {
+    std::lock_guard<std::mutex> lock(data_mutex_);
     return elements_.end() != get_iterator_of_key(key);
   }
 
@@ -225,6 +231,7 @@ private:
   std::vector<element, VectorAlloc> elements_;
   size_t head_;
   std::shared_ptr<ElemAlloc> allocator_;
+  std::mutex data_mutex_;
 };
 
 }  // namespace mapped_ring_buffer
