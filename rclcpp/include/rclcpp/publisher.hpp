@@ -135,8 +135,6 @@ protected:
 
   rmw_gid_t rmw_gid_;
   rmw_gid_t intra_process_rmw_gid_;
-
-  std::mutex intra_process_publish_mutex_;
 };
 
 /// A publisher publishes messages of any type to a topic.
@@ -185,12 +183,8 @@ public:
       //   See: http://stackoverflow.com/questions/11002641/dynamic-casting-for-unique-ptr
       MessageT * msg_ptr = msg.get();
       msg.release();
-      uint64_t message_seq;
-      {
-        std::lock_guard<std::mutex> lock(intra_process_publish_mutex_);
-        message_seq =
-          store_intra_process_message_(intra_process_publisher_id_, msg_ptr, typeid(MessageT));
-      }
+      uint64_t message_seq =
+        store_intra_process_message_(intra_process_publisher_id_, msg_ptr, typeid(MessageT));
       rcl_interfaces::msg::IntraProcessMessage ipm;
       ipm.publisher_id = intra_process_publisher_id_;
       ipm.message_sequence = message_seq;
