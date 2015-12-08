@@ -18,41 +18,57 @@
 #include "rosidl_generator_cpp/message_type_support_decl.hpp"
 #include "rosidl_generator_cpp/service_type_support_decl.hpp"
 
+#include "rosidl_generator_cpp/message_type_support.hpp"
+#include "rosidl_generator_cpp/service_type_support.hpp"
+
+#include "rclcpp/visibility_control.hpp"
+
 namespace rclcpp
 {
 namespace type_support
 {
 
+RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
 get_intra_process_message_msg_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
 get_parameter_event_msg_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
 get_set_parameters_result_msg_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
 get_parameter_descriptor_msg_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_message_type_support_t *
 get_list_parameters_result_msg_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_service_type_support_t *
 get_get_parameters_srv_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_service_type_support_t *
 get_get_parameter_types_srv_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_service_type_support_t *
 get_set_parameters_srv_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_service_type_support_t *
 get_list_parameters_srv_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_service_type_support_t *
 get_describe_parameters_srv_type_support();
 
+RCLCPP_PUBLIC
 const rosidl_service_type_support_t *
 get_set_parameters_atomically_srv_type_support();
 

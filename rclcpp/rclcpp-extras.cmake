@@ -14,6 +14,8 @@
 
 # copied from rclcpp/rclcpp-extras.cmake
 
+include("${rclcpp_DIR}/get_rclcpp_information.cmake")
+
 set(rclcpp_node_main_SRC "${rclcpp_DIR}/../../../src/rclcpp/node_main.cpp")
 
 function(rclcpp_create_node_main node_library_target)

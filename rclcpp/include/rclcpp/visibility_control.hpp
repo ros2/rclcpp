@@ -24,31 +24,6 @@
 
 #include "rmw/rmw.h"
 
-#if !defined(RCLCPP_BUILDING_LIBRARY)
-// The following header is necessary inorder to get the correct rmw
-// implementation specific message symbols.
-// Any library or executable using librclcpp must include the header.
-// However, librclcpp must not include it.
-#include "rclcpp/type_support_def.hpp"
-
-// Anonymous namespace to prevent duplicate symbols across compile units.
-namespace
-{
-
-// This call to an rmw function is used to force the Linux linker to include
-// the rmw implementation library in the user's executable.
-// If this is not done, then only librclcpp is missing rmw symbols and when
-// linking the next library or exectuable the linker will discard the rmw
-// implementation shared library as unused.
-// On OS X this isn't an issue because linking is done, by default, in a flat
-// namespace, so when linking something that uses librclcpp, it will try to
-// resolve the rclcpp symbols each time, taking them from the rmw implementation
-// when it is available and not discarding it as unused during the link step.
-static const char * __rmw_identifier = rmw_get_implementation_identifier();
-
-}  // namespace
-#endif  // !defined(RCLCPP_BUILDING_LIBRARY)
-
 // This logic was borrowed (then namespaced) from the examples on the gcc wiki:
 //     https://gcc.gnu.org/wiki/Visibility
 
