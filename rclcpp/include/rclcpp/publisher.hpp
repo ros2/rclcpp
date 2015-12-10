@@ -18,9 +18,9 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
+#include <functional>
 #include <iostream>
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <string>
 

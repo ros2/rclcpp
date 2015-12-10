@@ -139,13 +139,14 @@ public:
     uint64_t intra_process_publisher_id,
     uint64_t & message_seq)
   {
+    std::lock_guard<std::mutex> lock(runtime_mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
       throw std::runtime_error("store_intra_process_message called with invalid publisher id");
     }
     PublisherInfo & info = it->second;
     // Calculate the next message sequence number.
-    message_seq = info.sequence_number.fetch_add(1, std::memory_order_relaxed);
+    message_seq = info.sequence_number.fetch_add(1);
 
     return info.buffer;
   }
