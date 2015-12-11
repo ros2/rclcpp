@@ -15,6 +15,7 @@
 #ifndef RCLCPP__FUNCTION_TRAITS_HPP_
 #define RCLCPP__FUNCTION_TRAITS_HPP_
 
+#include <functional>
 #include <memory>
 #include <tuple>
 
@@ -75,6 +76,20 @@ struct function_traits<ReturnTypeT(Args ...)>
 // Function pointers
 template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(Args ...)>
+{};
+
+// std::bind
+template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
+#if defined _LIBCPP_VERSION  // libc++ (Clang)
+struct function_traits<std::__1::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
+#elif defined __GLIBCXX__  // glibc++ (GNU C++)
+struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)>(FArgs ...)>>
+#elif defined _MSC_VER  // MS Visual Studio
+struct function_traits<
+  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...), FArgs ...>
+>
+#endif
+  : function_traits<ReturnTypeT(Args ...)>
 {};
 
 // Lambdas
