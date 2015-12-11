@@ -28,33 +28,33 @@
 #include "rclcpp/visibility_control.hpp"
 
 // NOLINTNEXTLINE(runtime/int)
-const std::chrono::seconds operator"" _s(unsigned long long s)
+inline const std::chrono::seconds operator"" _s(unsigned long long s)
 {
   return std::chrono::seconds(s);
 }
-const std::chrono::nanoseconds operator"" _s(long double s)
+inline const std::chrono::nanoseconds operator"" _s(long double s)
 {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
     std::chrono::duration<long double>(s));
 }
 
 // NOLINTNEXTLINE(runtime/int)
-const std::chrono::nanoseconds operator"" _ms(unsigned long long ms)
+inline const std::chrono::nanoseconds operator"" _ms(unsigned long long ms)
 {
   return std::chrono::milliseconds(ms);
 }
-const std::chrono::nanoseconds operator"" _ms(long double ms)
+inline const std::chrono::nanoseconds operator"" _ms(long double ms)
 {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
     std::chrono::duration<long double, std::milli>(ms));
 }
 
 // NOLINTNEXTLINE(runtime/int)
-const std::chrono::nanoseconds operator"" _ns(unsigned long long ns)
+inline const std::chrono::nanoseconds operator"" _ns(unsigned long long ns)
 {
   return std::chrono::nanoseconds(ns);
 }
-const std::chrono::nanoseconds operator"" _ns(long double ns)
+inline const std::chrono::nanoseconds operator"" _ns(long double ns)
 {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
     std::chrono::duration<long double, std::nano>(ns));

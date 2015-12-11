@@ -32,7 +32,7 @@
 #include "rosidl_generator_cpp/message_type_support.hpp"
 #include "rosidl_generator_cpp/service_type_support.hpp"
 
-const rosidl_message_type_support_t *
+inline const rosidl_message_type_support_t *
 rclcpp::type_support::get_intra_process_message_msg_type_support()
 {
   return rosidl_generator_cpp::get_message_type_support_handle<
@@ -40,7 +40,7 @@ rclcpp::type_support::get_intra_process_message_msg_type_support()
   >();
 }
 
-const rosidl_message_type_support_t *
+inline const rosidl_message_type_support_t *
 rclcpp::type_support::get_parameter_event_msg_type_support()
 {
   return rosidl_generator_cpp::get_message_type_support_handle<
@@ -48,7 +48,7 @@ rclcpp::type_support::get_parameter_event_msg_type_support()
   >();
 }
 
-const rosidl_message_type_support_t *
+inline const rosidl_message_type_support_t *
 rclcpp::type_support::get_set_parameters_result_msg_type_support()
 {
   return rosidl_generator_cpp::get_message_type_support_handle<
@@ -56,7 +56,7 @@ rclcpp::type_support::get_set_parameters_result_msg_type_support()
   >();
 }
 
-const rosidl_message_type_support_t *
+inline const rosidl_message_type_support_t *
 rclcpp::type_support::get_parameter_descriptor_msg_type_support()
 {
   return rosidl_generator_cpp::get_message_type_support_handle<
@@ -64,7 +64,7 @@ rclcpp::type_support::get_parameter_descriptor_msg_type_support()
   >();
 }
 
-const rosidl_message_type_support_t *
+inline const rosidl_message_type_support_t *
 rclcpp::type_support::get_list_parameters_result_msg_type_support()
 {
   return rosidl_generator_cpp::get_message_type_support_handle<
@@ -72,7 +72,7 @@ rclcpp::type_support::get_list_parameters_result_msg_type_support()
   >();
 }
 
-const rosidl_service_type_support_t *
+inline const rosidl_service_type_support_t *
 rclcpp::type_support::get_get_parameters_srv_type_support()
 {
   return rosidl_generator_cpp::get_service_type_support_handle<
@@ -80,7 +80,7 @@ rclcpp::type_support::get_get_parameters_srv_type_support()
   >();
 }
 
-const rosidl_service_type_support_t *
+inline const rosidl_service_type_support_t *
 rclcpp::type_support::get_get_parameter_types_srv_type_support()
 {
   return rosidl_generator_cpp::get_service_type_support_handle<
@@ -88,7 +88,7 @@ rclcpp::type_support::get_get_parameter_types_srv_type_support()
   >();
 }
 
-const rosidl_service_type_support_t *
+inline const rosidl_service_type_support_t *
 rclcpp::type_support::get_set_parameters_srv_type_support()
 {
   return rosidl_generator_cpp::get_service_type_support_handle<
@@ -96,7 +96,7 @@ rclcpp::type_support::get_set_parameters_srv_type_support()
   >();
 }
 
-const rosidl_service_type_support_t *
+inline const rosidl_service_type_support_t *
 rclcpp::type_support::get_list_parameters_srv_type_support()
 {
   return rosidl_generator_cpp::get_service_type_support_handle<
@@ -104,7 +104,7 @@ rclcpp::type_support::get_list_parameters_srv_type_support()
   >();
 }
 
-const rosidl_service_type_support_t *
+inline const rosidl_service_type_support_t *
 rclcpp::type_support::get_describe_parameters_srv_type_support()
 {
   return rosidl_generator_cpp::get_service_type_support_handle<
@@ -112,7 +112,7 @@ rclcpp::type_support::get_describe_parameters_srv_type_support()
   >();
 }
 
-const rosidl_service_type_support_t *
+inline const rosidl_service_type_support_t *
 rclcpp::type_support::get_set_parameters_atomically_srv_type_support()
 {
   return rosidl_generator_cpp::get_service_type_support_handle<
