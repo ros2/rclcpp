@@ -77,6 +77,12 @@ template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(Args ...)>
 {};
 
+// std::bind
+template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
+struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)>(FArgs ...)>>
+: function_traits<ReturnTypeT(Args ...)>
+{};
+
 // Lambdas
 template<typename ClassT, typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>

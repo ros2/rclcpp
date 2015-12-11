@@ -71,6 +71,15 @@ struct FunctionObjectOneIntOneChar
   }
 };
 
+struct ObjectMember
+{
+  int callback(bool a)
+  {
+    (void)a;
+    return 7;
+  }
+};
+
 template<
   typename FunctorT,
   std::size_t Arity = 0,
@@ -358,6 +367,16 @@ TEST(TestFunctionTraits, argument_types) {
         FunctionObjectOneIntOneChar
       >::template argument_type<1>
     >::value, "Functor accepts a char as second argument");
+
+  ObjectMember object_member;
+
+  auto bind_one_bool = std::bind(&ObjectMember::callback, &object_member, std::placeholders::_1);
+
+  static_assert(
+    std::is_same<
+      bool,
+      rclcpp::function_traits::function_traits<decltype(bind_one_bool)>::template argument_type<0>
+    >::value, "Functor accepts a bool as first argument");
 }
 
 /*
@@ -439,6 +458,15 @@ TEST(TestFunctionTraits, check_arguments) {
   static_assert(
     rclcpp::function_traits::check_arguments<FunctionObjectOneIntOneChar, int, char>::value,
     "Functor accepts an int and a char as arguments");
+
+  ObjectMember object_member;
+
+  auto bind_one_bool = std::bind(&ObjectMember::callback, &object_member, std::placeholders::_1);
+
+  // Test std::bind functions
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_one_bool), bool>::value,
+    "Functor accepts a single bool as arguments");
 }
 
 /*
