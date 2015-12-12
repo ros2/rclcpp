@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__TYPE_SUPPORT_DEF_HPP_
-#define RCLCPP__TYPE_SUPPORT_DEF_HPP_
-
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -29,8 +26,6 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters_atomically.hpp"
-#include "rosidl_generator_cpp/message_type_support.hpp"
-#include "rosidl_generator_cpp/service_type_support.hpp"
 
 const rosidl_message_type_support_t *
 rclcpp::type_support::get_intra_process_message_msg_type_support()
@@ -119,5 +114,3 @@ rclcpp::type_support::get_set_parameters_atomically_srv_type_support()
     rcl_interfaces::srv::SetParametersAtomically
   >();
 }
-
-#endif  // RCLCPP__TYPE_SUPPORT_DEF_HPP_

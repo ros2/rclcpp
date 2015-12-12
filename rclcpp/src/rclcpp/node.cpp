@@ -21,43 +21,6 @@
 
 #include "rclcpp/node.hpp"
 
-// Specializations with references to unresolved symbols to delay evaluation until later.
-// On Windows this is not necessary since it will be built against the rmw implementation directly.
-#if !defined(WIN32)
-namespace rosidl_generator_cpp
-{
-
-template<>
-const rosidl_message_type_support_t *
-get_message_type_support_handle<rcl_interfaces::msg::ParameterEvent>()
-{
-  return rclcpp::type_support::get_parameter_event_msg_type_support();
-}
-
-template<>
-const rosidl_message_type_support_t *
-get_message_type_support_handle<rcl_interfaces::msg::SetParametersResult>()
-{
-  return rclcpp::type_support::get_set_parameters_result_msg_type_support();
-}
-
-template<>
-const rosidl_message_type_support_t *
-get_message_type_support_handle<rcl_interfaces::msg::ParameterDescriptor>()
-{
-  return rclcpp::type_support::get_parameter_descriptor_msg_type_support();
-}
-
-template<>
-const rosidl_message_type_support_t *
-get_message_type_support_handle<rcl_interfaces::msg::ListParametersResult>()
-{
-  return rclcpp::type_support::get_list_parameters_result_msg_type_support();
-}
-
-}  // namespace rosidl_generator_cpp
-#endif
-
 using rclcpp::node::Node;
 
 Node::Node(const std::string & node_name, bool use_intra_process_comms)
