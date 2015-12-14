@@ -117,8 +117,3 @@ install(
   DIRECTORY include/
   DESTINATION include
 )
-
-install(
-  DIRECTORY src/
-  DESTINATION src/rclcpp
-)
