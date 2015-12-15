@@ -73,7 +73,7 @@ Node::create_publisher(
   using rosidl_generator_cpp::get_message_type_support_handle;
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_publisher_t * publisher_handle = rmw_create_publisher(
-    node_handle_.get(), type_support_handle, topic_name.c_str(), qos_profile);
+    node_handle_.get(), type_support_handle, topic_name.c_str(), &qos_profile);
   if (!publisher_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
@@ -88,7 +88,7 @@ Node::create_publisher(
   if (use_intra_process_comms_) {
     rmw_publisher_t * intra_process_publisher_handle = rmw_create_publisher(
       node_handle_.get(), rclcpp::type_support::get_intra_process_message_msg_type_support(),
-      (topic_name + "__intra").c_str(), qos_profile);
+      (topic_name + "__intra").c_str(), &qos_profile);
     if (!intra_process_publisher_handle) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
@@ -167,7 +167,7 @@ Node::create_subscription(
   auto type_support_handle = get_message_type_support_handle<MessageT>();
   rmw_subscription_t * subscriber_handle = rmw_create_subscription(
     node_handle_.get(), type_support_handle,
-    topic_name.c_str(), qos_profile, ignore_local_publications);
+    topic_name.c_str(), &qos_profile, ignore_local_publications);
   if (!subscriber_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
@@ -190,7 +190,7 @@ Node::create_subscription(
   if (use_intra_process_comms_) {
     rmw_subscription_t * intra_process_subscriber_handle = rmw_create_subscription(
       node_handle_.get(), rclcpp::type_support::get_intra_process_message_msg_type_support(),
-      (topic_name + "__intra").c_str(), qos_profile, false);
+      (topic_name + "__intra").c_str(), &qos_profile, false);
     if (!subscriber_handle) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
@@ -304,7 +304,7 @@ Node::create_client(
     get_service_type_support_handle<ServiceT>();
 
   rmw_client_t * client_handle = rmw_create_client(
-    this->node_handle_.get(), service_type_support_handle, service_name.c_str(), qos_profile);
+    this->node_handle_.get(), service_type_support_handle, service_name.c_str(), &qos_profile);
   if (!client_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
@@ -352,7 +352,7 @@ Node::create_service(
   any_service_callback.set(std::forward<CallbackT>(callback));
 
   rmw_service_t * service_handle = rmw_create_service(
-    node_handle_.get(), service_type_support_handle, service_name.c_str(), qos_profile);
+    node_handle_.get(), service_type_support_handle, service_name.c_str(), &qos_profile);
   if (!service_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
