@@ -34,7 +34,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(RateBase);
 
   virtual bool sleep() = 0;
-  virtual bool is_steady() = 0;
+  virtual bool is_steady() const = 0;
   virtual void reset() = 0;
 };
 
@@ -89,7 +89,7 @@ public:
   }
 
   virtual bool
-  is_steady()
+  is_steady() const
   {
     return Clock::is_steady;
   }
@@ -109,7 +109,8 @@ private:
   RCLCPP_DISABLE_COPY(GenericRate);
 
   std::chrono::nanoseconds period_;
-  std::chrono::time_point<Clock> last_interval_;
+  using ClockDurationNano = std::chrono::duration<typename Clock::rep, std::nano>;
+  std::chrono::time_point<Clock, ClockDurationNano> last_interval_;
 };
 
 using Rate = GenericRate<std::chrono::system_clock>;
