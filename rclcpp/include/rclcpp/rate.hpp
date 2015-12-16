@@ -66,19 +66,19 @@ public:
     // Detect backwards time flow
     if (now < last_interval_) {
       // Best thing to do is to set the next_interval to now + period
-      next_interval = now + std::chrono::duration_cast<std::chrono::microseconds>(period_);
+      next_interval = now + period_;
     }
     // Calculate the time to sleep
     auto time_to_sleep = next_interval - now;
     // Update the interval
-    last_interval_ += std::chrono::duration_cast<std::chrono::microseconds>(period_);
+    last_interval_ += period_;
     // If the time_to_sleep is negative or zero, don't sleep
     if (time_to_sleep <= std::chrono::seconds(0)) {
       // If an entire cycle was missed then reset next interval.
       // This might happen if the loop took more than a cycle.
       // Or if time jumps forward.
-      if (now > next_interval + std::chrono::duration_cast<std::chrono::microseconds>(period_)) {
-        last_interval_ = now + std::chrono::duration_cast<std::chrono::microseconds>(period_);
+      if (now > next_interval + period_) {
+        last_interval_ = now + period_;
       }
       // Either way do not sleep and return false
       return false;
@@ -109,7 +109,8 @@ private:
   RCLCPP_DISABLE_COPY(GenericRate);
 
   std::chrono::nanoseconds period_;
-  std::chrono::time_point<Clock> last_interval_;
+  typedef std::chrono::duration<typename Clock::rep, std::nano> ClockDurationNano;
+  std::chrono::time_point<Clock, ClockDurationNano> last_interval_;
 };
 
 using Rate = GenericRate<std::chrono::system_clock>;
