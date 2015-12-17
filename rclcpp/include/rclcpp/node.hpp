@@ -175,7 +175,7 @@ public:
   typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
   create_wall_timer(
     std::chrono::nanoseconds period,
-    CallbackType && callback,
+    CallbackType callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /// Create a timer.
