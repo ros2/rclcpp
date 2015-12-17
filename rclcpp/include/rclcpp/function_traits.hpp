@@ -78,7 +78,7 @@ template<typename ReturnTypeT, typename ... Args>
 struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(Args ...)>
 {};
 
-// std::bind
+// std::bind for object methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined _LIBCPP_VERSION  // libc++ (Clang)
 struct function_traits<std::__1::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
@@ -88,6 +88,22 @@ struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)
 struct function_traits<
   std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...), FArgs ...>
 >
+#else
+#error "Unsupported C++ compiler / standard library"
+#endif
+  : function_traits<ReturnTypeT(Args ...)>
+{};
+
+// std::bind for free functions
+template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
+#if defined _LIBCPP_VERSION  // libc++ (Clang)
+struct function_traits<std::__1::__bind<ReturnTypeT( &)(Args ...), FArgs ...>>
+#elif defined __GLIBCXX__  // glibc++ (GNU C++)
+struct function_traits<std::_Bind<ReturnTypeT(*(FArgs ...))(Args ...)>>
+#elif defined _MSC_VER  // MS Visual Studio
+struct function_traits<std::_Binder<std::_Unforced, ReturnTypeT(__cdecl &)(Args ...), FArgs ...>>
+#else
+#error "Unsupported C++ compiler / standard library"
 #endif
   : function_traits<ReturnTypeT(Args ...)>
 {};
