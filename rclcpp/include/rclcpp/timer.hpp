@@ -101,7 +101,7 @@ public:
    * \param[in] callback User-specified callback function.
    */
   GenericTimer(std::chrono::nanoseconds period, FunctorT && callback)
-  : TimerBase(period), callback_(callback), loop_rate_(period)
+  : TimerBase(period), callback_(std::forward<FunctorT>(callback)), loop_rate_(period)
   {
     /* Set last_triggered_time_ so that the timer fires at least one period after being created. */
     last_triggered_time_ = Clock::now();

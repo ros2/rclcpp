@@ -274,11 +274,11 @@ template<typename CallbackType>
 typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
 Node::create_wall_timer(
   std::chrono::nanoseconds period,
-  CallbackType && callback,
+  CallbackType callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   auto timer = rclcpp::timer::WallTimer<CallbackType>::make_shared(
-    period, std::forward<CallbackType>(callback));
+    period, std::move(callback));
   if (group) {
     if (!group_in_node(group)) {
       // TODO(jacquelinekay): use custom exception
