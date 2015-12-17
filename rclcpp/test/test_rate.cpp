@@ -22,8 +22,8 @@
    Tests that funcion_traits calculates arity of several functors.
  */
 TEST(TestRate, rate_basics) {
-  auto period = std::chrono::milliseconds(10);
-  auto delta = std::chrono::milliseconds(1);
+  auto period = std::chrono::milliseconds(100);
+  auto delta = std::chrono::milliseconds(10);
 
   auto start = std::chrono::system_clock::now();
   rclcpp::rate::Rate r(period);
@@ -45,12 +45,12 @@ TEST(TestRate, rate_basics) {
   r.sleep();
   auto three = std::chrono::system_clock::now();
   ASSERT_TRUE(period + 3 * delta < three - two);
-  ASSERT_TRUE(period + 5 * delta > three - two);
+  ASSERT_TRUE(period + 7 * delta > three - two);
 }
 
 TEST(TestRate, wallrate_basics) {
-  auto period = std::chrono::milliseconds(10);
-  auto delta = std::chrono::milliseconds(1);
+  auto period = std::chrono::milliseconds(100);
+  auto delta = std::chrono::milliseconds(10);
 
   auto start = std::chrono::system_clock::now();
   rclcpp::rate::WallRate r(period);
@@ -72,5 +72,5 @@ TEST(TestRate, wallrate_basics) {
   r.sleep();
   auto three = std::chrono::system_clock::now();
   ASSERT_TRUE(period + 3 * delta < three - two);
-  ASSERT_TRUE(period + 5 * delta > three - two);
+  ASSERT_TRUE(period + 7 * delta > three - two);
 }
