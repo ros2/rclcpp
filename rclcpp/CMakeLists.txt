@@ -102,6 +102,17 @@ if(AMENT_ENABLE_TESTING)
       ${rosidl_generator_cpp_INCLUDE_DIRS}
     )
   endif()
+  ament_add_gtest(test_rate test/test_rate.cpp)
+  if(TARGET test_rate)
+    target_include_directories(test_rate PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_rate
+      ${PROJECT_NAME}${target_suffix}
+    )
+  endif()
 endif()
 
 ament_package(
