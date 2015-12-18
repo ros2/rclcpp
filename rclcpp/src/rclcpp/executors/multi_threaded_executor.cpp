@@ -64,9 +64,8 @@ MultiThreadedExecutor::get_number_of_threads()
 }
 
 void
-MultiThreadedExecutor::run(size_t this_thread_number)
+MultiThreadedExecutor::run(size_t)
 {
-  thread_number_by_thread_id_[std::this_thread::get_id()] = this_thread_number;
   while (rclcpp::utilities::ok() && spinning.load()) {
     executor::AnyExecutable::SharedPtr any_exec;
     {
