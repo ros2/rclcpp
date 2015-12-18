@@ -46,7 +46,6 @@ MultiThreadedExecutor::spin()
   {
     std::lock_guard<std::mutex> wait_lock(wait_mutex_);
     for (; thread_id < number_of_threads_ - 1; ++thread_id) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
       auto func = std::bind(&MultiThreadedExecutor::run, this, thread_id);
       threads.emplace_back(func);
     }
@@ -65,9 +64,8 @@ MultiThreadedExecutor::get_number_of_threads()
 }
 
 void
-MultiThreadedExecutor::run(size_t this_thread_number)
+MultiThreadedExecutor::run(size_t)
 {
-  thread_number_by_thread_id_[std::this_thread::get_id()] = this_thread_number;
   while (rclcpp::utilities::ok() && spinning.load()) {
     executor::AnyExecutable::SharedPtr any_exec;
     {
