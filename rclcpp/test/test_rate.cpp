@@ -19,7 +19,7 @@
 #include "rclcpp/rate.hpp"
 
 /*
-   Tests that funcion_traits calculates arity of several functors.
+   Basic tests for the Rate and WallRate clases.
  */
 TEST(TestRate, rate_basics) {
   auto period = std::chrono::milliseconds(100);
