@@ -142,7 +142,7 @@ public:
     std::lock_guard<std::mutex> lock(runtime_mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
     if (it == publishers_.end()) {
-      throw std::runtime_error("store_intra_process_message called with invalid publisher id");
+      throw std::runtime_error("get_publisher_info_for_id called with invalid publisher id");
     }
     PublisherInfo & info = it->second;
     // Calculate the next message sequence number.
@@ -168,7 +168,12 @@ public:
     // Figure out what subscriptions should receive the message.
     auto & destined_subscriptions = subscription_ids_by_topic_[publisher->get_topic_name()];
     // Store the list for later comparison.
-    info.target_subscriptions_by_message_sequence[message_seq].clear();
+    if (info.target_subscriptions_by_message_sequence.count(message_seq) == 0) {
+      info.target_subscriptions_by_message_sequence.emplace(
+        message_seq, AllocSet(std::less<uint64_t>(), uint64_allocator));
+    } else {
+      info.target_subscriptions_by_message_sequence[message_seq].clear();
+    }
     std::copy(
       destined_subscriptions.begin(), destined_subscriptions.end(),
       // Memory allocation occurs in info.target_subscriptions_by_message_sequence[message_seq]
@@ -241,6 +246,8 @@ private:
 
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
+
+  RebindAlloc<uint64_t> uint64_allocator;
 
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
   using SubscriptionMap = std::unordered_map<uint64_t, subscription::SubscriptionBase::WeakPtr,
