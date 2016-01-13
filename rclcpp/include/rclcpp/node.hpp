@@ -252,6 +252,8 @@ public:
   const CallbackGroupWeakPtrList &
   get_callback_groups() const;
 
+  std::atomic_bool has_executor;
+
 private:
   RCLCPP_DISABLE_COPY(Node);
 

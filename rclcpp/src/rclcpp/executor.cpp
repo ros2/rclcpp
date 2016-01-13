@@ -19,15 +19,57 @@
 
 using rclcpp::executor::AnyExecutable;
 using rclcpp::executor::Executor;
+using rclcpp::executor::ExecutorArgs;
 
-Executor::Executor(rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
-: spinning(false), interrupt_guard_condition_(rmw_create_guard_condition()),
-  memory_strategy_(ms)
+Executor::Executor(const ExecutorArgs & args)
+: spinning(false),
+  memory_strategy_(args.memory_strategy)
 {
+  interrupt_guard_condition_ = rmw_create_guard_condition();
+  if (!interrupt_guard_condition_) {
+    throw std::runtime_error("Failed to create interrupt guard condition in Executor constructor");
+  }
+
+  // The number of guard conditions is fixed at 2: 1 for the ctrl-c guard cond,
+  // and one for the executor's guard cond (interrupt_guard_condition_)
+  // These guard conditions are permanently attached to the waitset.
+  const size_t number_of_guard_conds = 2;
+  fixed_guard_conditions_.guard_condition_count = number_of_guard_conds;
+  fixed_guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
+
+  // Put the global ctrl-c guard condition in
+  assert(fixed_guard_conditions_.guard_condition_count > 1);
+  fixed_guard_conditions_.guard_conditions[0] = \
+    rclcpp::utilities::get_global_sigint_guard_condition()->data;
+  // Put the executor's guard condition in
+  fixed_guard_conditions_.guard_conditions[1] = interrupt_guard_condition_->data;
+
+  // The waitset adds the fixed guard conditions to the middleware waitset on initialization,
+  // and removes the guard conditions in rmw_destroy_waitset.
+  waitset_ = rmw_create_waitset(&fixed_guard_conditions_, args.max_conditions);
+
+  if (!waitset_) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to create waitset: %s\n", rmw_get_error_string_safe());
+    rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
+    if (status != RMW_RET_OK) {
+      fprintf(stderr,
+        "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
+    }
+    throw std::runtime_error("Failed to create waitset in Executor constructor");
+  }
 }
 
 Executor::~Executor()
 {
+  // Try to deallocate the waitset.
+  if (waitset_) {
+    rmw_ret_t status = rmw_destroy_waitset(waitset_);
+    if (status != RMW_RET_OK) {
+      fprintf(stderr,
+        "[rclcpp::error] failed to destroy waitset: %s\n", rmw_get_error_string_safe());
+    }
+  }
   // Try to deallocate the interrupt guard condition.
   if (interrupt_guard_condition_ != nullptr) {
     rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
@@ -41,6 +83,10 @@ Executor::~Executor()
 void
 Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
 {
+  // If the node already has an executor
+  if (node_ptr->has_executor.exchange(true)) {
+    throw std::runtime_error("Node has already been added to an executor.");
+  }
   // Check to ensure node not already added
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
@@ -76,6 +122,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
       // *INDENT-ON*
     )
   );
+  node_ptr->has_executor.store(false);
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
@@ -318,25 +365,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   client_handles.client_count =
     memory_strategy_->fill_client_handles(client_handles.clients);
 
-  // The number of guard conditions is fixed at 2: 1 for the ctrl-c guard cond,
-  // and one for the executor's guard cond (interrupt_guard_condition_)
-  size_t number_of_guard_conds = 2;
-  rmw_guard_conditions_t guard_condition_handles;
-  guard_condition_handles.guard_condition_count = number_of_guard_conds;
-  guard_condition_handles.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
-  if (guard_condition_handles.guard_conditions == NULL &&
-    number_of_guard_conds > 0)
-  {
-    // TODO(wjwwood): Use a different error here? maybe std::bad_alloc?
-    throw std::runtime_error("Could not malloc for guard condition pointers.");
-  }
-  // Put the global ctrl-c guard condition in
-  assert(guard_condition_handles.guard_condition_count > 1);
-  guard_condition_handles.guard_conditions[0] = \
-    rclcpp::utilities::get_global_sigint_guard_condition()->data;
-  // Put the executor's guard condition in
-  guard_condition_handles.guard_conditions[1] = \
-    interrupt_guard_condition_->data;
+  // Don't pass guard conditions to rmw_wait; they are permanent fixtures of the waitset
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -364,18 +393,13 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // Now wait on the waitable subscriptions and timers
   rmw_ret_t status = rmw_wait(
     &subscriber_handles,
-    &guard_condition_handles,
+    nullptr,
     &service_handles,
     &client_handles,
+    waitset_,
     wait_timeout);
   if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
     throw std::runtime_error(rmw_get_error_string_safe());
-  }
-  // If ctrl-c guard condition, return directly
-  if (guard_condition_handles.guard_conditions[0] != 0) {
-    // Make sure to free or clean memory
-    memory_strategy_->clear_handles();
-    return;
   }
 
   memory_strategy_->remove_null_handles();

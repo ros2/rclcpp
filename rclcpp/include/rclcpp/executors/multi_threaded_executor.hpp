@@ -38,7 +38,7 @@ public:
 
   RCLCPP_PUBLIC
   MultiThreadedExecutor(
-    memory_strategy::MemoryStrategy::SharedPtr ms = memory_strategies::create_default_strategy());
+    const executor::ExecutorArgs & args = rclcpp::executor::create_default_executor_arguments());
 
   RCLCPP_PUBLIC
   virtual ~MultiThreadedExecutor();

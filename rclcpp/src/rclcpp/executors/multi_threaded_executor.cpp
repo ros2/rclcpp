@@ -23,8 +23,8 @@
 
 using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
 
-MultiThreadedExecutor::MultiThreadedExecutor(rclcpp::memory_strategy::MemoryStrategy::SharedPtr ms)
-: executor::Executor(ms)
+MultiThreadedExecutor::MultiThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
+: executor::Executor(args)
 {
   number_of_threads_ = std::thread::hardware_concurrency();
   if (number_of_threads_ == 0) {
