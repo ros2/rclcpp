@@ -84,8 +84,9 @@ MemoryStrategy::get_client_by_handle(void * client_handle, const WeakNodeVector 
       if (!group) {
         continue;
       }
-      for (auto & client : group->get_client_ptrs()) {
-        if (client->get_client_handle()->data == client_handle) {
+      for (auto & weak_client : group->get_client_ptrs()) {
+        auto client = weak_client.lock();
+        if (client && client->get_client_handle()->data == client_handle) {
           return client;
         }
       }
@@ -182,8 +183,9 @@ MemoryStrategy::get_group_by_client(
       if (!group) {
         continue;
       }
-      for (auto & cli : group->get_client_ptrs()) {
-        if (cli == client) {
+      for (auto & weak_client : group->get_client_ptrs()) {
+        auto cli = weak_client.lock();
+        if (cli && cli == client) {
           return group;
         }
       }

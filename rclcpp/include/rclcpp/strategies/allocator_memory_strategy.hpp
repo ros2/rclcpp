@@ -151,7 +151,8 @@ public:
             services_.push_back(service);
           }
         }
-        for (auto & client : group->get_client_ptrs()) {
+        for (auto & weak_client : group->get_client_ptrs()) {
+          auto client = weak_client.lock();
           if (client) {
             clients_.push_back(client);
           }

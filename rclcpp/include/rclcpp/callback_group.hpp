@@ -66,7 +66,7 @@ public:
   get_service_ptrs() const;
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::client::ClientBase::SharedPtr> &
+  const std::vector<rclcpp::client::ClientBase::WeakPtr> &
   get_client_ptrs() const;
 
   RCLCPP_PUBLIC
@@ -100,7 +100,7 @@ private:
   std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
   std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::service::ServiceBase::SharedPtr> service_ptrs_;
-  std::vector<rclcpp::client::ClientBase::SharedPtr> client_ptrs_;
+  std::vector<rclcpp::client::ClientBase::WeakPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
 };
 
