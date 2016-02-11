@@ -13,7 +13,7 @@
 # limitations under the License.
 
 #
-# Get all information abut rclcpp for a specific RMW implementation.
+# Get all information about rclcpp for a specific RMW implementation.
 #
 # It sets the common variables _DEFINITIONS, _INCLUDE_DIRS and _LIBRARIES
 # with the given prefix.
@@ -29,7 +29,7 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   set(${var_prefix}_FOUND TRUE)
 
   # include directories
-  set(${var_prefix}_INCLUDE_DIRS
+  normalize_path(${var_prefix}_INCLUDE_DIRS
     "${rclcpp_DIR}/../../../include")
 
   # libraries
@@ -49,7 +49,7 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   )
   if(NOT _lib)
     # warn about not existing library and ignore it
-    message(FATAL_ERROR "Package 'rclcpp' doesn't contain the library '${_library_target}'")
+    message(WARNING "Package 'rclcpp' doesn't contain the library '${_library_target}'")
   elseif(NOT IS_ABSOLUTE "${_lib}")
     # the found library must be an absolute path
     message(FATAL_ERROR "Package 'rclcpp' found the library '${_library_target}' at '${_lib}' which is not an absolute path")
