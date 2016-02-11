@@ -65,6 +65,7 @@ endmacro()
 
 call_for_each_rmw_implementation(target GENERATE_DEFAULT)
 
+ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl_interfaces)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rmw_implementation)
