@@ -60,7 +60,7 @@ public:
   virtual std::shared_ptr<void> create_response() = 0;
   virtual std::shared_ptr<void> create_request_header() = 0;
   virtual void handle_response(
-    std::shared_ptr<void> & request_header, std::shared_ptr<void> & response) = 0;
+    std::shared_ptr<void> request_header, std::shared_ptr<void> response) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ClientBase);
@@ -111,13 +111,17 @@ public:
     return std::shared_ptr<void>(new rmw_request_id_t);
   }
 
-  void handle_response(std::shared_ptr<void> & request_header, std::shared_ptr<void> & response)
+  void handle_response(std::shared_ptr<void> request_header, std::shared_ptr<void> response)
   {
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
     int64_t sequence_number = typed_request_header->sequence_number;
-    // TODO(esteve) this must check if the sequence_number is valid otherwise the
-    // call_promise will be null
+    // TODO(esteve) this should throw instead since it is not expected to happen in the first place
+    if (this->pending_requests_.count(sequence_number) == 0) {
+      fprintf(stderr, "Received invalid sequence number. Ignoring...\n");
+      return;
+    }
     auto tuple = this->pending_requests_[sequence_number];
     auto call_promise = std::get<0>(tuple);
     auto callback = std::get<1>(tuple);
@@ -143,6 +147,7 @@ public:
   >
   SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
   {
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
     if (RMW_RET_OK != rmw_send_request(get_client_handle(), request.get(), &sequence_number)) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -187,6 +192,7 @@ private:
   RCLCPP_DISABLE_COPY(Client);
 
   std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
+  std::mutex pending_requests_mutex_;
 };
 
 }  // namespace client

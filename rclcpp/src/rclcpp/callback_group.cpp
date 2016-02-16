@@ -41,7 +41,7 @@ CallbackGroup::get_service_ptrs() const
   return service_ptrs_;
 }
 
-const std::vector<rclcpp::client::ClientBase::SharedPtr> &
+const std::vector<rclcpp::client::ClientBase::WeakPtr> &
 CallbackGroup::get_client_ptrs() const
 {
   return client_ptrs_;
