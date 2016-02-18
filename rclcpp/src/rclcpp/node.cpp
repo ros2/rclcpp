@@ -272,7 +272,7 @@ Node::list_parameters(
   // TODO(esteve): define parameter separator, use "." for now
   for (auto & kv : parameters_) {
     if ((prefixes.size() == 0) ||
-        (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
+      (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
       if (kv.first == prefix) {
         return true;
       } else if (kv.first.find(prefix + ".") == 0) {
