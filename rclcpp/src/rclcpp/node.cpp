@@ -241,7 +241,8 @@ Node::list_parameters(
 
   // TODO(esteve): define parameter separator, use "." for now
   for (auto & kv : parameters_) {
-    if (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
+    if ((prefixes.size() == 0) ||
+        (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
       if (kv.first == prefix) {
         return true;
       } else if (kv.first.find(prefix + ".") == 0) {
@@ -251,7 +252,7 @@ Node::list_parameters(
         return static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth;
       }
       return false;
-    }))
+    })))
     {
       result.names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of('.');
