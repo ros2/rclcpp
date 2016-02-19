@@ -120,7 +120,8 @@ public:
 
   RCLCPP_PUBLIC
   SyncParametersClient(
-    rclcpp::node::Node::SharedPtr node);
+    rclcpp::node::Node::SharedPtr node,
+    const std::string & remote_node_name = "");
 
   RCLCPP_PUBLIC
   SyncParametersClient(

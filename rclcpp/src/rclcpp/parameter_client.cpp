@@ -228,11 +228,11 @@ AsyncParametersClient::list_parameters(
 }
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::node::Node::SharedPtr node)
+  rclcpp::node::Node::SharedPtr node,const std::string & remote_node_name)
 : node_(node)
 {
   executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);
+  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node, remote_node_name);
 }
 
 SyncParametersClient::SyncParametersClient(
