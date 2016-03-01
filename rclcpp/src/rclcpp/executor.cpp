@@ -287,7 +287,7 @@ void
 Executor::execute_service(
   rclcpp::service::ServiceBase::SharedPtr service)
 {
-  std::shared_ptr<void> request_header = service->create_request_header();
+  auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
   bool taken = false;
   rmw_ret_t status = rmw_take_request(
@@ -310,7 +310,7 @@ void
 Executor::execute_client(
   rclcpp::client::ClientBase::SharedPtr client)
 {
-  std::shared_ptr<void> request_header = client->create_request_header();
+  auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
   bool taken = false;
   rmw_ret_t status = rmw_take_response(

@@ -58,9 +58,9 @@ public:
   get_client_handle() const;
 
   virtual std::shared_ptr<void> create_response() = 0;
-  virtual std::shared_ptr<void> create_request_header() = 0;
+  virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
   virtual void handle_response(
-    std::shared_ptr<void> request_header, std::shared_ptr<void> response) = 0;
+    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
 private:
   RCLCPP_DISABLE_COPY(ClientBase);
@@ -104,19 +104,19 @@ public:
     return std::shared_ptr<void>(new typename ServiceT::Response());
   }
 
-  std::shared_ptr<void> create_request_header()
+  std::shared_ptr<rmw_request_id_t> create_request_header()
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
-    return std::shared_ptr<void>(new rmw_request_id_t);
+    return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
-  void handle_response(std::shared_ptr<void> request_header, std::shared_ptr<void> response)
+  void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
+    std::shared_ptr<void> response)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-    auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
-    int64_t sequence_number = typed_request_header->sequence_number;
+    int64_t sequence_number = request_header->sequence_number;
     // TODO(esteve) this should throw instead since it is not expected to happen in the first place
     if (this->pending_requests_.count(sequence_number) == 0) {
       fprintf(stderr, "Received invalid sequence number. Ignoring...\n");

@@ -55,9 +55,9 @@ public:
   get_service_handle();
 
   virtual std::shared_ptr<void> create_request() = 0;
-  virtual std::shared_ptr<void> create_request_header() = 0;
+  virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
   virtual void handle_request(
-    std::shared_ptr<void> request_header,
+    std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) = 0;
 
 private:
@@ -102,20 +102,20 @@ public:
     return std::shared_ptr<void>(new typename ServiceT::Request());
   }
 
-  std::shared_ptr<void> create_request_header()
+  std::shared_ptr<rmw_request_id_t> create_request_header()
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
-    return std::shared_ptr<void>(new rmw_request_id_t);
+    return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
-  void handle_request(std::shared_ptr<void> request_header, std::shared_ptr<void> request)
+  void handle_request(std::shared_ptr<rmw_request_id_t> request_header,
+    std::shared_ptr<void> request)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
-    auto typed_request_header = std::static_pointer_cast<rmw_request_id_t>(request_header);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
-    any_callback_.dispatch(typed_request_header, typed_request, response);
-    send_response(typed_request_header, response);
+    any_callback_.dispatch(request_header, typed_request, response);
+    send_response(request_header, response);
   }
 
   void send_response(
