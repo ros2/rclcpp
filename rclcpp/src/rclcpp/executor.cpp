@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <type_traits>
+
 #include "rclcpp/executor.hpp"
 #include "rclcpp/scope_exit.hpp"
 
@@ -20,6 +22,7 @@
 using rclcpp::executor::AnyExecutable;
 using rclcpp::executor::Executor;
 using rclcpp::executor::ExecutorArgs;
+using rclcpp::executor::FutureReturnCode;
 
 Executor::Executor(const ExecutorArgs & args)
 : spinning(false),
@@ -568,4 +571,26 @@ Executor::get_next_executable(std::chrono::nanoseconds timeout)
     }
   }
   return any_exec;
+}
+
+std::ostream &
+rclcpp::executor::operator << (std::ostream & os, const FutureReturnCode & future_return_code)
+{
+  return os << to_string(future_return_code);
+}
+
+std::string
+rclcpp::executor::to_string(const FutureReturnCode & future_return_code)
+{
+  using enum_type = std::underlying_type<FutureReturnCode>::type;
+  using std::string;
+  using std::to_string;
+  switch (future_return_code) {
+    case FutureReturnCode::SUCCESS:
+      return string("SUCCESS (" + to_string(static_cast<enum_type>(future_return_code)) + ")");
+    case FutureReturnCode::INTERRUPTED:
+      return string("INTERRUPTED (" + to_string(static_cast<enum_type>(future_return_code)) + ")");
+    case FutureReturnCode::TIMEOUT:
+      return string("TIMEOUT (" + to_string(static_cast<enum_type>(future_return_code)) + ")");
+  }
 }

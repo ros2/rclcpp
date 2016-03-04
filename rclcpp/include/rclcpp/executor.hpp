@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <list>
@@ -42,7 +43,13 @@ namespace executor
  * INTERRUPTED: The future is not complete, spinning was interrupted by Ctrl-C or another error.
  * TIMEOUT: Spinning timed out.
  */
-enum FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
+enum class FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
+
+std::ostream &
+operator << (std::ostream & os, const FutureReturnCode & future_return_code);
+
+std::string
+to_string(const FutureReturnCode & future_return_code);
 
 ///
 /**
