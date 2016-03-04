@@ -184,23 +184,30 @@ public:
     // Check the future before entering the while loop.
     // If the future is already complete, don't try to spin.
     std::future_status status = future.wait_for(std::chrono::seconds(0));
-
-    auto start_time = std::chrono::system_clock::now();
-
-    while (status != std::future_status::ready && rclcpp::utilities::ok()) {
-      spin_once(timeout);
-      if (timeout.count() >= 0) {
-        if (start_time + timeout < std::chrono::system_clock::now()) {
-          return TIMEOUT;
-        }
-      }
-      status = future.wait_for(std::chrono::seconds(0));
-    }
-
-    // If the future completed, and we weren't interrupted by ctrl-C, return the response
     if (status == std::future_status::ready) {
       return FutureReturnCode::SUCCESS;
     }
+
+    auto start_time = std::chrono::steady_clock::now();
+
+    while (rclcpp::utilities::ok()) {
+      // Do one item of work.
+      spin_once(timeout);
+      // Check if the future is set, return SUCCESS if it is.
+      status = future.wait_for(std::chrono::seconds(0));
+      if (status == std::future_status::ready) {
+        return FutureReturnCode::SUCCESS;
+      }
+      // Otherwise check if we still have time to wait, return TIMEOUT if not.
+      auto elapsed_time = std::chrono::steady_clock::now() - start_time;
+      if (elapsed_time > timeout) {
+        return FutureReturnCode::TIMEOUT;
+      }
+      // Subtract the elapsed time from the original timeout.
+      timeout -= std::chrono::duration_cast<std::chrono::duration<int64_t, TimeT>>(elapsed_time);
+    }
+
+    // The future did not complete before ok() returned false, return INTERRUPTED.
     return FutureReturnCode::INTERRUPTED;
   }
 
