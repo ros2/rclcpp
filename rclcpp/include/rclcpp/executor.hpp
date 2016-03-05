@@ -22,6 +22,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "rclcpp/any_executable.hpp"
@@ -45,9 +46,11 @@ namespace executor
  */
 enum class FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
 
+RCLCPP_PUBLIC
 std::ostream &
-operator << (std::ostream & os, const FutureReturnCode & future_return_code);
+operator<<(std::ostream & os, const FutureReturnCode & future_return_code);
 
+RCLCPP_PUBLIC
 std::string
 to_string(const FutureReturnCode & future_return_code);
 
@@ -166,7 +169,8 @@ public:
   /**
    * \param[in] executor The executor which will spin the node.
    * \param[in] node_ptr The node to spin.
-   * \param[in] future The future to wait on. If SUCCESS, the future is safe to access after this function
+   * \param[in] future The future to wait on. If SUCCESS, the future is safe to access after this
+     function.
    * \param[in] timeout Optional timeout parameter, which gets passed to Executor::spin_node_once.
      -1 is block forever, 0 is non-blocking.
      If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return code.
@@ -188,23 +192,32 @@ public:
       return FutureReturnCode::SUCCESS;
     }
 
-    auto start_time = std::chrono::steady_clock::now();
+    auto end_time = std::chrono::steady_clock::now();
+    if (timeout > std::chrono::nanoseconds::zero()) {
+      end_time += timeout;
+    }
+    auto timeout_left = timeout;
 
     while (rclcpp::utilities::ok()) {
       // Do one item of work.
-      spin_once(timeout);
+      spin_once(timeout_left);
       // Check if the future is set, return SUCCESS if it is.
       status = future.wait_for(std::chrono::seconds(0));
       if (status == std::future_status::ready) {
         return FutureReturnCode::SUCCESS;
       }
+      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
+      if (timeout < std::chrono::nanoseconds::zero()) {
+        continue;
+      }
       // Otherwise check if we still have time to wait, return TIMEOUT if not.
-      auto elapsed_time = std::chrono::steady_clock::now() - start_time;
-      if (elapsed_time > timeout) {
+      auto now = std::chrono::steady_clock::now();
+      if (now >= end_time) {
         return FutureReturnCode::TIMEOUT;
       }
       // Subtract the elapsed time from the original timeout.
-      timeout -= std::chrono::duration_cast<std::chrono::duration<int64_t, TimeT>>(elapsed_time);
+      using duration_type = std::chrono::duration<int64_t, TimeT>;
+      timeout_left = std::chrono::duration_cast<duration_type>(end_time - now);
     }
 
     // The future did not complete before ok() returned false, return INTERRUPTED.

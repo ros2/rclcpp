@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
 #include <type_traits>
 
 #include "rclcpp/executor.hpp"
@@ -574,7 +575,7 @@ Executor::get_next_executable(std::chrono::nanoseconds timeout)
 }
 
 std::ostream &
-rclcpp::executor::operator << (std::ostream & os, const FutureReturnCode & future_return_code)
+rclcpp::executor::operator<<(std::ostream & os, const FutureReturnCode & future_return_code)
 {
   return os << to_string(future_return_code);
 }
@@ -583,14 +584,18 @@ std::string
 rclcpp::executor::to_string(const FutureReturnCode & future_return_code)
 {
   using enum_type = std::underlying_type<FutureReturnCode>::type;
-  using std::string;
-  using std::to_string;
+  std::string prefix = "Unknown enum value (";
+  std::string ret_as_string = std::to_string(static_cast<enum_type>(future_return_code));
   switch (future_return_code) {
     case FutureReturnCode::SUCCESS:
-      return string("SUCCESS (" + to_string(static_cast<enum_type>(future_return_code)) + ")");
+      prefix = "SUCCESS (";
+      break;
     case FutureReturnCode::INTERRUPTED:
-      return string("INTERRUPTED (" + to_string(static_cast<enum_type>(future_return_code)) + ")");
+      prefix = "INTERRUPTED (";
+      break;
     case FutureReturnCode::TIMEOUT:
-      return string("TIMEOUT (" + to_string(static_cast<enum_type>(future_return_code)) + ")");
+      prefix = "TIMEOUT (";
+      break;
   }
+  return prefix + ret_as_string + ")";
 }
