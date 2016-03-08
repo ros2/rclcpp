@@ -17,10 +17,12 @@
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
 #include <list>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "rclcpp/any_executable.hpp"
@@ -42,7 +44,15 @@ namespace executor
  * INTERRUPTED: The future is not complete, spinning was interrupted by Ctrl-C or another error.
  * TIMEOUT: Spinning timed out.
  */
-enum FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
+enum class FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
+
+RCLCPP_PUBLIC
+std::ostream &
+operator<<(std::ostream & os, const FutureReturnCode & future_return_code);
+
+RCLCPP_PUBLIC
+std::string
+to_string(const FutureReturnCode & future_return_code);
 
 ///
 /**
@@ -159,7 +169,8 @@ public:
   /**
    * \param[in] executor The executor which will spin the node.
    * \param[in] node_ptr The node to spin.
-   * \param[in] future The future to wait on. If SUCCESS, the future is safe to access after this function
+   * \param[in] future The future to wait on. If SUCCESS, the future is safe to access after this
+     function.
    * \param[in] timeout Optional timeout parameter, which gets passed to Executor::spin_node_once.
      -1 is block forever, 0 is non-blocking.
      If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return code.
@@ -177,23 +188,39 @@ public:
     // Check the future before entering the while loop.
     // If the future is already complete, don't try to spin.
     std::future_status status = future.wait_for(std::chrono::seconds(0));
-
-    auto start_time = std::chrono::system_clock::now();
-
-    while (status != std::future_status::ready && rclcpp::utilities::ok()) {
-      spin_once(timeout);
-      if (timeout.count() >= 0) {
-        if (start_time + timeout < std::chrono::system_clock::now()) {
-          return TIMEOUT;
-        }
-      }
-      status = future.wait_for(std::chrono::seconds(0));
-    }
-
-    // If the future completed, and we weren't interrupted by ctrl-C, return the response
     if (status == std::future_status::ready) {
       return FutureReturnCode::SUCCESS;
     }
+
+    auto end_time = std::chrono::steady_clock::now();
+    if (timeout > std::chrono::nanoseconds::zero()) {
+      end_time += timeout;
+    }
+    auto timeout_left = timeout;
+
+    while (rclcpp::utilities::ok()) {
+      // Do one item of work.
+      spin_once(timeout_left);
+      // Check if the future is set, return SUCCESS if it is.
+      status = future.wait_for(std::chrono::seconds(0));
+      if (status == std::future_status::ready) {
+        return FutureReturnCode::SUCCESS;
+      }
+      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
+      if (timeout < std::chrono::nanoseconds::zero()) {
+        continue;
+      }
+      // Otherwise check if we still have time to wait, return TIMEOUT if not.
+      auto now = std::chrono::steady_clock::now();
+      if (now >= end_time) {
+        return FutureReturnCode::TIMEOUT;
+      }
+      // Subtract the elapsed time from the original timeout.
+      using duration_type = std::chrono::duration<int64_t, TimeT>;
+      timeout_left = std::chrono::duration_cast<duration_type>(end_time - now);
+    }
+
+    // The future did not complete before ok() returned false, return INTERRUPTED.
     return FutureReturnCode::INTERRUPTED;
   }
 
