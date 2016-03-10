@@ -23,6 +23,8 @@
 #include <tuple>
 #include <utility>
 
+#include <rcl/client.h>
+
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/utilities.hpp"
@@ -42,8 +44,8 @@ public:
 
   RCLCPP_PUBLIC
   ClientBase(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_client_t * client_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_client_t * client_handle,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
@@ -54,7 +56,7 @@ public:
   get_service_name() const;
 
   RCLCPP_PUBLIC
-  const rmw_client_t *
+  const rcl_client_t *
   get_client_handle() const;
 
   virtual std::shared_ptr<void> create_response() = 0;
@@ -65,9 +67,9 @@ public:
 private:
   RCLCPP_DISABLE_COPY(ClientBase);
 
-  std::shared_ptr<rmw_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
-  rmw_client_t * client_handle_;
+  rcl_client_t * client_handle_;
   std::string service_name_;
 };
 
@@ -93,8 +95,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
 
   Client(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_client_t * client_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_client_t * client_handle,
     const std::string & service_name)
   : ClientBase(node_handle, client_handle, service_name)
   {}

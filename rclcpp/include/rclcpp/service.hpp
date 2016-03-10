@@ -21,6 +21,8 @@
 #include <sstream>
 #include <string>
 
+#include <rcl/service.h>
+
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -39,8 +41,8 @@ public:
 
   RCLCPP_PUBLIC
   ServiceBase(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_service_t * service_handle,
     const std::string service_name);
 
   RCLCPP_PUBLIC
@@ -63,9 +65,9 @@ public:
 private:
   RCLCPP_DISABLE_COPY(ServiceBase);
 
-  std::shared_ptr<rmw_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
-  rmw_service_t * service_handle_;
+  rcl_service_t * service_handle_;
   std::string service_name_;
 };
 
@@ -88,8 +90,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Service);
 
   Service(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_service_t * service_handle,
     const std::string & service_name,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle, service_handle, service_name), any_callback_(any_callback)
@@ -122,11 +124,12 @@ public:
     std::shared_ptr<rmw_request_id_t> req_id,
     std::shared_ptr<typename ServiceT::Response> response)
   {
-    rmw_ret_t status = rmw_send_response(get_service_handle(), req_id.get(), response.get());
-    if (status != RMW_RET_OK) {
+    rcl_ret_t status = rcl_send_response(get_service_handle(), req_id.get(), response.get());
+
+    if (status != RCL_RET_OK) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
-        std::string("failed to send response: ") + rmw_get_error_string_safe());
+        std::string("failed to send response: ") + rcl_get_error_string_safe());
       // *INDENT-ON*
     }
   }

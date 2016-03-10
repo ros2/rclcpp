@@ -389,15 +389,17 @@ Node::create_service(
   rclcpp::service::AnyServiceCallback<ServiceT> any_service_callback;
   any_service_callback.set(std::forward<CallbackT>(callback));
 
-  rmw_service_t * service_handle = rmw_create_service(
-    rcl_node_get_rmw_handle(node_handle_.get()),
-    service_type_support_handle, service_name.c_str(), &qos_profile);
-  if (!service_handle) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+  rcl_service_t * service_handle = new rcl_service_t;
+  rcl_service_options_t service_options = rcl_service_get_default_options();
+  service_options.qos = qos_profile;
+  // TODO allocator
+  if (rcl_service_init(
+    service_handle, node_handle_.get(), service_type_support_handle, service_name.c_str(),
+    &service_options) != RCL_RET_OK)
+  {
     throw std::runtime_error(
       std::string("could not create service: ") +
       rmw_get_error_string_safe());
-    // *INDENT-ON*
   }
 
   auto serv = service::Service<ServiceT>::make_shared(
