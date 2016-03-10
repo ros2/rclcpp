@@ -235,20 +235,17 @@ Executor::execute_subscription(
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
 {
   std::shared_ptr<void> message = subscription->create_message();
-  bool taken = false;
   rmw_message_info_t message_info;
-  auto ret =
-    rmw_take_with_info(subscription->get_subscription_handle(),
-      message.get(), &taken, &message_info);
-  if (ret == RMW_RET_OK) {
-    if (taken) {
-      message_info.from_intra_process = false;
-      subscription->handle_message(message, message_info);
-    }
-  } else {
+
+  auto ret = rcl_take(subscription->get_subscription_handle(),
+      message.get(), &message_info);
+  if (ret == RCL_RET_OK) {
+    message_info.from_intra_process = false;
+    subscription->handle_message(message, message_info);
+  } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
-      subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
+      subscription->get_topic_name().c_str(), rcl_get_error_string_safe());
   }
   subscription->return_message(message);
 }
@@ -258,22 +255,19 @@ Executor::execute_intra_process_subscription(
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
 {
   rcl_interfaces::msg::IntraProcessMessage ipm;
-  bool taken = false;
   rmw_message_info_t message_info;
-  rmw_ret_t status = rmw_take_with_info(
+  rcl_ret_t status = rcl_take(
     subscription->get_intra_process_subscription_handle(),
     &ipm,
-    &taken,
     &message_info);
-  if (status == RMW_RET_OK) {
-    if (taken) {
-      message_info.from_intra_process = true;
-      subscription->handle_intra_process_message(ipm, message_info);
-    }
-  } else {
+
+  if (status == RCL_RET_OK) {
+    message_info.from_intra_process = true;
+    subscription->handle_intra_process_message(ipm, message_info);
+  } else if (status != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take failed for intra process subscription on topic '%s': %s\n",
-      subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
+      subscription->get_topic_name().c_str(), rcl_get_error_string_safe());
   }
 }
 

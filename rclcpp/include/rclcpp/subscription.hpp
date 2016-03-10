@@ -1,5 +1,4 @@
 // Copyright 2014 Open Source Robotics Foundation, Inc.
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,6 +22,9 @@
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include <rcl/error_handling.h>
+#include <rcl/subscription.h>
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
@@ -51,14 +53,14 @@ public:
 
   /// Default constructor.
   /**
-   * \param[in] node_handle The rmw representation of the node that owns this subscription.
+   * \param[in] node_handle The rcl representation of the node that owns this subscription.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] ignore_local_publications True to ignore local publications (unused).
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_subscription_t * subscription_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications);
 
@@ -72,11 +74,11 @@ public:
   get_topic_name() const;
 
   RCLCPP_PUBLIC
-  const rmw_subscription_t *
+  const rcl_subscription_t *
   get_subscription_handle() const;
 
   RCLCPP_PUBLIC
-  const rmw_subscription_t *
+  const rcl_subscription_t *
   get_intra_process_subscription_handle() const;
 
   /// Borrow a new message.
@@ -101,14 +103,14 @@ public:
     const rmw_message_info_t & message_info) = 0;
 
 protected:
-  rmw_subscription_t * intra_process_subscription_handle_;
+  rcl_subscription_t * intra_process_subscription_handle_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase);
 
-  std::shared_ptr<rmw_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
-  rmw_subscription_t * subscription_handle_;
+  rcl_subscription_t * subscription_handle_;
 
   std::string topic_name_;
   bool ignore_local_publications_;
@@ -134,15 +136,15 @@ public:
   /**
    * The constructor for a subscription is almost never called directly. Instead, subscriptions
    * should be instantiated through Node::create_subscription.
-   * \param[in] node_handle rmw representation of the node that owns this subscription.
+   * \param[in] node_handle rcl representation of the node that owns this subscription.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] ignore_local_publications True to ignore local publications (unused).
    * \param[in] callback User-defined callback to call when a message is received.
    * \param[in] memory_strategy The memory strategy to be used for managing message memory.
    */
   Subscription(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_subscription_t * subscription_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications,
     AnySubscriptionCallback<MessageT, Alloc> callback,
@@ -231,7 +233,7 @@ private:
 
   void setup_intra_process(
     uint64_t intra_process_subscription_id,
-    rmw_subscription_t * intra_process_subscription,
+    rcl_subscription_t * intra_process_subscription,
     GetMessageCallbackType get_message_callback,
     MatchesAnyPublishersCallbackType matches_any_publisher_callback)
   {

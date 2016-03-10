@@ -68,25 +68,25 @@ Node::Node(
 #endif
   }
 
-  auto node = rmw_create_node(name_.c_str(), domain_id);
-  if (!node) {
-    // *INDENT-OFF*
+  rcl_node_t node = rcl_get_zero_initialized_node();
+  rcl_node_options_t options;
+  // TODO(jacquelinekay): Allocator options
+  options.domaind_id = domain_id;
+  if (rcl_node_init(&node, name_.c_str(), &options) != RCL_RET_OK) {
     if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
       fprintf(
         stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
     }
-    throw std::runtime_error(
-      std::string("could not create node: ") +
-      rmw_get_error_string_safe());
-    // *INDENT-ON*
+    throw std::runtime_error("Could not initialize rcl node");
   }
+
   // Initialize node handle shared_ptr with custom deleter.
   // *INDENT-OFF*
-  node_handle_.reset(node, [](rmw_node_t * node) {
-    auto ret = rmw_destroy_node(node);
+  node_handle_.reset(&node, [](rcl_node_t * node) {
+    auto ret = rcl_fini_node(node);
     if (ret != RMW_RET_OK) {
       fprintf(
-        stderr, "Error in destruction of rmw node handle: %s\n", rmw_get_error_string_safe());
+        stderr, "Error in destruction of rmw node handle: %s\n", rcl_get_error_string_safe());
     }
   });
   // *INDENT-ON*
@@ -297,7 +297,8 @@ Node::get_topic_names_and_types() const
   topic_names_and_types.topic_names = nullptr;
   topic_names_and_types.type_names = nullptr;
 
-  auto ret = rmw_get_topic_names_and_types(node_handle_.get(), &topic_names_and_types);
+  auto ret = rmw_get_topic_names_and_types(rcl_node_get_rmw_handle(node_handle_.get()),
+    &topic_names_and_types);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
@@ -325,7 +326,8 @@ size_t
 Node::count_publishers(const std::string & topic_name) const
 {
   size_t count;
-  auto ret = rmw_count_publishers(node_handle_.get(), topic_name.c_str(), &count);
+  auto ret = rmw_count_publishers(rcl_node_get_rmw_handle(node_handle_.get()),
+    topic_name.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
@@ -339,7 +341,8 @@ size_t
 Node::count_subscribers(const std::string & topic_name) const
 {
   size_t count;
-  auto ret = rmw_count_subscribers(node_handle_.get(), topic_name.c_str(), &count);
+  auto ret = rmw_count_subscribers(rcl_node_get_rmw_handle(node_handle_.get()),
+    topic_name.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(

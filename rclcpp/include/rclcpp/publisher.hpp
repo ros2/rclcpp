@@ -24,6 +24,9 @@
 #include <sstream>
 #include <string>
 
+#include <rcl/error_handling.h>
+#include <rcl/publisher.h>
+
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 #include "rmw/impl/cpp/demangle.hpp"
 
@@ -59,8 +62,8 @@ public:
    */
   RCLCPP_PUBLIC
   PublisherBase(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_publisher_t * publisher_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_publisher_t * publisher_handle,
     std::string topic,
     size_t queue_size);
 
@@ -120,12 +123,12 @@ protected:
   setup_intra_process(
     uint64_t intra_process_publisher_id,
     StoreMessageCallbackT callback,
-    rmw_publisher_t * intra_process_publisher_handle);
+    rcl_publisher_t * intra_process_publisher_handle);
 
-  std::shared_ptr<rmw_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
-  rmw_publisher_t * publisher_handle_;
-  rmw_publisher_t * intra_process_publisher_handle_;
+  rcl_publisher_t * publisher_handle_;
+  rcl_publisher_t * intra_process_publisher_handle_;
 
   std::string topic_;
   size_t queue_size_;
@@ -152,8 +155,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>);
 
   Publisher(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_publisher_t * publisher_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_publisher_t * publisher_handle,
     std::string topic,
     size_t queue_size,
     std::shared_ptr<Alloc> allocator)
@@ -188,11 +191,11 @@ public:
       rcl_interfaces::msg::IntraProcessMessage ipm;
       ipm.publisher_id = intra_process_publisher_id_;
       ipm.message_sequence = message_seq;
-      auto status = rmw_publish(intra_process_publisher_handle_, &ipm);
-      if (status != RMW_RET_OK) {
+      auto status = rcl_publish(intra_process_publisher_handle_, &ipm);
+      if (status != RCL_RET_OK) {
         // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
         throw std::runtime_error(
-          std::string("failed to publish intra process message: ") + rmw_get_error_string_safe());
+          std::string("failed to publish intra process message: ") + rcl_get_error_string_safe());
         // *INDENT-ON*
       }
     } else {
@@ -263,11 +266,11 @@ protected:
   void
   do_inter_process_publish(const MessageT * msg)
   {
-    auto status = rmw_publish(publisher_handle_, msg);
-    if (status != RMW_RET_OK) {
+    auto status = rcl_publish(publisher_handle_, msg);
+    if (status != RCL_RET_OK) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
-        std::string("failed to publish message: ") + rmw_get_error_string_safe());
+        std::string("failed to publish message: ") + rcl_get_error_string_safe());
       // *INDENT-ON*
     }
   }

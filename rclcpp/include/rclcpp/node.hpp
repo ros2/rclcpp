@@ -22,6 +22,9 @@
 #include <tuple>
 #include <vector>
 
+#include <rcl/error_handling.h>
+#include <rcl/node.h>
+
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
@@ -39,11 +42,10 @@
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-// Forward declaration of ROS middleware class
-namespace rmw
+namespace rcl
 {
-struct rmw_node_t;
-}  // namespace rmw
+struct rcl_node_t;
+}  // namespace rcl
 
 namespace rclcpp
 {
@@ -269,7 +271,8 @@ private:
 
   std::string name_;
 
-  std::shared_ptr<rmw_node_t> node_handle_;
+  //std::shared_ptr<rmw_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
   rclcpp::context::Context::SharedPtr context_;
 

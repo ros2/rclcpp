@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(rclcpp)
 
 find_package(ament_cmake REQUIRED)
+find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
@@ -45,6 +46,7 @@ macro(target)
   add_library(${PROJECT_NAME}${target_suffix} SHARED
     ${${PROJECT_NAME}_SRCS})
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
+    "rcl"
     "rcl_interfaces"
     "rmw"
     "rosidl_generator_cpp"
