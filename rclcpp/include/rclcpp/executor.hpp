@@ -307,7 +307,7 @@ protected:
   std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  rmw_guard_condition_t * interrupt_guard_condition_;
+  rcl_guard_condition_t * interrupt_guard_condition_;
 
   /// Waitset for managing entities that the rmw layer waits on.
   rmw_waitset_t * waitset_;

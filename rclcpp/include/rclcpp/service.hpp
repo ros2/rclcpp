@@ -21,6 +21,7 @@
 #include <sstream>
 #include <string>
 
+#include <rcl/error_handling.h>
 #include <rcl/service.h>
 
 #include "rclcpp/any_service_callback.hpp"
@@ -53,7 +54,7 @@ public:
   get_service_name();
 
   RCLCPP_PUBLIC
-  const rmw_service_t *
+  const rcl_service_t *
   get_service_handle();
 
   virtual std::shared_ptr<void> create_request() = 0;

@@ -23,6 +23,7 @@
 #include <tuple>
 #include <utility>
 
+#include <rcl/error_handling.h>
 #include <rcl/client.h>
 
 #include "rclcpp/function_traits.hpp"
@@ -149,12 +150,12 @@ public:
   >
   SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
   {
-    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
-    if (RMW_RET_OK != rmw_send_request(get_client_handle(), request.get(), &sequence_number)) {
+    std::lock_guard<std::mutex> lock(pending_requests_mutex_);
+    if (RMW_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
-        std::string("failed to send request: ") + rmw_get_error_string_safe());
+        std::string("failed to send request: ") + rcl_get_error_string_safe());
       // *INDENT-ON*
     }
 

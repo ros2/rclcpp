@@ -284,20 +284,18 @@ Executor::execute_service(
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
-  bool taken = false;
-  rmw_ret_t status = rmw_take_request(
+  rcl_ret_t status = rcl_take_request(
     service->get_service_handle(),
     request_header.get(),
-    request.get(),
-    &taken);
-  if (status == RMW_RET_OK) {
-    if (taken) {
+    request.get());
+  if (status != RCL_RET_SERVICE_TAKE_FAILED) {
+    if (status == RMW_RET_OK) {
       service->handle_request(request_header, request);
+    } else {
+      fprintf(stderr,
+        "[rclcpp::error] take request failed for server of service '%s': %s\n",
+        service->get_service_name().c_str(), rcl_get_error_string_safe());
     }
-  } else {
-    fprintf(stderr,
-      "[rclcpp::error] take request failed for server of service '%s': %s\n",
-      service->get_service_name().c_str(), rmw_get_error_string_safe());
   }
 }
 
@@ -307,20 +305,18 @@ Executor::execute_client(
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
-  bool taken = false;
-  rmw_ret_t status = rmw_take_response(
+  rcl_ret_t status = rcl_take_response(
     client->get_client_handle(),
     request_header.get(),
-    response.get(),
-    &taken);
-  if (status == RMW_RET_OK) {
-    if (taken) {
+    response.get());
+  if (status != RCL_RET_SERVICE_TAKE_FAILED) {
+    if (status == RMW_RET_OK) {
       client->handle_response(request_header, response);
+    } else {
+      fprintf(stderr,
+        "[rclcpp::error] take response failed for client of service '%s': %s\n",
+        client->get_service_name().c_str(), rcl_get_error_string_safe());
     }
-  } else {
-    fprintf(stderr,
-      "[rclcpp::error] take response failed for client of service '%s': %s\n",
-      client->get_service_name().c_str(), rmw_get_error_string_safe());
   }
 }
 
