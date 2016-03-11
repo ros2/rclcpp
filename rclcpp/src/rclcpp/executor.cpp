@@ -30,8 +30,10 @@ Executor::Executor(const ExecutorArgs & args)
 : spinning(false),
   memory_strategy_(args.memory_strategy)
 {
-  interrupt_guard_condition_ = rmw_create_guard_condition();
-  if (!interrupt_guard_condition_) {
+  rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
+  if (rcl_guard_condition_init(
+    &interrupt_guard_condition_, &guard_condition_options) != RCL_RET_OK)
+  {
     throw std::runtime_error("Failed to create interrupt guard condition in Executor constructor");
   }
 
@@ -44,13 +46,12 @@ Executor::Executor(const ExecutorArgs & args)
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(interrupt_guard_condition_);
 
-  waitset_ = rmw_create_waitset(args.max_conditions);
-
-  if (!waitset_) {
+  if (rcl_wait_set_init(
+    &waitset_, &fixed_guard_conditions, 0, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
+  {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rmw_get_error_string_safe());
-    rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
-    if (status != RMW_RET_OK) {
+    if (rcl_guard_condition_fini(interrupt_guard_condition_) != RCL_RET_OK) {
       fprintf(stderr,
         "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
     }
@@ -60,21 +61,15 @@ Executor::Executor(const ExecutorArgs & args)
 
 Executor::~Executor()
 {
-  // Try to deallocate the waitset.
-  if (waitset_) {
-    rmw_ret_t status = rmw_destroy_waitset(waitset_);
-    if (status != RMW_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy waitset: %s\n", rmw_get_error_string_safe());
-    }
+  // Finalize the waitset.
+  if (rcl_waitset_fini(&waitset_) != RMW_RET_OK) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to destroy waitset: %s\n", rcl_get_error_string_safe());
   }
-  // Try to deallocate the interrupt guard condition.
-  if (interrupt_guard_condition_ != nullptr) {
-    rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
-    if (status != RMW_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
-    }
+  // Finalize the interrupt guard condition.
+  if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
   }
 }
 
@@ -96,9 +91,8 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   weak_nodes_.push_back(node_ptr);
   if (notify) {
     // Interrupt waiting to handle new node
-    rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-    if (status != RMW_RET_OK) {
-      throw std::runtime_error(rmw_get_error_string_safe());
+    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RMW_RET_OK) {
+      throw std::runtime_error(rcl_get_error_string_safe());
     }
   }
   // Add the node's notify condition to the guard condition handles
@@ -126,9 +120,8 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
-      rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-      if (status != RMW_RET_OK) {
-        throw std::runtime_error(rmw_get_error_string_safe());
+      if (rcl_trigger_guard_condition(&interrupt_guard_condition_)!= RCL_RET_OK) {
+        throw std::runtime_error(rcl_get_error_string_safe());
       }
     }
   }
@@ -184,9 +177,8 @@ void
 Executor::cancel()
 {
   spinning.store(false);
-  rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-  if (status != RMW_RET_OK) {
-    throw std::runtime_error(rmw_get_error_string_safe());
+  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+    throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
 
@@ -224,9 +216,8 @@ Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
   any_exec->callback_group->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-  if (status != RMW_RET_OK) {
-    throw std::runtime_error(rmw_get_error_string_safe());
+  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+    throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
 
@@ -320,6 +311,18 @@ Executor::execute_client(
   }
 }
 
+/* 
+basic outline
+get ready entities
+
+For all the entities, check the size of the rcl wait_set array and resize if necessary
+Add the entities to the wait_set
+rcl_wait
+check ready subscriptions
+clear subscriptions
+
+memory strategy is the worst!!! :(
+*/
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {

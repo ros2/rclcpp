@@ -25,6 +25,9 @@
 #include <string>
 #include <vector>
 
+#include "rcl/guard_condition.h"
+#include "rcl/wait.h"
+
 #include "rclcpp/any_executable.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -306,11 +309,14 @@ protected:
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
+  // array of fixed guard conditions
+  rcl_guard_condition_t * fixed_guard_conditions_;
+
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  rcl_guard_condition_t * interrupt_guard_condition_;
+  rcl_guard_condition_t interrupt_guard_condition_;
 
   /// Waitset for managing entities that the rmw layer waits on.
-  rmw_waitset_t * waitset_;
+  rcl_wait_set_t waitset_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
