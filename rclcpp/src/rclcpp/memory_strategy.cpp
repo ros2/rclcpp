@@ -18,7 +18,7 @@ using rclcpp::memory_strategy::MemoryStrategy;
 
 rclcpp::subscription::SubscriptionBase::SharedPtr
 MemoryStrategy::get_subscription_by_handle(
-  void * subscriber_handle, const WeakNodeVector & weak_nodes)
+  rcl_subscription_t * subscriber_handle, const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -33,11 +33,10 @@ MemoryStrategy::get_subscription_by_handle(
       for (auto & weak_subscription : group->get_subscription_ptrs()) {
         auto subscription = weak_subscription.lock();
         if (subscription) {
-          if (subscription->get_subscription_handle()->data == subscriber_handle) {
+          if (subscription->get_subscription_handle() == subscriber_handle) {
             return subscription;
           }
-          if (subscription->get_intra_process_subscription_handle() &&
-            subscription->get_intra_process_subscription_handle()->data == subscriber_handle)
+          if (subscription->get_intra_process_subscription_handle() == subscriber_handle)
           {
             return subscription;
           }
@@ -49,7 +48,7 @@ MemoryStrategy::get_subscription_by_handle(
 }
 
 rclcpp::service::ServiceBase::SharedPtr
-MemoryStrategy::get_service_by_handle(void * service_handle, const WeakNodeVector & weak_nodes)
+MemoryStrategy::get_service_by_handle(rcl_service_t * service_handle, const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -62,7 +61,7 @@ MemoryStrategy::get_service_by_handle(void * service_handle, const WeakNodeVecto
         continue;
       }
       for (auto & service : group->get_service_ptrs()) {
-        if (service->get_service_handle()->data == service_handle) {
+        if (service->get_service_handle() == service_handle) {
           return service;
         }
       }
@@ -72,7 +71,7 @@ MemoryStrategy::get_service_by_handle(void * service_handle, const WeakNodeVecto
 }
 
 rclcpp::client::ClientBase::SharedPtr
-MemoryStrategy::get_client_by_handle(void * client_handle, const WeakNodeVector & weak_nodes)
+MemoryStrategy::get_client_by_handle(rcl_client_t * client_handle, const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -86,7 +85,7 @@ MemoryStrategy::get_client_by_handle(void * client_handle, const WeakNodeVector 
       }
       for (auto & weak_client : group->get_client_ptrs()) {
         auto client = weak_client.lock();
-        if (client && client->get_client_handle()->data == client_handle) {
+        if (client && client->get_client_handle() == client_handle) {
           return client;
         }
       }

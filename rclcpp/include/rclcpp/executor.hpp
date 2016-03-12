@@ -310,7 +310,7 @@ protected:
   std::atomic_bool spinning;
 
   // array of fixed guard conditions
-  rcl_guard_condition_t * fixed_guard_conditions_;
+  std::array<rcl_guard_condition_t *, 2> fixed_guard_conditions_;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rcl_guard_condition_t interrupt_guard_condition_;

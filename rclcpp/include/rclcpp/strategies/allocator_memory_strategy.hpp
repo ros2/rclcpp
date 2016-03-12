@@ -84,16 +84,17 @@ public:
     }
   }
 
+/*
   size_t fill_subscriber_handles(void ** & ptr)
   {
     for (auto & subscription : subscriptions_) {
-      subscriber_handles_.push_back(subscription->get_subscription_handle()->data);
+      subscription_handles_.push_back(subscription->get_subscription_handle()->data);
       if (subscription->get_intra_process_subscription_handle()) {
-        subscriber_handles_.push_back(subscription->get_intra_process_subscription_handle()->data);
+        subscription_handles_.push_back(subscription->get_intra_process_subscription_handle()->data);
       }
     }
-    ptr = subscriber_handles_.data();
-    return subscriber_handles_.size();
+    ptr = subscription_handles_.data();
+    return subscription_handles_.size();
   }
 
   // return the new number of services
@@ -136,7 +137,7 @@ public:
 
   void clear_handles()
   {
-    subscriber_handles_.clear();
+    subscription_handles_.clear();
     service_handles_.clear();
     client_handles_.clear();
     guard_condition_handles_.clear();
@@ -144,9 +145,9 @@ public:
 
   void remove_null_handles()
   {
-    subscriber_handles_.erase(
-      std::remove(subscriber_handles_.begin(), subscriber_handles_.end(), nullptr),
-      subscriber_handles_.end()
+    subscription_handles_.erase(
+      std::remove(subscription_handles_.begin(), subscription_handles_.end(), nullptr),
+      subscription_handles_.end()
     );
 
     service_handles_.erase(
@@ -164,6 +165,7 @@ public:
       guard_condition_handles_.end()
     );
   }
+*/
 
   bool collect_entities(const WeakNodeVector & weak_nodes)
   {
@@ -182,25 +184,36 @@ public:
         for (auto & weak_subscription : group->get_subscription_ptrs()) {
           auto subscription = weak_subscription.lock();
           if (subscription) {
-            subscriptions_.push_back(subscription);
+            subscription_handles_.push_back(subscription->get_subscription_handle());
           }
         }
         for (auto & service : group->get_service_ptrs()) {
           if (service) {
-            services_.push_back(service);
+            service_handles_.push_back(service->get_service_handle());
           }
         }
         for (auto & weak_client : group->get_client_ptrs()) {
           auto client = weak_client.lock();
           if (client) {
-            clients_.push_back(client);
+            client_handles_.push_back(client->get_client_handle());
           }
         }
+        // TODO: Add timers
       }
     }
     return has_invalid_weak_nodes;
   }
 
+  bool add_handles_to_waitset(rcl_wait_set_t * wait_set) {
+    for (auto subscription : subscription_handles_) {
+      if (rcl_wait_set_add_subscription(wait_set, subscription) != RCL_RET_OK) {
+        return false;
+      }
+    }
+
+    // TODO: etc.
+    return true;
+  }
 
   /// Provide a newly initialized AnyExecutable object.
   // \return Shared pointer to the fresh executable.
@@ -213,21 +226,22 @@ public:
   get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
-    auto it = subscriber_handles_.begin();
-    while (it != subscriber_handles_.end()) {
+    // TODO hmMMmmm we need to redo this whole API
+    auto it = subscription_handles_.begin();
+    while (it != subscription_handles_.end()) {
       auto subscription = get_subscription_by_handle(*it, weak_nodes);
       if (subscription) {
         // Figure out if this is for intra-process or not.
         bool is_intra_process = false;
         if (subscription->get_intra_process_subscription_handle()) {
-          is_intra_process = subscription->get_intra_process_subscription_handle()->data == *it;
+          is_intra_process = subscription->get_intra_process_subscription_handle() == *it;
         }
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_subscription(subscription, weak_nodes);
         if (!group) {
           // Group was not found, meaning the subscription is not valid...
           // Remove it from the ready list and continue looking
-          subscriber_handles_.erase(it);
+          subscription_handles_.erase(it);
           continue;
         }
         if (!group->can_be_taken_from().load()) {
@@ -244,11 +258,11 @@ public:
         }
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group, weak_nodes);
-        subscriber_handles_.erase(it);
+        subscription_handles_.erase(it);
         return;
       }
       // Else, the subscription is no longer valid, remove it and continue
-      subscriber_handles_.erase(it);
+      subscription_handles_.erase(it);
     }
   }
 
@@ -319,20 +333,25 @@ public:
     }
   }
 
+  size_t number_of_ready_subscriptions() const {
+    return subscription_handles_.size();
+  }
+
 private:
   template<typename T>
   using VectorRebind =
       std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 
+/*
   VectorRebind<rclcpp::subscription::SubscriptionBase::SharedPtr> subscriptions_;
   VectorRebind<rclcpp::service::ServiceBase::SharedPtr> services_;
   VectorRebind<rclcpp::client::ClientBase::SharedPtr> clients_;
   VectorRebind<const rmw_guard_condition_t *> guard_conditions_;
+*/
 
-  VectorRebind<void *> subscriber_handles_;
-  VectorRebind<void *> service_handles_;
-  VectorRebind<void *> client_handles_;
-  VectorRebind<void *> guard_condition_handles_;
+  VectorRebind<rcl_subscription_t *> subscription_handles_;
+  VectorRebind<rcl_service_t *> service_handles_;
+  VectorRebind<rcl_client_t *> client_handles_;
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;

@@ -18,6 +18,8 @@
 #include <memory>
 #include <vector>
 
+#include <rcl/wait.h>
+
 #include "rclcpp/any_executable.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
@@ -40,6 +42,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy);
   using WeakNodeVector = std::vector<std::weak_ptr<rclcpp::node::Node>>;
 
+/*
   // return the new number of subscribers
   virtual size_t fill_subscriber_handles(void ** & ptr) = 0;
 
@@ -56,7 +59,12 @@ public:
 
   virtual void clear_handles() = 0;
   virtual void remove_null_handles() = 0;
+*/
   virtual bool collect_entities(const WeakNodeVector & weak_nodes) = 0;
+
+  virtual size_t number_of_ready_subscriptions() const;
+
+  virtual bool add_handles_to_waitset(rcl_wait_set_t * wait_set);
 
   /// Provide a newly initialized AnyExecutable object.
   // \return Shared pointer to the fresh executable.
@@ -79,14 +87,14 @@ public:
     const WeakNodeVector & weak_nodes) = 0;
 
   static rclcpp::subscription::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(void * subscriber_handle,
+  get_subscription_by_handle(rcl_subscription_t * subscriber_handle,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::service::ServiceBase::SharedPtr
-  get_service_by_handle(void * service_handle, const WeakNodeVector & weak_nodes);
+  get_service_by_handle(rcl_service_t * service_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::client::ClientBase::SharedPtr
-  get_client_by_handle(void * client_handle, const WeakNodeVector & weak_nodes);
+  get_client_by_handle(rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::node::Node::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,

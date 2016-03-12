@@ -32,14 +32,18 @@ Executor::Executor(const ExecutorArgs & args)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   if (rcl_guard_condition_init(
-    &interrupt_guard_condition_, &guard_condition_options) != RCL_RET_OK)
+    &interrupt_guard_condition_, guard_condition_options) != RCL_RET_OK)
   {
     throw std::runtime_error("Failed to create interrupt guard condition in Executor constructor");
   }
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
-  // The size of guard conditions is variable because the number of nodes can vary
+
+  // These guard conditions are permanently attached to the waitset.
+  // const size_t number_of_guard_conds = 2;
+  //fixed_guard_conditions_.guard_condition_count = number_of_guard_conds;
+  //fixed_guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
 
   // Put the global ctrl-c guard condition in
   memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
@@ -47,11 +51,11 @@ Executor::Executor(const ExecutorArgs & args)
   memory_strategy_->add_guard_condition(interrupt_guard_condition_);
 
   if (rcl_wait_set_init(
-    &waitset_, &fixed_guard_conditions, 0, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
+    &waitset_, &(fixed_guard_conditions_.data()), 0, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
   {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rmw_get_error_string_safe());
-    if (rcl_guard_condition_fini(interrupt_guard_condition_) != RCL_RET_OK) {
+    if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
       fprintf(stderr,
         "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
     }
@@ -62,7 +66,7 @@ Executor::Executor(const ExecutorArgs & args)
 Executor::~Executor()
 {
   // Finalize the waitset.
-  if (rcl_waitset_fini(&waitset_) != RMW_RET_OK) {
+  if (rcl_wait_set_fini(&waitset_) != RMW_RET_OK) {
     fprintf(stderr,
       "[rclcpp::error] failed to destroy waitset: %s\n", rcl_get_error_string_safe());
   }
@@ -91,7 +95,7 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   weak_nodes_.push_back(node_ptr);
   if (notify) {
     // Interrupt waiting to handle new node
-    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RMW_RET_OK) {
+    if (rcl_guard_condition_trigger(&interrupt_guard_condition_) != RMW_RET_OK) {
       throw std::runtime_error(rcl_get_error_string_safe());
     }
   }
@@ -120,7 +124,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
-      if (rcl_trigger_guard_condition(&interrupt_guard_condition_)!= RCL_RET_OK) {
+      if (rcl_guard_condition_trigger(&interrupt_guard_condition_)!= RCL_RET_OK) {
         throw std::runtime_error(rcl_get_error_string_safe());
       }
     }
@@ -177,7 +181,7 @@ void
 Executor::cancel()
 {
   spinning.store(false);
-  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+  if (rcl_guard_condition_trigger(&interrupt_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
@@ -216,7 +220,7 @@ Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
   any_exec->callback_group->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+  if (rcl_guard_condition_trigger(&interrupt_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
@@ -326,7 +330,7 @@ memory strategy is the worst!!! :(
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
-  memory_strategy_->clear_active_entities();
+  //memory_strategy_->clear_active_entities();
 
   // Collect the subscriptions and timers to be waited on
   bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
@@ -347,7 +351,24 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   }
 
   memory_strategy_->clear_handles();
+  if (waitset_.size_of_subscriptions < memory_strategy_->number_of_ready_subscriptions()) {
+    rcl_wait_set_resize_subscriptions(
+      &waitset_, memory_strategy_->number_of_ready_subscriptions());
+  }
+  // TODO etc...
+
+  // for all ready subscriptions:
+  // rcl_wait_set_add_subscription(&waitset_, ready_subscription);
+  // etc...
+
+  rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
+  if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT && status != RCL_RET_WAIT_SET_EMPTY) {
+    throw std::runtime_error(rcl_get_error_string_safe());
+  }
+
   // Use the number of subscriptions to allocate memory in the handles
+  // TODO We need to add timers to the waitset now I guess!!
+/*
   rmw_subscriptions_t subscriber_handles;
   subscriber_handles.subscriber_count =
     memory_strategy_->fill_subscriber_handles(subscriber_handles.subscribers);
@@ -399,8 +420,10 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
     throw std::runtime_error(rmw_get_error_string_safe());
   }
+*/
 
-  memory_strategy_->remove_null_handles();
+  // eh? I think rcl_wait_set does this for us!
+  // memory_strategy_->remove_null_handles();
 }
 
 rclcpp::node::Node::SharedPtr
