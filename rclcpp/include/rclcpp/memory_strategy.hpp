@@ -62,9 +62,9 @@ public:
 */
   virtual bool collect_entities(const WeakNodeVector & weak_nodes) = 0;
 
-  virtual size_t number_of_ready_subscriptions() const;
+  virtual size_t number_of_ready_subscriptions() const = 0;
 
-  virtual bool add_handles_to_waitset(rcl_wait_set_t * wait_set);
+  virtual bool add_handles_to_waitset(rcl_wait_set_t * wait_set) = 0;
 
   /// Provide a newly initialized AnyExecutable object.
   // \return Shared pointer to the fresh executable.
@@ -87,14 +87,14 @@ public:
     const WeakNodeVector & weak_nodes) = 0;
 
   static rclcpp::subscription::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(rcl_subscription_t * subscriber_handle,
+  get_subscription_by_handle(const rcl_subscription_t * subscriber_handle,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::service::ServiceBase::SharedPtr
-  get_service_by_handle(rcl_service_t * service_handle, const WeakNodeVector & weak_nodes);
+  get_service_by_handle(const rcl_service_t * service_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::client::ClientBase::SharedPtr
-  get_client_by_handle(rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
+  get_client_by_handle(const rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::node::Node::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,

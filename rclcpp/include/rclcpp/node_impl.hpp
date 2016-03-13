@@ -335,9 +335,12 @@ Node::create_client(
   auto service_type_support_handle =
     get_service_type_support_handle<ServiceT>();
 
-  rmw_client_t * client_handle = rmw_create_client(
-    rcl_node_get_rmw_handle(this->node_handle_.get()),
-    service_type_support_handle, service_name.c_str(), &qos_profile);
+  rcl_client_t * client_handle = new rcl_client_t;
+
+  rcl_client_options_t options = rcl_client_get_default_options();
+  options.qos = qos_profile;
+  rcl_client_init(client_handle, this->node_handle_.get(),
+    service_type_support_handle, service_name.c_str(), &options);
   if (!client_handle) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(

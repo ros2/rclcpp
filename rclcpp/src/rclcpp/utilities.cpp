@@ -22,6 +22,9 @@
 #include <mutex>
 #include <string>
 
+#include "rcl/error_handling.h"
+#include "rcl/rcl.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -33,7 +36,7 @@
 /// Represent the status of the global interrupt signal.
 static volatile sig_atomic_t g_signal_status = 0;
 /// Guard condition for interrupting the rmw implementation when the global interrupt signal fired.
-static rmw_guard_condition_t * g_sigint_guard_cond_handle = rmw_create_guard_condition();
+static rcl_guard_condition_t g_sigint_guard_cond_handle = rcl_get_zero_initialized_guard_condition();
 /// Condition variable for timed sleep (see sleep_for).
 static std::condition_variable g_interrupt_condition_variable;
 static std::atomic<bool> g_is_interrupted(false);
@@ -77,10 +80,10 @@ signal_handler(int signal_value)
   }
 #endif
   g_signal_status = signal_value;
-  rmw_ret_t status = rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
-  if (status != RMW_RET_OK) {
+  rcl_ret_t status = rcl_trigger_guard_condition(&g_sigint_guard_cond_handle);
+  if (status != RCL_RET_OK) {
     fprintf(stderr,
-      "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
+      "[rclcpp::error] failed to trigger guard condition: %s\n", rcl_get_error_string_safe());
   }
   g_is_interrupted.store(true);
   g_interrupt_condition_variable.notify_all();
@@ -89,14 +92,11 @@ signal_handler(int signal_value)
 void
 rclcpp::utilities::init(int argc, char * argv[])
 {
-  (void)argc;
-  (void)argv;
   g_is_interrupted.store(false);
-  rmw_ret_t status = rmw_init();
-  if (status != RMW_RET_OK) {
+  if (rcl_init(argc, argv, rcl_get_default_allocator()) != RCL_RET_OK) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
-      std::string("failed to initialize rmw implementation: ") + rmw_get_error_string_safe());
+      std::string("failed to initialize rmw implementation: ") + rcl_get_error_string_safe());
     // *INDENT-ON*
   }
 #ifdef HAS_SIGACTION
@@ -138,6 +138,8 @@ rclcpp::utilities::init(int argc, char * argv[])
       error_string);
     // *INDENT-ON*
   }
+  rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
+  rcl_guard_condition_init(&g_sigint_guard_cond_handle, options);
 }
 
 bool
@@ -150,8 +152,7 @@ void
 rclcpp::utilities::shutdown()
 {
   g_signal_status = SIGINT;
-  rmw_ret_t status = rmw_trigger_guard_condition(g_sigint_guard_cond_handle);
-  if (status != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&g_sigint_guard_cond_handle) != RMW_RET_OK) {
     fprintf(stderr,
       "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
   }
@@ -159,10 +160,10 @@ rclcpp::utilities::shutdown()
   g_interrupt_condition_variable.notify_all();
 }
 
-rmw_guard_condition_t *
+rcl_guard_condition_t *
 rclcpp::utilities::get_global_sigint_guard_condition()
 {
-  return ::g_sigint_guard_cond_handle;
+  return &::g_sigint_guard_cond_handle;
 }
 
 bool

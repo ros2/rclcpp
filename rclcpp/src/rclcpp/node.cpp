@@ -71,7 +71,7 @@ Node::Node(
   rcl_node_t node = rcl_get_zero_initialized_node();
   rcl_node_options_t options;
   // TODO(jacquelinekay): Allocator options
-  options.domaind_id = domain_id;
+  options.domain_id = domain_id;
   if (rcl_node_init(&node, name_.c_str(), &options) != RCL_RET_OK) {
     if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
       fprintf(
@@ -83,7 +83,7 @@ Node::Node(
   // Initialize node handle shared_ptr with custom deleter.
   // *INDENT-OFF*
   node_handle_.reset(&node, [](rcl_node_t * node) {
-    auto ret = rcl_fini_node(node);
+    auto ret = rcl_node_fini(node);
     if (ret != RMW_RET_OK) {
       fprintf(
         stderr, "Error in destruction of rmw node handle: %s\n", rcl_get_error_string_safe());

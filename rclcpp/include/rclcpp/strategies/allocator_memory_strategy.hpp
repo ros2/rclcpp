@@ -349,9 +349,9 @@ private:
   VectorRebind<const rmw_guard_condition_t *> guard_conditions_;
 */
 
-  VectorRebind<rcl_subscription_t *> subscription_handles_;
-  VectorRebind<rcl_service_t *> service_handles_;
-  VectorRebind<rcl_client_t *> client_handles_;
+  VectorRebind<const rcl_subscription_t *> subscription_handles_;
+  VectorRebind<const rcl_service_t *> service_handles_;
+  VectorRebind<const rcl_client_t *> client_handles_;
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;

@@ -47,11 +47,12 @@ Executor::Executor(const ExecutorArgs & args)
 
   // Put the global ctrl-c guard condition in
   memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
+
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(interrupt_guard_condition_);
 
   if (rcl_wait_set_init(
-    &waitset_, &(fixed_guard_conditions_.data()), 0, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
+    &waitset_, fixed_guard_conditions_.data(), 0, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
   {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rmw_get_error_string_safe());
@@ -95,7 +96,7 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   weak_nodes_.push_back(node_ptr);
   if (notify) {
     // Interrupt waiting to handle new node
-    if (rcl_guard_condition_trigger(&interrupt_guard_condition_) != RMW_RET_OK) {
+    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RMW_RET_OK) {
       throw std::runtime_error(rcl_get_error_string_safe());
     }
   }
@@ -124,7 +125,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
-      if (rcl_guard_condition_trigger(&interrupt_guard_condition_)!= RCL_RET_OK) {
+      if (rcl_trigger_guard_condition(&interrupt_guard_condition_)!= RCL_RET_OK) {
         throw std::runtime_error(rcl_get_error_string_safe());
       }
     }
@@ -181,7 +182,7 @@ void
 Executor::cancel()
 {
   spinning.store(false);
-  if (rcl_guard_condition_trigger(&interrupt_guard_condition_) != RCL_RET_OK) {
+  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
@@ -220,7 +221,7 @@ Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
   any_exec->callback_group->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  if (rcl_guard_condition_trigger(&interrupt_guard_condition_) != RCL_RET_OK) {
+  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
