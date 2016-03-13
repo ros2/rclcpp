@@ -198,7 +198,6 @@ public:
             client_handles_.push_back(client->get_client_handle());
           }
         }
-        // TODO: Add timers
       }
     }
     return has_invalid_weak_nodes;
@@ -211,7 +210,17 @@ public:
       }
     }
 
-    // TODO: etc.
+    for (auto client : client_handles_) {
+      if (rcl_wait_set_add_client(wait_set, client) != RCL_RET_OK) {
+        return false;
+      }
+    }
+
+    for (auto service : service_handles_) {
+      if (rcl_wait_set_add_service(wait_set, service) != RCL_RET_OK) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -226,7 +235,6 @@ public:
   get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
-    // TODO hmMMmmm we need to redo this whole API
     auto it = subscription_handles_.begin();
     while (it != subscription_handles_.end()) {
       auto subscription = get_subscription_by_handle(*it, weak_nodes);
@@ -337,17 +345,20 @@ public:
     return subscription_handles_.size();
   }
 
+  size_t number_of_ready_services() const {
+    return service_handles_.size();
+  }
+
+  size_t number_of_ready_clients() const {
+    return client_handles_.size();
+  }
+
 private:
   template<typename T>
   using VectorRebind =
       std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 
-/*
-  VectorRebind<rclcpp::subscription::SubscriptionBase::SharedPtr> subscriptions_;
-  VectorRebind<rclcpp::service::ServiceBase::SharedPtr> services_;
-  VectorRebind<rclcpp::client::ClientBase::SharedPtr> clients_;
   VectorRebind<const rmw_guard_condition_t *> guard_conditions_;
-*/
 
   VectorRebind<const rcl_subscription_t *> subscription_handles_;
   VectorRebind<const rcl_service_t *> service_handles_;

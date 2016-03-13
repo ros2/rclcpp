@@ -316,23 +316,9 @@ Executor::execute_client(
   }
 }
 
-/* 
-basic outline
-get ready entities
-
-For all the entities, check the size of the rcl wait_set array and resize if necessary
-Add the entities to the wait_set
-rcl_wait
-check ready subscriptions
-clear subscriptions
-
-memory strategy is the worst!!! :(
-*/
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
-  //memory_strategy_->clear_active_entities();
-
   // Collect the subscriptions and timers to be waited on
   bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
 
@@ -356,19 +342,26 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     rcl_wait_set_resize_subscriptions(
       &waitset_, memory_strategy_->number_of_ready_subscriptions());
   }
-  // TODO etc...
 
-  // for all ready subscriptions:
-  // rcl_wait_set_add_subscription(&waitset_, ready_subscription);
-  // etc...
+  if (waitset_.size_of_services < memory_strategy_->number_of_ready_services()) {
+    rcl_wait_set_resize_services(
+      &waitset_, memory_strategy_->number_of_ready_services());
+  }
+
+  if (waitset_.size_of_clients < memory_strategy_->number_of_ready_clients()) {
+    rcl_wait_set_resize_clients(
+      &waitset_, memory_strategy_->number_of_ready_clients());
+  }
+
+  // TODO Only add the soonest timer to the waitset
+
+  memory_strategy_->add_handles_to_waitset(&waitset_);
 
   rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
   if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT && status != RCL_RET_WAIT_SET_EMPTY) {
     throw std::runtime_error(rcl_get_error_string_safe());
   }
 
-  // Use the number of subscriptions to allocate memory in the handles
-  // TODO We need to add timers to the waitset now I guess!!
 /*
   rmw_subscriptions_t subscriber_handles;
   subscriber_handles.subscriber_count =
