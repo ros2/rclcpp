@@ -480,7 +480,7 @@ Executor::get_next_timer(AnyExecutable::SharedPtr any_exec)
       }
       for (auto & timer_ref : group->get_timer_ptrs()) {
         auto timer = timer_ref.lock();
-        if (timer && timer->check_and_trigger()) {
+        if (timer && timer->is_ready()) {
           any_exec->timer = timer;
           any_exec->callback_group = group;
           node = get_node_by_group(group);

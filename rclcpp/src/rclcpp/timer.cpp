@@ -18,9 +18,7 @@
 
 using rclcpp::timer::TimerBase;
 
-TimerBase::TimerBase(std::chrono::nanoseconds period)
-: period_(period),
-  canceled_(false)
+TimerBase::TimerBase()
 {}
 
 TimerBase::~TimerBase()
@@ -29,5 +27,7 @@ TimerBase::~TimerBase()
 void
 TimerBase::cancel()
 {
-  this->canceled_ = true;
+  if (rcl_timer_cancel(&timer_handle_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't cancel timer");
+  }
 }
