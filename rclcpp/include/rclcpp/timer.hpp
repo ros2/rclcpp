@@ -27,6 +27,9 @@
 #include "rclcpp/rate.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcl/timer.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -72,9 +75,12 @@ public:
   virtual bool check_and_trigger() = 0;
 
 protected:
+  //virtual void initialize_rcl_handle(CallbackT && callback) = 0;
+
   std::chrono::nanoseconds period_;
 
   bool canceled_;
+  rcl_timer_t timer_handle_;
 };
 
 
@@ -113,12 +119,7 @@ public:
   {
     // Stop the timer from running.
     cancel();
-  }
-
-  void
-  execute_callback()
-  {
-    execute_callback_delegate<>();
+    rcl_timer_fini(&timer_handle_);
   }
 
   // void specialization
@@ -129,9 +130,16 @@ public:
     >::type * = nullptr
   >
   void
-  execute_callback_delegate()
+  initialize_rcl_handle(CallbackT && callback)
   {
-    callback_();
+    // TODO Should the API mirror rcl?
+    // rcl callback needs to wrap 
+    auto rcl_lambda = [this](rcl_timer_t * timer, uint64_t last_call_time) {
+        callback_();
+      };
+    auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>(rcl_lambda);
+      
+    rcl_timer_init(&timer_handle_, period_.count(), rcl_callback.target());
   }
 
   template<
@@ -141,10 +149,21 @@ public:
     >::type * = nullptr
   >
   void
-  execute_callback_delegate()
+  initialize_rcl_handle()
   {
-    callback_(*this);
+    auto rcl_callback = std::function<rcl_timer_callback_t>([this](rcl_timer_t * timer, uint64_t last_call_time) {
+        callback_(*this);
+      });
+    rcl_timer_init(&timer_handle_, period_.count(), rcl_callback.target());
   }
+
+
+  void
+  execute_callback()
+  {
+    rcl_timer_call(&timer_handle_);
+  }
+
 
   bool
   check_and_trigger()
