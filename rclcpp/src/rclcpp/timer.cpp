@@ -31,3 +31,32 @@ TimerBase::cancel()
     throw std::runtime_error("Couldn't cancel timer");
   }
 }
+
+void
+TimerBase::execute_callback()
+{
+  if (rcl_timer_call(&timer_handle_) != RCL_RET_OK) {
+    throw std::runtime_error("Execution of timer callback failed");
+  };
+}
+
+bool
+TimerBase::is_ready()
+{
+  bool ready = false;
+  if (rcl_timer_is_ready(&timer_handle_, &ready) != RCL_RET_OK)
+  {
+    throw std::runtime_error("Timer check failed");
+  }
+  return ready;
+}
+
+std::chrono::nanoseconds
+TimerBase::time_until_trigger()
+{
+  int64_t time_until_next_call = 0;
+  if (rcl_timer_get_time_until_next_call(&timer_handle_, &time_until_next_call) != RCL_RET_OK) {
+    throw std::runtime_error("Timer could not get time until next call");
+  }
+  return std::chrono::nanoseconds(time_until_next_call);
+}

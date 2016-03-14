@@ -54,13 +54,13 @@ public:
   cancel();
 
   RCLCPP_PUBLIC
-  virtual void
-  execute_callback() = 0;
+  void
+  execute_callback();
 
   /// Check how long the timer has until its next scheduled callback.
   // \return A std::chrono::duration representing the relative time until the next callback.
-  virtual std::chrono::nanoseconds
-  time_until_trigger() = 0;
+  std::chrono::nanoseconds
+  time_until_trigger();
 
   /// Is the clock steady (i.e. is the time between ticks constant?)
   // \return True if the clock used by this timer is steady.
@@ -72,7 +72,7 @@ public:
    * since it maintains the last time the callback was triggered.
    * \return True if the timer needs to trigger.
    */
-  virtual bool is_ready() = 0;
+  bool is_ready();
 
 protected:
   rcl_timer_t timer_handle_;
@@ -145,37 +145,6 @@ public:
         callback_(*this);
       });
     rcl_timer_init(&timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(), rcl_get_default_allocator());
-  }
-
-
-  void
-  execute_callback()
-  {
-    if (rcl_timer_call(&timer_handle_) != RCL_RET_OK) {
-      throw std::runtime_error("Execution of timer callback failed");
-    };
-  }
-
-
-  bool
-  is_ready()
-  {
-    bool ready = false;
-    if (rcl_timer_is_ready(&timer_handle_, &ready) != RCL_RET_OK)
-    {
-      throw std::runtime_error("Timer check failed");
-    }
-    return ready;
-  }
-
-  std::chrono::nanoseconds
-  time_until_trigger()
-  {
-    int64_t time_until_next_call = 0;
-    if (rcl_timer_get_time_until_next_call(&timer_handle_, &time_until_next_call) != RCL_RET_OK) {
-      throw std::runtime_error("Timer could not get time until next call");
-    }
-    return std::chrono::nanoseconds(time_until_next_call);
   }
 
   virtual bool
