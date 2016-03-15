@@ -295,10 +295,6 @@ protected:
   get_next_timer(AnyExecutable::SharedPtr any_exec);
 
   RCLCPP_PUBLIC
-  std::chrono::nanoseconds
-  get_earliest_timer();
-
-  RCLCPP_PUBLIC
   AnyExecutable::SharedPtr
   get_next_ready_executable();
 

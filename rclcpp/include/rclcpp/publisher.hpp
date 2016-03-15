@@ -33,6 +33,7 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -56,14 +57,12 @@ public:
    * Typically, a publisher is not created through this method, but instead is created through a
    * call to `Node::create_publisher`.
    * \param[in] node_handle The corresponding rmw representation of the owner node.
-   * \param[in] publisher_handle The rmw publisher handle corresponding to this publisher.
    * \param[in] topic The topic that this publisher publishes on.
    * \param[in] queue_size The maximum number of unpublished messages to queue.
    */
   RCLCPP_PUBLIC
   PublisherBase(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_publisher_t * publisher_handle,
     std::string topic,
     size_t queue_size);
 
@@ -123,12 +122,12 @@ protected:
   setup_intra_process(
     uint64_t intra_process_publisher_id,
     StoreMessageCallbackT callback,
-    rcl_publisher_t * intra_process_publisher_handle);
+    rcl_publisher_options_t & intra_process_options);
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_publisher_t * publisher_handle_;
-  rcl_publisher_t * intra_process_publisher_handle_;
+  rcl_publisher_t publisher_handle_;
+  rcl_publisher_t intra_process_publisher_handle_;
 
   std::string topic_;
   size_t queue_size_;
@@ -156,14 +155,25 @@ public:
 
   Publisher(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_publisher_t * publisher_handle,
     std::string topic,
-    size_t queue_size,
+    //size_t queue_size,
+    rcl_publisher_options_t & publisher_options,
     std::shared_ptr<Alloc> allocator)
-  : PublisherBase(node_handle, publisher_handle, topic, queue_size)
+  : PublisherBase(node_handle, topic, publisher_options.qos.depth)
   {
+    using rosidl_generator_cpp::get_message_type_support_handle;
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
+
+    auto type_support_handle = get_message_type_support_handle<MessageT>();
+    if (rcl_publisher_init(
+          &publisher_handle_, node_handle_.get(), type_support_handle,
+          topic.c_str(), &publisher_options) != RCL_RET_OK)
+    {
+      throw std::runtime_error(
+        std::string("could not create publisher: ") +
+        rcl_get_error_string_safe());
+    }
   }
 
 
@@ -191,7 +201,7 @@ public:
       rcl_interfaces::msg::IntraProcessMessage ipm;
       ipm.publisher_id = intra_process_publisher_id_;
       ipm.message_sequence = message_seq;
-      auto status = rcl_publish(intra_process_publisher_handle_, &ipm);
+      auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
       if (status != RCL_RET_OK) {
         // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
         throw std::runtime_error(
@@ -266,7 +276,7 @@ protected:
   void
   do_inter_process_publish(const MessageT * msg)
   {
-    auto status = rcl_publish(publisher_handle_, msg);
+    auto status = rcl_publish(&publisher_handle_, msg);
     if (status != RCL_RET_OK) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(

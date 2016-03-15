@@ -44,7 +44,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase);
 
   RCLCPP_PUBLIC
-  explicit TimerBase();
+  explicit TimerBase(std::chrono::nanoseconds period);
 
   RCLCPP_PUBLIC
   virtual ~TimerBase();
@@ -56,6 +56,10 @@ public:
   RCLCPP_PUBLIC
   void
   execute_callback();
+
+  RCLCPP_PUBLIC
+  const rcl_timer_t *
+  get_timer_handle();
 
   /// Check how long the timer has until its next scheduled callback.
   // \return A std::chrono::duration representing the relative time until the next callback.
@@ -126,10 +130,13 @@ public:
   void
   initialize_rcl_handle(std::chrono::nanoseconds & period)
   {
-    auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>([this](rcl_timer_t * timer, uint64_t last_call_time) {
+    auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>(
+      [this](rcl_timer_t * timer, uint64_t last_call_time) {
         callback_();
       });
-    rcl_timer_init(&timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(), rcl_get_default_allocator());
+    rcl_timer_init(
+      &timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(),
+      rcl_get_default_allocator());
   }
 
   template<
@@ -141,10 +148,13 @@ public:
   void
   initialize_rcl_handle(std::chrono::nanoseconds & period)
   {
-    auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>([this](rcl_timer_t * timer, uint64_t last_call_time) {
+    auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>(
+      [this](rcl_timer_t * timer, uint64_t last_call_time) {
         callback_(*this);
       });
-    rcl_timer_init(&timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(), rcl_get_default_allocator());
+    rcl_timer_init(
+      &timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(),
+      rcl_get_default_allocator());
   }
 
   virtual bool

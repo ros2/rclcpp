@@ -26,6 +26,7 @@
 
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -43,7 +44,6 @@ public:
   RCLCPP_PUBLIC
   ServiceBase(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_service_t * service_handle,
     const std::string service_name);
 
   RCLCPP_PUBLIC
@@ -63,12 +63,12 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) = 0;
 
-private:
+protected:
   RCLCPP_DISABLE_COPY(ServiceBase);
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_service_t * service_handle_;
+  rcl_service_t service_handle_;
   std::string service_name_;
 };
 
@@ -92,11 +92,23 @@ public:
 
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_service_t * service_handle,
     const std::string & service_name,
-    AnyServiceCallback<ServiceT> any_callback)
-  : ServiceBase(node_handle, service_handle, service_name), any_callback_(any_callback)
-  {}
+    AnyServiceCallback<ServiceT> any_callback,
+    rcl_service_options_t & service_options)
+  : ServiceBase(node_handle, service_name), any_callback_(any_callback)
+  {
+    using rosidl_generator_cpp::get_service_type_support_handle;
+    auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
+
+    if (rcl_service_init(
+      &service_handle_, node_handle.get(), service_type_support_handle, service_name.c_str(),
+      &service_options) != RCL_RET_OK)
+    {
+      throw std::runtime_error(
+        std::string("could not create service: ") +
+        rmw_get_error_string_safe());
+    }
+  }
 
   Service() = delete;
 

@@ -29,21 +29,17 @@ using rclcpp::service::ServiceBase;
 
 ServiceBase::ServiceBase(
   std::shared_ptr<rcl_node_t> node_handle,
-  rcl_service_t * service_handle,
   const std::string service_name)
-: node_handle_(node_handle), service_handle_(service_handle), service_name_(service_name)
+: node_handle_(node_handle), service_name_(service_name)
 {}
 
 ServiceBase::~ServiceBase()
 {
-  if (service_handle_) {
-    if (rcl_service_fini(service_handle_, node_handle_.get())) {
-      std::stringstream ss;
-      ss << "Error in destruction of rmw service_handle_ handle: " <<
-        rmw_get_error_string_safe() << '\n';
-      (std::cerr << ss.str()).flush();
-    }
-    delete service_handle_;
+  if (rcl_service_fini(&service_handle_, node_handle_.get()) != RCL_RET_OK) {
+    std::stringstream ss;
+    ss << "Error in destruction of rcl service_handle_ handle: " <<
+      rcl_get_error_string_safe() << '\n';
+    (std::cerr << ss.str()).flush();
   }
 }
 
@@ -56,5 +52,5 @@ ServiceBase::get_service_name()
 const rcl_service_t *
 ServiceBase::get_service_handle()
 {
-  return this->service_handle_;
+  return &service_handle_;
 }

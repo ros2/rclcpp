@@ -31,6 +31,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -60,7 +61,6 @@ public:
   RCLCPP_PUBLIC
   SubscriptionBase(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_subscription_t * subscription_handle,
     const std::string & topic_name,
     bool ignore_local_publications);
 
@@ -103,14 +103,14 @@ public:
     const rmw_message_info_t & message_info) = 0;
 
 protected:
-  rcl_subscription_t * intra_process_subscription_handle_;
+  rcl_subscription_t intra_process_subscription_handle_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase);
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_subscription_t * subscription_handle_;
+  rcl_subscription_t subscription_handle_;
 
   std::string topic_name_;
   bool ignore_local_publications_;
@@ -144,19 +144,29 @@ public:
    */
   Subscription(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_subscription_t * subscription_handle,
     const std::string & topic_name,
-    bool ignore_local_publications,
+    rcl_subscription_options_t & subscription_options,
     AnySubscriptionCallback<MessageT, Alloc> callback,
     typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
     memory_strategy = message_memory_strategy::MessageMemoryStrategy<MessageT,
     Alloc>::create_default())
-  : SubscriptionBase(node_handle, subscription_handle, topic_name, ignore_local_publications),
+  : SubscriptionBase(
+      node_handle, topic_name, subscription_options.ignore_local_publications),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy),
     get_intra_process_message_callback_(nullptr),
     matches_any_intra_process_publishers_(nullptr)
   {
+    using rosidl_generator_cpp::get_message_type_support_handle;
+
+    auto type_support_handle = get_message_type_support_handle<MessageT>();
+    if (rcl_subscription_init(
+      &subscription_handle_, node_handle_.get(), type_support_handle, topic_name.c_str(),
+      &subscription_options) != RCL_RET_OK)
+    {
+      throw std::runtime_error(
+        std::string("could not create subscription: ") + rcl_get_error_string_safe());
+    }
   }
 
   /// Support dynamically setting the message memory strategy.
@@ -233,12 +243,23 @@ private:
 
   void setup_intra_process(
     uint64_t intra_process_subscription_id,
-    rcl_subscription_t * intra_process_subscription,
     GetMessageCallbackType get_message_callback,
-    MatchesAnyPublishersCallbackType matches_any_publisher_callback)
+    MatchesAnyPublishersCallbackType matches_any_publisher_callback,
+    rcl_subscription_options_t & intra_process_options)
   {
+    if (rcl_subscription_init(
+        &intra_process_subscription_handle_, node_handle_.get(),
+        rclcpp::type_support::get_intra_process_message_msg_type_support(),
+        (topic_name_ + "__intra").c_str(),
+        &intra_process_options) != RCL_RET_OK)
+    {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("could not create intra process subscription: ") + rcl_get_error_string_safe());
+      // *INDENT-ON*
+    }
+
     intra_process_subscription_id_ = intra_process_subscription_id;
-    intra_process_subscription_handle_ = intra_process_subscription;
     get_intra_process_message_callback_ = get_message_callback;
     matches_any_intra_process_publishers_ = matches_any_publisher_callback;
   }

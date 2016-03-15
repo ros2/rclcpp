@@ -18,8 +18,10 @@
 
 using rclcpp::timer::TimerBase;
 
-TimerBase::TimerBase()
-{}
+TimerBase::TimerBase(std::chrono::nanoseconds period)
+{
+  (void)period;
+}
 
 TimerBase::~TimerBase()
 {}
@@ -59,4 +61,10 @@ TimerBase::time_until_trigger()
     throw std::runtime_error("Timer could not get time until next call");
   }
   return std::chrono::nanoseconds(time_until_next_call);
+}
+
+const rcl_timer_t *
+TimerBase::get_timer_handle()
+{
+  return &timer_handle_;
 }

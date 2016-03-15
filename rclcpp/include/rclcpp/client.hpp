@@ -29,6 +29,7 @@
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -46,7 +47,6 @@ public:
   RCLCPP_PUBLIC
   ClientBase(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_client_t * client_handle,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
@@ -65,12 +65,12 @@ public:
   virtual void handle_response(
     std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
-private:
+protected:
   RCLCPP_DISABLE_COPY(ClientBase);
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_client_t * client_handle_;
+  rcl_client_t client_handle_;
   std::string service_name_;
 };
 
@@ -97,10 +97,22 @@ public:
 
   Client(
     std::shared_ptr<rcl_node_t> node_handle,
-    rcl_client_t * client_handle,
-    const std::string & service_name)
-  : ClientBase(node_handle, client_handle, service_name)
-  {}
+    const std::string & service_name,
+    rcl_client_options_t & client_options)
+  : ClientBase(node_handle, service_name)
+  {
+    using rosidl_generator_cpp::get_service_type_support_handle;
+    auto service_type_support_handle =
+      get_service_type_support_handle<ServiceT>();
+    if (rcl_client_init(&client_handle_, this->node_handle_.get(),
+      service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("could not create client: ") +
+        rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
+  }
 
   std::shared_ptr<void> create_response()
   {

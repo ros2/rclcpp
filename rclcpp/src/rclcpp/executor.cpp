@@ -339,18 +339,27 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   memory_strategy_->clear_handles();
   if (waitset_.size_of_subscriptions < memory_strategy_->number_of_ready_subscriptions()) {
-    rcl_wait_set_resize_subscriptions(
-      &waitset_, memory_strategy_->number_of_ready_subscriptions());
+    if (rcl_wait_set_resize_subscriptions(
+      &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
+    {
+      throw std::runtime_error("Couldn't resize waitset to number of subscriptions");
+    }
   }
 
   if (waitset_.size_of_services < memory_strategy_->number_of_ready_services()) {
-    rcl_wait_set_resize_services(
-      &waitset_, memory_strategy_->number_of_ready_services());
+    if (rcl_wait_set_resize_services(
+      &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
+    {
+      throw std::runtime_error("Couldn't resize waitset to number of services");
+    }
   }
 
   if (waitset_.size_of_clients < memory_strategy_->number_of_ready_clients()) {
-    rcl_wait_set_resize_clients(
-      &waitset_, memory_strategy_->number_of_ready_clients());
+    if (rcl_wait_set_resize_clients(
+      &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
+    {
+      throw std::runtime_error("Couldn't resize waitset to number of clients");
+    }
   }
 
   // TODO Only add the soonest timer to the waitset
@@ -363,61 +372,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   }
 
 /*
-  rmw_subscriptions_t subscriber_handles;
-  subscriber_handles.subscriber_count =
-    memory_strategy_->fill_subscriber_handles(subscriber_handles.subscribers);
-
-  rmw_services_t service_handles;
-  service_handles.service_count =
-    memory_strategy_->fill_service_handles(service_handles.services);
-
-  rmw_clients_t client_handles;
-  client_handles.client_count =
-    memory_strategy_->fill_client_handles(client_handles.clients);
-
   // construct a guard conditions struct
   rmw_guard_conditions_t guard_conditions;
   guard_conditions.guard_condition_count =
     memory_strategy_->fill_guard_condition_handles(guard_conditions.guard_conditions);
-
-  rmw_time_t * wait_timeout = NULL;
-  rmw_time_t rmw_timeout;
-
-  auto next_timer_duration = get_earliest_timer();
-  // If the next timer timeout must preempt the requested timeout
-  // or if the requested timeout blocks forever, and there exists a valid timer,
-  // replace the requested timeout with the next timeout.
-  bool has_valid_timer = next_timer_duration >= std::chrono::nanoseconds::zero();
-  if ((next_timer_duration < timeout ||
-    timeout < std::chrono::nanoseconds::zero()) && has_valid_timer)
-  {
-    rmw_timeout.sec =
-      std::chrono::duration_cast<std::chrono::seconds>(next_timer_duration).count();
-    rmw_timeout.nsec = next_timer_duration.count() % (1000 * 1000 * 1000);
-    wait_timeout = &rmw_timeout;
-  } else if (timeout >= std::chrono::nanoseconds::zero()) {
-    // Convert timeout representation to rmw_time
-    rmw_timeout.sec = std::chrono::duration_cast<std::chrono::seconds>(timeout).count();
-    rmw_timeout.nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count() %
-      (1000 * 1000 * 1000);
-    wait_timeout = &rmw_timeout;
-  }
-
-  // Now wait on the waitable subscriptions and timers
-  rmw_ret_t status = rmw_wait(
-    &subscriber_handles,
-    &guard_conditions,
-    &service_handles,
-    &client_handles,
-    waitset_,
-    wait_timeout);
-  if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
-    throw std::runtime_error(rmw_get_error_string_safe());
-  }
 */
-
-  // eh? I think rcl_wait_set does this for us!
-  // memory_strategy_->remove_null_handles();
 }
 
 rclcpp::node::Node::SharedPtr
@@ -489,37 +448,6 @@ Executor::get_next_timer(AnyExecutable::SharedPtr any_exec)
       }
     }
   }
-}
-
-std::chrono::nanoseconds
-Executor::get_earliest_timer()
-{
-  std::chrono::nanoseconds latest = std::chrono::nanoseconds::max();
-  bool timers_empty = true;
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (!node) {
-      continue;
-    }
-    for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
-      if (!group || !group->can_be_taken_from().load()) {
-        continue;
-      }
-      for (auto & timer_ref : group->get_timer_ptrs()) {
-        timers_empty = false;
-        // Check the expected trigger time
-        auto timer = timer_ref.lock();
-        if (timer && timer->time_until_trigger() < latest) {
-          latest = timer->time_until_trigger();
-        }
-      }
-    }
-  }
-  if (timers_empty) {
-    return std::chrono::nanoseconds(-1);
-  }
-  return latest;
 }
 
 AnyExecutable::SharedPtr

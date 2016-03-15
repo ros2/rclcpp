@@ -34,17 +34,17 @@ using rclcpp::publisher::PublisherBase;
 
 PublisherBase::PublisherBase(
   std::shared_ptr<rcl_node_t> node_handle,
-  rcl_publisher_t * publisher_handle,
   std::string topic,
   size_t queue_size)
-: node_handle_(node_handle), publisher_handle_(publisher_handle),
-  intra_process_publisher_handle_(nullptr),
+: node_handle_(node_handle),
   topic_(topic), queue_size_(queue_size),
   intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
 {
   // Life time of this object is tied to the publisher handle.
+  // TODO this won't be valid until we initialize the publisher handle. argh
+  // What is the point of this check?
   if (rmw_get_gid_for_publisher(
-    rcl_publisher_get_rmw_handle(publisher_handle_), &rmw_gid_) != RMW_RET_OK)
+    rcl_publisher_get_rmw_handle(&publisher_handle_), &rmw_gid_) != RMW_RET_OK)
   {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(
@@ -55,27 +55,19 @@ PublisherBase::PublisherBase(
 
 PublisherBase::~PublisherBase()
 {
-  if (intra_process_publisher_handle_) {
-    if (rcl_publisher_fini(intra_process_publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
-      fprintf(
-        stderr,
-        "Error in destruction of intra process rcl publisher handle: %s\n",
-        rcl_get_error_string_safe());
-
-    }
-    // TODO custom deallocator
-    delete intra_process_publisher_handle_;
+  if (rcl_publisher_fini(&intra_process_publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
+    fprintf(
+      stderr,
+      "Error in destruction of intra process rcl publisher handle: %s\n",
+      rcl_get_error_string_safe());
   }
-  if (publisher_handle_) {
-    if (rcl_publisher_fini(publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
-      fprintf(
-        stderr,
-        "Error in destruction of rcl publisher handle: %s\n",
-        rcl_get_error_string_safe());
 
-    }
-    // TODO custom deallocator
-    delete publisher_handle_;  }
+  if (rcl_publisher_fini(&publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
+    fprintf(
+      stderr,
+      "Error in destruction of rcl publisher handle: %s\n",
+      rcl_get_error_string_safe());
+  }
 }
 
 const std::string &
@@ -131,14 +123,23 @@ void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
   StoreMessageCallbackT callback,
-  rcl_publisher_t * intra_process_publisher_handle)
+  rcl_publisher_options_t & intra_process_options)
 {
+  if (rcl_publisher_init(
+        &intra_process_publisher_handle_, node_handle_.get(),
+        rclcpp::type_support::get_intra_process_message_msg_type_support(),
+        (topic_ + "__intra").c_str(), &intra_process_options) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+      std::string("could not create intra process publisher: ") +
+      rcl_get_error_string_safe());
+  }
+
   intra_process_publisher_id_ = intra_process_publisher_id;
   store_intra_process_message_ = callback;
-  intra_process_publisher_handle_ = intra_process_publisher_handle;
   // Life time of this object is tied to the publisher handle.
   auto ret = rmw_get_gid_for_publisher(
-    rcl_publisher_get_rmw_handle(intra_process_publisher_handle_), &intra_process_rmw_gid_);
+    rcl_publisher_get_rmw_handle(&intra_process_publisher_handle_), &intra_process_rmw_gid_);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(

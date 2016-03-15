@@ -198,6 +198,12 @@ public:
             client_handles_.push_back(client->get_client_handle());
           }
         }
+        for (auto & weak_timer : group->get_timer_ptrs()) {
+          auto timer = weak_timer.lock();
+          if (timer) {
+            timer_handles_.push_back(timer->get_timer_handle());
+          }
+        }
       }
     }
     return has_invalid_weak_nodes;
@@ -218,6 +224,12 @@ public:
 
     for (auto service : service_handles_) {
       if (rcl_wait_set_add_service(wait_set, service) != RCL_RET_OK) {
+        return false;
+      }
+    }
+
+    for (auto timer : timer_handles_) {
+      if (rcl_wait_set_add_timer(wait_set, timer) != RCL_RET_OK) {
         return false;
       }
     }
@@ -363,6 +375,7 @@ private:
   VectorRebind<const rcl_subscription_t *> subscription_handles_;
   VectorRebind<const rcl_service_t *> service_handles_;
   VectorRebind<const rcl_client_t *> client_handles_;
+  VectorRebind<const rcl_timer_t *> timer_handles_;
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;
