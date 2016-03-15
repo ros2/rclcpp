@@ -116,6 +116,8 @@ Node::create_publisher(
     // *INDENT-ON*
     rcl_publisher_options_t intra_process_options = rcl_publisher_get_default_options();
     intra_process_options.qos = qos_profile;
+    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
+      *allocator.get());
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,
@@ -157,6 +159,8 @@ Node::create_subscription(
   // TODO Allocator
   auto subscription_options = rcl_subscription_get_default_options();
   subscription_options.qos = qos_profile;
+  subscription_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
+    *allocator.get());
   subscription_options.ignore_local_publications = ignore_local_publications;
 
   using rclcpp::subscription::Subscription;
@@ -172,6 +176,8 @@ Node::create_subscription(
   // Setup intra process.
   if (use_intra_process_comms_) {
     auto intra_process_options = rcl_subscription_get_default_options();
+    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
+      *allocator.get());
     intra_process_options.qos = qos_profile;
     intra_process_options.ignore_local_publications = false;
 
@@ -289,6 +295,7 @@ Node::create_client(
 {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos_profile;
+  // options.allocator = rclcpp::allocator::get_rcl_allocator<ServiceT, Alloc>(*allocator.get());
 
   using rclcpp::client::Client;
   using rclcpp::client::ClientBase;
@@ -331,7 +338,6 @@ Node::create_service(
 
   rcl_service_options_t service_options = rcl_service_get_default_options();
   service_options.qos = qos_profile;
-  // TODO allocator
 
   auto serv = service::Service<ServiceT>::make_shared(
     node_handle_, service_name, any_service_callback, service_options);
