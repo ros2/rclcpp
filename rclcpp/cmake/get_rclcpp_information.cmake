@@ -64,6 +64,7 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   set(_exported_dependencies
     "rcl_interfaces"
     "rmw"
+    "rcl"
     "${rmw_implementation}"
     "rosidl_generator_cpp")
   set(${var_prefix}_DEFINITIONS)
