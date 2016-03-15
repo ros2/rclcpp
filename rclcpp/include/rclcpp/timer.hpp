@@ -84,10 +84,11 @@ using TimerCallbackType = std::function<void(TimerBase &)>;
 /// Generic timer templated on the clock type. Periodically executes a user-specified callback.
 template<
   typename FunctorT,
-  class Clock = std::chrono::high_resolution_clock,
+  class Clock,
   typename std::enable_if<
-    rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
-    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value
+    (rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value) &&
+    Clock::is_steady
   >::type * = nullptr
 >
 class GenericTimer : public TimerBase
