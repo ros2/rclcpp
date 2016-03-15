@@ -76,6 +76,8 @@ Node::create_publisher(
 
   auto publisher_options = rcl_publisher_get_default_options();
   publisher_options.qos = qos_profile;
+  publisher_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
+    *allocator.get());
   auto publisher = publisher::Publisher<MessageT, Alloc>::make_shared(
     node_handle_, topic_name, publisher_options, allocator);
 

@@ -17,6 +17,8 @@
 
 #include <memory>
 
+#include "rcl/allocator.h"
+
 #include "rclcpp/allocator/allocator_deleter.hpp"
 
 namespace rclcpp
@@ -26,6 +28,39 @@ namespace allocator
 
 template<typename T, typename Alloc>
 using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
+
+// Convert a std::allocator_traits-formatted Allocator into an rcl allocator
+// TODO: Do we need to specify a value type for the Allocator? I think we do... o_o
+template<typename T, typename Alloc>
+rcl_allocator_t get_rcl_allocator(Alloc & allocator)
+{
+  rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
+
+  // Argh
+  auto allocate_callback = std::function<void(size_t, void *)>(
+    [](size_t size, void * state) {
+      auto allocator_ptr = static_cast<Alloc *>(state);
+      // TODO check if null
+      std::allocator_traits<Alloc>::allocate(*allocator_ptr, size);
+    });
+  auto deallocate_callback = std::function<void(void *, void *)>(
+    [](void * pointer, void * state) {
+      auto allocator_ptr = static_cast<Alloc *>(state);
+      // TODO check if null
+      // TODO size?
+      auto typed_pointer = static_cast<T *>(pointer);
+      std::allocator_traits<Alloc>::deallocate(*allocator_ptr, typed_pointer, sizeof(T));
+    });
+
+  rcl_allocator.allocate = allocate_callback;
+  rcl_allocator.deallocate = deallocate_callback;
+  rcl_allocator.reallocate = nullptr;
+  rcl_allocator.state = &allocator;
+  return std::move(rcl_allocator);
+}
+
+// TODO provide a nicer way of making a C++ allocator maybe?
+// or passing rcl allcoators directly?
 
 }  // namespace allocator
 }  // namespace rclcpp
