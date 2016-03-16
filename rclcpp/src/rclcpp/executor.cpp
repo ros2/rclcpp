@@ -38,19 +38,19 @@ Executor::Executor(const ExecutorArgs & args)
   // and one for the executor's guard cond (interrupt_guard_condition_)
   // These guard conditions are permanently attached to the waitset.
   const size_t number_of_guard_conds = 2;
-  fixed_guard_conditions_.guard_condition_count = number_of_guard_conds;
-  fixed_guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
+  guard_conditions_.guard_condition_count = number_of_guard_conds;
+  guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
 
   // Put the global ctrl-c guard condition in
-  assert(fixed_guard_conditions_.guard_condition_count > 1);
-  fixed_guard_conditions_.guard_conditions[0] = \
+  assert(guard_conditions_.guard_condition_count > 1);
+  guard_conditions_.guard_conditions[0] = \
     rclcpp::utilities::get_global_sigint_guard_condition()->data;
   // Put the executor's guard condition in
-  fixed_guard_conditions_.guard_conditions[1] = interrupt_guard_condition_->data;
+  guard_conditions_.guard_conditions[1] = interrupt_guard_condition_->data;
 
   // The waitset adds the fixed guard conditions to the middleware waitset on initialization,
   // and removes the guard conditions in rmw_destroy_waitset.
-  waitset_ = rmw_create_waitset(&fixed_guard_conditions_, args.max_conditions);
+  waitset_ = rmw_create_waitset(args.max_conditions);
 
   if (!waitset_) {
     fprintf(stderr,
@@ -369,7 +369,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   client_handles.client_count =
     memory_strategy_->fill_client_handles(client_handles.clients);
 
-  // Don't pass guard conditions to rmw_wait; they are permanent fixtures of the waitset
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -397,7 +396,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // Now wait on the waitable subscriptions and timers
   rmw_ret_t status = rmw_wait(
     &subscriber_handles,
-    nullptr,
+    &guard_conditions_,
     &service_handles,
     &client_handles,
     waitset_,
