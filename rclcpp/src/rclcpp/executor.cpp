@@ -34,19 +34,20 @@ Executor::Executor(const ExecutorArgs & args)
     throw std::runtime_error("Failed to create interrupt guard condition in Executor constructor");
   }
 
-  // The number of guard conditions is fixed at 2: 1 for the ctrl-c guard cond,
+  // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
-  // These guard conditions are permanently attached to the waitset.
-  const size_t number_of_guard_conds = 2;
-  guard_conditions_.guard_condition_count = number_of_guard_conds;
-  guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
+  // The size of guard conditions is variable because the number of nodes can vary
+  const size_t initial_number_of_guard_conds = 2;
+  guard_conditions_.guard_condition_count = initial_number_of_guard_conds;
 
   // Put the global ctrl-c guard condition in
   assert(guard_conditions_.guard_condition_count > 1);
-  guard_conditions_.guard_conditions[0] = \
-    rclcpp::utilities::get_global_sigint_guard_condition()->data;
+  guard_cond_handles_.push_back(
+    rclcpp::utilities::get_global_sigint_guard_condition()->data);
   // Put the executor's guard condition in
-  guard_conditions_.guard_conditions[1] = interrupt_guard_condition_->data;
+  guard_cond_handles_.push_back(interrupt_guard_condition_->data);
+
+  guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
 
   // The waitset adds the fixed guard conditions to the middleware waitset on initialization,
   // and removes the guard conditions in rmw_destroy_waitset.
@@ -107,6 +108,10 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
       throw std::runtime_error(rmw_get_error_string_safe());
     }
   }
+  // Add the node's notify condition to the guard condition handles
+  guard_conditions_.guard_condition_count++;
+  guard_cond_handles_.push_back(node_ptr->get_notify_guard_condition()->data);
+  guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
 }
 
 void
@@ -134,6 +139,16 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
       if (status != RMW_RET_OK) {
         throw std::runtime_error(rmw_get_error_string_safe());
       }
+    }
+  }
+  // Remove the node's guard condition
+  // Consider making a map instead
+  for (auto it = guard_cond_handles_.begin(); it != guard_cond_handles_.end(); ++it) {
+    if (*it == node_ptr->get_notify_guard_condition()->data) {
+      guard_cond_handles_.erase(it);
+      --guard_conditions_.guard_condition_count;
+      guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
+      break;
     }
   }
 }

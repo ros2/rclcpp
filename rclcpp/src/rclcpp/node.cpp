@@ -36,7 +36,8 @@ Node::Node(
   bool use_intra_process_comms)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
-  use_intra_process_comms_(use_intra_process_comms)
+  use_intra_process_comms_(use_intra_process_comms),
+  notify_guard_condition_(rmw_create_guard_condition())
 {
   has_executor.store(false);
   size_t domain_id = 0;
@@ -333,4 +334,9 @@ const Node::CallbackGroupWeakPtrList &
 Node::get_callback_groups() const
 {
   return callback_groups_;
+}
+
+rmw_guard_condition_t * Node::get_notify_guard_condition() const
+{
+  return notify_guard_condition_;
 }
