@@ -30,7 +30,7 @@ void
 TimerBase::cancel()
 {
   if (rcl_timer_cancel(&timer_handle_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't cancel timer");
+    throw std::runtime_error(std::string("Couldn't cancel timer: ") + rcl_get_error_string_safe());
   }
 }
 
@@ -38,7 +38,8 @@ void
 TimerBase::execute_callback()
 {
   if (rcl_timer_call(&timer_handle_) != RCL_RET_OK) {
-    throw std::runtime_error("Execution of timer callback failed");
+    throw std::runtime_error(
+      std::string("Execution of timer callback failed: ") + rcl_get_error_string_safe());
   };
 }
 
@@ -48,7 +49,7 @@ TimerBase::is_ready()
   bool ready = false;
   if (rcl_timer_is_ready(&timer_handle_, &ready) != RCL_RET_OK)
   {
-    throw std::runtime_error("Timer check failed");
+    throw std::runtime_error(std::string("Failed to check timer: ") + rcl_get_error_string_safe());
   }
   return ready;
 }
@@ -58,7 +59,8 @@ TimerBase::time_until_trigger()
 {
   int64_t time_until_next_call = 0;
   if (rcl_timer_get_time_until_next_call(&timer_handle_, &time_until_next_call) != RCL_RET_OK) {
-    throw std::runtime_error("Timer could not get time until next call");
+    throw std::runtime_error(
+      std::string("Timer could not get time until next call: ") + rcl_get_error_string_safe());
   }
   return std::chrono::nanoseconds(time_until_next_call);
 }

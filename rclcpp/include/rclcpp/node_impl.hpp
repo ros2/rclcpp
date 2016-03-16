@@ -76,10 +76,13 @@ Node::create_publisher(
 
   auto publisher_options = rcl_publisher_get_default_options();
   publisher_options.qos = qos_profile;
-  publisher_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
-    *allocator.get());
+
+  auto message_alloc = std::make_shared<typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>(*allocator.get());
+  publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(
+    *message_alloc.get());
+
   auto publisher = publisher::Publisher<MessageT, Alloc>::make_shared(
-    node_handle_, topic_name, publisher_options, allocator);
+    node_handle_, topic_name, publisher_options, message_alloc);
 
   if (use_intra_process_comms_) {
     auto intra_process_manager =
@@ -116,8 +119,8 @@ Node::create_publisher(
     // *INDENT-ON*
     rcl_publisher_options_t intra_process_options = rcl_publisher_get_default_options();
     intra_process_options.qos = qos_profile;
-    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
-      *allocator.get());
+    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
+    *message_alloc.get());
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,
@@ -155,12 +158,13 @@ Node::create_subscription(
     msg_mem_strat =
       rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::create_default();
   }
+  // TODO scope
+  auto message_alloc = std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
 
-  // TODO Allocator
   auto subscription_options = rcl_subscription_get_default_options();
   subscription_options.qos = qos_profile;
-  subscription_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
-    *allocator.get());
+  subscription_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
+    *message_alloc.get());
   subscription_options.ignore_local_publications = ignore_local_publications;
 
   using rclcpp::subscription::Subscription;
@@ -176,8 +180,8 @@ Node::create_subscription(
   // Setup intra process.
   if (use_intra_process_comms_) {
     auto intra_process_options = rcl_subscription_get_default_options();
-    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT, Alloc>(
-      *allocator.get());
+    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
+      *message_alloc.get());
     intra_process_options.qos = qos_profile;
     intra_process_options.ignore_local_publications = false;
 

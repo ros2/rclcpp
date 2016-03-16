@@ -46,9 +46,9 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
     [](void * pointer, void * state) {
       auto allocator_ptr = static_cast<Alloc *>(state);
       // TODO check if null
-      // TODO size?
       auto typed_pointer = static_cast<T *>(pointer);
-      std::allocator_traits<Alloc>::deallocate(*allocator_ptr, typed_pointer, sizeof(T));
+      // TODO size: we don't know how many entries were allocated
+      std::allocator_traits<Alloc>::deallocate(*allocator_ptr, typed_pointer, 1);
     }).target<void(void *, void *)>();
 
   rcl_allocator.allocate = allocate_callback;
@@ -66,9 +66,9 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
   return rcl_get_default_allocator();
 }
 
-
 // TODO provide a nicer way of making a C++ allocator maybe?
 // or passing rcl allocators directly?
+
 
 }  // namespace allocator
 }  // namespace rclcpp

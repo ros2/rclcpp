@@ -109,7 +109,7 @@ public:
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
         std::string("could not create client: ") +
-        rmw_get_error_string_safe());
+        rcl_get_error_string_safe());
       // *INDENT-ON*
     }
   }

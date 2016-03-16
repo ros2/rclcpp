@@ -156,13 +156,11 @@ public:
   Publisher(
     std::shared_ptr<rcl_node_t> node_handle,
     std::string topic,
-    //size_t queue_size,
     rcl_publisher_options_t & publisher_options,
-    std::shared_ptr<Alloc> allocator)
-  : PublisherBase(node_handle, topic, publisher_options.qos.depth)
+    std::shared_ptr<MessageAlloc> allocator)
+  : PublisherBase(node_handle, topic, publisher_options.qos.depth), message_allocator_(allocator)
   {
     using rosidl_generator_cpp::get_message_type_support_handle;
-    message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
 
     auto type_support_handle = get_message_type_support_handle<MessageT>();

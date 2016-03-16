@@ -106,7 +106,7 @@ public:
     {
       throw std::runtime_error(
         std::string("could not create service: ") +
-        rmw_get_error_string_safe());
+        rcl_get_error_string_safe());
     }
   }
 

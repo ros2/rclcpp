@@ -16,6 +16,8 @@
 #include <string>
 #include <type_traits>
 
+#include "rcl/error_handling.h"
+
 #include "rclcpp/executor.hpp"
 #include "rclcpp/scope_exit.hpp"
 
@@ -34,7 +36,9 @@ Executor::Executor(const ExecutorArgs & args)
   if (rcl_guard_condition_init(
     &interrupt_guard_condition_, guard_condition_options) != RCL_RET_OK)
   {
-    throw std::runtime_error("Failed to create interrupt guard condition in Executor constructor");
+    throw std::runtime_error(
+      std::string("Failed to create interrupt guard condition in Executor constructor: ") +
+      rcl_get_error_string_safe());
   }
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
@@ -55,10 +59,10 @@ Executor::Executor(const ExecutorArgs & args)
     &waitset_, fixed_guard_conditions_.data(), 0, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
   {
     fprintf(stderr,
-      "[rclcpp::error] failed to create waitset: %s\n", rmw_get_error_string_safe());
+      "[rclcpp::error] failed to create waitset: %s\n", rcl_get_error_string_safe());
     if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
       fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
+        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
     }
     throw std::runtime_error("Failed to create waitset in Executor constructor");
   }
@@ -342,7 +346,9 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     if (rcl_wait_set_resize_subscriptions(
       &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
     {
-      throw std::runtime_error("Couldn't resize waitset to number of subscriptions");
+      throw std::runtime_error(
+        std::string("Couldn't resize waitset to number of subscriptions: ") +
+        rcl_get_error_string_safe());
     }
   }
 
@@ -350,7 +356,9 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     if (rcl_wait_set_resize_services(
       &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
     {
-      throw std::runtime_error("Couldn't resize waitset to number of services");
+      throw std::runtime_error(
+        std::string("Couldn't resize waitset to number of services: ") +
+        rcl_get_error_string_safe());
     }
   }
 
@@ -358,11 +366,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     if (rcl_wait_set_resize_clients(
       &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
     {
-      throw std::runtime_error("Couldn't resize waitset to number of clients");
+      throw std::runtime_error(
+        std::string("Couldn't resize waitset to number of clients: ") +
+        rcl_get_error_string_safe());
     }
   }
-
-  // TODO Only add the soonest timer to the waitset
 
   memory_strategy_->add_handles_to_waitset(&waitset_);
 

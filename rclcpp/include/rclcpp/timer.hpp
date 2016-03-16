@@ -28,6 +28,7 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rcl/error_handling.h"
 #include "rcl/timer.h"
 
 #include "rmw/error_handling.h"
@@ -117,7 +118,9 @@ public:
   {
     // Stop the timer from running.
     cancel();
-    rcl_timer_fini(&timer_handle_);
+    if (rcl_timer_fini(&timer_handle_) != RCL_RET_OK) {
+      fprintf(stderr, "Failed to clean up rcl timer handle");
+    }
   }
 
   // void specialization
@@ -132,11 +135,16 @@ public:
   {
     auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>(
       [this](rcl_timer_t * timer, uint64_t last_call_time) {
+        (void)timer;
+        (void)last_call_time;
         callback_();
       });
-    rcl_timer_init(
+    if (rcl_timer_init(
       &timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(),
-      rcl_get_default_allocator());
+      rcl_get_default_allocator()) != RCL_RET_OK)
+    {
+      fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
+    }
   }
 
   template<
@@ -150,11 +158,16 @@ public:
   {
     auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>(
       [this](rcl_timer_t * timer, uint64_t last_call_time) {
+        (void)timer;
+        (void)last_call_time;
         callback_(*this);
       });
-    rcl_timer_init(
+    if (rcl_timer_init(
       &timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(),
-      rcl_get_default_allocator());
+      rcl_get_default_allocator()) != RCL_RET_OK)
+    {
+      fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
+    }
   }
 
   virtual bool

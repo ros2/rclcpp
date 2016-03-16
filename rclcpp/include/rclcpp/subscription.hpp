@@ -104,14 +104,11 @@ public:
 
 protected:
   rcl_subscription_t intra_process_subscription_handle_;
+  rcl_subscription_t subscription_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase);
-
-  std::shared_ptr<rcl_node_t> node_handle_;
-
-  rcl_subscription_t subscription_handle_;
-
   std::string topic_name_;
   bool ignore_local_publications_;
 };
@@ -250,7 +247,7 @@ private:
     if (rcl_subscription_init(
         &intra_process_subscription_handle_, node_handle_.get(),
         rclcpp::type_support::get_intra_process_message_msg_type_support(),
-        (topic_name_ + "__intra").c_str(),
+        (get_topic_name() + "__intra").c_str(),
         &intra_process_options) != RCL_RET_OK)
     {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
