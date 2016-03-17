@@ -37,20 +37,13 @@ Executor::Executor(const ExecutorArgs & args)
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
   // The size of guard conditions is variable because the number of nodes can vary
-  const size_t initial_number_of_guard_conds = 2;
-  guard_conditions_.guard_condition_count = initial_number_of_guard_conds;
 
   // Put the global ctrl-c guard condition in
-  assert(guard_conditions_.guard_condition_count > 1);
   guard_cond_handles_.push_back(
     rclcpp::utilities::get_global_sigint_guard_condition()->data);
   // Put the executor's guard condition in
   guard_cond_handles_.push_back(interrupt_guard_condition_->data);
 
-  guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
-
-  // The waitset adds the fixed guard conditions to the middleware waitset on initialization,
-  // and removes the guard conditions in rmw_destroy_waitset.
   waitset_ = rmw_create_waitset(args.max_conditions);
 
   if (!waitset_) {
@@ -109,9 +102,7 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
     }
   }
   // Add the node's notify condition to the guard condition handles
-  guard_conditions_.guard_condition_count++;
   guard_cond_handles_.push_back(node_ptr->get_notify_guard_condition()->data);
-  guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
 }
 
 void
@@ -146,8 +137,6 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   for (auto it = guard_cond_handles_.begin(); it != guard_cond_handles_.end(); ++it) {
     if (*it == node_ptr->get_notify_guard_condition()->data) {
       guard_cond_handles_.erase(it);
-      --guard_conditions_.guard_condition_count;
-      guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
       break;
     }
   }
@@ -384,6 +373,10 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   client_handles.client_count =
     memory_strategy_->fill_client_handles(client_handles.clients);
 
+  // construct a guard conditions struct
+  rmw_guard_conditions_t rmw_guard_conditions;
+  rmw_guard_conditions.guard_condition_count = guard_cond_handles_.size();
+  rmw_guard_conditions.guard_conditions = guard_cond_handles_.data();
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -411,7 +404,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // Now wait on the waitable subscriptions and timers
   rmw_ret_t status = rmw_wait(
     &subscriber_handles,
-    &guard_conditions_,
+    &rmw_guard_conditions,
     &service_handles,
     &client_handles,
     waitset_,
