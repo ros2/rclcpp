@@ -77,6 +77,9 @@ public:
     const std::string & node_name, rclcpp::context::Context::SharedPtr context,
     bool use_intra_process_comms = false);
 
+  RCLCPP_PUBLIC
+  ~Node();
+
   /// Get the name of the node.
   // \return The name of the node.
   RCLCPP_PUBLIC

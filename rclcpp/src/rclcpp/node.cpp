@@ -39,6 +39,9 @@ Node::Node(
   use_intra_process_comms_(use_intra_process_comms),
   notify_guard_condition_(rmw_create_guard_condition())
 {
+  if (!notify_guard_condition_) {
+    throw std::runtime_error("Failed to create guard condition for node!");
+  }
   has_executor.store(false);
   size_t domain_id = 0;
   char * ros_domain_id = nullptr;
@@ -52,6 +55,7 @@ Node::Node(
   if (ros_domain_id) {
     uint32_t number = strtoul(ros_domain_id, NULL, 0);
     if (number == (std::numeric_limits<uint32_t>::max)()) {
+      rmw_destroy_guard_condition(notify_guard_condition_);
       throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
     domain_id = static_cast<size_t>(number);
@@ -63,6 +67,7 @@ Node::Node(
   auto node = rmw_create_node(name_.c_str(), domain_id);
   if (!node) {
     // *INDENT-OFF*
+    rmw_destroy_guard_condition(notify_guard_condition_);
     throw std::runtime_error(
       std::string("could not create node: ") +
       rmw_get_error_string_safe());
@@ -84,6 +89,13 @@ Node::Node(
     CallbackGroupType::MutuallyExclusive);
   events_publisher_ = create_publisher<rcl_interfaces::msg::ParameterEvent>(
     "parameter_events", rmw_qos_profile_parameter_events);
+}
+
+Node::~Node()
+{
+  if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+    fprintf(stderr, "Warning: failed to destroy guard condition in Node destructor!");
+  }
 }
 
 const std::string &
