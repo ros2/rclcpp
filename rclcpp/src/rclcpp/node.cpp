@@ -40,7 +40,8 @@ Node::Node(
   notify_guard_condition_(rmw_create_guard_condition())
 {
   if (!notify_guard_condition_) {
-    throw std::runtime_error("Failed to create guard condition for node!");
+    throw std::runtime_error("Failed to create guard condition for node: " +
+      rmw_get_error_string_safe());
   }
   has_executor.store(false);
   size_t domain_id = 0;
@@ -94,7 +95,8 @@ Node::Node(
 Node::~Node()
 {
   if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
-    fprintf(stderr, "Warning: failed to destroy guard condition in Node destructor!");
+    fprintf(stderr, "Warning! Failed to destroy guard condition in Node destructor: " +
+      rmw_get_error_string_safe());
   }
 }
 
