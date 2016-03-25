@@ -128,6 +128,7 @@ protected:
 
   rcl_publisher_t publisher_handle_;
   rcl_publisher_t intra_process_publisher_handle_;
+  rcl_allocator_t rcl_allocator_;
 
   std::string topic_;
   size_t queue_size_;
@@ -163,6 +164,7 @@ public:
     using rosidl_generator_cpp::get_message_type_support_handle;
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
 
+    rcl_allocator_ = publisher_options.allocator;
     auto type_support_handle = get_message_type_support_handle<MessageT>();
     if (rcl_publisher_init(
           &publisher_handle_, node_handle_.get(), type_support_handle,

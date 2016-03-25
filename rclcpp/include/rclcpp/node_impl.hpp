@@ -117,10 +117,7 @@ Node::create_publisher(
       return message_seq;
     };
     // *INDENT-ON*
-    rcl_publisher_options_t intra_process_options = rcl_publisher_get_default_options();
-    intra_process_options.qos = qos_profile;
-    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
-    *message_alloc.get());
+    rcl_publisher_options_t intra_process_options = publisher_options;
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,
