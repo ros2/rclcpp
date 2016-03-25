@@ -343,7 +343,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
     {
       throw std::runtime_error(
-        std::string("Couldn't resize waitset to number of subscriptions: ") +
+        std::string("Couldn't resize the number of subscriptions in waitset : ") +
         rcl_get_error_string_safe());
     }
   }
@@ -353,7 +353,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
     {
       throw std::runtime_error(
-        std::string("Couldn't resize waitset to number of services: ") +
+        std::string("Couldn't resize the number of services in waitset : ") +
         rcl_get_error_string_safe());
     }
   }
@@ -363,12 +363,27 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
     {
       throw std::runtime_error(
-        std::string("Couldn't resize waitset to number of clients: ") +
+        std::string("Couldn't resize the number of clients in waitset : ") +
         rcl_get_error_string_safe());
     }
   }
 
   memory_strategy_->add_handles_to_waitset(&waitset_);
+
+  // TODO It seems like guard conditions need to be in the "memory strategy" god I hate that name
+  if (waitset_.size_of_guard_conditions < guard_cond_handles_.size()) {
+    if (rcl_wait_set_resize_guard_conditions(
+      &waitset_, guard_cond_handles_.size()) != RCL_RET_OK)
+    {
+      throw std::runtime_error(
+        std::string("Couldn't resize the number of guard conditions in waitset : ") +
+        rcl_get_error_string_safe());
+    }
+  }
+  // TODO: Will need to re-add guard condition handles every wait call...
+  for (auto handle : guard_cond_handles_) {
+    rcl_wait_set_add_guard_condition(&waitset_, handle);
+  }
 
   rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
   if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT && status != RCL_RET_WAIT_SET_EMPTY) {

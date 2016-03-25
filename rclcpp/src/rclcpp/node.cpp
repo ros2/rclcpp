@@ -75,7 +75,7 @@ Node::Node(
   }
 
   rcl_node_t node = rcl_get_zero_initialized_node();
-  rcl_node_options_t options;
+  rcl_node_options_t options = rcl_node_get_default_options();
   // TODO(jacquelinekay): Allocator options
   options.domain_id = domain_id;
   if (rcl_node_init(&node, name_.c_str(), &options) != RCL_RET_OK) {
@@ -85,7 +85,7 @@ Node::Node(
         "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
     }
 
-    throw std::runtime_error("Could not initialize rcl node");
+    throw std::runtime_error(std::string("Could not initialize rcl node: ")  + rcl_get_error_string_safe());
   }
 
   // Initialize node handle shared_ptr with custom deleter.

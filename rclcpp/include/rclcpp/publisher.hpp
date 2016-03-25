@@ -172,6 +172,15 @@ public:
         std::string("could not create publisher: ") +
         rcl_get_error_string_safe());
     }
+    // Life time of this object is tied to the publisher handle.
+    if (rmw_get_gid_for_publisher(
+      rcl_publisher_get_rmw_handle(&publisher_handle_), &rmw_gid_) != RMW_RET_OK)
+    {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
+      // *INDENT-ON*
+    }
   }
 
 

@@ -40,17 +40,6 @@ PublisherBase::PublisherBase(
   topic_(topic), queue_size_(queue_size),
   intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
 {
-  // Life time of this object is tied to the publisher handle.
-  // TODO this won't be valid until we initialize the publisher handle. argh
-  // What is the point of this check?
-  if (rmw_get_gid_for_publisher(
-    rcl_publisher_get_rmw_handle(&publisher_handle_), &rmw_gid_) != RMW_RET_OK)
-  {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-    throw std::runtime_error(
-      std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
 }
 
 PublisherBase::~PublisherBase()
