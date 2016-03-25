@@ -16,6 +16,7 @@
 #include <string>
 #include <type_traits>
 
+#include "rcl/allocator.h"
 #include "rcl/error_handling.h"
 
 #include "rclcpp/executor.hpp"
@@ -44,11 +45,6 @@ Executor::Executor(const ExecutorArgs & args)
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
 
-  // These guard conditions are permanently attached to the waitset.
-  // const size_t number_of_guard_conds = 2;
-  //fixed_guard_conditions_.guard_condition_count = number_of_guard_conds;
-  //fixed_guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
-
   // Put the global ctrl-c guard condition in
   memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
 
@@ -56,7 +52,7 @@ Executor::Executor(const ExecutorArgs & args)
   memory_strategy_->add_guard_condition(interrupt_guard_condition_);
 
   if (rcl_wait_set_init(
-    &waitset_, fixed_guard_conditions_.data(), 0, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
+    &waitset_, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
   {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rcl_get_error_string_safe());

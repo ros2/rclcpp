@@ -139,7 +139,9 @@ rclcpp::utilities::init(int argc, char * argv[])
     // *INDENT-ON*
   }
   rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
-  rcl_guard_condition_init(&g_sigint_guard_cond_handle, options);
+  if (rcl_guard_condition_init(&g_sigint_guard_cond_handle, options) != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
+  }
 }
 
 bool

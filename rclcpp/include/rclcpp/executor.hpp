@@ -305,9 +305,6 @@ protected:
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
-  // array of fixed guard conditions
-  std::array<rcl_guard_condition_t *, 2> fixed_guard_conditions_;
-
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rcl_guard_condition_t interrupt_guard_condition_;
 
