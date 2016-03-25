@@ -56,7 +56,10 @@ Node::Node(
   if (ros_domain_id) {
     uint32_t number = strtoul(ros_domain_id, NULL, 0);
     if (number == (std::numeric_limits<uint32_t>::max)()) {
-      rmw_destroy_guard_condition(notify_guard_condition_);
+      if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+        fprintf(
+          stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
+      }
       throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
     domain_id = static_cast<size_t>(number);
@@ -68,7 +71,10 @@ Node::Node(
   auto node = rmw_create_node(name_.c_str(), domain_id);
   if (!node) {
     // *INDENT-OFF*
-    rmw_destroy_guard_condition(notify_guard_condition_);
+    if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+      fprintf(
+        stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
+    }
     throw std::runtime_error(
       std::string("could not create node: ") +
       rmw_get_error_string_safe());
