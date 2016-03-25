@@ -134,7 +134,6 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
     }
   }
   // Remove the node's guard condition
-  // Consider making a map instead
   for (auto it = guard_cond_handles_.begin(); it != guard_cond_handles_.end(); ++it) {
     if (*it == node_ptr->get_notify_guard_condition()->data) {
       guard_cond_handles_.erase(it);
@@ -377,7 +376,10 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // construct a guard conditions struct
   rmw_guard_conditions_t rmw_guard_conditions;
   rmw_guard_conditions.guard_condition_count = guard_cond_handles_.size();
-  rmw_guard_conditions.guard_conditions = guard_cond_handles_.data();
+  // For now we don't do anything with the null guard handles. Make a throwaway copy
+  // of the handles data so that we don't have to restore it after it gets set to null.
+  auto temporary_guard_handles = guard_cond_handles_;
+  rmw_guard_conditions.guard_conditions = temporary_guard_handles.data();
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -413,10 +415,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
     throw std::runtime_error(rmw_get_error_string_safe());
   }
-  guard_cond_handles_.erase(
-      std::remove(guard_cond_handles_.begin(), guard_cond_handles_.end(), nullptr),
-      guard_cond_handles_.end()
-  );
+  // For now we don't do anything with the null guard handles.
 
   memory_strategy_->remove_null_handles();
 }
