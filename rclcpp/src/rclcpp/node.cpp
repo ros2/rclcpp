@@ -75,7 +75,6 @@ Node::Node(
       fprintf(
         stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
     }
-
     throw std::runtime_error(
       std::string("could not create node: ") +
       rmw_get_error_string_safe());
