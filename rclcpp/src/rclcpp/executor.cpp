@@ -406,6 +406,10 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
     throw std::runtime_error(rmw_get_error_string_safe());
   }
+  guard_cond_handles_.erase(
+      std::remove(guard_cond_handles_.begin(), guard_cond_handles_.end(), nullptr),
+      guard_cond_handles_.end()
+  );
 
   memory_strategy_->remove_null_handles();
 }
