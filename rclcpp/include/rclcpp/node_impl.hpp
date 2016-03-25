@@ -126,7 +126,7 @@ Node::create_publisher(
       shared_publish_callback,
       intra_process_options);
   }
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
@@ -231,7 +231,7 @@ Node::create_subscription(
     default_callback_group_->add_subscription(sub_base_ptr);
   }
   number_of_subscriptions_++;
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on subscription creation: ") + rmw_get_error_string());
@@ -282,7 +282,7 @@ Node::create_wall_timer(
     default_callback_group_->add_timer(timer);
   }
   number_of_timers_++;
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on timer creation: ") + rmw_get_error_string());
@@ -321,7 +321,7 @@ Node::create_client(
   }
   number_of_clients_++;
 
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on client creation: ") + rmw_get_error_string());
@@ -356,7 +356,7 @@ Node::create_service(
     default_callback_group_->add_service(serv_base_ptr);
   }
   number_of_services_++;
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on service creation: ") + rmw_get_error_string());

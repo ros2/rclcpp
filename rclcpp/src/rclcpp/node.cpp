@@ -36,13 +36,18 @@ Node::Node(
   bool use_intra_process_comms)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
-  use_intra_process_comms_(use_intra_process_comms),
-  notify_guard_condition_(rmw_create_guard_condition())
+  use_intra_process_comms_(use_intra_process_comms)
 {
-  if (!notify_guard_condition_) {
-    throw std::runtime_error("Failed to create guard condition for node: " +
-            std::string(rmw_get_error_string_safe()));
+
+  rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
+  if (rcl_guard_condition_init(
+    &notify_guard_condition_, guard_condition_options) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+      std::string("Failed to create interrupt guard condition in Executor constructor: ") +
+      rcl_get_error_string_safe());
   }
+
   has_executor.store(false);
   size_t domain_id = 0;
   char * ros_domain_id = nullptr;
@@ -56,9 +61,10 @@ Node::Node(
   if (ros_domain_id) {
     uint32_t number = strtoul(ros_domain_id, NULL, 0);
     if (number == (std::numeric_limits<uint32_t>::max)()) {
-      if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
-        fprintf(
-          stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
+      // Finalize the interrupt guard condition.
+      if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
+        fprintf(stderr,
+          "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
       }
       throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
@@ -73,10 +79,12 @@ Node::Node(
   // TODO(jacquelinekay): Allocator options
   options.domain_id = domain_id;
   if (rcl_node_init(&node, name_.c_str(), &options) != RCL_RET_OK) {
-    if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
-      fprintf(
-        stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
+    // Finalize the interrupt guard condition.
+    if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
+      fprintf(stderr,
+        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
     }
+
     throw std::runtime_error("Could not initialize rcl node");
   }
 
@@ -100,9 +108,10 @@ Node::Node(
 
 Node::~Node()
 {
-  if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
-    fprintf(stderr, "Warning! Failed to destroy guard condition in Node destructor: %s\n",
-      rmw_get_error_string_safe());
+  // Finalize the interrupt guard condition.
+  if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
   }
 }
 
@@ -359,7 +368,7 @@ Node::get_callback_groups() const
   return callback_groups_;
 }
 
-rmw_guard_condition_t * Node::get_notify_guard_condition() const
+const rcl_guard_condition_t * Node::get_notify_guard_condition() const
 {
-  return notify_guard_condition_;
+  return &notify_guard_condition_;
 }

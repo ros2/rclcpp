@@ -258,7 +258,7 @@ public:
   get_callback_groups() const;
 
   RCLCPP_PUBLIC
-  rmw_guard_condition_t * get_notify_guard_condition() const;
+  const rcl_guard_condition_t * get_notify_guard_condition() const;
 
   std::atomic_bool has_executor;
 
@@ -289,7 +289,7 @@ private:
   mutable std::mutex mutex_;
 
   /// Guard condition for notifying the Executor of changes to this node.
-  rmw_guard_condition_t * notify_guard_condition_;
+  rcl_guard_condition_t notify_guard_condition_;
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
