@@ -406,7 +406,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
     throw std::runtime_error(rmw_get_error_string_safe());
   }
-  // For now we don't do anything with the null guard handles.
 
   memory_strategy_->remove_null_handles();
 }
