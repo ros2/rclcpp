@@ -319,7 +319,7 @@ private:
   RCLCPP_DISABLE_COPY(Executor);
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
-  std::vector<void *> guard_cond_handles_;
+  // std::vector<void *> guard_cond_handles_;
 };
 
 }  // namespace executor

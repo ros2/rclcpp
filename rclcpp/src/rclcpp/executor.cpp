@@ -40,10 +40,11 @@ Executor::Executor(const ExecutorArgs & args)
   // The size of guard conditions is variable because the number of nodes can vary
 
   // Put the global ctrl-c guard condition in
-  guard_cond_handles_.push_back(
-    rclcpp::utilities::get_global_sigint_guard_condition()->data);
+  /*guard_cond_handles_.push_back(
+    rclcpp::utilities::get_global_sigint_guard_condition()->data);*/
+  memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
   // Put the executor's guard condition in
-  guard_cond_handles_.push_back(interrupt_guard_condition_->data);
+  memory_strategy_->add_guard_condition(interrupt_guard_condition_);
 
   waitset_ = rmw_create_waitset(args.max_conditions);
 
@@ -103,7 +104,8 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
     }
   }
   // Add the node's notify condition to the guard condition handles
-  guard_cond_handles_.push_back(node_ptr->get_notify_guard_condition()->data);
+  // guard_cond_handles_.push_back(node_ptr->get_notify_guard_condition()->data);
+  memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
 void
@@ -133,13 +135,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
       }
     }
   }
-  // Remove the node's guard condition
-  for (auto it = guard_cond_handles_.begin(); it != guard_cond_handles_.end(); ++it) {
-    if (*it == node_ptr->get_notify_guard_condition()->data) {
-      guard_cond_handles_.erase(it);
-      break;
-    }
-  }
+  memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
 void
@@ -360,6 +356,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     );
   }
 
+  memory_strategy_->clear_handles();
   // Use the number of subscriptions to allocate memory in the handles
   rmw_subscriptions_t subscriber_handles;
   subscriber_handles.subscriber_count =
@@ -374,12 +371,15 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     memory_strategy_->fill_client_handles(client_handles.clients);
 
   // construct a guard conditions struct
-  rmw_guard_conditions_t rmw_guard_conditions;
-  rmw_guard_conditions.guard_condition_count = guard_cond_handles_.size();
+  rmw_guard_conditions_t guard_conditions;
+  guard_conditions.guard_condition_count =
+    memory_strategy_->fill_guard_condition_handles(guard_conditions.guard_conditions);
+
+  // rmw_guard_conditions.guard_condition_count = guard_cond_handles_.size();
   // For now we don't do anything with the null guard handles. Make a throwaway copy
   // of the handles data so that we don't have to restore it after it gets set to null.
-  auto temporary_guard_handles = guard_cond_handles_;
-  rmw_guard_conditions.guard_conditions = temporary_guard_handles.data();
+  // auto temporary_guard_handles = guard_cond_handles_;
+  //rmw_guard_conditions.guard_conditions = temporary_guard_handles.data();
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -407,7 +407,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // Now wait on the waitable subscriptions and timers
   rmw_ret_t status = rmw_wait(
     &subscriber_handles,
-    &rmw_guard_conditions,
+    &guard_conditions,
     &service_handles,
     &client_handles,
     waitset_,
@@ -415,7 +415,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
     throw std::runtime_error(rmw_get_error_string_safe());
   }
-  // For now we don't do anything with the null guard handles.
 
   memory_strategy_->remove_null_handles();
 }

@@ -49,6 +49,9 @@ public:
   // return the new number of clients
   virtual size_t fill_client_handles(void ** & ptr) = 0;
 
+  // return the new number of guard_conditions
+  virtual size_t fill_guard_condition_handles(void ** & ptr) = 0;
+
   virtual void clear_active_entities() = 0;
 
   virtual void clear_handles() = 0;
@@ -58,6 +61,10 @@ public:
   /// Provide a newly initialized AnyExecutable object.
   // \return Shared pointer to the fresh executable.
   virtual rclcpp::executor::AnyExecutable::SharedPtr instantiate_next_executable() = 0;
+
+  virtual void add_guard_condition(rmw_guard_condition_t * guard_condition) = 0;
+
+  virtual void remove_guard_condition(rmw_guard_condition_t * guard_condition) = 0;
 
   virtual void
   get_next_subscription(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
