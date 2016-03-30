@@ -376,10 +376,24 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     }
   }
 
+  if (!memory_strategy_->add_handles_to_waitset(&waitset_)) {
+    throw std::runtime_error("Couldn't fill waitset");
+  }
+  fprintf(stderr, "waiting\n");
+
   rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
-  if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT && status != RCL_RET_WAIT_SET_EMPTY) {
+  if (status == RCL_RET_WAIT_SET_EMPTY)
+  {
+    fprintf(stderr, "Warning: empty waitset received in rcl_wait(). This should never happen.\n");
+  } else if (status == RCL_RET_TIMEOUT) {
+    fprintf(stderr, "Warning: timout in rcl_wait().\n");
+  } else if (status != RCL_RET_OK) {
     throw std::runtime_error(std::string("rcl_wait() failed: ") + rcl_get_error_string_safe());
   }
+
+  // check the null handles in the waitset and remove them from the handles in
+
+  // Then clear the waitset
 }
 
 rclcpp::node::Node::SharedPtr
