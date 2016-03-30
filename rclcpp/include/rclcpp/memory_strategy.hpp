@@ -47,16 +47,18 @@ public:
   virtual size_t number_of_ready_subscriptions() const = 0;
   virtual size_t number_of_ready_services() const = 0;
   virtual size_t number_of_ready_clients() const = 0;
+  virtual size_t number_of_guard_conditions() const = 0;
 
   virtual bool add_handles_to_waitset(rcl_wait_set_t * wait_set) = 0;
+  virtual void clear_active_entities() = 0;
 
   /// Provide a newly initialized AnyExecutable object.
   // \return Shared pointer to the fresh executable.
   virtual rclcpp::executor::AnyExecutable::SharedPtr instantiate_next_executable() = 0;
 
-  virtual void add_guard_condition(const rmw_guard_condition_t * guard_condition) = 0;
+  virtual void add_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
-  virtual void remove_guard_condition(const rmw_guard_condition_t * guard_condition) = 0;
+  virtual void remove_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
   virtual void
   get_next_subscription(rclcpp::executor::AnyExecutable::SharedPtr any_exec,

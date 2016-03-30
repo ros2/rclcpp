@@ -49,7 +49,7 @@ Executor::Executor(const ExecutorArgs & args)
   memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
 
   // Put the executor's guard condition in
-  memory_strategy_->add_guard_condition(interrupt_guard_condition_);
+  memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
 
   if (rcl_wait_set_init(
     &waitset_, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
@@ -337,7 +337,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     );
   }
 
-  memory_strategy_->clear_handles();
   if (waitset_.size_of_subscriptions < memory_strategy_->number_of_ready_subscriptions()) {
     if (rcl_wait_set_resize_subscriptions(
       &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
@@ -367,22 +366,14 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
         rcl_get_error_string_safe());
     }
   }
-
-  memory_strategy_->add_handles_to_waitset(&waitset_);
-
-  // TODO It seems like guard conditions need to be in the "memory strategy" god I hate that name
-  if (waitset_.size_of_guard_conditions < guard_cond_handles_.size()) {
+  if (waitset_.size_of_guard_conditions < memory_strategy_->number_of_guard_conditions()) {
     if (rcl_wait_set_resize_guard_conditions(
-      &waitset_, guard_cond_handles_.size()) != RCL_RET_OK)
+      &waitset_, memory_strategy_->number_of_guard_conditions()) != RCL_RET_OK)
     {
       throw std::runtime_error(
-        std::string("Couldn't resize the number of guard conditions in waitset : ") +
+        std::string("Couldn't resize the number of guard_conditions in waitset : ") +
         rcl_get_error_string_safe());
     }
-  }
-  // TODO: Will need to re-add guard condition handles every wait call...
-  for (auto handle : guard_cond_handles_) {
-    rcl_wait_set_add_guard_condition(&waitset_, handle);
   }
 
   rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
@@ -390,12 +381,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     throw std::runtime_error(rcl_get_error_string_safe());
   }
 
-/*
-  // construct a guard conditions struct
-  rmw_guard_conditions_t guard_conditions;
-  guard_conditions.guard_condition_count =
-    memory_strategy_->fill_guard_condition_handles(guard_conditions.guard_conditions);
-*/
+  
 }
 
 rclcpp::node::Node::SharedPtr

@@ -64,7 +64,7 @@ public:
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
-  void add_guard_condition(const rmw_guard_condition_t * guard_condition)
+  void add_guard_condition(const rcl_guard_condition_t * guard_condition)
   {
     for (const auto & existing_guard_condition : guard_conditions_) {
       if (existing_guard_condition == guard_condition) {
@@ -74,7 +74,7 @@ public:
     guard_conditions_.push_back(guard_condition);
   }
 
-  void remove_guard_condition(const rmw_guard_condition_t * guard_condition)
+  void remove_guard_condition(const rcl_guard_condition_t * guard_condition)
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
@@ -82,6 +82,13 @@ public:
         break;
       }
     }
+  }
+
+  void clear_active_entities()
+  {
+    subscription_handles_.clear();
+    service_handles_.clear();
+    client_handles_.clear();
   }
 
 /*
@@ -126,13 +133,6 @@ public:
     }
     ptr = guard_condition_handles_.data();
     return guard_condition_handles_.size();
-  }
-
-  void clear_active_entities()
-  {
-    subscriptions_.clear();
-    services_.clear();
-    clients_.clear();
   }
 
   void clear_handles()
@@ -234,6 +234,13 @@ public:
     for (auto timer : timer_handles_) {
       if (rcl_wait_set_add_timer(wait_set, timer) != RCL_RET_OK) {
         fprintf(stderr, "Couldn't add timer to waitset: %s\n", rcl_get_error_string_safe());
+        return false;
+      }
+    }
+
+    for (auto guard_condition : guard_conditions_) {
+      if (rcl_wait_set_add_guard_condition(wait_set, guard_condition) != RCL_RET_OK) {
+        fprintf(stderr, "Couldn't add guard_condition to waitset: %s\n", rcl_get_error_string_safe());
         return false;
       }
     }
@@ -369,12 +376,16 @@ public:
     return client_handles_.size();
   }
 
+  size_t number_of_guard_conditions() const {
+    return guard_conditions_.size();
+  }
+
 private:
   template<typename T>
   using VectorRebind =
       std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 
-  VectorRebind<const rmw_guard_condition_t *> guard_conditions_;
+  VectorRebind<const rcl_guard_condition_t *> guard_conditions_;
 
   VectorRebind<const rcl_subscription_t *> subscription_handles_;
   VectorRebind<const rcl_service_t *> service_handles_;
