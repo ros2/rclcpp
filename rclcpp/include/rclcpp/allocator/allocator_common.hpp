@@ -29,30 +29,26 @@ namespace allocator
 template<typename T, typename Alloc>
 using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
 
+template<typename Alloc>
+void * retyped_allocate(size_t size, void * untyped_allocator)
+{
+  return std::allocator_traits<Alloc>::allocate(*static_cast<Alloc *>(untyped_allocator), size);
+}
+template<typename Alloc, typename T>
+void retyped_deallocate(void * untyped_allocator, void * untyped_pointer)
+{
+  std::allocator_traits<Alloc>::deallocate(
+    *static_cast<Alloc *>(untyped_allocator), static_cast<T *>(untyped_pointer), 1);
+}
+
 // Convert a std::allocator_traits-formatted Allocator into an rcl allocator
 template<typename T, typename Alloc, typename std::enable_if<!std::is_same<Alloc, std::allocator<void>>::value>::type * = nullptr>
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {
   rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
 
-  // Argh
-  auto allocate_callback = std::function<void *(size_t, void *)>(
-    [](size_t size, void * state) -> void * {
-      auto allocator_ptr = static_cast<Alloc *>(state);
-      // TODO check if null
-      return std::allocator_traits<Alloc>::allocate(*allocator_ptr, size);
-    }).target<void *(size_t, void *)>();
-  auto deallocate_callback = std::function<void(void *, void *)>(
-    [](void * pointer, void * state) {
-      auto allocator_ptr = static_cast<Alloc *>(state);
-      // TODO check if null
-      auto typed_pointer = static_cast<T *>(pointer);
-      // TODO size: we don't know how many entries were allocated
-      std::allocator_traits<Alloc>::deallocate(*allocator_ptr, typed_pointer, 1);
-    }).target<void(void *, void *)>();
-
-  rcl_allocator.allocate = allocate_callback;
-  rcl_allocator.deallocate = deallocate_callback;
+  rcl_allocator.allocate = &retyped_allocate<Alloc>;
+  rcl_allocator.deallocate = &retyped_deallocate<Alloc, T>;
   rcl_allocator.reallocate = nullptr;
   rcl_allocator.state = &allocator;
   return rcl_allocator;
