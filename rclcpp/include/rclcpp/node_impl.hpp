@@ -137,7 +137,7 @@ Node::create_publisher(
   if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
-              "Failed to notify waitset of change to node state: ") + rmw_get_error_string());
+              "Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
   }
   return publisher;
 }
@@ -251,7 +251,7 @@ Node::create_subscription(
   if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
-              "Failed to notify waitset of change to node state: ") + rmw_get_error_string());
+              "Failed to notify waitset on subscription creation: ") + rmw_get_error_string());
   }
   return sub;
 }
@@ -302,7 +302,7 @@ Node::create_wall_timer(
   if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
-              "Failed to notify waitset of change to node state: ") + rmw_get_error_string());
+              "Failed to notify waitset on timer creation: ") + rmw_get_error_string());
   }
   return timer;
 }
@@ -351,7 +351,7 @@ Node::create_client(
   if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
-              "Failed to notify waitset of change to node state: ") + rmw_get_error_string());
+              "Failed to notify waitset on client creation: ") + rmw_get_error_string());
   }
   return cli;
 }
@@ -397,7 +397,7 @@ Node::create_service(
   if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
             std::string(
-              "Failed to notify waitset of change to node state: ") + rmw_get_error_string());
+              "Failed to notify waitset on service creation: ") + rmw_get_error_string());
   }
   return serv;
 }
