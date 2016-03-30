@@ -64,7 +64,8 @@ public:
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
-  void add_guard_condition(const rmw_guard_condition_t * guard_condition) {
+  void add_guard_condition(const rmw_guard_condition_t * guard_condition)
+  {
     for (const auto & existing_guard_condition : guard_conditions_) {
       if (existing_guard_condition == guard_condition) {
         return;
@@ -73,7 +74,8 @@ public:
     guard_conditions_.push_back(guard_condition);
   }
 
-  void remove_guard_condition(const rmw_guard_condition_t * guard_condition) {
+  void remove_guard_condition(const rmw_guard_condition_t * guard_condition)
+  {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
         guard_conditions_.erase(it);
@@ -114,7 +116,8 @@ public:
     return client_handles_.size();
   }
 
-  size_t fill_guard_condition_handles(void ** & ptr) {
+  size_t fill_guard_condition_handles(void ** & ptr)
+  {
     for (const auto & guard_condition : guard_conditions_) {
       if (guard_condition) {
         guard_condition_handles_.push_back(guard_condition->data);
