@@ -62,9 +62,9 @@ public:
   // \return Shared pointer to the fresh executable.
   virtual rclcpp::executor::AnyExecutable::SharedPtr instantiate_next_executable() = 0;
 
-  virtual void add_guard_condition(rmw_guard_condition_t * guard_condition) = 0;
+  virtual void add_guard_condition(const rmw_guard_condition_t * guard_condition) = 0;
 
-  virtual void remove_guard_condition(rmw_guard_condition_t * guard_condition) = 0;
+  virtual void remove_guard_condition(const rmw_guard_condition_t * guard_condition) = 0;
 
   virtual void
   get_next_subscription(rclcpp::executor::AnyExecutable::SharedPtr any_exec,

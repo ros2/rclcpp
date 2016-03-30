@@ -64,11 +64,16 @@ public:
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
-  void add_guard_condition(rmw_guard_condition_t * guard_condition) {
+  void add_guard_condition(const rmw_guard_condition_t * guard_condition) {
+    for (const auto & existing_guard_condition : guard_conditions_) {
+      if (existing_guard_condition == guard_condition) {
+        return;
+      }
+    }
     guard_conditions_.push_back(guard_condition);
   }
 
-  void remove_guard_condition(rmw_guard_condition_t * guard_condition) {
+  void remove_guard_condition(const rmw_guard_condition_t * guard_condition) {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
         guard_conditions_.erase(it);
@@ -110,8 +115,10 @@ public:
   }
 
   size_t fill_guard_condition_handles(void ** & ptr) {
-    for (auto & guard_condition : guard_conditions_) {
-      guard_condition_handles_.push_back(guard_condition->data);
+    for (const auto & guard_condition : guard_conditions_) {
+      if (guard_condition) {
+        guard_condition_handles_.push_back(guard_condition->data);
+      }
     }
     ptr = guard_condition_handles_.data();
     return guard_condition_handles_.size();
@@ -317,7 +324,7 @@ private:
   VectorRebind<rclcpp::subscription::SubscriptionBase::SharedPtr> subscriptions_;
   VectorRebind<rclcpp::service::ServiceBase::SharedPtr> services_;
   VectorRebind<rclcpp::client::ClientBase::SharedPtr> clients_;
-  VectorRebind<rmw_guard_condition_t *> guard_conditions_;
+  VectorRebind<const rmw_guard_condition_t *> guard_conditions_;
 
   VectorRebind<void *> subscriber_handles_;
   VectorRebind<void *> service_handles_;

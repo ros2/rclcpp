@@ -40,8 +40,6 @@ Executor::Executor(const ExecutorArgs & args)
   // The size of guard conditions is variable because the number of nodes can vary
 
   // Put the global ctrl-c guard condition in
-  /*guard_cond_handles_.push_back(
-    rclcpp::utilities::get_global_sigint_guard_condition()->data);*/
   memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(interrupt_guard_condition_);
@@ -104,7 +102,6 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
     }
   }
   // Add the node's notify condition to the guard condition handles
-  // guard_cond_handles_.push_back(node_ptr->get_notify_guard_condition()->data);
   memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
@@ -374,12 +371,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   rmw_guard_conditions_t guard_conditions;
   guard_conditions.guard_condition_count =
     memory_strategy_->fill_guard_condition_handles(guard_conditions.guard_conditions);
-
-  // rmw_guard_conditions.guard_condition_count = guard_cond_handles_.size();
-  // For now we don't do anything with the null guard handles. Make a throwaway copy
-  // of the handles data so that we don't have to restore it after it gets set to null.
-  // auto temporary_guard_handles = guard_cond_handles_;
-  //rmw_guard_conditions.guard_conditions = temporary_guard_handles.data();
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
