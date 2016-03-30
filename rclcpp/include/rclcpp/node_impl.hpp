@@ -341,7 +341,8 @@ Node::create_service(
   service_options.qos = qos_profile;
 
   auto serv = service::Service<ServiceT>::make_shared(
-    node_handle_, service_name, any_service_callback, service_options);
+    node_handle_,
+    service_name, any_service_callback, service_options);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   if (group) {
     if (!group_in_node(group)) {

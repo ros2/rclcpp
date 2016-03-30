@@ -103,8 +103,8 @@ public:
     const rmw_message_info_t & message_info) = 0;
 
 protected:
-  rcl_subscription_t intra_process_subscription_handle_;
-  rcl_subscription_t subscription_handle_;
+  rcl_subscription_t intra_process_subscription_handle_ = rcl_get_zero_initialized_subscription();
+  rcl_subscription_t subscription_handle_ = rcl_get_zero_initialized_subscription();
   std::shared_ptr<rcl_node_t> node_handle_;
 
 private:

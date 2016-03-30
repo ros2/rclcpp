@@ -91,8 +91,7 @@ Node::Node(
   // Initialize node handle shared_ptr with custom deleter.
   // *INDENT-OFF*
   node_handle_.reset(&node, [](rcl_node_t * node) {
-    auto ret = rcl_node_fini(node);
-    if (ret != RMW_RET_OK) {
+    if (rcl_node_fini(node) != RMW_RET_OK) {
       fprintf(
         stderr, "Error in destruction of rmw node handle: %s\n", rcl_get_error_string_safe());
     }

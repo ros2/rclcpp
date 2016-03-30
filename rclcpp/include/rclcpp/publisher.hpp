@@ -126,8 +126,8 @@ protected:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_publisher_t publisher_handle_;
-  rcl_publisher_t intra_process_publisher_handle_;
+  rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
+  rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
   rcl_allocator_t rcl_allocator_;
 
   std::string topic_;
@@ -175,8 +175,12 @@ public:
         rcl_get_error_string_safe());
     }
     // Life time of this object is tied to the publisher handle.
-    if (rmw_get_gid_for_publisher(
-      rcl_publisher_get_rmw_handle(&publisher_handle_), &rmw_gid_) != RMW_RET_OK)
+    rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
+    if (!publisher_rmw_handle) {
+      throw std::runtime_error(
+        std::string("failed to get rmw handle: ") + rcl_get_error_string_safe());
+    }
+    if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK)
     {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(

@@ -52,7 +52,7 @@ Executor::Executor(const ExecutorArgs & args)
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
 
   if (rcl_wait_set_init(
-    &waitset_, 0, 0, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
+    &waitset_, 0, 2, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
   {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rcl_get_error_string_safe());
@@ -378,10 +378,8 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
   if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT && status != RCL_RET_WAIT_SET_EMPTY) {
-    throw std::runtime_error(rcl_get_error_string_safe());
+    throw std::runtime_error(std::string("rcl_wait() failed: ") + rcl_get_error_string_safe());
   }
-
-  
 }
 
 rclcpp::node::Node::SharedPtr

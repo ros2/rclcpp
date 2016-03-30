@@ -271,7 +271,6 @@ private:
 
   std::string name_;
 
-  //std::shared_ptr<rmw_node_t> node_handle_;
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rclcpp::context::Context::SharedPtr context_;
@@ -289,7 +288,7 @@ private:
   mutable std::mutex mutex_;
 
   /// Guard condition for notifying the Executor of changes to this node.
-  rcl_guard_condition_t notify_guard_condition_;
+  rcl_guard_condition_t notify_guard_condition_ = rcl_get_zero_initialized_guard_condition();
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
