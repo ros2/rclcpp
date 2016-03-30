@@ -127,8 +127,12 @@ PublisherBase::setup_intra_process(
   intra_process_publisher_id_ = intra_process_publisher_id;
   store_intra_process_message_ = callback;
   // Life time of this object is tied to the publisher handle.
+  rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&intra_process_publisher_handle_);
+  if (publisher_rmw_handle == nullptr) {
+    throw std::runtime_error(std::string("Failed to get rmw publisher handle") + rcl_get_error_string_safe());
+  }
   auto ret = rmw_get_gid_for_publisher(
-    rcl_publisher_get_rmw_handle(&intra_process_publisher_handle_), &intra_process_rmw_gid_);
+    publisher_rmw_handle, &intra_process_rmw_gid_);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
     throw std::runtime_error(

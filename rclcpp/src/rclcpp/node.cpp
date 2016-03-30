@@ -74,11 +74,19 @@ Node::Node(
 #endif
   }
 
-  rcl_node_t node = rcl_get_zero_initialized_node();
+  //node_handle_ = std::make_shared<rcl_node_t>(rcl_get_zero_initialized_node());
+  rcl_node_t * rcl_node = new rcl_node_t(rcl_get_zero_initialized_node());
+  node_handle_.reset(rcl_node, [](rcl_node_t * node) {
+    if (rcl_node_fini(node) != RMW_RET_OK) {
+      fprintf(
+        stderr, "Error in destruction of rmw node handle: %s\n", rcl_get_error_string_safe());
+    }
+    delete node;
+  });
   rcl_node_options_t options = rcl_node_get_default_options();
   // TODO(jacquelinekay): Allocator options
   options.domain_id = domain_id;
-  if (rcl_node_init(&node, name_.c_str(), &options) != RCL_RET_OK) {
+  if (rcl_node_init(node_handle_.get(), name_.c_str(), &options) != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
       fprintf(stderr,
@@ -90,12 +98,6 @@ Node::Node(
 
   // Initialize node handle shared_ptr with custom deleter.
   // *INDENT-OFF*
-  node_handle_.reset(&node, [](rcl_node_t * node) {
-    if (rcl_node_fini(node) != RMW_RET_OK) {
-      fprintf(
-        stderr, "Error in destruction of rmw node handle: %s\n", rcl_get_error_string_safe());
-    }
-  });
   // *INDENT-ON*
 
   using rclcpp::callback_group::CallbackGroupType;

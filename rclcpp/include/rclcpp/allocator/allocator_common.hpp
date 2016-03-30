@@ -32,10 +32,14 @@ using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_trait
 template<typename Alloc>
 void * retyped_allocate(size_t size, void * untyped_allocator)
 {
-  return std::allocator_traits<Alloc>::allocate(*static_cast<Alloc *>(untyped_allocator), size);
+  auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
+  if (!typed_allocator) {
+    throw std::runtime_error("Received incorrect allocator type");
+  }
+  return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
 }
 template<typename Alloc, typename T>
-void retyped_deallocate(void * untyped_allocator, void * untyped_pointer)
+void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
 {
   std::allocator_traits<Alloc>::deallocate(
     *static_cast<Alloc *>(untyped_allocator), static_cast<T *>(untyped_pointer), 1);
