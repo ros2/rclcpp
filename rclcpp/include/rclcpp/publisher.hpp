@@ -66,10 +66,6 @@ public:
     std::string topic,
     size_t queue_size);
 
-  /// Default destructor.
-  RCLCPP_PUBLIC
-  virtual ~PublisherBase();
-
   /// Get the topic that this publisher publishes on.
   // \return The topic name.
   RCLCPP_PUBLIC
@@ -186,6 +182,23 @@ public:
       throw std::runtime_error(
         std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
       // *INDENT-ON*
+    }
+  }
+
+  ~Publisher()
+  {
+    if (rcl_publisher_fini(&intra_process_publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
+      fprintf(
+        stderr,
+        "Error in destruction of intra process rcl publisher handle: %s\n",
+        rcl_get_error_string_safe());
+    }
+
+    if (rcl_publisher_fini(&publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
+      fprintf(
+        stderr,
+        "Error in destruction of rcl publisher handle: %s\n",
+        rcl_get_error_string_safe());
     }
   }
 

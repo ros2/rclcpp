@@ -42,23 +42,6 @@ PublisherBase::PublisherBase(
 {
 }
 
-PublisherBase::~PublisherBase()
-{
-  if (rcl_publisher_fini(&intra_process_publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
-    fprintf(
-      stderr,
-      "Error in destruction of intra process rcl publisher handle: %s\n",
-      rcl_get_error_string_safe());
-  }
-
-  if (rcl_publisher_fini(&publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
-    fprintf(
-      stderr,
-      "Error in destruction of rcl publisher handle: %s\n",
-      rcl_get_error_string_safe());
-  }
-}
-
 const std::string &
 PublisherBase::get_topic_name() const
 {

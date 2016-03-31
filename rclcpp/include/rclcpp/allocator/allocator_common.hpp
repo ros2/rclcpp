@@ -38,11 +38,19 @@ void * retyped_allocate(size_t size, void * untyped_allocator)
   }
   return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
 }
-template<typename Alloc, typename T>
+template<typename T, typename Alloc>
 void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
 {
-  std::allocator_traits<Alloc>::deallocate(
-    *static_cast<Alloc *>(untyped_allocator), static_cast<T *>(untyped_pointer), 1);
+  auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
+  if (!typed_allocator) {
+    throw std::runtime_error("Received incorrect allocator type");
+  }
+  auto typed_ptr = static_cast<T *>(untyped_pointer);
+  if (!typed_ptr) {
+    //throw std::runtime_error("Received incorrect allocator type");
+    fprintf(stderr, "received null pointer in deallocate\n");
+  }
+  std::allocator_traits<Alloc>::deallocate(*typed_allocator, typed_ptr, 1);
 }
 
 // Convert a std::allocator_traits-formatted Allocator into an rcl allocator
@@ -52,7 +60,7 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
   rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
 
   rcl_allocator.allocate = &retyped_allocate<Alloc>;
-  rcl_allocator.deallocate = &retyped_deallocate<Alloc, T>;
+  rcl_allocator.deallocate = &retyped_deallocate<T, Alloc>;
   rcl_allocator.reallocate = nullptr;
   rcl_allocator.state = &allocator;
   return rcl_allocator;
