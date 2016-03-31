@@ -338,65 +338,50 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     );
   }
 
-  rcl_wait_set_clear_subscriptions(&waitset_);
-  if (waitset_.size_of_subscriptions != memory_strategy_->number_of_ready_subscriptions()) {
-    if (rcl_wait_set_resize_subscriptions(
-      &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
-    {
-      throw std::runtime_error(
-        std::string("Couldn't resize the number of subscriptions in waitset : ") +
-        rcl_get_error_string_safe());
-    }
+  fprintf(stderr, "Got %d ready subscriptions\n", memory_strategy_->number_of_ready_subscriptions());
+  if (rcl_wait_set_resize_subscriptions(
+    &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+      std::string("Couldn't resize the number of subscriptions in waitset : ") +
+      rcl_get_error_string_safe());
   }
 
-  rcl_wait_set_clear_services(&waitset_);
-  if (waitset_.size_of_services != memory_strategy_->number_of_ready_services()) {
-    if (rcl_wait_set_resize_services(
-      &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
-    {
-      throw std::runtime_error(
-        std::string("Couldn't resize the number of services in waitset : ") +
-        rcl_get_error_string_safe());
-    }
+  if (rcl_wait_set_resize_services(
+    &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+      std::string("Couldn't resize the number of services in waitset : ") +
+      rcl_get_error_string_safe());
   }
 
-  rcl_wait_set_clear_clients(&waitset_);
-  if (waitset_.size_of_clients != memory_strategy_->number_of_ready_clients()) {
-    if (rcl_wait_set_resize_clients(
-      &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
-    {
-      throw std::runtime_error(
-        std::string("Couldn't resize the number of clients in waitset : ") +
-        rcl_get_error_string_safe());
-    }
+  if (rcl_wait_set_resize_clients(
+    &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+      std::string("Couldn't resize the number of clients in waitset : ") +
+      rcl_get_error_string_safe());
   }
 
-  rcl_wait_set_clear_guard_conditions(&waitset_);
-  if (waitset_.size_of_guard_conditions != memory_strategy_->number_of_guard_conditions()) {
-    if (rcl_wait_set_resize_guard_conditions(
-      &waitset_, memory_strategy_->number_of_guard_conditions()) != RCL_RET_OK)
-    {
-      throw std::runtime_error(
-        std::string("Couldn't resize the number of guard_conditions in waitset : ") +
-        rcl_get_error_string_safe());
-    }
+  if (rcl_wait_set_resize_guard_conditions(
+    &waitset_, memory_strategy_->number_of_guard_conditions()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+      std::string("Couldn't resize the number of guard_conditions in waitset : ") +
+      rcl_get_error_string_safe());
   }
 
-  rcl_wait_set_clear_timers(&waitset_);
-  if (waitset_.size_of_timers != memory_strategy_->number_of_ready_timers()) {
-    if (rcl_wait_set_resize_timers(
-      &waitset_, memory_strategy_->number_of_ready_timers()) != RCL_RET_OK)
-    {
-      throw std::runtime_error(
-        std::string("Couldn't resize the number of timers in waitset : ") +
-        rcl_get_error_string_safe());
-    }
+  if (rcl_wait_set_resize_timers(
+    &waitset_, memory_strategy_->number_of_ready_timers()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+      std::string("Couldn't resize the number of timers in waitset : ") +
+      rcl_get_error_string_safe());
   }
 
   if (!memory_strategy_->add_handles_to_waitset(&waitset_)) {
     throw std::runtime_error("Couldn't fill waitset");
   }
-  fprintf(stderr, "waiting\n");
 
   rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
   if (status == RCL_RET_WAIT_SET_EMPTY)
@@ -408,9 +393,12 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   // check the null handles in the waitset and remove them from the handles in memory strategy
   // for callback-based entities
-
-  // Then clear the waitset
   memory_strategy_->remove_null_handles(&waitset_);
+  rcl_wait_set_clear_subscriptions(&waitset_);
+  rcl_wait_set_clear_services(&waitset_);
+  rcl_wait_set_clear_clients(&waitset_);
+  rcl_wait_set_clear_guard_conditions(&waitset_);
+  rcl_wait_set_clear_timers(&waitset_);
 }
 
 rclcpp::node::Node::SharedPtr

@@ -47,7 +47,6 @@ void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
   }
   auto typed_ptr = static_cast<T *>(untyped_pointer);
   if (!typed_ptr) {
-    //throw std::runtime_error("Received incorrect allocator type");
     fprintf(stderr, "received null pointer in deallocate\n");
   }
   std::allocator_traits<Alloc>::deallocate(*typed_allocator, typed_ptr, 1);

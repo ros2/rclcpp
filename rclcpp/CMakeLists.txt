@@ -43,10 +43,13 @@ set(${PROJECT_NAME}_SRCS
 )
 
 macro(target)
+  if(NOT "${target_suffix} " STREQUAL " ")
+    get_rcl_information("${rmw_implementation}" "rcl${target_suffix}")
+  endif()
   add_library(${PROJECT_NAME}${target_suffix} SHARED
     ${${PROJECT_NAME}_SRCS})
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
-    "rcl"
+    "rcl${target_suffix}"
     "rcl_interfaces"
     "rmw"
     "rosidl_generator_cpp"
