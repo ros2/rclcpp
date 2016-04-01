@@ -34,15 +34,6 @@ TimerBase::cancel()
   }
 }
 
-void
-TimerBase::execute_callback()
-{
-  if (rcl_timer_call(&timer_handle_) != RCL_RET_OK) {
-    throw std::runtime_error(
-      std::string("Execution of timer callback failed: ") + rcl_get_error_string_safe());
-  };
-}
-
 bool
 TimerBase::is_ready()
 {

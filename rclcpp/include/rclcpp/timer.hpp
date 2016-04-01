@@ -56,7 +56,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  execute_callback();
+  execute_callback() = 0;
 
   RCLCPP_PUBLIC
   const rcl_timer_t *
@@ -110,7 +110,12 @@ public:
   GenericTimer(std::chrono::nanoseconds period, FunctorT && callback)
   : TimerBase(period), callback_(std::forward<FunctorT>(callback))
   {
-    initialize_rcl_handle(period);
+    if (rcl_timer_init(
+      &timer_handle_, period.count(), nullptr,
+      rcl_get_default_allocator()) != RCL_RET_OK)
+    {
+      fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
+    }
   }
 
   /// Default destructor.
@@ -123,6 +128,12 @@ public:
     }
   }
 
+  void
+  execute_callback()
+  {
+    execute_callback_delegate<>();
+  }
+
   // void specialization
   template<
     typename CallbackT = FunctorT,
@@ -131,20 +142,9 @@ public:
     >::type * = nullptr
   >
   void
-  initialize_rcl_handle(std::chrono::nanoseconds & period)
+  execute_callback_delegate()
   {
-    auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>(
-      [this](rcl_timer_t * timer, uint64_t last_call_time) {
-        (void)timer;
-        (void)last_call_time;
-        callback_();
-      });
-    if (rcl_timer_init(
-      &timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(),
-      rcl_get_default_allocator()) != RCL_RET_OK)
-    {
-      fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
-    }
+    callback_();
   }
 
   template<
@@ -154,20 +154,9 @@ public:
     >::type * = nullptr
   >
   void
-  initialize_rcl_handle(std::chrono::nanoseconds & period)
+  execute_callback_delegate()
   {
-    auto rcl_callback = std::function<void(rcl_timer_t *, uint64_t)>(
-      [this](rcl_timer_t * timer, uint64_t last_call_time) {
-        (void)timer;
-        (void)last_call_time;
-        callback_(*this);
-      });
-    if (rcl_timer_init(
-      &timer_handle_, period.count(), rcl_callback.target<void(rcl_timer_t *, uint64_t)>(),
-      rcl_get_default_allocator()) != RCL_RET_OK)
-    {
-      fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
-    }
+    callback_(*this);
   }
 
   virtual bool
