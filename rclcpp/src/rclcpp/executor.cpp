@@ -338,7 +338,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     );
   }
 
-  fprintf(stderr, "Got %d ready subscriptions\n", memory_strategy_->number_of_ready_subscriptions());
   if (rcl_wait_set_resize_subscriptions(
     &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
   {

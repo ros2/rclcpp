@@ -55,7 +55,7 @@ public:
   cancel();
 
   RCLCPP_PUBLIC
-  void
+  virtual void
   execute_callback() = 0;
 
   RCLCPP_PUBLIC
@@ -131,6 +131,13 @@ public:
   void
   execute_callback()
   {
+    rcl_ret_t ret = rcl_timer_call(&timer_handle_);
+    if (ret == RCL_RET_TIMER_CANCELED) {
+      return;
+    }
+    if (ret != RCL_RET_OK) {
+      throw std::runtime_error("Failed to notify timer that callback occurred");
+    }
     execute_callback_delegate<>();
   }
 

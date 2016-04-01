@@ -89,6 +89,7 @@ public:
     subscription_handles_.clear();
     service_handles_.clear();
     client_handles_.clear();
+    timer_handles_.clear();
   }
 
   virtual void remove_null_handles(rcl_wait_set_t * wait_set)
