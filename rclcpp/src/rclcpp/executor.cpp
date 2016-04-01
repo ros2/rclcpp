@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <string>
 #include <type_traits>
 
@@ -34,23 +35,16 @@ Executor::Executor(const ExecutorArgs & args)
     throw std::runtime_error("Failed to create interrupt guard condition in Executor constructor");
   }
 
-  // The number of guard conditions is fixed at 2: 1 for the ctrl-c guard cond,
+  // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
-  // These guard conditions are permanently attached to the waitset.
-  const size_t number_of_guard_conds = 2;
-  fixed_guard_conditions_.guard_condition_count = number_of_guard_conds;
-  fixed_guard_conditions_.guard_conditions = static_cast<void **>(guard_cond_handles_.data());
+  // The size of guard conditions is variable because the number of nodes can vary
 
   // Put the global ctrl-c guard condition in
-  assert(fixed_guard_conditions_.guard_condition_count > 1);
-  fixed_guard_conditions_.guard_conditions[0] = \
-    rclcpp::utilities::get_global_sigint_guard_condition()->data;
+  memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
   // Put the executor's guard condition in
-  fixed_guard_conditions_.guard_conditions[1] = interrupt_guard_condition_->data;
+  memory_strategy_->add_guard_condition(interrupt_guard_condition_);
 
-  // The waitset adds the fixed guard conditions to the middleware waitset on initialization,
-  // and removes the guard conditions in rmw_destroy_waitset.
-  waitset_ = rmw_create_waitset(&fixed_guard_conditions_, args.max_conditions);
+  waitset_ = rmw_create_waitset(args.max_conditions);
 
   if (!waitset_) {
     fprintf(stderr,
@@ -107,6 +101,8 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
       throw std::runtime_error(rmw_get_error_string_safe());
     }
   }
+  // Add the node's notify condition to the guard condition handles
+  memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
 void
@@ -136,6 +132,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
       }
     }
   }
+  memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
 void
@@ -356,6 +353,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     );
   }
 
+  memory_strategy_->clear_handles();
   // Use the number of subscriptions to allocate memory in the handles
   rmw_subscriptions_t subscriber_handles;
   subscriber_handles.subscriber_count =
@@ -369,7 +367,10 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   client_handles.client_count =
     memory_strategy_->fill_client_handles(client_handles.clients);
 
-  // Don't pass guard conditions to rmw_wait; they are permanent fixtures of the waitset
+  // construct a guard conditions struct
+  rmw_guard_conditions_t guard_conditions;
+  guard_conditions.guard_condition_count =
+    memory_strategy_->fill_guard_condition_handles(guard_conditions.guard_conditions);
 
   rmw_time_t * wait_timeout = NULL;
   rmw_time_t rmw_timeout;
@@ -397,7 +398,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // Now wait on the waitable subscriptions and timers
   rmw_ret_t status = rmw_wait(
     &subscriber_handles,
-    nullptr,
+    &guard_conditions,
     &service_handles,
     &client_handles,
     waitset_,

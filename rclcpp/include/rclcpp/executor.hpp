@@ -306,8 +306,6 @@ protected:
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
 
-  rmw_guard_conditions_t fixed_guard_conditions_;
-
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rmw_guard_condition_t * interrupt_guard_condition_;
 
@@ -321,7 +319,6 @@ private:
   RCLCPP_DISABLE_COPY(Executor);
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
-  std::array<void *, 2> guard_cond_handles_;
 };
 
 }  // namespace executor

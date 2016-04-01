@@ -36,8 +36,13 @@ Node::Node(
   bool use_intra_process_comms)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
-  use_intra_process_comms_(use_intra_process_comms)
+  use_intra_process_comms_(use_intra_process_comms),
+  notify_guard_condition_(rmw_create_guard_condition())
 {
+  if (!notify_guard_condition_) {
+    throw std::runtime_error("Failed to create guard condition for node: " +
+            std::string(rmw_get_error_string_safe()));
+  }
   has_executor.store(false);
   size_t domain_id = 0;
   char * ros_domain_id = nullptr;
@@ -51,6 +56,10 @@ Node::Node(
   if (ros_domain_id) {
     uint32_t number = strtoul(ros_domain_id, NULL, 0);
     if (number == (std::numeric_limits<uint32_t>::max)()) {
+      if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+        fprintf(
+          stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
+      }
       throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
     domain_id = static_cast<size_t>(number);
@@ -62,6 +71,10 @@ Node::Node(
   auto node = rmw_create_node(name_.c_str(), domain_id);
   if (!node) {
     // *INDENT-OFF*
+    if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+      fprintf(
+        stderr, "Failed to destroy notify guard condition: %s\n", rmw_get_error_string_safe());
+    }
     throw std::runtime_error(
       std::string("could not create node: ") +
       rmw_get_error_string_safe());
@@ -83,6 +96,14 @@ Node::Node(
     CallbackGroupType::MutuallyExclusive);
   events_publisher_ = create_publisher<rcl_interfaces::msg::ParameterEvent>(
     "parameter_events", rmw_qos_profile_parameter_events);
+}
+
+Node::~Node()
+{
+  if (rmw_destroy_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+    fprintf(stderr, "Warning! Failed to destroy guard condition in Node destructor: %s\n",
+      rmw_get_error_string_safe());
+  }
 }
 
 const std::string &
@@ -333,4 +354,9 @@ const Node::CallbackGroupWeakPtrList &
 Node::get_callback_groups() const
 {
   return callback_groups_;
+}
+
+rmw_guard_condition_t * Node::get_notify_guard_condition() const
+{
+  return notify_guard_condition_;
 }
