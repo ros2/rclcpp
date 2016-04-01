@@ -80,7 +80,7 @@ public:
   bool is_ready();
 
 protected:
-  rcl_timer_t timer_handle_;
+  rcl_timer_t timer_handle_ = rcl_get_zero_initialized_timer();
 };
 
 
