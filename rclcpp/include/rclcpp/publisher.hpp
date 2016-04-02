@@ -56,7 +56,7 @@ public:
   /**
    * Typically, a publisher is not created through this method, but instead is created through a
    * call to `Node::create_publisher`.
-   * \param[in] node_handle The corresponding rmw representation of the owner node.
+   * \param[in] node_handle The corresponding rcl representation of the owner node.
    * \param[in] topic The topic that this publisher publishes on.
    * \param[in] queue_size The maximum number of unpublished messages to queue.
    */
@@ -118,7 +118,7 @@ protected:
   setup_intra_process(
     uint64_t intra_process_publisher_id,
     StoreMessageCallbackT callback,
-    rcl_publisher_options_t & intra_process_options);
+    const rcl_publisher_options_t & intra_process_options);
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
@@ -153,7 +153,7 @@ public:
   Publisher(
     std::shared_ptr<rcl_node_t> node_handle,
     std::string topic,
-    rcl_publisher_options_t & publisher_options,
+    const rcl_publisher_options_t & publisher_options,
     std::shared_ptr<MessageAlloc> allocator)
   : PublisherBase(node_handle, topic, publisher_options.qos.depth), message_allocator_(allocator)
   {

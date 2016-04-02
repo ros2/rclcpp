@@ -143,7 +143,7 @@ public:
   Subscription(
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string & topic_name,
-    rcl_subscription_options_t & subscription_options,
+    const rcl_subscription_options_t & subscription_options,
     AnySubscriptionCallback<MessageT, Alloc> callback,
     typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
     memory_strategy = message_memory_strategy::MessageMemoryStrategy<MessageT,
@@ -243,7 +243,7 @@ private:
     uint64_t intra_process_subscription_id,
     GetMessageCallbackType get_message_callback,
     MatchesAnyPublishersCallbackType matches_any_publisher_callback,
-    rcl_subscription_options_t & intra_process_options)
+    const rcl_subscription_options_t & intra_process_options)
   {
     if (rcl_subscription_init(
         &intra_process_subscription_handle_, node_handle_.get(),

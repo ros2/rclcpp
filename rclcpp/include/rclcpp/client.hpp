@@ -70,7 +70,7 @@ protected:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_client_t client_handle_;
+  rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
   std::string service_name_;
 };
 

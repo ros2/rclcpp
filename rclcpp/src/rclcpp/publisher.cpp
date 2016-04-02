@@ -95,7 +95,7 @@ void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
   StoreMessageCallbackT callback,
-  rcl_publisher_options_t & intra_process_options)
+  const rcl_publisher_options_t & intra_process_options)
 {
   if (rcl_publisher_init(
       &intra_process_publisher_handle_, node_handle_.get(),

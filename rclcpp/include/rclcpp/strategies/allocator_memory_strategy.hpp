@@ -154,6 +154,9 @@ public:
           auto subscription = weak_subscription.lock();
           if (subscription) {
             subscription_handles_.push_back(subscription->get_subscription_handle());
+            if (subscription->get_intra_process_subscription_handle()) {
+              subscription_handles_.push_back(subscription->get_intra_process_subscription_handle());
+            }
           }
         }
         for (auto & service : group->get_service_ptrs()) {

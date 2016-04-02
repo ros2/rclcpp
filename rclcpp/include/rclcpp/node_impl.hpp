@@ -119,11 +119,10 @@ Node::create_publisher(
       return message_seq;
     };
     // *INDENT-ON*
-    rcl_publisher_options_t intra_process_options = publisher_options;
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,
-      intra_process_options);
+      publisher_options);
   }
   if (rcl_trigger_guard_condition(&notify_guard_condition_) != RMW_RET_OK) {
     throw std::runtime_error(
