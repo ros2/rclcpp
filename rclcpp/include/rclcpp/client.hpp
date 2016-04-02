@@ -23,8 +23,8 @@
 #include <tuple>
 #include <utility>
 
-#include <rcl/error_handling.h>
-#include <rcl/client.h>
+#include "rcl/error_handling.h"
+#include "rcl/client.h"
 
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
@@ -105,7 +105,8 @@ public:
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
     if (rcl_client_init(&client_handle_, this->node_handle_.get(),
-      service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK) {
+      service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK)
+    {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
         std::string("could not create client: ") +

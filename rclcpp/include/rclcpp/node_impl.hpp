@@ -30,8 +30,8 @@
 #include <utility>
 #include <vector>
 
-#include <rcl/publisher.h>
-#include <rcl/subscription.h>
+#include "rcl/publisher.h"
+#include "rcl/subscription.h"
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
@@ -77,7 +77,9 @@ Node::create_publisher(
   auto publisher_options = rcl_publisher_get_default_options();
   publisher_options.qos = qos_profile;
 
-  auto message_alloc = std::make_shared<typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>(*allocator.get());
+  auto message_alloc =
+    std::make_shared<typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>(
+    *allocator.get());
   publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(
     *message_alloc.get());
 
@@ -155,8 +157,8 @@ Node::create_subscription(
     msg_mem_strat =
       rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::create_default();
   }
-  // TODO scope
-  auto message_alloc = std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
+  auto message_alloc =
+    std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
 
   auto subscription_options = rcl_subscription_get_default_options();
   subscription_options.qos = qos_profile;

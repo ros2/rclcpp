@@ -98,21 +98,23 @@ PublisherBase::setup_intra_process(
   rcl_publisher_options_t & intra_process_options)
 {
   if (rcl_publisher_init(
-        &intra_process_publisher_handle_, node_handle_.get(),
-        rclcpp::type_support::get_intra_process_message_msg_type_support(),
-        (topic_ + "__intra").c_str(), &intra_process_options) != RCL_RET_OK)
+      &intra_process_publisher_handle_, node_handle_.get(),
+      rclcpp::type_support::get_intra_process_message_msg_type_support(),
+      (topic_ + "__intra").c_str(), &intra_process_options) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("could not create intra process publisher: ") +
-      rcl_get_error_string_safe());
+            std::string("could not create intra process publisher: ") +
+            rcl_get_error_string_safe());
   }
 
   intra_process_publisher_id_ = intra_process_publisher_id;
   store_intra_process_message_ = callback;
   // Life time of this object is tied to the publisher handle.
-  rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&intra_process_publisher_handle_);
+  rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(
+    &intra_process_publisher_handle_);
   if (publisher_rmw_handle == nullptr) {
-    throw std::runtime_error(std::string("Failed to get rmw publisher handle") + rcl_get_error_string_safe());
+    throw std::runtime_error(std::string(
+              "Failed to get rmw publisher handle") + rcl_get_error_string_safe());
   }
   auto ret = rmw_get_gid_for_publisher(
     publisher_rmw_handle, &intra_process_rmw_gid_);

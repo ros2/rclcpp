@@ -178,7 +178,8 @@ public:
     return has_invalid_weak_nodes;
   }
 
-  bool add_handles_to_waitset(rcl_wait_set_t * wait_set) {
+  bool add_handles_to_waitset(rcl_wait_set_t * wait_set)
+  {
     for (auto subscription : subscription_handles_) {
       if (rcl_wait_set_add_subscription(wait_set, subscription) != RCL_RET_OK) {
         fprintf(stderr, "Couldn't add subscription to waitset: %s\n", rcl_get_error_string_safe());
@@ -209,7 +210,8 @@ public:
 
     for (auto guard_condition : guard_conditions_) {
       if (rcl_wait_set_add_guard_condition(wait_set, guard_condition) != RCL_RET_OK) {
-        fprintf(stderr, "Couldn't add guard_condition to waitset: %s\n", rcl_get_error_string_safe());
+        fprintf(stderr, "Couldn't add guard_condition to waitset: %s\n",
+          rcl_get_error_string_safe());
         return false;
       }
     }
@@ -333,23 +335,28 @@ public:
     }
   }
 
-  size_t number_of_ready_subscriptions() const {
+  size_t number_of_ready_subscriptions() const
+  {
     return subscription_handles_.size();
   }
 
-  size_t number_of_ready_services() const {
+  size_t number_of_ready_services() const
+  {
     return service_handles_.size();
   }
 
-  size_t number_of_ready_clients() const {
+  size_t number_of_ready_clients() const
+  {
     return client_handles_.size();
   }
 
-  size_t number_of_guard_conditions() const {
+  size_t number_of_guard_conditions() const
+  {
     return guard_conditions_.size();
   }
 
-  size_t number_of_ready_timers() const {
+  size_t number_of_ready_timers() const
+  {
     return timer_handles_.size();
   }
 

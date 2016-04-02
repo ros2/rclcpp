@@ -111,8 +111,8 @@ public:
   : TimerBase(period), callback_(std::forward<FunctorT>(callback))
   {
     if (rcl_timer_init(
-      &timer_handle_, period.count(), nullptr,
-      rcl_get_default_allocator()) != RCL_RET_OK)
+        &timer_handle_, period.count(), nullptr,
+        rcl_get_default_allocator()) != RCL_RET_OK)
     {
       fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
     }

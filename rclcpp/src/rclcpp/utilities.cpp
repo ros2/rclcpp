@@ -36,7 +36,8 @@
 /// Represent the status of the global interrupt signal.
 static volatile sig_atomic_t g_signal_status = 0;
 /// Guard condition for interrupting the rmw implementation when the global interrupt signal fired.
-static rcl_guard_condition_t g_sigint_guard_cond_handle = rcl_get_zero_initialized_guard_condition();
+static rcl_guard_condition_t g_sigint_guard_cond_handle =
+  rcl_get_zero_initialized_guard_condition();
 /// Condition variable for timed sleep (see sleep_for).
 static std::condition_variable g_interrupt_condition_variable;
 static std::atomic<bool> g_is_interrupted(false);
@@ -140,7 +141,8 @@ rclcpp::utilities::init(int argc, char * argv[])
   }
   rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
   if (rcl_guard_condition_init(&g_sigint_guard_cond_handle, options) != RCL_RET_OK) {
-    throw std::runtime_error(std::string("Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
+    throw std::runtime_error(std::string(
+              "Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
   }
 }
 

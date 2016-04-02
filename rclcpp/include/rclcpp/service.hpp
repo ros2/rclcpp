@@ -21,8 +21,8 @@
 #include <sstream>
 #include <string>
 
-#include <rcl/error_handling.h>
-#include <rcl/service.h>
+#include "rcl/error_handling.h"
+#include "rcl/service.h"
 
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/macros.hpp"
@@ -101,12 +101,12 @@ public:
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
 
     if (rcl_service_init(
-      &service_handle_, node_handle.get(), service_type_support_handle, service_name.c_str(),
-      &service_options) != RCL_RET_OK)
+        &service_handle_, node_handle.get(), service_type_support_handle, service_name.c_str(),
+        &service_options) != RCL_RET_OK)
     {
       throw std::runtime_error(
-        std::string("could not create service: ") +
-        rcl_get_error_string_safe());
+              std::string("could not create service: ") +
+              rcl_get_error_string_safe());
     }
   }
 

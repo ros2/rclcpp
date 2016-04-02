@@ -36,8 +36,7 @@ MemoryStrategy::get_subscription_by_handle(
           if (subscription->get_subscription_handle() == subscriber_handle) {
             return subscription;
           }
-          if (subscription->get_intra_process_subscription_handle() == subscriber_handle)
-          {
+          if (subscription->get_intra_process_subscription_handle() == subscriber_handle) {
             return subscription;
           }
         }
@@ -48,7 +47,8 @@ MemoryStrategy::get_subscription_by_handle(
 }
 
 rclcpp::service::ServiceBase::SharedPtr
-MemoryStrategy::get_service_by_handle(const rcl_service_t * service_handle, const WeakNodeVector & weak_nodes)
+MemoryStrategy::get_service_by_handle(const rcl_service_t * service_handle,
+  const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -71,7 +71,8 @@ MemoryStrategy::get_service_by_handle(const rcl_service_t * service_handle, cons
 }
 
 rclcpp::client::ClientBase::SharedPtr
-MemoryStrategy::get_client_by_handle(const rcl_client_t * client_handle, const WeakNodeVector & weak_nodes)
+MemoryStrategy::get_client_by_handle(const rcl_client_t * client_handle,
+  const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();

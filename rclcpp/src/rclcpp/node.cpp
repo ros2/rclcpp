@@ -38,14 +38,13 @@ Node::Node(
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
   use_intra_process_comms_(use_intra_process_comms)
 {
-
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   if (rcl_guard_condition_init(
-    &notify_guard_condition_, guard_condition_options) != RCL_RET_OK)
+      &notify_guard_condition_, guard_condition_options) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("Failed to create interrupt guard condition in Executor constructor: ") +
-      rcl_get_error_string_safe());
+            std::string("Failed to create interrupt guard condition in Executor constructor: ") +
+            rcl_get_error_string_safe());
   }
 
   has_executor.store(false);
@@ -74,7 +73,6 @@ Node::Node(
 #endif
   }
 
-  //node_handle_ = std::make_shared<rcl_node_t>(rcl_get_zero_initialized_node());
   rcl_node_t * rcl_node = new rcl_node_t(rcl_get_zero_initialized_node());
   node_handle_.reset(rcl_node, [](rcl_node_t * node) {
     if (rcl_node_fini(node) != RMW_RET_OK) {
@@ -93,7 +91,8 @@ Node::Node(
         "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
     }
 
-    throw std::runtime_error(std::string("Could not initialize rcl node: ")  + rcl_get_error_string_safe());
+    throw std::runtime_error(std::string(
+              "Could not initialize rcl node: ") + rcl_get_error_string_safe());
   }
 
   // Initialize node handle shared_ptr with custom deleter.
@@ -308,7 +307,7 @@ Node::get_topic_names_and_types() const
   topic_names_and_types.type_names = nullptr;
 
   auto ret = rmw_get_topic_names_and_types(rcl_node_get_rmw_handle(node_handle_.get()),
-    &topic_names_and_types);
+      &topic_names_and_types);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
@@ -337,7 +336,7 @@ Node::count_publishers(const std::string & topic_name) const
 {
   size_t count;
   auto ret = rmw_count_publishers(rcl_node_get_rmw_handle(node_handle_.get()),
-    topic_name.c_str(), &count);
+      topic_name.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
@@ -352,7 +351,7 @@ Node::count_subscribers(const std::string & topic_name) const
 {
   size_t count;
   auto ret = rmw_count_subscribers(rcl_node_get_rmw_handle(node_handle_.get()),
-    topic_name.c_str(), &count);
+      topic_name.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(

@@ -18,7 +18,7 @@
 #include <memory>
 #include <vector>
 
-#include <rcl/wait.h>
+#include "rcl/wait.h"
 
 #include "rclcpp/any_executable.hpp"
 #include "rclcpp/macros.hpp"

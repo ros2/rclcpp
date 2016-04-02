@@ -44,7 +44,7 @@ SubscriptionBase::~SubscriptionBase()
     (std::cerr << ss.str()).flush();
   }
   if (rcl_subscription_fini(
-    &intra_process_subscription_handle_, node_handle_.get()) != RCL_RET_OK)
+      &intra_process_subscription_handle_, node_handle_.get()) != RCL_RET_OK)
   {
     std::stringstream ss;
     ss << "Error in destruction of rmw intra process subscription handle: " <<

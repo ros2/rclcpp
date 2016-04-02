@@ -1,4 +1,5 @@
 // Copyright 2014 Open Source Robotics Foundation, Inc.
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,8 +24,8 @@
 #include <sstream>
 #include <string>
 
-#include <rcl/error_handling.h>
-#include <rcl/subscription.h>
+#include "rcl/error_handling.h"
+#include "rcl/subscription.h"
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
@@ -158,11 +159,11 @@ public:
 
     auto type_support_handle = get_message_type_support_handle<MessageT>();
     if (rcl_subscription_init(
-      &subscription_handle_, node_handle_.get(), type_support_handle, topic_name.c_str(),
-      &subscription_options) != RCL_RET_OK)
+        &subscription_handle_, node_handle_.get(), type_support_handle, topic_name.c_str(),
+        &subscription_options) != RCL_RET_OK)
     {
       throw std::runtime_error(
-        std::string("could not create subscription: ") + rcl_get_error_string_safe());
+              std::string("could not create subscription: ") + rcl_get_error_string_safe());
     }
   }
 

@@ -15,6 +15,7 @@
 #include "rclcpp/timer.hpp"
 
 #include <chrono>
+#include <string>
 
 using rclcpp::timer::TimerBase;
 
@@ -38,8 +39,7 @@ bool
 TimerBase::is_ready()
 {
   bool ready = false;
-  if (rcl_timer_is_ready(&timer_handle_, &ready) != RCL_RET_OK)
-  {
+  if (rcl_timer_is_ready(&timer_handle_, &ready) != RCL_RET_OK) {
     throw std::runtime_error(std::string("Failed to check timer: ") + rcl_get_error_string_safe());
   }
   return ready;
@@ -51,7 +51,8 @@ TimerBase::time_until_trigger()
   int64_t time_until_next_call = 0;
   if (rcl_timer_get_time_until_next_call(&timer_handle_, &time_until_next_call) != RCL_RET_OK) {
     throw std::runtime_error(
-      std::string("Timer could not get time until next call: ") + rcl_get_error_string_safe());
+            std::string("Timer could not get time until next call: ") +
+            rcl_get_error_string_safe());
   }
   return std::chrono::nanoseconds(time_until_next_call);
 }

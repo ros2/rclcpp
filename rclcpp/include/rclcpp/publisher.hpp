@@ -24,8 +24,8 @@
 #include <sstream>
 #include <string>
 
-#include <rcl/error_handling.h>
-#include <rcl/publisher.h>
+#include "rcl/error_handling.h"
+#include "rcl/publisher.h"
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 #include "rmw/impl/cpp/demangle.hpp"
@@ -163,21 +163,20 @@ public:
     rcl_allocator_ = publisher_options.allocator;
     auto type_support_handle = get_message_type_support_handle<MessageT>();
     if (rcl_publisher_init(
-          &publisher_handle_, node_handle_.get(), type_support_handle,
-          topic.c_str(), &publisher_options) != RCL_RET_OK)
+        &publisher_handle_, node_handle_.get(), type_support_handle,
+        topic.c_str(), &publisher_options) != RCL_RET_OK)
     {
       throw std::runtime_error(
-        std::string("could not create publisher: ") +
-        rcl_get_error_string_safe());
+              std::string("could not create publisher: ") +
+              rcl_get_error_string_safe());
     }
     // Life time of this object is tied to the publisher handle.
     rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
     if (!publisher_rmw_handle) {
       throw std::runtime_error(
-        std::string("failed to get rmw handle: ") + rcl_get_error_string_safe());
+              std::string("failed to get rmw handle: ") + rcl_get_error_string_safe());
     }
-    if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK)
-    {
+    if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
         std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());

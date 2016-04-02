@@ -35,11 +35,11 @@ Executor::Executor(const ExecutorArgs & args)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   if (rcl_guard_condition_init(
-    &interrupt_guard_condition_, guard_condition_options) != RCL_RET_OK)
+      &interrupt_guard_condition_, guard_condition_options) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("Failed to create interrupt guard condition in Executor constructor: ") +
-      rcl_get_error_string_safe());
+            std::string("Failed to create interrupt guard condition in Executor constructor: ") +
+            rcl_get_error_string_safe());
   }
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
@@ -52,7 +52,7 @@ Executor::Executor(const ExecutorArgs & args)
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
 
   if (rcl_wait_set_init(
-    &waitset_, 0, 2, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
+      &waitset_, 0, 2, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
   {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rcl_get_error_string_safe());
@@ -125,7 +125,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
-      if (rcl_trigger_guard_condition(&interrupt_guard_condition_)!= RCL_RET_OK) {
+      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
         throw std::runtime_error(rcl_get_error_string_safe());
       }
     }
@@ -339,43 +339,43 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   }
 
   if (rcl_wait_set_resize_subscriptions(
-    &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
+      &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("Couldn't resize the number of subscriptions in waitset : ") +
-      rcl_get_error_string_safe());
+            std::string("Couldn't resize the number of subscriptions in waitset : ") +
+            rcl_get_error_string_safe());
   }
 
   if (rcl_wait_set_resize_services(
-    &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
+      &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("Couldn't resize the number of services in waitset : ") +
-      rcl_get_error_string_safe());
+            std::string("Couldn't resize the number of services in waitset : ") +
+            rcl_get_error_string_safe());
   }
 
   if (rcl_wait_set_resize_clients(
-    &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
+      &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("Couldn't resize the number of clients in waitset : ") +
-      rcl_get_error_string_safe());
+            std::string("Couldn't resize the number of clients in waitset : ") +
+            rcl_get_error_string_safe());
   }
 
   if (rcl_wait_set_resize_guard_conditions(
-    &waitset_, memory_strategy_->number_of_guard_conditions()) != RCL_RET_OK)
+      &waitset_, memory_strategy_->number_of_guard_conditions()) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("Couldn't resize the number of guard_conditions in waitset : ") +
-      rcl_get_error_string_safe());
+            std::string("Couldn't resize the number of guard_conditions in waitset : ") +
+            rcl_get_error_string_safe());
   }
 
   if (rcl_wait_set_resize_timers(
-    &waitset_, memory_strategy_->number_of_ready_timers()) != RCL_RET_OK)
+      &waitset_, memory_strategy_->number_of_ready_timers()) != RCL_RET_OK)
   {
     throw std::runtime_error(
-      std::string("Couldn't resize the number of timers in waitset : ") +
-      rcl_get_error_string_safe());
+            std::string("Couldn't resize the number of timers in waitset : ") +
+            rcl_get_error_string_safe());
   }
 
   if (!memory_strategy_->add_handles_to_waitset(&waitset_)) {
@@ -383,8 +383,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   }
 
   rcl_ret_t status = rcl_wait(&waitset_, timeout.count());
-  if (status == RCL_RET_WAIT_SET_EMPTY)
-  {
+  if (status == RCL_RET_WAIT_SET_EMPTY) {
     fprintf(stderr, "Warning: empty waitset received in rcl_wait(). This should never happen.\n");
   } else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {
     throw std::runtime_error(std::string("rcl_wait() failed: ") + rcl_get_error_string_safe());
@@ -393,11 +392,21 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // check the null handles in the waitset and remove them from the handles in memory strategy
   // for callback-based entities
   memory_strategy_->remove_null_handles(&waitset_);
-  rcl_wait_set_clear_subscriptions(&waitset_);
-  rcl_wait_set_clear_services(&waitset_);
-  rcl_wait_set_clear_clients(&waitset_);
-  rcl_wait_set_clear_guard_conditions(&waitset_);
-  rcl_wait_set_clear_timers(&waitset_);
+  if (rcl_wait_set_clear_subscriptions(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear subscriptions from waitset");
+  }
+  if (rcl_wait_set_clear_services(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear servicess from waitset");
+  }
+  if (rcl_wait_set_clear_clients(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear clients from waitset");
+  }
+  if (rcl_wait_set_clear_guard_conditions(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear guard conditions from waitset");
+  }
+  if (rcl_wait_set_clear_timers(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear timers from waitset");
+  }
 }
 
 rclcpp::node::Node::SharedPtr
