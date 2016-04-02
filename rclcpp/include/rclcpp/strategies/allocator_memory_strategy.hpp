@@ -155,7 +155,8 @@ public:
           if (subscription) {
             subscription_handles_.push_back(subscription->get_subscription_handle());
             if (subscription->get_intra_process_subscription_handle()) {
-              subscription_handles_.push_back(subscription->get_intra_process_subscription_handle());
+              subscription_handles_.push_back(
+                subscription->get_intra_process_subscription_handle());
             }
           }
         }

@@ -1,5 +1,5 @@
 // Copyright 2014 Open Source Robotics Foundation, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -79,7 +79,7 @@ public:
   get_subscription_handle() const;
 
   RCLCPP_PUBLIC
-  const rcl_subscription_t *
+  virtual const rcl_subscription_t *
   get_intra_process_subscription_handle() const;
 
   /// Borrow a new message.
@@ -260,6 +260,15 @@ private:
     intra_process_subscription_id_ = intra_process_subscription_id;
     get_intra_process_message_callback_ = get_message_callback;
     matches_any_intra_process_publishers_ = matches_any_publisher_callback;
+  }
+
+  const rcl_subscription_t *
+  get_intra_process_subscription_handle() const
+  {
+    if (!get_intra_process_message_callback_) {
+      return nullptr;
+    }
+    return &intra_process_subscription_handle_;
   }
 
   RCLCPP_DISABLE_COPY(Subscription);

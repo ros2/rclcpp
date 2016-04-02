@@ -1,16 +1,16 @@
-  // Copyright 2014 Open Source Robotics Foundation, Inc.
-  //
-  // Licensed under the Apache License, Version 2.0 (the "License");
-  // you may not use this file except in compliance with the License.
-  // You may obtain a copy of the License at
-  //
-  //     http://www.apache.org/licenses/LICENSE-2.0
-  //
-  // Unless required by applicable law or agreed to in writing, software
-  // distributed under the License is distributed on an "AS IS" BASIS,
-  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  // See the License for the specific language governing permissions and
-  // limitations under the License.
+// Copyright 2014 Open Source Robotics Foundation, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
   #ifndef RCLCPP__SERVICE_HPP_
   #define RCLCPP__SERVICE_HPP_
@@ -31,60 +31,60 @@
   #include "rmw/error_handling.h"
   #include "rmw/rmw.h"
 
-  namespace rclcpp
-  {
-  namespace service
-  {
+namespace rclcpp
+{
+namespace service
+{
 
-  class ServiceBase
-  {
-  public:
-    RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase);
+class ServiceBase
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase);
 
-    RCLCPP_PUBLIC
-    ServiceBase(
-      std::shared_ptr<rcl_node_t> node_handle,
-      const std::string service_name);
+  RCLCPP_PUBLIC
+  ServiceBase(
+    std::shared_ptr<rcl_node_t> node_handle,
+    const std::string service_name);
 
-    RCLCPP_PUBLIC
-    virtual ~ServiceBase();
+  RCLCPP_PUBLIC
+  virtual ~ServiceBase();
 
-    RCLCPP_PUBLIC
-    std::string
-    get_service_name();
+  RCLCPP_PUBLIC
+  std::string
+  get_service_name();
 
-    RCLCPP_PUBLIC
-    const rcl_service_t *
-    get_service_handle();
+  RCLCPP_PUBLIC
+  const rcl_service_t *
+  get_service_handle();
 
-    virtual std::shared_ptr<void> create_request() = 0;
-    virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
-    virtual void handle_request(
-      std::shared_ptr<rmw_request_id_t> request_header,
-      std::shared_ptr<void> request) = 0;
+  virtual std::shared_ptr<void> create_request() = 0;
+  virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
+  virtual void handle_request(
+    std::shared_ptr<rmw_request_id_t> request_header,
+    std::shared_ptr<void> request) = 0;
 
-  protected:
-    RCLCPP_DISABLE_COPY(ServiceBase);
+protected:
+  RCLCPP_DISABLE_COPY(ServiceBase);
 
-    std::shared_ptr<rcl_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
-    rcl_service_t service_handle_ = rcl_get_zero_initialized_service();
-    std::string service_name_;
-  };
+  rcl_service_t service_handle_ = rcl_get_zero_initialized_service();
+  std::string service_name_;
+};
 
-  using any_service_callback::AnyServiceCallback;
+using any_service_callback::AnyServiceCallback;
 
-  template<typename ServiceT>
-  class Service : public ServiceBase
-  {
-  public:
-    using CallbackType = std::function<
-        void(
-          const std::shared_ptr<typename ServiceT::Request>,
-          std::shared_ptr<typename ServiceT::Response>)>;
+template<typename ServiceT>
+class Service : public ServiceBase
+{
+public:
+  using CallbackType = std::function<
+      void(
+        const std::shared_ptr<typename ServiceT::Request>,
+        std::shared_ptr<typename ServiceT::Response>)>;
 
-    using CallbackWithHeaderType = std::function<
-        void(
+  using CallbackWithHeaderType = std::function<
+      void(
         const std::shared_ptr<rmw_request_id_t>,
         const std::shared_ptr<typename ServiceT::Request>,
         std::shared_ptr<typename ServiceT::Response>)>;
