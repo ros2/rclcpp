@@ -24,7 +24,6 @@
 # :type var_prefix: string
 #
 macro(get_rclcpp_information rmw_implementation var_prefix)
-  message(STATUS "calling get_rclcpp_information with var_prefix=${var_prefix}")
   # pretend to be a "package"
   # so that the variables can be used by various functions / macros
   set(${var_prefix}_FOUND TRUE)
