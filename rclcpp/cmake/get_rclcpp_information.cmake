@@ -24,16 +24,22 @@
 # :type var_prefix: string
 #
 macro(get_rclcpp_information rmw_implementation var_prefix)
+  message(STATUS "calling get_rclcpp_information with var_prefix=${var_prefix}")
   # pretend to be a "package"
   # so that the variables can be used by various functions / macros
   set(${var_prefix}_FOUND TRUE)
+
+  # Get rcl using the existing macro
+  if(NOT "${target_suffix} " STREQUAL " ")
+    get_rcl_information("${rmw_implementation}" "rcl${target_suffix}")
+  endif()
 
   # include directories
   normalize_path(${var_prefix}_INCLUDE_DIRS
     "${rclcpp_DIR}/../../../include")
 
-  # libraries
-  set(_libs)
+  # The list of libraries was set in get_rcl_information
+  # set(_libs)
   # search for library relative to this CMake file
   set(_library_target "rclcpp")
   get_available_rmw_implementations(_rmw_impls)
@@ -61,11 +67,8 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   endif()
 
   # dependencies
-  set(_exported_dependencies
-    "rcl_interfaces"
-    "rmw"
+  list_append_unique(_exported_dependencies
     "rcl"
-    "${rmw_implementation}"
     "rosidl_generator_cpp")
   set(${var_prefix}_DEFINITIONS)
   foreach(_dep ${_exported_dependencies})

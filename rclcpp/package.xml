@@ -10,13 +10,13 @@
 
   <build_export_depend>rmw</build_export_depend>
 
-  <build_depend>rcl</build_depend>
   <build_depend>rcl_interfaces</build_depend>
   <build_depend>rmw_implementation_cmake</build_depend>
   <build_depend>rosidl_generator_cpp</build_depend>
   <build_export_depend>rcl_interfaces</build_export_depend>
   <build_export_depend>rosidl_generator_cpp</build_export_depend>
 
+  <depend>rcl</depend>
   <depend>rmw_implementation</depend>
 
   <exec_depend>ament_cmake</exec_depend>

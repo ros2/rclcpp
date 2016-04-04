@@ -50,10 +50,7 @@ macro(target)
     ${${PROJECT_NAME}_SRCS})
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
     "rcl${target_suffix}"
-    "rcl_interfaces"
-    "rmw"
-    "rosidl_generator_cpp"
-    "${rmw_implementation}")
+    "rosidl_generator_cpp")
 
   # Causes the visibility macros to use dllexport rather than dllimport,
   # which is appropriate when building the dll but not consuming it.
@@ -72,9 +69,6 @@ call_for_each_rmw_implementation(target GENERATE_DEFAULT)
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
-ament_export_dependencies(rcl_interfaces)
-ament_export_dependencies(rmw)
-ament_export_dependencies(rmw_implementation)
 ament_export_dependencies(rosidl_generator_cpp)
 
 ament_export_include_directories(include)
@@ -96,6 +90,7 @@ if(AMENT_ENABLE_TESTING)
   ament_add_gtest(test_mapped_ring_buffer test/test_mapped_ring_buffer.cpp)
   if(TARGET test_mapped_ring_buffer)
     target_include_directories(test_mapped_ring_buffer PUBLIC
+      ${rcl_INCLUDE_DIRS}
       ${rcl_interfaces_INCLUDE_DIRS}
       ${rmw_INCLUDE_DIRS}
       ${rosidl_generator_cpp_INCLUDE_DIRS}
@@ -104,6 +99,7 @@ if(AMENT_ENABLE_TESTING)
   ament_add_gtest(test_intra_process_manager test/test_intra_process_manager.cpp)
   if(TARGET test_intra_process_manager)
     target_include_directories(test_intra_process_manager PUBLIC
+      ${rcl_INCLUDE_DIRS}
       ${rcl_interfaces_INCLUDE_DIRS}
       ${rmw_INCLUDE_DIRS}
       ${rosidl_generator_cpp_INCLUDE_DIRS}
