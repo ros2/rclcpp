@@ -38,7 +38,7 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
     "${rclcpp_DIR}/../../../include")
 
   # The list of libraries was set in get_rcl_information
-  # set(_libs)
+  set(_libs)
   # search for library relative to this CMake file
   set(_library_target "rclcpp")
   get_available_rmw_implementations(_rmw_impls)
@@ -66,8 +66,8 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   endif()
 
   # dependencies
-  list_append_unique(_exported_dependencies
-    "rcl"
+  set(_exported_dependencies
+    "rcl${target_suffix}"
     "rosidl_generator_cpp")
   set(${var_prefix}_DEFINITIONS)
   foreach(_dep ${_exported_dependencies})
