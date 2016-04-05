@@ -50,9 +50,6 @@ public:
     const std::string & service_name);
 
   RCLCPP_PUBLIC
-  virtual ~ClientBase();
-
-  RCLCPP_PUBLIC
   const std::string &
   get_service_name() const;
 
@@ -115,6 +112,14 @@ public:
     }
   }
 
+  ~Client()
+  {
+    if (rcl_client_fini(&client_handle_, node_handle_.get()) != RMW_RET_OK) {
+      fprintf(stderr,
+        "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
+    }
+  }
+
   std::shared_ptr<void> create_response()
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
@@ -163,8 +168,8 @@ public:
   >
   SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
   {
-    int64_t sequence_number;
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
+    int64_t sequence_number;
     if (RMW_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(

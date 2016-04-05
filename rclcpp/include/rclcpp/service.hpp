@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-  #ifndef RCLCPP__SERVICE_HPP_
-  #define RCLCPP__SERVICE_HPP_
+#ifndef RCLCPP__SERVICE_HPP_
+#define RCLCPP__SERVICE_HPP_
 
-  #include <functional>
-  #include <iostream>
-  #include <memory>
-  #include <sstream>
-  #include <string>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <sstream>
+#include <string>
 
-  #include "rcl/error_handling.h"
-  #include "rcl/service.h"
+#include "rcl/error_handling.h"
+#include "rcl/service.h"
 
-  #include "rclcpp/any_service_callback.hpp"
-  #include "rclcpp/macros.hpp"
-  #include "rclcpp/type_support_decl.hpp"
-  #include "rclcpp/visibility_control.hpp"
-  #include "rmw/error_handling.h"
-  #include "rmw/rmw.h"
+#include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/type_support_decl.hpp"
+#include "rclcpp/visibility_control.hpp"
+#include "rmw/error_handling.h"
+#include "rmw/rmw.h"
 
 namespace rclcpp
 {
@@ -45,9 +45,6 @@ public:
   ServiceBase(
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string service_name);
-
-  RCLCPP_PUBLIC
-  virtual ~ServiceBase();
 
   RCLCPP_PUBLIC
   std::string
@@ -111,6 +108,16 @@ public:
   }
 
   Service() = delete;
+
+  ~Service()
+  {
+    if (rcl_service_fini(&service_handle_, node_handle_.get()) != RCL_RET_OK) {
+      std::stringstream ss;
+      ss << "Error in destruction of rcl service_handle_ handle: " <<
+        rcl_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
 
   std::shared_ptr<void> create_request()
   {

@@ -27,14 +27,6 @@ ClientBase::ClientBase(
 : node_handle_(node_handle), service_name_(service_name)
 {}
 
-ClientBase::~ClientBase()
-{
-  if (rcl_client_fini(&client_handle_, node_handle_.get()) != RMW_RET_OK) {
-    fprintf(stderr,
-      "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
-  }
-}
-
 const std::string &
 ClientBase::get_service_name() const
 {

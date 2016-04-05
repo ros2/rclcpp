@@ -33,16 +33,6 @@ ServiceBase::ServiceBase(
 : node_handle_(node_handle), service_name_(service_name)
 {}
 
-ServiceBase::~ServiceBase()
-{
-  if (rcl_service_fini(&service_handle_, node_handle_.get()) != RCL_RET_OK) {
-    std::stringstream ss;
-    ss << "Error in destruction of rcl service_handle_ handle: " <<
-      rcl_get_error_string_safe() << '\n';
-    (std::cerr << ss.str()).flush();
-  }
-}
-
 std::string
 ServiceBase::get_service_name()
 {

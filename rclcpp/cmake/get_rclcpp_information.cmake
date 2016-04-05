@@ -37,7 +37,7 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   normalize_path(${var_prefix}_INCLUDE_DIRS
     "${rclcpp_DIR}/../../../include")
 
-  # The list of libraries was set in get_rcl_information
+  # libraries
   set(_libs)
   # search for library relative to this CMake file
   set(_library_target "rclcpp")
