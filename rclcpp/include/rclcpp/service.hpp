@@ -47,6 +47,9 @@ public:
     const std::string service_name);
 
   RCLCPP_PUBLIC
+  ~ServiceBase();
+
+  RCLCPP_PUBLIC
   std::string
   get_service_name();
 
@@ -109,7 +112,7 @@ public:
 
   Service() = delete;
 
-  ~Service()
+  virtual ~Service()
   {
     if (rcl_service_fini(&service_handle_, node_handle_.get()) != RCL_RET_OK) {
       std::stringstream ss;

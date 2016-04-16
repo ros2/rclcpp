@@ -27,6 +27,10 @@ ClientBase::ClientBase(
 : node_handle_(node_handle), service_name_(service_name)
 {}
 
+ClientBase::~ClientBase()
+{
+}
+
 const std::string &
 ClientBase::get_service_name() const
 {

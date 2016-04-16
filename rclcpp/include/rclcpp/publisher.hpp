@@ -66,6 +66,9 @@ public:
     std::string topic,
     size_t queue_size);
 
+  RCLCPP_PUBLIC
+  ~PublisherBase();
+
   /// Get the topic that this publisher publishes on.
   // \return The topic name.
   RCLCPP_PUBLIC
@@ -184,7 +187,7 @@ public:
     }
   }
 
-  ~Publisher()
+  virtual ~Publisher()
   {
     if (rcl_publisher_fini(&intra_process_publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
       fprintf(

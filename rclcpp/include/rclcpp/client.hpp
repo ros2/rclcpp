@@ -28,9 +28,10 @@
 
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/type_support_decl.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -48,6 +49,9 @@ public:
   ClientBase(
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name);
+
+  RCLCPP_PUBLIC
+  ~ClientBase();
 
   RCLCPP_PUBLIC
   const std::string &
@@ -112,7 +116,7 @@ public:
     }
   }
 
-  ~Client()
+  virtual ~Client()
   {
     if (rcl_client_fini(&client_handle_, node_handle_.get()) != RMW_RET_OK) {
       fprintf(stderr,

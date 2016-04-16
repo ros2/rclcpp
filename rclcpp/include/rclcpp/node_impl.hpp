@@ -297,7 +297,6 @@ Node::create_client(
 {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos_profile;
-  // options.allocator = rclcpp::allocator::get_rcl_allocator<ServiceT, Alloc>(*allocator.get());
 
   using rclcpp::client::Client;
   using rclcpp::client::ClientBase;

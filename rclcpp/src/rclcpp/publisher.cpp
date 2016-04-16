@@ -42,6 +42,10 @@ PublisherBase::PublisherBase(
 {
 }
 
+PublisherBase::~PublisherBase()
+{
+}
+
 const std::string &
 PublisherBase::get_topic_name() const
 {

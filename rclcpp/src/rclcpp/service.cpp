@@ -33,6 +33,9 @@ ServiceBase::ServiceBase(
 : node_handle_(node_handle), service_name_(service_name)
 {}
 
+ServiceBase::~ServiceBase()
+{}
+
 std::string
 ServiceBase::get_service_name()
 {
