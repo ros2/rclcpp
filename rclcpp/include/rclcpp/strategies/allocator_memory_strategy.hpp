@@ -343,7 +343,7 @@ public:
 
   virtual rcl_allocator_t get_allocator()
   {
-    return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_);
+    return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
   }
 
   size_t number_of_ready_subscriptions() const
