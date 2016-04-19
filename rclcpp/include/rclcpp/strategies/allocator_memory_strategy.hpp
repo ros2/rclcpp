@@ -18,6 +18,8 @@
 #include <memory>
 #include <vector>
 
+#include "rcl/allocator.h"
+
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
@@ -337,6 +339,11 @@ public:
       // Else, the service is no longer valid, remove it and continue
       client_handles_.erase(it);
     }
+  }
+
+  virtual rcl_allocator_t get_allocator()
+  {
+    return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_);
   }
 
   size_t number_of_ready_subscriptions() const

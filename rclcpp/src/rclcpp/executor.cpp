@@ -50,9 +50,10 @@ Executor::Executor(const ExecutorArgs & args)
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
+  rcl_allocator_t allocator = memory_strategy_->get_allocator();
 
   if (rcl_wait_set_init(
-      &waitset_, 0, 2, 0, 0, 0, rcl_get_default_allocator()) != RCL_RET_OK)
+      &waitset_, 0, 2, 0, 0, 0, allocator) != RCL_RET_OK)
   {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rcl_get_error_string_safe());

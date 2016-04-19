@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 
+#include "rcl/allocator.h"
 #include "rcl/wait.h"
 
 #include "rclcpp/any_executable.hpp"
@@ -73,6 +74,9 @@ public:
   virtual void
   get_next_client(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
+
+  virtual rcl_allocator_t
+  get_allocator() = 0;
 
   static rclcpp::subscription::SubscriptionBase::SharedPtr
   get_subscription_by_handle(const rcl_subscription_t * subscriber_handle,
