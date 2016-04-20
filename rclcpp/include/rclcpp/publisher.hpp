@@ -127,7 +127,7 @@ protected:
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
   rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
-  rcl_allocator_t rcl_allocator_;
+  rcl_allocator_t rcl_allocator_ = rcl_get_default_allocator();
 
   std::string topic_;
   size_t queue_size_;
