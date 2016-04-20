@@ -68,7 +68,7 @@ Executor::Executor(const ExecutorArgs & args)
 Executor::~Executor()
 {
   // Finalize the waitset.
-  if (rcl_wait_set_fini(&waitset_) != RMW_RET_OK) {
+  if (rcl_wait_set_fini(&waitset_) != RCL_RET_OK) {
     fprintf(stderr,
       "[rclcpp::error] failed to destroy waitset: %s\n", rcl_get_error_string_safe());
   }
@@ -97,7 +97,7 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   weak_nodes_.push_back(node_ptr);
   if (notify) {
     // Interrupt waiting to handle new node
-    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RMW_RET_OK) {
+    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
       throw std::runtime_error(rcl_get_error_string_safe());
     }
   }
@@ -286,7 +286,7 @@ Executor::execute_service(
     request_header.get(),
     request.get());
   if (status != RCL_RET_SERVICE_TAKE_FAILED) {
-    if (status == RMW_RET_OK) {
+    if (status == RCL_RET_OK) {
       service->handle_request(request_header, request);
     }
   } else {
@@ -307,7 +307,7 @@ Executor::execute_client(
     request_header.get(),
     response.get());
   if (status != RCL_RET_SERVICE_TAKE_FAILED) {
-    if (status == RMW_RET_OK) {
+    if (status == RCL_RET_OK) {
       client->handle_response(request_header, response);
     }
   } else {

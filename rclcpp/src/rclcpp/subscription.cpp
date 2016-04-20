@@ -37,7 +37,7 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
-  if (rcl_subscription_fini(&subscription_handle_, node_handle_.get()) != RMW_RET_OK) {
+  if (rcl_subscription_fini(&subscription_handle_, node_handle_.get()) != RCL_RET_OK) {
     std::stringstream ss;
     ss << "Error in destruction of rcl subscription handle: " <<
       rcl_get_error_string_safe() << '\n';

@@ -75,7 +75,7 @@ Node::Node(
 
   rcl_node_t * rcl_node = new rcl_node_t(rcl_get_zero_initialized_node());
   node_handle_.reset(rcl_node, [](rcl_node_t * node) {
-    if (rcl_node_fini(node) != RMW_RET_OK) {
+    if (rcl_node_fini(node) != RCL_RET_OK) {
       fprintf(
         stderr, "Error in destruction of rmw node handle: %s\n", rcl_get_error_string_safe());
     }

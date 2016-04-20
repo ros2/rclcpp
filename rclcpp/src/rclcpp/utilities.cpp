@@ -156,7 +156,7 @@ void
 rclcpp::utilities::shutdown()
 {
   g_signal_status = SIGINT;
-  if (rcl_trigger_guard_condition(&g_sigint_guard_cond_handle) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&g_sigint_guard_cond_handle) != RCL_RET_OK) {
     fprintf(stderr,
       "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
   }
