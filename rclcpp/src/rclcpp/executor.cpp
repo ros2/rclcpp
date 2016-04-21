@@ -382,7 +382,8 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   if (!memory_strategy_->add_handles_to_waitset(&waitset_)) {
     throw std::runtime_error("Couldn't fill waitset");
   }
-  rcl_ret_t status = rcl_wait(&waitset_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
+  rcl_ret_t status =
+    rcl_wait(&waitset_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
   if (status == RCL_RET_WAIT_SET_EMPTY) {
     fprintf(stderr, "Warning: empty waitset received in rcl_wait(). This should never happen.\n");
   } else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {

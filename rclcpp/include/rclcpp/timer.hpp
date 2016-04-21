@@ -46,7 +46,7 @@ public:
 
   RCLCPP_PUBLIC
   explicit TimerBase(std::chrono::nanoseconds period);
-  
+
   RCLCPP_PUBLIC
   ~TimerBase();
 
