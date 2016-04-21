@@ -69,11 +69,12 @@ typename std::enable_if<!std::is_same<Alloc, std::allocator<void>>::value>::type
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {
   rcl_allocator_t rcl_allocator = rcl_get_default_allocator();
-
+#ifndef _WIN32
   rcl_allocator.allocate = &retyped_allocate<Alloc>;
   rcl_allocator.deallocate = &retyped_deallocate<T, Alloc>;
   rcl_allocator.reallocate = &retyped_reallocate<T, Alloc>;
   rcl_allocator.state = &allocator;
+#endif
   return rcl_allocator;
 }
 

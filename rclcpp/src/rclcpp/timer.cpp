@@ -21,7 +21,12 @@ using rclcpp::timer::TimerBase;
 
 TimerBase::TimerBase(std::chrono::nanoseconds period)
 {
-  (void)period;
+  if (rcl_timer_init(
+      &timer_handle_, period.count(), nullptr,
+      rcl_get_default_allocator()) != RCL_RET_OK)
+  {
+    fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
+  }
 }
 
 TimerBase::~TimerBase()

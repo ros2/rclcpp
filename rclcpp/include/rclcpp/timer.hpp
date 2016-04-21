@@ -46,9 +46,9 @@ public:
 
   RCLCPP_PUBLIC
   explicit TimerBase(std::chrono::nanoseconds period);
-
+  
   RCLCPP_PUBLIC
-  virtual ~TimerBase();
+  ~TimerBase();
 
   RCLCPP_PUBLIC
   void
@@ -64,6 +64,7 @@ public:
 
   /// Check how long the timer has until its next scheduled callback.
   // \return A std::chrono::duration representing the relative time until the next callback.
+  RCLCPP_PUBLIC
   std::chrono::nanoseconds
   time_until_trigger();
 
@@ -77,6 +78,7 @@ public:
    * since it maintains the last time the callback was triggered.
    * \return True if the timer needs to trigger.
    */
+  RCLCPP_PUBLIC
   bool is_ready();
 
 protected:
@@ -110,12 +112,6 @@ public:
   GenericTimer(std::chrono::nanoseconds period, FunctorT && callback)
   : TimerBase(period), callback_(std::forward<FunctorT>(callback))
   {
-    if (rcl_timer_init(
-        &timer_handle_, period.count(), nullptr,
-        rcl_get_default_allocator()) != RCL_RET_OK)
-    {
-      fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
-    }
   }
 
   /// Default destructor.
@@ -124,7 +120,7 @@ public:
     // Stop the timer from running.
     cancel();
     if (rcl_timer_fini(&timer_handle_) != RCL_RET_OK) {
-      fprintf(stderr, "Failed to clean up rcl timer handle");
+      fprintf(stderr, "Failed to clean up rcl timer handle: %s\n", rcl_get_error_string_safe());
     }
   }
 

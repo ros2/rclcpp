@@ -196,10 +196,11 @@ public:
     }
 
     auto end_time = std::chrono::steady_clock::now();
-    if (timeout > std::chrono::nanoseconds::zero()) {
-      end_time += timeout;
+    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(timeout);
+    if (timeout_ns > std::chrono::nanoseconds::zero()) {
+      end_time += timeout_ns;
     }
-    auto timeout_left = timeout;
+    std::chrono::nanoseconds timeout_left = timeout_ns;
 
     while (rclcpp::utilities::ok()) {
       // Do one item of work.
@@ -210,7 +211,7 @@ public:
         return FutureReturnCode::SUCCESS;
       }
       // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout < std::chrono::nanoseconds::zero()) {
+      if (timeout_ns < std::chrono::nanoseconds::zero()) {
         continue;
       }
       // Otherwise check if we still have time to wait, return TIMEOUT if not.
@@ -219,8 +220,7 @@ public:
         return FutureReturnCode::TIMEOUT;
       }
       // Subtract the elapsed time from the original timeout.
-      using duration_type = std::chrono::duration<int64_t, TimeT>;
-      timeout_left = std::chrono::duration_cast<duration_type>(end_time - now);
+      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
     }
 
     // The future did not complete before ok() returned false, return INTERRUPTED.
