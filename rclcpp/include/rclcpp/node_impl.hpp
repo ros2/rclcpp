@@ -30,6 +30,9 @@
 #include <utility>
 #include <vector>
 
+#include "rcl/publisher.h"
+#include "rcl/subscription.h"
+
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
 #include "rclcpp/contexts/default_context.hpp"
@@ -70,33 +73,20 @@ Node::create_publisher(
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
-  using rosidl_generator_cpp::get_message_type_support_handle;
-  auto type_support_handle = get_message_type_support_handle<MessageT>();
-  rmw_publisher_t * publisher_handle = rmw_create_publisher(
-    node_handle_.get(), type_support_handle, topic_name.c_str(), &qos_profile);
-  if (!publisher_handle) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-    throw std::runtime_error(
-      std::string("could not create publisher: ") +
-      rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
+
+  auto publisher_options = rcl_publisher_get_default_options();
+  publisher_options.qos = qos_profile;
+
+  auto message_alloc =
+    std::make_shared<typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>(
+    *allocator.get());
+  publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(
+    *message_alloc.get());
 
   auto publisher = publisher::Publisher<MessageT, Alloc>::make_shared(
-    node_handle_, publisher_handle, topic_name, qos_profile.depth, allocator);
+    node_handle_, topic_name, publisher_options, message_alloc);
 
   if (use_intra_process_comms_) {
-    rmw_publisher_t * intra_process_publisher_handle = rmw_create_publisher(
-      node_handle_.get(), rclcpp::type_support::get_intra_process_message_msg_type_support(),
-      (topic_name + "__intra").c_str(), &qos_profile);
-    if (!intra_process_publisher_handle) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("could not create intra process publisher: ") +
-        rmw_get_error_string_safe());
-      // *INDENT-ON*
-    }
-
     auto intra_process_manager =
       context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     uint64_t intra_process_publisher_id =
@@ -132,9 +122,9 @@ Node::create_publisher(
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,
-      intra_process_publisher_handle);
+      publisher_options);
   }
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
@@ -162,46 +152,37 @@ Node::create_subscription(
   Alloc> any_subscription_callback(allocator);
   any_subscription_callback.set(std::forward<CallbackT>(callback));
 
-  using rosidl_generator_cpp::get_message_type_support_handle;
-
   if (!msg_mem_strat) {
     msg_mem_strat =
       rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::create_default();
   }
+  auto message_alloc =
+    std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
 
-  auto type_support_handle = get_message_type_support_handle<MessageT>();
-  rmw_subscription_t * subscriber_handle = rmw_create_subscription(
-    node_handle_.get(), type_support_handle,
-    topic_name.c_str(), &qos_profile, ignore_local_publications);
-  if (!subscriber_handle) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-    throw std::runtime_error(
-      std::string("could not create subscription: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
+  auto subscription_options = rcl_subscription_get_default_options();
+  subscription_options.qos = qos_profile;
+  subscription_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
+    *message_alloc.get());
+  subscription_options.ignore_local_publications = ignore_local_publications;
 
   using rclcpp::subscription::Subscription;
   using rclcpp::subscription::SubscriptionBase;
 
   auto sub = Subscription<MessageT, Alloc>::make_shared(
     node_handle_,
-    subscriber_handle,
     topic_name,
-    ignore_local_publications,
+    subscription_options,
     any_subscription_callback,
     msg_mem_strat);
   auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
   // Setup intra process.
   if (use_intra_process_comms_) {
-    rmw_subscription_t * intra_process_subscriber_handle = rmw_create_subscription(
-      node_handle_.get(), rclcpp::type_support::get_intra_process_message_msg_type_support(),
-      (topic_name + "__intra").c_str(), &qos_profile, false);
-    if (!subscriber_handle) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("could not create intra process subscription: ") + rmw_get_error_string_safe());
-      // *INDENT-ON*
-    }
+    auto intra_process_options = rcl_subscription_get_default_options();
+    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
+      *message_alloc.get());
+    intra_process_options.qos = qos_profile;
+    intra_process_options.ignore_local_publications = false;
+
     auto intra_process_manager =
       context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
@@ -210,7 +191,6 @@ Node::create_subscription(
     // *INDENT-OFF*
     sub->setup_intra_process(
       intra_process_subscription_id,
-      intra_process_subscriber_handle,
       [weak_ipm](
         uint64_t publisher_id,
         uint64_t message_sequence,
@@ -233,7 +213,8 @@ Node::create_subscription(
             "intra process publisher check called after destruction of intra process manager");
         }
         return ipm->matches_any_publishers(sender_gid);
-      }
+      },
+      intra_process_options
     );
     // *INDENT-ON*
   }
@@ -248,7 +229,7 @@ Node::create_subscription(
     default_callback_group_->add_subscription(sub_base_ptr);
   }
   number_of_subscriptions_++;
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on subscription creation: ") + rmw_get_error_string());
@@ -299,7 +280,7 @@ Node::create_wall_timer(
     default_callback_group_->add_timer(timer);
   }
   number_of_timers_++;
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on timer creation: ") + rmw_get_error_string());
@@ -314,27 +295,16 @@ Node::create_client(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  using rosidl_generator_cpp::get_service_type_support_handle;
-  auto service_type_support_handle =
-    get_service_type_support_handle<ServiceT>();
-
-  rmw_client_t * client_handle = rmw_create_client(
-    this->node_handle_.get(), service_type_support_handle, service_name.c_str(), &qos_profile);
-  if (!client_handle) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-    throw std::runtime_error(
-      std::string("could not create client: ") +
-      rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
+  rcl_client_options_t options = rcl_client_get_default_options();
+  options.qos = qos_profile;
 
   using rclcpp::client::Client;
   using rclcpp::client::ClientBase;
 
   auto cli = Client<ServiceT>::make_shared(
     node_handle_,
-    client_handle,
-    service_name);
+    service_name,
+    options);
 
   auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
   if (group) {
@@ -348,7 +318,7 @@ Node::create_client(
   }
   number_of_clients_++;
 
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on client creation: ") + rmw_get_error_string());
@@ -364,25 +334,15 @@ Node::create_service(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  using rosidl_generator_cpp::get_service_type_support_handle;
-  auto service_type_support_handle =
-    get_service_type_support_handle<ServiceT>();
-
   rclcpp::service::AnyServiceCallback<ServiceT> any_service_callback;
   any_service_callback.set(std::forward<CallbackT>(callback));
 
-  rmw_service_t * service_handle = rmw_create_service(
-    node_handle_.get(), service_type_support_handle, service_name.c_str(), &qos_profile);
-  if (!service_handle) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-    throw std::runtime_error(
-      std::string("could not create service: ") +
-      rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
+  rcl_service_options_t service_options = rcl_service_get_default_options();
+  service_options.qos = qos_profile;
 
   auto serv = service::Service<ServiceT>::make_shared(
-    node_handle_, service_handle, service_name, any_service_callback);
+    node_handle_,
+    service_name, any_service_callback, service_options);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   if (group) {
     if (!group_in_node(group)) {
@@ -394,7 +354,7 @@ Node::create_service(
     default_callback_group_->add_service(serv_base_ptr);
   }
   number_of_services_++;
-  if (rmw_trigger_guard_condition(notify_guard_condition_) != RMW_RET_OK) {
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on service creation: ") + rmw_get_error_string());

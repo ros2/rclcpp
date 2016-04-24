@@ -22,20 +22,13 @@
 using rclcpp::client::ClientBase;
 
 ClientBase::ClientBase(
-  std::shared_ptr<rmw_node_t> node_handle,
-  rmw_client_t * client_handle,
+  std::shared_ptr<rcl_node_t> node_handle,
   const std::string & service_name)
-: node_handle_(node_handle), client_handle_(client_handle), service_name_(service_name)
+: node_handle_(node_handle), service_name_(service_name)
 {}
 
 ClientBase::~ClientBase()
 {
-  if (client_handle_) {
-    if (rmw_destroy_client(client_handle_) != RMW_RET_OK) {
-      fprintf(stderr,
-        "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
-    }
-  }
 }
 
 const std::string &
@@ -44,8 +37,8 @@ ClientBase::get_service_name() const
   return this->service_name_;
 }
 
-const rmw_client_t *
+const rcl_client_t *
 ClientBase::get_client_handle() const
 {
-  return this->client_handle_;
+  return &client_handle_;
 }

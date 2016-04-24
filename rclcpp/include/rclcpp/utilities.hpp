@@ -18,6 +18,9 @@
 #include <chrono>
 
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcl/guard_condition.h"
+
 #include "rmw/macros.h"
 #include "rmw/rmw.h"
 
@@ -48,7 +51,7 @@ shutdown();
 
 /// Get a handle to the rmw guard condition that manages the signal handler.
 RCLCPP_PUBLIC
-rmw_guard_condition_t *
+rcl_guard_condition_t *
 get_global_sigint_guard_condition();
 
 /// Use the global condition variable to block for the specified amount of time.

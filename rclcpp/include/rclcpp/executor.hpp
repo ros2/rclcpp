@@ -25,6 +25,9 @@
 #include <string>
 #include <vector>
 
+#include "rcl/guard_condition.h"
+#include "rcl/wait.h"
+
 #include "rclcpp/any_executable.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
@@ -193,10 +196,12 @@ public:
     }
 
     auto end_time = std::chrono::steady_clock::now();
-    if (timeout > std::chrono::nanoseconds::zero()) {
-      end_time += timeout;
+    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      timeout);
+    if (timeout_ns > std::chrono::nanoseconds::zero()) {
+      end_time += timeout_ns;
     }
-    auto timeout_left = timeout;
+    std::chrono::nanoseconds timeout_left = timeout_ns;
 
     while (rclcpp::utilities::ok()) {
       // Do one item of work.
@@ -207,7 +212,7 @@ public:
         return FutureReturnCode::SUCCESS;
       }
       // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout < std::chrono::nanoseconds::zero()) {
+      if (timeout_ns < std::chrono::nanoseconds::zero()) {
         continue;
       }
       // Otherwise check if we still have time to wait, return TIMEOUT if not.
@@ -216,8 +221,7 @@ public:
         return FutureReturnCode::TIMEOUT;
       }
       // Subtract the elapsed time from the original timeout.
-      using duration_type = std::chrono::duration<int64_t, TimeT>;
-      timeout_left = std::chrono::duration_cast<duration_type>(end_time - now);
+      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
     }
 
     // The future did not complete before ok() returned false, return INTERRUPTED.
@@ -292,10 +296,6 @@ protected:
   get_next_timer(AnyExecutable::SharedPtr any_exec);
 
   RCLCPP_PUBLIC
-  std::chrono::nanoseconds
-  get_earliest_timer();
-
-  RCLCPP_PUBLIC
   AnyExecutable::SharedPtr
   get_next_ready_executable();
 
@@ -307,10 +307,10 @@ protected:
   std::atomic_bool spinning;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
-  rmw_guard_condition_t * interrupt_guard_condition_;
+  rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
 
   /// Waitset for managing entities that the rmw layer waits on.
-  rmw_waitset_t * waitset_;
+  rcl_wait_set_t waitset_ = rcl_get_zero_initialized_wait_set();
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;

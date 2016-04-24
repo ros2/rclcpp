@@ -27,6 +27,10 @@
 #include "rclcpp/rate.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcl/error_handling.h"
+#include "rcl/timer.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -44,7 +48,7 @@ public:
   explicit TimerBase(std::chrono::nanoseconds period);
 
   RCLCPP_PUBLIC
-  virtual ~TimerBase();
+  ~TimerBase();
 
   RCLCPP_PUBLIC
   void
@@ -54,27 +58,31 @@ public:
   virtual void
   execute_callback() = 0;
 
+  RCLCPP_PUBLIC
+  const rcl_timer_t *
+  get_timer_handle();
+
   /// Check how long the timer has until its next scheduled callback.
   // \return A std::chrono::duration representing the relative time until the next callback.
-  virtual std::chrono::nanoseconds
-  time_until_trigger() = 0;
+  RCLCPP_PUBLIC
+  std::chrono::nanoseconds
+  time_until_trigger();
 
   /// Is the clock steady (i.e. is the time between ticks constant?)
   // \return True if the clock used by this timer is steady.
   virtual bool is_steady() = 0;
 
-  /// Check if the timer needs to trigger the callback.
+  /// Check if the timer is ready to trigger the callback.
   /**
    * This function expects its caller to immediately trigger the callback after this function,
    * since it maintains the last time the callback was triggered.
    * \return True if the timer needs to trigger.
    */
-  virtual bool check_and_trigger() = 0;
+  RCLCPP_PUBLIC
+  bool is_ready();
 
 protected:
-  std::chrono::nanoseconds period_;
-
-  bool canceled_;
+  rcl_timer_t timer_handle_ = rcl_get_zero_initialized_timer();
 };
 
 
@@ -102,10 +110,8 @@ public:
    * \param[in] callback User-specified callback function.
    */
   GenericTimer(std::chrono::nanoseconds period, FunctorT && callback)
-  : TimerBase(period), callback_(std::forward<FunctorT>(callback)), loop_rate_(period)
+  : TimerBase(period), callback_(std::forward<FunctorT>(callback))
   {
-    /* Set last_triggered_time_ so that the timer fires at least one period after being created. */
-    last_triggered_time_ = Clock::now();
   }
 
   /// Default destructor.
@@ -113,11 +119,21 @@ public:
   {
     // Stop the timer from running.
     cancel();
+    if (rcl_timer_fini(&timer_handle_) != RCL_RET_OK) {
+      fprintf(stderr, "Failed to clean up rcl timer handle: %s\n", rcl_get_error_string_safe());
+    }
   }
 
   void
   execute_callback()
   {
+    rcl_ret_t ret = rcl_timer_call(&timer_handle_);
+    if (ret == RCL_RET_TIMER_CANCELED) {
+      return;
+    }
+    if (ret != RCL_RET_OK) {
+      throw std::runtime_error("Failed to notify timer that callback occurred");
+    }
     execute_callback_delegate<>();
   }
 
@@ -146,39 +162,6 @@ public:
     callback_(*this);
   }
 
-  bool
-  check_and_trigger()
-  {
-    if (canceled_) {
-      return false;
-    }
-    if (Clock::now() < last_triggered_time_) {
-      return false;
-    }
-    if (std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now() - last_triggered_time_) >=
-      loop_rate_.period())
-    {
-      last_triggered_time_ = Clock::now();
-      return true;
-    }
-    return false;
-  }
-
-  std::chrono::nanoseconds
-  time_until_trigger()
-  {
-    std::chrono::nanoseconds time_until_trigger;
-    // Calculate the time between the next trigger and the current time
-    if (last_triggered_time_ + loop_rate_.period() < Clock::now()) {
-      // time is overdue, need to trigger immediately
-      time_until_trigger = std::chrono::nanoseconds::zero();
-    } else {
-      time_until_trigger = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        last_triggered_time_ - Clock::now()) + loop_rate_.period();
-    }
-    return time_until_trigger;
-  }
-
   virtual bool
   is_steady()
   {
@@ -189,8 +172,6 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer);
 
   FunctorT callback_;
-  rclcpp::rate::GenericRate<Clock> loop_rate_;
-  std::chrono::time_point<Clock> last_triggered_time_;
 };
 
 template<typename CallbackType>

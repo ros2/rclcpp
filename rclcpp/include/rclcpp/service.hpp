@@ -21,8 +21,12 @@
 #include <sstream>
 #include <string>
 
+#include "rcl/error_handling.h"
+#include "rcl/service.h"
+
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -39,19 +43,18 @@ public:
 
   RCLCPP_PUBLIC
   ServiceBase(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
     const std::string service_name);
 
   RCLCPP_PUBLIC
-  virtual ~ServiceBase();
+  ~ServiceBase();
 
   RCLCPP_PUBLIC
   std::string
   get_service_name();
 
   RCLCPP_PUBLIC
-  const rmw_service_t *
+  const rcl_service_t *
   get_service_handle();
 
   virtual std::shared_ptr<void> create_request() = 0;
@@ -60,12 +63,12 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) = 0;
 
-private:
+protected:
   RCLCPP_DISABLE_COPY(ServiceBase);
 
-  std::shared_ptr<rmw_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
-  rmw_service_t * service_handle_;
+  rcl_service_t service_handle_ = rcl_get_zero_initialized_service();
   std::string service_name_;
 };
 
@@ -88,14 +91,36 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Service);
 
   Service(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_service_t * service_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name,
-    AnyServiceCallback<ServiceT> any_callback)
-  : ServiceBase(node_handle, service_handle, service_name), any_callback_(any_callback)
-  {}
+    AnyServiceCallback<ServiceT> any_callback,
+    rcl_service_options_t & service_options)
+  : ServiceBase(node_handle, service_name), any_callback_(any_callback)
+  {
+    using rosidl_generator_cpp::get_service_type_support_handle;
+    auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
+
+    if (rcl_service_init(
+        &service_handle_, node_handle.get(), service_type_support_handle, service_name.c_str(),
+        &service_options) != RCL_RET_OK)
+    {
+      throw std::runtime_error(
+              std::string("could not create service: ") +
+              rcl_get_error_string_safe());
+    }
+  }
 
   Service() = delete;
+
+  virtual ~Service()
+  {
+    if (rcl_service_fini(&service_handle_, node_handle_.get()) != RCL_RET_OK) {
+      std::stringstream ss;
+      ss << "Error in destruction of rcl service_handle_ handle: " <<
+        rcl_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
 
   std::shared_ptr<void> create_request()
   {
@@ -122,11 +147,12 @@ public:
     std::shared_ptr<rmw_request_id_t> req_id,
     std::shared_ptr<typename ServiceT::Response> response)
   {
-    rmw_ret_t status = rmw_send_response(get_service_handle(), req_id.get(), response.get());
-    if (status != RMW_RET_OK) {
+    rcl_ret_t status = rcl_send_response(get_service_handle(), req_id.get(), response.get());
+
+    if (status != RCL_RET_OK) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
-        std::string("failed to send response: ") + rmw_get_error_string_safe());
+        std::string("failed to send response: ") + rcl_get_error_string_safe());
       // *INDENT-ON*
     }
   }

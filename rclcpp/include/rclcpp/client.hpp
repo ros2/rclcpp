@@ -23,10 +23,15 @@
 #include <tuple>
 #include <utility>
 
+#include "rcl/client.h"
+#include "rcl/error_handling.h"
+
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -42,19 +47,18 @@ public:
 
   RCLCPP_PUBLIC
   ClientBase(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_client_t * client_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
-  virtual ~ClientBase();
+  ~ClientBase();
 
   RCLCPP_PUBLIC
   const std::string &
   get_service_name() const;
 
   RCLCPP_PUBLIC
-  const rmw_client_t *
+  const rcl_client_t *
   get_client_handle() const;
 
   virtual std::shared_ptr<void> create_response() = 0;
@@ -62,12 +66,12 @@ public:
   virtual void handle_response(
     std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
-private:
+protected:
   RCLCPP_DISABLE_COPY(ClientBase);
 
-  std::shared_ptr<rmw_node_t> node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
-  rmw_client_t * client_handle_;
+  rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
   std::string service_name_;
 };
 
@@ -93,11 +97,32 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
 
   Client(
-    std::shared_ptr<rmw_node_t> node_handle,
-    rmw_client_t * client_handle,
-    const std::string & service_name)
-  : ClientBase(node_handle, client_handle, service_name)
-  {}
+    std::shared_ptr<rcl_node_t> node_handle,
+    const std::string & service_name,
+    rcl_client_options_t & client_options)
+  : ClientBase(node_handle, service_name)
+  {
+    using rosidl_generator_cpp::get_service_type_support_handle;
+    auto service_type_support_handle =
+      get_service_type_support_handle<ServiceT>();
+    if (rcl_client_init(&client_handle_, this->node_handle_.get(),
+      service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK)
+    {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("could not create client: ") +
+        rcl_get_error_string_safe());
+      // *INDENT-ON*
+    }
+  }
+
+  virtual ~Client()
+  {
+    if (rcl_client_fini(&client_handle_, node_handle_.get()) != RCL_RET_OK) {
+      fprintf(stderr,
+        "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
+    }
+  }
 
   std::shared_ptr<void> create_response()
   {
@@ -149,10 +174,10 @@ public:
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
-    if (RMW_RET_OK != rmw_send_request(get_client_handle(), request.get(), &sequence_number)) {
+    if (RCL_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
       // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
       throw std::runtime_error(
-        std::string("failed to send request: ") + rmw_get_error_string_safe());
+        std::string("failed to send request: ") + rcl_get_error_string_safe());
       // *INDENT-ON*
     }
 

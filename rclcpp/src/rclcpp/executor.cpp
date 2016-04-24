@@ -16,6 +16,9 @@
 #include <string>
 #include <type_traits>
 
+#include "rcl/allocator.h"
+#include "rcl/error_handling.h"
+
 #include "rclcpp/executor.hpp"
 #include "rclcpp/scope_exit.hpp"
 
@@ -30,29 +33,33 @@ Executor::Executor(const ExecutorArgs & args)
 : spinning(false),
   memory_strategy_(args.memory_strategy)
 {
-  interrupt_guard_condition_ = rmw_create_guard_condition();
-  if (!interrupt_guard_condition_) {
-    throw std::runtime_error("Failed to create interrupt guard condition in Executor constructor");
+  rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
+  if (rcl_guard_condition_init(
+      &interrupt_guard_condition_, guard_condition_options) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+            std::string("Failed to create interrupt guard condition in Executor constructor: ") +
+            rcl_get_error_string_safe());
   }
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
   // and one for the executor's guard cond (interrupt_guard_condition_)
-  // The size of guard conditions is variable because the number of nodes can vary
 
   // Put the global ctrl-c guard condition in
   memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
+
   // Put the executor's guard condition in
-  memory_strategy_->add_guard_condition(interrupt_guard_condition_);
+  memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
+  rcl_allocator_t allocator = memory_strategy_->get_allocator();
 
-  waitset_ = rmw_create_waitset(args.max_conditions);
-
-  if (!waitset_) {
+  if (rcl_wait_set_init(
+      &waitset_, 0, 2, 0, 0, 0, allocator) != RCL_RET_OK)
+  {
     fprintf(stderr,
-      "[rclcpp::error] failed to create waitset: %s\n", rmw_get_error_string_safe());
-    rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
-    if (status != RMW_RET_OK) {
+      "[rclcpp::error] failed to create waitset: %s\n", rcl_get_error_string_safe());
+    if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
       fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
+        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
     }
     throw std::runtime_error("Failed to create waitset in Executor constructor");
   }
@@ -60,21 +67,15 @@ Executor::Executor(const ExecutorArgs & args)
 
 Executor::~Executor()
 {
-  // Try to deallocate the waitset.
-  if (waitset_) {
-    rmw_ret_t status = rmw_destroy_waitset(waitset_);
-    if (status != RMW_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy waitset: %s\n", rmw_get_error_string_safe());
-    }
+  // Finalize the waitset.
+  if (rcl_wait_set_fini(&waitset_) != RCL_RET_OK) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to destroy waitset: %s\n", rcl_get_error_string_safe());
   }
-  // Try to deallocate the interrupt guard condition.
-  if (interrupt_guard_condition_ != nullptr) {
-    rmw_ret_t status = rmw_destroy_guard_condition(interrupt_guard_condition_);
-    if (status != RMW_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rmw_get_error_string_safe());
-    }
+  // Finalize the interrupt guard condition.
+  if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
+    fprintf(stderr,
+      "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
   }
 }
 
@@ -96,9 +97,8 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   weak_nodes_.push_back(node_ptr);
   if (notify) {
     // Interrupt waiting to handle new node
-    rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-    if (status != RMW_RET_OK) {
-      throw std::runtime_error(rmw_get_error_string_safe());
+    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+      throw std::runtime_error(rcl_get_error_string_safe());
     }
   }
   // Add the node's notify condition to the guard condition handles
@@ -126,9 +126,8 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
-      rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-      if (status != RMW_RET_OK) {
-        throw std::runtime_error(rmw_get_error_string_safe());
+      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+        throw std::runtime_error(rcl_get_error_string_safe());
       }
     }
   }
@@ -184,9 +183,8 @@ void
 Executor::cancel()
 {
   spinning.store(false);
-  rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-  if (status != RMW_RET_OK) {
-    throw std::runtime_error(rmw_get_error_string_safe());
+  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+    throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
 
@@ -224,9 +222,8 @@ Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
   any_exec->callback_group->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  rmw_ret_t status = rmw_trigger_guard_condition(interrupt_guard_condition_);
-  if (status != RMW_RET_OK) {
-    throw std::runtime_error(rmw_get_error_string_safe());
+  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+    throw std::runtime_error(rcl_get_error_string_safe());
   }
 }
 
@@ -235,20 +232,17 @@ Executor::execute_subscription(
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
 {
   std::shared_ptr<void> message = subscription->create_message();
-  bool taken = false;
   rmw_message_info_t message_info;
-  auto ret =
-    rmw_take_with_info(subscription->get_subscription_handle(),
-      message.get(), &taken, &message_info);
-  if (ret == RMW_RET_OK) {
-    if (taken) {
-      message_info.from_intra_process = false;
-      subscription->handle_message(message, message_info);
-    }
-  } else {
+
+  auto ret = rcl_take(subscription->get_subscription_handle(),
+      message.get(), &message_info);
+  if (ret == RCL_RET_OK) {
+    message_info.from_intra_process = false;
+    subscription->handle_message(message, message_info);
+  } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
-      subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
+      subscription->get_topic_name().c_str(), rcl_get_error_string_safe());
   }
   subscription->return_message(message);
 }
@@ -258,22 +252,19 @@ Executor::execute_intra_process_subscription(
   rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
 {
   rcl_interfaces::msg::IntraProcessMessage ipm;
-  bool taken = false;
   rmw_message_info_t message_info;
-  rmw_ret_t status = rmw_take_with_info(
+  rcl_ret_t status = rcl_take(
     subscription->get_intra_process_subscription_handle(),
     &ipm,
-    &taken,
     &message_info);
-  if (status == RMW_RET_OK) {
-    if (taken) {
-      message_info.from_intra_process = true;
-      subscription->handle_intra_process_message(ipm, message_info);
-    }
-  } else {
+
+  if (status == RCL_RET_OK) {
+    message_info.from_intra_process = true;
+    subscription->handle_intra_process_message(ipm, message_info);
+  } else if (status != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take failed for intra process subscription on topic '%s': %s\n",
-      subscription->get_topic_name().c_str(), rmw_get_error_string_safe());
+      subscription->get_topic_name().c_str(), rcl_get_error_string_safe());
   }
 }
 
@@ -290,20 +281,18 @@ Executor::execute_service(
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
-  bool taken = false;
-  rmw_ret_t status = rmw_take_request(
+  rcl_ret_t status = rcl_take_request(
     service->get_service_handle(),
     request_header.get(),
-    request.get(),
-    &taken);
-  if (status == RMW_RET_OK) {
-    if (taken) {
+    request.get());
+  if (status != RCL_RET_SERVICE_TAKE_FAILED) {
+    if (status == RCL_RET_OK) {
       service->handle_request(request_header, request);
     }
   } else {
     fprintf(stderr,
       "[rclcpp::error] take request failed for server of service '%s': %s\n",
-      service->get_service_name().c_str(), rmw_get_error_string_safe());
+      service->get_service_name().c_str(), rcl_get_error_string_safe());
   }
 }
 
@@ -313,29 +302,26 @@ Executor::execute_client(
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
-  bool taken = false;
-  rmw_ret_t status = rmw_take_response(
+  rcl_ret_t status = rcl_take_response(
     client->get_client_handle(),
     request_header.get(),
-    response.get(),
-    &taken);
-  if (status == RMW_RET_OK) {
-    if (taken) {
+    response.get());
+  if (status != RCL_RET_SERVICE_TAKE_FAILED) {
+    if (status == RCL_RET_OK) {
       client->handle_response(request_header, response);
     }
   } else {
     fprintf(stderr,
       "[rclcpp::error] take response failed for client of service '%s': %s\n",
-      client->get_service_name().c_str(), rmw_get_error_string_safe());
+      client->get_service_name().c_str(), rcl_get_error_string_safe());
   }
 }
 
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
-  memory_strategy_->clear_active_entities();
-
   // Collect the subscriptions and timers to be waited on
+  memory_strategy_->clear_handles();
   bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
 
   // Clean up any invalid nodes, if they were detected
@@ -353,61 +339,75 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     );
   }
 
-  memory_strategy_->clear_handles();
-  // Use the number of subscriptions to allocate memory in the handles
-  rmw_subscriptions_t subscriber_handles;
-  subscriber_handles.subscriber_count =
-    memory_strategy_->fill_subscriber_handles(subscriber_handles.subscribers);
-
-  rmw_services_t service_handles;
-  service_handles.service_count =
-    memory_strategy_->fill_service_handles(service_handles.services);
-
-  rmw_clients_t client_handles;
-  client_handles.client_count =
-    memory_strategy_->fill_client_handles(client_handles.clients);
-
-  // construct a guard conditions struct
-  rmw_guard_conditions_t guard_conditions;
-  guard_conditions.guard_condition_count =
-    memory_strategy_->fill_guard_condition_handles(guard_conditions.guard_conditions);
-
-  rmw_time_t * wait_timeout = NULL;
-  rmw_time_t rmw_timeout;
-
-  auto next_timer_duration = get_earliest_timer();
-  // If the next timer timeout must preempt the requested timeout
-  // or if the requested timeout blocks forever, and there exists a valid timer,
-  // replace the requested timeout with the next timeout.
-  bool has_valid_timer = next_timer_duration >= std::chrono::nanoseconds::zero();
-  if ((next_timer_duration < timeout ||
-    timeout < std::chrono::nanoseconds::zero()) && has_valid_timer)
+  if (rcl_wait_set_resize_subscriptions(
+      &waitset_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
   {
-    rmw_timeout.sec =
-      std::chrono::duration_cast<std::chrono::seconds>(next_timer_duration).count();
-    rmw_timeout.nsec = next_timer_duration.count() % (1000 * 1000 * 1000);
-    wait_timeout = &rmw_timeout;
-  } else if (timeout >= std::chrono::nanoseconds::zero()) {
-    // Convert timeout representation to rmw_time
-    rmw_timeout.sec = std::chrono::duration_cast<std::chrono::seconds>(timeout).count();
-    rmw_timeout.nsec = std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count() %
-      (1000 * 1000 * 1000);
-    wait_timeout = &rmw_timeout;
+    throw std::runtime_error(
+            std::string("Couldn't resize the number of subscriptions in waitset : ") +
+            rcl_get_error_string_safe());
   }
 
-  // Now wait on the waitable subscriptions and timers
-  rmw_ret_t status = rmw_wait(
-    &subscriber_handles,
-    &guard_conditions,
-    &service_handles,
-    &client_handles,
-    waitset_,
-    wait_timeout);
-  if (status != RMW_RET_OK && status != RMW_RET_TIMEOUT) {
-    throw std::runtime_error(rmw_get_error_string_safe());
+  if (rcl_wait_set_resize_services(
+      &waitset_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+            std::string("Couldn't resize the number of services in waitset : ") +
+            rcl_get_error_string_safe());
   }
 
-  memory_strategy_->remove_null_handles();
+  if (rcl_wait_set_resize_clients(
+      &waitset_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+            std::string("Couldn't resize the number of clients in waitset : ") +
+            rcl_get_error_string_safe());
+  }
+
+  if (rcl_wait_set_resize_guard_conditions(
+      &waitset_, memory_strategy_->number_of_guard_conditions()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+            std::string("Couldn't resize the number of guard_conditions in waitset : ") +
+            rcl_get_error_string_safe());
+  }
+
+  if (rcl_wait_set_resize_timers(
+      &waitset_, memory_strategy_->number_of_ready_timers()) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+            std::string("Couldn't resize the number of timers in waitset : ") +
+            rcl_get_error_string_safe());
+  }
+
+  if (!memory_strategy_->add_handles_to_waitset(&waitset_)) {
+    throw std::runtime_error("Couldn't fill waitset");
+  }
+  rcl_ret_t status =
+    rcl_wait(&waitset_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
+  if (status == RCL_RET_WAIT_SET_EMPTY) {
+    fprintf(stderr, "Warning: empty waitset received in rcl_wait(). This should never happen.\n");
+  } else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {
+    throw std::runtime_error(std::string("rcl_wait() failed: ") + rcl_get_error_string_safe());
+  }
+
+  // check the null handles in the waitset and remove them from the handles in memory strategy
+  // for callback-based entities
+  memory_strategy_->remove_null_handles(&waitset_);
+  if (rcl_wait_set_clear_subscriptions(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear subscriptions from waitset");
+  }
+  if (rcl_wait_set_clear_services(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear servicess from waitset");
+  }
+  if (rcl_wait_set_clear_clients(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear clients from waitset");
+  }
+  if (rcl_wait_set_clear_guard_conditions(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear guard conditions from waitset");
+  }
+  if (rcl_wait_set_clear_timers(&waitset_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear timers from waitset");
+  }
 }
 
 rclcpp::node::Node::SharedPtr
@@ -470,7 +470,7 @@ Executor::get_next_timer(AnyExecutable::SharedPtr any_exec)
       }
       for (auto & timer_ref : group->get_timer_ptrs()) {
         auto timer = timer_ref.lock();
-        if (timer && timer->check_and_trigger()) {
+        if (timer && timer->is_ready()) {
           any_exec->timer = timer;
           any_exec->callback_group = group;
           node = get_node_by_group(group);
@@ -479,37 +479,6 @@ Executor::get_next_timer(AnyExecutable::SharedPtr any_exec)
       }
     }
   }
-}
-
-std::chrono::nanoseconds
-Executor::get_earliest_timer()
-{
-  std::chrono::nanoseconds latest = std::chrono::nanoseconds::max();
-  bool timers_empty = true;
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (!node) {
-      continue;
-    }
-    for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
-      if (!group || !group->can_be_taken_from().load()) {
-        continue;
-      }
-      for (auto & timer_ref : group->get_timer_ptrs()) {
-        timers_empty = false;
-        // Check the expected trigger time
-        auto timer = timer_ref.lock();
-        if (timer && timer->time_until_trigger() < latest) {
-          latest = timer->time_until_trigger();
-        }
-      }
-    }
-  }
-  if (timers_empty) {
-    return std::chrono::nanoseconds(-1);
-  }
-  return latest;
 }
 
 AnyExecutable::SharedPtr

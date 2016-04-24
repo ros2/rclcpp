@@ -18,6 +18,8 @@
 #include <memory>
 #include <vector>
 
+#include "rcl/allocator.h"
+
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
@@ -64,7 +66,7 @@ public:
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
-  void add_guard_condition(const rmw_guard_condition_t * guard_condition)
+  void add_guard_condition(const rcl_guard_condition_t * guard_condition)
   {
     for (const auto & existing_guard_condition : guard_conditions_) {
       if (existing_guard_condition == guard_condition) {
@@ -74,7 +76,7 @@ public:
     guard_conditions_.push_back(guard_condition);
   }
 
-  void remove_guard_condition(const rmw_guard_condition_t * guard_condition)
+  void remove_guard_condition(const rcl_guard_condition_t * guard_condition)
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
@@ -84,69 +86,40 @@ public:
     }
   }
 
-  size_t fill_subscriber_handles(void ** & ptr)
-  {
-    for (auto & subscription : subscriptions_) {
-      subscriber_handles_.push_back(subscription->get_subscription_handle()->data);
-      if (subscription->get_intra_process_subscription_handle()) {
-        subscriber_handles_.push_back(subscription->get_intra_process_subscription_handle()->data);
-      }
-    }
-    ptr = subscriber_handles_.data();
-    return subscriber_handles_.size();
-  }
-
-  // return the new number of services
-  size_t fill_service_handles(void ** & ptr)
-  {
-    for (auto & service : services_) {
-      service_handles_.push_back(service->get_service_handle()->data);
-    }
-    ptr = service_handles_.data();
-    return service_handles_.size();
-  }
-
-  // return the new number of clients
-  size_t fill_client_handles(void ** & ptr)
-  {
-    for (auto & client : clients_) {
-      client_handles_.push_back(client->get_client_handle()->data);
-    }
-    ptr = client_handles_.data();
-    return client_handles_.size();
-  }
-
-  size_t fill_guard_condition_handles(void ** & ptr)
-  {
-    for (const auto & guard_condition : guard_conditions_) {
-      if (guard_condition) {
-        guard_condition_handles_.push_back(guard_condition->data);
-      }
-    }
-    ptr = guard_condition_handles_.data();
-    return guard_condition_handles_.size();
-  }
-
-  void clear_active_entities()
-  {
-    subscriptions_.clear();
-    services_.clear();
-    clients_.clear();
-  }
-
   void clear_handles()
   {
-    subscriber_handles_.clear();
+    subscription_handles_.clear();
     service_handles_.clear();
     client_handles_.clear();
-    guard_condition_handles_.clear();
+    timer_handles_.clear();
   }
 
-  void remove_null_handles()
+  virtual void remove_null_handles(rcl_wait_set_t * wait_set)
   {
-    subscriber_handles_.erase(
-      std::remove(subscriber_handles_.begin(), subscriber_handles_.end(), nullptr),
-      subscriber_handles_.end()
+    for (size_t i = 0; i < wait_set->size_of_subscriptions; ++i) {
+      if (!wait_set->subscriptions[i]) {
+        subscription_handles_[i] = nullptr;
+      }
+    }
+    for (size_t i = 0; i < wait_set->size_of_services; ++i) {
+      if (!wait_set->services[i]) {
+        service_handles_[i] = nullptr;
+      }
+    }
+    for (size_t i = 0; i < wait_set->size_of_clients; ++i) {
+      if (!wait_set->clients[i]) {
+        client_handles_[i] = nullptr;
+      }
+    }
+    for (size_t i = 0; i < wait_set->size_of_timers; ++i) {
+      if (!wait_set->timers[i]) {
+        timer_handles_[i] = nullptr;
+      }
+    }
+
+    subscription_handles_.erase(
+      std::remove(subscription_handles_.begin(), subscription_handles_.end(), nullptr),
+      subscription_handles_.end()
     );
 
     service_handles_.erase(
@@ -159,9 +132,9 @@ public:
       client_handles_.end()
     );
 
-    guard_condition_handles_.erase(
-      std::remove(guard_condition_handles_.begin(), guard_condition_handles_.end(), nullptr),
-      guard_condition_handles_.end()
+    timer_handles_.erase(
+      std::remove(timer_handles_.begin(), timer_handles_.end(), nullptr),
+      timer_handles_.end()
     );
   }
 
@@ -182,18 +155,28 @@ public:
         for (auto & weak_subscription : group->get_subscription_ptrs()) {
           auto subscription = weak_subscription.lock();
           if (subscription) {
-            subscriptions_.push_back(subscription);
+            subscription_handles_.push_back(subscription->get_subscription_handle());
+            if (subscription->get_intra_process_subscription_handle()) {
+              subscription_handles_.push_back(
+                subscription->get_intra_process_subscription_handle());
+            }
           }
         }
         for (auto & service : group->get_service_ptrs()) {
           if (service) {
-            services_.push_back(service);
+            service_handles_.push_back(service->get_service_handle());
           }
         }
         for (auto & weak_client : group->get_client_ptrs()) {
           auto client = weak_client.lock();
           if (client) {
-            clients_.push_back(client);
+            client_handles_.push_back(client->get_client_handle());
+          }
+        }
+        for (auto & weak_timer : group->get_timer_ptrs()) {
+          auto timer = weak_timer.lock();
+          if (timer) {
+            timer_handles_.push_back(timer->get_timer_handle());
           }
         }
       }
@@ -201,6 +184,45 @@ public:
     return has_invalid_weak_nodes;
   }
 
+  bool add_handles_to_waitset(rcl_wait_set_t * wait_set)
+  {
+    for (auto subscription : subscription_handles_) {
+      if (rcl_wait_set_add_subscription(wait_set, subscription) != RCL_RET_OK) {
+        fprintf(stderr, "Couldn't add subscription to waitset: %s\n", rcl_get_error_string_safe());
+        return false;
+      }
+    }
+
+    for (auto client : client_handles_) {
+      if (rcl_wait_set_add_client(wait_set, client) != RCL_RET_OK) {
+        fprintf(stderr, "Couldn't add client to waitset: %s\n", rcl_get_error_string_safe());
+        return false;
+      }
+    }
+
+    for (auto service : service_handles_) {
+      if (rcl_wait_set_add_service(wait_set, service) != RCL_RET_OK) {
+        fprintf(stderr, "Couldn't add service to waitset: %s\n", rcl_get_error_string_safe());
+        return false;
+      }
+    }
+
+    for (auto timer : timer_handles_) {
+      if (rcl_wait_set_add_timer(wait_set, timer) != RCL_RET_OK) {
+        fprintf(stderr, "Couldn't add timer to waitset: %s\n", rcl_get_error_string_safe());
+        return false;
+      }
+    }
+
+    for (auto guard_condition : guard_conditions_) {
+      if (rcl_wait_set_add_guard_condition(wait_set, guard_condition) != RCL_RET_OK) {
+        fprintf(stderr, "Couldn't add guard_condition to waitset: %s\n",
+          rcl_get_error_string_safe());
+        return false;
+      }
+    }
+    return true;
+  }
 
   /// Provide a newly initialized AnyExecutable object.
   // \return Shared pointer to the fresh executable.
@@ -213,21 +235,21 @@ public:
   get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
-    auto it = subscriber_handles_.begin();
-    while (it != subscriber_handles_.end()) {
+    auto it = subscription_handles_.begin();
+    while (it != subscription_handles_.end()) {
       auto subscription = get_subscription_by_handle(*it, weak_nodes);
       if (subscription) {
         // Figure out if this is for intra-process or not.
         bool is_intra_process = false;
         if (subscription->get_intra_process_subscription_handle()) {
-          is_intra_process = subscription->get_intra_process_subscription_handle()->data == *it;
+          is_intra_process = subscription->get_intra_process_subscription_handle() == *it;
         }
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_subscription(subscription, weak_nodes);
         if (!group) {
           // Group was not found, meaning the subscription is not valid...
           // Remove it from the ready list and continue looking
-          subscriber_handles_.erase(it);
+          subscription_handles_.erase(it);
           continue;
         }
         if (!group->can_be_taken_from().load()) {
@@ -244,11 +266,11 @@ public:
         }
         any_exec->callback_group = group;
         any_exec->node = get_node_by_group(group, weak_nodes);
-        subscriber_handles_.erase(it);
+        subscription_handles_.erase(it);
         return;
       }
       // Else, the subscription is no longer valid, remove it and continue
-      subscriber_handles_.erase(it);
+      subscription_handles_.erase(it);
     }
   }
 
@@ -319,20 +341,47 @@ public:
     }
   }
 
+  virtual rcl_allocator_t get_allocator()
+  {
+    return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
+  }
+
+  size_t number_of_ready_subscriptions() const
+  {
+    return subscription_handles_.size();
+  }
+
+  size_t number_of_ready_services() const
+  {
+    return service_handles_.size();
+  }
+
+  size_t number_of_ready_clients() const
+  {
+    return client_handles_.size();
+  }
+
+  size_t number_of_guard_conditions() const
+  {
+    return guard_conditions_.size();
+  }
+
+  size_t number_of_ready_timers() const
+  {
+    return timer_handles_.size();
+  }
+
 private:
   template<typename T>
   using VectorRebind =
       std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 
-  VectorRebind<rclcpp::subscription::SubscriptionBase::SharedPtr> subscriptions_;
-  VectorRebind<rclcpp::service::ServiceBase::SharedPtr> services_;
-  VectorRebind<rclcpp::client::ClientBase::SharedPtr> clients_;
-  VectorRebind<const rmw_guard_condition_t *> guard_conditions_;
+  VectorRebind<const rcl_guard_condition_t *> guard_conditions_;
 
-  VectorRebind<void *> subscriber_handles_;
-  VectorRebind<void *> service_handles_;
-  VectorRebind<void *> client_handles_;
-  VectorRebind<void *> guard_condition_handles_;
+  VectorRebind<const rcl_subscription_t *> subscription_handles_;
+  VectorRebind<const rcl_service_t *> service_handles_;
+  VectorRebind<const rcl_client_t *> client_handles_;
+  VectorRebind<const rcl_timer_t *> timer_handles_;
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;

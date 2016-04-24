@@ -28,6 +28,11 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   # so that the variables can be used by various functions / macros
   set(${var_prefix}_FOUND TRUE)
 
+  # Get rcl using the existing macro
+  if(NOT "${target_suffix} " STREQUAL " ")
+    get_rcl_information("${rmw_implementation}" "rcl${target_suffix}")
+  endif()
+
   # include directories
   normalize_path(${var_prefix}_INCLUDE_DIRS
     "${rclcpp_DIR}/../../../include")
@@ -63,8 +68,7 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   # dependencies
   set(_exported_dependencies
     "rcl_interfaces"
-    "rmw"
-    "${rmw_implementation}"
+    "rcl${target_suffix}"
     "rosidl_generator_cpp")
   set(${var_prefix}_DEFINITIONS)
   foreach(_dep ${_exported_dependencies})
