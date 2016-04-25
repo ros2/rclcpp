@@ -67,7 +67,7 @@ public:
     size_t queue_size);
 
   RCLCPP_PUBLIC
-  ~PublisherBase();
+  virtual ~PublisherBase();
 
   /// Get the topic that this publisher publishes on.
   // \return The topic name.
