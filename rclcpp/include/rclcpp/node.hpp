@@ -80,7 +80,7 @@ public:
     bool use_intra_process_comms = false);
 
   RCLCPP_PUBLIC
-  ~Node();
+  virtual ~Node();
 
   /// Get the name of the node.
   // \return The name of the node.

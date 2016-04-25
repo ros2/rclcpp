@@ -51,7 +51,7 @@ public:
     const std::string & service_name);
 
   RCLCPP_PUBLIC
-  ~ClientBase();
+  virtual ~ClientBase();
 
   RCLCPP_PUBLIC
   const std::string &
