@@ -113,7 +113,7 @@ if(AMENT_ENABLE_TESTING)
       ${rosidl_generator_cpp_INCLUDE_DIRS}
     )
     target_link_libraries(test_rate
-      ${PROJECT_NAME}${target_suffix}
+      ${PROJECT_NAME}
     )
   endif()
 endif()
