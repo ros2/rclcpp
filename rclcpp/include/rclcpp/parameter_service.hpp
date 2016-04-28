@@ -23,6 +23,9 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters_atomically.hpp"
+
+#include "rcl/parameter_service.h"
+
 #include "rclcpp/executors.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
@@ -45,15 +48,7 @@ public:
 
 private:
   const rclcpp::node::Node::SharedPtr node_;
-  rclcpp::service::Service<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
-    get_parameter_types_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::SetParameters>::SharedPtr set_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::SetParametersAtomically>::SharedPtr
-    set_parameters_atomically_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::DescribeParameters>::SharedPtr
-    describe_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_service_;
+  rcl_parameter_service_t parameter_service_handle;
 };
 
 }  // namespace parameter_service

@@ -24,6 +24,7 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
 {
   std::weak_ptr<rclcpp::node::Node> captured_node = node_;
   // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+/*
   get_parameters_service_ = node_->create_service<rcl_interfaces::srv::GetParameters>(
     node_->get_name() + "__get_parameters",
     [captured_node](
@@ -137,4 +138,5 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
     }
   );
   // *INDENT-ON*
+*/
 }

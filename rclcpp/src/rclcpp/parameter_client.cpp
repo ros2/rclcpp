@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rosidl_generator_c/string_functions.h"
 #include "rclcpp/parameter_client.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -31,16 +33,22 @@ AsyncParametersClient::AsyncParametersClient(
   } else {
     remote_node_name_ = node_->get_name();
   }
-  get_parameters_client_ = node_->create_client<rcl_interfaces::srv::GetParameters>(
-    remote_node_name_ + "__get_parameters");
-  get_parameter_types_client_ = node_->create_client<rcl_interfaces::srv::GetParameterTypes>(
-    remote_node_name_ + "__get_parameter_types");
-  set_parameters_client_ = node_->create_client<rcl_interfaces::srv::SetParameters>(
-    remote_node_name_ + "__set_parameters");
-  list_parameters_client_ = node_->create_client<rcl_interfaces::srv::ListParameters>(
-    remote_node_name_ + "__list_parameters");
-  describe_parameters_client_ = node_->create_client<rcl_interfaces::srv::DescribeParameters>(
-    remote_node_name_ + "__describe_parameters");
+  rcl_parameter_client_options_t options = rcl_parameter_client_get_default_options();
+  memcpy(options.remote_node_name, remote_node_name.c_str(), remote_node_name.length());
+  rcl_ret_t ret = rcl_parameter_client_init(&parameter_client_handle_, node->get_rcl_handle(), &options);
+  if (ret != RCL_RET_OK) {
+    // TODO error handling
+  }
+}
+
+// probably need to be in utilities.hpp
+// Expects array to be initialized to the same size as str_vector
+void convert_to_rosidl_generator_c_string(
+  const std::vector<std::string> & str_vector, rosidl_generator_c__String__Array & array)
+{
+  for (size_t i = 0; i < str_vector.size(); ++i) {
+    rosidl_generator_c__String__assign(&array.data[i], str_vector[i].c_str());
+  }
 }
 
 std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
@@ -54,6 +62,46 @@ AsyncParametersClient::get_parameters(
     std::make_shared<std::promise<std::vector<rclcpp::parameter::ParameterVariant>>>();
   auto future_result = promise_result->get_future().share();
 
+  rosidl_generator_c__String__Array names_array;
+  rosidl_generator_c__String__Array__init(&names_array, names.size());
+  convert_to_rosidl_generator_c_string(names, names_array);
+
+  // TODO
+  rmw_request_id_t * request_header = nullptr;
+  rcl_ret_t ret = rcl_parameter_client_send_get_request(
+    &parameter_client_handle_, &names_array);
+
+  auto wrapper_callback =  [request, promise_result, future_result, &callback](
+      // rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f)
+      std::shared_future<rcl_interfaces__msg__Parameter__Array> callback_future)
+    {
+      // someone called take_get_response and filled the future outside of this callback
+      /*
+      rcl_ret_t ret = rcl_parameter_client_take_get_response(
+        &parameter_client_handle_, );
+      */
+      std::vector<rclcpp::parameter::ParameterVariant> parameter_variants;
+      auto & pvalues = callback_future.get()->values;
+
+      for (auto & pvalue : pvalues) {
+        auto i = &pvalue - &pvalues[0];
+        rcl_interfaces::msg::Parameter parameter;
+        parameter.name = request->names[i];
+        parameter.value = pvalue;
+        parameter_variants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(
+          parameter));
+      }
+
+      promise_result->set_value(parameter_variants);
+      if (callback != nullptr) {
+        callback(future_result);
+      }
+    }
+
+  // Store pending callback as promise/future pair in ParameterClient
+
+  /// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  /*
   auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
   request->names = names;
 
@@ -82,6 +130,7 @@ AsyncParametersClient::get_parameters(
     }
   );
   // *INDENT-ON*
+  */
 
   return future_result;
 }
@@ -97,6 +146,7 @@ AsyncParametersClient::get_parameter_types(
     std::make_shared<std::promise<std::vector<rclcpp::parameter::ParameterType>>>();
   auto future_result = promise_result->get_future().share();
 
+/*
   auto request = std::make_shared<rcl_interfaces::srv::GetParameterTypes::Request>();
   request->names = names;
 
@@ -119,6 +169,7 @@ AsyncParametersClient::get_parameter_types(
   );
   // *INDENT-ON*
 
+*/
   return future_result;
 }
 
@@ -133,6 +184,7 @@ AsyncParametersClient::set_parameters(
     std::make_shared<std::promise<std::vector<rcl_interfaces::msg::SetParametersResult>>>();
   auto future_result = promise_result->get_future().share();
 
+/*
   auto request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
 
   // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -154,6 +206,7 @@ AsyncParametersClient::set_parameters(
     }
   );
   // *INDENT-ON*
+*/
 
   return future_result;
 }
@@ -169,6 +222,7 @@ AsyncParametersClient::set_parameters_atomically(
     std::make_shared<std::promise<rcl_interfaces::msg::SetParametersResult>>();
   auto future_result = promise_result->get_future().share();
 
+/*
   auto request = std::make_shared<rcl_interfaces::srv::SetParametersAtomically::Request>();
 
   // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
@@ -190,6 +244,7 @@ AsyncParametersClient::set_parameters_atomically(
     }
   );
   // *INDENT-ON*
+*/
 
   return future_result;
 }
@@ -206,6 +261,7 @@ AsyncParametersClient::list_parameters(
     std::make_shared<std::promise<rcl_interfaces::msg::ListParametersResult>>();
   auto future_result = promise_result->get_future().share();
 
+/*
   auto request = std::make_shared<rcl_interfaces::srv::ListParameters::Request>();
   request->prefixes = prefixes;
   request->depth = depth;
@@ -223,6 +279,7 @@ AsyncParametersClient::list_parameters(
     }
   );
   // *INDENT-ON*
+*/
 
   return future_result;
 }

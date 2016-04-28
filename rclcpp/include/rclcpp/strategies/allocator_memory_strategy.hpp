@@ -303,6 +303,8 @@ public:
         service_handles_.erase(it);
         return;
       }
+      // Try again, checking if it's a parameter service
+      
       // Else, the service is no longer valid, remove it and continue
       service_handles_.erase(it);
     }

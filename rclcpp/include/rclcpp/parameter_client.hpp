@@ -27,6 +27,9 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters_atomically.hpp"
+
+#include "rcl/parameter_client.h"
+
 #include "rclcpp/executors.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
@@ -101,15 +104,8 @@ public:
 
 private:
   const rclcpp::node::Node::SharedPtr node_;
-  rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
-    get_parameter_types_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::SetParameters>::SharedPtr set_parameters_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::SetParametersAtomically>::SharedPtr
-    set_parameters_atomically_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::DescribeParameters>::SharedPtr
-    describe_parameters_client_;
+  rcl_parameter_client_t parameter_client_handle_ = rcl_get_zero_initialized_parameter_client();
+
   std::string remote_node_name_;
 };
 

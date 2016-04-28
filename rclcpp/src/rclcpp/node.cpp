@@ -372,3 +372,8 @@ const rcl_guard_condition_t * Node::get_notify_guard_condition() const
 {
   return &notify_guard_condition_;
 }
+
+const rcl_node_t * Node::get_rcl_handle() const
+{
+  return node_handle_.get();
+}
