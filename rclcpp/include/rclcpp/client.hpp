@@ -90,6 +90,8 @@ public:
   using CallbackType = std::function<void(SharedFuture)>;
   using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
 
+  using SendRequestFunctionT = std::function<void(SharedRequest request, int64_t & sequence_number)>;
+
   virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
   {
@@ -110,11 +112,9 @@ public:
     callback(future);
   }
 
-  virtual void send_request(SharedRequest request, int64_t & sequence_number) = 0;
-
   SharedFuture async_send_request(SharedRequest request)
   {
-    return async_send_request(request, [](SharedFuture) {});
+    return async_send_request(request, [](SharedRequest request, int64_t & sequence_number) {});
   }
 
   template<
@@ -130,7 +130,7 @@ public:
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
-    send_request(request, sequence_number);
+    send_request_function_(request, sequence_number);
     SharedPromise call_promise = std::make_shared<Promise>();
     SharedFuture f(call_promise->get_future());
     pending_requests_[sequence_number] =
@@ -163,6 +163,13 @@ public:
     return future_with_request;
   }
 
+  virtual void set_send_request_function(SendRequestFunctionT && fn)
+  {
+    send_request_function_ = fn;
+  }
+protected:
+  SendRequestFunctionT send_request_function_;
+
 private:
   std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
   std::mutex pending_requests_mutex_;
@@ -172,6 +179,7 @@ template<typename ServiceT>
 class Client : public ClientPattern<typename ServiceT::Request, typename ServiceT::Response>,
   public ClientBase
 {
+  using ClientPatternT = ClientPattern<typename ServiceT::Request, typename ServiceT::Response>;
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
   using SharedRequest =
@@ -196,6 +204,16 @@ public:
         rcl_get_error_string_safe());
       // *INDENT-ON*
     }
+
+    this->set_send_request_function([this](SharedRequest request, int64_t & sequence_number)
+    {
+      if (RCL_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
+        // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+        throw std::runtime_error(
+          std::string("failed to send request: ") + rcl_get_error_string_safe());
+        // *INDENT-ON*
+      }
+    });
   }
 
   virtual ~Client()
@@ -214,18 +232,7 @@ public:
   virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
   {
-    ClientPattern<typename ServiceT::Request, typename ServiceT::Response>::handle_response(
-      request_header, response);
-  }
-
-  virtual void send_request(SharedRequest request, int64_t & sequence_number)
-  {
-    if (RCL_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to send request: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
-    }
+    ClientPatternT::handle_response(request_header, response);
   }
 
   virtual std::shared_ptr<rmw_request_id_t> create_request_header()
