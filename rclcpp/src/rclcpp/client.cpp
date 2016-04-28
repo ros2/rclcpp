@@ -22,9 +22,8 @@
 using rclcpp::client::ClientBase;
 
 ClientBase::ClientBase(
-  std::shared_ptr<rcl_node_t> node_handle,
   const std::string & service_name)
-: node_handle_(node_handle), service_name_(service_name)
+: service_name_(service_name)
 {}
 
 ClientBase::~ClientBase()

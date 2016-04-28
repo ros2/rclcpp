@@ -46,9 +46,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase);
 
   RCLCPP_PUBLIC
-  ClientBase(
-    std::shared_ptr<rcl_node_t> node_handle,
-    const std::string & service_name);
+  ClientBase(const std::string & service_name);
 
   RCLCPP_PUBLIC
   virtual ~ClientBase();
@@ -61,26 +59,24 @@ public:
   const rcl_client_t *
   get_client_handle() const;
 
+  virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
+    std::shared_ptr<void> response) = 0;
   virtual std::shared_ptr<void> create_response() = 0;
   virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
-  virtual void handle_response(
-    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
 protected:
   RCLCPP_DISABLE_COPY(ClientBase);
-
-  std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
   std::string service_name_;
 };
 
-template<typename ServiceT>
-class Client : public ClientBase
+template<typename RequestT, typename ResponseT>
+class ClientPattern
 {
 public:
-  using SharedRequest = typename ServiceT::Request::SharedPtr;
-  using SharedResponse = typename ServiceT::Response::SharedPtr;
+  using SharedRequest = typename RequestT::SharedPtr;
+  using SharedResponse = typename ResponseT::SharedPtr;
 
   using Promise = std::promise<SharedResponse>;
   using PromiseWithRequest = std::promise<std::pair<SharedRequest, SharedResponse>>;
@@ -94,53 +90,11 @@ public:
   using CallbackType = std::function<void(SharedFuture)>;
   using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
 
-  RCLCPP_SMART_PTR_DEFINITIONS(Client);
-
-  Client(
-    std::shared_ptr<rcl_node_t> node_handle,
-    const std::string & service_name,
-    rcl_client_options_t & client_options)
-  : ClientBase(node_handle, service_name)
-  {
-    using rosidl_generator_cpp::get_service_type_support_handle;
-    auto service_type_support_handle =
-      get_service_type_support_handle<ServiceT>();
-    if (rcl_client_init(&client_handle_, this->node_handle_.get(),
-      service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK)
-    {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("could not create client: ") +
-        rcl_get_error_string_safe());
-      // *INDENT-ON*
-    }
-  }
-
-  virtual ~Client()
-  {
-    if (rcl_client_fini(&client_handle_, node_handle_.get()) != RCL_RET_OK) {
-      fprintf(stderr,
-        "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
-    }
-  }
-
-  std::shared_ptr<void> create_response()
-  {
-    return std::shared_ptr<void>(new typename ServiceT::Response());
-  }
-
-  std::shared_ptr<rmw_request_id_t> create_request_header()
-  {
-    // TODO(wjwwood): This should probably use rmw_request_id's allocator.
-    //                (since it is a C type)
-    return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
-  }
-
-  void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
+  virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
+    auto typed_response = std::static_pointer_cast<ResponseT>(response);
     int64_t sequence_number = request_header->sequence_number;
     // TODO(esteve) this should throw instead since it is not expected to happen in the first place
     if (this->pending_requests_.count(sequence_number) == 0) {
@@ -155,6 +109,8 @@ public:
     call_promise->set_value(typed_response);
     callback(future);
   }
+
+  virtual void send_request(SharedRequest request, int64_t & sequence_number) = 0;
 
   SharedFuture async_send_request(SharedRequest request)
   {
@@ -174,13 +130,7 @@ public:
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
-    if (RCL_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to send request: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
-    }
-
+    send_request(request, sequence_number);
     SharedPromise call_promise = std::make_shared<Promise>();
     SharedFuture f(call_promise->get_future());
     pending_requests_[sequence_number] =
@@ -214,11 +164,83 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(Client);
-
   std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
   std::mutex pending_requests_mutex_;
 };
+
+template<typename ServiceT>
+class Client : public ClientPattern<typename ServiceT::Request, typename ServiceT::Response>,
+  public ClientBase
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(Client);
+  using SharedRequest =
+      typename ClientPattern<typename ServiceT::Request,
+      typename ServiceT::Response>::SharedRequest;
+
+  Client(
+    std::shared_ptr<rcl_node_t> node_handle,
+    const std::string & service_name,
+    rcl_client_options_t & client_options)
+  : ClientBase(service_name), node_handle_(node_handle)
+  {
+    using rosidl_generator_cpp::get_service_type_support_handle;
+    auto service_type_support_handle =
+      get_service_type_support_handle<ServiceT>();
+    if (rcl_client_init(&client_handle_, this->node_handle_.get(),
+      service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK)
+    {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("could not create client: ") +
+        rcl_get_error_string_safe());
+      // *INDENT-ON*
+    }
+  }
+
+  virtual ~Client()
+  {
+    if (rcl_client_fini(&client_handle_, node_handle_.get()) != RCL_RET_OK) {
+      fprintf(stderr,
+        "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
+    }
+  }
+
+  std::shared_ptr<void> create_response()
+  {
+    return std::shared_ptr<void>(new typename ServiceT::Response());
+  }
+
+  virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
+    std::shared_ptr<void> response)
+  {
+    ClientPattern<typename ServiceT::Request, typename ServiceT::Response>::handle_response(
+      request_header, response);
+  }
+
+  virtual void send_request(SharedRequest request, int64_t & sequence_number)
+  {
+    if (RCL_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
+      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to send request: ") + rcl_get_error_string_safe());
+      // *INDENT-ON*
+    }
+  }
+
+  virtual std::shared_ptr<rmw_request_id_t> create_request_header()
+  {
+    // TODO(wjwwood): This should probably use rmw_request_id's allocator.
+    //                (since it is a C type)
+    return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
+  }
+
+private:
+  RCLCPP_DISABLE_COPY(Client);
+  std::shared_ptr<rcl_node_t> node_handle_;
+
+};
+
 
 }  // namespace client
 }  // namespace rclcpp
