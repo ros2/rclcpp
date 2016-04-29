@@ -76,28 +76,27 @@ class ClientPattern
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClientPattern);
-  using SharedRequest = typename RequestT::SharedPtr;
-  using SharedResponse = typename ResponseT::SharedPtr;
+  using SharedRequest = typename std::shared_ptr<const RequestT>;
+  using SharedResponse = typename std::shared_ptr<ResponseT>;
 
-  using Promise = std::promise<SharedResponse>;
-  using PromiseWithRequest = std::promise<std::pair<SharedRequest, SharedResponse>>;
+  using Promise = std::promise<ResponseT>;
+  using PromiseWithRequest = std::promise<std::pair<RequestT, ResponseT>>;
 
   using SharedPromise = std::shared_ptr<Promise>;
   using SharedPromiseWithRequest = std::shared_ptr<PromiseWithRequest>;
 
-  using SharedFuture = std::shared_future<SharedResponse>;
-  using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
+  using SharedFuture = std::shared_future<ResponseT>;
+  using SharedFutureWithRequest = std::shared_future<std::pair<RequestT, ResponseT>>;
 
   using CallbackType = std::function<void(SharedFuture)>;
   using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
 
-  using SendRequestFunctionT = std::function<void(SharedRequest, int64_t &)>;
+  using SendRequestFunctionT = std::function<void(const RequestT &, int64_t &)>;
 
   virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> response)
+    ResponseT & response)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
-    auto typed_response = std::static_pointer_cast<ResponseT>(response);
     int64_t sequence_number = request_header->sequence_number;
     // TODO(esteve) this should throw instead since it is not expected to happen in the first place
     if (this->pending_requests_.count(sequence_number) == 0) {
@@ -109,7 +108,7 @@ public:
     auto callback = std::get<1>(tuple);
     auto future = std::get<2>(tuple);
     this->pending_requests_.erase(sequence_number);
-    call_promise->set_value(typed_response);
+    call_promise->set_value(response);
     callback(future);
   }
 
@@ -122,7 +121,7 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
+  SharedFuture async_send_request(const RequestT & request, CallbackT && cb)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
@@ -143,7 +142,7 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFutureWithRequest async_send_request(SharedRequest request, CallbackT && cb)
+  SharedFutureWithRequest async_send_request(const RequestT & request, CallbackT && cb)
   {
     SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
     SharedFutureWithRequest future_with_request(promise->get_future());
@@ -159,7 +158,7 @@ public:
     return future_with_request;
   }
 
-  SharedFuture async_send_request(SharedRequest request)
+  SharedFuture async_send_request(const RequestT & request)
   {
     return async_send_request(request, [](SharedFuture) {});
   }
@@ -177,15 +176,13 @@ private:
 };
 
 template<typename ServiceT>
-class Client : public ClientPattern<typename ServiceT::Request, typename ServiceT::Response>,
+class Client : public ClientPattern<typename ServiceT::Request::SharedPtr, typename ServiceT::Response::SharedPtr>,
   public ClientBase
 {
-  using ClientPatternT = ClientPattern<typename ServiceT::Request, typename ServiceT::Response>;
+  using ClientPatternT = ClientPattern<typename ServiceT::Request::SharedPtr, typename ServiceT::Response::SharedPtr>;
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
-  using SharedRequest =
-      typename ClientPattern<typename ServiceT::Request,
-      typename ServiceT::Response>::SharedRequest;
+  using SharedRequest = typename ServiceT::Request::SharedPtr;
 
   Client(
     std::shared_ptr<rcl_node_t> node_handle,
@@ -233,7 +230,8 @@ public:
   virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
   {
-    ClientPatternT::handle_response(request_header, response);
+    auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
+    ClientPatternT::handle_response(request_header, typed_response);
   }
 
   virtual std::shared_ptr<rmw_request_id_t> create_request_header()
