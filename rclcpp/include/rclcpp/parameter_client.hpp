@@ -103,8 +103,12 @@ public:
   }
 
 private:
+  enum ParameterClientType {get, get_types, set, set_atomically, list};
   const rclcpp::node::Node::SharedPtr node_;
   rcl_parameter_client_t parameter_client_handle_ = rcl_get_zero_initialized_parameter_client();
+
+  // this is very deceptive
+  std::map<ParameterClientType, rclcpp::client::ClientBase::SharedPtr> client_map;
 
   std::string remote_node_name_;
 };

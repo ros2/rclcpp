@@ -95,6 +95,7 @@ MemoryStrategy::get_client_by_handle(const rcl_client_t * client_handle,
   return nullptr;
 }
 
+/*
 rclcpp::parameter_client::ParameterClient::SharedPtr
 MemoryStrategy::get_parameter_client_by_handle(
   const WeakNodeVector & weak_nodes)
@@ -102,6 +103,7 @@ MemoryStrategy::get_parameter_client_by_handle(
   // iterate through the parameter clients of each node and see if the 
   // need to also indicate which verb was available
 }
+*/
 
 rclcpp::node::Node::SharedPtr
 MemoryStrategy::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,
