@@ -43,9 +43,15 @@ namespace rclcpp
 namespace parameter_client
 {
 
+using NameVector = std::vector<std::string>;
+using ParameterVector = std::vector<rclcpp::parameter::ParameterVariant>;
+using ParameterTypeVector = std::vector<rclcpp::parameter::ParameterType>;
+using SetParametersResultVector = std::vector<rcl_interfaces::msg::SetParametersResult>;
+
 class AsyncParametersClient
 {
 public:
+
   RCLCPP_SMART_PTR_DEFINITIONS(AsyncParametersClient);
 
   RCLCPP_PUBLIC
@@ -54,33 +60,27 @@ public:
     const std::string & remote_node_name = "");
 
   RCLCPP_PUBLIC
-  std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
+  std::shared_future<ParameterVector>
   get_parameters(
-    const std::vector<std::string> & names,
-    std::function<
-      void(std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>)
-    > callback = nullptr);
+    const NameVector & names,
+    std::function<void(std::shared_future<ParameterVector>)> callback = nullptr);
 
   RCLCPP_PUBLIC
-  std::shared_future<std::vector<rclcpp::parameter::ParameterType>>
+  std::shared_future<ParameterTypeVector>
   get_parameter_types(
-    const std::vector<std::string> & names,
-    std::function<
-      void(std::shared_future<std::vector<rclcpp::parameter::ParameterType>>)
-    > callback = nullptr);
+    const NameVector & names,
+    std::function<void(std::shared_future<ParameterTypeVector>)> callback = nullptr);
 
   RCLCPP_PUBLIC
-  std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+  std::shared_future<SetParametersResultVector>
   set_parameters(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
-    std::function<
-      void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
-    > callback = nullptr);
+    const ParameterVector & parameters,
+    std::function<void(std::shared_future<SetParametersResultVector>)> callback = nullptr);
 
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::SetParametersResult>
   set_parameters_atomically(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
+    const ParameterVector & parameters,
     std::function<
       void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)
     > callback = nullptr);
@@ -88,7 +88,7 @@ public:
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::ListParametersResult>
   list_parameters(
-    const std::vector<std::string> & prefixes,
+    const NameVector & prefixes,
     uint64_t depth,
     std::function<
       void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)
@@ -103,12 +103,16 @@ public:
   }
 
 private:
-  enum ParameterClientType {get, get_types, set, set_atomically, list};
   const rclcpp::node::Node::SharedPtr node_;
   rcl_parameter_client_t parameter_client_handle_ = rcl_get_zero_initialized_parameter_client();
 
-  // this is very deceptive
-  std::map<ParameterClientType, rclcpp::client::ClientBase::SharedPtr> client_map;
+  // Storage for promise/future patterns
+  rclcpp::client::ClientPattern<NameVector, ParameterVector> get_parameters_client;
+  rclcpp::client::ClientPattern<NameVector, ParameterTypeVector> get_parameters_types_client;
+  rclcpp::client::ClientPattern<ParameterVector, SetParametersResultVector> set_parameters_client;
+  rclcpp::client::ClientPattern<ParameterVector, rcl_interfaces::msg::SetParametersResult> set_parameters_atomically_client;
+  // TODO interface is a little strange
+  rclcpp::client::ClientPattern<rcl_interfaces::srv::ListParameters::Request, rcl_interfaces::srv::ListParameters::Response> list_parameters_client;
 
   std::string remote_node_name_;
 };
@@ -128,25 +132,25 @@ public:
     rclcpp::node::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::parameter::ParameterVariant>
-  get_parameters(const std::vector<std::string> & parameter_names);
+  ParameterVector
+  get_parameters(const NameVector & parameter_names);
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::parameter::ParameterType>
-  get_parameter_types(const std::vector<std::string> & parameter_names);
+  ParameterTypeVector
+  get_parameter_types(const NameVector & parameter_names);
 
   RCLCPP_PUBLIC
-  std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  SetParametersResultVector
+  set_parameters(const ParameterVector & parameters);
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  set_parameters_atomically(const ParameterVector & parameters);
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult
   list_parameters(
-    const std::vector<std::string> & parameter_prefixes,
+    const NameVector & parameter_prefixes,
     uint64_t depth);
 
   template<typename CallbackT>

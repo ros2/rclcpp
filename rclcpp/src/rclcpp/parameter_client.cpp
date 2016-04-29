@@ -22,6 +22,11 @@
 
 using rclcpp::parameter_client::AsyncParametersClient;
 using rclcpp::parameter_client::SyncParametersClient;
+using rclcpp::parameter_client::NameVector;
+using rclcpp::parameter_client::ParameterVector;
+using rclcpp::parameter_client::ParameterTypeVector;
+using rclcpp::parameter_client::SetParametersResultVector;
+
 
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node::Node::SharedPtr node,
@@ -39,6 +44,8 @@ AsyncParametersClient::AsyncParametersClient(
   if (ret != RCL_RET_OK) {
     // TODO error handling
   }
+
+
 }
 
 // probably need to be in utilities.hpp
@@ -53,62 +60,36 @@ void convert_to_rosidl_generator_c_string(
 
 std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
 AsyncParametersClient::get_parameters(
-  const std::vector<std::string> & names,
-  std::function<
-    void(std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>)
-  > callback)
+  const NameVector & names,
+  std::function<void(std::shared_future<ParameterVector>)> callback)
 {
   auto promise_result =
     std::make_shared<std::promise<std::vector<rclcpp::parameter::ParameterVariant>>>();
   auto future_result = promise_result->get_future().share();
 
-  rosidl_generator_c__String__Array names_array;
-  rosidl_generator_c__String__Array__init(&names_array, names.size());
-  convert_to_rosidl_generator_c_string(names, names_array);
-
   // TODO
-  rmw_request_id_t * request_header = nullptr;
-  rcl_ret_t ret = rcl_parameter_client_send_get_request(
-    &parameter_client_handle_, &names_array);
+  // rmw_request_id_t * request_header = nullptr;
 
-  auto wrapper_callback =  [request, promise_result, future_result, &callback](
-      // rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f)
-      std::shared_future<rcl_interfaces__msg__Parameter__Array> callback_future)
-    {
-      // someone called take_get_response and filled the future outside of this callback
-      /*
-      rcl_ret_t ret = rcl_parameter_client_take_get_response(
-        &parameter_client_handle_, );
-      */
-      std::vector<rclcpp::parameter::ParameterVariant> parameter_variants;
-      auto & pvalues = callback_future.get()->values;
+  // move this to constructor
+  auto get_parameters_request_function = [this](std::shared_ptr<const NameVector> names, int64_t & sequence_number) {
+    rosidl_generator_c__String__Array names_array;
+    rosidl_generator_c__String__Array__init(&names_array, names.size());
+    convert_to_rosidl_generator_c_string(names, names_array);
 
-      for (auto & pvalue : pvalues) {
-        auto i = &pvalue - &pvalues[0];
-        rcl_interfaces::msg::Parameter parameter;
-        parameter.name = request->names[i];
-        parameter.value = pvalue;
-        parameter_variants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(
-          parameter));
-      }
+    rcl_ret_t ret = rcl_parameter_client_send_get_request(
+      &parameter_client_handle_, &names_array, &sequence_number);
+  };
 
-      promise_result->set_value(parameter_variants);
-      if (callback != nullptr) {
-        callback(future_result);
-      }
-    }
 
   // Store pending callback as promise/future pair in ParameterClient
 
   /// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  /*
-  auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
-  request->names = names;
 
   // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-  get_parameters_client_->async_send_request(
-    request,
-    [request, promise_result, future_result, &callback](
+  std::shared_ptr<const NameVector> name_ptr(names);
+  get_parameters_client.async_send_request(
+    name_ptr,
+    [name_ptr, promise_result, future_result, &callback](
       rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f)
     {
       std::vector<rclcpp::parameter::ParameterVariant> parameter_variants;
@@ -117,7 +98,7 @@ AsyncParametersClient::get_parameters(
       for (auto & pvalue : pvalues) {
         auto i = &pvalue - &pvalues[0];
         rcl_interfaces::msg::Parameter parameter;
-        parameter.name = request->names[i];
+        parameter.name = names[i];
         parameter.value = pvalue;
         parameter_variants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(
           parameter));
@@ -130,20 +111,17 @@ AsyncParametersClient::get_parameters(
     }
   );
   // *INDENT-ON*
-  */
 
   return future_result;
 }
 
 std::shared_future<std::vector<rclcpp::parameter::ParameterType>>
 AsyncParametersClient::get_parameter_types(
-  const std::vector<std::string> & names,
-  std::function<
-    void(std::shared_future<std::vector<rclcpp::parameter::ParameterType>>)
-  > callback)
+  const NameVector & names,
+  std::function<void(std::shared_future<ParameterTypeVector>)> callback)
 {
   auto promise_result =
-    std::make_shared<std::promise<std::vector<rclcpp::parameter::ParameterType>>>();
+    std::make_shared<std::promise<ParameterTypeVector>();
   auto future_result = promise_result->get_future().share();
 
 /*
@@ -175,13 +153,10 @@ AsyncParametersClient::get_parameter_types(
 
 std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::set_parameters(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
-  std::function<
-    void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
-  > callback)
+  const ParameterVector & parameters,
+  std::function<void(std::shared_future<SetParametersResultVector>)> callback)
 {
-  auto promise_result =
-    std::make_shared<std::promise<std::vector<rcl_interfaces::msg::SetParametersResult>>>();
+  auto promise_result = std::make_shared<std::promise<SetParametersResultVector>>();
   auto future_result = promise_result->get_future().share();
 
 /*
@@ -213,7 +188,7 @@ AsyncParametersClient::set_parameters(
 
 std::shared_future<rcl_interfaces::msg::SetParametersResult>
 AsyncParametersClient::set_parameters_atomically(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
+  const ParameterVector & parameters,
   std::function<
     void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)
   > callback)

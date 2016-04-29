@@ -76,8 +76,8 @@ class ClientPattern
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ClientPattern);
-  using SharedRequest = typename std::shared_ptr<const RequestT>;
-  using SharedResponse = typename std::shared_ptr<ResponseT>;
+  using SharedRequest = std::shared_ptr<RequestT>;
+  using SharedResponse = std::shared_ptr<ResponseT>;
 
   using Promise = std::promise<ResponseT>;
   using PromiseWithRequest = std::promise<std::pair<RequestT, ResponseT>>;
@@ -182,7 +182,7 @@ class Client : public ClientPattern<typename ServiceT::Request::SharedPtr, typen
   using ClientPatternT = ClientPattern<typename ServiceT::Request::SharedPtr, typename ServiceT::Response::SharedPtr>;
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
-  using SharedRequest = typename ServiceT::Request::SharedPtr;
+  using SharedRequest = std::shared_ptr<typename ServiceT::Request>;
 
   Client(
     std::shared_ptr<rcl_node_t> node_handle,
