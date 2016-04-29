@@ -90,7 +90,7 @@ public:
   using CallbackType = std::function<void(SharedFuture)>;
   using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
 
-  using SendRequestFunctionT = std::function<void(SharedRequest request, int64_t & sequence_number)>;
+  using SendRequestFunctionT = std::function<void(SharedRequest, int64_t &)>;
 
   virtual void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
@@ -110,11 +110,6 @@ public:
     this->pending_requests_.erase(sequence_number);
     call_promise->set_value(typed_response);
     callback(future);
-  }
-
-  SharedFuture async_send_request(SharedRequest request)
-  {
-    return async_send_request(request, [](SharedRequest request, int64_t & sequence_number) {});
   }
 
   template<
@@ -161,6 +156,11 @@ public:
     async_send_request(request, wrapping_cb);
 
     return future_with_request;
+  }
+
+  SharedFuture async_send_request(SharedRequest request)
+  {
+    return async_send_request(request, [](SharedFuture) {});
   }
 
   virtual void set_send_request_function(SendRequestFunctionT && fn)
