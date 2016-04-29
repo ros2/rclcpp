@@ -114,12 +114,12 @@ private:
 
 
   // Storage for promise/future patterns
-  RCLCPP_PARAMETER_CLIENT(NameVector, ParameterVector) get_parameters_client;
-  RCLCPP_PARAMETER_CLIENT(NameVector, ParameterTypeVector) get_parameters_types_client;
-  RCLCPP_PARAMETER_CLIENT(ParameterVector, SetParametersResultVector) set_parameters_client;
-  RCLCPP_PARAMETER_CLIENT(ParameterVector, rcl_interfaces::msg::SetParametersResult) set_parameters_atomically_client;
+  RCLCPP_PARAMETER_CLIENT(NameVector, ParameterVector) get_parameters_client_;
+  RCLCPP_PARAMETER_CLIENT(NameVector, ParameterTypeVector) get_parameter_types_client_;
+  RCLCPP_PARAMETER_CLIENT(ParameterVector, SetParametersResultVector) set_parameters_client_;
+  RCLCPP_PARAMETER_CLIENT(ParameterVector, rcl_interfaces::msg::SetParametersResult) set_parameters_atomically_client_;
   // TODO interface is a little strange
-  RCLCPP_PARAMETER_CLIENT_SRV(rcl_interfaces::srv::ListParameters) list_parameters_client;
+  RCLCPP_PARAMETER_CLIENT_SRV(rcl_interfaces::srv::ListParameters) list_parameters_client_;
 
   std::string remote_node_name_;
 };
