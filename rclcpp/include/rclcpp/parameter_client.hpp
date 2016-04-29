@@ -106,13 +106,20 @@ private:
   const rclcpp::node::Node::SharedPtr node_;
   rcl_parameter_client_t parameter_client_handle_ = rcl_get_zero_initialized_parameter_client();
 
+#define RCLCPP_PARAMETER_CLIENT(REQUEST, RESPONSE) \
+ rclcpp::client::ClientPattern<REQUEST, RESPONSE>
+
+#define RCLCPP_PARAMETER_CLIENT_SRV(SERVICE_TYPE) \
+ rclcpp::client::ClientPattern<SERVICE_TYPE::Request, SERVICE_TYPE::Response>
+
+
   // Storage for promise/future patterns
-  rclcpp::client::ClientPattern<NameVector, ParameterVector> get_parameters_client;
-  rclcpp::client::ClientPattern<NameVector, ParameterTypeVector> get_parameters_types_client;
-  rclcpp::client::ClientPattern<ParameterVector, SetParametersResultVector> set_parameters_client;
-  rclcpp::client::ClientPattern<ParameterVector, rcl_interfaces::msg::SetParametersResult> set_parameters_atomically_client;
+  RCLCPP_PARAMETER_CLIENT(NameVector, ParameterVector) get_parameters_client;
+  RCLCPP_PARAMETER_CLIENT(NameVector, ParameterTypeVector) get_parameters_types_client;
+  RCLCPP_PARAMETER_CLIENT(ParameterVector, SetParametersResultVector) set_parameters_client;
+  RCLCPP_PARAMETER_CLIENT(ParameterVector, rcl_interfaces::msg::SetParametersResult) set_parameters_atomically_client;
   // TODO interface is a little strange
-  rclcpp::client::ClientPattern<rcl_interfaces::srv::ListParameters::Request, rcl_interfaces::srv::ListParameters::Response> list_parameters_client;
+  RCLCPP_PARAMETER_CLIENT_SRV(rcl_interfaces::srv::ListParameters) list_parameters_client;
 
   std::string remote_node_name_;
 };

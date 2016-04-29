@@ -28,6 +28,16 @@ using rclcpp::parameter_client::ParameterTypeVector;
 using rclcpp::parameter_client::SetParametersResultVector;
 
 
+// probably need to be in utilities.hpp
+// Expects array to be initialized to the same size as str_vector
+void convert_to_rosidl_generator_c_string(
+  const std::vector<std::string> & str_vector, rosidl_generator_c__String__Array & array)
+{
+  for (size_t i = 0; i < str_vector.size(); ++i) {
+    rosidl_generator_c__String__assign(&array.data[i], str_vector[i].c_str());
+  }
+}
+
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node::Node::SharedPtr node,
   const std::string & remote_node_name)
@@ -45,17 +55,18 @@ AsyncParametersClient::AsyncParametersClient(
     // TODO error handling
   }
 
+  // TODO move semantics for moving lambdas into the clients
+  auto get_parameters_request_function = [this](const NameVector & names, int64_t & sequence_number) {
+    rosidl_generator_c__String__Array names_array;
+    rosidl_generator_c__String__Array__init(&names_array, names.size());
+    convert_to_rosidl_generator_c_string(names, names_array);
 
-}
+    rcl_ret_t ret = rcl_parameter_client_send_get_request(
+      &parameter_client_handle_, &names_array, &sequence_number);
+  };
+  get_parameters_client.set_send_request_function(get_parameters_request_function);
 
-// probably need to be in utilities.hpp
-// Expects array to be initialized to the same size as str_vector
-void convert_to_rosidl_generator_c_string(
-  const std::vector<std::string> & str_vector, rosidl_generator_c__String__Array & array)
-{
-  for (size_t i = 0; i < str_vector.size(); ++i) {
-    rosidl_generator_c__String__assign(&array.data[i], str_vector[i].c_str());
-  }
+
 }
 
 std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
@@ -67,50 +78,19 @@ AsyncParametersClient::get_parameters(
     std::make_shared<std::promise<std::vector<rclcpp::parameter::ParameterVariant>>>();
   auto future_result = promise_result->get_future().share();
 
-  // TODO
-  // rmw_request_id_t * request_header = nullptr;
-
-  // move this to constructor
-  auto get_parameters_request_function = [this](std::shared_ptr<const NameVector> names, int64_t & sequence_number) {
-    rosidl_generator_c__String__Array names_array;
-    rosidl_generator_c__String__Array__init(&names_array, names.size());
-    convert_to_rosidl_generator_c_string(names, names_array);
-
-    rcl_ret_t ret = rcl_parameter_client_send_get_request(
-      &parameter_client_handle_, &names_array, &sequence_number);
-  };
-
-
   // Store pending callback as promise/future pair in ParameterClient
 
-  /// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-  // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
-  std::shared_ptr<const NameVector> name_ptr(names);
   get_parameters_client.async_send_request(
-    name_ptr,
-    [name_ptr, promise_result, future_result, &callback](
-      rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f)
+    names,
+    [names, promise_result, future_result, &callback](
+      RCLCPP_PARAMETER_CLIENT(NameVector, ParameterVector)::SharedFuture cb_f)
     {
-      std::vector<rclcpp::parameter::ParameterVariant> parameter_variants;
-      auto & pvalues = cb_f.get()->values;
-
-      for (auto & pvalue : pvalues) {
-        auto i = &pvalue - &pvalues[0];
-        rcl_interfaces::msg::Parameter parameter;
-        parameter.name = names[i];
-        parameter.value = pvalue;
-        parameter_variants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(
-          parameter));
-      }
-
-      promise_result->set_value(parameter_variants);
+      promise_result->set_value(cb_f.get());
       if (callback != nullptr) {
         callback(future_result);
       }
     }
   );
-  // *INDENT-ON*
 
   return future_result;
 }
@@ -120,8 +100,7 @@ AsyncParametersClient::get_parameter_types(
   const NameVector & names,
   std::function<void(std::shared_future<ParameterTypeVector>)> callback)
 {
-  auto promise_result =
-    std::make_shared<std::promise<ParameterTypeVector>();
+  auto promise_result = std::make_shared<std::promise<ParameterTypeVector>>();
   auto future_result = promise_result->get_future().share();
 
 /*
