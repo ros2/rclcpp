@@ -75,6 +75,7 @@ template<typename RequestT, typename ResponseT>
 class ClientPattern
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS(ClientPattern);
   using SharedRequest = typename RequestT::SharedPtr;
   using SharedResponse = typename ResponseT::SharedPtr;
 
