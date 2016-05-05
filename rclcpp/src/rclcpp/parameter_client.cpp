@@ -40,16 +40,46 @@ void convert_to_rosidl_generator_c_string(
   }
 }
 
-void convert_to_c_array(const std::vector<rclcpp::parameter::ParameterVariant> & input,
-  rcl_interfaces__msg__Parameter__Array & output);
-/*{
-  
+enum ParameterMappedTypes =
+{
+  rclcpp::parameter::ParameterType::PARAMETER_NOT_SET = ;
+}
+
+void convert_to_c_array(
+  const std::vector<rclcpp::parameter::ParameterVariant> & input,
+  rcl_interfaces__msg__Parameter__Array & output)
+{
   for (size_t i = 0; i < input.size(); ++i) {
-    // rosidl_generator_c__String__assign(&output.data[i], input[i].c_str());
     rosidl_generator_c__String__assign(output.data[i].name, input[i].get_name().c_str());
-    output.data[i].value = ;
+    // TODO this map idea is yet implemented, but it'
+    // output.data[i].value.type = ParameterTypeMap[input[i].get_type()];
+    // switch on enums...
+    switch(input[i].get_type()) {
+      rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
+        // TODO Throw
+        throw std::runtime_error("parameter type not set");
+      rclcpp::parameter::ParameterType::PARAMETER_BOOL:
+        output.data[i].value.type = rcl_interfaces__msg__ParameterType__PARAMETER_BOOL;
+        output.data[i].value.bool_value = input[i].as_bool();
+        break;
+      rclcpp::parameter::ParameterType::PARAMETER_INTEGER:
+        output.data[i].value.type = rcl_interfaces__msg__ParameterType__PARAMETER_INTEGER;
+        output.data[i].value.integer_value = input[i].as_int();
+        break;
+      rclcpp::parameter::ParameterType::PARAMETER_DOUBLE:
+        output.data[i].value.type = rcl_interfaces__msg__ParameterType__PARAMETER_DOUBLE;
+        output.data[i].value.double_value = input[i].as_double();
+        break;
+      rclcpp::parameter::ParameterType::PARAMETER_STRING:
+        output.data[i].value.type = rcl_interfaces__msg__ParameterType__PARAMETER_STRING;
+        rosidl_generator_c__String__assign(output.data[i].value.string_value, input[i].as_string().c_str());
+        break;
+      default:
+        // TODO Throw
+        throw std::runtime_error("Unexpected type received");
+    }
   }
-}*/
+}
 
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node::Node::SharedPtr node,
