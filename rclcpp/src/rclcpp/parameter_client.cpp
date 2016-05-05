@@ -148,7 +148,7 @@ AsyncParametersClient::get_parameter_types(
   return future_result;
 }
 
-std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
+std::shared_future<SetParametersResultVector>
 AsyncParametersClient::set_parameters(
   const ParameterVector & parameters,
   std::function<void(std::shared_future<SetParametersResultVector>)> callback)
@@ -156,10 +156,10 @@ AsyncParametersClient::set_parameters(
   auto promise_result = std::make_shared<std::promise<SetParametersResultVector>>();
   auto future_result = promise_result->get_future().share();
 
-  set_parameters_client_->async_send_request(
+  set_parameters_client_.async_send_request(
     parameters,
     [promise_result, future_result, &callback](
-      RCLCPP_PARAMETER_CLIENT(ParameterVector, rcl_interfaces::msg::SetParametersResult)::SharedFuture cb_f)
+      RCLCPP_PARAMETER_CLIENT(ParameterVector, SetParametersResultVector)::SharedFuture cb_f)
     {
       promise_result->set_value(cb_f.get());
       if (callback != nullptr) {
