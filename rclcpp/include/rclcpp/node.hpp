@@ -258,7 +258,16 @@ public:
   get_callback_groups() const;
 
   RCLCPP_PUBLIC
-  const rcl_guard_condition_t * get_notify_guard_condition() const;
+  const rcl_guard_condition_t *
+  get_notify_guard_condition() const;
+
+  RCLCPP_PUBLIC
+  const rcl_guard_condition_t *
+  get_graph_guard_condition() const;
+
+  RCLCPP_PUBLIC
+  const rcl_node_t *
+  get_rcl_node_handle() const;
 
   std::atomic_bool has_executor;
 

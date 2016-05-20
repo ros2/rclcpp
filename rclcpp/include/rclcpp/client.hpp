@@ -25,6 +25,7 @@
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
+#include "rcl/wait.h"
 
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
@@ -61,6 +62,20 @@ public:
   const rcl_client_t *
   get_client_handle() const;
 
+  RCLCPP_PUBLIC
+  bool
+  server_is_ready() const;
+
+  template<typename RatioT = std::milli>
+  bool
+  wait_for_server(
+    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+  {
+    return wait_for_server_nanoseconds(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
   virtual std::shared_ptr<void> create_response() = 0;
   virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
   virtual void handle_response(
@@ -69,10 +84,14 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(ClientBase);
 
+  bool
+  wait_for_server_nanoseconds(std::chrono::nanoseconds timeout);
+
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
   std::string service_name_;
+  rcl_wait_set_t wait_set_;
 };
 
 template<typename ServiceT>
@@ -124,19 +143,22 @@ public:
     }
   }
 
-  std::shared_ptr<void> create_response()
+  std::shared_ptr<void>
+  create_response()
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
   }
 
-  std::shared_ptr<rmw_request_id_t> create_request_header()
+  std::shared_ptr<rmw_request_id_t>
+  create_request_header()
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
     return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
-  void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
+  void
+  handle_response(std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
@@ -156,7 +178,8 @@ public:
     callback(future);
   }
 
-  SharedFuture async_send_request(SharedRequest request)
+  SharedFuture
+  async_send_request(SharedRequest request)
   {
     return async_send_request(request, [](SharedFuture) {});
   }
@@ -170,7 +193,8 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
+  SharedFuture
+  async_send_request(SharedRequest request, CallbackT && cb)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
@@ -197,7 +221,8 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFutureWithRequest async_send_request(SharedRequest request, CallbackT && cb)
+  SharedFutureWithRequest
+  async_send_request(SharedRequest request, CallbackT && cb)
   {
     SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
     SharedFutureWithRequest future_with_request(promise->get_future());
