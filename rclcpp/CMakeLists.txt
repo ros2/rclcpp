@@ -105,7 +105,8 @@ if(BUILD_TESTING)
       ${rosidl_generator_cpp_INCLUDE_DIRS}
     )
   endif()
-  ament_add_gtest(test_rate test/test_rate.cpp)
+  ament_add_gtest(test_rate test/test_rate.cpp
+    ENV RCL_ASSERT_RMW_ID_MATCHES=${rmw_implementation})
   if(TARGET test_rate)
     target_include_directories(test_rate PUBLIC
       ${rcl_interfaces_INCLUDE_DIRS}
