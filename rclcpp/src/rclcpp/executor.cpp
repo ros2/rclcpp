@@ -112,7 +112,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
   weak_nodes_.erase(
     std::remove_if(
       weak_nodes_.begin(), weak_nodes_.end(),
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       [&](std::weak_ptr<rclcpp::node::Node> & i)
       {
         bool matched = (i.lock() == node_ptr);
@@ -329,7 +329,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     weak_nodes_.erase(
       remove_if(
         weak_nodes_.begin(), weak_nodes_.end(),
-        // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+        // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
         [](std::weak_ptr<rclcpp::node::Node> i)
         {
           return i.expired();

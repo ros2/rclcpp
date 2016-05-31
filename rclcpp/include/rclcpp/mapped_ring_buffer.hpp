@@ -220,7 +220,7 @@ private:
   typename std::vector<element, VectorAlloc>::iterator
   get_iterator_of_key(uint64_t key)
   {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     auto it = std::find_if(elements_.begin(), elements_.end(), [key](element & e) -> bool {
       return e.key == key && e.in_use;
     });

@@ -69,7 +69,7 @@ IntraProcessManager::get_next_unique_id()
     // So around 585 million years. Even at 1 GHz, it would take 585 years.
     // I think it's safe to avoid trying to handle overflow.
     // If we roll over then it's most likely a bug.
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::overflow_error(
       "exhausted the unique id's for publishers and subscribers in this process "
       "(congratulations your computer is either extremely fast or extremely old)");

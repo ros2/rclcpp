@@ -180,7 +180,7 @@ public:
               std::string("failed to get rmw handle: ") + rcl_get_error_string_safe());
     }
     if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
       // *INDENT-ON*
@@ -231,7 +231,7 @@ public:
       ipm.message_sequence = message_seq;
       auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
       if (status != RCL_RET_OK) {
-        // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+        // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
         throw std::runtime_error(
           std::string("failed to publish intra process message: ") + rcl_get_error_string_safe());
         // *INDENT-ON*
@@ -306,7 +306,7 @@ protected:
   {
     auto status = rcl_publish(&publisher_handle_, msg);
     if (status != RCL_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("failed to publish message: ") + rcl_get_error_string_safe());
       // *INDENT-ON*

@@ -251,7 +251,7 @@ private:
         (get_topic_name() + "__intra").c_str(),
         &intra_process_options) != RCL_RET_OK)
     {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("could not create intra process subscription: ") + rcl_get_error_string_safe());
       // *INDENT-ON*

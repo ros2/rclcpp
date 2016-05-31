@@ -123,7 +123,7 @@ PublisherBase::setup_intra_process(
   auto ret = rmw_get_gid_for_publisher(
     publisher_rmw_handle, &intra_process_rmw_gid_);
   if (ret != RMW_RET_OK) {
-    // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::runtime_error(
       std::string("failed to create intra process publisher gid: ") +
       rmw_get_error_string_safe());

@@ -108,7 +108,7 @@ public:
     if (rcl_client_init(&client_handle_, this->node_handle_.get(),
       service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK)
     {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("could not create client: ") +
         rcl_get_error_string_safe());
@@ -175,7 +175,7 @@ public:
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
     if (RCL_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("failed to send request: ") + rcl_get_error_string_safe());
       // *INDENT-ON*

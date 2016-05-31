@@ -150,7 +150,7 @@ public:
     rcl_ret_t status = rcl_send_response(get_service_handle(), req_id.get(), response.get());
 
     if (status != RCL_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("failed to send response: ") + rcl_get_error_string_safe());
       // *INDENT-ON*

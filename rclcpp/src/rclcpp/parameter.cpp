@@ -105,7 +105,7 @@ ParameterVariant::get_type_name() const
     case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
       return "not set";
     default:
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         "Unexpected type from ParameterVariant: " + std::to_string(get_type()));
       // *INDENT-ON*
@@ -172,7 +172,7 @@ ParameterVariant::from_parameter(const rcl_interfaces::msg::Parameter & paramete
       throw std::runtime_error("Type from ParameterValue is not set");
     default:
       // TODO(wjwwood): use custom exception
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         "Unexpected type from ParameterVariant: " + std::to_string(parameter.value.type));
       // *INDENT-ON*
@@ -218,7 +218,7 @@ ParameterVariant::value_to_string() const
     case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
       return "not set";
     default:
-      // *INDENT-OFF* (prevent uncrustify from making unecessary indents here)
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         "Unexpected type from ParameterVariant: " + std::to_string(get_type()));
       // *INDENT-ON*
