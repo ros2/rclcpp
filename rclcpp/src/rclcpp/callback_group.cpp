@@ -26,24 +26,28 @@ CallbackGroup::CallbackGroup(CallbackGroupType group_type)
 const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
 CallbackGroup::get_subscription_ptrs() const
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   return subscription_ptrs_;
 }
 
 const std::vector<rclcpp::timer::TimerBase::WeakPtr> &
 CallbackGroup::get_timer_ptrs() const
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   return timer_ptrs_;
 }
 
 const std::vector<rclcpp::service::ServiceBase::SharedPtr> &
 CallbackGroup::get_service_ptrs() const
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   return service_ptrs_;
 }
 
 const std::vector<rclcpp::client::ClientBase::WeakPtr> &
 CallbackGroup::get_client_ptrs() const
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   return client_ptrs_;
 }
 
@@ -63,23 +67,27 @@ void
 CallbackGroup::add_subscription(
   const rclcpp::subscription::SubscriptionBase::SharedPtr subscription_ptr)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   subscription_ptrs_.push_back(subscription_ptr);
 }
 
 void
 CallbackGroup::add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   timer_ptrs_.push_back(timer_ptr);
 }
 
 void
 CallbackGroup::add_service(const rclcpp::service::ServiceBase::SharedPtr service_ptr)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   service_ptrs_.push_back(service_ptr);
 }
 
 void
 CallbackGroup::add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   client_ptrs_.push_back(client_ptr);
 }
