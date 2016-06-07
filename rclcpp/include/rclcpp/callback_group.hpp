@@ -16,6 +16,7 @@
 #define RCLCPP__CALLBACK_GROUP_HPP_
 
 #include <atomic>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -97,6 +98,8 @@ private:
   add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr);
 
   CallbackGroupType type_;
+  // Mutex to protect the subsequent vectors of pointers.
+  mutable std::mutex mutex_;
   std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
   std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::service::ServiceBase::SharedPtr> service_ptrs_;
