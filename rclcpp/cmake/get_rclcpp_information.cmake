@@ -15,8 +15,8 @@
 #
 # Get all information about rclcpp for a specific RMW implementation.
 #
-# It sets the common variables _DEFINITIONS, _INCLUDE_DIRS and _LIBRARIES
-# with the given prefix.
+# It sets the common variables _DEFINITIONS, _INCLUDE_DIRS, _LIBRARIES,
+# and _LINK_FLAGS with the given prefix.
 #
 # :param rmw_implementation: the RMW implementation name
 # :type target: string
@@ -83,6 +83,9 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
     endif()
     if(${_dep}_LIBRARIES)
       list(APPEND _libs "${${_dep}_LIBRARIES}")
+    endif()
+    if(${_dep}_LINK_FLAGS)
+      list_append_unique(${var_prefix}_LINK_FLAGS "${${_dep}_LINK_FLAGS}")
     endif()
   endforeach()
   if(_libs)
