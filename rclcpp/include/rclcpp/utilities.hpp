@@ -52,7 +52,7 @@ shutdown();
 /// Get a handle to the rmw guard condition that manages the signal handler.
 RCLCPP_PUBLIC
 rcl_guard_condition_t *
-get_global_sigint_guard_condition();
+get_global_sigint_guard_condition(void*);
 
 /// Use the global condition variable to block for the specified amount of time.
 /**

@@ -19,6 +19,7 @@
 #include <csignal>
 #include <cstdio>
 #include <cstring>
+#include <map>
 #include <mutex>
 #include <string>
 
@@ -36,8 +37,10 @@
 /// Represent the status of the global interrupt signal.
 static volatile sig_atomic_t g_signal_status = 0;
 /// Guard condition for interrupting the rmw implementation when the global interrupt signal fired.
-static rcl_guard_condition_t g_sigint_guard_cond_handle =
-  rcl_get_zero_initialized_guard_condition();
+std::mutex g_sigint_guard_cond_handle_mutex;
+/*static rcl_guard_condition_t g_sigint_guard_cond_handle =
+  rcl_get_zero_initialized_guard_condition();*/
+static std::map<void*, rcl_guard_condition_t> g_sigint_guard_cond_handles;
 /// Condition variable for timed sleep (see sleep_for).
 static std::condition_variable g_interrupt_condition_variable;
 static std::atomic<bool> g_is_interrupted(false);
@@ -81,10 +84,18 @@ signal_handler(int signal_value)
   }
 #endif
   g_signal_status = signal_value;
-  rcl_ret_t status = rcl_trigger_guard_condition(&g_sigint_guard_cond_handle);
-  if (status != RCL_RET_OK) {
-    fprintf(stderr,
-      "[rclcpp::error] failed to trigger guard condition: %s\n", rcl_get_error_string_safe());
+  {
+    std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handle_mutex);
+    for(std::map<void*, rcl_guard_condition_t>::iterator it = g_sigint_guard_cond_handles.begin();
+        it != g_sigint_guard_cond_handles.end();
+        ++it)
+    {
+      rcl_ret_t status = rcl_trigger_guard_condition(&(it->second));
+      if (status != RCL_RET_OK) {
+        fprintf(stderr,
+          "[rclcpp::error] failed to trigger guard condition: %s\n", rcl_get_error_string_safe());
+      }
+    }
   }
   g_is_interrupted.store(true);
   g_interrupt_condition_variable.notify_all();
@@ -139,11 +150,13 @@ rclcpp::utilities::init(int argc, char * argv[])
       error_string);
     // *INDENT-ON*
   }
+  /*
   rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
   if (rcl_guard_condition_init(&g_sigint_guard_cond_handle, options) != RCL_RET_OK) {
     throw std::runtime_error(std::string(
               "Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
   }
+  */
 }
 
 bool
@@ -156,18 +169,38 @@ void
 rclcpp::utilities::shutdown()
 {
   g_signal_status = SIGINT;
-  if (rcl_trigger_guard_condition(&g_sigint_guard_cond_handle) != RCL_RET_OK) {
-    fprintf(stderr,
-      "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
+  {
+    std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handle_mutex);
+    for(std::map<void*, rcl_guard_condition_t>::iterator it = g_sigint_guard_cond_handles.begin();
+        it != g_sigint_guard_cond_handles.end();
+        ++it)
+    {
+      if (rcl_trigger_guard_condition(&(it->second)) != RCL_RET_OK) {
+        fprintf(stderr,
+          "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
+      }
+    }
   }
   g_is_interrupted.store(true);
   g_interrupt_condition_variable.notify_all();
 }
 
 rcl_guard_condition_t *
-rclcpp::utilities::get_global_sigint_guard_condition()
+rclcpp::utilities::get_global_sigint_guard_condition(void* p)
 {
-  return &::g_sigint_guard_cond_handle;
+  std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handle_mutex);
+  if(g_sigint_guard_cond_handles.find(p) == g_sigint_guard_cond_handles.end())
+  {
+    rcl_guard_condition_t handle =
+      rcl_get_zero_initialized_guard_condition();
+    rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
+    if (rcl_guard_condition_init(&handle, options) != RCL_RET_OK) {
+      throw std::runtime_error(std::string(
+              "Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
+    }
+    g_sigint_guard_cond_handles[p] = handle;
+  }
+  return &g_sigint_guard_cond_handles[p];
 }
 
 bool
