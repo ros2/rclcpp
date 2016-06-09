@@ -15,8 +15,8 @@
 #ifndef RCLCPP__EVENT_HPP_
 #define RCLCPP__EVENT_HPP_
 
+#include <atomic>
 #include <memory>
-#include <mutex>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
