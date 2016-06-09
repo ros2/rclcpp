@@ -20,6 +20,7 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -35,12 +36,14 @@ namespace exceptions
  * \throws std::runtime_error if the rcl_get_error_state returns 0
  * \throws RCLErrorBase some child class exception based on ret
  */
+RCLCPP_PUBLIC
 void
 throw_from_rcl_error(rcl_ret_t ret, const std::string & prefix = "", bool reset_error = true);
 
 class RCLErrorBase
 {
 public:
+  RCLCPP_PUBLIC
   RCLErrorBase(rcl_ret_t ret, const rcl_error_state_t * error_state);
   virtual ~RCLErrorBase() {}
 
@@ -55,7 +58,9 @@ public:
 class RCLError : public RCLErrorBase, public std::runtime_error
 {
 public:
+  RCLCPP_PUBLIC
   RCLError(rcl_ret_t ret, const rcl_error_state_t * error_state, const std::string & prefix);
+  RCLCPP_PUBLIC
   RCLError(const RCLErrorBase & base_exc, const std::string & prefix);
 };
 
@@ -63,7 +68,9 @@ public:
 class RCLBadAlloc : public RCLErrorBase, public std::bad_alloc
 {
 public:
+  RCLCPP_PUBLIC
   RCLBadAlloc(rcl_ret_t ret, const rcl_error_state_t * error_state);
+  RCLCPP_PUBLIC
   explicit RCLBadAlloc(const RCLErrorBase & base_exc);
 };
 
@@ -71,10 +78,12 @@ public:
 class RCLInvalidArgument : public RCLErrorBase, public std::invalid_argument
 {
 public:
+  RCLCPP_PUBLIC
   RCLInvalidArgument(
     rcl_ret_t ret,
     const rcl_error_state_t * error_state,
     const std::string & prefix);
+  RCLCPP_PUBLIC
   RCLInvalidArgument(const RCLErrorBase & base_exc, const std::string & prefix);
 };
 

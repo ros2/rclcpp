@@ -23,6 +23,7 @@
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -63,8 +64,10 @@ public:
 class GraphListener
 {
 public:
+  RCLCPP_PUBLIC
   GraphListener();
 
+  RCLCPP_PUBLIC
   virtual ~GraphListener();
 
   /// Start the graph listener's listen thread if it hasn't been started.
@@ -72,6 +75,7 @@ public:
    *
    * \throws GraphListenerShutdownError if the GraphListener is shutdown
    */
+  RCLCPP_PUBLIC
   virtual
   void
   start_if_not_started();
@@ -83,6 +87,7 @@ public:
    * \throws std::invalid_argument if node is nullptr
    * \throws std::system_error anything std::mutex::lock() throws
    */
+  RCLCPP_PUBLIC
   virtual
   void
   add_node(rclcpp::node::Node * node);
@@ -92,6 +97,7 @@ public:
    *
    * \throws std::system_error anything std::mutex::lock() throws
    */
+  RCLCPP_PUBLIC
   virtual
   bool
   has_node(rclcpp::node::Node * node) const;
@@ -102,6 +108,7 @@ public:
    * \throws std::invalid_argument if node is nullptr
    * \throws std::system_error anything std::mutex::lock() throws
    */
+  RCLCPP_PUBLIC
   virtual
   void
   remove_node(rclcpp::node::Node * node);
@@ -112,6 +119,7 @@ public:
    * \throws rclcpp::execptions::RCLError from rcl_trigger_guard_condition()
    * \throws std::system_error anything std::mutex::lock() throws
    */
+  RCLCPP_PUBLIC
   virtual
   void
   interrupt();
@@ -130,16 +138,19 @@ public:
    * \throws rclcpp::execptions::RCLError from rcl_wait_set_fini()
    * \throws std::system_error anything std::mutex::lock() throws
    */
+  RCLCPP_PUBLIC
   virtual
   void
   shutdown();
 
 protected:
   /// Main function for the listening thread.
+  RCLCPP_PUBLIC
   virtual
   void
   run();
 
+  RCLCPP_PUBLIC
   virtual
   void
   run_loop();
