@@ -82,6 +82,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     time_to_wait = std::chrono::nanoseconds(0);
   }
   // continue forever if timeout is negative, otherwise continue until out of time_to_wait
+  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   do {
     node_->wait_for_graph_change(event, time_to_wait);
     if (event->check_and_clear()) {
@@ -92,6 +93,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     // server is not ready, loop if there is time left
     time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
   } while (timeout < std::chrono::nanoseconds(0) || time_to_wait > std::chrono::nanoseconds(0));
+  // *INDENT-ON*
   return false;  // timeout exceeded while waiting for the server to be ready
 }
 
