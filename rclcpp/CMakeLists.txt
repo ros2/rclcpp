@@ -22,10 +22,13 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/client.cpp
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
+  src/rclcpp/event.cpp
+  src/rclcpp/exceptions.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
+  src/rclcpp/graph_listener.cpp
   src/rclcpp/intra_process_manager.cpp
   src/rclcpp/intra_process_manager_impl.cpp
   src/rclcpp/memory_strategies.cpp

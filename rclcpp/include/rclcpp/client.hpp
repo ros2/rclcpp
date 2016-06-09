@@ -25,6 +25,7 @@
 
 #include "rcl/client.h"
 #include "rcl/error_handling.h"
+#include "rcl/wait.h"
 
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
@@ -37,6 +38,12 @@
 
 namespace rclcpp
 {
+
+namespace node
+{
+class Node;
+}  // namespace node
+
 namespace client
 {
 
@@ -47,7 +54,7 @@ public:
 
   RCLCPP_PUBLIC
   ClientBase(
-    std::shared_ptr<rcl_node_t> node_handle,
+    rclcpp::node::Node * parent_node,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
@@ -61,6 +68,20 @@ public:
   const rcl_client_t *
   get_client_handle() const;
 
+  RCLCPP_PUBLIC
+  bool
+  service_is_ready() const;
+
+  template<typename RatioT = std::milli>
+  bool
+  wait_for_service(
+    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+  {
+    return wait_for_service_nanoseconds(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
   virtual std::shared_ptr<void> create_response() = 0;
   virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
   virtual void handle_response(
@@ -69,6 +90,13 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(ClientBase);
 
+  bool
+  wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
+
+  rcl_node_t *
+  get_rcl_node_handle() const;
+
+  rclcpp::node::Node * node_;
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
@@ -97,15 +125,15 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
 
   Client(
-    std::shared_ptr<rcl_node_t> node_handle,
+    rclcpp::node::Node * parent_node,
     const std::string & service_name,
     rcl_client_options_t & client_options)
-  : ClientBase(node_handle, service_name)
+  : ClientBase(parent_node, service_name)
   {
     using rosidl_generator_cpp::get_service_type_support_handle;
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
-    if (rcl_client_init(&client_handle_, this->node_handle_.get(),
+    if (rcl_client_init(&client_handle_, this->get_rcl_node_handle(),
       service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK)
     {
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
@@ -118,25 +146,28 @@ public:
 
   virtual ~Client()
   {
-    if (rcl_client_fini(&client_handle_, node_handle_.get()) != RCL_RET_OK) {
+    if (rcl_client_fini(&client_handle_, this->get_rcl_node_handle()) != RCL_RET_OK) {
       fprintf(stderr,
         "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
     }
   }
 
-  std::shared_ptr<void> create_response()
+  std::shared_ptr<void>
+  create_response()
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
   }
 
-  std::shared_ptr<rmw_request_id_t> create_request_header()
+  std::shared_ptr<rmw_request_id_t>
+  create_request_header()
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
     return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
-  void handle_response(std::shared_ptr<rmw_request_id_t> request_header,
+  void
+  handle_response(std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
@@ -156,7 +187,8 @@ public:
     callback(future);
   }
 
-  SharedFuture async_send_request(SharedRequest request)
+  SharedFuture
+  async_send_request(SharedRequest request)
   {
     return async_send_request(request, [](SharedFuture) {});
   }
@@ -170,7 +202,8 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
+  SharedFuture
+  async_send_request(SharedRequest request, CallbackT && cb)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
@@ -197,7 +230,8 @@ public:
       >::value
     >::type * = nullptr
   >
-  SharedFutureWithRequest async_send_request(SharedRequest request, CallbackT && cb)
+  SharedFutureWithRequest
+  async_send_request(SharedRequest request, CallbackT && cb)
   {
     SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
     SharedFutureWithRequest future_with_request(promise->get_future());

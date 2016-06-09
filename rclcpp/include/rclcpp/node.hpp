@@ -15,9 +15,12 @@
 #ifndef RCLCPP__NODE_HPP_
 #define RCLCPP__NODE_HPP_
 
+#include <atomic>
+#include <condition_variable>
 #include <list>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -33,6 +36,7 @@
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/parameter.hpp"
@@ -50,8 +54,28 @@ struct rcl_node_t;
 namespace rclcpp
 {
 
+namespace graph_listener
+{
+class GraphListener;
+}  // namespace graph_listener
+
 namespace node
 {
+
+class InvalidEventError : public std::runtime_error
+{
+public:
+  InvalidEventError()
+  : std::runtime_error("event is invalid") {}
+};
+
+class EventNotRegisteredError : public std::runtime_error
+{
+public:
+  EventNotRegisteredError()
+  : std::runtime_error("event already registered") {}
+};
+
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node
 {
@@ -258,7 +282,71 @@ public:
   get_callback_groups() const;
 
   RCLCPP_PUBLIC
-  const rcl_guard_condition_t * get_notify_guard_condition() const;
+  const rcl_guard_condition_t *
+  get_notify_guard_condition() const;
+
+  RCLCPP_PUBLIC
+  const rcl_guard_condition_t *
+  get_graph_guard_condition() const;
+
+  RCLCPP_PUBLIC
+  const rcl_node_t *
+  get_rcl_node_handle() const;
+
+  /// Return the rcl_node_t node handle (non-const version).
+  RCLCPP_PUBLIC
+  rcl_node_t *
+  get_rcl_node_handle();
+
+  /// Return the rcl_node_t node handle in a std::shared_ptr.
+  /* This handle remains valid after the Node is destroyed.
+   * The actual rcl node is not finalized until it is out of scope everywhere.
+   */
+  RCLCPP_PUBLIC
+  std::shared_ptr<rcl_node_t>
+  get_shared_node_handle();
+
+  /// Notify threads waiting on graph changes.
+  /* Affects threads waiting on the notify guard condition, see:
+   * get_notify_guard_condition(), as well as the threads waiting on graph
+   * changes using a graph Event, see: wait_for_graph_change().
+   *
+   * This is typically only used by the rclcpp::graph_listener::GraphListener.
+   *
+   * \throws RCLBaseError (a child of that exception) when an rcl error occurs
+   */
+  RCLCPP_PUBLIC
+  void
+  notify_graph_change();
+
+  /// Return a graph event, which will be set anytime a graph change occurs.
+  /* The graph Event object is a loan which must be returned.
+   * The Event object is scoped and therefore to return the load just let it go
+   * out of scope.
+   */
+  RCLCPP_PUBLIC
+  rclcpp::event::Event::SharedPtr
+  get_graph_event();
+
+  /// Wait for a graph event to occur by waiting on an Event to become set.
+  /* The given Event must be acquire through the get_graph_event() method.
+   *
+   * \throws InvalidEventError if the given event is nullptr
+   * \throws EventNotRegisteredError if the given event was not acquired with
+   *   get_graph_event().
+   */
+  RCLCPP_PUBLIC
+  void
+  wait_for_graph_change(
+    rclcpp::event::Event::SharedPtr event,
+    std::chrono::nanoseconds timeout);
+
+  /// Return the number of on loan graph events, see get_graph_event().
+  /* This is typically only used by the rclcpp::graph_listener::GraphListener.
+   */
+  RCLCPP_PUBLIC
+  size_t
+  count_graph_users();
 
   std::atomic_bool has_executor;
 
@@ -289,6 +377,21 @@ private:
 
   /// Guard condition for notifying the Executor of changes to this node.
   rcl_guard_condition_t notify_guard_condition_ = rcl_get_zero_initialized_guard_condition();
+
+  /// Graph Listener which waits on graph changes for the node and is shared across nodes.
+  std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
+  /// Whether or not this node has been added to the graph listener yet.
+  bool added_to_graph_listener_;
+
+  /// Mutex to guard the graph event related data structures.
+  std::mutex graph_mutex_;
+  /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
+  std::condition_variable graph_cv_;
+  /// Weak references to graph events out on loan.
+  std::vector<rclcpp::event::Event::WeakPtr> graph_events_;
+  /// Number of graph events out on loan, used to determine if the graph should be monitored.
+  /* graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
+  std::atomic_size_t graph_users_count_;
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
