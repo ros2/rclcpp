@@ -46,7 +46,7 @@ Executor::Executor(const ExecutorArgs & args)
   // and one for the executor's guard cond (interrupt_guard_condition_)
 
   // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition(&waitset_));
+  memory_strategy_->add_guard_condition(rclcpp::utilities::get_sigint_guard_condition(&waitset_));
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);

@@ -20,6 +20,7 @@
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcl/guard_condition.h"
+#include "rcl/wait.h"
 
 #include "rmw/macros.h"
 #include "rmw/rmw.h"
@@ -50,9 +51,20 @@ void
 shutdown();
 
 /// Get a handle to the rmw guard condition that manages the signal handler.
+/**
+ * The first time that this function is called for a given waitset a new guard
+ * condition will be created and returned; thereafter the same guard condition
+ * will be returned for the same waitset. This mechanism is designed to ensure
+ * that the same guard condition is not reused across waitsets (e.g., when
+ * using multiple executors in the same process). Can throw an exception if
+ * initialization of the guard condition fails.
+ * \param[waitset] waitset Pointer to the rcl_wait_set_t that will be using the
+ * resulting guard condition.
+ * \return Pointer to the guard condition.
+ */
 RCLCPP_PUBLIC
 rcl_guard_condition_t *
-get_global_sigint_guard_condition(void*);
+get_sigint_guard_condition(rcl_wait_set_t * waitset);
 
 /// Use the global condition variable to block for the specified amount of time.
 /**
