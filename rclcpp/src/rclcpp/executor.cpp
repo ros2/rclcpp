@@ -46,7 +46,7 @@ Executor::Executor(const ExecutorArgs & args)
   // and one for the executor's guard cond (interrupt_guard_condition_)
 
   // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(rclcpp::utilities::get_global_sigint_guard_condition());
+  memory_strategy_->add_guard_condition(rclcpp::utilities::get_sigint_guard_condition(&waitset_));
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
@@ -77,6 +77,9 @@ Executor::~Executor()
     fprintf(stderr,
       "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
   }
+  // Remove and release the sigint guard condition
+  memory_strategy_->remove_guard_condition(rclcpp::utilities::get_sigint_guard_condition(&waitset_));
+  rclcpp::utilities::release_sigint_guard_condition(&waitset_);
 }
 
 void
