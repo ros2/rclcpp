@@ -140,7 +140,7 @@ rclcpp::utilities::init(int argc, char * argv[])
 #else
     strerror_s(error_string, error_length, errno);
 #endif
-    // *INDENT-OFF*
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::runtime_error(
       std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
       error_string);
@@ -163,7 +163,8 @@ rclcpp::utilities::shutdown()
     for (auto const & kv : g_sigint_guard_cond_handles) {
       if (rcl_trigger_guard_condition(&(kv.second)) != RCL_RET_OK) {
         fprintf(stderr,
-          "[rclcpp::error] failed to trigger guard condition: %s\n", rmw_get_error_string_safe());
+          "[rclcpp::error] failed to trigger sigint guard condition: %s\n",
+          rcl_get_error_string_safe());
       }
     }
   }
@@ -183,11 +184,34 @@ rclcpp::utilities::get_sigint_guard_condition(rcl_wait_set_t * waitset)
       rcl_get_zero_initialized_guard_condition();
     rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
     if (rcl_guard_condition_init(&handle, options) != RCL_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(std::string(
-                "Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
+        "Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
+      // *INDENT-ON*
     }
     g_sigint_guard_cond_handles[waitset] = handle;
     return &g_sigint_guard_cond_handles[waitset];
+  }
+}
+
+void
+rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * waitset)
+{
+  std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
+  auto kv = g_sigint_guard_cond_handles.find(waitset);
+  if (kv != g_sigint_guard_cond_handles.end()) {
+    if (rcl_guard_condition_fini(&kv->second) != RCL_RET_OK) {
+      fprintf(stderr,
+        "[rclcpp::error] failed to destroy sigint guard condition: %s\n",
+        rcl_get_error_string_safe());
+    }
+    g_sigint_guard_cond_handles.erase(kv);
+  } else {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+    throw std::runtime_error(std::string(
+      "Tried to release sigint guard condition for nonexistent waitset: %s") +
+      rcl_get_error_string_safe());
+    // *INDENT-ON*
   }
 }
 

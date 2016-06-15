@@ -56,7 +56,7 @@ shutdown();
  * condition will be created and returned; thereafter the same guard condition
  * will be returned for the same waitset. This mechanism is designed to ensure
  * that the same guard condition is not reused across waitsets (e.g., when
- * using multiple executors in the same process). Can throw an exception if
+ * using multiple executors in the same process). Will throw an exception if
  * initialization of the guard condition fails.
  * \param[waitset] waitset Pointer to the rcl_wait_set_t that will be using the
  * resulting guard condition.
@@ -65,6 +65,19 @@ shutdown();
 RCLCPP_PUBLIC
 rcl_guard_condition_t *
 get_sigint_guard_condition(rcl_wait_set_t * waitset);
+
+/// Release the previously allocated guard condition that manages the signal handler
+/**
+ * If you previously called get_sigint_guard_condition() for a given waitset
+ * to get a sigint guard condition, then you should call release_sigint_guard_condition()
+ * when you're done, to free that condition.  Will throw an exception if
+ * get_sigint_guard_condition() wasn't previously called for the given waitset.
+ * \param[waitset] waitset Pointer to the rcl_wait_set_t that was using the
+ * resulting guard condition.
+ */
+RCLCPP_PUBLIC
+void
+release_sigint_guard_condition(rcl_wait_set_t * waitset);
 
 /// Use the global condition variable to block for the specified amount of time.
 /**

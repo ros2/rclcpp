@@ -77,6 +77,8 @@ Executor::~Executor()
     fprintf(stderr,
       "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
   }
+  // Release the sigint guard condition
+  rclcpp::utilities::release_sigint_guard_condition(&waitset_);
 }
 
 void
