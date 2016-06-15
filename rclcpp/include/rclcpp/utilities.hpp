@@ -66,7 +66,7 @@ RCLCPP_PUBLIC
 rcl_guard_condition_t *
 get_sigint_guard_condition(rcl_wait_set_t * waitset);
 
-/// Release the previously allocated guard condition that manages the signal handler
+/// Release the previously allocated guard condition that manages the signal handler.
 /**
  * If you previously called get_sigint_guard_condition() for a given waitset
  * to get a sigint guard condition, then you should call release_sigint_guard_condition()
