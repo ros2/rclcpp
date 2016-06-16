@@ -23,6 +23,7 @@
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
+#include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -162,6 +163,8 @@ protected:
   run_loop();
 
 private:
+  RCLCPP_DISABLE_COPY(GraphListener);
+
   std::thread listener_thread_;
   bool is_started_;
   std::atomic_bool is_shutdown_;
