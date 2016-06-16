@@ -247,5 +247,11 @@ GraphListener::shutdown()
   }
 }
 
+bool
+GraphListener::is_shutdown()
+{
+  return is_shutdown_.load();
+}
+
 }  // namespace graph_listener
 }  // namespace rclcpp

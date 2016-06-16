@@ -143,6 +143,12 @@ public:
   void
   shutdown();
 
+  /// Return true if shutdown() has been called, else false.
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  is_shutdown();
+
 protected:
   /// Main function for the listening thread.
   RCLCPP_PUBLIC
