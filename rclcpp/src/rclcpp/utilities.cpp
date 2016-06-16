@@ -201,9 +201,11 @@ rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * waitset)
   auto kv = g_sigint_guard_cond_handles.find(waitset);
   if (kv != g_sigint_guard_cond_handles.end()) {
     if (rcl_guard_condition_fini(&kv->second) != RCL_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(std::string(
         "Failed to destroy sigint guard condition: ") +
         rcl_get_error_string_safe());
+      // *INDENT-ON*
     }
     g_sigint_guard_cond_handles.erase(kv);
   } else {
