@@ -54,8 +54,10 @@ Node::Node(
 #ifndef _WIN32
   ros_domain_id = getenv(env_var);
 #else
+#ifndef __cplusplus_winrt
   size_t ros_domain_id_size;
   _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
+#endif
 #endif
   if (ros_domain_id) {
     uint32_t number = strtoul(ros_domain_id, NULL, 0);

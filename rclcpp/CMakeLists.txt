@@ -48,6 +48,9 @@ macro(target)
   endif()
   add_library(${PROJECT_NAME}${target_suffix} SHARED
     ${${PROJECT_NAME}_SRCS})
+  if("${CMAKE_SYSTEM_NAME} " STREQUAL "WindowsPhone " OR "${CMAKE_SYSTEM_NAME} " STREQUAL "WindowsStore ")
+    set_property(TARGET ${PROJECT_NAME}${target_suffix} PROPERTY VS_WINRT_COMPONENT 1)
+  endif()
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
     "rcl${target_suffix}"
     "rosidl_generator_cpp")
