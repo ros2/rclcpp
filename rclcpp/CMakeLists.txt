@@ -43,7 +43,7 @@ set(${PROJECT_NAME}_SRCS
 )
 
 macro(target)
-  if(NOT "${target_suffix} " STREQUAL " ")
+  if(NOT target_suffix STREQUAL "")
     get_rcl_information("${rmw_implementation}" "rcl${target_suffix}")
   endif()
   add_library(${PROJECT_NAME}${target_suffix} SHARED

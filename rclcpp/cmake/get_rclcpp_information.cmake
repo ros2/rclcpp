@@ -29,7 +29,7 @@ macro(get_rclcpp_information rmw_implementation var_prefix)
   set(${var_prefix}_FOUND TRUE)
 
   # Get rcl using the existing macro
-  if(NOT "${target_suffix} " STREQUAL " ")
+  if(NOT target_suffix STREQUAL "")
     get_rcl_information("${rmw_implementation}" "rcl${target_suffix}")
   endif()
 
