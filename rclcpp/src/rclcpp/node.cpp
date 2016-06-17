@@ -107,6 +107,8 @@ Node::Node(
 
 Node::~Node()
 {
+  // Guard against concurrent calls to Node::notify_graph_change().
+  std::lock_guard<std::mutex> notify_lock(notify_mutex_);
   // Finalize the interrupt guard condition.
   if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
     fprintf(stderr,
@@ -411,6 +413,7 @@ Node::get_shared_node_handle()
 void
 Node::notify_graph_change()
 {
+  std::lock_guard<std::mutex> notify_lock(notify_mutex_);
   {
     std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
     bool bad_ptr_encountered = false;

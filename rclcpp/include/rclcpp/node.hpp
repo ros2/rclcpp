@@ -390,6 +390,8 @@ private:
 
   /// Mutex to guard the graph event related data structures.
   std::mutex graph_mutex_;
+  /// Mutex to guard the notify actions.
+  std::mutex notify_mutex_;
   /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
   std::condition_variable graph_cv_;
   /// Weak references to graph events out on loan.
