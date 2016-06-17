@@ -23,6 +23,7 @@
 #include "rcl/wait.h"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/utilities.hpp"
 
 using rclcpp::client::ClientBase;
 using rclcpp::exceptions::InvalidNodeError;
@@ -89,6 +90,9 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   // continue forever if timeout is negative, otherwise continue until out of time_to_wait
   // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   do {
+    if (!rclcpp::utilities::ok()) {
+      return false;
+    }
     node_ptr->wait_for_graph_change(event, time_to_wait);
     if (event->check_and_clear()) {
       if (this->service_is_ready()) {

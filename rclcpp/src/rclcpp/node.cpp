@@ -443,6 +443,13 @@ Node::notify_graph_change()
   }
 }
 
+void
+Node::notify_shutdown()
+{
+  // notify here anything that will not be woken up by ctrl-c or rclcpp::shutdown().
+  graph_cv_.notify_all();
+}
+
 rclcpp::event::Event::SharedPtr
 Node::get_graph_event()
 {
@@ -482,7 +489,7 @@ Node::wait_for_graph_change(
   }
   std::unique_lock<std::mutex> graph_lock(graph_mutex_);
   graph_cv_.wait_for(graph_lock, timeout, [&event]() {
-    return event->check();
+    return event->check() || !rclcpp::utilities::ok();
   });
 }
 

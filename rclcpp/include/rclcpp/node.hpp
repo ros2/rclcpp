@@ -319,6 +319,11 @@ public:
   void
   notify_graph_change();
 
+  /// Notify any and all blocking node actions that shutdown has occurred.
+  RCLCPP_PUBLIC
+  void
+  notify_shutdown();
+
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the load just let it go

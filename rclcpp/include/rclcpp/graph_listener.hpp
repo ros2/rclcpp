@@ -174,6 +174,7 @@ private:
   std::vector<rclcpp::node::Node *> nodes_;
 
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
+  rcl_guard_condition_t * shutdown_guard_condition_;
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 };
 
