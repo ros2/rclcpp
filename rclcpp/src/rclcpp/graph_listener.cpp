@@ -15,6 +15,7 @@
 #include "rclcpp/graph_listener.hpp"
 
 #include <cstdio>
+#include <exception>
 #include <string>
 
 #include "rcl/error_handling.h"
@@ -82,8 +83,10 @@ GraphListener::run()
       "[rclcpp] caught %s exception in GraphListener thread: %s\n",
       rmw::impl::cpp::demangle(exc).c_str(),
       exc.what());
+    std::rethrow_exception(std::current_exception());
   } catch (...) {
     fprintf(stderr, "[rclcpp] unknown error in GraphListener thread\n");
+    std::rethrow_exception(std::current_exception());
   }
 }
 
