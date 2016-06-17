@@ -77,7 +77,7 @@ public:
 };
 
 /// Node is the single point of entry for creating publishers and subscribers.
-class Node
+class Node : public std::enable_shared_from_this<Node>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node);

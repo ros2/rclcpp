@@ -25,10 +25,11 @@
 #include "rclcpp/node.hpp"
 
 using rclcpp::client::ClientBase;
+using rclcpp::exceptions::InvalidNodeError;
 using rclcpp::exceptions::throw_from_rcl_error;
 
 ClientBase::ClientBase(
-  rclcpp::node::Node * parent_node,
+  std::shared_ptr<rclcpp::node::Node> parent_node,
   const std::string & service_name)
 : node_(parent_node), node_handle_(parent_node->get_shared_node_handle()),
   service_name_(service_name)
@@ -73,7 +74,11 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     return false;
   }
   // make an event to reuse, rather than create a new one each time
-  auto event = node_->get_graph_event();
+  auto node_ptr = node_.lock();
+  if (!node_ptr) {
+    throw InvalidNodeError();
+  }
+  auto event = node_ptr->get_graph_event();
   // update the time even on the first loop to account for time in first server_is_read()
   std::chrono::nanoseconds time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
   if (timeout > std::chrono::nanoseconds(0) && time_to_wait < std::chrono::nanoseconds(0)) {
@@ -84,7 +89,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   // continue forever if timeout is negative, otherwise continue until out of time_to_wait
   // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   do {
-    node_->wait_for_graph_change(event, time_to_wait);
+    node_ptr->wait_for_graph_change(event, time_to_wait);
     if (event->check_and_clear()) {
       if (this->service_is_ready()) {
         return true;

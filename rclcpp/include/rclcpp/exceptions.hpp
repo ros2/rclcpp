@@ -27,6 +27,14 @@ namespace rclcpp
 namespace exceptions
 {
 
+/// Thrown when a method is trying to use a node, but it is invalid.
+class InvalidNodeError : public std::runtime_error
+{
+public:
+  InvalidNodeError()
+  : std::runtime_error("node is invalid") {}
+};
+
 /// Throw a C++ std::exception which was created based on an rcl error.
 /*
  * \param ret the return code for the current error state

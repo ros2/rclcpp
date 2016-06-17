@@ -54,7 +54,7 @@ public:
 
   RCLCPP_PUBLIC
   ClientBase(
-    rclcpp::node::Node * parent_node,
+    std::shared_ptr<rclcpp::node::Node> parent_node,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
@@ -98,7 +98,7 @@ protected:
   rcl_node_t *
   get_rcl_node_handle() const;
 
-  rclcpp::node::Node * node_;
+  std::weak_ptr<rclcpp::node::Node> node_;
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
@@ -127,7 +127,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client);
 
   Client(
-    rclcpp::node::Node * parent_node,
+    std::shared_ptr<rclcpp::node::Node> parent_node,
     const std::string & service_name,
     rcl_client_options_t & client_options)
   : ClientBase(parent_node, service_name)
