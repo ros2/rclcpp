@@ -271,7 +271,9 @@ Node::list_parameters(
 
   // TODO(esteve): define parameter separator, use "." for now
   for (auto & kv : parameters_) {
-    if ((prefixes.size() == 0) ||
+    if (((prefixes.size() == 0) &&
+      ((depth == 0) ||
+      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), '.')) < depth))) ||
       (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
       if (kv.first == prefix) {
         return true;
@@ -279,7 +281,8 @@ Node::list_parameters(
         size_t length = prefix.length();
         std::string substr = kv.first.substr(length);
         // Cast as unsigned integer to avoid warning
-        return static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth;
+        return (depth == 0) ||
+        (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth);
       }
       return false;
     })))
