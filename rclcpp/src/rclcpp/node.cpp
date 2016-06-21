@@ -40,9 +40,9 @@ Node::Node(
   bool use_intra_process_comms)
 : name_(node_name), context_(context),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0),
-  use_intra_process_comms_(use_intra_process_comms),
+  use_intra_process_comms_(use_intra_process_comms), notify_guard_condition_is_valid_(false),
   graph_listener_(context->get_sub_context<rclcpp::graph_listener::GraphListener>()),
-  added_to_graph_listener_(false), graph_users_count_(0)
+  should_add_to_graph_listener_(true), graph_users_count_(0)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   rcl_ret_t ret = rcl_guard_condition_init(&notify_guard_condition_, guard_condition_options);
@@ -103,22 +103,25 @@ Node::Node(
     CallbackGroupType::MutuallyExclusive);
   events_publisher_ = create_publisher<rcl_interfaces::msg::ParameterEvent>(
     "parameter_events", rmw_qos_profile_parameter_events);
+  notify_guard_condition_is_valid_ = true;
 }
 
 Node::~Node()
 {
-  // Guard against concurrent calls to Node::notify_graph_change().
-  std::lock_guard<std::mutex> notify_lock(notify_mutex_);
-  // Finalize the interrupt guard condition.
-  if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-    fprintf(stderr,
-      "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
-  }
   // Remove self from graph listener.
+  // Exchange with false to prevent others from trying to add this node to the
+  // graph listener after checking that it was not here.
+  if (!should_add_to_graph_listener_.exchange(false)) {
+    // If it was already false, then it needs to now be removed.
+    graph_listener_->remove_node(this);
+  }
+  // Finalize the interrupt guard condition after removing self from graph listener.
   {
-    std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
-    if (added_to_graph_listener_) {
-      graph_listener_->remove_node(this);
+    std::lock_guard<std::mutex> notify_guard_condition_lock(notify_guard_condition_mutex_);
+    notify_guard_condition_is_valid_ = false;
+    if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
+      fprintf(stderr,
+        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
     }
   }
 }
@@ -383,6 +386,10 @@ Node::get_callback_groups() const
 const rcl_guard_condition_t *
 Node::get_notify_guard_condition() const
 {
+  std::lock_guard<std::mutex> notify_guard_condition_lock(notify_guard_condition_mutex_);
+  if (!notify_guard_condition_is_valid_) {
+    return nullptr;
+  }
   return &notify_guard_condition_;
 }
 
@@ -413,7 +420,6 @@ Node::get_shared_node_handle()
 void
 Node::notify_graph_change()
 {
-  std::lock_guard<std::mutex> notify_lock(notify_mutex_);
   {
     std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
     bool bad_ptr_encountered = false;
@@ -440,9 +446,12 @@ Node::notify_graph_change()
     }
   }
   graph_cv_.notify_all();
-  rcl_ret_t ret = rcl_trigger_guard_condition(&notify_guard_condition_);
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to trigger notify guard condition");
+  {
+    std::lock_guard<std::mutex> notify_guard_condition_lock(notify_guard_condition_mutex_);
+    rcl_ret_t ret = rcl_trigger_guard_condition(&notify_guard_condition_);
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, "failed to trigger notify guard condition");
+    }
   }
 }
 
@@ -459,9 +468,8 @@ Node::get_graph_event()
   auto event = rclcpp::event::Event::make_shared();
   std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
   // on first call, add node to graph_listener_
-  if (!added_to_graph_listener_) {
+  if (should_add_to_graph_listener_.exchange(false)) {
     graph_listener_->add_node(this);
-    added_to_graph_listener_ = true;
     graph_listener_->start_if_not_started();
   }
   graph_events_.push_back(event);

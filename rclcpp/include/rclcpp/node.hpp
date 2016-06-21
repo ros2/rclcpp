@@ -381,17 +381,17 @@ private:
   mutable std::mutex mutex_;
 
   /// Guard condition for notifying the Executor of changes to this node.
+  mutable std::mutex notify_guard_condition_mutex_;
   rcl_guard_condition_t notify_guard_condition_ = rcl_get_zero_initialized_guard_condition();
+  bool notify_guard_condition_is_valid_;
 
   /// Graph Listener which waits on graph changes for the node and is shared across nodes.
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
-  /// Whether or not this node has been added to the graph listener yet.
-  bool added_to_graph_listener_;
+  /// Whether or not this node needs to be added to the graph listener.
+  std::atomic_bool should_add_to_graph_listener_;
 
   /// Mutex to guard the graph event related data structures.
   std::mutex graph_mutex_;
-  /// Mutex to guard the notify actions.
-  std::mutex notify_mutex_;
   /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
   std::condition_variable graph_cv_;
   /// Weak references to graph events out on loan.

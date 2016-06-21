@@ -101,7 +101,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  has_node(rclcpp::node::Node * node) const;
+  has_node(rclcpp::node::Node * node);
 
   /// Remove a node from the graph listener's list of nodes.
   /*
@@ -113,17 +113,6 @@ public:
   virtual
   void
   remove_node(rclcpp::node::Node * node);
-
-  /// Interrupt the listening thread so it can consider changes or shutdown.
-  /*
-   * \throws GraphListenerShutdownError if the GraphListener is shutdown
-   * \throws rclcpp::execptions::RCLError from rcl_trigger_guard_condition()
-   * \throws std::system_error anything std::mutex::lock() throws
-   */
-  RCLCPP_PUBLIC
-  virtual
-  void
-  interrupt();
 
   /// Stop the listening thread.
   /* The thread cannot be restarted, and the class is defunct after calling.
@@ -170,6 +159,7 @@ private:
   std::atomic_bool is_shutdown_;
   mutable std::mutex shutdown_mutex_;
 
+  mutable std::mutex nodes_barrier_mutex_;
   mutable std::mutex nodes_mutex_;
   std::vector<rclcpp::node::Node *> nodes_;
 
