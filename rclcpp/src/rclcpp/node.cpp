@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/node.hpp"
 
 using rclcpp::node::Node;
@@ -271,17 +272,21 @@ Node::list_parameters(
 
   // TODO(esteve): define parameter separator, use "." for now
   for (auto & kv : parameters_) {
-    if (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
+    if (((prefixes.size() == 0) &&
+      ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
+      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), '.')) < depth))) ||
+      (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
       if (kv.first == prefix) {
         return true;
       } else if (kv.first.find(prefix + ".") == 0) {
         size_t length = prefix.length();
         std::string substr = kv.first.substr(length);
         // Cast as unsigned integer to avoid warning
-        return static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth;
+        return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
+        (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth);
       }
       return false;
-    }))
+    })))
     {
       result.names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of('.');
