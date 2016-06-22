@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <exception>
 #include <string>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
@@ -211,7 +212,7 @@ acquire_nodes_lock_(
 static bool
 has_node_(std::vector<rclcpp::node::Node *> * nodes, rclcpp::node::Node * node)
 {
-  for (const auto node_ptr : *nodes) {
+  for (const auto node_ptr : (*nodes)) {
     if (node == node_ptr) {
       return true;
     }
