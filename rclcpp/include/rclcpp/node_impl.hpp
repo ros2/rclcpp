@@ -302,7 +302,7 @@ Node::create_client(
   using rclcpp::client::ClientBase;
 
   auto cli = Client<ServiceT>::make_shared(
-    node_handle_,
+    shared_from_this(),
     service_name,
     options);
 

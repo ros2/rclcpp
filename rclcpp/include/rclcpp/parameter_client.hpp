@@ -119,8 +119,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(SyncParametersClient);
 
   RCLCPP_PUBLIC
-  SyncParametersClient(
-    rclcpp::node::Node::SharedPtr node);
+  explicit SyncParametersClient(rclcpp::node::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
   SyncParametersClient(
