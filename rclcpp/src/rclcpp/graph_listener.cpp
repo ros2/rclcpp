@@ -313,9 +313,11 @@ GraphListener::shutdown()
       rclcpp::utilities::release_sigint_guard_condition(&wait_set_);
       shutdown_guard_condition_ = nullptr;
     }
-    ret = rcl_wait_set_fini(&wait_set_);
-    if (RCL_RET_OK != ret) {
-      throw_from_rcl_error(ret, "failed to finalize wait set");
+    if (is_started_) {
+      ret = rcl_wait_set_fini(&wait_set_);
+      if (RCL_RET_OK != ret) {
+        throw_from_rcl_error(ret, "failed to finalize wait set");
+      }
     }
   }
 }
