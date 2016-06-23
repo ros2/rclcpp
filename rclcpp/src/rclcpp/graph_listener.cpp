@@ -42,17 +42,6 @@ GraphListener::GraphListener()
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
 
-  ret = rcl_wait_set_init(
-    &wait_set_,
-    0,  // number_of_subscriptions
-    2,  // number_of_guard_conditions
-    0,  // number_of_timers
-    0,  // number_of_clients
-    0,  // number_of_services
-    rcl_get_default_allocator());
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to initialize wait set");
-  }
   shutdown_guard_condition_ = rclcpp::utilities::get_sigint_guard_condition(&wait_set_);
 }
 
@@ -69,6 +58,19 @@ GraphListener::start_if_not_started()
     throw GraphListenerShutdownError();
   }
   if (!is_started_) {
+    // Initialize the wait set before starting.
+    rcl_ret_t ret = rcl_wait_set_init(
+      &wait_set_,
+      0,  // number_of_subscriptions
+      2,  // number_of_guard_conditions
+      0,  // number_of_timers
+      0,  // number_of_clients
+      0,  // number_of_services
+      rcl_get_default_allocator());
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, "failed to initialize wait set");
+    }
+    // Start the listener thread.
     listener_thread_ = std::thread(&GraphListener::run, this);
     is_started_ = true;
   }
@@ -303,18 +305,18 @@ GraphListener::shutdown()
       interrupt_(&interrupt_guard_condition_);
       listener_thread_.join();
     }
-  }
-  rcl_ret_t ret = rcl_guard_condition_fini(&interrupt_guard_condition_);
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
-  }
-  if (shutdown_guard_condition_) {
-    rclcpp::utilities::release_sigint_guard_condition(&wait_set_);
-    shutdown_guard_condition_ = nullptr;
-  }
-  ret = rcl_wait_set_fini(&wait_set_);
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to finalize wait set");
+    rcl_ret_t ret = rcl_guard_condition_fini(&interrupt_guard_condition_);
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
+    }
+    if (shutdown_guard_condition_) {
+      rclcpp::utilities::release_sigint_guard_condition(&wait_set_);
+      shutdown_guard_condition_ = nullptr;
+    }
+    ret = rcl_wait_set_fini(&wait_set_);
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, "failed to finalize wait set");
+    }
   }
 }
 
