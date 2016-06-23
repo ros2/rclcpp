@@ -62,7 +62,7 @@ public:
 };
 
 /// Notifies many nodes of graph changes by listening in a thread.
-class GraphListener
+class GraphListener : public std::enable_shared_from_this<GraphListener>
 {
 public:
   RCLCPP_PUBLIC

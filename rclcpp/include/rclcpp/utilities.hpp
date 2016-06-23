@@ -16,6 +16,7 @@
 #define RCLCPP__UTILITIES_HPP_
 
 #include <chrono>
+#include <functional>
 
 #include "rclcpp/visibility_control.hpp"
 
@@ -49,6 +50,12 @@ ok();
 RCLCPP_PUBLIC
 void
 shutdown();
+
+/// Register a function to be called when shutdown is called.
+/* Calling the callbacks is the last thing shutdown() does. */
+RCLCPP_PUBLIC
+void
+on_shutdown(std::function<void(void)> callback);
 
 /// Get a handle to the rmw guard condition that manages the signal handler.
 /**

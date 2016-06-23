@@ -22,6 +22,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
@@ -154,6 +155,9 @@ rclcpp::utilities::ok()
   return ::g_signal_status == 0;
 }
 
+static std::mutex on_shutdown_mutex_;
+static std::vector<std::function<void(void)>> on_shutdown_callbacks_;
+
 void
 rclcpp::utilities::shutdown()
 {
@@ -170,6 +174,19 @@ rclcpp::utilities::shutdown()
   }
   g_is_interrupted.store(true);
   g_interrupt_condition_variable.notify_all();
+  {
+    std::lock_guard<std::mutex> lock(on_shutdown_mutex_);
+    for (auto & on_shutdown_callback : on_shutdown_callbacks_) {
+      on_shutdown_callback();
+    }
+  }
+}
+
+void
+rclcpp::utilities::on_shutdown(std::function<void(void)> callback)
+{
+  std::lock_guard<std::mutex> lock(on_shutdown_mutex_);
+  on_shutdown_callbacks_.push_back(callback);
 }
 
 rcl_guard_condition_t *

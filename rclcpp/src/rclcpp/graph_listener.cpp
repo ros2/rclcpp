@@ -70,6 +70,16 @@ GraphListener::start_if_not_started()
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to initialize wait set");
     }
+    // Register an on_shutdown hook to shtudown the graph listener.
+    // This is important to ensure that the wait set is finalized before
+    // destruction of static objects occurs.
+    std::weak_ptr<GraphListener> weak_this = shared_from_this();
+    rclcpp::utilities::on_shutdown([weak_this]() {
+      auto shared_this = weak_this.lock();
+      if (shared_this) {
+        shared_this->shutdown();
+      }
+    });
     // Start the listener thread.
     listener_thread_ = std::thread(&GraphListener::run, this);
     is_started_ = true;
