@@ -26,6 +26,22 @@
 #include "rmw/macros.h"
 #include "rmw/rmw.h"
 
+#ifdef ANDROID
+#include <string>
+#include <sstream>
+
+namespace std
+{
+template<typename T>
+std::string to_string(T value)
+{
+  std::ostringstream os;
+  os << value;
+  return os.str();
+}
+}
+#endif
+
 namespace rclcpp
 {
 namespace utilities

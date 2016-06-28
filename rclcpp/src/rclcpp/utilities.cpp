@@ -126,7 +126,7 @@ rclcpp::utilities::init(int argc, char * argv[])
     // NOLINTNEXTLINE(runtime/arrays)
     char error_string[error_length];
 #ifndef _WIN32
-#ifdef _GNU_SOURCE
+#if (defined(_GNU_SOURCE) && !defined(ANDROID))
     char * msg = strerror_r(errno, error_string, error_length);
     if (msg != error_string) {
       strncpy(error_string, msg, error_length);

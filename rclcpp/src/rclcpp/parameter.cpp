@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/parameter.hpp"
-
 #include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/utilities.hpp"
 
 using rclcpp::parameter::ParameterType;
 using rclcpp::parameter::ParameterVariant;

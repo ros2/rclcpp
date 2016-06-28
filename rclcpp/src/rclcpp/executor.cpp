@@ -21,6 +21,7 @@
 
 #include "rclcpp/executor.hpp"
 #include "rclcpp/scope_exit.hpp"
+#include "rclcpp/utilities.hpp"
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
