@@ -17,11 +17,65 @@
 #include <algorithm>
 #include <vector>
 
+#include "rcl/rcl.h"
+
+#include <string.h>
+
 using rclcpp::parameter_service::ParameterService;
 
 ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
 : node_(node)
 {
+  int argc;
+  char** argv;
+  argc = rcl_get_argv(&argv);
+  for (int i = 1; i < argc; ++i)
+  {
+    char * arg = strdup(argv[i]);
+    if (arg == NULL) {
+      break;
+    }
+    int len = strlen(arg);
+    // Minimum expression is __n:=v
+    if (len > 5) {
+      if (arg[0] == '_' && arg[1] == '_') {
+        char * colon = strchr(arg, ':'); 
+        if (colon != NULL) {
+          int name_len = colon - arg - 2;
+          int value_len = len - name_len - 2 - 2;
+          if ((name_len > 0) && (value_len > 0) && (*(colon + 1) == '=')) {
+            int valid = 1;
+            // TODO: extend this character-checking to whatever our spec is
+            for (int j = 0; j < name_len; ++j) {
+              if (((arg[2+j] < 'a') || (arg[2+j] > 'z')) &&
+                ((arg[2+j] < 'A') || (arg[2+j] > 'Z'))) {
+                valid = 0;
+                break;
+              }
+            }
+            if (valid) {
+              for (int j = 0; j < value_len; ++j) {
+                if (((arg[2+name_len+2+j] < 'a') || (arg[2+name_len+2+j] > 'z')) &&
+                  ((arg[2+name_len+2+j] < 'A') || (arg[2+name_len+2+j] > 'Z'))) {
+                  valid = 0;
+                  break;
+                }
+              }
+            }
+            if (valid) {
+              arg[2+name_len] = 0;
+              char * name = arg+2;
+              char * value = arg+2+name_len+2;
+              std::vector<rclcpp::parameter::ParameterVariant> pvariants;
+              pvariants.push_back(rclcpp::parameter::ParameterVariant(name, value));
+            }
+          }
+        }
+      }
+    }
+    free(arg);
+  }
+
   std::weak_ptr<rclcpp::node::Node> captured_node = node_;
   // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   get_parameters_service_ = node_->create_service<rcl_interfaces::srv::GetParameters>(
