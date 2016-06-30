@@ -48,18 +48,10 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
             // TODO: extend this character-checking to whatever our spec is
             for (int j = 0; j < name_len; ++j) {
               if (((arg[2+j] < 'a') || (arg[2+j] > 'z')) &&
-                ((arg[2+j] < 'A') || (arg[2+j] > 'Z'))) {
+                ((arg[2+j] < 'A') || (arg[2+j] > 'Z')) &&
+                ((arg[2+j] != '_'))) {
                 valid = 0;
                 break;
-              }
-            }
-            if (valid) {
-              for (int j = 0; j < value_len; ++j) {
-                if (((arg[2+name_len+2+j] < 'a') || (arg[2+name_len+2+j] > 'z')) &&
-                  ((arg[2+name_len+2+j] < 'A') || (arg[2+name_len+2+j] > 'Z'))) {
-                  valid = 0;
-                  break;
-                }
               }
             }
             if (valid) {
@@ -68,6 +60,8 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
               char * value = arg+2+name_len+2;
               std::vector<rclcpp::parameter::ParameterVariant> pvariants;
               pvariants.push_back(rclcpp::parameter::ParameterVariant(name, value));
+              auto results = node->set_parameters(pvariants);
+              printf("storing %s = %s\n", name, value);
             }
           }
         }
