@@ -55,13 +55,32 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
               }
             }
             if (valid) {
-              arg[1+name_len] = 0;
+              arg[1+name_len] = '\0';
               char * name = arg+1;
               char * value = arg+1+name_len+2;
               std::vector<rclcpp::parameter::ParameterVariant> pvariants;
-              pvariants.push_back(rclcpp::parameter::ParameterVariant(name, value));
+
+              char * endptr;
+              errno = 0;
+              int l = strtol(value, &endptr, 10);
+              if ((errno == 0) && (*endptr == '\0')) {
+                pvariants.push_back(rclcpp::parameter::ParameterVariant(name, l));
+              } else {
+                errno = 0;
+                double d = strtod(value, &endptr);
+                if ((errno == 0) && (*endptr == '\0')) {
+                  pvariants.push_back(rclcpp::parameter::ParameterVariant(name, d));
+                } else {
+                  if (!strcmp(value, "true") || !strcmp(value, "True")) {
+                    pvariants.push_back(rclcpp::parameter::ParameterVariant(name, true));
+                  } else if (!strcmp(value, "false") || !strcmp(value, "False")) {
+                    pvariants.push_back(rclcpp::parameter::ParameterVariant(name, false));
+                  } else {
+                    pvariants.push_back(rclcpp::parameter::ParameterVariant(name, value));
+                  }
+                }
+              }
               auto results = node->set_parameters(pvariants);
-              printf("storing %s = %s\n", name, value);
             }
           }
         }
