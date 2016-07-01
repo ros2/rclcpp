@@ -148,7 +148,7 @@ public:
     if ((vars.size() == 0) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
       return default_value;
     } else {
-      return vars[0].get_value<T>();
+      return static_cast<T>(vars[0].get_value<T>());
     }
   }
 
@@ -162,7 +162,7 @@ public:
     if ((vars.size() == 0) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
       throw std::runtime_error("Parameter not set");
     } else {
-      return vars[0].get_value<T>();
+      return static_cast<T>(vars[0].get_value<T>());
     }
   }
 
