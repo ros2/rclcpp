@@ -80,6 +80,8 @@ public:
   rcl_interfaces::msg::ParameterValue
   get_parameter_value() const;
 
+  // The following get_value() variants require the use of ParameterType
+
   template<ParameterType type>
   typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, int64_t>::type
   get_value() const
@@ -134,6 +136,44 @@ public:
       throw std::runtime_error("Invalid type");
     }
     return value_.bytes_value;
+  }
+
+  // The following get_value() variants allow the use of primitive types
+
+  template<typename type>
+  typename std::enable_if<std::is_integral<type>::value, int64_t>::type
+  get_value() const
+  {
+    return get_value<ParameterType::PARAMETER_INTEGER>();
+  }
+
+  template<typename type>
+  typename std::enable_if<std::is_floating_point<type>::value, double>::type
+  get_value() const
+  {
+    return get_value<ParameterType::PARAMETER_DOUBLE>();
+  }
+
+  template<typename type>
+  typename std::enable_if<std::is_convertible<type, std::string>::value, const std::string &>::type
+  get_value() const
+  {
+    return get_value<ParameterType::PARAMETER_STRING>();
+  }
+
+  template<typename type>
+  typename std::enable_if<std::is_same<type, bool>::value, bool>::type
+  get_value() const
+  {
+    return get_value<ParameterType::PARAMETER_BOOL>();
+  }
+
+  template<typename type>
+  typename std::enable_if<std::is_same<type, const std::vector<uint8_t> &>::value,
+  const std::vector<uint8_t> &>::type
+  get_value() const
+  {
+    return get_value<ParameterType::PARAMETER_BYTES>();
   }
 
   RCLCPP_PUBLIC
