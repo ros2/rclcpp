@@ -23,7 +23,8 @@ using rclcpp::parameter_client::SyncParametersClient;
 
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node::Node::SharedPtr node,
-  const std::string & remote_node_name)
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile)
 : node_(node)
 {
   if (remote_node_name != "") {
@@ -32,15 +33,15 @@ AsyncParametersClient::AsyncParametersClient(
     remote_node_name_ = node_->get_name();
   }
   get_parameters_client_ = node_->create_client<rcl_interfaces::srv::GetParameters>(
-    remote_node_name_ + "__get_parameters", rmw_qos_profile_parameters);
+    remote_node_name_ + "__get_parameters", qos_profile);
   get_parameter_types_client_ = node_->create_client<rcl_interfaces::srv::GetParameterTypes>(
-    remote_node_name_ + "__get_parameter_types", rmw_qos_profile_parameters);
+    remote_node_name_ + "__get_parameter_types", qos_profile);
   set_parameters_client_ = node_->create_client<rcl_interfaces::srv::SetParameters>(
-    remote_node_name_ + "__set_parameters", rmw_qos_profile_parameters);
+    remote_node_name_ + "__set_parameters", qos_profile);
   list_parameters_client_ = node_->create_client<rcl_interfaces::srv::ListParameters>(
-    remote_node_name_ + "__list_parameters", rmw_qos_profile_parameters);
+    remote_node_name_ + "__list_parameters", qos_profile);
   describe_parameters_client_ = node_->create_client<rcl_interfaces::srv::DescribeParameters>(
-    remote_node_name_ + "__describe_parameters", rmw_qos_profile_parameters);
+    remote_node_name_ + "__describe_parameters", qos_profile);
 }
 
 std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
@@ -228,19 +229,21 @@ AsyncParametersClient::list_parameters(
 }
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::node::Node::SharedPtr node)
+  rclcpp::node::Node::SharedPtr node,
+  const rmw_qos_profile_t & qos_profile)
 : node_(node)
 {
   executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);
+  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node, "", qos_profile);
 }
 
 SyncParametersClient::SyncParametersClient(
   rclcpp::executor::Executor::SharedPtr executor,
-  rclcpp::node::Node::SharedPtr node)
+  rclcpp::node::Node::SharedPtr node,
+  const rmw_qos_profile_t & qos_profile)
 : executor_(executor), node_(node)
 {
-  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node);
+  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node, "", qos_profile);
 }
 
 std::vector<rclcpp::parameter::ParameterVariant>
