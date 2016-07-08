@@ -140,13 +140,14 @@ public:
 
   template<typename T>
   T
-  get_parameter(const std::string & parameter_name, const T & default_value)
+  get_parameter_impl(
+    const std::string & parameter_name, std::function<T()> parameter_not_found_handler)
   {
     std::vector<std::string> names;
     names.push_back(parameter_name);
     auto vars = get_parameters(names);
-    if ((vars.size() == 0) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
-      return default_value;
+    if ((vars.size() != 1) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
+      return parameter_not_found_handler();
     } else {
       return static_cast<T>(vars[0].get_value<T>());
     }
@@ -154,16 +155,20 @@ public:
 
   template<typename T>
   T
+  get_parameter(const std::string & parameter_name, const T & default_value)
+  {
+    std::function<T()> handler = [&default_value]() -> T {return default_value; };
+    return get_parameter_impl(parameter_name, handler);
+  }
+
+  template<typename T>
+  T
   get_parameter(const std::string & parameter_name)
   {
-    std::vector<std::string> names;
-    names.push_back(parameter_name);
-    auto vars = get_parameters(names);
-    if ((vars.size() == 0) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
-      throw std::runtime_error("Parameter not set");
-    } else {
-      return static_cast<T>(vars[0].get_value<T>());
-    }
+    std::function<T()> handler = []() -> T {throw std::runtime_error("Parameter not set"); };
+    // *INDENT-OFF*
+    return get_parameter_impl(parameter_name, handler);
+    // *INDENT-ON*
   }
 
   RCLCPP_PUBLIC
