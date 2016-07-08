@@ -135,6 +135,38 @@ public:
   get_parameters(const std::vector<std::string> & parameter_names);
 
   RCLCPP_PUBLIC
+  bool
+  has_parameter(const std::string & parameter_name);
+
+  template<typename T>
+  T
+  get_parameter(const std::string & parameter_name, const T & default_value)
+  {
+    std::vector<std::string> names;
+    names.push_back(parameter_name);
+    auto vars = get_parameters(names);
+    if ((vars.size() == 0) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
+      return default_value;
+    } else {
+      return static_cast<T>(vars[0].get_value<T>());
+    }
+  }
+
+  template<typename T>
+  T
+  get_parameter(const std::string & parameter_name)
+  {
+    std::vector<std::string> names;
+    names.push_back(parameter_name);
+    auto vars = get_parameters(names);
+    if ((vars.size() == 0) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
+      throw std::runtime_error("Parameter not set");
+    } else {
+      return static_cast<T>(vars[0].get_value<T>());
+    }
+  }
+
+  RCLCPP_PUBLIC
   std::vector<rclcpp::parameter::ParameterType>
   get_parameter_types(const std::vector<std::string> & parameter_names);
 
