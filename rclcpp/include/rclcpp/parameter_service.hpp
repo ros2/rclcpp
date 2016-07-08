@@ -41,7 +41,9 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterService);
 
   RCLCPP_PUBLIC
-  explicit ParameterService(const rclcpp::node::Node::SharedPtr node);
+  explicit ParameterService(
+    const rclcpp::node::Node::SharedPtr node,
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
 private:
   const rclcpp::node::Node::SharedPtr node_;

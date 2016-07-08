@@ -19,7 +19,9 @@
 
 using rclcpp::parameter_service::ParameterService;
 
-ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
+ParameterService::ParameterService(
+  const rclcpp::node::Node::SharedPtr node,
+  const rmw_qos_profile_t & qos_profile)
 : node_(node)
 {
   std::weak_ptr<rclcpp::node::Node> captured_node = node_;
@@ -39,7 +41,8 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
       for (auto & pvariant : values) {
         response->values.push_back(pvariant.get_parameter_value());
       }
-    }
+    },
+    qos_profile
   );
 
   get_parameter_types_service_ = node_->create_service<rcl_interfaces::srv::GetParameterTypes>(
@@ -58,7 +61,8 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
       std::back_inserter(response->types), [](const uint8_t & type) {
         return static_cast<rclcpp::parameter::ParameterType>(type);
       });
-    }
+    },
+    qos_profile
   );
 
   set_parameters_service_ = node_->create_service<rcl_interfaces::srv::SetParameters>(
@@ -78,7 +82,8 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
       }
       auto results = node->set_parameters(pvariants);
       response->results = results;
-    }
+    },
+    qos_profile
   );
 
   set_parameters_atomically_service_ =
@@ -102,7 +107,8 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
       });
       auto result = node->set_parameters_atomically(pvariants);
       response->result = result;
-    }
+    },
+    qos_profile
   );
 
   describe_parameters_service_ = node_->create_service<rcl_interfaces::srv::DescribeParameters>(
@@ -118,7 +124,8 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
       }
       auto descriptors = node->describe_parameters(request->names);
       response->descriptors = descriptors;
-    }
+    },
+    qos_profile
   );
 
   list_parameters_service_ = node_->create_service<rcl_interfaces::srv::ListParameters>(
@@ -134,7 +141,8 @@ ParameterService::ParameterService(const rclcpp::node::Node::SharedPtr node)
       }
       auto result = node->list_parameters(request->prefixes, request->depth);
       response->result = result;
-    }
+    },
+    qos_profile
   );
   // *INDENT-ON*
 }
