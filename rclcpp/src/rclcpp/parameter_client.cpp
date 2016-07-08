@@ -259,6 +259,15 @@ SyncParametersClient::get_parameters(const std::vector<std::string> & parameter_
   return std::vector<rclcpp::parameter::ParameterVariant>();
 }
 
+bool
+SyncParametersClient::has_parameter(const std::string & parameter_name)
+{
+  std::vector<std::string> names;
+  names.push_back(parameter_name);
+  auto vars = list_parameters(names, 1);
+  return vars.names.size() > 0;
+}
+
 std::vector<rclcpp::parameter::ParameterType>
 SyncParametersClient::get_parameter_types(const std::vector<std::string> & parameter_names)
 {
