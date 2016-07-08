@@ -166,9 +166,7 @@ public:
   get_parameter(const std::string & parameter_name)
   {
     std::function<T()> handler = []() -> T {throw std::runtime_error("Parameter not set"); };
-    // *INDENT-OFF*
     return get_parameter_impl(parameter_name, handler);
-    // *INDENT-ON*
   }
 
   RCLCPP_PUBLIC
