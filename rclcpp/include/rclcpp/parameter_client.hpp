@@ -157,16 +157,20 @@ public:
   T
   get_parameter(const std::string & parameter_name, const T & default_value)
   {
-    std::function<T()> handler = [&default_value]() -> T {return default_value; };
-    return get_parameter_impl(parameter_name, handler);
+    // *INDENT-OFF*
+    return get_parameter_impl(parameter_name,
+      std::function<T()>([&default_value]() -> T {return default_value; }));
+    // *INDENT-ON*
   }
 
   template<typename T>
   T
   get_parameter(const std::string & parameter_name)
   {
-    std::function<T()> handler = []() -> T {throw std::runtime_error("Parameter not set"); };
-    return get_parameter_impl(parameter_name, handler);
+    // *INDENT-OFF*
+    return get_parameter_impl(parameter_name,
+      std::function<T()>([]() -> T {throw std::runtime_error("Parameter not set"); }));
+    // *INDENT-ON*
   }
 
   RCLCPP_PUBLIC
