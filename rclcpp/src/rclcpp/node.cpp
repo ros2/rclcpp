@@ -242,6 +242,14 @@ Node::get_parameters(
   return results;
 }
 
+const rclcpp::parameter::ParameterVariant &
+Node::get_parameter(const std::string & name) const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  return parameters_.at(name);
+}
+
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
 Node::describe_parameters(
   const std::vector<std::string> & names) const

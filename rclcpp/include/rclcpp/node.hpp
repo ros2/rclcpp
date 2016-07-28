@@ -254,6 +254,10 @@ public:
   get_parameters(const std::vector<std::string> & names) const;
 
   RCLCPP_PUBLIC
+  const rclcpp::parameter::ParameterVariant &
+  get_parameter(const std::string & name) const;
+
+  RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
 
