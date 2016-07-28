@@ -363,7 +363,7 @@ Node::create_service(
 }
 
 template<typename CallbackT>
-void Node::on_param_change(CallbackT && callback)
+void Node::register_param_change_callback(CallbackT && callback)
 {
   this->parameters_callback_ = callback;
 }

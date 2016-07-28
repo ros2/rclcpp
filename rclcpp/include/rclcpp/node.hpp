@@ -353,8 +353,13 @@ public:
   size_t
   count_graph_users();
 
+  /// Register the callback for parameter changes
+  /**
+   * \param[in] User defined callback function, It is expected to atomically set parameters.
+   * \note Repeated invocations of this function will overwrite previous callbacks
+   */
   template<typename CallbackT>
-  void on_param_change(CallbackT && callback);
+  void register_param_change_callback(CallbackT && callback);
 
   std::atomic_bool has_executor;
 
