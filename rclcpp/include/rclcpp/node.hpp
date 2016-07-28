@@ -353,6 +353,9 @@ public:
   size_t
   count_graph_users();
 
+  template<typename CallbackT>
+  void on_param_change(CallbackT && callback);
+
   std::atomic_bool has_executor;
 
 private:
@@ -399,6 +402,10 @@ private:
   /// Number of graph events out on loan, used to determine if the graph should be monitored.
   /* graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
   std::atomic_size_t graph_users_count_;
+
+  std::function<typename rcl_interfaces::msg::SetParametersResult(
+    const typename std::vector<rclcpp::parameter::ParameterVariant> &
+  )> parameters_callback_ = nullptr;
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
