@@ -368,6 +368,19 @@ void Node::register_param_change_callback(CallbackT && callback)
   this->parameters_callback_ = callback;
 }
 
+template<typename ParameterT>
+bool Node::get_parameter(const std::string & name, ParameterT & parameter) const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  if (parameters_.count(name)) {
+    parameter = parameters_.at(name).get_value<ParameterT>();
+    return true;
+  } else {
+    return false;
+  }
+}
+
 }  // namespace node
 }  // namespace rclcpp
 
