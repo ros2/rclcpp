@@ -245,14 +245,12 @@ Node::get_parameters(
 const rclcpp::parameter::ParameterVariant
 Node::get_parameter(const std::string & name) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-
   rclcpp::parameter::ParameterVariant parameter;
 
-  if (get_parameter_(name, parameter)) {
+  if (get_parameter(name, parameter)) {
     return parameter;
   } else {
-    throw std::out_of_range("Parameter does not exist in map");
+    throw std::out_of_range("Parameter: " + name + " does not exist in map");
   }
 }
 
@@ -261,12 +259,6 @@ bool Node::get_parameter(const std::string & name,
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  return get_parameter_(name, parameter);
-}
-
-bool Node::get_parameter_(const std::string & name,
-  rclcpp::parameter::ParameterVariant & parameter) const
-{
   if (parameters_.count(name)) {
     parameter = parameters_.at(name);
     return true;
