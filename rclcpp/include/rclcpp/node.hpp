@@ -254,7 +254,7 @@ public:
   get_parameters(const std::vector<std::string> & names) const;
 
   RCLCPP_PUBLIC
-  const rclcpp::parameter::ParameterVariant &
+  const rclcpp::parameter::ParameterVariant
   get_parameter(const std::string & name) const;
 
   RCLCPP_PUBLIC
@@ -427,6 +427,10 @@ private:
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
   publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
+
+  bool get_parameter_(
+    const std::string & name,
+    rclcpp::parameter::ParameterVariant & parameter) const;
 };
 
 }  // namespace node

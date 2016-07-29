@@ -373,12 +373,11 @@ bool Node::get_parameter(const std::string & name, ParameterT & parameter) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  if (parameters_.count(name)) {
-    parameter = parameters_.at(name).get_value<ParameterT>();
-    return true;
-  } else {
-    return false;
-  }
+  rclcpp::parameter::ParameterVariant parameter_variant(parameter);
+  bool result = get_parameter_(name, parameter_variant);
+  parameter = parameter_variant.get_value<ParameterT>();
+
+  return result;
 }
 
 }  // namespace node
