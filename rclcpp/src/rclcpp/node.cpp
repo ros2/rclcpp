@@ -250,7 +250,7 @@ Node::get_parameter(const std::string & name) const
   if (get_parameter(name, parameter)) {
     return parameter;
   } else {
-    throw std::out_of_range("Parameter: " + name + " does not exist in map");
+    throw std::out_of_range("Parameter '" + name + "' not set");
   }
 }
 
