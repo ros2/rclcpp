@@ -189,6 +189,18 @@ Node::set_parameters_atomically(
   std::map<std::string, rclcpp::parameter::ParameterVariant> tmp_map;
   auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
 
+  // TODO(jacquelinekay): handle parameter constraints
+  rcl_interfaces::msg::SetParametersResult result;
+  if (parameters_callback_) {
+    result = parameters_callback_(parameters);
+  } else {
+    result.successful = true;
+  }
+
+  if (!result.successful) {
+    return result;
+  }
+
   for (auto p : parameters) {
     if (parameters_.find(p.get_name()) == parameters_.end()) {
       if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
@@ -205,10 +217,6 @@ Node::set_parameters_atomically(
   // ones and add only those that already exist in the Node's internal map
   tmp_map.insert(parameters_.begin(), parameters_.end());
   std::swap(tmp_map, parameters_);
-
-  // TODO(jacquelinekay): handle parameter constraints
-  rcl_interfaces::msg::SetParametersResult result;
-  result.successful = true;
 
   events_publisher_->publish(parameter_event);
 

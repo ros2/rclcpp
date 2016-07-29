@@ -362,6 +362,12 @@ Node::create_service(
   return serv;
 }
 
+template<typename CallbackT>
+void Node::register_param_change_callback(CallbackT && callback)
+{
+  this->parameters_callback_ = callback;
+}
+
 }  // namespace node
 }  // namespace rclcpp
 
