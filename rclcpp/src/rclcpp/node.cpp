@@ -242,6 +242,31 @@ Node::get_parameters(
   return results;
 }
 
+const rclcpp::parameter::ParameterVariant
+Node::get_parameter(const std::string & name) const
+{
+  rclcpp::parameter::ParameterVariant parameter;
+
+  if (get_parameter(name, parameter)) {
+    return parameter;
+  } else {
+    throw std::out_of_range("Parameter '" + name + "' not set");
+  }
+}
+
+bool Node::get_parameter(const std::string & name,
+  rclcpp::parameter::ParameterVariant & parameter) const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  if (parameters_.count(name)) {
+    parameter = parameters_.at(name);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
 Node::describe_parameters(
   const std::vector<std::string> & names) const

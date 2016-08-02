@@ -368,6 +368,16 @@ void Node::register_param_change_callback(CallbackT && callback)
   this->parameters_callback_ = callback;
 }
 
+template<typename ParameterT>
+bool Node::get_parameter(const std::string & name, ParameterT & parameter) const
+{
+  rclcpp::parameter::ParameterVariant parameter_variant(name, parameter);
+  bool result = get_parameter(name, parameter_variant);
+  parameter = parameter_variant.get_value<ParameterT>();
+
+  return result;
+}
+
 }  // namespace node
 }  // namespace rclcpp
 
