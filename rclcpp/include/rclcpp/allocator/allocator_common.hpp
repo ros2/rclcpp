@@ -74,6 +74,8 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
   rcl_allocator.deallocate = &retyped_deallocate<T, Alloc>;
   rcl_allocator.reallocate = &retyped_reallocate<T, Alloc>;
   rcl_allocator.state = &allocator;
+#else
+  allocator;
 #endif
   return rcl_allocator;
 }
