@@ -39,7 +39,7 @@ namespace service
 class ServiceBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
 
   RCLCPP_PUBLIC
   ServiceBase(
@@ -64,7 +64,7 @@ public:
     std::shared_ptr<void> request) = 0;
 
 protected:
-  RCLCPP_DISABLE_COPY(ServiceBase);
+  RCLCPP_DISABLE_COPY(ServiceBase)
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
@@ -88,7 +88,7 @@ public:
         const std::shared_ptr<rmw_request_id_t>,
         const std::shared_ptr<typename ServiceT::Request>,
         std::shared_ptr<typename ServiceT::Response>)>;
-  RCLCPP_SMART_PTR_DEFINITIONS(Service);
+  RCLCPP_SMART_PTR_DEFINITIONS(Service)
 
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
@@ -158,7 +158,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(Service);
+  RCLCPP_DISABLE_COPY(Service)
 
   AnyServiceCallback<ServiceT> any_callback_;
 };

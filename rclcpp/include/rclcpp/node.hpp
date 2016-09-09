@@ -80,7 +80,7 @@ public:
 class Node : public std::enable_shared_from_this<Node>
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(Node);
+  RCLCPP_SMART_PTR_DEFINITIONS(Node)
 
   /// Create a new node with the specified name.
   /**
@@ -380,7 +380,7 @@ public:
   std::atomic_bool has_executor;
 
 private:
-  RCLCPP_DISABLE_COPY(Node);
+  RCLCPP_DISABLE_COPY(Node)
 
   RCLCPP_PUBLIC
   bool

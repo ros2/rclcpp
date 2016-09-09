@@ -51,7 +51,7 @@ namespace subscription
 class SubscriptionBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)
 
   /// Default constructor.
   /**
@@ -109,7 +109,7 @@ protected:
   std::shared_ptr<rcl_node_t> node_handle_;
 
 private:
-  RCLCPP_DISABLE_COPY(SubscriptionBase);
+  RCLCPP_DISABLE_COPY(SubscriptionBase)
   std::string topic_name_;
   bool ignore_local_publications_;
 };
@@ -128,7 +128,7 @@ public:
   using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
-  RCLCPP_SMART_PTR_DEFINITIONS(Subscription);
+  RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
   /// Default constructor.
   /**
@@ -271,7 +271,7 @@ private:
     return &intra_process_subscription_handle_;
   }
 
-  RCLCPP_DISABLE_COPY(Subscription);
+  RCLCPP_DISABLE_COPY(Subscription)
 
   AnySubscriptionCallback<MessageT, Alloc> any_callback_;
   typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr

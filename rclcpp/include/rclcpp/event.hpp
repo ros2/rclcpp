@@ -29,7 +29,7 @@ namespace event
 class Event
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Event);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Event)
 
   RCLCPP_PUBLIC
   Event();
@@ -47,7 +47,7 @@ public:
   check_and_clear();
 
 private:
-  RCLCPP_DISABLE_COPY(Event);
+  RCLCPP_DISABLE_COPY(Event)
 
   std::atomic_bool state_;
 };

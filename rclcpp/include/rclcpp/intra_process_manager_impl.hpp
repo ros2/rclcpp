@@ -41,7 +41,7 @@ namespace intra_process_manager
 class IntraProcessManagerImplBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(IntraProcessManagerImplBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(IntraProcessManagerImplBase)
 
   IntraProcessManagerImplBase() = default;
   ~IntraProcessManagerImplBase() = default;
@@ -78,7 +78,7 @@ public:
   matches_any_publishers(const rmw_gid_t * id) const = 0;
 
 private:
-  RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase);
+  RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase)
 };
 
 template<typename Allocator = std::allocator<void>>
@@ -242,7 +242,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(IntraProcessManagerImpl);
+  RCLCPP_DISABLE_COPY(IntraProcessManagerImpl)
 
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
@@ -262,7 +262,7 @@ private:
 
   struct PublisherInfo
   {
-    RCLCPP_DISABLE_COPY(PublisherInfo);
+    RCLCPP_DISABLE_COPY(PublisherInfo)
 
     PublisherInfo() = default;
 

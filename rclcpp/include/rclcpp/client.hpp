@@ -50,7 +50,7 @@ namespace client
 class ClientBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase)
 
   RCLCPP_PUBLIC
   ClientBase(
@@ -88,7 +88,7 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
 protected:
-  RCLCPP_DISABLE_COPY(ClientBase);
+  RCLCPP_DISABLE_COPY(ClientBase)
 
   RCLCPP_PUBLIC
   bool
@@ -124,7 +124,7 @@ public:
   using CallbackType = std::function<void(SharedFuture)>;
   using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
 
-  RCLCPP_SMART_PTR_DEFINITIONS(Client);
+  RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
   Client(
     std::shared_ptr<rclcpp::node::Node> parent_node,
@@ -250,7 +250,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(Client);
+  RCLCPP_DISABLE_COPY(Client)
 
   std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
   std::mutex pending_requests_mutex_;

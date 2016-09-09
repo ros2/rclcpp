@@ -34,7 +34,7 @@ namespace multi_threaded_executor
 class MultiThreadedExecutor : public executor::Executor
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MultiThreadedExecutor);
+  RCLCPP_SMART_PTR_DEFINITIONS(MultiThreadedExecutor)
 
   RCLCPP_PUBLIC
   MultiThreadedExecutor(
@@ -57,7 +57,7 @@ protected:
   run(size_t this_thread_number);
 
 private:
-  RCLCPP_DISABLE_COPY(MultiThreadedExecutor);
+  RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 
   std::mutex wait_mutex_;
   size_t number_of_threads_;

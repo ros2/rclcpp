@@ -51,7 +51,7 @@ namespace publisher
 class PublisherBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase);
+  RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
   /// Default constructor.
   /**
    * Typically, a publisher is not created through this method, but instead is created through a
@@ -151,7 +151,7 @@ public:
   using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
-  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>);
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>)
 
   Publisher(
     std::shared_ptr<rcl_node_t> node_handle,

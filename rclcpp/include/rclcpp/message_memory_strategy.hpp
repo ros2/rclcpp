@@ -33,7 +33,7 @@ template<typename MessageT, typename Alloc = std::allocator<void>>
 class MessageMemoryStrategy
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MessageMemoryStrategy);
+  RCLCPP_SMART_PTR_DEFINITIONS(MessageMemoryStrategy)
 
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;

@@ -44,7 +44,7 @@ template<typename Alloc = std::allocator<void>>
 class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>);
+  RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>)
 
   using ExecAllocTraits = allocator::AllocRebind<executor::AnyExecutable, Alloc>;
   using ExecAlloc = typename ExecAllocTraits::allocator_type;

@@ -28,7 +28,7 @@ namespace executor
 
 struct AnyExecutable
 {
-  RCLCPP_SMART_PTR_DEFINITIONS(AnyExecutable);
+  RCLCPP_SMART_PTR_DEFINITIONS(AnyExecutable)
 
   RCLCPP_PUBLIC
   AnyExecutable();

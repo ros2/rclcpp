@@ -31,7 +31,7 @@ namespace mock
 class PublisherBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase);
+  RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
 
   PublisherBase()
   : mock_topic_name(""), mock_queue_size(0) {}
@@ -66,7 +66,7 @@ public:
   using MessageUniquePtr = std::unique_ptr<T, MessageDeleter>;
   std::shared_ptr<MessageAlloc> allocator_;
 
-  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>);
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>)
 
   Publisher()
   {
@@ -93,7 +93,7 @@ namespace mock
 class SubscriptionBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionBase);
+  RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionBase)
 
   SubscriptionBase()
   : mock_topic_name(""), mock_queue_size(0) {}

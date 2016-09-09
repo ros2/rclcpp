@@ -46,7 +46,7 @@ class MessagePoolMemoryStrategy
   : public message_memory_strategy::MessageMemoryStrategy<MessageT>
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MessagePoolMemoryStrategy);
+  RCLCPP_SMART_PTR_DEFINITIONS(MessagePoolMemoryStrategy)
 
   /// Default constructor
   MessagePoolMemoryStrategy()

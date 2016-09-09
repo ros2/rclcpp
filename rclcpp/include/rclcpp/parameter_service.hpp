@@ -38,7 +38,7 @@ namespace parameter_service
 class ParameterService
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(ParameterService);
+  RCLCPP_SMART_PTR_DEFINITIONS(ParameterService)
 
   RCLCPP_PUBLIC
   explicit ParameterService(
