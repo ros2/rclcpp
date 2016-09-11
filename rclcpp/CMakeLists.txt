@@ -10,8 +10,8 @@ find_package(rmw_implementation REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 
-if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+if(CMAKE_COMPILER_IS_GNUCXX)
+  set_directory_properties(PROPERTIES COMPILE_OPTIONS "-std=c++11;-Wall;-Wextra;-Wpedantic")
 endif()
 
 include_directories(include)
