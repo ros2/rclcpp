@@ -80,7 +80,8 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     throw InvalidNodeError();
   }
   auto event = node_ptr->get_graph_event();
-  // update the time even on the first loop to account for time in first server_is_read()
+  // update the time even on the first loop to account for time spent in the first call
+  // to this->server_is_ready()
   std::chrono::nanoseconds time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
   if (timeout > std::chrono::nanoseconds(0) && time_to_wait < std::chrono::nanoseconds(0)) {
     // Do not allow the time_to_wait to become negative when timeout was originally positive.
