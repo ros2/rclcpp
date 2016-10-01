@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <utility>
+
 #ifndef RCLCPP__MACROS_HPP_
 #define RCLCPP__MACROS_HPP_
 

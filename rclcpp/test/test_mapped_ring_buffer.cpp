@@ -17,6 +17,8 @@
 #define RCLCPP_BUILDING_LIBRARY 1  // Prevent including unavailable symbols
 #include <rclcpp/mapped_ring_buffer.hpp>
 
+#include <memory>
+
 /*
    Tests get_copy and pop on an empty mrb.
  */

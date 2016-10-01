@@ -14,6 +14,8 @@
 
 #include "rclcpp/memory_strategies.hpp"
 
+#include <memory>
+
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 
 using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;

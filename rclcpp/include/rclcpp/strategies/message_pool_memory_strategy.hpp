@@ -15,6 +15,8 @@
 #ifndef RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 #define RCLCPP__STRATEGIES__MESSAGE_POOL_MEMORY_STRATEGY_HPP_
 
+#include <memory>
+
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/visibility_control.hpp"
