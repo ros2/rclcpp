@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <type_traits>
 

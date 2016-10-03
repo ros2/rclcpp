@@ -21,6 +21,7 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/function_traits.hpp"

@@ -16,6 +16,7 @@
 
 #include <cstdio>
 #include <exception>
+#include <memory>
 #include <string>
 #include <vector>
 

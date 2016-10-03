@@ -15,6 +15,7 @@
 #include "rclcpp/subscription.hpp"
 
 #include <cstdio>
+#include <memory>
 #include <string>
 
 #include "rmw/error_handling.h"

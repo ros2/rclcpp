@@ -15,6 +15,7 @@
 #include "rclcpp/parameter_client.hpp"
 
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
