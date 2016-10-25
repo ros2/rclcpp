@@ -50,8 +50,9 @@ namespace rclcpp
 namespace node
 {
 
-template<typename MessageT, typename Alloc>
-typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
+template<typename MessageT, typename Alloc,
+  template <class MessageT, class Alloc>  typename PublisherT>
+typename PublisherT<MessageT, Alloc>::SharedPtr
 Node::create_publisher(
   const std::string & topic_name, size_t qos_history_depth,
   std::shared_ptr<Alloc> allocator)
@@ -61,11 +62,12 @@ Node::create_publisher(
   }
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_publisher<MessageT, Alloc>(topic_name, qos, allocator);
+  return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos, allocator);
 }
 
-template<typename MessageT, typename Alloc>
-typename publisher::Publisher<MessageT, Alloc>::SharedPtr
+template<typename MessageT, typename Alloc,
+template <class MessageT, class Alloc> typename PublisherT>
+typename PublisherT<MessageT, Alloc>::SharedPtr
 Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
   std::shared_ptr<Alloc> allocator)
@@ -78,12 +80,12 @@ Node::create_publisher(
   publisher_options.qos = qos_profile;
 
   auto message_alloc =
-    std::make_shared<typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>(
+    std::make_shared<typename PublisherT<MessageT, Alloc>::MessageAlloc>(
     *allocator.get());
   publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(
     *message_alloc.get());
 
-  auto publisher = publisher::Publisher<MessageT, Alloc>::make_shared(
+  auto publisher = PublisherT<MessageT, Alloc>::make_shared(
     node_handle_, topic_name, publisher_options, message_alloc);
 
   if (use_intra_process_comms_) {

@@ -123,8 +123,9 @@ public:
    * \param[in] qos_history_depth The depth of the publisher message queue.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT, typename Alloc = std::allocator<void>>
-  typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
+  template<typename MessageT, typename Alloc = std::allocator<void>,
+    template <class MessageT, class Alloc>  typename PublisherT = ::rclcpp::publisher::Publisher>
+  typename PublisherT<MessageT, Alloc>::SharedPtr
   create_publisher(
     const std::string & topic_name, size_t qos_history_depth,
     std::shared_ptr<Alloc> allocator = nullptr);
@@ -135,8 +136,9 @@ public:
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \return Shared pointer to the created publisher.
    */
-  template<typename MessageT, typename Alloc = std::allocator<void>>
-  typename rclcpp::publisher::Publisher<MessageT, Alloc>::SharedPtr
+  template<typename MessageT, typename Alloc = std::allocator<void>,
+    template <class MessageT, class Alloc>  typename PublisherT = ::rclcpp::publisher::Publisher>
+  typename PublisherT<MessageT, Alloc>::SharedPtr
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
