@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include "rcl/graph.h"
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
@@ -350,12 +351,9 @@ Node::list_parameters(
 std::map<std::string, std::string>
 Node::get_topic_names_and_types() const
 {
-  rmw_topic_names_and_types_t topic_names_and_types;
-  topic_names_and_types.topic_count = 0;
-  topic_names_and_types.topic_names = nullptr;
-  topic_names_and_types.type_names = nullptr;
+  rcl_topic_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_topic_names_and_types();
 
-  auto ret = rmw_get_topic_names_and_types(rcl_node_get_rmw_handle(node_handle_.get()),
+  auto ret = rcl_get_topic_names_and_types(rcl_node_get_rmw_handle(node_handle_.get()),
       &topic_names_and_types);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
