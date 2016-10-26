@@ -60,8 +60,9 @@ MemoryStrategy::get_service_by_handle(const rcl_service_t * service_handle,
       if (!group) {
         continue;
       }
-      for (auto & service : group->get_service_ptrs()) {
-        if (service->get_service_handle() == service_handle) {
+      for (auto & weak_service : group->get_service_ptrs()) {
+        auto service = weak_service.lock();
+        if (service && service->get_service_handle() == service_handle) {
           return service;
         }
       }
@@ -158,8 +159,9 @@ MemoryStrategy::get_group_by_service(
       if (!group) {
         continue;
       }
-      for (auto & serv : group->get_service_ptrs()) {
-        if (serv == service) {
+      for (auto & weak_serv : group->get_service_ptrs()) {
+        auto serv = weak_serv.lock();
+        if (serv && serv == service) {
           return group;
         }
       }

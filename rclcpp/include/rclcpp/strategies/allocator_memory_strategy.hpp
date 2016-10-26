@@ -162,7 +162,8 @@ public:
             }
           }
         }
-        for (auto & service : group->get_service_ptrs()) {
+        for (auto & weak_service : group->get_service_ptrs()) {
+          auto service = weak_service.lock();
           if (service) {
             service_handles_.push_back(service->get_service_handle());
           }
