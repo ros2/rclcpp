@@ -353,7 +353,7 @@ Node::get_topic_names_and_types() const
 {
   rcl_topic_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_topic_names_and_types();
 
-  auto ret = rcl_get_topic_names_and_types(rcl_node_get_rmw_handle(node_handle_.get()),
+  auto ret = rcl_get_topic_names_and_types(node_handle_.get(),
       &topic_names_and_types);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
