@@ -351,7 +351,8 @@ Node::list_parameters(
 std::map<std::string, std::string>
 Node::get_topic_names_and_types() const
 {
-  rcl_topic_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_topic_names_and_types();
+  rcl_topic_names_and_types_t topic_names_and_types =
+    rcl_get_zero_initialized_topic_names_and_types();
 
   auto ret = rcl_get_topic_names_and_types(node_handle_.get(),
       &topic_names_and_types);
