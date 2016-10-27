@@ -96,10 +96,9 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
       return false;
     }
     node_ptr->wait_for_graph_change(event, time_to_wait);
-    if (event->check_and_clear()) {
-      if (this->service_is_ready()) {
-        return true;
-      }
+    event->check_and_clear();  // reset the event
+    if (this->service_is_ready()) {  // check if the service is ready regardless
+      return true;
     }
     // server is not ready, loop if there is time left
     time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
