@@ -37,7 +37,7 @@ CallbackGroup::get_timer_ptrs() const
   return timer_ptrs_;
 }
 
-const std::vector<rclcpp::service::ServiceBase::SharedPtr> &
+const std::vector<rclcpp::service::ServiceBase::WeakPtr> &
 CallbackGroup::get_service_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
