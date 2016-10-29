@@ -97,7 +97,10 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     }
     node_ptr->wait_for_graph_change(event, time_to_wait);
     event->check_and_clear();  // reset the event
-    if (this->service_is_ready()) {  // check if the service is ready regardless
+
+    // always check if the service is ready, even if the graph event wasn't triggered
+    // (see https://github.com/ros2/rmw_connext/issues/201)
+    if (this->service_is_ready()) {
       return true;
     }
     // server is not ready, loop if there is time left
