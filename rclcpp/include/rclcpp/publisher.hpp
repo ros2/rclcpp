@@ -204,13 +204,12 @@ public:
     }
   }
 
-
   /// Send a message to the topic for this publisher.
   /**
    * This function is templated on the input message type, MessageT.
    * \param[in] msg A shared pointer to the message to send.
    */
-  void
+  virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
     this->do_inter_process_publish(msg.get());
@@ -242,7 +241,7 @@ public:
     }
   }
 
-  void
+  virtual void
   publish(const std::shared_ptr<MessageT> & msg)
   {
     // Avoid allocating when not using intra process.
@@ -261,7 +260,7 @@ public:
     return this->publish(unique_msg);
   }
 
-  void
+  virtual void
   publish(std::shared_ptr<const MessageT> msg)
   {
     // Avoid allocating when not using intra process.
@@ -280,7 +279,7 @@ public:
     return this->publish(unique_msg);
   }
 
-  void
+  virtual void
   publish(const MessageT & msg)
   {
     // Avoid allocating when not using intra process.
