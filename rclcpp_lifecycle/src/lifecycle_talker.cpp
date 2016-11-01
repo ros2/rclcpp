@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2016 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,11 @@ int main(int argc, char * argv[])
 
   lc_node->print_state_machine();
 
+  if (!lc_node->on_configure())
+  {
+    printf("Could not configure node. Going to error state.\n");
+  }
+
   rclcpp::WallRate loop_rate(2);
 
   auto msg = std::make_shared<std_msgs::msg::String>();
@@ -51,7 +56,7 @@ int main(int argc, char * argv[])
   }
 
   printf("Calling activate\n");
-  if (!lc_node->activate())
+  if (!lc_node->on_activate())
   {
     return -1;
   }
@@ -65,7 +70,7 @@ int main(int argc, char * argv[])
   }
 
   printf("Calling deactivate\n");
-  if (!lc_node->deactivate())
+  if (!lc_node->on_deactivate())
   {
     return -1;
   }

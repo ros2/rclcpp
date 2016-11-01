@@ -65,24 +65,29 @@ typedef struct _map
  * the classification is based on the start state
  * within the given transition
  */
-void rcl_append_transition(rcl_transition_map_t* m, rcl_state_transition_t transition);
+void
+rcl_append_transition(rcl_transition_map_t* m, rcl_state_transition_t transition);
 
 /**
  * @brief gets all transitions based on a label
  * label is supposed to come from a rcl_state_t object
  */
-rcl_transition_array_t* rcl_get_map_by_label(rcl_transition_map_t* m, const char* label);
+rcl_transition_array_t*
+rcl_get_map_by_label(rcl_transition_map_t* m, const char* label);
 /**
  * @brief gets all transitions based on a state
  * state is supposed to come from a rcl_state_t object
  */
-rcl_transition_array_t* rcl_get_map_by_state(rcl_transition_map_t* m, const unsigned int state);
+rcl_transition_array_t*
+rcl_get_map_by_state(rcl_transition_map_t* m, const unsigned int state);
 
 /**
  * @brief helper functions to print
  */
-void rcl_print_transition_array(const rcl_transition_array_t* da);
-void rcl_print_transition_map(const rcl_transition_map_t* m);
+void
+rcl_print_transition_array(const rcl_transition_array_t* da);
+void
+rcl_print_transition_map(const rcl_transition_map_t* m);
 
 #if __cplusplus
 }
