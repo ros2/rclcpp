@@ -71,6 +71,6 @@ TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
   bool has_invalid_weak_nodes = memory_strategy->collect_entities(weak_nodes);
 
   // THEN
-  // The result of finding dangling node pointers should be true
+  // The result of finding dangling node pointers should be false
   ASSERT_FALSE(has_invalid_weak_nodes);
 }
