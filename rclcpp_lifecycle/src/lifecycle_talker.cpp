@@ -28,7 +28,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
 
   std::shared_ptr<rclcpp::node::LifecycleNode> lc_node = std::make_shared<rclcpp::node::LifecycleNode>("lc_talker");
-
+ 
   rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
   custom_qos_profile.depth = 7;
 
@@ -83,4 +83,5 @@ int main(int argc, char * argv[])
     loop_rate.sleep();
   }
   return 0;
+  
 }

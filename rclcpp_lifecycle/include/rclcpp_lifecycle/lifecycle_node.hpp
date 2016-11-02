@@ -46,6 +46,8 @@ class NodeInterface
 };
 }  // namespace lifecycle_interface
 
+#include <rclcpp_lifecycle/visibility_control.h>
+
 /**
  * @brief LifecycleNode as child class of rclcpp Node
  * has lifecycle nodeinterface for configuring this node.
@@ -54,19 +56,21 @@ class LifecycleNode : public rclcpp::node::Node, public lifecycle_interface::Nod
 {
 public:
 
-  RCLCPP_PUBLIC
+  LIFECYCLE_EXPORT
   explicit LifecycleNode(const std::string & node_name, bool use_intra_process_comms = false) :
     Node(node_name, use_intra_process_comms)
   {
     setup_state_machine();
   }
 
+  LIFECYCLE_EXPORT
   ~LifecycleNode(){}
 
   /**
    * @brief get the default state machine
    * as defined on design.ros.org
    */
+  LIFECYCLE_EXPORT
   virtual void
   setup_state_machine()
   {
@@ -93,6 +97,7 @@ public:
     return pub;
   }
 
+  LIFECYCLE_EXPORT
   void
   print_state_machine()
   {
@@ -100,16 +105,17 @@ public:
     rcl_print_transition_map(&state_machine_.transition_map);
   }
 
+  LIFECYCLE_EXPORT
   virtual bool
   on_configure()
   {
     // check on every function whether we are in the correct state
-    if (!rcl_is_valid_transition(&state_machine_, &rcl_state_inactive))
+    /*if (!rcl_is_valid_transition(&state_machine_, &rcl_state_inactive))
     {
       // if not, go to error state
       state_machine_.current_state = rcl_state_error;
       return false;
-    }
+    }*/
 
     // Placeholder print for all configuring work to be done
     // with each pub/sub/srv/client
@@ -120,27 +126,30 @@ public:
     return true;
   }
 
+  LIFECYCLE_EXPORT
   virtual bool
   on_clean_up()
   {
     return true;
   }
 
+  LIFECYCLE_EXPORT
   virtual bool
   on_shutdown()
   {
     return true;
   }
 
+  LIFECYCLE_EXPORT
   virtual bool
   on_activate()
   {
-    if (!rcl_is_valid_transition(&state_machine_, &rcl_state_active))
+    /*if (!rcl_is_valid_transition(&state_machine_, &rcl_state_active))
     {
       fprintf(stderr, "Unable to change from  current state %s from transition start %s\n", state_machine_.current_state.label, rcl_state_active.label);
       state_machine_.current_state = rcl_state_error;
       return false;
-    }
+    }*/
     if (weak_pub_.expired())
     {
       // Someone externally destroyed the publisher handle
@@ -159,17 +168,18 @@ public:
     return true;
   }
 
+  LIFECYCLE_EXPORT
   virtual bool
   on_deactivate()
   {
     // second transition is from active to deactive
-    if(!rcl_is_valid_transition(&state_machine_, &rcl_state_inactive))
+    /*if(!rcl_is_valid_transition(&state_machine_, &rcl_state_inactive))
     {
       fprintf(stderr, "Unable to change from  current state %s from transition start %s\n", state_machine_.current_state.label, rcl_state_inactive.label);
       fprintf(stderr, "deactivate is not a valid transition in current state %s\n", state_machine_.current_state.label);
       // TODO: go to error state here
       return false;
-    }
+    }*/
     if (weak_pub_.expired())
     {
       fprintf(stderr, "I have no publisher handle\n");
@@ -187,6 +197,7 @@ public:
     return true;
   }
 
+  LIFECYCLE_EXPORT
   virtual bool
   on_error()
   {

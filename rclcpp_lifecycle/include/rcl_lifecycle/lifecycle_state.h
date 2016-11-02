@@ -20,7 +20,18 @@ extern "C"
 {
 #endif
 
-#include <stdbool.h>
+//#include <stdbool.h>
+//#define bool int;
+// #ifdef __cplusplus
+// #error WRONG COMPILER
+// #endif
+#ifndef __cplusplus
+typedef int bool;
+#define true 1
+#define false 0
+#endif
+
+#include <rcl_lifecycle/visibility_control.h>
 #include <rcl_lifecycle/transition_map.h>
 
 /**
@@ -28,7 +39,7 @@ extern "C"
  * @param state: integer giving the state
  * @param label: label for easy indexing
  */
-typedef struct _rcl_state_t
+typedef struct LIFECYCLE_EXPORT _rcl_state_t
 {
   unsigned int state;
   const char* label;
@@ -41,7 +52,7 @@ typedef struct _rcl_state_t
  * TODO: Maybe specify callback pointer here
  * and call on_* functions directly
  */
-typedef struct _rcl_state_transition_t
+typedef struct LIFECYCLE_EXPORT _rcl_state_transition_t
 {
   rcl_state_t start;
   // function callback
@@ -56,7 +67,7 @@ typedef struct _rcl_state_transition_t
  * possible transitions registered with this
  * state machine.
  */
-typedef struct _rcl_state_machine_t
+typedef struct LIFECYCLE_EXPORT _rcl_state_machine_t
 {
   // current state of the lifecycle
   rcl_state_t current_state;
@@ -72,16 +83,16 @@ typedef struct _rcl_state_machine_t
  * current state to the specified goal state
  */
 bool
-rcl_is_valid_transition(rcl_state_machine_t* state_machine, const rcl_state_t* goal_state);
+LIFECYCLE_EXPORT rcl_is_valid_transition(rcl_state_machine_t* state_machine, const rcl_state_t* goal_state);
 
 rcl_state_t
-rcl_create_state(unsigned int state, char* label);
+LIFECYCLE_EXPORT rcl_create_state(unsigned int state, char* label);
 
 rcl_state_transition_t
-rcl_create_transition(rcl_state_t start, rcl_state_t goal);
+LIFECYCLE_EXPORT rcl_create_transition(rcl_state_t start, rcl_state_t goal);
 
 rcl_state_machine_t
-rcl_get_default_state_machine();
+LIFECYCLE_EXPORT rcl_get_default_state_machine();
 
 #if __cplusplus
 }

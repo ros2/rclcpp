@@ -15,6 +15,8 @@
 #ifndef RCL__DEFAULT_STATE_MACHINE_H_
 #define RCL__DEFAULT_STATE_MACHINE_H_
 
+#include <rcl_lifecycle/visibility_control.h>
+
 #if __cplusplus
 extern "C"
 {
@@ -22,11 +24,11 @@ extern "C"
 
 // primary states based on
 // design.ros2.org/articles/node_lifecycle.html
-static const rcl_state_t rcl_state_unconfigured = {.state = 0, .label = "unconfigured"};
-static const rcl_state_t rcl_state_inactive     = {.state = 1, .label = "inactive"};
-static const rcl_state_t rcl_state_active       = {.state = 2, .label = "active"};
-static const rcl_state_t rcl_state_finalized    = {.state = 3, .label = "finalized"};
-static const rcl_state_t rcl_state_error        = {.state = 4, .label = "error"};
+/*static*/ const rcl_state_t LIFECYCLE_EXPORT rcl_state_unconfigured = {/*.state = */0, /*.label = */"unconfigured"};
+/*static*/ const rcl_state_t LIFECYCLE_EXPORT rcl_state_inactive     = {/*.state = */1, /*.label = */"inactive"};
+/*static*/ const rcl_state_t LIFECYCLE_EXPORT rcl_state_active       = {/*.state = */2, /*.label = */"active"};
+/*static*/ const rcl_state_t LIFECYCLE_EXPORT rcl_state_finalized    = {/*.state = */3, /*.label = */"finalized"};
+/*static*/ const rcl_state_t LIFECYCLE_EXPORT rcl_state_error        = {/*.state = */4, /*.label = */"error"};
 
 #if __cplusplus
 }
