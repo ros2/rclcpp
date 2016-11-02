@@ -144,7 +144,7 @@ public:
     for (auto & weak_node : weak_nodes) {
       auto node = weak_node.lock();
       if (!node) {
-        has_invalid_weak_nodes = false;
+        has_invalid_weak_nodes = true;
         continue;
       }
       for (auto & weak_group : node->get_callback_groups()) {

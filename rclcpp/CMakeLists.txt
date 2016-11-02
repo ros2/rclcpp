@@ -120,6 +120,13 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
+  ament_add_gtest(test_find_weak_nodes test/test_find_weak_nodes.cpp)
+  if(TARGET test_find_weak_nodes)
+    target_include_directories(test_find_weak_nodes PUBLIC
+      ${rcl_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_find_weak_nodes ${PROJECT_NAME})
+  endif()
 endif()
 
 ament_package(
