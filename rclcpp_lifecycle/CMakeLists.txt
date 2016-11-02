@@ -33,7 +33,9 @@ add_library(
   src/transition_map.c
 )
 install(TARGETS state_machine
-  DESTINATION lib)
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+)
 
 macro(targets)
   if(NOT target_suffix STREQUAL "")
@@ -42,6 +44,7 @@ macro(targets)
 
   add_executable(lifecycle_talker${target_suffix}
     src/lifecycle_talker.cpp)
+	
   target_link_libraries(lifecycle_talker${target_suffix} state_machine)
   ament_target_dependencies(lifecycle_talker${target_suffix}
     "rclcpp${target_suffix}"
