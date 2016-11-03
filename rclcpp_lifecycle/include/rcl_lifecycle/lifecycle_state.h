@@ -41,8 +41,8 @@ typedef int bool;
  */
 typedef struct LIFECYCLE_EXPORT _rcl_state_t
 {
-  unsigned int state;
   const char* label;
+  unsigned int index;
 } rcl_state_t;
 
 /**
@@ -54,8 +54,10 @@ typedef struct LIFECYCLE_EXPORT _rcl_state_t
  */
 typedef struct LIFECYCLE_EXPORT _rcl_state_transition_t
 {
-  rcl_state_t start;
+  rcl_state_t transition_index;
+  //rcl_state_t transition_state;
   // function callback
+  void* callback;
   rcl_state_t goal;
 } rcl_state_transition_t;
 
@@ -70,8 +72,7 @@ typedef struct LIFECYCLE_EXPORT _rcl_state_transition_t
 typedef struct LIFECYCLE_EXPORT _rcl_state_machine_t
 {
   // current state of the lifecycle
-  rcl_state_t current_state;
-
+  rcl_state_t* current_state;
   rcl_transition_map_t transition_map;
 } rcl_state_machine_t;
 
@@ -93,6 +94,9 @@ LIFECYCLE_EXPORT rcl_create_transition(rcl_state_t start, rcl_state_t goal);
 
 rcl_state_machine_t
 LIFECYCLE_EXPORT rcl_get_default_state_machine();
+
+void
+LIFECYCLE_EXPORT rcl_register_callback(rcl_state_machine_t* state_machine, unsigned int state_index, unsigned int transition_index, bool(*fcn)(void));
 
 #if __cplusplus
 }

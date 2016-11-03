@@ -37,7 +37,7 @@ int main(int argc, char * argv[])
 
   lc_node->print_state_machine();
 
-  if (!lc_node->on_configure())
+  if (!lc_node->configure())
   {
     printf("Could not configure node. Going to error state.\n");
   }
@@ -55,8 +55,8 @@ int main(int argc, char * argv[])
     loop_rate.sleep();
   }
 
-  printf("Calling activate\n");
-  if (!lc_node->on_activate())
+  printf("Calling new activate\n");
+  if (!lc_node->activate())
   {
     return -1;
   }
@@ -70,7 +70,7 @@ int main(int argc, char * argv[])
   }
 
   printf("Calling deactivate\n");
-  if (!lc_node->on_deactivate())
+  if (!lc_node->deactivate())
   {
     return -1;
   }

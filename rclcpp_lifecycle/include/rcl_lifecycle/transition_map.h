@@ -67,7 +67,7 @@ typedef struct LIFECYCLE_EXPORT _map
  */
 LIFECYCLE_EXPORT
 void
-rcl_append_transition(rcl_transition_map_t* m, rcl_state_transition_t transition);
+rcl_append_transition(rcl_transition_map_t* m, rcl_state_t state, rcl_state_transition_t transition);
 
 /**
  * @brief gets all transitions based on a label
@@ -75,14 +75,14 @@ rcl_append_transition(rcl_transition_map_t* m, rcl_state_transition_t transition
  */
 LIFECYCLE_EXPORT
 rcl_transition_array_t*
-rcl_get_map_by_label(rcl_transition_map_t* m, const char* label);
+rcl_get_transitions_by_label(rcl_transition_map_t* m, const char* label);
 /**
  * @brief gets all transitions based on a state
  * state is supposed to come from a rcl_state_t object
  */
 LIFECYCLE_EXPORT
 rcl_transition_array_t*
-rcl_get_map_by_state(rcl_transition_map_t* m, const unsigned int state);
+rcl_get_transitions_by_index(rcl_transition_map_t* m, unsigned int index);
 
 /**
  * @brief helper functions to print

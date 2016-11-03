@@ -25,16 +25,30 @@ typedef rcl_state_t rcl_state;
 bool
 rcl_is_valid_transition(rcl_state_machine_t* state_machine, const rcl_state_t* goal_state)
 {
-  rcl_transition_array_t* all_transitions = rcl_get_map_by_label(&state_machine->transition_map, state_machine->current_state.label);
+  rcl_transition_array_t* all_transitions = rcl_get_transitions_by_label(&state_machine->transition_map, state_machine->current_state->label);
 
   for (unsigned int i=0; i<all_transitions->size; ++i)
   {
-    if (all_transitions->transitions[i].goal.state == goal_state->state)
+    if (all_transitions->transitions[i].goal.index == goal_state->index)
     {
       return true;
     }
   }
   return false;
+}
+
+void
+rcL_register_callback(rcl_state_machine_t* state_machine, unsigned int state_index, unsigned int transition_index, bool(*fcn)(void))
+{
+  rcl_transition_array_t* all_transitions = rcl_get_transitions_by_index(&state_machine->transition_map, state_index);
+
+  for (unsigned int i=0; i<all_transitions->size; ++i)
+  {
+    if (all_transitions->transitions[i].transition_index.index == transition_index)
+    {
+      all_transitions->transitions[i].callback = fcn;
+    }
+  }
 }
 
 #if __cplusplus

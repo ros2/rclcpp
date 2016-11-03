@@ -28,16 +28,16 @@ extern "C"
 #endif
 
 rcl_state_t
-rcl_create_state(unsigned int state, char* label)
+rcl_create_state(unsigned int index, char* label)
 {
-  rcl_state_t ret_state = {.state = state, .label = label};
+  rcl_state_t ret_state = {.index = index, .label = label};
   return ret_state;
 }
 
 rcl_state_transition_t
-rcl_create_state_transition(rcl_state_t start, rcl_state_t goal)
+rcl_create_state_transition(rcl_state_t index, rcl_state_t goal)
 {
-  rcl_state_transition_t ret_transition = {.start = start, .goal = goal};
+  rcl_state_transition_t ret_transition = {.transition_index = index, NULL, .goal = goal};
   return ret_transition;
 }
 
@@ -52,33 +52,33 @@ rcl_get_default_state_machine()
   state_machine.transition_map.size = 0;
 
   // set default state as unconfigured
-  state_machine.current_state = rcl_state_unconfigured;
+  state_machine.current_state = &rcl_state_unconfigured;
 
-  // from unconfigured to inactive
-  rcl_state_transition_t unconfigured_to_inactive = {.start = rcl_state_unconfigured, .goal = rcl_state_inactive};
-  // from unconfigured to error state
-  rcl_state_transition_t unconfigured_to_error    = {.start = rcl_state_unconfigured, .goal = rcl_state_error};
+  rcl_state_transition_t LIFECYCLE_EXPORT rcl_transition_unconfigured_inactive
+    = {rcl_state_configuring, NULL, rcl_state_inactive};
+  rcl_state_transition_t LIFECYCLE_EXPORT rcl_transition_unconfigured_finalized
+    = {rcl_state_shuttingdown, NULL, rcl_state_finalized};
 
-  // from inactive to active
-  rcl_state_transition_t inactive_to_active = {.start = rcl_state_inactive, .goal = rcl_state_active};
-  // from inactive to error state
-  rcl_state_transition_t inactive_to_error  = {.start = rcl_state_inactive, .goal = rcl_state_error};
+  rcl_state_transition_t LIFECYCLE_EXPORT rcl_transition_inactive_unconfigured
+    = {rcl_state_cleaningup, NULL, rcl_state_unconfigured};
+  rcl_state_transition_t LIFECYCLE_EXPORT rcl_transition_inactive_finalized
+    = {rcl_state_shuttingdown, NULL, rcl_state_finalized};
+  rcl_state_transition_t LIFECYCLE_EXPORT rcl_transition_inactive_active
+    = {rcl_state_activating, NULL, rcl_state_active};
 
-  // from active to finalized
-  rcl_state_transition_t active_to_finalized  = {.start = rcl_state_active, .goal = rcl_state_finalized};
-  // from active to inactive
-  rcl_state_transition_t active_to_inactive   = {.start = rcl_state_active, .goal = rcl_state_inactive};
-  // from active to error
-  rcl_state_transition_t active_to_error      = {.start = rcl_state_active, .goal = rcl_state_error};
+  rcl_state_transition_t LIFECYCLE_EXPORT rcl_transition_active_inactive
+    = {rcl_state_deactivating, NULL, rcl_state_inactive};
+  rcl_state_transition_t LIFECYCLE_EXPORT rcl_transition_active_finalized
+    = {rcl_state_shuttingdown, NULL, rcl_state_finalized};
 
   // add transitions to map
-  rcl_append_transition(&state_machine.transition_map, unconfigured_to_inactive);
-  rcl_append_transition(&state_machine.transition_map, unconfigured_to_error);
-  rcl_append_transition(&state_machine.transition_map, inactive_to_active);
-  rcl_append_transition(&state_machine.transition_map, inactive_to_error);
-  rcl_append_transition(&state_machine.transition_map, active_to_finalized);
-  rcl_append_transition(&state_machine.transition_map, active_to_inactive);
-  rcl_append_transition(&state_machine.transition_map, active_to_error);
+  rcl_append_transition(&state_machine.transition_map, rcl_state_unconfigured, rcl_transition_unconfigured_inactive);
+  rcl_append_transition(&state_machine.transition_map, rcl_state_unconfigured, rcl_transition_unconfigured_finalized);
+  rcl_append_transition(&state_machine.transition_map, rcl_state_inactive, rcl_transition_inactive_unconfigured);
+  rcl_append_transition(&state_machine.transition_map, rcl_state_inactive, rcl_transition_inactive_finalized);
+  rcl_append_transition(&state_machine.transition_map, rcl_state_inactive, rcl_transition_inactive_active);
+  rcl_append_transition(&state_machine.transition_map, rcl_state_active, rcl_transition_active_inactive);
+  rcl_append_transition(&state_machine.transition_map, rcl_state_active, rcl_transition_active_finalized);
 
   return state_machine;
 }

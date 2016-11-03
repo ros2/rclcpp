@@ -29,7 +29,6 @@ namespace node
 
 namespace lifecycle_interface
 {
-
 /**
  * @brief Interface class for a managed node.
  * Pure virtual functions as defined in
@@ -37,12 +36,90 @@ namespace lifecycle_interface
  */
 class NodeInterface
 {
-  virtual bool on_configure()   = 0;
-  virtual bool on_clean_up()    = 0;
-  virtual bool on_shutdown()    = 0;
-  virtual bool on_activate()    = 0;
-  virtual bool on_deactivate()  = 0;
-  virtual bool on_error()       = 0;
+protected:
+  virtual bool on_configure()  { return true; };
+  virtual bool on_cleanup()    { return true; };
+  virtual bool on_shutdown()   { return true; };
+  virtual bool on_activate()   { return true; };
+  virtual bool on_deactivate() { return true; };
+  virtual bool on_error()      { return true; };
+
+  /**
+   * @brief get the default state machine
+   * as defined on design.ros.org
+   */
+  LIFECYCLE_EXPORT
+  virtual void
+  setup_state_machine()
+  {
+    state_machine_ = rcl_get_default_state_machine();
+    // register callback functions here so that a generic
+    // move_to function in rcl can actually makes the change
+    // register_callback(&state_machine, state.label, fcn)
+  }
+
+  rcl_state_machine_t state_machine_;
+
+public:
+  //virtual bool create()     = 0;
+  virtual bool configure()
+  {
+    if (state_machine_.current_state->index == rcl_state_unconfigured.index)
+    {
+      // change state here to "Configuring"
+      if (on_configure())
+      {
+        state_machine_.current_state = &rcl_state_inactive;
+        return true;
+      }
+    }
+    // everything else is considered wrong
+    //state_machine_.current_state = rcl_state_error;
+    return false;
+  }
+
+  virtual bool cleanup()
+  {
+    return on_cleanup();
+  }
+
+  virtual bool shutdown()
+  {
+    return on_shutdown();
+  }
+
+  virtual bool activate()
+  {
+    if (state_machine_.current_state->index == rcl_state_inactive.index)
+    {
+      // change state here to "Activating"
+      if (on_activate())
+      {
+        state_machine_.current_state = &rcl_state_active;
+        return true;
+      }
+    }
+    // everything else is considered wrong
+    //state_machine_.current_state = rcl_state_error;
+    return false;
+  }
+
+  virtual bool deactivate()
+  {
+    if (state_machine_.current_state->index == rcl_state_active.index)
+    {
+      // change state here to "Activating"
+      if (on_deactivate())
+      {
+        state_machine_.current_state = &rcl_state_inactive;
+        return true;
+      }
+    }
+    // everything else is considered wrong
+    //state_machine_.current_state = rcl_state_error;
+    return false;
+  }
+  //virtual bool destroy()    = 0;
 };
 }  // namespace lifecycle_interface
 
@@ -74,9 +151,11 @@ public:
   virtual void
   setup_state_machine()
   {
-    state_machine_ = rcl_get_default_state_machine();
-  }
+    lifecycle_interface::NodeInterface::setup_state_machine();
 
+    // FAAAAAAIL !!!!!
+    //rcl_register_callback(&state_machine_, rcl_state_unconfigured.index, rcl_state_configuring.index, &LifecycleNode::on_configure);
+  }
   /**
    * @brief same API for creating publisher as regular Node
    */
@@ -101,7 +180,7 @@ public:
   void
   print_state_machine()
   {
-    printf("current state is %s\n", state_machine_.current_state.label);
+    printf("current state is %s\n", state_machine_.current_state->label);
     rcl_print_transition_map(&state_machine_.transition_map);
   }
 
@@ -109,34 +188,10 @@ public:
   virtual bool
   on_configure()
   {
-    // check on every function whether we are in the correct state
-    /*if (!rcl_is_valid_transition(&state_machine_, &rcl_state_inactive))
-    {
-      // if not, go to error state
-      state_machine_.current_state = rcl_state_error;
-      return false;
-    }*/
-
     // Placeholder print for all configuring work to be done
     // with each pub/sub/srv/client
     printf("I am doing some important configuration work\n");
 
-    // work was done correctly, so change the current state
-    state_machine_.current_state = rcl_state_inactive;
-    return true;
-  }
-
-  LIFECYCLE_EXPORT
-  virtual bool
-  on_clean_up()
-  {
-    return true;
-  }
-
-  LIFECYCLE_EXPORT
-  virtual bool
-  on_shutdown()
-  {
     return true;
   }
 
@@ -144,17 +199,10 @@ public:
   virtual bool
   on_activate()
   {
-    /*if (!rcl_is_valid_transition(&state_machine_, &rcl_state_active))
-    {
-      fprintf(stderr, "Unable to change from  current state %s from transition start %s\n", state_machine_.current_state.label, rcl_state_active.label);
-      state_machine_.current_state = rcl_state_error;
-      return false;
-    }*/
     if (weak_pub_.expired())
     {
       // Someone externally destroyed the publisher handle
       fprintf(stderr, "I have no publisher handle\n");
-      state_machine_.current_state = rcl_state_error;
       return false;
     }
 
@@ -162,9 +210,13 @@ public:
     // with each pub/sub/srv/client
     printf("I am doing a lot of activation work\n");
     // TODO: does a return value make sense here?
-    weak_pub_.lock()->on_activate();
+    auto pub = weak_pub_.lock();
+    if (!pub)
+    {
+      return false;
+    }
+    pub->on_activate();
 
-    state_machine_.current_state = rcl_state_active;
     return true;
   }
 
@@ -172,28 +224,22 @@ public:
   virtual bool
   on_deactivate()
   {
-    // second transition is from active to deactive
-    /*if(!rcl_is_valid_transition(&state_machine_, &rcl_state_inactive))
-    {
-      fprintf(stderr, "Unable to change from  current state %s from transition start %s\n", state_machine_.current_state.label, rcl_state_inactive.label);
-      fprintf(stderr, "deactivate is not a valid transition in current state %s\n", state_machine_.current_state.label);
-      // TODO: go to error state here
-      return false;
-    }*/
     if (weak_pub_.expired())
     {
       fprintf(stderr, "I have no publisher handle\n");
-      // TODO: go to error state here
       return false;
     }
 
     // Placeholder print for all configuring work to be done
     // with each pub/sub/srv/client
-    printf("I am doing a lot of activation work\n");
+    printf("I am doing a lot of deactivation work\n");
     // TODO: does a return value make sense here?
-    weak_pub_.lock()->on_deactivate();
+    auto pub = weak_pub_.lock();
+    if (!pub){
+      return false;
+    }
+    pub->on_deactivate();
 
-    state_machine_.current_state = rcl_state_inactive;
     return true;
   }
 
@@ -201,6 +247,7 @@ public:
   virtual bool
   on_error()
   {
+    fprintf(stderr, "Something went wrong here\n");
     return true;
   }
 
@@ -211,7 +258,6 @@ private:
   // Placeholder for all pub/sub/srv/clients
   std::weak_ptr<rclcpp::publisher::lifecycle_interface::PublisherInterface> weak_pub_;
 
-  rcl_state_machine_t state_machine_;
 };
 
 } // namespace node
