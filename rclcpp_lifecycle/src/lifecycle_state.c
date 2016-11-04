@@ -38,7 +38,7 @@ rcl_is_valid_transition(rcl_state_machine_t* state_machine, const rcl_state_t* g
 }
 
 void
-rcL_register_callback(rcl_state_machine_t* state_machine, unsigned int state_index, unsigned int transition_index, bool(*fcn)(void))
+rcl_register_callback(rcl_state_machine_t* state_machine, unsigned int state_index, unsigned int transition_index, bool(*fcn)(void))
 {
   rcl_transition_array_t* all_transitions = rcl_get_transitions_by_index(&state_machine->transition_map, state_index);
 
