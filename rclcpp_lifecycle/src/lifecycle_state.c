@@ -51,6 +51,30 @@ rcL_register_callback(rcl_state_machine_t* state_machine, unsigned int state_ind
   }
 }
 
+// maybe change directly the current state here,
+// no need to that all the time inside high level language
+bool
+rcl_invoke_transition(rcl_state_machine_t* state_machine, rcl_state_t transition_index)
+{
+  rcl_transition_array_t* all_transitions = rcl_get_transitions_by_index(&state_machine->transition_map, state_machine->current_state->index);
+
+  if (!all_transitions)
+  {
+    return false;
+  }
+  bool success = false;
+  for (unsigned int i=0; i<all_transitions->size; ++i)
+  {
+    if (all_transitions->transitions[i].transition_index.index == transition_index.index)
+    {
+      ((bool(*)(void))all_transitions->transitions[i].callback)();
+      success = true;
+      // break here ?! would allow only one to one transitions
+    }
+  }
+  return success;
+}
+
 #if __cplusplus
 }
 #endif  // extern "C"

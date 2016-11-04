@@ -98,6 +98,9 @@ LIFECYCLE_EXPORT rcl_get_default_state_machine();
 void
 LIFECYCLE_EXPORT rcl_register_callback(rcl_state_machine_t* state_machine, unsigned int state_index, unsigned int transition_index, bool(*fcn)(void));
 
+bool
+LIFECYCLE_EXPORT rcl_invoke_transition(rcl_state_machine_t* state_machine, rcl_state_t transition_index);
+
 #if __cplusplus
 }
 #endif  // extern "C"

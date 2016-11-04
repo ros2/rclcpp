@@ -29,6 +29,21 @@ namespace node
 
 namespace lifecycle_interface
 {
+template <typename T, size_t State_Index, size_t Transition_Index>
+struct Callback;
+
+template <typename Ret, typename... Params, size_t State_Index, size_t Transition_Index>
+struct Callback<Ret(Params...), State_Index, Transition_Index>
+{
+    template <typename... Args>
+    static Ret callback(Args... args) { return func(args...); }
+    static std::function<Ret(Params...)> func;
+};
+
+// Initialize the static member.
+template <typename Ret, typename... Params, size_t State_Index, size_t Transition_Index>
+std::function<Ret(Params...)> Callback<Ret(Params...), State_Index, Transition_Index>::func;
+
 /**
  * @brief Interface class for a managed node.
  * Pure virtual functions as defined in
@@ -58,6 +73,16 @@ protected:
     // register_callback(&state_machine, state.label, fcn)
   }
 
+  LIFECYCLE_EXPORT
+  template<typename T, size_t State_Index, size_t Transition_Index>
+  void
+  register_state_callback(bool (T::*method)(), T* instance)
+  {
+    Callback<bool(), State_Index, Transition_Index>::func = std::bind(method, instance);
+    bool(*c_function_pointer)(void) = static_cast<decltype(c_function_pointer)>(Callback<bool(), State_Index, Transition_Index>::callback);
+    rcl_register_callback(&state_machine_, (unsigned int)State_Index, (unsigned int)Transition_Index, c_function_pointer);
+  }
+
   rcl_state_machine_t state_machine_;
 
 public:
@@ -66,12 +91,15 @@ public:
   {
     if (state_machine_.current_state->index == rcl_state_unconfigured.index)
     {
+      // given the current state machine, specify a transition and go for it
+      auto ret = rcl_invoke_transition(&state_machine_, rcl_state_configuring);
+      printf("%s\n", (ret)?"Callback was successful":"Callback unsuccessful");
       // change state here to "Configuring"
-      if (on_configure())
-      {
-        state_machine_.current_state = &rcl_state_inactive;
-        return true;
-      }
+      //if (on_configure())
+      //{
+      //  state_machine_.current_state = &rcl_state_inactive;
+      //  return true;
+      //}
     }
     // everything else is considered wrong
     //state_machine_.current_state = rcl_state_error;
@@ -153,6 +181,8 @@ public:
   {
     lifecycle_interface::NodeInterface::setup_state_machine();
 
+    register_state_callback<LifecycleNode, 0, 4>(
+        &LifecycleNode::on_configure, this);
     // FAAAAAAIL !!!!!
     //rcl_register_callback(&state_machine_, rcl_state_unconfigured.index, rcl_state_configuring.index, &LifecycleNode::on_configure);
   }
