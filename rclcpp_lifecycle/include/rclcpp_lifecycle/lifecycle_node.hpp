@@ -35,9 +35,9 @@ struct Callback;
 template <typename Ret, typename... Params, size_t State_Index, size_t Transition_Index>
 struct Callback<Ret(Params...), State_Index, Transition_Index>
 {
-    template <typename... Args>
-    static Ret callback(Args... args) { return func(args...); }
-    static std::function<Ret(Params...)> func;
+  template <typename... Args>
+  static Ret callback(Args... args) { return func(args...); }
+  static std::function<Ret(Params...)> func;
 };
 
 // Initialize the static member.
@@ -51,7 +51,10 @@ std::function<Ret(Params...)> Callback<Ret(Params...), State_Index, Transition_I
  */
 class NodeInterface
 {
-protected:
+  std::map<size_t, std::function<bool(void)>> callback_map;
+  rcl_state_machine_t state_machine_;
+
+  protected:
   virtual bool on_configure()  { return true; };
   virtual bool on_cleanup()    { return true; };
   virtual bool on_shutdown()   { return true; };
@@ -68,11 +71,10 @@ protected:
   setup_state_machine()
   {
     state_machine_ = rcl_get_default_state_machine();
-    // register callback functions here so that a generic
-    // move_to function in rcl can actually makes the change
-    // register_callback(&state_machine, state.label, fcn)
   }
 
+  // In case with want to register the callbacks directly in c
+  /*
   LIFECYCLE_EXPORT
   template<typename T, size_t State_Index, size_t Transition_Index>
   void
@@ -82,8 +84,46 @@ protected:
     bool(*c_function_pointer)(void) = static_cast<decltype(c_function_pointer)>(Callback<bool(), State_Index, Transition_Index>::callback);
     rcl_register_callback(&state_machine_, (unsigned int)State_Index, (unsigned int)Transition_Index, c_function_pointer);
   }
+  */
 
-  rcl_state_machine_t state_machine_;
+  LIFECYCLE_EXPORT
+  template<typename T>
+  void
+  register_transition_callback(bool (T::*method)(), T* instance, size_t transition_state_index)
+  {
+    const rcl_state_transition_t* transition_state
+      = rcl_get_registered_transition_by_index(&state_machine_, transition_state_index);
+    if (!transition_state)
+    {
+      // TODO do something smarter here
+      throw std::runtime_error("Transition is not valid");
+    }
+    callback_map[transition_state_index] = std::bind(method, instance);
+  }
+
+  LIFECYCLE_EXPORT
+  template<typename T>
+  void
+  register_transition_callback(bool (T::*method)(), T* instance, const std::string& transition_state_label)
+  {
+    const rcl_state_transition_t* transition_state
+      = rcl_get_registered_transition_by_label(&state_machine_, transition_state_label.c_str());
+    if (!transition_state)
+    {
+      // TODO do something smarter here
+      throw std::runtime_error("Transition is not valid");
+    }
+    callback_map[transition_state->transition_state.index] = std::bind(method, instance);
+  }
+
+  public:
+  LIFECYCLE_EXPORT
+  void
+  print_state_machine()
+  {
+    printf("current state is %s\n", state_machine_.current_state->label);
+    rcl_print_transition_map(&state_machine_.transition_map);
+  }
 
 public:
   //virtual bool create()     = 0;
@@ -92,7 +132,9 @@ public:
     if (state_machine_.current_state->index == rcl_state_unconfigured.index)
     {
       // given the current state machine, specify a transition and go for it
-      auto ret = rcl_invoke_transition(&state_machine_, rcl_state_configuring);
+      //auto ret = rcl_invoke_transition(&state_machine_, rcl_state_configuring);
+      auto cb = callback_map[rcl_state_configuring.index];
+      auto ret = cb();
       printf("%s\n", (ret)?"Callback was successful":"Callback unsuccessful");
       // change state here to "Configuring"
       //if (on_configure())
@@ -181,11 +223,9 @@ public:
   {
     lifecycle_interface::NodeInterface::setup_state_machine();
 
-    register_state_callback<LifecycleNode, 0, 4>(
-        &LifecycleNode::on_configure, this);
-    // FAAAAAAIL !!!!!
-    //rcl_register_callback(&state_machine_, rcl_state_unconfigured.index, rcl_state_configuring.index, &LifecycleNode::on_configure);
+    register_transition_callback(&LifecycleNode::on_configure, this, rcl_state_configuring.index);
   }
+
   /**
    * @brief same API for creating publisher as regular Node
    */
@@ -204,14 +244,6 @@ public:
     // keep weak handle for this publisher to enable/disable afterwards
     weak_pub_ = pub;
     return pub;
-  }
-
-  LIFECYCLE_EXPORT
-  void
-  print_state_machine()
-  {
-    printf("current state is %s\n", state_machine_.current_state->label);
-    rcl_print_transition_map(&state_machine_.transition_map);
   }
 
   LIFECYCLE_EXPORT
