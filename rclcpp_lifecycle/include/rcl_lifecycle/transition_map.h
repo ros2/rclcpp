@@ -24,29 +24,19 @@ extern "C"
 #endif
 
 typedef struct _rcl_state_t rcl_state_t;
-
 typedef struct _rcl_state_transition_t rcl_state_transition_t;
 
 /**
- * @brief The actual data array
- * within the map. One array belongs
- * to one label within the map.
+ * @brief All transitions which are
+ * valid associations for a primary state.
+ * One array belongs to one primary state
+ * within the map.
  */
-typedef struct LIFECYCLE_EXPORT _data_array
+typedef struct LIFECYCLE_EXPORT _transition_array
 {
   rcl_state_transition_t* transitions;
   unsigned int size;
 } rcl_transition_array_t;
-
-/**
- * @brief helper index for keeping
- * track of the map content
- */
-typedef struct LIFECYCLE_EXPORT _index
-{
-  unsigned int index;
-  const char* label;
-} rcl_transition_map_index_t;
 
 /**
  * @brief stores an array of transitions
@@ -55,10 +45,16 @@ typedef struct LIFECYCLE_EXPORT _index
 typedef struct LIFECYCLE_EXPORT _map
 {
   //rcl_state_t* state_index;
-  rcl_transition_map_index_t* state_index;
+  // associative array between primary state and their respective transitions
+  // 1 ps -> 1 transition_array
+  rcl_state_t* primary_states;
   rcl_transition_array_t* transition_arrays;
   unsigned int size;
 } rcl_transition_map_t;
+
+LIFECYCLE_EXPORT
+void
+rcl_register_primary_state(rcl_transition_map_t* m, rcl_state_t primary_state);
 
 /**
  * @brief appends a transition in a map
@@ -67,7 +63,40 @@ typedef struct LIFECYCLE_EXPORT _map
  */
 LIFECYCLE_EXPORT
 void
-rcl_append_transition(rcl_transition_map_t* m, rcl_state_t state, rcl_state_transition_t transition);
+rcl_register_transition_by_state(rcl_transition_map_t* m, rcl_state_t start, rcl_state_t goal, rcl_state_transition_t transition);
+
+/**
+ * @brief appends a transition in a map
+ * the classification is based on the start state
+ * within the given transition
+ */
+LIFECYCLE_EXPORT
+void
+rcl_register_transition_by_label(rcl_transition_map_t* m, const char* start_label, const char* goal_label, rcl_state_transition_t transition);
+
+/**
+ * @brief appends a transition in a map
+ * the classification is based on the start state
+ * within the given transition
+ */
+LIFECYCLE_EXPORT
+void
+rcl_register_transition_by_index(rcl_transition_map_t* m, unsigned int start_index, unsigned int goal_index, rcl_state_transition_t transition);
+
+/**
+ * @brief gets the registered primary state based on a label
+ * @return primary state pointer, NULL if not found
+ */
+LIFECYCLE_EXPORT
+rcl_state_t*
+rcl_get_primary_state_by_label(rcl_transition_map_t* m, const char* label);
+/**
+ * @brief gets the registered primary state based on a index
+ * @return primary state pointer, NULL if not found
+ */
+LIFECYCLE_EXPORT
+rcl_state_t*
+rcl_get_primary_state_by_index(rcl_transition_map_t* m, unsigned int index);
 
 /**
  * @brief gets all transitions based on a label
@@ -89,7 +118,7 @@ rcl_get_transitions_by_index(rcl_transition_map_t* m, unsigned int index);
  */
 LIFECYCLE_EXPORT
 void
-rcl_print_transition_array(const rcl_transition_array_t* da);
+rcl_print_transition_array(const rcl_transition_array_t* transition_array);
 LIFECYCLE_EXPORT
 void
 rcl_print_transition_map(const rcl_transition_map_t* m);

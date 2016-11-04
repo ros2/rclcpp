@@ -54,11 +54,10 @@ typedef struct LIFECYCLE_EXPORT _rcl_state_t
  */
 typedef struct LIFECYCLE_EXPORT _rcl_state_transition_t
 {
-  rcl_state_t transition_index;
-  //rcl_state_t transition_state;
-  // function callback
+  rcl_state_t transition_state;
   void* callback;
-  rcl_state_t goal;
+  rcl_state_t* start;
+  rcl_state_t* goal;
 } rcl_state_transition_t;
 
 /**
@@ -71,7 +70,6 @@ typedef struct LIFECYCLE_EXPORT _rcl_state_transition_t
  */
 typedef struct LIFECYCLE_EXPORT _rcl_state_machine_t
 {
-  // current state of the lifecycle
   rcl_state_t* current_state;
   rcl_transition_map_t transition_map;
 } rcl_state_machine_t;
@@ -82,9 +80,16 @@ typedef struct LIFECYCLE_EXPORT _rcl_state_machine_t
  * @brief traverses the transition map of the given
  * state machine to find if there is a transition from the
  * current state to the specified goal state
+ * @return the transition state which is valid
+ * NULL if not available
  */
-bool
+const rcl_state_transition_t*
 LIFECYCLE_EXPORT rcl_is_valid_transition(rcl_state_machine_t* state_machine, const rcl_state_t* goal_state);
+
+const rcl_state_transition_t*
+LIFECYCLE_EXPORT rcl_get_registered_transition_by_index(rcl_state_machine_t* state_machine, unsigned int transition_state_index);
+const rcl_state_transition_t*
+LIFECYCLE_EXPORT rcl_get_registered_transition_by_label(rcl_state_machine_t* state_machine, const char* transition_state_label);
 
 rcl_state_t
 LIFECYCLE_EXPORT rcl_create_state(unsigned int state, char* label);

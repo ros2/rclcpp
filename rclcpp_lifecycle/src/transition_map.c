@@ -24,9 +24,52 @@ extern "C"
 #include <rcl_lifecycle/lifecycle_state.h>
 #include <rcl_lifecycle/transition_map.h>
 
-void append_to_transition_array(rcl_transition_array_t* transition_array, rcl_state_transition_t data)
+void rcl_register_primary_state(rcl_transition_map_t* m, rcl_state_t primary_state)
 {
-  // There is no transition array !?
+  if (rcl_get_primary_state_by_index(m, primary_state.index) != NULL)
+  {
+    // primary state is already registered
+    return;
+  }
+
+  // add new primary state memory
+  //rcl_transition_map_index_t idx = {.index = m->size, .label = state.label};
+  ++m->size;
+  m->primary_states = realloc(m->primary_states, m->size*sizeof(rcl_state_t));
+  m->primary_states[m->size-1] = primary_state;
+
+  // allocate empty pointer for transition_array_t
+  m->transition_arrays = realloc(m->transition_arrays, m->size*sizeof(rcl_transition_array_t));
+  m->transition_arrays[m->size-1].transitions = NULL;
+  m->transition_arrays[m->size-1].size = 0; // initialize array to size 0
+}
+
+void rcl_register_transition_by_state(rcl_transition_map_t* m, rcl_state_t start, rcl_state_t goal, rcl_state_transition_t transition)
+{
+  rcl_register_transition_by_index(m, start.index, goal.index, transition);
+}
+
+void rcl_register_transition_by_label(rcl_transition_map_t* m, const char* start_label, const char* goal_label, rcl_state_transition_t transition)
+{
+  // the idea here is to add this transition based on the
+  // start label and classify them.
+  rcl_state_t* start_state = rcl_get_primary_state_by_label(m, start_label);
+  if (start_state == NULL)
+  {
+    // return false here?
+    return;
+  }
+  rcl_state_t* goal_state = rcl_get_primary_state_by_label(m, goal_label);
+  if (goal_state == NULL)
+  {
+    // return false here?
+    return;
+  }
+
+  transition.start = start_state;
+  transition.goal = goal_state;
+
+  rcl_transition_array_t* transition_array = rcl_get_transitions_by_index(m, transition.start->index);
   if (!transition_array)
   {
     return;
@@ -37,58 +80,94 @@ void append_to_transition_array(rcl_transition_array_t* transition_array, rcl_st
 
   // TODO: Not sure if this is really necessary to differentiate
   // between malloc and realloc
-  if (transition_array->size == 1)
-  {
-    transition_array->transitions = malloc(sizeof(rcl_state_transition_t));
-  }
-  else
-  {
+  //if (transition_array->size == 1)
+  //{
+  //  transition_array->transitions = malloc(sizeof(rcl_state_transition_t));
+  //}
+  //else
+  //{
   transition_array->transitions
     = realloc(transition_array->transitions, transition_array->size*sizeof(rcl_state_transition_t));
-  }
+  //}
 
   // finally set the new transition to the end of the array
-  transition_array->transitions[transition_array->size-1] = data;
+  transition_array->transitions[transition_array->size-1] = transition;
 }
 
-void rcl_append_transition(rcl_transition_map_t* m, rcl_state_t state, rcl_state_transition_t data)
+void rcl_register_transition_by_index(rcl_transition_map_t* m, unsigned int start_index, unsigned int goal_index, rcl_state_transition_t transition)
 {
   // the idea here is to add this transition based on the
   // start label and classify them.
-
-  // check wether the label exits already
-  for (unsigned int i=0; i<m->size; ++i)
+  rcl_state_t* start_state = rcl_get_primary_state_by_index(m, start_index);
+  if (start_state == NULL)
   {
-    if (strcmp(m->state_index[i].label, state.label) == 0)
-    {
-      // label exists already
-      //printf("Found existing label %s. Will append new data\n", m->state_index[i].label);
-      // we will append data into rcl_transition_array_t with given data.start.label
-      append_to_transition_array(&(m->transition_arrays[i]), data);
-      return;
-    }
+    // return false here?
+    return;
+  }
+  rcl_state_t* goal_state = rcl_get_primary_state_by_index(m, goal_index);
+  if (goal_state == NULL)
+  {
+    // return false here?
+    return;
   }
 
-  //printf("Label %s does not exist yet. Will add a new one\n", data.start.label);
-  //printf("There are %u existing labels\n", m->size);
-  // when we reach this point, the label does not exist yet
-  // reallocate the index array and extend it for the new label
-  rcl_transition_map_index_t idx = {.index = m->size, .label = state.label};
-  ++m->size;
-  m->state_index = realloc(m->state_index, m->size*sizeof(rcl_transition_map_index_t));
-  m->state_index[idx.index] = idx;
+  transition.start = start_state;
+  transition.goal = goal_state;
 
-  // reallocate the actual data array and extend it for the data
-  m->transition_arrays = realloc(m->transition_arrays, m->size*sizeof(rcl_transition_array_t));
-  m->transition_arrays[idx.index].size = 0;
-  append_to_transition_array(&m->transition_arrays[idx.index], data);
+  rcl_transition_array_t* transition_array = rcl_get_transitions_by_index(m, transition.start->index);
+  if (!transition_array)
+  {
+    return;
+  }
+
+  // we add a new transition, so increase the size
+  ++transition_array->size;
+
+  // TODO: Not sure if this is really necessary to differentiate
+  // between malloc and realloc
+  //if (transition_array->size == 1)
+  //{
+  //  transition_array->transitions = malloc(sizeof(rcl_state_transition_t));
+  //}
+  //else
+  //{
+  transition_array->transitions
+    = realloc(transition_array->transitions, transition_array->size*sizeof(rcl_state_transition_t));
+  //}
+
+  // finally set the new transition to the end of the array
+  transition_array->transitions[transition_array->size-1] = transition;
+}
+
+rcl_state_t* rcl_get_primary_state_by_label(rcl_transition_map_t* m, const char* label)
+{
+  for (unsigned int i=0; i<m->size; ++i)
+  {
+    if (m->primary_states[i].label == label)
+    {
+      return &m->primary_states[i];
+    }
+  }
+  return NULL;
+}
+
+rcl_state_t* rcl_get_primary_state_by_index(rcl_transition_map_t* m, unsigned int index)
+{
+  for (unsigned int i=0; i<m->size; ++i)
+  {
+    if (m->primary_states[i].index == index)
+    {
+      return &m->primary_states[i];
+    }
+  }
+  return NULL;
 }
 
 rcl_transition_array_t* rcl_get_transitions_by_label(rcl_transition_map_t* m, const char* label)
 {
   for (unsigned int i=0; i<m->size; ++i)
   {
-    if (strcmp(m->state_index[i].label, label) == 0)
+    if (strcmp(m->primary_states[i].label, label) == 0)
     {
       return &m->transition_arrays[i];
     }
@@ -100,7 +179,7 @@ rcl_transition_array_t* rcl_get_transitions_by_index(rcl_transition_map_t* m, un
 {
   for (unsigned int i=0; i<m->size; ++i)
   {
-    if (m->state_index[i].index == index )
+    if (m->primary_states[i].index == index )
     {
       return &m->transition_arrays[i];
     }
@@ -108,11 +187,11 @@ rcl_transition_array_t* rcl_get_transitions_by_index(rcl_transition_map_t* m, un
   return NULL;
 }
 
-void rcl_print_transition_array(const rcl_transition_array_t* da)
+void rcl_print_transition_array(const rcl_transition_array_t* ta)
 {
-    for (unsigned int i=0; i<da->size; ++i)
+    for (unsigned int i=0; i<ta->size; ++i)
     {
-      printf("%s(%s)\t", da->transitions[i].goal.label, (da->transitions[i].callback==NULL)?" ":"x");
+      printf("%s(%u)(%s)\t", ta->transitions[i].transition_state.label, ta->transitions[i].transition_state.index, (ta->transitions[i].callback==NULL)?" ":"x");
     }
     printf("\n");
 }
@@ -122,7 +201,7 @@ void rcl_print_transition_map(const rcl_transition_map_t* m)
   printf("rcl_transition_map_t size %u\n", m->size);
   for (unsigned int i=0; i<m->size; ++i)
   {
-    printf("Start state %s ::: ", m->state_index[i].label);
+    printf("Start state %s(%u) ::: ", m->primary_states[i].label, m->primary_states[i].index);
     rcl_print_transition_array(&(m->transition_arrays[i]));
   }
 }
