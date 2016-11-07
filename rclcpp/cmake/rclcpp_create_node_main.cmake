@@ -12,19 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# copied from rclcpp/rclcpp-extras.cmake
 
-# register ament_package() hook for node plugins once
-macro(_rclcpp_register_package_hook)
-  if(NOT DEFINED _RCLCPP_PACKAGE_HOOK_REGISTERED)
-    set(_RCLCPP_PACKAGE_HOOK_REGISTERED TRUE)
+set(rclcpp_node_main_SRC "${rclcpp_DIR}/../../../src/rclcpp/node_main.cpp")
 
-    find_package(ament_cmake_core QUIET REQUIRED)
-    ament_register_extension("ament_package" "rclcpp"
-      "rclcpp_package_hook.cmake")
+function(rclcpp_create_node_main node_library_target)
+  if(NOT TARGET ${node_library_target})
+    message(FATAL_ERROR "rclcpp_create_node_main() the first argument must be a valid target name")
   endif()
-endmacro()
-
-include("${rclcpp_DIR}/get_rclcpp_information.cmake")
-include("${rclcpp_DIR}/rclcpp_create_node_main.cmake")
-include("${rclcpp_DIR}/rclcpp_register_node_plugins.cmake")
+  set(executable_name_ ${node_library_target}_node)
+  add_executable(${executable_name_} ${rclcpp_node_main_SRC})
+  target_link_libraries(${executable_name_} ${node_library_target})
+  install(TARGETS ${executable_name_} DESTINATION bin)
+endfunction()
