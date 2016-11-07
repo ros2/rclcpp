@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# copied from rclcpp/rclcpp-extras.cmake
-
 
 set(rclcpp_node_main_SRC "${rclcpp_DIR}/../../../src/rclcpp/node_main.cpp")
 
