@@ -16,8 +16,6 @@
 #ifndef RCL__TRANSITION_MAP_H_
 #define RCL__TRANSITION_MAP_H_
 
-#include <rcl_lifecycle/lifecycle_state.h>
-
 #if __cplusplus
 extern "C"
 {

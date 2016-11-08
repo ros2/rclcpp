@@ -24,27 +24,16 @@ extern "C"
 
 // primary states based on
 // design.ros2.org/articles/node_lifecycle.html
-rcl_state_t LIFECYCLE_EXPORT rcl_state_unconfigured
-  = {"unconfigured", 0};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_inactive
-  = {"inactive", 1};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_active
-  = {"active", 2};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_finalized
-  = {"finalized", 3};
-
-rcl_state_t LIFECYCLE_EXPORT rcl_state_configuring
-  = {"configuring", 4};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_cleaningup
-  = {"cleaningup", 5};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_shuttingdown
-  = {"shuttingdown", 6};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_activating
-  = {"activating", 7};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_deactivating
-  = {"deactivating", 8};
-rcl_state_t LIFECYCLE_EXPORT rcl_state_errorprocessing
-  = {"errorprocessing", 9};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_unconfigured = {"unconfigured", 0};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_inactive = {"inactive", 1};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_active = {"active", 2};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_finalized = {"finalized", 3};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_configuring = {"configuring", 4};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_cleaningup = {"cleaningup", 5};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_shuttingdown = {"shuttingdown", 6};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_activating = {"activating", 7};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_deactivating = {"deactivating", 8};
+const rcl_state_t LIFECYCLE_EXPORT rcl_state_errorprocessing = {"errorprocessing", 9};
 
 #if __cplusplus
 }

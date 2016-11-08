@@ -70,7 +70,7 @@ typedef struct LIFECYCLE_EXPORT _rcl_state_transition_t
  */
 typedef struct LIFECYCLE_EXPORT _rcl_state_machine_t
 {
-  rcl_state_t* current_state;
+  const rcl_state_t* current_state;
   rcl_transition_map_t transition_map;
 } rcl_state_machine_t;
 
@@ -84,7 +84,9 @@ typedef struct LIFECYCLE_EXPORT _rcl_state_machine_t
  * NULL if not available
  */
 const rcl_state_transition_t*
-LIFECYCLE_EXPORT rcl_is_valid_transition(rcl_state_machine_t* state_machine, const rcl_state_t* goal_state);
+LIFECYCLE_EXPORT rcl_is_valid_transition_by_index(rcl_state_machine_t* state_machine, unsigned int transition_index);
+const rcl_state_transition_t*
+LIFECYCLE_EXPORT rcl_is_valid_transition_by_label(rcl_state_machine_t* state_machine, const char* transition_label);
 
 const rcl_state_transition_t*
 LIFECYCLE_EXPORT rcl_get_registered_transition_by_index(rcl_state_machine_t* state_machine, unsigned int transition_state_index);
