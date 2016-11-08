@@ -73,6 +73,7 @@ public:
 class LifecycleNode : public rclcpp::node::Node, public lifecycle::LifecycleNodeInterface
 {
 public:
+  using LifecyclePublisherWeakPtr = std::weak_ptr<rclcpp::publisher::lifecycle_interface::PublisherInterface>;
 
   LIFECYCLE_EXPORT
   explicit LifecycleNode(const std::string & node_name, bool use_intra_process_comms = false) :
@@ -88,7 +89,7 @@ public:
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
   std::shared_ptr<rclcpp::publisher::LifecyclePublisher<MessageT, Alloc>>
-  create_publisher(
+  create_publisher (
       const std::string & topic_name,
       const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
       std::shared_ptr<Alloc> allocator = nullptr)
@@ -99,84 +100,44 @@ public:
         topic_name, qos_profile, allocator);
 
     // keep weak handle for this publisher to enable/disable afterwards
-    weak_pub_ = pub;
+    weak_pubs_.push_back(pub);
     return pub;
   }
 
   LIFECYCLE_EXPORT
   virtual bool
-  on_configure()
+  disable_communication()
   {
-    // Placeholder print for all configuring work to be done
-    // with each pub/sub/srv/client
-    printf("I am doing some important configuration work\n");
-
+    for (auto weak_pub : weak_pubs_)
+    {
+      auto pub = weak_pub.lock();
+      if (!pub){
+        return false;
+      }
+      pub->on_deactivate();
+    }
     return true;
   }
 
   LIFECYCLE_EXPORT
   virtual bool
-  on_activate()
+  enable_communication()
   {
-    if (weak_pub_.expired())
+    for (auto weak_pub : weak_pubs_)
     {
-      // Someone externally destroyed the publisher handle
-      fprintf(stderr, "I have no publisher handle\n");
-      return false;
+      auto pub = weak_pub.lock();
+      if (!pub){
+        return false;
+      }
+      pub->on_activate();
     }
-
-    // Placeholder print for all configuring work to be done
-    // with each pub/sub/srv/client
-    printf("I am doing a lot of activation work\n");
-    // TODO: does a return value make sense here?
-    auto pub = weak_pub_.lock();
-    if (!pub)
-    {
-      return false;
-    }
-    pub->on_activate();
-
-    return true;
-  }
-
-  LIFECYCLE_EXPORT
-  virtual bool
-  on_deactivate()
-  {
-    if (weak_pub_.expired())
-    {
-      fprintf(stderr, "I have no publisher handle\n");
-      return false;
-    }
-
-    // Placeholder print for all configuring work to be done
-    // with each pub/sub/srv/client
-    printf("I am doing a lot of deactivation work\n");
-    // TODO: does a return value make sense here?
-    auto pub = weak_pub_.lock();
-    if (!pub){
-      return false;
-    }
-    pub->on_deactivate();
-
-    return true;
-  }
-
-  LIFECYCLE_EXPORT
-  virtual bool
-  on_error()
-  {
-    fprintf(stderr, "Something went wrong here\n");
     return true;
   }
 
 private:
 
-  // weak handle for the managing publisher
-  // TODO: Has to be a vector of weak publishers. Does on_deactivate deactivate every publisher?!
   // Placeholder for all pub/sub/srv/clients
-  std::weak_ptr<rclcpp::publisher::lifecycle_interface::PublisherInterface> weak_pub_;
-
+  std::vector<LifecyclePublisherWeakPtr> weak_pubs_;
 };
 
 }  // namespace lifecycle_interface
