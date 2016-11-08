@@ -26,13 +26,15 @@ macro(rclcpp_register_node_plugins target)
   if(NOT TARGET ${target})
     message(
       FATAL_ERROR
-      "rclcpp_register_node_plugins() first argument '${target}' is not a target")
+      "rclcpp_register_node_plugins() first argument "
+      "'${target}' is not a target")
   endif()
   get_target_property(_target_type ${target} TYPE)
   if(NOT _target_type STREQUAL "SHARED_LIBRARY")
     message(
       FATAL_ERROR
-      "rclcpp_register_node_plugins() first argument '${target}' is not a shared library target")
+      "rclcpp_register_node_plugins() first argument "
+      "'${target}' is not a shared library target")
   endif()
 
   if(${ARGC} GREATER 0)
@@ -42,7 +44,8 @@ macro(rclcpp_register_node_plugins target)
       if(_arg IN_LIST _unique_names)
         message(
           FATAL_ERROR
-          "rclcpp_register_node_plugins() the plugin names must be unique (multiple '${_arg}')")
+          "rclcpp_register_node_plugins() the plugin names "
+          "must be unique (multiple '${_arg}')")
       endif()
       list(APPEND _unique_names "${_arg}")
 
