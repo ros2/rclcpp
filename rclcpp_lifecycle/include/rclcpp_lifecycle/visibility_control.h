@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__LIFECYCLE_VISIBILITY_CONTROL_H_
-#define RCLCPP__LIFECYCLE_VISIBILITY_CONTROL_H_
+#ifndef RCLCPP_LIFECYCLE__VISIBILITY_CONTROL_H_
+#define RCLCPP_LIFECYCLE__VISIBILITY_CONTROL_H_
 
 #ifdef _WIN32
-	#define shared_EXPORTS 1
-    #ifdef shared_EXPORTS
-        #define LIFECYCLE_EXPORT __declspec(dllexport)
-    #else
-        #define LIFECYCLE_EXPORT __declspec(dllimport)
-    #endif
+  #define shared_EXPORTS 1
+  #ifdef shared_EXPORTS
+    #define LIFECYCLE_EXPORT __declspec(dllexport)
+  #else
+    #define LIFECYCLE_EXPORT __declspec(dllimport)
+  #endif
 #else
-    #define LIFECYCLE_EXPORT
+  #define LIFECYCLE_EXPORT
 #endif
 
-#endif
+#endif  // RCLCPP_LIFECYCLE__VISIBILITY_CONTROL_H_

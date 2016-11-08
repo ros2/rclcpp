@@ -402,6 +402,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
             rcl_get_error_string_safe());
   }
 
+  fprintf(stderr, "I got %u services in waitset\n", memory_strategy_->number_of_ready_services());
   if (!memory_strategy_->add_handles_to_waitset(&waitset_)) {
     throw std::runtime_error("Couldn't fill waitset");
   }

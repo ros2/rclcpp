@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__LIFECYCLE_EXECUTOR_HPP_
-#define RCLCPP__LIFECYCLE_EXECUTOR_HPP_
+#ifndef RCLCPP_LIFECYCLE__LIFECYCLE_EXECUTOR_HPP_
+#define RCLCPP_LIFECYCLE__LIFECYCLE_EXECUTOR_HPP_
+
+#include <memory>
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/type_traits/is_manageable_node.hpp"
@@ -26,21 +28,18 @@ namespace executors
 
 class LifecycleExecutor : public single_threaded_executor::SingleThreadedExecutor
 {
-//  using Node = rclcpp::node::Node;
-
 public:
-
-  explicit LifecycleExecutor(const executor::ExecutorArgs & args = executor::create_default_executor_arguments())
-    : SingleThreadedExecutor(args)
+  explicit LifecycleExecutor(const executor::ExecutorArgs & args =
+    executor::create_default_executor_arguments())
+  : SingleThreadedExecutor(args)
   {}
 
-  //RCLCPP_PUBLIC
   template<class T, typename std::enable_if<is_manageable_node<T>::value>::type>
   void
   add_node(std::shared_ptr<T> node_ptr, bool notify = true);
 };
 
-} // namespace executor
-} // namespace rclcpp
+}  // namespace executors
+}  // namespace rclcpp
 
-#endif
+#endif  // RCLCPP_LIFECYCLE__LIFECYCLE_EXECUTOR_HPP_

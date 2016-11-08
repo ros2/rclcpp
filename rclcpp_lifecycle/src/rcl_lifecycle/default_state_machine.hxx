@@ -12,18 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCL_LIFECYCLE__VISIBILITY_CONTROL_H_
-#define RCL_LIFECYCLE__VISIBILITY_CONTROL_H_
+#ifndef RCL_LIFECYCLE__DEFAULT_STATE_MACHINE_HXX_
+#define RCL_LIFECYCLE__DEFAULT_STATE_MACHINE_HXX_
 
-#ifdef _WIN32
-  #define shared_EXPORTS 1
-  #ifdef shared_EXPORTS
-    #define LIFECYCLE_EXPORT __declspec(dllexport)
-  #else
-    #define LIFECYCLE_EXPORT __declspec(dllimport)
-  #endif
-#else
-  #define LIFECYCLE_EXPORT
+#include <rcl/types.h>
+
+#include "rcl_lifecycle/data_types.h"
+#include "rcl_lifecycle/visibility_control.h"
+
+#if __cplusplus
+extern "C"
+{
 #endif
 
-#endif  // RCL_LIFECYCLE__VISIBILITY_CONTROL_H_
+LIFECYCLE_EXPORT
+rcl_ret_t
+rcl_init_default_state_machine(rcl_state_machine_t * state_machine);
+
+#if __cplusplus
+}
+#endif
+
+#endif  // RCL_LIFECYCLE__DEFAULT_STATE_MACHINE_HXX_

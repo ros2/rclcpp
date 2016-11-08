@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__LIFECYCLE_PUBLISHER_HPP_
-#define RCLCPP__LIFECYCLE_PUBLISHER_HPP_
+#ifndef RCLCPP_LIFECYCLE__LIFECYCLE_PUBLISHER_HPP_
+#define RCLCPP_LIFECYCLE__LIFECYCLE_PUBLISHER_HPP_
+
+#include <memory>
+#include <string>
 
 #include "rclcpp/publisher.hpp"
 
@@ -56,15 +59,16 @@ public:
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   LifecyclePublisher(
-      std::shared_ptr<rcl_node_t> node_handle,
-      std::string topic,
-      const rcl_publisher_options_t & publisher_options,
-      std::shared_ptr<MessageAlloc> allocator):
-    ::rclcpp::publisher::Publisher<MessageT, Alloc>(node_handle, topic, publisher_options, allocator),
-      enabled_(false)
-  {  }
+    std::shared_ptr<rcl_node_t> node_handle,
+    std::string topic,
+    const rcl_publisher_options_t & publisher_options,
+    std::shared_ptr<MessageAlloc> allocator)
+  : ::rclcpp::publisher::Publisher<MessageT, Alloc>(
+      node_handle, topic, publisher_options, allocator),
+    enabled_(false)
+  {}
 
-  ~LifecyclePublisher() {};
+  ~LifecyclePublisher() {}
 
   /**
    * @brief briefly checks whether this publisher
@@ -74,8 +78,7 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
-    if (!enabled_)
-    {
+    if (!enabled_) {
       printf("I push every message to /dev/null\n");
       return;
     }
@@ -90,8 +93,7 @@ public:
   virtual void
   publish(const std::shared_ptr<MessageT> & msg)
   {
-    if (!enabled_)
-    {
+    if (!enabled_) {
       printf("I publish message %s to /dev/null\n", msg->data.c_str());
       return;
     }
@@ -107,8 +109,7 @@ public:
   virtual void
   publish(std::shared_ptr<const MessageT> msg)
   {
-    if (!enabled_)
-    {
+    if (!enabled_) {
       printf("I am every message to /dev/null\n");
       return;
     }
@@ -123,8 +124,7 @@ public:
   virtual void
   publish(const MessageT & msg)
   {
-    if (!enabled_)
-    {
+    if (!enabled_) {
       printf("I am every message to /dev/null\n");
       return;
     }
@@ -137,10 +137,9 @@ public:
    * to the actual rclcp Publisher base class
    */
   virtual void
-  publish(std::shared_ptr<const MessageT>& msg)
+  publish(std::shared_ptr<const MessageT> & msg)
   {
-    if (!enabled_)
-    {
+    if (!enabled_) {
       printf("I am every message to /dev/null\n");
       return;
     }
@@ -168,4 +167,4 @@ private:
 }  // namespace publisher
 }  // namespace rclcpp
 
-#endif  // endif RCLCPP__LIFECYCLE_PUBLISHER_HPP_
+#endif  // RCLCPP_LIFECYCLE__LIFECYCLE_PUBLISHER_HPP_
