@@ -19,20 +19,21 @@ include_directories(
   #  ${rmw_INCLUDE_DIRS}
 )
 
+set(rcl_lifecycle_sources
+  src/rcl_lifecycle/lifecycle_state.c
+  src/rcl_lifecycle/default_state_machine.c
+  src/rcl_lifecycle/transition_map.c
+)
 set_source_files_properties(
-  src/lifecycle_state.c
-  src/default_state_machine.c
-  src/transition_map.c
+  ${rcl_lifecycle_sources}
   PROPERTIES language "C"
 )
 add_library(
-  state_machine
+  rcl_lifecycle
   SHARED
-  src/lifecycle_state.c
-  src/default_state_machine.c
-  src/transition_map.c
+  ${rcl_lifecycle_sources}
 )
-install(TARGETS state_machine
+install(TARGETS rcl_lifecycle
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
 )
@@ -42,10 +43,20 @@ macro(targets)
     get_rclcpp_information("${rmw_implementation}" "rclcpp${target_suffix}")
   endif()
 
+  add_library(rclcpp_lifecycle${target_suffix}
+    src/rclcpp_lifecycle/lifecycle_manager.cpp)
+  target_link_libraries(rclcpp_lifecycle${target_suffix}
+    rcl_lifecycle
+  )
+  ament_target_dependencies(rclcpp_lifecycle${target_suffix}
+    "rclcpp${target_suffix}"
+  )
+
   add_executable(lifecycle_talker${target_suffix}
-    src/lifecycle_talker.cpp)
-	
-  target_link_libraries(lifecycle_talker${target_suffix} state_machine)
+    src/rclcpp_lifecycle/lifecycle_talker.cpp)
+  target_link_libraries(lifecycle_talker${target_suffix}
+    rclcpp_lifecycle
+  )
   ament_target_dependencies(lifecycle_talker${target_suffix}
     "rclcpp${target_suffix}"
     "std_msgs"
