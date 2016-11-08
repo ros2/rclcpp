@@ -37,20 +37,6 @@ struct NodeStateMachine
   std::map<LifecycleTransitionsT, std::function<bool(void)>> cb_map;
 };
 
-namespace
-{
-  template<typename MapT>
-  typename MapT::iterator is_registered(MapT& state_machine_map, const std::string& node_name)
-  {
-    for (auto map_iter=state_machine_map.begin(); map_iter!=state_machine_map.end(); ++map_iter)
-    {
-      if (map_iter->first == node_name)
-        return map_iter;
-    }
-    return state_machine_map.end();
-  }
-}  // namespace
-
 class LifecycleManager::LifecycleManagerImpl
 {
 public:
@@ -97,12 +83,28 @@ public:
 
   template<LifecycleTransitionsT lifecycle_transition>
   bool
+  register_callback(const std::string& node_name, std::function<bool(void)>& cb)
+  {
+    if (node_name.empty())
+      return false;
+
+    auto node_handle_iter = node_handle_map_.find(node_name);
+    if (node_handle_iter == node_handle_map_.end())
+    {
+      fprintf(stderr, "Node with name %s is not registered\n", node_name.c_str());
+    }
+    node_handle_iter->second.cb_map[lifecycle_transition] = cb;
+    return true;
+  }
+
+  template<LifecycleTransitionsT lifecycle_transition>
+  bool
   change_state(const std::string& node_name = "")
   {
     if (node_name.empty())
       return false;
 
-    auto node_handle_iter = is_registered(node_handle_map_, node_name);
+    auto node_handle_iter = node_handle_map_.find(node_name);
     if (node_handle_iter == node_handle_map_.end())
     {
       fprintf(stderr, "Node with name %s is not registered\n", node_name.c_str());

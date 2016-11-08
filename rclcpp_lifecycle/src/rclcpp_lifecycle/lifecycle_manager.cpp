@@ -43,9 +43,21 @@ LifecycleManager::add_node_interface(const NodeInterfacePtr& node_interface, rcl
 }
 
 bool
+LifecycleManager::register_on_configure(const std::string& node_name, std::function<bool(void)>& fcn)
+{
+  return impl_->register_callback<lifecycle::LifecycleTransitionsT::CONFIGURING>(node_name, fcn);
+}
+
+bool
 LifecycleManager::configure(const std::string& node_name)
 {
   return impl_->change_state<lifecycle::LifecycleTransitionsT::CONFIGURING>(node_name);
+}
+
+bool
+LifecycleManager::register_on_cleanup(const std::string& node_name, std::function<bool(void)>& fcn)
+{
+  return impl_->register_callback<lifecycle::LifecycleTransitionsT::CLEANINGUP>(node_name, fcn);
 }
 
 bool
@@ -55,15 +67,33 @@ LifecycleManager::cleanup(const std::string& node_name)
 }
 
 bool
+LifecycleManager::register_on_shutdown(const std::string& node_name, std::function<bool(void)>& fcn)
+{
+  return impl_->register_callback<lifecycle::LifecycleTransitionsT::SHUTTINGDOWN>(node_name, fcn);
+}
+
+bool
 LifecycleManager::shutdown(const std::string& node_name)
 {
   return impl_->change_state<lifecycle::LifecycleTransitionsT::SHUTTINGDOWN>(node_name);
 }
 
 bool
+LifecycleManager::register_on_activate(const std::string& node_name, std::function<bool(void)>& fcn)
+{
+  return impl_->register_callback<lifecycle::LifecycleTransitionsT::ACTIVATING>(node_name, fcn);
+}
+
+bool
 LifecycleManager::activate(const std::string& node_name)
 {
   return impl_->change_state<lifecycle::LifecycleTransitionsT::ACTIVATING>(node_name);
+}
+
+bool
+LifecycleManager::register_on_deactivate(const std::string& node_name, std::function<bool(void)>& fcn)
+{
+  return impl_->register_callback<lifecycle::LifecycleTransitionsT::DEACTIVATING>(node_name, fcn);
 }
 
 bool

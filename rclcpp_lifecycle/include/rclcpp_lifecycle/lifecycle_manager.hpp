@@ -73,20 +73,85 @@ public:
   add_node_interface(const std::shared_ptr<node::lifecycle::LifecycleNodeInterface>& node_interface, rcl_state_machine_t custom_state_machine);
 
   LIFECYCLE_EXPORT
+  template<typename T>
+  bool
+  register_on_configure(const std::string& node_name, bool(T::*method)(void), T* instance)
+  {
+    auto cb = std::bind(method, instance);
+    return register_on_configure(node_name, cb);
+  }
+
+  LIFECYCLE_EXPORT
+  bool
+  register_on_configure(const std::string& node_name, std::function<bool(void)>& fcn);
+
+  LIFECYCLE_EXPORT
   bool
   configure(const std::string& node_name = "");
+
+  LIFECYCLE_EXPORT
+  template<typename T>
+  bool
+  register_on_cleanup(const std::string& node_name, bool(T::*method)(void), T* instance)
+  {
+    auto cb = std::bind(method, instance);
+    return register_on_cleanup(node_name, cb);
+  }
+
+  LIFECYCLE_EXPORT
+  bool
+  register_on_cleanup(const std::string& node_name, std::function<bool(void)>& fcn);
 
   LIFECYCLE_EXPORT
   bool
   cleanup(const std::string& node_name = "");
 
   LIFECYCLE_EXPORT
+  template<typename T>
+  bool
+  register_on_shutdown(const std::string& node_name, bool(T::*method)(void), T* instance)
+  {
+    auto cb = std::bind(method, instance);
+    return register_on_shutdown(node_name, cb);
+  }
+
+  LIFECYCLE_EXPORT
+  bool
+  register_on_shutdown(const std::string& node_name, std::function<bool(void)>& fcn);
+
+  LIFECYCLE_EXPORT
   bool
   shutdown(const std::string& node_name = "");
 
   LIFECYCLE_EXPORT
+  template<typename T>
+  bool
+  register_on_activate(const std::string& node_name, bool(T::*method)(void), T* instance)
+  {
+    auto cb = std::bind(method, instance);
+    return register_on_activate(node_name, cb);
+  }
+
+  LIFECYCLE_EXPORT
+  bool
+  register_on_activate(const std::string& node_name, std::function<bool(void)>& fcn);
+
+  LIFECYCLE_EXPORT
   bool
   activate(const std::string& node_name = "");
+
+  LIFECYCLE_EXPORT
+  template<typename T>
+  bool
+  register_on_deactivate(const std::string& node_name, bool(T::*method)(void), T* instance)
+  {
+    auto cb = std::bind(method, instance);
+    return register_on_deactivate(node_name, cb);
+  }
+
+  LIFECYCLE_EXPORT
+  bool
+  register_on_deactivate(const std::string& node_name, std::function<bool(void)>& fcn);
 
   LIFECYCLE_EXPORT
   bool
