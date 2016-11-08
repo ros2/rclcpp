@@ -19,7 +19,7 @@
 # with the given prefix.
 #
 # :param rmw_implementation: the RMW implementation name
-# :type target: string
+# :type rmw_implementation: string
 # :param var_prefix: the prefix of all output variable names
 # :type var_prefix: string
 #
