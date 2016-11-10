@@ -291,11 +291,9 @@ Executor::execute_service(
     service->get_service_handle(),
     request_header.get(),
     request.get());
-  if (status != RCL_RET_SERVICE_TAKE_FAILED) {
-    if (status == RCL_RET_OK) {
-      service->handle_request(request_header, request);
-    }
-  } else {
+  if (status == RCL_RET_OK) {
+    service->handle_request(request_header, request);
+  } else if (status != RCL_RET_SERVICE_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take request failed for server of service '%s': %s\n",
       service->get_service_name().c_str(), rcl_get_error_string_safe());
@@ -312,11 +310,9 @@ Executor::execute_client(
     client->get_client_handle(),
     request_header.get(),
     response.get());
-  if (status != RCL_RET_SERVICE_TAKE_FAILED) {
-    if (status == RCL_RET_OK) {
-      client->handle_response(request_header, response);
-    }
-  } else {
+  if (status == RCL_RET_OK) {
+    client->handle_response(request_header, response);
+  } else if (status != RCL_RET_SERVICE_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take response failed for client of service '%s': %s\n",
       client->get_service_name().c_str(), rcl_get_error_string_safe());
