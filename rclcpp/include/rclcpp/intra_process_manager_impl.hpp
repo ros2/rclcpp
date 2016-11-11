@@ -254,7 +254,7 @@ private:
       std::hash<uint64_t>, std::equal_to<uint64_t>,
       RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
   using IDTopicMap = std::map<std::string, AllocSet,
-      std::less<std::string>, RebindAlloc<std::pair<std::string, AllocSet>>>;
+      std::less<std::string>, RebindAlloc<std::pair<const std::string, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
