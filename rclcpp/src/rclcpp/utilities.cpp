@@ -86,7 +86,7 @@ signal_handler(int signal_value)
   g_signal_status = signal_value;
   {
     std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
-    for (auto const & kv : g_sigint_guard_cond_handles) {
+    for (auto & kv : g_sigint_guard_cond_handles) {
       rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
       if (status != RCL_RET_OK) {
         fprintf(stderr,
@@ -164,7 +164,7 @@ rclcpp::utilities::shutdown()
   g_signal_status = SIGINT;
   {
     std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
-    for (auto const & kv : g_sigint_guard_cond_handles) {
+    for (auto & kv : g_sigint_guard_cond_handles) {
       if (rcl_trigger_guard_condition(&(kv.second)) != RCL_RET_OK) {
         fprintf(stderr,
           "[rclcpp::error] failed to trigger sigint guard condition: %s\n",
