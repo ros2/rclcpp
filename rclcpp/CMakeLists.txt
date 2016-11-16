@@ -40,6 +40,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/parameter_service.cpp
   src/rclcpp/publisher.cpp
   src/rclcpp/node.cpp
+  src/rclcpp/node_interfaces/node_base.cpp
   src/rclcpp/service.cpp
   src/rclcpp/subscription.cpp
   src/rclcpp/timer.cpp
