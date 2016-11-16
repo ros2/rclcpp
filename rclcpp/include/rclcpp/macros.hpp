@@ -50,6 +50,20 @@
   RCLCPP_WEAK_PTR_DEFINITIONS(__VA_ARGS__) \
   __RCLCPP_UNIQUE_PTR_ALIAS(__VA_ARGS__)
 
+/* Defines aliases only for using the Class with smart pointers.
+ *
+ * Same as RCLCPP_SMART_PTR_DEFINITIONS expect it excludes the static
+ * method definitions which do not work on pure virtual classes and classes
+ * which are not CopyConstructable.
+ *
+ * Use in the public section of the class.
+ * Make sure to include <memory> in the header when using this.
+ */
+#define RCLCPP_SMART_PTR_ALIASES_ONLY(...) \
+  __RCLCPP_SHARED_PTR_ALIAS(__VA_ARGS__) \
+  __RCLCPP_WEAK_PTR_ALIAS(__VA_ARGS__) \
+  __RCLCPP_MAKE_SHARED_DEFINITION(__VA_ARGS__)
+
 #define __RCLCPP_SHARED_PTR_ALIAS(...) using SharedPtr = std::shared_ptr<__VA_ARGS__>;
 
 #define __RCLCPP_MAKE_SHARED_DEFINITION(...) \

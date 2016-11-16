@@ -40,72 +40,14 @@ Node::Node(
   const std::string & node_name,
   rclcpp::context::Context::SharedPtr context,
   bool use_intra_process_comms)
-: name_(node_name), context_(context),
+: node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
   number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0), number_of_clients_(0),
-  use_intra_process_comms_(use_intra_process_comms), notify_guard_condition_is_valid_(false),
+  use_intra_process_comms_(use_intra_process_comms),
   graph_listener_(context->get_sub_context<rclcpp::graph_listener::GraphListener>()),
   should_add_to_graph_listener_(true), graph_users_count_(0)
 {
-  rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
-  rcl_ret_t ret = rcl_guard_condition_init(&notify_guard_condition_, guard_condition_options);
-  if (ret != RCL_RET_OK) {
-    throw_from_rcl_error(ret, "failed to create interrupt guard condition");
-  }
-
-  has_executor.store(false);
-  size_t domain_id = 0;
-  char * ros_domain_id = nullptr;
-  const char * env_var = "ROS_DOMAIN_ID";
-#ifndef _WIN32
-  ros_domain_id = getenv(env_var);
-#else
-  size_t ros_domain_id_size;
-  _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
-#endif
-  if (ros_domain_id) {
-    uint32_t number = strtoul(ros_domain_id, NULL, 0);
-    if (number == (std::numeric_limits<uint32_t>::max)()) {
-      // Finalize the interrupt guard condition.
-      if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-        fprintf(stderr,
-          "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
-      }
-      throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
-    }
-    domain_id = static_cast<size_t>(number);
-#ifdef _WIN32
-    free(ros_domain_id);
-#endif
-  }
-
-  rcl_node_t * rcl_node = new rcl_node_t(rcl_get_zero_initialized_node());
-  node_handle_.reset(rcl_node, [](rcl_node_t * node) {
-    if (rcl_node_fini(node) != RCL_RET_OK) {
-      fprintf(
-        stderr, "Error in destruction of rmw node handle: %s\n", rcl_get_error_string_safe());
-    }
-    delete node;
-  });
-  rcl_node_options_t options = rcl_node_get_default_options();
-  // TODO(jacquelinekay): Allocator options
-  options.domain_id = domain_id;
-  ret = rcl_node_init(node_handle_.get(), name_.c_str(), &options);
-  if (ret != RCL_RET_OK) {
-    // Finalize the interrupt guard condition.
-    if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
-    }
-
-    throw_from_rcl_error(ret, "failed to initialize rcl node");
-  }
-
-  using rclcpp::callback_group::CallbackGroupType;
-  default_callback_group_ = create_callback_group(
-    CallbackGroupType::MutuallyExclusive);
   events_publisher_ = create_publisher<rcl_interfaces::msg::ParameterEvent>(
     "parameter_events", rmw_qos_profile_parameter_events);
-  notify_guard_condition_is_valid_ = true;
 }
 
 Node::~Node()
@@ -117,45 +59,25 @@ Node::~Node()
     // If it was already false, then it needs to now be removed.
     graph_listener_->remove_node(this);
   }
-  // Finalize the interrupt guard condition after removing self from graph listener.
-  {
-    std::lock_guard<std::mutex> notify_guard_condition_lock(notify_guard_condition_mutex_);
-    notify_guard_condition_is_valid_ = false;
-    if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
-    }
-  }
 }
 
 const std::string &
 Node::get_name() const
 {
-  return name_;
+  return node_base_->get_name();
 }
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
 Node::create_callback_group(
   rclcpp::callback_group::CallbackGroupType group_type)
 {
-  using rclcpp::callback_group::CallbackGroup;
-  using rclcpp::callback_group::CallbackGroupType;
-  auto group = CallbackGroup::SharedPtr(new CallbackGroup(group_type));
-  callback_groups_.push_back(group);
-  return group;
+  return node_base_->create_callback_group(group_type);
 }
 
 bool
 Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  bool group_belongs_to_this_node = false;
-  for (auto & weak_group : this->callback_groups_) {
-    auto cur_group = weak_group.lock();
-    if (cur_group && (cur_group == group)) {
-      group_belongs_to_this_node = true;
-    }
-  }
-  return group_belongs_to_this_node;
+  return node_base_->callback_group_in_node(group);
 }
 
 // TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
@@ -354,7 +276,7 @@ Node::get_topic_names_and_types() const
   rcl_topic_names_and_types_t topic_names_and_types =
     rcl_get_zero_initialized_topic_names_and_types();
 
-  auto ret = rcl_get_topic_names_and_types(node_handle_.get(),
+  auto ret = rcl_get_topic_names_and_types(node_base_->get_rcl_node_handle(),
       &topic_names_and_types);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
@@ -383,7 +305,8 @@ size_t
 Node::count_publishers(const std::string & topic_name) const
 {
   size_t count;
-  auto ret = rmw_count_publishers(rcl_node_get_rmw_handle(node_handle_.get()),
+  // TODO(wjwwood): use the rcl equivalent methods
+  auto ret = rmw_count_publishers(rcl_node_get_rmw_handle(node_base_->get_rcl_node_handle()),
       topic_name.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
@@ -398,7 +321,8 @@ size_t
 Node::count_subscribers(const std::string & topic_name) const
 {
   size_t count;
-  auto ret = rmw_count_subscribers(rcl_node_get_rmw_handle(node_handle_.get()),
+  // TODO(wjwwood): use the rcl equivalent methods
+  auto ret = rmw_count_subscribers(rcl_node_get_rmw_handle(node_base_->get_rcl_node_handle()),
       topic_name.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
@@ -410,44 +334,40 @@ Node::count_subscribers(const std::string & topic_name) const
 }
 
 
-const Node::CallbackGroupWeakPtrList &
+const std::vector<Node::CallbackGroupWeakPtr> &
 Node::get_callback_groups() const
 {
-  return callback_groups_;
+  return node_base_->get_callback_groups();
 }
 
 const rcl_guard_condition_t *
 Node::get_notify_guard_condition() const
 {
-  std::lock_guard<std::mutex> notify_guard_condition_lock(notify_guard_condition_mutex_);
-  if (!notify_guard_condition_is_valid_) {
-    return nullptr;
-  }
-  return &notify_guard_condition_;
+  return node_base_->get_notify_guard_condition();
 }
 
 const rcl_guard_condition_t *
 Node::get_graph_guard_condition() const
 {
-  return rcl_node_get_graph_guard_condition(node_handle_.get());
+  return rcl_node_get_graph_guard_condition(node_base_->get_rcl_node_handle());
 }
 
 const rcl_node_t *
 Node::get_rcl_node_handle() const
 {
-  return node_handle_.get();
+  return node_base_->get_rcl_node_handle();
 }
 
 rcl_node_t *
 Node::get_rcl_node_handle()
 {
-  return node_handle_.get();
+  return node_base_->get_rcl_node_handle();
 }
 
 std::shared_ptr<rcl_node_t>
-Node::get_shared_node_handle()
+Node::get_shared_rcl_node_handle()
 {
-  return node_handle_;
+  return node_base_->get_shared_rcl_node_handle();
 }
 
 void
@@ -480,8 +400,8 @@ Node::notify_graph_change()
   }
   graph_cv_.notify_all();
   {
-    std::lock_guard<std::mutex> notify_guard_condition_lock(notify_guard_condition_mutex_);
-    rcl_ret_t ret = rcl_trigger_guard_condition(&notify_guard_condition_);
+    auto notify_condition_lock = node_base_->acquire_notify_guard_condition_lock();
+    rcl_ret_t ret = rcl_trigger_guard_condition(node_base_->get_notify_guard_condition());
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to trigger notify guard condition");
     }
@@ -543,7 +463,6 @@ Node::count_graph_users()
   return graph_users_count_.load();
 }
 
-
 // PROTECTED IMPLEMENTATION
 void
 Node::add_service(rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
@@ -560,12 +479,18 @@ Node::add_service(rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
     }
     group->add_service(serv_base_ptr);
   } else {
-    default_callback_group_->add_service(serv_base_ptr);
+    node_base_->get_default_callback_group()->add_service(serv_base_ptr);
   }
   number_of_services_++;
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
+  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on service creation: ") + rmw_get_error_string());
   }
+}
+
+rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
+Node::get_node_base_interface()
+{
+  return node_base_;
 }

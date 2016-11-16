@@ -22,8 +22,8 @@ AnyExecutable::AnyExecutable()
   timer(nullptr),
   service(nullptr),
   client(nullptr),
-  callback_group(nullptr),
-  node(nullptr)
+  callback_group(nullptr)
+  // node(nullptr)
 {}
 
 AnyExecutable::~AnyExecutable()

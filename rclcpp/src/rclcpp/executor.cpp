@@ -86,10 +86,11 @@ Executor::~Executor()
 }
 
 void
-Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
+Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   // If the node already has an executor
-  if (node_ptr->has_executor.exchange(true)) {
+  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+  if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
   // Check to ensure node not already added
@@ -112,14 +113,14 @@ Executor::add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
 }
 
 void
-Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
+Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   bool node_removed = false;
   weak_nodes_.erase(
     std::remove_if(
       weak_nodes_.begin(), weak_nodes_.end(),
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      [&](std::weak_ptr<rclcpp::node::Node> & i)
+      [&](rclcpp::node_interfaces::NodeBaseInterface::WeakPtr & i)
       {
         bool matched = (i.lock() == node_ptr);
         node_removed |= matched;
@@ -128,7 +129,8 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
       // *INDENT-ON*
     )
   );
-  node_ptr->has_executor.store(false);
+  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+  has_executor.store(false);
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
@@ -142,7 +144,7 @@ Executor::remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify)
 
 void
 Executor::spin_node_once_nanoseconds(
-  rclcpp::node::Node::SharedPtr node,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
   std::chrono::nanoseconds timeout)
 {
   this->add_node(node, false);
@@ -152,7 +154,7 @@ Executor::spin_node_once_nanoseconds(
 }
 
 void
-Executor::spin_node_some(rclcpp::node::Node::SharedPtr node)
+Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
 {
   this->add_node(node, false);
   spin_some();
@@ -332,7 +334,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       remove_if(
         weak_nodes_.begin(), weak_nodes_.end(),
         // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-        [](std::weak_ptr<rclcpp::node::Node> i)
+        [](rclcpp::node_interfaces::NodeBaseInterface::WeakPtr i)
         {
           return i.expired();
         }
@@ -412,11 +414,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   }
 }
 
-rclcpp::node::Node::SharedPtr
+rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   if (!group) {
-    return rclcpp::node::Node::SharedPtr();
+    return nullptr;
   }
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
@@ -430,7 +432,7 @@ Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr gro
       }
     }
   }
-  return rclcpp::node::Node::SharedPtr();
+  return nullptr;
 }
 
 rclcpp::callback_group::CallbackGroup::SharedPtr

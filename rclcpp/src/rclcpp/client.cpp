@@ -33,7 +33,7 @@ using rclcpp::exceptions::throw_from_rcl_error;
 ClientBase::ClientBase(
   std::shared_ptr<rclcpp::node::Node> parent_node,
   const std::string & service_name)
-: node_(parent_node), node_handle_(parent_node->get_shared_node_handle()),
+: node_(parent_node), node_handle_(parent_node->get_shared_rcl_node_handle()),
   service_name_(service_name)
 {}
 

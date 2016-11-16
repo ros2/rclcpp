@@ -84,11 +84,12 @@ Node::create_publisher(
     *message_alloc.get());
 
   auto publisher = std::make_shared<PublisherT>(
-    node_handle_, topic_name, publisher_options, message_alloc);
+    node_base_->get_shared_rcl_node_handle(), topic_name, publisher_options, message_alloc);
 
   if (use_intra_process_comms_) {
+    auto context = node_base_->get_context();
     auto intra_process_manager =
-      context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+      context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     uint64_t intra_process_publisher_id =
       intra_process_manager->add_publisher<MessageT, Alloc>(publisher);
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
@@ -124,7 +125,7 @@ Node::create_publisher(
       shared_publish_callback,
       publisher_options);
   }
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
+  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
@@ -169,7 +170,7 @@ Node::create_subscription(
   using rclcpp::subscription::SubscriptionBase;
 
   auto sub = Subscription<MessageT, Alloc>::make_shared(
-    node_handle_,
+    node_base_->get_shared_rcl_node_handle(),
     topic_name,
     subscription_options,
     any_subscription_callback,
@@ -183,8 +184,9 @@ Node::create_subscription(
     intra_process_options.qos = qos_profile;
     intra_process_options.ignore_local_publications = false;
 
+    auto context = node_base_->get_context();
     auto intra_process_manager =
-      context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+      context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
     uint64_t intra_process_subscription_id =
       intra_process_manager->add_subscription(sub_base_ptr);
@@ -226,10 +228,10 @@ Node::create_subscription(
     }
     group->add_subscription(sub_base_ptr);
   } else {
-    default_callback_group_->add_subscription(sub_base_ptr);
+    node_base_->get_default_callback_group()->add_subscription(sub_base_ptr);
   }
   number_of_subscriptions_++;
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
+  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on subscription creation: ") + rmw_get_error_string());
@@ -277,10 +279,10 @@ Node::create_wall_timer(
     }
     group->add_timer(timer);
   } else {
-    default_callback_group_->add_timer(timer);
+    node_base_->get_default_callback_group()->add_timer(timer);
   }
   number_of_timers_++;
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
+  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on timer creation: ") + rmw_get_error_string());
@@ -314,11 +316,11 @@ Node::create_client(
     }
     group->add_client(cli_base_ptr);
   } else {
-    default_callback_group_->add_client(cli_base_ptr);
+    node_base_->get_default_callback_group()->add_client(cli_base_ptr);
   }
   number_of_clients_++;
 
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
+  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
               "Failed to notify waitset on client creation: ") + rmw_get_error_string());
@@ -341,7 +343,7 @@ Node::create_service(
   service_options.qos = qos_profile;
 
   auto serv = service::Service<ServiceT>::make_shared(
-    node_handle_,
+    node_base_->get_shared_rcl_node_handle(),
     service_name, any_service_callback, service_options);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
   add_service(serv_base_ptr, group);

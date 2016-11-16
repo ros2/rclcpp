@@ -28,11 +28,12 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 
-#include "rclcpp/any_executable.hpp"
-#include "rclcpp/macros.hpp"
+// #include "rclcpp/any_executable.hpp"
+// #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/memory_strategy.hpp"
-#include "rclcpp/node.hpp"
+// #include "rclcpp/node.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -114,7 +115,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  add_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify = true);
+  add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Remove a node from the executor.
   /**
@@ -125,7 +126,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual void
-  remove_node(rclcpp::node::Node::SharedPtr node_ptr, bool notify = true);
+  remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Add a node to executor, execute the next available unit of work, and remove the node.
   /**
@@ -136,7 +137,7 @@ public:
    */
   template<typename T = std::milli>
   void
-  spin_node_once(rclcpp::node::Node::SharedPtr node,
+  spin_node_once(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
   {
     return spin_node_once_nanoseconds(
@@ -151,7 +152,7 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  spin_node_some(rclcpp::node::Node::SharedPtr node);
+  spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
 
   /// Complete all available queued work without blocking.
   /**
@@ -247,7 +248,9 @@ public:
 protected:
   RCLCPP_PUBLIC
   void
-  spin_node_once_nanoseconds(rclcpp::node::Node::SharedPtr node, std::chrono::nanoseconds timeout);
+  spin_node_once_nanoseconds(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+    std::chrono::nanoseconds timeout);
 
   /// Find the next available executable and do the work associated with it.
   /** \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
@@ -284,7 +287,7 @@ protected:
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
   RCLCPP_PUBLIC
-  rclcpp::node::Node::SharedPtr
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
   RCLCPP_PUBLIC
@@ -318,7 +321,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(Executor)
 
-  std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
+  std::vector<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 };
 
 }  // namespace executor

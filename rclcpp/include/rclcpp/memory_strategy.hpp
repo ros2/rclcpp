@@ -23,7 +23,7 @@
 
 #include "rclcpp/any_executable.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -41,7 +41,7 @@ class RCLCPP_PUBLIC MemoryStrategy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy)
-  using WeakNodeVector = std::vector<std::weak_ptr<rclcpp::node::Node>>;
+  using WeakNodeVector = std::vector<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>;
 
   virtual bool collect_entities(const WeakNodeVector & weak_nodes) = 0;
 
@@ -88,7 +88,7 @@ public:
   static rclcpp::client::ClientBase::SharedPtr
   get_client_by_handle(const rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
 
-  static rclcpp::node::Node::SharedPtr
+  static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,
     const WeakNodeVector & weak_nodes);
 

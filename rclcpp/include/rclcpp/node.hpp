@@ -39,6 +39,7 @@
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/service.hpp"
@@ -226,7 +227,6 @@ public:
 
   using CallbackGroup = rclcpp::callback_group::CallbackGroup;
   using CallbackGroupWeakPtr = std::weak_ptr<CallbackGroup>;
-  using CallbackGroupWeakPtrList = std::list<CallbackGroupWeakPtr>;
 
   /* Create and return a Client. */
   template<typename ServiceT>
@@ -294,7 +294,7 @@ public:
   count_subscribers(const std::string & topic_name) const;
 
   RCLCPP_PUBLIC
-  const CallbackGroupWeakPtrList &
+  const std::vector<CallbackGroupWeakPtr> &
   get_callback_groups() const;
 
   RCLCPP_PUBLIC
@@ -320,7 +320,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::shared_ptr<rcl_node_t>
-  get_shared_node_handle();
+  get_shared_rcl_node_handle();
 
   /// Notify threads waiting on graph changes.
   /* Affects threads waiting on the notify guard condition, see:
@@ -377,7 +377,9 @@ public:
   template<typename CallbackT>
   void register_param_change_callback(CallbackT && callback);
 
-  std::atomic_bool has_executor;
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
+  get_node_base_interface();
 
   RCLCPP_PUBLIC
   void
@@ -391,14 +393,7 @@ private:
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
-  std::string name_;
-
-  std::shared_ptr<rcl_node_t> node_handle_;
-
-  rclcpp::context::Context::SharedPtr context_;
-
-  CallbackGroup::SharedPtr default_callback_group_;
-  CallbackGroupWeakPtrList callback_groups_;
+  rclcpp::node_interfaces::NodeBase::SharedPtr node_base_;
 
   size_t number_of_subscriptions_;
   size_t number_of_timers_;
@@ -408,11 +403,6 @@ private:
   bool use_intra_process_comms_;
 
   mutable std::mutex mutex_;
-
-  /// Guard condition for notifying the Executor of changes to this node.
-  mutable std::mutex notify_guard_condition_mutex_;
-  rcl_guard_condition_t notify_guard_condition_ = rcl_get_zero_initialized_guard_condition();
-  bool notify_guard_condition_is_valid_;
 
   /// Graph Listener which waits on graph changes for the node and is shared across nodes.
   std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;

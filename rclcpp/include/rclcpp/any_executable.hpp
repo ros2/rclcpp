@@ -17,8 +17,13 @@
 
 #include <memory>
 
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/client.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/node.hpp"
+// #include "rclcpp/node.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -44,7 +49,7 @@ struct AnyExecutable
   rclcpp::client::ClientBase::SharedPtr client;
   // These are used to keep the scope on the containing items
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
-  rclcpp::node::Node::SharedPtr node;
+  // rclcpp::node::Node::SharedPtr node;
 };
 
 }  // namespace executor

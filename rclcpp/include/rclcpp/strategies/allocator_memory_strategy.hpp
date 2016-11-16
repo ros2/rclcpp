@@ -52,7 +52,7 @@ public:
   using VoidAllocTraits = typename allocator::AllocRebind<void *, Alloc>;
   using VoidAlloc = typename VoidAllocTraits::allocator_type;
 
-  using WeakNodeVector = std::vector<std::weak_ptr<node::Node>>;
+  // using WeakNodeVector = std::vector<std::weak_ptr<node::Node>>;
 
   explicit AllocatorMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
@@ -266,7 +266,7 @@ public:
           any_exec->subscription = subscription;
         }
         any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        // any_exec->node = get_node_by_group(group, weak_nodes);
         subscription_handles_.erase(it);
         return;
       }
@@ -300,7 +300,7 @@ public:
         // Otherwise it is safe to set and return the any_exec
         any_exec->service = service;
         any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        // any_exec->node = get_node_by_group(group, weak_nodes);
         service_handles_.erase(it);
         return;
       }
@@ -333,7 +333,7 @@ public:
         // Otherwise it is safe to set and return the any_exec
         any_exec->client = client;
         any_exec->callback_group = group;
-        any_exec->node = get_node_by_group(group, weak_nodes);
+        // any_exec->node = get_node_by_group(group, weak_nodes);
         client_handles_.erase(it);
         return;
       }

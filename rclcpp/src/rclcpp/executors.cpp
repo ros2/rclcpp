@@ -15,14 +15,14 @@
 #include "rclcpp/executors.hpp"
 
 void
-rclcpp::spin_some(node::Node::SharedPtr node_ptr)
+rclcpp::spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.spin_node_some(node_ptr);
 }
 
 void
-rclcpp::spin(node::Node::SharedPtr node_ptr)
+rclcpp::spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(node_ptr);
