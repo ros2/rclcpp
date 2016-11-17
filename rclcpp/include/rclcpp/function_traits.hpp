@@ -15,6 +15,32 @@
 #ifndef RCLCPP__FUNCTION_TRAITS_HPP_
 #define RCLCPP__FUNCTION_TRAITS_HPP_
 
+#if defined _LIBCPP_VERSION  // libc++ (Clang)
+#define RCLCPP__FUNCTION_TRAITS_BIND_OBJECT_MEMBER_SIGNATURE \
+  std::__1::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>
+#elif defined __GLIBCXX__  // glibc++ (GNU C++)
+#define RCLCPP__FUNCTION_TRAITS_BIND_OBJECT_MEMBER_SIGNATURE \
+  std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)>(FArgs ...)>
+#elif defined _MSC_VER  // MS Visual Studio
+#define RCLCPP__FUNCTION_TRAITS_BIND_OBJECT_MEMBER_SIGNATURE \
+  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...), FArgs ...>
+#else
+#error "Unsupported C++ compiler / standard library"
+#endif
+
+#if defined _LIBCPP_VERSION  // libc++ (Clang)
+#define RCLCPP__FUNCTION_TRAITS_BIND_FREE_FUNCTION_SIGNATURE \
+  std::__1::__bind<ReturnTypeT( &)(Args ...), FArgs ...>
+#elif defined __GLIBCXX__  // glibc++ (GNU C++)
+#define RCLCPP__FUNCTION_TRAITS_BIND_FREE_FUNCTION_SIGNATURE \
+  std::_Bind<ReturnTypeT(*(FArgs ...))(Args ...)>
+#elif defined _MSC_VER  // MS Visual Studio
+#define RCLCPP__FUNCTION_TRAITS_BIND_FREE_FUNCTION_SIGNATURE \
+  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl &)(Args ...), FArgs ...>
+#else
+#error "Unsupported C++ compiler / standard library"
+#endif
+
 #include <functional>
 #include <memory>
 #include <tuple>
@@ -34,6 +60,33 @@ namespace function_traits
  * See http://blogs.msdn.com/b/vcblog/archive/2015/06/19/c-11-14-17-features-in-vs-2015-rtm.aspx
  */
 
+template<typename TupleA, typename TupleB>
+struct tuple_concat;
+
+template<typename ... TupleArgsA, typename ... TupleArgsB>
+struct tuple_concat<std::tuple<TupleArgsA ...>, std::tuple<TupleArgsB ...>>
+{
+  using type = std::tuple<TupleArgsA ..., TupleArgsB ...>;
+};
+
+template<std::size_t N, typename T>
+struct tuple_cut;
+
+template<std::size_t N, typename Head, typename ... Tail>
+struct tuple_cut<N, std::tuple<Head, Tail ...>>
+{
+  using type = typename tuple_concat<
+      std::tuple<Head>,
+      typename tuple_cut<N - 1, std::tuple<Tail ...>>::type
+      >::type;
+};
+
+template<typename Head, typename ... Tail>
+struct tuple_cut<1, std::tuple<Head, Tail ...>>
+{
+  using type = std::tuple<Head>;
+};
+
 // Remove the first item in a tuple
 template<typename T>
 struct tuple_tail;
@@ -42,6 +95,28 @@ template<typename Head, typename ... Tail>
 struct tuple_tail<std::tuple<Head, Tail ...>>
 {
   using type = std::tuple<Tail ...>;
+};
+
+struct strict_tag {};
+
+struct relaxed_tag {};
+
+template<typename T>
+struct argument_checking_traits
+{
+  using tag = strict_tag;
+};
+
+template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
+struct argument_checking_traits<RCLCPP__FUNCTION_TRAITS_BIND_OBJECT_MEMBER_SIGNATURE>
+{
+  using tag = relaxed_tag;
+};
+
+template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
+struct argument_checking_traits<RCLCPP__FUNCTION_TRAITS_BIND_FREE_FUNCTION_SIGNATURE>
+{
+  using tag = relaxed_tag;
 };
 
 // std::function
@@ -80,31 +155,13 @@ struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(A
 
 // std::bind for object methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__1::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
-#elif defined __GLIBCXX__  // glibc++ (GNU C++)
-struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)>(FArgs ...)>>
-#elif defined _MSC_VER  // MS Visual Studio
-struct function_traits<
-  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...), FArgs ...>
->
-#else
-#error "Unsupported C++ compiler / standard library"
-#endif
+struct function_traits<RCLCPP__FUNCTION_TRAITS_BIND_OBJECT_MEMBER_SIGNATURE>
   : function_traits<ReturnTypeT(Args ...)>
 {};
 
 // std::bind for free functions
 template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__1::__bind<ReturnTypeT( &)(Args ...), FArgs ...>>
-#elif defined __GLIBCXX__  // glibc++ (GNU C++)
-struct function_traits<std::_Bind<ReturnTypeT(*(FArgs ...))(Args ...)>>
-#elif defined _MSC_VER  // MS Visual Studio
-struct function_traits<std::_Binder<std::_Unforced, ReturnTypeT(__cdecl &)(Args ...), FArgs ...>>
-#else
-#error "Unsupported C++ compiler / standard library"
-#endif
+struct function_traits<RCLCPP__FUNCTION_TRAITS_BIND_FREE_FUNCTION_SIGNATURE>
   : function_traits<ReturnTypeT(Args ...)>
 {};
 
@@ -137,9 +194,20 @@ struct check_arguments : std::is_same<
   >
 {};
 
-template<typename FunctorAT, typename FunctorBT>
+template<typename FunctorAT, typename FunctorBT,
+typename Tag = typename argument_checking_traits<FunctorAT>::tag>
 struct same_arguments : std::is_same<
     typename function_traits<FunctorAT>::arguments,
+    typename function_traits<FunctorBT>::arguments
+  >
+{};
+
+template<typename FunctorAT, typename FunctorBT>
+struct same_arguments<FunctorAT, FunctorBT, relaxed_tag>: std::is_same<
+    typename tuple_cut<
+      function_traits<FunctorBT>::arity,
+      typename function_traits<FunctorAT>::arguments
+    >::type,
     typename function_traits<FunctorBT>::arguments
   >
 {};
