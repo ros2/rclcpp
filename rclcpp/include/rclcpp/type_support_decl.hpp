@@ -18,8 +18,8 @@
 #include "rosidl_generator_cpp/message_type_support_decl.hpp"
 #include "rosidl_generator_cpp/service_type_support_decl.hpp"
 
-#include "rosidl_generator_cpp/message_type_support.hpp"
-#include "rosidl_generator_cpp/service_type_support.hpp"
+#include "rosidl_typesupport_cpp/message_type_support.hpp"
+#include "rosidl_typesupport_cpp/service_type_support.hpp"
 
 #include "rclcpp/visibility_control.hpp"
 

@@ -102,7 +102,7 @@ public:
     rcl_service_options_t & service_options)
   : ServiceBase(node_handle, service_name), any_callback_(any_callback)
   {
-    using rosidl_generator_cpp::get_service_type_support_handle;
+    using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
 
     // rcl does the static memory allocation here
