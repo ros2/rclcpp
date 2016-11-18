@@ -42,9 +42,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
 
   RCLCPP_PUBLIC
-  ServiceBase(
-    std::shared_ptr<rcl_node_t> node_handle,
-    const std::string service_name);
+  explicit ServiceBase(std::shared_ptr<rcl_node_t> node_handle);
 
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
@@ -68,8 +66,7 @@ protected:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_service_t service_handle_ = rcl_get_zero_initialized_service();
-  std::string service_name_;
+  rcl_service_t* service_handle_ = nullptr;
 };
 
 using any_service_callback::AnyServiceCallback;
@@ -95,13 +92,16 @@ public:
     const std::string & service_name,
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
-  : ServiceBase(node_handle, service_name), any_callback_(any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback)
   {
     using rosidl_generator_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
 
+    // rcl does the static memory allocation here
+    *service_handle_ = rcl_get_zero_initialized_service();
+
     if (rcl_service_init(
-        &service_handle_, node_handle.get(), service_type_support_handle, service_name.c_str(),
+        service_handle_, node_handle.get(), service_type_support_handle, service_name.c_str(),
         &service_options) != RCL_RET_OK)
     {
       throw std::runtime_error(
@@ -110,15 +110,36 @@ public:
     }
   }
 
+  Service(
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_service_t* service_handle,
+    AnyServiceCallback<ServiceT> any_callback)
+  : ServiceBase(node_handle), defined_extern(true),
+    any_callback_(any_callback)
+  {
+    // check if service handle was initialized
+    // TODO(Karsten1987): Can this go directly in RCL?
+    if (service_handle->impl == NULL)
+    {
+      throw std::runtime_error(
+          std::string("rcl_service_t in constructor argument \
+            has to be initialized beforehand"));
+    }
+  }
+
   Service() = delete;
 
   virtual ~Service()
   {
-    if (rcl_service_fini(&service_handle_, node_handle_.get()) != RCL_RET_OK) {
-      std::stringstream ss;
-      ss << "Error in destruction of rcl service_handle_ handle: " <<
-        rcl_get_error_string_safe() << '\n';
-      (std::cerr << ss.str()).flush();
+    // check if you have ownership of the handle
+    if (!defined_extern)
+    {
+      if (rcl_service_fini(service_handle_, node_handle_.get()) != RCL_RET_OK) {
+        std::stringstream ss;
+        ss << "Error in destruction of rcl service_handle_ handle: " <<
+          rcl_get_error_string_safe() << '\n';
+        (std::cerr << ss.str()).flush();
+      }
     }
   }
 
@@ -159,6 +180,8 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(Service)
+
+  bool defined_extern = false;
 
   AnyServiceCallback<ServiceT> any_callback_;
 };

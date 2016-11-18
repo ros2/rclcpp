@@ -127,6 +127,31 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_find_weak_nodes ${PROJECT_NAME})
   endif()
+
+  get_default_rmw_implementation(default_rmw)
+  find_package(${default_rmw})
+  get_rmw_typesupport(typesupport_impls_cpp "${default_rmw}" LANGUAGE "cpp")
+  get_rmw_typesupport(typesupport_impls_c "${default_rmw}" LANGUAGE "c")
+  set(mock_msg_files
+    "test/mock_msgs/srv/Mock.srv")
+  rosidl_generate_interfaces(mock_msgs
+    ${mock_msg_files})
+
+  ament_add_gtest(test_externally_defined_services test/test_externally_defined_services.cpp)
+  if(TARGET test_externally_defined_services)
+    target_include_directories(test_externally_defined_services PUBLIC
+      ${rcl_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_externally_defined_services ${PROJECT_NAME})
+    foreach(typesupport_impl_cpp ${typesupport_impls_cpp})
+      rosidl_target_interfaces(test_externally_defined_services
+        mock_msgs ${typesupport_impl_cpp})
+    endforeach()
+    foreach(typesupport_impl_c ${typesupport_impls_c})
+      rosidl_target_interfaces(test_externally_defined_services
+        mock_msgs ${typesupport_impl_c})
+    endforeach()
+  endif()
 endif()
 
 ament_package(
