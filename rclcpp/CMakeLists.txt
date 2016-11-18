@@ -143,7 +143,7 @@ if(BUILD_TESTING)
   endif()
 
   get_default_rmw_implementation(default_rmw)
-  find_package(${default_rmw} REQUIRED)
+  find_package(${default_rmw})
   get_rmw_typesupport(typesupport_impls_cpp "${default_rmw}" LANGUAGE "cpp")
   get_rmw_typesupport(typesupport_impls_c "${default_rmw}" LANGUAGE "c")
   set(mock_msg_files

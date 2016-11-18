@@ -15,7 +15,6 @@
 #include <gtest/gtest.h>
 
 #include <string>
-#include <memory>
 
 #include "rclcpp/node.hpp"
 #include "rclcpp/any_service_callback.hpp"
@@ -37,23 +36,8 @@ protected:
 };
 
 void
-callback(const std::shared_ptr<rclcpp::srv::Mock::Request>/*req*/,
-  std::shared_ptr<rclcpp::srv::Mock::Response>/*resp*/)
-{}
-
-TEST_F(TestExternallyDefinedServices, default_behavior) {
-  auto node_handle = rclcpp::node::Node::make_shared("base_node");
-
-  try {
-    auto srv = node_handle->create_service<rclcpp::srv::Mock>("test",
-        callback);
-  } catch (const std::exception &) {
-    FAIL();
-    return;
-  }
-  SUCCEED();
-}
-
+callback(const std::shared_ptr<rclcpp::srv::Mock::Request> /*req*/,
+    std::shared_ptr<rclcpp::srv::Mock::Response> /*resp*/);
 
 TEST_F(TestExternallyDefinedServices, extern_defined_uninitialized) {
   auto node_handle = rclcpp::node::Node::make_shared("base_node");
@@ -93,7 +77,6 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
     FAIL();
     return;
   }
-
   rclcpp::any_service_callback::AnyServiceCallback<rclcpp::srv::Mock> cb;
 
   try {
@@ -134,7 +117,8 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
     // Call destructor
   }
 
-  if (!service_handle.impl) {
+  if (service_handle.impl == NULL)
+  {
     FAIL();
     return;
   }
