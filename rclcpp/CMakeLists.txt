@@ -135,7 +135,8 @@ if(BUILD_TESTING)
   set(mock_msg_files
     "test/mock_msgs/srv/Mock.srv")
   rosidl_generate_interfaces(mock_msgs
-    ${mock_msg_files})
+    ${mock_msg_files}
+    SKIP_INSTALL)
 
   ament_add_gtest(test_externally_defined_services test/test_externally_defined_services.cpp)
   if(TARGET test_externally_defined_services)
