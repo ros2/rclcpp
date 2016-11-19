@@ -542,3 +542,26 @@ Node::count_graph_users()
 {
   return graph_users_count_.load();
 }
+
+
+// PROTECTED IMPLEMENTATION
+void
+Node::add_service(const rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
+  if (group) {
+    if (!group_in_node(group)) {
+      // TODO(jacquelinekay): use custom exception
+      throw std::runtime_error("Cannot create service, group not in node.");
+    }
+    group->add_service(serv_base_ptr);
+  } else {
+    default_callback_group_->add_service(serv_base_ptr);
+  }
+  number_of_services_++;
+  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
+    throw std::runtime_error(
+            std::string(
+              "Failed to notify waitset on service creation: ") + rmw_get_error_string());
+  }
+}
