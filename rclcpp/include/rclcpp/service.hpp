@@ -101,6 +101,7 @@ public:
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
 
     // rcl does the static memory allocation here
+    service_handle_ = new rcl_service_t;
     *service_handle_ = rcl_get_zero_initialized_service();
 
     if (rcl_service_init(

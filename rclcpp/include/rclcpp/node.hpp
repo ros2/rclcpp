@@ -379,7 +379,6 @@ public:
 
   std::atomic_bool has_executor;
 
-protected:
   RCLCPP_PUBLIC
   void
   add_service(const rclcpp::service::ServiceBase::SharedPtr service,
