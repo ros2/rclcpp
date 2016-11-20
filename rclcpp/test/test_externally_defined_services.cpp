@@ -38,7 +38,22 @@ protected:
 
 void
 callback(const std::shared_ptr<rclcpp::srv::Mock::Request>/*req*/,
-  std::shared_ptr<rclcpp::srv::Mock::Response>/*resp*/);
+  std::shared_ptr<rclcpp::srv::Mock::Response>/*resp*/)
+{}
+
+TEST_F(TestExternallyDefinedServices, default_behavior) {
+  auto node_handle = rclcpp::node::Node::make_shared("base_node");
+
+  try {
+  auto srv = node_handle->create_service<rclcpp::srv::Mock>("test",
+      callback);
+  } catch (const std::exception& e) {
+    FAIL();
+    return;
+  }
+  SUCCEED();
+}
+
 
 TEST_F(TestExternallyDefinedServices, extern_defined_uninitialized) {
   auto node_handle = rclcpp::node::Node::make_shared("base_node");
