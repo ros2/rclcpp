@@ -123,8 +123,8 @@ public:
     // TODO(Karsten1987): Can this go directly in RCL?
     if (service_handle->impl == NULL) {
       throw std::runtime_error(
-              std::string("rcl_service_t in constructor argument" +
-              "has to be initialized beforehand"));
+              std::string("rcl_service_t in constructor argument ") +
+              "has to be initialized beforehand");
     }
   }
 
