@@ -45,9 +45,9 @@ TEST_F(TestExternallyDefinedServices, default_behavior) {
   auto node_handle = rclcpp::node::Node::make_shared("base_node");
 
   try {
-  auto srv = node_handle->create_service<rclcpp::srv::Mock>("test",
-      callback);
-  } catch (const std::exception& e) {
+    auto srv = node_handle->create_service<rclcpp::srv::Mock>("test",
+        callback);
+  } catch (const std::exception & e) {
     FAIL();
     return;
   }
