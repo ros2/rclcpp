@@ -50,21 +50,21 @@ public:
 
   bool on_configure()
   {
-    printf("%s is going to configure its node\n", get_name().c_str());
+    printf("[%s] on_configure() is called.\n", get_name().c_str());
     return true;
   }
 
   bool on_activate()
   {
     rclcpp::node::lifecycle::LifecycleNode::enable_communication();
-    printf("%s is going to activate its node\n", get_name().c_str());
+    printf("[%s] on_activate() is called.\n", get_name().c_str());
     return true;
   }
 
   bool on_deactivate()
   {
     rclcpp::node::lifecycle::LifecycleNode::disable_communication();
-    printf("%s is going to deactivate its node\n", get_name().c_str());
+    printf("[%s] on_deactivate() is called.\n", get_name().c_str());
     return true;
   }
 
@@ -81,22 +81,21 @@ public:
   : rclcpp::node::Node(node_name)
   {
     sub_data_ = this->create_subscription<std_msgs::msg::String>("lifecycle_chatter",
-        std::bind(&LifecycleListener::data_callback, this, std::placeholders::_1));
+      std::bind(&LifecycleListener::data_callback, this, std::placeholders::_1));
     sub_notification_ = this->create_subscription<rclcpp_lifecycle::msg::Transition>(
-      "lifecycle_manager__lc_talker", std::bind(&LifecycleListener::notification_callback, this,
+      "lc_talker__transition_notify", std::bind(&LifecycleListener::notification_callback, this,
       std::placeholders::_1));
   }
 
   void data_callback(const std_msgs::msg::String::SharedPtr msg)
   {
-    std::cout << "I heard data: [" << msg->data << "]" << std::endl;
+    printf("[%s] data_callback: %s\n", get_name().c_str(), msg->data.c_str());
   }
 
   void notification_callback(const rclcpp_lifecycle::msg::Transition::SharedPtr msg)
   {
-    std::cout << "Transition triggered:: [ Going from state " <<
-      static_cast<int>(msg->start_state) << " to state " <<
-      static_cast<int>(msg->goal_state) << " ] " << std::endl;
+    printf("[%s] notify callback: Transition from state %d to %d\n",
+      get_name().c_str(), static_cast<int>(msg->start_state), static_cast<int>(msg->goal_state));
   }
 
 private:
@@ -115,94 +114,138 @@ public:
   void
   init()
   {
+    // Service clients pointing to a global lifecycle manager
     client_get_state_ = this->create_client<rclcpp_lifecycle::srv::GetState>(
       "lifecycle_manager__get_state");
-    client_get_single_state_ = this->create_client<rclcpp_lifecycle::srv::GetState>(
-      "lc_talker__get_state");
     client_change_state_ = this->create_client<rclcpp_lifecycle::srv::ChangeState>(
       "lifecycle_manager__change_state");
+
+    // Service client pointing to each individual service
+    client_get_single_state_ = this->create_client<rclcpp_lifecycle::srv::GetState>(
+      "lc_talker__get_state");
     client_change_single_state_ = this->create_client<rclcpp_lifecycle::srv::ChangeState>(
       "lc_talker__change_state");
   }
 
   unsigned int
-  get_state(const std::string & node_name)
+  get_state(const std::string & node_name, std::chrono::seconds time_out = 3_s)
   {
     auto request = std::make_shared<rclcpp_lifecycle::srv::GetState::Request>();
     request->node_name = node_name;
 
-    if (!client_get_state_->wait_for_service(3_s)) {
-      fprintf(stderr, "Service %s is not available.\n", client_get_state_->get_service_name().c_str());
+    if (!client_get_state_->wait_for_service(time_out)) {
+      fprintf(stderr, "Service %s is not available.\n",
+          client_get_state_->get_service_name().c_str());
       return static_cast<int>(rclcpp::lifecycle::LifecyclePrimaryStatesT::UNKNOWN);
     }
 
     auto result = client_get_state_->async_send_request(request);
-    fprintf(stderr, "Asking current state of node %s. Let's wait!\n", node_name.c_str());
     // Kind of a hack for making a async request a synchronous one.
     while (result.wait_for(std::chrono::milliseconds(500)) != std::future_status::ready) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    return result.get()->current_state;
+
+    if(result.get())
+    {
+      printf("[%s] Node %s has current state %d.\n",
+        get_name().c_str(), node_name.c_str(), result.get()->current_state);
+      return result.get()->current_state;
+    } else {
+      fprintf(stderr, "[%s] Failed to get current state for node %s\n",
+        get_name().c_str(), node_name.c_str());
+      return static_cast<int>(rclcpp::lifecycle::LifecyclePrimaryStatesT::UNKNOWN);
+    }
   }
 
   unsigned int
-  get_single_state()
+  get_single_state(std::chrono::seconds time_out = 3_s)
   {
     auto request = std::make_shared<rclcpp_lifecycle::srv::GetState::Request>();
 
-    if (!client_get_single_state_->wait_for_service(3_s)) {
-      fprintf(stderr, "Service %s is not available.\n", client_get_single_state_->get_service_name().c_str());
+    if (!client_get_single_state_->wait_for_service(time_out)) {
+      fprintf(stderr, "Service %s is not available.\n",
+          client_get_single_state_->get_service_name().c_str());
       return static_cast<int>(rclcpp::lifecycle::LifecyclePrimaryStatesT::UNKNOWN);
     }
 
     auto result = client_get_single_state_->async_send_request(request);
-    fprintf(stderr, "Asking single state of node %s. Let's wait!\n", "lc_talker");
     // Kind of a hack for making a async request a synchronous one.
     while (result.wait_for(std::chrono::milliseconds(500)) != std::future_status::ready) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    return result.get()->current_state;
+
+    if(result.get())
+    {
+      printf("[%s] Node %s has current state %d\n",
+        get_name().c_str(), "lc_talker", result.get()->current_state);
+      return result.get()->current_state;
+    } else {
+      fprintf(stderr, "[%s] Failed to get current state for node %s\n",
+        get_name().c_str(), "lc_talker");
+      return static_cast<int>(rclcpp::lifecycle::LifecyclePrimaryStatesT::UNKNOWN);
+    }
   }
 
   bool
-  change_state(const std::string & node_name, rclcpp::lifecycle::LifecycleTransitionsT transition)
+  change_state(const std::string & node_name, rclcpp::lifecycle::LifecycleTransitionsT transition,
+      std::chrono::seconds time_out = 3_s)
   {
     auto request = std::make_shared<rclcpp_lifecycle::srv::ChangeState::Request>();
     request->node_name = node_name;
     request->transition = static_cast<unsigned int>(transition);
 
-    if (!client_change_state_->wait_for_service(3_s)) {
-      fprintf(stderr, "Service %s is not available.\n", client_change_state_->get_service_name().c_str());
+    if (!client_change_state_->wait_for_service(time_out)) {
+      fprintf(stderr, "Service %s is not available.\n",
+        client_change_state_->get_service_name().c_str());
       return false;
     }
 
     auto result = client_change_state_->async_send_request(request);
-    fprintf(stderr, "Going to trigger transition %u for node %s\n", request->transition,
-      node_name.c_str());
     while (result.wait_for(std::chrono::milliseconds(500)) != std::future_status::ready) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    return result.get()->success;
+
+    if(result.get()->success)
+    {
+      printf("[%s] Transition %d successfully triggered.\n",
+        get_name().c_str(), static_cast<int>(transition));
+      return true;
+    } else {
+      fprintf(stderr, "[%s] Failed to trigger transition %d\n",
+        get_name().c_str(), static_cast<int>(transition));
+      return false;
+    }
   }
 
   bool
-  change_single_state(rclcpp::lifecycle::LifecycleTransitionsT transition)
+  change_single_state(rclcpp::lifecycle::LifecycleTransitionsT transition,
+      std::chrono::seconds time_out = 3_s)
   {
     auto request = std::make_shared<rclcpp_lifecycle::srv::ChangeState::Request>();
+    request->node_name = "lc_talker";
     request->transition = static_cast<unsigned int>(transition);
 
-    if (!client_change_single_state_->wait_for_service(3_s)) {
-      fprintf(stderr, "Service %s is not available.\n", client_change_single_state_->get_service_name().c_str());
+    if (!client_change_single_state_->wait_for_service(time_out)) {
+      fprintf(stderr, "Service %s is not available.\n",
+        client_change_single_state_->get_service_name().c_str());
       return false;
     }
 
     auto result = client_change_single_state_->async_send_request(request);
-    fprintf(stderr, "Going to trigger transition %u for node %s\n", request->transition,
-      "lc_talker");
     while (result.wait_for(std::chrono::milliseconds(500)) != std::future_status::ready) {
       std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-    return result.get()->success;
+
+    if(result.get()->success)
+    {
+      printf("[%s] Transition %d successfully triggered.\n",
+        get_name().c_str(), static_cast<int>(transition));
+      return true;
+    } else {
+      fprintf(stderr, "[%s] Failed to trigger transition %d\n",
+        get_name().c_str(), static_cast<int>(transition));
+      return false;
+    }
   }
 
 private:
@@ -216,43 +259,35 @@ void
 callee_script(std::shared_ptr<LifecycleServiceClient> lc_client,
   const std::string & node_name)
 {
-  auto sleep_time = 2_s;
+  auto sleep_time = 10_s;
 
-    std::this_thread::sleep_for(sleep_time);
-  /*
   {  // configure
     std::this_thread::sleep_for(sleep_time);
-    lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::CONFIGURING);
-    //lc_client->change_single_state(rclcpp::lifecycle::LifecycleTransitionsT::CONFIGURING);
-    //auto current_state = lc_client->get_single_state();
-    auto current_state = lc_client->get_state(node_name);
-    printf("Node %s is in state %u\n", "lc_talker", current_state);
+    //lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::CONFIGURING);
+    //lc_client->get_state(node_name);
+    lc_client->change_single_state(rclcpp::lifecycle::LifecycleTransitionsT::CONFIGURING);
+    lc_client->get_single_state();
   }
   {  // activate
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::ACTIVATING);
-    auto current_state = lc_client->get_state(node_name);
-    printf("Node %s is in state %u\n", node_name.c_str(), current_state);
+    lc_client->get_state(node_name);
   }
   {  // deactivate
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::DEACTIVATING);
-    auto current_state = lc_client->get_state(node_name);
-    printf("Node %s is in state %u\n", node_name.c_str(), current_state);
+    lc_client->get_state(node_name);
   }
   {  // activate againn
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::ACTIVATING);
-    auto current_state = lc_client->get_state(node_name);
-    printf("Node %s is in state %u\n", node_name.c_str(), current_state);
+    lc_client->get_state(node_name);
   }
   {  // deactivate again
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::DEACTIVATING);
-    auto current_state = lc_client->get_state(node_name);
-    printf("Node %s is in state %u\n", node_name.c_str(), current_state);
+    lc_client->get_state(node_name);
   }
-  */
 }
 
 int main(int argc, char * argv[])
@@ -276,8 +311,8 @@ int main(int argc, char * argv[])
   lm.add_node_interface(lc_node);
 
   exe.add_node(lc_node->get_communication_interface());
-  //exe.add_node(lc_listener);
-  //exe.add_node(lc_client);
+  exe.add_node(lc_listener);
+  exe.add_node(lc_client);
   exe.add_node(lm.get_node_base_interface());
 
   auto node_name = lc_node->get_base_interface()->get_name();
