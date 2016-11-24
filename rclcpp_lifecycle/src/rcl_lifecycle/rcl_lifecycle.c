@@ -45,7 +45,7 @@ bool concatenate(const char ** prefix, const char ** suffix, char ** result)
   }
   *result = malloc((prefix_size + suffix_size) * sizeof(char));
   memcpy(*result, *prefix, prefix_size);
-  memcpy(*result + prefix_size, *suffix, suffix_size);
+  memcpy(*result + prefix_size, *suffix, suffix_size+1);
   return true;
 }
 
@@ -87,7 +87,7 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
   {  // initialize publisher
      // Build topic, topic suffix hardcoded for now
      // and limited in length of 255
-    const char * topic_prefix = "__states";
+    const char * topic_prefix = "__transition_notify";
     char * topic_name;
     if (concatenate(&node_name, &topic_prefix, &topic_name) != true) {
       fprintf(stderr, "%s:%u, Topic name exceeds maximum size of 255\n",
@@ -107,7 +107,7 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
       free(topic_name);
       return ret;
     }
-    //free(topic_name);
+    free(topic_name);
   }
 
   {  // initialize get state service
@@ -122,8 +122,8 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
       return RCL_RET_ERROR;
     }
 
-    const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT(
-      rclcpp_lifecycle, srv, GetState);
+    const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT_FUNCTION(
+      rclcpp_lifecycle, srv, GetState)();
     rcl_service_options_t service_options = rcl_service_get_default_options();
     rcl_ret_t ret = rcl_service_init(&state_machine->comm_interface.srv_get_state,
         state_machine->comm_interface.node_handle, ts, topic_name, &service_options);
@@ -132,7 +132,7 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
       free(topic_name);
       return ret;
     }
-    //free(topic_name);
+    free(topic_name);
   }
 
   {  // initialize change state service
@@ -157,7 +157,7 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
       free(topic_name);
       return ret;
     }
-    //free(topic_name);
+    free(topic_name);
   }
 
   if (default_states) {
