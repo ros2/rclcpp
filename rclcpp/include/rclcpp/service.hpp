@@ -127,6 +127,7 @@ public:
               std::string("rcl_service_t in constructor argument ") +
               "has to be initialized beforehand");
     }
+    service_handle_ = service_handle;
   }
 
   Service() = delete;
