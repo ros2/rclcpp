@@ -101,7 +101,6 @@ public:
     }
     for (size_t i = 0; i < wait_set->size_of_services; ++i) {
       if (!wait_set->services[i]) {
-        fprintf(stderr, "Going to remove a invalid service\n");
         service_handles_[i] = nullptr;
       }
     }
@@ -164,7 +163,6 @@ public:
         for (auto & weak_service : group->get_service_ptrs()) {
           auto service = weak_service.lock();
           if (service) {
-            fprintf(stderr, "Going to add %s to the list of service handles\n", service->get_service_name().c_str());
             service_handles_.push_back(service->get_service_handle());
           }
         }
@@ -202,13 +200,10 @@ public:
     }
 
     for (auto service : service_handles_) {
-      fprintf(stderr, "Adding %s to waitset\n", rcl_service_get_service_name(service));
-      fprintf(stderr, "I won't see that\n");
       if (rcl_wait_set_add_service(wait_set, service) != RCL_RET_OK) {
         fprintf(stderr, "Couldn't add service to waitset: %s\n", rcl_get_error_string_safe());
         return false;
       }
-      fprintf(stderr, "Successfully added %s to waitset\n", rcl_service_get_service_name(service));
     }
 
     for (auto timer : timer_handles_) {

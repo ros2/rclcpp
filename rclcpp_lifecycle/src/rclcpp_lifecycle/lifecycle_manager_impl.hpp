@@ -33,7 +33,7 @@ namespace rclcpp
 namespace lifecycle
 {
 
-using LifecycleInterface = rclcpp::node::lifecycle::LifecycleNode;
+using LifecycleInterface = rclcpp::node::lifecycle::LifecycleNodeInterface;
 using LifecycleInterfacePtr = std::shared_ptr<rclcpp::node::lifecycle::LifecycleNodeInterface>;
 using LifecycleInterfaceWeakPtr = std::weak_ptr<rclcpp::node::lifecycle::LifecycleNodeInterface>;
 
@@ -42,8 +42,6 @@ struct NodeStateMachine
   LifecycleInterfaceWeakPtr weak_node_handle;
   rcl_state_machine_t state_machine;
   std::map<LifecycleTransitionsT, std::function<bool(void)>> cb_map;
-  // std::shared_ptr<rclcpp::service::Service<rclcpp_lifecycle::srv::GetState>> srv_get_state;
-  // std::shared_ptr<rclcpp::service::Service<rclcpp_lifecycle::srv::GetState>> srv_change_state;
   std::shared_ptr<rclcpp::service::ServiceBase> srv_get_state;
   std::shared_ptr<rclcpp::service::ServiceBase> srv_change_state;
 };

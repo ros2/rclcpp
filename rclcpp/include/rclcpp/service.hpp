@@ -128,7 +128,6 @@ public:
     }
     service_handle_ = service_handle;
     defined_extern_ = true;
-    fprintf(stderr, "Created Extern Service around servicehandle %p\n", service_handle_);
   }
 
   Service() = delete;
@@ -137,15 +136,12 @@ public:
   {
     // check if you have ownership of the handle
     if (!defined_extern_) {
-      fprintf(stderr, "CPP Service Handle address %p\n", service_handle_);
       if (rcl_service_fini(service_handle_, node_handle_) != RCL_RET_OK) {
         std::stringstream ss;
         ss << "Error in destruction of rcl service_handle_ handle: " <<
           rcl_get_error_string_safe() << '\n';
         (std::cerr << ss.str()).flush();
       }
-    } else {
-      fprintf(stderr, "Extern Service Handle address %p\n", service_handle_);
     }
   }
 

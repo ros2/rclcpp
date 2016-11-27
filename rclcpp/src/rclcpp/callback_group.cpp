@@ -41,13 +41,6 @@ const std::vector<rclcpp::service::ServiceBase::WeakPtr> &
 CallbackGroup::get_service_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  for(auto& service : service_ptrs_)
-  {
-    auto srv = service.lock();
-    if (srv)
-      fprintf(stderr, "Getting: Service in Group %s\n", srv->get_service_name().c_str());
-  }
-  fprintf(stderr, "**Getting***\n");
   return service_ptrs_;
 }
 
@@ -88,17 +81,8 @@ CallbackGroup::add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr)
 void
 CallbackGroup::add_service(const rclcpp::service::ServiceBase::SharedPtr service_ptr)
 {
-  {
   std::lock_guard<std::mutex> lock(mutex_);
   service_ptrs_.push_back(service_ptr);
-  for(auto& service : service_ptrs_)
-  {
-    auto srv = service.lock();
-    if (srv)
-      fprintf(stderr, "Adding: Service in Group %s\n", srv->get_service_name().c_str());
-  }
-  fprintf(stderr, "**Additing***\n");
-  }
 }
 
 void
