@@ -68,7 +68,7 @@ macro(targets)
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)
 
-  ### CPP High level library+exe
+  ### CPP High level library
   add_library(rclcpp_lifecycle${target_suffix}
     SHARED
     src/rclcpp_lifecycle/lifecycle_manager.cpp)
@@ -82,17 +82,34 @@ macro(targets)
   ament_target_dependencies(rclcpp_lifecycle${target_suffix}
     "rclcpp${target_suffix}")
 
+  ### demos
   add_executable(lifecycle_talker${target_suffix}
-    src/rclcpp_lifecycle/lifecycle_talker.cpp)
+    src/demos/lifecycle_talker.cpp)
   target_link_libraries(lifecycle_talker${target_suffix}
     rclcpp_lifecycle${target_suffix})
   ament_target_dependencies(lifecycle_talker${target_suffix}
+    "rclcpp${target_suffix}"
+    "std_msgs")
+  add_executable(lifecycle_listener${target_suffix}
+    src/demos/lifecycle_listener.cpp)
+  target_link_libraries(lifecycle_listener${target_suffix}
+    rclcpp_lifecycle${target_suffix})
+  ament_target_dependencies(lifecycle_listener${target_suffix}
+    "rclcpp${target_suffix}"
+    "std_msgs")
+  add_executable(lifecycle_service_client${target_suffix}
+    src/demos/lifecycle_service_client.cpp)
+  target_link_libraries(lifecycle_service_client${target_suffix}
+    rclcpp_lifecycle${target_suffix})
+  ament_target_dependencies(lifecycle_service_client${target_suffix}
     "rclcpp${target_suffix}"
     "std_msgs")
 
   install(TARGETS
     rclcpp_lifecycle${target_suffix}
     lifecycle_talker${target_suffix}
+    lifecycle_listener${target_suffix}
+    lifecycle_service_client${target_suffix}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)

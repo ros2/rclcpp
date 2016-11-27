@@ -12,97 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <iostream>
 #include <memory>
 #include <string>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/publisher.hpp"
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_lifecycle/lifecycle_manager.hpp>
+#include <rclcpp_lifecycle/srv/get_state.hpp>
+#include <rclcpp_lifecycle/srv/change_state.hpp>
 
-#include "rclcpp_lifecycle/lifecycle_manager.hpp"
-#include "rclcpp_lifecycle/lifecycle_node.hpp"
-#include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+// service topics for general lifecycle manager
+static constexpr auto manager_get_state_topic = "lifecycle_manager__get_state";
+static constexpr auto manager_change_state_topic = "lifecycle_manager__change_state";
 
-#include "std_msgs/msg/string.hpp"
-#include "rclcpp_lifecycle/msg/transition.hpp"
-#include "rclcpp_lifecycle/srv/get_state.hpp"
-#include "rclcpp_lifecycle/srv/change_state.hpp"
-
-class LifecycleTalker : public rclcpp::node::lifecycle::LifecycleNode
-{
-public:
-  explicit LifecycleTalker(const std::string & node_name, bool intra_process_comms = false)
-  : rclcpp::node::lifecycle::LifecycleNode(node_name, intra_process_comms)
-  {
-    msg_ = std::make_shared<std_msgs::msg::String>();
-
-    pub_ = this->create_publisher<std_msgs::msg::String>("lifecycle_chatter");
-    timer_ = this->get_communication_interface()->create_wall_timer(
-      1_s, std::bind(&LifecycleTalker::publish, this));
-  }
-
-  void publish()
-  {
-    static size_t count = 0;
-    msg_->data = "Lifecycle HelloWorld #" + std::to_string(++count);
-    pub_->publish(msg_);
-  }
-
-  bool on_configure()
-  {
-    printf("[%s] on_configure() is called.\n", get_name().c_str());
-    return true;
-  }
-
-  bool on_activate()
-  {
-    rclcpp::node::lifecycle::LifecycleNode::enable_communication();
-    printf("[%s] on_activate() is called.\n", get_name().c_str());
-    return true;
-  }
-
-  bool on_deactivate()
-  {
-    rclcpp::node::lifecycle::LifecycleNode::disable_communication();
-    printf("[%s] on_deactivate() is called.\n", get_name().c_str());
-    return true;
-  }
-
-private:
-  std::shared_ptr<std_msgs::msg::String> msg_;
-  std::shared_ptr<rclcpp::publisher::LifecyclePublisher<std_msgs::msg::String>> pub_;
-  rclcpp::TimerBase::SharedPtr timer_;
-};
-
-class LifecycleListener : public rclcpp::node::Node
-{
-public:
-  explicit LifecycleListener(const std::string & node_name)
-  : rclcpp::node::Node(node_name)
-  {
-    sub_data_ = this->create_subscription<std_msgs::msg::String>("lifecycle_chatter",
-      std::bind(&LifecycleListener::data_callback, this, std::placeholders::_1));
-    sub_notification_ = this->create_subscription<rclcpp_lifecycle::msg::Transition>(
-      "lc_talker__transition_notify", std::bind(&LifecycleListener::notification_callback, this,
-      std::placeholders::_1));
-  }
-
-  void data_callback(const std_msgs::msg::String::SharedPtr msg)
-  {
-    printf("[%s] data_callback: %s\n", get_name().c_str(), msg->data.c_str());
-  }
-
-  void notification_callback(const rclcpp_lifecycle::msg::Transition::SharedPtr msg)
-  {
-    printf("[%s] notify callback: Transition from state %d to %d\n",
-      get_name().c_str(), static_cast<int>(msg->start_state), static_cast<int>(msg->goal_state));
-  }
-
-private:
-  std::shared_ptr<rclcpp::subscription::Subscription<std_msgs::msg::String>> sub_data_;
-  std::shared_ptr<rclcpp::subscription::Subscription<rclcpp_lifecycle::msg::Transition>>
-  sub_notification_;
-};
+// service topics for node-attached services
+static const std::string lifecycle_node = "lc_talker";
+static const std::string node_get_state_topic = lifecycle_node+"__get_state";
+static const std::string node_change_state_topic = lifecycle_node+"__change_state";
 
 class LifecycleServiceClient : public rclcpp::node::Node
 {
@@ -116,15 +41,15 @@ public:
   {
     // Service clients pointing to a global lifecycle manager
     client_get_state_ = this->create_client<rclcpp_lifecycle::srv::GetState>(
-      "lifecycle_manager__get_state");
+      manager_get_state_topic);
     client_change_state_ = this->create_client<rclcpp_lifecycle::srv::ChangeState>(
-      "lifecycle_manager__change_state");
+      manager_change_state_topic);
 
     // Service client pointing to each individual service
     client_get_single_state_ = this->create_client<rclcpp_lifecycle::srv::GetState>(
-      "lc_talker__get_state");
+      node_get_state_topic);
     client_change_single_state_ = this->create_client<rclcpp_lifecycle::srv::ChangeState>(
-      "lc_talker__change_state");
+      node_change_state_topic);
   }
 
   unsigned int
@@ -177,11 +102,11 @@ public:
     if(result.get())
     {
       printf("[%s] Node %s has current state %d\n",
-        get_name().c_str(), "lc_talker", result.get()->current_state);
+        get_name().c_str(), lifecycle_node.c_str(), result.get()->current_state);
       return result.get()->current_state;
     } else {
       fprintf(stderr, "[%s] Failed to get current state for node %s\n",
-        get_name().c_str(), "lc_talker");
+        get_name().c_str(), lifecycle_node.c_str());
       return static_cast<int>(rclcpp::lifecycle::LifecyclePrimaryStatesT::UNKNOWN);
     }
   }
@@ -222,7 +147,7 @@ public:
       std::chrono::seconds time_out = 3_s)
   {
     auto request = std::make_shared<rclcpp_lifecycle::srv::ChangeState::Request>();
-    request->node_name = "lc_talker";
+    request->node_name = lifecycle_node;
     request->transition = static_cast<unsigned int>(transition);
 
     if (!client_change_single_state_->wait_for_service(time_out)) {
@@ -262,64 +187,43 @@ callee_script(std::shared_ptr<LifecycleServiceClient> lc_client,
   auto sleep_time = 10_s;
 
   {  // configure
-    std::this_thread::sleep_for(sleep_time);
-    //lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::CONFIGURING);
-    //lc_client->get_state(node_name);
     lc_client->change_single_state(rclcpp::lifecycle::LifecycleTransitionsT::CONFIGURING);
     lc_client->get_single_state();
   }
-  {  // activate
+  {  // activate single node
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::ACTIVATING);
     lc_client->get_state(node_name);
   }
-  {  // deactivate
+  {  // deactivate single node
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::DEACTIVATING);
     lc_client->get_state(node_name);
   }
-  {  // activate againn
+  {  // activate lifecycle_manager
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::ACTIVATING);
     lc_client->get_state(node_name);
   }
-  {  // deactivate again
+  {  // deactivate lifecycle_manager
     std::this_thread::sleep_for(sleep_time);
     lc_client->change_state(node_name, rclcpp::lifecycle::LifecycleTransitionsT::DEACTIVATING);
     lc_client->get_state(node_name);
   }
 }
 
-int main(int argc, char * argv[])
+int main(int argc, char** argv)
 {
-  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
   rclcpp::init(argc, argv);
 
-  rclcpp::executors::SingleThreadedExecutor exe;
-
-  std::shared_ptr<LifecycleTalker> lc_node =
-    std::make_shared<LifecycleTalker>("lc_talker");
-
-  std::shared_ptr<LifecycleListener> lc_listener =
-    std::make_shared<LifecycleListener>("lc_listener");
-
-  std::shared_ptr<LifecycleServiceClient> lc_client =
-    std::make_shared<LifecycleServiceClient>("lc_client");
+  auto lc_client = std::make_shared<LifecycleServiceClient>("lc_client");
   lc_client->init();
 
-  rclcpp::lifecycle::LifecycleManager lm;
-  lm.add_node_interface(lc_node);
-
-  exe.add_node(lc_node->get_communication_interface());
-  exe.add_node(lc_listener);
+  rclcpp::executors::SingleThreadedExecutor exe;
   exe.add_node(lc_client);
-  exe.add_node(lm.get_node_base_interface());
-
-  auto node_name = lc_node->get_base_interface()->get_name();
 
   std::shared_future<void> script = std::async(std::launch::async,
-      std::bind(callee_script, lc_client, node_name));
-
+      std::bind(callee_script, lc_client, lifecycle_node));
   exe.spin_until_future_complete(script);
 
   return 0;
