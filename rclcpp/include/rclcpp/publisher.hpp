@@ -52,6 +52,7 @@ class PublisherBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
+
   /// Default constructor.
   /**
    * Typically, a publisher is not created through this method, but instead is created through a

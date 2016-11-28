@@ -375,7 +375,8 @@ public:
    * \note Repeated invocations of this function will overwrite previous callbacks
    */
   template<typename CallbackT>
-  void register_param_change_callback(CallbackT && callback);
+  void
+  register_param_change_callback(CallbackT && callback);
 
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
@@ -395,7 +396,6 @@ private:
 
   rclcpp::node_interfaces::NodeBase::SharedPtr node_base_;
 
-  size_t number_of_subscriptions_;
   size_t number_of_timers_;
   size_t number_of_services_;
   size_t number_of_clients_;

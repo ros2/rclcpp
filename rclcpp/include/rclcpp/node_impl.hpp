@@ -230,7 +230,6 @@ Node::create_subscription(
   } else {
     node_base_->get_default_callback_group()->add_subscription(sub_base_ptr);
   }
-  number_of_subscriptions_++;
   if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
