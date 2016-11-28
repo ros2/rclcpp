@@ -42,7 +42,7 @@ namespace single_threaded_executor
 class SingleThreadedExecutor : public executor::Executor
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor);
+  RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor)
 
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
@@ -61,7 +61,7 @@ public:
   spin();
 
 private:
-  RCLCPP_DISABLE_COPY(SingleThreadedExecutor);
+  RCLCPP_DISABLE_COPY(SingleThreadedExecutor)
 };
 
 }  // namespace single_threaded_executor

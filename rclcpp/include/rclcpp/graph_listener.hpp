@@ -152,7 +152,7 @@ protected:
   run_loop();
 
 private:
-  RCLCPP_DISABLE_COPY(GraphListener);
+  RCLCPP_DISABLE_COPY(GraphListener)
 
   std::thread listener_thread_;
   bool is_started_;

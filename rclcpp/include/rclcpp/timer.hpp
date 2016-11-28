@@ -43,7 +43,7 @@ namespace timer
 class TimerBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase)
 
   RCLCPP_PUBLIC
   explicit TimerBase(std::chrono::nanoseconds period);
@@ -103,7 +103,7 @@ template<
 class GenericTimer : public TimerBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(GenericTimer);
+  RCLCPP_SMART_PTR_DEFINITIONS(GenericTimer)
 
   /// Default constructor.
   /**
@@ -170,7 +170,7 @@ public:
   }
 
 protected:
-  RCLCPP_DISABLE_COPY(GenericTimer);
+  RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
 };

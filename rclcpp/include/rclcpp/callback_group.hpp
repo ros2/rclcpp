@@ -49,7 +49,7 @@ class CallbackGroup
   friend class rclcpp::node::Node;
 
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup);
+  RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup)
 
   RCLCPP_PUBLIC
   explicit CallbackGroup(CallbackGroupType group_type);
@@ -79,7 +79,7 @@ public:
   type() const;
 
 private:
-  RCLCPP_DISABLE_COPY(CallbackGroup);
+  RCLCPP_DISABLE_COPY(CallbackGroup)
 
   RCLCPP_PUBLIC
   void

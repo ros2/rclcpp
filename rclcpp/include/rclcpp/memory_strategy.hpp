@@ -40,7 +40,7 @@ namespace memory_strategy
 class RCLCPP_PUBLIC MemoryStrategy
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy)
   using WeakNodeVector = std::vector<std::weak_ptr<rclcpp::node::Node>>;
 
   virtual bool collect_entities(const WeakNodeVector & weak_nodes) = 0;

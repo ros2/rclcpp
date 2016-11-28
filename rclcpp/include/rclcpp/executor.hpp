@@ -88,7 +88,7 @@ static inline ExecutorArgs create_default_executor_arguments()
 class Executor
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Executor);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Executor)
 
   /// Default constructor.
   // \param[in] ms The memory strategy to be used with this executor.
@@ -316,7 +316,7 @@ protected:
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
 private:
-  RCLCPP_DISABLE_COPY(Executor);
+  RCLCPP_DISABLE_COPY(Executor)
 
   std::vector<std::weak_ptr<rclcpp::node::Node>> weak_nodes_;
 };

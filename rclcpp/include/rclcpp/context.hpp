@@ -36,7 +36,7 @@ namespace context
 class Context
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(Context);
+  RCLCPP_SMART_PTR_DEFINITIONS(Context)
 
   RCLCPP_PUBLIC
   Context();
@@ -68,7 +68,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(Context);
+  RCLCPP_DISABLE_COPY(Context)
 
   std::unordered_map<std::type_index, std::shared_ptr<void>> sub_contexts_;
   std::mutex mutex_;

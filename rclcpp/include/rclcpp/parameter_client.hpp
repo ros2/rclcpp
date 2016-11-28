@@ -44,7 +44,7 @@ namespace parameter_client
 class AsyncParametersClient
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(AsyncParametersClient);
+  RCLCPP_SMART_PTR_DEFINITIONS(AsyncParametersClient)
 
   RCLCPP_PUBLIC
   AsyncParametersClient(
@@ -118,7 +118,7 @@ private:
 class SyncParametersClient
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(SyncParametersClient);
+  RCLCPP_SMART_PTR_DEFINITIONS(SyncParametersClient)
 
   RCLCPP_PUBLIC
   explicit SyncParametersClient(

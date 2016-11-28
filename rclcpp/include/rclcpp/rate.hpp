@@ -31,7 +31,7 @@ namespace rate
 class RateBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(RateBase);
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(RateBase)
 
   virtual bool sleep() = 0;
   virtual bool is_steady() const = 0;
@@ -46,7 +46,7 @@ template<class Clock = std::chrono::high_resolution_clock>
 class GenericRate : public RateBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(GenericRate);
+  RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
 
   explicit GenericRate(double rate)
   : GenericRate<Clock>(
@@ -106,7 +106,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(GenericRate);
+  RCLCPP_DISABLE_COPY(GenericRate)
 
   std::chrono::nanoseconds period_;
   using ClockDurationNano = std::chrono::duration<typename Clock::rep, std::nano>;

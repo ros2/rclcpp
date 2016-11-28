@@ -35,7 +35,7 @@ namespace mapped_ring_buffer
 class RCLCPP_PUBLIC MappedRingBufferBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBufferBase);
+  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBufferBase)
 };
 
 /// Ring buffer container of unique_ptr's of T, which can be accessed by a key.
@@ -58,7 +58,7 @@ template<typename T, typename Alloc = std::allocator<void>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Alloc>);
+  RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBuffer<T, Alloc>)
   using ElemAllocTraits = allocator::AllocRebind<T, Alloc>;
   using ElemAlloc = typename ElemAllocTraits::allocator_type;
   using ElemDeleter = allocator::Deleter<ElemAlloc, T>;
@@ -207,7 +207,7 @@ public:
   }
 
 private:
-  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Alloc>);
+  RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Alloc>)
 
   struct element
   {

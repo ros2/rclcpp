@@ -120,10 +120,10 @@ namespace intra_process_manager
 class IntraProcessManager
 {
 private:
-  RCLCPP_DISABLE_COPY(IntraProcessManager);
+  RCLCPP_DISABLE_COPY(IntraProcessManager)
 
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManager);
+  RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessManager)
 
   RCLCPP_PUBLIC
   explicit IntraProcessManager(
