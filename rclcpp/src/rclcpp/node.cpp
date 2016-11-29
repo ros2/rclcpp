@@ -546,7 +546,7 @@ Node::count_graph_users()
 
 // PROTECTED IMPLEMENTATION
 void
-Node::add_service(const rclcpp::service::ServiceBase::SharedPtr & serv_base_ptr,
+Node::add_service(rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   if (!serv_base_ptr) {
