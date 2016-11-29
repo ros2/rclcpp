@@ -94,6 +94,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
     FAIL();
     return;
   }
+
   rclcpp::any_service_callback::AnyServiceCallback<rclcpp::srv::Mock> cb;
 
   try {

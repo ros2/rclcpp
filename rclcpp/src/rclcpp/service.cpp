@@ -27,6 +27,12 @@
 
 using rclcpp::service::ServiceBase;
 
+ServiceBase::ServiceBase(
+  rcl_node_t * node_handle,
+  const std::string & service_name)
+: node_handle_(node_handle), service_name_(service_name)
+{}
+
 ServiceBase::ServiceBase(rcl_node_t * node_handle)
 : node_handle_(node_handle)
 {}
@@ -45,7 +51,7 @@ ServiceBase::~ServiceBase()
 std::string
 ServiceBase::get_service_name()
 {
-  return rcl_service_get_service_name(service_handle_);
+  return this->service_name_;
 }
 
 const rcl_service_t *
