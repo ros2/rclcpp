@@ -25,16 +25,16 @@ extern "C"
 #include "rosidl_generator_c/message_type_support.h"
 #include "rosidl_generator_c/string_functions.h"
 
-#include "rclcpp_lifecycle/msg/transition.h"
-#include "rclcpp_lifecycle/srv/get_state.h"
-#include "rclcpp_lifecycle/srv/change_state.h"
+#include "lifecycle_msgs/msg/transition.h"
+#include "lifecycle_msgs/srv/get_state.h"
+#include "lifecycle_msgs/srv/change_state.h"
 
 #include "rcl_lifecycle/rcl_lifecycle.h"
 #include "rcl_lifecycle/transition_map.h"
 
 #include "default_state_machine.hxx"
 
-static rclcpp_lifecycle__msg__Transition msg;
+static lifecycle_msgs__msg__Transition msg;
 
 bool concatenate(const char ** prefix, const char ** suffix, char ** result)
 {
@@ -97,7 +97,7 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
     }
 
     const rosidl_message_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT(
-      rclcpp_lifecycle, msg, Transition);
+      lifecycle_msgs, msg, Transition);
     rcl_publisher_options_t publisher_options = rcl_publisher_get_default_options();
     rcl_ret_t ret = rcl_publisher_init(&state_machine->comm_interface.state_publisher,
         state_machine->comm_interface.node_handle, ts, topic_name, &publisher_options);
@@ -123,7 +123,7 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
     }
 
     const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT_FUNCTION(
-      rclcpp_lifecycle, srv, GetState)();
+      lifecycle_msgs, srv, GetState)();
     rcl_service_options_t service_options = rcl_service_get_default_options();
     rcl_ret_t ret = rcl_service_init(&state_machine->comm_interface.srv_get_state,
         state_machine->comm_interface.node_handle, ts, topic_name, &service_options);
@@ -148,7 +148,7 @@ rcl_state_machine_init(rcl_state_machine_t * state_machine, const char* node_nam
     }
 
     const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT(
-      rclcpp_lifecycle, srv, ChangeState);
+      lifecycle_msgs, srv, ChangeState);
     rcl_service_options_t service_options = rcl_service_get_default_options();
     rcl_ret_t ret = rcl_service_init(&state_machine->comm_interface.srv_change_state,
         state_machine->comm_interface.node_handle, ts, topic_name, &service_options);
@@ -336,7 +336,7 @@ rcl_start_transition_by_index(rcl_state_machine_t * state_machine,
   }
 
   // do the initialization
-  rclcpp_lifecycle__msg__Transition__init(&msg);
+  lifecycle_msgs__msg__Transition__init(&msg);
   msg.start_state = state_machine->current_state->index;
   msg.goal_state = transition->transition_state.index;
 
@@ -344,7 +344,7 @@ rcl_start_transition_by_index(rcl_state_machine_t * state_machine,
     fprintf(stderr, "%s:%d, Couldn't publish the notification message.\n",
       __FILE__, __LINE__);
   }
-  rclcpp_lifecycle__msg__Transition__fini(&msg);
+  lifecycle_msgs__msg__Transition__fini(&msg);
 
   // Apply a transition state
   state_machine->current_state = &transition->transition_state;
@@ -377,26 +377,26 @@ rcl_finish_transition_by_index(rcl_state_machine_t * state_machine,
 
   // high level transition(callback) was executed correctly
   if (success == true) {
-    rclcpp_lifecycle__msg__Transition__init(&msg);
+    lifecycle_msgs__msg__Transition__init(&msg);
     msg.start_state = transition->transition_state.index;
     msg.goal_state = transition->goal->index;
     if (rcl_publish(&state_machine->comm_interface.state_publisher, &msg) != RCL_RET_OK) {
       fprintf(stderr, "%s:%d, Couldn't publish the notification message.\n",
         __FILE__, __LINE__);
     }
-    rclcpp_lifecycle__msg__Transition__fini(&msg);
+    lifecycle_msgs__msg__Transition__fini(&msg);
     state_machine->current_state = transition->goal;
     return true;
   }
 
-  rclcpp_lifecycle__msg__Transition__init(&msg);
+  lifecycle_msgs__msg__Transition__init(&msg);
   msg.start_state = transition->transition_state.index;
   msg.goal_state = transition->error->index;
   if (rcl_publish(&state_machine->comm_interface.state_publisher, &msg) != RCL_RET_OK) {
     fprintf(stderr, "%s:%d, Couldn't publish the notification message.\n",
       __FILE__, __LINE__);
   }
-  rclcpp_lifecycle__msg__Transition__fini(&msg);
+  lifecycle_msgs__msg__Transition__fini(&msg);
   state_machine->current_state = transition->error;
   return true;
 }

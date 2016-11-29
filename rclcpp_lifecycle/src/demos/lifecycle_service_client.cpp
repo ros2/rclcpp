@@ -17,8 +17,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp_lifecycle/lifecycle_manager.hpp>
-#include <rclcpp_lifecycle/srv/get_state.hpp>
-#include <rclcpp_lifecycle/srv/change_state.hpp>
+#include <lifecycle_msgs/srv/get_state.hpp>
+#include <lifecycle_msgs/srv/change_state.hpp>
 
 // service topics for general lifecycle manager
 static constexpr auto manager_get_state_topic = "lifecycle_manager__get_state";
@@ -40,22 +40,22 @@ public:
   init()
   {
     // Service clients pointing to a global lifecycle manager
-    client_get_state_ = this->create_client<rclcpp_lifecycle::srv::GetState>(
+    client_get_state_ = this->create_client<lifecycle_msgs::srv::GetState>(
       manager_get_state_topic);
-    client_change_state_ = this->create_client<rclcpp_lifecycle::srv::ChangeState>(
+    client_change_state_ = this->create_client<lifecycle_msgs::srv::ChangeState>(
       manager_change_state_topic);
 
     // Service client pointing to each individual service
-    client_get_single_state_ = this->create_client<rclcpp_lifecycle::srv::GetState>(
+    client_get_single_state_ = this->create_client<lifecycle_msgs::srv::GetState>(
       node_get_state_topic);
-    client_change_single_state_ = this->create_client<rclcpp_lifecycle::srv::ChangeState>(
+    client_change_single_state_ = this->create_client<lifecycle_msgs::srv::ChangeState>(
       node_change_state_topic);
   }
 
   unsigned int
   get_state(const std::string & node_name, std::chrono::seconds time_out = 3_s)
   {
-    auto request = std::make_shared<rclcpp_lifecycle::srv::GetState::Request>();
+    auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
     request->node_name = node_name;
 
     if (!client_get_state_->wait_for_service(time_out)) {
@@ -85,7 +85,7 @@ public:
   unsigned int
   get_single_state(std::chrono::seconds time_out = 3_s)
   {
-    auto request = std::make_shared<rclcpp_lifecycle::srv::GetState::Request>();
+    auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
 
     if (!client_get_single_state_->wait_for_service(time_out)) {
       fprintf(stderr, "Service %s is not available.\n",
@@ -115,7 +115,7 @@ public:
   change_state(const std::string & node_name, rclcpp::lifecycle::LifecycleTransitionsT transition,
       std::chrono::seconds time_out = 3_s)
   {
-    auto request = std::make_shared<rclcpp_lifecycle::srv::ChangeState::Request>();
+    auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
     request->node_name = node_name;
     request->transition = static_cast<unsigned int>(transition);
 
@@ -146,7 +146,7 @@ public:
   change_single_state(rclcpp::lifecycle::LifecycleTransitionsT transition,
       std::chrono::seconds time_out = 3_s)
   {
-    auto request = std::make_shared<rclcpp_lifecycle::srv::ChangeState::Request>();
+    auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
     request->node_name = lifecycle_node;
     request->transition = static_cast<unsigned int>(transition);
 
@@ -174,10 +174,10 @@ public:
   }
 
 private:
-  std::shared_ptr<rclcpp::client::Client<rclcpp_lifecycle::srv::GetState>> client_get_state_;
-  std::shared_ptr<rclcpp::client::Client<rclcpp_lifecycle::srv::ChangeState>> client_change_state_;
-  std::shared_ptr<rclcpp::client::Client<rclcpp_lifecycle::srv::GetState>> client_get_single_state_;
-  std::shared_ptr<rclcpp::client::Client<rclcpp_lifecycle::srv::ChangeState>> client_change_single_state_;
+  std::shared_ptr<rclcpp::client::Client<lifecycle_msgs::srv::GetState>> client_get_state_;
+  std::shared_ptr<rclcpp::client::Client<lifecycle_msgs::srv::ChangeState>> client_change_state_;
+  std::shared_ptr<rclcpp::client::Client<lifecycle_msgs::srv::GetState>> client_get_single_state_;
+  std::shared_ptr<rclcpp::client::Client<lifecycle_msgs::srv::ChangeState>> client_change_single_state_;
 };
 
 void

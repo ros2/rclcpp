@@ -1,4 +1,0 @@
-string node_name
-uint8 transition
----
-bool success

@@ -13,22 +13,7 @@ find_package(rcl REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
-
-# get the rmw implementations ahead of time
-find_package(rmw_implementation_cmake REQUIRED)
-get_available_rmw_implementations(rmw_implementations2)
-foreach(rmw_implementation ${rmw_implementations2})
-  find_package("${rmw_implementation}" REQUIRED)
-endforeach()
-
-set(lifecycle_msg_files
-  "msg/Transition.msg")
-set(lifecycle_srv_files
-  "srv/GetState.srv"
-  "srv/ChangeState.srv")
-rosidl_generate_interfaces(lifecycle_msgs
-  ${lifecycle_msg_files}
-  ${lifecycle_srv_files})
+find_package(lifecycle_msgs REQUIRED)
 
 include_directories(
   include)
@@ -53,15 +38,10 @@ macro(targets)
     SHARED
     ${rcl_lifecycle_sources})
 
-  foreach(typesupport_impl ${typesupport_impls_c})
-    rosidl_target_interfaces(rcl_lifecycle${target_suffix}
-      lifecycle_msgs
-      ${typesupport_impl})
-  endforeach()
-
   ament_target_dependencies(rcl_lifecycle${target_suffix}
     "rcl${target_suffix}"
-    "std_msgs")
+    "std_msgs"
+    "lifecycle_msgs")
 
   install(TARGETS rcl_lifecycle${target_suffix}
     ARCHIVE DESTINATION lib
@@ -74,13 +54,9 @@ macro(targets)
     src/rclcpp_lifecycle/lifecycle_manager.cpp)
   target_link_libraries(rclcpp_lifecycle${target_suffix}
     rcl_lifecycle${target_suffix})
-  foreach(typesupport_impl ${typesupport_impls_cpp})
-    rosidl_target_interfaces(rclcpp_lifecycle${target_suffix}
-      lifecycle_msgs
-      ${typesupport_impl})
-  endforeach()
   ament_target_dependencies(rclcpp_lifecycle${target_suffix}
-    "rclcpp${target_suffix}")
+    "rclcpp${target_suffix}"
+    "lifecycle_msgs")
 
   ### demos
   add_executable(lifecycle_talker${target_suffix}
@@ -96,14 +72,16 @@ macro(targets)
     rclcpp_lifecycle${target_suffix})
   ament_target_dependencies(lifecycle_listener${target_suffix}
     "rclcpp${target_suffix}"
-    "std_msgs")
+    "std_msgs"
+    "lifecycle_msgs")
   add_executable(lifecycle_service_client${target_suffix}
     src/demos/lifecycle_service_client.cpp)
   target_link_libraries(lifecycle_service_client${target_suffix}
     rclcpp_lifecycle${target_suffix})
   ament_target_dependencies(lifecycle_service_client${target_suffix}
     "rclcpp${target_suffix}"
-    "std_msgs")
+    "std_msgs"
+    "lifecycle_msgs")
 
   install(TARGETS
     rclcpp_lifecycle${target_suffix}
