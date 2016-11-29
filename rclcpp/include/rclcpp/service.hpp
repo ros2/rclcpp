@@ -43,12 +43,12 @@ public:
 
   RCLCPP_PUBLIC
   ServiceBase(
-    rcl_node_t * node_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
   explicit ServiceBase(
-    rcl_node_t * node_handle);
+    std::shared_ptr<rcl_node_t> node_handle);
 
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
@@ -70,7 +70,7 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
-  rcl_node_t * node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_service_t * service_handle_ = nullptr;
   std::string service_name_;
@@ -100,7 +100,7 @@ public:
     const std::string & service_name,
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
-  : ServiceBase(node_handle.get(), service_name), any_callback_(any_callback)
+  : ServiceBase(node_handle, service_name), any_callback_(any_callback)
   {
     using rosidl_generator_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
@@ -119,7 +119,7 @@ public:
   }
 
   Service(
-    rcl_node_t * node_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
     rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle),
@@ -143,7 +143,7 @@ public:
   {
     // check if you have ownership of the handle
     if (owns_rcl_handle_) {
-      if (rcl_service_fini(service_handle_, node_handle_) != RCL_RET_OK) {
+      if (rcl_service_fini(service_handle_, node_handle_.get()) != RCL_RET_OK) {
         std::stringstream ss;
         ss << "Error in destruction of rcl service_handle_ handle: " <<
           rcl_get_error_string_safe() << '\n';
