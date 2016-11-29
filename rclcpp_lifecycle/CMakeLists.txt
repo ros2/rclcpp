@@ -30,25 +30,8 @@ macro(targets)
     #"rcl_lifecycle${target_suffix}"  This doesn't compile?
     "lifecycle_msgs")
 
-  ### demos
-  add_executable(lifecycle_talker${target_suffix}
-    src/demos/lifecycle_talker.cpp)
-  target_link_libraries(lifecycle_talker${target_suffix}
-    rclcpp_lifecycle${target_suffix})
-  add_executable(lifecycle_listener${target_suffix}
-    src/demos/lifecycle_listener.cpp)
-  target_link_libraries(lifecycle_listener${target_suffix}
-    rclcpp_lifecycle${target_suffix})
-  add_executable(lifecycle_service_client${target_suffix}
-    src/demos/lifecycle_service_client.cpp)
-  target_link_libraries(lifecycle_service_client${target_suffix}
-    rclcpp_lifecycle${target_suffix})
-
   install(TARGETS
     rclcpp_lifecycle${target_suffix}
-    lifecycle_talker${target_suffix}
-    lifecycle_listener${target_suffix}
-    lifecycle_service_client${target_suffix}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin)
@@ -61,4 +44,11 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+ament_export_dependencies(rclcpp)
+ament_export_dependencies(lifecycle_msgs)
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
 ament_package()
+
+install(DIRECTORY include/
+  DESTINATION include)
