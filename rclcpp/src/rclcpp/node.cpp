@@ -546,9 +546,13 @@ Node::count_graph_users()
 
 // PROTECTED IMPLEMENTATION
 void
-Node::add_service(const rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
+Node::add_service(const rclcpp::service::ServiceBase::SharedPtr & serv_base_ptr,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
+  if (!serv_base_ptr) {
+    throw std::runtime_error("Cannot add empty service to group");
+  }
+
   if (group) {
     if (!group_in_node(group)) {
       // TODO(jacquelinekay): use custom exception

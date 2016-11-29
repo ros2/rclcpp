@@ -42,10 +42,13 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
 
   RCLCPP_PUBLIC
-  explicit ServiceBase(rcl_node_t * node_handle);
+  ServiceBase(
+    rcl_node_t * node_handle,
+    const std::string & service_name);
 
   RCLCPP_PUBLIC
-  explicit ServiceBase(rcl_service_t * service_handle);
+  explicit ServiceBase(
+    rcl_node_t * node_handle);
 
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
@@ -70,6 +73,8 @@ protected:
   rcl_node_t * node_handle_;
 
   rcl_service_t * service_handle_ = nullptr;
+  std::string service_name_;
+  bool owns_rcl_handle_ = true;
 };
 
 using any_service_callback::AnyServiceCallback;
@@ -95,7 +100,7 @@ public:
     const std::string & service_name,
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
-  : ServiceBase(node_handle.get()), any_callback_(any_callback)
+  : ServiceBase(node_handle.get(), service_name), any_callback_(any_callback)
   {
     using rosidl_generator_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
@@ -117,17 +122,19 @@ public:
     rcl_node_t * node_handle,
     rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
-  : ServiceBase(node_handle), defined_extern(true),
+  : ServiceBase(node_handle),
     any_callback_(any_callback)
   {
     // check if service handle was initialized
-    // TODO(Karsten1987): Can this go directly in RCL?
+    // see: https://github.com/ros2/rcl/issues/81
     if (service_handle->impl == NULL) {
       throw std::runtime_error(
               std::string("rcl_service_t in constructor argument ") +
               "has to be initialized beforehand");
     }
     service_handle_ = service_handle;
+    service_name_ = std::string(rcl_service_get_service_name(service_handle));
+    owns_rcl_handle_ = false;
   }
 
   Service() = delete;
@@ -135,7 +142,7 @@ public:
   virtual ~Service()
   {
     // check if you have ownership of the handle
-    if (!defined_extern) {
+    if (owns_rcl_handle_) {
       if (rcl_service_fini(service_handle_, node_handle_) != RCL_RET_OK) {
         std::stringstream ss;
         ss << "Error in destruction of rcl service_handle_ handle: " <<
@@ -182,8 +189,6 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(Service)
-
-  bool defined_extern = false;
 
   AnyServiceCallback<ServiceT> any_callback_;
 };

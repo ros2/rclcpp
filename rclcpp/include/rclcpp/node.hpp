@@ -381,7 +381,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  add_service(const rclcpp::service::ServiceBase::SharedPtr service,
+  add_service(const rclcpp::service::ServiceBase::SharedPtr & service,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
