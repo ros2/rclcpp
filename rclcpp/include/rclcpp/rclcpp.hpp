@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "rclcpp/executors.hpp"
+#include "rclcpp/literals.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_client.hpp"
@@ -27,38 +28,8 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-// NOLINTNEXTLINE(runtime/int)
-inline const std::chrono::seconds operator"" _s(unsigned long long s)
-{
-  return std::chrono::seconds(s);
-}
-inline const std::chrono::nanoseconds operator"" _s(long double s)
-{
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<long double>(s));
-}
-
-// NOLINTNEXTLINE(runtime/int)
-inline const std::chrono::nanoseconds operator"" _ms(unsigned long long ms)
-{
-  return std::chrono::milliseconds(ms);
-}
-inline const std::chrono::nanoseconds operator"" _ms(long double ms)
-{
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<long double, std::milli>(ms));
-}
-
-// NOLINTNEXTLINE(runtime/int)
-inline const std::chrono::nanoseconds operator"" _ns(unsigned long long ns)
-{
-  return std::chrono::nanoseconds(ns);
-}
-inline const std::chrono::nanoseconds operator"" _ns(long double ns)
-{
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<long double, std::nano>(ns));
-}
+// temporary, to stay compatible until the examples are migrated
+using namespace rclcpp::literals;
 
 namespace rclcpp
 {
