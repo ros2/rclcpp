@@ -28,9 +28,6 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-// temporary, to stay compatible until the examples are migrated
-using namespace rclcpp::literals;
-
 namespace rclcpp
 {
 
