@@ -22,7 +22,7 @@ macro(targets)
   ### CPP High level library
   add_library(rclcpp_lifecycle${target_suffix}
     SHARED
-    src/lifecycle_manager.cpp)
+    src/lifecycle_node.cpp)
   target_link_libraries(rclcpp_lifecycle${target_suffix}
     ${rcl_lifecycle_LIBRARIES})
   ament_target_dependencies(rclcpp_lifecycle${target_suffix}
@@ -45,6 +45,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_export_dependencies(rclcpp)
+ament_export_dependencies(rcl_lifecycle)
 ament_export_dependencies(lifecycle_msgs)
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})

@@ -21,7 +21,10 @@
 #include <map>
 #include <functional>
 
+#include <rcl/error_handling.h>
+
 #include <rcl_lifecycle/rcl_lifecycle.h>
+#include <lifecycle_msgs/msg/transition.hpp>
 #include <lifecycle_msgs/srv/get_state.hpp>
 #include <lifecycle_msgs/srv/change_state.hpp>
 
@@ -63,7 +66,7 @@ public:
         fprintf(stderr, "%s:%u, FATAL: rcl_state_machine got destroyed externally.\n",
             __FILE__, __LINE__);
       } else {
-        rcl_state_machine_fini(rcl_state_machine);
+        rcl_state_machine_fini(rcl_state_machine, node_base_handle_->get_rcl_node_handle());
       }
     }
   }
@@ -136,9 +139,18 @@ public:
   {
     // TODO(karsten1987): clarify what do if node already exists;
     NodeStateMachine& node_state_machine = node_handle_map_[node_name];
-    node_state_machine.state_machine = rcl_get_zero_initialized_state_machine(
-      node_base_handle_->get_rcl_node_handle());
-    rcl_state_machine_init(&node_state_machine.state_machine, node_name.c_str(), true);
+    node_state_machine.state_machine = rcl_get_zero_initialized_state_machine();
+    rcl_ret_t ret = rcl_state_machine_init(&node_state_machine.state_machine, node_base_handle_->get_rcl_node_handle(),
+       rosidl_generator_cpp::get_message_type_support_handle<lifecycle_msgs::msg::Transition>(),
+       rosidl_generator_cpp::get_service_type_support_handle<lifecycle_msgs::srv::GetState>(),
+       rosidl_generator_cpp::get_service_type_support_handle<lifecycle_msgs::srv::ChangeState>(),
+       true);
+    if (ret != RCL_RET_OK)
+    {
+      fprintf(stderr, "Error adding %s: %s\n",
+          node_name.c_str(), rcl_get_error_string_safe());
+      return;
+    }
 
     // srv objects may get destroyed directly here
     {  // get_state
@@ -153,8 +165,7 @@ public:
       any_cb.set(std::move(cb));
       auto srv_get_state =
         rclcpp::service::Service<lifecycle_msgs::srv::GetState>::make_shared(
-        //node_state_machine.state_machine.comm_interface.node_handle,
-        node_base_handle_->get_rcl_node_handle(),
+        node_base_handle_->get_shared_node_handle(),
         &node_state_machine.state_machine.comm_interface.srv_get_state,
         any_cb);
       auto srv_get_state_base = std::dynamic_pointer_cast<service::ServiceBase>(srv_get_state);
@@ -174,8 +185,7 @@ public:
       any_cb.set(cb);
       auto srv_change_state =
         std::make_shared<rclcpp::service::Service<lifecycle_msgs::srv::ChangeState>>(
-        //node_state_machine.state_machine.comm_interface.node_handle,
-        node_base_handle_->get_rcl_node_handle(),
+        node_base_handle_->get_shared_node_handle(),
         &node_state_machine.state_machine.comm_interface.srv_change_state,
         any_cb);
       auto srv_change_state_base = std::dynamic_pointer_cast<service::ServiceBase>(srv_change_state);

@@ -22,10 +22,7 @@
 
 namespace rclcpp
 {
-namespace publisher
-{
-
-namespace lifecycle_interface
+namespace lifecycle
 {
 /**
  * @brief base class with only
@@ -35,13 +32,12 @@ namespace lifecycle_interface
  * It is more a convenient interface class
  * than a necessary base class.
  */
-class PublisherInterface
+class LifecyclePublisherInterface
 {
 public:
   virtual void on_activate() = 0;
   virtual void on_deactivate() = 0;
 };
-}  // namespace lifecycle_interface
 
 /**
  * @brief child class of rclcpp Publisher class.
@@ -49,8 +45,8 @@ public:
  * enabled/disabled state.
  */
 template<typename MessageT, typename Alloc = std::allocator<void>>
-class LifecyclePublisher : public rclcpp::publisher::Publisher<MessageT, Alloc>,
-  public lifecycle_interface::PublisherInterface
+class LifecyclePublisher : public LifecyclePublisherInterface,
+  public rclcpp::publisher::Publisher<MessageT, Alloc>
 {
 public:
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
@@ -63,7 +59,7 @@ public:
     std::string topic,
     const rcl_publisher_options_t & publisher_options,
     std::shared_ptr<MessageAlloc> allocator)
-  : ::rclcpp::publisher::Publisher<MessageT, Alloc>(
+  : rclcpp::publisher::Publisher<MessageT, Alloc>(
       node_handle, topic, publisher_options, allocator),
     enabled_(false)
   {}
@@ -164,7 +160,7 @@ private:
   bool enabled_ = false;
 };
 
-}  // namespace publisher
+}  // namespace lifecycle
 }  // namespace rclcpp
 
 #endif  // RCLCPP_LIFECYCLE__LIFECYCLE_PUBLISHER_HPP_

@@ -20,73 +20,63 @@
 #include <memory>
 
 #include "rclcpp/node.hpp"
-#include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp/timer.hpp"
 
+#include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
 namespace rclcpp
 {
-namespace node
-{
-
 namespace lifecycle
 {
-template<typename T, size_t State_Index, size_t Transition_Index>
-struct Callback;
-
-template<typename Ret, typename ... Params, size_t State_Index, size_t Transition_Index>
-struct Callback<Ret(Params ...), State_Index, Transition_Index>
-{
-  template<typename ... Args>
-  static Ret callback(Args ... args) {return func(args ...); }
-  static std::function<Ret(Params ...)> func;
-};
-
-// Initialize the static member.
-template<typename Ret, typename ... Params, size_t State_Index, size_t Transition_Index>
-std::function<Ret(Params ...)> Callback<Ret(Params ...), State_Index, Transition_Index>::func;
-
 /**
  * @brief Interface class for a managed node.
  * Pure virtual functions as defined in
  * http://design.ros2.org/articles/node_lifecycle.html
  */
+// *INDENT-OFF
 class LifecycleNodeInterface
 {
 public:
-  virtual bool on_configure() {return true; }
-  virtual bool on_cleanup() {return true; }
-  virtual bool on_shutdown() {return true; }
-  virtual bool on_activate() {return true; }
-  virtual bool on_deactivate() {return true; }
-  virtual bool on_error() {return true; }
+  virtual bool on_configure()   = 0;
+  virtual bool on_cleanup()     = 0;
+  virtual bool on_shutdown()    = 0;
+  virtual bool on_activate()    = 0;
+  virtual bool on_deactivate()  = 0;
+  virtual bool on_error()       = 0;
 };
+
+class AbstractLifecycleNode : public LifecycleNodeInterface
+{
+public:
+  virtual bool on_configure()   {return true;};
+  virtual bool on_cleanup()     {return true;};
+  virtual bool on_shutdown()    {return true;};
+  virtual bool on_activate()    {return true;};
+  virtual bool on_deactivate()  {return true;};
+  virtual bool on_error()       {return true;};
+};
+// *INDENT-ON
 
 /**
  * @brief LifecycleNode as child class of rclcpp Node
  * has lifecycle nodeinterface for configuring this node.
  */
-class LifecycleNode : public lifecycle::LifecycleNodeInterface
+class LifecycleNode : public AbstractLifecycleNode
 {
 public:
-  using LifecyclePublisherWeakPtr =
-      std::weak_ptr<rclcpp::publisher::lifecycle_interface::PublisherInterface>;
+  LIFECYCLE_EXPORT
+  explicit LifecycleNode(const std::string & node_name, bool use_intra_process_comms = false);
 
   LIFECYCLE_EXPORT
-  explicit LifecycleNode(const std::string & node_name, bool use_intra_process_comms = false)
-  : base_interface_(std::make_shared<rclcpp::node::Node>(node_name, use_intra_process_comms)),
-    communication_interface_(base_interface_)  // MOCK as base/comms interface not done yet
-  {}
-
-  LIFECYCLE_EXPORT
-  ~LifecycleNode() {}
+  virtual ~LifecycleNode();
 
   // MOCK typedefs as node refactor not done yet
   using BaseInterface = rclcpp::node::Node;
   std::shared_ptr<BaseInterface>
   get_base_interface()
   {
-    return base_interface_;
+    return base_node_handle_;
   }
 
   // MOCK typedefs as node refactor not done yet
@@ -100,14 +90,27 @@ public:
   std::string
   get_name()
   {
-    return base_interface_->get_name();
+    return base_node_handle_->get_name();
   }
+
+  bool
+  register_on_configure(std::function<bool(void)> fcn);
+  bool
+  register_on_cleanup(std::function<bool(void)> fcn);
+  bool
+  register_on_shutdown(std::function<bool(void)> fcn);
+  bool
+  register_on_activate(std::function<bool(void)> fcn);
+  bool
+  register_on_deactivate(std::function<bool(void)> fcn);
+  bool
+  register_on_error(std::function<bool(void)> fcn);
 
   /**
    * @brief same API for creating publisher as regular Node
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
-  std::shared_ptr<rclcpp::publisher::LifecyclePublisher<MessageT, Alloc>>
+  std::shared_ptr<rclcpp::lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
@@ -115,13 +118,13 @@ public:
   {
     // create regular publisher in rclcpp::Node
     auto pub = communication_interface_->create_publisher<MessageT, Alloc,
-      rclcpp::publisher::LifecyclePublisher<MessageT, Alloc>>(
+      rclcpp::lifecycle::LifecyclePublisher<MessageT, Alloc>>(
       topic_name, qos_profile, allocator);
+    add_publisher_handle(pub);
 
-    // keep weak handle for this publisher to enable/disable afterwards
-    weak_pubs_.push_back(pub);
     return pub;
   }
+
 
   template<typename CallbackType>
   typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
@@ -130,46 +133,29 @@ public:
     CallbackType callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
   {
-    return communication_interface_->create_wall_timer(period, callback, group);
+    auto timer = communication_interface_->create_wall_timer(period, callback, group);
+    add_timer_handle(timer);
+
+    return timer;
   }
 
+protected:
   LIFECYCLE_EXPORT
-  virtual bool
-  disable_communication()
-  {
-    for (auto weak_pub : weak_pubs_) {
-      auto pub = weak_pub.lock();
-      if (!pub) {
-        return false;
-      }
-      pub->on_deactivate();
-    }
-    return true;
-  }
+  void
+  add_publisher_handle(std::shared_ptr<rclcpp::lifecycle::LifecyclePublisherInterface> pub);
 
   LIFECYCLE_EXPORT
-  virtual bool
-  enable_communication()
-  {
-    for (auto weak_pub : weak_pubs_) {
-      auto pub = weak_pub.lock();
-      if (!pub) {
-        return false;
-      }
-      pub->on_activate();
-    }
-    return true;
-  }
+  void
+  add_timer_handle(std::shared_ptr<rclcpp::timer::TimerBase> timer);
 
 private:
-  std::shared_ptr<BaseInterface> base_interface_;
+  std::shared_ptr<BaseInterface> base_node_handle_;
   std::shared_ptr<CommunicationInterface> communication_interface_;
-  // Placeholder for all pub/sub/srv/clients
-  std::vector<LifecyclePublisherWeakPtr> weak_pubs_;
+  class LifecycleNodeImpl;
+  std::unique_ptr<LifecycleNodeImpl> impl_;
 };
 
 }  // namespace lifecycle
-}  // namespace node
 }  // namespace rclcpp
 
 #endif  // RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
