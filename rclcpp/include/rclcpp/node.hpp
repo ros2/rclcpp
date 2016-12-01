@@ -40,6 +40,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
+#include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/service.hpp"
@@ -383,6 +384,10 @@ public:
   get_node_base_interface();
 
   RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
+  get_node_topics_interface();
+
+  RCLCPP_PUBLIC
   void
   add_service(rclcpp::service::ServiceBase::SharedPtr service,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
@@ -395,6 +400,7 @@ private:
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
   rclcpp::node_interfaces::NodeBase::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeTopics::SharedPtr node_topics_;
 
   size_t number_of_timers_;
   size_t number_of_services_;

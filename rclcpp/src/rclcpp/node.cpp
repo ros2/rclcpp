@@ -41,7 +41,7 @@ Node::Node(
   rclcpp::context::Context::SharedPtr context,
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
-  number_of_subscriptions_(0), number_of_timers_(0), number_of_services_(0), number_of_clients_(0),
+  number_of_timers_(0), number_of_services_(0), number_of_clients_(0),
   use_intra_process_comms_(use_intra_process_comms),
   graph_listener_(context->get_sub_context<rclcpp::graph_listener::GraphListener>()),
   should_add_to_graph_listener_(true), graph_users_count_(0)
