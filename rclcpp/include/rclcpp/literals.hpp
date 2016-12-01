@@ -24,36 +24,33 @@ namespace literals
 {
 
 // NOLINTNEXTLINE(runtime/int)
-inline const std::chrono::seconds operator"" _s(unsigned long long s)
+constexpr std::chrono::seconds operator"" _s(unsigned long long s)
 {
   return std::chrono::seconds(s);
 }
-inline const std::chrono::nanoseconds operator"" _s(long double s)
+constexpr std::chrono::duration<long double> operator"" _s(long double s)
 {
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<long double>(s));
+  return std::chrono::duration<long double>(s);
 }
 
 // NOLINTNEXTLINE(runtime/int)
-inline const std::chrono::nanoseconds operator"" _ms(unsigned long long ms)
+constexpr std::chrono::milliseconds operator"" _ms(unsigned long long ms)
 {
   return std::chrono::milliseconds(ms);
 }
-inline const std::chrono::nanoseconds operator"" _ms(long double ms)
+constexpr std::chrono::duration<long double, std::milli> operator"" _ms(long double ms)
 {
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<long double, std::milli>(ms));
+  return std::chrono::duration<long double, std::milli>(ms);
 }
 
 // NOLINTNEXTLINE(runtime/int)
-inline const std::chrono::nanoseconds operator"" _ns(unsigned long long ns)
+constexpr std::chrono::nanoseconds operator"" _ns(unsigned long long ns)
 {
   return std::chrono::nanoseconds(ns);
 }
-inline const std::chrono::nanoseconds operator"" _ns(long double ns)
+constexpr std::chrono::duration<long double, std::nano> operator"" _ns(long double ns)
 {
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::duration<long double, std::nano>(ns));
+  return std::chrono::duration<long double, std::nano>(ns);
 }
 
 }  // namespace literals
