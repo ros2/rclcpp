@@ -47,7 +47,7 @@ struct SubscriptionFactory
     rclcpp::subscription::SubscriptionBase::SharedPtr (
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
-      const rcl_subscription_options_t & subscription_options)>;
+      rcl_subscription_options_t & subscription_options)>;
 
   SubscriptionFactoryFunction create_typed_subscription;
 
@@ -83,7 +83,7 @@ create_subscription_factory(
     [allocator, msg_mem_strat, any_subscription_callback, message_alloc](
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
-      const rcl_subscription_options_t & subscription_options
+      rcl_subscription_options_t & subscription_options
     ) -> rclcpp::subscription::SubscriptionBase::SharedPtr
     {
       subscription_options.allocator =
@@ -128,7 +128,7 @@ create_subscription_factory(
         {
           auto ipm = weak_ipm.lock();
           if (!ipm) {
-            // TODO(wjwwood): should this just return silently? Or maybe return with a logged warning?
+            // TODO(wjwwood): should this just return silently? Or return with a logged warning?
             throw std::runtime_error(
               "intra process take called after destruction of intra process manager");
           }
@@ -148,8 +148,7 @@ create_subscription_factory(
           return ipm->matches_any_publishers(sender_gid);
         };
 
-      auto typed_sub_ptr =
-        std::dynamic_pointer_cast<rclcpp::subscription::Subscription<MessageT>>(subscription);
+      auto typed_sub_ptr = std::dynamic_pointer_cast<SubscriptionT>(subscription);
       typed_sub_ptr->setup_intra_process(
         intra_process_subscription_id,
         take_intra_process_message_func,

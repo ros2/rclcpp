@@ -116,9 +116,9 @@ Node::create_subscription(
   subscription_options.qos = qos_profile;
   subscription_options.ignore_local_publications = ignore_local_publications;
 
-  using SubscriptionT = rclcpp::subscription::Subscription<MessageT>;
+  using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
   auto factory = rclcpp::create_subscription_factory<MessageT, CallbackT, Alloc, SubscriptionT>(
-      callback, msg_mem_strat, allocator);
+    std::forward<CallbackT>(callback), msg_mem_strat, allocator);
 
   auto sub = node_topics_->create_subscription(
     topic_name,
@@ -126,7 +126,7 @@ Node::create_subscription(
     subscription_options,
     use_intra_process_comms_);
   node_topics_->add_subscription(sub, group);
-  return sub;
+  return std::dynamic_pointer_cast<SubscriptionT>(sub);
 }
 
 template<typename MessageT, typename CallbackT, typename Alloc>

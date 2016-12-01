@@ -38,9 +38,9 @@
 namespace rclcpp
 {
 
-namespace node
+namespace node_interfaces
 {
-class Node;
+class NodeTopicsInterface;
 }  // namespace node
 
 namespace subscription
@@ -120,7 +120,7 @@ using any_subscription_callback::AnySubscriptionCallback;
 template<typename MessageT, typename Alloc = std::allocator<void>>
 class Subscription : public SubscriptionBase
 {
-  friend class rclcpp::node::Node;
+  friend class rclcpp::node_interfaces::NodeTopicsInterface;
 
 public:
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
@@ -232,13 +232,11 @@ public:
     any_callback_.dispatch_intra_process(msg, message_info);
   }
 
-private:
-  typedef
-    std::function<
-      void (uint64_t, uint64_t, uint64_t, MessageUniquePtr &)
-    > GetMessageCallbackType;
-  typedef std::function<bool (const rmw_gid_t *)> MatchesAnyPublishersCallbackType;
+  using GetMessageCallbackType =
+    std::function<void (uint64_t, uint64_t, uint64_t, MessageUniquePtr &)>;
+  using MatchesAnyPublishersCallbackType = std::function<bool (const rmw_gid_t *)>;
 
+  /// Implemenation detail.
   void setup_intra_process(
     uint64_t intra_process_subscription_id,
     GetMessageCallbackType get_message_callback,
@@ -262,6 +260,7 @@ private:
     matches_any_intra_process_publishers_ = matches_any_publisher_callback;
   }
 
+  /// Implemenation detail.
   const rcl_subscription_t *
   get_intra_process_subscription_handle() const
   {
@@ -271,6 +270,7 @@ private:
     return &intra_process_subscription_handle_;
   }
 
+private:
   RCLCPP_DISABLE_COPY(Subscription)
 
   AnySubscriptionCallback<MessageT, Alloc> any_callback_;
