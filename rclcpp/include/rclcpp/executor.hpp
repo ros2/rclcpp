@@ -28,17 +28,21 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 
-// #include "rclcpp/any_executable.hpp"
-// #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/memory_strategy.hpp"
-// #include "rclcpp/node.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
+
+// Forward declaration is used in convenience method signature.
+namespace node
+{
+class Node;
+}  // namespace node
+
 namespace executor
 {
 
@@ -117,6 +121,11 @@ public:
   virtual void
   add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
+  /// Convenience function which takes Node and forwards NodeBaseInterface.
+  RCLCPP_PUBLIC
+  virtual void
+  add_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify = true);
+
   /// Remove a node from the executor.
   /**
    * \param[in] node_ptr Shared pointer to the node to remove.
@@ -127,6 +136,11 @@ public:
   RCLCPP_PUBLIC
   virtual void
   remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
+
+  /// Convenience function which takes Node and forwards NodeBaseInterface.
+  RCLCPP_PUBLIC
+  virtual void
+  remove_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify = true);
 
   /// Add a node to executor, execute the next available unit of work, and remove the node.
   /**
@@ -146,6 +160,18 @@ public:
     );
   }
 
+  /// Convenience function which takes Node and forwards NodeBaseInterface.
+  template<typename NodeT = rclcpp::node::Node, typename T = std::milli>
+  void
+  spin_node_once(std::shared_ptr<NodeT> node,
+    std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
+  {
+    return spin_node_once_nanoseconds(
+      node->get_node_base_interface(),
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
   /// Add a node, complete all immediately available work, and remove the node.
   /**
    * \param[in] node Shared pointer to the node to add.
@@ -153,6 +179,11 @@ public:
   RCLCPP_PUBLIC
   void
   spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
+
+  /// Convenience function which takes Node and forwards NodeBaseInterface.
+  RCLCPP_PUBLIC
+  void
+  spin_node_some(std::shared_ptr<rclcpp::node::Node> node);
 
   /// Complete all available queued work without blocking.
   /**

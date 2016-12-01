@@ -21,6 +21,7 @@
 #include "rcl/error_handling.h"
 
 #include "rclcpp/executor.hpp"
+#include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/utilities.hpp"
 
@@ -113,6 +114,12 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 }
 
 void
+Executor::add_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify)
+{
+  this->add_node(node_ptr->get_node_base_interface(), notify);
+}
+
+void
 Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   bool node_removed = false;
@@ -143,6 +150,12 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 }
 
 void
+Executor::remove_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify)
+{
+  this->remove_node(node_ptr->get_node_base_interface(), notify);
+}
+
+void
 Executor::spin_node_once_nanoseconds(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
   std::chrono::nanoseconds timeout)
@@ -159,6 +172,12 @@ Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr n
   this->add_node(node, false);
   spin_some();
   this->remove_node(node, false);
+}
+
+void
+Executor::spin_node_some(std::shared_ptr<rclcpp::node::Node> node)
+{
+  this->spin_node_some(node->get_node_base_interface());
 }
 
 void

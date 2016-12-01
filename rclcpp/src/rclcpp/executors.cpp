@@ -22,10 +22,22 @@ rclcpp::spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr
 }
 
 void
+rclcpp::spin_some(rclcpp::node::Node::SharedPtr node_ptr)
+{
+  rclcpp::spin_some(node_ptr->get_node_base_interface());
+}
+
+void
 rclcpp::spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
   rclcpp::executors::SingleThreadedExecutor exec;
   exec.add_node(node_ptr);
   exec.spin();
   exec.remove_node(node_ptr);
+}
+
+void
+rclcpp::spin(rclcpp::node::Node::SharedPtr node_ptr)
+{
+  rclcpp::spin(node_ptr->get_node_base_interface());
 }
