@@ -40,6 +40,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
+#include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
@@ -48,18 +49,8 @@
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-namespace rcl
-{
-struct rcl_node_t;
-}  // namespace rcl
-
 namespace rclcpp
 {
-
-namespace graph_listener
-{
-class GraphListener;
-}  // namespace graph_listener
 
 namespace node
 {
@@ -309,24 +300,6 @@ public:
   std::shared_ptr<rcl_node_t>
   get_shared_rcl_node_handle();
 
-  /// Notify threads waiting on graph changes.
-  /* Affects threads waiting on the notify guard condition, see:
-   * get_notify_guard_condition(), as well as the threads waiting on graph
-   * changes using a graph Event, see: wait_for_graph_change().
-   *
-   * This is typically only used by the rclcpp::graph_listener::GraphListener.
-   *
-   * \throws RCLBaseError (a child of that exception) when an rcl error occurs
-   */
-  RCLCPP_PUBLIC
-  void
-  notify_graph_change();
-
-  /// Notify any and all blocking node actions that shutdown has occurred.
-  RCLCPP_PUBLIC
-  void
-  notify_shutdown();
-
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the load just let it go
@@ -349,13 +322,6 @@ public:
     rclcpp::event::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
-  /// Return the number of on loan graph events, see get_graph_event().
-  /* This is typically only used by the rclcpp::graph_listener::GraphListener.
-   */
-  RCLCPP_PUBLIC
-  size_t
-  count_graph_users();
-
   /// Register the callback for parameter changes
   /**
    * \param[in] User defined callback function, It is expected to atomically set parameters.
@@ -374,8 +340,13 @@ public:
   get_node_topics_interface();
 
   RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+  get_node_graph_interface();
+
+  RCLCPP_PUBLIC
   void
-  add_service(rclcpp::service::ServiceBase::SharedPtr service,
+  add_service(
+    rclcpp::service::ServiceBase::SharedPtr service,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
 private:
@@ -387,6 +358,7 @@ private:
 
   rclcpp::node_interfaces::NodeBase::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeTopics::SharedPtr node_topics_;
+  rclcpp::node_interfaces::NodeGraph::SharedPtr node_graph_;
 
   size_t number_of_timers_;
   size_t number_of_services_;
@@ -395,21 +367,6 @@ private:
   bool use_intra_process_comms_;
 
   mutable std::mutex mutex_;
-
-  /// Graph Listener which waits on graph changes for the node and is shared across nodes.
-  std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
-  /// Whether or not this node needs to be added to the graph listener.
-  std::atomic_bool should_add_to_graph_listener_;
-
-  /// Mutex to guard the graph event related data structures.
-  std::mutex graph_mutex_;
-  /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
-  std::condition_variable graph_cv_;
-  /// Weak references to graph events out on loan.
-  std::vector<rclcpp::event::Event::WeakPtr> graph_events_;
-  /// Number of graph events out on loan, used to determine if the graph should be monitored.
-  /* graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
-  std::atomic_size_t graph_users_count_;
 
   std::function<typename rcl_interfaces::msg::SetParametersResult(
     const typename std::vector<rclcpp::parameter::ParameterVariant> &

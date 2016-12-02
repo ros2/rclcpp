@@ -20,7 +20,6 @@
 #include <utility>
 #include <vector>
 
-#include "rcl/graph.h"
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
@@ -42,24 +41,14 @@ Node::Node(
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
   number_of_timers_(0), number_of_services_(0), number_of_clients_(0),
-  use_intra_process_comms_(use_intra_process_comms),
-  graph_listener_(context->get_sub_context<rclcpp::graph_listener::GraphListener>()),
-  should_add_to_graph_listener_(true), graph_users_count_(0)
+  use_intra_process_comms_(use_intra_process_comms)
 {
   events_publisher_ = create_publisher<rcl_interfaces::msg::ParameterEvent>(
     "parameter_events", rmw_qos_profile_parameter_events);
 }
 
 Node::~Node()
-{
-  // Remove self from graph listener.
-  // Exchange with false to prevent others from trying to add this node to the
-  // graph listener after checking that it was not here.
-  if (!should_add_to_graph_listener_.exchange(false)) {
-    // If it was already false, then it needs to now be removed.
-    graph_listener_->remove_node(this);
-  }
-}
+{}
 
 const std::string &
 Node::get_name() const
@@ -273,66 +262,20 @@ Node::list_parameters(
 std::map<std::string, std::string>
 Node::get_topic_names_and_types() const
 {
-  rcl_topic_names_and_types_t topic_names_and_types =
-    rcl_get_zero_initialized_topic_names_and_types();
-
-  auto ret = rcl_get_topic_names_and_types(node_base_->get_rcl_node_handle(),
-      &topic_names_and_types);
-  if (ret != RMW_RET_OK) {
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not get topic names and types: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
-
-  std::map<std::string, std::string> topics;
-  for (size_t i = 0; i < topic_names_and_types.topic_count; ++i) {
-    topics[topic_names_and_types.topic_names[i]] = topic_names_and_types.type_names[i];
-  }
-
-  ret = rmw_destroy_topic_names_and_types(&topic_names_and_types);
-  if (ret != RMW_RET_OK) {
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not destroy topic names and types: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
-
-  return topics;
+  return node_graph_->get_topic_names_and_types();
 }
 
 size_t
 Node::count_publishers(const std::string & topic_name) const
 {
-  size_t count;
-  // TODO(wjwwood): use the rcl equivalent methods
-  auto ret = rmw_count_publishers(rcl_node_get_rmw_handle(node_base_->get_rcl_node_handle()),
-      topic_name.c_str(), &count);
-  if (ret != RMW_RET_OK) {
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not count publishers: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
-  return count;
+  return node_graph_->count_publishers(topic_name);
 }
 
 size_t
 Node::count_subscribers(const std::string & topic_name) const
 {
-  size_t count;
-  // TODO(wjwwood): use the rcl equivalent methods
-  auto ret = rmw_count_subscribers(rcl_node_get_rmw_handle(node_base_->get_rcl_node_handle()),
-      topic_name.c_str(), &count);
-  if (ret != RMW_RET_OK) {
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not count subscribers: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
-  }
-  return count;
+  return node_graph_->count_subscribers(topic_name);
 }
-
 
 const std::vector<Node::CallbackGroupWeakPtr> &
 Node::get_callback_groups() const
@@ -349,7 +292,7 @@ Node::get_notify_guard_condition() const
 const rcl_guard_condition_t *
 Node::get_graph_guard_condition() const
 {
-  return rcl_node_get_graph_guard_condition(node_base_->get_rcl_node_handle());
+  return node_graph_->get_graph_guard_condition();
 }
 
 const rcl_node_t *
@@ -370,64 +313,10 @@ Node::get_shared_rcl_node_handle()
   return node_base_->get_shared_rcl_node_handle();
 }
 
-void
-Node::notify_graph_change()
-{
-  {
-    std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
-    bool bad_ptr_encountered = false;
-    for (auto & event_wptr : graph_events_) {
-      auto event_ptr = event_wptr.lock();
-      if (event_ptr) {
-        event_ptr->set();
-      } else {
-        bad_ptr_encountered = true;
-      }
-    }
-    if (bad_ptr_encountered) {
-      // remove invalid pointers with the erase-remove idiom
-      graph_events_.erase(
-        std::remove_if(
-          graph_events_.begin(),
-          graph_events_.end(),
-          [](const rclcpp::event::Event::WeakPtr & wptr) {
-        return wptr.expired();
-      }),
-        graph_events_.end());
-      // update graph_users_count_
-      graph_users_count_.store(graph_events_.size());
-    }
-  }
-  graph_cv_.notify_all();
-  {
-    auto notify_condition_lock = node_base_->acquire_notify_guard_condition_lock();
-    rcl_ret_t ret = rcl_trigger_guard_condition(node_base_->get_notify_guard_condition());
-    if (RCL_RET_OK != ret) {
-      throw_from_rcl_error(ret, "failed to trigger notify guard condition");
-    }
-  }
-}
-
-void
-Node::notify_shutdown()
-{
-  // notify here anything that will not be woken up by ctrl-c or rclcpp::shutdown().
-  graph_cv_.notify_all();
-}
-
 rclcpp::event::Event::SharedPtr
 Node::get_graph_event()
 {
-  auto event = rclcpp::event::Event::make_shared();
-  std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
-  // on first call, add node to graph_listener_
-  if (should_add_to_graph_listener_.exchange(false)) {
-    graph_listener_->add_node(this);
-    graph_listener_->start_if_not_started();
-  }
-  graph_events_.push_back(event);
-  graph_users_count_++;
-  return event;
+  return node_graph_->get_graph_event();
 }
 
 void
@@ -435,32 +324,7 @@ Node::wait_for_graph_change(
   rclcpp::event::Event::SharedPtr event,
   std::chrono::nanoseconds timeout)
 {
-  if (!event) {
-    throw InvalidEventError();
-  }
-  {
-    std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
-    bool event_in_graph_events = false;
-    for (const auto & event_wptr : graph_events_) {
-      if (event == event_wptr.lock()) {
-        event_in_graph_events = true;
-        break;
-      }
-    }
-    if (!event_in_graph_events) {
-      throw EventNotRegisteredError();
-    }
-  }
-  std::unique_lock<std::mutex> graph_lock(graph_mutex_);
-  graph_cv_.wait_for(graph_lock, timeout, [&event]() {
-    return event->check() || !rclcpp::utilities::ok();
-  });
-}
-
-size_t
-Node::count_graph_users()
-{
-  return graph_users_count_.load();
+  node_graph_->wait_for_graph_change(event, timeout);
 }
 
 // PROTECTED IMPLEMENTATION
@@ -493,4 +357,16 @@ rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 Node::get_node_base_interface()
 {
   return node_base_;
+}
+
+rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
+Node::get_node_topics_interface()
+{
+  return node_topics_;
+}
+
+rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+Node::get_node_graph_interface()
+{
+  return node_graph_;
 }
