@@ -47,7 +47,7 @@ TEST_F(TestExternallyDefinedServices, default_behavior) {
   try {
     auto srv = node_handle->create_service<rclcpp::srv::Mock>("test",
         callback);
-  } catch (const std::exception & e) {
+  } catch (const std::exception &) {
     FAIL();
     return;
   }
@@ -68,7 +68,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_uninitialized) {
   try {
     rclcpp::service::Service<rclcpp::srv::Mock>(node_handle->get_shared_node_handle(),
       &service_handle, cb);
-  } catch (const std::runtime_error & e) {
+  } catch (const std::runtime_error &) {
     SUCCEED();
     return;
   }
@@ -96,7 +96,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
   try {
     rclcpp::service::Service<rclcpp::srv::Mock>(node_handle->get_shared_node_handle(),
       &service_handle, cb);
-  } catch (const std::runtime_error & e) {
+  } catch (const std::runtime_error &) {
     FAIL();
     return;
   }
