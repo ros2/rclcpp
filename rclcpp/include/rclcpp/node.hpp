@@ -64,20 +64,6 @@ class GraphListener;
 namespace node
 {
 
-class InvalidEventError : public std::runtime_error
-{
-public:
-  InvalidEventError()
-  : std::runtime_error("event is invalid") {}
-};
-
-class EventNotRegisteredError : public std::runtime_error
-{
-public:
-  EventNotRegisteredError()
-  : std::runtime_error("event already registered") {}
-};
-
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node : public std::enable_shared_from_this<Node>
 {
