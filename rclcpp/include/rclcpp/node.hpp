@@ -39,9 +39,9 @@
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
-#include "rclcpp/node_interfaces/node_base.hpp"
-#include "rclcpp/node_interfaces/node_graph.hpp"
-#include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/service.hpp"
@@ -356,9 +356,9 @@ private:
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
-  rclcpp::node_interfaces::NodeBase::SharedPtr node_base_;
-  rclcpp::node_interfaces::NodeTopics::SharedPtr node_topics_;
-  rclcpp::node_interfaces::NodeGraph::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
 
   size_t number_of_timers_;
   size_t number_of_services_;

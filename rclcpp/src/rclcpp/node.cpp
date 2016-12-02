@@ -24,6 +24,9 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_base.hpp"
+#include "rclcpp/node_interfaces/node_graph.hpp"
+#include "rclcpp/node_interfaces/node_topics.hpp"
 
 using rclcpp::node::Node;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -40,6 +43,8 @@ Node::Node(
   rclcpp::context::Context::SharedPtr context,
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
+  node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
+  node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   number_of_timers_(0), number_of_services_(0), number_of_clients_(0),
   use_intra_process_comms_(use_intra_process_comms)
 {
