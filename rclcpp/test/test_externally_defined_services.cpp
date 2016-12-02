@@ -127,7 +127,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
     // Call destructor
   }
 
-  if (service_handle.impl == NULL) {
+  if (!service_handle.impl) {
     FAIL();
     return;
   }
