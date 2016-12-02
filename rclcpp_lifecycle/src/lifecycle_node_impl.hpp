@@ -85,7 +85,7 @@ public:
       any_cb.set(std::move(cb));
 
       srv_get_state_ = std::make_shared<rclcpp::service::Service<GetStateSrv>>(
-        base_node_handle_->get_shared_node_handle(), &state_machine_.comm_interface.srv_get_state,
+        base_node_handle_->get_shared_node_handle(), &state_machine_.com_interface.srv_get_state,
         any_cb);
       base_node_handle_->add_service(
           std::dynamic_pointer_cast<service::ServiceBase>(srv_get_state_));
@@ -99,7 +99,7 @@ public:
 
       srv_change_state_ = std::make_shared<rclcpp::service::Service<ChangeStateSrv>>(
         base_node_handle_->get_shared_node_handle(),
-        &state_machine_.comm_interface.srv_change_state,
+        &state_machine_.com_interface.srv_change_state,
         any_cb);
       base_node_handle_->add_service(
           std::dynamic_pointer_cast<service::ServiceBase>(srv_change_state_));
@@ -151,7 +151,7 @@ public:
     }
 
     unsigned int transition_index = static_cast<unsigned int>(lifecycle_transition);
-    if (!rcl_start_transition_by_index(&state_machine_, transition_index)) {
+    if (!rcl_start_transition_by_index(&state_machine_, transition_index, true)) {
       fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s\n",
         __FILE__, __LINE__, transition_index, state_machine_.current_state->label);
       return false;
@@ -170,7 +170,7 @@ public:
     std::function<bool(void)> callback = it->second;
     auto success = callback();
 
-    if (!rcl_finish_transition_by_index(&state_machine_, transition_index, success))
+    if (!rcl_finish_transition_by_index(&state_machine_, transition_index, success, true))
     {
       fprintf(stderr, "Failed to finish transition %u. Current state is now: %s\n",
         transition_index, state_machine_.current_state->label);
