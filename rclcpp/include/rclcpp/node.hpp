@@ -96,6 +96,14 @@ public:
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
+  using CallbackGroup = rclcpp::callback_group::CallbackGroup;
+  using CallbackGroupWeakPtr = std::weak_ptr<CallbackGroup>;
+
+  /// Return the list of callback groups in the node.
+  RCLCPP_PUBLIC
+  const std::vector<CallbackGroupWeakPtr> &
+  get_callback_groups() const;
+
   /// Create and return a Publisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
@@ -203,9 +211,6 @@ public:
   //   rclcpp::timer::CallbackType callback,
   //   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  using CallbackGroup = rclcpp::callback_group::CallbackGroup;
-  using CallbackGroupWeakPtr = std::weak_ptr<CallbackGroup>;
-
   /* Create and return a Client. */
   template<typename ServiceT>
   typename rclcpp::client::Client<ServiceT>::SharedPtr
@@ -240,12 +245,14 @@ public:
   get_parameter(const std::string & name) const;
 
   RCLCPP_PUBLIC
-  bool get_parameter(
+  bool
+  get_parameter(
     const std::string & name,
     rclcpp::parameter::ParameterVariant & parameter) const;
 
   template<typename ParameterT>
-  bool get_parameter(const std::string & name, ParameterT & parameter) const;
+  bool
+  get_parameter(const std::string & name, ParameterT & parameter) const;
 
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
@@ -259,6 +266,15 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  /// Register the callback for parameter changes
+  /**
+   * \param[in] User defined callback function, It is expected to atomically set parameters.
+   * \note Repeated invocations of this function will overwrite previous callbacks
+   */
+  template<typename CallbackT>
+  void
+  register_param_change_callback(CallbackT && callback);
+
   RCLCPP_PUBLIC
   std::map<std::string, std::string>
   get_topic_names_and_types() const;
@@ -270,35 +286,6 @@ public:
   RCLCPP_PUBLIC
   size_t
   count_subscribers(const std::string & topic_name) const;
-
-  RCLCPP_PUBLIC
-  const std::vector<CallbackGroupWeakPtr> &
-  get_callback_groups() const;
-
-  RCLCPP_PUBLIC
-  const rcl_guard_condition_t *
-  get_notify_guard_condition() const;
-
-  RCLCPP_PUBLIC
-  const rcl_guard_condition_t *
-  get_graph_guard_condition() const;
-
-  RCLCPP_PUBLIC
-  const rcl_node_t *
-  get_rcl_node_handle() const;
-
-  /// Return the rcl_node_t node handle (non-const version).
-  RCLCPP_PUBLIC
-  rcl_node_t *
-  get_rcl_node_handle();
-
-  /// Return the rcl_node_t node handle in a std::shared_ptr.
-  /* This handle remains valid after the Node is destroyed.
-   * The actual rcl node is not finalized until it is out of scope everywhere.
-   */
-  RCLCPP_PUBLIC
-  std::shared_ptr<rcl_node_t>
-  get_shared_rcl_node_handle();
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
@@ -322,23 +309,17 @@ public:
     rclcpp::event::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
-  /// Register the callback for parameter changes
-  /**
-   * \param[in] User defined callback function, It is expected to atomically set parameters.
-   * \note Repeated invocations of this function will overwrite previous callbacks
-   */
-  template<typename CallbackT>
-  void
-  register_param_change_callback(CallbackT && callback);
-
+  /// Return the Node's internal NodeBaseInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_base_interface();
 
+  /// Return the Node's internal NodeTopicsInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
   get_node_topics_interface();
 
+  /// Return the Node's internal NodeGraphInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
@@ -346,8 +327,8 @@ public:
   RCLCPP_PUBLIC
   void
   add_service(
-    rclcpp::service::ServiceBase::SharedPtr service,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
 private:
   RCLCPP_DISABLE_COPY(Node)

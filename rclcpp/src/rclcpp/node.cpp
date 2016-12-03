@@ -288,36 +288,6 @@ Node::get_callback_groups() const
   return node_base_->get_callback_groups();
 }
 
-const rcl_guard_condition_t *
-Node::get_notify_guard_condition() const
-{
-  return node_base_->get_notify_guard_condition();
-}
-
-const rcl_guard_condition_t *
-Node::get_graph_guard_condition() const
-{
-  return node_graph_->get_graph_guard_condition();
-}
-
-const rcl_node_t *
-Node::get_rcl_node_handle() const
-{
-  return node_base_->get_rcl_node_handle();
-}
-
-rcl_node_t *
-Node::get_rcl_node_handle()
-{
-  return node_base_->get_rcl_node_handle();
-}
-
-std::shared_ptr<rcl_node_t>
-Node::get_shared_rcl_node_handle()
-{
-  return node_base_->get_shared_rcl_node_handle();
-}
-
 rclcpp::event::Event::SharedPtr
 Node::get_graph_event()
 {
@@ -332,9 +302,9 @@ Node::wait_for_graph_change(
   node_graph_->wait_for_graph_change(event, timeout);
 }
 
-// PROTECTED IMPLEMENTATION
 void
-Node::add_service(rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
+Node::add_service(
+  rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   if (!serv_base_ptr) {
