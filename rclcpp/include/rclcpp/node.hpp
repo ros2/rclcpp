@@ -41,6 +41,7 @@
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
@@ -319,16 +320,15 @@ public:
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
   get_node_topics_interface();
 
+  /// Return the Node's internal NodeServicesInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
+  get_node_services_interface();
+
   /// Return the Node's internal NodeGraphInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
-
-  RCLCPP_PUBLIC
-  void
-  add_service(
-    rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
 private:
   RCLCPP_DISABLE_COPY(Node)
@@ -339,6 +339,7 @@ private:
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
 
   size_t number_of_timers_;

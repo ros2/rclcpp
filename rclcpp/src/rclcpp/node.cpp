@@ -26,6 +26,7 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
+#include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
 using rclcpp::node::Node;
@@ -44,6 +45,7 @@ Node::Node(
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
+  node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   number_of_timers_(0), number_of_services_(0), number_of_clients_(0),
   use_intra_process_comms_(use_intra_process_comms)
@@ -300,32 +302,6 @@ Node::wait_for_graph_change(
   std::chrono::nanoseconds timeout)
 {
   node_graph_->wait_for_graph_change(event, timeout);
-}
-
-void
-Node::add_service(
-  rclcpp::service::ServiceBase::SharedPtr serv_base_ptr,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
-{
-  if (!serv_base_ptr) {
-    throw std::runtime_error("Cannot add empty service to group");
-  }
-
-  if (group) {
-    if (!group_in_node(group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create service, group not in node.");
-    }
-    group->add_service(serv_base_ptr);
-  } else {
-    node_base_->get_default_callback_group()->add_service(serv_base_ptr);
-  }
-  number_of_services_++;
-  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to notify waitset on service creation: ") + rmw_get_error_string());
-  }
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr

@@ -25,7 +25,7 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-/// Implementation of the NodeBaseInterface, which is part of the Node API.
+/// Implementation of the NodeBase part of the Node API.
 class NodeBase : public NodeBaseInterface
 {
 public:
@@ -94,7 +94,7 @@ public:
   acquire_notify_guard_condition_lock() const;
 
 private:
-  RCLCPP_DISABLE_COPY(NodeBase);
+  RCLCPP_DISABLE_COPY(NodeBase)
 
   std::string name_;
   rclcpp::context::Context::SharedPtr context_;

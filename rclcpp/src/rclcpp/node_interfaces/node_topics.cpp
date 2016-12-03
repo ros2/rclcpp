@@ -32,7 +32,7 @@ rclcpp::publisher::PublisherBase::SharedPtr
 NodeTopics::create_publisher(
   const std::string & topic_name,
   const rclcpp::PublisherFactory & publisher_factory,
-  const rcl_publisher_options_t & publisher_options,
+  rcl_publisher_options_t & publisher_options,
   bool use_intra_process)
 {
   // Create the MessageT specific Publisher using the factory, but store it as PublisherBase.
@@ -64,6 +64,9 @@ NodeTopics::add_publisher(
   rclcpp::publisher::PublisherBase::SharedPtr publisher,
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
 {
+  // The publisher is not added to a callback group for now.
+  (void)publisher;
+  (void)callback_group;
   // Notify the executor that a new publisher was created using the parent Node.
   {
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
@@ -78,7 +81,7 @@ rclcpp::subscription::SubscriptionBase::SharedPtr
 NodeTopics::create_subscription(
   const std::string & topic_name,
   const rclcpp::SubscriptionFactory & subscription_factory,
-  const rcl_subscription_options_t & subscription_options,
+  rcl_subscription_options_t & subscription_options,
   bool use_intra_process)
 {
   auto subscription = subscription_factory.create_typed_subscription(

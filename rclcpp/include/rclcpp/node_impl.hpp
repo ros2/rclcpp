@@ -199,22 +199,7 @@ Node::create_client(
     options);
 
   auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
-  if (group) {
-    if (!group_in_node(group)) {
-      // TODO(esteve): use custom exception
-      throw std::runtime_error("Cannot create client, group not in node.");
-    }
-    group->add_client(cli_base_ptr);
-  } else {
-    node_base_->get_default_callback_group()->add_client(cli_base_ptr);
-  }
-  number_of_clients_++;
-
-  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to notify waitset on client creation: ") + rmw_get_error_string());
-  }
+  node_services_->add_client(cli_base_ptr, group);
   return cli;
 }
 
@@ -236,7 +221,7 @@ Node::create_service(
     node_base_->get_shared_rcl_node_handle(),
     service_name, any_service_callback, service_options);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
-  add_service(serv_base_ptr, group);
+  node_services_->add_service(serv_base_ptr, group);
   return serv;
 }
 

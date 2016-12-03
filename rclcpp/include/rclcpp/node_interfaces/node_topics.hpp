@@ -32,7 +32,7 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-/// Implementation of the NodeTopicsInterface, which is part of the Node API.
+/// Implementation of the NodeTopics part of the Node API.
 class NodeTopics : public NodeTopicsInterface
 {
 public:
@@ -52,7 +52,7 @@ public:
   create_publisher(
     const std::string & topic_name,
     const rclcpp::PublisherFactory & publisher_factory,
-    const rcl_publisher_options_t & publisher_options,
+    rcl_publisher_options_t & publisher_options,
     bool use_intra_process);
 
   RCLCPP_PUBLIC
@@ -68,7 +68,7 @@ public:
   create_subscription(
     const std::string & topic_name,
     const rclcpp::SubscriptionFactory & subscription_factory,
-    const rcl_subscription_options_t & subscription_options,
+    rcl_subscription_options_t & subscription_options,
     bool use_intra_process);
 
   RCLCPP_PUBLIC
@@ -79,7 +79,7 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr callback_group);
 
 private:
-  RCLCPP_DISABLE_COPY(NodeTopics);
+  RCLCPP_DISABLE_COPY(NodeTopics)
 
   NodeBaseInterface * node_base_;
 

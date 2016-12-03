@@ -40,6 +40,7 @@ class Node;
 namespace node_interfaces
 {
 class NodeTopics;
+class NodeServices;
 }  // namespace node_interfaces
 
 namespace callback_group
@@ -55,6 +56,7 @@ class CallbackGroup
 {
   friend class rclcpp::node::Node;
   friend class rclcpp::node_interfaces::NodeTopics;
+  friend class rclcpp::node_interfaces::NodeServices;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup)

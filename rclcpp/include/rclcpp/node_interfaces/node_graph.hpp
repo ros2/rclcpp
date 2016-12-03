@@ -41,7 +41,7 @@ class GraphListener;
 namespace node_interfaces
 {
 
-/// Pure virtual interface class for the NodeBase part of the Node API.
+/// Implementation the NodeGraph part of the Node API.
 class NodeGraph : public NodeGraphInterface
 {
 public:
@@ -103,6 +103,8 @@ public:
   count_graph_users();
 
 private:
+  RCLCPP_DISABLE_COPY(NodeGraph)
+
   /// Handle to the NodeBaseInterface given in the constructor.
   rclcpp::node_interfaces::NodeBaseInterface * node_base_;
 
