@@ -44,9 +44,9 @@ Node::Node(
   rclcpp::context::Context::SharedPtr context,
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
+  node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
-  node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
     node_base_.get(),
     node_topics_.get(),
@@ -190,14 +190,26 @@ Node::get_node_base_interface()
   return node_base_;
 }
 
+rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+Node::get_node_graph_interface()
+{
+  return node_graph_;
+}
+
 rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
 Node::get_node_topics_interface()
 {
   return node_topics_;
 }
 
-rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
-Node::get_node_graph_interface()
+rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
+Node::get_node_services_interface()
 {
-  return node_graph_;
+  return node_services_;
+}
+
+rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
+Node::get_node_parameters_interface()
+{
+  return node_parameters_;
 }

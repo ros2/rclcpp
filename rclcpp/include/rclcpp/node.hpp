@@ -316,6 +316,11 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_base_interface();
 
+  /// Return the Node's internal NodeGraphInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+  get_node_graph_interface();
+
   /// Return the Node's internal NodeTopicsInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
@@ -325,11 +330,6 @@ public:
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
   get_node_services_interface();
-
-  /// Return the Node's internal NodeGraphInterface implementation.
-  RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
-  get_node_graph_interface();
 
   /// Return the Node's internal NodeParametersInterface implementation.
   RCLCPP_PUBLIC
@@ -344,9 +344,9 @@ private:
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
 
   size_t number_of_timers_;
