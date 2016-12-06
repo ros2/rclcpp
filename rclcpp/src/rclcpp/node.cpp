@@ -27,6 +27,7 @@
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
+#include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
 using rclcpp::node::Node;
@@ -45,13 +46,13 @@ Node::Node(
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
+  node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
     node_topics_.get(),
     use_intra_process_comms
   )),
-  number_of_timers_(0),
   use_intra_process_comms_(use_intra_process_comms)
 {
 }
@@ -77,19 +78,6 @@ Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return node_base_->callback_group_in_node(group);
 }
-
-// TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
-// rclcpp::timer::WallTimer::SharedPtr
-// Node::create_wall_timer(
-//   std::chrono::duration<long double, std::nano> period,
-//   rclcpp::timer::CallbackType callback,
-//   rclcpp::callback_group::CallbackGroup::SharedPtr group)
-// {
-//   return create_wall_timer(
-//     std::chrono::duration_cast<std::chrono::nanoseconds>(period),
-//     callback,
-//     group);
-// }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(
@@ -193,6 +181,12 @@ rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
 Node::get_node_graph_interface()
 {
   return node_graph_;
+}
+
+rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
+Node::get_node_timers_interface()
+{
+  return node_timers_;
 }
 
 rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr

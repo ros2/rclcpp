@@ -153,30 +153,17 @@ Node::create_subscription(
     allocator);
 }
 
-template<typename CallbackType>
-typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
+template<typename DurationT, typename CallbackT>
+typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
-  std::chrono::nanoseconds period,
-  CallbackType callback,
+  std::chrono::duration<uint64_t, DurationT> period,
+  CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  auto timer = rclcpp::timer::WallTimer<CallbackType>::make_shared(
-    period, std::move(callback));
-  if (group) {
-    if (!group_in_node(group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create timer, group not in node.");
-    }
-    group->add_timer(timer);
-  } else {
-    node_base_->get_default_callback_group()->add_timer(timer);
-  }
-  number_of_timers_++;
-  if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to notify waitset on timer creation: ") + rmw_get_error_string());
-  }
+  auto timer = rclcpp::timer::WallTimer<CallbackT>::make_shared(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+    std::move(callback));
+  node_timers_->add_timer(timer, group);
   return timer;
 }
 

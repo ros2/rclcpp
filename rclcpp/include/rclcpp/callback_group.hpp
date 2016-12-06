@@ -30,16 +30,10 @@ namespace rclcpp
 {
 
 // Forward declarations for friend statement in class CallbackGroup
-namespace node
-{
-// TODO(wjwwood): remove this and the friend decl when refactoring of Node is done.
-class Node;
-}  // namespace node
-
-// Forward declarations for friend statement in class CallbackGroup
 namespace node_interfaces
 {
 class NodeServices;
+class NodeTimers;
 class NodeTopics;
 }  // namespace node_interfaces
 
@@ -54,8 +48,8 @@ enum class CallbackGroupType
 
 class CallbackGroup
 {
-  friend class rclcpp::node::Node;
   friend class rclcpp::node_interfaces::NodeServices;
+  friend class rclcpp::node_interfaces::NodeTimers;
   friend class rclcpp::node_interfaces::NodeTopics;
 
 public:

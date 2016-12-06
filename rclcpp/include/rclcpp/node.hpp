@@ -43,6 +43,7 @@
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
@@ -193,25 +194,12 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
-  template<typename CallbackType>
-  typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
+  template<typename DurationT = std::milli, typename CallbackT>
+  typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
-    std::chrono::nanoseconds period,
-    CallbackType callback,
+    std::chrono::duration<uint64_t, DurationT> period,
+    CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create a timer.
-  /**
-   * \param[in] period Time interval between triggers of the callback.
-   * \param[in] callback User-defined callback function.
-   * \param[in] group Callback group to execute this timer's callback in.
-   */
-  // TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
-  // rclcpp::timer::WallTimer::SharedPtr
-  // create_wall_timer(
-  //   std::chrono::duration<long double, std::nano> period,
-  //   rclcpp::timer::CallbackType callback,
-  //   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Client. */
   template<typename ServiceT>
@@ -321,6 +309,11 @@ public:
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
 
+  /// Return the Node's internal NodeTimersInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
+  get_node_timers_interface();
+
   /// Return the Node's internal NodeTopicsInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
@@ -345,11 +338,10 @@ private:
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
-
-  size_t number_of_timers_;
 
   bool use_intra_process_comms_;
 

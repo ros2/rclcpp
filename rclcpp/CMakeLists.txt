@@ -40,6 +40,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_interfaces/node_graph.cpp
   src/rclcpp/node_interfaces/node_parameters.cpp
   src/rclcpp/node_interfaces/node_services.cpp
+  src/rclcpp/node_interfaces/node_timers.cpp
   src/rclcpp/node_interfaces/node_topics.cpp
   src/rclcpp/parameter.cpp
   src/rclcpp/parameter_client.cpp
