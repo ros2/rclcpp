@@ -41,6 +41,7 @@
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/parameter.hpp"
@@ -330,6 +331,11 @@ public:
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
 
+  /// Return the Node's internal NodeParametersInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
+  get_node_parameters_interface();
+
 private:
   RCLCPP_DISABLE_COPY(Node)
 
@@ -341,22 +347,12 @@ private:
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
 
   size_t number_of_timers_;
-  size_t number_of_services_;
-  size_t number_of_clients_;
 
   bool use_intra_process_comms_;
 
-  mutable std::mutex mutex_;
-
-  std::function<typename rcl_interfaces::msg::SetParametersResult(
-    const typename std::vector<rclcpp::parameter::ParameterVariant> &
-  )> parameters_callback_ = nullptr;
-
-  std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
-
-  publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 };
 
 }  // namespace node

@@ -226,9 +226,10 @@ Node::create_service(
 }
 
 template<typename CallbackT>
-void Node::register_param_change_callback(CallbackT && callback)
+void
+Node::register_param_change_callback(CallbackT && callback)
 {
-  this->parameters_callback_ = callback;
+  this->node_parameters_->register_param_change_callback(std::forward<CallbackT>(callback));
 }
 
 template<typename ParameterT>

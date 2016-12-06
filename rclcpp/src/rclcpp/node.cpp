@@ -20,12 +20,12 @@
 #include <utility>
 #include <vector>
 
-#include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
+#include "rclcpp/node_interfaces/node_parameters.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
@@ -47,11 +47,14 @@ Node::Node(
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  number_of_timers_(0), number_of_services_(0), number_of_clients_(0),
+  node_parameters_(new rclcpp::node_interfaces::NodeParameters(
+    node_base_.get(),
+    node_topics_.get(),
+    node_services_.get()
+  )),
+  number_of_timers_(0),
   use_intra_process_comms_(use_intra_process_comms)
 {
-  events_publisher_ = create_publisher<rcl_interfaces::msg::ParameterEvent>(
-    "parameter_events", rmw_qos_profile_parameter_events);
 }
 
 Node::~Node()
@@ -93,177 +96,54 @@ std::vector<rcl_interfaces::msg::SetParametersResult>
 Node::set_parameters(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
-  std::vector<rcl_interfaces::msg::SetParametersResult> results;
-  for (auto p : parameters) {
-    auto result = set_parameters_atomically({{p}});
-    results.push_back(result);
-  }
-  return results;
+  return node_parameters_->set_parameters(parameters);
 }
 
 rcl_interfaces::msg::SetParametersResult
 Node::set_parameters_atomically(
   const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  std::map<std::string, rclcpp::parameter::ParameterVariant> tmp_map;
-  auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
-
-  // TODO(jacquelinekay): handle parameter constraints
-  rcl_interfaces::msg::SetParametersResult result;
-  if (parameters_callback_) {
-    result = parameters_callback_(parameters);
-  } else {
-    result.successful = true;
-  }
-
-  if (!result.successful) {
-    return result;
-  }
-
-  for (auto p : parameters) {
-    if (parameters_.find(p.get_name()) == parameters_.end()) {
-      if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
-        parameter_event->new_parameters.push_back(p.to_parameter());
-      }
-    } else if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
-      parameter_event->changed_parameters.push_back(p.to_parameter());
-    } else {
-      parameter_event->deleted_parameters.push_back(p.to_parameter());
-    }
-    tmp_map[p.get_name()] = p;
-  }
-  // std::map::insert will not overwrite elements, so we'll keep the new
-  // ones and add only those that already exist in the Node's internal map
-  tmp_map.insert(parameters_.begin(), parameters_.end());
-  std::swap(tmp_map, parameters_);
-
-  events_publisher_->publish(parameter_event);
-
-  return result;
+  return node_parameters_->set_parameters_atomically(parameters);
 }
 
 std::vector<rclcpp::parameter::ParameterVariant>
 Node::get_parameters(
   const std::vector<std::string> & names) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<rclcpp::parameter::ParameterVariant> results;
-
-  for (auto & name : names) {
-    if (std::any_of(parameters_.cbegin(), parameters_.cend(),
-      [&name](const std::pair<std::string, rclcpp::parameter::ParameterVariant> & kv) {
-      return name == kv.first;
-    }))
-    {
-      results.push_back(parameters_.at(name));
-    }
-  }
-  return results;
+  return node_parameters_->get_parameters(names);
 }
 
 const rclcpp::parameter::ParameterVariant
 Node::get_parameter(const std::string & name) const
 {
-  rclcpp::parameter::ParameterVariant parameter;
-
-  if (get_parameter(name, parameter)) {
-    return parameter;
-  } else {
-    throw std::out_of_range("Parameter '" + name + "' not set");
-  }
+  return node_parameters_->get_parameter(name);
 }
 
 bool Node::get_parameter(const std::string & name,
   rclcpp::parameter::ParameterVariant & parameter) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-
-  if (parameters_.count(name)) {
-    parameter = parameters_.at(name);
-    return true;
-  } else {
-    return false;
-  }
+  return node_parameters_->get_parameter(name, parameter);
 }
 
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
 Node::describe_parameters(
   const std::vector<std::string> & names) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<rcl_interfaces::msg::ParameterDescriptor> results;
-  for (auto & kv : parameters_) {
-    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
-      return name == kv.first;
-    }))
-    {
-      rcl_interfaces::msg::ParameterDescriptor parameter_descriptor;
-      parameter_descriptor.name = kv.first;
-      parameter_descriptor.type = kv.second.get_type();
-      results.push_back(parameter_descriptor);
-    }
-  }
-  return results;
+  return node_parameters_->describe_parameters(names);
 }
 
 std::vector<uint8_t>
 Node::get_parameter_types(
   const std::vector<std::string> & names) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<uint8_t> results;
-  for (auto & kv : parameters_) {
-    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
-      return name == kv.first;
-    }))
-    {
-      results.push_back(kv.second.get_type());
-    } else {
-      results.push_back(rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
-    }
-  }
-  return results;
+  return node_parameters_->get_parameter_types(names);
 }
 
 rcl_interfaces::msg::ListParametersResult
 Node::list_parameters(
   const std::vector<std::string> & prefixes, uint64_t depth) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  rcl_interfaces::msg::ListParametersResult result;
-
-  // TODO(esteve): define parameter separator, use "." for now
-  for (auto & kv : parameters_) {
-    if (((prefixes.size() == 0) &&
-      ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), '.')) < depth))) ||
-      (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
-      if (kv.first == prefix) {
-        return true;
-      } else if (kv.first.find(prefix + ".") == 0) {
-        size_t length = prefix.length();
-        std::string substr = kv.first.substr(length);
-        // Cast as unsigned integer to avoid warning
-        return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-        (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth);
-      }
-      return false;
-    })))
-    {
-      result.names.push_back(kv.first);
-      size_t last_separator = kv.first.find_last_of('.');
-      if (std::string::npos != last_separator) {
-        std::string prefix = kv.first.substr(0, last_separator);
-        if (std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
-          result.prefixes.cend())
-        {
-          result.prefixes.push_back(prefix);
-        }
-      }
-    }
-  }
-  return result;
+  return node_parameters_->list_parameters(prefixes, depth);
 }
 
 std::map<std::string, std::string>
