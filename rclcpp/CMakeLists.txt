@@ -144,6 +144,7 @@ if(BUILD_TESTING)
     "test/mock_msgs/srv/Mock.srv")
   rosidl_generate_interfaces(mock_msgs
     ${mock_msg_files}
+    LIBRARY_NAME "rclcpp"
     SKIP_INSTALL)
 
   set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
