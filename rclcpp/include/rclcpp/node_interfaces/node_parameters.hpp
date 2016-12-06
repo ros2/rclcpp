@@ -36,7 +36,7 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-/// Pure virtual interface class for the NodeParameters part of the Node API.
+/// Implementation of the NodeParameters part of the Node API.
 class NodeParameters : public NodeParametersInterface
 {
 public:
@@ -44,9 +44,8 @@ public:
 
   RCLCPP_PUBLIC
   NodeParameters(
-    NodeBaseInterface * node_base,
     NodeTopicsInterface * node_topics,
-    NodeServicesInterface * node_services);
+    bool use_intra_process);
 
   RCLCPP_PUBLIC
   virtual
@@ -102,9 +101,9 @@ public:
   register_param_change_callback(ParametersCallbackFunction callback);
 
 private:
-  NodeBaseInterface * node_base_;
+  RCLCPP_DISABLE_COPY(NodeParameters)
+
   NodeTopicsInterface * node_topics_;
-  NodeServicesInterface * node_services_;
 
   mutable std::mutex mutex_;
 

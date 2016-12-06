@@ -20,10 +20,9 @@
 using namespace rclcpp::node_interfaces;
 
 NodeParameters::NodeParameters(
-  NodeBaseInterface * node_base,
   NodeTopicsInterface * node_topics,
-  NodeServicesInterface * node_services)
-: node_base_(node_base), node_topics_(node_topics), node_services_(node_services)
+  bool use_intra_process)
+: node_topics_(node_topics)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::publisher::Publisher<MessageT>;
@@ -39,7 +38,7 @@ NodeParameters::NodeParameters(
     "parameter_events",
     factory,
     publisher_options,
-    false /* use intra process */);
+    use_intra_process);
   node_topics_->add_publisher(
     pub,
     // this is the callback group, not currently used or exposed to the user for publishers
