@@ -150,7 +150,11 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>>
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
   typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
   create_subscription(
     const std::string & topic_name,

@@ -38,7 +38,7 @@
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/parameter.hpp"
-#include "rclcpp/publisher_factory.hpp"
+#include "rclcpp/create_publisher.hpp"
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -75,58 +75,45 @@ Node::create_publisher(
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
-
-  auto publisher_options = rcl_publisher_get_default_options();
-  publisher_options.qos = qos_profile;
-
-  auto pub = node_topics_->create_publisher(
+  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
+    this->node_topics_.get(),
     topic_name,
-    rclcpp::create_publisher_factory<MessageT, Alloc, PublisherT>(allocator),
-    publisher_options,
-    use_intra_process_comms_);
-  node_topics_->add_publisher(
-    pub,
-    // this is the callback group, not currently used or exposed to the user for publishers
-    nullptr);
-  return std::dynamic_pointer_cast<PublisherT>(pub);
+    qos_profile,
+    use_intra_process_comms_,
+    allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc>
-typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+template<typename MessageT, typename CallbackT, typename AllocatorT, typename SubscriptionT>
+typename rclcpp::subscription::Subscription<MessageT, AllocatorT>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, AllocatorT>::SharedPtr
   msg_mem_strat,
-  typename std::shared_ptr<Alloc> allocator)
+  typename std::shared_ptr<AllocatorT> allocator)
 {
   if (!allocator) {
-    allocator = std::make_shared<Alloc>();
+    allocator = std::make_shared<AllocatorT>();
   }
 
   if (!msg_mem_strat) {
-    msg_mem_strat =
-      rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::create_default();
+    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
+    msg_mem_strat = MessageMemoryStrategy<MessageT, AllocatorT>::create_default();
   }
 
-  auto subscription_options = rcl_subscription_get_default_options();
-  subscription_options.qos = qos_profile;
-  subscription_options.ignore_local_publications = ignore_local_publications;
-
-  using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
-  auto factory = rclcpp::create_subscription_factory<MessageT, CallbackT, Alloc, SubscriptionT>(
-    std::forward<CallbackT>(callback), msg_mem_strat, allocator);
-
-  auto sub = node_topics_->create_subscription(
+  return rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT, SubscriptionT>(
+    node_topics_,
     topic_name,
-    factory,
-    subscription_options,
-    use_intra_process_comms_);
-  node_topics_->add_subscription(sub, group);
-  return std::dynamic_pointer_cast<SubscriptionT>(sub);
+    callback,
+    qos_profile,
+    group,
+    ignore_local_publications,
+    use_intra_process_comms_,
+    msg_mem_strat,
+    allocator);
 }
 
 template<typename MessageT, typename CallbackT, typename Alloc>

@@ -15,6 +15,7 @@
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
+#include "rclcpp/create_publisher.hpp"
 #include "rmw/qos_profiles.h"
 
 using namespace rclcpp::node_interfaces;
@@ -27,23 +28,15 @@ NodeParameters::NodeParameters(
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::publisher::Publisher<MessageT>;
   using AllocatorT = std::allocator<void>;
+  // TODO(wjwwood): expose this allocator through the Parameter interface.
   auto allocator = std::make_shared<AllocatorT>();
 
-  auto publisher_options = rcl_publisher_get_default_options();
-  publisher_options.qos = rmw_qos_profile_parameter_events;
-
-  auto factory = rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(allocator);
-
-  auto pub = node_topics_->create_publisher(
-    "parameter_events",
-    factory,
-    publisher_options,
-    use_intra_process);
-  node_topics_->add_publisher(
-    pub,
-    // this is the callback group, not currently used or exposed to the user for publishers
-    nullptr);
-  events_publisher_ = std::dynamic_pointer_cast<PublisherT>(pub);
+  events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+      node_topics_,
+      "parameter_events",
+      rmw_qos_profile_parameter_events,
+      use_intra_process,
+      allocator);
 }
 
 NodeParameters::~NodeParameters()
