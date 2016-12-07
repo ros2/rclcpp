@@ -61,6 +61,10 @@ NodeBase::NodeBase(
     if (number == (std::numeric_limits<uint32_t>::max)()) {
       // Finalize the interrupt guard condition.
       finalize_notify_guard_condition();
+#ifdef _WIN32
+      // free the ros_domain_id before throwing, if getenv was used on Windows
+      free(ros_domain_id);
+#endif
 
       throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
     }
