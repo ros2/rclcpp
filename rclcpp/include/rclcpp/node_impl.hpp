@@ -143,7 +143,7 @@ Node::create_subscription(
 template<typename DurationT, typename CallbackT>
 typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
-  std::chrono::duration<uint64_t, DurationT> period,
+  std::chrono::duration<int64_t, DurationT> period,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
