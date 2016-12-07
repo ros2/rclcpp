@@ -150,10 +150,10 @@ public:
       return false;
     }
 
-    unsigned int transition_index = static_cast<unsigned int>(lifecycle_transition);
-    if (!rcl_start_transition_by_index(&state_machine_, transition_index, true)) {
-      fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s\n",
-        __FILE__, __LINE__, transition_index, state_machine_.current_state->label);
+    unsigned int transition_id = static_cast<unsigned int>(lifecycle_transition);
+    if (rcl_lifecycle_start_transition(&state_machine_, transition_id, true) != RCL_RET_OK) {
+      fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s: %s\n",
+        __FILE__, __LINE__, transition_id, state_machine_.current_state->label, rcl_get_error_string_safe());
       return false;
     }
 
