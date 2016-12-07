@@ -107,7 +107,7 @@ Node::create_subscription(
   return rclcpp::create_subscription<MessageT, CallbackT, AllocatorT, SubscriptionT>(
     this->node_topics_.get(),
     topic_name,
-    callback,
+    std::forward<CallbackT>(callback),
     qos_profile,
     group,
     ignore_local_publications,
