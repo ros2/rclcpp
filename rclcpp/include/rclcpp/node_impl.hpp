@@ -39,7 +39,7 @@
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/create_publisher.hpp"
-#include "rclcpp/subscription_factory.hpp"
+#include "rclcpp/create_subscription.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -104,8 +104,8 @@ Node::create_subscription(
     msg_mem_strat = MessageMemoryStrategy<MessageT, AllocatorT>::create_default();
   }
 
-  return rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT, SubscriptionT>(
-    node_topics_,
+  return rclcpp::create_subscription<MessageT, CallbackT, AllocatorT, SubscriptionT>(
+    this->node_topics_.get(),
     topic_name,
     callback,
     qos_profile,
