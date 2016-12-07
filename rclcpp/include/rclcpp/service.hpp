@@ -125,12 +125,15 @@ public:
   : ServiceBase(node_handle),
     any_callback_(any_callback)
   {
-    // check if service handle was initialized
+    //check if service handle was initialized
+    // TODO(karsten1987): Take this verification
+    // directly in rcl_*_t
     // see: https://github.com/ros2/rcl/issues/81
-    if (service_handle->impl == NULL) {
+    if (!service_handle->impl) {
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
-              std::string("rcl_service_t in constructor argument ") +
-              "has to be initialized beforehand");
+          std::string("rcl_service_t in constructor argument must be initialized beforehand."));
+      // *INDENT-ON*
     }
     service_handle_ = service_handle;
     service_name_ = std::string(rcl_service_get_service_name(service_handle));

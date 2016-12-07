@@ -37,14 +37,6 @@ ServiceBase::ServiceBase(rcl_node_t * node_handle)
 : node_handle_(node_handle)
 {}
 
-ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
-: node_handle_(node_handle)
-{}
-
-ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
-: node_handle_(node_handle)
-{}
-
 ServiceBase::~ServiceBase()
 {}
 
