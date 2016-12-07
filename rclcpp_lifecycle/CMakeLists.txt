@@ -23,9 +23,11 @@ macro(targets)
   add_library(rclcpp_lifecycle${target_suffix}
     SHARED
     src/lifecycle_node.cpp)
+  target_link_libraries(rclcpp_lifecycle${target_suffix}
+    ${rcl_lifecycle_LIBRARIES})
   ament_target_dependencies(rclcpp_lifecycle${target_suffix}
     "rclcpp${target_suffix}"
-    "rcl_lifecycle"  #This doesn't compile?
+    #"rcl_lifecycle${target_suffix}"  This doesn't compile?
     "lifecycle_msgs")
 
   install(TARGETS
