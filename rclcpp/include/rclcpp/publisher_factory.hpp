@@ -16,6 +16,7 @@
 #define RCLCPP__PUBLISHER_FACTORY_HPP_
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "rcl/publisher.h"
@@ -44,19 +45,19 @@ struct PublisherFactory
 {
   // Creates a PublisherT<MessageT, ...> publisher object and returns it as a PublisherBase.
   using PublisherFactoryFunction = std::function<
-    rclcpp::publisher::PublisherBase::SharedPtr (
-      rclcpp::node_interfaces::NodeBaseInterface * node_base,
-      const std::string & topic_name,
-      rcl_publisher_options_t & publisher_options)>;
+      rclcpp::publisher::PublisherBase::SharedPtr(
+        rclcpp::node_interfaces::NodeBaseInterface * node_base,
+        const std::string & topic_name,
+        rcl_publisher_options_t & publisher_options)>;
 
   PublisherFactoryFunction create_typed_publisher;
 
   // Adds the PublisherBase to the intraprocess manager with the correctly
   // templated call to IntraProcessManager::store_intra_process_message.
   using AddPublisherToIntraProcessManagerFunction = std::function<
-    uint64_t (
-      rclcpp::intra_process_manager::IntraProcessManager * ipm,
-      rclcpp::publisher::PublisherBase::SharedPtr publisher)>;
+      uint64_t(
+        rclcpp::intra_process_manager::IntraProcessManager * ipm,
+        rclcpp::publisher::PublisherBase::SharedPtr publisher)>;
 
   AddPublisherToIntraProcessManagerFunction add_publisher_to_intra_process_manager;
 
@@ -64,8 +65,8 @@ struct PublisherFactory
   // PublisherT::publish() and which handles the intra process transmission of
   // the message being published.
   using SharedPublishCallbackFactoryFunction = std::function<
-    rclcpp::publisher::PublisherBase::StoreMessageCallbackT (
-      rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
+      rclcpp::publisher::PublisherBase::StoreMessageCallbackT(
+        rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
 
   SharedPublishCallbackFactoryFunction create_shared_publish_callback;
 };
@@ -80,9 +81,9 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
   // factory function that creates a MessageT specific PublisherT
   factory.create_typed_publisher =
     [allocator](
-      rclcpp::node_interfaces::NodeBaseInterface * node_base,
-      const std::string & topic_name,
-      rcl_publisher_options_t & publisher_options) -> std::shared_ptr<PublisherT>
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic_name,
+    rcl_publisher_options_t & publisher_options) -> std::shared_ptr<PublisherT>
     {
       auto message_alloc = std::make_shared<typename PublisherT::MessageAlloc>(*allocator.get());
       publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
@@ -93,8 +94,8 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
   // function to add a publisher to the intra process manager
   factory.add_publisher_to_intra_process_manager =
     [](
-      rclcpp::intra_process_manager::IntraProcessManager * ipm,
-      rclcpp::publisher::PublisherBase::SharedPtr publisher) -> uint64_t
+    rclcpp::intra_process_manager::IntraProcessManager * ipm,
+    rclcpp::publisher::PublisherBase::SharedPtr publisher) -> uint64_t
     {
       return ipm->add_publisher<MessageT, Alloc>(std::dynamic_pointer_cast<PublisherT>(publisher));
     };
@@ -115,7 +116,7 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
           if (!ipm) {
             // TODO(wjwwood): should this just return silently? Or maybe return with a warning?
             throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
+                    "intra process publish called after destruction of intra process manager");
           }
           if (!msg) {
             throw std::runtime_error("cannot publisher msg which is a null pointer");
@@ -123,8 +124,8 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
           auto & message_type_info = typeid(MessageT);
           if (message_type_info != type_info) {
             throw std::runtime_error(
-              std::string("published type '") + type_info.name() +
-              "' is incompatible from the publisher type '" + message_type_info.name() + "'");
+                    std::string("published type '") + type_info.name() +
+                    "' is incompatible from the publisher type '" + message_type_info.name() + "'");
           }
           MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
           using MessageDeleter = typename publisher::Publisher<MessageT, Alloc>::MessageDeleter;

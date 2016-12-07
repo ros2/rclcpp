@@ -15,6 +15,8 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_HPP_
 
+#include <map>
+#include <string>
 #include <vector>
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
@@ -112,7 +114,6 @@ private:
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
   publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
-
 };
 
 }  // namespace node_interfaces

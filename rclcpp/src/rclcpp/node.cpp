@@ -50,9 +50,9 @@ Node::Node(
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
-    node_topics_.get(),
-    use_intra_process_comms
-  )),
+      node_topics_.get(),
+      use_intra_process_comms
+    )),
   use_intra_process_comms_(use_intra_process_comms)
 {
 }

@@ -15,6 +15,10 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_BASE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_BASE_HPP_
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"

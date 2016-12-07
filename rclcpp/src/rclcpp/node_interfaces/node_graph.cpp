@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
+#include <string>
+
 #include "rclcpp/node_interfaces/node_graph.hpp"
 
 #include "rcl/graph.h"
@@ -19,7 +22,7 @@
 #include "rclcpp/event.hpp"
 #include "rclcpp/graph_listener.hpp"
 
-using namespace rclcpp::node_interfaces;
+using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::graph_listener::GraphListener;
 
@@ -175,7 +178,8 @@ NodeGraph::wait_for_graph_change(
   rclcpp::event::Event::SharedPtr event,
   std::chrono::nanoseconds timeout)
 {
-  using namespace rclcpp::exceptions;
+  using rclcpp::exceptions::InvalidEventError;
+  using rclcpp::exceptions::EventNotRegisteredError;
   if (!event) {
     throw InvalidEventError();
   }

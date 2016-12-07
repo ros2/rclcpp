@@ -16,7 +16,9 @@
 #define RCLCPP__SUBSCRIPTION_FACTORY_HPP_
 
 #include <functional>
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "rcl/subscription.h"
 
@@ -44,18 +46,18 @@ struct SubscriptionFactory
 {
   // Creates a Subscription<MessageT> object and returns it as a SubscriptionBase.
   using SubscriptionFactoryFunction = std::function<
-    rclcpp::subscription::SubscriptionBase::SharedPtr (
-      rclcpp::node_interfaces::NodeBaseInterface * node_base,
-      const std::string & topic_name,
-      rcl_subscription_options_t & subscription_options)>;
+      rclcpp::subscription::SubscriptionBase::SharedPtr(
+        rclcpp::node_interfaces::NodeBaseInterface * node_base,
+        const std::string & topic_name,
+        rcl_subscription_options_t & subscription_options)>;
 
   SubscriptionFactoryFunction create_typed_subscription;
 
   // Function that takes a MessageT from the intra process manager
-  using SetupIntraProcessFunction = std::function<void (
-    rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
-    const rcl_subscription_options_t & subscription_options)>;
+  using SetupIntraProcessFunction = std::function<void(
+        rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
+        rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+        const rcl_subscription_options_t & subscription_options)>;
 
   SetupIntraProcessFunction setup_intra_process;
 };
@@ -81,9 +83,9 @@ create_subscription_factory(
   // factory function that creates a MessageT specific SubscriptionT
   factory.create_typed_subscription =
     [allocator, msg_mem_strat, any_subscription_callback, message_alloc](
-      rclcpp::node_interfaces::NodeBaseInterface * node_base,
-      const std::string & topic_name,
-      rcl_subscription_options_t & subscription_options
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic_name,
+    rcl_subscription_options_t & subscription_options
     ) -> rclcpp::subscription::SubscriptionBase::SharedPtr
     {
       subscription_options.allocator =
@@ -105,9 +107,9 @@ create_subscription_factory(
   // function that will setup intra process communications for the subscription
   factory.setup_intra_process =
     [message_alloc](
-      rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
-      rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
-      const rcl_subscription_options_t & subscription_options)
+    rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
+    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    const rcl_subscription_options_t & subscription_options)
     {
       rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = ipm;
       uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
@@ -121,16 +123,16 @@ create_subscription_factory(
       // function that will be called to take a MessageT from the intra process manager
       auto take_intra_process_message_func =
         [weak_ipm](
-          uint64_t publisher_id,
-          uint64_t message_sequence,
-          uint64_t subscription_id,
-          typename rclcpp::subscription::Subscription<MessageT, Alloc>::MessageUniquePtr & message)
+        uint64_t publisher_id,
+        uint64_t message_sequence,
+        uint64_t subscription_id,
+        typename rclcpp::subscription::Subscription<MessageT, Alloc>::MessageUniquePtr & message)
         {
           auto ipm = weak_ipm.lock();
           if (!ipm) {
             // TODO(wjwwood): should this just return silently? Or return with a logged warning?
             throw std::runtime_error(
-              "intra process take called after destruction of intra process manager");
+                    "intra process take called after destruction of intra process manager");
           }
           ipm->take_intra_process_message<MessageT, Alloc>(
             publisher_id, message_sequence, subscription_id, message);
@@ -143,7 +145,8 @@ create_subscription_factory(
           auto ipm = weak_ipm.lock();
           if (!ipm) {
             throw std::runtime_error(
-              "intra process publisher check called after destruction of intra process manager");
+                    "intra process publisher check called "
+                    "after destruction of intra process manager");
           }
           return ipm->matches_any_publishers(sender_gid);
         };

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
@@ -19,7 +21,7 @@
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
-using namespace rclcpp::node_interfaces;
+using rclcpp::node_interfaces::NodeTopics;
 
 NodeTopics::NodeTopics(NodeBaseInterface * node_base)
 : node_base_(node_base)
@@ -72,7 +74,8 @@ NodeTopics::add_publisher(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-        std::string("Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
+              std::string(
+                "Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
     }
   }
 }
@@ -121,7 +124,8 @@ NodeTopics::add_subscription(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-        std::string("Failed to notify waitset on subscription creation: ") + rmw_get_error_string()
+              std::string(
+                "Failed to notify waitset on subscription creation: ") + rmw_get_error_string()
       );
     }
   }

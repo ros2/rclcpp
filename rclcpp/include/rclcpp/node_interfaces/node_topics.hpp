@@ -39,8 +39,7 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTopicsInterface)
 
   RCLCPP_PUBLIC
-  explicit
-  NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base);
+  explicit NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base);
 
   RCLCPP_PUBLIC
   virtual
@@ -82,7 +81,6 @@ private:
   RCLCPP_DISABLE_COPY(NodeTopics)
 
   NodeBaseInterface * node_base_;
-
 };
 
 }  // namespace node_interfaces

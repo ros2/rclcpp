@@ -45,7 +45,6 @@ public:
   add_service(
     rclcpp::service::ServiceBase::SharedPtr service_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
-
 };
 
 }  // namespace node_interfaces

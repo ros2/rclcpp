@@ -12,13 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <limits>
+#include <memory>
+#include <vector>
+
 #include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rclcpp/exceptions.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
-using namespace rclcpp::node_interfaces;
+using rclcpp::node_interfaces::NodeBase;
 
 NodeBase::NodeBase(
   const std::string & node_name,
@@ -39,12 +44,12 @@ NodeBase::NodeBase(
 
   // Setup a safe exit lamda to clean up the guard condition in case of an error here.
   auto finalize_notify_guard_condition = [this]() {
-    // Finalize the interrupt guard condition.
-    if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
-    }
-  };
+      // Finalize the interrupt guard condition.
+      if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
+        fprintf(stderr,
+          "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
+      }
+    };
 
   // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
   size_t domain_id = 0;

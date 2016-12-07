@@ -92,7 +92,7 @@ PublisherBase::get_queue_size() const
   const rcl_publisher_options_t * publisher_options = rcl_publisher_get_options(&publisher_handle_);
   if (!publisher_options) {
     throw std::runtime_error(
-      std::string("failed to get publisher options: ") + rcl_get_error_string_safe());
+            std::string("failed to get publisher options: ") + rcl_get_error_string_safe());
   }
   return publisher_options->qos.depth;
 }

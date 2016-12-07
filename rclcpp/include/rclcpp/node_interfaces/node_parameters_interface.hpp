@@ -15,6 +15,7 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_INTERFACE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_INTERFACE_HPP_
 
+#include <string>
 #include <vector>
 
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
@@ -80,15 +81,14 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
-  using ParametersCallbackFunction = std::function<
-    rcl_interfaces::msg::SetParametersResult(const std::vector<rclcpp::parameter::ParameterVariant> &)
-  >;
+  using ParametersCallbackFunction =
+      std::function<rcl_interfaces::msg::SetParametersResult(
+        const std::vector<rclcpp::parameter::ParameterVariant> &)>;
 
   RCLCPP_PUBLIC
   virtual
   void
   register_param_change_callback(ParametersCallbackFunction callback) = 0;
-
 };
 
 }  // namespace node_interfaces

@@ -348,7 +348,6 @@ private:
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
 
   bool use_intra_process_comms_;
-
 };
 
 }  // namespace node

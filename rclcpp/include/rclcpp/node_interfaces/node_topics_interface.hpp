@@ -71,7 +71,6 @@ public:
   add_subscription(
     rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
     rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
-
 };
 
 }  // namespace node_interfaces

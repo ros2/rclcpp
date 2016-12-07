@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 #include "rclcpp/node_interfaces/node_timers.hpp"
 
-using namespace rclcpp::node_interfaces;
+using rclcpp::node_interfaces::NodeTimers;
 
 NodeTimers::NodeTimers(NodeBaseInterface * node_base)
 : node_base_(node_base)

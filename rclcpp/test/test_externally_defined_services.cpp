@@ -120,8 +120,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
     &service_handle,
     node_handle->get_node_base_interface()->get_rcl_node_handle(),
     ts, "base_node_service", &service_options);
-  if (ret != RCL_RET_OK)
-  {
+  if (ret != RCL_RET_OK) {
     FAIL();
     return;
   }

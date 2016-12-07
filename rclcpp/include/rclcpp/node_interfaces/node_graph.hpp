@@ -48,8 +48,7 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeGraph)
 
   RCLCPP_PUBLIC
-  explicit
-  NodeGraph(rclcpp::node_interfaces::NodeBaseInterface * node_base);
+  explicit NodeGraph(rclcpp::node_interfaces::NodeBaseInterface * node_base);
 
   RCLCPP_PUBLIC
   virtual
@@ -122,7 +121,6 @@ private:
   /// Number of graph events out on loan, used to determine if the graph should be monitored.
   /* graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
   std::atomic_size_t graph_users_count_;
-
 };
 
 }  // namespace node_interfaces

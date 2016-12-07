@@ -12,13 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rmw/qos_profiles.h"
 
-using namespace rclcpp::node_interfaces;
+using rclcpp::node_interfaces::NodeParameters;
 
 NodeParameters::NodeParameters(
   NodeTopicsInterface * node_topics,
@@ -32,11 +38,11 @@ NodeParameters::NodeParameters(
   auto allocator = std::make_shared<AllocatorT>();
 
   events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
-      node_topics_,
-      "parameter_events",
-      rmw_qos_profile_parameter_events,
-      use_intra_process,
-      allocator);
+    node_topics_,
+    "parameter_events",
+    rmw_qos_profile_parameter_events,
+    use_intra_process,
+    allocator);
 }
 
 NodeParameters::~NodeParameters()

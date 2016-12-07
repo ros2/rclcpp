@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/subscription_factory.hpp"
@@ -45,7 +46,7 @@ create_subscription(
 
   auto factory =
     rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT, SubscriptionT>(
-      std::forward<CallbackT>(callback), msg_mem_strat, allocator);
+    std::forward<CallbackT>(callback), msg_mem_strat, allocator);
 
   auto sub = node_topics->create_subscription(
     topic_name,
