@@ -25,7 +25,7 @@
 
 #include <rcl_lifecycle/rcl_lifecycle.h>
 
-#include <lifecycle_msgs/msg/transition.hpp>
+#include <lifecycle_msgs/msg/transition_event.hpp>
 #include <lifecycle_msgs/srv/get_state.hpp>
 #include <lifecycle_msgs/srv/change_state.hpp>
 
@@ -41,7 +41,7 @@ namespace lifecycle
 class LifecycleNode::LifecycleNodeImpl
 {
 
-using TransitionMsg = lifecycle_msgs::msg::Transition;
+using TransitionEventMsg = lifecycle_msgs::msg::TransitionEvent;
 using GetStateSrv = lifecycle_msgs::srv::GetState;
 using ChangeStateSrv = lifecycle_msgs::srv::ChangeState;
 
@@ -52,21 +52,21 @@ public:
 
   ~LifecycleNodeImpl()
   {
-    if (rcl_state_machine_is_initialized(&state_machine_) != RCL_RET_OK)
+    if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK)
     {
       fprintf(stderr, "%s:%u, FATAL: rcl_state_machine got destroyed externally.\n",
           __FILE__, __LINE__);
     } else {
-      rcl_state_machine_fini(&state_machine_, base_node_handle_->get_rcl_node_handle());
+      rcl_lifecycle_state_machine_fini(&state_machine_, base_node_handle_->get_rcl_node_handle());
     }
   }
 
   void
   init()
   {
-    state_machine_ = rcl_get_zero_initialized_state_machine();
-    rcl_ret_t ret = rcl_state_machine_init(&state_machine_, base_node_handle_->get_rcl_node_handle(),
-       rosidl_generator_cpp::get_message_type_support_handle<TransitionMsg>(),
+    state_machine_ = rcl_lifecycle_get_zero_initialized_state_machine();
+    rcl_ret_t ret = rcl_lifecycle_state_machine_init(&state_machine_, base_node_handle_->get_rcl_node_handle(),
+       rosidl_generator_cpp::get_message_type_support_handle<TransitionEventMsg>(),
        rosidl_generator_cpp::get_service_type_support_handle<GetStateSrv>(),
        rosidl_generator_cpp::get_service_type_support_handle<ChangeStateSrv>(),
        true);
@@ -76,6 +76,7 @@ public:
           base_node_handle_->get_name().c_str(), rcl_get_error_string_safe());
       return;
     }
+    rcl_print_state_machine(&state_machine_);
 
     // srv objects may get destroyed directly here
     {  // get_state
@@ -113,12 +114,12 @@ public:
   {
     (void)header;
     (void)req;
-    if (rcl_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      resp->current_state = static_cast<uint8_t>(rcl_state_unknown.index);
+    if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
+      resp->current_state = static_cast<uint8_t>(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN);
       return;
     }
     resp->current_state =
-      static_cast<uint8_t>(state_machine_.current_state->index);
+      static_cast<uint8_t>(state_machine_.current_state->id);
   }
 
   void
@@ -126,12 +127,13 @@ public:
     const std::shared_ptr<lifecycle_msgs::srv::ChangeState::Request> req,
     std::shared_ptr<lifecycle_msgs::srv::ChangeState::Response> resp)
   {
+    fprintf(stderr, "Received change request %u\n", req->transition.id);
     (void)header;
-    if (rcl_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
+    if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       resp->success = false;
       return;
     }
-    resp->success = change_state(req->transition);
+    resp->success = change_state(req->transition.id);
   }
 
   bool
@@ -144,7 +146,7 @@ public:
   bool
   change_state(std::uint8_t lifecycle_transition)
   {
-    if (rcl_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
+    if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       fprintf(stderr, "%s:%d, Unable to change state for state machine for %s: %s \n",
         __FILE__, __LINE__, base_node_handle_->get_name().c_str(), rcl_get_error_string_safe());
       return false;
@@ -158,7 +160,7 @@ public:
     }
 
     fprintf(stderr, "Started Transition %u. SM is now in state %u\n",
-        lifecycle_transition, state_machine_.current_state->index);
+        lifecycle_transition, state_machine_.current_state->id);
     // Since we set always set a default callback,
     // we don't have to check for nullptr here
     auto it = cb_map_.find(lifecycle_transition);
@@ -170,14 +172,14 @@ public:
     std::function<bool(void)> callback = it->second;
     auto success = callback();
 
-    if (!rcl_finish_transition_by_index(&state_machine_, transition_index, success, true))
+    if (!rcl_lifecycle_finish_transition(&state_machine_, transition_id, success, false))
     {
       fprintf(stderr, "Failed to finish transition %u. Current state is now: %s\n",
-        transition_index, state_machine_.current_state->label);
+        transition_id, state_machine_.current_state->label);
       return false;
     }
     fprintf(stderr, "Finished Transition %u. SM is now in state %u\n",
-        lifecycle_transition, state_machine_.current_state->index);
+        lifecycle_transition, state_machine_.current_state->id);
     // This true holds in both cases where the actual callback
     // was successful or not, since at this point we have a valid transistion
     // to either a new primary state or error state
@@ -196,7 +198,7 @@ public:
     weak_timers_.push_back(timer);
   }
 
-  rcl_state_machine_t state_machine_;
+  rcl_lifecycle_state_machine_t state_machine_;
   std::map<std::uint8_t, std::function<bool(void)>> cb_map_;
 
   std::shared_ptr<rclcpp::node::Node> base_node_handle_;

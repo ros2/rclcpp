@@ -15,7 +15,8 @@
 #include <string>
 #include <memory>
 
-#include <rcl_lifecycle/states.h>
+#include <lifecycle_msgs/msg/state.hpp>
+#include <lifecycle_msgs/msg/transition.hpp>
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -47,37 +48,37 @@ LifecycleNode::~LifecycleNode()
 bool
 LifecycleNode::register_on_configure(std::function<bool(void)> fcn)
 {
-  return impl_->register_callback(rcl_state_configuring.index, fcn);
+  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_CONFIGURING, fcn);
 }
 
 bool
 LifecycleNode::register_on_cleanup(std::function<bool(void)> fcn)
 {
-  return impl_->register_callback(rcl_state_cleaningup.index, fcn);
+  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_CLEANINGUP, fcn);
 }
 
 bool
 LifecycleNode::register_on_shutdown(std::function<bool(void)> fcn)
 {
-  return impl_->register_callback(rcl_state_shuttingdown.index, fcn);
+  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_SHUTTINGDOWN, fcn);
 }
 
 bool
 LifecycleNode::register_on_activate(std::function<bool(void)> fcn)
 {
-  return impl_->register_callback(rcl_state_activating.index, fcn);
+  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_ACTIVATING, fcn);
 }
 
 bool
 LifecycleNode::register_on_deactivate(std::function<bool(void)> fcn)
 {
-  return impl_->register_callback(rcl_state_deactivating.index, fcn);
+  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_DEACTIVATING, fcn);
 }
 
 bool
 LifecycleNode::register_on_error(std::function<bool(void)> fcn)
 {
-  return impl_->register_callback(rcl_state_errorprocessing.index, fcn);
+  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING, fcn);
 }
 
 void
