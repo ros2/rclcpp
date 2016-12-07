@@ -120,7 +120,7 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
   return results;
 }
 
-const rclcpp::parameter::ParameterVariant
+rclcpp::parameter::ParameterVariant
 NodeParameters::get_parameter(const std::string & name) const
 {
   rclcpp::parameter::ParameterVariant parameter;

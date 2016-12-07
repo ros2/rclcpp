@@ -56,7 +56,7 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  const rclcpp::parameter::ParameterVariant
+  rclcpp::parameter::ParameterVariant
   get_parameter(const std::string & name) const = 0;
 
   RCLCPP_PUBLIC

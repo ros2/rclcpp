@@ -50,12 +50,18 @@ public:
   RCLCPP_PUBLIC
   virtual
   rclcpp::context::Context::SharedPtr
-  get_context() const = 0;
+  get_context() = 0;
 
   /// Return the rcl_node_t node handle (non-const version).
   RCLCPP_PUBLIC
   virtual
   rcl_node_t *
+  get_rcl_node_handle() = 0;
+
+  /// Return the rcl_node_t node handle (const version).
+  RCLCPP_PUBLIC
+  virtual
+  const rcl_node_t *
   get_rcl_node_handle() const = 0;
 
   /// Return the rcl_node_t node handle in a std::shared_ptr.
@@ -65,6 +71,15 @@ public:
   RCLCPP_PUBLIC
   virtual
   std::shared_ptr<rcl_node_t>
+  get_shared_rcl_node_handle() = 0;
+
+  /// Return the rcl_node_t node handle in a std::shared_ptr.
+  /* This handle remains valid after the Node is destroyed.
+   * The actual rcl node is not finalized until it is out of scope everywhere.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<const rcl_node_t>
   get_shared_rcl_node_handle() const = 0;
 
   /// Create and return a callback group.

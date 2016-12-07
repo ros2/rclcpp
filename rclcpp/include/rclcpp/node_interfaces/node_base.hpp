@@ -50,16 +50,26 @@ public:
   RCLCPP_PUBLIC
   virtual
   rclcpp::context::Context::SharedPtr
-  get_context() const;
+  get_context();
 
   RCLCPP_PUBLIC
   virtual
   rcl_node_t *
+  get_rcl_node_handle();
+
+  RCLCPP_PUBLIC
+  virtual
+  const rcl_node_t *
   get_rcl_node_handle() const;
 
   RCLCPP_PUBLIC
   virtual
   std::shared_ptr<rcl_node_t>
+  get_shared_rcl_node_handle();
+
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<const rcl_node_t>
   get_shared_rcl_node_handle() const;
 
   RCLCPP_PUBLIC

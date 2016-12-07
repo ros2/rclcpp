@@ -100,7 +100,7 @@ Node::get_parameters(
   return node_parameters_->get_parameters(names);
 }
 
-const rclcpp::parameter::ParameterVariant
+rclcpp::parameter::ParameterVariant
 Node::get_parameter(const std::string & name) const
 {
   return node_parameters_->get_parameter(name);

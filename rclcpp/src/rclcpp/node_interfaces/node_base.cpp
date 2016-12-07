@@ -129,18 +129,30 @@ NodeBase::get_name() const
 }
 
 rclcpp::context::Context::SharedPtr
-NodeBase::get_context() const
+NodeBase::get_context()
 {
   return context_;
 }
 
 rcl_node_t *
+NodeBase::get_rcl_node_handle()
+{
+  return node_handle_.get();
+}
+
+const rcl_node_t *
 NodeBase::get_rcl_node_handle() const
 {
   return node_handle_.get();
 }
 
 std::shared_ptr<rcl_node_t>
+NodeBase::get_shared_rcl_node_handle()
+{
+  return node_handle_;
+}
+
+std::shared_ptr<const rcl_node_t>
 NodeBase::get_shared_rcl_node_handle() const
 {
   return node_handle_;
