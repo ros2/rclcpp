@@ -23,6 +23,8 @@
 #include "rclcpp/timer.hpp"
 
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
+#include "rclcpp_lifecycle/state.hpp"
+#include "rclcpp_lifecycle/transition.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
 namespace rclcpp
@@ -38,23 +40,23 @@ namespace lifecycle
 class LifecycleNodeInterface
 {
 public:
-  virtual bool on_configure()   = 0;
-  virtual bool on_cleanup()     = 0;
-  virtual bool on_shutdown()    = 0;
-  virtual bool on_activate()    = 0;
-  virtual bool on_deactivate()  = 0;
-  virtual bool on_error()       = 0;
+  virtual bool on_configure() = 0;
+  virtual bool on_cleanup() = 0;
+  virtual bool on_shutdown() = 0;
+  virtual bool on_activate() = 0;
+  virtual bool on_deactivate() = 0;
+  virtual bool on_error() = 0;
 };
 
 class AbstractLifecycleNode : public LifecycleNodeInterface
 {
 public:
-  virtual bool on_configure()   {return true;};
-  virtual bool on_cleanup()     {return true;};
-  virtual bool on_shutdown()    {return true;};
-  virtual bool on_activate()    {return true;};
-  virtual bool on_deactivate()  {return true;};
-  virtual bool on_error()       {return true;};
+  virtual bool on_configure() {return true;}
+  virtual bool on_cleanup() {return true;}
+  virtual bool on_shutdown() {return true;}
+  virtual bool on_activate() {return true;}
+  virtual bool on_deactivate() {return true;}
+  virtual bool on_error() {return true;}
 };
 // *INDENT-ON
 
@@ -65,14 +67,15 @@ public:
 class LifecycleNode : public AbstractLifecycleNode
 {
 public:
-  LIFECYCLE_EXPORT
+  RCLCPP_LIFECYCLE_PUBLIC
   explicit LifecycleNode(const std::string & node_name, bool use_intra_process_comms = false);
 
-  LIFECYCLE_EXPORT
+  RCLCPP_LIFECYCLE_PUBLIC
   virtual ~LifecycleNode();
 
   // MOCK typedefs as node refactor not done yet
   using BaseInterface = rclcpp::node::Node;
+  RCLCPP_LIFECYCLE_PUBLIC
   std::shared_ptr<BaseInterface>
   get_base_interface()
   {
@@ -81,30 +84,19 @@ public:
 
   // MOCK typedefs as node refactor not done yet
   using CommunicationInterface = rclcpp::node::Node;
+  RCLCPP_LIFECYCLE_PUBLIC
   std::shared_ptr<CommunicationInterface>
   get_communication_interface()
   {
     return communication_interface_;
   }
 
+  RCLCPP_LIFECYCLE_PUBLIC
   std::string
   get_name()
   {
     return base_node_handle_->get_name();
   }
-
-  bool
-  register_on_configure(std::function<bool(void)> fcn);
-  bool
-  register_on_cleanup(std::function<bool(void)> fcn);
-  bool
-  register_on_shutdown(std::function<bool(void)> fcn);
-  bool
-  register_on_activate(std::function<bool(void)> fcn);
-  bool
-  register_on_deactivate(std::function<bool(void)> fcn);
-  bool
-  register_on_error(std::function<bool(void)> fcn);
 
   /**
    * @brief same API for creating publisher as regular Node
@@ -125,7 +117,6 @@ public:
     return pub;
   }
 
-
   template<typename CallbackType>
   typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
   create_wall_timer(
@@ -139,12 +130,47 @@ public:
     return timer;
   }
 
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  get_current_state();
+
+  /// trigger the specified transition
+  /*
+   * return the new state after this transition
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  trigger_transition(const Transition & transition);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  trigger_transition(unsigned int transition_id);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_on_configure(std::function<bool(void)> fcn);
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_on_cleanup(std::function<bool(void)> fcn);
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_on_shutdown(std::function<bool(void)> fcn);
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_on_activate(std::function<bool(void)> fcn);
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_on_deactivate(std::function<bool(void)> fcn);
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  register_on_error(std::function<bool(void)> fcn);
+
 protected:
-  LIFECYCLE_EXPORT
+  RCLCPP_LIFECYCLE_PUBLIC
   void
   add_publisher_handle(std::shared_ptr<rclcpp::lifecycle::LifecyclePublisherInterface> pub);
 
-  LIFECYCLE_EXPORT
+  RCLCPP_LIFECYCLE_PUBLIC
   void
   add_timer_handle(std::shared_ptr<rclcpp::timer::TimerBase> timer);
 

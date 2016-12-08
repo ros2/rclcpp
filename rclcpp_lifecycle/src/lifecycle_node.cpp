@@ -43,7 +43,7 @@ LifecycleNode::LifecycleNode(const std::string & node_name, bool use_intra_proce
 }
 
 LifecycleNode::~LifecycleNode()
-{};
+{}
 
 bool
 LifecycleNode::register_on_configure(std::function<bool(void)> fcn)
@@ -78,11 +78,31 @@ LifecycleNode::register_on_deactivate(std::function<bool(void)> fcn)
 bool
 LifecycleNode::register_on_error(std::function<bool(void)> fcn)
 {
-  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING, fcn);
+  return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING,
+           fcn);
+}
+
+const State &
+LifecycleNode::get_current_state()
+{
+  return impl_->get_current_state();
+}
+
+const State &
+LifecycleNode::trigger_transition(const Transition & transition)
+{
+  return trigger_transition(transition.id());
+}
+
+const State &
+LifecycleNode::trigger_transition(unsigned int transition_id)
+{
+  return impl_->trigger_transition(transition_id);
 }
 
 void
-LifecycleNode::add_publisher_handle(std::shared_ptr<rclcpp::lifecycle::LifecyclePublisherInterface> pub)
+LifecycleNode::add_publisher_handle(
+  std::shared_ptr<rclcpp::lifecycle::LifecyclePublisherInterface> pub)
 {
   impl_->add_publisher_handle(pub);
 }

@@ -12,18 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* This header must be included by all rclcpp headers which declare symbols
+ * which are defined in the rclcpp library. When not building the rclcpp
+ * library, i.e. when using the headers in other package's code, the contents
+ * of this header change the visibility of certain symbols which the rclcpp
+ * library cannot have, but the consuming code must have inorder to link.
+ */
+
 #ifndef RCLCPP_LIFECYCLE__VISIBILITY_CONTROL_H_
 #define RCLCPP_LIFECYCLE__VISIBILITY_CONTROL_H_
 
-#ifdef _WIN32
-  #define shared_EXPORTS 1
-  #ifdef shared_EXPORTS
-    #define LIFECYCLE_EXPORT __declspec(dllexport)
+#include "rmw/rmw.h"
+
+// This logic was borrowed (then namespaced) from the examples on the gcc wiki:
+//     https://gcc.gnu.org/wiki/Visibility
+
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef __GNUC__
+    #define RCLCPP_LIFECYCLE_EXPORT __attribute__ ((dllexport))
+    #define RCLCPP_LIFECYCLE_IMPORT __attribute__ ((dllimport))
   #else
-    #define LIFECYCLE_EXPORT __declspec(dllimport)
+    #define RCLCPP_LIFECYCLE_EXPORT __declspec(dllexport)
+    #define RCLCPP_LIFECYCLE_IMPORT __declspec(dllimport)
   #endif
+  #ifdef RCLCPP_LIFECYCLE_BUILDING_DLL
+    #define RCLCPP_LIFECYCLE_PUBLIC RCLCPP_LIFECYCLE_EXPORT
+  #else
+    #define RCLCPP_LIFECYCLE_PUBLIC RCLCPP_LIFECYCLE_IMPORT
+  #endif
+  #define RCLCPP_LIFECYCLE_PUBLIC_TYPE RCLCPP_LIFECYCLE_PUBLIC
+  #define RCLCPP_LIFECYCLE_LOCAL
 #else
-  #define LIFECYCLE_EXPORT
+  #define RCLCPP_LIFECYCLE_EXPORT __attribute__ ((visibility("default")))
+  #define RCLCPP_LIFECYCLE_IMPORT
+  #if __GNUC__ >= 4
+    #define RCLCPP_LIFECYCLE_PUBLIC __attribute__ ((visibility("default")))
+    #define RCLCPP_LIFECYCLE_LOCAL  __attribute__ ((visibility("hidden")))
+  #else
+    #define RCLCPP_LIFECYCLE_PUBLIC
+    #define RCLCPP_LIFECYCLE_LOCAL
+  #endif
+  #define RCLCPP_LIFECYCLE_PUBLIC_TYPE
 #endif
 
 #endif  // RCLCPP_LIFECYCLE__VISIBILITY_CONTROL_H_

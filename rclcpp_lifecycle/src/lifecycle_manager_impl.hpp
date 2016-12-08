@@ -61,10 +61,9 @@ public:
   {
     for (auto it = node_handle_map_.begin(); it != node_handle_map_.end(); ++it) {
       rcl_state_machine_t * rcl_state_machine = &it->second.state_machine;
-      if (!rcl_state_machine)
-      {
+      if (!rcl_state_machine) {
         fprintf(stderr, "%s:%u, FATAL: rcl_state_machine got destroyed externally.\n",
-            __FILE__, __LINE__);
+          __FILE__, __LINE__);
       } else {
         rcl_state_machine_fini(rcl_state_machine, node_base_handle_->get_rcl_node_handle());
       }
@@ -110,7 +109,7 @@ public:
   }
 
   void
-  on_change_state(const std::shared_ptr<rmw_request_id_t>header,
+  on_change_state(const std::shared_ptr<rmw_request_id_t> header,
     const std::shared_ptr<lifecycle_msgs::srv::ChangeState::Request> req,
     std::shared_ptr<lifecycle_msgs::srv::ChangeState::Response> resp)
   {
@@ -138,17 +137,17 @@ public:
     const LifecycleInterfacePtr & lifecycle_interface)
   {
     // TODO(karsten1987): clarify what do if node already exists;
-    NodeStateMachine& node_state_machine = node_handle_map_[node_name];
+    NodeStateMachine & node_state_machine = node_handle_map_[node_name];
     node_state_machine.state_machine = rcl_get_zero_initialized_state_machine();
-    rcl_ret_t ret = rcl_state_machine_init(&node_state_machine.state_machine, node_base_handle_->get_rcl_node_handle(),
-       rosidl_generator_cpp::get_message_type_support_handle<lifecycle_msgs::msg::Transition>(),
-       rosidl_generator_cpp::get_service_type_support_handle<lifecycle_msgs::srv::GetState>(),
-       rosidl_generator_cpp::get_service_type_support_handle<lifecycle_msgs::srv::ChangeState>(),
-       true);
-    if (ret != RCL_RET_OK)
-    {
+    rcl_ret_t ret = rcl_state_machine_init(&node_state_machine.state_machine,
+        node_base_handle_->get_rcl_node_handle(),
+        rosidl_generator_cpp::get_message_type_support_handle<lifecycle_msgs::msg::Transition>(),
+        rosidl_generator_cpp::get_service_type_support_handle<lifecycle_msgs::srv::GetState>(),
+        rosidl_generator_cpp::get_service_type_support_handle<lifecycle_msgs::srv::ChangeState>(),
+        true);
+    if (ret != RCL_RET_OK) {
       fprintf(stderr, "Error adding %s: %s\n",
-          node_name.c_str(), rcl_get_error_string_safe());
+        node_name.c_str(), rcl_get_error_string_safe());
       return;
     }
 
@@ -188,7 +187,8 @@ public:
         node_base_handle_->get_shared_node_handle(),
         &node_state_machine.state_machine.comm_interface.srv_change_state,
         any_cb);
-      auto srv_change_state_base = std::dynamic_pointer_cast<service::ServiceBase>(srv_change_state);
+      auto srv_change_state_base =
+        std::dynamic_pointer_cast<service::ServiceBase>(srv_change_state);
       node_base_handle_->add_service(srv_change_state_base);
       node_state_machine.srv_change_state = srv_change_state_base;
     }

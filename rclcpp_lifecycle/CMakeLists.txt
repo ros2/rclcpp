@@ -22,7 +22,10 @@ macro(targets)
   ### CPP High level library
   add_library(rclcpp_lifecycle${target_suffix}
     SHARED
-    src/lifecycle_node.cpp)
+    src/lifecycle_node.cpp
+    src/state.cpp
+    src/transition.cpp
+  )
   ament_target_dependencies(rclcpp_lifecycle${target_suffix}
     "rclcpp${target_suffix}"
     "rcl_lifecycle${target_suffix}"
@@ -40,6 +43,17 @@ call_for_each_rmw_implementation(targets GENERATE_DEFAULT)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_lifecycle_node test/test_lifecycle_node.cpp)
+  if(TARGET test_lifecycle_node)
+    target_include_directories(test_lifecycle_node PUBLIC
+      ${rcl_lifecycle_INCLUDE_DIRS}
+      ${rclcpp_INCLUDE_DIRS}
+      ${rclcpp_lifecycle_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_lifecycle_node ${PROJECT_NAME})
+  endif()
+
 endif()
 
 ament_export_dependencies(rclcpp)
