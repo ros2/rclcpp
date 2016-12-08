@@ -28,8 +28,7 @@ SubscriptionBase::SubscriptionBase(
   std::shared_ptr<rcl_node_t> node_handle,
   const std::string & topic_name,
   bool ignore_local_publications)
-:   node_handle_(node_handle),
-  topic_name_(topic_name),
+: node_handle_(node_handle),
   ignore_local_publications_(ignore_local_publications)
 {
   // To avoid unused private member warnings.
@@ -54,10 +53,10 @@ SubscriptionBase::~SubscriptionBase()
   }
 }
 
-const std::string &
+const char *
 SubscriptionBase::get_topic_name() const
 {
-  return this->topic_name_;
+  return rcl_subscription_get_topic_name(&subscription_handle_);
 }
 
 const rcl_subscription_t *

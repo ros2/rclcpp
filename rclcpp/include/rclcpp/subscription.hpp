@@ -71,7 +71,7 @@ public:
 
   /// Get the topic that this subscription is subscribed on.
   RCLCPP_PUBLIC
-  const std::string &
+  const char *
   get_topic_name() const;
 
   RCLCPP_PUBLIC
@@ -110,7 +110,6 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
-  std::string topic_name_;
   bool ignore_local_publications_;
 };
 
@@ -246,7 +245,7 @@ public:
     if (rcl_subscription_init(
         &intra_process_subscription_handle_, node_handle_.get(),
         rclcpp::type_support::get_intra_process_message_msg_type_support(),
-        (get_topic_name() + "__intra").c_str(),
+        (std::string(get_topic_name()) + "__intra").c_str(),
         &intra_process_options) != RCL_RET_OK)
     {
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
