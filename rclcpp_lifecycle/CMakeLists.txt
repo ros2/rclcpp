@@ -13,21 +13,19 @@ find_package(rmw_implementation_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
-include_directories(
-  include)
+include_directories(include)
 
 macro(targets)
   get_rclcpp_information("${rmw_implementation}" "rclcpp${target_suffix}")
+  get_rcl_lifecycle_information("${rmw_implementation}" "rcl_lifecycle${target_suffix}")
 
   ### CPP High level library
   add_library(rclcpp_lifecycle${target_suffix}
     SHARED
     src/lifecycle_node.cpp)
-  target_link_libraries(rclcpp_lifecycle${target_suffix}
-    ${rcl_lifecycle_LIBRARIES})
   ament_target_dependencies(rclcpp_lifecycle${target_suffix}
     "rclcpp${target_suffix}"
-    #"rcl_lifecycle${target_suffix}"  This doesn't compile?
+    "rcl_lifecycle${target_suffix}"
     "lifecycle_msgs")
 
   install(TARGETS
