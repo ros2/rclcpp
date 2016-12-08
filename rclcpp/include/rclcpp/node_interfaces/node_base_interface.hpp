@@ -98,7 +98,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  callback_group_in_node(callback_group::CallbackGroup::SharedPtr group) = 0;
+  callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
 
   /// Return list of callback groups associated with this node.
   RCLCPP_PUBLIC
