@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-#include <memory>
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
+#include "lifecycle_node_impl.hpp"  // implementation
 
 #include <lifecycle_msgs/msg/state.hpp>
 #include <lifecycle_msgs/msg/transition.hpp>
 
-#include "rclcpp_lifecycle/lifecycle_node.hpp"
-
-#include "lifecycle_node_impl.hpp"  // implementation
+#include <string>
+#include <memory>
 
 namespace rclcpp
 {

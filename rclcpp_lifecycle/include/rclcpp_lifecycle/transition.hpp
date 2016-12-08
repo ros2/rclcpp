@@ -34,10 +34,10 @@ public:
   Transition() = delete;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  Transition(unsigned int id, const std::string & label = "");
+  explicit Transition(unsigned int id, const std::string & label = "");
 
   RCLCPP_LIFECYCLE_PUBLIC
-  Transition(const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle);
+  explicit Transition(const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle);
 
   RCLCPP_LIFECYCLE_PUBLIC
   virtual ~Transition();
@@ -55,6 +55,6 @@ protected:
   const rcl_lifecycle_transition_t * transition_handle_;
 };
 
-}  // namespace rclcpp_lifecycle
+}  // namespace lifecycle
 }  // namespace rclcpp
 #endif  // RCLCPP_LIFECYCLE__TRANSITION_HPP_

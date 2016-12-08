@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
-#include <string>
 
-#include <lifecycle_msgs/msg/state.hpp>
-#include <lifecycle_msgs/msg/transition.hpp>
+#include <gtest/gtest.h>
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "lifecycle_msgs/msg/state.hpp"
+#include "lifecycle_msgs/msg/transition.hpp"
 
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
@@ -52,8 +55,8 @@ protected:
 class EmptyLifecycleNode : public rclcpp::lifecycle::LifecycleNode
 {
 public:
-  EmptyLifecycleNode(std::string node_name)
-    : rclcpp::lifecycle::LifecycleNode(std::move(node_name))
+  explicit EmptyLifecycleNode(std::string node_name)
+  : rclcpp::lifecycle::LifecycleNode(std::move(node_name))
   {}
 };
 
@@ -61,8 +64,8 @@ template<class Mood = GoodMood>
 class MoodyLifecycleNode : public rclcpp::lifecycle::LifecycleNode
 {
 public:
-  MoodyLifecycleNode(std::string node_name)
-    : rclcpp::lifecycle::LifecycleNode(std::move(node_name))
+  explicit MoodyLifecycleNode(std::string node_name)
+  : rclcpp::lifecycle::LifecycleNode(std::move(node_name))
   {}
 
   size_t number_of_callbacks = 0;
@@ -139,15 +142,15 @@ TEST_F(TestDefaultStateMachine, trigger_transition) {
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
   EXPECT_EQ(State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
   EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
   EXPECT_EQ(State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_SHUTDOWN)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_SHUTDOWN)).id());
 }
 
 TEST_F(TestDefaultStateMachine, good_mood) {
@@ -155,15 +158,15 @@ TEST_F(TestDefaultStateMachine, good_mood) {
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
   EXPECT_EQ(State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
   EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
   EXPECT_EQ(State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_SHUTDOWN)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_SHUTDOWN)).id());
 
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(5, test_node->number_of_callbacks);
@@ -174,7 +177,7 @@ TEST_F(TestDefaultStateMachine, bad_mood) {
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
 
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(2, test_node->number_of_callbacks);
@@ -185,7 +188,7 @@ TEST_F(TestDefaultStateMachine, very_bad_mood) {
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
-        rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+      rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
 
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(2, test_node->number_of_callbacks);

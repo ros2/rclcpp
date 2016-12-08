@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rclcpp_lifecycle/transition.hpp"
+
 #include <lifecycle_msgs/msg/transition.hpp>
 #include <rcl_lifecycle/data_types.h>
 
-#include "rclcpp_lifecycle/transition.hpp"
+#include <string>
 
 namespace rclcpp
 {
@@ -23,7 +25,7 @@ namespace lifecycle
 {
 
 Transition::Transition(unsigned int id, const std::string & label)
-  : owns_rcl_transition_handle_(true)
+: owns_rcl_transition_handle_(true)
 {
   auto transition_handle = new rcl_lifecycle_transition_t;
   transition_handle->id = id;
@@ -33,15 +35,14 @@ Transition::Transition(unsigned int id, const std::string & label)
 }
 
 Transition::Transition(const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle)
-  : owns_rcl_transition_handle_(false)
+: owns_rcl_transition_handle_(false)
 {
   transition_handle_ = rcl_lifecycle_transition_handle;
 }
 
 Transition::~Transition()
 {
-  if (owns_rcl_transition_handle_)
-  {
+  if (owns_rcl_transition_handle_) {
     delete transition_handle_;
   }
 }

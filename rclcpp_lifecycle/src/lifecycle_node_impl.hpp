@@ -12,27 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_LIFECYCLE__LIFECYCLE_NODE_IMPL_HPP_
-#define RCLCPP_LIFECYCLE__LIFECYCLE_NODE_IMPL_HPP_
-
-#include <string>
-#include <memory>
-#include <vector>
-#include <map>
-#include <functional>
-
-#include <rcl/error_handling.h>
-
-#include <rcl_lifecycle/rcl_lifecycle.h>
-
-#include <lifecycle_msgs/msg/transition_event.hpp>
-#include <lifecycle_msgs/msg/transition_event.h>  // for getting the c-typesupport
-#include <lifecycle_msgs/srv/get_state.hpp>
-#include <lifecycle_msgs/srv/change_state.hpp>
-
-#include <rclcpp/node.hpp>
+#ifndef LIFECYCLE_NODE_IMPL_HPP_
+#define LIFECYCLE_NODE_IMPL_HPP_
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
+
+#include <functional>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+#include <utility>
+
+#include "lifecycle_msgs/srv/change_state.hpp"
+#include "lifecycle_msgs/srv/get_state.hpp"
+#include "lifecycle_msgs/msg/transition_event.h"  // for getting the c-typesupport
+#include "lifecycle_msgs/msg/transition_event.hpp"
+
+#include "rcl/error_handling.h"
+
+#include "rcl_lifecycle/rcl_lifecycle.h"
+
+#include "rclcpp/node.hpp"
 
 namespace rclcpp
 {
@@ -41,13 +42,12 @@ namespace lifecycle
 
 class LifecycleNode::LifecycleNodeImpl
 {
-
   using TransitionEventMsg = lifecycle_msgs::msg::TransitionEvent;
   using GetStateSrv = lifecycle_msgs::srv::GetState;
   using ChangeStateSrv = lifecycle_msgs::srv::ChangeState;
 
 public:
-  LifecycleNodeImpl(std::shared_ptr<rclcpp::node::Node>(base_node_handle))
+  explicit LifecycleNodeImpl(std::shared_ptr<rclcpp::node::Node>(base_node_handle))
   : base_node_handle_(base_node_handle)
   {}
 
@@ -166,7 +166,7 @@ public:
 
     auto cb_success = execute_callback(state_machine_.current_state->id);
     if (rcl_lifecycle_start_transition(
-          &state_machine_, transition_id, cb_success, true) != RCL_RET_OK)
+        &state_machine_, transition_id, cb_success, true) != RCL_RET_OK)
     {
       fprintf(stderr, "Failed to finish transition %u. Current state is now: %s\n",
         transition_id, state_machine_.current_state->label);
@@ -174,18 +174,17 @@ public:
     }
 
     // error handling ?!
-    if (!cb_success)
-    {
+    if (!cb_success) {
       auto error_resolved = execute_callback(state_machine_.current_state->id);
       if (error_resolved) {
         // We call cleanup on the error state
         rcl_lifecycle_start_transition(
-            &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_CLEANUP, true, true);
+          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_CLEANUP, true, true);
       } else {
         // We call shutdown on the error state
         rcl_lifecycle_start_transition(
-            &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_SHUTDOWN, true, true);
-        }
+          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_SHUTDOWN, true, true);
+      }
     }
     // This true holds in both cases where the actual callback
     // was successful or not, since at this point we have a valid transistion
@@ -200,7 +199,7 @@ public:
     auto it = cb_map_.find(state_machine_.current_state->id);
     if (it != cb_map_.end()) {
       std::function<bool(void)> callback = it->second;
-      try{
+      try {
         cb_success = callback();
       } catch (const std::exception & e) {
         fprintf(stderr, "Caught exception in callback for transition %d\n",
@@ -213,7 +212,6 @@ public:
     }
     return cb_success;
   }
-
 
   const State &
   trigger_transition(unsigned int transition_id)
@@ -249,4 +247,4 @@ public:
 
 }  // namespace lifecycle
 }  // namespace rclcpp
-#endif  // RCLCPP_LIFECYCLE__LIFECYCLE_MANAGER_IMPL_HPP_
+#endif  // LIFECYCLE_NODE_IMPL_HPP_

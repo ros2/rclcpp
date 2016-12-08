@@ -37,7 +37,7 @@ public:
   State(unsigned int id, const std::string & label);
 
   RCLCPP_LIFECYCLE_PUBLIC
-  State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle);
+  explicit State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle);
 
   RCLCPP_LIFECYCLE_PUBLIC
   virtual ~State();
@@ -55,6 +55,6 @@ protected:
   const rcl_lifecycle_state_t * state_handle_;
 };
 
-}  // namespace rclcpp_lifecycle
+}  // namespace lifecycle
 }  // namespace rclcpp
 #endif  // RCLCPP_LIFECYCLE__STATE_HPP_

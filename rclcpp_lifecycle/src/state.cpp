@@ -12,22 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rclcpp_lifecycle/state.hpp"
+
 #include <lifecycle_msgs/msg/state.hpp>
 #include <rcl_lifecycle/data_types.h>
 
-#include "rclcpp_lifecycle/state.hpp"
+#include <string>
 
 namespace rclcpp
 {
 namespace lifecycle
 {
 
-State::State():
-  State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown")
+State::State()
+: State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown")
 {}
 
 State::State(unsigned int id, const std::string & label)
-  : owns_rcl_state_handle_(true)
+: owns_rcl_state_handle_(true)
 {
   if (label.empty()) {
     throw std::runtime_error("Lifecycle State cannot have an empty label.");
@@ -41,15 +43,14 @@ State::State(unsigned int id, const std::string & label)
 }
 
 State::State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle)
-  : owns_rcl_state_handle_(false)
+: owns_rcl_state_handle_(false)
 {
   state_handle_ = rcl_lifecycle_state_handle;
 }
 
 State::~State()
 {
-  if (owns_rcl_state_handle_)
-  {
+  if (owns_rcl_state_handle_) {
     delete state_handle_;
   }
 }
