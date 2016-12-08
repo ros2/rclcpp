@@ -132,7 +132,7 @@ public:
     rcl_client_options_t & client_options)
   : ClientBase(parent_node, service_name)
   {
-    using rosidl_generator_cpp::get_service_type_support_handle;
+    using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
     if (rcl_client_init(&client_handle_, this->get_rcl_node_handle(),

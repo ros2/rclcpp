@@ -155,7 +155,7 @@ public:
     get_intra_process_message_callback_(nullptr),
     matches_any_intra_process_publishers_(nullptr)
   {
-    using rosidl_generator_cpp::get_message_type_support_handle;
+    using rosidl_typesupport_cpp::get_message_type_support_handle;
 
     auto type_support_handle = get_message_type_support_handle<MessageT>();
     if (rcl_subscription_init(

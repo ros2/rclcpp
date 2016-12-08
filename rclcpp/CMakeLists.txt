@@ -9,6 +9,7 @@ find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
+find_package(rosidl_typesupport_cpp REQUIRED)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11")
@@ -54,7 +55,8 @@ macro(target)
     ${${PROJECT_NAME}_SRCS})
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
     "rcl${target_suffix}"
-    "rosidl_generator_cpp")
+    "rosidl_generator_cpp"
+    "rosidl_typesupport_cpp")
 
   # Causes the visibility macros to use dllexport rather than dllimport,
   # which is appropriate when building the dll but not consuming it.
@@ -74,6 +76,7 @@ call_for_each_rmw_implementation(target GENERATE_DEFAULT)
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rosidl_generator_cpp)
+ament_export_dependencies(rosidl_typesupport_cpp)
 
 ament_export_include_directories(include)
 
@@ -89,6 +92,7 @@ if(BUILD_TESTING)
       ${rcl_interfaces_INCLUDE_DIRS}
       ${rmw_INCLUDE_DIRS}
       ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
   endif()
   ament_add_gtest(test_mapped_ring_buffer test/test_mapped_ring_buffer.cpp)
@@ -98,6 +102,7 @@ if(BUILD_TESTING)
       ${rcl_interfaces_INCLUDE_DIRS}
       ${rmw_INCLUDE_DIRS}
       ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
   endif()
   ament_add_gtest(test_intra_process_manager test/test_intra_process_manager.cpp)
@@ -107,6 +112,7 @@ if(BUILD_TESTING)
       ${rcl_interfaces_INCLUDE_DIRS}
       ${rmw_INCLUDE_DIRS}
       ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
   endif()
   ament_add_gtest(test_rate test/test_rate.cpp
@@ -116,6 +122,7 @@ if(BUILD_TESTING)
       ${rcl_interfaces_INCLUDE_DIRS}
       ${rmw_INCLUDE_DIRS}
       ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
     target_link_libraries(test_rate
       ${PROJECT_NAME}
@@ -137,9 +144,16 @@ if(BUILD_TESTING)
     "test/mock_msgs/srv/Mock.srv")
   rosidl_generate_interfaces(mock_msgs
     ${mock_msg_files}
+    LIBRARY_NAME "rclcpp"
     SKIP_INSTALL)
 
-  ament_add_gtest(test_externally_defined_services test/test_externally_defined_services.cpp)
+  set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
+  if(WIN32)
+    set(append_library_dirs "${append_library_dirs}/$<CONFIGURATION>")
+  endif()
+
+  ament_add_gtest(test_externally_defined_services test/test_externally_defined_services.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_externally_defined_services)
     target_include_directories(test_externally_defined_services PUBLIC
       ${rcl_INCLUDE_DIRS}
