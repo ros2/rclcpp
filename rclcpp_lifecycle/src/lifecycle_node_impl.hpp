@@ -68,8 +68,8 @@ public:
     rcl_ret_t ret = rcl_lifecycle_state_machine_init(
       &state_machine_, base_node_handle_->get_rcl_node_handle(),
       ROSIDL_GET_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
-      rosidl_generator_cpp::get_service_type_support_handle<GetStateSrv>(),
-      rosidl_generator_cpp::get_service_type_support_handle<ChangeStateSrv>(),
+      rosidl_typesupport_cpp::get_service_type_support_handle<GetStateSrv>(),
+      rosidl_typesupport_cpp::get_service_type_support_handle<ChangeStateSrv>(),
       true);
     if (ret != RCL_RET_OK) {
       fprintf(stderr, "Error adding %s: %s\n",
