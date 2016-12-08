@@ -26,6 +26,7 @@
 #include <rcl_lifecycle/rcl_lifecycle.h>
 
 #include <lifecycle_msgs/msg/transition_event.hpp>
+#include <lifecycle_msgs/msg/transition_event.h>  // for getting the c-typesupport
 #include <lifecycle_msgs/srv/get_state.hpp>
 #include <lifecycle_msgs/srv/change_state.hpp>
 
@@ -46,7 +47,7 @@ using GetStateSrv = lifecycle_msgs::srv::GetState;
 using ChangeStateSrv = lifecycle_msgs::srv::ChangeState;
 
 public:
-  LifecycleNodeImpl(std::shared_ptr<rclcpp::node::Node> base_node_handle)
+  LifecycleNodeImpl(std::shared_ptr<rclcpp::node::Node>(base_node_handle))
   : base_node_handle_(base_node_handle)
   {}
 
@@ -65,18 +66,18 @@ public:
   init()
   {
     state_machine_ = rcl_lifecycle_get_zero_initialized_state_machine();
-    rcl_ret_t ret = rcl_lifecycle_state_machine_init(&state_machine_, base_node_handle_->get_rcl_node_handle(),
-       rosidl_generator_cpp::get_message_type_support_handle<TransitionEventMsg>(),
-       rosidl_generator_cpp::get_service_type_support_handle<GetStateSrv>(),
-       rosidl_generator_cpp::get_service_type_support_handle<ChangeStateSrv>(),
-       true);
+    rcl_ret_t ret = rcl_lifecycle_state_machine_init(
+      &state_machine_, base_node_handle_->get_rcl_node_handle(),
+      ROSIDL_GET_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
+      rosidl_generator_cpp::get_service_type_support_handle<GetStateSrv>(),
+      rosidl_generator_cpp::get_service_type_support_handle<ChangeStateSrv>(),
+      true);
     if (ret != RCL_RET_OK)
     {
       fprintf(stderr, "Error adding %s: %s\n",
           base_node_handle_->get_name().c_str(), rcl_get_error_string_safe());
       return;
     }
-    rcl_print_state_machine(&state_machine_);
 
     // srv objects may get destroyed directly here
     {  // get_state
@@ -118,8 +119,7 @@ public:
       resp->current_state = static_cast<uint8_t>(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN);
       return;
     }
-    resp->current_state =
-      static_cast<uint8_t>(state_machine_.current_state->id);
+    resp->current_state = static_cast<uint8_t>(state_machine_.current_state->id);
   }
 
   void
@@ -127,7 +127,6 @@ public:
     const std::shared_ptr<lifecycle_msgs::srv::ChangeState::Request> req,
     std::shared_ptr<lifecycle_msgs::srv::ChangeState::Response> resp)
   {
-    fprintf(stderr, "Received change request %u\n", req->transition.id);
     (void)header;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       resp->success = false;
@@ -153,33 +152,30 @@ public:
     }
 
     unsigned int transition_id = static_cast<unsigned int>(lifecycle_transition);
-    if (rcl_lifecycle_start_transition(&state_machine_, transition_id, true) != RCL_RET_OK) {
+    if (rcl_lifecycle_start_transition(&state_machine_, transition_id, true, true) != RCL_RET_OK) {
       fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s: %s\n",
-        __FILE__, __LINE__, transition_id, state_machine_.current_state->label, rcl_get_error_string_safe());
+        __FILE__, __LINE__, transition_id,
+        state_machine_.current_state->label, rcl_get_error_string_safe());
       return false;
     }
 
-    fprintf(stderr, "Started Transition %u. SM is now in state %u\n",
-        lifecycle_transition, state_machine_.current_state->id);
-    // Since we set always set a default callback,
-    // we don't have to check for nullptr here
-    auto it = cb_map_.find(lifecycle_transition);
-    if (it == cb_map_.end())
+    auto cb_success = true;  // in case no callback was attached, we forward directly
+    auto it = cb_map_.find(state_machine_.current_state->id);
+    if (it != cb_map_.end())
     {
+      std::function<bool(void)> callback = it->second;
+      cb_success = callback();
+    } else {
       fprintf(stderr, "%s:%d, No callback is registered for transition %u.\n",
-          __FILE__, __LINE__, lifecycle_transition);
+        __FILE__, __LINE__, lifecycle_transition);
     }
-    std::function<bool(void)> callback = it->second;
-    auto success = callback();
 
-    if (!rcl_lifecycle_finish_transition(&state_machine_, transition_id, success, false))
+    if (rcl_lifecycle_start_transition(&state_machine_, transition_id, cb_success, true) != RCL_RET_OK)
     {
       fprintf(stderr, "Failed to finish transition %u. Current state is now: %s\n",
         transition_id, state_machine_.current_state->label);
       return false;
     }
-    fprintf(stderr, "Finished Transition %u. SM is now in state %u\n",
-        lifecycle_transition, state_machine_.current_state->id);
     // This true holds in both cases where the actual callback
     // was successful or not, since at this point we have a valid transistion
     // to either a new primary state or error state
