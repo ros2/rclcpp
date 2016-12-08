@@ -269,7 +269,7 @@ Executor::execute_subscription(
   } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
-      subscription->get_topic_name().c_str(), rcl_get_error_string_safe());
+      subscription->get_topic_name(), rcl_get_error_string_safe());
   }
   subscription->return_message(message);
 }
@@ -291,7 +291,7 @@ Executor::execute_intra_process_subscription(
   } else if (status != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take failed for intra process subscription on topic '%s': %s\n",
-      subscription->get_topic_name().c_str(), rcl_get_error_string_safe());
+      subscription->get_topic_name(), rcl_get_error_string_safe());
   }
 }
 

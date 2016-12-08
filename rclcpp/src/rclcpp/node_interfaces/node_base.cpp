@@ -175,7 +175,7 @@ NodeBase::get_default_callback_group()
 }
 
 bool
-NodeBase::callback_group_in_node(callback_group::CallbackGroup::SharedPtr group)
+NodeBase::callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   bool group_belongs_to_this_node = false;
   for (auto & weak_group : this->callback_groups_) {

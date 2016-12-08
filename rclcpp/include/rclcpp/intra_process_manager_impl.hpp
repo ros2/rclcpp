@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstring>
 #include <functional>
 #include <limits>
 #include <map>
@@ -92,6 +93,8 @@ public:
   add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription)
   {
     subscriptions_[id] = subscription;
+    // subscription->get_topic_name() -> const char * can be used as the key,
+    // since subscriptions_ shares the ownership of subscription
     subscription_ids_by_topic_[subscription->get_topic_name()].insert(id);
   }
 
@@ -253,8 +256,20 @@ private:
   using SubscriptionMap = std::unordered_map<uint64_t, subscription::SubscriptionBase::WeakPtr,
       std::hash<uint64_t>, std::equal_to<uint64_t>,
       RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
-  using IDTopicMap = std::map<std::string, AllocSet,
-      std::less<std::string>, RebindAlloc<std::pair<const std::string, AllocSet>>>;
+
+  struct strcmp_wrapper : public std::binary_function<const char *, const char *, bool>
+  {
+     bool
+     operator()(const char * lhs, const char * rhs) const
+     {
+        return std::strcmp(lhs, rhs) < 0;
+     }
+  };
+  using IDTopicMap = std::map<
+      const char *,
+      AllocSet,
+      strcmp_wrapper,
+      RebindAlloc<std::pair<const std::string, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 

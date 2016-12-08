@@ -36,9 +36,9 @@ public:
   PublisherBase()
   : mock_topic_name(""), mock_queue_size(0) {}
 
-  const std::string & get_topic_name() const
+  const char * get_topic_name() const
   {
-    return mock_topic_name;
+    return mock_topic_name.c_str();
   }
   size_t get_queue_size() const
   {
@@ -98,9 +98,9 @@ public:
   SubscriptionBase()
   : mock_topic_name(""), mock_queue_size(0) {}
 
-  const std::string & get_topic_name() const
+  const char * get_topic_name() const
   {
-    return mock_topic_name;
+    return mock_topic_name.c_str();
   }
   size_t get_queue_size() const
   {
