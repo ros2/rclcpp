@@ -42,10 +42,7 @@ create_publisher(
     rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(allocator),
     publisher_options,
     use_intra_process_comms);
-  node_topics->add_publisher(
-    pub,
-    // this is the callback group, not currently used or exposed to the user for publishers
-    nullptr);
+  node_topics->add_publisher(pub);
   return std::dynamic_pointer_cast<PublisherT>(pub);
 }
 

@@ -58,8 +58,7 @@ public:
   virtual
   void
   add_publisher(
-    rclcpp::publisher::PublisherBase::SharedPtr publisher,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group);
+    rclcpp::publisher::PublisherBase::SharedPtr publisher);
 
   RCLCPP_PUBLIC
   virtual

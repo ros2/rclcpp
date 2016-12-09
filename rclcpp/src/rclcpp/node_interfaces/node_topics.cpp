@@ -63,12 +63,11 @@ NodeTopics::create_publisher(
 
 void
 NodeTopics::add_publisher(
-  rclcpp::publisher::PublisherBase::SharedPtr publisher,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
+  rclcpp::publisher::PublisherBase::SharedPtr publisher)
 {
-  // The publisher is not added to a callback group for now.
+  // The publisher is not added to a callback group or anthing like that for now.
+  // It may be stored within the NodeTopics class or the NodeBase class in the future.
   (void)publisher;
-  (void)callback_group;
   // Notify the executor that a new publisher was created using the parent Node.
   {
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
