@@ -125,7 +125,7 @@ public:
   : ServiceBase(node_handle),
     any_callback_(any_callback)
   {
-    //check if service handle was initialized
+    // check if service handle was initialized
     // TODO(karsten1987): Take this verification
     // directly in rcl_*_t
     // see: https://github.com/ros2/rcl/issues/81
