@@ -22,7 +22,7 @@
 
 #include "rcl/subscription.h"
 
-#include "rosidl_generator_cpp/message_type_support.hpp"
+#include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/intra_process_manager.hpp"

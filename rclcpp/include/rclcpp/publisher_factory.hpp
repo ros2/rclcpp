@@ -21,7 +21,7 @@
 
 #include "rcl/publisher.h"
 
-#include "rosidl_generator_cpp/message_type_support.hpp"
+#include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/intra_process_manager.hpp"

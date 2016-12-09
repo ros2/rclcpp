@@ -56,14 +56,16 @@ public:
   /// Default constructor.
   /**
    * \param[in] node_handle The rcl representation of the node that owns this subscription.
+   * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
-   * \param[in] ignore_local_publications True to ignore local publications (unused).
+   * \param[in] subscription_options options for the subscription.
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
     std::shared_ptr<rcl_node_t> node_handle,
+    const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
-    bool ignore_local_publications);
+    const rcl_subscription_options_t & subscription_options);
 
   /// Default destructor.
   RCLCPP_PUBLIC
@@ -110,7 +112,6 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
-  bool ignore_local_publications_;
 };
 
 using any_subscription_callback::AnySubscriptionCallback;
@@ -135,8 +136,8 @@ public:
    * should be instantiated through Node::create_subscription.
    * \param[in] node_handle rcl representation of the node that owns this subscription.
    * \param[in] topic_name Name of the topic to subscribe to.
-   * \param[in] ignore_local_publications True to ignore local publications (unused).
-   * \param[in] callback User-defined callback to call when a message is received.
+   * \param[in] subscription_options options for the subscription.
+   * \param[in] callback User defined callback to call when a message is received.
    * \param[in] memory_strategy The memory strategy to be used for managing message memory.
    */
   Subscription(
@@ -148,23 +149,15 @@ public:
     memory_strategy = message_memory_strategy::MessageMemoryStrategy<MessageT,
     Alloc>::create_default())
   : SubscriptionBase(
-      node_handle, topic_name, subscription_options.ignore_local_publications),
+      node_handle,
+      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      topic_name,
+      subscription_options),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy),
     get_intra_process_message_callback_(nullptr),
     matches_any_intra_process_publishers_(nullptr)
-  {
-    using rosidl_typesupport_cpp::get_message_type_support_handle;
-
-    auto type_support_handle = get_message_type_support_handle<MessageT>();
-    if (rcl_subscription_init(
-        &subscription_handle_, node_handle_.get(), type_support_handle, topic_name.c_str(),
-        &subscription_options) != RCL_RET_OK)
-    {
-      throw std::runtime_error(
-              std::string("could not create subscription: ") + rcl_get_error_string_safe());
-    }
-  }
+  {}
 
   /// Support dynamically setting the message memory strategy.
   /**
