@@ -204,6 +204,7 @@ public:
       } catch (const std::exception & e) {
         fprintf(stderr, "Caught exception in callback for transition %d\n",
           it->first);
+        fprintf(stderr, "Original error msg: %s\n", e.what());
         cb_success = false;
       }
     } else {
