@@ -91,7 +91,7 @@ public:
   /// Get the name of the node.
   // \return The name of the node.
   RCLCPP_PUBLIC
-  const std::string &
+  const char *
   get_name() const;
 
   /// Create and return a callback group.

@@ -44,7 +44,7 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  const std::string &
+  const char *
   get_name() const;
 
   RCLCPP_PUBLIC
@@ -110,7 +110,6 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeBase)
 
-  std::string name_;
   rclcpp::context::Context::SharedPtr context_;
 
   std::shared_ptr<rcl_node_t> node_handle_;

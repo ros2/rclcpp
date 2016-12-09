@@ -42,7 +42,7 @@ public:
   // \return The name of the node.
   RCLCPP_PUBLIC
   virtual
-  const std::string &
+  const char *
   get_name() const = 0;
 
   /// Return the context of the node.

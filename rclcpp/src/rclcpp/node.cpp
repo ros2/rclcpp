@@ -60,7 +60,7 @@ Node::Node(
 Node::~Node()
 {}
 
-const std::string &
+const char *
 Node::get_name() const
 {
   return node_base_->get_name();
