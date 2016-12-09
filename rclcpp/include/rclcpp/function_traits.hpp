@@ -25,6 +25,24 @@ namespace rclcpp
 namespace function_traits
 {
 
+template<typename MessageT>
+struct plain_message
+{
+  using type = MessageT;
+};
+
+template<typename MessageT>
+struct plain_message<std::shared_ptr<MessageT>> : plain_message<MessageT>
+{};
+
+template<typename MessageT>
+struct plain_message<const std::shared_ptr<MessageT>> : plain_message<MessageT>
+{};
+
+template<typename MessageT, typename Deleter>
+struct plain_message<std::unique_ptr<MessageT, Deleter>> : plain_message<MessageT>
+{};
+
 /* NOTE(esteve):
  * We support service callbacks that can optionally take the request id,
  * which should be possible with two overloaded create_service methods,

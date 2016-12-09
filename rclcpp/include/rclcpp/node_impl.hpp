@@ -81,7 +81,7 @@ Node::create_publisher(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<typename CallbackT, typename MessageT, typename Alloc, typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
@@ -114,7 +114,7 @@ Node::create_subscription(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<typename CallbackT, typename MessageT, typename Alloc, typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
@@ -128,7 +128,7 @@ Node::create_subscription(
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
+  return this->create_subscription<CallbackT, MessageT, Alloc, SubscriptionT>(
     topic_name,
     std::forward<CallbackT>(callback),
     qos,

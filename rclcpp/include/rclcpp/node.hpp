@@ -172,10 +172,13 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template<
-    typename MessageT,
     typename CallbackT,
+    typename MessageT = typename rclcpp::function_traits::plain_message<
+      typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>
+    >::type,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  >
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -203,10 +206,13 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template<
-    typename MessageT,
     typename CallbackT,
+    typename MessageT = typename rclcpp::function_traits::plain_message<
+      typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>
+    >::type,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  >
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
