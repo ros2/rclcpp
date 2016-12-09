@@ -83,28 +83,28 @@ Node::create_publisher(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename AllocatorT, typename SubscriptionT>
-typename rclcpp::subscription::Subscription<MessageT, AllocatorT>::SharedPtr
+template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, AllocatorT>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
   msg_mem_strat,
-  typename std::shared_ptr<AllocatorT> allocator)
+  std::shared_ptr<Alloc> allocator)
 {
   if (!allocator) {
-    allocator = std::make_shared<AllocatorT>();
+    allocator = std::make_shared<Alloc>();
   }
 
   if (!msg_mem_strat) {
     using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-    msg_mem_strat = MessageMemoryStrategy<MessageT, AllocatorT>::create_default();
+    msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
   }
 
-  return rclcpp::create_subscription<MessageT, CallbackT, AllocatorT, SubscriptionT>(
+  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
     this->node_topics_.get(),
     topic_name,
     std::forward<CallbackT>(callback),
@@ -116,7 +116,7 @@ Node::create_subscription(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc>
+template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
 typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
@@ -130,7 +130,7 @@ Node::create_subscription(
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_subscription<MessageT, CallbackT, Alloc>(
+  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
     topic_name,
     std::forward<CallbackT>(callback),
     qos,
