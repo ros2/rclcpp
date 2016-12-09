@@ -134,10 +134,12 @@ public:
     (void)header;
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      resp->current_state = static_cast<uint8_t>(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN);
+      resp->current_state.id = static_cast<uint8_t>(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN);
+      resp->current_state.label = "unknown";
       return;
     }
-    resp->current_state = static_cast<uint8_t>(state_machine_.current_state->id);
+    resp->current_state.id = static_cast<uint8_t>(state_machine_.current_state->id);
+    resp->current_state.label = state_machine_.current_state->label;
   }
 
   const State &
