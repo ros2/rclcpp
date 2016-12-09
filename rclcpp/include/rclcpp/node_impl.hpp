@@ -168,7 +168,8 @@ Node::create_client(
   using rclcpp::client::ClientBase;
 
   auto cli = Client<ServiceT>::make_shared(
-    shared_from_this(),
+    node_base_.get(),
+    node_graph_,
     service_name,
     options);
 
