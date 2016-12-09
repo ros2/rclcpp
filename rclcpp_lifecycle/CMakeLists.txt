@@ -31,6 +31,10 @@ macro(targets)
     "rcl_lifecycle${target_suffix}"
     "lifecycle_msgs")
 
+  # Causes the visibility macros to use dllexport rather than dllimport,
+  # which is appropriate when building the dll but not consuming it.
+  target_compile_definitions(rclcpp_lifecycle${target_suffix} PRIVATE "RCLCPP_LIFECYCLE_BUILDING_DLL")
+
   install(TARGETS
     rclcpp_lifecycle${target_suffix}
     ARCHIVE DESTINATION lib
