@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
 #include <vector>
 
 using rclcpp::parameter_service::ParameterService;

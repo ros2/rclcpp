@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rclcpp/node_interfaces/node_topics.hpp"
+
 #include <string>
 
 #include "rclcpp/intra_process_manager.hpp"
-#include "rclcpp/node_interfaces/node_topics.hpp"
-
 #include "rclcpp/exceptions.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;

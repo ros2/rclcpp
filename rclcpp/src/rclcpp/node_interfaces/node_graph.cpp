@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rclcpp/node_interfaces/node_graph.hpp"
+
 #include <map>
 #include <string>
-
-#include "rclcpp/node_interfaces/node_graph.hpp"
 
 #include "rcl/graph.h"
 #include "rclcpp/exceptions.hpp"
