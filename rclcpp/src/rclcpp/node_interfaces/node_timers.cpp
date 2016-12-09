@@ -18,7 +18,7 @@
 
 using rclcpp::node_interfaces::NodeTimers;
 
-NodeTimers::NodeTimers(NodeBaseInterface * node_base)
+NodeTimers::NodeTimers(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
 {}
 

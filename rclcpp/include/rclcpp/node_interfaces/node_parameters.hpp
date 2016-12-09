@@ -46,7 +46,7 @@ public:
 
   RCLCPP_PUBLIC
   NodeParameters(
-    NodeTopicsInterface * node_topics,
+    rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
     bool use_intra_process);
 
   RCLCPP_PUBLIC
@@ -105,7 +105,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
-  NodeTopicsInterface * node_topics_;
+  rclcpp::node_interfaces::NodeTopicsInterface * node_topics_;
 
   mutable std::mutex mutex_;
 

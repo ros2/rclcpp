@@ -23,7 +23,7 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 using rclcpp::node_interfaces::NodeTopics;
 
-NodeTopics::NodeTopics(NodeBaseInterface * node_base)
+NodeTopics::NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
 {}
 

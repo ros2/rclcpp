@@ -27,7 +27,7 @@
 using rclcpp::node_interfaces::NodeParameters;
 
 NodeParameters::NodeParameters(
-  NodeTopicsInterface * node_topics,
+  rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
   bool use_intra_process)
 : node_topics_(node_topics)
 {

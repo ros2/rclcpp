@@ -34,7 +34,7 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimers)
 
   RCLCPP_PUBLIC
-  explicit NodeTimers(NodeBaseInterface * node_base);
+  explicit NodeTimers(rclcpp::node_interfaces::NodeBaseInterface * node_base);
 
   RCLCPP_PUBLIC
   virtual
@@ -51,7 +51,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeTimers)
 
-  NodeBaseInterface * node_base_;
+  rclcpp::node_interfaces::NodeBaseInterface * node_base_;
 };
 
 }  // namespace node_interfaces
