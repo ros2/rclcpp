@@ -151,7 +151,7 @@ Node::count_subscribers(const std::string & topic_name) const
   return node_graph_->count_subscribers(topic_name);
 }
 
-const std::vector<Node::CallbackGroupWeakPtr> &
+const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
 Node::get_callback_groups() const
 {
   return node_base_->get_callback_groups();

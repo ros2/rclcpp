@@ -99,12 +99,9 @@ public:
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
-  using CallbackGroup = rclcpp::callback_group::CallbackGroup;
-  using CallbackGroupWeakPtr = std::weak_ptr<CallbackGroup>;
-
   /// Return the list of callback groups in the node.
   RCLCPP_PUBLIC
-  const std::vector<CallbackGroupWeakPtr> &
+  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
   /// Create and return a Publisher.
