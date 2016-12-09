@@ -169,7 +169,7 @@ TEST_F(TestDefaultStateMachine, good_mood) {
       rclcpp::lifecycle::Transition(Transition::TRANSITION_SHUTDOWN)).id());
 
   // check if all callbacks were successfully overwritten
-  EXPECT_EQ(5, test_node->number_of_callbacks);
+  EXPECT_EQ(static_cast<size_t>(5), test_node->number_of_callbacks);
 }
 
 TEST_F(TestDefaultStateMachine, bad_mood) {
@@ -180,7 +180,7 @@ TEST_F(TestDefaultStateMachine, bad_mood) {
       rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
 
   // check if all callbacks were successfully overwritten
-  EXPECT_EQ(2, test_node->number_of_callbacks);
+  EXPECT_EQ(static_cast<size_t>(2), test_node->number_of_callbacks);
 }
 
 TEST_F(TestDefaultStateMachine, very_bad_mood) {
@@ -191,5 +191,5 @@ TEST_F(TestDefaultStateMachine, very_bad_mood) {
       rclcpp::lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
 
   // check if all callbacks were successfully overwritten
-  EXPECT_EQ(2, test_node->number_of_callbacks);
+  EXPECT_EQ(static_cast<size_t>(2), test_node->number_of_callbacks);
 }
