@@ -259,11 +259,11 @@ private:
 
   struct strcmp_wrapper : public std::binary_function<const char *, const char *, bool>
   {
-     bool
-     operator()(const char * lhs, const char * rhs) const
-     {
-        return std::strcmp(lhs, rhs) < 0;
-     }
+    bool
+    operator()(const char * lhs, const char * rhs) const
+    {
+      return std::strcmp(lhs, rhs) < 0;
+    }
   };
   using IDTopicMap = std::map<
       const char *,

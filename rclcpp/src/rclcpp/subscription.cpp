@@ -32,13 +32,12 @@ SubscriptionBase::SubscriptionBase(
 : node_handle_(node_handle)
 {
   rcl_ret_t ret = rcl_subscription_init(
-      &subscription_handle_,
-      node_handle_.get(),
-      &type_support_handle,
-      topic_name.c_str(),
-      &subscription_options);
-  if (ret != RCL_RET_OK)
-  {
+    &subscription_handle_,
+    node_handle_.get(),
+    &type_support_handle,
+    topic_name.c_str(),
+    &subscription_options);
+  if (ret != RCL_RET_OK) {
     throw std::runtime_error(
             std::string("could not create subscription: ") + rcl_get_error_string_safe());
   }
