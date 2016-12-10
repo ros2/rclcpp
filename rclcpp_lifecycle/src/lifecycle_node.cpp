@@ -33,7 +33,7 @@
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
-#include "lifecycle_node_impl.hpp"  // implementation
+#include "lifecycle_node_interface_impl.hpp"  // implementation
 
 namespace rclcpp_lifecycle
 {
@@ -59,7 +59,7 @@ LifecycleNode::LifecycleNode(
       use_intra_process_comms
     )),
   use_intra_process_comms_(use_intra_process_comms),
-  impl_(new LifecycleNodeImpl(node_base_, node_services_))
+  impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
 {
   impl_->init();
 

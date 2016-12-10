@@ -149,7 +149,7 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
-  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+  std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
     CallbackT && callback,
@@ -401,8 +401,9 @@ private:
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
 
   bool use_intra_process_comms_;
-  class LifecycleNodeImpl;
-  std::unique_ptr<LifecycleNodeImpl> impl_;
+
+  class LifecycleNodeInterfaceImpl;
+  std::unique_ptr<LifecycleNodeInterfaceImpl> impl_;
 };
 
 }  // namespace rclcpp_lifecycle

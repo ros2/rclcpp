@@ -37,6 +37,7 @@ namespace node_interfaces
 class LifecycleNodeInterface
 {
 protected:
+  RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNodeInterface() {}
 
 public:
@@ -44,37 +45,49 @@ public:
   /*
    * \return true by default
    */
-  virtual bool on_configure();
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual bool
+  on_configure();
 
   /// Callback function for cleanup transition
   /*
    * \return true by default
    */
-  virtual bool on_cleanup();
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual bool
+  on_cleanup();
 
   /// Callback function for shutdown transition
   /*
    * \return true by default
    */
-  virtual bool on_shutdown();
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual bool
+  on_shutdown();
 
   /// Callback function for activate transition
   /*
    * \return true by default
    */
-  virtual bool on_activate();
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual bool
+  on_activate();
 
   /// Callback function for deactivate transition
   /*
    * \return true by default
    */
-  virtual bool on_deactivate();
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual bool
+  on_deactivate();
 
   /// Callback function for errorneous transition
   /*
    * \return false by default
    */
-  virtual bool on_error();
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual bool
+  on_error();
 };
 
 }  // namespace node_interfaces

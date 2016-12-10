@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef LIFECYCLE_NODE_IMPL_HPP_
-#define LIFECYCLE_NODE_IMPL_HPP_
+#ifndef LIFECYCLE_NODE_INTERFACE_IMPL_HPP_
+#define LIFECYCLE_NODE_INTERFACE_IMPL_HPP_
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -42,7 +42,7 @@
 namespace rclcpp_lifecycle
 {
 
-class LifecycleNode::LifecycleNodeImpl
+class LifecycleNode::LifecycleNodeInterfaceImpl
 {
   using ChangeStateSrv = lifecycle_msgs::srv::ChangeState;
   using GetStateSrv = lifecycle_msgs::srv::GetState;
@@ -51,14 +51,14 @@ class LifecycleNode::LifecycleNodeImpl
   using TransitionEventMsg = lifecycle_msgs::msg::TransitionEvent;
 
 public:
-  LifecycleNodeImpl(
+  LifecycleNodeInterfaceImpl(
     std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> node_base_interface,
     std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface> node_services_interface)
   : node_base_interface_(node_base_interface),
     node_services_interface_(node_services_interface)
   {}
 
-  ~LifecycleNodeImpl()
+  ~LifecycleNodeInterfaceImpl()
   {
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       fprintf(stderr, "%s:%u, FATAL: rcl_state_machine got destroyed externally.\n",
@@ -88,7 +88,7 @@ public:
     }
 
     {  // change_state
-      auto cb = std::bind(&LifecycleNodeImpl::on_change_state, this,
+      auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_change_state, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
       rclcpp::any_service_callback::AnyServiceCallback<ChangeStateSrv> any_cb;
       any_cb.set(cb);
@@ -103,7 +103,7 @@ public:
     }
 
     {  // get_state
-      auto cb = std::bind(&LifecycleNodeImpl::on_get_state, this,
+      auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_get_state, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
       rclcpp::any_service_callback::AnyServiceCallback<GetStateSrv> any_cb;
       any_cb.set(std::move(cb));
@@ -118,7 +118,7 @@ public:
     }
 
     {  // get_available_states
-      auto cb = std::bind(&LifecycleNodeImpl::on_get_available_states, this,
+      auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_get_available_states, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
       rclcpp::any_service_callback::AnyServiceCallback<GetAvailableStatesSrv> any_cb;
       any_cb.set(std::move(cb));
@@ -133,7 +133,7 @@ public:
     }
 
     {  // get_available_transitions
-      auto cb = std::bind(&LifecycleNodeImpl::on_get_available_transitions, this,
+      auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_get_available_transitions, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
       rclcpp::any_service_callback::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
       any_cb.set(std::move(cb));
@@ -383,4 +383,4 @@ public:
 };
 
 }  // namespace rclcpp_lifecycle
-#endif  // LIFECYCLE_NODE_IMPL_HPP_
+#endif  // LIFECYCLE_NODE_INTERFACE_IMPL_HPP_

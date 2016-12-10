@@ -55,9 +55,9 @@ LifecycleNode::create_publisher(
   const rmw_qos_profile_t & qos_profile,
   std::shared_ptr<Alloc> allocator)
 {
-  // create regular publisher in rclcpp::Node
   using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>;
 
+  // create regular publisher in rclcpp::Node
   return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
     this->node_topics_.get(),
     topic_name,
@@ -68,7 +68,7 @@ LifecycleNode::create_publisher(
 
 // TODO(karsten1987): Create LifecycleSubscriber
 template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
-typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+std::shared_ptr<SubscriptionT>
 LifecycleNode::create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
