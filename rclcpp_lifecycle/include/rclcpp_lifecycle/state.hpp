@@ -22,9 +22,7 @@
 // forward declare rcl_state_t
 typedef struct rcl_lifecycle_state_t rcl_lifecycle_state_t;
 
-namespace rclcpp
-{
-namespace lifecycle
+namespace rclcpp_lifecycle
 {
 
 class State
@@ -55,6 +53,5 @@ protected:
   const rcl_lifecycle_state_t * state_handle_;
 };
 
-}  // namespace lifecycle
-}  // namespace rclcpp
+}  // namespace rclcpp_lifecycle
 #endif  // RCLCPP_LIFECYCLE__STATE_HPP_

@@ -1,17 +1,3 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 #ifndef RCLCPP__SERVICE_HPP_
 #define RCLCPP__SERVICE_HPP_
 
@@ -43,12 +29,12 @@ public:
 
   RCLCPP_PUBLIC
   ServiceBase(
-    rcl_node_t * node_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
   explicit ServiceBase(
-    rcl_node_t * node_handle);
+    std::shared_ptr<rcl_node_t> node_handle);
 
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
@@ -70,7 +56,7 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
-  rcl_node_t * node_handle_;
+  std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_service_t * service_handle_ = nullptr;
   std::string service_name_;
@@ -100,7 +86,7 @@ public:
     const std::string & service_name,
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
-  : ServiceBase(node_handle.get(), service_name), any_callback_(any_callback)
+  : ServiceBase(node_handle, service_name), any_callback_(any_callback)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
@@ -119,7 +105,7 @@ public:
   }
 
   Service(
-    rcl_node_t * node_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
     rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle),
@@ -132,7 +118,7 @@ public:
     if (!service_handle->impl) {
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
-          std::string("rcl_service_t in constructor argument must be initialized beforehand."));
+        std::string("rcl_service_t in constructor argument must be initialized beforehand."));
       // *INDENT-ON*
     }
     service_handle_ = service_handle;
@@ -146,7 +132,7 @@ public:
   {
     // check if you have ownership of the handle
     if (owns_rcl_handle_) {
-      if (rcl_service_fini(service_handle_, node_handle_) != RCL_RET_OK) {
+      if (rcl_service_fini(service_handle_, node_handle_.get()) != RCL_RET_OK) {
         std::stringstream ss;
         ss << "Error in destruction of rcl service_handle_ handle: " <<
           rcl_get_error_string_safe() << '\n';

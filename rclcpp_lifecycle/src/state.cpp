@@ -19,9 +19,7 @@
 
 #include <string>
 
-namespace rclcpp
-{
-namespace lifecycle
+namespace rclcpp_lifecycle
 {
 
 State::State()
@@ -67,5 +65,4 @@ State::label() const
   return state_handle_->label;
 }
 
-}  // namespace lifecycle
-}  // namespace rclcpp
+}  // namespace rclcpp_lifecycle

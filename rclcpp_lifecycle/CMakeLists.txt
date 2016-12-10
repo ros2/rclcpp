@@ -23,6 +23,7 @@ macro(targets)
   add_library(rclcpp_lifecycle${target_suffix}
     SHARED
     src/lifecycle_node.cpp
+    src/lifecycle_node_interface.cpp
     src/state.cpp
     src/transition.cpp
   )

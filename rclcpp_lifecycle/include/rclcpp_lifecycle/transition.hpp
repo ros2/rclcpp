@@ -23,9 +23,7 @@
 // forward declare rcl_transition_t
 typedef struct rcl_lifecycle_transition_t rcl_lifecycle_transition_t;
 
-namespace rclcpp
-{
-namespace lifecycle
+namespace rclcpp_lifecycle
 {
 
 class Transition
@@ -70,6 +68,5 @@ protected:
   const rcl_lifecycle_transition_t * transition_handle_;
 };
 
-}  // namespace lifecycle
-}  // namespace rclcpp
+}  // namespace rclcpp_lifecycle
 #endif  // RCLCPP_LIFECYCLE__TRANSITION_HPP_

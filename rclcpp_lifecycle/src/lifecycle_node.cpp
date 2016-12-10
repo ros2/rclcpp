@@ -13,24 +13,53 @@
 // limitations under the License.
 
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
-#include "lifecycle_node_impl.hpp"  // implementation
-
-#include <lifecycle_msgs/msg/state.hpp>
-#include <lifecycle_msgs/msg/transition.hpp>
 
 #include <string>
+#include <map>
 #include <memory>
 #include <vector>
+#include <utility>
 
-namespace rclcpp
-{
-namespace lifecycle
+#include "lifecycle_msgs/msg/state.hpp"
+#include "lifecycle_msgs/msg/transition.hpp"
+
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/graph_listener.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_base.hpp"
+#include "rclcpp/node_interfaces/node_graph.hpp"
+#include "rclcpp/node_interfaces/node_parameters.hpp"
+#include "rclcpp/node_interfaces/node_services.hpp"
+#include "rclcpp/node_interfaces/node_timers.hpp"
+#include "rclcpp/node_interfaces/node_topics.hpp"
+
+#include "lifecycle_node_impl.hpp"  // implementation
+
+namespace rclcpp_lifecycle
 {
 
 LifecycleNode::LifecycleNode(const std::string & node_name, bool use_intra_process_comms)
-: base_node_handle_(std::make_shared<rclcpp::node::Node>(node_name, use_intra_process_comms)),
-  communication_interface_(base_node_handle_),
-  impl_(new LifecycleNodeImpl(base_node_handle_))
+: LifecycleNode(
+    node_name,
+    rclcpp::contexts::default_context::get_global_default_context(),
+    use_intra_process_comms)
+{}
+
+LifecycleNode::LifecycleNode(
+  const std::string & node_name,
+  rclcpp::context::Context::SharedPtr context,
+  bool use_intra_process_comms)
+: node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
+  node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
+  node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
+  node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
+  node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
+  node_parameters_(new rclcpp::node_interfaces::NodeParameters(
+      node_topics_.get(),
+      use_intra_process_comms
+    )),
+  use_intra_process_comms_(use_intra_process_comms),
+  impl_(new LifecycleNodeImpl(node_base_, node_services_))
 {
   impl_->init();
 
@@ -45,6 +74,155 @@ LifecycleNode::LifecycleNode(const std::string & node_name, bool use_intra_proce
 LifecycleNode::~LifecycleNode()
 {}
 
+const char *
+LifecycleNode::get_name() const
+{
+  return node_base_->get_name();
+}
+
+rclcpp::callback_group::CallbackGroup::SharedPtr
+LifecycleNode::create_callback_group(
+  rclcpp::callback_group::CallbackGroupType group_type)
+{
+  return node_base_->create_callback_group(group_type);
+}
+
+bool
+LifecycleNode::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
+{
+  return node_base_->callback_group_in_node(group);
+}
+
+std::vector<rcl_interfaces::msg::SetParametersResult>
+LifecycleNode::set_parameters(
+  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+{
+  return node_parameters_->set_parameters(parameters);
+}
+
+rcl_interfaces::msg::SetParametersResult
+LifecycleNode::set_parameters_atomically(
+  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+{
+  return node_parameters_->set_parameters_atomically(parameters);
+}
+
+std::vector<rclcpp::parameter::ParameterVariant>
+LifecycleNode::get_parameters(
+  const std::vector<std::string> & names) const
+{
+  return node_parameters_->get_parameters(names);
+}
+
+rclcpp::parameter::ParameterVariant
+LifecycleNode::get_parameter(const std::string & name) const
+{
+  return node_parameters_->get_parameter(name);
+}
+
+bool LifecycleNode::get_parameter(const std::string & name,
+  rclcpp::parameter::ParameterVariant & parameter) const
+{
+  return node_parameters_->get_parameter(name, parameter);
+}
+
+std::vector<rcl_interfaces::msg::ParameterDescriptor>
+LifecycleNode::describe_parameters(
+  const std::vector<std::string> & names) const
+{
+  return node_parameters_->describe_parameters(names);
+}
+
+std::vector<uint8_t>
+LifecycleNode::get_parameter_types(
+  const std::vector<std::string> & names) const
+{
+  return node_parameters_->get_parameter_types(names);
+}
+
+rcl_interfaces::msg::ListParametersResult
+LifecycleNode::list_parameters(
+  const std::vector<std::string> & prefixes, uint64_t depth) const
+{
+  return node_parameters_->list_parameters(prefixes, depth);
+}
+
+std::map<std::string, std::string>
+LifecycleNode::get_topic_names_and_types() const
+{
+  return node_graph_->get_topic_names_and_types();
+}
+
+size_t
+LifecycleNode::count_publishers(const std::string & topic_name) const
+{
+  return node_graph_->count_publishers(topic_name);
+}
+
+size_t
+LifecycleNode::count_subscribers(const std::string & topic_name) const
+{
+  return node_graph_->count_subscribers(topic_name);
+}
+
+const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+LifecycleNode::get_callback_groups() const
+{
+  return node_base_->get_callback_groups();
+}
+
+rclcpp::event::Event::SharedPtr
+LifecycleNode::get_graph_event()
+{
+  return node_graph_->get_graph_event();
+}
+
+void
+LifecycleNode::wait_for_graph_change(
+  rclcpp::event::Event::SharedPtr event,
+  std::chrono::nanoseconds timeout)
+{
+  node_graph_->wait_for_graph_change(event, timeout);
+}
+
+rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
+LifecycleNode::get_node_base_interface()
+{
+  return node_base_;
+}
+
+rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+LifecycleNode::get_node_graph_interface()
+{
+  return node_graph_;
+}
+
+rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
+LifecycleNode::get_node_timers_interface()
+{
+  return node_timers_;
+}
+
+rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
+LifecycleNode::get_node_topics_interface()
+{
+  return node_topics_;
+}
+
+rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
+LifecycleNode::get_node_services_interface()
+{
+  return node_services_;
+}
+
+rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
+LifecycleNode::get_node_parameters_interface()
+{
+  return node_parameters_;
+}
+
+
+////
 bool
 LifecycleNode::register_on_configure(std::function<bool(void)> fcn)
 {
@@ -114,7 +292,7 @@ LifecycleNode::trigger_transition(unsigned int transition_id)
 
 void
 LifecycleNode::add_publisher_handle(
-  std::shared_ptr<rclcpp::lifecycle::LifecyclePublisherInterface> pub)
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisherInterface> pub)
 {
   impl_->add_publisher_handle(pub);
 }
@@ -125,5 +303,4 @@ LifecycleNode::add_timer_handle(std::shared_ptr<rclcpp::timer::TimerBase> timer)
   impl_->add_timer_handle(timer);
 }
 
-}  // namespace lifecycle
-}  // namespace rclcpp
+}  // namespace rclcpp_lifecycle

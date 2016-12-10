@@ -16,120 +16,325 @@
 #define RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 
 #include <string>
+#include <map>
 #include <vector>
 #include <memory>
 
-#include "rclcpp/node.hpp"
+#include "rcl/error_handling.h"
+#include "rcl/node.h"
+
+#include "rcl_interfaces/msg/list_parameters_result.hpp"
+#include "rcl_interfaces/msg/parameter_descriptor.hpp"
+#include "rcl_interfaces/msg/parameter_event.hpp"
+#include "rcl_interfaces/msg/set_parameters_result.hpp"
+
+#include "rclcpp/callback_group.hpp"
+#include "rclcpp/client.hpp"
+#include "rclcpp/context.hpp"
+#include "rclcpp/event.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
+#include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/service.hpp"
+#include "rclcpp/subscription.hpp"
 #include "rclcpp/timer.hpp"
 
+#include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+#include "rclcpp_lifecycle/lifecycle_node_impl.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/transition.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
-namespace rclcpp
+namespace rclcpp_lifecycle
 {
-namespace lifecycle
-{
-/**
- * @brief Interface class for a managed node.
- * Pure virtual functions as defined in
- * http://design.ros2.org/articles/node_lifecycle.html
- */
-// *INDENT-OFF
-class LifecycleNodeInterface
-{
-public:
-  virtual bool on_configure() = 0;
-  virtual bool on_cleanup() = 0;
-  virtual bool on_shutdown() = 0;
-  virtual bool on_activate() = 0;
-  virtual bool on_deactivate() = 0;
-  virtual bool on_error() = 0;
-};
 
-class AbstractLifecycleNode : public LifecycleNodeInterface
-{
-public:
-  virtual bool on_configure() {return true;}
-  virtual bool on_cleanup() {return true;}
-  virtual bool on_shutdown() {return true;}
-  virtual bool on_activate() {return true;}
-  virtual bool on_deactivate() {return true;}
-  virtual bool on_error() {return true;}
-};
-// *INDENT-ON
-
+/// LifecycleNode for creating lifecycle components
 /**
- * @brief LifecycleNode as child class of rclcpp Node
  * has lifecycle nodeinterface for configuring this node.
  */
-class LifecycleNode : public AbstractLifecycleNode
+class LifecycleNode : public node_interfaces::LifecycleNodeInterface,
+  public std::enable_shared_from_this<LifecycleNode>
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS(LifecycleNode)
+
+  /// Create a new lifecycle node with the specified name.
+  /**
+   * \param[in] node_name Name of the node.
+   * \param[in] use_intra_process_comms True to use the optimized intra-process communication
+   * pipeline to pass messages between nodes in the same process using shared memory.
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   explicit LifecycleNode(const std::string & node_name, bool use_intra_process_comms = false);
+
+  /// Create a node based on the node name and a rclcpp::context::Context.
+  /**
+   * \param[in] node_name Name of the node.
+   * \param[in] context The context for the node (usually represents the state of a process).
+   * \param[in] use_intra_process_comms True to use the optimized intra-process communication
+   * pipeline to pass messages between nodes in the same process using shared memory.
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  LifecycleNode(
+    const std::string & node_name, rclcpp::context::Context::SharedPtr context,
+    bool use_intra_process_comms = false);
 
   RCLCPP_LIFECYCLE_PUBLIC
   virtual ~LifecycleNode();
 
-  // MOCK typedefs as node refactor not done yet
-  using BaseInterface = rclcpp::node::Node;
+  /// Get the name of the node.
+  // \return The name of the node.
   RCLCPP_LIFECYCLE_PUBLIC
-  std::shared_ptr<BaseInterface>
-  get_base_interface()
-  {
-    return base_node_handle_;
-  }
+  const char *
+  get_name() const;
 
-  // MOCK typedefs as node refactor not done yet
-  using CommunicationInterface = rclcpp::node::Node;
+  /// Create and return a callback group.
   RCLCPP_LIFECYCLE_PUBLIC
-  std::shared_ptr<CommunicationInterface>
-  get_communication_interface()
-  {
-    return communication_interface_;
-  }
+  rclcpp::callback_group::CallbackGroup::SharedPtr
+  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
+  /// Return the list of callback groups in the node.
   RCLCPP_LIFECYCLE_PUBLIC
-  std::string
-  get_name()
-  {
-    return base_node_handle_->get_name();
-  }
+  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+  get_callback_groups() const;
 
+  /// Create and return a Publisher.
   /**
-   * @brief same API for creating publisher as regular Node
+   * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
-  std::shared_ptr<rclcpp::lifecycle::LifecyclePublisher<MessageT, Alloc>>
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
+  create_publisher(
+    const std::string & topic_name, size_t qos_history_depth,
+    std::shared_ptr<Alloc> allocator = nullptr);
+
+  /// Create and return a LifecyclePublisher.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \return Shared pointer to the created publisher.
+   */
+  template<typename MessageT, typename Alloc = std::allocator<void>>
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
-    std::shared_ptr<Alloc> allocator = nullptr)
-  {
-    // create regular publisher in rclcpp::Node
-    auto pub = communication_interface_->create_publisher<MessageT, Alloc,
-      rclcpp::lifecycle::LifecyclePublisher<MessageT, Alloc>>(
-      topic_name, qos_profile, allocator);
-    add_publisher_handle(pub);
+    std::shared_ptr<Alloc> allocator = nullptr);
 
-    return pub;
-  }
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] callback The user-defined callback function.
+   * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
+   * \param[in] group The callback group for this subscription. NULL for no callback group.
+   * \param[in] ignore_local_publications True to ignore local publications.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
+  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+  create_subscription(
+    const std::string & topic_name,
+    CallbackT && callback,
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    bool ignore_local_publications = false,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
 
-  template<typename CallbackType>
-  typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] qos_history_depth The depth of the subscription's incoming message queue.
+   * \param[in] callback The user-defined callback function.
+   * \param[in] group The callback group for this subscription. NULL for no callback group.
+   * \param[in] ignore_local_publications True to ignore local publications.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
+  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+  create_subscription(
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    CallbackT && callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    bool ignore_local_publications = false,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
+
+  /// Create a timer.
+  /**
+   * \param[in] period Time interval between triggers of the callback.
+   * \param[in] callback User-defined callback function.
+   * \param[in] group Callback group to execute this timer's callback in.
+   */
+  template<typename DurationT = std::milli, typename CallbackT>
+  typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
-    std::chrono::nanoseconds period,
-    CallbackType callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
-  {
-    auto timer = communication_interface_->create_wall_timer(period, callback, group);
-    add_timer_handle(timer);
+    std::chrono::duration<int64_t, DurationT> period,
+    CallbackT callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-    return timer;
-  }
+  /* Create and return a Client. */
+  template<typename ServiceT>
+  typename rclcpp::client::Client<ServiceT>::SharedPtr
+  create_client(
+    const std::string & service_name,
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  /* Create and return a Service. */
+  template<typename ServiceT, typename CallbackT>
+  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  create_service(
+    const std::string & service_name,
+    CallbackT && callback,
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rcl_interfaces::msg::SetParametersResult>
+  set_parameters(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameters_atomically(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::parameter::ParameterVariant>
+  get_parameters(const std::vector<std::string> & names) const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::parameter::ParameterVariant
+  get_parameter(const std::string & name) const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  get_parameter(
+    const std::string & name,
+    rclcpp::parameter::ParameterVariant & parameter) const;
+
+  template<typename ParameterT>
+  bool
+  get_parameter(const std::string & name, ParameterT & parameter) const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rcl_interfaces::msg::ParameterDescriptor>
+  describe_parameters(const std::vector<std::string> & names) const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<uint8_t>
+  get_parameter_types(const std::vector<std::string> & names) const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  rcl_interfaces::msg::ListParametersResult
+  list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
+
+  /// Register the callback for parameter changes
+  /**
+   * \param[in] User defined callback function, It is expected to atomically set parameters.
+   * \note Repeated invocations of this function will overwrite previous callbacks
+   */
+  template<typename CallbackT>
+  void
+  register_param_change_callback(CallbackT && callback);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::map<std::string, std::string>
+  get_topic_names_and_types() const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  size_t
+  count_publishers(const std::string & topic_name) const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  size_t
+  count_subscribers(const std::string & topic_name) const;
+
+  /// Return a graph event, which will be set anytime a graph change occurs.
+  /* The graph Event object is a loan which must be returned.
+   * The Event object is scoped and therefore to return the load just let it go
+   * out of scope.
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::event::Event::SharedPtr
+  get_graph_event();
+
+  /// Wait for a graph event to occur by waiting on an Event to become set.
+  /* The given Event must be acquire through the get_graph_event() method.
+   *
+   * \throws InvalidEventError if the given event is nullptr
+   * \throws EventNotRegisteredError if the given event was not acquired with
+   *   get_graph_event().
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  wait_for_graph_change(
+    rclcpp::event::Event::SharedPtr event,
+    std::chrono::nanoseconds timeout);
+
+  /// Return the Node's internal NodeBaseInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
+  get_node_base_interface();
+
+  /// Return the Node's internal NodeGraphInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+  get_node_graph_interface();
+
+  /// Return the Node's internal NodeTimersInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
+  get_node_timers_interface();
+
+  /// Return the Node's internal NodeTopicsInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
+  get_node_topics_interface();
+
+  /// Return the Node's internal NodeServicesInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
+  get_node_services_interface();
+
+  /// Return the Node's internal NodeParametersInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
+  get_node_parameters_interface();
+
+  //
+  // LIFECYCLE COMPONENTS
+  //
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
   get_current_state();
@@ -176,20 +381,31 @@ public:
 protected:
   RCLCPP_LIFECYCLE_PUBLIC
   void
-  add_publisher_handle(std::shared_ptr<rclcpp::lifecycle::LifecyclePublisherInterface> pub);
+  add_publisher_handle(std::shared_ptr<rclcpp_lifecycle::LifecyclePublisherInterface> pub);
 
   RCLCPP_LIFECYCLE_PUBLIC
   void
   add_timer_handle(std::shared_ptr<rclcpp::timer::TimerBase> timer);
 
 private:
-  std::shared_ptr<BaseInterface> base_node_handle_;
-  std::shared_ptr<CommunicationInterface> communication_interface_;
+  RCLCPP_DISABLE_COPY(LifecycleNode)
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group);
+
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
+
+  bool use_intra_process_comms_;
   class LifecycleNodeImpl;
   std::unique_ptr<LifecycleNodeImpl> impl_;
 };
 
-}  // namespace lifecycle
-}  // namespace rclcpp
+}  // namespace rclcpp_lifecycle
 
 #endif  // RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_

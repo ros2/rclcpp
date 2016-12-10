@@ -20,9 +20,7 @@
 
 #include "rclcpp/publisher.hpp"
 
-namespace rclcpp
-{
-namespace lifecycle
+namespace rclcpp_lifecycle
 {
 /**
  * @brief base class with only
@@ -49,9 +47,9 @@ class LifecyclePublisher : public LifecyclePublisherInterface,
   public rclcpp::publisher::Publisher<MessageT, Alloc>
 {
 public:
-  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAllocTraits = rclcpp::allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
-  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
+  using MessageDeleter = rclcpp::allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   LifecyclePublisher(
@@ -160,7 +158,6 @@ private:
   bool enabled_ = false;
 };
 
-}  // namespace lifecycle
-}  // namespace rclcpp
+}  // namespace rclcpp_lifecycle
 
 #endif  // RCLCPP_LIFECYCLE__LIFECYCLE_PUBLISHER_HPP_

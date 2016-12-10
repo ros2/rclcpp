@@ -19,9 +19,7 @@
 
 #include <string>
 
-namespace rclcpp
-{
-namespace lifecycle
+namespace rclcpp_lifecycle
 {
 
 Transition::Transition(unsigned int id, const std::string & label)
@@ -105,5 +103,4 @@ Transition::goal_state() const
     transition_handle_->goal->label);
 }
 
-}  // namespace lifecycle
-}  // namespace rclcpp
+}  // namespace rclcpp_lifecycle

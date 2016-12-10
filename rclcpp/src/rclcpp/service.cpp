@@ -28,12 +28,12 @@
 using rclcpp::service::ServiceBase;
 
 ServiceBase::ServiceBase(
-  rcl_node_t * node_handle,
+  std::shared_ptr<rcl_node_t> node_handle,
   const std::string & service_name)
 : node_handle_(node_handle), service_name_(service_name)
 {}
 
-ServiceBase::ServiceBase(rcl_node_t * node_handle)
+ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
 : node_handle_(node_handle)
 {}
 
