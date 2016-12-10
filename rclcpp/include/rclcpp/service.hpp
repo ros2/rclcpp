@@ -12,10 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Based on: http://the-witness.net/news/2012/11/scopeexit-in-c11/
-// But I changed the lambda to include by reference rather than value, see:
-// http://the-witness.net/news/2012/11/scopeexit-in-c11/comment-page-1/#comment-86873
-
 #ifndef RCLCPP__SERVICE_HPP_
 #define RCLCPP__SERVICE_HPP_
 
