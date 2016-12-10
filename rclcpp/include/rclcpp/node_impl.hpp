@@ -84,7 +84,7 @@ Node::create_publisher(
 }
 
 template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
-typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
@@ -117,7 +117,7 @@ Node::create_subscription(
 }
 
 template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
-typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
   size_t qos_history_depth,
