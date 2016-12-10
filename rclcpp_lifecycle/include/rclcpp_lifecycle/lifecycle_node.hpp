@@ -47,7 +47,6 @@
 #include "rclcpp/timer.hpp"
 
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
-#include "rclcpp_lifecycle/lifecycle_node_impl.hpp"
 #include "rclcpp_lifecycle/lifecycle_publisher.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/transition.hpp"
@@ -180,7 +179,7 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
-  typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+  std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
     size_t qos_history_depth,
@@ -407,5 +406,10 @@ private:
 };
 
 }  // namespace rclcpp_lifecycle
+
+#ifndef RCLCPP_LIFECYCLE__LIFECYCLE_NODE_IMPL_HPP_
+// Template implementations
+#include "rclcpp_lifecycle/lifecycle_node_impl.hpp"
+#endif
 
 #endif  // RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_

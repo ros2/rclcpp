@@ -29,7 +29,7 @@
 #include "lifecycle_publisher.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
-#include "lifecycle_node.hpp"
+#include "rclcpp_lifecycle/lifecycle_node.hpp"
 
 namespace rclcpp_lifecycle
 {
@@ -52,16 +52,18 @@ template<typename MessageT, typename Alloc>
 std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
 LifecycleNode::create_publisher(
   const std::string & topic_name,
-  const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
-  std::shared_ptr<Alloc> allocator = nullptr)
+  const rmw_qos_profile_t & qos_profile,
+  std::shared_ptr<Alloc> allocator)
 {
   // create regular publisher in rclcpp::Node
-  auto pub = rclcpp::create_publisher<MessageT, Alloc,
-    rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>(
-    topic_name, qos_profile, allocator);
-  add_publisher_handle(pub);
+  using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>;
 
-  return pub;
+  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
+    this->node_topics_.get(),
+    topic_name,
+    qos_profile,
+    use_intra_process_comms_,
+    allocator);
 }
 
 // TODO(karsten1987): Create LifecycleSubscriber
@@ -100,8 +102,12 @@ LifecycleNode::create_subscription(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc>
-typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename Alloc,
+  typename SubscriptionT>
+std::shared_ptr<SubscriptionT>
 LifecycleNode::create_subscription(
   const std::string & topic_name,
   size_t qos_history_depth,
@@ -139,7 +145,7 @@ LifecycleNode::create_wall_timer(
 }
 
 template<typename ServiceT>
-typename client::Client<ServiceT>::SharedPtr
+typename rclcpp::client::Client<ServiceT>::SharedPtr
 LifecycleNode::create_client(
   const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
@@ -152,7 +158,7 @@ LifecycleNode::create_client(
   using rclcpp::client::ClientBase;
 
   auto cli = Client<ServiceT>::make_shared(
-    node_base_->get(),
+    node_base_.get(),
     node_graph_,
     service_name,
     options);
@@ -176,10 +182,10 @@ LifecycleNode::create_service(
   rcl_service_options_t service_options = rcl_service_get_default_options();
   service_options.qos = qos_profile;
 
-  auto serv = service::Service<ServiceT>::make_shared(
+  auto serv = rclcpp::service::Service<ServiceT>::make_shared(
     node_base_->get_shared_rcl_node_handle(),
     service_name, any_service_callback, service_options);
-  auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
+  auto serv_base_ptr = std::dynamic_pointer_cast<rclcpp::service::ServiceBase>(serv);
   node_services_->add_service(serv_base_ptr, group);
   return serv;
 }
