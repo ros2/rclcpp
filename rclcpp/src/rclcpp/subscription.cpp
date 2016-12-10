@@ -26,14 +26,21 @@ using rclcpp::subscription::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
   std::shared_ptr<rcl_node_t> node_handle,
+  const rosidl_message_type_support_t & type_support_handle,
   const std::string & topic_name,
-  bool ignore_local_publications)
-:   node_handle_(node_handle),
-  topic_name_(topic_name),
-  ignore_local_publications_(ignore_local_publications)
+  const rcl_subscription_options_t & subscription_options)
+: node_handle_(node_handle)
 {
-  // To avoid unused private member warnings.
-  (void)ignore_local_publications_;
+  rcl_ret_t ret = rcl_subscription_init(
+    &subscription_handle_,
+    node_handle_.get(),
+    &type_support_handle,
+    topic_name.c_str(),
+    &subscription_options);
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error(
+            std::string("could not create subscription: ") + rcl_get_error_string_safe());
+  }
 }
 
 SubscriptionBase::~SubscriptionBase()
@@ -54,10 +61,10 @@ SubscriptionBase::~SubscriptionBase()
   }
 }
 
-const std::string &
+const char *
 SubscriptionBase::get_topic_name() const
 {
-  return this->topic_name_;
+  return rcl_subscription_get_topic_name(&subscription_handle_);
 }
 
 const rcl_subscription_t *

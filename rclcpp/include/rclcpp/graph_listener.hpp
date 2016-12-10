@@ -24,15 +24,11 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
-
-namespace node
-{
-class Node;
-}  // namespace node
 
 namespace graph_listener
 {
@@ -91,7 +87,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  add_node(rclcpp::node::Node * node);
+  add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Return true if the given node is in the graph listener's list of nodes.
   /* Also return false if given nullptr.
@@ -101,7 +97,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  has_node(rclcpp::node::Node * node);
+  has_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Remove a node from the graph listener's list of nodes.
   /*
@@ -112,7 +108,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  remove_node(rclcpp::node::Node * node);
+  remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Stop the listening thread.
   /* The thread cannot be restarted, and the class is defunct after calling.
@@ -159,9 +155,9 @@ private:
   std::atomic_bool is_shutdown_;
   mutable std::mutex shutdown_mutex_;
 
-  mutable std::mutex nodes_barrier_mutex_;
-  mutable std::mutex nodes_mutex_;
-  std::vector<rclcpp::node::Node *> nodes_;
+  mutable std::mutex node_graph_interfaces_barrier_mutex_;
+  mutable std::mutex node_graph_interfaces_mutex_;
+  std::vector<rclcpp::node_interfaces::NodeGraphInterface *> node_graph_interfaces_;
 
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
   rcl_guard_condition_t * shutdown_guard_condition_;

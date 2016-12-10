@@ -30,10 +30,12 @@ namespace rclcpp
 {
 
 // Forward declarations for friend statement in class CallbackGroup
-namespace node
+namespace node_interfaces
 {
-class Node;
-}  // namespace node
+class NodeServices;
+class NodeTimers;
+class NodeTopics;
+}  // namespace node_interfaces
 
 namespace callback_group
 {
@@ -46,7 +48,9 @@ enum class CallbackGroupType
 
 class CallbackGroup
 {
-  friend class rclcpp::node::Node;
+  friend class rclcpp::node_interfaces::NodeServices;
+  friend class rclcpp::node_interfaces::NodeTimers;
+  friend class rclcpp::node_interfaces::NodeTopics;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup)
@@ -78,7 +82,7 @@ public:
   const CallbackGroupType &
   type() const;
 
-private:
+protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)
 
   RCLCPP_PUBLIC

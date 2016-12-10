@@ -35,11 +35,17 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/intra_process_manager_impl.cpp
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
+  src/rclcpp/node.cpp
+  src/rclcpp/node_interfaces/node_base.cpp
+  src/rclcpp/node_interfaces/node_graph.cpp
+  src/rclcpp/node_interfaces/node_parameters.cpp
+  src/rclcpp/node_interfaces/node_services.cpp
+  src/rclcpp/node_interfaces/node_timers.cpp
+  src/rclcpp/node_interfaces/node_topics.cpp
   src/rclcpp/parameter.cpp
   src/rclcpp/parameter_client.cpp
   src/rclcpp/parameter_service.cpp
   src/rclcpp/publisher.cpp
-  src/rclcpp/node.cpp
   src/rclcpp/service.cpp
   src/rclcpp/subscription.cpp
   src/rclcpp/timer.cpp

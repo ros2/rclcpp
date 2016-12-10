@@ -95,6 +95,22 @@ public:
   RCLInvalidArgument(const RCLErrorBase & base_exc, const std::string & prefix);
 };
 
+/// Thrown when an invalid rclcpp::Event object or SharedPtr is encountered.
+class InvalidEventError : public std::runtime_error
+{
+public:
+  InvalidEventError()
+  : std::runtime_error("event is invalid") {}
+};
+
+/// Thrown when an unregistered rclcpp::Event is encountered where a registered one was expected.
+class EventNotRegisteredError : public std::runtime_error
+{
+public:
+  EventNotRegisteredError()
+  : std::runtime_error("event already registered") {}
+};
+
 }  // namespace exceptions
 }  // namespace rclcpp
 

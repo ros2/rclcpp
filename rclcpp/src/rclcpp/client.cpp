@@ -23,7 +23,8 @@
 #include "rcl/node.h"
 #include "rcl/wait.h"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/node.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/utilities.hpp"
 
 using rclcpp::client::ClientBase;
@@ -31,9 +32,11 @@ using rclcpp::exceptions::InvalidNodeError;
 using rclcpp::exceptions::throw_from_rcl_error;
 
 ClientBase::ClientBase(
-  std::shared_ptr<rclcpp::node::Node> parent_node,
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
   const std::string & service_name)
-: node_(parent_node), node_handle_(parent_node->get_shared_node_handle()),
+: node_graph_(node_graph),
+  node_handle_(node_base->get_shared_rcl_node_handle()),
   service_name_(service_name)
 {}
 
@@ -76,7 +79,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     return false;
   }
   // make an event to reuse, rather than create a new one each time
-  auto node_ptr = node_.lock();
+  auto node_ptr = node_graph_.lock();
   if (!node_ptr) {
     throw InvalidNodeError();
   }

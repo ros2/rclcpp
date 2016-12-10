@@ -39,6 +39,12 @@
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
+#include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/service.hpp"
@@ -46,35 +52,11 @@
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-namespace rcl
-{
-struct rcl_node_t;
-}  // namespace rcl
-
 namespace rclcpp
 {
 
-namespace graph_listener
-{
-class GraphListener;
-}  // namespace graph_listener
-
 namespace node
 {
-
-class InvalidEventError : public std::runtime_error
-{
-public:
-  InvalidEventError()
-  : std::runtime_error("event is invalid") {}
-};
-
-class EventNotRegisteredError : public std::runtime_error
-{
-public:
-  EventNotRegisteredError()
-  : std::runtime_error("event already registered") {}
-};
 
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node : public std::enable_shared_from_this<Node>
@@ -109,13 +91,18 @@ public:
   /// Get the name of the node.
   // \return The name of the node.
   RCLCPP_PUBLIC
-  const std::string &
+  const char *
   get_name() const;
 
   /// Create and return a callback group.
   RCLCPP_PUBLIC
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
+
+  /// Return the list of callback groups in the node.
+  RCLCPP_PUBLIC
+  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+  get_callback_groups() const;
 
   /// Create and return a Publisher.
   /**
@@ -160,7 +147,11 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>>
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
   typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
   create_subscription(
     const std::string & topic_name,
@@ -186,7 +177,11 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>>
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
   typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
   create_subscription(
     const std::string & topic_name,
@@ -204,29 +199,12 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
-  template<typename CallbackType>
-  typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
+  template<typename DurationT = std::milli, typename CallbackT>
+  typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
-    std::chrono::nanoseconds period,
-    CallbackType callback,
+    std::chrono::duration<int64_t, DurationT> period,
+    CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
-
-  /// Create a timer.
-  /**
-   * \param[in] period Time interval between triggers of the callback.
-   * \param[in] callback User-defined callback function.
-   * \param[in] group Callback group to execute this timer's callback in.
-   */
-  // TODO(wjwwood): reenable this once I figure out why the demo doesn't build with it.
-  // rclcpp::timer::WallTimer::SharedPtr
-  // create_wall_timer(
-  //   std::chrono::duration<long double, std::nano> period,
-  //   rclcpp::timer::CallbackType callback,
-  //   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
-
-  using CallbackGroup = rclcpp::callback_group::CallbackGroup;
-  using CallbackGroupWeakPtr = std::weak_ptr<CallbackGroup>;
-  using CallbackGroupWeakPtrList = std::list<CallbackGroupWeakPtr>;
 
   /* Create and return a Client. */
   template<typename ServiceT>
@@ -258,16 +236,18 @@ public:
   get_parameters(const std::vector<std::string> & names) const;
 
   RCLCPP_PUBLIC
-  const rclcpp::parameter::ParameterVariant
+  rclcpp::parameter::ParameterVariant
   get_parameter(const std::string & name) const;
 
   RCLCPP_PUBLIC
-  bool get_parameter(
+  bool
+  get_parameter(
     const std::string & name,
     rclcpp::parameter::ParameterVariant & parameter) const;
 
   template<typename ParameterT>
-  bool get_parameter(const std::string & name, ParameterT & parameter) const;
+  bool
+  get_parameter(const std::string & name, ParameterT & parameter) const;
 
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
@@ -281,6 +261,15 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  /// Register the callback for parameter changes
+  /**
+   * \param[in] User defined callback function, It is expected to atomically set parameters.
+   * \note Repeated invocations of this function will overwrite previous callbacks
+   */
+  template<typename CallbackT>
+  void
+  register_param_change_callback(CallbackT && callback);
+
   RCLCPP_PUBLIC
   std::map<std::string, std::string>
   get_topic_names_and_types() const;
@@ -292,53 +281,6 @@ public:
   RCLCPP_PUBLIC
   size_t
   count_subscribers(const std::string & topic_name) const;
-
-  RCLCPP_PUBLIC
-  const CallbackGroupWeakPtrList &
-  get_callback_groups() const;
-
-  RCLCPP_PUBLIC
-  const rcl_guard_condition_t *
-  get_notify_guard_condition() const;
-
-  RCLCPP_PUBLIC
-  const rcl_guard_condition_t *
-  get_graph_guard_condition() const;
-
-  RCLCPP_PUBLIC
-  const rcl_node_t *
-  get_rcl_node_handle() const;
-
-  /// Return the rcl_node_t node handle (non-const version).
-  RCLCPP_PUBLIC
-  rcl_node_t *
-  get_rcl_node_handle();
-
-  /// Return the rcl_node_t node handle in a std::shared_ptr.
-  /* This handle remains valid after the Node is destroyed.
-   * The actual rcl node is not finalized until it is out of scope everywhere.
-   */
-  RCLCPP_PUBLIC
-  std::shared_ptr<rcl_node_t>
-  get_shared_node_handle();
-
-  /// Notify threads waiting on graph changes.
-  /* Affects threads waiting on the notify guard condition, see:
-   * get_notify_guard_condition(), as well as the threads waiting on graph
-   * changes using a graph Event, see: wait_for_graph_change().
-   *
-   * This is typically only used by the rclcpp::graph_listener::GraphListener.
-   *
-   * \throws RCLBaseError (a child of that exception) when an rcl error occurs
-   */
-  RCLCPP_PUBLIC
-  void
-  notify_graph_change();
-
-  /// Notify any and all blocking node actions that shutdown has occurred.
-  RCLCPP_PUBLIC
-  void
-  notify_shutdown();
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
@@ -362,27 +304,35 @@ public:
     rclcpp::event::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
-  /// Return the number of on loan graph events, see get_graph_event().
-  /* This is typically only used by the rclcpp::graph_listener::GraphListener.
-   */
+  /// Return the Node's internal NodeBaseInterface implementation.
   RCLCPP_PUBLIC
-  size_t
-  count_graph_users();
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
+  get_node_base_interface();
 
-  /// Register the callback for parameter changes
-  /**
-   * \param[in] User defined callback function, It is expected to atomically set parameters.
-   * \note Repeated invocations of this function will overwrite previous callbacks
-   */
-  template<typename CallbackT>
-  void register_param_change_callback(CallbackT && callback);
-
-  std::atomic_bool has_executor;
-
+  /// Return the Node's internal NodeGraphInterface implementation.
   RCLCPP_PUBLIC
-  void
-  add_service(rclcpp::service::ServiceBase::SharedPtr service,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
+  get_node_graph_interface();
+
+  /// Return the Node's internal NodeTimersInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
+  get_node_timers_interface();
+
+  /// Return the Node's internal NodeTopicsInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
+  get_node_topics_interface();
+
+  /// Return the Node's internal NodeServicesInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
+  get_node_services_interface();
+
+  /// Return the Node's internal NodeParametersInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
+  get_node_parameters_interface();
 
 private:
   RCLCPP_DISABLE_COPY(Node)
@@ -391,51 +341,14 @@ private:
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
-  std::string name_;
-
-  std::shared_ptr<rcl_node_t> node_handle_;
-
-  rclcpp::context::Context::SharedPtr context_;
-
-  CallbackGroup::SharedPtr default_callback_group_;
-  CallbackGroupWeakPtrList callback_groups_;
-
-  size_t number_of_subscriptions_;
-  size_t number_of_timers_;
-  size_t number_of_services_;
-  size_t number_of_clients_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
 
   bool use_intra_process_comms_;
-
-  mutable std::mutex mutex_;
-
-  /// Guard condition for notifying the Executor of changes to this node.
-  mutable std::mutex notify_guard_condition_mutex_;
-  rcl_guard_condition_t notify_guard_condition_ = rcl_get_zero_initialized_guard_condition();
-  bool notify_guard_condition_is_valid_;
-
-  /// Graph Listener which waits on graph changes for the node and is shared across nodes.
-  std::shared_ptr<rclcpp::graph_listener::GraphListener> graph_listener_;
-  /// Whether or not this node needs to be added to the graph listener.
-  std::atomic_bool should_add_to_graph_listener_;
-
-  /// Mutex to guard the graph event related data structures.
-  std::mutex graph_mutex_;
-  /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
-  std::condition_variable graph_cv_;
-  /// Weak references to graph events out on loan.
-  std::vector<rclcpp::event::Event::WeakPtr> graph_events_;
-  /// Number of graph events out on loan, used to determine if the graph should be monitored.
-  /* graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
-  std::atomic_size_t graph_users_count_;
-
-  std::function<typename rcl_interfaces::msg::SetParametersResult(
-    const typename std::vector<rclcpp::parameter::ParameterVariant> &
-  )> parameters_callback_ = nullptr;
-
-  std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
-
-  publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 };
 
 }  // namespace node

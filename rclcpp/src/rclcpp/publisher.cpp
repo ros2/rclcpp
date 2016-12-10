@@ -29,33 +29,72 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node.hpp"
 
 using rclcpp::publisher::PublisherBase;
 
 PublisherBase::PublisherBase(
-  std::shared_ptr<rcl_node_t> node_handle,
-  std::string topic,
-  size_t queue_size)
-: node_handle_(node_handle),
-  topic_(topic), queue_size_(queue_size),
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
+  const std::string & topic,
+  const rosidl_message_type_support_t & type_support,
+  const rcl_publisher_options_t & publisher_options)
+: rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
   intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
 {
+  if (rcl_publisher_init(
+      &publisher_handle_, rcl_node_handle_.get(), &type_support,
+      topic.c_str(), &publisher_options) != RCL_RET_OK)
+  {
+    throw std::runtime_error(
+            std::string("could not create publisher: ") +
+            rcl_get_error_string_safe());
+  }
+  // Life time of this object is tied to the publisher handle.
+  rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
+  if (!publisher_rmw_handle) {
+    throw std::runtime_error(
+            std::string("failed to get rmw handle: ") + rcl_get_error_string_safe());
+  }
+  if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK) {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+    throw std::runtime_error(
+      std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
 }
 
 PublisherBase::~PublisherBase()
 {
+  if (rcl_publisher_fini(&intra_process_publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
+    fprintf(
+      stderr,
+      "Error in destruction of intra process rcl publisher handle: %s\n",
+      rcl_get_error_string_safe());
+  }
+
+  if (rcl_publisher_fini(&publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
+    fprintf(
+      stderr,
+      "Error in destruction of rcl publisher handle: %s\n",
+      rcl_get_error_string_safe());
+  }
 }
 
-const std::string &
+const char *
 PublisherBase::get_topic_name() const
 {
-  return topic_;
+  return rcl_publisher_get_topic_name(&publisher_handle_);
 }
 
 size_t
 PublisherBase::get_queue_size() const
 {
-  return queue_size_;
+  const rcl_publisher_options_t * publisher_options = rcl_publisher_get_options(&publisher_handle_);
+  if (!publisher_options) {
+    throw std::runtime_error(
+            std::string("failed to get publisher options: ") + rcl_get_error_string_safe());
+  }
+  return publisher_options->qos.depth;
 }
 
 const rmw_gid_t &
@@ -101,10 +140,11 @@ PublisherBase::setup_intra_process(
   StoreMessageCallbackT callback,
   const rcl_publisher_options_t & intra_process_options)
 {
+  auto intra_process_topic_name = std::string(this->get_topic_name()) + "__intra";
   if (rcl_publisher_init(
-      &intra_process_publisher_handle_, node_handle_.get(),
+      &intra_process_publisher_handle_, rcl_node_handle_.get(),
       rclcpp::type_support::get_intra_process_message_msg_type_support(),
-      (topic_ + "__intra").c_str(), &intra_process_options) != RCL_RET_OK)
+      intra_process_topic_name.c_str(), &intra_process_options) != RCL_RET_OK)
   {
     throw std::runtime_error(
             std::string("could not create intra process publisher: ") +

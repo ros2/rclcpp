@@ -96,7 +96,7 @@ MemoryStrategy::get_client_by_handle(const rcl_client_t * client_handle,
   return nullptr;
 }
 
-rclcpp::node::Node::SharedPtr
+rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 MemoryStrategy::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,
   const WeakNodeVector & weak_nodes)
 {

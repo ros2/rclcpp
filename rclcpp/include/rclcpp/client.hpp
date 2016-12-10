@@ -29,6 +29,7 @@
 
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -39,10 +40,10 @@
 namespace rclcpp
 {
 
-namespace node
+namespace node_interfaces
 {
-class Node;
-}  // namespace node
+class NodeBaseInterface;
+}  // namespace node_interfaces
 
 namespace client
 {
@@ -54,7 +55,8 @@ public:
 
   RCLCPP_PUBLIC
   ClientBase(
-    std::shared_ptr<rclcpp::node::Node> parent_node,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name);
 
   RCLCPP_PUBLIC
@@ -98,7 +100,7 @@ protected:
   rcl_node_t *
   get_rcl_node_handle() const;
 
-  std::weak_ptr<rclcpp::node::Node> node_;
+  rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
@@ -127,10 +129,11 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
   Client(
-    std::shared_ptr<rclcpp::node::Node> parent_node,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name,
     rcl_client_options_t & client_options)
-  : ClientBase(parent_node, service_name)
+  : ClientBase(node_base, node_graph, service_name)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle =

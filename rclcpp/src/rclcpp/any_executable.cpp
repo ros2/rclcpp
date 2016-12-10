@@ -23,7 +23,7 @@ AnyExecutable::AnyExecutable()
   service(nullptr),
   client(nullptr),
   callback_group(nullptr),
-  node(nullptr)
+  node_base(nullptr)
 {}
 
 AnyExecutable::~AnyExecutable()

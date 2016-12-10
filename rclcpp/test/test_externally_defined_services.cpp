@@ -66,7 +66,8 @@ TEST_F(TestExternallyDefinedServices, extern_defined_uninitialized) {
   // don't initialize the service
   // expect fail
   try {
-    rclcpp::service::Service<rclcpp::srv::Mock>(node_handle->get_shared_node_handle(),
+    rclcpp::service::Service<rclcpp::srv::Mock>(
+      node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
       &service_handle, cb);
   } catch (const std::runtime_error &) {
     SUCCEED();
@@ -84,9 +85,11 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
   rcl_service_options_t service_options = rcl_service_get_default_options();
   const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT(
     rclcpp, srv, Mock);
-  if (rcl_service_init(&service_handle, node_handle->get_rcl_node_handle(),
-    ts, "base_node_service", &service_options) != RCL_RET_OK)
-  {
+  rcl_ret_t ret = rcl_service_init(
+    &service_handle,
+    node_handle->get_node_base_interface()->get_rcl_node_handle(),
+    ts, "base_node_service", &service_options);
+  if (ret != RCL_RET_OK) {
     FAIL();
     return;
   }
@@ -94,7 +97,8 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
   rclcpp::any_service_callback::AnyServiceCallback<rclcpp::srv::Mock> cb;
 
   try {
-    rclcpp::service::Service<rclcpp::srv::Mock>(node_handle->get_shared_node_handle(),
+    rclcpp::service::Service<rclcpp::srv::Mock>(
+      node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
       &service_handle, cb);
   } catch (const std::runtime_error &) {
     FAIL();
@@ -112,9 +116,11 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
   rcl_service_options_t service_options = rcl_service_get_default_options();
   const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT(
     rclcpp, srv, Mock);
-  if (rcl_service_init(&service_handle, node_handle->get_rcl_node_handle(),
-    ts, "base_node_service", &service_options) != RCL_RET_OK)
-  {
+  rcl_ret_t ret = rcl_service_init(
+    &service_handle,
+    node_handle->get_node_base_interface()->get_rcl_node_handle(),
+    ts, "base_node_service", &service_options);
+  if (ret != RCL_RET_OK) {
     FAIL();
     return;
   }
@@ -122,7 +128,8 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
 
   {
     // Call constructor
-    rclcpp::service::Service<rclcpp::srv::Mock> srv_cpp(node_handle->get_shared_node_handle(),
+    rclcpp::service::Service<rclcpp::srv::Mock> srv_cpp(
+      node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
       &service_handle, cb);
     // Call destructor
   }

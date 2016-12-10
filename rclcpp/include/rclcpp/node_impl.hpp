@@ -38,6 +38,8 @@
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/create_publisher.hpp"
+#include "rclcpp/create_subscription.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -73,66 +75,15 @@ Node::create_publisher(
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
-
-  auto publisher_options = rcl_publisher_get_default_options();
-  publisher_options.qos = qos_profile;
-
-  auto message_alloc =
-    std::make_shared<typename PublisherT::MessageAlloc>(
-    *allocator.get());
-  publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(
-    *message_alloc.get());
-
-  auto publisher = std::make_shared<PublisherT>(
-    node_handle_, topic_name, publisher_options, message_alloc);
-
-  if (use_intra_process_comms_) {
-    auto intra_process_manager =
-      context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    uint64_t intra_process_publisher_id =
-      intra_process_manager->add_publisher<MessageT, Alloc>(publisher);
-    rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
-    // *INDENT-OFF*
-    auto shared_publish_callback =
-      [weak_ipm](uint64_t publisher_id, void * msg, const std::type_info & type_info) -> uint64_t
-    {
-      auto ipm = weak_ipm.lock();
-      if (!ipm) {
-        // TODO(wjwwood): should this just return silently? Or maybe return with a logged warning?
-        throw std::runtime_error(
-          "intra process publish called after destruction of intra process manager");
-      }
-      if (!msg) {
-        throw std::runtime_error("cannot publisher msg which is a null pointer");
-      }
-      auto & message_type_info = typeid(MessageT);
-      if (message_type_info != type_info) {
-        throw std::runtime_error(
-          std::string("published type '") + type_info.name() +
-          "' is incompatible from the publisher type '" + message_type_info.name() + "'");
-      }
-      MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
-      using MessageDeleter = typename publisher::Publisher<MessageT, Alloc>::MessageDeleter;
-      std::unique_ptr<MessageT, MessageDeleter> unique_msg(typed_message_ptr);
-      uint64_t message_seq =
-        ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);
-      return message_seq;
-    };
-    // *INDENT-ON*
-    publisher->setup_intra_process(
-      intra_process_publisher_id,
-      shared_publish_callback,
-      publisher_options);
-  }
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
-  }
-  return publisher;
+  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
+    this->node_topics_.get(),
+    topic_name,
+    qos_profile,
+    use_intra_process_comms_,
+    allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc>
+template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
 typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
@@ -142,102 +93,30 @@ Node::create_subscription(
   bool ignore_local_publications,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
   msg_mem_strat,
-  typename std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator)
 {
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
 
-  rclcpp::subscription::AnySubscriptionCallback<MessageT,
-  Alloc> any_subscription_callback(allocator);
-  any_subscription_callback.set(std::forward<CallbackT>(callback));
-
   if (!msg_mem_strat) {
-    msg_mem_strat =
-      rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::create_default();
+    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
+    msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
   }
-  auto message_alloc =
-    std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
 
-  auto subscription_options = rcl_subscription_get_default_options();
-  subscription_options.qos = qos_profile;
-  subscription_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
-    *message_alloc.get());
-  subscription_options.ignore_local_publications = ignore_local_publications;
-
-  using rclcpp::subscription::Subscription;
-  using rclcpp::subscription::SubscriptionBase;
-
-  auto sub = Subscription<MessageT, Alloc>::make_shared(
-    node_handle_,
+  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
+    this->node_topics_.get(),
     topic_name,
-    subscription_options,
-    any_subscription_callback,
-    msg_mem_strat);
-  auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
-  // Setup intra process.
-  if (use_intra_process_comms_) {
-    auto intra_process_options = rcl_subscription_get_default_options();
-    intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
-      *message_alloc.get());
-    intra_process_options.qos = qos_profile;
-    intra_process_options.ignore_local_publications = false;
-
-    auto intra_process_manager =
-      context_->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = intra_process_manager;
-    uint64_t intra_process_subscription_id =
-      intra_process_manager->add_subscription(sub_base_ptr);
-    // *INDENT-OFF*
-    sub->setup_intra_process(
-      intra_process_subscription_id,
-      [weak_ipm](
-        uint64_t publisher_id,
-        uint64_t message_sequence,
-        uint64_t subscription_id,
-        typename Subscription<MessageT, Alloc>::MessageUniquePtr & message)
-      {
-        auto ipm = weak_ipm.lock();
-        if (!ipm) {
-          // TODO(wjwwood): should this just return silently? Or maybe return with a logged warning?
-          throw std::runtime_error(
-            "intra process take called after destruction of intra process manager");
-        }
-        ipm->take_intra_process_message<MessageT, Alloc>(
-          publisher_id, message_sequence, subscription_id, message);
-      },
-      [weak_ipm](const rmw_gid_t * sender_gid) -> bool {
-        auto ipm = weak_ipm.lock();
-        if (!ipm) {
-          throw std::runtime_error(
-            "intra process publisher check called after destruction of intra process manager");
-        }
-        return ipm->matches_any_publishers(sender_gid);
-      },
-      intra_process_options
-    );
-    // *INDENT-ON*
-  }
-  // Assign to a group.
-  if (group) {
-    if (!group_in_node(group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create subscription, group not in node.");
-    }
-    group->add_subscription(sub_base_ptr);
-  } else {
-    default_callback_group_->add_subscription(sub_base_ptr);
-  }
-  number_of_subscriptions_++;
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to notify waitset on subscription creation: ") + rmw_get_error_string());
-  }
-  return sub;
+    std::forward<CallbackT>(callback),
+    qos_profile,
+    group,
+    ignore_local_publications,
+    use_intra_process_comms_,
+    msg_mem_strat,
+    allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc>
+template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
 typename rclcpp::subscription::Subscription<MessageT, Alloc>::SharedPtr
 Node::create_subscription(
   const std::string & topic_name,
@@ -251,7 +130,7 @@ Node::create_subscription(
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_subscription<MessageT, CallbackT, Alloc>(
+  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
     topic_name,
     std::forward<CallbackT>(callback),
     qos,
@@ -261,30 +140,17 @@ Node::create_subscription(
     allocator);
 }
 
-template<typename CallbackType>
-typename rclcpp::timer::WallTimer<CallbackType>::SharedPtr
+template<typename DurationT, typename CallbackT>
+typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
-  std::chrono::nanoseconds period,
-  CallbackType callback,
+  std::chrono::duration<int64_t, DurationT> period,
+  CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  auto timer = rclcpp::timer::WallTimer<CallbackType>::make_shared(
-    period, std::move(callback));
-  if (group) {
-    if (!group_in_node(group)) {
-      // TODO(jacquelinekay): use custom exception
-      throw std::runtime_error("Cannot create timer, group not in node.");
-    }
-    group->add_timer(timer);
-  } else {
-    default_callback_group_->add_timer(timer);
-  }
-  number_of_timers_++;
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to notify waitset on timer creation: ") + rmw_get_error_string());
-  }
+  auto timer = rclcpp::timer::WallTimer<CallbackT>::make_shared(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+    std::move(callback));
+  node_timers_->add_timer(timer, group);
   return timer;
 }
 
@@ -302,27 +168,13 @@ Node::create_client(
   using rclcpp::client::ClientBase;
 
   auto cli = Client<ServiceT>::make_shared(
-    shared_from_this(),
+    node_base_.get(),
+    node_graph_,
     service_name,
     options);
 
   auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
-  if (group) {
-    if (!group_in_node(group)) {
-      // TODO(esteve): use custom exception
-      throw std::runtime_error("Cannot create client, group not in node.");
-    }
-    group->add_client(cli_base_ptr);
-  } else {
-    default_callback_group_->add_client(cli_base_ptr);
-  }
-  number_of_clients_++;
-
-  if (rcl_trigger_guard_condition(&notify_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string(
-              "Failed to notify waitset on client creation: ") + rmw_get_error_string());
-  }
+  node_services_->add_client(cli_base_ptr, group);
   return cli;
 }
 
@@ -341,21 +193,23 @@ Node::create_service(
   service_options.qos = qos_profile;
 
   auto serv = service::Service<ServiceT>::make_shared(
-    node_handle_,
+    node_base_->get_shared_rcl_node_handle(),
     service_name, any_service_callback, service_options);
   auto serv_base_ptr = std::dynamic_pointer_cast<service::ServiceBase>(serv);
-  add_service(serv_base_ptr, group);
+  node_services_->add_service(serv_base_ptr, group);
   return serv;
 }
 
 template<typename CallbackT>
-void Node::register_param_change_callback(CallbackT && callback)
+void
+Node::register_param_change_callback(CallbackT && callback)
 {
-  this->parameters_callback_ = callback;
+  this->node_parameters_->register_param_change_callback(std::forward<CallbackT>(callback));
 }
 
 template<typename ParameterT>
-bool Node::get_parameter(const std::string & name, ParameterT & parameter) const
+bool
+Node::get_parameter(const std::string & name, ParameterT & parameter) const
 {
   rclcpp::parameter::ParameterVariant parameter_variant(name, parameter);
   bool result = get_parameter(name, parameter_variant);

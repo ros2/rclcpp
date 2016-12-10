@@ -28,43 +28,48 @@
 #include "rcl/publisher.h"
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
-#include "rmw/impl/cpp/demangle.hpp"
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
 
-// Forward declaration for friend statement
-namespace node
+// Forward declaration is used for friend statement.
+namespace node_interfaces
 {
-class Node;
-}  // namespace node
+class NodeTopicsInterface;
+}
 
 namespace publisher
 {
 
 class PublisherBase
 {
+  friend rclcpp::node_interfaces::NodeTopicsInterface;
+
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
+
   /// Default constructor.
   /**
    * Typically, a publisher is not created through this method, but instead is created through a
    * call to `Node::create_publisher`.
-   * \param[in] node_handle The corresponding rcl representation of the owner node.
+   * \param[in] node_base A pointer to the NodeBaseInterface for the parent node.
    * \param[in] topic The topic that this publisher publishes on.
-   * \param[in] queue_size The maximum number of unpublished messages to queue.
+   * \param[in] type_support The type support structure for the type to be published.
+   * \param[in] publisher_options QoS settings for this publisher.
    */
   RCLCPP_PUBLIC
   PublisherBase(
-    std::shared_ptr<rcl_node_t> node_handle,
-    std::string topic,
-    size_t queue_size);
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rosidl_message_type_support_t & type_support,
+    const rcl_publisher_options_t & publisher_options);
 
   RCLCPP_PUBLIC
   virtual ~PublisherBase();
@@ -72,7 +77,7 @@ public:
   /// Get the topic that this publisher publishes on.
   // \return The topic name.
   RCLCPP_PUBLIC
-  const std::string &
+  const char *
   get_topic_name() const;
 
   /// Get the queue size for this publisher.
@@ -113,9 +118,9 @@ public:
   bool
   operator==(const rmw_gid_t * gid) const;
 
-  typedef std::function<uint64_t(uint64_t, void *, const std::type_info &)> StoreMessageCallbackT;
+  using StoreMessageCallbackT = std::function<uint64_t(uint64_t, void *, const std::type_info &)>;
 
-protected:
+  /// Implementation utility function used to setup intra process publishing after creation.
   RCLCPP_PUBLIC
   void
   setup_intra_process(
@@ -123,14 +128,11 @@ protected:
     StoreMessageCallbackT callback,
     const rcl_publisher_options_t & intra_process_options);
 
-  std::shared_ptr<rcl_node_t> node_handle_;
+protected:
+  std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
   rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
-  rcl_allocator_t rcl_allocator_ = rcl_get_default_allocator();
-
-  std::string topic_;
-  size_t queue_size_;
 
   uint64_t intra_process_publisher_id_;
   StoreMessageCallbackT store_intra_process_message_;
@@ -143,8 +145,6 @@ protected:
 template<typename MessageT, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
-  friend rclcpp::node::Node;
-
 public:
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
@@ -154,55 +154,22 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>)
 
   Publisher(
-    std::shared_ptr<rcl_node_t> node_handle,
-    std::string topic,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
-    std::shared_ptr<MessageAlloc> allocator)
-  : PublisherBase(node_handle, topic, publisher_options.qos.depth), message_allocator_(allocator)
+    const std::shared_ptr<MessageAlloc> & allocator)
+  : PublisherBase(
+      node_base,
+      topic,
+      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      publisher_options),
+    message_allocator_(allocator)
   {
-    using rosidl_typesupport_cpp::get_message_type_support_handle;
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
-
-    rcl_allocator_ = publisher_options.allocator;
-    auto type_support_handle = get_message_type_support_handle<MessageT>();
-    if (rcl_publisher_init(
-        &publisher_handle_, node_handle_.get(), type_support_handle,
-        topic.c_str(), &publisher_options) != RCL_RET_OK)
-    {
-      throw std::runtime_error(
-              std::string("could not create publisher: ") +
-              rcl_get_error_string_safe());
-    }
-    // Life time of this object is tied to the publisher handle.
-    rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
-    if (!publisher_rmw_handle) {
-      throw std::runtime_error(
-              std::string("failed to get rmw handle: ") + rcl_get_error_string_safe());
-    }
-    if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
-      // *INDENT-ON*
-    }
   }
 
   virtual ~Publisher()
-  {
-    if (rcl_publisher_fini(&intra_process_publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
-      fprintf(
-        stderr,
-        "Error in destruction of intra process rcl publisher handle: %s\n",
-        rcl_get_error_string_safe());
-    }
-
-    if (rcl_publisher_fini(&publisher_handle_, node_handle_.get()) != RCL_RET_OK) {
-      fprintf(
-        stderr,
-        "Error in destruction of rcl publisher handle: %s\n",
-        rcl_get_error_string_safe());
-    }
-  }
+  {}
 
   /// Send a message to the topic for this publisher.
   /**
@@ -318,6 +285,7 @@ protected:
 };
 
 }  // namespace publisher
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__PUBLISHER_HPP_

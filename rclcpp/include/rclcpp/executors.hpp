@@ -16,6 +16,7 @@
 #define RCLCPP__EXECUTORS_HPP_
 
 #include <future>
+#include <memory>
 
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
@@ -30,13 +31,21 @@ namespace rclcpp
 // \param[in] node_ptr Shared pointer to the node to spin.
 RCLCPP_PUBLIC
 void
-spin_some(node::Node::SharedPtr node_ptr);
+spin_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+
+RCLCPP_PUBLIC
+void
+spin_some(rclcpp::node::Node::SharedPtr node_ptr);
 
 /// Create a default single-threaded executor and spin the specified node.
 // \param[in] node_ptr Shared pointer to the node to spin.
 RCLCPP_PUBLIC
 void
-spin(node::Node::SharedPtr node_ptr);
+spin(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+
+RCLCPP_PUBLIC
+void
+spin(rclcpp::node::Node::SharedPtr node_ptr);
 
 namespace executors
 {
@@ -57,7 +66,8 @@ using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
 template<typename ResponseT, typename TimeT = std::milli>
 rclcpp::executor::FutureReturnCode
 spin_node_until_future_complete(
-  rclcpp::executor::Executor & executor, rclcpp::node::Node::SharedPtr node_ptr,
+  rclcpp::executor::Executor & executor,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   std::shared_future<ResponseT> & future,
   std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
 {
@@ -69,16 +79,42 @@ spin_node_until_future_complete(
   return retcode;
 }
 
+template<typename NodeT = rclcpp::node::Node, typename ResponseT, typename TimeT = std::milli>
+rclcpp::executor::FutureReturnCode
+spin_node_until_future_complete(
+  rclcpp::executor::Executor & executor,
+  std::shared_ptr<NodeT> node_ptr,
+  std::shared_future<ResponseT> & future,
+  std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
+{
+  return rclcpp::executors::spin_node_until_future_complete(
+    executor,
+    node_ptr->get_node_base_interface(),
+    future,
+    timeout);
+}
+
 }  // namespace executors
 
 template<typename FutureT, typename TimeT = std::milli>
 rclcpp::executor::FutureReturnCode
 spin_until_future_complete(
-  node::Node::SharedPtr node_ptr, std::shared_future<FutureT> & future,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  std::shared_future<FutureT> & future,
   std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
 {
   rclcpp::executors::SingleThreadedExecutor executor;
   return executors::spin_node_until_future_complete<FutureT>(executor, node_ptr, future, timeout);
+}
+
+template<typename NodeT = rclcpp::node::Node, typename FutureT, typename TimeT = std::milli>
+rclcpp::executor::FutureReturnCode
+spin_until_future_complete(
+  std::shared_ptr<NodeT> node_ptr,
+  std::shared_future<FutureT> & future,
+  std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
+{
+  return rclcpp::spin_until_future_complete(node_ptr->get_node_base_interface(), future, timeout);
 }
 
 }  // namespace rclcpp
