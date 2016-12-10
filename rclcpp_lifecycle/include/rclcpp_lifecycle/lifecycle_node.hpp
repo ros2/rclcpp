@@ -134,6 +134,14 @@ public:
   const State &
   get_current_state();
 
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<State>
+  get_available_states();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<Transition>
+  get_available_transitions();
+
   /// trigger the specified transition
   /*
    * return the new state after this transition

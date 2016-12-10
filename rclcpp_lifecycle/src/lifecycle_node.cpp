@@ -20,6 +20,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace rclcpp
 {
@@ -85,6 +86,18 @@ const State &
 LifecycleNode::get_current_state()
 {
   return impl_->get_current_state();
+}
+
+std::vector<State>
+LifecycleNode::get_available_states()
+{
+  return impl_->get_available_states();
+}
+
+std::vector<Transition>
+LifecycleNode::get_available_transitions()
+{
+  return impl_->get_available_transitions();
 }
 
 const State &

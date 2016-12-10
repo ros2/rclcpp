@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
 // forward declare rcl_transition_t
@@ -37,6 +38,11 @@ public:
   explicit Transition(unsigned int id, const std::string & label = "");
 
   RCLCPP_LIFECYCLE_PUBLIC
+  Transition(
+    unsigned int id, const std::string & label,
+    State && start, State && goal);
+
+  RCLCPP_LIFECYCLE_PUBLIC
   explicit Transition(const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle);
 
   RCLCPP_LIFECYCLE_PUBLIC
@@ -50,8 +56,17 @@ public:
   std::string
   label() const;
 
+  RCLCPP_LIFECYCLE_PUBLIC
+  State
+  start_state() const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  State
+  goal_state() const;
+
 protected:
   bool owns_rcl_transition_handle_;
+
   const rcl_lifecycle_transition_t * transition_handle_;
 };
 

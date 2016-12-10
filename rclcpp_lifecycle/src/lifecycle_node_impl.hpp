@@ -237,6 +237,33 @@ public:
     return current_state_;
   }
 
+  std::vector<State>
+  get_available_states()
+  {
+    std::vector<State> states;
+    for (unsigned int i = 0; i < state_machine_.transition_map.size; ++i) {
+      State state(&state_machine_.transition_map.states[i]);
+      states.push_back(state);
+    }
+    return states;
+  }
+
+  std::vector<Transition>
+  get_available_transitions()
+  {
+    std::vector<Transition> transitions;
+
+    for (unsigned int i = 0; i < state_machine_.transition_map.size; ++i) {
+      // get transitions associated to each primary state
+      for (unsigned int j = 0; j < state_machine_.transition_map.transition_arrays[i].size; ++j) {
+        Transition transition(
+          &state_machine_.transition_map.transition_arrays[i].transitions[j]);
+        transitions.push_back(transition);
+      }
+    }
+    return transitions;
+  }
+
   bool
   change_state(std::uint8_t lifecycle_transition)
   {
