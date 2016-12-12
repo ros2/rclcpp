@@ -172,12 +172,38 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>,
+    typename DisableIfMessageTCallable = std::enable_if<
+      !rclcpp::function_traits::is_callable_t<MessageT>::value
+    >,
+    typename EnableIfCallbackTCallable = std::enable_if<
+      rclcpp::function_traits::is_callable_t<CallbackT>::value
+    >
+  >
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    CallbackT && callback,
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    bool ignore_local_publications = false,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
+
+  template<
     typename CallbackT,
     typename MessageT = typename rclcpp::function_traits::plain_message<
       typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>
     >::type,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>,
+    typename EnableIfCallbackTCallable = std::enable_if<
+      rclcpp::function_traits::is_callable_t<CallbackT>::value
+    >
   >
   std::shared_ptr<SubscriptionT>
   create_subscription(
@@ -206,12 +232,38 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>,
+    typename DisableIfMessageTCallable = std::enable_if<
+      !rclcpp::function_traits::is_callable_t<MessageT>::value
+    >,
+    typename EnableIfCallbackTCallable = std::enable_if<
+      rclcpp::function_traits::is_callable_t<CallbackT>::value
+    >
+  >
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    CallbackT && callback,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    bool ignore_local_publications = false,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    msg_mem_strat = nullptr,
+    std::shared_ptr<Alloc> allocator = nullptr);
+
+  template<
     typename CallbackT,
     typename MessageT = typename rclcpp::function_traits::plain_message<
       typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>
     >::type,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>,
+    typename EnableIfCallbackTCallable = std::enable_if<
+      rclcpp::function_traits::is_callable_t<CallbackT>::value
+    >
   >
   std::shared_ptr<SubscriptionT>
   create_subscription(

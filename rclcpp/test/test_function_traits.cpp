@@ -95,6 +95,8 @@ struct ObjectMember
   }
 };
 
+struct NotCallable {};
+
 template<
   typename FunctorT,
   std::size_t Arity = 0,
@@ -705,4 +707,94 @@ TEST(TestFunctionTraits, sfinae_match) {
   EXPECT_EQ(123.45, func_accept_callback_return_type(lambda_no_args_double));
 
   EXPECT_EQ("foo", func_accept_callback_return_type(lambda_no_args_string));
+}
+
+/*
+   Tests that funcion_traits detects that a functor is callabale.
+ */
+TEST(TestFunctionTraits, is_callable) {
+  // Test regular functions
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(func_no_args)>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(func_one_int)>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(func_two_ints)>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(func_one_int_one_char)>::value,
+    "Functor must be callable");
+
+  // Test lambdas
+  auto lambda_no_args = []() {
+      return 0;
+    };
+
+  auto lambda_one_int = [](int one) {
+      (void)one;
+      return 1;
+    };
+
+  auto lambda_two_ints = [](int one, int two) {
+      (void)one;
+      (void)two;
+      return 2;
+    };
+
+  auto lambda_one_int_one_char = [](int one, char two) {
+      (void)one;
+      (void)two;
+      return 3;
+    };
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(lambda_no_args)>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(lambda_one_int)>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(lambda_two_ints)>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<decltype(lambda_one_int_one_char)>::value,
+    "Functor must be callable");
+
+  // Test objects that have a call operator
+  static_assert(
+    rclcpp::function_traits::is_callable_t<FunctionObjectNoArgs>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<FunctionObjectOneInt>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<FunctionObjectTwoInts>::value,
+    "Functor must be callable");
+
+  static_assert(
+    rclcpp::function_traits::is_callable_t<FunctionObjectOneIntOneChar>::value,
+    "Functor must be callable");
+
+  // Test that types that don't have a call operator return false
+  static_assert(
+    !rclcpp::function_traits::is_callable_t<int>::value,
+    "Type is not callable");
+
+  static_assert(
+    !rclcpp::function_traits::is_callable_t<std::string>::value,
+    "Type is not callable");
+
+  static_assert(
+    !rclcpp::function_traits::is_callable_t<NotCallable>::value,
+    "Type is not callable");
 }

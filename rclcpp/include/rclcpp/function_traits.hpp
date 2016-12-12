@@ -36,11 +36,15 @@ struct plain_message<std::shared_ptr<MessageT>> : plain_message<MessageT>
 {};
 
 template<typename MessageT>
-struct plain_message<const std::shared_ptr<MessageT>> : plain_message<MessageT>
+struct plain_message<std::shared_ptr<MessageT const>> : plain_message<MessageT>
 {};
 
 template<typename MessageT, typename Deleter>
 struct plain_message<std::unique_ptr<MessageT, Deleter>> : plain_message<MessageT>
+{};
+
+template<typename MessageT, typename Deleter>
+struct plain_message<std::unique_ptr<MessageT const, Deleter>> : plain_message<MessageT>
 {};
 
 /* NOTE(esteve):
@@ -163,6 +167,46 @@ struct same_arguments : std::is_same<
     typename function_traits<FunctorBT>::arguments
   >
 {};
+
+// Taken from http://stackoverflow.com/a/25859000
+// Original author http://stackoverflow.com/users/847987/charphacy
+template<typename T>
+using remove_ref_t = typename std::remove_reference<T>::type;
+
+template<typename T>
+using remove_refptr_t = typename std::remove_pointer<remove_ref_t<T>>::type;
+
+template<typename T>
+using is_function_t = typename std::is_function<remove_refptr_t<T>>::type;
+
+template<bool isObject, typename T>
+struct is_callable_impl : public is_function_t<T>{};
+
+template<typename T>
+struct is_callable_impl<true, T>
+{
+private:
+  struct Fallback { void operator()(); };
+  struct Derived : T, Fallback {};
+
+  template<typename U, U>
+  struct Check;
+
+  template<typename>
+  static std::true_type test(...);
+
+  template<typename C>
+  static std::false_type test(Check<void (Fallback::*)(), & C::operator()> *);
+
+public:
+  using type = decltype(test<Derived>(nullptr));
+};
+
+template<typename T>
+using is_callable_t =
+    typename is_callable_impl<std::is_class<remove_ref_t<T>>::value,
+    remove_ref_t<T>>::type;
+
 
 }  // namespace function_traits
 
