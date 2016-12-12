@@ -22,8 +22,6 @@
 #ifndef RCLCPP__VISIBILITY_CONTROL_HPP_
 #define RCLCPP__VISIBILITY_CONTROL_HPP_
 
-#include "rmw/rmw.h"
-
 // This logic was borrowed (then namespaced) from the examples on the gcc wiki:
 //     https://gcc.gnu.org/wiki/Visibility
 
