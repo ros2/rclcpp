@@ -81,7 +81,7 @@ public:
     // Services are handled in C++, so that it needs a C++ typesupport structure.
     rcl_ret_t ret = rcl_lifecycle_state_machine_init(
       &state_machine_, node_base_interface_->get_rcl_node_handle(),
-      ROSIDL_GET_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
+      ROSIDL_GET_MSG_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
       rosidl_typesupport_cpp::get_service_type_support_handle<ChangeStateSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetStateSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableStatesSrv>(),
