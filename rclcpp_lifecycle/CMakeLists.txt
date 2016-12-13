@@ -76,6 +76,15 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_register_custom_callbacks ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_callback_exceptions test/test_callback_exceptions.cpp)
+  if(TARGET test_callback_exceptions)
+    target_include_directories(test_callback_exceptions PUBLIC
+      ${rcl_lifecycle_INCLUDE_DIRS}
+      ${rclcpp_INCLUDE_DIRS}
+      ${rclcpp_lifecycle_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_callback_exceptions ${PROJECT_NAME})
+  endif()
 endif()
 
 ament_export_dependencies(rclcpp)

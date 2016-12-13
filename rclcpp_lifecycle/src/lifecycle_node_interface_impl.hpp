@@ -297,7 +297,7 @@ public:
       return false;
     }
 
-    auto cb_success = execute_callback(
+    rcl_lifecycle_ret_t cb_success = execute_callback(
       state_machine_.current_state->id, initial_state);
 
     if (rcl_lifecycle_trigger_transition(
@@ -307,19 +307,22 @@ public:
         transition_id, state_machine_.current_state->label);
       return false;
     }
+    fprintf(stderr, "current state after first callback%s\n", state_machine_.current_state->label);
 
     // error handling ?!
     // TODO(karsten1987): iterate over possible ret value
     if (cb_success == RCL_LIFECYCLE_RET_ERROR) {
-      auto error_resolved = execute_callback(state_machine_.current_state->id, initial_state);
+      rcl_lifecycle_ret_t error_resolved = execute_callback(state_machine_.current_state->id, initial_state);
       if (error_resolved == RCL_RET_OK) {
+        fprintf(stderr, "Exception handling was successful\n");
         // We call cleanup on the error state
         rcl_lifecycle_trigger_transition(
-          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_CLEANUP, true, true);
+          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_CLEANUP, error_resolved, true);
+      fprintf(stderr, "current state after error callback%s\n", state_machine_.current_state->label);
       } else {
         // We call shutdown on the error state
         rcl_lifecycle_trigger_transition(
-          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_SHUTDOWN, true, true);
+          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_SHUTDOWN, error_resolved, true);
       }
     }
     // This true holds in both cases where the actual callback
