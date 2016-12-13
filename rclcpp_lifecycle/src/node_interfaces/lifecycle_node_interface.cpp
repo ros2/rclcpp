@@ -18,41 +18,40 @@ namespace rclcpp_lifecycle
 {
 namespace node_interfaces
 {
-
-bool
-LifecycleNodeInterface::on_configure()
+rcl_lifecycle_ret_t
+LifecycleNodeInterface::on_configure(const State &)
 {
-  return true;
+  return RCL_LIFECYCLE_RET_OK;
 }
 
-bool
-LifecycleNodeInterface::on_cleanup()
+rcl_lifecycle_ret_t
+LifecycleNodeInterface::on_cleanup(const State &)
 {
-  return true;
+  return RCL_LIFECYCLE_RET_OK;
 }
 
-bool
-LifecycleNodeInterface::on_shutdown()
+rcl_lifecycle_ret_t
+LifecycleNodeInterface::on_shutdown(const State &)
 {
-  return true;
+  return RCL_LIFECYCLE_RET_OK;
 }
 
-bool
-LifecycleNodeInterface::on_activate()
+rcl_lifecycle_ret_t
+LifecycleNodeInterface::on_activate(const State &)
 {
-  return true;
+  return RCL_LIFECYCLE_RET_OK;
 }
 
-bool
-LifecycleNodeInterface::on_deactivate()
+rcl_lifecycle_ret_t
+LifecycleNodeInterface::on_deactivate(const State &)
 {
-  return true;
+  return RCL_LIFECYCLE_RET_OK;
 }
 
-bool
-LifecycleNodeInterface::on_error()
+rcl_lifecycle_ret_t
+LifecycleNodeInterface::on_error(const State &)
 {
-  return false;
+  return RCL_LIFECYCLE_RET_FAILURE;
 }
 
 }  // namespace node_interfaces

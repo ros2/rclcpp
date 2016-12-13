@@ -46,89 +46,97 @@ public:
   size_t number_of_callbacks = 0;
 
 protected:
-  bool on_configure()
+  rcl_lifecycle_ret_t on_configure(const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_activate()
+  rcl_lifecycle_ret_t on_activate(const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_deactivate()
+  rcl_lifecycle_ret_t on_deactivate(const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_cleanup()
+  rcl_lifecycle_ret_t on_cleanup(const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_shutdown()
+  rcl_lifecycle_ret_t on_shutdown(const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
   // Custom callbacks
 
 public:
-  bool on_custom_configure()
+  rcl_lifecycle_ret_t on_custom_configure(const rclcpp_lifecycle::State & previous_state)
   {
+    EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_CONFIGURING, get_current_state().id());
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_custom_activate()
+  rcl_lifecycle_ret_t on_custom_activate(const rclcpp_lifecycle::State & previous_state)
   {
+    EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_ACTIVATING, get_current_state().id());
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_custom_deactivate()
+  rcl_lifecycle_ret_t on_custom_deactivate(const rclcpp_lifecycle::State & previous_state)
   {
+    EXPECT_EQ(State::PRIMARY_STATE_ACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_DEACTIVATING, get_current_state().id());
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_custom_cleanup()
+  rcl_lifecycle_ret_t on_custom_cleanup(const rclcpp_lifecycle::State & previous_state)
   {
+    EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_CLEANINGUP, get_current_state().id());
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 
-  bool on_custom_shutdown()
+  rcl_lifecycle_ret_t on_custom_shutdown(const rclcpp_lifecycle::State &)
   {
     EXPECT_EQ(State::TRANSITION_STATE_SHUTTINGDOWN, get_current_state().id());
     ++number_of_callbacks;
-    return true;
+    return RCL_LIFECYCLE_RET_OK;
   }
 };
 
 TEST_F(TestRegisterCustomCallbacks, custom_callbacks) {
   auto test_node = std::make_shared<CustomLifecycleNode>("testnode");
 
-  test_node->register_on_configure(std::bind(&CustomLifecycleNode::on_custom_configure, test_node));
-  test_node->register_on_cleanup(std::bind(&CustomLifecycleNode::on_custom_cleanup, test_node));
-  test_node->register_on_shutdown(std::bind(&CustomLifecycleNode::on_custom_shutdown, test_node));
-  test_node->register_on_activate(std::bind(&CustomLifecycleNode::on_custom_activate, test_node));
+  test_node->register_on_configure(
+    std::bind(&CustomLifecycleNode::on_custom_configure, test_node, std::placeholders::_1));
+  test_node->register_on_cleanup(std::bind(&CustomLifecycleNode::on_custom_cleanup, test_node,
+    std::placeholders::_1));
+  test_node->register_on_shutdown(std::bind(&CustomLifecycleNode::on_custom_shutdown, test_node,
+    std::placeholders::_1));
+  test_node->register_on_activate(std::bind(&CustomLifecycleNode::on_custom_activate, test_node,
+    std::placeholders::_1));
   test_node->register_on_deactivate(std::bind(&CustomLifecycleNode::on_custom_deactivate,
-    test_node));
+    test_node, std::placeholders::_1));
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(

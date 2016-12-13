@@ -63,12 +63,16 @@ LifecycleNode::LifecycleNode(
 {
   impl_->init();
 
-  register_on_configure(std::bind(&LifecycleNodeInterface::on_configure, this));
-  register_on_cleanup(std::bind(&LifecycleNodeInterface::on_cleanup, this));
-  register_on_shutdown(std::bind(&LifecycleNodeInterface::on_shutdown, this));
-  register_on_activate(std::bind(&LifecycleNodeInterface::on_activate, this));
-  register_on_deactivate(std::bind(&LifecycleNodeInterface::on_deactivate, this));
-  register_on_error(std::bind(&LifecycleNodeInterface::on_error, this));
+  register_on_configure(std::bind(&LifecycleNodeInterface::on_configure, this,
+    std::placeholders::_1));
+  register_on_cleanup(std::bind(&LifecycleNodeInterface::on_cleanup, this, std::placeholders::_1));
+  register_on_shutdown(std::bind(&LifecycleNodeInterface::on_shutdown, this,
+    std::placeholders::_1));
+  register_on_activate(std::bind(&LifecycleNodeInterface::on_activate, this,
+    std::placeholders::_1));
+  register_on_deactivate(std::bind(&LifecycleNodeInterface::on_deactivate, this,
+    std::placeholders::_1));
+  register_on_error(std::bind(&LifecycleNodeInterface::on_error, this, std::placeholders::_1));
 }
 
 LifecycleNode::~LifecycleNode()
@@ -224,37 +228,37 @@ LifecycleNode::get_node_parameters_interface()
 
 ////
 bool
-LifecycleNode::register_on_configure(std::function<bool(void)> fcn)
+LifecycleNode::register_on_configure(std::function<rcl_lifecycle_ret_t(const State &)> fcn)
 {
   return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_CONFIGURING, fcn);
 }
 
 bool
-LifecycleNode::register_on_cleanup(std::function<bool(void)> fcn)
+LifecycleNode::register_on_cleanup(std::function<rcl_lifecycle_ret_t(const State &)> fcn)
 {
   return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_CLEANINGUP, fcn);
 }
 
 bool
-LifecycleNode::register_on_shutdown(std::function<bool(void)> fcn)
+LifecycleNode::register_on_shutdown(std::function<rcl_lifecycle_ret_t(const State &)> fcn)
 {
   return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_SHUTTINGDOWN, fcn);
 }
 
 bool
-LifecycleNode::register_on_activate(std::function<bool(void)> fcn)
+LifecycleNode::register_on_activate(std::function<rcl_lifecycle_ret_t(const State &)> fcn)
 {
   return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_ACTIVATING, fcn);
 }
 
 bool
-LifecycleNode::register_on_deactivate(std::function<bool(void)> fcn)
+LifecycleNode::register_on_deactivate(std::function<rcl_lifecycle_ret_t(const State &)> fcn)
 {
   return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_DEACTIVATING, fcn);
 }
 
 bool
-LifecycleNode::register_on_error(std::function<bool(void)> fcn)
+LifecycleNode::register_on_error(std::function<rcl_lifecycle_ret_t(const State &)> fcn)
 {
   return impl_->register_callback(lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING,
            fcn);

@@ -360,22 +360,22 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_configure(std::function<bool(void)> fcn);
+  register_on_configure(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_cleanup(std::function<bool(void)> fcn);
+  register_on_cleanup(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_shutdown(std::function<bool(void)> fcn);
+  register_on_shutdown(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_activate(std::function<bool(void)> fcn);
+  register_on_activate(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_deactivate(std::function<bool(void)> fcn);
+  register_on_deactivate(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
   RCLCPP_LIFECYCLE_PUBLIC
   bool
-  register_on_error(std::function<bool(void)> fcn);
+  register_on_error(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
 
 protected:
   RCLCPP_LIFECYCLE_PUBLIC

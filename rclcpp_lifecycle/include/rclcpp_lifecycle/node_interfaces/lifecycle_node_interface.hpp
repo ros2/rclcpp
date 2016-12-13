@@ -15,6 +15,9 @@
 #ifndef RCLCPP_LIFECYCLE__NODE_INTERFACES__LIFECYCLE_NODE_INTERFACE_HPP_
 #define RCLCPP_LIFECYCLE__NODE_INTERFACES__LIFECYCLE_NODE_INTERFACE_HPP_
 
+#include "rcl_lifecycle/data_types.h"
+
+#include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
 namespace rclcpp_lifecycle
@@ -46,48 +49,48 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual bool
-  on_configure();
+  virtual rcl_lifecycle_ret_t
+  on_configure(const State & previous_state);
 
   /// Callback function for cleanup transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual bool
-  on_cleanup();
+  virtual rcl_lifecycle_ret_t
+  on_cleanup(const State & previous_state);
 
   /// Callback function for shutdown transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual bool
-  on_shutdown();
+  virtual rcl_lifecycle_ret_t
+  on_shutdown(const State & previous_state);
 
   /// Callback function for activate transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual bool
-  on_activate();
+  virtual rcl_lifecycle_ret_t
+  on_activate(const State & previous_state);
 
   /// Callback function for deactivate transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual bool
-  on_deactivate();
+  virtual rcl_lifecycle_ret_t
+  on_deactivate(const State & previous_state);
 
   /// Callback function for errorneous transition
   /*
    * \return false by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual bool
-  on_error();
+  virtual rcl_lifecycle_ret_t
+  on_error(const State & previous_state);
 };
 
 }  // namespace node_interfaces

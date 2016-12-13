@@ -150,7 +150,8 @@ public:
   }
 
   bool
-  register_callback(std::uint8_t lifecycle_transition, std::function<bool(void)> & cb)
+  register_callback(std::uint8_t lifecycle_transition, std::function<rcl_lifecycle_ret_t(
+      const State &)> & cb)
   {
     cb_map_[lifecycle_transition] = cb;
     return true;
@@ -280,16 +281,23 @@ public:
       return false;
     }
 
+    // keep the initial state to pass to a transition callback
+    State initial_state(state_machine_.current_state);
+
     unsigned int transition_id = static_cast<unsigned int>(lifecycle_transition);
-    if (rcl_lifecycle_start_transition(&state_machine_, transition_id, true, true) != RCL_RET_OK) {
+    if (rcl_lifecycle_trigger_transition(&state_machine_, transition_id, RCL_RET_OK,
+      true) != RCL_RET_OK)
+    {
       fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s: %s\n",
         __FILE__, __LINE__, transition_id,
         state_machine_.current_state->label, rcl_get_error_string_safe());
       return false;
     }
 
-    auto cb_success = execute_callback(state_machine_.current_state->id);
-    if (rcl_lifecycle_start_transition(
+    auto cb_success = execute_callback(
+      state_machine_.current_state->id, initial_state);
+
+    if (rcl_lifecycle_trigger_transition(
         &state_machine_, transition_id, cb_success, true) != RCL_RET_OK)
     {
       fprintf(stderr, "Failed to finish transition %u. Current state is now: %s\n",
@@ -298,15 +306,16 @@ public:
     }
 
     // error handling ?!
-    if (!cb_success) {
-      auto error_resolved = execute_callback(state_machine_.current_state->id);
-      if (error_resolved) {
+    // TODO(karsten1987): iterate over possible ret value
+    if (cb_success == RCL_LIFECYCLE_RET_ERROR) {
+      auto error_resolved = execute_callback(state_machine_.current_state->id, initial_state);
+      if (error_resolved == RCL_RET_OK) {
         // We call cleanup on the error state
-        rcl_lifecycle_start_transition(
+        rcl_lifecycle_trigger_transition(
           &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_CLEANUP, true, true);
       } else {
         // We call shutdown on the error state
-        rcl_lifecycle_start_transition(
+        rcl_lifecycle_trigger_transition(
           &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_SHUTDOWN, true, true);
       }
     }
@@ -316,20 +325,24 @@ public:
     return true;
   }
 
-  bool
-  execute_callback(unsigned int cb_id)
+  rcl_lifecycle_ret_t
+  execute_callback(unsigned int cb_id, const State & previous_state)
   {
-    auto cb_success = true;  // in case no callback was attached, we forward directly
-    auto it = cb_map_.find(state_machine_.current_state->id);
+    // in case no callback was attached, we forward directly
+    auto cb_success = RCL_LIFECYCLE_RET_OK;
+
+    auto it = cb_map_.find(cb_id);
     if (it != cb_map_.end()) {
-      std::function<bool(void)> callback = it->second;
+      auto callback = it->second;
       try {
-        cb_success = callback();
+        cb_success = callback(State(previous_state));
       } catch (const std::exception & e) {
         fprintf(stderr, "Caught exception in callback for transition %d\n",
           it->first);
         fprintf(stderr, "Original error msg: %s\n", e.what());
-        cb_success = false;
+        // maybe directly go for error handling here
+        // and pass exception along with it
+        cb_success = RCL_LIFECYCLE_RET_ERROR;
       }
     } else {
       fprintf(stderr, "%s:%d, No callback is registered for transition %u.\n",
@@ -359,7 +372,9 @@ public:
 
   rcl_lifecycle_state_machine_t state_machine_;
   State current_state_;
-  std::map<std::uint8_t, std::function<bool(void)>> cb_map_;
+  std::map<
+    std::uint8_t,
+    std::function<rcl_lifecycle_ret_t(const State &)>> cb_map_;
 
   using NodeBasePtr = std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>;
   using NodeServicesPtr = std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface>;
