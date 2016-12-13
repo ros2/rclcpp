@@ -73,6 +73,12 @@ public:
   init()
   {
     state_machine_ = rcl_lifecycle_get_zero_initialized_state_machine();
+    // The call to initialize the state machine takes
+    // currently five different typesupports for all publishers/services
+    // created within the RCL_LIFECYCLE structure.
+    // The publisher takes a C-Typesupport since the publishing (i.e. creating
+    // the message) is done fully in RCL.
+    // Services are handled in C++, so that it needs a C++ typesupport structure.
     rcl_ret_t ret = rcl_lifecycle_state_machine_init(
       &state_machine_, node_base_interface_->get_rcl_node_handle(),
       ROSIDL_GET_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
@@ -82,9 +88,9 @@ public:
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
       true);
     if (ret != RCL_RET_OK) {
-      fprintf(stderr, "Error adding %s: %s\n",
-        node_base_interface_->get_name(), rcl_get_error_string_safe());
-      return;
+      throw std::runtime_error(
+              std::string(
+                "Couldn't initialize state machine for node ") + node_base_interface_->get_name());
     }
 
     {  // change_state
@@ -164,8 +170,8 @@ public:
   {
     (void)header;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      resp->success = false;
-      return;
+      throw std::runtime_error(
+              "Can't get state. State machine is not initialized.");
     }
     resp->success = change_state(req->transition.id);
   }
@@ -178,10 +184,8 @@ public:
     (void)header;
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      resp->current_state.id =
-        static_cast<uint8_t>(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN);
-      resp->current_state.label = "unknown";
-      return;
+      throw std::runtime_error(
+              "Can't get state. State machine is not initialized.");
     }
     resp->current_state.id = static_cast<uint8_t>(state_machine_.current_state->id);
     resp->current_state.label = state_machine_.current_state->label;
@@ -195,11 +199,8 @@ public:
     (void)header;
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      lifecycle_msgs::msg::State unknown_state;
-      unknown_state.id = static_cast<uint8_t>(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN);
-      unknown_state.label = "unknown";
-      resp->available_states.push_back(unknown_state);
-      return;
+      throw std::runtime_error(
+              "Can't get available states. State machine is not initialized.");
     }
     for (unsigned int i = 0; i < state_machine_.transition_map.size; ++i) {
       lifecycle_msgs::msg::State state;
@@ -217,6 +218,8 @@ public:
     (void)header;
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
+      throw std::runtime_error(
+              "Can't get available transitions. State machine is not initialized.");
       return;
     }
 
@@ -344,9 +347,6 @@ public:
         // and pass exception along with it
         cb_success = RCL_LIFECYCLE_RET_ERROR;
       }
-    } else {
-      fprintf(stderr, "%s:%d, No callback is registered for transition %u.\n",
-        __FILE__, __LINE__, cb_id);
     }
     return cb_success;
   }

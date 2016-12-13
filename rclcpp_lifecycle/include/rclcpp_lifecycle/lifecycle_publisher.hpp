@@ -22,8 +22,8 @@
 
 namespace rclcpp_lifecycle
 {
+/// base class with only
 /**
- * @brief base class with only
  * pure virtual functions. A managed
  * node can then deactivate or activate
  * the publishing.
@@ -35,10 +35,11 @@ class LifecyclePublisherInterface
 public:
   virtual void on_activate() = 0;
   virtual void on_deactivate() = 0;
+  virtual bool is_activated() = 0;
 };
 
+/// brief child class of rclcpp Publisher class.
 /**
- * @brief child class of rclcpp Publisher class.
  * Overrides all publisher functions to check for
  * enabled/disabled state.
  */
@@ -64,77 +65,76 @@ public:
 
   ~LifecyclePublisher() {}
 
+  /// LifecyclePublisher pulish function
   /**
-   * @brief briefly checks whether this publisher
+   * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
-   * to the actual rclcp Publisher base class
+   * to the actual rclcpp Publisher base class
    */
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
     if (!enabled_) {
-      printf("I push every message to /dev/null\n");
       return;
     }
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  /// LifecyclePublisher pulish function
   /**
-   * @brief briefly checks whether this publisher
+   * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
-   * to the actual rclcp Publisher base class
+   * to the actual rclcpp Publisher base class
    */
   virtual void
   publish(const std::shared_ptr<MessageT> & msg)
   {
     if (!enabled_) {
-      printf("I publish message %s to /dev/null\n", msg->data.c_str());
       return;
     }
-    printf("I publish message %s to DDS\n", msg->data.c_str());
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  /// LifecyclePublisher pulish function
   /**
-   * @brief briefly checks whether this publisher
+   * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
-   * to the actual rclcp Publisher base class
+   * to the actual rclcpp Publisher base class
    */
   virtual void
   publish(std::shared_ptr<const MessageT> msg)
   {
     if (!enabled_) {
-      printf("I am every message to /dev/null\n");
       return;
     }
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  /// LifecyclePublisher pulish function
   /**
-   * @brief briefly checks whether this publisher
+   * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
-   * to the actual rclcp Publisher base class
+   * to the actual rclcpp Publisher base class
    */
   virtual void
   publish(const MessageT & msg)
   {
     if (!enabled_) {
-      printf("I am every message to /dev/null\n");
       return;
     }
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  /// LifecyclePublisher pulish function
   /**
-   * @brief briefly checks whether this publisher
+   * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
-   * to the actual rclcp Publisher base class
+   * to the actual rclcpp Publisher base class
    */
   virtual void
   publish(std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
-      printf("I am every message to /dev/null\n");
       return;
     }
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
@@ -143,15 +143,19 @@ public:
   virtual void
   on_activate()
   {
-    printf("Lifecycle publisher is enabled\n");
     enabled_ = true;
   }
 
   virtual void
   on_deactivate()
   {
-    printf("Lifecycle publisher is deactivated\n");
     enabled_ = false;
+  }
+
+  virtual bool
+  is_activated()
+  {
+    return enabled_;
   }
 
 private:
