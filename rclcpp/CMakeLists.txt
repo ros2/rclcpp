@@ -12,7 +12,7 @@ find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11")
+  set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++14")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
