@@ -56,9 +56,8 @@ TEST_F(TestStateMachineInfo, available_transitions) {
   auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
   std::vector<rclcpp_lifecycle::Transition> available_transitions =
     test_node->get_available_transitions();
-  EXPECT_EQ((unsigned int)14, available_transitions.size());
+  EXPECT_EQ((unsigned int)25, available_transitions.size());
   for (rclcpp_lifecycle::Transition & transition : available_transitions) {
-    EXPECT_TRUE(transition.id() <= (unsigned int)5);
     EXPECT_FALSE(transition.label().empty());
 
     EXPECT_TRUE(transition.start_state().id() <= (unsigned int)4 ||

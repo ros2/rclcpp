@@ -202,7 +202,7 @@ public:
       throw std::runtime_error(
               "Can't get available states. State machine is not initialized.");
     }
-    for (unsigned int i = 0; i < state_machine_.transition_map.size; ++i) {
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
       lifecycle_msgs::msg::State state;
       state.id = static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
       state.label = static_cast<std::string>(state_machine_.transition_map.states[i].label);
@@ -223,21 +223,16 @@ public:
       return;
     }
 
-    for (unsigned int i = 0; i < state_machine_.transition_map.size; ++i) {
-      // get transitions associated to each primary state
-      for (unsigned int j = 0; j < state_machine_.transition_map.transition_arrays[i].size; ++j) {
-        rcl_lifecycle_transition_t rcl_transition =
-          state_machine_.transition_map.transition_arrays[i].transitions[j];
-
-        lifecycle_msgs::msg::TransitionDescription trans_desc;
-        trans_desc.transition.id = rcl_transition.id;
-        trans_desc.transition.label = rcl_transition.label;
-        trans_desc.start_state.id = rcl_transition.start->id;
-        trans_desc.start_state.label = rcl_transition.start->label;
-        trans_desc.goal_state.id = rcl_transition.goal->id;
-        trans_desc.goal_state.label = rcl_transition.goal->label;
-        resp->available_transitions.push_back(trans_desc);
-      }
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+      rcl_lifecycle_transition_t & rcl_transition = state_machine_.transition_map.transitions[i];
+      lifecycle_msgs::msg::TransitionDescription trans_desc;
+      trans_desc.transition.id = rcl_transition.id;
+      trans_desc.transition.label = rcl_transition.label;
+      trans_desc.start_state.id = rcl_transition.start->id;
+      trans_desc.start_state.label = rcl_transition.start->label;
+      trans_desc.goal_state.id = rcl_transition.goal->id;
+      trans_desc.goal_state.label = rcl_transition.goal->label;
+      resp->available_transitions.push_back(trans_desc);
     }
   }
 
@@ -252,7 +247,7 @@ public:
   get_available_states()
   {
     std::vector<State> states;
-    for (unsigned int i = 0; i < state_machine_.transition_map.size; ++i) {
+    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
       State state(&state_machine_.transition_map.states[i]);
       states.push_back(state);
     }
@@ -264,13 +259,10 @@ public:
   {
     std::vector<Transition> transitions;
 
-    for (unsigned int i = 0; i < state_machine_.transition_map.size; ++i) {
-      // get transitions associated to each primary state
-      for (unsigned int j = 0; j < state_machine_.transition_map.transition_arrays[i].size; ++j) {
-        Transition transition(
-          &state_machine_.transition_map.transition_arrays[i].transitions[j]);
-        transitions.push_back(transition);
-      }
+    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+      Transition transition(
+        &state_machine_.transition_map.transitions[i]);
+      transitions.push_back(transition);
     }
     return transitions;
   }
@@ -288,9 +280,7 @@ public:
     State initial_state(state_machine_.current_state);
 
     unsigned int transition_id = static_cast<unsigned int>(lifecycle_transition);
-    if (rcl_lifecycle_trigger_transition(&state_machine_, transition_id, RCL_RET_OK,
-      true) != RCL_RET_OK)
-    {
+    if (rcl_lifecycle_trigger_transition(&state_machine_, transition_id, true) != RCL_RET_OK) {
       fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s: %s\n",
         __FILE__, __LINE__, transition_id,
         state_machine_.current_state->label, rcl_get_error_string_safe());
@@ -301,28 +291,29 @@ public:
       state_machine_.current_state->id, initial_state);
 
     if (rcl_lifecycle_trigger_transition(
-        &state_machine_, transition_id, cb_success, true) != RCL_RET_OK)
+        &state_machine_, cb_success, true) != RCL_RET_OK)
     {
       fprintf(stderr, "Failed to finish transition %u. Current state is now: %s\n",
         transition_id, state_machine_.current_state->label);
       return false;
     }
-    fprintf(stderr, "current state after first callback%s\n", state_machine_.current_state->label);
 
     // error handling ?!
     // TODO(karsten1987): iterate over possible ret value
     if (cb_success == RCL_LIFECYCLE_RET_ERROR) {
-      rcl_lifecycle_ret_t error_resolved = execute_callback(state_machine_.current_state->id, initial_state);
+      rcl_lifecycle_ret_t error_resolved = execute_callback(state_machine_.current_state->id,
+          initial_state);
       if (error_resolved == RCL_RET_OK) {
         fprintf(stderr, "Exception handling was successful\n");
         // We call cleanup on the error state
         rcl_lifecycle_trigger_transition(
-          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_CLEANUP, error_resolved, true);
-      fprintf(stderr, "current state after error callback%s\n", state_machine_.current_state->label);
+          &state_machine_, error_resolved, true);
+        fprintf(stderr, "current state after error callback%s\n",
+          state_machine_.current_state->label);
       } else {
         // We call shutdown on the error state
         rcl_lifecycle_trigger_transition(
-          &state_machine_, lifecycle_msgs__msg__Transition__TRANSITION_SHUTDOWN, error_resolved, true);
+          &state_machine_, error_resolved, true);
       }
     }
     // This true holds in both cases where the actual callback

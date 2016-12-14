@@ -55,7 +55,7 @@ protected:
   rcl_lifecycle_ret_t on_error(const rclcpp_lifecycle::State & previous_state)
   {
     fprintf(stderr, "Previous state of error was %s\n",
-        previous_state.label().c_str());
+      previous_state.label().c_str());
     ++number_of_callbacks;
     return RCL_LIFECYCLE_RET_OK;
   }
@@ -90,7 +90,7 @@ protected:
   rcl_lifecycle_ret_t on_error(const rclcpp_lifecycle::State & previous_state)
   {
     fprintf(stderr, "Previous state of error was %s\n",
-        previous_state.label().c_str());
+      previous_state.label().c_str());
     ++number_of_callbacks;
     return RCL_LIFECYCLE_RET_FAILURE;
   }
