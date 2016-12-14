@@ -49,13 +49,11 @@ protected:
   rcl_lifecycle_ret_t on_configure(const rclcpp_lifecycle::State &)
   {
     ++number_of_callbacks;
-    throw std::runtime_error("On_configure exception");
+    throw std::runtime_error("custom exception raised in configure callback");
   }
 
-  rcl_lifecycle_ret_t on_error(const rclcpp_lifecycle::State & previous_state)
+  rcl_lifecycle_ret_t on_error(const rclcpp_lifecycle::State &)
   {
-    fprintf(stderr, "Previous state of error was %s\n",
-      previous_state.label().c_str());
     ++number_of_callbacks;
     return RCL_LIFECYCLE_RET_OK;
   }
@@ -84,13 +82,11 @@ protected:
   rcl_lifecycle_ret_t on_configure(const rclcpp_lifecycle::State &)
   {
     ++number_of_callbacks;
-    throw std::runtime_error("On_configure exception");
+    throw std::runtime_error("custom exception raised in configure callback");
   }
 
-  rcl_lifecycle_ret_t on_error(const rclcpp_lifecycle::State & previous_state)
+  rcl_lifecycle_ret_t on_error(const rclcpp_lifecycle::State &)
   {
-    fprintf(stderr, "Previous state of error was %s\n",
-      previous_state.label().c_str());
     ++number_of_callbacks;
     return RCL_LIFECYCLE_RET_FAILURE;
   }
