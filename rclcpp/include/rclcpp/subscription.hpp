@@ -85,7 +85,7 @@ public:
   get_intra_process_subscription_handle() const;
 
   /// Borrow a new message.
-  // \return Shared pointer to the fresh message.
+  /** \return Shared pointer to the fresh message. */
   virtual std::shared_ptr<void>
   create_message() = 0;
   /// Check if we need to handle the message, and execute the callback if we do.
@@ -97,9 +97,10 @@ public:
   handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
   /// Return the message borrowed in create_message.
-  // \param[in] Shared pointer to the returned message.
+  /** \param[in] message Shared pointer to the returned message. */
   virtual void
   return_message(std::shared_ptr<void> & message) = 0;
+
   virtual void
   handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
@@ -192,6 +193,8 @@ public:
     any_callback_.dispatch(typed_message, message_info);
   }
 
+  /// Return the loaned message.
+  /** \param message message to be returned */
   void return_message(std::shared_ptr<void> & message)
   {
     auto typed_message = std::static_pointer_cast<MessageT>(message);

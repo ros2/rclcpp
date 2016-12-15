@@ -57,7 +57,7 @@ void
 init(int argc, char * argv[]);
 
 /// Check rclcpp's status.
-// \return True if SIGINT hasn't fired yet, false otherwise.
+/** \return True if SIGINT hasn't fired yet, false otherwise. */
 RCLCPP_PUBLIC
 bool
 ok();
@@ -68,7 +68,7 @@ void
 shutdown();
 
 /// Register a function to be called when shutdown is called.
-/* Calling the callbacks is the last thing shutdown() does. */
+/** Calling the callbacks is the last thing shutdown() does. */
 RCLCPP_PUBLIC
 void
 on_shutdown(std::function<void(void)> callback);
@@ -81,7 +81,7 @@ on_shutdown(std::function<void(void)> callback);
  * that the same guard condition is not reused across waitsets (e.g., when
  * using multiple executors in the same process). Will throw an exception if
  * initialization of the guard condition fails.
- * \param[waitset] waitset Pointer to the rcl_wait_set_t that will be using the
+ * \param waitset Pointer to the rcl_wait_set_t that will be using the
  * resulting guard condition.
  * \return Pointer to the guard condition.
  */
@@ -95,7 +95,7 @@ get_sigint_guard_condition(rcl_wait_set_t * waitset);
  * to get a sigint guard condition, then you should call release_sigint_guard_condition()
  * when you're done, to free that condition.  Will throw an exception if
  * get_sigint_guard_condition() wasn't previously called for the given waitset.
- * \param[waitset] waitset Pointer to the rcl_wait_set_t that was using the
+ * \param waitset Pointer to the rcl_wait_set_t that was using the
  * resulting guard condition.
  */
 RCLCPP_PUBLIC

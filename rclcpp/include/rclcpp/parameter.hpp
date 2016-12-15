@@ -216,7 +216,7 @@ private:
 };
 
 
-/* Return a json encoded version of the parameter intended for a dict. */
+/// Return a json encoded version of the parameter intended for a dict.
 RCLCPP_PUBLIC
 std::string
 _to_json_dict_entry(const ParameterVariant & param);
@@ -235,12 +235,12 @@ operator<<(std::ostream & os, const std::vector<ParameterVariant> & parameters);
 namespace std
 {
 
-/* Return a json encoded version of the parameter intended for a list. */
+/// Return a json encoded version of the parameter intended for a list.
 RCLCPP_PUBLIC
 std::string
 to_string(const rclcpp::parameter::ParameterVariant & param);
 
-/* Return a json encoded version of a vector of parameters, as a string*/
+/// Return a json encoded version of a vector of parameters, as a string.
 RCLCPP_PUBLIC
 std::string
 to_string(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);

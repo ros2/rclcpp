@@ -28,7 +28,7 @@ namespace message_memory_strategy
 {
 
 /// Default allocation strategy for messages received by subscriptions.
-// A message memory strategy must be templated on the type of the subscription it belongs to.
+/** A message memory strategy must be templated on the type of the subscription it belongs to. */
 template<typename MessageT, typename Alloc = std::allocator<void>>
 class MessageMemoryStrategy
 {
@@ -56,14 +56,14 @@ public:
   }
 
   /// By default, dynamically allocate a new message.
-  // \return Shared pointer to the new message.
+  /** \return Shared pointer to the new message. */
   virtual std::shared_ptr<MessageT> borrow_message()
   {
     return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_.get());
   }
 
   /// Release ownership of the message, which will deallocate it if it has no more owners.
-  // \param[in] Shared pointer to the message we are returning.
+  /** \param[in] msg Shared pointer to the message we are returning. */
   virtual void return_message(std::shared_ptr<MessageT> & msg)
   {
     msg.reset();

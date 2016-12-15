@@ -68,7 +68,8 @@ public:
   virtual ~GraphListener();
 
   /// Start the graph listener's listen thread if it hasn't been started.
-  /* This function is thread-safe.
+  /**
+   * This function is thread-safe.
    *
    * \throws GraphListenerShutdownError if the GraphListener is shutdown
    */
@@ -78,7 +79,7 @@ public:
   start_if_not_started();
 
   /// Add a node to the graph listener's list of nodes.
-  /*
+  /**
    * \throws GraphListenerShutdownError if the GraphListener is shutdown
    * \throws NodeAlreadyAddedError if the given node is already in the list
    * \throws std::invalid_argument if node is nullptr
@@ -90,7 +91,8 @@ public:
   add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Return true if the given node is in the graph listener's list of nodes.
-  /* Also return false if given nullptr.
+  /**
+   * Also return false if given nullptr.
    *
    * \throws std::system_error anything std::mutex::lock() throws
    */
@@ -100,7 +102,8 @@ public:
   has_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Remove a node from the graph listener's list of nodes.
-  /*
+  /**
+   *
    * \throws NodeNotFoundError if the given node is not in the list
    * \throws std::invalid_argument if node is nullptr
    * \throws std::system_error anything std::mutex::lock() throws
@@ -111,7 +114,8 @@ public:
   remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Stop the listening thread.
-  /* The thread cannot be restarted, and the class is defunct after calling.
+  /**
+   * The thread cannot be restarted, and the class is defunct after calling.
    * This function is called by the ~GraphListener() and does nothing if
    * shutdown() was already called.
    * This function exists separately from the ~GraphListener() so that it can

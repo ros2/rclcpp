@@ -33,7 +33,8 @@ namespace rclcpp
 {
 
 /// Factory with functions used to create a Subscription<MessageT>.
-/* This factory class is used to encapsulate the template generated functions
+/**
+ * This factory class is used to encapsulate the template generated functions
  * which are used during the creation of a Message type specific subscription
  * within a non-templated class.
  *

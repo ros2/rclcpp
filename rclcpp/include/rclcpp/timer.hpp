@@ -64,13 +64,13 @@ public:
   get_timer_handle();
 
   /// Check how long the timer has until its next scheduled callback.
-  // \return A std::chrono::duration representing the relative time until the next callback.
+  /** \return A std::chrono::duration representing the relative time until the next callback. */
   RCLCPP_PUBLIC
   std::chrono::nanoseconds
   time_until_trigger();
 
   /// Is the clock steady (i.e. is the time between ticks constant?)
-  // \return True if the clock used by this timer is steady.
+  /** \return True if the clock used by this timer is steady. */
   virtual bool is_steady() = 0;
 
   /// Check if the timer is ready to trigger the callback.

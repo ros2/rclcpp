@@ -18,7 +18,8 @@
 #ifndef RCLCPP__MACROS_HPP_
 #define RCLCPP__MACROS_HPP_
 
-/* Disables the copy constructor and operator= for the given class.
+/**
+ * Disables the copy constructor and operator= for the given class.
  *
  * Use in the private section of the class.
  */
@@ -26,38 +27,41 @@
   __VA_ARGS__(const __VA_ARGS__ &) = delete; \
   __VA_ARGS__ & operator=(const __VA_ARGS__ &) = delete;
 
-/* Defines aliases and static functions for using the Class with smart pointers.
+/**
+ * Defines aliases and static functions for using the Class with smart pointers.
  *
  * Use in the public section of the class.
- * Make sure to include <memory> in the header when using this.
+ * Make sure to include `<memory>` in the header when using this.
  */
 #define RCLCPP_SMART_PTR_DEFINITIONS(...) \
   RCLCPP_SHARED_PTR_DEFINITIONS(__VA_ARGS__) \
   RCLCPP_WEAK_PTR_DEFINITIONS(__VA_ARGS__) \
   RCLCPP_UNIQUE_PTR_DEFINITIONS(__VA_ARGS__)
 
-/* Defines aliases and static functions for using the Class with smart pointers.
+/**
+ * Defines aliases and static functions for using the Class with smart pointers.
  *
  * Same as RCLCPP_SMART_PTR_DEFINITIONS expect it excludes the static
  * Class::make_unique() method definition which does not work on classes which
  * are not CopyConstructable.
  *
  * Use in the public section of the class.
- * Make sure to include <memory> in the header when using this.
+ * Make sure to include `<memory>` in the header when using this.
  */
 #define RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(...) \
   RCLCPP_SHARED_PTR_DEFINITIONS(__VA_ARGS__) \
   RCLCPP_WEAK_PTR_DEFINITIONS(__VA_ARGS__) \
   __RCLCPP_UNIQUE_PTR_ALIAS(__VA_ARGS__)
 
-/* Defines aliases only for using the Class with smart pointers.
+/**
+ * Defines aliases only for using the Class with smart pointers.
  *
  * Same as RCLCPP_SMART_PTR_DEFINITIONS expect it excludes the static
  * method definitions which do not work on pure virtual classes and classes
  * which are not CopyConstructable.
  *
  * Use in the public section of the class.
- * Make sure to include <memory> in the header when using this.
+ * Make sure to include `<memory>` in the header when using this.
  */
 #define RCLCPP_SMART_PTR_ALIASES_ONLY(...) \
   __RCLCPP_SHARED_PTR_ALIAS(__VA_ARGS__) \

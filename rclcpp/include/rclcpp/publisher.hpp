@@ -75,25 +75,25 @@ public:
   virtual ~PublisherBase();
 
   /// Get the topic that this publisher publishes on.
-  // \return The topic name.
+  /** \return The topic name. */
   RCLCPP_PUBLIC
   const char *
   get_topic_name() const;
 
   /// Get the queue size for this publisher.
-  // \return The queue size.
+  /** \return The queue size. */
   RCLCPP_PUBLIC
   size_t
   get_queue_size() const;
 
   /// Get the global identifier for this publisher (used in rmw and by DDS).
-  // \return The gid.
+  /** \return The gid. */
   RCLCPP_PUBLIC
   const rmw_gid_t &
   get_gid() const;
 
   /// Get the global identifier for this publisher used by intra-process communication.
-  // \return The intra-process gid.
+  /** \return The intra-process gid. */
   RCLCPP_PUBLIC
   const rmw_gid_t &
   get_intra_process_gid() const;
