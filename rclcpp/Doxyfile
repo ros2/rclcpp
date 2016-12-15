@@ -1,0 +1,19 @@
+# All settings not listed here will use the Doxygen default values.
+
+PROJECT_NAME           = "rclcpp"
+PROJECT_NUMBER         = beta1
+PROJECT_BRIEF          = "C++ ROS Client Library API"
+
+INPUT                  = ./include
+RECURSIVE              = YES
+OUTPUT_DIRECTORY       = doc_output
+
+EXTRACT_ALL            = YES
+SORT_MEMBER_DOCS       = NO
+
+GENERATE_LATEX         = NO
+
+TAGFILES += "../../../../doxygen_tag_files/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/"
+TAGFILES += "../../../../doxygen_tag_files/rcl.tag=http://docs.ros2.org/beta1/api/rcl/"
+TAGFILES += "../../../../doxygen_tag_files/rmw.tag=http://docs.ros2.org/beta1/api/rmw/"
+GENERATE_TAGFILE = "../../../../doxygen_tag_files/rclcpp.tag"
