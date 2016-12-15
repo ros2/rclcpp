@@ -88,6 +88,7 @@ public:
   // \return Shared pointer to the fresh message.
   virtual std::shared_ptr<void>
   create_message() = 0;
+
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.
@@ -164,13 +165,16 @@ public:
    * Behavior may be undefined if called while the subscription could be executing.
    * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
    */
-  void set_message_memory_strategy(
+  virtual void
+  set_message_memory_strategy(
     typename message_memory_strategy::MessageMemoryStrategy<MessageT,
     Alloc>::SharedPtr message_memory_strategy)
   {
     message_memory_strategy_ = message_memory_strategy;
   }
-  std::shared_ptr<void> create_message()
+
+  virtual std::shared_ptr<void>
+  create_message()
   {
     /* The default message memory strategy provides a dynamically allocated message on each call to
      * create_message, though alternative memory strategies that re-use a preallocated message may be
@@ -179,7 +183,8 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
+  virtual void
+  handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
   {
     if (matches_any_intra_process_publishers_) {
       if (matches_any_intra_process_publishers_(&message_info.publisher_gid)) {
@@ -192,13 +197,15 @@ public:
     any_callback_.dispatch(typed_message, message_info);
   }
 
-  void return_message(std::shared_ptr<void> & message)
+  virtual void
+  return_message(std::shared_ptr<void> & message)
   {
     auto typed_message = std::static_pointer_cast<MessageT>(message);
     message_memory_strategy_->return_message(typed_message);
   }
 
-  void handle_intra_process_message(
+  virtual void
+  handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info)
   {

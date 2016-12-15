@@ -77,8 +77,7 @@ create_subscription_factory(
   AnySubscriptionCallback<MessageT, Alloc> any_subscription_callback(allocator);
   any_subscription_callback.set(std::forward<CallbackT>(callback));
 
-  auto message_alloc =
-    std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
+  auto message_alloc = std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
 
   // factory function that creates a MessageT specific SubscriptionT
   factory.create_typed_subscription =
@@ -91,10 +90,10 @@ create_subscription_factory(
       subscription_options.allocator =
         rclcpp::allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
 
-      using rclcpp::subscription::Subscription;
+      //using rclcpp::subscription::Subscription;
       using rclcpp::subscription::SubscriptionBase;
 
-      auto sub = Subscription<MessageT, Alloc>::make_shared(
+      std::shared_ptr<SubscriptionT> sub = std::make_shared<SubscriptionT>(
         node_base->get_shared_rcl_node_handle(),
         topic_name,
         subscription_options,
@@ -126,7 +125,7 @@ create_subscription_factory(
         uint64_t publisher_id,
         uint64_t message_sequence,
         uint64_t subscription_id,
-        typename rclcpp::subscription::Subscription<MessageT, Alloc>::MessageUniquePtr & message)
+        typename SubscriptionT::MessageUniquePtr & message)
         {
           auto ipm = weak_ipm.lock();
           if (!ipm) {
