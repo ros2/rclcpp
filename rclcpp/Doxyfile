@@ -13,6 +13,11 @@ SORT_MEMBER_DOCS       = NO
 
 GENERATE_LATEX         = NO
 
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = RCLCPP_PUBLIC=
+
 # Tag files that do not exist will produce a warning and cross-project linking will not work.
 TAGFILES += "../../../../doxygen_tag_files/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/"
 # Consider changing "latest" to the version you want to reference (e.g. beta1 or 1.0.0)
