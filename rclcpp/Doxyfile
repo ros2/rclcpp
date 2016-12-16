@@ -19,4 +19,4 @@ TAGFILES += "../../../../doxygen_tag_files/cppreference-doxygen-web.tag.xml=http
 TAGFILES += "../../../../doxygen_tag_files/rcl.tag=http://docs.ros2.org/latest/api/rcl/"
 TAGFILES += "../../../../doxygen_tag_files/rmw.tag=http://docs.ros2.org/latest/api/rmw/"
 # Uncomment to generate tag files for cross-project linking.
-GENERATE_TAGFILE = "../../../../doxygen_tag_files/rclcpp.tag"
+#GENERATE_TAGFILE = "../../../../doxygen_tag_files/rclcpp.tag"
