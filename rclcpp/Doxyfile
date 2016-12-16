@@ -1,7 +1,7 @@
 # All settings not listed here will use the Doxygen default values.
 
 PROJECT_NAME           = "rclcpp"
-PROJECT_NUMBER         = beta1
+PROJECT_NUMBER         = master
 PROJECT_BRIEF          = "C++ ROS Client Library API"
 
 INPUT                  = ./include
