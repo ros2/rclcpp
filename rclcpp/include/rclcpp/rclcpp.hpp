@@ -19,7 +19,6 @@
 #include <memory>
 
 #include "rclcpp/executors.hpp"
-#include "rclcpp/literals.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_client.hpp"
