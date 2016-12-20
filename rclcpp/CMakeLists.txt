@@ -155,7 +155,7 @@ if(BUILD_TESTING)
 
   set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
   if(WIN32)
-    set(append_library_dirs "${append_library_dirs}/$<CONFIGURATION>")
+    set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
   endif()
 
   ament_add_gtest(test_externally_defined_services test/test_externally_defined_services.cpp
