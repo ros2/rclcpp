@@ -39,14 +39,14 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBaseInterface)
 
   /// Return the name of the node.
-  // \return The name of the node.
+  /** \return The name of the node. */
   RCLCPP_PUBLIC
   virtual
   const char *
   get_name() const = 0;
 
   /// Return the context of the node.
-  // \return SharedPtr to the node's context.
+  /** \return SharedPtr to the node's context. */
   RCLCPP_PUBLIC
   virtual
   rclcpp::context::Context::SharedPtr
@@ -65,7 +65,8 @@ public:
   get_rcl_node_handle() const = 0;
 
   /// Return the rcl_node_t node handle in a std::shared_ptr.
-  /* This handle remains valid after the Node is destroyed.
+  /**
+   * This handle remains valid after the Node is destroyed.
    * The actual rcl node is not finalized until it is out of scope everywhere.
    */
   RCLCPP_PUBLIC
@@ -74,7 +75,8 @@ public:
   get_shared_rcl_node_handle() = 0;
 
   /// Return the rcl_node_t node handle in a std::shared_ptr.
-  /* This handle remains valid after the Node is destroyed.
+  /**
+   * This handle remains valid after the Node is destroyed.
    * The actual rcl node is not finalized until it is out of scope everywhere.
    */
   RCLCPP_PUBLIC
@@ -113,7 +115,8 @@ public:
   get_associated_with_executor_atomic() = 0;
 
   /// Return guard condition that should be notified when the internal node state changes.
-  /* For example, this should be notified when a publisher is added or removed.
+  /**
+   * For example, this should be notified when a publisher is added or removed.
    *
    * \return the rcl_guard_condition_t if it is valid, else nullptr
    */
@@ -123,7 +126,7 @@ public:
   get_notify_guard_condition() = 0;
 
   /// Acquire and return a scoped lock that protects the notify guard condition.
-  /* This should be used when triggering the notify guard condition. */
+  /** This should be used when triggering the notify guard condition. */
   RCLCPP_PUBLIC
   virtual
   std::unique_lock<std::recursive_mutex>

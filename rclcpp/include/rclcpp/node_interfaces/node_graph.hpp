@@ -119,7 +119,7 @@ private:
   /// Weak references to graph events out on loan.
   std::vector<rclcpp::event::Event::WeakPtr> graph_events_;
   /// Number of graph events out on loan, used to determine if the graph should be monitored.
-  /* graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
+  /** graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
   std::atomic_size_t graph_users_count_;
 };
 

@@ -36,7 +36,7 @@ public:
 };
 
 /// Throw a C++ std::exception which was created based on an rcl error.
-/*
+/**
  * \param ret the return code for the current error state
  * \param prefix string to prefix to the error if applicable (not all errors have custom messages)
  * \param reset_error if true rcl_reset_error() is called before returning

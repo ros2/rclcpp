@@ -39,7 +39,8 @@ public:
 };
 
 /// Ring buffer container of unique_ptr's of T, which can be accessed by a key.
-/* T must be a CopyConstructable and CopyAssignable.
+/**
+ * T must be a CopyConstructable and CopyAssignable.
  * This class can be used in a container by using the base class MappedRingBufferBase.
  * This class must have a positive, non-zero size.
  * This class cannot be resized nor can it reserve additional space after construction.
@@ -66,9 +67,11 @@ public:
   using ElemUniquePtr = std::unique_ptr<T, ElemDeleter>;
 
   /// Constructor.
-  /* The constructor will allocate memory while reserving space.
+  /**
+   * The constructor will allocate memory while reserving space.
    *
    * \param size size of the ring buffer; must be positive and non-zero.
+   * \param allocator optional custom allocator
    */
   explicit MappedRingBuffer(size_t size, std::shared_ptr<Alloc> allocator = nullptr)
   : elements_(size), head_(0)
@@ -86,7 +89,8 @@ public:
   virtual ~MappedRingBuffer() {}
 
   /// Return a copy of the value stored in the ring buffer at the given key.
-  /* The key is matched if an element in the ring buffer has a matching key.
+  /**
+   * The key is matched if an element in the ring buffer has a matching key.
    * This method will allocate in order to return a copy.
    *
    * The key is not guaranteed to be unique, see the class docs for more.
@@ -110,7 +114,8 @@ public:
   }
 
   /// Return ownership of the value stored in the ring buffer, leaving a copy.
-  /* The key is matched if an element in the ring bufer has a matching key.
+  /**
+   * The key is matched if an element in the ring bufer has a matching key.
    * This method will allocate in order to store a copy.
    *
    * The key is not guaranteed to be unique, see the class docs for more.
@@ -147,7 +152,8 @@ public:
   }
 
   /// Return ownership of the value stored in the ring buffer at the given key.
-  /* The key is matched if an element in the ring buffer has a matching key.
+  /**
+   * The key is matched if an element in the ring buffer has a matching key.
    *
    * The key is not guaranteed to be unique, see the class docs for more.
    *
@@ -169,7 +175,8 @@ public:
   }
 
   /// Insert a key-value pair, displacing an existing pair if necessary.
-  /* The key's uniqueness is not checked on insertion.
+  /**
+   * The key's uniqueness is not checked on insertion.
    * It is up to the user to ensure the key is unique.
    * This method should not allocate memory.
    *

@@ -89,7 +89,7 @@ public:
   virtual ~Node();
 
   /// Get the name of the node.
-  // \return The name of the node.
+  /** \return The name of the node. */
   RCLCPP_PUBLIC
   const char *
   get_name() const;
@@ -108,6 +108,7 @@ public:
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created publisher.
    */
   template<
@@ -122,6 +123,7 @@ public:
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
+   * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created publisher.
    */
   template<
@@ -141,6 +143,7 @@ public:
    * \param[in] group The callback group for this subscription. NULL for no callback group.
    * \param[in] ignore_local_publications True to ignore local publications.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created subscription.
    */
   /* TODO(jacquelinekay):
@@ -171,6 +174,7 @@ public:
    * \param[in] group The callback group for this subscription. NULL for no callback group.
    * \param[in] ignore_local_publications True to ignore local publications.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created subscription.
    */
   /* TODO(jacquelinekay):
@@ -263,7 +267,8 @@ public:
 
   /// Register the callback for parameter changes
   /**
-   * \param[in] User defined callback function, It is expected to atomically set parameters.
+   * \param[in] callback User defined callback function.
+   *   It is expected to atomically set parameters.
    * \note Repeated invocations of this function will overwrite previous callbacks
    */
   template<typename CallbackT>
@@ -292,7 +297,8 @@ public:
   get_graph_event();
 
   /// Wait for a graph event to occur by waiting on an Event to become set.
-  /* The given Event must be acquire through the get_graph_event() method.
+  /**
+   * The given Event must be acquire through the get_graph_event() method.
    *
    * \throws InvalidEventError if the given event is nullptr
    * \throws EventNotRegisteredError if the given event was not acquired with

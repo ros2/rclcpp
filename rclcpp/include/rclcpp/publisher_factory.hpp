@@ -32,7 +32,8 @@ namespace rclcpp
 {
 
 /// Factory with functions used to create a MessageT specific PublisherT.
-/* This factory class is used to encapsulate the template generated functions
+/**
+ * This factory class is used to encapsulate the template generated functions
  * which are used during the creation of a Message type specific publisher
  * within a non-templated class.
  *

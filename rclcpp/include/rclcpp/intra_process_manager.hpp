@@ -40,7 +40,8 @@ namespace intra_process_manager
 {
 
 /// This class facilitates intra process communication between nodes.
-/* This class is used in the creation of publishers and subscriptions.
+/**
+ * This class is used in the creation of publishers and subscriptions.
  * A singleton instance of this class is owned by a rclcpp::Context and a
  * rclcpp::Node can use an associated Context to get an instance of this class.
  * Nodes which do not have a common Context will not exchange intra process
@@ -133,7 +134,8 @@ public:
   virtual ~IntraProcessManager();
 
   /// Register a subscription with the manager, returns subscriptions unique id.
-  /* In addition to generating a unique intra process id for the subscription,
+  /**
+   * In addition to generating a unique intra process id for the subscription,
    * this method also stores the topic name of the subscription.
    *
    * This method is normally called during the creation of a subscription,
@@ -149,7 +151,8 @@ public:
   add_subscription(subscription::SubscriptionBase::SharedPtr subscription);
 
   /// Unregister a subscription using the subscription's unique id.
-  /* This method does not allocate memory.
+  /**
+   * This method does not allocate memory.
    *
    * \param intra_process_subscription_id id of the subscription to remove.
    */
@@ -158,7 +161,8 @@ public:
   remove_subscription(uint64_t intra_process_subscription_id);
 
   /// Register a publisher with the manager, returns the publisher unique id.
-  /* In addition to generating and returning a unique id for the publisher,
+  /**
+   * In addition to generating and returning a unique id for the publisher,
    * this method creates internal ring buffer storage for "in-flight" intra
    * process messages which are stored when store_intra_process_message is
    * called with this publisher's unique id.
@@ -194,7 +198,8 @@ public:
   }
 
   /// Unregister a publisher using the publisher's unique id.
-  /* This method does not allocate memory.
+  /**
+   * This method does not allocate memory.
    *
    * \param intra_process_publisher_id id of the publisher to remove.
    */
@@ -203,7 +208,8 @@ public:
   remove_publisher(uint64_t intra_process_publisher_id);
 
   /// Store a message in the manager, and return the message sequence number.
-  /* The given message is stored in internal storage using the given publisher
+  /**
+   * The given message is stored in internal storage using the given publisher
    * id and the newly generated message sequence, which is also returned.
    * The combination of publisher id and message sequence number can later
    * be used with a subscription id to retrieve the message by calling
@@ -261,7 +267,8 @@ public:
   }
 
   /// Take an intra process message.
-  /* The intra_process_publisher_id and message_sequence_number parameters
+  /**
+   * The intra_process_publisher_id and message_sequence_number parameters
    * uniquely identify a message instance, which should be taken.
    *
    * The requesting_subscriptions_intra_process_id parameter is used to make

@@ -37,7 +37,8 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeGraphInterface)
 
   /// Return a map of existing topic names (string) to topic types (string).
-  /* A topic is considered to exist when at least one publisher or subscriber
+  /**
+   * A topic is considered to exist when at least one publisher or subscriber
    * exists for it, whether they be local or remote to this process.
    */
   RCLCPP_PUBLIC
@@ -64,7 +65,8 @@ public:
   get_graph_guard_condition() const = 0;
 
   /// Notify threads waiting on graph changes.
-  /* Affects threads waiting on the notify guard condition, see:
+  /**
+   * Affects threads waiting on the notify guard condition, see:
    * get_notify_guard_condition(), as well as the threads waiting on graph
    * changes using a graph Event, see: wait_for_graph_change().
    *
@@ -84,7 +86,8 @@ public:
   notify_shutdown() = 0;
 
   /// Return a graph event, which will be set anytime a graph change occurs.
-  /* The graph Event object is a loan which must be returned.
+  /**
+   * The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the load just let it go
    * out of scope.
    */
@@ -94,7 +97,8 @@ public:
   get_graph_event() = 0;
 
   /// Wait for a graph event to occur by waiting on an Event to become set.
-  /* The given Event must be acquire through the get_graph_event() method.
+  /**
+   * The given Event must be acquire through the get_graph_event() method.
    *
    * \throws InvalidEventError if the given event is nullptr
    * \throws EventNotRegisteredError if the given event was not acquired with
@@ -108,7 +112,8 @@ public:
     std::chrono::nanoseconds timeout) = 0;
 
   /// Return the number of on loan graph events, see get_graph_event().
-  /* This is typically only used by the rclcpp::graph_listener::GraphListener.
+  /**
+   * This is typically only used by the rclcpp::graph_listener::GraphListener.
    */
   RCLCPP_PUBLIC
   virtual
