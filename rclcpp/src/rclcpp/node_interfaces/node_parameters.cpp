@@ -226,5 +226,9 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
 void
 NodeParameters::register_param_change_callback(ParametersCallbackFunction callback)
 {
+  if (parameters_callback_) {
+    fprintf(stderr, "Warning: param_change_callback already registered, "
+      "overwriting previous callback\n");
+  }
   parameters_callback_ = callback;
 }
