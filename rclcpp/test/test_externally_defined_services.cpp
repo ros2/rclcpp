@@ -83,8 +83,8 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
   // mock for externally defined service
   rcl_service_t service_handle = rcl_get_zero_initialized_service();
   rcl_service_options_t service_options = rcl_service_get_default_options();
-  const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT(
-    rclcpp, srv, Mock);
+  const rosidl_service_type_support_t * ts =
+    rosidl_typesupport_cpp::get_service_type_support_handle<rclcpp::srv::Mock>();
   rcl_ret_t ret = rcl_service_init(
     &service_handle,
     node_handle->get_node_base_interface()->get_rcl_node_handle(),
@@ -114,8 +114,8 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
   // mock for externally defined service
   rcl_service_t service_handle = rcl_get_zero_initialized_service();
   rcl_service_options_t service_options = rcl_service_get_default_options();
-  const rosidl_service_type_support_t * ts = ROSIDL_GET_TYPE_SUPPORT(
-    rclcpp, srv, Mock);
+  const rosidl_service_type_support_t * ts =
+    rosidl_typesupport_cpp::get_service_type_support_handle<rclcpp::srv::Mock>();
   rcl_ret_t ret = rcl_service_init(
     &service_handle,
     node_handle->get_node_base_interface()->get_rcl_node_handle(),
