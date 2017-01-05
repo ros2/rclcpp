@@ -29,9 +29,9 @@ macro(targets)
     src/transition.cpp
   )
   ament_target_dependencies(rclcpp_lifecycle${target_suffix}
-    "rclcpp${target_suffix}"
+    "lifecycle_msgs"
     "rcl_lifecycle${target_suffix}"
-    "lifecycle_msgs")
+    "rclcpp${target_suffix}")
 
   # Causes the visibility macros to use dllexport rather than dllimport,
   # which is appropriate when building the dll but not consuming it.
