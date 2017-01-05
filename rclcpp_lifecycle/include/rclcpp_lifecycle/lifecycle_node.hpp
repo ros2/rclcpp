@@ -356,7 +356,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  trigger_transition(unsigned int transition_id);
+  trigger_transition(uint8_t transition_id);
 
   RCLCPP_LIFECYCLE_PUBLIC
   bool

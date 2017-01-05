@@ -202,7 +202,7 @@ public:
       throw std::runtime_error(
               "Can't get available states. State machine is not initialized.");
     }
-    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
+    for (uint8_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
       lifecycle_msgs::msg::State state;
       state.id = static_cast<uint8_t>(state_machine_.transition_map.states[i].id);
       state.label = static_cast<std::string>(state_machine_.transition_map.states[i].label);
@@ -223,7 +223,7 @@ public:
       return;
     }
 
-    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+    for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
       rcl_lifecycle_transition_t & rcl_transition = state_machine_.transition_map.transitions[i];
       lifecycle_msgs::msg::TransitionDescription trans_desc;
       trans_desc.transition.id = rcl_transition.id;
@@ -247,7 +247,7 @@ public:
   get_available_states()
   {
     std::vector<State> states;
-    for (unsigned int i = 0; i < state_machine_.transition_map.states_size; ++i) {
+    for (uint8_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
       State state(&state_machine_.transition_map.states[i]);
       states.push_back(state);
     }
@@ -259,7 +259,7 @@ public:
   {
     std::vector<Transition> transitions;
 
-    for (unsigned int i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
+    for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
       Transition transition(
         &state_machine_.transition_map.transitions[i]);
       transitions.push_back(transition);
@@ -279,7 +279,7 @@ public:
     // keep the initial state to pass to a transition callback
     State initial_state(state_machine_.current_state);
 
-    unsigned int transition_id = static_cast<unsigned int>(lifecycle_transition);
+    uint8_t transition_id = lifecycle_transition;
     if (rcl_lifecycle_trigger_transition(&state_machine_, transition_id, true) != RCL_RET_OK) {
       fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s: %s\n",
         __FILE__, __LINE__, transition_id,
@@ -348,7 +348,7 @@ public:
   }
 
   const State &
-  trigger_transition(unsigned int transition_id)
+  trigger_transition(uint8_t transition_id)
   {
     change_state(transition_id);
     return get_current_state();

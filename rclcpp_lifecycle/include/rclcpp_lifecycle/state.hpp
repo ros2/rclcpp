@@ -32,7 +32,7 @@ public:
   State();
 
   RCLCPP_LIFECYCLE_PUBLIC
-  State(unsigned int id, const std::string & label);
+  State(uint8_t id, const std::string & label);
 
   RCLCPP_LIFECYCLE_PUBLIC
   explicit State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle);
@@ -41,7 +41,7 @@ public:
   virtual ~State();
 
   RCLCPP_LIFECYCLE_PUBLIC
-  unsigned int
+  uint8_t
   id() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
