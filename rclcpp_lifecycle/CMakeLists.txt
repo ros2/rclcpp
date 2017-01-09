@@ -10,41 +10,33 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_lifecycle REQUIRED)
-find_package(rmw_implementation_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
 include_directories(include)
 
-macro(targets)
-  get_rclcpp_information("${rmw_implementation}" "rclcpp${target_suffix}")
-  get_rcl_lifecycle_information("${rmw_implementation}" "rcl_lifecycle${target_suffix}")
+### CPP High level library
+add_library(rclcpp_lifecycle
+  SHARED
+  src/lifecycle_node.cpp
+  src/node_interfaces/lifecycle_node_interface.cpp
+  src/state.cpp
+  src/transition.cpp
+)
+ament_target_dependencies(rclcpp_lifecycle
+  "lifecycle_msgs"
+  "rcl_lifecycle"
+  "rclcpp")
 
-  ### CPP High level library
-  add_library(rclcpp_lifecycle${target_suffix}
-    SHARED
-    src/lifecycle_node.cpp
-    src/node_interfaces/lifecycle_node_interface.cpp
-    src/state.cpp
-    src/transition.cpp
-  )
-  ament_target_dependencies(rclcpp_lifecycle${target_suffix}
-    "lifecycle_msgs"
-    "rcl_lifecycle${target_suffix}"
-    "rclcpp${target_suffix}")
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(rclcpp_lifecycle PRIVATE "RCLCPP_LIFECYCLE_BUILDING_DLL")
 
-  # Causes the visibility macros to use dllexport rather than dllimport,
-  # which is appropriate when building the dll but not consuming it.
-  target_compile_definitions(rclcpp_lifecycle${target_suffix} PRIVATE "RCLCPP_LIFECYCLE_BUILDING_DLL")
-
-  install(TARGETS
-    rclcpp_lifecycle${target_suffix}
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin)
-endmacro()
-
-call_for_each_rmw_implementation(targets GENERATE_DEFAULT)
+install(TARGETS
+  rclcpp_lifecycle
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

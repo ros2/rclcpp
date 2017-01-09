@@ -7,7 +7,6 @@ find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
-find_package(rmw_implementation_cmake REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
@@ -54,31 +53,24 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/utilities.cpp
 )
 
-macro(target)
-  if(NOT target_suffix STREQUAL "")
-    get_rcl_information("${rmw_implementation}" "rcl${target_suffix}")
-  endif()
-  add_library(${PROJECT_NAME}${target_suffix} SHARED
-    ${${PROJECT_NAME}_SRCS})
-  ament_target_dependencies(${PROJECT_NAME}${target_suffix}
-    "rcl${target_suffix}"
-    "rosidl_generator_cpp"
-    "rosidl_typesupport_cpp")
+add_library(${PROJECT_NAME} SHARED
+  ${${PROJECT_NAME}_SRCS})
+ament_target_dependencies(${PROJECT_NAME}
+  "rcl"
+  "rosidl_generator_cpp"
+  "rosidl_typesupport_cpp")
 
-  # Causes the visibility macros to use dllexport rather than dllimport,
-  # which is appropriate when building the dll but not consuming it.
-  target_compile_definitions(${PROJECT_NAME}${target_suffix}
-    PRIVATE "RCLCPP_BUILDING_LIBRARY")
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(${PROJECT_NAME}
+  PRIVATE "RCLCPP_BUILDING_LIBRARY")
 
-  install(
-    TARGETS ${PROJECT_NAME}${target_suffix}
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
-  )
-endmacro()
-
-call_for_each_rmw_implementation(target GENERATE_DEFAULT)
+install(
+  TARGETS ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
@@ -93,6 +85,8 @@ ament_export_libraries(${PROJECT_NAME})
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(rmw_implementation_cmake REQUIRED)
 
   ament_add_gtest(test_function_traits test/test_function_traits.cpp)
   if(TARGET test_function_traits)
