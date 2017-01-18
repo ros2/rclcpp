@@ -266,7 +266,7 @@ Executor::execute_subscription(
   if (ret == RCL_RET_OK) {
     message_info.from_intra_process = false;
     subscription->handle_message(message, message_info);
-  } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
+  } else if (ret == RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
       subscription->get_topic_name(), rcl_get_error_string_safe());
