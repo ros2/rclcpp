@@ -16,6 +16,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "rcl/graph.h"
 #include "rclcpp/exceptions.hpp"
@@ -73,6 +74,33 @@ NodeGraph::get_topic_names_and_types() const
   }
 
   return topics;
+}
+
+std::vector<std::string>
+NodeGraph::get_node_names() const
+{
+  rcl_node_names_t node_names_c =
+    rcl_get_zero_initialized_node_names();
+
+  auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
+      &node_names_c);
+  if (ret != RMW_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("could not get node names: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
+
+  std::vector<std::string> node_names(&node_names_c.names[0], &node_names_c.names[0 + node_names_c.node_count]);
+  ret = rmw_destroy_node_names(&node_names_c);
+  if (ret != RMW_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("could not destroy node names: ") + rmw_get_error_string_safe());
+    // *INDENT-ON*
+  }
+
+  return node_names;
 }
 
 size_t
