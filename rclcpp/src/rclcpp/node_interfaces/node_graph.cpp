@@ -79,8 +79,8 @@ NodeGraph::get_topic_names_and_types() const
 std::vector<std::string>
 NodeGraph::get_node_names() const
 {
-  rcl_node_names_t node_names_c =
-    rcl_get_zero_initialized_node_names();
+  rcl_string_array_t node_names_c =
+    rcl_get_zero_initialized_string_array();
 
   auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
       &node_names_c);
@@ -91,8 +91,8 @@ NodeGraph::get_node_names() const
     // *INDENT-ON*
   }
 
-  std::vector<std::string> node_names(&node_names_c.names[0],
-    &node_names_c.names[0 + node_names_c.node_count]);
+  std::vector<std::string> node_names(&node_names_c.data[0],
+    &node_names_c.data[0 + node_names_c.size]);
   ret = rmw_destroy_node_names(&node_names_c);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
