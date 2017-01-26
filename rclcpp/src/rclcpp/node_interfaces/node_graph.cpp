@@ -85,6 +85,9 @@ NodeGraph::get_node_names() const
   auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
       &node_names_c);
   if (ret != RMW_RET_OK) {
+    if (rmw_destroy_node_names(&node_names_c) != RMW_RET_OK) {
+      RMW_SET_ERROR_MSG("Fatal: Leaking node_name memory.");
+    }
     // *INDENT-OFF*
     throw std::runtime_error(
       std::string("could not get node names: ") + rmw_get_error_string_safe());
