@@ -91,7 +91,8 @@ NodeGraph::get_node_names() const
     // *INDENT-ON*
   }
 
-  std::vector<std::string> node_names(&node_names_c.names[0], &node_names_c.names[0 + node_names_c.node_count]);
+  std::vector<std::string> node_names(&node_names_c.names[0],
+    &node_names_c.names[0 + node_names_c.node_count]);
   ret = rmw_destroy_node_names(&node_names_c);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
