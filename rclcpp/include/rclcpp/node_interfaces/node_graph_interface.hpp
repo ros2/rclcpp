@@ -1,4 +1,4 @@
-// Copyright 2016 Open Source Robotics Foundation, Inc.
+// Copyright 2016-2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #include <chrono>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "rcl/guard_condition.h"
 
@@ -45,6 +46,12 @@ public:
   virtual
   std::map<std::string, std::string>
   get_topic_names_and_types() const = 0;
+
+  /// Return a vector of existing node names (string).
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::string>
+  get_node_names() const = 0;
 
   /// Return the number of publishers that are advertised on a given topic.
   RCLCPP_PUBLIC
