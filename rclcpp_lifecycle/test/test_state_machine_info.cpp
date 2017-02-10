@@ -34,7 +34,7 @@ TEST_F(TestStateMachineInfo, available_states) {
   auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
   std::vector<rclcpp_lifecycle::State> available_states =
     test_node->get_available_states();
-  EXPECT_EQ(11, available_states.size());
+  EXPECT_EQ(11u, available_states.size());
 
   // Primary States
   EXPECT_EQ(0, available_states[0].id());  // unknown
