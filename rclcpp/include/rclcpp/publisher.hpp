@@ -261,6 +261,15 @@ public:
     return this->publish(unique_msg);
   }
 
+  virtual void
+  publish(const MessageT * msg)
+  {
+    if (!msg) {
+      throw std::runtime_error("msg argument is nullptr");
+    }
+    return this->publish(*msg);
+  }
+
   std::shared_ptr<MessageAlloc> get_allocator() const
   {
     return message_allocator_;

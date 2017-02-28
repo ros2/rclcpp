@@ -125,6 +125,15 @@ public:
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  virtual void
+  publish(const MessageT * msg)
+  {
+    if (!msg) {
+      throw std::runtime_error("msg argument is nullptr");
+    }
+    this->publish(*msg);
+  }
+
   /// LifecyclePublisher pulish function
   /**
    * The publish function checks whether the communication
