@@ -289,7 +289,7 @@ LifecycleNode::trigger_transition(const Transition & transition)
 }
 
 const State &
-LifecycleNode::trigger_transition(unsigned int transition_id)
+LifecycleNode::trigger_transition(uint8_t transition_id)
 {
   return impl_->trigger_transition(transition_id);
 }

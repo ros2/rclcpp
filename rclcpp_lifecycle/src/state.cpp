@@ -26,7 +26,7 @@ State::State()
 : State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown")
 {}
 
-State::State(unsigned int id, const std::string & label)
+State::State(uint8_t id, const std::string & label)
 : owns_rcl_state_handle_(true)
 {
   if (label.empty()) {
@@ -53,7 +53,7 @@ State::~State()
   }
 }
 
-unsigned int
+uint8_t
 State::id() const
 {
   return state_handle_->id;

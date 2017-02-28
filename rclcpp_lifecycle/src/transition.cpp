@@ -22,7 +22,7 @@
 namespace rclcpp_lifecycle
 {
 
-Transition::Transition(unsigned int id, const std::string & label)
+Transition::Transition(uint8_t id, const std::string & label)
 : owns_rcl_transition_handle_(true)
 {
   auto transition_handle = new rcl_lifecycle_transition_t;
@@ -35,7 +35,7 @@ Transition::Transition(unsigned int id, const std::string & label)
 }
 
 Transition::Transition(
-  unsigned int id, const std::string & label,
+  uint8_t id, const std::string & label,
   State && start, State && goal)
 : owns_rcl_transition_handle_(true)
 {
@@ -75,7 +75,7 @@ Transition::~Transition()
   }
 }
 
-unsigned int
+uint8_t
 Transition::id() const
 {
   return transition_handle_->id;

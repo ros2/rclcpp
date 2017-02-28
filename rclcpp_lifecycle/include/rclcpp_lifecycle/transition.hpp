@@ -33,11 +33,11 @@ public:
   Transition() = delete;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  explicit Transition(unsigned int id, const std::string & label = "");
+  explicit Transition(uint8_t id, const std::string & label = "");
 
   RCLCPP_LIFECYCLE_PUBLIC
   Transition(
-    unsigned int id, const std::string & label,
+    uint8_t id, const std::string & label,
     State && start, State && goal);
 
   RCLCPP_LIFECYCLE_PUBLIC
@@ -47,7 +47,7 @@ public:
   virtual ~Transition();
 
   RCLCPP_LIFECYCLE_PUBLIC
-  unsigned int
+  uint8_t
   id() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
