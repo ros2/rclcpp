@@ -218,6 +218,20 @@ Node::get_parameter(const std::string & name, ParameterT & parameter) const
   return result;
 }
 
+template<typename ParameterT>
+bool
+Node::get_parameter(
+  const std::string & name,
+  ParameterT & parameter,
+  const ParameterT & default_value) const
+{
+  bool got_parameter = get_parameter(name, parameter);
+  if (!got_parameter) {
+    parameter = default_value;
+  }
+  return got_parameter;
+}
+
 }  // namespace node
 }  // namespace rclcpp
 

@@ -253,6 +253,13 @@ public:
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
 
+  template<typename ParameterT>
+  bool
+  get_parameter(
+    const std::string & name,
+    ParameterT & parameter,
+    const ParameterT & default_value) const;
+
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
