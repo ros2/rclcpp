@@ -130,6 +130,7 @@
 #include "rclcpp/parameter_client.hpp"
 #include "rclcpp/parameter_service.hpp"
 #include "rclcpp/rate.hpp"
+#include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
