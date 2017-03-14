@@ -82,7 +82,9 @@ ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_typesupport_cpp)
 
-ament_export_include_directories(include)
+ament_export_include_directories(
+  include
+  ${builtin_interfaces_INCLUDE_DIRS})
 
 ament_export_libraries(${PROJECT_NAME})
 
@@ -173,6 +175,15 @@ if(BUILD_TESTING)
       rosidl_target_interfaces(test_externally_defined_services
         mock_msgs ${typesupport_impl_c})
     endforeach()
+  endif()
+
+  ament_add_gtest(test_time test/test_time.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_time)
+    target_include_directories(test_time PUBLIC
+      ${rcl_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_time ${PROJECT_NAME})
   endif()
 endif()
 

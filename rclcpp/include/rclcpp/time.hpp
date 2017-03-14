@@ -25,18 +25,28 @@ namespace rclcpp
 namespace time
 {
 
-template<class ClockT = std::chrono::high_resolution_clock>
+template<rcl_time_source_type_t ClockT = RCL_SYSTEM_TIME>
 builtin_interfaces::msg::Time now()
 {
   builtin_interfaces::msg::Time now;
   now.sec = 0;
   now.nanosec = 0;
-  auto now_nanosec = ClockT::now().time_since_epoch();
-  if (now_nanosec > std::chrono::nanoseconds(0)) {
-    now.sec = static_cast<builtin_interfaces::msg::Time::_sec_type>(
-      RCL_NS_TO_S(now_nanosec.count()));
-    now.nanosec = now_nanosec.count() % (1000 * 1000 * 1000);
+  rcl_time_point_value_t rcl_now = 0;
+  rcl_ret_t ret = RCL_RET_ERROR;
+  if (ClockT == RCL_ROS_TIME) {
+    // ret = rcl_ros_time_now(&rcl_now);
+    fprintf(stderr, "RCL_ROS_TIME is currently not implemented.\n");
+    ret = false;
+  } else if (ClockT == RCL_ROS_TIME) {
+    ret = rcl_system_time_now(&rcl_now);
+  } else if (ClockT == RCL_STEADY_TIME) {
+    ret = rcl_steady_time_now(&rcl_now);
   }
+  if (ret != RCL_RET_OK) {
+    fprintf(stderr, "Could not get current time: %s\n", rcl_get_error_string_safe());
+  }
+  now.sec = RCL_NS_TO_S(rcl_now);
+  now.nanosec = rcl_now % (1000 * 1000 * 1000);
   return now;
 }
 
