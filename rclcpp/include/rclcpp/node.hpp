@@ -257,7 +257,7 @@ public:
   bool
   get_parameter(
     const std::string & name,
-    ParameterT & parameter,
+    ParameterT & value,
     const ParameterT & default_value) const;
 
   RCLCPP_PUBLIC
