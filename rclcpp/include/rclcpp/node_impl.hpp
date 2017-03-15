@@ -222,12 +222,12 @@ template<typename ParameterT>
 bool
 Node::get_parameter(
   const std::string & name,
-  ParameterT & parameter,
+  ParameterT & value,
   const ParameterT & default_value) const
 {
-  bool got_parameter = get_parameter(name, parameter);
+  bool got_parameter = get_parameter(name, value);
   if (!got_parameter) {
-    parameter = default_value;
+    value = default_value;
   }
   return got_parameter;
 }
