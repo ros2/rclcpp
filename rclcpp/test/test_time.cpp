@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,24 +18,34 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/time.hpp"
 
-TEST(TestRate, rate_basics) {
-  using builtin_interfaces::msg::Time;
-  Time ros_now = rclcpp::time::now<RCL_ROS_TIME>();
-  EXPECT_NE(0, ros_now.sec);
-  EXPECT_NE(0, ros_now.nanosec);
+class TestTime : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+};
 
-  Time system_now = rclcpp::time::now<RCL_SYSTEM_TIME>();
+TEST(TestTime, rate_basics) {
+  using builtin_interfaces::msg::Time;
+  Time ros_now = rclcpp::Time::now<RCL_ROS_TIME>();
+  EXPECT_EQ(0, ros_now.sec);
+  EXPECT_EQ(0, ros_now.nanosec);
+
+  Time system_now = rclcpp::Time::now<RCL_SYSTEM_TIME>();
   EXPECT_NE(0, system_now.sec);
   EXPECT_NE(0, system_now.nanosec);
 
-  Time steady_now = rclcpp::time::now<RCL_STEADY_TIME>();
+  Time steady_now = rclcpp::Time::now<RCL_STEADY_TIME>();
   EXPECT_NE(0, steady_now.sec);
   EXPECT_NE(0, steady_now.nanosec);
 
   // default
-  Time default_now = rclcpp::time::now();
+  Time default_now = rclcpp::Time::now();
   EXPECT_NE(0, default_now.sec);
   EXPECT_NE(0, default_now.nanosec);
 }

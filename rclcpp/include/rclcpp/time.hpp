@@ -16,41 +16,58 @@
 #define RCLCPP__TIME_HPP_
 
 #include <chrono>
+#include <utility>
 
 #include "builtin_interfaces/msg/time.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
-namespace time
-{
 
-template<rcl_time_source_type_t ClockT = RCL_SYSTEM_TIME>
-builtin_interfaces::msg::Time now()
+class Time
 {
-  builtin_interfaces::msg::Time now;
-  now.sec = 0;
-  now.nanosec = 0;
-  rcl_time_point_value_t rcl_now = 0;
-  rcl_ret_t ret = RCL_RET_ERROR;
-  if (ClockT == RCL_ROS_TIME) {
-    // ret = rcl_ros_time_now(&rcl_now);
-    fprintf(stderr, "RCL_ROS_TIME is currently not implemented.\n");
-    ret = false;
-  } else if (ClockT == RCL_ROS_TIME) {
-    ret = rcl_system_time_now(&rcl_now);
-  } else if (ClockT == RCL_STEADY_TIME) {
-    ret = rcl_steady_time_now(&rcl_now);
-  }
-  if (ret != RCL_RET_OK) {
-    fprintf(stderr, "Could not get current time: %s\n", rcl_get_error_string_safe());
-  }
-  now.sec = RCL_NS_TO_S(rcl_now);
-  now.nanosec = rcl_now % (1000 * 1000 * 1000);
-  return now;
-}
+  rcl_time_point_value_t rcl_time_;
 
-}  // namespace time
+  Time(std::uint32_t sec, std::uint32_t nanosec)
+  : rcl_time_(RCL_S_TO_NS(sec) + nanosec)
+  {}
+
+  Time(rcl_time_point_value_t && rcl_time)
+  : rcl_time_(std::forward<decltype(rcl_time)>(rcl_time))
+  {}
+
+public:
+  template<rcl_time_source_type_t ClockT = RCL_SYSTEM_TIME>
+  static Time
+  now()
+  {
+    rcl_time_point_value_t rcl_now = 0;
+    rcl_ret_t ret = RCL_RET_ERROR;
+    if (ClockT == RCL_ROS_TIME) {
+      // ret = rcl_ros_time_now(&rcl_now);
+      fprintf(stderr, "RCL_ROS_TIME is currently not implemented.\n");
+      ret = false;
+    } else if (ClockT == RCL_SYSTEM_TIME) {
+      ret = rcl_system_time_now(&rcl_now);
+    } else if (ClockT == RCL_STEADY_TIME) {
+      ret = rcl_steady_time_now(&rcl_now);
+    }
+    if (ret != RCL_RET_OK) {
+      fprintf(stderr, "Could not get current time: %s\n", rcl_get_error_string_safe());
+    }
+
+    return Time(std::move(rcl_now));
+  }
+
+  operator builtin_interfaces::msg::Time() const
+  {
+    builtin_interfaces::msg::Time msg_time;
+    msg_time.sec = RCL_NS_TO_S(rcl_time_);
+    msg_time.nanosec = rcl_time_ % (1000 * 1000 * 1000);
+    return msg_time;
+  }
+};
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__TIME_HPP_
