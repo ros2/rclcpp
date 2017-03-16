@@ -220,14 +220,14 @@ Node::get_parameter(const std::string & name, ParameterT & parameter) const
 
 template<typename ParameterT>
 bool
-Node::get_parameter(
+Node::get_parameter_or(
   const std::string & name,
   ParameterT & value,
-  const ParameterT & default_value) const
+  const ParameterT & alternative_value) const
 {
   bool got_parameter = get_parameter(name, value);
   if (!got_parameter) {
-    value = default_value;
+    value = alternative_value;
   }
   return got_parameter;
 }

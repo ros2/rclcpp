@@ -255,10 +255,10 @@ public:
 
   template<typename ParameterT>
   bool
-  get_parameter(
+  get_parameter_or(
     const std::string & name,
     ParameterT & value,
-    const ParameterT & default_value) const;
+    const ParameterT & alternative_value) const;
 
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
