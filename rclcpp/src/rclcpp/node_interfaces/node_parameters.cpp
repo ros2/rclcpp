@@ -91,7 +91,7 @@ NodeParameters::set_parameters_atomically(
       parameter_event->changed_parameters.push_back(p.to_parameter());
     } else {
       // case: parameter was set before, and input is "NOT_SET"
-      // therefore we will "unset" the previous set parameter
+      // therefore we will "unset" the previously set parameter
       // it is not necessary to erase the parameter from parameters_
       // because the new value for this key (p.get_name()) will be a
       // ParameterVariant with type "NOT_SET"

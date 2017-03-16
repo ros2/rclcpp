@@ -239,7 +239,7 @@ public:
   void
   set_parameter_if_not_set(
     const std::string & name,
-    const ParameterT & default_value);
+    const ParameterT & value);
 
   RCLCPP_PUBLIC
   std::vector<rclcpp::parameter::ParameterVariant>

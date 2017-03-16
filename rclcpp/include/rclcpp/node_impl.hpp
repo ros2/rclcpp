@@ -211,12 +211,12 @@ template<typename ParameterT>
 void
 Node::set_parameter_if_not_set(
   const std::string & name,
-  const ParameterT & default_value)
+  const ParameterT & value)
 {
   rclcpp::parameter::ParameterVariant parameter_variant;
   if (!this->get_parameter(name, parameter_variant)) {
     this->set_parameters({
-          rclcpp::parameter::ParameterVariant(name, default_value),
+          rclcpp::parameter::ParameterVariant(name, value),
         });
   }
 }
