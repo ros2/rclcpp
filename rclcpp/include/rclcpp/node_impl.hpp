@@ -208,6 +208,20 @@ Node::register_param_change_callback(CallbackT && callback)
 }
 
 template<typename ParameterT>
+void
+Node::set_parameter_if_not_set(
+  const std::string & name,
+  const ParameterT & default_value)
+{
+  rclcpp::parameter::ParameterVariant parameter_variant;
+  if (!this->get_parameter(name, parameter_variant)) {
+    this->set_parameters({
+      rclcpp::parameter::ParameterVariant(name, default_value),
+    });
+  }
+}
+
+template<typename ParameterT>
 bool
 Node::get_parameter(const std::string & name, ParameterT & value) const
 {

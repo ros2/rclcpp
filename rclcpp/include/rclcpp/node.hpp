@@ -235,6 +235,12 @@ public:
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
 
+  template<typename ParameterT>
+  void
+  set_parameter_if_not_set(
+    const std::string & name,
+    const ParameterT & default_value);
+
   RCLCPP_PUBLIC
   std::vector<rclcpp::parameter::ParameterVariant>
   get_parameters(const std::vector<std::string> & names) const;
