@@ -83,11 +83,18 @@ NodeParameters::set_parameters_atomically(
   for (auto p : parameters) {
     if (parameters_.find(p.get_name()) == parameters_.end()) {
       if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+        // case: parameter not set before, and input is something other than "NOT_SET"
         parameter_event->new_parameters.push_back(p.to_parameter());
       }
     } else if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+      // case: parameter was set before, and input is something other than "NOT_SET"
       parameter_event->changed_parameters.push_back(p.to_parameter());
     } else {
+      // case: parameter was set before, and input is "NOT_SET"
+      // therefore we will "unset" the previous set parameter
+      // it is not necessary to erase the parameter from parameters_
+      // because the new value for this key (p.get_name()) will be a
+      // ParameterVariant with type "NOT_SET"
       parameter_event->deleted_parameters.push_back(p.to_parameter());
     }
     tmp_map[p.get_name()] = p;
