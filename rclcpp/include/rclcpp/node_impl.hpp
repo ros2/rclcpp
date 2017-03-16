@@ -209,11 +209,13 @@ Node::register_param_change_callback(CallbackT && callback)
 
 template<typename ParameterT>
 bool
-Node::get_parameter(const std::string & name, ParameterT & parameter) const
+Node::get_parameter(const std::string & name, ParameterT & value) const
 {
-  rclcpp::parameter::ParameterVariant parameter_variant(name, parameter);
+  rclcpp::parameter::ParameterVariant parameter_variant;
   bool result = get_parameter(name, parameter_variant);
-  parameter = parameter_variant.get_value<ParameterT>();
+  if (result) {
+    value = parameter_variant.get_value<ParameterT>();
+  }
 
   return result;
 }
