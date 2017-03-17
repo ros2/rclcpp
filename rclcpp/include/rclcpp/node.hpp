@@ -255,10 +255,29 @@ public:
     const std::string & name,
     rclcpp::parameter::ParameterVariant & parameter) const;
 
+  /// Assign the value of the parameter if set into the parameter argument.
+  /**
+   * If the parameter was not set, then the "parameter" argument is never assigned a value.
+   *
+   * \param[in] name The name of the parameter to get.
+   * \param[out] parameter The output where the value of the parameter should be assigned.
+   * \returns true if the parameter was set, false otherwise
+   */
   template<typename ParameterT>
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
 
+  /// Get the parameter value, or the "alternative value" if not set, and assign it to "value".
+  /**
+   * If the parameter was not set, then the "value" argument is assigned
+   * the "alternative_value".
+   * In all cases, the parameter remains not set after this function is called.
+   *
+   * \param[in] name The name of the parameter to get.
+   * \param[out] value The output where the value of the parameter should be assigned.
+   * \param[in] alternative_value Value to be stored in output if the parameter was not set.
+   * \returns true if the parameter was set, false otherwise
+   */
   template<typename ParameterT>
   bool
   get_parameter_or(
