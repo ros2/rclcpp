@@ -34,7 +34,7 @@ class Time
   : rcl_time_(RCL_S_TO_NS(sec) + nanosec)
   {}
 
-  Time(rcl_time_point_value_t && rcl_time)
+  explicit Time(rcl_time_point_value_t && rcl_time)
   : rcl_time_(std::forward<decltype(rcl_time)>(rcl_time))
   {}
 
