@@ -18,9 +18,7 @@ else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wpedantic")
 endif()
 
-include_directories(
-  include
-  ${builtin_interfaces_INCLUDE_DIRS})
+include_directories(include)
 
 set(${PROJECT_NAME}_SRCS
   src/rclcpp/any_executable.cpp
@@ -60,6 +58,7 @@ set(${PROJECT_NAME}_SRCS
 add_library(${PROJECT_NAME} SHARED
   ${${PROJECT_NAME}_SRCS})
 ament_target_dependencies(${PROJECT_NAME}
+  "builtin_interfaces"
   "rcl"
   "rosidl_generator_cpp"
   "rosidl_typesupport_cpp")
@@ -77,14 +76,13 @@ install(
 )
 
 ament_export_dependencies(ament_cmake)
+ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_typesupport_cpp)
 
-ament_export_include_directories(
-  include
-  ${builtin_interfaces_INCLUDE_DIRS})
+ament_export_include_directories(include)
 
 ament_export_libraries(${PROJECT_NAME})
 
@@ -180,9 +178,8 @@ if(BUILD_TESTING)
   ament_add_gtest(test_time test/test_time.cpp
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_time)
-    target_include_directories(test_time PUBLIC
-      ${rcl_INCLUDE_DIRS}
-    )
+    ament_target_dependencies(test_time
+      "rcl")
     target_link_libraries(test_time ${PROJECT_NAME})
   endif()
 endif()

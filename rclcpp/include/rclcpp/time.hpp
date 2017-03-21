@@ -28,16 +28,6 @@ namespace rclcpp
 
 class Time
 {
-  rcl_time_point_value_t rcl_time_;
-
-  Time(std::uint32_t sec, std::uint32_t nanosec)
-  : rcl_time_(RCL_S_TO_NS(sec) + nanosec)
-  {}
-
-  explicit Time(rcl_time_point_value_t && rcl_time)
-  : rcl_time_(std::forward<decltype(rcl_time)>(rcl_time))
-  {}
-
 public:
   template<rcl_time_source_type_t ClockT = RCL_SYSTEM_TIME>
   static Time
@@ -68,6 +58,17 @@ public:
     msg_time.nanosec = static_cast<std::uint32_t>(rcl_time_ % (1000 * 1000 * 1000));
     return msg_time;
   }
+
+private:
+  rcl_time_point_value_t rcl_time_;
+
+  Time(std::uint32_t sec, std::uint32_t nanosec)
+  : rcl_time_(RCL_S_TO_NS(sec) + nanosec)
+  {}
+
+  explicit Time(rcl_time_point_value_t && rcl_time)
+  : rcl_time_(std::forward<decltype(rcl_time)>(rcl_time))
+  {}
 };
 
 }  // namespace rclcpp
