@@ -32,9 +32,13 @@ protected:
 
 TEST(TestTime, rate_basics) {
   using builtin_interfaces::msg::Time;
-  Time ros_now = rclcpp::Time::now<RCL_ROS_TIME>();
-  EXPECT_EQ(0, ros_now.sec);
-  EXPECT_EQ(0, ros_now.nanosec);
+  try {
+    rclcpp::Time::now<RCL_ROS_TIME>();
+    FAIL();
+  } catch (const std::exception &) {
+    // test succeeded, ROStime not implemented yet
+    // TODO(karsten1987): Fix this test when ROStime is implemented
+  }
 
   Time system_now = rclcpp::Time::now<RCL_SYSTEM_TIME>();
   EXPECT_NE(0, system_now.sec);
