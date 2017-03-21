@@ -19,6 +19,8 @@
 #include <utility>
 
 #include "builtin_interfaces/msg/time.hpp"
+
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -44,8 +46,7 @@ public:
     rcl_time_point_value_t rcl_now = 0;
     rcl_ret_t ret = RCL_RET_ERROR;
     if (ClockT == RCL_ROS_TIME) {
-      // ret = rcl_ros_time_now(&rcl_now);
-      fprintf(stderr, "RCL_ROS_TIME is currently not implemented.\n");
+      throw std::runtime_error("RCL_ROS_TIME is currently not implemented.");
       ret = false;
     } else if (ClockT == RCL_SYSTEM_TIME) {
       ret = rcl_system_time_now(&rcl_now);
@@ -53,7 +54,8 @@ public:
       ret = rcl_steady_time_now(&rcl_now);
     }
     if (ret != RCL_RET_OK) {
-      fprintf(stderr, "Could not get current time: %s\n", rcl_get_error_string_safe());
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "Could not get current time: ", rcl_get_error_string_safe());
     }
 
     return Time(std::move(rcl_now));
