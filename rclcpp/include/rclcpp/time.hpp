@@ -55,7 +55,7 @@ public:
     }
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(
-        ret, "Could not get current time: ", rcl_get_error_string_safe());
+        ret, "Could not get current time: ");
     }
 
     return Time(std::move(rcl_now));
@@ -64,8 +64,8 @@ public:
   operator builtin_interfaces::msg::Time() const
   {
     builtin_interfaces::msg::Time msg_time;
-    msg_time.sec = RCL_NS_TO_S(rcl_time_);
-    msg_time.nanosec = rcl_time_ % (1000 * 1000 * 1000);
+    msg_time.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_time_));
+    msg_time.nanosec = static_cast<std::uint32_t>(rcl_time_ % (1000 * 1000 * 1000));
     return msg_time;
   }
 };
