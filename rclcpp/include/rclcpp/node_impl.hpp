@@ -208,14 +208,44 @@ Node::register_param_change_callback(CallbackT && callback)
 }
 
 template<typename ParameterT>
-bool
-Node::get_parameter(const std::string & name, ParameterT & parameter) const
+void
+Node::set_parameter_if_not_set(
+  const std::string & name,
+  const ParameterT & value)
 {
-  rclcpp::parameter::ParameterVariant parameter_variant(name, parameter);
+  rclcpp::parameter::ParameterVariant parameter_variant;
+  if (!this->get_parameter(name, parameter_variant)) {
+    this->set_parameters({
+          rclcpp::parameter::ParameterVariant(name, value),
+        });
+  }
+}
+
+template<typename ParameterT>
+bool
+Node::get_parameter(const std::string & name, ParameterT & value) const
+{
+  rclcpp::parameter::ParameterVariant parameter_variant;
   bool result = get_parameter(name, parameter_variant);
-  parameter = parameter_variant.get_value<ParameterT>();
+  if (result) {
+    value = parameter_variant.get_value<ParameterT>();
+  }
 
   return result;
+}
+
+template<typename ParameterT>
+bool
+Node::get_parameter_or(
+  const std::string & name,
+  ParameterT & value,
+  const ParameterT & alternative_value) const
+{
+  bool got_parameter = get_parameter(name, value);
+  if (!got_parameter) {
+    value = alternative_value;
+  }
+  return got_parameter;
 }
 
 }  // namespace node
