@@ -36,15 +36,15 @@ TEST(TestTime, rate_basics) {
   EXPECT_ANY_THROW(rclcpp::Time::now<RCL_ROS_TIME>());
 
   Time system_now = rclcpp::Time::now<RCL_SYSTEM_TIME>();
-  EXPECT_NE(0, system_now.sec);
-  EXPECT_NE(0, system_now.nanosec);
+  EXPECT_NE(static_cast<std::int32_t>(0), system_now.sec);
+  EXPECT_NE(static_cast<std::uint32_t>(0), system_now.nanosec);
 
   Time steady_now = rclcpp::Time::now<RCL_STEADY_TIME>();
-  EXPECT_NE(0, steady_now.sec);
-  EXPECT_NE(0, steady_now.nanosec);
+  EXPECT_NE(static_cast<std::int32_t>(0), steady_now.sec);
+  EXPECT_NE(static_cast<std::uint32_t>(0), steady_now.nanosec);
 
   // default
   Time default_now = rclcpp::Time::now();
-  EXPECT_NE(0, default_now.sec);
-  EXPECT_NE(0, default_now.nanosec);
+  EXPECT_NE(static_cast<std::int32_t>(0), default_now.sec);
+  EXPECT_NE(static_cast<std::uint32_t>(0), default_now.nanosec);
 }
