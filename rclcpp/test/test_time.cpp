@@ -32,6 +32,7 @@ protected:
 
 TEST(TestTime, rate_basics) {
   using builtin_interfaces::msg::Time;
+  // TODO(Karsten1987): Fix this test once ROS_TIME is implemented
   EXPECT_ANY_THROW(rclcpp::Time::now<RCL_ROS_TIME>());
 
   Time system_now = rclcpp::Time::now<RCL_SYSTEM_TIME>();
