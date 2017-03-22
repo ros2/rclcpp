@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 project(rclcpp)
 
 find_package(ament_cmake REQUIRED)
+find_package(builtin_interfaces REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rmw REQUIRED)
@@ -57,6 +58,7 @@ set(${PROJECT_NAME}_SRCS
 add_library(${PROJECT_NAME} SHARED
   ${${PROJECT_NAME}_SRCS})
 ament_target_dependencies(${PROJECT_NAME}
+  "builtin_interfaces"
   "rcl"
   "rosidl_generator_cpp"
   "rosidl_typesupport_cpp")
@@ -74,6 +76,7 @@ install(
 )
 
 ament_export_dependencies(ament_cmake)
+ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
@@ -170,6 +173,14 @@ if(BUILD_TESTING)
       rosidl_target_interfaces(test_externally_defined_services
         mock_msgs ${typesupport_impl_c})
     endforeach()
+  endif()
+
+  ament_add_gtest(test_time test/test_time.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_time)
+    ament_target_dependencies(test_time
+      "rcl")
+    target_link_libraries(test_time ${PROJECT_NAME})
   endif()
 endif()
 
