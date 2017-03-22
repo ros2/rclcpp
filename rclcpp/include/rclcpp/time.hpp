@@ -15,13 +15,11 @@
 #ifndef RCLCPP__TIME_HPP_
 #define RCLCPP__TIME_HPP_
 
-#include <chrono>
 #include <utility>
 
 #include "builtin_interfaces/msg/time.hpp"
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
