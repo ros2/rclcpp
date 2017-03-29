@@ -36,7 +36,10 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBaseInterface)
 
   RCLCPP_PUBLIC
-  NodeBase(const std::string & node_name, rclcpp::context::Context::SharedPtr context);
+  NodeBase(
+    const std::string & node_name,
+    const std::string & name_space,
+    rclcpp::context::Context::SharedPtr context);
 
   RCLCPP_PUBLIC
   virtual

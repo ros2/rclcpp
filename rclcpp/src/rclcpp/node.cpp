@@ -33,18 +33,23 @@
 using rclcpp::node::Node;
 using rclcpp::exceptions::throw_from_rcl_error;
 
-Node::Node(const std::string & node_name, bool use_intra_process_comms)
+Node::Node(
+  const std::string & node_name,
+  const std::string & name_space,
+  bool use_intra_process_comms)
 : Node(
     node_name,
+    name_space,
     rclcpp::contexts::default_context::get_global_default_context(),
     use_intra_process_comms)
 {}
 
 Node::Node(
   const std::string & node_name,
+  const std::string & name_space,
   rclcpp::context::Context::SharedPtr context,
   bool use_intra_process_comms)
-: node_base_(new rclcpp::node_interfaces::NodeBase(node_name, context)),
+: node_base_(new rclcpp::node_interfaces::NodeBase(node_name, name_space, context)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
