@@ -40,21 +40,21 @@ namespace rclcpp_lifecycle
 
 LifecycleNode::LifecycleNode(
   const std::string & node_name,
-  const std::string & name_space,
+  const std::string & namespace_,
   bool use_intra_process_comms)
 : LifecycleNode(
     node_name,
-    name_space,
+    namespace_,
     rclcpp::contexts::default_context::get_global_default_context(),
     use_intra_process_comms)
 {}
 
 LifecycleNode::LifecycleNode(
   const std::string & node_name,
-  const std::string & name_space,
+  const std::string & namespace_,
   rclcpp::context::Context::SharedPtr context,
   bool use_intra_process_comms)
-: node_base_(new rclcpp::node_interfaces::NodeBase(node_name, name_space, context)),
+: node_base_(new rclcpp::node_interfaces::NodeBase(node_name, namespace_, context)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),

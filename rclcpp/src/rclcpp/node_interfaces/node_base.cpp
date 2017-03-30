@@ -27,7 +27,7 @@ using rclcpp::node_interfaces::NodeBase;
 
 NodeBase::NodeBase(
   const std::string & node_name,
-  const std::string & name_space,
+  const std::string & namespace_,
   rclcpp::context::Context::SharedPtr context)
 : context_(context),
   node_handle_(nullptr),
@@ -85,7 +85,7 @@ NodeBase::NodeBase(
   rcl_node_options_t options = rcl_node_get_default_options();
   // TODO(wjwwood): pass the Allocator to the options
   options.domain_id = domain_id;
-  ret = rcl_node_init(rcl_node, node_name.c_str(), name_space.c_str(), &options);
+  ret = rcl_node_init(rcl_node, node_name.c_str(), namespace_.c_str(), &options);
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();

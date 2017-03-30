@@ -38,7 +38,7 @@ public:
   RCLCPP_PUBLIC
   NodeBase(
     const std::string & node_name,
-    const std::string & name_space,
+    const std::string & namespace_,
     rclcpp::context::Context::SharedPtr context);
 
   RCLCPP_PUBLIC
