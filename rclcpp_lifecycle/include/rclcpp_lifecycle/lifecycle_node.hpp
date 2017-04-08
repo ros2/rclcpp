@@ -68,22 +68,29 @@ public:
   /// Create a new lifecycle node with the specified name.
   /**
    * \param[in] node_name Name of the node.
+   * \param[in] node_name Namespace of the node.
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  explicit LifecycleNode(const std::string & node_name, bool use_intra_process_comms = false);
+  explicit LifecycleNode(
+    const std::string & node_name,
+    const std::string & namespace_ = "",
+    bool use_intra_process_comms = false);
 
   /// Create a node based on the node name and a rclcpp::context::Context.
   /**
    * \param[in] node_name Name of the node.
+   * \param[in] node_name Namespace of the node.
    * \param[in] context The context for the node (usually represents the state of a process).
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNode(
-    const std::string & node_name, rclcpp::context::Context::SharedPtr context,
+    const std::string & node_name,
+    const std::string & namespace_,
+    rclcpp::context::Context::SharedPtr context,
     bool use_intra_process_comms = false);
 
   RCLCPP_LIFECYCLE_PUBLIC
