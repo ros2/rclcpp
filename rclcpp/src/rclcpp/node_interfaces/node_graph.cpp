@@ -79,28 +79,28 @@ NodeGraph::get_topic_names_and_types() const
 std::vector<std::string>
 NodeGraph::get_node_names() const
 {
-  rcl_string_array_t node_names_c =
-    rcl_get_zero_initialized_string_array();
+  utilities_string_array_t node_names_c =
+    utilities_get_zero_initialized_string_array();
 
   auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
       &node_names_c);
-  if (ret != RMW_RET_OK) {
-    if (rmw_destroy_node_names(&node_names_c) != RMW_RET_OK) {
+  if (ret != RCL_RET_OK) {
+    if (utilities_string_array_fini(&node_names_c) != RCL_RET_OK) {
       RMW_SET_ERROR_MSG("Fatal: Leaking node_name memory.");
     }
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not get node names: ") + rmw_get_error_string_safe());
+      std::string("could not get node names: ") + rcl_get_error_string_safe());
     // *INDENT-ON*
   }
 
   std::vector<std::string> node_names(&node_names_c.data[0],
     &node_names_c.data[0 + node_names_c.size]);
-  ret = rmw_destroy_node_names(&node_names_c);
+  ret = utilities_string_array_fini(&node_names_c);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not destroy node names: ") + rmw_get_error_string_safe());
+      std::string("could not destroy node names: ") + rcl_get_error_string_safe());
     // *INDENT-ON*
   }
 
