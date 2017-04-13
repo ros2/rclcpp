@@ -85,22 +85,24 @@ NodeGraph::get_node_names() const
   auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
       &node_names_c);
   if (ret != RCL_RET_OK) {
-    if (utilities_string_array_fini(&node_names_c) != RCL_RET_OK) {
+    if (utilities_string_array_fini(&node_names_c) != UTILITIES_RET_OK) {
       RMW_SET_ERROR_MSG("Fatal: Leaking node_name memory.");
     }
     // *INDENT-OFF*
+    // TODO(karsten1987): Append utilities_error_message once it's in master
     throw std::runtime_error(
-      std::string("could not get node names: ") + rcl_get_error_string_safe());
+      std::string("could not get node names: "));
     // *INDENT-ON*
   }
 
   std::vector<std::string> node_names(&node_names_c.data[0],
     &node_names_c.data[0 + node_names_c.size]);
   ret = utilities_string_array_fini(&node_names_c);
-  if (ret != RMW_RET_OK) {
+  if (ret != UTILITIES_RET_OK) {
     // *INDENT-OFF*
+    // TODO(karsten1987): Append utilities_error_message once it's in master
     throw std::runtime_error(
-      std::string("could not destroy node names: ") + rcl_get_error_string_safe());
+      std::string("could not destroy node names: "));
     // *INDENT-ON*
   }
 
