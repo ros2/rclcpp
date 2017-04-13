@@ -51,8 +51,10 @@ NodeGraph::get_topic_names_and_types() const
   rcl_topic_names_and_types_t topic_names_and_types =
     rcl_get_zero_initialized_topic_names_and_types();
 
-  auto ret = rcl_get_topic_names_and_types(node_base_->get_rcl_node_handle(),
-      &topic_names_and_types);
+  auto ret = rcl_get_topic_names_and_types(
+    node_base_->get_rcl_node_handle(),
+    rcl_get_default_allocator(),
+    &topic_names_and_types);
   if (ret != RMW_RET_OK) {
     auto error_msg = std::string("failed to get topic names and types: ") +
       rcl_get_error_string_safe();
@@ -86,8 +88,10 @@ NodeGraph::get_node_names() const
   utilities_string_array_t node_names_c =
     utilities_get_zero_initialized_string_array();
 
-  auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
-      &node_names_c);
+  auto ret = rcl_get_node_names(
+    node_base_->get_rcl_node_handle(),
+    rcl_get_default_allocator(),
+    &node_names_c);
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string_safe();
     rcl_reset_error();
