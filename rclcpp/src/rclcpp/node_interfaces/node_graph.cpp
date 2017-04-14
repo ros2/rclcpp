@@ -54,10 +54,14 @@ NodeGraph::get_topic_names_and_types() const
   auto ret = rcl_get_topic_names_and_types(node_base_->get_rcl_node_handle(),
       &topic_names_and_types);
   if (ret != RMW_RET_OK) {
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not get topic names and types: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
+    auto error_msg = std::string("failed to get topic names and types: ") +
+      rcl_get_error_string_safe();
+    rcl_reset_error();
+    if (rmw_destroy_topic_names_and_types(&topic_names_and_types) != RMW_RET_OK) {
+      error_msg += std::string(", failed also to cleanup topic names and types, leaking memory: ") +
+        rcl_get_error_string_safe();
+    }
+    throw std::runtime_error(error_msg + rmw_get_error_string_safe());
   }
 
   std::map<std::string, std::string> topics;
@@ -79,28 +83,30 @@ NodeGraph::get_topic_names_and_types() const
 std::vector<std::string>
 NodeGraph::get_node_names() const
 {
-  rcl_string_array_t node_names_c =
-    rcl_get_zero_initialized_string_array();
+  utilities_string_array_t node_names_c =
+    utilities_get_zero_initialized_string_array();
 
   auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
       &node_names_c);
-  if (ret != RMW_RET_OK) {
-    if (rmw_destroy_node_names(&node_names_c) != RMW_RET_OK) {
-      RMW_SET_ERROR_MSG("Fatal: Leaking node_name memory.");
+  if (ret != RCL_RET_OK) {
+    auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string_safe();
+    rcl_reset_error();
+    if (utilities_string_array_fini(&node_names_c) != UTILITIES_RET_OK) {
+      error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
+        rcl_get_error_string_safe();
     }
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not get node names: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
+    // TODO(karsten1987): Append utilities_error_message once it's in master
+    throw std::runtime_error(error_msg);
   }
 
   std::vector<std::string> node_names(&node_names_c.data[0],
     &node_names_c.data[0 + node_names_c.size]);
-  ret = rmw_destroy_node_names(&node_names_c);
-  if (ret != RMW_RET_OK) {
+  ret = utilities_string_array_fini(&node_names_c);
+  if (ret != UTILITIES_RET_OK) {
     // *INDENT-OFF*
+    // TODO(karsten1987): Append utilities_error_message once it's in master
     throw std::runtime_error(
-      std::string("could not destroy node names: ") + rmw_get_error_string_safe());
+      std::string("could not destroy node names: "));
     // *INDENT-ON*
   }
 
