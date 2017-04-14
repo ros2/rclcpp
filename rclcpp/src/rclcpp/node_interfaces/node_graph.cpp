@@ -54,11 +54,14 @@ NodeGraph::get_topic_names_and_types() const
   auto ret = rcl_get_topic_names_and_types(node_base_->get_rcl_node_handle(),
       &topic_names_and_types);
   if (ret != RMW_RET_OK) {
-    auto error_msg = std::string("Failed to get topic names and types.");
+    auto error_msg = std::string("failed to get topic names and types: ") +
+      rcl_get_error_string_safe();
+    rcl_reset_error();
     if (rmw_destroy_topic_names_and_types(&topic_names_and_types) != RMW_RET_OK) {
-      error_msg += "Fatal: Leaking topic_names_and_types memory.";
+      error_msg += std::string(", failed also to cleanup topic names and types, leaking memory: ") +
+        rcl_get_error_string_safe();
     }
-    throw std::runtime_error(error_msg);
+    throw std::runtime_error(error_msg + rmw_get_error_string_safe());
   }
 
   std::map<std::string, std::string> topics;
@@ -86,9 +89,11 @@ NodeGraph::get_node_names() const
   auto ret = rcl_get_node_names(node_base_->get_rcl_node_handle(),
       &node_names_c);
   if (ret != RCL_RET_OK) {
-    auto error_msg = std::string("Failed to get node names.");
+    auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string_safe();
+    rcl_reset_error();
     if (utilities_string_array_fini(&node_names_c) != UTILITIES_RET_OK) {
-      error_msg += "Fatal: Leaking node_name memory.";
+      error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
+        rcl_get_error_string_safe();
     }
     // TODO(karsten1987): Append utilities_error_message once it's in master
     throw std::runtime_error(error_msg);
