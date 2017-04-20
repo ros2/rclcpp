@@ -26,7 +26,7 @@ void
 SingleThreadedExecutor::spin()
 {
   if (spinning.exchange(true)) {
-    throw std::runtime_error("spin_some() called while already spinning");
+    throw std::runtime_error("spin() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   while (rclcpp::utilities::ok() && spinning.load()) {
