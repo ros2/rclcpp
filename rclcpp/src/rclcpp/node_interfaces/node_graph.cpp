@@ -85,8 +85,8 @@ NodeGraph::get_topic_names_and_types() const
 std::vector<std::string>
 NodeGraph::get_node_names() const
 {
-  utilities_string_array_t node_names_c =
-    utilities_get_zero_initialized_string_array();
+  rcutils_string_array_t node_names_c =
+    rcutils_get_zero_initialized_string_array();
 
   auto ret = rcl_get_node_names(
     node_base_->get_rcl_node_handle(),
@@ -95,20 +95,20 @@ NodeGraph::get_node_names() const
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string_safe();
     rcl_reset_error();
-    if (utilities_string_array_fini(&node_names_c) != UTILITIES_RET_OK) {
+    if (rcutils_string_array_fini(&node_names_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
         rcl_get_error_string_safe();
     }
-    // TODO(karsten1987): Append utilities_error_message once it's in master
+    // TODO(karsten1987): Append rcutils_error_message once it's in master
     throw std::runtime_error(error_msg);
   }
 
   std::vector<std::string> node_names(&node_names_c.data[0],
     &node_names_c.data[0 + node_names_c.size]);
-  ret = utilities_string_array_fini(&node_names_c);
-  if (ret != UTILITIES_RET_OK) {
+  ret = rcutils_string_array_fini(&node_names_c);
+  if (ret != RCUTILS_RET_OK) {
     // *INDENT-OFF*
-    // TODO(karsten1987): Append utilities_error_message once it's in master
+    // TODO(karsten1987): Append rcutils_error_message once it's in master
     throw std::runtime_error(
       std::string("could not destroy node names: "));
     // *INDENT-ON*
