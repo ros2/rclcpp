@@ -205,13 +205,13 @@ NodeGraph::get_graph_event()
 {
   auto event = rclcpp::event::Event::make_shared();
   std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
+  graph_events_.push_back(event);
+  graph_users_count_++;
   // on first call, add node to graph_listener_
   if (should_add_to_graph_listener_.exchange(false)) {
     graph_listener_->add_node(this);
     graph_listener_->start_if_not_started();
   }
-  graph_events_.push_back(event);
-  graph_users_count_++;
   return event;
 }
 
@@ -238,10 +238,13 @@ NodeGraph::wait_for_graph_change(
       throw EventNotRegisteredError();
     }
   }
+  auto pred = [&event]() {
+      return event->check() || !rclcpp::utilities::ok();
+    };
   std::unique_lock<std::mutex> graph_lock(graph_mutex_);
-  graph_cv_.wait_for(graph_lock, timeout, [&event]() {
-    return event->check() || !rclcpp::utilities::ok();
-  });
+  if (!pred()) {
+    graph_cv_.wait_for(graph_lock, timeout, pred);
+  }
 }
 
 size_t
