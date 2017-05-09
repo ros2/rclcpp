@@ -56,6 +56,10 @@ public:
   cancel();
 
   RCLCPP_PUBLIC
+  void
+  reset();
+
+  RCLCPP_PUBLIC
   virtual void
   execute_callback() = 0;
 
