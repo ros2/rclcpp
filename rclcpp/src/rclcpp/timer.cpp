@@ -40,6 +40,14 @@ TimerBase::cancel()
   }
 }
 
+void
+TimerBase::reset()
+{
+  if (rcl_timer_reset(&timer_handle_) != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't reset timer: ") + rcl_get_error_string_safe());
+  }
+}
+
 bool
 TimerBase::is_ready()
 {
