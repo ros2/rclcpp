@@ -90,17 +90,13 @@ Transition::label() const
 State
 Transition::start_state() const
 {
-  return State(
-    transition_handle_->start->id,
-    transition_handle_->start->label);
+  return State(transition_handle_->start);
 }
 
 State
 Transition::goal_state() const
 {
-  return State(
-    transition_handle_->goal->id,
-    transition_handle_->goal->label);
+  return State(transition_handle_->goal);
 }
 
 }  // namespace rclcpp_lifecycle
