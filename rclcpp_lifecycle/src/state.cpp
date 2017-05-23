@@ -56,12 +56,18 @@ State::~State()
 uint8_t
 State::id() const
 {
+  if (!state_handle_) {
+    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+  }
   return state_handle_->id;
 }
 
 std::string
 State::label() const
 {
+  if (!state_handle_) {
+    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+  }
   return state_handle_->label;
 }
 
