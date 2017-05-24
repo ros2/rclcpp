@@ -53,12 +53,12 @@ TEST_F(TestStateWrapper, wrapper) {
   }
 
   {
-   rcl_lifecycle_state_t * lc_state 
-     = new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
-   rclcpp_lifecycle::State c_state(lc_state->id, lc_state->label);
-   EXPECT_EQ(3, c_state.id());
-   EXPECT_FALSE(c_state.label().empty());
-   EXPECT_STREQ("my_c_state", c_state.label().c_str());
+    rcl_lifecycle_state_t * lc_state =
+      new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
+    rclcpp_lifecycle::State c_state(lc_state->id, lc_state->label);
+    EXPECT_EQ(3, c_state.id());
+    EXPECT_FALSE(c_state.label().empty());
+    EXPECT_STREQ("my_c_state", c_state.label().c_str());
   }
 
 
@@ -66,7 +66,7 @@ TEST_F(TestStateWrapper, wrapper) {
   // unsupported behavior!
   /*
   {
-   rcl_lifecycle_state_t * lc_state 
+   rcl_lifecycle_state_t * lc_state
      = new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
    rclcpp_lifecycle::State c_state(lc_state);
    delete lc_state;

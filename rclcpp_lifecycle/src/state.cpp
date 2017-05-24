@@ -38,8 +38,8 @@ State::State(uint8_t id, const std::string & label)
 
   auto state_handle = new rcl_lifecycle_state_t;
   state_handle->id = id;
-  state_handle->label 
-  = rcutils_strndup(label.c_str(), label.size(), rcutils_get_default_allocator());
+  state_handle->label =
+    rcutils_strndup(label.c_str(), label.size(), rcutils_get_default_allocator());
 
   state_handle_ = state_handle;
 }
