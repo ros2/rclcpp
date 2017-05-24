@@ -29,27 +29,50 @@ protected:
 };
 
 TEST_F(TestStateWrapper, wrapper) {
-  rclcpp_lifecycle::State state(1, "my_state");
-  EXPECT_EQ(1, state.id());
-  EXPECT_FALSE(state.label().empty());
-  ASSERT_STREQ("my_state", state.label().c_str());
+  {
+    rclcpp_lifecycle::State state(1, "my_state");
+    EXPECT_EQ(1, state.id());
+    EXPECT_FALSE(state.label().empty());
+    EXPECT_STREQ("my_state", state.label().c_str());
+  }
 
-  rcl_lifecycle_state_t lc_state = {"my_c_state", 2, NULL, NULL, 0};
-  rclcpp_lifecycle::State c_state(lc_state.id, lc_state.label);
-  EXPECT_EQ(2, c_state.id());
-  EXPECT_FALSE(c_state.label().empty());
-  ASSERT_STREQ("my_c_state", c_state.label().c_str());
+  {
+    rcl_lifecycle_state_t lc_state = {"my_c_state", 2, NULL, NULL, 0};
+    rclcpp_lifecycle::State c_state(lc_state.id, lc_state.label);
+    EXPECT_EQ(2, c_state.id());
+    EXPECT_FALSE(c_state.label().empty());
+    EXPECT_STREQ("my_c_state", c_state.label().c_str());
+  }
+
+  {
+    rcl_lifecycle_state_t lc_state = {"my_c_state", 2, NULL, NULL, 0};
+    rclcpp_lifecycle::State c_state(&lc_state);
+    EXPECT_EQ(2, c_state.id());
+    EXPECT_FALSE(c_state.label().empty());
+    EXPECT_STREQ("my_c_state", c_state.label().c_str());
+  }
+
+  {
+   rcl_lifecycle_state_t * lc_state 
+     = new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
+   rclcpp_lifecycle::State c_state(lc_state->id, lc_state->label);
+   EXPECT_EQ(3, c_state.id());
+   EXPECT_FALSE(c_state.label().empty());
+   EXPECT_STREQ("my_c_state", c_state.label().c_str());
+  }
+
 
   // introduces flakiness
   // unsupported behavior!
   /*
-  * rcl_lifecycle_state_t * lc_state2 
-  *   = new rcl_lifecycle_state_t {"my_c_state2", 3, NULL, NULL, 0};
-  * rclcpp_lifecycle::State c_state2(lc_state2->id, lc_state2->label);
-  * delete lc_state2;
-  * lc_state2 = NULL;
-  * EXPECT_EQ(3, c_state2.id());
-  * EXPECT_FALSE(c_state2.label().empty());
-  * ASSERT_STREQ("my_c_state2", c_state2.label().c_str());
+  {
+   rcl_lifecycle_state_t * lc_state 
+     = new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
+   rclcpp_lifecycle::State c_state(lc_state);
+   delete lc_state;
+   lc_state = NULL;
+   EXPECT_EQ(3, c_state.id());
+   EXPECT_STREQ("my_c_state", c_state.label().c_str());
+  }
   */
 }
