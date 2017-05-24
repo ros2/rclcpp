@@ -64,13 +64,14 @@ TEST_F(TestStateWrapper, wrapper) {
 
   // introduces flakiness
   // unsupported behavior!
-  {
-   rcl_lifecycle_state_t * lc_state
-     = new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
-   rclcpp_lifecycle::State c_state(lc_state);
-   delete lc_state;
-   lc_state = NULL;
-   EXPECT_EQ(3, c_state.id());
-   EXPECT_STREQ("my_c_state", c_state.label().c_str());
-  }
+  // fails when compiled with memory sanitizer
+  // {
+  //  rcl_lifecycle_state_t * lc_state
+  //    = new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
+  //  rclcpp_lifecycle::State c_state(lc_state);
+  //  delete lc_state;
+  //  lc_state = NULL;
+  //  EXPECT_EQ(3, c_state.id());
+  //  EXPECT_STREQ("my_c_state", c_state.label().c_str());
+  // }
 }
