@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,7 +64,6 @@ TEST_F(TestStateWrapper, wrapper) {
 
   // introduces flakiness
   // unsupported behavior!
-  /*
   {
    rcl_lifecycle_state_t * lc_state
      = new rcl_lifecycle_state_t {"my_c_state", 3, NULL, NULL, 0};
@@ -74,5 +73,4 @@ TEST_F(TestStateWrapper, wrapper) {
    EXPECT_EQ(3, c_state.id());
    EXPECT_STREQ("my_c_state", c_state.label().c_str());
   }
-  */
 }
