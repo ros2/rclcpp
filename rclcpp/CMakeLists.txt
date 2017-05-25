@@ -30,6 +30,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/exceptions.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
+  src/rclcpp/expand_topic_or_service_name.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
   src/rclcpp/graph_listener.cpp
@@ -92,6 +93,16 @@ if(BUILD_TESTING)
 
   find_package(rmw_implementation_cmake REQUIRED)
 
+  ament_add_gtest(test_expand_topic_or_service_name test/test_expand_topic_or_service_name.cpp)
+  if(TARGET test_expand_topic_or_service_name)
+    target_include_directories(test_expand_topic_or_service_name PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_expand_topic_or_service_name ${PROJECT_NAME})
+  endif()
   ament_add_gtest(test_function_traits test/test_function_traits.cpp)
   if(TARGET test_function_traits)
     target_include_directories(test_function_traits PUBLIC
