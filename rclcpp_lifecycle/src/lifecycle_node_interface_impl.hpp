@@ -63,9 +63,15 @@ public:
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       fprintf(stderr, "%s:%u, FATAL: rcl_state_machine got destroyed externally.\n",
         __FILE__, __LINE__);
+      // TODO(karsten1987): Remove else. It should always be possible to call
+      // fini on state machine, also when not initialized
     } else {
-      rcl_lifecycle_state_machine_fini(&state_machine_,
-        node_base_interface_->get_rcl_node_handle());
+      if (rcl_lifecycle_state_machine_fini(&state_machine_,
+        node_base_interface_->get_rcl_node_handle()) != RCL_RET_OK)
+      {
+        fprintf(stderr, "%s:%u, FATAL: failed to destroy rcl_state_machine.\n",
+          __FILE__, __LINE__);
+      }
     }
   }
 
@@ -304,16 +310,20 @@ public:
       rcl_lifecycle_ret_t error_resolved = execute_callback(state_machine_.current_state->id,
           initial_state);
       if (error_resolved == RCL_RET_OK) {
-        fprintf(stderr, "Exception handling was successful\n");
+        // fprintf(stderr, "Exception handling was successful\n");
         // We call cleanup on the error state
-        rcl_lifecycle_trigger_transition(
-          &state_machine_, error_resolved, true);
-        fprintf(stderr, "current state after error callback%s\n",
-          state_machine_.current_state->label);
+        if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, true) != RCL_RET_OK) {
+          fprintf(stderr, "Failed to call cleanup on error state\n");
+          return false;
+        }
+        // fprintf(stderr, "current state after error callback%s\n",
+        //  state_machine_.current_state->label);
       } else {
         // We call shutdown on the error state
-        rcl_lifecycle_trigger_transition(
-          &state_machine_, error_resolved, true);
+        if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, true) != RCL_RET_OK) {
+          fprintf(stderr, "Failed to call cleanup on error state\n");
+          return false;
+        }
       }
     }
     // This true holds in both cases where the actual callback

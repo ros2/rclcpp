@@ -15,6 +15,9 @@
 #include "rclcpp_lifecycle/state.hpp"
 
 #include <lifecycle_msgs/msg/state.hpp>
+
+#include <rcutils/allocator.h>
+#include <rcutils/strdup.h>
 #include <rcl_lifecycle/data_types.h>
 
 #include <string>
@@ -35,7 +38,8 @@ State::State(uint8_t id, const std::string & label)
 
   auto state_handle = new rcl_lifecycle_state_t;
   state_handle->id = id;
-  state_handle->label = label.c_str();
+  state_handle->label =
+    rcutils_strndup(label.c_str(), label.size(), rcutils_get_default_allocator());
 
   state_handle_ = state_handle;
 }
@@ -56,12 +60,18 @@ State::~State()
 uint8_t
 State::id() const
 {
+  if (!state_handle_) {
+    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+  }
   return state_handle_->id;
 }
 
 std::string
 State::label() const
 {
+  if (!state_handle_) {
+    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+  }
   return state_handle_->label;
 }
 
