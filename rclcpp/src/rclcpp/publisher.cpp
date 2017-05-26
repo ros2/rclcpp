@@ -28,8 +28,10 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 
 using rclcpp::publisher::PublisherBase;
 
@@ -41,25 +43,36 @@ PublisherBase::PublisherBase(
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
   intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
 {
-  if (rcl_publisher_init(
-      &publisher_handle_, rcl_node_handle_.get(), &type_support,
-      topic.c_str(), &publisher_options) != RCL_RET_OK)
-  {
-    throw std::runtime_error(
-            std::string("could not create publisher: ") +
-            rcl_get_error_string_safe());
+  rcl_ret_t ret = rcl_publisher_init(
+    &publisher_handle_,
+    rcl_node_handle_.get(),
+    &type_support,
+    topic.c_str(),
+    &publisher_options);
+  if (ret != RCL_RET_OK) {
+    if (ret == RCL_RET_TOPIC_NAME_INVALID) {
+      auto rcl_node_handle = rcl_node_handle_.get();
+      // this will throw on any validation problem
+      rcl_reset_error();
+      expand_topic_or_service_name(
+        topic,
+        rcl_node_get_name(rcl_node_handle),
+        rcl_node_get_namespace(rcl_node_handle));
+    }
+
+    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create publisher");
   }
   // Life time of this object is tied to the publisher handle.
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
   if (!publisher_rmw_handle) {
-    throw std::runtime_error(
-            std::string("failed to get rmw handle: ") + rcl_get_error_string_safe());
+    auto msg = std::string("failed to get rmw handle: ") + rcl_get_error_string_safe();
+    rcl_reset_error();
+    throw std::runtime_error(msg);
   }
   if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK) {
-    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-    throw std::runtime_error(
-      std::string("failed to get publisher gid: ") + rmw_get_error_string_safe());
-    // *INDENT-ON*
+    auto msg = std::string("failed to get publisher gid: ") + rmw_get_error_string_safe();
+    rmw_reset_error();
+    throw std::runtime_error(msg);
   }
 }
 
@@ -70,6 +83,7 @@ PublisherBase::~PublisherBase()
       stderr,
       "Error in destruction of intra process rcl publisher handle: %s\n",
       rcl_get_error_string_safe());
+    rcl_reset_error();
   }
 
   if (rcl_publisher_fini(&publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
@@ -77,6 +91,7 @@ PublisherBase::~PublisherBase()
       stderr,
       "Error in destruction of rcl publisher handle: %s\n",
       rcl_get_error_string_safe());
+    rcl_reset_error();
   }
 }
 
@@ -91,8 +106,9 @@ PublisherBase::get_queue_size() const
 {
   const rcl_publisher_options_t * publisher_options = rcl_publisher_get_options(&publisher_handle_);
   if (!publisher_options) {
-    throw std::runtime_error(
-            std::string("failed to get publisher options: ") + rcl_get_error_string_safe());
+    auto msg = std::string("failed to get publisher options: ") + rcl_get_error_string_safe();
+    rcl_reset_error();
+    throw std::runtime_error(msg);
   }
   return publisher_options->qos.depth;
 }
@@ -121,14 +137,16 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
   bool result = false;
   auto ret = rmw_compare_gids_equal(gid, &this->get_gid(), &result);
   if (ret != RMW_RET_OK) {
-    throw std::runtime_error(
-            std::string("failed to compare gids: ") + rmw_get_error_string_safe());
+    auto msg = std::string("failed to compare gids: ") + rmw_get_error_string_safe();
+    rmw_reset_error();
+    throw std::runtime_error(msg);
   }
   if (!result) {
     ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
     if (ret != RMW_RET_OK) {
-      throw std::runtime_error(
-              std::string("failed to compare gids: ") + rmw_get_error_string_safe());
+      auto msg = std::string("failed to compare gids: ") + rmw_get_error_string_safe();
+      rmw_reset_error();
+      throw std::runtime_error(msg);
     }
   }
   return result;
@@ -140,15 +158,25 @@ PublisherBase::setup_intra_process(
   StoreMessageCallbackT callback,
   const rcl_publisher_options_t & intra_process_options)
 {
-  auto intra_process_topic_name = std::string(this->get_topic_name()) + "__intra";
-  if (rcl_publisher_init(
-      &intra_process_publisher_handle_, rcl_node_handle_.get(),
-      rclcpp::type_support::get_intra_process_message_msg_type_support(),
-      intra_process_topic_name.c_str(), &intra_process_options) != RCL_RET_OK)
-  {
-    throw std::runtime_error(
-            std::string("could not create intra process publisher: ") +
-            rcl_get_error_string_safe());
+  auto intra_process_topic_name = std::string(this->get_topic_name()) + "/_intra";
+  rcl_ret_t ret = rcl_publisher_init(
+    &intra_process_publisher_handle_,
+    rcl_node_handle_.get(),
+    rclcpp::type_support::get_intra_process_message_msg_type_support(),
+    intra_process_topic_name.c_str(),
+    &intra_process_options);
+  if (ret != RCL_RET_OK) {
+    if (ret == RCL_RET_TOPIC_NAME_INVALID) {
+      auto rcl_node_handle = rcl_node_handle_.get();
+      // this will throw on any validation problem
+      rcl_reset_error();
+      expand_topic_or_service_name(
+        intra_process_topic_name,
+        rcl_node_get_name(rcl_node_handle),
+        rcl_node_get_namespace(rcl_node_handle));
+    }
+
+    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create intra process publisher");
   }
 
   intra_process_publisher_id_ = intra_process_publisher_id;
@@ -157,16 +185,16 @@ PublisherBase::setup_intra_process(
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(
     &intra_process_publisher_handle_);
   if (publisher_rmw_handle == nullptr) {
-    throw std::runtime_error(std::string(
-              "Failed to get rmw publisher handle") + rcl_get_error_string_safe());
+    auto msg = std::string("Failed to get rmw publisher handle") + rcl_get_error_string_safe();
+    rcl_reset_error();
+    throw std::runtime_error(msg);
   }
-  auto ret = rmw_get_gid_for_publisher(
+  auto rmw_ret = rmw_get_gid_for_publisher(
     publisher_rmw_handle, &intra_process_rmw_gid_);
-  if (ret != RMW_RET_OK) {
-    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-    throw std::runtime_error(
-      std::string("failed to create intra process publisher gid: ") +
-      rmw_get_error_string_safe());
-    // *INDENT-ON*
+  if (rmw_ret != RMW_RET_OK) {
+    auto msg =
+      std::string("failed to create intra process publisher gid: ") + rmw_get_error_string_safe();
+    rmw_reset_error();
+    throw std::runtime_error(msg);
   }
 }

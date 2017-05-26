@@ -29,10 +29,12 @@
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/type_support_decl.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -238,16 +240,25 @@ public:
     MatchesAnyPublishersCallbackType matches_any_publisher_callback,
     const rcl_subscription_options_t & intra_process_options)
   {
-    if (rcl_subscription_init(
-        &intra_process_subscription_handle_, node_handle_.get(),
-        rclcpp::type_support::get_intra_process_message_msg_type_support(),
-        (std::string(get_topic_name()) + "__intra").c_str(),
-        &intra_process_options) != RCL_RET_OK)
-    {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("could not create intra process subscription: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
+    std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";
+    rcl_ret_t ret = rcl_subscription_init(
+      &intra_process_subscription_handle_,
+      node_handle_.get(),
+      rclcpp::type_support::get_intra_process_message_msg_type_support(),
+      intra_process_topic_name.c_str(),
+      &intra_process_options);
+    if (ret != RCL_RET_OK) {
+      if (ret == RCL_RET_TOPIC_NAME_INVALID) {
+        auto rcl_node_handle = node_handle_.get();
+        // this will throw on any validation problem
+        rcl_reset_error();
+        expand_topic_or_service_name(
+          intra_process_topic_name,
+          rcl_node_get_name(rcl_node_handle),
+          rcl_node_get_namespace(rcl_node_handle));
+      }
+
+      rclcpp::exceptions::throw_from_rcl_error(ret, "could not create intra process subscription");
     }
 
     intra_process_subscription_id_ = intra_process_subscription_id;

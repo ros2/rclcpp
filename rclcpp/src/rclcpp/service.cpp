@@ -51,3 +51,9 @@ ServiceBase::get_service_handle()
 {
   return service_handle_;
 }
+
+rcl_node_t *
+ServiceBase::get_rcl_node_handle() const
+{
+  return node_handle_.get();
+}

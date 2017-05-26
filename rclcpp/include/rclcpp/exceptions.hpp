@@ -35,18 +35,88 @@ public:
   : std::runtime_error("node is invalid") {}
 };
 
+/// Thrown when a any kind of name (node, namespace, topic, etc.) is invalid.
+class NameValidationError : public std::invalid_argument
+{
+public:
+  NameValidationError(
+    const char * name_type_,
+    const char * name_,
+    const char * error_msg_,
+    size_t invalid_index_)
+  : std::invalid_argument(format_error(name_type_, name_, error_msg_, invalid_index_)),
+    name_type(name_type_), name(name_), error_msg(error_msg_), invalid_index(invalid_index_)
+  {}
+
+  static std::string
+  format_error(
+    const char * name_type,
+    const char * name,
+    const char * error_msg,
+    size_t invalid_index);
+
+  const std::string name_type;
+  const std::string name;
+  const std::string error_msg;
+  const size_t invalid_index;
+};
+
+/// Thrown when a node name is invalid.
+class InvalidNodeNameError : public NameValidationError
+{
+public:
+  InvalidNodeNameError(const char * node_name, const char * error_msg, size_t invalid_index)
+  : NameValidationError("node name", node_name, error_msg, invalid_index)
+  {}
+};
+
+/// Thrown when a node namespace is invalid.
+class InvalidNamespaceError : public NameValidationError
+{
+public:
+  InvalidNamespaceError(const char * namespace_, const char * error_msg, size_t invalid_index)
+  : NameValidationError("namespace", namespace_, error_msg, invalid_index)
+  {}
+};
+
+/// Thrown when a topic name is invalid.
+class InvalidTopicNameError : public NameValidationError
+{
+public:
+  InvalidTopicNameError(const char * namespace_, const char * error_msg, size_t invalid_index)
+  : NameValidationError("topic name", namespace_, error_msg, invalid_index)
+  {}
+};
+
+/// Thrown when a service name is invalid.
+class InvalidServiceNameError : public NameValidationError
+{
+public:
+  InvalidServiceNameError(const char * namespace_, const char * error_msg, size_t invalid_index)
+  : NameValidationError("service name", namespace_, error_msg, invalid_index)
+  {}
+};
+
 /// Throw a C++ std::exception which was created based on an rcl error.
 /**
+ * Passing nullptr for reset_error is safe and will avoid calling any function
+ * to reset the error.
+ *
  * \param ret the return code for the current error state
  * \param prefix string to prefix to the error if applicable (not all errors have custom messages)
- * \param reset_error if true rcl_reset_error() is called before returning
+ * \param error_state error state to create exception from, if nullptr rcl_get_error_state is used
+ * \param reset_error function to be called before throwing which whill clear the error state
  * \throws std::invalid_argument if ret is RCL_RET_OK
  * \throws std::runtime_error if the rcl_get_error_state returns 0
  * \throws RCLErrorBase some child class exception based on ret
  */
 RCLCPP_PUBLIC
 void
-throw_from_rcl_error(rcl_ret_t ret, const std::string & prefix = "", bool reset_error = true);
+throw_from_rcl_error(
+  rcl_ret_t ret,
+  const std::string & prefix = "",
+  const rcl_error_state_t * error_state = nullptr,
+  void (* reset_error)() = rcl_reset_error);
 
 class RCLErrorBase
 {
