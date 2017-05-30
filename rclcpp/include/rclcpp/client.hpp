@@ -227,7 +227,7 @@ public:
     int64_t sequence_number;
     rcl_ret_t ret = rcl_send_request(get_client_handle(), request.get(), &sequence_number);
     if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
     }
 
     SharedPromise call_promise = std::make_shared<Promise>();
