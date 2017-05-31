@@ -18,6 +18,9 @@
 #include <memory>
 #include <string>
 
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -38,8 +41,17 @@ SubscriptionBase::SubscriptionBase(
     topic_name.c_str(),
     &subscription_options);
   if (ret != RCL_RET_OK) {
-    throw std::runtime_error(
-            std::string("could not create subscription: ") + rcl_get_error_string_safe());
+    if (ret == RCL_RET_TOPIC_NAME_INVALID) {
+      auto rcl_node_handle = node_handle_.get();
+      // this will throw on any validation problem
+      rcl_reset_error();
+      expand_topic_or_service_name(
+        topic_name,
+        rcl_node_get_name(rcl_node_handle),
+        rcl_node_get_namespace(rcl_node_handle));
+    }
+
+    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription");
   }
 }
 

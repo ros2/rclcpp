@@ -55,7 +55,7 @@ namespace intra_process_manager
  * When a publisher is created, it advertises on the topic the user provided,
  * as well as a "shadowing" topic of type rcl_interfaces/IntraProcessMessage.
  * For instance, if the user specified the topic '/namespace/chatter', then the
- * corresponding intra process topic might be '/namespace/chatter__intra'.
+ * corresponding intra process topic might be '/namespace/chatter/_intra'.
  * The publisher is also allocated an id which is unique among all publishers
  * and subscriptions in this process.
  * Additionally, when registered with this class a ring buffer is created and

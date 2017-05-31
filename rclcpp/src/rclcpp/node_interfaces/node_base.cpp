@@ -20,6 +20,8 @@
 #include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rclcpp/exceptions.hpp"
+#include "rmw/validate_node_name.h"
+#include "rmw/validate_namespace.h"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
@@ -89,6 +91,42 @@ NodeBase::NodeBase(
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
+
+    if (ret == RCL_RET_NODE_INVALID_NAME) {
+      rcl_reset_error();  // discard rcl_node_init error
+      int validation_result;
+      size_t invalid_index;
+      rmw_ret_t rmw_ret =
+        rmw_validate_node_name(node_name.c_str(), &validation_result, &invalid_index);
+      if (rmw_ret != RMW_RET_OK) {
+        if (rmw_ret == RMW_RET_INVALID_ARGUMENT) {
+          throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "failed to validate node name");
+        }
+        throw_from_rcl_error(RCL_RET_ERROR, "failed to validate node name");
+      }
+      throw rclcpp::exceptions::InvalidNodeNameError(
+              node_name.c_str(),
+              rmw_node_name_validation_result_string(validation_result),
+              invalid_index);
+    }
+
+    if (ret == RCL_RET_NODE_INVALID_NAMESPACE) {
+      rcl_reset_error();  // discard rcl_node_init error
+      int validation_result;
+      size_t invalid_index;
+      rmw_ret_t rmw_ret =
+        rmw_validate_namespace(namespace_.c_str(), &validation_result, &invalid_index);
+      if (rmw_ret != RMW_RET_OK) {
+        if (rmw_ret == RMW_RET_INVALID_ARGUMENT) {
+          throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "failed to validate namespace");
+        }
+        throw_from_rcl_error(RCL_RET_ERROR, "failed to validate namespace");
+      }
+      throw rclcpp::exceptions::InvalidNamespaceError(
+              namespace_.c_str(),
+              rmw_namespace_validation_result_string(validation_result),
+              invalid_index);
+    }
 
     throw_from_rcl_error(ret, "failed to initialize rcl node");
   }

@@ -27,11 +27,13 @@
 #include "rcl/error_handling.h"
 #include "rcl/wait.h"
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 #include "rmw/error_handling.h"
@@ -138,14 +140,24 @@ public:
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
-    if (rcl_client_init(&client_handle_, this->get_rcl_node_handle(),
-      service_type_support_handle, service_name.c_str(), &client_options) != RCL_RET_OK)
-    {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("could not create client: ") +
-        rcl_get_error_string_safe());
-      // *INDENT-ON*
+    rcl_ret_t ret = rcl_client_init(
+      &client_handle_,
+      this->get_rcl_node_handle(),
+      service_type_support_handle,
+      service_name.c_str(),
+      &client_options);
+    if (ret != RCL_RET_OK) {
+      if (ret == RCL_RET_SERVICE_NAME_INVALID) {
+        auto rcl_node_handle = this->get_rcl_node_handle();
+        // this will throw on any validation problem
+        rcl_reset_error();
+        expand_topic_or_service_name(
+          service_name,
+          rcl_node_get_name(rcl_node_handle),
+          rcl_node_get_namespace(rcl_node_handle),
+          true);
+      }
+      rclcpp::exceptions::throw_from_rcl_error(ret, "could not create client");
     }
   }
 
@@ -153,7 +165,8 @@ public:
   {
     if (rcl_client_fini(&client_handle_, this->get_rcl_node_handle()) != RCL_RET_OK) {
       fprintf(stderr,
-        "Error in destruction of rmw client handle: %s\n", rmw_get_error_string_safe());
+        "Error in destruction of rcl client handle: %s\n", rcl_get_error_string_safe());
+      rcl_reset_error();
     }
   }
 
@@ -212,11 +225,9 @@ public:
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
-    if (RCL_RET_OK != rcl_send_request(get_client_handle(), request.get(), &sequence_number)) {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to send request: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
+    rcl_ret_t ret = rcl_send_request(get_client_handle(), request.get(), &sequence_number);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
     }
 
     SharedPromise call_promise = std::make_shared<Promise>();

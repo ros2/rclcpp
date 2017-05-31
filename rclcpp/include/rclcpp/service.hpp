@@ -25,8 +25,10 @@
 #include "rcl/service.h"
 
 #include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/type_support_decl.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -70,6 +72,10 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
+  RCLCPP_PUBLIC
+  rcl_node_t *
+  get_rcl_node_handle() const;
+
   std::shared_ptr<rcl_node_t> node_handle_;
 
   rcl_service_t * service_handle_ = nullptr;
@@ -109,12 +115,25 @@ public:
     service_handle_ = new rcl_service_t;
     *service_handle_ = rcl_get_zero_initialized_service();
 
-    if (rcl_service_init(
-        service_handle_, node_handle.get(), service_type_support_handle, service_name.c_str(),
-        &service_options) != RCL_RET_OK)
-    {
-      throw std::runtime_error(std::string("could not create service: ") +
-              rcl_get_error_string_safe());
+    rcl_ret_t ret = rcl_service_init(
+      service_handle_,
+      node_handle.get(),
+      service_type_support_handle,
+      service_name.c_str(),
+      &service_options);
+    if (ret != RCL_RET_OK) {
+      if (ret == RCL_RET_SERVICE_NAME_INVALID) {
+        auto rcl_node_handle = get_rcl_node_handle();
+        // this will throw on any validation problem
+        rcl_reset_error();
+        expand_topic_or_service_name(
+          service_name,
+          rcl_node_get_name(rcl_node_handle),
+          rcl_node_get_namespace(rcl_node_handle),
+          true);
+      }
+
+      rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service");
     }
   }
 
@@ -151,6 +170,7 @@ public:
         ss << "Error in destruction of rcl service_handle_ handle: " <<
           rcl_get_error_string_safe() << '\n';
         (std::cerr << ss.str()).flush();
+        rcl_reset_error();
       }
     }
   }
@@ -183,10 +203,7 @@ public:
     rcl_ret_t status = rcl_send_response(get_service_handle(), req_id.get(), response.get());
 
     if (status != RCL_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to send response: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to send response");
     }
   }
 

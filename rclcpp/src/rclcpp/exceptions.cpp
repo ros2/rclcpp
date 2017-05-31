@@ -18,18 +18,40 @@
 #include <functional>
 #include <string>
 
+using namespace std::string_literals;
+
 namespace rclcpp
 {
 namespace exceptions
 {
 
+std::string
+NameValidationError::format_error(
+  const char * name_type,
+  const char * name,
+  const char * error_msg,
+  size_t invalid_index)
+{
+  std::string msg = "";
+  msg += "Invalid "s + name_type + ": " + error_msg + ":\n";
+  msg += "  '"s + name + "'\n";
+  msg += "   "s + std::string(invalid_index, ' ') + "^\n";
+  return msg;
+}
+
 void
-throw_from_rcl_error(rcl_ret_t ret, const std::string & prefix, bool reset_error)
+throw_from_rcl_error(
+  rcl_ret_t ret,
+  const std::string & prefix,
+  const rcl_error_state_t * error_state,
+  void (* reset_error)())
 {
   if (RCL_RET_OK == ret) {
     throw std::invalid_argument("ret is RCL_RET_OK");
   }
-  const rcl_error_state_t * error_state = rcl_get_error_state();
+  if (!error_state) {
+    error_state = rcl_get_error_state();
+  }
   if (!error_state) {
     throw std::runtime_error("rcl error state is not set");
   }
@@ -39,7 +61,7 @@ throw_from_rcl_error(rcl_ret_t ret, const std::string & prefix, bool reset_error
   }
   RCLErrorBase base_exc(ret, error_state);
   if (reset_error) {
-    rcl_reset_error();
+    reset_error();
   }
   switch (ret) {
     case RCL_RET_BAD_ALLOC:

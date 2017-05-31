@@ -30,6 +30,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/exceptions.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
+  src/rclcpp/expand_topic_or_service_name.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
   src/rclcpp/graph_listener.cpp
@@ -92,6 +93,26 @@ if(BUILD_TESTING)
 
   find_package(rmw_implementation_cmake REQUIRED)
 
+  ament_add_gtest(test_client test/test_client.cpp)
+  if(TARGET test_client)
+    target_include_directories(test_client PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_client ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_expand_topic_or_service_name test/test_expand_topic_or_service_name.cpp)
+  if(TARGET test_expand_topic_or_service_name)
+    target_include_directories(test_expand_topic_or_service_name PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_expand_topic_or_service_name ${PROJECT_NAME})
+  endif()
   ament_add_gtest(test_function_traits test/test_function_traits.cpp)
   if(TARGET test_function_traits)
     target_include_directories(test_function_traits PUBLIC
@@ -121,6 +142,26 @@ if(BUILD_TESTING)
       ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
   endif()
+  ament_add_gtest(test_node test/test_node.cpp)
+  if(TARGET test_node)
+    target_include_directories(test_node PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_node ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_publisher test/test_publisher.cpp)
+  if(TARGET test_publisher)
+    target_include_directories(test_publisher PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_publisher ${PROJECT_NAME})
+  endif()
   ament_add_gtest(test_rate test/test_rate.cpp
     ENV RCL_ASSERT_RMW_ID_MATCHES=${rmw_implementation})
   if(TARGET test_rate)
@@ -133,6 +174,26 @@ if(BUILD_TESTING)
     target_link_libraries(test_rate
       ${PROJECT_NAME}
     )
+  endif()
+  ament_add_gtest(test_service test/test_service.cpp)
+  if(TARGET test_service)
+    target_include_directories(test_service PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_service ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_subscription test/test_subscription.cpp)
+  if(TARGET test_subscription)
+    target_include_directories(test_subscription PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_subscription ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_find_weak_nodes test/test_find_weak_nodes.cpp)
   if(TARGET test_find_weak_nodes)
