@@ -52,6 +52,11 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  const char *
+  get_namespace() const;
+
+  RCLCPP_PUBLIC
+  virtual
   rclcpp::context::Context::SharedPtr
   get_context();
 

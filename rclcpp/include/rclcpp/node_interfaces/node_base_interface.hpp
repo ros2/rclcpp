@@ -45,6 +45,13 @@ public:
   const char *
   get_name() const = 0;
 
+  /// Return the namespace of the node.
+  /** \return The namespace of the node. */
+  RCLCPP_PUBLIC
+  virtual
+  const char *
+  get_namespace() const = 0;
+
   /// Return the context of the node.
   /** \return SharedPtr to the node's context. */
   RCLCPP_PUBLIC
