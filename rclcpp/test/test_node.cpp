@@ -50,3 +50,26 @@ TEST_F(TestNode, construction_and_destruction) {
     }, rclcpp::exceptions::InvalidNamespaceError);
   }
 }
+
+TEST_F(TestNode, get_name_and_namespace) {
+  {
+    auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+    EXPECT_STREQ("my_node", node->get_name());
+    EXPECT_STREQ("/ns", node->get_namespace());
+  }
+  {
+    auto node = std::make_shared<rclcpp::node::Node>("my_node", "ns");
+    EXPECT_STREQ("my_node", node->get_name());
+    EXPECT_STREQ("/ns", node->get_namespace());
+  }
+  {
+    auto node = std::make_shared<rclcpp::node::Node>("my_node", "/my/ns");
+    EXPECT_STREQ("my_node", node->get_name());
+    EXPECT_STREQ("/my/ns", node->get_namespace());
+  }
+  {
+    auto node = std::make_shared<rclcpp::node::Node>("my_node", "my/ns");
+    EXPECT_STREQ("my_node", node->get_name());
+    EXPECT_STREQ("/my/ns", node->get_namespace());
+  }
+}
