@@ -102,7 +102,7 @@ public:
   get_name() const;
 
   /// Get the namespace of the node.
-  /** \return The namesoace of the node. */
+  /** \return The namespace of the node. */
   RCLCPP_PUBLIC
   const char *
   get_namespace() const;
