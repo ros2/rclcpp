@@ -123,7 +123,8 @@ rcl_lifecycle_ret_t MoodyLifecycleNode<BadMood>::on_error(const rclcpp_lifecycle
 
 TEST_F(TestDefaultStateMachine, empty_initializer) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
-
+  EXPECT_STREQ("testnode", test_node->get_name());
+  EXPECT_STREQ("/", test_node->get_namespace());
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
 }
 

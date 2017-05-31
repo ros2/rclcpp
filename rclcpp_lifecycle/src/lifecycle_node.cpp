@@ -89,6 +89,12 @@ LifecycleNode::get_name() const
   return node_base_->get_name();
 }
 
+const char *
+LifecycleNode::get_namespace() const
+{
+  return node_base_->get_namespace();
+}
+
 rclcpp::callback_group::CallbackGroup::SharedPtr
 LifecycleNode::create_callback_group(
   rclcpp::callback_group::CallbackGroupType group_type)
