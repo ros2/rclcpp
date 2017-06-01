@@ -101,6 +101,12 @@ public:
   const char *
   get_name() const;
 
+  /// Get the namespace of the node.
+  /** \return The namespace of the node. */
+  RCLCPP_PUBLIC
+  const char *
+  get_namespace() const;
+
   /// Create and return a callback group.
   RCLCPP_PUBLIC
   rclcpp::callback_group::CallbackGroup::SharedPtr
