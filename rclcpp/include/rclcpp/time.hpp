@@ -31,22 +31,22 @@ public:
   static Time
   now()
   {
-    rcl_time_point_value_t rcl_now = 0;
-    rcl_ret_t ret = RCL_RET_ERROR;
+    rcutils_time_point_value_t rcutils_now = 0;
+    rcutils_ret_t ret = RCUTILS_RET_ERROR;
     if (ClockT == RCL_ROS_TIME) {
       throw std::runtime_error("RCL_ROS_TIME is currently not implemented.");
       ret = false;
     } else if (ClockT == RCL_SYSTEM_TIME) {
-      ret = rcl_system_time_now(&rcl_now);
+      ret = rcutils_system_time_now(&rcutils_now);
     } else if (ClockT == RCL_STEADY_TIME) {
-      ret = rcl_steady_time_now(&rcl_now);
+      ret = rcutils_steady_time_now(&rcutils_now);
     }
-    if (ret != RCL_RET_OK) {
+    if (ret != RCUTILS_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(
         ret, "Could not get current time: ");
     }
 
-    return Time(std::move(rcl_now));
+    return Time(std::move(rcutils_now));
   }
 
   operator builtin_interfaces::msg::Time() const
