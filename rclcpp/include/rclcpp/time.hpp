@@ -18,6 +18,7 @@
 #include <utility>
 
 #include "builtin_interfaces/msg/time.hpp"
+#include "rcl/time.h"
 #include "rcutils/time.h"
 
 #include "rclcpp/exceptions.hpp"
