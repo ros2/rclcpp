@@ -372,20 +372,45 @@ public:
   trigger_transition(uint8_t transition_id);
 
   RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  configure();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  cleanup();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  activate();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  deactivate();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  const State &
+  shutdown();
+
+  RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_configure(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
+
   RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_cleanup(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
+
   RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_shutdown(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
+
   RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_activate(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
+
   RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_deactivate(std::function<rcl_lifecycle_ret_t(const State &)> fcn);
+
   RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_error(std::function<rcl_lifecycle_ret_t(const State &)> fcn);

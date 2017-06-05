@@ -305,6 +305,41 @@ LifecycleNode::trigger_transition(uint8_t transition_id)
   return impl_->trigger_transition(transition_id);
 }
 
+const State &
+LifecycleNode::configure()
+{
+  return impl_->trigger_transition(
+    lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE);
+}
+
+const State &
+LifecycleNode::cleanup()
+{
+  return impl_->trigger_transition(
+    lifecycle_msgs::msg::Transition::TRANSITION_CLEANUP);
+}
+
+const State &
+LifecycleNode::activate()
+{
+  return impl_->trigger_transition(
+    lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE);
+}
+
+const State &
+LifecycleNode::deactivate()
+{
+  return impl_->trigger_transition(
+    lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE);
+}
+
+const State &
+LifecycleNode::shutdown()
+{
+  return impl_->trigger_transition(
+    lifecycle_msgs::msg::Transition::TRANSITION_SHUTDOWN);
+}
+
 void
 LifecycleNode::add_publisher_handle(
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisherInterface> pub)
