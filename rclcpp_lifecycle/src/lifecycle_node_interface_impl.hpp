@@ -66,7 +66,7 @@ public:
     auto ret = rcl_lifecycle_state_machine_fini(
       &state_machine_, node_handle, &node_options->allocator);
     if (ret != RCL_RET_OK) {
-      throw std::runtime_error("FATAL: failed to destroy rcl_state_machine");
+      fprintf(stderr, "FATAL: failed to destroy rcl_state_machine\n");
     }
   }
 
