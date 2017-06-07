@@ -35,6 +35,7 @@
 #include "rcl/error_handling.h"
 
 #include "rcl_lifecycle/rcl_lifecycle.h"
+#include "rcl_lifecycle/transition_map.h"
 
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
@@ -60,24 +61,21 @@ public:
 
   ~LifecycleNodeInterfaceImpl()
   {
-    if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      fprintf(stderr, "%s:%u, FATAL: rcl_state_machine got destroyed externally.\n",
-        __FILE__, __LINE__);
-      // TODO(karsten1987): Remove else. It should always be possible to call
-      // fini on state machine, also when not initialized
-    } else {
-      if (rcl_lifecycle_state_machine_fini(&state_machine_,
-        node_base_interface_->get_rcl_node_handle()) != RCL_RET_OK)
-      {
-        fprintf(stderr, "%s:%u, FATAL: failed to destroy rcl_state_machine.\n",
-          __FILE__, __LINE__);
-      }
+    rcl_node_t * node_handle = node_base_interface_->get_rcl_node_handle();
+    const rcl_node_options_t * node_options = rcl_node_get_options(node_handle);
+    auto ret = rcl_lifecycle_state_machine_fini(
+      &state_machine_, node_handle, &node_options->allocator);
+    if (ret != RCL_RET_OK) {
+      throw std::runtime_error("FATAL: failed to destroy rcl_state_machine");
     }
   }
 
   void
   init()
   {
+    rcl_node_t * node_handle = node_base_interface_->get_rcl_node_handle();
+    const rcl_node_options_t * node_options =
+      rcl_node_get_options(node_base_interface_->get_rcl_node_handle());
     state_machine_ = rcl_lifecycle_get_zero_initialized_state_machine();
     // The call to initialize the state machine takes
     // currently five different typesupports for all publishers/services
@@ -86,17 +84,19 @@ public:
     // the message) is done fully in RCL.
     // Services are handled in C++, so that it needs a C++ typesupport structure.
     rcl_ret_t ret = rcl_lifecycle_state_machine_init(
-      &state_machine_, node_base_interface_->get_rcl_node_handle(),
+      &state_machine_,
+      node_handle,
       ROSIDL_GET_MSG_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
       rosidl_typesupport_cpp::get_service_type_support_handle<ChangeStateSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetStateSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableStatesSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
-      true);
+      true,
+      &node_options->allocator);
     if (ret != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string(
-                "Couldn't initialize state machine for node ") + node_base_interface_->get_name());
+              std::string("Couldn't initialize state machine for node ") +
+              node_base_interface_->get_name());
     }
 
     {  // change_state
