@@ -77,6 +77,7 @@ public:
   service_is_ready() const;
 
   template<typename RatioT = std::milli>
+  RCLCPP_PUBLIC
   bool
   wait_for_service(
     std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))

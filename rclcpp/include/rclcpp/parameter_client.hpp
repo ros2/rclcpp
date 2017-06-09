@@ -95,11 +95,35 @@ public:
 
   template<typename CallbackT>
   typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  RCLCPP_PUBLIC
   on_parameter_event(CallbackT && callback)
   {
     return node_->create_subscription<rcl_interfaces::msg::ParameterEvent>(
       "parameter_events", std::forward<CallbackT>(callback), rmw_qos_profile_parameter_events);
   }
+
+  RCLCPP_PUBLIC
+  bool
+  service_is_ready() const;
+
+  template<typename RatioT = std::milli>
+  RCLCPP_PUBLIC
+  bool
+  wait_for_service(
+    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+  {
+    return wait_for_service_nanoseconds(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+
+protected:
+
+  RCLCPP_PUBLIC
+  bool
+  wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
+
 
 private:
   const rclcpp::node::Node::SharedPtr node_;
