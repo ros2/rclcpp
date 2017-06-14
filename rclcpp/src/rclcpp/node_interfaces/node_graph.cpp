@@ -88,14 +88,15 @@ NodeGraph::get_node_names() const
   rcutils_string_array_t node_names_c =
     rcutils_get_zero_initialized_string_array();
 
+  auto allocator = rcl_get_default_allocator();
   auto ret = rcl_get_node_names(
     node_base_->get_rcl_node_handle(),
-    rcl_get_default_allocator(),
+    allocator,
     &node_names_c);
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string_safe();
     rcl_reset_error();
-    if (rcutils_string_array_fini(&node_names_c) != RCUTILS_RET_OK) {
+    if (rcutils_string_array_fini(&node_names_c, &allocator) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
         rcl_get_error_string_safe();
     }
@@ -105,7 +106,7 @@ NodeGraph::get_node_names() const
 
   std::vector<std::string> node_names(&node_names_c.data[0],
     &node_names_c.data[0 + node_names_c.size]);
-  ret = rcutils_string_array_fini(&node_names_c);
+  ret = rcutils_string_array_fini(&node_names_c, &allocator);
   if (ret != RCUTILS_RET_OK) {
     // *INDENT-OFF*
     // TODO(karsten1987): Append rcutils_error_message once it's in master
