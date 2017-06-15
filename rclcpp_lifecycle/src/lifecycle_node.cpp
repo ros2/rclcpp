@@ -162,7 +162,7 @@ LifecycleNode::list_parameters(
   return node_parameters_->list_parameters(prefixes, depth);
 }
 
-std::map<std::string, std::string>
+std::map<std::string, std::vector<std::string>>
 LifecycleNode::get_topic_names_and_types() const
 {
   return node_graph_->get_topic_names_and_types();

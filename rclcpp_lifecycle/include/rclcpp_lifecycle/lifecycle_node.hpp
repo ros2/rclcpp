@@ -281,7 +281,7 @@ public:
   register_param_change_callback(CallbackT && callback);
 
   RCLCPP_LIFECYCLE_PUBLIC
-  std::map<std::string, std::string>
+  std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types() const;
 
   RCLCPP_LIFECYCLE_PUBLIC

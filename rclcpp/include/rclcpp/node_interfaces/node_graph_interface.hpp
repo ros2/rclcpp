@@ -41,11 +41,13 @@ public:
   /**
    * A topic is considered to exist when at least one publisher or subscriber
    * exists for it, whether they be local or remote to this process.
+   *
+   * \param[in] no_demangle if true, topic names and types are not demangled
    */
   RCLCPP_PUBLIC
   virtual
-  std::map<std::string, std::string>
-  get_topic_names_and_types() const = 0;
+  std::map<std::string, std::vector<std::string>>
+  get_topic_names_and_types(bool no_demangle = false) const = 0;
 
   /// Return a vector of existing node names (string).
   RCLCPP_PUBLIC

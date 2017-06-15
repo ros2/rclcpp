@@ -56,8 +56,8 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  std::map<std::string, std::string>
-  get_topic_names_and_types() const;
+  std::map<std::string, std::vector<std::string>>
+  get_topic_names_and_types(bool no_demangle = false) const;
 
   RCLCPP_PUBLIC
   virtual
