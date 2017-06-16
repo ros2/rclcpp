@@ -163,9 +163,15 @@ LifecycleNode::list_parameters(
 }
 
 std::map<std::string, std::vector<std::string>>
-LifecycleNode::get_topic_names_and_types() const
+LifecycleNode::get_topic_names_and_types(bool no_demangle) const
 {
-  return node_graph_->get_topic_names_and_types();
+  return node_graph_->get_topic_names_and_types(no_demangle);
+}
+
+std::map<std::string, std::vector<std::string>>
+LifecycleNode::get_service_names_and_types() const
+{
+  return node_graph_->get_service_names_and_types();
 }
 
 size_t

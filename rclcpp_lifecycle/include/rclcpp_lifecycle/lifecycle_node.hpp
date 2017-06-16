@@ -282,7 +282,11 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   std::map<std::string, std::vector<std::string>>
-  get_topic_names_and_types() const;
+  get_topic_names_and_types(bool no_demangle = false) const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
   size_t

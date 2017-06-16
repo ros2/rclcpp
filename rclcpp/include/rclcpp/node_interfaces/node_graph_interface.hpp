@@ -37,7 +37,7 @@ class NodeGraphInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeGraphInterface)
 
-  /// Return a map of existing topic names (string) to topic types (string).
+  /// Return a map of existing topic names to list of topic types.
   /**
    * A topic is considered to exist when at least one publisher or subscriber
    * exists for it, whether they be local or remote to this process.
@@ -48,6 +48,17 @@ public:
   virtual
   std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types(bool no_demangle = false) const = 0;
+
+  /// Return a map of existing service names to list of service types.
+  /**
+   * A service is considered to exist when at least one service server or
+   * service client exists for it, whether they be local or remote to this
+   * process.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types() const = 0;
 
   /// Return a vector of existing node names (string).
   RCLCPP_PUBLIC

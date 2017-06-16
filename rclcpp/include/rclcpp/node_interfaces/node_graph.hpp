@@ -61,6 +61,11 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types() const;
+
+  RCLCPP_PUBLIC
+  virtual
   std::vector<std::string>
   get_node_names() const;
 
