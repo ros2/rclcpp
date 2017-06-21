@@ -62,10 +62,6 @@ public:
 private:
   rcl_time_point_value_t rcl_time_;
 
-  Time(std::uint32_t sec, std::uint32_t nanosec)
-  : rcl_time_(RCL_S_TO_NS(sec) + nanosec)
-  {}
-
   explicit Time(rcl_time_point_value_t && rcl_time)
   : rcl_time_(std::forward<decltype(rcl_time)>(rcl_time))
   {}
