@@ -117,13 +117,10 @@ public:
     );
   }
 
-
 protected:
-
   RCLCPP_PUBLIC
   bool
   wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
-
 
 private:
   const rclcpp::node::Node::SharedPtr node_;
