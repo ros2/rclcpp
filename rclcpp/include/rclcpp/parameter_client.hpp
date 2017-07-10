@@ -101,6 +101,25 @@ public:
       "parameter_events", std::forward<CallbackT>(callback), rmw_qos_profile_parameter_events);
   }
 
+  RCLCPP_PUBLIC
+  bool
+  service_is_ready() const;
+
+  template<typename RatioT = std::milli>
+  bool
+  wait_for_service(
+    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+  {
+    return wait_for_service_nanoseconds(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
+
+protected:
+  RCLCPP_PUBLIC
+  bool
+  wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
+
 private:
   const rclcpp::node::Node::SharedPtr node_;
   rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_client_;

@@ -229,6 +229,43 @@ AsyncParametersClient::list_parameters(
   return future_result;
 }
 
+bool
+AsyncParametersClient::service_is_ready() const
+{
+  return
+    get_parameters_client_->service_is_ready() &&
+    get_parameter_types_client_->service_is_ready() &&
+    set_parameters_client_->service_is_ready() &&
+    list_parameters_client_->service_is_ready() &&
+    describe_parameters_client_->service_is_ready();
+}
+
+bool
+AsyncParametersClient::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
+{
+  const std::vector<std::shared_ptr<rclcpp::client::ClientBase>> clients = {
+    get_parameters_client_,
+    get_parameter_types_client_,
+    set_parameters_client_,
+    list_parameters_client_,
+    describe_parameters_client_
+  };
+  for (auto & client : clients) {
+    auto stamp = std::chrono::steady_clock::now();
+    if (!client->wait_for_service(timeout)) {
+      return false;
+    }
+    if (timeout > std::chrono::nanoseconds::zero()) {
+      timeout -= std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now() - stamp);
+      if (timeout < std::chrono::nanoseconds::zero()) {
+        timeout = std::chrono::nanoseconds::zero();
+      }
+    }
+  }
+  return true;
+}
+
 SyncParametersClient::SyncParametersClient(
   rclcpp::node::Node::SharedPtr node,
   const rmw_qos_profile_t & qos_profile)
