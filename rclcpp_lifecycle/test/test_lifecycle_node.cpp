@@ -35,10 +35,6 @@ struct BadMood
 {
   static constexpr rcl_lifecycle_ret_t cb_ret = RCL_LIFECYCLE_RET_FAILURE;
 };
-struct VeryBadMood
-{
-  static constexpr rcl_lifecycle_ret_t cb_ret = RCL_LIFECYCLE_RET_ERROR;
-};
 
 class TestDefaultStateMachine : public ::testing::Test
 {
@@ -142,6 +138,30 @@ TEST_F(TestDefaultStateMachine, trigger_transition) {
       rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
   EXPECT_EQ(State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
       rclcpp_lifecycle::Transition(Transition::TRANSITION_SHUTDOWN)).id());
+}
+
+TEST_F(TestDefaultStateMachine, trigger_transition_with_error_code) {
+  auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
+
+  rcl_lifecycle_ret_t ret = RCL_LIFECYCLE_RET_ERROR;
+  test_node->configure(ret);
+  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
+  ret = RCL_LIFECYCLE_RET_ERROR;
+
+  test_node->activate(ret);
+  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
+  ret = RCL_LIFECYCLE_RET_ERROR;
+
+  test_node->deactivate(ret);
+  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
+  ret = RCL_LIFECYCLE_RET_ERROR;
+
+  test_node->cleanup(ret);
+  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
+  ret = RCL_LIFECYCLE_RET_ERROR;
+
+  test_node->shutdown(ret);
+  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
 }
 
 TEST_F(TestDefaultStateMachine, good_mood) {

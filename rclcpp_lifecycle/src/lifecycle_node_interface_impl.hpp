@@ -181,7 +181,9 @@ public:
       throw std::runtime_error(
               "Can't get state. State machine is not initialized.");
     }
-    auto ret = change_state(req->transition.id);
+    rcl_lifecycle_ret_t error;
+    auto ret = change_state(req->transition.id, error);
+    (void) error;
     resp->success = (ret == RCL_RET_OK) ? true : false;
   }
 
@@ -276,7 +278,7 @@ public:
   }
 
   rcl_ret_t
-  change_state(std::uint8_t lifecycle_transition)
+  change_state(std::uint8_t lifecycle_transition, rcl_lifecycle_ret_t & error)
   {
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR("Unable to change state for state machine for %s: %s",
@@ -296,6 +298,7 @@ public:
 
     rcl_lifecycle_ret_t cb_success = execute_callback(
       state_machine_.current_state->id, initial_state);
+    error = cb_success;
 
     if (rcl_lifecycle_trigger_transition(
         &state_machine_, cb_success, true) != RCL_RET_OK)
@@ -311,7 +314,7 @@ public:
       RCUTILS_LOG_WARN("Error occured. Executing error handling.")
       rcl_lifecycle_ret_t error_resolved = execute_callback(state_machine_.current_state->id,
           initial_state);
-      if (error_resolved == RCL_RET_OK) {
+      if (error_resolved == RCL_LIFECYCLE_RET_OK) {
         // We call cleanup on the error state
         if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, true) != RCL_RET_OK) {
           RCUTILS_LOG_ERROR("Failed to call cleanup on error state");
@@ -359,7 +362,16 @@ public:
   const State &
   trigger_transition(uint8_t transition_id)
   {
-    change_state(transition_id);
+    rcl_lifecycle_ret_t error;
+    change_state(transition_id, error);
+    (void) error;
+    return get_current_state();
+  }
+
+  const State &
+  trigger_transition(uint8_t transition_id, rcl_lifecycle_ret_t & error)
+  {
+    change_state(transition_id, error);
     return get_current_state();
   }
 
