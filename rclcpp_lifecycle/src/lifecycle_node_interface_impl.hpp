@@ -40,6 +40,8 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 
+#include "rcutils/logging_macros.h"
+
 namespace rclcpp_lifecycle
 {
 
@@ -179,7 +181,8 @@ public:
       throw std::runtime_error(
               "Can't get state. State machine is not initialized.");
     }
-    resp->success = change_state(req->transition.id);
+    auto ret = change_state(req->transition.id);
+    resp->success = (ret == RCL_RET_OK) ? true : false;
   }
 
   void
@@ -226,7 +229,6 @@ public:
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       throw std::runtime_error(
               "Can't get available transitions. State machine is not initialized.");
-      return;
     }
 
     for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {
@@ -273,13 +275,13 @@ public:
     return transitions;
   }
 
-  bool
+  rcl_ret_t
   change_state(std::uint8_t lifecycle_transition)
   {
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
-      fprintf(stderr, "%s:%d, Unable to change state for state machine for %s: %s \n",
-        __FILE__, __LINE__, node_base_interface_->get_name(), rcl_get_error_string_safe());
-      return false;
+      RCUTILS_LOG_ERROR("Unable to change state for state machine for %s: %s",
+        node_base_interface_->get_name(), rcl_get_error_string_safe())
+      return RCL_RET_ERROR;
     }
 
     // keep the initial state to pass to a transition callback
@@ -287,10 +289,9 @@ public:
 
     uint8_t transition_id = lifecycle_transition;
     if (rcl_lifecycle_trigger_transition(&state_machine_, transition_id, true) != RCL_RET_OK) {
-      fprintf(stderr, "%s:%d, Unable to start transition %u from current state %s: %s\n",
-        __FILE__, __LINE__, transition_id,
-        state_machine_.current_state->label, rcl_get_error_string_safe());
-      return false;
+      RCUTILS_LOG_ERROR("Unable to start transition %u from current state %s: %s",
+        transition_id, state_machine_.current_state->label, rcl_get_error_string_safe())
+      return RCL_RET_ERROR;
     }
 
     rcl_lifecycle_ret_t cb_success = execute_callback(
@@ -299,37 +300,35 @@ public:
     if (rcl_lifecycle_trigger_transition(
         &state_machine_, cb_success, true) != RCL_RET_OK)
     {
-      fprintf(stderr, "Failed to finish transition %u. Current state is now: %s\n",
-        transition_id, state_machine_.current_state->label);
-      return false;
+      RCUTILS_LOG_ERROR("Failed to finish transition %u. Current state is now: %s",
+        transition_id, state_machine_.current_state->label)
+      return RCL_RET_ERROR;
     }
 
     // error handling ?!
     // TODO(karsten1987): iterate over possible ret value
     if (cb_success == RCL_LIFECYCLE_RET_ERROR) {
+      RCUTILS_LOG_WARN("Error occured. Executing error handling.")
       rcl_lifecycle_ret_t error_resolved = execute_callback(state_machine_.current_state->id,
           initial_state);
       if (error_resolved == RCL_RET_OK) {
-        // fprintf(stderr, "Exception handling was successful\n");
         // We call cleanup on the error state
         if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, true) != RCL_RET_OK) {
-          fprintf(stderr, "Failed to call cleanup on error state\n");
-          return false;
+          RCUTILS_LOG_ERROR("Failed to call cleanup on error state");
+          return RCL_RET_ERROR;
         }
-        // fprintf(stderr, "current state after error callback%s\n",
-        //  state_machine_.current_state->label);
       } else {
         // We call shutdown on the error state
         if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, true) != RCL_RET_OK) {
-          fprintf(stderr, "Failed to call cleanup on error state\n");
-          return false;
+          RCUTILS_LOG_ERROR("Failed to call cleanup on error state");
+          return RCL_RET_ERROR;
         }
       }
     }
     // This true holds in both cases where the actual callback
     // was successful or not, since at this point we have a valid transistion
     // to either a new primary state or error state
-    return true;
+    return RCL_RET_OK;
   }
 
   rcl_lifecycle_ret_t
