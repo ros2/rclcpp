@@ -373,7 +373,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  trigger_transition(const Transition & transition, rcl_ret_t & error);
+  trigger_transition(const Transition & transition, rcl_lifecycle_ret_t & cb_return_code);
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
@@ -381,7 +381,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  trigger_transition(uint8_t transition_id, rcl_lifecycle_ret_t & error);
+  trigger_transition(uint8_t transition_id, rcl_lifecycle_ret_t & cb_return_code);
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
@@ -389,7 +389,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  configure(rcl_lifecycle_ret_t & error);
+  configure(rcl_lifecycle_ret_t & cb_return_code);
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
@@ -397,7 +397,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  cleanup(rcl_lifecycle_ret_t & error);
+  cleanup(rcl_lifecycle_ret_t & cb_return_code);
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
@@ -405,7 +405,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  activate(rcl_lifecycle_ret_t & error);
+  activate(rcl_lifecycle_ret_t & cb_return_code);
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
@@ -413,7 +413,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  deactivate(rcl_lifecycle_ret_t & error);
+  deactivate(rcl_lifecycle_ret_t & cb_return_code);
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
@@ -421,7 +421,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   const State &
-  shutdown(rcl_lifecycle_ret_t & error);
+  shutdown(rcl_lifecycle_ret_t & cb_return_code);
 
   RCLCPP_LIFECYCLE_PUBLIC
   bool
