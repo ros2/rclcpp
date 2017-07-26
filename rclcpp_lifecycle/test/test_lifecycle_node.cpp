@@ -29,11 +29,13 @@ using lifecycle_msgs::msg::Transition;
 
 struct GoodMood
 {
-  static constexpr rcl_lifecycle_ret_t cb_ret = RCL_LIFECYCLE_RET_OK;
+  static constexpr rcl_lifecycle_transition_key_t cb_ret =
+    lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
 };
 struct BadMood
 {
-  static constexpr rcl_lifecycle_ret_t cb_ret = RCL_LIFECYCLE_RET_FAILURE;
+  static constexpr rcl_lifecycle_transition_key_t cb_ret =
+    lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE;
 };
 
 class TestDefaultStateMachine : public ::testing::Test
@@ -64,57 +66,65 @@ public:
   size_t number_of_callbacks = 0;
 
 protected:
-  rcl_lifecycle_ret_t on_configure(const rclcpp_lifecycle::State &)
+  rcl_lifecycle_transition_key_t
+  on_configure(const rclcpp_lifecycle::State &)
   {
     EXPECT_EQ(State::TRANSITION_STATE_CONFIGURING, get_current_state().id());
     ++number_of_callbacks;
     return Mood::cb_ret;
   }
 
-  rcl_lifecycle_ret_t on_activate(const rclcpp_lifecycle::State &)
+  rcl_lifecycle_transition_key_t
+  on_activate(const rclcpp_lifecycle::State &)
   {
     EXPECT_EQ(State::TRANSITION_STATE_ACTIVATING, get_current_state().id());
     ++number_of_callbacks;
     return Mood::cb_ret;
   }
 
-  rcl_lifecycle_ret_t on_deactivate(const rclcpp_lifecycle::State &)
+  rcl_lifecycle_transition_key_t
+  on_deactivate(const rclcpp_lifecycle::State &)
   {
     EXPECT_EQ(State::TRANSITION_STATE_DEACTIVATING, get_current_state().id());
     ++number_of_callbacks;
     return Mood::cb_ret;
   }
 
-  rcl_lifecycle_ret_t on_cleanup(const rclcpp_lifecycle::State &)
+  rcl_lifecycle_transition_key_t
+  on_cleanup(const rclcpp_lifecycle::State &)
   {
     EXPECT_EQ(State::TRANSITION_STATE_CLEANINGUP, get_current_state().id());
     ++number_of_callbacks;
     return Mood::cb_ret;
   }
 
-  rcl_lifecycle_ret_t on_shutdown(const rclcpp_lifecycle::State &)
+  rcl_lifecycle_transition_key_t
+  on_shutdown(const rclcpp_lifecycle::State &)
   {
     EXPECT_EQ(State::TRANSITION_STATE_SHUTTINGDOWN, get_current_state().id());
     ++number_of_callbacks;
     return Mood::cb_ret;
   }
 
-  rcl_lifecycle_ret_t on_error(const rclcpp_lifecycle::State &);
+  rcl_lifecycle_transition_key_t
+  on_error(const rclcpp_lifecycle::State &);
 };
 
 template<>
-rcl_lifecycle_ret_t MoodyLifecycleNode<GoodMood>::on_error(const rclcpp_lifecycle::State &)
+rcl_lifecycle_transition_key_t
+MoodyLifecycleNode<GoodMood>::on_error(const rclcpp_lifecycle::State &)
 {
   EXPECT_EQ(State::TRANSITION_STATE_ERRORPROCESSING, get_current_state().id());
   ADD_FAILURE();
-  return RCL_LIFECYCLE_RET_ERROR;
+  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
 }
 template<>
-rcl_lifecycle_ret_t MoodyLifecycleNode<BadMood>::on_error(const rclcpp_lifecycle::State &)
+rcl_lifecycle_transition_key_t
+MoodyLifecycleNode<BadMood>::on_error(const rclcpp_lifecycle::State &)
 {
   EXPECT_EQ(State::TRANSITION_STATE_ERRORPROCESSING, get_current_state().id());
   ++number_of_callbacks;
-  return RCL_LIFECYCLE_RET_OK;
+  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
 }
 
 TEST_F(TestDefaultStateMachine, empty_initializer) {
@@ -143,25 +153,25 @@ TEST_F(TestDefaultStateMachine, trigger_transition) {
 TEST_F(TestDefaultStateMachine, trigger_transition_with_error_code) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
 
-  rcl_lifecycle_ret_t ret = RCL_LIFECYCLE_RET_ERROR;
+  rcl_lifecycle_transition_key_t ret = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
   test_node->configure(ret);
-  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
-  ret = RCL_LIFECYCLE_RET_ERROR;
+  EXPECT_EQ(lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ret);
+  ret = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
 
   test_node->activate(ret);
-  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
-  ret = RCL_LIFECYCLE_RET_ERROR;
+  EXPECT_EQ(lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ret);
+  ret = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
 
   test_node->deactivate(ret);
-  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
-  ret = RCL_LIFECYCLE_RET_ERROR;
+  EXPECT_EQ(lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ret);
+  ret = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
 
   test_node->cleanup(ret);
-  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
-  ret = RCL_LIFECYCLE_RET_ERROR;
+  EXPECT_EQ(lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ret);
+  ret = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
 
   test_node->shutdown(ret);
-  EXPECT_EQ(RCL_LIFECYCLE_RET_OK, ret);
+  EXPECT_EQ(lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ret);
 }
 
 TEST_F(TestDefaultStateMachine, good_mood) {

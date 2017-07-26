@@ -49,7 +49,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_ret_t
+  virtual rcl_lifecycle_transition_key_t
   on_configure(const State & previous_state);
 
   /// Callback function for cleanup transition
@@ -57,7 +57,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_ret_t
+  virtual rcl_lifecycle_transition_key_t
   on_cleanup(const State & previous_state);
 
   /// Callback function for shutdown transition
@@ -65,7 +65,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_ret_t
+  virtual rcl_lifecycle_transition_key_t
   on_shutdown(const State & previous_state);
 
   /// Callback function for activate transition
@@ -73,7 +73,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_ret_t
+  virtual rcl_lifecycle_transition_key_t
   on_activate(const State & previous_state);
 
   /// Callback function for deactivate transition
@@ -81,7 +81,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_ret_t
+  virtual rcl_lifecycle_transition_key_t
   on_deactivate(const State & previous_state);
 
   /// Callback function for errorneous transition
@@ -89,7 +89,7 @@ public:
    * \return false by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_ret_t
+  virtual rcl_lifecycle_transition_key_t
   on_error(const State & previous_state);
 };
 
