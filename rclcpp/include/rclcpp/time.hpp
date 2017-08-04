@@ -36,8 +36,10 @@ public:
   now()
   {
     // TODO(karsten1987): This impl throws explicitely on RCL_ROS_TIME
-    // we have to do this, because rcl_time_source_init return RET_OK
-    // however sets system time under the hood
+    // we have to do this, because rcl_time_source_init returns RCL_RET_OK
+    // for RCL_ROS_TIME, however defaults to system time under the hood.
+    // ref: https://github.com/ros2/rcl/blob/master/rcl/src/rcl/time.c#L66-L77
+    // This section can be removed when rcl supports ROS_TIME correctly.
     if (ClockT == RCL_ROS_TIME) {
       throw std::runtime_error("RCL_ROS_TIME is currently not implemented.");
     }
@@ -47,14 +49,9 @@ public:
     rcl_time_source_t time_source;
     ret = rcl_time_source_init(ClockT, &time_source);
 
-    if (ret == RCL_RET_ERROR) {
+    if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(
         ret, "could not initialize time source: ");
-    }
-
-    if (ret == RCL_RET_INVALID_ARGUMENT) {
-      throw std::runtime_error(
-        std::string("no time source available for type ") + std::to_string(ClockT));
     }
 
     rcl_time_point_t time_point;
@@ -93,7 +90,7 @@ public:
   virtual ~Time()
   {
     if (rcl_time_point_fini(&rcl_time_) != RCL_RET_OK) {
-      RCUTILS_LOG_FATAL("failed to destroy rclcpp::Time object");
+      RCUTILS_LOG_FATAL("failed to reclaim rcl_time_point_t in destructor of rclcpp::Time")
     }
   }
 };
