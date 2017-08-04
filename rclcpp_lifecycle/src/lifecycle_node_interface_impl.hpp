@@ -187,7 +187,8 @@ public:
     // TODO(karsten1987): Lifecycle msgs have to be extended to keep both returns
     // 1. return is the actual transition
     // 2. return is whether an error occurred or not
-    resp->success = (cb_return_code == RCL_RET_OK);
+    resp->success =
+      (cb_return_code == lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS);
   }
 
   void
