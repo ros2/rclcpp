@@ -48,3 +48,38 @@ TEST(TestTime, rate_basics) {
   EXPECT_NE(0, default_now.sec);
   EXPECT_NE(0u, default_now.nanosec);
 }
+
+TEST(TestTime, convertions) {
+  rclcpp::Time now = rclcpp::Time::now();
+  builtin_interfaces::msg::Time now_msg = now;
+
+  rclcpp::Time now_again = now_msg;
+  EXPECT_EQ(now.nanoseconds(), now_again.nanoseconds());
+
+  builtin_interfaces::msg::Time msg;
+  msg.sec = 12345;
+  msg.nanosec = 67890;
+
+  rclcpp::Time time = msg;
+  EXPECT_EQ(RCL_S_TO_NS(msg.sec) + static_cast<uint64_t>(msg.nanosec), time.nanoseconds());
+  EXPECT_EQ(msg.sec, RCL_NS_TO_S(time.nanoseconds()));
+}
+
+TEST(TestTime, operators) {
+  rclcpp::Time old(1, 0);
+  rclcpp::Time young(2, 0);
+
+  EXPECT_EQ(true, old < young);
+  EXPECT_EQ(true, young > old);
+  EXPECT_EQ(true, old <= young);
+  EXPECT_EQ(true, young >= old);
+  EXPECT_EQ(false, young == old);
+
+  rclcpp::Time add = old + young;
+  EXPECT_EQ(add.nanoseconds(), old.nanoseconds() + young.nanoseconds());
+  EXPECT_EQ(add, old + young);
+
+  rclcpp::Time sub = young - old;
+  EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
+  EXPECT_EQ(sub, young - old);
+}
