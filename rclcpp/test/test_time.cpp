@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <limits>
 #include <string>
 
@@ -72,6 +73,16 @@ TEST(TestTime, convertions) {
   negative_time_msg.nanosec = 1;
   try {
     rclcpp::Time negative_time = negative_time_msg;
+    FAIL();
+  } catch (const std::exception &) {
+    SUCCEED();
+  }
+
+  EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
+
+  rclcpp::Time assignment(1, 2);
+  try {
+    assignment = negative_time_msg;
     FAIL();
   } catch (const std::exception &) {
     SUCCEED();

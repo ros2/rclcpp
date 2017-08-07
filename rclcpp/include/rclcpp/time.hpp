@@ -84,6 +84,10 @@ public:
   Time(int32_t seconds, uint32_t nanoseconds)
   : rcl_time_(get_empty_time_point())
   {
+    if (seconds < 0) {
+      throw std::runtime_error("can't convert a negative time msg to rclcpp::Time");
+    }
+
     uint64_t ns = RCL_S_TO_NS(static_cast<uint64_t>(seconds));
     ns += nanoseconds;
     rcl_time_.nanoseconds = ns;
