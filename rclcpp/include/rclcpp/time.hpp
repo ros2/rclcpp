@@ -84,7 +84,7 @@ public:
   Time(int32_t seconds, uint32_t nanoseconds)
   : rcl_time_(get_empty_time_point())
   {
-    uint64_t ns = RCL_S_TO_NS(seconds);
+    uint64_t ns = RCL_S_TO_NS(static_cast<uint64_t>(seconds));
     ns += nanoseconds;
     rcl_time_.nanoseconds = ns;
   }
@@ -99,7 +99,11 @@ public:
   Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
   : rcl_time_(get_empty_time_point())
   {
-    rcl_time_.nanoseconds = RCL_S_TO_NS(time_msg.sec);
+    if (time_msg.sec < 0) {
+      throw std::runtime_error("can't convert a negative time msg to rclcpp::Time");
+    }
+
+    rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
     rcl_time_.nanoseconds += time_msg.nanosec;
   }
 
@@ -114,8 +118,12 @@ public:
   void
   operator=(const builtin_interfaces::msg::Time & time_msg)
   {
+    if (time_msg.sec < 0) {
+      throw std::runtime_error("can't convert a negative time msg to rclcpp::Time");
+    }
+
     auto time_point = get_empty_time_point();
-    time_point.nanoseconds = RCL_S_TO_NS(time_msg.sec);
+    time_point.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
     time_point.nanoseconds += time_msg.nanosec;
 
     this->rcl_time_ = time_point;
@@ -164,6 +172,11 @@ public:
       throw std::runtime_error("can't add times with different time sources");
     }
 
+    auto ns = rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds;
+    if (ns < rcl_time_.nanoseconds) {
+      throw std::runtime_error("addition leads to uint64_t overflow");
+    }
+
     return Time(rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds);
   }
 
@@ -172,6 +185,11 @@ public:
   {
     if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
       throw std::runtime_error("can't add times with different time sources");
+    }
+
+    auto ns = rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds;
+    if (ns > rcl_time_.nanoseconds) {
+      throw std::runtime_error("subtraction leads to uint64_t underflow");
     }
 
     return Time(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);

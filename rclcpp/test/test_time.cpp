@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
 #include <string>
 
 #include "rcl/error_handling.h"
@@ -30,7 +31,7 @@ protected:
   }
 };
 
-TEST(TestTime, rate_basics) {
+TEST(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   // TODO(Karsten1987): Fix this test once ROS_TIME is implemented
   EXPECT_ANY_THROW(rclcpp::Time::now<RCL_ROS_TIME>());
@@ -61,8 +62,20 @@ TEST(TestTime, convertions) {
   msg.nanosec = 67890;
 
   rclcpp::Time time = msg;
-  EXPECT_EQ(RCL_S_TO_NS(msg.sec) + static_cast<uint64_t>(msg.nanosec), time.nanoseconds());
+  EXPECT_EQ(
+    RCL_S_TO_NS(static_cast<uint64_t>(msg.sec)) + static_cast<uint64_t>(msg.nanosec),
+    time.nanoseconds());
   EXPECT_EQ(msg.sec, RCL_NS_TO_S(time.nanoseconds()));
+
+  builtin_interfaces::msg::Time negative_time_msg;
+  negative_time_msg.sec = -1;
+  negative_time_msg.nanosec = 1;
+  try {
+    rclcpp::Time negative_time = negative_time_msg;
+    FAIL();
+  } catch (const std::exception &) {
+    SUCCEED();
+  }
 }
 
 TEST(TestTime, operators) {
@@ -82,4 +95,12 @@ TEST(TestTime, operators) {
   rclcpp::Time sub = young - old;
   EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
   EXPECT_EQ(sub, young - old);
+}
+
+TEST(TestTime, overflows) {
+  rclcpp::Time max(std::numeric_limits<uint64_t>::max());
+  rclcpp::Time one(1);
+
+  EXPECT_ANY_THROW(max + one);
+  EXPECT_ANY_THROW(one - max);
 }
