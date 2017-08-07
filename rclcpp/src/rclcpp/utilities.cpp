@@ -50,7 +50,8 @@ static std::mutex g_interrupt_mutex;
 #ifdef HAS_SIGACTION
 static struct sigaction old_action;
 #else
-static void (* old_signal_handler)(int) = 0;
+typedef void (* signal_handler_t)(int);
+static signal_handler_t old_signal_handler = 0;
 #endif
 
 void
@@ -98,28 +99,22 @@ signal_handler(int signal_value)
   g_interrupt_condition_variable.notify_all();
 }
 
-void
-rclcpp::utilities::init(int argc, char * argv[])
-{
-  g_is_interrupted.store(false);
-  if (rcl_init(argc, argv, rcl_get_default_allocator()) != RCL_RET_OK) {
-    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-    throw std::runtime_error(
-      std::string("failed to initialize rmw implementation: ") + rcl_get_error_string_safe());
-    // *INDENT-ON*
-  }
 #ifdef HAS_SIGACTION
-  struct sigaction action;
-  memset(&action, 0, sizeof(action));
-  sigemptyset(&action.sa_mask);
-  action.sa_sigaction = ::signal_handler;
-  action.sa_flags = SA_SIGINFO;
-  ssize_t ret = sigaction(SIGINT, &action, &old_action);
+struct sigaction
+set_sigaction(int signal_value, const struct sigaction & action)
+#else
+signal_handler_t
+set_signal_handler(int signal_value, signal_handler_t signal_handler)
+#endif
+{
+#ifdef HAS_SIGACTION
+  struct sigaction old_action;
+  ssize_t ret = sigaction(signal_value, &action, &old_action);
   if (ret == -1)
 #else
-  ::old_signal_handler = std::signal(SIGINT, ::signal_handler);
+  signal_handler_t old_signal_handler = std::signal(signal_value, signal_handler);
   // NOLINTNEXTLINE(readability/braces)
-  if (::old_signal_handler == SIG_ERR)
+  if (old_signal_handler == SIG_ERR)
 #endif
   {
     const size_t error_length = 1024;
@@ -147,6 +142,34 @@ rclcpp::utilities::init(int argc, char * argv[])
       error_string);
     // *INDENT-ON*
   }
+
+#ifdef HAS_SIGACTION
+  return old_action;
+#else
+  return old_signal_handler;
+#endif
+}
+
+void
+rclcpp::utilities::init(int argc, char * argv[])
+{
+  g_is_interrupted.store(false);
+  if (rcl_init(argc, argv, rcl_get_default_allocator()) != RCL_RET_OK) {
+    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+    throw std::runtime_error(
+      std::string("failed to initialize rmw implementation: ") + rcl_get_error_string_safe());
+    // *INDENT-ON*
+  }
+#ifdef HAS_SIGACTION
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  sigemptyset(&action.sa_mask);
+  action.sa_sigaction = ::signal_handler;
+  action.sa_flags = SA_SIGINFO;
+  ::old_action = set_sigaction(SIGINT, action);
+#else
+  ::old_signal_handler = set_signal_handler(SIGINT, ::signal_handler);
+#endif
 }
 
 bool
