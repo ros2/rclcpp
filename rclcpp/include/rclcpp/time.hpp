@@ -36,7 +36,7 @@ public:
   Time(int32_t seconds, uint32_t nanoseconds, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
-  explicit Time(uint64_t nanoseconds, rcl_time_source_type_t clcok = RCL_SYSTEM_TIME);
+  explicit Time(uint64_t nanoseconds, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
