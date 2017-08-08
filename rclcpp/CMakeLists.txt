@@ -58,6 +58,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/publisher.cpp
   src/rclcpp/service.cpp
   src/rclcpp/subscription.cpp
+  src/rclcpp/time.cpp
   src/rclcpp/timer.cpp
   src/rclcpp/type_support.cpp
   src/rclcpp/utilities.cpp

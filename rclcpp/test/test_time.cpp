@@ -35,13 +35,13 @@ protected:
 TEST(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   // TODO(Karsten1987): Fix this test once ROS_TIME is implemented
-  EXPECT_ANY_THROW(rclcpp::Time::now<RCL_ROS_TIME>());
+  EXPECT_ANY_THROW(rclcpp::Time::now(RCL_ROS_TIME));
 
-  Time system_now = rclcpp::Time::now<RCL_SYSTEM_TIME>();
+  Time system_now = rclcpp::Time::now(RCL_SYSTEM_TIME);
   EXPECT_NE(0, system_now.sec);
   EXPECT_NE(0u, system_now.nanosec);
 
-  Time steady_now = rclcpp::Time::now<RCL_STEADY_TIME>();
+  Time steady_now = rclcpp::Time::now(RCL_STEADY_TIME);
   EXPECT_NE(0, steady_now.sec);
   EXPECT_NE(0u, steady_now.nanosec);
 
@@ -106,6 +106,28 @@ TEST(TestTime, operators) {
   rclcpp::Time sub = young - old;
   EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
   EXPECT_EQ(sub, young - old);
+
+  rclcpp::Time system_time(1, 0, RCL_SYSTEM_TIME);
+  rclcpp::Time steady_time(2, 0, RCL_STEADY_TIME);
+
+  EXPECT_ANY_THROW((void)(system_time == steady_time));
+  EXPECT_ANY_THROW((void)(system_time <= steady_time));
+  EXPECT_ANY_THROW((void)(system_time >= steady_time));
+  EXPECT_ANY_THROW((void)(system_time < steady_time));
+  EXPECT_ANY_THROW((void)(system_time > steady_time));
+  EXPECT_ANY_THROW((void)(system_time + steady_time));
+  EXPECT_ANY_THROW((void)(system_time - steady_time));
+
+  rclcpp::Time now = rclcpp::Time::now(RCL_SYSTEM_TIME);
+  rclcpp::Time later = rclcpp::Time::now(RCL_STEADY_TIME);
+
+  EXPECT_ANY_THROW((void)(now == later));
+  EXPECT_ANY_THROW((void)(now <= later));
+  EXPECT_ANY_THROW((void)(now >= later));
+  EXPECT_ANY_THROW((void)(now < later));
+  EXPECT_ANY_THROW((void)(now > later));
+  EXPECT_ANY_THROW((void)(now + later));
+  EXPECT_ANY_THROW((void)(now - later));
 }
 
 TEST(TestTime, overflows) {
