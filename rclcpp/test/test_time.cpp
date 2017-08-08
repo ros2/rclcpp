@@ -93,11 +93,11 @@ TEST(TestTime, operators) {
   rclcpp::Time old(1, 0);
   rclcpp::Time young(2, 0);
 
-  EXPECT_EQ(true, old < young);
-  EXPECT_EQ(true, young > old);
-  EXPECT_EQ(true, old <= young);
-  EXPECT_EQ(true, young >= old);
-  EXPECT_EQ(false, young == old);
+  EXPECT_TRUE(old < young);
+  EXPECT_TRUE(young > old);
+  EXPECT_TRUE(old <= young);
+  EXPECT_TRUE(young >= old);
+  EXPECT_FALSE(young == old);
 
   rclcpp::Time add = old + young;
   EXPECT_EQ(add.nanoseconds(), old.nanoseconds() + young.nanoseconds());
