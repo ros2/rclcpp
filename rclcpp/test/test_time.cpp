@@ -51,7 +51,7 @@ TEST(TestTime, time_sources) {
   EXPECT_NE(0u, default_now.nanosec);
 }
 
-TEST(TestTime, convertions) {
+TEST(TestTime, conversions) {
   rclcpp::Time now = rclcpp::Time::now();
   builtin_interfaces::msg::Time now_msg = now;
 
