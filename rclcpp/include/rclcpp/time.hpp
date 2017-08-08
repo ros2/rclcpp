@@ -15,15 +15,11 @@
 #ifndef RCLCPP__TIME_HPP_
 #define RCLCPP__TIME_HPP_
 
-#include <utility>
-
 #include "builtin_interfaces/msg/time.hpp"
 
+#include "rclcpp/visibility_control.hpp"
+
 #include "rcl/time.h"
-
-#include "rclcpp/exceptions.hpp"
-
-#include "rcutils/logging_macros.h"
 
 namespace rclcpp
 {
@@ -31,68 +27,65 @@ namespace rclcpp
 class Time
 {
 public:
-  template<rcl_time_source_type_t ClockT = RCL_SYSTEM_TIME>
-  static Time
-  now()
-  {
-    // TODO(karsten1987): This impl throws explicitely on RCL_ROS_TIME
-    // we have to do this, because rcl_time_source_init returns RCL_RET_OK
-    // for RCL_ROS_TIME, however defaults to system time under the hood.
-    // ref: https://github.com/ros2/rcl/blob/master/rcl/src/rcl/time.c#L66-L77
-    // This section can be removed when rcl supports ROS_TIME correctly.
-    if (ClockT == RCL_ROS_TIME) {
-      throw std::runtime_error("RCL_ROS_TIME is currently not implemented.");
-    }
+  RCLCPP_PUBLIC
+  static
+  Time
+  now(rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
 
-    rcl_ret_t ret = RCL_RET_ERROR;
+  RCLCPP_PUBLIC
+  Time(int32_t seconds, uint32_t nanoseconds, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
 
-    rcl_time_source_t time_source;
-    ret = rcl_time_source_init(ClockT, &time_source);
+  RCLCPP_PUBLIC
+  explicit Time(uint64_t nanoseconds, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
 
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "could not initialize time source: ");
-    }
+  RCLCPP_PUBLIC
+  Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
 
-    rcl_time_point_t time_point;
-    ret = rcl_time_point_init(&time_point, &time_source);
+  RCLCPP_PUBLIC
+  virtual ~Time();
 
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "could not initialize time point: ");
-    }
+  RCLCPP_PUBLIC
+  operator builtin_interfaces::msg::Time() const;
 
-    ret = rcl_time_point_get_now(&time_point);
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "could not get current time stamp: ");
-    }
+  RCLCPP_PUBLIC
+  void
+  operator=(const builtin_interfaces::msg::Time & time_msg);
 
-    return Time(std::move(time_point));
-  }
+  RCLCPP_PUBLIC
+  bool
+  operator==(const rclcpp::Time & rhs) const;
 
-  operator builtin_interfaces::msg::Time() const
-  {
-    builtin_interfaces::msg::Time msg_time;
-    msg_time.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_time_.nanoseconds));
-    msg_time.nanosec = static_cast<std::uint32_t>(rcl_time_.nanoseconds % (1000 * 1000 * 1000));
-    return msg_time;
-  }
+  RCLCPP_PUBLIC
+  bool
+  operator<(const rclcpp::Time & rhs) const;
+
+  RCLCPP_PUBLIC
+  bool
+  operator<=(const rclcpp::Time & rhs) const;
+
+  RCLCPP_PUBLIC
+  bool
+  operator>=(const rclcpp::Time & rhs) const;
+
+  RCLCPP_PUBLIC
+  bool
+  operator>(const rclcpp::Time & rhs) const;
+
+  RCLCPP_PUBLIC
+  Time
+  operator+(const rclcpp::Time & rhs) const;
+
+  RCLCPP_PUBLIC
+  Time
+  operator-(const rclcpp::Time & rhs) const;
+
+  RCLCPP_PUBLIC
+  uint64_t
+  nanoseconds() const;
 
 private:
+  rcl_time_source_t rcl_time_source_;
   rcl_time_point_t rcl_time_;
-
-  explicit Time(rcl_time_point_t && rcl_time)
-  : rcl_time_(std::forward<decltype(rcl_time)>(rcl_time))
-  {}
-
-public:
-  virtual ~Time()
-  {
-    if (rcl_time_point_fini(&rcl_time_) != RCL_RET_OK) {
-      RCUTILS_LOG_FATAL("failed to reclaim rcl_time_point_t in destructor of rclcpp::Time")
-    }
-  }
 };
 
 }  // namespace rclcpp

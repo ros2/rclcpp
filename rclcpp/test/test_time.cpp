@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <limits>
 #include <string>
 
 #include "rcl/error_handling.h"
@@ -30,16 +32,16 @@ protected:
   }
 };
 
-TEST(TestTime, rate_basics) {
+TEST(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   // TODO(Karsten1987): Fix this test once ROS_TIME is implemented
-  EXPECT_ANY_THROW(rclcpp::Time::now<RCL_ROS_TIME>());
+  EXPECT_ANY_THROW(rclcpp::Time::now(RCL_ROS_TIME));
 
-  Time system_now = rclcpp::Time::now<RCL_SYSTEM_TIME>();
+  Time system_now = rclcpp::Time::now(RCL_SYSTEM_TIME);
   EXPECT_NE(0, system_now.sec);
   EXPECT_NE(0u, system_now.nanosec);
 
-  Time steady_now = rclcpp::Time::now<RCL_STEADY_TIME>();
+  Time steady_now = rclcpp::Time::now(RCL_STEADY_TIME);
   EXPECT_NE(0, steady_now.sec);
   EXPECT_NE(0u, steady_now.nanosec);
 
@@ -47,4 +49,86 @@ TEST(TestTime, rate_basics) {
   Time default_now = rclcpp::Time::now();
   EXPECT_NE(0, default_now.sec);
   EXPECT_NE(0u, default_now.nanosec);
+}
+
+TEST(TestTime, convertions) {
+  rclcpp::Time now = rclcpp::Time::now();
+  builtin_interfaces::msg::Time now_msg = now;
+
+  rclcpp::Time now_again = now_msg;
+  EXPECT_EQ(now.nanoseconds(), now_again.nanoseconds());
+
+  builtin_interfaces::msg::Time msg;
+  msg.sec = 12345;
+  msg.nanosec = 67890;
+
+  rclcpp::Time time = msg;
+  EXPECT_EQ(
+    RCL_S_TO_NS(static_cast<uint64_t>(msg.sec)) + static_cast<uint64_t>(msg.nanosec),
+    time.nanoseconds());
+  EXPECT_EQ(static_cast<uint64_t>(msg.sec), RCL_NS_TO_S(time.nanoseconds()));
+
+  builtin_interfaces::msg::Time negative_time_msg;
+  negative_time_msg.sec = -1;
+  negative_time_msg.nanosec = 1;
+
+  EXPECT_ANY_THROW({
+    rclcpp::Time negative_time = negative_time_msg;
+  });
+
+  EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
+
+  EXPECT_ANY_THROW({
+    rclcpp::Time assignment(1, 2);
+    assignment = negative_time_msg;
+  });
+}
+
+TEST(TestTime, operators) {
+  rclcpp::Time old(1, 0);
+  rclcpp::Time young(2, 0);
+
+  EXPECT_TRUE(old < young);
+  EXPECT_TRUE(young > old);
+  EXPECT_TRUE(old <= young);
+  EXPECT_TRUE(young >= old);
+  EXPECT_FALSE(young == old);
+
+  rclcpp::Time add = old + young;
+  EXPECT_EQ(add.nanoseconds(), old.nanoseconds() + young.nanoseconds());
+  EXPECT_EQ(add, old + young);
+
+  rclcpp::Time sub = young - old;
+  EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
+  EXPECT_EQ(sub, young - old);
+
+  rclcpp::Time system_time(1, 0, RCL_SYSTEM_TIME);
+  rclcpp::Time steady_time(2, 0, RCL_STEADY_TIME);
+
+  EXPECT_ANY_THROW((void)(system_time == steady_time));
+  EXPECT_ANY_THROW((void)(system_time <= steady_time));
+  EXPECT_ANY_THROW((void)(system_time >= steady_time));
+  EXPECT_ANY_THROW((void)(system_time < steady_time));
+  EXPECT_ANY_THROW((void)(system_time > steady_time));
+  EXPECT_ANY_THROW((void)(system_time + steady_time));
+  EXPECT_ANY_THROW((void)(system_time - steady_time));
+
+  rclcpp::Time now = rclcpp::Time::now(RCL_SYSTEM_TIME);
+  rclcpp::Time later = rclcpp::Time::now(RCL_STEADY_TIME);
+
+  EXPECT_ANY_THROW((void)(now == later));
+  EXPECT_ANY_THROW((void)(now <= later));
+  EXPECT_ANY_THROW((void)(now >= later));
+  EXPECT_ANY_THROW((void)(now < later));
+  EXPECT_ANY_THROW((void)(now > later));
+  EXPECT_ANY_THROW((void)(now + later));
+  EXPECT_ANY_THROW((void)(now - later));
+}
+
+TEST(TestTime, overflows) {
+  rclcpp::Time max(std::numeric_limits<uint64_t>::max());
+  rclcpp::Time one(1);
+
+  EXPECT_THROW(max + one, std::overflow_error);
+  EXPECT_THROW(one - max, std::underflow_error);
 }
