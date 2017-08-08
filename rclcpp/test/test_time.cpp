@@ -129,6 +129,6 @@ TEST(TestTime, overflows) {
   rclcpp::Time max(std::numeric_limits<uint64_t>::max());
   rclcpp::Time one(1);
 
-  EXPECT_ANY_THROW(max + one);
-  EXPECT_ANY_THROW(one - max);
+  EXPECT_THROW(max + one, std::overflow_error);
+  EXPECT_THROW(one - max, std::underflow_error);
 }
