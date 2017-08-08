@@ -35,7 +35,7 @@ init_time_source(rcl_time_source_type_t clock = RCL_SYSTEM_TIME)
 
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not initialize time source: ");
+      ret, "could not initialize time source");
   }
 
   return time_source;
@@ -49,7 +49,7 @@ init_time_point(rcl_time_source_t & time_source)
 
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not initialize time point: ");
+      ret, "could not initialize time point");
   }
 
   return time_point;
@@ -77,7 +77,7 @@ Time::now(rcl_time_source_type_t clock)
   auto ret = rcl_time_point_get_now(&now.rcl_time_);
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not get current time stamp: ");
+      ret, "could not get current time stamp");
   }
 
   return now;
@@ -88,12 +88,11 @@ Time::Time(int32_t seconds, uint32_t nanoseconds, rcl_time_source_type_t clock)
   rcl_time_(init_time_point(rcl_time_source_))
 {
   if (seconds < 0) {
-    throw std::runtime_error("can't convert a negative time msg to rclcpp::Time");
+    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
   }
 
-  uint64_t ns = RCL_S_TO_NS(static_cast<uint64_t>(seconds));
-  ns += nanoseconds;
-  rcl_time_.nanoseconds = ns;
+  rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(seconds));
+  rcl_time_.nanoseconds += nanoseconds;
 }
 
 Time::Time(uint64_t nanoseconds, rcl_time_source_type_t clock)
@@ -108,7 +107,7 @@ Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
   rcl_time_(init_time_point(rcl_time_source_))
 {
   if (time_msg.sec < 0) {
-    throw std::runtime_error("can't convert a negative time msg to rclcpp::Time");
+    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
   }
 
   rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
@@ -134,7 +133,7 @@ void
 Time::operator=(const builtin_interfaces::msg::Time & time_msg)
 {
   if (time_msg.sec < 0) {
-    throw std::runtime_error("can't convert a negative time msg to rclcpp::Time");
+    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
   }
 
   this->rcl_time_source_ = init_time_source();
@@ -203,7 +202,7 @@ Time::operator+(const rclcpp::Time & rhs) const
 
   auto ns = rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds;
   if (ns < rcl_time_.nanoseconds) {
-    throw std::runtime_error("addition leads to uint64_t overflow");
+    throw std::overflow_error("addition leads to uint64_t overflow");
   }
 
   return Time(rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds);
@@ -218,7 +217,7 @@ Time::operator-(const rclcpp::Time & rhs) const
 
   auto ns = rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds;
   if (ns > rcl_time_.nanoseconds) {
-    throw std::runtime_error("subtraction leads to uint64_t underflow");
+    throw std::underflow_error("subtraction leads to uint64_t underflow");
   }
 
   return Time(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);

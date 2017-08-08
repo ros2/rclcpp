@@ -71,22 +71,17 @@ TEST(TestTime, convertions) {
   builtin_interfaces::msg::Time negative_time_msg;
   negative_time_msg.sec = -1;
   negative_time_msg.nanosec = 1;
-  try {
+
+  EXPECT_ANY_THROW({
     rclcpp::Time negative_time = negative_time_msg;
-    FAIL();
-  } catch (const std::exception &) {
-    SUCCEED();
-  }
+  });
 
   EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
 
-  rclcpp::Time assignment(1, 2);
-  try {
+  EXPECT_ANY_THROW({
+    rclcpp::Time assignment(1, 2);
     assignment = negative_time_msg;
-    FAIL();
-  } catch (const std::exception &) {
-    SUCCEED();
-  }
+  });
 }
 
 TEST(TestTime, operators) {
