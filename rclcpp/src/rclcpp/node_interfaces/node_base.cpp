@@ -104,6 +104,7 @@ NodeBase::NodeBase(
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate node name");
       }
+      delete rcl_node;
       throw rclcpp::exceptions::InvalidNodeNameError(
               node_name.c_str(),
               rmw_node_name_validation_result_string(validation_result),
@@ -122,6 +123,7 @@ NodeBase::NodeBase(
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate namespace");
       }
+      delete rcl_node;
       throw rclcpp::exceptions::InvalidNamespaceError(
               namespace_.c_str(),
               rmw_namespace_validation_result_string(validation_result),
