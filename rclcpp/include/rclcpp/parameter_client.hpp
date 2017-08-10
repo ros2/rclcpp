@@ -218,6 +218,21 @@ public:
     return async_parameters_client_->on_parameter_event(std::forward<CallbackT>(callback));
   }
 
+  RCLCPP_PUBLIC
+  bool
+  service_is_ready() const
+  {
+    return async_parameters_client_->service_is_ready();
+  }
+
+  template<typename RatioT = std::milli>
+  bool
+  wait_for_service(
+    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+  {
+    return async_parameters_client_->wait_for_service(timeout);
+  }
+
 private:
   rclcpp::executor::Executor::SharedPtr executor_;
   rclcpp::node::Node::SharedPtr node_;
