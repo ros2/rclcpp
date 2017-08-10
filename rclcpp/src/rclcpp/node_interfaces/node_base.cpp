@@ -92,6 +92,8 @@ NodeBase::NodeBase(
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
 
+    delete rcl_node;
+
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
       int validation_result;
@@ -104,7 +106,6 @@ NodeBase::NodeBase(
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate node name");
       }
-      delete rcl_node;
       throw rclcpp::exceptions::InvalidNodeNameError(
               node_name.c_str(),
               rmw_node_name_validation_result_string(validation_result),
@@ -123,7 +124,6 @@ NodeBase::NodeBase(
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate namespace");
       }
-      delete rcl_node;
       throw rclcpp::exceptions::InvalidNamespaceError(
               namespace_.c_str(),
               rmw_namespace_validation_result_string(validation_result),
