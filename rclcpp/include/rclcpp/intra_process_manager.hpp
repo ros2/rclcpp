@@ -23,6 +23,7 @@
 #include <exception>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <unordered_map>
 #include <set>
 
@@ -315,6 +316,7 @@ public:
     message = nullptr;
 
     size_t target_subs_size = 0;
+    std::lock_guard<std::mutex> lock(take_mutex_);
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->take_intra_process_message(
       intra_process_publisher_id,
       message_sequence_number,
@@ -346,6 +348,7 @@ private:
   get_next_unique_id();
 
   IntraProcessManagerImplBase::SharedPtr impl_;
+  std::mutex take_mutex_;
 };
 
 }  // namespace intra_process_manager
