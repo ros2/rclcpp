@@ -54,51 +54,6 @@ typedef void (* signal_handler_t)(int);
 static signal_handler_t old_signal_handler = 0;
 #endif
 
-void
-#ifdef HAS_SIGACTION
-signal_handler(int signal_value, siginfo_t * siginfo, void * context)
-#else
-signal_handler(int signal_value)
-#endif
-{
-  // TODO(wjwwood): remove? move to console logging at some point?
-  printf("signal_handler(%d)\n", signal_value);
-#ifdef HAS_SIGACTION
-  if (old_action.sa_flags & SA_SIGINFO) {
-    if (old_action.sa_sigaction != NULL) {
-      old_action.sa_sigaction(signal_value, siginfo, context);
-    }
-  } else {
-    // *INDENT-OFF*
-    if (
-      old_action.sa_handler != NULL &&  // Is set
-      old_action.sa_handler != SIG_DFL &&  // Is not default
-      old_action.sa_handler != SIG_IGN)  // Is not ignored
-    // *INDENT-ON*
-    {
-      old_action.sa_handler(signal_value);
-    }
-  }
-#else
-  if (old_signal_handler) {
-    old_signal_handler(signal_value);
-  }
-#endif
-  g_signal_status = signal_value;
-  {
-    std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
-    for (auto & kv : g_sigint_guard_cond_handles) {
-      rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
-      if (status != RCL_RET_OK) {
-        fprintf(stderr,
-          "[rclcpp::error] failed to trigger guard condition: %s\n", rcl_get_error_string_safe());
-      }
-    }
-  }
-  g_is_interrupted.store(true);
-  g_interrupt_condition_variable.notify_all();
-}
-
 #ifdef HAS_SIGACTION
 struct sigaction
 set_sigaction(int signal_value, const struct sigaction & action)
@@ -151,6 +106,59 @@ set_signal_handler(int signal_value, signal_handler_t signal_handler)
 }
 
 void
+trigger_interrupt_guard_condition(int signal_value)
+{
+  g_signal_status = signal_value;
+  {
+    std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
+    for (auto & kv : g_sigint_guard_cond_handles) {
+      rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
+      if (status != RCL_RET_OK) {
+        fprintf(stderr,
+          "[rclcpp::error] failed to trigger guard condition: %s\n", rcl_get_error_string_safe());
+      }
+    }
+  }
+  g_is_interrupted.store(true);
+  g_interrupt_condition_variable.notify_all();
+}
+
+void
+#ifdef HAS_SIGACTION
+signal_handler(int signal_value, siginfo_t * siginfo, void * context)
+#else
+signal_handler(int signal_value)
+#endif
+{
+  // TODO(wjwwood): remove? move to console logging at some point?
+  printf("signal_handler(%d)\n", signal_value);
+
+#ifdef HAS_SIGACTION
+  if (old_action.sa_flags & SA_SIGINFO) {
+    if (old_action.sa_sigaction != NULL) {
+      old_action.sa_sigaction(signal_value, siginfo, context);
+    }
+  } else {
+    // *INDENT-OFF*
+    if (
+      old_action.sa_handler != NULL &&  // Is set
+      old_action.sa_handler != SIG_DFL &&  // Is not default
+      old_action.sa_handler != SIG_IGN)  // Is not ignored
+    // *INDENT-ON*
+    {
+      old_action.sa_handler(signal_value);
+    }
+  }
+#else
+  if (old_signal_handler) {
+    old_signal_handler(signal_value);
+  }
+#endif
+
+  trigger_interrupt_guard_condition(signal_value);
+}
+
+void
 rclcpp::utilities::init(int argc, char * argv[])
 {
   g_is_interrupted.store(false);
@@ -192,19 +200,8 @@ static std::vector<std::function<void(void)>> on_shutdown_callbacks_;
 void
 rclcpp::utilities::shutdown()
 {
-  g_signal_status = SIGINT;
-  {
-    std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
-    for (auto & kv : g_sigint_guard_cond_handles) {
-      if (rcl_trigger_guard_condition(&(kv.second)) != RCL_RET_OK) {
-        fprintf(stderr,
-          "[rclcpp::error] failed to trigger sigint guard condition: %s\n",
-          rcl_get_error_string_safe());
-      }
-    }
-  }
-  g_is_interrupted.store(true);
-  g_interrupt_condition_variable.notify_all();
+  trigger_interrupt_guard_condition(SIGINT);
+
   {
     std::lock_guard<std::mutex> lock(on_shutdown_mutex_);
     for (auto & on_shutdown_callback : on_shutdown_callbacks_) {
