@@ -172,6 +172,7 @@ public:
         (std::cerr << ss.str()).flush();
         rcl_reset_error();
       }
+      delete service_handle_;
     }
   }
 

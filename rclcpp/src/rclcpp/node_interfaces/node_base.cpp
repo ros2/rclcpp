@@ -92,6 +92,8 @@ NodeBase::NodeBase(
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
 
+    delete rcl_node;
+
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
       int validation_result;
