@@ -46,7 +46,7 @@ class ParameterVariant
 {
 public:
   RCLCPP_PUBLIC
-  ParameterVariant();
+  ParameterVariant(const std::string & name = "");
   RCLCPP_PUBLIC
   explicit ParameterVariant(const std::string & name, const bool bool_value);
   RCLCPP_PUBLIC
