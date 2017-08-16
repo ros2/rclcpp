@@ -188,7 +188,7 @@ public:
     // 1. return is the actual transition
     // 2. return is whether an error occurred or not
     resp->success =
-      (cb_return_code == lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS);
+      (cb_return_code == TRANSITION_CALLBACK_SUCCESS);
   }
 
   void
@@ -313,11 +313,11 @@ public:
 
     // error handling ?!
     // TODO(karsten1987): iterate over possible ret value
-    if (cb_return_code == lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR) {
+    if (cb_return_code == TRANSITION_CALLBACK_ERROR) {
       RCUTILS_LOG_WARN("Error occurred while doing error handling.")
       rcl_lifecycle_transition_key_t error_resolved = execute_callback(
         state_machine_.current_state->id, initial_state);
-      if (error_resolved == lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS) {
+      if (error_resolved == TRANSITION_CALLBACK_SUCCESS) {
         // We call cleanup on the error state
         if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, true) != RCL_RET_OK) {
           RCUTILS_LOG_ERROR("Failed to call cleanup on error state")
@@ -341,8 +341,7 @@ public:
   execute_callback(unsigned int cb_id, const State & previous_state)
   {
     // in case no callback was attached, we forward directly
-    rcl_lifecycle_transition_key_t cb_success =
-      lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    rcl_lifecycle_transition_key_t cb_success = TRANSITION_CALLBACK_SUCCESS;
 
     auto it = cb_map_.find(cb_id);
     if (it != cb_map_.end()) {
@@ -357,7 +356,7 @@ public:
         // fprintf(stderr, "Original error msg: %s\n", e.what());
         // maybe directly go for error handling here
         // and pass exception along with it
-        cb_success = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
+        cb_success = TRANSITION_CALLBACK_ERROR;
       }
     }
     return cb_success;

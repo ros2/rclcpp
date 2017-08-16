@@ -17,6 +17,10 @@
 
 #include <string>
 
+#include "lifecycle_msgs/msg/transition.hpp"
+
+#include "rcl_lifecycle/data_types.h"
+
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
 
@@ -25,6 +29,13 @@ typedef struct rcl_lifecycle_transition_t rcl_lifecycle_transition_t;
 
 namespace rclcpp_lifecycle
 {
+
+static constexpr rcl_lifecycle_transition_key_t TRANSITION_CALLBACK_SUCCESS =
+  lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+static constexpr rcl_lifecycle_transition_key_t TRANSITION_CALLBACK_FAILURE =
+  lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE;
+static constexpr rcl_lifecycle_transition_key_t TRANSITION_CALLBACK_ERROR =
+  lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
 
 class Transition
 {

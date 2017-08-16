@@ -17,6 +17,10 @@
 
 #include <string>
 
+#include "lifecycle_msgs/msg/state.hpp"
+
+#include "rcl_lifecycle/data_types.h"
+
 #include "rclcpp_lifecycle/visibility_control.h"
 
 // forward declare rcl_state_t
@@ -24,6 +28,17 @@ typedef struct rcl_lifecycle_state_t rcl_lifecycle_state_t;
 
 namespace rclcpp_lifecycle
 {
+
+static constexpr uint8_t PRIMARY_STATE_UNKNOWN =
+  lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN;
+static constexpr uint8_t PRIMARY_STATE_UNCONFIGURED =
+  lifecycle_msgs::msg::State::PRIMARY_STATE_UNCONFIGURED;
+static constexpr uint8_t PRIMARY_STATE_INACTIVE =
+  lifecycle_msgs::msg::State::PRIMARY_STATE_INACTIVE;
+static constexpr uint8_t PRIMARY_STATE_ACTIVE =
+  lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE;
+static constexpr uint8_t PRIMARY_STATE_FINALIZED =
+  lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED;
 
 class State
 {
