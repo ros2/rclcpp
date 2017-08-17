@@ -23,49 +23,54 @@
 using rclcpp::parameter::ParameterType;
 using rclcpp::parameter::ParameterVariant;
 
-ParameterVariant::ParameterVariant()
-: name_("")
+ParameterVariant::ParameterVariant(const std::string & name)
+: name_(name)
 {
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET;
+  value_.bool_value = false;
+  value_.integer_value = 0;
+  value_.double_value = 0.0;
+  value_.string_value = "";
+  value_.bytes_value = std::vector<uint8_t>();
 }
 
 ParameterVariant::ParameterVariant(const std::string & name, const bool bool_value)
-: name_(name)
+: ParameterVariant(name)
 {
   value_.bool_value = bool_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL;
 }
 
 ParameterVariant::ParameterVariant(const std::string & name, const int int_value)
-: name_(name)
+: ParameterVariant(name)
 {
   value_.integer_value = int_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
 }
 
 ParameterVariant::ParameterVariant(const std::string & name, const int64_t int_value)
-: name_(name)
+: ParameterVariant(name)
 {
   value_.integer_value = int_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
 }
 
 ParameterVariant::ParameterVariant(const std::string & name, const float double_value)
-: name_(name)
+: ParameterVariant(name)
 {
   value_.double_value = double_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
 }
 
 ParameterVariant::ParameterVariant(const std::string & name, const double double_value)
-: name_(name)
+: ParameterVariant(name)
 {
   value_.double_value = double_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
 }
 
 ParameterVariant::ParameterVariant(const std::string & name, const std::string & string_value)
-: name_(name)
+: ParameterVariant(name)
 {
   value_.string_value = string_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING;
@@ -77,7 +82,7 @@ ParameterVariant::ParameterVariant(const std::string & name, const char * string
 
 ParameterVariant::ParameterVariant(
   const std::string & name, const std::vector<uint8_t> & bytes_value)
-: name_(name)
+: ParameterVariant(name)
 {
   value_.bytes_value = bytes_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BYTES;

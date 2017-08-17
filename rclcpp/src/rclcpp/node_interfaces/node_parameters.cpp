@@ -70,6 +70,9 @@ NodeParameters::set_parameters_atomically(
 
   // TODO(jacquelinekay): handle parameter constraints
   rcl_interfaces::msg::SetParametersResult result;
+  result.successful = false;
+  result.reason = "";
+
   if (parameters_callback_) {
     result = parameters_callback_(parameters);
   } else {
@@ -196,6 +199,8 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
 {
   std::lock_guard<std::mutex> lock(mutex_);
   rcl_interfaces::msg::ListParametersResult result;
+  result.names = std::vector<std::string>();
+  result.prefixes = std::vector<std::string>();
 
   // TODO(esteve): define parameter separator, use "." for now
   for (auto & kv : parameters_) {
