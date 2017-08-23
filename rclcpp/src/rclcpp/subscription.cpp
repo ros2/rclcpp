@@ -79,6 +79,12 @@ SubscriptionBase::get_topic_name() const
   return rcl_subscription_get_topic_name(&subscription_handle_);
 }
 
+rcl_subscription_t *
+SubscriptionBase::get_subscription_handle()
+{
+  return &subscription_handle_;
+}
+
 const rcl_subscription_t *
 SubscriptionBase::get_subscription_handle() const
 {

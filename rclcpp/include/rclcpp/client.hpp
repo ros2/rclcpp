@@ -69,6 +69,10 @@ public:
   get_service_name() const;
 
   RCLCPP_PUBLIC
+  rcl_client_t *
+  get_client_handle();
+
+  RCLCPP_PUBLIC
   const rcl_client_t *
   get_client_handle() const;
 
@@ -100,6 +104,10 @@ protected:
 
   RCLCPP_PUBLIC
   rcl_node_t *
+  get_rcl_node_handle();
+
+  RCLCPP_PUBLIC
+  const rcl_node_t *
   get_rcl_node_handle() const;
 
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;

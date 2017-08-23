@@ -79,6 +79,10 @@ public:
   get_topic_name() const;
 
   RCLCPP_PUBLIC
+  rcl_subscription_t *
+  get_subscription_handle();
+
+  RCLCPP_PUBLIC
   const rcl_subscription_t *
   get_subscription_handle() const;
 

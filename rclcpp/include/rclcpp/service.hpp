@@ -60,8 +60,12 @@ public:
   get_service_name();
 
   RCLCPP_PUBLIC
-  const rcl_service_t *
+  rcl_service_t *
   get_service_handle();
+
+  RCLCPP_PUBLIC
+  const rcl_service_t *
+  get_service_handle() const;
 
   virtual std::shared_ptr<void> create_request() = 0;
   virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
@@ -74,6 +78,10 @@ protected:
 
   RCLCPP_PUBLIC
   rcl_node_t *
+  get_rcl_node_handle();
+
+  RCLCPP_PUBLIC
+  const rcl_node_t *
   get_rcl_node_handle() const;
 
   std::shared_ptr<rcl_node_t> node_handle_;

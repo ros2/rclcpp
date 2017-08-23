@@ -98,6 +98,18 @@ public:
   const rmw_gid_t &
   get_intra_process_gid() const;
 
+  /// Get the rcl publisher handle.
+  /** \return The rcl publisher handle. */
+  RCLCPP_PUBLIC
+  rcl_publisher_t *
+  get_publisher_handle();
+
+  /// Get the rcl publisher handle.
+  /** \return The rcl publisher handle. */
+  RCLCPP_PUBLIC
+  const rcl_publisher_t *
+  get_publisher_handle() const;
+
   /// Compare this publisher to a gid.
   /**
    * Note that this function calls the next function.
