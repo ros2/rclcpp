@@ -39,6 +39,9 @@ public:
   explicit Time(uint64_t nanoseconds, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
+  Time(const Time & rhs);
+
+  RCLCPP_PUBLIC
   Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
 
   RCLCPP_PUBLIC
@@ -46,6 +49,10 @@ public:
 
   RCLCPP_PUBLIC
   operator builtin_interfaces::msg::Time() const;
+
+  RCLCPP_PUBLIC
+  void
+  operator=(const Time & rhs);
 
   RCLCPP_PUBLIC
   void

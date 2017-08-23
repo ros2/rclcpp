@@ -102,8 +102,8 @@ TEST(TestTime, operators) {
   EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
   EXPECT_EQ(sub, young - old);
 
-  rclcpp::Time system_time(1, 0, RCL_SYSTEM_TIME);
-  rclcpp::Time steady_time(2, 0, RCL_STEADY_TIME);
+  rclcpp::Time system_time(0, 0, RCL_SYSTEM_TIME);
+  rclcpp::Time steady_time(0, 0, RCL_STEADY_TIME);
 
   EXPECT_ANY_THROW((void)(system_time == steady_time));
   EXPECT_ANY_THROW((void)(system_time <= steady_time));

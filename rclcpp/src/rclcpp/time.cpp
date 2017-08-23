@@ -79,7 +79,7 @@ Time::now(rcl_time_source_type_t clock)
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "could not get current time stamp");
   }
-
+  fprintf(stderr, "leaving now() with time source %d\n", now.rcl_time_.time_source->type);
   return now;
 }
 
@@ -100,6 +100,13 @@ Time::Time(uint64_t nanoseconds, rcl_time_source_type_t clock)
   rcl_time_(init_time_point(rcl_time_source_))
 {
   rcl_time_.nanoseconds = nanoseconds;
+}
+
+Time::Time(const Time & rhs)
+: rcl_time_source_(rhs.rcl_time_source_),
+  rcl_time_(init_time_point(rcl_time_source_))
+{
+  rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
 }
 
 Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
@@ -127,6 +134,14 @@ Time::operator builtin_interfaces::msg::Time() const
   msg_time.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_time_.nanoseconds));
   msg_time.nanosec = static_cast<std::uint32_t>(rcl_time_.nanoseconds % (1000 * 1000 * 1000));
   return msg_time;
+}
+
+void
+Time::operator=(const Time & rhs)
+{
+  rcl_time_source_ = rhs.rcl_time_source_;
+  rcl_time_ = init_time_point(rcl_time_source_);
+  rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
 }
 
 void
