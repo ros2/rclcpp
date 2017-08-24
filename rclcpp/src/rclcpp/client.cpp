@@ -48,6 +48,12 @@ ClientBase::get_service_name() const
   return this->service_name_;
 }
 
+rcl_client_t *
+ClientBase::get_client_handle()
+{
+  return &client_handle_;
+}
+
 const rcl_client_t *
 ClientBase::get_client_handle() const
 {
@@ -115,6 +121,12 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
 }
 
 rcl_node_t *
+ClientBase::get_rcl_node_handle()
+{
+  return node_handle_.get();
+}
+
+const rcl_node_t *
 ClientBase::get_rcl_node_handle() const
 {
   return node_handle_.get();
