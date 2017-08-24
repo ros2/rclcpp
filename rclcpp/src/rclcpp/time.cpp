@@ -79,6 +79,7 @@ Time::now(rcl_time_source_type_t clock)
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "could not get current time stamp");
   }
+
   return now;
 }
 
