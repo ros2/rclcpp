@@ -43,6 +43,9 @@ public:
 
   RCLCPP_PUBLIC
   Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
+  
+  RCLCPP_PUBLIC
+  Time(const rcl_time_point_t & time_point);
 
   RCLCPP_PUBLIC
   virtual ~Time();

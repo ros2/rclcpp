@@ -110,7 +110,7 @@ Time::Time(const Time & rhs)
 }
 
 Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
-: rcl_time_source_(init_time_source(RCL_SYSTEM_TIME)),
+: rcl_time_source_(init_time_source(RCL_ROS_TIME)),
   rcl_time_(init_time_point(rcl_time_source_))
 {
   if (time_msg.sec < 0) {
@@ -119,6 +119,13 @@ Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
 
   rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
   rcl_time_.nanoseconds += time_msg.nanosec;
+}
+
+Time::Time(const rcl_time_point_t& time_point)
+: rcl_time_source_(*(time_point.time_source)),
+  rcl_time_(time_point)
+{
+  // noop
 }
 
 Time::~Time()
