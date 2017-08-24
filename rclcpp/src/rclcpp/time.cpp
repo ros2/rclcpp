@@ -123,6 +123,9 @@ Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
 
 Time::~Time()
 {
+  if (rcl_time_source_fini(&rcl_time_source_) != RCL_RET_OK) {
+    RCUTILS_LOG_FATAL("failed to reclaim rcl_time_source_t in destructor of rclcpp::Time")
+  }
   if (rcl_time_point_fini(&rcl_time_) != RCL_RET_OK) {
     RCUTILS_LOG_FATAL("failed to reclaim rcl_time_point_t in destructor of rclcpp::Time")
   }
