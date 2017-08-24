@@ -55,10 +55,14 @@ TEST_F(TestTimeSource, tripwire){
 TEST_F(TestTimeSource, clock)
 {
   rclcpp::TimeSource ts(node);
+  builtin_interfaces::msg::Time::SharedPtr last_msg;
   
+  auto clock_sub = node->create_subscription<builtin_interfaces::msg::Time>(
+    "clock", [&](builtin_interfaces::msg::Time::SharedPtr msg) {last_msg = msg; std::cout << "got clock? " << msg->sec << std::endl;}, rmw_qos_profile_default);
+
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock", rmw_qos_profile_default);
   
-  rclcpp::WallRate loop_rate(1);
+  rclcpp::WallRate loop_rate(10);
   for (int i = 0; i < 10; ++i)
   {
     if (!rclcpp::ok()) break; // Break for ctrl-c
@@ -66,8 +70,16 @@ TEST_F(TestTimeSource, clock)
     msg->sec = i;
     msg->nanosec = 1000;
     clock_pub->publish(msg);
-    rclcpp::spin_some(node);
     std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
+    rclcpp::spin_some(node);
     loop_rate.sleep();
   }
+  auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
+  auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
+
+  auto t_out = ts.now();
+
+  EXPECT_NE(0, t_out.nanoseconds());
+  EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
+  EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 }

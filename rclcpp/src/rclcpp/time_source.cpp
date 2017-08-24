@@ -33,23 +33,33 @@ namespace rclcpp
 Time
 TimeSource::now(rcl_time_source_type_t clock)
 {
-  // TODO(karsten1987): This impl throws explicitely on RCL_ROS_TIME
-  // we have to do this, because rcl_time_source_init returns RCL_RET_OK
-  // for RCL_ROS_TIME, however defaults to system time under the hood.
-  // ref: https://github.com/ros2/rcl/blob/master/rcl/src/rcl/time.c#L66-L77
-  // This section can be removed when rcl supports ROS_TIME correctly.
-  // if (clock == RCL_ROS_TIME) {
-  //   throw std::runtime_error("RCL_ROS_TIME is currently not implemented.");
-  // }
-  // 
-  Time now(0, 0, clock);
-  // 
-  // auto ret = rcl_time_point_get_now(&now.rcl_time_);
-  // if (ret != RCL_RET_OK) {
-  //   rclcpp::exceptions::throw_from_rcl_error(
-  //     ret, "could not get current time stamp");
-  // }
+  rcl_time_point_t now_time_point;
 
+  if (clock == RCL_ROS_TIME){
+    auto ret = rcl_time_point_init(&now_time_point, &ros_time_source_);
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "could not get init time_point");
+      }
+  }
+  else if (clock == RCL_SYSTEM_TIME){
+    auto ret2 = rcl_time_point_init(&now_time_point, &system_time_source_);
+    if (ret2 != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret2, "could not get init time_point");
+      }
+  }
+  else {
+    RCUTILS_LOG_ERROR("INVALID TIME TYPE");
+  }
+
+  auto ret3 = rcl_time_point_get_now(&now_time_point);
+  if (ret3 != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret3, "could not get current time stamp");
+  }
+
+  Time now(now_time_point);
   return now;
 }
 
