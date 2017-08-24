@@ -126,7 +126,7 @@ TEST(TestTime, operators) {
 
   for (auto time_source : {RCL_ROS_TIME, RCL_SYSTEM_TIME, RCL_STEADY_TIME}) {
     rclcpp::Time time = rclcpp::Time(0, 0, time_source);
-    rclcpp::Time copy_constructor_time = time;
+    rclcpp::Time copy_constructor_time(time);
     rclcpp::Time assignment_op_time = rclcpp::Time(1, 0, time_source);
     assignment_op_time = time;
 
