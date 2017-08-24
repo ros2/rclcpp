@@ -102,6 +102,13 @@ Time::Time(uint64_t nanoseconds, rcl_time_source_type_t clock)
   rcl_time_.nanoseconds = nanoseconds;
 }
 
+Time::Time(const Time & rhs)
+: rcl_time_source_(init_time_source(rhs.rcl_time_source_.type)),
+  rcl_time_(init_time_point(rcl_time_source_))
+{
+  rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
+}
+
 Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
 : rcl_time_source_(init_time_source(RCL_SYSTEM_TIME)),
   rcl_time_(init_time_point(rcl_time_source_))
@@ -116,6 +123,9 @@ Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
 
 Time::~Time()
 {
+  if (rcl_time_source_fini(&rcl_time_source_) != RCL_RET_OK) {
+    RCUTILS_LOG_FATAL("failed to reclaim rcl_time_source_t in destructor of rclcpp::Time")
+  }
   if (rcl_time_point_fini(&rcl_time_) != RCL_RET_OK) {
     RCUTILS_LOG_FATAL("failed to reclaim rcl_time_point_t in destructor of rclcpp::Time")
   }
@@ -127,6 +137,14 @@ Time::operator builtin_interfaces::msg::Time() const
   msg_time.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_time_.nanoseconds));
   msg_time.nanosec = static_cast<std::uint32_t>(rcl_time_.nanoseconds % (1000 * 1000 * 1000));
   return msg_time;
+}
+
+void
+Time::operator=(const Time & rhs)
+{
+  rcl_time_source_ = init_time_source(rhs.rcl_time_source_.type);
+  rcl_time_ = init_time_point(rcl_time_source_);
+  rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
 }
 
 void

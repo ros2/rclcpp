@@ -102,8 +102,8 @@ TEST(TestTime, operators) {
   EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
   EXPECT_EQ(sub, young - old);
 
-  rclcpp::Time system_time(1, 0, RCL_SYSTEM_TIME);
-  rclcpp::Time steady_time(2, 0, RCL_STEADY_TIME);
+  rclcpp::Time system_time(0, 0, RCL_SYSTEM_TIME);
+  rclcpp::Time steady_time(0, 0, RCL_STEADY_TIME);
 
   EXPECT_ANY_THROW((void)(system_time == steady_time));
   EXPECT_ANY_THROW((void)(system_time <= steady_time));
@@ -123,6 +123,16 @@ TEST(TestTime, operators) {
   EXPECT_ANY_THROW((void)(now > later));
   EXPECT_ANY_THROW((void)(now + later));
   EXPECT_ANY_THROW((void)(now - later));
+
+  for (auto time_source : {RCL_ROS_TIME, RCL_SYSTEM_TIME, RCL_STEADY_TIME}) {
+    rclcpp::Time time = rclcpp::Time(0, 0, time_source);
+    rclcpp::Time copy_constructor_time(time);
+    rclcpp::Time assignment_op_time = rclcpp::Time(1, 0, time_source);
+    assignment_op_time = time;
+
+    EXPECT_TRUE(time == copy_constructor_time);
+    EXPECT_TRUE(time == assignment_op_time);
+  }
 }
 
 TEST(TestTime, overflows) {
