@@ -30,6 +30,15 @@ public:
   TimeSource(std::shared_ptr<rclcpp::node::Node> node);
 
   RCLCPP_PUBLIC
+  TimeSource();
+
+  RCLCPP_PUBLIC
+  void attachNode(std::shared_ptr<rclcpp::node::Node> node);
+
+  RCLCPP_PUBLIC
+  void detachNode();
+
+  RCLCPP_PUBLIC
   ~TimeSource();
 
   RCLCPP_PUBLIC
@@ -50,7 +59,13 @@ private:
 
   // The clock callback itself
   void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
+  void initializeData();
+  void enableROSTime();
+  void disableROSTime();
+
+  bool ros_time_valid_;
   
+  //Data Storage
   rcl_time_source_t ros_time_source_;
   rcl_time_source_t system_time_source_;
 };

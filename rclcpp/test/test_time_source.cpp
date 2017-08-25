@@ -46,22 +46,49 @@ protected:
 };
 
 
-TEST_F(TestTimeSource, tripwire){
-  rclcpp::TimeSource ts(node);
-  
+TEST_F(TestTimeSource, detachUnattached){
+  rclcpp::TimeSource ts;
+
+  ASSERT_NO_THROW(ts.detachNode());
+
+  //Try multiple detach to see if error
+  ASSERT_NO_THROW(ts.detachNode());
 
 }
+
+TEST_F(TestTimeSource, reattach){
+  rclcpp::TimeSource ts;
+  //Try reattach
+  ASSERT_NO_THROW(ts.attachNode(node));
+  ASSERT_NO_THROW(ts.attachNode(node));
+}
+
+TEST_F(TestTimeSource, ROS_time_valid){
+  rclcpp::TimeSource ts;
+  //Try reattach
+  ASSERT_THROW(ts.now(), std::invalid_argument);
+  ASSERT_THROW(ts.now(RCL_ROS_TIME), std::invalid_argument);
+  ASSERT_NO_THROW(ts.now(RCL_SYSTEM_TIME));
+
+  ts.attachNode(node);
+
+  ASSERT_NO_THROW(ts.now());
+  ASSERT_NO_THROW(ts.now(RCL_ROS_TIME));
+  ASSERT_NO_THROW(ts.now(RCL_SYSTEM_TIME));
+}
+
+
 
 TEST_F(TestTimeSource, clock)
 {
   rclcpp::TimeSource ts(node);
-  builtin_interfaces::msg::Time::SharedPtr last_msg;
-  
-  auto clock_sub = node->create_subscription<builtin_interfaces::msg::Time>(
-    "clock", [&](builtin_interfaces::msg::Time::SharedPtr msg) {last_msg = msg; std::cout << "got clock? " << msg->sec << std::endl;}, rmw_qos_profile_default);
+
+  // builtin_interfaces::msg::Time::SharedPtr last_msg;
+  // auto clock_sub = node->create_subscription<builtin_interfaces::msg::Time>(
+  //   "clock", [&](builtin_interfaces::msg::Time::SharedPtr msg) {last_msg = msg;}, rmw_qos_profile_default);
 
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock", rmw_qos_profile_default);
-  
+
   rclcpp::WallRate loop_rate(10);
   for (int i = 0; i < 10; ++i)
   {
@@ -70,7 +97,7 @@ TEST_F(TestTimeSource, clock)
     msg->sec = i;
     msg->nanosec = 1000;
     clock_pub->publish(msg);
-    std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
+    // std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
     rclcpp::spin_some(node);
     loop_rate.sleep();
   }
