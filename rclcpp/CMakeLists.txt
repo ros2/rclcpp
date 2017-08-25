@@ -101,6 +101,9 @@ if(BUILD_TESTING)
 
   find_package(rmw_implementation_cmake REQUIRED)
 
+  find_package(rosidl_runtime_cpp REQUIRED)
+  include_directories(${rosidl_runtime_cpp_INCLUDE_DIRS})
+
   ament_add_gtest(test_client test/test_client.cpp)
   if(TARGET test_client)
     target_include_directories(test_client PUBLIC
