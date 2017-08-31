@@ -26,6 +26,7 @@ static constexpr const char * set_parameters = "set_parameters";
 static constexpr const char * set_parameters_atomically = "set_parameters_atomically";
 static constexpr const char * describe_parameters = "describe_parameters";
 static constexpr const char * list_parameters = "list_parameters";
+
 }  // namespace parameter_service_names
 }  // namespace rclcpp
 
