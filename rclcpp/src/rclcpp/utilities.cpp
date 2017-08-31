@@ -163,10 +163,10 @@ rclcpp::utilities::init(int argc, char * argv[])
 {
   g_is_interrupted.store(false);
   if (rcl_init(argc, argv, rcl_get_default_allocator()) != RCL_RET_OK) {
-    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-    throw std::runtime_error(
-      std::string("failed to initialize rmw implementation: ") + rcl_get_error_string_safe());
-    // *INDENT-ON*
+    std::string msg = "failed to initialize rmw implementation: ";
+    msg += rcl_get_error_string_safe();
+    rcl_reset_error();
+    throw std::runtime_error(msg);
   }
 #ifdef HAS_SIGACTION
   struct sigaction action;
