@@ -133,7 +133,7 @@ ParameterService::ParameterService(
   );
 
   list_parameters_service_ = node_->create_service<rcl_interfaces::srv::ListParameters>(
-    std::string(node_->get_name()) + "/list_parameters",
+    std::string(node_->get_name()) + "/" + parameter_service_names::list_parameters,
     [captured_node](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request> request,
