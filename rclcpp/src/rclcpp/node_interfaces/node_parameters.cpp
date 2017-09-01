@@ -207,7 +207,7 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
         [&kv, &depth, &separator](const std::string & prefix) {
       if (kv.first == prefix) {
         return true;
-      } else if (kv.first.find(prefix) == 0) {
+      } else if (kv.first.find(prefix + separator) == 0) {
         size_t length = prefix.length();
         std::string substr = kv.first.substr(length);
         // Cast as unsigned integer to avoid warning
