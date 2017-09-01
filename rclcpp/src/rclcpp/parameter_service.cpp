@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "./parameter_service_names.hpp"
+
 using rclcpp::parameter_service::ParameterService;
 
 ParameterService::ParameterService(
@@ -29,7 +31,7 @@ ParameterService::ParameterService(
   std::weak_ptr<rclcpp::node::Node> captured_node = node_;
   // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   get_parameters_service_ = node_->create_service<rcl_interfaces::srv::GetParameters>(
-    std::string(node_->get_name()) + "__get_parameters",
+    std::string(node_->get_name()) + "/" + parameter_service_names::get_parameters,
     [captured_node](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::GetParameters::Request> request,
@@ -48,7 +50,7 @@ ParameterService::ParameterService(
   );
 
   get_parameter_types_service_ = node_->create_service<rcl_interfaces::srv::GetParameterTypes>(
-    std::string(node_->get_name()) + "__get_parameter_types",
+    std::string(node_->get_name()) + "/" + parameter_service_names::get_parameter_types,
     [captured_node](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Request> request,
@@ -68,7 +70,7 @@ ParameterService::ParameterService(
   );
 
   set_parameters_service_ = node_->create_service<rcl_interfaces::srv::SetParameters>(
-    std::string(node_->get_name()) + "__set_parameters",
+    std::string(node_->get_name()) + "/" + parameter_service_names::set_parameters,
     [captured_node](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::SetParameters::Request> request,
@@ -90,7 +92,7 @@ ParameterService::ParameterService(
 
   set_parameters_atomically_service_ =
     node_->create_service<rcl_interfaces::srv::SetParametersAtomically>(
-    std::string(node_->get_name()) + "__set_parameters_atomically",
+    std::string(node_->get_name()) + "/" + parameter_service_names::set_parameters_atomically,
     [captured_node](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Request> request,
@@ -114,7 +116,7 @@ ParameterService::ParameterService(
   );
 
   describe_parameters_service_ = node_->create_service<rcl_interfaces::srv::DescribeParameters>(
-    std::string(node_->get_name()) + "__describe_parameters",
+    std::string(node_->get_name()) + "/" + parameter_service_names::describe_parameters,
     [captured_node](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Request> request,
@@ -131,7 +133,7 @@ ParameterService::ParameterService(
   );
 
   list_parameters_service_ = node_->create_service<rcl_interfaces::srv::ListParameters>(
-    std::string(node_->get_name()) + "__list_parameters",
+    std::string(node_->get_name()) + "/" + parameter_service_names::list_parameters,
     [captured_node](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request> request,
