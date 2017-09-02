@@ -24,7 +24,6 @@
 using rclcpp::parameter_client::AsyncParametersClient;
 using rclcpp::parameter_client::SyncParametersClient;
 
-RCLCPP_PUBLIC
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
   const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
