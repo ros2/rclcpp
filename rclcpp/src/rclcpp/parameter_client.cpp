@@ -26,10 +26,12 @@ using rclcpp::parameter_client::SyncParametersClient;
 
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
   const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
+: node_topics_interface_(node_topics_interface)
 {
   if (remote_node_name != "") {
     remote_node_name_ = remote_node_name;
@@ -92,6 +94,7 @@ AsyncParametersClient::AsyncParametersClient(
   const rmw_qos_profile_t & qos_profile)
 : AsyncParametersClient(
     node->get_node_base_interface(),
+    node->get_node_topics_interface(),
     node->get_node_graph_interface(),
     node->get_node_services_interface(),
     remote_node_name,

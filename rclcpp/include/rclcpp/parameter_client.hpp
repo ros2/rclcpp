@@ -15,6 +15,7 @@
 #ifndef RCLCPP__PARAMETER_CLIENT_HPP_
 #define RCLCPP__PARAMETER_CLIENT_HPP_
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -49,6 +50,7 @@ public:
   RCLCPP_PUBLIC
   AsyncParametersClient(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+    const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
     const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
     const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
     const std::string & remote_node_name = "",
@@ -101,12 +103,29 @@ public:
       void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)
     > callback = nullptr);
 
-  template<typename CallbackT>
+  template<
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT =
+    rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent, Alloc>>
   typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(CallbackT && callback)
   {
-    return node_->create_subscription<rcl_interfaces::msg::ParameterEvent>(
-      "parameter_events", std::forward<CallbackT>(callback), rmw_qos_profile_parameter_events);
+    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
+    auto msg_mem_strat =
+      MessageMemoryStrategy<rcl_interfaces::msg::ParameterEvent, Alloc>::create_default();
+
+    return rclcpp::create_subscription<
+      rcl_interfaces::msg::ParameterEvent, CallbackT, Alloc, SubscriptionT>(
+      this->node_topics_interface_.get(),
+      "parameter_events",
+      std::forward<CallbackT>(callback),
+      rmw_qos_profile_default,
+      nullptr,  // group,
+      false,  // ignore_local_publications,
+      false,  // use_intra_process_comms_,
+      msg_mem_strat,
+      std::make_shared<Alloc>);
   }
 
   RCLCPP_PUBLIC
@@ -129,7 +148,7 @@ protected:
   wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
 
 private:
-  const rclcpp::node::Node::SharedPtr node_;
+  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface_;
   rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_client_;
   rclcpp::client::Client<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
     get_parameter_types_client_;
