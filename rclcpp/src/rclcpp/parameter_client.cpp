@@ -34,7 +34,7 @@ AsyncParametersClient::AsyncParametersClient(
   if (remote_node_name != "") {
     remote_node_name_ = remote_node_name;
   } else {
-    remote_node_name_ = node_->get_name();
+    remote_node_name_ = node_base_interface->get_name();
   }
 
   rcl_client_options_t options = rcl_client_get_default_options();
