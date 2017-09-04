@@ -19,7 +19,7 @@
 #include "rclcpp/rate.hpp"
 
 /*
-   Basic tests for the Rate and WallRate clases.
+   Basic tests for the Rate and WallRate classes.
  */
 TEST(TestRate, rate_basics) {
   auto period = std::chrono::milliseconds(100);
