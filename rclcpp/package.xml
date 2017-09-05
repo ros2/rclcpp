@@ -32,6 +32,7 @@
   <test_depend>ament_lint_common</test_depend>
   <test_depend>rmw</test_depend>
   <test_depend>rmw_implementation_cmake</test_depend>
+  <test_depend>rosidl_runtime_cpp</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
