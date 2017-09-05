@@ -22,6 +22,7 @@
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/create_publisher.hpp"
+#include "rcutils/logging_macros.h"
 #include "rmw/qos_profiles.h"
 
 using rclcpp::node_interfaces::NodeParameters;
@@ -197,26 +198,27 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
   std::lock_guard<std::mutex> lock(mutex_);
   rcl_interfaces::msg::ListParametersResult result;
 
-  // TODO(esteve): define parameter separator, use "." for now
+  const char separator = '/';
   for (auto & kv : parameters_) {
-    if (((prefixes.size() == 0) &&
+    bool get_all = (prefixes.size() == 0) &&
       ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), '.')) < depth))) ||
-      (std::any_of(prefixes.cbegin(), prefixes.cend(), [&kv, &depth](const std::string & prefix) {
+      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), separator)) < depth));
+    bool prefix_matches = std::any_of(prefixes.cbegin(), prefixes.cend(),
+        [&kv, &depth, &separator](const std::string & prefix) {
       if (kv.first == prefix) {
         return true;
-      } else if (kv.first.find(prefix + ".") == 0) {
+      } else if (kv.first.find(prefix + separator) == 0) {
         size_t length = prefix.length();
         std::string substr = kv.first.substr(length);
         // Cast as unsigned integer to avoid warning
         return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-        (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), '.')) < depth);
+        (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), separator)) < depth);
       }
       return false;
-    })))
-    {
+    });
+    if (get_all || prefix_matches) {
       result.names.push_back(kv.first);
-      size_t last_separator = kv.first.find_last_of('.');
+      size_t last_separator = kv.first.find_last_of(separator);
       if (std::string::npos != last_separator) {
         std::string prefix = kv.first.substr(0, last_separator);
         if (std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
@@ -234,8 +236,8 @@ void
 NodeParameters::register_param_change_callback(ParametersCallbackFunction callback)
 {
   if (parameters_callback_) {
-    fprintf(stderr, "Warning: param_change_callback already registered, "
-      "overwriting previous callback\n");
+    RCUTILS_LOG_WARN("param_change_callback already registered, "
+      "overwriting previous callback")
   }
   parameters_callback_ = callback;
 }
