@@ -75,7 +75,7 @@ AsyncParametersClient::AsyncParametersClient(
     node_graph_interface,
     remote_node_name_ + "/" + parameter_service_names::list_parameters,
     options);
-  auto list_parameters_base = std::dynamic_pointer_cast<ClientBase>(get_parameters_client_);
+  auto list_parameters_base = std::dynamic_pointer_cast<ClientBase>(list_parameters_client_);
   node_services_interface->add_client(list_parameters_base, nullptr);
 
   describe_parameters_client_ = Client<rcl_interfaces::srv::DescribeParameters>::make_shared(

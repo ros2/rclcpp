@@ -30,6 +30,7 @@
 #include "rcl_interfaces/srv/set_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters_atomically.hpp"
 #include "rclcpp/executors.hpp"
+#include "rclcpp/create_subscription.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
@@ -125,7 +126,7 @@ public:
       false,  // ignore_local_publications,
       false,  // use_intra_process_comms_,
       msg_mem_strat,
-      std::make_shared<Alloc>);
+      std::make_shared<Alloc>());
   }
 
   RCLCPP_PUBLIC
