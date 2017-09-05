@@ -198,7 +198,7 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
   std::lock_guard<std::mutex> lock(mutex_);
   rcl_interfaces::msg::ListParametersResult result;
 
-  char separator = '/';
+  const char separator = '/';
   for (auto & kv : parameters_) {
     bool get_all = (prefixes.size() == 0) &&
       ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
