@@ -30,46 +30,6 @@
 namespace rclcpp
 {
 
-Time
-TimeSource::now(rcl_clock_type_t clock)
-{
-  rcl_time_point_t now_time_point;
-
-  if (clock == RCL_ROS_TIME) {
-    if (!this->ros_time_valid_) {
-      throw std::invalid_argument("Timesource ROS connection invalid,"
-              " RCL_ROS_TIME cannot get now.");
-    }
-
-    auto ret = rcl_time_point_init(&now_time_point, &ros_clock_.type);
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "could not get init time_point");
-    }
-    auto ret3 = rcl_time_point_get_now(&ros_clock_, &now_time_point);
-    if (ret3 != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret3, "could not get current time stamp");
-    }
-  } else if (clock == RCL_SYSTEM_TIME) {
-    auto ret2 = rcl_time_point_init(&now_time_point, &system_clock_.type);
-    if (ret2 != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret2, "could not get init time_point");
-    }
-    auto ret3 = rcl_time_point_get_now(&system_clock_, &now_time_point);
-    if (ret3 != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret3, "could not get current time stamp");
-    }
-  } else {
-    RCUTILS_LOG_ERROR("INVALID TIME TYPE");
-  }
-
-  Time now(now_time_point);
-  return now;
-}
-
 TimeSource::TimeSource(std::shared_ptr<rclcpp::node::Node> node)
 : ros_time_valid_(false)
 {
@@ -108,10 +68,6 @@ void TimeSource::initializeData()
   if (ret1 != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to initialize ROS time source");
   }
-  auto ret2 = rcl_clock_init(RCL_ROS_TIME, &system_clock_);
-  if (ret2 != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to initialize SYSTEM time source");
-  }
 }
 
 TimeSource::~TimeSource()
@@ -122,10 +78,6 @@ TimeSource::~TimeSource()
   auto ret1 = rcl_clock_fini(&ros_clock_);
   if (ret1 != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to fini ROS time source");
-  }
-  auto ret2 = rcl_clock_fini(&system_clock_);
-  if (ret2 != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to fini SYSTEM time source");
   }
 }
 
@@ -146,6 +98,10 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
   ret = rcl_set_ros_time_override(&ros_clock_, clock_time.nanoseconds);
   if (ret != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
+  }
+  auto ret2 = rcl_time_point_fini(&clock_time);
+  if (ret2 != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to fini clock_time");
   }
 }
 

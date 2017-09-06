@@ -25,6 +25,7 @@ namespace rclcpp
 {
 
 class Clock;
+class TimeSource;
 
 class Time
 {
@@ -110,11 +111,15 @@ public:
   explicit Clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
+  ~Clock();
+
+  RCLCPP_PUBLIC
   Time
   now();
 
 private:
   rcl_clock_t rcl_clock_;
+  friend TimeSource;  // Allow TimeSource to acces the rcl_clock_ datatype.
 };
 
 }  // namespace rclcpp

@@ -83,6 +83,14 @@ Clock::Clock(rcl_clock_type_t clock_type)
   }
 }
 
+Clock::~Clock()
+{
+  auto ret = rcl_clock_fini(&rcl_clock_);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to fini rcl clock.");
+  }
+}
+
 Time::Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type)
 : rcl_time_(init_time_point(clock_type))
 {

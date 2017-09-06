@@ -43,10 +43,6 @@ public:
   RCLCPP_PUBLIC
   ~TimeSource();
 
-  RCLCPP_PUBLIC
-  Time
-  now(rcl_clock_type_t clock_type = RCL_ROS_TIME);
-
   // TODO(tfoote) add register callback for time jumps
 
 private:
@@ -69,7 +65,6 @@ private:
 
   // Data Storage
   rcl_clock_t ros_clock_;
-  rcl_clock_t system_clock_;
 };
 
 }  // namespace rclcpp

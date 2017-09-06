@@ -63,19 +63,16 @@ TEST_F(TestTimeSource, reattach) {
   ASSERT_NO_THROW(ts.attachNode(node));
 }
 
-TEST_F(TestTimeSource, ROS_time_valid) {
-  rclcpp::TimeSource ts;
-  // Try reattach
-  ASSERT_THROW(ts.now(), std::invalid_argument);
-  ASSERT_THROW(ts.now(RCL_ROS_TIME), std::invalid_argument);
-  ASSERT_NO_THROW(ts.now(RCL_SYSTEM_TIME));
-
-  ts.attachNode(node);
-
-  ASSERT_NO_THROW(ts.now());
-  ASSERT_NO_THROW(ts.now(RCL_ROS_TIME));
-  ASSERT_NO_THROW(ts.now(RCL_SYSTEM_TIME));
-}
+// TEST_F(TestTimeSource, ROS_time_valid) {
+//   rclcpp::TimeSource ts;
+//   // Try reattach
+//   // TODO(tfoote) reenabled using external clock
+//   ASSERT_THROW(ts.now(), std::invalid_argument);
+//
+//   ts.attachNode(node);
+//
+//   ASSERT_NO_THROW(ts.now());
+// }
 
 TEST_F(TestTimeSource, clock) {
   rclcpp::TimeSource ts(node);
@@ -104,9 +101,10 @@ TEST_F(TestTimeSource, clock) {
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
-  auto t_out = ts.now();
-
-  EXPECT_NE(0, t_out.nanoseconds());
-  EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
-  EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
+// // TODO(tfoote) restore with external clock
+//   auto t_out = ts.now();
+//
+//   EXPECT_NE(0, t_out.nanoseconds());
+//   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
+//   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 }
