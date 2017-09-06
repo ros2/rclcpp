@@ -43,14 +43,14 @@ public:
 
   RCLCPP_PUBLIC
   Time
-  now(rcl_time_source_type_t clock = RCL_ROS_TIME);
-  
+  now(rcl_clock_type_t clock_type = RCL_ROS_TIME);
+
   // TODO(tfoote) add register callback for time jumps
-  
+
 private:
   // Preserve the node reference
   std::shared_ptr<rclcpp::node::Node> node_;
-  
+
   using MessageT = builtin_interfaces::msg::Time;
   using Alloc = std::allocator<void>;
   using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
@@ -64,12 +64,12 @@ private:
   void disableROSTime();
 
   bool ros_time_valid_;
-  
+
   //Data Storage
-  rcl_time_source_t ros_time_source_;
-  rcl_time_source_t system_time_source_;
+  rcl_clock_t ros_clock_;
+  rcl_clock_t system_clock_;
 };
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__TIME_SOURCE_HPP_
+#endif  // RCLCPP__clock_HPP_

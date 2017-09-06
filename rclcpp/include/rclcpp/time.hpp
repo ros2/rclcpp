@@ -24,13 +24,13 @@
 namespace rclcpp
 {
 
+class Clock;
+
 class Time
 {
 public:
   RCLCPP_PUBLIC
-  static
-  Time
-  now(rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
+  Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   Time(int32_t seconds, uint32_t nanoseconds, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
@@ -43,7 +43,7 @@ public:
 
   RCLCPP_PUBLIC
   Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
-  
+
   RCLCPP_PUBLIC
   Time(const rcl_time_point_t & time_point);
 
@@ -98,8 +98,23 @@ public:
   nanoseconds() const;
 
 private:
-  rcl_time_source_t rcl_time_source_;
   rcl_time_point_t rcl_time_;
+  friend Clock; // Allow clock to manipulate internal data
+};
+
+//TODO(tfoote) move to own file
+class Clock
+{
+public:
+  RCLCPP_PUBLIC
+  Clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
+
+  RCLCPP_PUBLIC
+  Time
+  now(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
+
+private:
+  rcl_clock_t rcl_clock_;
 };
 
 }  // namespace rclcpp

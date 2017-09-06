@@ -31,36 +31,38 @@ namespace rclcpp
 {
 
 Time
-TimeSource::now(rcl_time_source_type_t clock)
+TimeSource::now(rcl_clock_type_t clock)
 {
   rcl_time_point_t now_time_point;
 
-  if (clock == RCL_ROS_TIME){
+  if (clock == RCL_ROS_TIME) {
     if (!this->ros_time_valid_) {
       throw std::invalid_argument("Timesource ROS connection invalid, RCL_ROS_TIME cannot get now.");
     }
 
-    auto ret = rcl_time_point_init(&now_time_point, &ros_time_source_);
+    auto ret = rcl_time_point_init(&now_time_point, &ros_clock_.type);
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(
         ret, "could not get init time_point");
-      }
-  }
-  else if (clock == RCL_SYSTEM_TIME){
-    auto ret2 = rcl_time_point_init(&now_time_point, &system_time_source_);
+    }
+    auto ret3 = rcl_time_point_get_now(&ros_clock_, &now_time_point);
+    if (ret3 != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret3, "could not get current time stamp");
+    }
+  } else if (clock == RCL_SYSTEM_TIME) {
+    auto ret2 = rcl_time_point_init(&now_time_point, &system_clock_.type);
     if (ret2 != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(
         ret2, "could not get init time_point");
-      }
-  }
-  else {
+    }
+    auto ret3 = rcl_time_point_get_now(&system_clock_, &now_time_point);
+    if (ret3 != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret3, "could not get current time stamp");
+    }
+  } else {
     RCUTILS_LOG_ERROR("INVALID TIME TYPE");
-  }
-
-  auto ret3 = rcl_time_point_get_now(&now_time_point);
-  if (ret3 != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret3, "could not get current time stamp");
   }
 
   Time now(now_time_point);
@@ -85,7 +87,8 @@ void TimeSource::attachNode(std::shared_ptr<rclcpp::node::Node> node)
   node_ = node;
   // TODO(tfoote): Update QOS
   clock_subscription_ = node_->create_subscription<builtin_interfaces::msg::Time>(
-    "clock", std::bind(&TimeSource::clock_cb, this, std::placeholders::_1), rmw_qos_profile_default);
+    "clock", std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
+    rmw_qos_profile_default);
   //TODO(tfoote): Check for time related parameters here too
   this->ros_time_valid_ = true;
 }
@@ -98,12 +101,13 @@ void TimeSource::detachNode()
   disableROSTime();
 }
 
-void TimeSource::initializeData(){
-  auto ret1 = rcl_time_source_init(RCL_ROS_TIME, &ros_time_source_);
+void TimeSource::initializeData()
+{
+  auto ret1 = rcl_clock_init(RCL_ROS_TIME, &ros_clock_);
   if (ret1 != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to initialize ROS time source");
   }
-  auto ret2 = rcl_time_source_init(RCL_ROS_TIME, &system_time_source_);
+  auto ret2 = rcl_clock_init(RCL_ROS_TIME, &system_clock_);
   if (ret2 != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to initialize SYSTEM time source");
   }
@@ -114,11 +118,11 @@ TimeSource::~TimeSource()
   if (node_) {
     this->detachNode();
   }
-  auto ret1 = rcl_time_source_fini(&ros_time_source_);
+  auto ret1 = rcl_clock_fini(&ros_clock_);
   if (ret1 != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to fini ROS time source");
   }
-  auto ret2 = rcl_time_source_fini(&system_time_source_);
+  auto ret2 = rcl_clock_fini(&system_clock_);
   if (ret2 != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to fini SYSTEM time source");
   }
@@ -128,49 +132,49 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 {
   // RCUTILS_LOG_INFO("Got clock message");
   enableROSTime();
-  //TODO(tfoote) switch this to be based on if there are clock publishers
+  //TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
   //TODO(tfoote) also setup disable
 
   //TODO(tfoote) Use a time import/export method from rclcpp Time pending
   rcl_time_point_t clock_time;
-  auto ret = rcl_time_point_init(&clock_time, &ros_time_source_);
+  auto ret = rcl_time_point_init(&clock_time, &ros_clock_.type);
   if (ret != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR("Failed to init ros_time_point");
+    RCUTILS_LOG_ERROR("Failed to init ros_time_point");
   }
   clock_time.nanoseconds = msg->sec * 1e9 + msg->nanosec;
-  ret = rcl_set_ros_time_override(&ros_time_source_, clock_time.nanoseconds);
+  ret = rcl_set_ros_time_override(&ros_clock_, clock_time.nanoseconds);
   if (ret != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
+    RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
   }
 }
 
-void TimeSource::enableROSTime(){
+void TimeSource::enableROSTime()
+{
   bool is_enabled;
-  auto ret = rcl_is_enabled_ros_time_override(&ros_time_source_, &is_enabled);
+  auto ret = rcl_is_enabled_ros_time_override(&ros_clock_, &is_enabled);
   if (ret != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
+    RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
   }
-  if (!is_enabled)
-  {
-   ret = rcl_enable_ros_time_override(&ros_time_source_);
-   if (ret != RCL_RET_OK) {
-       RCUTILS_LOG_ERROR("Failed to enable ros_time_override_status");
-   }
+  if (!is_enabled) {
+    ret = rcl_enable_ros_time_override(&ros_clock_);
+    if (ret != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR("Failed to enable ros_time_override_status");
+    }
   }
 }
 
-void TimeSource::disableROSTime(){
+void TimeSource::disableROSTime()
+{
   bool is_enabled;
-  auto ret = rcl_is_enabled_ros_time_override(&ros_time_source_, &is_enabled);
+  auto ret = rcl_is_enabled_ros_time_override(&ros_clock_, &is_enabled);
   if (ret != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
+    RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
   }
-  if (!is_enabled)
-  {
-   ret = rcl_disable_ros_time_override(&ros_time_source_);
-   if (ret != RCL_RET_OK) {
-       RCUTILS_LOG_ERROR("Failed to disable ros_time_override_status");
-   }
+  if (!is_enabled) {
+    ret = rcl_disable_ros_time_override(&ros_clock_);
+    if (ret != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR("Failed to disable ros_time_override_status");
+    }
   }
 }
 
