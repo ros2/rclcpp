@@ -45,7 +45,7 @@ public:
   Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
 
   RCLCPP_PUBLIC
-  Time(const rcl_time_point_t & time_point);
+  explicit Time(const rcl_time_point_t & time_point);
 
   RCLCPP_PUBLIC
   virtual ~Time();
@@ -99,19 +99,19 @@ public:
 
 private:
   rcl_time_point_t rcl_time_;
-  friend Clock; // Allow clock to manipulate internal data
+  friend Clock;  // Allow clock to manipulate internal data
 };
 
-//TODO(tfoote) move to own file
+// TODO(tfoote) move to own file
 class Clock
 {
 public:
   RCLCPP_PUBLIC
-  Clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
+  explicit Clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   Time
-  now(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
+  now();
 
 private:
   rcl_clock_t rcl_clock_;

@@ -15,6 +15,8 @@
 #ifndef RCLCPP__TIME_SOURCE_HPP_
 #define RCLCPP__TIME_SOURCE_HPP_
 
+#include <memory>
+
 #include "rcl/time.h"
 
 #include "rclcpp/node.hpp"
@@ -27,7 +29,7 @@ class TimeSource
 {
 public:
   RCLCPP_PUBLIC
-  TimeSource(std::shared_ptr<rclcpp::node::Node> node);
+  explicit TimeSource(std::shared_ptr<rclcpp::node::Node> node);
 
   RCLCPP_PUBLIC
   TimeSource();
@@ -54,7 +56,7 @@ private:
   using MessageT = builtin_interfaces::msg::Time;
   using Alloc = std::allocator<void>;
   using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
-  //The subscription for the clock callback
+  // The subscription for the clock callback
   std::shared_ptr<SubscriptionT> clock_subscription_;
 
   // The clock callback itself
@@ -65,11 +67,11 @@ private:
 
   bool ros_time_valid_;
 
-  //Data Storage
+  // Data Storage
   rcl_clock_t ros_clock_;
   rcl_clock_t system_clock_;
 };
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__clock_HPP_
+#endif  // RCLCPP__TIME_SOURCE_HPP_

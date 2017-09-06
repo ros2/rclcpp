@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <string>
 
 #include "rcl/error_handling.h"
@@ -51,21 +52,20 @@ TEST_F(TestTimeSource, detachUnattached) {
 
   ASSERT_NO_THROW(ts.detachNode());
 
-  //Try multiple detach to see if error
+  // Try multiple detach to see if error
   ASSERT_NO_THROW(ts.detachNode());
-
 }
 
 TEST_F(TestTimeSource, reattach) {
   rclcpp::TimeSource ts;
-  //Try reattach
+  // Try reattach
   ASSERT_NO_THROW(ts.attachNode(node));
   ASSERT_NO_THROW(ts.attachNode(node));
 }
 
 TEST_F(TestTimeSource, ROS_time_valid) {
   rclcpp::TimeSource ts;
-  //Try reattach
+  // Try reattach
   ASSERT_THROW(ts.now(), std::invalid_argument);
   ASSERT_THROW(ts.now(RCL_ROS_TIME), std::invalid_argument);
   ASSERT_NO_THROW(ts.now(RCL_SYSTEM_TIME));
@@ -82,7 +82,8 @@ TEST_F(TestTimeSource, clock) {
 
   // builtin_interfaces::msg::Time::SharedPtr last_msg;
   // auto clock_sub = node->create_subscription<builtin_interfaces::msg::Time>(
-  //   "clock", [&](builtin_interfaces::msg::Time::SharedPtr msg) {last_msg = msg;}, rmw_qos_profile_default);
+  //   "clock", [&](builtin_interfaces::msg::Time::SharedPtr msg) {last_msg = msg;},
+  //   rmw_qos_profile_default);
 
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
       rmw_qos_profile_default);
@@ -90,7 +91,7 @@ TEST_F(TestTimeSource, clock) {
   rclcpp::WallRate loop_rate(10);
   for (int i = 0; i < 10; ++i) {
     if (!rclcpp::ok()) {
-      break; // Break for ctrl-c
+      break;  // Break for ctrl-c
     }
     auto msg = std::make_shared<builtin_interfaces::msg::Time>();
     msg->sec = i;

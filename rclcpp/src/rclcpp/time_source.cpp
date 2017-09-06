@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/node.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp/time_source.hpp"
-
-
+#include <memory>
 #include <utility>
 
 #include "builtin_interfaces/msg/time.hpp"
 
 #include "rcl/time.h"
 
-#include "rclcpp/exceptions.hpp"
-
 #include "rcutils/logging_macros.h"
+
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp/time_source.hpp"
+
 
 namespace rclcpp
 {
@@ -37,7 +37,8 @@ TimeSource::now(rcl_clock_type_t clock)
 
   if (clock == RCL_ROS_TIME) {
     if (!this->ros_time_valid_) {
-      throw std::invalid_argument("Timesource ROS connection invalid, RCL_ROS_TIME cannot get now.");
+      throw std::invalid_argument("Timesource ROS connection invalid,"
+              " RCL_ROS_TIME cannot get now.");
     }
 
     auto ret = rcl_time_point_init(&now_time_point, &ros_clock_.type);
@@ -89,7 +90,7 @@ void TimeSource::attachNode(std::shared_ptr<rclcpp::node::Node> node)
   clock_subscription_ = node_->create_subscription<builtin_interfaces::msg::Time>(
     "clock", std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
     rmw_qos_profile_default);
-  //TODO(tfoote): Check for time related parameters here too
+  // TODO(tfoote): Check for time related parameters here too
   this->ros_time_valid_ = true;
 }
 
@@ -132,10 +133,10 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 {
   // RCUTILS_LOG_INFO("Got clock message");
   enableROSTime();
-  //TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
-  //TODO(tfoote) also setup disable
+  // TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
+  // TODO(tfoote) also setup disable
 
-  //TODO(tfoote) Use a time import/export method from rclcpp Time pending
+  // TODO(tfoote) Use a time import/export method from rclcpp Time pending
   rcl_time_point_t clock_time;
   auto ret = rcl_time_point_init(&clock_time, &ros_clock_.type);
   if (ret != RCL_RET_OK) {

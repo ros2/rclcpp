@@ -35,17 +35,18 @@ protected:
 TEST(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
-  // TODO(Karsten1987): Fix this test once ROS_TIME is implemented
-  EXPECT_ANY_THROW(ros_clock.now());
+  Time ros_now = ros_clock.now();
+  EXPECT_NE(0, ros_now.sec);
+  EXPECT_NE(0u, ros_now.nanosec);
 
   rclcpp::Clock system_clock(RCL_ROS_TIME);
-  Time system_now = system_clock.now(RCL_SYSTEM_TIME);
+  Time system_now = system_clock.now();
   EXPECT_NE(0, system_now.sec);
   EXPECT_NE(0u, system_now.nanosec);
 
   // TODO(tfoote) restore steady
   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
-  Time steady_now = steady_clock.now(RCL_STEADY_TIME);
+  Time steady_now = steady_clock.now();
   EXPECT_NE(0, steady_now.sec);
   EXPECT_NE(0u, steady_now.nanosec);
 
@@ -124,8 +125,8 @@ TEST(TestTime, operators) {
   rclcpp::Clock system_clock(RCL_ROS_TIME);
   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
 
-  rclcpp::Time now = system_clock.now(RCL_SYSTEM_TIME);
-  rclcpp::Time later = steady_clock.now(RCL_STEADY_TIME);
+  rclcpp::Time now = system_clock.now();
+  rclcpp::Time later = steady_clock.now();
 
   EXPECT_ANY_THROW((void)(now == later));
   EXPECT_ANY_THROW((void)(now != later));

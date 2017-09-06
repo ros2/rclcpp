@@ -61,18 +61,9 @@ namespace rclcpp
 {
 
 Time
-Clock::now(rcl_clock_type_t clock_type)
+Clock::now()
 {
-  // TODO(karsten1987): This impl throws explicitely on RCL_ROS_TIME
-  // we have to do this, because rcl_clock_init returns RCL_RET_OK
-  // for RCL_ROS_TIME, however defaults to system time under the hood.
-  // ref: https://github.com/ros2/rcl/blob/master/rcl/src/rcl/time.c#L66-L77
-  // This section can be removed when rcl supports ROS_TIME correctly.
-  if (clock_type == RCL_ROS_TIME) {
-    throw std::runtime_error("RCL_ROS_TIME is currently not implemented.");
-  }
-
-  Time now(0, 0, clock_type);
+  Time now(0, 0, rcl_clock_.type);
 
   auto ret = rcl_time_point_get_now(&rcl_clock_, &now.rcl_time_);
   if (ret != RCL_RET_OK) {
@@ -118,7 +109,7 @@ Time::Time(const Time & rhs)
 
 Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
 {
-  rcl_clock_type_t ros_time = RCL_ROS_TIME; // TODO(tfoote) hard coded ROS here
+  rcl_clock_type_t ros_time = RCL_ROS_TIME;  // TODO(tfoote) hard coded ROS here
   rcl_time_ = init_time_point(ros_time);
   if (time_msg.sec < 0) {
     throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
