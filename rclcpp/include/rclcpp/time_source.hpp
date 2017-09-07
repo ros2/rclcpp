@@ -57,26 +57,34 @@ private:
   // Preserve the node reference
   std::shared_ptr<rclcpp::node::Node> node_;
 
+  // The subscription for the clock callback
   using MessageT = builtin_interfaces::msg::Time;
   using Alloc = std::allocator<void>;
   using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
-  // The subscription for the clock callback
   std::shared_ptr<SubscriptionT> clock_subscription_;
 
   // The clock callback itself
   void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
+
+
+  // An internal method to use in the clock callback that iterates and enables all clocks
   void enableROSTime();
+  // An internal method to use in the clock callback that iterates and disables all clocks
   void disableROSTime();
 
   // Internal helper functions used inside iterators
-  void enableROSTime(std::shared_ptr<rclcpp::Clock> clock);
-  void disableROSTime(std::shared_ptr<rclcpp::Clock> clock);
-  void setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
+  static void enableROSTime(std::shared_ptr<rclcpp::Clock> clock);
+  static void disableROSTime(std::shared_ptr<rclcpp::Clock> clock);
+  static void setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
     std::shared_ptr<rclcpp::Clock> clock);
 
+  // Local storage of validity of ROS time
+  // This is needed when new clocks are added.
   bool ros_time_valid_;
 
+  // A lock to protect iterating the associated_clocks_ field.
   std::mutex clock_list_lock_;
+  // A vector to store references to associated clocks.
   std::vector<std::shared_ptr<rclcpp::Clock>> associated_clocks_;
 };
 

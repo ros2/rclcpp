@@ -49,7 +49,6 @@ void TimeSource::attachNode(std::shared_ptr<rclcpp::node::Node> node)
     "clock", std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
     rmw_qos_profile_default);
   // TODO(tfoote): Check for time related parameters here too
-  this->ros_time_valid_ = true;
 }
 
 void TimeSource::detachNode()
@@ -108,7 +107,9 @@ void TimeSource::setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
 void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 {
   // RCUTILS_LOG_INFO("Got clock message");
-  enableROSTime();
+  if (!this->ros_time_valid_) {
+    enableROSTime();
+  }
   // TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
   // TODO(tfoote) also setup disable
 
@@ -136,6 +137,10 @@ void TimeSource::disableROSTime(std::shared_ptr<rclcpp::Clock> clock)
 
 void TimeSource::enableROSTime()
 {
+  // Local storage
+  this->ros_time_valid_ = true;
+
+  // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
     enableROSTime(*it);
@@ -144,6 +149,10 @@ void TimeSource::enableROSTime()
 
 void TimeSource::disableROSTime()
 {
+  // Local storage
+  this->ros_time_valid_ = false;
+
+  // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
     disableROSTime(*it);
