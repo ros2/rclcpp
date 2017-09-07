@@ -138,7 +138,7 @@ void TimeSource::enableROSTime()
 {
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    disableROSTime(*it);
+    enableROSTime(*it);
   }
 }
 
@@ -146,7 +146,7 @@ void TimeSource::disableROSTime()
 {
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    enableROSTime(*it);
+    disableROSTime(*it);
   }
 }
 
