@@ -28,20 +28,6 @@
 namespace
 {
 
-rcl_clock_t
-init_clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME)
-{
-  rcl_clock_t clock;
-  auto ret = rcl_clock_init(clock_type, &clock);
-
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not initialize time source");
-  }
-
-  return clock;
-}
-
 rcl_time_point_t
 init_time_point(rcl_clock_type_t & clock)
 {
