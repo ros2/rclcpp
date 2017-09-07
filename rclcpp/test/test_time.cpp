@@ -32,6 +32,17 @@ protected:
   }
 };
 
+TEST(TestTime, clock_type_access) {
+  rclcpp::Clock ros_clock(RCL_ROS_TIME);
+  EXPECT_EQ(RCL_ROS_TIME, ros_clock.getClockType());
+
+  rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
+  EXPECT_EQ(RCL_SYSTEM_TIME, system_clock.getClockType());
+
+  rclcpp::Clock steady_clock(RCL_STEADY_TIME);
+  EXPECT_EQ(RCL_STEADY_TIME, steady_clock.getClockType());
+}
+
 TEST(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   rclcpp::Clock ros_clock(RCL_ROS_TIME);

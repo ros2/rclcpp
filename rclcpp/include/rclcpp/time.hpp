@@ -117,6 +117,14 @@ public:
   Time
   now();
 
+  RCLCPP_PUBLIC
+  bool
+  isROSTimeActive();
+
+  RCLCPP_PUBLIC
+  rcl_clock_type_t
+  getClockType();
+
 private:
   rcl_clock_t rcl_clock_;
   friend TimeSource;  // Allow TimeSource to acces the rcl_clock_ datatype.

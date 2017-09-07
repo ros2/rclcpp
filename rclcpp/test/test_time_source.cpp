@@ -63,19 +63,29 @@ TEST_F(TestTimeSource, reattach) {
   ASSERT_NO_THROW(ts.attachNode(node));
 }
 
-// TEST_F(TestTimeSource, ROS_time_valid) {
-//   rclcpp::TimeSource ts;
-//   // Try reattach
-//   // TODO(tfoote) reenabled using external clock
-//   ASSERT_THROW(ts.now(), std::invalid_argument);
-//
-//   ts.attachNode(node);
-//
-//   ASSERT_NO_THROW(ts.now());
-// }
+TEST_F(TestTimeSource, ROS_time_valid) {
+  rclcpp::TimeSource ts;
+  // Try reattach
+  // TODO(tfoote) reenabled using external clock
+  auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  ts.attachClock(ros_clock);
+  auto now = ros_clock->now();
+
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
+
+  ts.attachNode(node);
+
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
+}
 
 TEST_F(TestTimeSource, clock) {
   rclcpp::TimeSource ts(node);
+  auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  ts.attachClock(ros_clock);
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
 
   // builtin_interfaces::msg::Time::SharedPtr last_msg;
   // auto clock_sub = node->create_subscription<builtin_interfaces::msg::Time>(
@@ -101,10 +111,12 @@ TEST_F(TestTimeSource, clock) {
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
-// // TODO(tfoote) restore with external clock
-//   auto t_out = ts.now();
-//
-//   EXPECT_NE(0, t_out.nanoseconds());
-//   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
-//   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
+  // Now that we've recieved a message it should be active
+  EXPECT_TRUE(ros_clock->isROSTimeActive());
+
+  auto t_out = ros_clock->now();
+
+  EXPECT_NE(0, t_out.nanoseconds());
+  EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
+  EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 }

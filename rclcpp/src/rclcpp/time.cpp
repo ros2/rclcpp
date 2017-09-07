@@ -74,6 +74,28 @@ Clock::now()
   return now;
 }
 
+bool
+Clock::isROSTimeActive()
+{
+  if (!rcl_clock_valid(&rcl_clock_)) {
+    RCUTILS_LOG_ERROR("ROS time not valid!");
+    return false;
+  }
+
+  bool is_enabled;
+  auto ret = rcl_is_enabled_ros_time_override(&rcl_clock_, &is_enabled);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
+  }
+  return is_enabled;
+}
+
+rcl_clock_type_t
+Clock::getClockType()
+{
+  return rcl_clock_.type;
+}
+
 Clock::Clock(rcl_clock_type_t clock_type)
 {
   auto ret = rcl_clock_init(clock_type, &rcl_clock_);
