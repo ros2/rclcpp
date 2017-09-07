@@ -33,14 +33,12 @@ namespace rclcpp
 TimeSource::TimeSource(std::shared_ptr<rclcpp::node::Node> node)
 : ros_time_valid_(false)
 {
-  this->initializeData();
   this->attachNode(node);
 }
 
 TimeSource::TimeSource()
 : ros_time_valid_(false)
 {
-  this->initializeData();
 }
 
 void TimeSource::attachNode(std::shared_ptr<rclcpp::node::Node> node)
@@ -80,27 +78,15 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
   }
 }
 
-void TimeSource::initializeData()
-{
-  auto ret1 = rcl_clock_init(RCL_ROS_TIME, &ros_clock_);
-  if (ret1 != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to initialize ROS time source");
-  }
-}
-
 TimeSource::~TimeSource()
 {
   if (node_) {
     this->detachNode();
   }
-  auto ret1 = rcl_clock_fini(&ros_clock_);
-  if (ret1 != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to fini ROS time source");
-  }
 }
 
 void TimeSource::setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
-    std::shared_ptr<rclcpp::Clock> clock)
+  std::shared_ptr<rclcpp::Clock> clock)
 {
   // TODO(tfoote) Use a time import/export method from rclcpp Time pending
   rcl_time_point_t clock_time;
@@ -132,33 +118,35 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
   }
 }
 
+void TimeSource::enableROSTime(std::shared_ptr<rclcpp::Clock> clock)
+{
+  auto ret = rcl_enable_ros_time_override(&clock->rcl_clock_);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to enable ros_time_override_status");
+  }
+}
+
+void TimeSource::disableROSTime(std::shared_ptr<rclcpp::Clock> clock)
+{
+  auto ret = rcl_disable_ros_time_override(&clock->rcl_clock_);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to enable ros_time_override_status");
+  }
+}
+
 void TimeSource::enableROSTime()
 {
-  bool is_enabled;
-  auto ret = rcl_is_enabled_ros_time_override(&ros_clock_, &is_enabled);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
-  }
-  if (!is_enabled) {
-    ret = rcl_enable_ros_time_override(&ros_clock_);
-    if (ret != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR("Failed to enable ros_time_override_status");
-    }
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
+    disableROSTime(*it);
   }
 }
 
 void TimeSource::disableROSTime()
 {
-  bool is_enabled;
-  auto ret = rcl_is_enabled_ros_time_override(&ros_clock_, &is_enabled);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
-  }
-  if (!is_enabled) {
-    ret = rcl_disable_ros_time_override(&ros_clock_);
-    if (ret != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR("Failed to disable ros_time_override_status");
-    }
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
+    enableROSTime(*it);
   }
 }
 

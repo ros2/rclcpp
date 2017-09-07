@@ -16,6 +16,7 @@
 #define RCLCPP__TIME_SOURCE_HPP_
 
 #include <memory>
+#include <vector>
 
 #include "rcl/time.h"
 
@@ -64,19 +65,19 @@ private:
 
   // The clock callback itself
   void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
-  void initializeData();
   void enableROSTime();
   void disableROSTime();
 
+  // Internal helper functions used inside iterators
+  void enableROSTime(std::shared_ptr<rclcpp::Clock> clock);
+  void disableROSTime(std::shared_ptr<rclcpp::Clock> clock);
   void setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
-      std::shared_ptr<rclcpp::Clock> clock);
+    std::shared_ptr<rclcpp::Clock> clock);
 
   bool ros_time_valid_;
 
   std::mutex clock_list_lock_;
-  std::vector<std::shared_ptr<rclcpp::Clock> > associated_clocks_;
-  // Data Storage
-  rcl_clock_t ros_clock_;
+  std::vector<std::shared_ptr<rclcpp::Clock>> associated_clocks_;
 };
 
 }  // namespace rclcpp
