@@ -21,6 +21,7 @@
 
 #include "rcutils/logging_macros.h"
 
+#include "rclcpp/clock.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"

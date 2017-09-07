@@ -20,6 +20,7 @@
 
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/time.hpp"
 

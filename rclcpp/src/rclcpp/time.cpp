@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/time.hpp"
-
 #include <utility>
+
+#include "rclcpp/clock.hpp"
+#include "rclcpp/time.hpp"
 
 #include "builtin_interfaces/msg/time.hpp"
 
@@ -59,59 +60,6 @@ init_time_point(rcl_clock_type_t & clock)
 
 namespace rclcpp
 {
-
-Time
-Clock::now()
-{
-  Time now(0, 0, rcl_clock_.type);
-
-  auto ret = rcl_time_point_get_now(&rcl_clock_, &now.rcl_time_);
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not get current time stamp");
-  }
-
-  return now;
-}
-
-bool
-Clock::isROSTimeActive()
-{
-  if (!rcl_clock_valid(&rcl_clock_)) {
-    RCUTILS_LOG_ERROR("ROS time not valid!");
-    return false;
-  }
-
-  bool is_enabled;
-  auto ret = rcl_is_enabled_ros_time_override(&rcl_clock_, &is_enabled);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
-  }
-  return is_enabled;
-}
-
-rcl_clock_type_t
-Clock::getClockType()
-{
-  return rcl_clock_.type;
-}
-
-Clock::Clock(rcl_clock_type_t clock_type)
-{
-  auto ret = rcl_clock_init(clock_type, &rcl_clock_);
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not get current time stamp");
-  }
-}
-
-Clock::~Clock()
-{
-  auto ret = rcl_clock_fini(&rcl_clock_);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to fini rcl clock.");
-  }
-}
 
 Time::Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type)
 : rcl_time_(init_time_point(clock_type))

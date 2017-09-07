@@ -31,6 +31,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/any_executable.cpp
   src/rclcpp/callback_group.cpp
   src/rclcpp/client.cpp
+  src/rclcpp/clock.cpp
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
   src/rclcpp/event.cpp

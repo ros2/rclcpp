@@ -25,7 +25,6 @@ namespace rclcpp
 {
 
 class Clock;
-class TimeSource;
 
 class Time
 {
@@ -101,33 +100,6 @@ public:
 private:
   rcl_time_point_t rcl_time_;
   friend Clock;  // Allow clock to manipulate internal data
-};
-
-// TODO(tfoote) move to own file
-class Clock
-{
-public:
-  RCLCPP_PUBLIC
-  explicit Clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
-
-  RCLCPP_PUBLIC
-  ~Clock();
-
-  RCLCPP_PUBLIC
-  Time
-  now();
-
-  RCLCPP_PUBLIC
-  bool
-  isROSTimeActive();
-
-  RCLCPP_PUBLIC
-  rcl_clock_type_t
-  getClockType();
-
-private:
-  rcl_clock_t rcl_clock_;
-  friend TimeSource;  // Allow TimeSource to acces the rcl_clock_ datatype.
 };
 
 }  // namespace rclcpp
