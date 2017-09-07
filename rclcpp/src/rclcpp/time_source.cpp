@@ -62,6 +62,24 @@ void TimeSource::detachNode()
   disableROSTime();
 }
 
+void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  associated_clocks_.push_back(clock);
+  // TODO(tfoote) cache state and set clock here
+}
+
+void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
+{
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  auto result = std::find(associated_clocks_.begin(), associated_clocks_.end(), clock);
+  if (result != associated_clocks_.end()) {
+    associated_clocks_.erase(result);
+  } else {
+    RCUTILS_LOG_ERROR("Failed to remove clock");
+  }
+}
+
 void TimeSource::initializeData()
 {
   auto ret1 = rcl_clock_init(RCL_ROS_TIME, &ros_clock_);
@@ -81,6 +99,26 @@ TimeSource::~TimeSource()
   }
 }
 
+void TimeSource::setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
+    std::shared_ptr<rclcpp::Clock> clock)
+{
+  // TODO(tfoote) Use a time import/export method from rclcpp Time pending
+  rcl_time_point_t clock_time;
+  auto ret = rcl_time_point_init(&clock_time, &(clock->rcl_clock_.type));
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to init ros_time_point");
+  }
+  clock_time.nanoseconds = msg->sec * 1e9 + msg->nanosec;
+  ret = rcl_set_ros_time_override(&(clock->rcl_clock_.type), clock_time.nanoseconds);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
+  }
+  auto ret2 = rcl_time_point_fini(&clock_time);
+  if (ret2 != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to fini clock_time");
+  }
+}
+
 void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 {
   // RCUTILS_LOG_INFO("Got clock message");
@@ -88,20 +126,9 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
   // TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
   // TODO(tfoote) also setup disable
 
-  // TODO(tfoote) Use a time import/export method from rclcpp Time pending
-  rcl_time_point_t clock_time;
-  auto ret = rcl_time_point_init(&clock_time, &ros_clock_.type);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to init ros_time_point");
-  }
-  clock_time.nanoseconds = msg->sec * 1e9 + msg->nanosec;
-  ret = rcl_set_ros_time_override(&ros_clock_, clock_time.nanoseconds);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
-  }
-  auto ret2 = rcl_time_point_fini(&clock_time);
-  if (ret2 != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to fini clock_time");
+  std::lock_guard<std::mutex> guard(clock_list_lock_);
+  for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
+    setClock(msg, *it);
   }
 }
 

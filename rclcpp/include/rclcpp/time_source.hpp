@@ -24,6 +24,7 @@
 
 namespace rclcpp
 {
+class Clock;
 
 class TimeSource
 {
@@ -39,6 +40,12 @@ public:
 
   RCLCPP_PUBLIC
   void detachNode();
+
+  RCLCPP_PUBLIC
+  void attachClock(std::shared_ptr<rclcpp::Clock> clock);
+
+  RCLCPP_PUBLIC
+  void detachClock(std::shared_ptr<rclcpp::Clock> clock);
 
   RCLCPP_PUBLIC
   ~TimeSource();
@@ -61,8 +68,13 @@ private:
   void enableROSTime();
   void disableROSTime();
 
+  void setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
+      std::shared_ptr<rclcpp::Clock> clock);
+
   bool ros_time_valid_;
 
+  std::mutex clock_list_lock_;
+  std::vector<std::shared_ptr<rclcpp::Clock> > associated_clocks_;
   // Data Storage
   rcl_clock_t ros_clock_;
 };
