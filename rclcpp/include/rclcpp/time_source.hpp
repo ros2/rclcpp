@@ -20,7 +20,10 @@
 
 #include "rcl/time.h"
 
+#include "rcl_interfaces/msg/parameter_event.hpp"
+
 #include "rclcpp/node.hpp"
+#include "rclcpp/parameter_client.hpp"
 
 
 namespace rclcpp
@@ -66,6 +69,20 @@ private:
   // The clock callback itself
   void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
 
+  // Parameter Client pointer
+  std::shared_ptr<rclcpp::parameter_client::AsyncParametersClient> parameter_client_;
+
+  // Parameter Event subscription
+  using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
+  using ParamSubscriptionT = rclcpp::subscription::Subscription<ParamMessageT, Alloc>;
+  std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
+
+  // Callback for parameter updates
+  void on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
+
+  // An enum to hold the parameter state
+  enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
+  UseSimTimeParameterState parameter_state_;
 
   // An internal method to use in the clock callback that iterates and enables all clocks
   void enableROSTime();

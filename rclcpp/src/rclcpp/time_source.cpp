@@ -49,13 +49,18 @@ void TimeSource::attachNode(std::shared_ptr<rclcpp::node::Node> node)
   clock_subscription_ = node_->create_subscription<builtin_interfaces::msg::Time>(
     "clock", std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
     rmw_qos_profile_default);
-  // TODO(tfoote): Check for time related parameters here too
+
+  parameter_client_ = std::make_shared<rclcpp::parameter_client::AsyncParametersClient>(node);
+  parameter_subscription_ =
+    parameter_client_->on_parameter_event(std::bind(&TimeSource::on_parameter_event,
+      this, std::placeholders::_1));
 }
 
 void TimeSource::detachNode()
 {
   this->ros_time_valid_ = false;
   clock_subscription_.reset();
+  parameter_client_.reset();
   node_.reset();
   disableROSTime();
 }
@@ -120,6 +125,45 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
   }
 }
 
+
+void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
+{
+  for (auto & new_parameter : event->new_parameters) {
+    if (new_parameter.value.type == rclcpp::parameter::ParameterType::PARAMETER_BOOL) {
+      if (new_parameter.name == "use_sim_time") {
+        bool value = new_parameter.value.bool_value;
+        if (value) {
+          parameter_state_ = SET_TRUE;
+          enableROSTime();
+        } else {
+          parameter_state_ = SET_FALSE;
+          disableROSTime();
+        }
+      }
+    }
+  }
+  for (auto & changed_parameter : event->changed_parameters) {
+    if (changed_parameter.value.type == rclcpp::parameter::ParameterType::PARAMETER_BOOL) {
+      if (changed_parameter.name == "use_sim_time") {
+        bool value = changed_parameter.value.bool_value;
+        if (value) {
+          parameter_state_ = SET_TRUE;
+          enableROSTime();
+        } else {
+          parameter_state_ = SET_FALSE;
+          disableROSTime();
+        }
+      }
+    }
+  }
+  for (auto & deleted_parameter : event->deleted_parameters) {
+    if (deleted_parameter.name == "use_sim_time") {
+      // If the parameter is deleted mark it as unset but dont' change state.
+      parameter_state_ = UNSET;
+    }
+  }
+}
+
 void TimeSource::enableROSTime(std::shared_ptr<rclcpp::Clock> clock)
 {
   auto ret = rcl_enable_ros_time_override(&clock->rcl_clock_);
@@ -138,8 +182,13 @@ void TimeSource::disableROSTime(std::shared_ptr<rclcpp::Clock> clock)
 
 void TimeSource::enableROSTime()
 {
+  if (ros_time_valid_) {
+    // already enabled no-op
+    return;
+  }
+
   // Local storage
-  this->ros_time_valid_ = true;
+  ros_time_valid_ = true;
 
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
@@ -150,8 +199,13 @@ void TimeSource::enableROSTime()
 
 void TimeSource::disableROSTime()
 {
+  if (!ros_time_valid_) {
+    // already disabled no-op
+    return;
+  }
+
   // Local storage
-  this->ros_time_valid_ = false;
+  ros_time_valid_ = false;
 
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);

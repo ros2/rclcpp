@@ -112,7 +112,7 @@ TEST_F(TestTimeSource, clock) {
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
-  // Now that we've recieved a message it should be active
+  // Now that we've recieved a message it should be active with parameter unset
   EXPECT_TRUE(ros_clock->isROSTimeActive());
 
   auto t_out = ros_clock->now();
@@ -120,4 +120,52 @@ TEST_F(TestTimeSource, clock) {
   EXPECT_NE(0, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
+}
+
+TEST_F(TestTimeSource, parameter_activation) {
+  rclcpp::TimeSource ts(node);
+  auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
+
+  ts.attachClock(ros_clock);
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
+
+  auto parameter_service = std::make_shared<rclcpp::parameter_service::ParameterService>(node);
+  auto parameters_client = std::make_shared<rclcpp::parameter_client::SyncParametersClient>(node);
+
+  using namespace std::chrono_literals;
+  EXPECT_TRUE(parameters_client->wait_for_service(2s));
+  auto set_parameters_results = parameters_client->set_parameters({
+    rclcpp::parameter::ParameterVariant("use_sim_time", true)
+  });
+  for (auto & result : set_parameters_results) {
+    EXPECT_TRUE(result.successful);
+  }
+  rclcpp::spin_some(node);
+  EXPECT_TRUE(ros_clock->isROSTimeActive());
+
+
+  set_parameters_results = parameters_client->set_parameters({
+    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
+  });
+  for (auto & result : set_parameters_results) {
+    EXPECT_TRUE(result.successful);
+  }
+  EXPECT_TRUE(ros_clock->isROSTimeActive());
+
+  set_parameters_results = parameters_client->set_parameters({
+    rclcpp::parameter::ParameterVariant("use_sim_time", false)
+  });
+  for (auto & result : set_parameters_results) {
+    EXPECT_TRUE(result.successful);
+  }
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
+
+  set_parameters_results = parameters_client->set_parameters({
+    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
+  });
+  for (auto & result : set_parameters_results) {
+    EXPECT_TRUE(result.successful);
+  }
+  EXPECT_FALSE(ros_clock->isROSTimeActive());
 }
