@@ -109,7 +109,7 @@ void TimeSource::setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
     RCUTILS_LOG_ERROR("Failed to init ros_time_point");
   }
   clock_time.nanoseconds = msg->sec * 1e9 + msg->nanosec;
-  ret = rcl_set_ros_time_override(&(clock->rcl_clock_.type), clock_time.nanoseconds);
+  ret = rcl_set_ros_time_override(&(clock->rcl_clock_), clock_time.nanoseconds);
   if (ret != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
   }
