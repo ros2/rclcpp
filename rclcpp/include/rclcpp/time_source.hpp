@@ -34,22 +34,22 @@ class TimeSource
 {
 public:
   RCLCPP_PUBLIC
-  explicit TimeSource(std::shared_ptr<rclcpp::node::Node> node);
+  explicit TimeSource(rclcpp::node::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
   TimeSource();
 
   RCLCPP_PUBLIC
-  void attachNode(std::shared_ptr<rclcpp::node::Node> node);
+  void attachNode(rclcpp::node::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
   void detachNode();
 
   RCLCPP_PUBLIC
-  void attachClock(std::shared_ptr<rclcpp::Clock> clock);
+  void attachClock(rclcpp::Clock::SharedPtr clock);
 
   RCLCPP_PUBLIC
-  void detachClock(std::shared_ptr<rclcpp::Clock> clock);
+  void detachClock(rclcpp::Clock::SharedPtr clock);
 
   RCLCPP_PUBLIC
   ~TimeSource();
@@ -58,7 +58,7 @@ public:
 
 private:
   // Preserve the node reference
-  std::shared_ptr<rclcpp::node::Node> node_;
+  rclcpp::node::Node::SharedPtr node_;
 
   // The subscription for the clock callback
   using MessageT = builtin_interfaces::msg::Time;
@@ -90,10 +90,10 @@ private:
   void disableROSTime();
 
   // Internal helper functions used inside iterators
-  static void enableROSTime(std::shared_ptr<rclcpp::Clock> clock);
-  static void disableROSTime(std::shared_ptr<rclcpp::Clock> clock);
+  static void enableROSTime(rclcpp::Clock::SharedPtr clock);
+  static void disableROSTime(rclcpp::Clock::SharedPtr clock);
   static void setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
-    std::shared_ptr<rclcpp::Clock> clock);
+    rclcpp::Clock::SharedPtr clock);
 
   // Local storage of validity of ROS time
   // This is needed when new clocks are added.
@@ -102,7 +102,7 @@ private:
   // A lock to protect iterating the associated_clocks_ field.
   std::mutex clock_list_lock_;
   // A vector to store references to associated clocks.
-  std::vector<std::shared_ptr<rclcpp::Clock>> associated_clocks_;
+  std::vector<rclcpp::Clock::SharedPtr> associated_clocks_;
 };
 
 }  // namespace rclcpp
