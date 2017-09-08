@@ -15,6 +15,7 @@
 #ifndef RCLCPP__CLOCK_HPP_
 #define RCLCPP__CLOCK_HPP_
 
+#include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -25,9 +26,11 @@ namespace rclcpp
 
 class TimeSource;
 
-class Clock
+class Clock : public std::enable_shared_from_this<Clock>
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS(Clock)
+
   RCLCPP_PUBLIC
   explicit Clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
