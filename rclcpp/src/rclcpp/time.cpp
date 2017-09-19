@@ -139,15 +139,16 @@ Time::operator builtin_interfaces::msg::Time() const
   return msg_time;
 }
 
-void
+Time &
 Time::operator=(const Time & rhs)
 {
   rcl_time_source_ = init_time_source(rhs.rcl_time_source_.type);
   rcl_time_ = init_time_point(rcl_time_source_);
   rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
+  return *this;
 }
 
-void
+Time &
 Time::operator=(const builtin_interfaces::msg::Time & time_msg)
 {
   if (time_msg.sec < 0) {
@@ -159,6 +160,7 @@ Time::operator=(const builtin_interfaces::msg::Time & time_msg)
 
   rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
   rcl_time_.nanoseconds += time_msg.nanosec;
+  return *this;
 }
 
 bool
@@ -169,6 +171,12 @@ Time::operator==(const rclcpp::Time & rhs) const
   }
 
   return rcl_time_.nanoseconds == rhs.rcl_time_.nanoseconds;
+}
+
+bool
+Time::operator!=(const rclcpp::Time & rhs) const
+{
+  return !(*this == rhs);
 }
 
 bool
