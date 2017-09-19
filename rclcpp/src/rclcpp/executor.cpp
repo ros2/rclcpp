@@ -20,6 +20,7 @@
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/scope_exit.hpp"
@@ -410,7 +411,8 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   if (status == RCL_RET_WAIT_SET_EMPTY) {
     fprintf(stderr, "Warning: empty waitset received in rcl_wait(). This should never happen.\n");
   } else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {
-    throw std::runtime_error(std::string("rcl_wait() failed: ") + rcl_get_error_string_safe());
+    using rclcpp::exceptions::throw_from_rcl_error;
+    throw_from_rcl_error(status, "rcl_wait() failed");
   }
 
   // check the null handles in the waitset and remove them from the handles in memory strategy
