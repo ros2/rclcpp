@@ -51,11 +51,11 @@ public:
   operator builtin_interfaces::msg::Time() const;
 
   RCLCPP_PUBLIC
-  void
+  Time &
   operator=(const Time & rhs);
 
   RCLCPP_PUBLIC
-  void
+  Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
 
   RCLCPP_PUBLIC
