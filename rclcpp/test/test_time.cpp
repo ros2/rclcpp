@@ -93,6 +93,7 @@ TEST(TestTime, operators) {
   EXPECT_TRUE(old <= young);
   EXPECT_TRUE(young >= old);
   EXPECT_FALSE(young == old);
+  EXPECT_TRUE(young != old);
 
   rclcpp::Time add = old + young;
   EXPECT_EQ(add.nanoseconds(), old.nanoseconds() + young.nanoseconds());
@@ -106,6 +107,7 @@ TEST(TestTime, operators) {
   rclcpp::Time steady_time(0, 0, RCL_STEADY_TIME);
 
   EXPECT_ANY_THROW((void)(system_time == steady_time));
+  EXPECT_ANY_THROW((void)(system_time != steady_time));
   EXPECT_ANY_THROW((void)(system_time <= steady_time));
   EXPECT_ANY_THROW((void)(system_time >= steady_time));
   EXPECT_ANY_THROW((void)(system_time < steady_time));
@@ -117,6 +119,7 @@ TEST(TestTime, operators) {
   rclcpp::Time later = rclcpp::Time::now(RCL_STEADY_TIME);
 
   EXPECT_ANY_THROW((void)(now == later));
+  EXPECT_ANY_THROW((void)(now != later));
   EXPECT_ANY_THROW((void)(now <= later));
   EXPECT_ANY_THROW((void)(now >= later));
   EXPECT_ANY_THROW((void)(now < later));

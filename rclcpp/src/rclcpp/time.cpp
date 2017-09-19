@@ -174,6 +174,12 @@ Time::operator==(const rclcpp::Time & rhs) const
 }
 
 bool
+Time::operator!=(const rclcpp::Time & rhs) const
+{
+  return !(*this == rhs);
+}
+
+bool
 Time::operator<(const rclcpp::Time & rhs) const
 {
   if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {

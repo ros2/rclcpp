@@ -64,6 +64,10 @@ public:
 
   RCLCPP_PUBLIC
   bool
+  operator!=(const rclcpp::Time & rhs) const;
+
+  RCLCPP_PUBLIC
+  bool
   operator<(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
