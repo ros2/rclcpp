@@ -61,9 +61,11 @@ Executor::Executor(const ExecutorArgs & args)
   {
     fprintf(stderr,
       "[rclcpp::error] failed to create waitset: %s\n", rcl_get_error_string_safe());
+    rcl_reset_error();
     if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
       fprintf(stderr,
         "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
+      rcl_reset_error();
     }
     throw std::runtime_error("Failed to create waitset in Executor constructor");
   }
@@ -75,11 +77,13 @@ Executor::~Executor()
   if (rcl_wait_set_fini(&waitset_) != RCL_RET_OK) {
     fprintf(stderr,
       "[rclcpp::error] failed to destroy waitset: %s\n", rcl_get_error_string_safe());
+    rcl_reset_error();
   }
   // Finalize the interrupt guard condition.
   if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
     fprintf(stderr,
       "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
+    rcl_reset_error();
   }
   // Remove and release the sigint guard condition
   memory_strategy_->remove_guard_condition(
@@ -271,6 +275,7 @@ Executor::execute_subscription(
     fprintf(stderr,
       "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
       subscription->get_topic_name(), rcl_get_error_string_safe());
+    rcl_reset_error();
   }
   subscription->return_message(message);
 }
@@ -293,6 +298,7 @@ Executor::execute_intra_process_subscription(
     fprintf(stderr,
       "[rclcpp::error] take failed for intra process subscription on topic '%s': %s\n",
       subscription->get_topic_name(), rcl_get_error_string_safe());
+    rcl_reset_error();
   }
 }
 
@@ -319,6 +325,7 @@ Executor::execute_service(
     fprintf(stderr,
       "[rclcpp::error] take request failed for server of service '%s': %s\n",
       service->get_service_name().c_str(), rcl_get_error_string_safe());
+    rcl_reset_error();
   }
 }
 
@@ -334,10 +341,11 @@ Executor::execute_client(
     response.get());
   if (status == RCL_RET_OK) {
     client->handle_response(request_header, response);
-  } else if (status != RCL_RET_SERVICE_TAKE_FAILED) {
+  } else if (status != RCL_RET_CLIENT_TAKE_FAILED) {
     fprintf(stderr,
       "[rclcpp::error] take response failed for client of service '%s': %s\n",
       client->get_service_name().c_str(), rcl_get_error_string_safe());
+    rcl_reset_error();
   }
 }
 

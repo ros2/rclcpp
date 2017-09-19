@@ -19,31 +19,87 @@
 #include <string>
 #include <vector>
 
+#include "./parameter_service_names.hpp"
+
 using rclcpp::parameter_client::AsyncParametersClient;
 using rclcpp::parameter_client::SyncParametersClient;
+
+AsyncParametersClient::AsyncParametersClient(
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+  const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile)
+: node_topics_interface_(node_topics_interface)
+{
+  if (remote_node_name != "") {
+    remote_node_name_ = remote_node_name;
+  } else {
+    remote_node_name_ = node_base_interface->get_name();
+  }
+
+  rcl_client_options_t options = rcl_client_get_default_options();
+  options.qos = qos_profile;
+
+  using rclcpp::client::Client;
+  using rclcpp::client::ClientBase;
+
+  get_parameters_client_ = Client<rcl_interfaces::srv::GetParameters>::make_shared(
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::get_parameters,
+    options);
+  auto get_parameters_base = std::dynamic_pointer_cast<ClientBase>(get_parameters_client_);
+  node_services_interface->add_client(get_parameters_base, nullptr);
+
+  get_parameter_types_client_ = Client<rcl_interfaces::srv::GetParameterTypes>::make_shared(
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::get_parameter_types,
+    options);
+  auto get_parameter_types_base =
+    std::dynamic_pointer_cast<ClientBase>(get_parameter_types_client_);
+  node_services_interface->add_client(get_parameter_types_base, nullptr);
+
+  set_parameters_client_ = Client<rcl_interfaces::srv::SetParameters>::make_shared(
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::set_parameters,
+    options);
+  auto set_parameters_base = std::dynamic_pointer_cast<ClientBase>(set_parameters_client_);
+  node_services_interface->add_client(set_parameters_base, nullptr);
+
+  list_parameters_client_ = Client<rcl_interfaces::srv::ListParameters>::make_shared(
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::list_parameters,
+    options);
+  auto list_parameters_base = std::dynamic_pointer_cast<ClientBase>(list_parameters_client_);
+  node_services_interface->add_client(list_parameters_base, nullptr);
+
+  describe_parameters_client_ = Client<rcl_interfaces::srv::DescribeParameters>::make_shared(
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::describe_parameters,
+    options);
+  auto describe_parameters_base =
+    std::dynamic_pointer_cast<ClientBase>(describe_parameters_client_);
+  node_services_interface->add_client(describe_parameters_base, nullptr);
+}
 
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node::Node::SharedPtr node,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
-: node_(node)
-{
-  if (remote_node_name != "") {
-    remote_node_name_ = remote_node_name;
-  } else {
-    remote_node_name_ = node_->get_name();
-  }
-  get_parameters_client_ = node_->create_client<rcl_interfaces::srv::GetParameters>(
-    remote_node_name_ + "__get_parameters", qos_profile);
-  get_parameter_types_client_ = node_->create_client<rcl_interfaces::srv::GetParameterTypes>(
-    remote_node_name_ + "__get_parameter_types", qos_profile);
-  set_parameters_client_ = node_->create_client<rcl_interfaces::srv::SetParameters>(
-    remote_node_name_ + "__set_parameters", qos_profile);
-  list_parameters_client_ = node_->create_client<rcl_interfaces::srv::ListParameters>(
-    remote_node_name_ + "__list_parameters", qos_profile);
-  describe_parameters_client_ = node_->create_client<rcl_interfaces::srv::DescribeParameters>(
-    remote_node_name_ + "__describe_parameters", qos_profile);
-}
+: AsyncParametersClient(
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
+    qos_profile)
+{}
 
 std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
 AsyncParametersClient::get_parameters(
