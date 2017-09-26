@@ -265,11 +265,15 @@ private:
       return std::strcmp(lhs, rhs) < 0;
     }
   };
+
+  // Make sure allocator given to map has the correct value_type
+  using IDTopic = std::pair<const char *, AllocSet>;
+
   using IDTopicMap = std::map<
-      const char *,
-      AllocSet,
+      typename IDTopic::first_type,
+      typename IDTopic::second_type,
       strcmp_wrapper,
-      RebindAlloc<std::pair<const char *, AllocSet>>>;
+      RebindAlloc<IDTopic>>;
 
   SubscriptionMap subscriptions_;
 
