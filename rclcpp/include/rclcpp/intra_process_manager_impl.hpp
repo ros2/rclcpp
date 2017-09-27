@@ -266,14 +266,11 @@ private:
     }
   };
 
-  // Make sure allocator given to map has the correct value_type
-  using IDTopic = std::pair<const char *, AllocSet>;
-
   using IDTopicMap = std::map<
-      typename IDTopic::first_type,
-      typename IDTopic::second_type,
+      const char *,
+      AllocSet,
       strcmp_wrapper,
-      RebindAlloc<IDTopic>>;
+      RebindAlloc<std::pair<const char const *, AllocSet>>;
 
   SubscriptionMap subscriptions_;
 
