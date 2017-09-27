@@ -269,7 +269,7 @@ private:
       const char *,
       AllocSet,
       strcmp_wrapper,
-      RebindAlloc<std::pair<const char const *, AllocSet>>>;
+      RebindAlloc<std::pair<const char * const, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
