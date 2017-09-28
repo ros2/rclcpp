@@ -37,7 +37,8 @@ protected:
 };
 
 void
-callback(const std::shared_ptr<rclcpp::srv::Mock::Request>/*req*/,
+callback(
+  const std::shared_ptr<rclcpp::srv::Mock::Request>/*req*/,
   std::shared_ptr<rclcpp::srv::Mock::Response>/*resp*/)
 {}
 

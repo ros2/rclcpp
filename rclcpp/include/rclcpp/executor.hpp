@@ -151,7 +151,8 @@ public:
    */
   template<typename T = std::milli>
   void
-  spin_node_once(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
+  spin_node_once(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
   {
     return spin_node_once_nanoseconds(
@@ -163,7 +164,8 @@ public:
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   template<typename NodeT = rclcpp::node::Node, typename T = std::milli>
   void
-  spin_node_once(std::shared_ptr<NodeT> node,
+  spin_node_once(
+    std::shared_ptr<NodeT> node,
     std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
   {
     return spin_node_once_nanoseconds(

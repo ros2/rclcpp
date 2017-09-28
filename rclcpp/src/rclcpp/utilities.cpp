@@ -176,15 +176,17 @@ rclcpp::utilities::init(int argc, char * argv[])
   action.sa_flags = SA_SIGINFO;
   ::old_action = set_sigaction(SIGINT, action);
   // Register an on_shutdown hook to restore the old action.
-  rclcpp::utilities::on_shutdown([]() {
-    set_sigaction(SIGINT, ::old_action);
-  });
+  rclcpp::utilities::on_shutdown(
+    []() {
+      set_sigaction(SIGINT, ::old_action);
+    });
 #else
   ::old_signal_handler = set_signal_handler(SIGINT, ::signal_handler);
   // Register an on_shutdown hook to restore the old signal handler.
-  rclcpp::utilities::on_shutdown([]() {
-    set_signal_handler(SIGINT, ::old_signal_handler);
-  });
+  rclcpp::utilities::on_shutdown(
+    []() {
+      set_signal_handler(SIGINT, ::old_signal_handler);
+    });
 #endif
 }
 

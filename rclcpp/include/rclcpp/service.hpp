@@ -196,7 +196,8 @@ public:
     return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
-  void handle_request(std::shared_ptr<rmw_request_id_t> request_header,
+  void handle_request(
+    std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);

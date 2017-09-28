@@ -234,8 +234,8 @@ NodeGraph::notify_graph_change()
           graph_events_.begin(),
           graph_events_.end(),
           [](const rclcpp::event::Event::WeakPtr & wptr) {
-        return wptr.expired();
-      }),
+            return wptr.expired();
+          }),
         graph_events_.end());
       // update graph_users_count_
       graph_users_count_.store(graph_events_.size());

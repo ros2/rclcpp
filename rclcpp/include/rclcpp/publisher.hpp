@@ -50,7 +50,7 @@ namespace publisher
 
 class PublisherBase
 {
-  friend rclcpp::node_interfaces::NodeTopicsInterface;
+  friend ::rclcpp::node_interfaces::NodeTopicsInterface;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
