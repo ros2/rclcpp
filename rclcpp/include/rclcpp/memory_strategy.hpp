@@ -64,22 +64,26 @@ public:
   virtual void remove_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
   virtual void
-  get_next_subscription(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
+  get_next_subscription(
+    rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
   virtual void
-  get_next_service(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
+  get_next_service(
+    rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
   virtual void
-  get_next_client(rclcpp::executor::AnyExecutable::SharedPtr any_exec,
+  get_next_client(
+    rclcpp::executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
   virtual rcl_allocator_t
   get_allocator() = 0;
 
   static rclcpp::subscription::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(const rcl_subscription_t * subscriber_handle,
+  get_subscription_by_handle(
+    const rcl_subscription_t * subscriber_handle,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::service::ServiceBase::SharedPtr
@@ -89,7 +93,8 @@ public:
   get_client_by_handle(const rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  get_node_by_group(
+    rclcpp::callback_group::CallbackGroup::SharedPtr group,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
@@ -103,7 +108,8 @@ public:
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_client(rclcpp::client::ClientBase::SharedPtr client,
+  get_group_by_client(
+    rclcpp::client::ClientBase::SharedPtr client,
     const WeakNodeVector & weak_nodes);
 };
 

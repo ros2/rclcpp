@@ -193,7 +193,8 @@ public:
   }
 
   void
-  handle_response(std::shared_ptr<rmw_request_id_t> request_header,
+  handle_response(
+    std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> response)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);

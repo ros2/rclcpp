@@ -285,7 +285,7 @@ private:
 
   AnySubscriptionCallback<MessageT, Alloc> any_callback_;
   typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
-  message_memory_strategy_;
+    message_memory_strategy_;
 
   GetMessageCallbackType get_intra_process_message_callback_;
   MatchesAnyPublishersCallbackType matches_any_intra_process_publishers_;

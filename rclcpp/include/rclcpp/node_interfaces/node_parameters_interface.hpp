@@ -81,8 +81,8 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
-  using ParametersCallbackFunction =
-      std::function<rcl_interfaces::msg::SetParametersResult(
+  using ParametersCallbackFunction = std::function<
+      rcl_interfaces::msg::SetParametersResult(
         const std::vector<rclcpp::parameter::ParameterVariant> &)>;
 
   RCLCPP_PUBLIC

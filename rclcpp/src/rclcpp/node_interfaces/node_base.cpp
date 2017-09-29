@@ -133,13 +133,15 @@ NodeBase::NodeBase(
     throw_from_rcl_error(ret, "failed to initialize rcl node");
   }
 
-  node_handle_.reset(rcl_node, [](rcl_node_t * node) -> void {
-    if (rcl_node_fini(node) != RCL_RET_OK) {
-      fprintf(
-        stderr, "Error in destruction of rcl node handle: %s\n", rcl_get_error_string_safe());
-    }
-    delete node;
-  });
+  node_handle_.reset(
+    rcl_node,
+    [](rcl_node_t * node) -> void {
+      if (rcl_node_fini(node) != RCL_RET_OK) {
+        fprintf(
+          stderr, "Error in destruction of rcl node handle: %s\n", rcl_get_error_string_safe());
+      }
+      delete node;
+    });
 
   // Create the default callback group.
   using rclcpp::callback_group::CallbackGroupType;

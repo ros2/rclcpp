@@ -119,8 +119,8 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
   for (auto & name : names) {
     if (std::any_of(parameters_.cbegin(), parameters_.cend(),
       [&name](const std::pair<std::string, rclcpp::parameter::ParameterVariant> & kv) {
-      return name == kv.first;
-    }))
+        return name == kv.first;
+      }))
     {
       results.push_back(parameters_.at(name));
     }
@@ -162,8 +162,8 @@ NodeParameters::describe_parameters(const std::vector<std::string> & names) cons
   std::vector<rcl_interfaces::msg::ParameterDescriptor> results;
   for (auto & kv : parameters_) {
     if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
-      return name == kv.first;
-    }))
+        return name == kv.first;
+      }))
     {
       rcl_interfaces::msg::ParameterDescriptor parameter_descriptor;
       parameter_descriptor.name = kv.first;
@@ -181,8 +181,8 @@ NodeParameters::get_parameter_types(const std::vector<std::string> & names) cons
   std::vector<uint8_t> results;
   for (auto & kv : parameters_) {
     if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
-      return name == kv.first;
-    }))
+        return name == kv.first;
+      }))
     {
       results.push_back(kv.second.get_type());
     } else {
@@ -207,17 +207,17 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
       (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), separator)) < depth));
     bool prefix_matches = std::any_of(prefixes.cbegin(), prefixes.cend(),
         [&kv, &depth, &separator](const std::string & prefix) {
-      if (kv.first == prefix) {
-        return true;
-      } else if (kv.first.find(prefix + separator) == 0) {
-        size_t length = prefix.length();
-        std::string substr = kv.first.substr(length);
-        // Cast as unsigned integer to avoid warning
-        return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-        (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), separator)) < depth);
-      }
-      return false;
-    });
+          if (kv.first == prefix) {
+            return true;
+          } else if (kv.first.find(prefix + separator) == 0) {
+            size_t length = prefix.length();
+            std::string substr = kv.first.substr(length);
+            // Cast as unsigned integer to avoid warning
+            return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
+            (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), separator)) < depth);
+          }
+          return false;
+        });
     if (get_all || prefix_matches) {
       result.names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of(separator);

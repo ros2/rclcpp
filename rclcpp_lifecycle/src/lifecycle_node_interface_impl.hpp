@@ -164,7 +164,8 @@ public:
   }
 
   bool
-  register_callback(std::uint8_t lifecycle_transition, std::function<rcl_lifecycle_transition_key_t(
+  register_callback(
+    std::uint8_t lifecycle_transition, std::function<rcl_lifecycle_transition_key_t(
       const State &)> & cb)
   {
     cb_map_[lifecycle_transition] = cb;
@@ -172,7 +173,8 @@ public:
   }
 
   void
-  on_change_state(const std::shared_ptr<rmw_request_id_t> header,
+  on_change_state(
+    const std::shared_ptr<rmw_request_id_t> header,
     const std::shared_ptr<ChangeStateSrv::Request> req,
     std::shared_ptr<ChangeStateSrv::Response> resp)
   {
@@ -192,7 +194,8 @@ public:
   }
 
   void
-  on_get_state(const std::shared_ptr<rmw_request_id_t> header,
+  on_get_state(
+    const std::shared_ptr<rmw_request_id_t> header,
     const std::shared_ptr<GetStateSrv::Request> req,
     std::shared_ptr<GetStateSrv::Response> resp)
   {
@@ -207,7 +210,8 @@ public:
   }
 
   void
-  on_get_available_states(const std::shared_ptr<rmw_request_id_t> header,
+  on_get_available_states(
+    const std::shared_ptr<rmw_request_id_t> header,
     const std::shared_ptr<GetAvailableStatesSrv::Request> req,
     std::shared_ptr<GetAvailableStatesSrv::Response> resp)
   {
@@ -226,7 +230,8 @@ public:
   }
 
   void
-  on_get_available_transitions(const std::shared_ptr<rmw_request_id_t> header,
+  on_get_available_transitions(
+    const std::shared_ptr<rmw_request_id_t> header,
     const std::shared_ptr<GetAvailableTransitionsSrv::Request> req,
     std::shared_ptr<GetAvailableTransitionsSrv::Response> resp)
   {

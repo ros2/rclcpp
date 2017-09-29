@@ -117,7 +117,8 @@ Node::get_parameter(const std::string & name) const
   return node_parameters_->get_parameter(name);
 }
 
-bool Node::get_parameter(const std::string & name,
+bool Node::get_parameter(
+  const std::string & name,
   rclcpp::parameter::ParameterVariant & parameter) const
 {
   return node_parameters_->get_parameter(name, parameter);

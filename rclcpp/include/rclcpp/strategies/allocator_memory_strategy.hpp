@@ -231,7 +231,8 @@ public:
   }
 
   virtual void
-  get_next_subscription(executor::AnyExecutable::SharedPtr any_exec,
+  get_next_subscription(
+    executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
     auto it = subscription_handles_.begin();
@@ -274,7 +275,8 @@ public:
   }
 
   virtual void
-  get_next_service(executor::AnyExecutable::SharedPtr any_exec,
+  get_next_service(
+    executor::AnyExecutable::SharedPtr any_exec,
     const WeakNodeVector & weak_nodes)
   {
     auto it = service_handles_.begin();

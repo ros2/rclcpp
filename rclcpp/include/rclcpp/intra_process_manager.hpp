@@ -186,14 +186,16 @@ public:
    */
   template<typename MessageT, typename Alloc>
   uint64_t
-  add_publisher(typename publisher::Publisher<MessageT, Alloc>::SharedPtr publisher,
+  add_publisher(
+    typename publisher::Publisher<MessageT, Alloc>::SharedPtr publisher,
     size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     size_t size = buffer_size > 0 ? buffer_size : publisher->get_queue_size();
-    auto mrb = mapped_ring_buffer::MappedRingBuffer<MessageT,
-      typename publisher::Publisher<MessageT, Alloc>::MessageAlloc>::make_shared(
-      size, publisher->get_allocator());
+    auto mrb = mapped_ring_buffer::MappedRingBuffer<
+      MessageT,
+      typename publisher::Publisher<MessageT, Alloc>::MessageAlloc
+      >::make_shared(size, publisher->get_allocator());
     impl_->add_publisher(id, publisher, mrb, size);
     return id;
   }
@@ -239,8 +241,9 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template<typename MessageT, typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>>
+  template<
+    typename MessageT, typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
@@ -302,8 +305,9 @@ public:
    * \param requesting_subscriptions_intra_process_id the subscription's id.
    * \param message the message typed unique_ptr used to return the message.
    */
-  template<typename MessageT, typename Alloc = std::allocator<void>,
-  typename Deleter = std::default_delete<MessageT>>
+  template<
+    typename MessageT, typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,
