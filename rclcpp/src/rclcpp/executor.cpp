@@ -131,14 +131,12 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
   weak_nodes_.erase(
     std::remove_if(
       weak_nodes_.begin(), weak_nodes_.end(),
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       [&](rclcpp::node_interfaces::NodeBaseInterface::WeakPtr & i)
       {
         bool matched = (i.lock() == node_ptr);
         node_removed |= matched;
         return matched;
       }
-      // *INDENT-ON*
     )
   );
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
@@ -361,12 +359,10 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     weak_nodes_.erase(
       remove_if(
         weak_nodes_.begin(), weak_nodes_.end(),
-        // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
         [](rclcpp::node_interfaces::NodeBaseInterface::WeakPtr i)
         {
           return i.expired();
         }
-        // *INDENT-ON*
       )
     );
   }

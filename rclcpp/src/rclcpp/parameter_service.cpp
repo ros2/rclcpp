@@ -29,7 +29,6 @@ ParameterService::ParameterService(
 : node_(node)
 {
   std::weak_ptr<rclcpp::node::Node> captured_node = node_;
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   get_parameters_service_ = node_->create_service<rcl_interfaces::srv::GetParameters>(
     std::string(node_->get_name()) + "/" + parameter_service_names::get_parameters,
     [captured_node](
@@ -46,8 +45,7 @@ ParameterService::ParameterService(
         response->values.push_back(pvariant.get_parameter_value());
       }
     },
-    qos_profile
-  );
+    qos_profile);
 
   get_parameter_types_service_ = node_->create_service<rcl_interfaces::srv::GetParameterTypes>(
     std::string(node_->get_name()) + "/" + parameter_service_names::get_parameter_types,
@@ -66,8 +64,7 @@ ParameterService::ParameterService(
         return static_cast<rclcpp::parameter::ParameterType>(type);
       });
     },
-    qos_profile
-  );
+    qos_profile);
 
   set_parameters_service_ = node_->create_service<rcl_interfaces::srv::SetParameters>(
     std::string(node_->get_name()) + "/" + parameter_service_names::set_parameters,
@@ -87,8 +84,7 @@ ParameterService::ParameterService(
       auto results = node->set_parameters(pvariants);
       response->results = results;
     },
-    qos_profile
-  );
+    qos_profile);
 
   set_parameters_atomically_service_ =
     node_->create_service<rcl_interfaces::srv::SetParametersAtomically>(
@@ -106,14 +102,12 @@ ParameterService::ParameterService(
       std::transform(request->parameters.cbegin(), request->parameters.cend(),
       std::back_inserter(pvariants),
       [](const rcl_interfaces::msg::Parameter & p) {
-        return rclcpp::parameter::ParameterVariant::
-        from_parameter(p);
+        return rclcpp::parameter::ParameterVariant::from_parameter(p);
       });
       auto result = node->set_parameters_atomically(pvariants);
       response->result = result;
     },
-    qos_profile
-  );
+    qos_profile);
 
   describe_parameters_service_ = node_->create_service<rcl_interfaces::srv::DescribeParameters>(
     std::string(node_->get_name()) + "/" + parameter_service_names::describe_parameters,
@@ -129,8 +123,7 @@ ParameterService::ParameterService(
       auto descriptors = node->describe_parameters(request->names);
       response->descriptors = descriptors;
     },
-    qos_profile
-  );
+    qos_profile);
 
   list_parameters_service_ = node_->create_service<rcl_interfaces::srv::ListParameters>(
     std::string(node_->get_name()) + "/" + parameter_service_names::list_parameters,
@@ -146,7 +139,5 @@ ParameterService::ParameterService(
       auto result = node->list_parameters(request->prefixes, request->depth);
       response->result = result;
     },
-    qos_profile
-  );
-  // *INDENT-ON*
+    qos_profile);
 }

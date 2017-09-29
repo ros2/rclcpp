@@ -139,12 +139,10 @@ signal_handler(int signal_value)
       old_action.sa_sigaction(signal_value, siginfo, context);
     }
   } else {
-    // *INDENT-OFF*
     if (
       old_action.sa_handler != NULL &&  // Is set
       old_action.sa_handler != SIG_DFL &&  // Is not default
       old_action.sa_handler != SIG_IGN)  // Is not ignored
-    // *INDENT-ON*
     {
       old_action.sa_handler(signal_value);
     }

@@ -115,7 +115,6 @@ AsyncParametersClient::get_parameters(
   auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
   request->names = names;
 
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   get_parameters_client_->async_send_request(
     request,
     [request, promise_result, future_result, &callback](
@@ -139,7 +138,6 @@ AsyncParametersClient::get_parameters(
       }
     }
   );
-  // *INDENT-ON*
 
   return future_result;
 }
@@ -158,7 +156,6 @@ AsyncParametersClient::get_parameter_types(
   auto request = std::make_shared<rcl_interfaces::srv::GetParameterTypes::Request>();
   request->names = names;
 
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   get_parameter_types_client_->async_send_request(
     request,
     [promise_result, future_result, &callback](
@@ -175,7 +172,6 @@ AsyncParametersClient::get_parameter_types(
       }
     }
   );
-  // *INDENT-ON*
 
   return future_result;
 }
@@ -193,7 +189,6 @@ AsyncParametersClient::set_parameters(
 
   auto request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
 
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   std::transform(parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
     [](rclcpp::parameter::ParameterVariant p) {
       return p.to_parameter();
@@ -211,7 +206,6 @@ AsyncParametersClient::set_parameters(
       }
     }
   );
-  // *INDENT-ON*
 
   return future_result;
 }
@@ -229,7 +223,6 @@ AsyncParametersClient::set_parameters_atomically(
 
   auto request = std::make_shared<rcl_interfaces::srv::SetParametersAtomically::Request>();
 
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   std::transform(parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
     [](rclcpp::parameter::ParameterVariant p) {
       return p.to_parameter();
@@ -247,7 +240,6 @@ AsyncParametersClient::set_parameters_atomically(
       }
     }
   );
-  // *INDENT-ON*
 
   return future_result;
 }
@@ -268,7 +260,6 @@ AsyncParametersClient::list_parameters(
   request->prefixes = prefixes;
   request->depth = depth;
 
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
   list_parameters_client_->async_send_request(
     request,
     [promise_result, future_result, &callback](
@@ -280,7 +271,6 @@ AsyncParametersClient::list_parameters(
       }
     }
   );
-  // *INDENT-ON*
 
   return future_result;
 }
