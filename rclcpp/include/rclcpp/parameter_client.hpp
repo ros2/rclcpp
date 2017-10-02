@@ -170,12 +170,14 @@ public:
   RCLCPP_PUBLIC
   explicit SyncParametersClient(
     rclcpp::node::Node::SharedPtr node,
+    const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
   SyncParametersClient(
     rclcpp::executor::Executor::SharedPtr executor,
     rclcpp::node::Node::SharedPtr node,
+    const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC

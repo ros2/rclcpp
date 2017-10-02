@@ -314,20 +314,24 @@ AsyncParametersClient::wait_for_service_nanoseconds(std::chrono::nanoseconds tim
 
 SyncParametersClient::SyncParametersClient(
   rclcpp::node::Node::SharedPtr node,
+  const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
-: node_(node)
-{
-  executor_ = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
-  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node, "", qos_profile);
-}
+: SyncParametersClient(
+    std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
+    node,
+    remote_node_name,
+    qos_profile)
+{}
 
 SyncParametersClient::SyncParametersClient(
   rclcpp::executor::Executor::SharedPtr executor,
   rclcpp::node::Node::SharedPtr node,
+  const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
 : executor_(executor), node_(node)
 {
-  async_parameters_client_ = std::make_shared<AsyncParametersClient>(node, "", qos_profile);
+  async_parameters_client_ =
+    std::make_shared<AsyncParametersClient>(node, remote_node_name, qos_profile);
 }
 
 std::vector<rclcpp::parameter::ParameterVariant>
