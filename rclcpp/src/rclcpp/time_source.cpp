@@ -100,10 +100,30 @@ void TimeSource::setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
     RCUTILS_LOG_ERROR("Failed to init ros_time_point");
   }
   clock_time.nanoseconds = msg->sec * 1e9 + msg->nanosec;
+
+  
+  // TODO(tfoote) Move enabledROS time logic here.
+  rclcpp::TimeJump jump;
+  rcl_time_point_t now;
+  ret = rcl_time_point_get_now(&(clock->rcl_clock_), &now);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to get now before setting time");
+  }
+  ret = rcl_difference_times(&now, &clock_time, &jump.delta_);
+  if (ret != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR("Failed to difference time for time jump");
+  }// TODO(tfoote) fill in time source change on jump
+
+
+  // TODO(tfoote) potential race condition with target going out of scope
+  auto active_callbacks = clock->get_triggered_callbacks(jump);
+  clock->invoke_prejump_callbacks(active_callbacks);
   ret = rcl_set_ros_time_override(&(clock->rcl_clock_), clock_time.nanoseconds);
   if (ret != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
   }
+  clock->invoke_postjump_callbacks(active_callbacks, jump);
+
   auto ret2 = rcl_time_point_fini(&clock_time);
   if (ret2 != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to fini clock_time");

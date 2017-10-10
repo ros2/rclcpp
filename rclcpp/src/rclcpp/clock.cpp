@@ -26,6 +26,32 @@
 
 namespace rclcpp
 {
+bool
+JumpThreshold::is_exceeded(const TimeJump & jump)
+{
+  if (on_clock_change_ &&
+    (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_ACTIVATED ||
+      jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED))
+  {
+    return true; 
+  }
+  if ((uint64_t)jump.delta_.nanoseconds > min_forward_ ||
+       (uint64_t)jump.delta_.nanoseconds < min_backward_)
+    {
+     return true;
+    }
+  return false;
+}
+  
+JumpCallback::JumpCallback(
+  std::function<void()> pre_callback,
+  std::function<void(TimeJump)> post_callback,
+  JumpThreshold & threshold)
+: pre_callback(pre_callback),
+  post_callback(post_callback),
+  notice_threshold(threshold)
+{}
+
 Clock::Clock(rcl_clock_type_t clock_type)
 {
   auto ret = rcl_clock_init(clock_type, &rcl_clock_);
@@ -79,5 +105,60 @@ Clock::getClockType()
   return rcl_clock_.type;
 }
 
+rclcpp::JumpCallback::SharedPtr
+Clock::create_jump_callback(
+  std::function<void()> pre_callback,
+  std::function<void(TimeJump)> post_callback,
+  JumpThreshold & threshold)
+{
+  // JumpCallback jump_callback;
+  auto jump_callback =
+    std::make_shared<rclcpp::JumpCallback>(pre_callback, post_callback, threshold);
+  {
+    std::lock_guard<std::mutex> guard(callback_list_mutex_);
+    active_jump_callbacks_.push_back(jump_callback);
+  }
+  return jump_callback;
+}
+
+std::vector<JumpCallback::SharedPtr>
+Clock::get_triggered_callbacks(const TimeJump & jump)
+{
+  std::vector<JumpCallback::SharedPtr> callbacks;
+  std::lock_guard<std::mutex> guard(callback_list_mutex_);
+  for (auto wjcb = active_jump_callbacks_.begin(); wjcb != active_jump_callbacks_.end(); wjcb++)
+  {
+    if (auto jcb = wjcb->lock())
+    {
+      if (jcb->notice_threshold.is_exceeded(jump))
+      {
+        callbacks.push_back(jcb);
+      }
+    }
+    else
+    {
+      active_jump_callbacks_.erase(wjcb);
+    }
+  }
+  return callbacks;
+}
+
+void
+Clock::invoke_prejump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks)
+{
+  for (const auto cb : callbacks)
+  {
+    cb->pre_callback();
+  }
+}
+
+void
+Clock::invoke_postjump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks, const TimeJump & jump)
+{
+  for (auto cb : callbacks)
+  {
+    cb->post_callback(jump);
+  }
+}
 
 }  // namespace rclcpp
