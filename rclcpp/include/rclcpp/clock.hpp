@@ -69,7 +69,7 @@ public:
     JumpThreshold & threshold);
 
   std::function<void()> pre_callback;
-  std::function<void(TimeJump)> post_callback;
+  std::function<void(const TimeJump &)> post_callback;
   JumpThreshold notice_threshold;
 };
 
@@ -101,7 +101,7 @@ public:
   JumpCallback::SharedPtr
   create_jump_callback(
     std::function<void()> pre_callback,
-    std::function<void(TimeJump)> post_callback,
+    std::function<void(const TimeJump &)> post_callback,
     JumpThreshold & threshold);
 
 private:
