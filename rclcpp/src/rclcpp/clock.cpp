@@ -94,7 +94,8 @@ Clock::isROSTimeActive()
   bool is_enabled;
   auto ret = rcl_is_enabled_ros_time_override(&rcl_clock_, &is_enabled);
   if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to check ros_time_override_status");
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "Failed to check ros_time_override_status");
   }
   return is_enabled;
 }

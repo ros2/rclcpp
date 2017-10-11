@@ -29,15 +29,10 @@ namespace
 {
 
 rcl_time_point_t
-init_time_point(rcl_clock_type_t & clock)
+init_time_point(rcl_clock_type_t & clock_type)
 {
   rcl_time_point_t time_point;
-  auto ret = rcl_time_point_init(&time_point, &clock);
-
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not initialize time point");
-  }
+  time_point.clock_type = clock_type;
 
   return time_point;
 }
@@ -91,12 +86,6 @@ Time::Time(const rcl_time_point_t & time_point)
 
 Time::~Time()
 {
-  if (rcl_time_source_fini(&rcl_time_source_) != RCL_RET_OK) {
-    RCUTILS_LOG_FATAL("failed to reclaim rcl_time_source_t in destructor of rclcpp::Time")
-  }
-  if (rcl_time_point_fini(&rcl_time_) != RCL_RET_OK) {
-    RCUTILS_LOG_FATAL("failed to reclaim rcl_time_point_t in destructor of rclcpp::Time")
-  }
 }
 
 Time::operator builtin_interfaces::msg::Time() const
