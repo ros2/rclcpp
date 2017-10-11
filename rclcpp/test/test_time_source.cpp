@@ -96,8 +96,8 @@ TEST_F(TestTimeSource, clock) {
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
       rmw_qos_profile_default);
 
-  rclcpp::WallRate loop_rate(10);
-  for (int i = 0; i < 10; ++i) {
+  rclcpp::WallRate loop_rate(50);
+  for (int i = 0; i < 5; ++i) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
@@ -150,12 +150,12 @@ TEST_F(TestTimeSource, callbacks) {
   // Register a callback for time jumps
   rclcpp::JumpCallback::SharedPtr callback_holder = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
-    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
     jump_threshold
   );
 
-    EXPECT_EQ(0, cbo.last_precallback_id_);
-    EXPECT_EQ(0, cbo.last_postcallback_id_);
+  EXPECT_EQ(0, cbo.last_precallback_id_);
+  EXPECT_EQ(0, cbo.last_postcallback_id_);
 
   EXPECT_FALSE(ros_clock->isROSTimeActive());
 
@@ -165,8 +165,8 @@ TEST_F(TestTimeSource, callbacks) {
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
       rmw_qos_profile_default);
 
-  rclcpp::WallRate loop_rate(10);
-  for (int i = 0; i < 10; ++i) {
+  rclcpp::WallRate loop_rate(50);
+  for (int i = 0; i < 5; ++i) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
@@ -182,12 +182,45 @@ TEST_F(TestTimeSource, callbacks) {
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
   EXPECT_EQ(1, cbo.last_precallback_id_);
-  EXPECT_EQ(2, cbo.last_postcallback_id_);
+  EXPECT_EQ(1, cbo.last_postcallback_id_);
 
   // Now that we've recieved a message it should be active with parameter unset
   EXPECT_TRUE(ros_clock->isROSTimeActive());
 
   auto t_out = ros_clock->now();
+
+  EXPECT_NE(0UL, t_out.nanoseconds());
+  EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
+  EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
+
+
+  // Change callbacks
+  callback_holder = ros_clock->create_jump_callback(
+    std::bind(&CallbackObject::pre_callback, &cbo, 2),
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
+    jump_threshold
+  );
+
+  for (int i = 0; i < 5; ++i) {
+    if (!rclcpp::ok()) {
+      break;  // Break for ctrl-c
+    }
+    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
+    msg->sec = i;
+    msg->nanosec = 2000;
+    clock_pub->publish(msg);
+    // std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
+    rclcpp::spin_some(node);
+    loop_rate.sleep();
+  }
+
+  EXPECT_EQ(2, cbo.last_precallback_id_);
+  EXPECT_EQ(2, cbo.last_postcallback_id_);
+
+  // Now that we've recieved a message it should be active with parameter unset
+  EXPECT_TRUE(ros_clock->isROSTimeActive());
+
+  t_out = ros_clock->now();
 
   EXPECT_NE(0UL, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
