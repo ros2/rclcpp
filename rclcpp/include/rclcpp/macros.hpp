@@ -41,7 +41,7 @@
 /**
  * Defines aliases and static functions for using the Class with smart pointers.
  *
- * Same as RCLCPP_SMART_PTR_DEFINITIONS expect it excludes the static
+ * Same as RCLCPP_SMART_PTR_DEFINITIONS except it excludes the static
  * Class::make_unique() method definition which does not work on classes which
  * are not CopyConstructable.
  *
@@ -56,7 +56,7 @@
 /**
  * Defines aliases only for using the Class with smart pointers.
  *
- * Same as RCLCPP_SMART_PTR_DEFINITIONS expect it excludes the static
+ * Same as RCLCPP_SMART_PTR_DEFINITIONS except it excludes the static
  * method definitions which do not work on pure virtual classes and classes
  * which are not CopyConstructable.
  *
