@@ -65,7 +65,7 @@ public:
 
   ~LifecyclePublisher() {}
 
-  /// LifecyclePublisher pulish function
+  /// LifecyclePublisher publish function
   /**
    * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
@@ -80,7 +80,7 @@ public:
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
-  /// LifecyclePublisher pulish function
+  /// LifecyclePublisher publish function
   /**
    * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
@@ -95,7 +95,7 @@ public:
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
-  /// LifecyclePublisher pulish function
+  /// LifecyclePublisher publish function
   /**
    * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
@@ -110,7 +110,7 @@ public:
     rclcpp::publisher::Publisher<MessageT, Alloc>::publish(msg);
   }
 
-  /// LifecyclePublisher pulish function
+  /// LifecyclePublisher publish function
   /**
    * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
@@ -134,7 +134,7 @@ public:
     this->publish(*msg);
   }
 
-  /// LifecyclePublisher pulish function
+  /// LifecyclePublisher publish function
   /**
    * The publish function checks whether the communication
    * was enabled or disabled and forwards the message
