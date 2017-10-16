@@ -105,7 +105,7 @@ public:
       auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_change_state, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
       rclcpp::any_service_callback::AnyServiceCallback<ChangeStateSrv> any_cb;
-      any_cb.set(cb);
+      any_cb.set(std::move(cb));
 
       srv_change_state_ = std::make_shared<rclcpp::service::Service<ChangeStateSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
