@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <limits>
 #include <utility>
 
 #include "rclcpp/clock.hpp"
-#include "rclcpp/time.hpp"
+#include "rclcpp/duration.hpp"
 
 #include "builtin_interfaces/msg/time.hpp"
 
@@ -177,34 +178,42 @@ Time::operator>(const rclcpp::Time & rhs) const
   return rcl_time_.nanoseconds > rhs.rcl_time_.nanoseconds;
 }
 
-Time
+Duration
 Time::operator+(const rclcpp::Time & rhs) const
 {
   if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
     throw std::runtime_error("can't add times with different time sources");
   }
 
-  auto ns = rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds;
-  if (ns < rcl_time_.nanoseconds) {
+  if (rcl_time_.nanoseconds >
+    std::numeric_limits<rcl_time_point_value_t>::max() - rhs.rcl_time_.nanoseconds)
+  {
     throw std::overflow_error("addition leads to uint64_t overflow");
   }
-
-  return Time(rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds);
+  return Duration(rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds, rcl_time_.clock_type);
 }
 
-Time
+Duration
 Time::operator-(const rclcpp::Time & rhs) const
 {
   if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
-    throw std::runtime_error("can't add times with different time sources");
+    throw std::runtime_error("can't subtract times with different time sources");
   }
 
-  auto ns = rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds;
-  if (ns > rcl_time_.nanoseconds) {
-    throw std::underflow_error("subtraction leads to uint64_t underflow");
+  if (rcl_time_.nanoseconds >
+    (uint64_t)std::numeric_limits<rcl_duration_value_t>::max() + rhs.rcl_time_.nanoseconds)
+  {
+    throw std::underflow_error("time subtraction leads to int64_t overflow");
+  }
+  // TODO(tfoote) the below check won't work for larger times
+  if ((int64_t)rcl_time_.nanoseconds <
+    (int64_t)rhs.rcl_time_.nanoseconds -
+    (int64_t) std::abs(std::numeric_limits<rcl_duration_value_t>::min()))
+  {
+    throw std::underflow_error("time subtraction leads to int64_t underflow");
   }
 
-  return Time(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);
+  return Duration(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds, rcl_time_.clock_type);
 }
 
 uint64_t

@@ -95,7 +95,6 @@ TEST_F(TestTimeSource, clock) {
 
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
       rmw_qos_profile_default);
-
   rclcpp::WallRate loop_rate(50);
   for (int i = 0; i < 5; ++i) {
     if (!rclcpp::ok()) {
@@ -125,16 +124,19 @@ TEST_F(TestTimeSource, clock) {
 class CallbackObject
 {
 public:
-  CallbackObject():
-    last_precallback_id_(0),
+  CallbackObject()
+  : last_precallback_id_(0),
     last_postcallback_id_(0)
   {}
   int last_precallback_id_;
-  void pre_callback(int id){ last_precallback_id_ = id;};
+  void pre_callback(int id) {last_precallback_id_ = id;}
 
   int last_postcallback_id_;
   rclcpp::TimeJump last_timejump_;
-  void post_callback(const rclcpp::TimeJump & jump, int id){ last_postcallback_id_ = id; last_timejump_ = jump;};
+  void post_callback(const rclcpp::TimeJump & jump, int id)
+  {
+    last_postcallback_id_ = id; last_timejump_ = jump;
+  }
 };
 
 TEST_F(TestTimeSource, callbacks) {
@@ -151,8 +153,7 @@ TEST_F(TestTimeSource, callbacks) {
   rclcpp::JumpCallback::SharedPtr callback_holder = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
-    jump_threshold
-  );
+    jump_threshold);
 
   EXPECT_EQ(0, cbo.last_precallback_id_);
   EXPECT_EQ(0, cbo.last_postcallback_id_);
@@ -198,8 +199,7 @@ TEST_F(TestTimeSource, callbacks) {
   callback_holder = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 2),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
-    jump_threshold
-  );
+    jump_threshold);
 
   for (int i = 0; i < 5; ++i) {
     if (!rclcpp::ok()) {

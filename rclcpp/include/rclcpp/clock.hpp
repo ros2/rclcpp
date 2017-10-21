@@ -116,7 +116,8 @@ private:
   static void invoke_prejump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks);
 
   RCLCPP_PUBLIC
-  static void invoke_postjump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks, const TimeJump & jump);
+  static void invoke_postjump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks,
+    const TimeJump & jump);
 
   // Internal storage backed by rcl
   rcl_clock_t rcl_clock_;

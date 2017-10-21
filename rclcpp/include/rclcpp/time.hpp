@@ -21,6 +21,8 @@
 
 #include "rcl/time.h"
 
+#include "rclcpp/duration.hpp"
+
 namespace rclcpp
 {
 
@@ -86,15 +88,16 @@ public:
   operator>(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  Time
+  Duration
   operator+(const rclcpp::Time & rhs) const;
+  // TODO(tfoote) does time + time make sense to implement?
 
   RCLCPP_PUBLIC
-  Time
+  Duration
   operator-(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  uint64_t
+  rcl_time_point_value_t
   nanoseconds() const;
 
 private:

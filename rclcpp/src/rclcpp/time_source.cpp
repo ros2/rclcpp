@@ -93,34 +93,23 @@ TimeSource::~TimeSource()
 void TimeSource::setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
   std::shared_ptr<rclcpp::Clock> clock)
 {
-  rcl_time_point_t now;
-
-  // TODO(tfoote) Use a time import/export method from rclcpp Time pending
-  rcl_time_point_t clock_time;
-
-  clock_time.nanoseconds = msg->sec * 1e9 + msg->nanosec;
-
-  
   // TODO(tfoote) Move enabledROS time logic here.
+
+  rclcpp::Time msg_time = rclcpp::Time(*msg);
+  rclcpp::Time now = clock->now();
+  auto diff = now - msg_time;
   rclcpp::TimeJump jump;
-  auto ret = rcl_time_point_get_now(&(clock->rcl_clock_), &now);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to get now before setting time");
-  }
-  ret = rcl_difference_times(&now, &clock_time, &jump.delta_);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to difference time for time jump");
-    rcutils_reset_error();
-  }// TODO(tfoote) fill in time source change on jump
+  jump.delta_.nanoseconds = diff.nanoseconds();
+  // TODO(tfoote) fill in time source change on jump
 
 
   // TODO(tfoote) potential race condition with target going out of scope
   auto active_callbacks = clock->get_triggered_callbacks(jump);
   clock->invoke_prejump_callbacks(active_callbacks);
-  ret = rcl_set_ros_time_override(&(clock->rcl_clock_), clock_time.nanoseconds);
+  auto ret = rcl_set_ros_time_override(&(clock->rcl_clock_), msg_time.nanoseconds());
   if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to set ros_time_override_status");
-    rcutils_reset_error();
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "Failed to set ros_time_override_status");
   }
   clock->invoke_postjump_callbacks(active_callbacks, jump);
 }
@@ -183,7 +172,8 @@ void TimeSource::enableROSTime(std::shared_ptr<rclcpp::Clock> clock)
 {
   auto ret = rcl_enable_ros_time_override(&clock->rcl_clock_);
   if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to enable ros_time_override_status");
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "Failed to enable ros_time_override_status");
   }
 }
 
@@ -191,7 +181,8 @@ void TimeSource::disableROSTime(std::shared_ptr<rclcpp::Clock> clock)
 {
   auto ret = rcl_disable_ros_time_override(&clock->rcl_clock_);
   if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to enable ros_time_override_status");
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "Failed to enable ros_time_override_status");
   }
 }
 

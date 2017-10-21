@@ -114,12 +114,12 @@ TEST(TestTime, operators) {
   EXPECT_FALSE(young == old);
   EXPECT_TRUE(young != old);
 
-  rclcpp::Time add = old + young;
-  EXPECT_EQ(add.nanoseconds(), old.nanoseconds() + young.nanoseconds());
+  rclcpp::Duration add = old + young;
+  EXPECT_EQ(add.nanoseconds(), (rcl_duration_value_t)(old.nanoseconds() + young.nanoseconds()));
   EXPECT_EQ(add, old + young);
 
-  rclcpp::Time sub = young - old;
-  EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
+  rclcpp::Duration sub = young - old;
+  EXPECT_EQ(sub.nanoseconds(), (rcl_duration_value_t)(young.nanoseconds() - old.nanoseconds()));
   EXPECT_EQ(sub, young - old);
 
   rclcpp::Time system_time(0, 0, RCL_SYSTEM_TIME);
@@ -161,7 +161,7 @@ TEST(TestTime, operators) {
 }
 
 TEST(TestTime, overflows) {
-  rclcpp::Time max(std::numeric_limits<uint64_t>::max());
+  rclcpp::Time max(std::numeric_limits<rcl_time_point_value_t>::max());
   rclcpp::Time one(1);
 
   EXPECT_THROW(max + one, std::overflow_error);

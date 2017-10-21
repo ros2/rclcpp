@@ -14,7 +14,9 @@
 
 #include "rclcpp/clock.hpp"
 
+#include <memory>
 #include <utility>
+#include <vector>
 
 #include "builtin_interfaces/msg/time.hpp"
 
@@ -31,18 +33,18 @@ JumpThreshold::is_exceeded(const TimeJump & jump)
 {
   if (on_clock_change_ &&
     (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_ACTIVATED ||
-      jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED))
+    jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED))
   {
-    return true; 
+    return true;
   }
   if ((uint64_t)jump.delta_.nanoseconds > min_forward_ ||
-       (uint64_t)jump.delta_.nanoseconds < min_backward_)
-    {
-     return true;
-    }
+    (uint64_t)jump.delta_.nanoseconds < min_backward_)
+  {
+    return true;
+  }
   return false;
 }
-  
+
 JumpCallback::JumpCallback(
   std::function<void()> pre_callback,
   std::function<void(TimeJump)> post_callback,
@@ -74,7 +76,7 @@ Clock::now()
 {
   Time now(0, 0, rcl_clock_.type);
 
-  auto ret = rcl_time_point_get_now(&rcl_clock_, &now.rcl_time_);
+  auto ret = rcl_clock_get_now(&rcl_clock_, &now.rcl_time_);
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "could not get current time stamp");
@@ -127,17 +129,12 @@ Clock::get_triggered_callbacks(const TimeJump & jump)
 {
   std::vector<JumpCallback::SharedPtr> callbacks;
   std::lock_guard<std::mutex> guard(callback_list_mutex_);
-  for (auto wjcb = active_jump_callbacks_.begin(); wjcb != active_jump_callbacks_.end(); wjcb++)
-  {
-    if (auto jcb = wjcb->lock())
-    {
-      if (jcb->notice_threshold.is_exceeded(jump))
-      {
+  for (auto wjcb = active_jump_callbacks_.begin(); wjcb != active_jump_callbacks_.end(); wjcb++) {
+    if (auto jcb = wjcb->lock()) {
+      if (jcb->notice_threshold.is_exceeded(jump)) {
         callbacks.push_back(jcb);
       }
-    }
-    else
-    {
+    } else {
       active_jump_callbacks_.erase(wjcb);
     }
   }
@@ -147,17 +144,16 @@ Clock::get_triggered_callbacks(const TimeJump & jump)
 void
 Clock::invoke_prejump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks)
 {
-  for (const auto cb : callbacks)
-  {
+  for (const auto cb : callbacks) {
     cb->pre_callback();
   }
 }
 
 void
-Clock::invoke_postjump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks, const TimeJump & jump)
+Clock::invoke_postjump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks,
+  const TimeJump & jump)
 {
-  for (auto cb : callbacks)
-  {
+  for (auto cb : callbacks) {
     cb->post_callback(jump);
   }
 }
