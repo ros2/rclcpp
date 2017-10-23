@@ -279,6 +279,22 @@ public:
     return this->publish(*msg);
   }
 
+  virtual void
+  publish(const rcl_message_raw_t * raw_msg)
+  {
+    if (store_intra_process_message_) {
+      // not supported atm
+      throw std::runtime_error("storing raw messages in intra process is not supported yet.");
+    }
+    auto status = rcl_publish_raw(&publisher_handle_, raw_msg);
+    if (status != RCL_RET_OK) {
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+      throw std::runtime_error(
+        std::string("failed to publish raw message: ") + rcl_get_error_string_safe());
+      // *INDENT-ON*
+    }
+  }
+
   std::shared_ptr<MessageAlloc> get_allocator() const
   {
     return message_allocator_;
