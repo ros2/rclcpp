@@ -126,6 +126,7 @@
 #include <memory>
 
 #include "rclcpp/executors.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_client.hpp"
