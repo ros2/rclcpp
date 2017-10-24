@@ -40,6 +40,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
@@ -359,10 +360,23 @@ public:
     rclcpp::event::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
+  RCLCPP_PUBLIC
+  rclcpp::Clock::SharedPtr
+  get_clock();
+
+  RCLCPP_PUBLIC
+  Time
+  now();
+
   /// Return the Node's internal NodeBaseInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_base_interface();
+
+  /// Return the Node's internal NodeClockInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr
+  get_node_clock_interface();
 
   /// Return the Node's internal NodeGraphInterface implementation.
   RCLCPP_PUBLIC
@@ -402,6 +416,7 @@ private:
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
 
   bool use_intra_process_comms_;
 };
