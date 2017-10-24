@@ -29,17 +29,16 @@
 #define RCLCPP_CONSOLE_DEFAULT_NAME RCLCPP_CONSOLE_NAME_PREFIX
 
 @{
-import rcutils.logging
 from rcutils.logging import feature_combinations
-from rcutils.logging import get_macro_arguments
-from rcutils.logging import get_macro_parameters
+from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
 }@
 @[for severity in severities]@
 /** @@name Logging macros for severity @(severity).
  */
 ///@@{
-@[ for suffix in [s for s in feature_combinations if 'NAMED' not in s]]@
+@[ for feature_combination in [fc for fc in feature_combinations if 'named' not in fc]]@
+@{suffix = get_suffix_from_features(feature_combination)}@
 #define ROS_@(severity)@(suffix)(...) RCUTILS_LOG_@(severity)@(suffix)_NAMED(RCLCPP_CONSOLE_DEFAULT_NAME, __VA_ARGS__)
 
 #define ROS_@(severity)@(suffix)_NAMED(name, ...) RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
