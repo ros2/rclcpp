@@ -61,8 +61,7 @@ Time::Time(uint64_t nanoseconds, rcl_clock_type_t clock_type)
 }
 
 Time::Time(const Time & rhs)
-: rcl_time_source_(init_time_source(rhs.rcl_time_source_.type)),
-  rcl_time_(init_time_point(rcl_time_source_))
+: rcl_time_(rhs.rcl_time_)
 {
   rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
 }
@@ -100,9 +99,7 @@ Time::operator builtin_interfaces::msg::Time() const
 Time &
 Time::operator=(const Time & rhs)
 {
-  rcl_time_source_ = init_time_source(rhs.rcl_time_source_.type);
-  rcl_time_ = init_time_point(rcl_time_source_);
-  rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
+  rcl_time_ = rhs.rcl_time_;
   return *this;
 }
 
