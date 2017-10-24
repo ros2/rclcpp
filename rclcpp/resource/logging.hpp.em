@@ -1,3 +1,5 @@
+// generated from rclcpp/resource/logging.hpp.em
+
 // Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,12 +28,28 @@
 #define RCLCPP_CONSOLE_NAME_PREFIX RCLCPP_CONSOLE_PACKAGE_NAME
 #define RCLCPP_CONSOLE_DEFAULT_NAME RCLCPP_CONSOLE_NAME_PREFIX
 
-#define ROS_INFO(...) RCUTILS_LOG_INFO_NAMED(RCLCPP_CONSOLE_DEFAULT_NAME, __VA_ARGS__)
+@{
+import rcutils.logging
+from rcutils.logging import feature_combinations
+from rcutils.logging import get_macro_arguments
+from rcutils.logging import get_macro_parameters
+from rcutils.logging import severities
+}@
+@[for severity in severities]@
+/** @@name Logging macros for severity @(severity).
+ */
+///@@{
+@[ for suffix in [s for s in feature_combinations if 'NAMED' not in s]]@
+#define ROS_@(severity)@(suffix)(...) RCUTILS_LOG_@(severity)@(suffix)_NAMED(RCLCPP_CONSOLE_DEFAULT_NAME, __VA_ARGS__)
 
-#define ROS_INFO_NAMED(name, ...) RCUTILS_LOG_INFO_NAMED( \
+#define ROS_@(severity)@(suffix)_NAMED(name, ...) RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
   (std::string(RCLCPP_CONSOLE_DEFAULT_NAME) + "." + name).c_str(), __VA_ARGS__)
 
-#define ROS_INFO_FULLNAMED(name, ...) RCUTILS_LOG_INFO_NAMED( \
+#define ROS_@(severity)@(suffix)_FULLNAMED(name, ...) RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
   std::string(name).c_str(), __VA_ARGS__)
+@[ end for]@
+///@@}
+
+@[end for]@
 
 #endif  // RCLCPP__LOGGING_HPP_
