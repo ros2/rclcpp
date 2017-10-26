@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(rclcpp)
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_ros REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
@@ -93,11 +93,12 @@ list(APPEND ${PROJECT_NAME}_SRCS
   include/rclcpp/logging.hpp)
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME}
   ${${PROJECT_NAME}_SRCS})
 ament_target_dependencies(${PROJECT_NAME}
   "builtin_interfaces"
   "rcl"
+  "rmw"
   "rosidl_generator_cpp"
   "rosidl_typesupport_cpp")
 
@@ -116,6 +117,7 @@ install(
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rcl)
+ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_typesupport_cpp)
