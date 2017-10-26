@@ -7,7 +7,7 @@
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
   <license>Apache License 2.0</license>
 
-  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
   <build_export_depend>rmw</build_export_depend>
 
@@ -25,7 +25,7 @@
   <depend>rcl</depend>
   <depend>rmw_implementation</depend>
 
-  <exec_depend>ament_cmake</exec_depend>
+  <exec_depend>ament_cmake_ros</exec_depend>
 
   <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
