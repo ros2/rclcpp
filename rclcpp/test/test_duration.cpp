@@ -70,9 +70,9 @@ TEST(TestDuration, operators) {
   // Force RCL_ROS_TIME
   rclcpp::Duration rostime = rclcpp::Duration(steadytime.nanoseconds(), RCL_ROS_TIME);
 
-  EXPECT_EQ(RCL_ROS_TIME, rostime.clock_type());
-  EXPECT_EQ(RCL_STEADY_TIME, steadytime.clock_type());
-  EXPECT_EQ(RCL_SYSTEM_TIME, systemtime.clock_type());
+  EXPECT_EQ(RCL_ROS_TIME, rostime.get_clock_type());
+  EXPECT_EQ(RCL_STEADY_TIME, steadytime.get_clock_type());
+  EXPECT_EQ(RCL_SYSTEM_TIME, systemtime.get_clock_type());
 
   EXPECT_ANY_THROW((void)(rostime == steadytime));
   EXPECT_ANY_THROW((void)(rostime <= steadytime));

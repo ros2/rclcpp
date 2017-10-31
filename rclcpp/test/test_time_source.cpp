@@ -70,23 +70,23 @@ TEST_F(TestTimeSource, ROS_time_valid) {
   // TODO(tfoote) reenabled using external clock
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
 
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
   ts.attachClock(ros_clock);
   auto now = ros_clock->now();
 
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   ts.attachNode(node);
 
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 }
 
 TEST_F(TestTimeSource, clock) {
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
   ts.attachClock(ros_clock);
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   // builtin_interfaces::msg::Time::SharedPtr last_msg;
   // auto clock_sub = node->create_subscription<builtin_interfaces::msg::Time>(
@@ -112,7 +112,7 @@ TEST_F(TestTimeSource, clock) {
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
   // Now that we've recieved a message it should be active with parameter unset
-  EXPECT_TRUE(ros_clock->isROSTimeActive());
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   auto t_out = ros_clock->now();
 
@@ -150,7 +150,7 @@ TEST_F(TestTimeSource, callbacks) {
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
 
   // Register a callback for time jumps
-  rclcpp::JumpCallback::SharedPtr callback_holder = ros_clock->create_jump_callback(
+  rclcpp::JumpHandler::SharedPtr callback_holder = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
     jump_threshold);
@@ -158,10 +158,10 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_EQ(0, cbo.last_precallback_id_);
   EXPECT_EQ(0, cbo.last_postcallback_id_);
 
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   ts.attachClock(ros_clock);
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
       rmw_qos_profile_default);
@@ -186,7 +186,7 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_EQ(1, cbo.last_postcallback_id_);
 
   // Now that we've recieved a message it should be active with parameter unset
-  EXPECT_TRUE(ros_clock->isROSTimeActive());
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   auto t_out = ros_clock->now();
 
@@ -218,7 +218,7 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_EQ(2, cbo.last_postcallback_id_);
 
   // Now that we've recieved a message it should be active with parameter unset
-  EXPECT_TRUE(ros_clock->isROSTimeActive());
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   t_out = ros_clock->now();
 
@@ -231,10 +231,10 @@ TEST_F(TestTimeSource, callbacks) {
 TEST_F(TestTimeSource, parameter_activation) {
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   ts.attachClock(ros_clock);
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   auto parameter_service = std::make_shared<rclcpp::parameter_service::ParameterService>(node);
   auto parameters_client = std::make_shared<rclcpp::parameter_client::SyncParametersClient>(node);
@@ -248,7 +248,7 @@ TEST_F(TestTimeSource, parameter_activation) {
     EXPECT_TRUE(result.successful);
   }
   rclcpp::spin_some(node);
-  EXPECT_TRUE(ros_clock->isROSTimeActive());
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
 
   set_parameters_results = parameters_client->set_parameters({
@@ -257,7 +257,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
-  EXPECT_TRUE(ros_clock->isROSTimeActive());
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
     rclcpp::parameter::ParameterVariant("use_sim_time", false)
@@ -265,7 +265,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
     rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
@@ -273,5 +273,5 @@ TEST_F(TestTimeSource, parameter_activation) {
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
-  EXPECT_FALSE(ros_clock->isROSTimeActive());
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 }

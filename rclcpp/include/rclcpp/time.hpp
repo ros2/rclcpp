@@ -85,22 +85,32 @@ public:
   operator>(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  Duration
-  operator+(const rclcpp::Time & rhs) const;
-  // TODO(tfoote) does time + time make sense to implement?
+  Time
+  operator+(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
   Duration
   operator-(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
+  Time
+  operator-(const rclcpp::Duration & rhs) const;
+
+  RCLCPP_PUBLIC
   rcl_time_point_value_t
   nanoseconds() const;
+
+  RCLCPP_PUBLIC
+  rcl_clock_type_t
+  get_clock_type() const;
 
 private:
   rcl_time_point_t rcl_time_;
   friend Clock;  // Allow clock to manipulate internal data
 };
+
+Time
+operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
 
 }  // namespace rclcpp
 

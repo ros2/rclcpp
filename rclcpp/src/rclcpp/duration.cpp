@@ -94,14 +94,15 @@ Duration::operator builtin_interfaces::msg::Duration() const
   return msg_duration;
 }
 
-void
+Duration &
 Duration::operator=(const Duration & rhs)
 {
   rcl_duration_.nanoseconds = rhs.rcl_duration_.nanoseconds;
   rcl_duration_.clock_type = rhs.rcl_duration_.clock_type;
+  return *this;
 }
 
-void
+Duration &
 Duration::operator=(const builtin_interfaces::msg::Duration & duration_msg)
 {
   if (duration_msg.sec < 0) {
@@ -114,6 +115,7 @@ Duration::operator=(const builtin_interfaces::msg::Duration & duration_msg)
 
   rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(duration_msg.sec));
   rcl_duration_.nanoseconds += duration_msg.nanosec;
+  return *this;
 }
 
 bool
@@ -166,41 +168,8 @@ Duration::operator>(const rclcpp::Duration & rhs) const
   return rcl_duration_.nanoseconds > rhs.rcl_duration_.nanoseconds;
 }
 
-Duration
-Duration::operator+(const rclcpp::Duration & rhs) const
-{
-  if (rcl_duration_.clock_type != rhs.rcl_duration_.clock_type) {
-    throw std::runtime_error("can't add durations with different duration sources");
-  }
-
-  bounds_check_sum(
-    this->rcl_duration_.nanoseconds,
-    rhs.rcl_duration_.nanoseconds,
-    std::numeric_limits<rcl_duration_value_t>::max());
-  return Duration(
-    rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds,
-    rcl_duration_.clock_type);
-}
-
 void
-Duration::bounds_check_difference(int64_t lhsns, int64_t rhsns, uint64_t max)
-{
-  auto abs_lhs = (uint64_t)std::abs(lhsns);
-  auto abs_rhs = (uint64_t)std::abs(rhsns);
-
-  if (lhsns > 0 && rhsns < 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
-      throw std::overflow_error("duration subtraction leads to int64_t overflow");
-    }
-  } else if (lhsns < 0 && rhsns > 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
-      throw std::underflow_error("duration subtraction leads to int64_t underflow");
-    }
-  }
-}
-
-void
-Duration::bounds_check_sum(int64_t lhsns, int64_t rhsns, uint64_t max)
+bounds_check_duration_sum(int64_t lhsns, int64_t rhsns, uint64_t max)
 {
   auto abs_lhs = (uint64_t)std::abs(lhsns);
   auto abs_rhs = (uint64_t)std::abs(rhsns);
@@ -217,13 +186,46 @@ Duration::bounds_check_sum(int64_t lhsns, int64_t rhsns, uint64_t max)
 }
 
 Duration
+Duration::operator+(const rclcpp::Duration & rhs) const
+{
+  if (rcl_duration_.clock_type != rhs.rcl_duration_.clock_type) {
+    throw std::runtime_error("can't add durations with different duration sources");
+  }
+
+  bounds_check_duration_sum(
+    this->rcl_duration_.nanoseconds,
+    rhs.rcl_duration_.nanoseconds,
+    std::numeric_limits<rcl_duration_value_t>::max());
+  return Duration(
+    rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds,
+    rcl_duration_.clock_type);
+}
+
+void
+bounds_check_duration_difference(int64_t lhsns, int64_t rhsns, uint64_t max)
+{
+  auto abs_lhs = (uint64_t)std::abs(lhsns);
+  auto abs_rhs = (uint64_t)std::abs(rhsns);
+
+  if (lhsns > 0 && rhsns < 0) {
+    if (abs_lhs + abs_rhs > (uint64_t) max) {
+      throw std::overflow_error("duration subtraction leads to int64_t overflow");
+    }
+  } else if (lhsns < 0 && rhsns > 0) {
+    if (abs_lhs + abs_rhs > (uint64_t) max) {
+      throw std::underflow_error("duration subtraction leads to int64_t underflow");
+    }
+  }
+}
+
+Duration
 Duration::operator-(const rclcpp::Duration & rhs) const
 {
   if (rcl_duration_.clock_type != rhs.rcl_duration_.clock_type) {
     throw std::runtime_error("can't subtract durations with different duration sources");
   }
 
-  bounds_check_difference(
+  bounds_check_duration_difference(
     this->rcl_duration_.nanoseconds,
     rhs.rcl_duration_.nanoseconds,
     std::numeric_limits<rcl_duration_value_t>::max());
@@ -240,7 +242,7 @@ Duration::nanoseconds() const
 }
 
 rcl_clock_type_t
-Duration::clock_type() const
+Duration::get_clock_type() const
 {
   return rcl_duration_.clock_type;
 }

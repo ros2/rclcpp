@@ -23,7 +23,6 @@
 
 namespace rclcpp
 {
-
 class Duration
 {
 public:
@@ -50,11 +49,11 @@ public:
   operator builtin_interfaces::msg::Duration() const;
 
   RCLCPP_PUBLIC
-  void
+  Duration &
   operator=(const Duration & rhs);
 
   RCLCPP_PUBLIC
-  void
+  Duration &
   operator=(const builtin_interfaces::msg::Duration & Duration_msg);
 
   RCLCPP_PUBLIC
@@ -91,18 +90,10 @@ public:
 
   RCLCPP_PUBLIC
   rcl_clock_type_t
-  clock_type() const;
+  get_clock_type() const;
 
 private:
   rcl_duration_t rcl_duration_;
-
-  static
-  void
-  bounds_check_difference(int64_t lhsns, int64_t rhsns, uint64_t max);
-
-  static
-  void
-  bounds_check_sum(int64_t lhsns, int64_t rhsns, uint64_t max);
 };
 
 }  // namespace rclcpp

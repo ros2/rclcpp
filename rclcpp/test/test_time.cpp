@@ -35,13 +35,13 @@ protected:
 
 TEST(TestTime, clock_type_access) {
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
-  EXPECT_EQ(RCL_ROS_TIME, ros_clock.getClockType());
+  EXPECT_EQ(RCL_ROS_TIME, ros_clock.get_clock_type());
 
   rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
-  EXPECT_EQ(RCL_SYSTEM_TIME, system_clock.getClockType());
+  EXPECT_EQ(RCL_SYSTEM_TIME, system_clock.get_clock_type());
 
   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
-  EXPECT_EQ(RCL_STEADY_TIME, steady_clock.getClockType());
+  EXPECT_EQ(RCL_STEADY_TIME, steady_clock.get_clock_type());
 }
 
 TEST(TestTime, time_sources) {
@@ -114,10 +114,6 @@ TEST(TestTime, operators) {
   EXPECT_FALSE(young == old);
   EXPECT_TRUE(young != old);
 
-  rclcpp::Duration add = old + young;
-  EXPECT_EQ(add.nanoseconds(), (rcl_duration_value_t)(old.nanoseconds() + young.nanoseconds()));
-  EXPECT_EQ(add, old + young);
-
   rclcpp::Duration sub = young - old;
   EXPECT_EQ(sub.nanoseconds(), (rcl_duration_value_t)(young.nanoseconds() - old.nanoseconds()));
   EXPECT_EQ(sub, young - old);
@@ -131,7 +127,6 @@ TEST(TestTime, operators) {
   EXPECT_ANY_THROW((void)(system_time >= steady_time));
   EXPECT_ANY_THROW((void)(system_time < steady_time));
   EXPECT_ANY_THROW((void)(system_time > steady_time));
-  EXPECT_ANY_THROW((void)(system_time + steady_time));
   EXPECT_ANY_THROW((void)(system_time - steady_time));
 
   rclcpp::Clock system_clock(RCL_ROS_TIME);
@@ -146,7 +141,6 @@ TEST(TestTime, operators) {
   EXPECT_ANY_THROW((void)(now >= later));
   EXPECT_ANY_THROW((void)(now < later));
   EXPECT_ANY_THROW((void)(now > later));
-  EXPECT_ANY_THROW((void)(now + later));
   EXPECT_ANY_THROW((void)(now - later));
 
   for (auto time_source : {RCL_ROS_TIME, RCL_SYSTEM_TIME, RCL_STEADY_TIME}) {
@@ -161,9 +155,10 @@ TEST(TestTime, operators) {
 }
 
 TEST(TestTime, overflows) {
-  rclcpp::Time max(std::numeric_limits<rcl_time_point_value_t>::max());
-  rclcpp::Time one(1);
+  rclcpp::Time max_time(std::numeric_limits<rcl_time_point_value_t>::max());
+  rclcpp::Time min_time(std::numeric_limits<rcl_time_point_value_t>::min());
+  rclcpp::Duration one(1);
 
-  EXPECT_THROW(max + one, std::overflow_error);
-  EXPECT_THROW(one - max, std::underflow_error);
+  EXPECT_THROW(max_time + one, std::overflow_error);
+  EXPECT_THROW(min_time - one, std::underflow_error);
 }

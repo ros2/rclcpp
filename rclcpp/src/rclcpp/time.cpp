@@ -175,19 +175,19 @@ Time::operator>(const rclcpp::Time & rhs) const
   return rcl_time_.nanoseconds > rhs.rcl_time_.nanoseconds;
 }
 
-Duration
-Time::operator+(const rclcpp::Time & rhs) const
+Time
+Time::operator+(const rclcpp::Duration & rhs) const
 {
-  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
+  if (this->get_clock_type() != rhs.get_clock_type()) {
     throw std::runtime_error("can't add times with different time sources");
   }
 
-  if (rcl_time_.nanoseconds >
-    std::numeric_limits<rcl_time_point_value_t>::max() - rhs.rcl_time_.nanoseconds)
+  if (rhs.nanoseconds() > 0 && (uint64_t)rhs.nanoseconds() >
+    std::numeric_limits<rcl_time_point_value_t>::max() - (rcl_time_point_value_t)this->nanoseconds())
   {
     throw std::overflow_error("addition leads to uint64_t overflow");
   }
-  return Duration(rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds, rcl_time_.clock_type);
+  return Time(this->nanoseconds() + rhs.nanoseconds(), this->get_clock_type());
 }
 
 Duration
@@ -213,10 +213,53 @@ Time::operator-(const rclcpp::Time & rhs) const
   return Duration(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds, rcl_time_.clock_type);
 }
 
+Time
+Time::operator-(const rclcpp::Duration & rhs) const
+{
+  if (rcl_time_.clock_type != rhs.get_clock_type()) {
+    throw std::runtime_error("can't subtract times with different time sources");
+  }
+
+  if (rhs.nanoseconds() > 0 && rcl_time_.nanoseconds >
+    std::numeric_limits<rcl_time_point_value_t>::max() - (uint64_t)rhs.nanoseconds())
+  {
+    throw std::underflow_error("time subtraction leads to uint64_t overflow");
+  }
+  if (rcl_time_.nanoseconds < (uint64_t) std::numeric_limits<rcl_duration_value_t>::max() &&
+    (int64_t)rcl_time_.nanoseconds < (int64_t)rhs.nanoseconds())
+  {
+    throw std::underflow_error("time subtraction leads to uint64_t underflow");
+  }
+
+  return Time(rcl_time_.nanoseconds - rhs.nanoseconds(), rcl_time_.clock_type);
+}
+
 uint64_t
 Time::nanoseconds() const
 {
   return rcl_time_.nanoseconds;
 }
+
+rcl_clock_type_t
+Time::get_clock_type() const
+{
+  return rcl_time_.clock_type;
+}
+
+Time
+operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
+{
+  if (lhs.get_clock_type() != rhs.get_clock_type()) {
+    throw std::runtime_error("can't add times with different time sources");
+  }
+
+  if (rhs.nanoseconds() >
+    std::numeric_limits<rcl_time_point_value_t>::max() - (rcl_time_point_value_t)lhs.nanoseconds())
+  {
+    throw std::overflow_error("addition leads to uint64_t overflow");
+  }
+  return Time(lhs.nanoseconds() + rhs.nanoseconds(), lhs.get_clock_type());
+}
+
 
 }  // namespace rclcpp
