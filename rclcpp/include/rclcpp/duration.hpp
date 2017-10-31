@@ -30,7 +30,8 @@ public:
   Duration(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
-  explicit Duration(rcl_duration_value_t nanoseconds,
+  explicit Duration(
+    rcl_duration_value_t nanoseconds,
     rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC

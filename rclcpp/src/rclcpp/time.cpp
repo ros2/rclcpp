@@ -183,7 +183,8 @@ Time::operator+(const rclcpp::Duration & rhs) const
   }
 
   if (rhs.nanoseconds() > 0 && (uint64_t)rhs.nanoseconds() >
-    std::numeric_limits<rcl_time_point_value_t>::max() - (rcl_time_point_value_t)this->nanoseconds())
+    std::numeric_limits<rcl_time_point_value_t>::max() -
+    (rcl_time_point_value_t)this->nanoseconds())
   {
     throw std::overflow_error("addition leads to uint64_t overflow");
   }

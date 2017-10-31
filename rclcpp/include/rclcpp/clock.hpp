@@ -117,10 +117,12 @@ private:
 
   // Invoke callbacks that are valid and outside threshold.
   RCLCPP_PUBLIC
-  static void invoke_prejump_callbacks(const std::vector<JumpHandler::SharedPtr> & callbacks);
+  static void invoke_prejump_callbacks(
+    const std::vector<JumpHandler::SharedPtr> & callbacks);
 
   RCLCPP_PUBLIC
-  static void invoke_postjump_callbacks(const std::vector<JumpHandler::SharedPtr> & callbacks,
+  static void invoke_postjump_callbacks(
+    const std::vector<JumpHandler::SharedPtr> & callbacks,
     const TimeJump & jump);
 
   /// Internal storage backed by rcl

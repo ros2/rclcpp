@@ -142,7 +142,8 @@ Clock::get_triggered_callbacks(const TimeJump & jump)
 }
 
 void
-Clock::invoke_prejump_callbacks(const std::vector<JumpHandler::SharedPtr> & callbacks)
+Clock::invoke_prejump_callbacks(
+  const std::vector<JumpHandler::SharedPtr> & callbacks)
 {
   for (const auto cb : callbacks) {
     cb->pre_callback();
@@ -150,7 +151,8 @@ Clock::invoke_prejump_callbacks(const std::vector<JumpHandler::SharedPtr> & call
 }
 
 void
-Clock::invoke_postjump_callbacks(const std::vector<JumpHandler::SharedPtr> & callbacks,
+Clock::invoke_postjump_callbacks(
+  const std::vector<JumpHandler::SharedPtr> & callbacks,
   const TimeJump & jump)
 {
   for (auto cb : callbacks) {

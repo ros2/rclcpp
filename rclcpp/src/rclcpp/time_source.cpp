@@ -90,7 +90,8 @@ TimeSource::~TimeSource()
   }
 }
 
-void TimeSource::setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
+void TimeSource::setClock(
+  const builtin_interfaces::msg::Time::SharedPtr msg,
   std::shared_ptr<rclcpp::Clock> clock)
 {
   // TODO(tfoote) Move enabledROS time logic here.

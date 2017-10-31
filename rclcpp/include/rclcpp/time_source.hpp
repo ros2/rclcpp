@@ -92,7 +92,8 @@ private:
   // Internal helper functions used inside iterators
   static void enableROSTime(rclcpp::Clock::SharedPtr clock);
   static void disableROSTime(rclcpp::Clock::SharedPtr clock);
-  static void setClock(const builtin_interfaces::msg::Time::SharedPtr msg,
+  static void setClock(
+    const builtin_interfaces::msg::Time::SharedPtr msg,
     rclcpp::Clock::SharedPtr clock);
 
   // Local storage of validity of ROS time
