@@ -31,27 +31,32 @@ namespace rclcpp
 
 class TimeSource;
 
-class TimeJump
+/*  \brief A struct to represent a timejump.
+ *  It epresents the time jump duration and whether it changed clock type.
+ */
+struct TimeJump
 {
-public:
   typedef enum ClockChange_t
   {
-    ROS_TIME_NO_CHANGE,
-    ROS_TIME_ACTIVATED,
-    ROS_TIME_DEACTIVATED,
-    SYSTEM_TIME_NO_CHANGE
+    ROS_TIME_NO_CHANGE,    ///< The time type before and after the jump is ROS_TIME
+    ROS_TIME_ACTIVATED,    ///< The time type switched to ROS_TIME from SYSTEM_TIME
+    ROS_TIME_DEACTIVATED,  ///< The time type switched to SYSTEM_TIME from ROS_TIME
+    SYSTEM_TIME_NO_CHANGE  ///< The time type before and after the jump is SYSTEM_TIME
   } ClockChange_t;
 
-  ClockChange_t jump_type_;
-  rcl_duration_t delta_;
+  ClockChange_t jump_type_;  ///< The change in clock_type if there is one.
+  rcl_duration_t delta_;     ///< The change in time value.
 };
 
+/* \brief A class to store a threshold for a TimeJump
+ * This class can be used to evaluate a time jump's magnitude.
+*/
 class JumpThreshold
 {
 public:
-  uint64_t min_forward_;
-  uint64_t min_backward_;
-  bool on_clock_change_;
+  uint64_t min_forward_;   ///< The minimum jump forward to be considered exceeded..
+  uint64_t min_backward_;  ///< The minimum backwards jump to be considered exceeded.
+  bool on_clock_change_;   ///< Whether to trigger on any clock type change.
 
   // Test if the threshold is exceeded by a TimeJump
   RCLCPP_PUBLIC
@@ -59,11 +64,11 @@ public:
   is_exceeded(const TimeJump & jump);
 };
 
-class JumpCallback : public std::enable_shared_from_this<JumpCallback>
+class JumpHandler : public std::enable_shared_from_this<JumpHandler>
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(JumpCallback)
-  JumpCallback(
+  RCLCPP_SMART_PTR_DEFINITIONS(JumpHandler)
+  JumpHandler(
     std::function<void()> pre_callback,
     std::function<void(TimeJump)> post_callback,
     JumpThreshold & threshold);
@@ -90,15 +95,15 @@ public:
 
   RCLCPP_PUBLIC
   bool
-  isROSTimeActive();
+  ros_time_is_active();
 
   RCLCPP_PUBLIC
   rcl_clock_type_t
-  getClockType();
+  get_clock_type();
 
   // Add a callback to invoke if the jump threshold is exceeded.
   RCLCPP_PUBLIC
-  JumpCallback::SharedPtr
+  JumpHandler::SharedPtr
   create_jump_callback(
     std::function<void()> pre_callback,
     std::function<void(const TimeJump &)> post_callback,
@@ -107,24 +112,23 @@ public:
 private:
   // A method for TimeSource to get a list of callbacks to invoke while updating
   RCLCPP_PUBLIC
-  std::vector<JumpCallback::SharedPtr>
+  std::vector<JumpHandler::SharedPtr>
   get_triggered_callbacks(const TimeJump & jump);
-
 
   // Invoke callbacks that are valid and outside threshold.
   RCLCPP_PUBLIC
-  static void invoke_prejump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks);
+  static void invoke_prejump_callbacks(const std::vector<JumpHandler::SharedPtr> & callbacks);
 
   RCLCPP_PUBLIC
-  static void invoke_postjump_callbacks(const std::vector<JumpCallback::SharedPtr> & callbacks,
+  static void invoke_postjump_callbacks(const std::vector<JumpHandler::SharedPtr> & callbacks,
     const TimeJump & jump);
 
-  // Internal storage backed by rcl
+  /// Internal storage backed by rcl
   rcl_clock_t rcl_clock_;
-  friend TimeSource;  // Allow TimeSource to access the rcl_clock_ datatype.
+  friend TimeSource;  /// Allow TimeSource to access the rcl_clock_ datatype.
 
   std::mutex callback_list_mutex_;
-  std::vector<std::weak_ptr<JumpCallback>> active_jump_callbacks_;
+  std::vector<std::weak_ptr<JumpHandler>> active_jump_handlers_;
 };
 
 }  // namespace rclcpp
