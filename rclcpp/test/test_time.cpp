@@ -56,7 +56,6 @@ TEST(TestTime, time_sources) {
   EXPECT_NE(0, system_now.sec);
   EXPECT_NE(0u, system_now.nanosec);
 
-  // TODO(tfoote) restore steady
   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
   Time steady_now = steady_clock.now();
   EXPECT_NE(0, steady_now.sec);

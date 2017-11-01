@@ -63,9 +63,10 @@ Duration::Duration(const Duration & rhs)
   rcl_duration_.clock_type = rhs.rcl_duration_.clock_type;
 }
 
-Duration::Duration(const builtin_interfaces::msg::Duration & duration_msg)  // NOLINT
+Duration::Duration(
+  const builtin_interfaces::msg::Duration & duration_msg,
+  rcl_clock_type_t ros_duration)
 {
-  rcl_clock_type_t ros_duration = RCL_ROS_TIME;  // TODO(tfoote) hard coded ROS here
   rcl_duration_ = init_duration(ros_duration);
 
   rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(duration_msg.sec));

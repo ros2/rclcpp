@@ -35,7 +35,9 @@ public:
     rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
-  Duration(const builtin_interfaces::msg::Duration & duration_msg);  // NOLINT
+  Duration(
+    const builtin_interfaces::msg::Duration & duration_msg,
+    rcl_clock_type_t ros_duration = RCL_ROS_TIME);
 
   RCLCPP_PUBLIC
   explicit Duration(const rcl_duration_t & duration);
