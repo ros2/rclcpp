@@ -85,13 +85,13 @@ private:
   UseSimTimeParameterState parameter_state_;
 
   // An internal method to use in the clock callback that iterates and enables all clocks
-  void enableROSTime();
+  void enable_ros_time();
   // An internal method to use in the clock callback that iterates and disables all clocks
-  void disableROSTime();
+  void disable_ros_time();
 
   // Internal helper functions used inside iterators
-  static void enableROSTime(rclcpp::Clock::SharedPtr clock);
-  static void disableROSTime(rclcpp::Clock::SharedPtr clock);
+  static void enable_ros_time(rclcpp::Clock::SharedPtr clock);
+  static void disable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void setClock(
     const builtin_interfaces::msg::Time::SharedPtr msg,
     rclcpp::Clock::SharedPtr clock);

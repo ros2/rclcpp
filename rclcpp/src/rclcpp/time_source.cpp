@@ -62,7 +62,7 @@ void TimeSource::detachNode()
   clock_subscription_.reset();
   parameter_client_.reset();
   node_.reset();
-  disableROSTime();
+  disable_ros_time();
 }
 
 void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
@@ -119,7 +119,7 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 {
   // RCUTILS_LOG_INFO("Got clock message");
   if (!this->ros_time_valid_) {
-    enableROSTime();
+    enable_ros_time();
   }
   // TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
   // TODO(tfoote) also setup disable
@@ -139,10 +139,10 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
         bool value = new_parameter.value.bool_value;
         if (value) {
           parameter_state_ = SET_TRUE;
-          enableROSTime();
+          enable_ros_time();
         } else {
           parameter_state_ = SET_FALSE;
-          disableROSTime();
+          disable_ros_time();
         }
       }
     }
@@ -153,10 +153,10 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
         bool value = changed_parameter.value.bool_value;
         if (value) {
           parameter_state_ = SET_TRUE;
-          enableROSTime();
+          enable_ros_time();
         } else {
           parameter_state_ = SET_FALSE;
-          disableROSTime();
+          disable_ros_time();
         }
       }
     }
@@ -169,7 +169,7 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
   }
 }
 
-void TimeSource::enableROSTime(std::shared_ptr<rclcpp::Clock> clock)
+void TimeSource::enable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 {
   auto ret = rcl_enable_ros_time_override(&clock->rcl_clock_);
   if (ret != RCL_RET_OK) {
@@ -178,7 +178,7 @@ void TimeSource::enableROSTime(std::shared_ptr<rclcpp::Clock> clock)
   }
 }
 
-void TimeSource::disableROSTime(std::shared_ptr<rclcpp::Clock> clock)
+void TimeSource::disable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 {
   auto ret = rcl_disable_ros_time_override(&clock->rcl_clock_);
   if (ret != RCL_RET_OK) {
@@ -187,7 +187,7 @@ void TimeSource::disableROSTime(std::shared_ptr<rclcpp::Clock> clock)
   }
 }
 
-void TimeSource::enableROSTime()
+void TimeSource::enable_ros_time()
 {
   if (ros_time_valid_) {
     // already enabled no-op
@@ -200,11 +200,11 @@ void TimeSource::enableROSTime()
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    enableROSTime(*it);
+    enable_ros_time(*it);
   }
 }
 
-void TimeSource::disableROSTime()
+void TimeSource::disable_ros_time()
 {
   if (!ros_time_valid_) {
     // already disabled no-op
@@ -217,7 +217,7 @@ void TimeSource::disableROSTime()
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    disableROSTime(*it);
+    disable_ros_time(*it);
   }
 }
 
