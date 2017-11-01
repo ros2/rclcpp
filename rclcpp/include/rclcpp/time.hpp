@@ -41,7 +41,9 @@ public:
   Time(const Time & rhs);
 
   RCLCPP_PUBLIC
-  Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
+  Time(
+    const builtin_interfaces::msg::Time & time_msg,
+    rcl_clock_type_t ros_time = RCL_ROS_TIME);
 
   RCLCPP_PUBLIC
   explicit Time(const rcl_time_point_t & time_point);
