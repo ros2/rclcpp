@@ -97,7 +97,9 @@ private:
 
   // Local storage of validity of ROS time
   // This is needed when new clocks are added.
-  bool ros_time_valid_;
+  bool ros_time_active_;
+  // Last set message to be passed to newly registered clocks
+  builtin_interfaces::msg::Time::SharedPtr last_msg_set_;
 
   // A lock to protect iterating the associated_clocks_ field.
   std::mutex clock_list_lock_;

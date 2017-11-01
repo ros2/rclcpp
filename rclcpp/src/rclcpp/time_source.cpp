@@ -32,13 +32,13 @@ namespace rclcpp
 {
 
 TimeSource::TimeSource(std::shared_ptr<rclcpp::node::Node> node)
-: ros_time_valid_(false)
+: ros_time_active_(false)
 {
   this->attachNode(node);
 }
 
 TimeSource::TimeSource()
-: ros_time_valid_(false)
+: ros_time_active_(false)
 {
 }
 
@@ -58,7 +58,7 @@ void TimeSource::attachNode(std::shared_ptr<rclcpp::node::Node> node)
 
 void TimeSource::detachNode()
 {
-  this->ros_time_valid_ = false;
+  this->ros_time_active_ = false;
   clock_subscription_.reset();
   parameter_client_.reset();
   node_.reset();
@@ -69,7 +69,10 @@ void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
 {
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   associated_clocks_.push_back(clock);
-  // TODO(tfoote) cache state and set clock here
+  // Set the clock if there's already data for it.
+  if (last_msg_set_) {
+    set_clock(last_msg_set_, ros_time_active_, clock);
+  }
 }
 
 void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
@@ -96,9 +99,8 @@ void TimeSource::set_clock(
 {
   if (clock->get_clock_type() != RCL_ROS_TIME) {
     RCUTILS_LOG_ERROR("Cannot set clock that's not a ROS clock");
-    throw; // TODO(tfoote) throw somethinguseful
+    throw;  // TODO(tfoote) throw somethinguseful
   }
-  
 
   // Compute diff
   rclcpp::Time msg_time = rclcpp::Time(*msg);
@@ -154,9 +156,11 @@ void TimeSource::set_clock(
 
 void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 {
-  if (!this->ros_time_valid_) {
+  if (!this->ros_time_active_) {
     enable_ros_time();
   }
+  // Cache the last message in case a new clock is attached.
+  last_msg_set_ = msg;
   // TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
   // TODO(tfoote) also setup disable
 
@@ -224,13 +228,13 @@ void TimeSource::disable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 
 void TimeSource::enable_ros_time()
 {
-  if (ros_time_valid_) {
+  if (ros_time_active_) {
     // already enabled no-op
     return;
   }
 
   // Local storage
-  ros_time_valid_ = true;
+  ros_time_active_ = true;
 
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
@@ -244,13 +248,13 @@ void TimeSource::enable_ros_time()
 
 void TimeSource::disable_ros_time()
 {
-  if (!ros_time_valid_) {
+  if (!ros_time_active_) {
     // already disabled no-op
     return;
   }
 
   // Local storage
-  ros_time_valid_ = false;
+  ros_time_active_ = false;
 
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
