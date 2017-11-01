@@ -90,34 +90,70 @@ TimeSource::~TimeSource()
   }
 }
 
-void TimeSource::setClock(
-  const builtin_interfaces::msg::Time::SharedPtr msg,
+void TimeSource::set_clock(
+  const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
   std::shared_ptr<rclcpp::Clock> clock)
 {
-  // TODO(tfoote) Move enabledROS time logic here.
+  if (clock->get_clock_type() != RCL_ROS_TIME) {
+    RCUTILS_LOG_ERROR("Cannot set clock that's not a ROS clock");
+    throw; // TODO(tfoote) throw somethinguseful
+  }
+  
 
+  // Compute diff
   rclcpp::Time msg_time = rclcpp::Time(*msg);
   rclcpp::Time now = clock->now();
   auto diff = now - msg_time;
   rclcpp::TimeJump jump;
   jump.delta_.nanoseconds = diff.nanoseconds();
-  // TODO(tfoote) fill in time source change on jump
 
-
-  // TODO(tfoote) potential race condition with target going out of scope
-  auto active_callbacks = clock->get_triggered_callbacks(jump);
-  clock->invoke_prejump_callbacks(active_callbacks);
-  auto ret = rcl_set_ros_time_override(&(clock->rcl_clock_), msg_time.nanoseconds());
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "Failed to set ros_time_override_status");
+  // Compute jump type
+  if (clock->ros_time_is_active()) {
+    if (set_ros_time_enabled) {
+      jump.jump_type_ = TimeJump::ClockChange_t::ROS_TIME_NO_CHANGE;
+    } else {
+      jump.jump_type_ = TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED;
+    }
+  } else if (!clock->ros_time_is_active()) {
+    if (set_ros_time_enabled) {
+      jump.jump_type_ = TimeJump::ClockChange_t::ROS_TIME_ACTIVATED;
+    } else {
+      jump.jump_type_ = TimeJump::ClockChange_t::SYSTEM_TIME_NO_CHANGE;
+    }
   }
+
+  if (jump.jump_type_ == TimeJump::ClockChange_t::SYSTEM_TIME_NO_CHANGE) {
+    // No change/no updates don't act.
+    return;
+  }
+
+  // TODO(tfoote) potential race condition with callback object going out of scope
+  // Document to user requirments
+  auto active_callbacks = clock->get_triggered_callback_handlers(jump);
+  clock->invoke_prejump_callbacks(active_callbacks);
+
+  // Do change
+  if (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED) {
+    disable_ros_time(clock);
+  } else if (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_ACTIVATED) {
+    enable_ros_time(clock);
+  }
+
+  if (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_ACTIVATED ||
+    jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_NO_CHANGE)
+  {
+    auto ret = rcl_set_ros_time_override(&(clock->rcl_clock_), msg_time.nanoseconds());
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "Failed to set ros_time_override_status");
+    }
+  }
+  // Post change callbacks
   clock->invoke_postjump_callbacks(active_callbacks, jump);
 }
 
 void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 {
-  // RCUTILS_LOG_INFO("Got clock message");
   if (!this->ros_time_valid_) {
     enable_ros_time();
   }
@@ -126,10 +162,9 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    setClock(msg, *it);
+    set_clock(msg, true, *it);
   }
 }
-
 
 void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
 {
@@ -200,7 +235,10 @@ void TimeSource::enable_ros_time()
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    enable_ros_time(*it);
+    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
+    msg->sec = 0;
+    msg->nanosec = 0;
+    set_clock(msg, true, *it);
   }
 }
 
@@ -217,7 +255,8 @@ void TimeSource::disable_ros_time()
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    disable_ros_time(*it);
+    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
+    set_clock(msg, false, *it);
   }
 }
 

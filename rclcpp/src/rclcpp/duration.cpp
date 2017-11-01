@@ -67,9 +67,6 @@ Duration::Duration(const builtin_interfaces::msg::Duration & duration_msg)  // N
 {
   rcl_clock_type_t ros_duration = RCL_ROS_TIME;  // TODO(tfoote) hard coded ROS here
   rcl_duration_ = init_duration(ros_duration);
-  if (duration_msg.sec < 0) {
-    throw std::runtime_error("cannot store a negative duration point in rclcpp::Duration");
-  }
 
   rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(duration_msg.sec));
   rcl_duration_.nanoseconds += duration_msg.nanosec;

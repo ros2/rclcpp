@@ -203,12 +203,12 @@ Time::operator-(const rclcpp::Time & rhs) const
   {
     throw std::underflow_error("time subtraction leads to int64_t overflow");
   }
-  // TODO(tfoote) the below check won't work for larger times
-  if ((int64_t)rcl_time_.nanoseconds <
-    (int64_t)rhs.rcl_time_.nanoseconds -
-    (int64_t) std::abs(std::numeric_limits<rcl_duration_value_t>::min()))
-  {
-    throw std::underflow_error("time subtraction leads to int64_t underflow");
+
+  if (rcl_time_.nanoseconds < rhs.rcl_time_.nanoseconds) {
+    rcl_time_point_value_t negative_delta = rhs.rcl_time_.nanoseconds - rcl_time_.nanoseconds;
+    if (negative_delta > (uint64_t) std::numeric_limits<rcl_duration_value_t>::min()) {
+      throw std::underflow_error("time subtraction leads to int64_t underflow");
+    }
   }
 
   return Duration(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds, rcl_time_.clock_type);

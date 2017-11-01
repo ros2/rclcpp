@@ -113,7 +113,7 @@ private:
   // A method for TimeSource to get a list of callbacks to invoke while updating
   RCLCPP_PUBLIC
   std::vector<JumpHandler::SharedPtr>
-  get_triggered_callbacks(const TimeJump & jump);
+  get_triggered_callback_handlers(const TimeJump & jump);
 
   // Invoke callbacks that are valid and outside threshold.
   RCLCPP_PUBLIC

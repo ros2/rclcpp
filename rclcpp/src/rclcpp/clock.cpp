@@ -125,7 +125,7 @@ Clock::create_jump_callback(
 }
 
 std::vector<JumpHandler::SharedPtr>
-Clock::get_triggered_callbacks(const TimeJump & jump)
+Clock::get_triggered_callback_handlers(const TimeJump & jump)
 {
   std::vector<JumpHandler::SharedPtr> callbacks;
   std::lock_guard<std::mutex> guard(callback_list_mutex_);
