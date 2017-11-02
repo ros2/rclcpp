@@ -64,7 +64,7 @@ public:
   is_exceeded(const TimeJump & jump);
 };
 
-class JumpHandler : public std::enable_shared_from_this<JumpHandler>
+class JumpHandler
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(JumpHandler)
@@ -78,7 +78,7 @@ public:
   JumpThreshold notice_threshold;
 };
 
-class Clock : public std::enable_shared_from_this<Clock>
+class Clock
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Clock)
