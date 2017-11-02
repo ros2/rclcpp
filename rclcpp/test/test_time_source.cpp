@@ -66,18 +66,20 @@ TEST_F(TestTimeSource, reattach) {
 
 TEST_F(TestTimeSource, ROS_time_valid) {
   rclcpp::TimeSource ts;
-  // Try reattach
-  // TODO(tfoote) reenabled using external clock
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
 
   EXPECT_FALSE(ros_clock->ros_time_is_active());
   ts.attachClock(ros_clock);
   auto now = ros_clock->now();
-
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   ts.attachNode(node);
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
+  ts.detachNode();
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
+
+  ts.attachNode(node);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 }
 
