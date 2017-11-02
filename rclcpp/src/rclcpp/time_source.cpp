@@ -128,8 +128,6 @@ void TimeSource::set_clock(
     return;
   }
 
-  // TODO(tfoote) potential race condition with callback object going out of scope
-  // Document to user requirments
   auto active_callbacks = clock->get_triggered_callback_handlers(jump);
   clock->invoke_prejump_callbacks(active_callbacks);
 

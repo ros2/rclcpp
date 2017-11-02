@@ -102,6 +102,10 @@ public:
   get_clock_type();
 
   // Add a callback to invoke if the jump threshold is exceeded.
+  /**
+   * These callback functions must remain valid as long as the
+   * returned shared pointer is valid.
+   */
   RCLCPP_PUBLIC
   JumpHandler::SharedPtr
   create_jump_callback(
