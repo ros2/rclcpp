@@ -45,6 +45,10 @@ public:
   RCLCPP_PUBLIC
   void detachNode();
 
+  /// Attach a clock to the time source to be updated
+  /**
+   * \throws std::invalid_argument if node is nullptr
+   */
   RCLCPP_PUBLIC
   void attachClock(rclcpp::Clock::SharedPtr clock);
 

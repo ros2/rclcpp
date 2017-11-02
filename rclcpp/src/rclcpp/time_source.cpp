@@ -67,9 +67,13 @@ void TimeSource::detachNode()
 
 void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
 {
+  if (clock->get_clock_type() != RCL_ROS_TIME) {
+    throw std::invalid_argument("Cannot attach clock to a time source that's not a ROS clock");
+  }
+
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   associated_clocks_.push_back(clock);
-  // Set the clock if there's already data for it.
+  // Set the clock if there's already data for it
   if (last_msg_set_) {
     set_clock(last_msg_set_, ros_time_active_, clock);
   }
@@ -97,11 +101,6 @@ void TimeSource::set_clock(
   const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
   std::shared_ptr<rclcpp::Clock> clock)
 {
-  if (clock->get_clock_type() != RCL_ROS_TIME) {
-    RCUTILS_LOG_ERROR("Cannot set clock that's not a ROS clock");
-    throw;  // TODO(tfoote) throw somethinguseful
-  }
-
   // Compute diff
   rclcpp::Time msg_time = rclcpp::Time(*msg);
   rclcpp::Time now = clock->now();
@@ -161,8 +160,6 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
   }
   // Cache the last message in case a new clock is attached.
   last_msg_set_ = msg;
-  // TODO(tfoote) switch this to be based on if there are clock publishers or use_sim_time
-  // TODO(tfoote) also setup disable
 
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
