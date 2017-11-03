@@ -56,6 +56,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_interfaces/node_topics.cpp
   src/rclcpp/parameter.cpp
   src/rclcpp/parameter_client.cpp
+  src/rclcpp/parameter_events_filter.cpp
   src/rclcpp/parameter_service.cpp
   src/rclcpp/publisher.cpp
   src/rclcpp/service.cpp
@@ -184,6 +185,16 @@ if(BUILD_TESTING)
       ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
     target_link_libraries(test_node ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_parameter_events_filter test/test_parameter_events_filter.cpp)
+  if(TARGET test_parameter_events_filter)
+    target_include_directories(test_parameter_events_filter PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_parameter_events_filter ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_publisher test/test_publisher.cpp)
   if(TARGET test_publisher)

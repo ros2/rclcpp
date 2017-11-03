@@ -24,6 +24,7 @@
 
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter_client.hpp"
+#include "rclcpp/parameter_events_filter.hpp"
 
 
 namespace rclcpp

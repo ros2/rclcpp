@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include <memory>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "builtin_interfaces/msg/time.hpp"
 
@@ -167,39 +169,30 @@ void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
 
 void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
 {
-  for (auto & new_parameter : event->new_parameters) {
-    if (new_parameter.value.type == rclcpp::parameter::ParameterType::PARAMETER_BOOL) {
-      if (new_parameter.name == "use_sim_time") {
-        bool value = new_parameter.value.bool_value;
-        if (value) {
-          parameter_state_ = SET_TRUE;
-          enable_ros_time();
-        } else {
-          parameter_state_ = SET_FALSE;
-          disable_ros_time();
-        }
-      }
+  // Filter for only 'use_sim_time' being added or changed.
+  rclcpp::ParameterEventsFilter filter(event, {"use_sim_time"},
+    {rclcpp::ParameterEventsFilter::EventType::NEW,
+      rclcpp::ParameterEventsFilter::EventType::CHANGED});
+  for (auto & it : filter.get_events()) {
+    if (it.second->value.type != parameter::ParameterType::PARAMETER_BOOL) {
+      RCUTILS_LOG_ERROR("use_sim_time parameter set to something besides a bool");
+      continue;
+    }
+    if (it.second->value.bool_value) {
+      parameter_state_ = SET_TRUE;
+      enable_ros_time();
+    } else {
+      parameter_state_ = SET_FALSE;
+      disable_ros_time();
     }
   }
-  for (auto & changed_parameter : event->changed_parameters) {
-    if (changed_parameter.value.type == rclcpp::parameter::ParameterType::PARAMETER_BOOL) {
-      if (changed_parameter.name == "use_sim_time") {
-        bool value = changed_parameter.value.bool_value;
-        if (value) {
-          parameter_state_ = SET_TRUE;
-          enable_ros_time();
-        } else {
-          parameter_state_ = SET_FALSE;
-          disable_ros_time();
-        }
-      }
-    }
-  }
-  for (auto & deleted_parameter : event->deleted_parameters) {
-    if (deleted_parameter.name == "use_sim_time") {
-      // If the parameter is deleted mark it as unset but dont' change state.
-      parameter_state_ = UNSET;
-    }
+  // Handle the case that use_sim_time was deleted.
+  rclcpp::ParameterEventsFilter deleted(event, {"use_sim_time"},
+    {rclcpp::ParameterEventsFilter::EventType::DELETED});
+  for (auto & it : deleted.get_events()) {
+    (void) it;  // if there is a match it's already matched, don't bother reading it.
+    // If the parameter is deleted mark it as unset but dont' change state.
+    parameter_state_ = UNSET;
   }
 }
 
