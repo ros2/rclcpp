@@ -15,11 +15,11 @@
 #ifndef RCLCPP__DURATION_HPP_
 #define RCLCPP__DURATION_HPP_
 
+#include <chrono>
+
 #include "builtin_interfaces/msg/duration.hpp"
-
-#include "rclcpp/visibility_control.hpp"
-
 #include "rcl/time.h"
+#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -27,17 +27,19 @@ class Duration
 {
 public:
   RCLCPP_PUBLIC
-  Duration(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
+  Duration(int32_t seconds, uint32_t nanoseconds);
 
   RCLCPP_PUBLIC
   explicit Duration(
-    rcl_duration_value_t nanoseconds,
-    rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
+    rcl_duration_value_t nanoseconds);
+
+  RCLCPP_PUBLIC
+  explicit Duration(
+    std::chrono::nanoseconds nanoseconds);
 
   RCLCPP_PUBLIC
   Duration(
-    const builtin_interfaces::msg::Duration & duration_msg,
-    rcl_clock_type_t ros_duration = RCL_ROS_TIME);
+    const builtin_interfaces::msg::Duration & duration_msg);
 
   RCLCPP_PUBLIC
   explicit Duration(const rcl_duration_t & duration);
@@ -90,10 +92,6 @@ public:
   RCLCPP_PUBLIC
   rcl_duration_value_t
   nanoseconds() const;
-
-  RCLCPP_PUBLIC
-  rcl_clock_type_t
-  get_clock_type() const;
 
 private:
   rcl_duration_t rcl_duration_;

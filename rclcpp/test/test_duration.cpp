@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <string>
 
@@ -23,6 +24,9 @@
 #include "rclcpp/clock.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/duration.hpp"
+
+
+using namespace std::chrono_literals;
 
 class TestDuration : public ::testing::Test
 {
@@ -50,63 +54,24 @@ TEST(TestDuration, operators) {
   EXPECT_EQ(sub.nanoseconds(), (rcl_duration_value_t)(young.nanoseconds() - old.nanoseconds()));
   EXPECT_EQ(sub, young - old);
 
-  rclcpp::Duration system_duration(0, 0, RCL_SYSTEM_TIME);
-  rclcpp::Duration steady_duration(0, 0, RCL_STEADY_TIME);
+  rclcpp::Duration time = rclcpp::Duration(0, 0);
+  rclcpp::Duration copy_constructor_duration(time);
+  rclcpp::Duration assignment_op_duration = rclcpp::Duration(1, 0);
+  assignment_op_duration = time;
 
-  EXPECT_ANY_THROW((void)(system_duration == steady_duration));
-  EXPECT_ANY_THROW((void)(system_duration <= steady_duration));
-  EXPECT_ANY_THROW((void)(system_duration >= steady_duration));
-  EXPECT_ANY_THROW((void)(system_duration < steady_duration));
-  EXPECT_ANY_THROW((void)(system_duration > steady_duration));
-  EXPECT_ANY_THROW((void)(system_duration + steady_duration));
-  EXPECT_ANY_THROW((void)(system_duration - steady_duration));
+  EXPECT_TRUE(time == copy_constructor_duration);
+  EXPECT_TRUE(time == assignment_op_duration);
+}
 
-  rclcpp::Clock ros_clock(RCL_ROS_TIME);
-  rclcpp::Clock steady_clock(RCL_STEADY_TIME);
-  rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
-
-  rclcpp::Duration steadytime = steady_clock.now() - steady_clock.now();
-  rclcpp::Duration systemtime = system_clock.now() - system_clock.now();
-  // Force RCL_ROS_TIME
-  rclcpp::Duration rostime = rclcpp::Duration(steadytime.nanoseconds(), RCL_ROS_TIME);
-
-  EXPECT_EQ(RCL_ROS_TIME, rostime.get_clock_type());
-  EXPECT_EQ(RCL_STEADY_TIME, steadytime.get_clock_type());
-  EXPECT_EQ(RCL_SYSTEM_TIME, systemtime.get_clock_type());
-
-  EXPECT_ANY_THROW((void)(rostime == steadytime));
-  EXPECT_ANY_THROW((void)(rostime <= steadytime));
-  EXPECT_ANY_THROW((void)(rostime >= steadytime));
-  EXPECT_ANY_THROW((void)(rostime < steadytime));
-  EXPECT_ANY_THROW((void)(rostime > steadytime));
-  EXPECT_ANY_THROW((void)(rostime + steadytime));
-  EXPECT_ANY_THROW((void)(rostime - steadytime));
-
-  EXPECT_ANY_THROW((void)(rostime == systemtime));
-  EXPECT_ANY_THROW((void)(rostime <= systemtime));
-  EXPECT_ANY_THROW((void)(rostime >= systemtime));
-  EXPECT_ANY_THROW((void)(rostime < systemtime));
-  EXPECT_ANY_THROW((void)(rostime > systemtime));
-  EXPECT_ANY_THROW((void)(rostime + systemtime));
-  EXPECT_ANY_THROW((void)(rostime - systemtime));
-
-  EXPECT_ANY_THROW((void)(systemtime == steadytime));
-  EXPECT_ANY_THROW((void)(systemtime <= steadytime));
-  EXPECT_ANY_THROW((void)(systemtime >= steadytime));
-  EXPECT_ANY_THROW((void)(systemtime < steadytime));
-  EXPECT_ANY_THROW((void)(systemtime > steadytime));
-  EXPECT_ANY_THROW((void)(systemtime + steadytime));
-  EXPECT_ANY_THROW((void)(systemtime - steadytime));
-
-  for (auto time_source : {RCL_ROS_TIME, RCL_SYSTEM_TIME, RCL_STEADY_TIME}) {
-    rclcpp::Duration time = rclcpp::Duration(0, 0, time_source);
-    rclcpp::Duration copy_constructor_duration(time);
-    rclcpp::Duration assignment_op_duration = rclcpp::Duration(1, 0, time_source);
-    assignment_op_duration = time;
-
-    EXPECT_TRUE(time == copy_constructor_duration);
-    EXPECT_TRUE(time == assignment_op_duration);
-  }
+TEST(TestDuration, chrono_overloads) {
+  int64_t ns = 123456789l;
+  auto chrono_ns = std::chrono::nanoseconds(ns);
+  auto d1 = rclcpp::Duration(ns);
+  auto d2 = rclcpp::Duration(chrono_ns);
+  auto d3 = rclcpp::Duration(123456789ns);
+  EXPECT_EQ(d1, d2);
+  EXPECT_EQ(d1, d3);
+  EXPECT_EQ(d2, d3);
 }
 
 TEST(TestDuration, overflows) {
