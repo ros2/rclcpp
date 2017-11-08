@@ -40,6 +40,7 @@
 
 @{
 from rcutils.logging import feature_combinations
+from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
 }@
@@ -60,13 +61,36 @@ from rcutils.logging import severities
 #else
 @[ for feature_combination in [fc for fc in feature_combinations if 'named' not in fc]]@
 @{suffix = get_suffix_from_features(feature_combination)}@
+/**
+ * \def ROS_@(severity)@(suffix)
+ * Log a message with severity @(severity)@
+@[ if feature_combinations[feature_combination].doc_lines]@
+ with the following conditions:
+@[ else]@
+.
+@[ end if]@
+@[ for doc_line in feature_combinations[feature_combination].doc_lines]@
+ * @(doc_line)
+@[ end for]@
+@[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
+ * \param @(param_name) @(doc_line)
+@[ end for]@
+ * \param ... The format string, followed by the variable arguments for the format string
+ */
 #define ROS_@(severity)@(suffix)(...) RCUTILS_LOG_@(severity)@(suffix)_NAMED(RCLCPP_CONSOLE_DEFAULT_NAME, __VA_ARGS__)
 
-#define ROS_@(severity)@(suffix)_NAMED(name, ...) RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-  (std::string(RCLCPP_CONSOLE_DEFAULT_NAME) + "." + name).c_str(), __VA_ARGS__)
+#define ROS_@(severity)@(suffix)_NAMED(name, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+  RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
+@{params = get_macro_parameters(feature_combination).keys()}@
+@[ if params]@
+@(''.join(['    ' + p + ', \\\n' for p in params]))@
+@[ end if]@
+    (std::string(RCLCPP_CONSOLE_DEFAULT_NAME) + "." + name).c_str(), \
+    __VA_ARGS__)
 
 #define ROS_@(severity)@(suffix)_FULLNAMED(name, ...) RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
   std::string(name).c_str(), __VA_ARGS__)
+
 @[ end for]@
 #endif
 ///@@}
