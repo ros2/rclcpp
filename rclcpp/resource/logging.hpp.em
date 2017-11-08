@@ -54,8 +54,6 @@ from rcutils.logging import severities
 @{suffix = get_suffix_from_features(feature_combination)}@
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define ROS_@(severity)@(suffix)(...)
-#define ROS_@(severity)@(suffix)_NAMED(name, ...)
-#define ROS_@(severity)@(suffix)_FULLNAMED(name, ...)
 @[ end for]@
 
 #else
@@ -77,9 +75,7 @@ from rcutils.logging import severities
 @[ end for]@
  * \param ... The format string, followed by the variable arguments for the format string
  */
-#define ROS_@(severity)@(suffix)(...) RCUTILS_LOG_@(severity)@(suffix)_NAMED(RCLCPP_CONSOLE_DEFAULT_NAME, __VA_ARGS__)
-
-#define ROS_@(severity)@(suffix)_NAMED(name, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+#define ROS_@(severity)@(suffix)(name, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
   RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = get_macro_parameters(feature_combination).keys()}@
 @[ if params]@
@@ -87,9 +83,6 @@ from rcutils.logging import severities
 @[ end if]@
     (std::string(RCLCPP_CONSOLE_DEFAULT_NAME) + "." + name).c_str(), \
     __VA_ARGS__)
-
-#define ROS_@(severity)@(suffix)_FULLNAMED(name, ...) RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-  std::string(name).c_str(), __VA_ARGS__)
 
 @[ end for]@
 #endif
