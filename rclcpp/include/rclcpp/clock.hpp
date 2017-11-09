@@ -132,6 +132,7 @@ private:
   /// Internal storage backed by rcl
   rcl_clock_t rcl_clock_;
   friend TimeSource;  /// Allow TimeSource to access the rcl_clock_ datatype.
+  rcl_allocator_t allocator_;
 
   std::mutex callback_list_mutex_;
   std::vector<std::weak_ptr<JumpHandler>> active_jump_handlers_;

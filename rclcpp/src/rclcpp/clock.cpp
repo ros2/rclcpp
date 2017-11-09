@@ -56,8 +56,8 @@ JumpHandler::JumpHandler(
 
 Clock::Clock(rcl_clock_type_t clock_type)
 {
-  rcl_allocator_t allocator = rcl_get_default_allocator();
-  auto ret = rcl_clock_init(clock_type, &rcl_clock_, &allocator);
+  allocator_ = rcl_get_default_allocator();
+  auto ret = rcl_clock_init(clock_type, &rcl_clock_, &allocator_);
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "could not get current time stamp");
@@ -66,8 +66,7 @@ Clock::Clock(rcl_clock_type_t clock_type)
 
 Clock::~Clock()
 {
-  rcl_allocator_t allocator = rcl_get_default_allocator();
-  auto ret = rcl_clock_fini(&rcl_clock_, &allocator);
+  auto ret = rcl_clock_fini(&rcl_clock_);
   if (ret != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to fini rcl clock.");
   }
