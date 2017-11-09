@@ -19,15 +19,6 @@
 
 #include "rcutils/logging_macros.h"
 
-#ifdef ROS_PACKAGE_NAME
-#define RCLCPP_CONSOLE_PACKAGE_NAME ROS_PACKAGE_NAME
-#else
-#define RCLCPP_CONSOLE_PACKAGE_NAME "unknown_package"
-#endif
-
-#define RCLCPP_CONSOLE_NAME_PREFIX RCLCPP_CONSOLE_PACKAGE_NAME
-#define RCLCPP_CONSOLE_DEFAULT_NAME RCLCPP_CONSOLE_NAME_PREFIX
-
 /**
  * \def RCLCPP_LOG_MIN_SEVERITY
  * Define RCLCPP_LOG_MIN_SEVERITY=RCUTILS_LOG_SEVERITY_[DEBUG|INFO|WARN|ERROR|FATAL]
@@ -81,7 +72,7 @@ from rcutils.logging import severities
 @[ if params]@
 @(''.join(['    ' + p + ', \\\n' for p in params]))@
 @[ end if]@
-    (std::string(RCLCPP_CONSOLE_DEFAULT_NAME) + "." + name).c_str(), \
+    std::string(name).c_str(), \
     __VA_ARGS__)
 
 @[ end for]@
