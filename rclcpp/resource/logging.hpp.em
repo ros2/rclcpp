@@ -19,13 +19,22 @@
 
 #include "rcutils/logging_macros.h"
 
+// These are used for compiling out logging macros lower than a minimum severity.
+#define RCLCPP_LOG_MIN_SEVERITY_DEBUG 0
+#define RCLCPP_LOG_MIN_SEVERITY_INFO 1
+#define RCLCPP_LOG_MIN_SEVERITY_WARN 2
+#define RCLCPP_LOG_MIN_SEVERITY_ERROR 3
+#define RCLCPP_LOG_MIN_SEVERITY_FATAL 4
+#define RCLCPP_LOG_MIN_SEVERITY_NONE 5
+
 /**
  * \def RCLCPP_LOG_MIN_SEVERITY
- * Define RCLCPP_LOG_MIN_SEVERITY=RCUTILS_LOG_SEVERITY_[DEBUG|INFO|WARN|ERROR|FATAL]
+ * Define RCLCPP_LOG_MIN_SEVERITY=RCLCPP_LOG_MIN_SEVERITY_[DEBUG|INFO|WARN|ERROR|FATAL]
  * in your build options to compile out anything below that severity.
+ * Use RCUTILS_LOG_MIN_SEVERITY_NONE to compile out all macros.
  */
 #ifndef RCLCPP_LOG_MIN_SEVERITY
-#define RCLCPP_LOG_MIN_SEVERITY RCUTILS_LOG_SEVERITY_DEBUG
+#define RCLCPP_LOG_MIN_SEVERITY RCLCPP_LOG_MIN_SEVERITY_DEBUG
 #endif
 
 
@@ -39,7 +48,7 @@ from rcutils.logging import severities
 /** @@name Logging macros for severity @(severity).
  */
 ///@@{
-#if (RCLCPP_LOG_MIN_SEVERITY > RCUTILS_LOG_SEVERITY_@(severity))
+#if (RCLCPP_LOG_MIN_SEVERITY > RCLCPP_LOG_MIN_SEVERITY_@(severity))
 // empty logging macros for severity @(severity) when being disabled at compile time
 @[ for feature_combination in [fc for fc in feature_combinations if 'named' not in fc]]@
 @{suffix = get_suffix_from_features(feature_combination)}@
