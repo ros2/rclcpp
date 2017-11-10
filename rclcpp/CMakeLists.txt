@@ -272,6 +272,9 @@ if(BUILD_TESTING)
       "rcl")
     target_link_libraries(test_time ${PROJECT_NAME})
   endif()
+
+  ament_add_gmock(test_logging test/test_logging.cpp)
+  target_link_libraries(test_logging ${PROJECT_NAME})
 endif()
 
 ament_package(
