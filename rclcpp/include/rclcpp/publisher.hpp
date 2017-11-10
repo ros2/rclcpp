@@ -279,7 +279,7 @@ public:
     return this->publish(*msg);
   }
 
-  virtual void
+  void
   publish(const rcl_message_raw_t * raw_msg)
   {
     if (store_intra_process_message_) {

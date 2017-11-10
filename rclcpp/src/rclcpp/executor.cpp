@@ -281,11 +281,21 @@ void
 Executor::execute_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription)
 {
+  // may have to overwrite create_message here
   std::shared_ptr<void> message = subscription->create_message();
+  fprintf(stderr, "Creating message at %p\n", message.get());
   rmw_message_info_t message_info;
 
-  auto ret = rcl_take(subscription->get_subscription_handle().get(),
+  auto ret = RCL_RET_ERROR;
+  if (subscription->is_raw()) {
+    ret = rcl_take_raw(subscription->get_subscription_handle(),
+      reinterpret_cast<rcl_message_raw_t *>(message.get()), &message_info);
+    auto rcl_ptr = message.get();
+    (void) rcl_ptr;
+  } else {
+    ret = rcl_take(subscription->get_subscription_handle(),
       message.get(), &message_info);
+  }
   if (ret == RCL_RET_OK) {
     message_info.from_intra_process = false;
     subscription->handle_message(message, message_info);

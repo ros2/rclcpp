@@ -29,12 +29,13 @@
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
-#include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/type_support_decl.hpp"
-#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -64,7 +65,8 @@ public:
     std::shared_ptr<rcl_node_t> node_handle,
     const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
-    const rcl_subscription_options_t & subscription_options);
+    const rcl_subscription_options_t & subscription_options,
+    bool is_raw = false);
 
   /// Default destructor.
   RCLCPP_PUBLIC
@@ -109,6 +111,9 @@ public:
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
 
+  bool
+  is_raw() const;
+
 protected:
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
@@ -116,19 +121,23 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
+
+  bool is_raw_;
 };
 
 /// Subscription implementation, templated on the type of message this subscription receives.
-template<typename MessageT, typename Alloc = std::allocator<void>>
+template<
+  typename CallbackMessageT,
+  typename Alloc = std::allocator<void>>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node_interfaces::NodeTopicsInterface;
 
 public:
-  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAllocTraits = allocator::AllocRebind<CallbackMessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
-  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
-  using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
+  using MessageDeleter = allocator::Deleter<MessageAlloc, CallbackMessageT>;
+  using MessageUniquePtr = std::unique_ptr<CallbackMessageT, MessageDeleter>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
@@ -144,17 +153,19 @@ public:
    */
   Subscription(
     std::shared_ptr<rcl_node_t> node_handle,
+    const rosidl_message_type_support_t & ts,
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
-    AnySubscriptionCallback<MessageT, Alloc> callback,
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
-    memory_strategy = message_memory_strategy::MessageMemoryStrategy<MessageT,
+    AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
+    typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
+    memory_strategy = message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
     Alloc>::create_default())
   : SubscriptionBase(
       node_handle,
-      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      ts,
       topic_name,
-      subscription_options),
+      subscription_options,
+      rclcpp::subscription_traits::is_raw_subscription_argument<CallbackMessageT>::value),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy),
     get_intra_process_message_callback_(nullptr),
@@ -167,11 +178,12 @@ public:
    * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
    */
   void set_message_memory_strategy(
-    typename message_memory_strategy::MessageMemoryStrategy<MessageT,
+    typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
     Alloc>::SharedPtr message_memory_strategy)
   {
     message_memory_strategy_ = message_memory_strategy;
   }
+
   std::shared_ptr<void> create_message()
   {
     /* The default message memory strategy provides a dynamically allocated message on each call to
@@ -190,7 +202,7 @@ public:
         return;
       }
     }
-    auto typed_message = std::static_pointer_cast<MessageT>(message);
+    auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     any_callback_.dispatch(typed_message, message_info);
   }
 
@@ -198,7 +210,7 @@ public:
   /** \param message message to be returned */
   void return_message(std::shared_ptr<void> & message)
   {
-    auto typed_message = std::static_pointer_cast<MessageT>(message);
+    auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     message_memory_strategy_->return_message(typed_message);
   }
 
@@ -278,8 +290,8 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Subscription)
 
-  AnySubscriptionCallback<MessageT, Alloc> any_callback_;
-  typename message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
+  typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
     message_memory_strategy_;
 
   GetMessageCallbackType get_intra_process_message_callback_;

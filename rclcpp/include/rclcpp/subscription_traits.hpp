@@ -47,7 +47,7 @@ struct is_raw_callback
 template<typename MessageT>
 struct extract_message_type
 {
-  using type = MessageT;
+  using type = typename std::remove_cv<MessageT>::type;
 };
 
 template<typename MessageT>
@@ -60,10 +60,9 @@ struct extract_message_type<std::unique_ptr<MessageT>> : extract_message_type<Me
 
 template<typename CallbackT>
 struct has_message_type
-{
-  using type = extract_message_type<
-    typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>>;
-};
+: extract_message_type<
+    typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>>
+{};
 
 }  // namespace subscription_traits
 }  // namespace rclcpp

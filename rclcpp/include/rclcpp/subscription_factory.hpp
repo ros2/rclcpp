@@ -25,6 +25,7 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -65,22 +66,28 @@ struct SubscriptionFactory
 };
 
 /// Return a SubscriptionFactory with functions for creating a SubscriptionT<MessageT, Alloc>.
-template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename Alloc,
+  typename CallbackMessageT,
+  typename SubscriptionT>
 SubscriptionFactory
 create_subscription_factory(
   CallbackT && callback,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
+
   SubscriptionFactory factory;
 
   using rclcpp::AnySubscriptionCallback;
-  AnySubscriptionCallback<MessageT, Alloc> any_subscription_callback(allocator);
+  AnySubscriptionCallback<CallbackMessageT, Alloc> any_subscription_callback(allocator);
   any_subscription_callback.set(std::forward<CallbackT>(callback));
 
   auto message_alloc =
-    std::make_shared<typename Subscription<MessageT, Alloc>::MessageAlloc>();
+    std::make_shared<typename Subscription<CallbackMessageT, Alloc>::MessageAlloc>();
 
   // factory function that creates a MessageT specific SubscriptionT
   factory.create_typed_subscription =
@@ -91,13 +98,14 @@ create_subscription_factory(
     ) -> rclcpp::SubscriptionBase::SharedPtr
     {
       subscription_options.allocator =
-        rclcpp::allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
+        rclcpp::allocator::get_rcl_allocator<CallbackMessageT>(*message_alloc.get());
 
       using rclcpp::Subscription;
       using rclcpp::SubscriptionBase;
 
-      auto sub = Subscription<MessageT, Alloc>::make_shared(
+      auto sub = Subscription<CallbackMessageT, Alloc>::make_shared(
         node_base->get_shared_rcl_node_handle(),
+        *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
         topic_name,
         subscription_options,
         any_subscription_callback,
@@ -117,7 +125,7 @@ create_subscription_factory(
       uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
 
       auto intra_process_options = rcl_subscription_get_default_options();
-      intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(
+      intra_process_options.allocator = rclcpp::allocator::get_rcl_allocator<CallbackMessageT>(
         *message_alloc.get());
       intra_process_options.qos = subscription_options.qos;
       intra_process_options.ignore_local_publications = false;
@@ -128,7 +136,7 @@ create_subscription_factory(
         uint64_t publisher_id,
         uint64_t message_sequence,
         uint64_t subscription_id,
-        typename rclcpp::Subscription<MessageT, Alloc>::MessageUniquePtr & message)
+        typename rclcpp::Subscription<CallbackMessageT, Alloc>::MessageUniquePtr & message)
         {
           auto ipm = weak_ipm.lock();
           if (!ipm) {
@@ -136,7 +144,7 @@ create_subscription_factory(
             throw std::runtime_error(
                     "intra process take called after destruction of intra process manager");
           }
-          ipm->take_intra_process_message<MessageT, Alloc>(
+          ipm->take_intra_process_message<CallbackMessageT, Alloc>(
             publisher_id, message_sequence, subscription_id, message);
         };
 

@@ -280,6 +280,13 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_subscription ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_subscription_traits test/test_subscription_traits.cpp)
+  if(TARGET test_subscription_traits)
+    target_include_directories(test_subscription_traits PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rcl_INCLUDE_DIRS}
+    )
+  endif()
   ament_add_gtest(test_find_weak_nodes test/test_find_weak_nodes.cpp)
   if(TARGET test_find_weak_nodes)
     target_include_directories(test_find_weak_nodes PUBLIC

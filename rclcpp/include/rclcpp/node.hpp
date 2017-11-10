@@ -53,6 +53,7 @@
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -183,7 +184,8 @@ public:
     typename MessageT,
     typename CallbackT,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -191,7 +193,8 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
@@ -214,15 +217,17 @@ public:
     typename MessageT,
     typename CallbackT,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
-    size_t qos_history_depth,
     CallbackT && callback,
+    size_t qos_history_depth,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 

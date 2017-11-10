@@ -59,6 +59,19 @@ TEST(TestSubscriptionTraits, is_raw_callback) {
 
 TEST(TestSubscriptionTraits, callback_messages)
 {
+  static_assert(
+    std::is_same<
+      std::shared_ptr<char>,
+      rclcpp::function_traits::function_traits<decltype(not_raw_shared_ptr_callback)>::template argument_type<0>>::value, "wrong!");
+
+  static_assert(
+    std::is_same<
+      char,
+      rclcpp::subscription_traits::extract_message_type<
+        rclcpp::function_traits::function_traits<decltype(not_raw_shared_ptr_callback)>::template argument_type<0>
+        >::type
+    >::value, "wrong!1");
+
   auto cb1 = &raw_callback_copy;
   static_assert(
     std::is_same<

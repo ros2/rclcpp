@@ -31,8 +31,10 @@ SubscriptionBase::SubscriptionBase(
   std::shared_ptr<rcl_node_t> node_handle,
   const rosidl_message_type_support_t & type_support_handle,
   const std::string & topic_name,
-  const rcl_subscription_options_t & subscription_options)
-: node_handle_(node_handle)
+  const rcl_subscription_options_t & subscription_options,
+  bool is_raw)
+: node_handle_(node_handle),
+  is_raw_(is_raw)
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
   auto custom_deletor = [weak_node_handle](rcl_subscription_t * rcl_subs)
@@ -110,4 +112,10 @@ const std::shared_ptr<rcl_subscription_t>
 SubscriptionBase::get_intra_process_subscription_handle() const
 {
   return intra_process_subscription_handle_;
+}
+
+bool
+SubscriptionBase::is_raw() const
+{
+  return is_raw_;
 }
