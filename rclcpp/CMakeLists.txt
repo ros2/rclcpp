@@ -66,20 +66,21 @@ set(${PROJECT_NAME}_SRCS
 
 # "watch" template for changes
 configure_file(
- "resource/logging.hpp.em"
- "logging.hpp.em.watch"
- COPYONLY)
+  "resource/logging.hpp.em"
+  "logging.hpp.em.watch"
+  COPYONLY
+)
 # generate header with logging macros
 set(python_code
- "import em"
- "em.invoke(['-o', 'include/rclcpp/logging.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging.hpp.em'])")
+  "import em"
+  "em.invoke(['-o', 'include/rclcpp/logging.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging.hpp.em'])")
 string(REPLACE ";" "$<SEMICOLON>" python_code "${python_code}")
 add_custom_command(OUTPUT include/rclcpp/logging.hpp
- COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
- COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code}"
- DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
- COMMENT "Expanding logging.hpp.em"
- VERBATIM
+  COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
+  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code}"
+  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
+  COMMENT "Expanding logging.hpp.em"
+  VERBATIM
 )
 list(APPEND ${PROJECT_NAME}_SRCS
   include/rclcpp/logging.hpp)
