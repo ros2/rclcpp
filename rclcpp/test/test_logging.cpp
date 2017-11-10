@@ -23,6 +23,8 @@
 #include "rcutils/logging.h"
 #include "rcutils/time.h"
 
+#define RCLCPP_TEST_LOGGING_MACRO_NAME "name"  // Used in testing below
+
 using ::testing::EndsWith;
 
 size_t g_log_calls = 0;
@@ -80,7 +82,7 @@ TEST_F(TestLoggingMacros, test_logging_named) {
   if (g_last_log_event.location) {
     EXPECT_STREQ("TestBody", g_last_log_event.location->function_name);
     EXPECT_THAT(g_last_log_event.location->file_name, EndsWith("test_logging.cpp"));
-    EXPECT_EQ(76u, g_last_log_event.location->line_number);
+    EXPECT_EQ(78u, g_last_log_event.location->line_number);
   }
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_DEBUG, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
@@ -90,10 +92,17 @@ TEST_F(TestLoggingMacros, test_logging_named) {
   std::string std_string_name = "name";
   ROS_DEBUG(std_string_name, "message");
   EXPECT_EQ("name", g_last_log_event.name);
+
   const char * c_string_name = "name";
   ROS_DEBUG(c_string_name, "message");
   EXPECT_EQ("name", g_last_log_event.name);
+
   ROS_DEBUG(std_string_name + c_string_name, "message");
+  EXPECT_EQ("namename", g_last_log_event.name);
+
+  ROS_DEBUG(RCLCPP_TEST_LOGGING_MACRO_NAME, "message");
+  EXPECT_EQ(RCLCPP_TEST_LOGGING_MACRO_NAME, g_last_log_event.name);
+  ROS_DEBUG(std::string(RCLCPP_TEST_LOGGING_MACRO_NAME) + std_string_name, "message");
   EXPECT_EQ("namename", g_last_log_event.name);
 }
 
@@ -105,6 +114,15 @@ TEST_F(TestLoggingMacros, test_logging_once) {
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
   EXPECT_EQ("message 1", g_last_log_event.message);
+
+  // Check that different instances have independent contexts
+  for (int i : {1, 2, 3}) {
+    ROS_INFO_ONCE("name", "second message %d", i);
+  }
+  EXPECT_EQ(2u, g_log_calls);  // 1 for each instance of "once" log call
+  EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
+  EXPECT_EQ("name", g_last_log_event.name);
+  EXPECT_EQ("second message 1", g_last_log_event.message);
 }
 
 TEST_F(TestLoggingMacros, test_logging_expression) {
@@ -133,14 +151,14 @@ TEST_F(TestLoggingMacros, test_logging_function) {
 
 TEST_F(TestLoggingMacros, test_logging_skipfirst) {
   for (uint32_t i : {1, 2, 3, 4, 5}) {
-    RCUTILS_LOG_WARN_SKIPFIRST("message %u", i);
+    ROS_WARN_SKIPFIRST("name", "message %u", i);
     EXPECT_EQ(i - 1, g_log_calls);
   }
 }
 
 TEST_F(TestLoggingMacros, test_logging_throttle) {
   for (int i : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}) {
-    RCUTILS_LOG_ERROR_THROTTLE(RCUTILS_STEADY_TIME, 50 /* ms */, "throttled message %d", i)
+    ROS_ERROR_THROTTLE("name", RCUTILS_STEADY_TIME, 50 /* ms */, "throttled message %d", i)
     using namespace std::chrono_literals;
     std::this_thread::sleep_for(30ms);
   }
@@ -152,8 +170,8 @@ TEST_F(TestLoggingMacros, test_logging_throttle) {
 
 TEST_F(TestLoggingMacros, test_logging_skipfirst_throttle) {
   for (int i : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}) {
-    RCUTILS_LOG_FATAL_SKIPFIRST_THROTTLE(
-      RCUTILS_STEADY_TIME, 50 /* ms */, "throttled message %d", i)
+    ROS_FATAL_SKIPFIRST_THROTTLE(
+      "name", RCUTILS_STEADY_TIME, 50 /* ms */, "throttled message %d", i)
     using namespace std::chrono_literals;
     std::this_thread::sleep_for(30ms);
   }
@@ -161,19 +179,4 @@ TEST_F(TestLoggingMacros, test_logging_skipfirst_throttle) {
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_FATAL, g_last_log_event.level);
   EXPECT_EQ("", g_last_log_event.name);
   EXPECT_EQ("throttled message 8", g_last_log_event.message);
-}
-
-TEST_F(TestLoggingMacros, test_logger_hierarchy) {
-  ASSERT_EQ(
-    RCUTILS_RET_OK,
-    rcutils_logging_set_logger_severity_threshold(
-      "rcutils_test_logging_macros_cpp", RCUTILS_LOG_SEVERITY_WARN));
-  RCUTILS_LOG_INFO_NAMED("rcutils_test_logging_macros_cpp.testing.x.y.x", "message");
-  // check that no call was made to the underlying log function
-  EXPECT_EQ(0u, g_log_calls);
-
-  // check that nameless log calls get the default severity threshold
-  rcutils_logging_set_default_severity_threshold(RCUTILS_LOG_SEVERITY_INFO);
-  RCUTILS_LOG_DEBUG("message");
-  EXPECT_EQ(0u, g_log_calls);
 }
