@@ -16,6 +16,7 @@
 #define RCLCPP_LIFECYCLE__TRANSITION_HPP_
 
 #include <string>
+#include <utility>
 
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
@@ -67,6 +68,10 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   State
   goal_state() const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  friend void
+  swap(Transition & lhs, const Transition & rhs);
 
 protected:
   bool owns_rcl_transition_handle_;

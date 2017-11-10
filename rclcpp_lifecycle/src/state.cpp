@@ -14,17 +14,37 @@
 
 #include "rclcpp_lifecycle/state.hpp"
 
-#include <lifecycle_msgs/msg/state.hpp>
-
-#include <rcutils/allocator.h>
-#include <rcutils/strdup.h>
-
-#include <rcl_lifecycle/data_types.h>
-
 #include <string>
+#include <utility>
+
+#include "lifecycle_msgs/msg/state.hpp"
+
+#include "rcutils/allocator.h"
+#include "rcutils/strdup.h"
+
+#include "rcl_lifecycle/data_types.h"
 
 namespace rclcpp_lifecycle
 {
+
+void
+swap(rcl_lifecycle_state_t * lhs, const rcl_lifecycle_state_t * rhs)
+{
+  lhs->id = rhs->id;
+  lhs->label = rcutils_strndup(rhs->label, strlen(rhs->label), rcutils_get_default_allocator());
+}
+
+void
+swap(State & lhs, const State & rhs)
+{
+  if (lhs.owns_rcl_state_handle_) {
+    auto state_handle = new rcl_lifecycle_state_t;
+    swap(state_handle, rhs.state_handle_);
+    lhs.state_handle_ = state_handle;
+  } else {
+    lhs.state_handle_ = rhs.state_handle_;
+  }
+}
 
 State::State()
 : State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown")
@@ -54,17 +74,7 @@ State::State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle)
 State::State(const State & rhs)
 : owns_rcl_state_handle_(rhs.owns_rcl_state_handle_)
 {
-  if (owns_rcl_state_handle_) {
-    auto state_handle = new rcl_lifecycle_state_t;
-    state_handle->id = rhs.state_handle_->id;
-    state_handle->label = rcutils_strndup(
-      rhs.state_handle_->label,
-      strlen(rhs.state_handle_->label),
-      rcutils_get_default_allocator());
-    state_handle_ = state_handle;
-  } else {
-    state_handle_ = rhs.state_handle_;
-  }
+  swap(*this, rhs);
 }
 
 State::~State()
@@ -77,17 +87,9 @@ State::~State()
 State &
 State::operator=(const State & rhs)
 {
-  owns_rcl_state_handle_ = rhs.owns_rcl_state_handle_;
-  if (owns_rcl_state_handle_) {
-    auto state_handle = new rcl_lifecycle_state_t;
-    state_handle->id = rhs.state_handle_->id;
-    state_handle->label = rcutils_strndup(
-      rhs.state_handle_->label,
-      strlen(rhs.state_handle_->label),
-      rcutils_get_default_allocator());
-    state_handle_ = state_handle;
-  } else {
-    state_handle_ = rhs.state_handle_;
+  if (this != &rhs) {
+    owns_rcl_state_handle_ = rhs.owns_rcl_state_handle_;
+    swap(*this, rhs);
   }
 
   return *this;

@@ -14,17 +14,42 @@
 
 #include "rclcpp_lifecycle/transition.hpp"
 
-#include <lifecycle_msgs/msg/transition.hpp>
-
-#include <rcl_lifecycle/data_types.h>
-
-#include <rcutils/allocator.h>
-#include <rcutils/strdup.h>
-
 #include <string>
+#include <utility>
+
+#include "lifecycle_msgs/msg/transition.hpp"
+
+#include "rcl_lifecycle/data_types.h"
+
+#include "rcutils/allocator.h"
+#include "rcutils/strdup.h"
 
 namespace rclcpp_lifecycle
 {
+
+void
+swap(rcl_lifecycle_transition_t * lhs, const rcl_lifecycle_transition_t * rhs)
+{
+  lhs->id = rhs->id;
+  lhs->label = rcutils_strndup(rhs->label, strlen(rhs->label), rcutils_get_default_allocator());
+}
+
+void
+swap(Transition & lhs, const Transition & rhs)
+{
+  if (lhs.owns_rcl_transition_handle_) {
+    auto transition_handle = new rcl_lifecycle_transition_t;
+    swap(transition_handle, rhs.transition_handle_);
+
+    // don't deep copy the start and goal states
+    // because a matching is done via pointer address
+    transition_handle->start = rhs.transition_handle_->start;
+    transition_handle->goal = rhs.transition_handle_->goal;
+    lhs.transition_handle_ = transition_handle;
+  } else {
+    lhs.transition_handle_ = rhs.transition_handle_;
+  }
+}
 
 Transition::Transition(uint8_t id, const std::string & label)
 : owns_rcl_transition_handle_(true)
@@ -73,22 +98,7 @@ Transition::Transition(const rcl_lifecycle_transition_t * rcl_lifecycle_transiti
 Transition::Transition(const Transition & rhs)
 : owns_rcl_transition_handle_(rhs.owns_rcl_transition_handle_)
 {
-  if (owns_rcl_transition_handle_) {
-    auto transition_handle = new rcl_lifecycle_transition_t;
-    transition_handle->id = rhs.transition_handle_->id;
-    transition_handle->label = rcutils_strndup(
-      rhs.transition_handle_->label,
-      strlen(rhs.transition_handle_->label),
-      rcutils_get_default_allocator());
-
-    // don't deep copy the start and goal states
-    // because a matching is done via pointer address
-    transition_handle->start = rhs.transition_handle_->start;
-    transition_handle->goal = rhs.transition_handle_->goal;
-    transition_handle_ = transition_handle;
-  } else {
-    transition_handle_ = rhs.transition_handle_;
-  }
+  swap(*this, rhs);
 }
 
 Transition::~Transition()
@@ -107,22 +117,8 @@ Transition::~Transition()
 Transition &
 Transition::operator=(const Transition & rhs)
 {
-  owns_rcl_transition_handle_ = rhs.owns_rcl_transition_handle_;
-  if (owns_rcl_transition_handle_) {
-    auto transition_handle = new rcl_lifecycle_transition_t;
-    transition_handle->id = rhs.transition_handle_->id;
-    transition_handle->label = rcutils_strndup(
-      rhs.transition_handle_->label,
-      strlen(rhs.transition_handle_->label),
-      rcutils_get_default_allocator());
-
-    // don't deep copy the start and goal states
-    // because a matching is done via pointer address
-    transition_handle->start = rhs.transition_handle_->start;
-    transition_handle->goal = rhs.transition_handle_->goal;
-    transition_handle_ = transition_handle;
-  } else {
-    transition_handle_ = rhs.transition_handle_;
+  if (this != &rhs) {
+    swap(*this, rhs);
   }
 
   return *this;

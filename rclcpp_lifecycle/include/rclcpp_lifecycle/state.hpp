@@ -16,6 +16,7 @@
 #define RCLCPP_LIFECYCLE__STATE_HPP_
 
 #include <string>
+#include <utility>
 
 #include "rclcpp_lifecycle/visibility_control.h"
 
@@ -53,6 +54,10 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   std::string
   label() const;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  friend void
+  swap(State & lhs, const State & rhs);
 
 protected:
   bool owns_rcl_state_handle_;
