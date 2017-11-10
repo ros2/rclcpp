@@ -44,7 +44,7 @@ from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
 
-excluded_features = ['named']
+excluded_features = ['named', 'throttle']
 def is_supported_feature_combination(feature_combination):
     is_excluded = any([ef in feature_combination for ef in excluded_features])
     return not is_excluded

@@ -155,28 +155,3 @@ TEST_F(TestLoggingMacros, test_logging_skipfirst) {
     EXPECT_EQ(i - 1, g_log_calls);
   }
 }
-
-TEST_F(TestLoggingMacros, test_logging_throttle) {
-  for (int i : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}) {
-    ROS_ERROR_THROTTLE("name", RCUTILS_STEADY_TIME, 50 /* ms */, "throttled message %d", i)
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(30ms);
-  }
-  EXPECT_EQ(5u, g_log_calls);
-  EXPECT_EQ(RCUTILS_LOG_SEVERITY_ERROR, g_last_log_event.level);
-  EXPECT_EQ("", g_last_log_event.name);
-  EXPECT_EQ("throttled message 8", g_last_log_event.message);
-}
-
-TEST_F(TestLoggingMacros, test_logging_skipfirst_throttle) {
-  for (int i : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}) {
-    ROS_FATAL_SKIPFIRST_THROTTLE(
-      "name", RCUTILS_STEADY_TIME, 50 /* ms */, "throttled message %d", i)
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(30ms);
-  }
-  EXPECT_EQ(4u, g_log_calls);
-  EXPECT_EQ(RCUTILS_LOG_SEVERITY_FATAL, g_last_log_event.level);
-  EXPECT_EQ("", g_last_log_event.name);
-  EXPECT_EQ("throttled message 8", g_last_log_event.message);
-}
