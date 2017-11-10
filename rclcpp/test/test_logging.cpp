@@ -79,8 +79,8 @@ TEST_F(TestLoggingMacros, test_logging_named) {
   EXPECT_TRUE(g_last_log_event.location != NULL);
   if (g_last_log_event.location) {
     EXPECT_STREQ("TestBody", g_last_log_event.location->function_name);
-    EXPECT_THAT(g_last_log_event.location->file_name, EndsWith("test_logging_macros.cpp"));
-    EXPECT_EQ(78u, g_last_log_event.location->line_number);
+    EXPECT_THAT(g_last_log_event.location->file_name, EndsWith("test_logging.cpp"));
+    EXPECT_EQ(76u, g_last_log_event.location->line_number);
   }
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_DEBUG, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
@@ -88,12 +88,12 @@ TEST_F(TestLoggingMacros, test_logging_named) {
 
   // Test different name inputs
   std::string std_string_name = "name";
-  ROS_DEBUG(std_string_name, "message %d", i);
+  ROS_DEBUG(std_string_name, "message");
   EXPECT_EQ("name", g_last_log_event.name);
-  const char * c_string_name[5] = "name";
-  ROS_DEBUG(c_string_name, "message %d", i);
+  const char * c_string_name = "name";
+  ROS_DEBUG(c_string_name, "message");
   EXPECT_EQ("name", g_last_log_event.name);
-  ROS_DEBUG(std_string_name + c_string_name, "message %d", i);
+  ROS_DEBUG(std_string_name + c_string_name, "message");
   EXPECT_EQ("namename", g_last_log_event.name);
 }
 
@@ -103,7 +103,7 @@ TEST_F(TestLoggingMacros, test_logging_once) {
   }
   EXPECT_EQ(1u, g_log_calls);
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
-  EXPECT_EQ("", g_last_log_event.name);
+  EXPECT_EQ("name", g_last_log_event.name);
   EXPECT_EQ("message 1", g_last_log_event.message);
 }
 
@@ -125,7 +125,7 @@ bool mod3()
 TEST_F(TestLoggingMacros, test_logging_function) {
   for (int i : {1, 2, 3, 4, 5, 6}) {
     g_counter = i;
-    ROS_INFO_FUNCTION(&mod3, "message %d", i);
+    ROS_INFO_FUNCTION("name", &mod3, "message %d", i);
   }
   EXPECT_EQ(4u, g_log_calls);
   EXPECT_EQ("message 5", g_last_log_event.message);
