@@ -43,6 +43,11 @@ from rcutils.logging import feature_combinations
 from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
+
+excluded_features = ['named']
+def is_supported_feature_combination(feature_combination):
+    is_excluded = any([ef in feature_combination for ef in excluded_features])
+    return not is_excluded
 }@
 @[for severity in severities]@
 /** @@name Logging macros for severity @(severity).
@@ -50,14 +55,14 @@ from rcutils.logging import severities
 ///@@{
 #if (RCLCPP_LOG_MIN_SEVERITY > RCLCPP_LOG_MIN_SEVERITY_@(severity))
 // empty logging macros for severity @(severity) when being disabled at compile time
-@[ for feature_combination in [fc for fc in feature_combinations if 'named' not in fc]]@
+@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
 @{suffix = get_suffix_from_features(feature_combination)}@
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define ROS_@(severity)@(suffix)(...)
 @[ end for]@
 
 #else
-@[ for feature_combination in [fc for fc in feature_combinations if 'named' not in fc]]@
+@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
 @{suffix = get_suffix_from_features(feature_combination)}@
 /**
  * \def ROS_@(severity)@(suffix)
