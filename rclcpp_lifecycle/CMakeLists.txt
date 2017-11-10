@@ -90,6 +90,15 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_state_wrapper ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_transition_wrapper test/test_transition_wrapper.cpp)
+  if(TARGET test_transition_wrapper)
+    target_include_directories(test_transition_wrapper PUBLIC
+      ${rcl_lifecycle_INCLUDE_DIRS}
+      ${rclcpp_INCLUDE_DIRS}
+      ${rclcpp_lifecycle_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_transition_wrapper ${PROJECT_NAME})
+  endif()
 endif()
 
 ament_export_dependencies(rclcpp)

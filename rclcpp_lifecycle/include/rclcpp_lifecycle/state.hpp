@@ -38,7 +38,13 @@ public:
   explicit State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle);
 
   RCLCPP_LIFECYCLE_PUBLIC
+  State(const State & rhs);
+
+  RCLCPP_LIFECYCLE_PUBLIC
   virtual ~State();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  State & operator=(const State & rhs);
 
   RCLCPP_LIFECYCLE_PUBLIC
   uint8_t

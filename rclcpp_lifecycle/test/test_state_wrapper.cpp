@@ -75,3 +75,24 @@ TEST_F(TestStateWrapper, wrapper) {
   //  EXPECT_STREQ("my_c_state", c_state.label().c_str());
   // }
 }
+
+TEST_F(TestStateWrapper, copy_constructor) {
+  auto a = std::make_shared<rclcpp_lifecycle::State>(1, "my_c_state");
+  rclcpp_lifecycle::State b(*a);
+
+  a.reset();
+
+  EXPECT_EQ(1, b.id());
+  EXPECT_STREQ("my_c_state", b.label().c_str());
+}
+
+TEST_F(TestStateWrapper, assignment_operator) {
+  auto a = std::make_shared<rclcpp_lifecycle::State>(1, "one");
+  auto b = std::make_shared<rclcpp_lifecycle::State>(2, "two");
+  *b = *a;
+
+  a.reset();
+
+  EXPECT_EQ(1, b->id());
+  EXPECT_STREQ("one", b->label().c_str());
+}

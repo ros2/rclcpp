@@ -44,7 +44,13 @@ public:
   explicit Transition(const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle);
 
   RCLCPP_LIFECYCLE_PUBLIC
+  Transition(const Transition & rhs);
+
+  RCLCPP_LIFECYCLE_PUBLIC
   virtual ~Transition();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  Transition & operator=(const Transition & rhs);
 
   RCLCPP_LIFECYCLE_PUBLIC
   uint8_t
