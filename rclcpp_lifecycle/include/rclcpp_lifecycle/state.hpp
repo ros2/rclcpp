@@ -16,11 +16,11 @@
 #define RCLCPP_LIFECYCLE__STATE_HPP_
 
 #include <string>
-#include <utility>
 
 #include "rclcpp_lifecycle/visibility_control.h"
 
-// forward declare rcl_state_t
+#include "rcutils/allocator.h"
+
 typedef struct rcl_lifecycle_state_t rcl_lifecycle_state_t;
 
 namespace rclcpp_lifecycle
@@ -30,13 +30,18 @@ class State
 {
 public:
   RCLCPP_LIFECYCLE_PUBLIC
-  State();
+  explicit State(rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC
-  State(uint8_t id, const std::string & label);
+  State(
+    uint8_t id,
+    const std::string & label,
+    rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC
-  explicit State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle);
+  explicit State(
+    const rcl_lifecycle_state_t * rcl_lifecycle_state_handle,
+    rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC
   State(const State & rhs);
@@ -57,10 +62,13 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   friend void
-  swap(State & lhs, const State & rhs);
+  copy_from(State & lhs, const State & rhs);
 
 protected:
+  rcutils_allocator_t allocator_;
+
   bool owns_rcl_state_handle_;
+
   const rcl_lifecycle_state_t * state_handle_;
 };
 
