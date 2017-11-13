@@ -339,7 +339,7 @@ Executor::execute_client(
     response.get());
   if (status == RCL_RET_OK) {
     client->handle_response(request_header, response);
-  } else if (status != RCL_RET_CLIENT_TAKE_FAILED) {
+  } else {
     fprintf(stderr,
       "[rclcpp::error] take response failed for client of service '%s': %s\n",
       client->get_service_name().c_str(), rcl_get_error_string_safe());
