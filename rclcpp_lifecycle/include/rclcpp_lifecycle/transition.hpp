@@ -75,16 +75,16 @@ public:
   State
   goal_state() const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
-  friend void
-  copy_from(Transition & lhs, const Transition & rhs);
-
 protected:
   rcutils_allocator_t allocator_;
 
   bool owns_rcl_transition_handle_;
 
   const rcl_lifecycle_transition_t * transition_handle_;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  copy_from(Transition & lhs, const Transition & rhs);
 };
 
 }  // namespace rclcpp_lifecycle

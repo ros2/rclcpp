@@ -60,16 +60,16 @@ public:
   std::string
   label() const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
-  friend void
-  copy_from(State & lhs, const State & rhs);
-
 protected:
   rcutils_allocator_t allocator_;
 
   bool owns_rcl_state_handle_;
 
   const rcl_lifecycle_state_t * state_handle_;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  copy_from(State & lhs, const State & rhs);
 };
 
 }  // namespace rclcpp_lifecycle
