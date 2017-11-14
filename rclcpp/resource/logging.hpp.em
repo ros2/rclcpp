@@ -58,14 +58,14 @@ def is_supported_feature_combination(feature_combination):
 @[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
 @{suffix = get_suffix_from_features(feature_combination)}@
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
-#define ROS_@(severity)@(suffix)(...)
+#define RCLCPP_@(severity)@(suffix)(...)
 @[ end for]@
 
 #else
 @[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
 @{suffix = get_suffix_from_features(feature_combination)}@
 /**
- * \def ROS_@(severity)@(suffix)
+ * \def RCLCPP_@(severity)@(suffix)
  * Log a message with severity @(severity)@
 @[ if feature_combinations[feature_combination].doc_lines]@
  with the following conditions:
@@ -80,7 +80,7 @@ def is_supported_feature_combination(feature_combination):
 @[ end for]@
  * \param ... The format string, followed by the variable arguments for the format string
  */
-#define ROS_@(severity)@(suffix)(name, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+#define RCLCPP_@(severity)@(suffix)(name, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
   RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = get_macro_parameters(feature_combination).keys()}@
 @[ if params]@

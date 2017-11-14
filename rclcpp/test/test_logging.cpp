@@ -75,7 +75,7 @@ public:
 
 TEST_F(TestLoggingMacros, test_logging_named) {
   for (int i : {1, 2, 3}) {
-    ROS_DEBUG("name", "message %d", i);
+    RCLCPP_DEBUG("name", "message %d", i);
   }
   EXPECT_EQ(3u, g_log_calls);
   EXPECT_TRUE(g_last_log_event.location != NULL);
@@ -90,25 +90,25 @@ TEST_F(TestLoggingMacros, test_logging_named) {
 
   // Test different name inputs
   std::string std_string_name = "name";
-  ROS_DEBUG(std_string_name, "message");
+  RCLCPP_DEBUG(std_string_name, "message");
   EXPECT_EQ("name", g_last_log_event.name);
 
   const char * c_string_name = "name";
-  ROS_DEBUG(c_string_name, "message");
+  RCLCPP_DEBUG(c_string_name, "message");
   EXPECT_EQ("name", g_last_log_event.name);
 
-  ROS_DEBUG(std_string_name + c_string_name, "message");
+  RCLCPP_DEBUG(std_string_name + c_string_name, "message");
   EXPECT_EQ("namename", g_last_log_event.name);
 
-  ROS_DEBUG(RCLCPP_TEST_LOGGING_MACRO_NAME, "message");
+  RCLCPP_DEBUG(RCLCPP_TEST_LOGGING_MACRO_NAME, "message");
   EXPECT_EQ(RCLCPP_TEST_LOGGING_MACRO_NAME, g_last_log_event.name);
-  ROS_DEBUG(std::string(RCLCPP_TEST_LOGGING_MACRO_NAME) + std_string_name, "message");
+  RCLCPP_DEBUG(std::string(RCLCPP_TEST_LOGGING_MACRO_NAME) + std_string_name, "message");
   EXPECT_EQ("namename", g_last_log_event.name);
 }
 
 TEST_F(TestLoggingMacros, test_logging_once) {
   for (int i : {1, 2, 3}) {
-    ROS_INFO_ONCE("name", "message %d", i);
+    RCLCPP_INFO_ONCE("name", "message %d", i);
   }
   EXPECT_EQ(1u, g_log_calls);
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
@@ -117,7 +117,7 @@ TEST_F(TestLoggingMacros, test_logging_once) {
 
   // Check that different instances have independent contexts
   for (int i : {1, 2, 3}) {
-    ROS_INFO_ONCE("name", "second message %d", i);
+    RCLCPP_INFO_ONCE("name", "second message %d", i);
   }
   EXPECT_EQ(2u, g_log_calls);  // 1 for each instance of "once" log call
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
@@ -127,7 +127,7 @@ TEST_F(TestLoggingMacros, test_logging_once) {
 
 TEST_F(TestLoggingMacros, test_logging_expression) {
   for (int i : {1, 2, 3, 4, 5, 6}) {
-    ROS_INFO_EXPRESSION("name", i % 3, "message %d", i);
+    RCLCPP_INFO_EXPRESSION("name", i % 3, "message %d", i);
   }
   EXPECT_EQ(4u, g_log_calls);
   EXPECT_EQ("message 5", g_last_log_event.message);
@@ -143,7 +143,7 @@ bool mod3()
 TEST_F(TestLoggingMacros, test_logging_function) {
   for (int i : {1, 2, 3, 4, 5, 6}) {
     g_counter = i;
-    ROS_INFO_FUNCTION("name", &mod3, "message %d", i);
+    RCLCPP_INFO_FUNCTION("name", &mod3, "message %d", i);
   }
   EXPECT_EQ(4u, g_log_calls);
   EXPECT_EQ("message 5", g_last_log_event.message);
@@ -151,7 +151,7 @@ TEST_F(TestLoggingMacros, test_logging_function) {
 
 TEST_F(TestLoggingMacros, test_logging_skipfirst) {
   for (uint32_t i : {1, 2, 3, 4, 5}) {
-    ROS_WARN_SKIPFIRST("name", "message %u", i);
+    RCLCPP_WARN_SKIPFIRST("name", "message %u", i);
     EXPECT_EQ(i - 1, g_log_calls);
   }
 }
