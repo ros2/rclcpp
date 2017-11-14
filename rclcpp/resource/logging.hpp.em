@@ -44,6 +44,7 @@ from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
 
+# TODO(dhood): Implement the throttle macro using time sources available in rclcpp
 excluded_features = ['named', 'throttle']
 def is_supported_feature_combination(feature_combination):
     is_excluded = any([ef in feature_combination for ef in excluded_features])
@@ -81,6 +82,7 @@ def is_supported_feature_combination(feature_combination):
 @[ end for]@
  * \param ... The format string, followed by the variable arguments for the format string
  */
+// TODO(dhood): Replace the name argument with a logger object.
 #define RCLCPP_@(severity)@(suffix)(name, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
   RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = get_macro_parameters(feature_combination).keys()}@
