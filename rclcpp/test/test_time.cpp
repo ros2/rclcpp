@@ -60,11 +60,6 @@ TEST(TestTime, time_sources) {
   Time steady_now = steady_clock.now();
   EXPECT_NE(0, steady_now.sec);
   EXPECT_NE(0u, steady_now.nanosec);
-
-  // // default
-  // Time default_now = rclcpp::Time::now();
-  // EXPECT_NE(0, default_now.sec);
-  // EXPECT_NE(0u, default_now.nanosec);
 }
 
 TEST(TestTime, conversions) {

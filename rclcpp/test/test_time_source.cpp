@@ -90,11 +90,6 @@ TEST_F(TestTimeSource, clock) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  // builtin_interfaces::msg::Time::SharedPtr last_msg;
-  // auto clock_sub = node->create_subscription<builtin_interfaces::msg::Time>(
-  //   "clock", [&](builtin_interfaces::msg::Time::SharedPtr msg) {last_msg = msg;},
-  //   rmw_qos_profile_default);
-
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
       rmw_qos_profile_default);
   rclcpp::WallRate loop_rate(50);
