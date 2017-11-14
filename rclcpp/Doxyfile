@@ -4,7 +4,12 @@ PROJECT_NAME           = "rclcpp"
 PROJECT_NUMBER         = master
 PROJECT_BRIEF          = "C++ ROS Client Library API"
 
+# Use these lines to include the generated logging.hpp (update install path if needed)
+#INPUT                  = ../../../../install_isolated/rclcpp/include
+#STRIP_FROM_PATH        = /Users/william/ros2_ws/install_isolated/rclcpp/include
+# Otherwise just generate for the local (non-generated header files)
 INPUT                  = ./include
+
 RECURSIVE              = YES
 OUTPUT_DIRECTORY       = doc_output
 
