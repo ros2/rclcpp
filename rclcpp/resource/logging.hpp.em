@@ -75,6 +75,7 @@ def is_supported_feature_combination(feature_combination):
 @[ for doc_line in feature_combinations[feature_combination].doc_lines]@
  * @(doc_line)
 @[ end for]@
+ * \param name The name of the logger
 @[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
