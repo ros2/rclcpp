@@ -115,11 +115,12 @@ TEST_F(TestLoggingMacros, test_logging_once) {
   EXPECT_EQ("name", g_last_log_event.name);
   EXPECT_EQ("message 1", g_last_log_event.message);
 
-  // Check that different instances have independent contexts
+  // Check that another instance has a context that's independent to the call above's
+  g_log_calls = 0;
   for (int i : {1, 2, 3}) {
     RCLCPP_INFO_ONCE("name", "second message %d", i);
   }
-  EXPECT_EQ(2u, g_log_calls);  // 1 for each instance of "once" log call
+  EXPECT_EQ(1u, g_log_calls);
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
   EXPECT_EQ("second message 1", g_last_log_event.message);
