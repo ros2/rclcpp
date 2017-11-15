@@ -110,6 +110,4 @@
 #define RCLCPP_STRING_JOIN(arg1, arg2) RCLCPP_DO_STRING_JOIN(arg1, arg2)
 #define RCLCPP_DO_STRING_JOIN(arg1, arg2) arg1 ## arg2
 
-#define RCLCPP_INFO(Args) std::cout << Args << std::endl;
-
 #endif  // RCLCPP__MACROS_HPP_

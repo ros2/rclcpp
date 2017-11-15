@@ -110,6 +110,13 @@
  *   - rclcpp::context::Context
  *   - rclcpp/context.hpp
  *   - rclcpp/contexts/default_context.hpp
+ * - Logging macros:
+ *   - Some examples (not exhaustive):
+ *     - RCLCPP_DEBUG()
+ *     - RCLCPP_INFO()
+ *     - RCLCPP_WARN_ONCE()
+ *     - RCLCPP_ERROR_SKIPFIRST()
+ *   - rclcpp/logging.hpp
  * - Various utilities:
  *   - rclcpp/function_traits.hpp
  *   - rclcpp/macros.hpp
@@ -126,6 +133,7 @@
 #include <memory>
 
 #include "rclcpp/executors.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_client.hpp"
