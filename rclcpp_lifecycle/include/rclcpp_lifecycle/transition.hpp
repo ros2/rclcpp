@@ -82,8 +82,13 @@ protected:
 
   const rcl_lifecycle_transition_t * transition_handle_;
 
+  // TODO(karsten1987) Refactor this into a rcl_lifecycle_*_fini function
   RCLCPP_LIFECYCLE_PUBLIC
-  void
+  friend void
+  free_resources(Transition & instance);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  friend void
   copy_from(Transition & lhs, const Transition & rhs);
 };
 

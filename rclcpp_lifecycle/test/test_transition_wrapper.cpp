@@ -28,6 +28,11 @@ protected:
   }
 };
 
+TEST_F(TestTransitionWrapper, empty_transition) {
+  auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "my_transition");
+  EXPECT_NO_THROW(a.reset());
+}
+
 TEST_F(TestTransitionWrapper, wrapper) {
   rclcpp_lifecycle::State start_state(1, "start_state");
   rclcpp_lifecycle::State goal_state(2, "goal_state");

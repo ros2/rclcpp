@@ -31,7 +31,8 @@ Transition::Transition(
   const std::string & label,
   rcutils_allocator_t allocator)
 : allocator_(allocator),
-  owns_rcl_transition_handle_(true)
+  owns_rcl_transition_handle_(true),
+  transition_handle_(nullptr)
 {
   auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
@@ -49,7 +50,8 @@ Transition::Transition(
   State && start, State && goal,
   rcutils_allocator_t allocator)
 : allocator_(allocator),
-  owns_rcl_transition_handle_(true)
+  owns_rcl_transition_handle_(true),
+  transition_handle_(nullptr)
 {
   auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
@@ -78,54 +80,29 @@ Transition::Transition(
   const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle,
   rcutils_allocator_t allocator)
 : allocator_(allocator),
-  owns_rcl_transition_handle_(false)
+  owns_rcl_transition_handle_(false),
+  transition_handle_(nullptr)
 {
   transition_handle_ = rcl_lifecycle_transition_handle;
 }
 
 Transition::Transition(const Transition & rhs)
 : allocator_(rhs.allocator_),
-  owns_rcl_transition_handle_(rhs.owns_rcl_transition_handle_)
+  owns_rcl_transition_handle_(rhs.owns_rcl_transition_handle_),
+  transition_handle_(nullptr)
 {
   copy_from(*this, rhs);
 }
 
 Transition::~Transition()
 {
-  if (owns_rcl_transition_handle_) {
-    if (transition_handle_->start) {
-      allocator_.deallocate(transition_handle_->start->label, allocator_.state);
-      allocator_.deallocate(transition_handle_->start, allocator_.state);
-    }
-    if (transition_handle_->goal) {
-      allocator_.deallocate(transition_handle_->goal->label, allocator_.state);
-      allocator_.deallocate(transition_handle_->goal, allocator_.state);
-    }
-    allocator_.deallocate(transition_handle_->label, allocator_.state);
-    allocator_.deallocate(
-      const_cast<rcl_lifecycle_transition_t *>(transition_handle_), allocator_.state);
-  }
+  free_resources(*this);
 }
 
 Transition &
 Transition::operator=(const Transition & rhs)
 {
   if (this != &rhs) {
-    if (owns_rcl_transition_handle_) {
-      if (transition_handle_->start) {
-        allocator_.deallocate(transition_handle_->start->label, allocator_.state);
-        allocator_.deallocate(transition_handle_->start, allocator_.state);
-      }
-      if (transition_handle_->goal) {
-        allocator_.deallocate(transition_handle_->goal->label, allocator_.state);
-        allocator_.deallocate(transition_handle_->goal, allocator_.state);
-      }
-      allocator_.deallocate(transition_handle_->label, allocator_.state);
-      allocator_.deallocate(
-        const_cast<rcl_lifecycle_transition_t *>(transition_handle_), allocator_.state);
-    }
-    allocator_ = rhs.allocator_;
-    owns_rcl_transition_handle_ = rhs.transition_handle_;
     copy_from(*this, rhs);
   }
 
@@ -157,16 +134,66 @@ Transition::goal_state() const
 }
 
 void
-Transition::copy_from(Transition & lhs, const Transition & rhs)
+free_resources(Transition & instance)
+{
+  // nothing to free here
+  if (!instance.transition_handle_) {
+    return;
+  }
+
+  // can't free anything which is not owned
+  if (!instance.owns_rcl_transition_handle_) {
+    return;
+  }
+
+  if (instance.transition_handle_->start) {
+    if (instance.transition_handle_->start->label) {
+      instance.allocator_.deallocate(
+        const_cast<char *>(instance.transition_handle_->start->label),
+        instance.allocator_.state);
+    }
+    instance.allocator_.deallocate(
+      const_cast<rcl_lifecycle_state_t *>(instance.transition_handle_->start),
+      instance.allocator_.state);
+  }
+  if (instance.transition_handle_->goal) {
+    if (instance.transition_handle_->goal->label) {
+      instance.allocator_.deallocate(
+        const_cast<char *>(instance.transition_handle_->goal->label),
+        instance.allocator_.state);
+    }
+    instance.allocator_.deallocate(
+      const_cast<rcl_lifecycle_state_t *>(instance.transition_handle_->goal),
+      instance.allocator_.state);
+  }
+  if (instance.transition_handle_) {
+    if (instance.transition_handle_->label) {
+      instance.allocator_.deallocate(
+        const_cast<char *>(instance.transition_handle_->label),
+        instance.allocator_.state);
+    }
+    instance.allocator_.deallocate(
+      const_cast<rcl_lifecycle_transition_t *>(instance.transition_handle_),
+      instance.allocator_.state);
+  }
+}
+
+void
+copy_from(Transition & lhs, const Transition & rhs)
 {
   if (lhs.owns_rcl_transition_handle_) {
+    free_resources(lhs);
+
+    lhs.allocator_ = rhs.allocator_;
+    lhs.owns_rcl_transition_handle_ = rhs.transition_handle_;
+
     auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
-      rhs.allocator_.allocate(sizeof(rcl_lifecycle_transition_t), rhs.allocator_.state));
+      lhs.allocator_.allocate(sizeof(rcl_lifecycle_transition_t), lhs.allocator_.state));
     transition_handle->id = rhs.transition_handle_->id;
     transition_handle->label = rcutils_strndup(
       rhs.transition_handle_->label,
       strlen(rhs.transition_handle_->label),
-      rhs.allocator_);
+      lhs.allocator_);
 
     // don't deep copy the start and goal states
     // because a matching is done via pointer address

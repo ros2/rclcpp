@@ -68,7 +68,11 @@ protected:
   const rcl_lifecycle_state_t * state_handle_;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  void
+  friend void
+  free_resources(State & instance);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  friend void
   copy_from(State & lhs, const State & rhs);
 };
 
