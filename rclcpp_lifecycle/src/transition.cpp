@@ -184,7 +184,7 @@ Transition::assign(const Transition & rhs)
     reset();
 
     allocator_ = rhs.allocator_;
-    owns_rcl_transition_handle_ = rhs.transition_handle_;
+    owns_rcl_transition_handle_ = rhs.owns_rcl_transition_handle_;
   }
 
   if (owns_rcl_transition_handle_) {
