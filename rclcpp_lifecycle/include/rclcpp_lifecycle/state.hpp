@@ -65,15 +65,15 @@ protected:
 
   bool owns_rcl_state_handle_;
 
-  const rcl_lifecycle_state_t * state_handle_;
+  rcl_lifecycle_state_t * state_handle_;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  friend void
-  free_resources(State & instance);
+  void
+  reset();
 
   RCLCPP_LIFECYCLE_PUBLIC
-  friend void
-  copy_from(State & lhs, const State & rhs);
+  void
+  assign(const State & rhs);
 };
 
 }  // namespace rclcpp_lifecycle

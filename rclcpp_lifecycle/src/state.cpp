@@ -58,7 +58,7 @@ State::State(
   owns_rcl_state_handle_(false),
   state_handle_(nullptr)
 {
-  state_handle_ = rcl_lifecycle_state_handle;
+  state_handle_ = const_cast<rcl_lifecycle_state_t *>(rcl_lifecycle_state_handle);
 }
 
 State::State(const State & rhs)
@@ -66,19 +66,19 @@ State::State(const State & rhs)
   owns_rcl_state_handle_(rhs.owns_rcl_state_handle_),
   state_handle_(nullptr)
 {
-  copy_from(*this, rhs);
+  assign(rhs);
 }
 
 State::~State()
 {
-  free_resources(*this);
+  reset();
 }
 
 State &
 State::operator=(const State & rhs)
 {
   if (this != &rhs) {
-    copy_from(*this, rhs);
+    assign(rhs);
   }
 
   return *this;
@@ -103,47 +103,45 @@ State::label() const
 }
 
 void
-free_resources(State & instance)
+State::reset()
 {
   // nothing to free here
-  if (!instance.state_handle_) {
+  if (!state_handle_) {
+    owns_rcl_state_handle_ = false;
     return;
   }
-  if (!instance.owns_rcl_state_handle_) {
+  if (!owns_rcl_state_handle_) {
+    state_handle_ = nullptr;
     return;
   }
 
-  if (instance.state_handle_) {
-    if (instance.state_handle_->label) {
-      instance.allocator_.deallocate(
-        const_cast<char *>(instance.state_handle_->label),
-        instance.allocator_.state);
-    }
-    instance.allocator_.deallocate(
-      const_cast<rcl_lifecycle_state_t *>(instance.state_handle_),
-      instance.allocator_.state);
+  if (state_handle_->label) {
+    allocator_.deallocate(const_cast<char *>(state_handle_->label), allocator_.state);
+    state_handle_->label = nullptr;
   }
+  allocator_.deallocate(state_handle_, allocator_.state);
+  state_handle_ = nullptr;
 }
 
 void
-copy_from(State & lhs, const State & rhs)
+State::assign(const State & rhs)
 {
-  if (lhs.owns_rcl_state_handle_) {
-    free_resources(lhs);
+  reset();
 
-    lhs.allocator_ = rhs.allocator_;
-    lhs.owns_rcl_state_handle_ = rhs.owns_rcl_state_handle_;
+  allocator_ = rhs.allocator_;
+  owns_rcl_state_handle_ = rhs.owns_rcl_state_handle_;
 
+  if (owns_rcl_state_handle_) {
     auto state_handle = reinterpret_cast<rcl_lifecycle_state_t *>(
-      lhs.allocator_.allocate(sizeof(rcl_lifecycle_state_t), lhs.allocator_.state));
+      allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
     state_handle->id = rhs.state_handle_->id;
     state_handle->label = rcutils_strndup(
       rhs.state_handle_->label,
       strlen(rhs.state_handle_->label),
-      lhs.allocator_);
-    lhs.state_handle_ = state_handle;
+      allocator_);
+    state_handle_ = state_handle;
   } else {
-    lhs.state_handle_ = rhs.state_handle_;
+    state_handle_ = rhs.state_handle_;
   }
 }
 }  // namespace rclcpp_lifecycle

@@ -80,16 +80,16 @@ protected:
 
   bool owns_rcl_transition_handle_;
 
-  const rcl_lifecycle_transition_t * transition_handle_;
+  rcl_lifecycle_transition_t * transition_handle_;
 
   // TODO(karsten1987) Refactor this into a rcl_lifecycle_*_fini function
   RCLCPP_LIFECYCLE_PUBLIC
-  friend void
-  free_resources(Transition & instance);
+  void
+  reset();
 
   RCLCPP_LIFECYCLE_PUBLIC
-  friend void
-  copy_from(Transition & lhs, const Transition & rhs);
+  void
+  assign(const Transition & rhs);
 };
 
 }  // namespace rclcpp_lifecycle

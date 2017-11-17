@@ -97,3 +97,66 @@ TEST_F(TestStateWrapper, assignment_operator) {
   EXPECT_EQ(1, b->id());
   EXPECT_STREQ("one", b->label().c_str());
 }
+
+TEST_F(TestStateWrapper, assignment_operator2) {
+  // Non-owning State
+  rcl_lifecycle_state_t * lc_state1 =
+    new rcl_lifecycle_state_t{const_cast<char *>("my_c_state1"), 1, NULL, NULL, 0};
+  auto non_owning_state1 = std::make_shared<rclcpp_lifecycle::State>(lc_state1);
+
+  // Non-owning State
+  rcl_lifecycle_state_t * lc_state2 =
+    new rcl_lifecycle_state_t{const_cast<char *>("my_c_state2"), 2, NULL, NULL, 0};
+  auto non_owning_state2 = std::make_shared<rclcpp_lifecycle::State>(lc_state2);
+
+  *non_owning_state2 = *non_owning_state1;
+
+  EXPECT_EQ(1, non_owning_state2->id());
+  EXPECT_STREQ("my_c_state1", non_owning_state2->label().c_str());
+
+  non_owning_state1.reset();
+  non_owning_state2.reset();
+
+  delete lc_state1;
+  delete lc_state2;
+}
+
+TEST_F(TestStateWrapper, assignment_operator3) {
+  // Non-owning State
+  rcl_lifecycle_state_t * lc_state1 =
+    new rcl_lifecycle_state_t{const_cast<char *>("my_c_state1"), 1, NULL, NULL, 0};
+  auto non_owning_state1 = std::make_shared<rclcpp_lifecycle::State>(lc_state1);
+
+  // owning State
+  auto owning_state2 = std::make_shared<rclcpp_lifecycle::State>(2, "my_c_state2");
+
+  *owning_state2 = *non_owning_state1;
+
+  EXPECT_EQ(1, owning_state2->id());
+  EXPECT_STREQ("my_c_state1", owning_state2->label().c_str());
+
+  non_owning_state1.reset();
+  owning_state2.reset();
+
+  delete lc_state1;
+}
+
+TEST_F(TestStateWrapper, assignment_operator4) {
+  // Non-owning State
+  rcl_lifecycle_state_t * lc_state1 =
+    new rcl_lifecycle_state_t{const_cast<char *>("my_c_state1"), 1, NULL, NULL, 0};
+  auto non_owning_state1 = std::make_shared<rclcpp_lifecycle::State>(lc_state1);
+
+  // owning State
+  auto owning_state2 = std::make_shared<rclcpp_lifecycle::State>(2, "my_c_state2");
+
+  *non_owning_state1 = *owning_state2;
+
+  EXPECT_EQ(2, non_owning_state1->id());
+  EXPECT_STREQ("my_c_state2", non_owning_state1->label().c_str());
+
+  non_owning_state1.reset();
+  owning_state2.reset();
+
+  delete lc_state1;
+}
