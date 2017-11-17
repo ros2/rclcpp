@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/time.hpp"
-
+#include <limits>
 #include <utility>
+
+#include "rclcpp/clock.hpp"
+#include "rclcpp/duration.hpp"
 
 #include "builtin_interfaces/msg/time.hpp"
 
@@ -27,30 +29,11 @@
 namespace
 {
 
-rcl_time_source_t
-init_time_source(rcl_time_source_type_t clock = RCL_SYSTEM_TIME)
-{
-  rcl_time_source_t time_source;
-  auto ret = rcl_time_source_init(clock, &time_source);
-
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not initialize time source");
-  }
-
-  return time_source;
-}
-
 rcl_time_point_t
-init_time_point(rcl_time_source_t & time_source)
+init_time_point(rcl_clock_type_t & clock_type)
 {
   rcl_time_point_t time_point;
-  auto ret = rcl_time_point_init(&time_point, &time_source);
-
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not initialize time point");
-  }
+  time_point.clock_type = clock_type;
 
   return time_point;
 }
@@ -60,32 +43,8 @@ init_time_point(rcl_time_source_t & time_source)
 namespace rclcpp
 {
 
-Time
-Time::now(rcl_time_source_type_t clock)
-{
-  // TODO(karsten1987): This impl throws explicitely on RCL_ROS_TIME
-  // we have to do this, because rcl_time_source_init returns RCL_RET_OK
-  // for RCL_ROS_TIME, however defaults to system time under the hood.
-  // ref: https://github.com/ros2/rcl/blob/master/rcl/src/rcl/time.c#L66-L77
-  // This section can be removed when rcl supports ROS_TIME correctly.
-  if (clock == RCL_ROS_TIME) {
-    throw std::runtime_error("RCL_ROS_TIME is currently not implemented.");
-  }
-
-  Time now(0, 0, clock);
-
-  auto ret = rcl_time_point_get_now(&now.rcl_time_);
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not get current time stamp");
-  }
-
-  return now;
-}
-
-Time::Time(int32_t seconds, uint32_t nanoseconds, rcl_time_source_type_t clock)
-: rcl_time_source_(init_time_source(clock)),
-  rcl_time_(init_time_point(rcl_time_source_))
+Time::Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type)
+: rcl_time_(init_time_point(clock_type))
 {
   if (seconds < 0) {
     throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
@@ -95,24 +54,23 @@ Time::Time(int32_t seconds, uint32_t nanoseconds, rcl_time_source_type_t clock)
   rcl_time_.nanoseconds += nanoseconds;
 }
 
-Time::Time(uint64_t nanoseconds, rcl_time_source_type_t clock)
-: rcl_time_source_(init_time_source(clock)),
-  rcl_time_(init_time_point(rcl_time_source_))
+Time::Time(uint64_t nanoseconds, rcl_clock_type_t clock_type)
+: rcl_time_(init_time_point(clock_type))
 {
   rcl_time_.nanoseconds = nanoseconds;
 }
 
 Time::Time(const Time & rhs)
-: rcl_time_source_(init_time_source(rhs.rcl_time_source_.type)),
-  rcl_time_(init_time_point(rcl_time_source_))
+: rcl_time_(rhs.rcl_time_)
 {
   rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
 }
 
-Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
-: rcl_time_source_(init_time_source(RCL_SYSTEM_TIME)),
-  rcl_time_(init_time_point(rcl_time_source_))
+Time::Time(
+  const builtin_interfaces::msg::Time & time_msg,
+  rcl_clock_type_t ros_time)
 {
+  rcl_time_ = init_time_point(ros_time);
   if (time_msg.sec < 0) {
     throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
   }
@@ -121,14 +79,14 @@ Time::Time(const builtin_interfaces::msg::Time & time_msg)  // NOLINT
   rcl_time_.nanoseconds += time_msg.nanosec;
 }
 
+Time::Time(const rcl_time_point_t & time_point)
+: rcl_time_(time_point)
+{
+  // noop
+}
+
 Time::~Time()
 {
-  if (rcl_time_source_fini(&rcl_time_source_) != RCL_RET_OK) {
-    RCUTILS_LOG_FATAL("failed to reclaim rcl_time_source_t in destructor of rclcpp::Time")
-  }
-  if (rcl_time_point_fini(&rcl_time_) != RCL_RET_OK) {
-    RCUTILS_LOG_FATAL("failed to reclaim rcl_time_point_t in destructor of rclcpp::Time")
-  }
 }
 
 Time::operator builtin_interfaces::msg::Time() const
@@ -142,9 +100,7 @@ Time::operator builtin_interfaces::msg::Time() const
 Time &
 Time::operator=(const Time & rhs)
 {
-  rcl_time_source_ = init_time_source(rhs.rcl_time_source_.type);
-  rcl_time_ = init_time_point(rcl_time_source_);
-  rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
+  rcl_time_ = rhs.rcl_time_;
   return *this;
 }
 
@@ -155,8 +111,9 @@ Time::operator=(const builtin_interfaces::msg::Time & time_msg)
     throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
   }
 
-  this->rcl_time_source_ = init_time_source();
-  this->rcl_time_ = init_time_point(this->rcl_time_source_);
+
+  rcl_clock_type_t ros_time = RCL_ROS_TIME;
+  rcl_time_ = init_time_point(ros_time);  // TODO(tfoote) hard coded ROS here
 
   rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
   rcl_time_.nanoseconds += time_msg.nanosec;
@@ -166,7 +123,7 @@ Time::operator=(const builtin_interfaces::msg::Time & time_msg)
 bool
 Time::operator==(const rclcpp::Time & rhs) const
 {
-  if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
+  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
     throw std::runtime_error("can't compare times with different time sources");
   }
 
@@ -182,7 +139,7 @@ Time::operator!=(const rclcpp::Time & rhs) const
 bool
 Time::operator<(const rclcpp::Time & rhs) const
 {
-  if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
+  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
     throw std::runtime_error("can't compare times with different time sources");
   }
 
@@ -192,7 +149,7 @@ Time::operator<(const rclcpp::Time & rhs) const
 bool
 Time::operator<=(const rclcpp::Time & rhs) const
 {
-  if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
+  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
     throw std::runtime_error("can't compare times with different time sources");
   }
 
@@ -202,7 +159,7 @@ Time::operator<=(const rclcpp::Time & rhs) const
 bool
 Time::operator>=(const rclcpp::Time & rhs) const
 {
-  if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
+  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
     throw std::runtime_error("can't compare times with different time sources");
   }
 
@@ -212,7 +169,7 @@ Time::operator>=(const rclcpp::Time & rhs) const
 bool
 Time::operator>(const rclcpp::Time & rhs) const
 {
-  if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
+  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
     throw std::runtime_error("can't compare times with different time sources");
   }
 
@@ -220,33 +177,55 @@ Time::operator>(const rclcpp::Time & rhs) const
 }
 
 Time
-Time::operator+(const rclcpp::Time & rhs) const
+Time::operator+(const rclcpp::Duration & rhs) const
 {
-  if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
-    throw std::runtime_error("can't add times with different time sources");
-  }
-
-  auto ns = rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds;
-  if (ns < rcl_time_.nanoseconds) {
+  if (rhs.nanoseconds() > 0 && (uint64_t)rhs.nanoseconds() >
+    std::numeric_limits<rcl_time_point_value_t>::max() -
+    (rcl_time_point_value_t)this->nanoseconds())
+  {
     throw std::overflow_error("addition leads to uint64_t overflow");
   }
+  return Time(this->nanoseconds() + rhs.nanoseconds(), this->get_clock_type());
+}
 
-  return Time(rcl_time_.nanoseconds + rhs.rcl_time_.nanoseconds);
+Duration
+Time::operator-(const rclcpp::Time & rhs) const
+{
+  if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
+    throw std::runtime_error("can't subtract times with different time sources");
+  }
+
+  if (rcl_time_.nanoseconds >
+    (uint64_t)std::numeric_limits<rcl_duration_value_t>::max() + rhs.rcl_time_.nanoseconds)
+  {
+    throw std::underflow_error("time subtraction leads to int64_t overflow");
+  }
+
+  if (rcl_time_.nanoseconds < rhs.rcl_time_.nanoseconds) {
+    rcl_time_point_value_t negative_delta = rhs.rcl_time_.nanoseconds - rcl_time_.nanoseconds;
+    if (negative_delta > (uint64_t) std::numeric_limits<rcl_duration_value_t>::min()) {
+      throw std::underflow_error("time subtraction leads to int64_t underflow");
+    }
+  }
+
+  return Duration(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);
 }
 
 Time
-Time::operator-(const rclcpp::Time & rhs) const
+Time::operator-(const rclcpp::Duration & rhs) const
 {
-  if (rcl_time_.time_source->type != rhs.rcl_time_.time_source->type) {
-    throw std::runtime_error("can't add times with different time sources");
+  if (rhs.nanoseconds() > 0 && rcl_time_.nanoseconds >
+    std::numeric_limits<rcl_time_point_value_t>::max() - (uint64_t)rhs.nanoseconds())
+  {
+    throw std::underflow_error("time subtraction leads to uint64_t overflow");
+  }
+  if (rcl_time_.nanoseconds < (uint64_t) std::numeric_limits<rcl_duration_value_t>::max() &&
+    (int64_t)rcl_time_.nanoseconds < (int64_t)rhs.nanoseconds())
+  {
+    throw std::underflow_error("time subtraction leads to uint64_t underflow");
   }
 
-  auto ns = rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds;
-  if (ns > rcl_time_.nanoseconds) {
-    throw std::underflow_error("subtraction leads to uint64_t underflow");
-  }
-
-  return Time(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);
+  return Time(rcl_time_.nanoseconds - rhs.nanoseconds(), rcl_time_.clock_type);
 }
 
 uint64_t
@@ -254,5 +233,23 @@ Time::nanoseconds() const
 {
   return rcl_time_.nanoseconds;
 }
+
+rcl_clock_type_t
+Time::get_clock_type() const
+{
+  return rcl_time_.clock_type;
+}
+
+Time
+operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
+{
+  if (rhs.nanoseconds() >
+    std::numeric_limits<rcl_time_point_value_t>::max() - (rcl_time_point_value_t)lhs.nanoseconds())
+  {
+    throw std::overflow_error("addition leads to uint64_t overflow");
+  }
+  return Time(lhs.nanoseconds() + rhs.nanoseconds(), rhs.get_clock_type());
+}
+
 
 }  // namespace rclcpp

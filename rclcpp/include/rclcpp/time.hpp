@@ -21,28 +21,32 @@
 
 #include "rcl/time.h"
 
+#include "rclcpp/duration.hpp"
+
 namespace rclcpp
 {
+
+class Clock;
 
 class Time
 {
 public:
   RCLCPP_PUBLIC
-  static
-  Time
-  now(rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
+  Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
-  Time(int32_t seconds, uint32_t nanoseconds, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
-
-  RCLCPP_PUBLIC
-  explicit Time(uint64_t nanoseconds = 0, rcl_time_source_type_t clock = RCL_SYSTEM_TIME);
+  explicit Time(uint64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   Time(const Time & rhs);
 
   RCLCPP_PUBLIC
-  Time(const builtin_interfaces::msg::Time & time_msg);  // NOLINT
+  Time(
+    const builtin_interfaces::msg::Time & time_msg,
+    rcl_clock_type_t ros_time = RCL_ROS_TIME);
+
+  RCLCPP_PUBLIC
+  explicit Time(const rcl_time_point_t & time_point);
 
   RCLCPP_PUBLIC
   virtual ~Time();
@@ -84,20 +88,31 @@ public:
 
   RCLCPP_PUBLIC
   Time
-  operator+(const rclcpp::Time & rhs) const;
+  operator+(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
-  Time
+  Duration
   operator-(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  uint64_t
+  Time
+  operator-(const rclcpp::Duration & rhs) const;
+
+  RCLCPP_PUBLIC
+  rcl_time_point_value_t
   nanoseconds() const;
 
+  RCLCPP_PUBLIC
+  rcl_clock_type_t
+  get_clock_type() const;
+
 private:
-  rcl_time_source_t rcl_time_source_;
   rcl_time_point_t rcl_time_;
+  friend Clock;  // Allow clock to manipulate internal data
 };
+
+Time
+operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
 
 }  // namespace rclcpp
 
