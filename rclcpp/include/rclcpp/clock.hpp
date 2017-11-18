@@ -31,8 +31,9 @@ namespace rclcpp
 
 class TimeSource;
 
-/*  \brief A struct to represent a timejump.
- *  It epresents the time jump duration and whether it changed clock type.
+/// A struct to represent a timejump.
+/**
+ * It represents the time jump duration and whether it changed clock type.
  */
 struct TimeJump
 {
@@ -48,9 +49,10 @@ struct TimeJump
   rcl_duration_t delta_;     ///< The change in time value.
 };
 
-/* \brief A class to store a threshold for a TimeJump
+/// A class to store a threshold for a TimeJump.
+/**
  * This class can be used to evaluate a time jump's magnitude.
-*/
+ */
 class JumpThreshold
 {
 public:
