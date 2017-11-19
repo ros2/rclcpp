@@ -193,7 +193,7 @@ TEST_F(TestTimeSource, callbacks) {
 
 
   // Change callbacks
-  callback_holder = ros_clock->create_jump_callback(
+  rclcpp::JumpHandler::SharedPtr callback_holder2 = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 2),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
     jump_threshold);
