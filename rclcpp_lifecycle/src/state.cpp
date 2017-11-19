@@ -66,7 +66,7 @@ State::State(const State & rhs)
   owns_rcl_state_handle_(rhs.owns_rcl_state_handle_),
   state_handle_(nullptr)
 {
-  assign(rhs);
+  *this = rhs;
 }
 
 State::~State()
@@ -78,7 +78,23 @@ State &
 State::operator=(const State & rhs)
 {
   if (this != &rhs) {
-    assign(rhs);
+    reset();
+
+    allocator_ = rhs.allocator_;
+    owns_rcl_state_handle_ = rhs.owns_rcl_state_handle_;
+
+    if (owns_rcl_state_handle_) {
+      auto state_handle = reinterpret_cast<rcl_lifecycle_state_t *>(
+        allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+      state_handle->id = rhs.state_handle_->id;
+      state_handle->label = rcutils_strndup(
+        rhs.state_handle_->label,
+        strlen(rhs.state_handle_->label),
+        allocator_);
+      state_handle_ = state_handle;
+    } else {
+      state_handle_ = rhs.state_handle_;
+    }
   }
 
   return *this;
@@ -121,27 +137,5 @@ State::reset()
   }
   allocator_.deallocate(state_handle_, allocator_.state);
   state_handle_ = nullptr;
-}
-
-void
-State::assign(const State & rhs)
-{
-  reset();
-
-  allocator_ = rhs.allocator_;
-  owns_rcl_state_handle_ = rhs.owns_rcl_state_handle_;
-
-  if (owns_rcl_state_handle_) {
-    auto state_handle = reinterpret_cast<rcl_lifecycle_state_t *>(
-      allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
-    state_handle->id = rhs.state_handle_->id;
-    state_handle->label = rcutils_strndup(
-      rhs.state_handle_->label,
-      strlen(rhs.state_handle_->label),
-      allocator_);
-    state_handle_ = state_handle;
-  } else {
-    state_handle_ = rhs.state_handle_;
-  }
 }
 }  // namespace rclcpp_lifecycle

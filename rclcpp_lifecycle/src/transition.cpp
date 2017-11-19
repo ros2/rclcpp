@@ -91,7 +91,7 @@ Transition::Transition(const Transition & rhs)
   owns_rcl_transition_handle_(rhs.owns_rcl_transition_handle_),
   transition_handle_(nullptr)
 {
-  assign(rhs);
+  *this = rhs;
 }
 
 Transition::~Transition()
@@ -103,7 +103,30 @@ Transition &
 Transition::operator=(const Transition & rhs)
 {
   if (this != &rhs) {
-    assign(rhs);
+    if (owns_rcl_transition_handle_) {
+      reset();
+
+      allocator_ = rhs.allocator_;
+      owns_rcl_transition_handle_ = rhs.owns_rcl_transition_handle_;
+    }
+
+    if (owns_rcl_transition_handle_) {
+      auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
+        allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
+      transition_handle->id = rhs.transition_handle_->id;
+      transition_handle->label = rcutils_strndup(
+        rhs.transition_handle_->label,
+        strlen(rhs.transition_handle_->label),
+        allocator_);
+
+      // don't deep copy the start and goal states
+      // because a matching is done via pointer address
+      transition_handle->start = rhs.transition_handle_->start;
+      transition_handle->goal = rhs.transition_handle_->goal;
+      transition_handle_ = transition_handle;
+    } else {
+      transition_handle_ = rhs.transition_handle_;
+    }
   }
 
   return *this;
@@ -176,34 +199,4 @@ Transition::reset()
     transition_handle_ = nullptr;
   }
 }
-
-void
-Transition::assign(const Transition & rhs)
-{
-  if (owns_rcl_transition_handle_) {
-    reset();
-
-    allocator_ = rhs.allocator_;
-    owns_rcl_transition_handle_ = rhs.owns_rcl_transition_handle_;
-  }
-
-  if (owns_rcl_transition_handle_) {
-    auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
-      allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
-    transition_handle->id = rhs.transition_handle_->id;
-    transition_handle->label = rcutils_strndup(
-      rhs.transition_handle_->label,
-      strlen(rhs.transition_handle_->label),
-      allocator_);
-
-    // don't deep copy the start and goal states
-    // because a matching is done via pointer address
-    transition_handle->start = rhs.transition_handle_->start;
-    transition_handle->goal = rhs.transition_handle_->goal;
-    transition_handle_ = transition_handle;
-  } else {
-    transition_handle_ = rhs.transition_handle_;
-  }
-}
-
 }  // namespace rclcpp_lifecycle

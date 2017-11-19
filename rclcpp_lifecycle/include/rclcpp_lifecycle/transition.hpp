@@ -86,10 +86,6 @@ protected:
   RCLCPP_LIFECYCLE_PUBLIC
   void
   reset();
-
-  RCLCPP_LIFECYCLE_PUBLIC
-  void
-  assign(const Transition & rhs);
 };
 
 }  // namespace rclcpp_lifecycle
