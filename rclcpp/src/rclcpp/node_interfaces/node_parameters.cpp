@@ -200,11 +200,11 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
 
   // TODO(mikaelarguedas) define parameter separator different from "/" to avoid ambiguity
   // using "." for now
-  const char separator = '.';
+  const char * separator = ".";
   for (auto & kv : parameters_) {
     bool get_all = (prefixes.size() == 0) &&
       ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), separator)) < depth));
+      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), *separator)) < depth));
     bool prefix_matches = std::any_of(prefixes.cbegin(), prefixes.cend(),
         [&kv, &depth, &separator](const std::string & prefix) {
           if (kv.first == prefix) {
@@ -214,7 +214,7 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
             std::string substr = kv.first.substr(length);
             // Cast as unsigned integer to avoid warning
             return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-            (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), separator)) < depth);
+            (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), *separator)) < depth);
           }
           return false;
         });
