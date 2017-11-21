@@ -277,6 +277,14 @@ if(BUILD_TESTING)
     target_link_libraries(test_duration ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_executor test/test_executor.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_executor)
+    ament_target_dependencies(test_executor
+      "rcl")
+    target_link_libraries(test_executor ${PROJECT_NAME})
+  endif()
+
   ament_add_gmock(test_logging test/test_logging.cpp)
   target_link_libraries(test_logging ${PROJECT_NAME})
 

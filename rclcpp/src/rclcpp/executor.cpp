@@ -73,6 +73,16 @@ Executor::Executor(const ExecutorArgs & args)
 
 Executor::~Executor()
 {
+  // Disassocate all nodes
+  for (auto & weak_node : weak_nodes_) {
+    auto node = weak_node.lock();
+    if (node) {
+      std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
+      has_executor.store(false);
+    }
+  }
+  weak_nodes_.clear();
+
   // Finalize the waitset.
   if (rcl_wait_set_fini(&waitset_) != RCL_RET_OK) {
     fprintf(stderr,
