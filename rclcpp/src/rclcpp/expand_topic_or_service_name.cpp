@@ -133,9 +133,13 @@ rclcpp::expand_topic_or_service_name(
           RCL_RET_ERROR, "failed to validate node name",
           rmw_get_error_state(), rmw_reset_error);
       }
+
+      const char * validation_result_string = rmw_node_name_validation_result_string(
+        validation_result);
+      validation_result_string = validation_result_string ? validation_result_string : "";
       throw rclcpp::exceptions::InvalidNodeNameError(
               node_name.c_str(),
-              rmw_node_name_validation_result_string(validation_result),
+              validation_result_string,
               invalid_index);
       // if invalid namespace
     } else if (ret == RCL_RET_NODE_INVALID_NAMESPACE) {
@@ -154,9 +158,13 @@ rclcpp::expand_topic_or_service_name(
           RCL_RET_ERROR, "failed to validate namespace",
           rmw_get_error_state(), rmw_reset_error);
       }
+
+      const char * validation_result_string = rmw_namespace_validation_result_string(
+        validation_result);
+      validation_result_string = validation_result_string ? validation_result_string : "";
       throw rclcpp::exceptions::InvalidNamespaceError(
               namespace_.c_str(),
-              rmw_namespace_validation_result_string(validation_result),
+              validation_result_string,
               invalid_index);
       // something else happened
     } else {
@@ -180,15 +188,18 @@ rclcpp::expand_topic_or_service_name(
       rmw_get_error_state(), rmw_reset_error);
   }
   if (validation_result != RMW_TOPIC_VALID) {
+    const char * validation_result_string = rmw_full_topic_name_validation_result_string(
+      validation_result);
+    validation_result_string = validation_result_string ? validation_result_string : "";
     if (is_service) {
       throw rclcpp::exceptions::InvalidServiceNameError(
               result.c_str(),
-              rmw_full_topic_name_validation_result_string(validation_result),
+              validation_result_string,
               invalid_index);
     } else {
       throw rclcpp::exceptions::InvalidTopicNameError(
               result.c_str(),
-              rmw_full_topic_name_validation_result_string(validation_result),
+              validation_result_string,
               invalid_index);
     }
   }
