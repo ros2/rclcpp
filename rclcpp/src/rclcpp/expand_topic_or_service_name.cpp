@@ -136,7 +136,9 @@ rclcpp::expand_topic_or_service_name(
 
       const char * validation_result_string = rmw_node_name_validation_result_string(
         validation_result);
-      validation_result_string = validation_result_string ? validation_result_string : "";
+      if (!validation_result_string) {
+        validation_result_string = "undefined node name type";
+      }
       throw rclcpp::exceptions::InvalidNodeNameError(
               node_name.c_str(),
               validation_result_string,
@@ -161,7 +163,9 @@ rclcpp::expand_topic_or_service_name(
 
       const char * validation_result_string = rmw_namespace_validation_result_string(
         validation_result);
-      validation_result_string = validation_result_string ? validation_result_string : "";
+      if (!validation_result_string) {
+        validation_result_string = "undefined namespace type";
+      }
       throw rclcpp::exceptions::InvalidNamespaceError(
               namespace_.c_str(),
               validation_result_string,
@@ -190,7 +194,10 @@ rclcpp::expand_topic_or_service_name(
   if (validation_result != RMW_TOPIC_VALID) {
     const char * validation_result_string = rmw_full_topic_name_validation_result_string(
       validation_result);
-    validation_result_string = validation_result_string ? validation_result_string : "";
+    if (!validation_result_string) {
+      validation_result_string = "undefined topic name type";
+    }
+
     if (is_service) {
       throw rclcpp::exceptions::InvalidServiceNameError(
               result.c_str(),

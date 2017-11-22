@@ -106,9 +106,15 @@ NodeBase::NodeBase(
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate node name");
       }
+
+      const char * validation_result_string = rmw_node_name_validation_result_string(
+        validation_result);
+      if (!validation_result_string) {
+        validation_result_string = "undefined node name type";
+      }
       throw rclcpp::exceptions::InvalidNodeNameError(
               node_name.c_str(),
-              rmw_node_name_validation_result_string(validation_result),
+              validation_result_string,
               invalid_index);
     }
 
@@ -123,6 +129,12 @@ NodeBase::NodeBase(
           throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "failed to validate namespace");
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate namespace");
+      }
+
+      const char * validation_result_string = rmw_namespace_validation_result_string(
+        validation_result);
+      if (!validation_result_string) {
+        validation_result_string = "undefind namespace type";
       }
       throw rclcpp::exceptions::InvalidNamespaceError(
               namespace_.c_str(),
