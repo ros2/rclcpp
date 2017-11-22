@@ -74,7 +74,7 @@ NodeTopics::add_publisher(
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
               std::string(
-                "Failed to notify waitset on publisher creation: ") + rmw_get_error_string());
+                "Failed to notify wait_set on publisher creation: ") + rmw_get_error_string());
     }
   }
 }
@@ -124,7 +124,7 @@ NodeTopics::add_subscription(
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
               std::string(
-                "Failed to notify waitset on subscription creation: ") + rmw_get_error_string()
+                "Failed to notify wait_set on subscription creation: ") + rmw_get_error_string()
       );
     }
   }

@@ -183,39 +183,39 @@ public:
     return has_invalid_weak_nodes;
   }
 
-  bool add_handles_to_waitset(rcl_wait_set_t * wait_set)
+  bool add_handles_to_wait_set(rcl_wait_set_t * wait_set)
   {
     for (auto subscription : subscription_handles_) {
       if (rcl_wait_set_add_subscription(wait_set, subscription) != RCL_RET_OK) {
-        fprintf(stderr, "Couldn't add subscription to waitset: %s\n", rcl_get_error_string_safe());
+        fprintf(stderr, "Couldn't add subscription to wait_set: %s\n", rcl_get_error_string_safe());
         return false;
       }
     }
 
     for (auto client : client_handles_) {
       if (rcl_wait_set_add_client(wait_set, client) != RCL_RET_OK) {
-        fprintf(stderr, "Couldn't add client to waitset: %s\n", rcl_get_error_string_safe());
+        fprintf(stderr, "Couldn't add client to wait_set: %s\n", rcl_get_error_string_safe());
         return false;
       }
     }
 
     for (auto service : service_handles_) {
       if (rcl_wait_set_add_service(wait_set, service) != RCL_RET_OK) {
-        fprintf(stderr, "Couldn't add service to waitset: %s\n", rcl_get_error_string_safe());
+        fprintf(stderr, "Couldn't add service to wait_set: %s\n", rcl_get_error_string_safe());
         return false;
       }
     }
 
     for (auto timer : timer_handles_) {
       if (rcl_wait_set_add_timer(wait_set, timer) != RCL_RET_OK) {
-        fprintf(stderr, "Couldn't add timer to waitset: %s\n", rcl_get_error_string_safe());
+        fprintf(stderr, "Couldn't add timer to wait_set: %s\n", rcl_get_error_string_safe());
         return false;
       }
     }
 
     for (auto guard_condition : guard_conditions_) {
       if (rcl_wait_set_add_guard_condition(wait_set, guard_condition) != RCL_RET_OK) {
-        fprintf(stderr, "Couldn't add guard_condition to waitset: %s\n",
+        fprintf(stderr, "Couldn't add guard_condition to wait_set: %s\n",
           rcl_get_error_string_safe());
         return false;
       }

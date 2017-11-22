@@ -42,6 +42,6 @@ NodeTimers::add_timer(
   if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
             std::string(
-              "Failed to notify waitset on timer creation: ") + rmw_get_error_string());
+              "Failed to notify wait_set on timer creation: ") + rmw_get_error_string());
   }
 }

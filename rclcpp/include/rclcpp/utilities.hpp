@@ -75,32 +75,32 @@ on_shutdown(std::function<void(void)> callback);
 
 /// Get a handle to the rmw guard condition that manages the signal handler.
 /**
- * The first time that this function is called for a given waitset a new guard
+ * The first time that this function is called for a given wait_set a new guard
  * condition will be created and returned; thereafter the same guard condition
- * will be returned for the same waitset. This mechanism is designed to ensure
- * that the same guard condition is not reused across waitsets (e.g., when
+ * will be returned for the same wait_set. This mechanism is designed to ensure
+ * that the same guard condition is not reused across wait_sets (e.g., when
  * using multiple executors in the same process). Will throw an exception if
  * initialization of the guard condition fails.
- * \param waitset Pointer to the rcl_wait_set_t that will be using the
+ * \param wait_set Pointer to the rcl_wait_set_t that will be using the
  * resulting guard condition.
  * \return Pointer to the guard condition.
  */
 RCLCPP_PUBLIC
 rcl_guard_condition_t *
-get_sigint_guard_condition(rcl_wait_set_t * waitset);
+get_sigint_guard_condition(rcl_wait_set_t * wait_set);
 
 /// Release the previously allocated guard condition that manages the signal handler.
 /**
- * If you previously called get_sigint_guard_condition() for a given waitset
+ * If you previously called get_sigint_guard_condition() for a given wait_set
  * to get a sigint guard condition, then you should call release_sigint_guard_condition()
  * when you're done, to free that condition.  Will throw an exception if
- * get_sigint_guard_condition() wasn't previously called for the given waitset.
- * \param waitset Pointer to the rcl_wait_set_t that was using the
+ * get_sigint_guard_condition() wasn't previously called for the given wait_set.
+ * \param wait_set Pointer to the rcl_wait_set_t that was using the
  * resulting guard condition.
  */
 RCLCPP_PUBLIC
 void
-release_sigint_guard_condition(rcl_wait_set_t * waitset);
+release_sigint_guard_condition(rcl_wait_set_t * wait_set);
 
 /// Use the global condition variable to block for the specified amount of time.
 /**

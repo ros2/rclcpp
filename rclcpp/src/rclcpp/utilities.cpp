@@ -218,10 +218,10 @@ rclcpp::utilities::on_shutdown(std::function<void(void)> callback)
 }
 
 rcl_guard_condition_t *
-rclcpp::utilities::get_sigint_guard_condition(rcl_wait_set_t * waitset)
+rclcpp::utilities::get_sigint_guard_condition(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
-  auto kv = g_sigint_guard_cond_handles.find(waitset);
+  auto kv = g_sigint_guard_cond_handles.find(wait_set);
   if (kv != g_sigint_guard_cond_handles.end()) {
     return &kv->second;
   } else {
@@ -234,16 +234,16 @@ rclcpp::utilities::get_sigint_guard_condition(rcl_wait_set_t * waitset)
         "Couldn't initialize guard condition: ") + rcl_get_error_string_safe());
       // *INDENT-ON*
     }
-    g_sigint_guard_cond_handles[waitset] = handle;
-    return &g_sigint_guard_cond_handles[waitset];
+    g_sigint_guard_cond_handles[wait_set] = handle;
+    return &g_sigint_guard_cond_handles[wait_set];
   }
 }
 
 void
-rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * waitset)
+rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
-  auto kv = g_sigint_guard_cond_handles.find(waitset);
+  auto kv = g_sigint_guard_cond_handles.find(wait_set);
   if (kv != g_sigint_guard_cond_handles.end()) {
     if (rcl_guard_condition_fini(&kv->second) != RCL_RET_OK) {
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
@@ -256,7 +256,7 @@ rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * waitset)
   } else {
     // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::runtime_error(std::string(
-      "Tried to release sigint guard condition for nonexistent waitset"));
+      "Tried to release sigint guard condition for nonexistent wait_set"));
     // *INDENT-ON*
   }
 }
