@@ -130,15 +130,21 @@ Clock::get_triggered_callback_handlers(const TimeJump & jump)
 {
   std::vector<JumpHandler::SharedPtr> callbacks;
   std::lock_guard<std::mutex> guard(callback_list_mutex_);
-  for (auto wjcb = active_jump_handlers_.begin(); wjcb != active_jump_handlers_.end(); wjcb++) {
-    if (auto jcb = wjcb->lock()) {
-      if (jcb->notice_threshold.is_exceeded(jump)) {
-        callbacks.push_back(jcb);
-      }
-    } else {
-      active_jump_handlers_.erase(wjcb);
-    }
-  }
+  active_jump_handlers_.erase(
+    std::remove_if(
+      active_jump_handlers_.begin(),
+      active_jump_handlers_.end(),
+      [&callbacks, &jump](const std::weak_ptr<JumpHandler> & wjcb) {
+        if (auto jcb = wjcb.lock()) {
+          if (jcb->notice_threshold.is_exceeded(jump)) {
+            callbacks.push_back(jcb);
+          }
+          return false;
+        }
+        // Lock failed so clear the weak pointer.
+        return true;
+      }),
+    active_jump_handlers_.end());
   return callbacks;
 }
 
