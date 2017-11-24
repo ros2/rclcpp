@@ -75,10 +75,10 @@ on_shutdown(std::function<void(void)> callback);
 
 /// Get a handle to the rmw guard condition that manages the signal handler.
 /**
- * The first time that this function is called for a given wait_set a new guard
+ * The first time that this function is called for a given wait set a new guard
  * condition will be created and returned; thereafter the same guard condition
- * will be returned for the same wait_set. This mechanism is designed to ensure
- * that the same guard condition is not reused across wait_sets (e.g., when
+ * will be returned for the same wait set. This mechanism is designed to ensure
+ * that the same guard condition is not reused across wait sets (e.g., when
  * using multiple executors in the same process). Will throw an exception if
  * initialization of the guard condition fails.
  * \param wait_set Pointer to the rcl_wait_set_t that will be using the
@@ -91,10 +91,10 @@ get_sigint_guard_condition(rcl_wait_set_t * wait_set);
 
 /// Release the previously allocated guard condition that manages the signal handler.
 /**
- * If you previously called get_sigint_guard_condition() for a given wait_set
+ * If you previously called get_sigint_guard_condition() for a given wait set
  * to get a sigint guard condition, then you should call release_sigint_guard_condition()
  * when you're done, to free that condition.  Will throw an exception if
- * get_sigint_guard_condition() wasn't previously called for the given wait_set.
+ * get_sigint_guard_condition() wasn't previously called for the given wait set.
  * \param wait_set Pointer to the rcl_wait_set_t that was using the
  * resulting guard condition.
  */

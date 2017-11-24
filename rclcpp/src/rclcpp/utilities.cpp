@@ -256,7 +256,7 @@ rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * wait_set)
   } else {
     // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
     throw std::runtime_error(std::string(
-      "Tried to release sigint guard condition for nonexistent wait_set"));
+      "Tried to release sigint guard condition for nonexistent wait set"));
     // *INDENT-ON*
   }
 }
