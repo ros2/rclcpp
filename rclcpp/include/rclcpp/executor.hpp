@@ -344,8 +344,8 @@ protected:
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
 
-  /// Waitset for managing entities that the rmw layer waits on.
-  rcl_wait_set_t waitset_ = rcl_get_zero_initialized_wait_set();
+  /// Wait set for managing entities that the rmw layer waits on.
+  rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
