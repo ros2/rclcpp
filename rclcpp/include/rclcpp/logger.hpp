@@ -56,6 +56,16 @@ inline Logger get_logger(const std::string & name) {
   return rclcpp::Logger(name);
 }
 
+namespace logging_macro_utilities {
+
+/// Helper function to give useful compiler errors in logging macros if passed incorrect type.
+inline const char * get_logger_name(const Logger & logger)
+{
+  return logger.get_name();
+}
+
+}  // namespace logging_macro_utilities
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__LOGGER_HPP_
