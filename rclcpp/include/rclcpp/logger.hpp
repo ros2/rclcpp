@@ -37,6 +37,22 @@
 namespace rclcpp
 {
 
+class Logger;
+
+/// Return a named logger.
+/**
+ * The returned logger's name will include any naming conventions, such as a
+ * name prefix.
+ * Currently there are no such naming conventions but they may be introduced in
+ * the future.
+ *
+ * \param[in] name the name of the logger
+ * \return a logger with the fully-qualified name including naming conventions, or
+ * \return a dummy logger if logging is disabled.
+ */
+RCLCPP_PUBLIC
+Logger get_logger(const std::string & name);
+
 class Logger
 {
 private:
@@ -99,20 +115,6 @@ public:
     return Logger(*name_ + "." + suffix);
   }
 };
-
-/// Return a named logger.
-/**
- * The returned logger's name will include any naming conventions, such as a
- * name prefix.
- * Currently there are no such naming conventions but they may be introduced in
- * the future.
- *
- * \param[in] name the name of the logger
- * \return a logger with the fully-qualified name including naming conventions, or
- * \return a dummy logger if logging is disabled.
- */
-RCLCPP_PUBLIC
-Logger get_logger(const std::string & name);
 
 namespace logging_macro_utilities
 {
