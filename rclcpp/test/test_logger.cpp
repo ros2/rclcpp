@@ -23,8 +23,6 @@ TEST(TestLogger, factory_functions) {
   EXPECT_STREQ("test_logger", logger.get_name());
   rclcpp::Logger logger_copy = rclcpp::Logger(logger);
   EXPECT_STREQ("test_logger", logger_copy.get_name());
-
-  EXPECT_ANY_THROW(rclcpp::Logger null_logger = rclcpp::get_logger(nullptr));
 }
 
 TEST(TestLogger, hierarchy) {
