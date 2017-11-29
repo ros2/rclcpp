@@ -111,6 +111,7 @@ public:
  * \return a logger with the fully-qualified name including naming conventions, or
  * \return a dummy logger if logging is disabled.
  */
+RCLCPP_PUBLIC
 inline Logger get_logger(const std::string & name)
 {
 #if RCLCPP_LOGGING_ENABLED
@@ -135,6 +136,7 @@ namespace logging_macro_utilities
  * \param[in] logger the logger to get the name of
  * \return the name of the logger
  */
+RCLCPP_PUBLIC
 inline const char * get_logger_name(const Logger & logger)
 {
   return logger.get_name();
