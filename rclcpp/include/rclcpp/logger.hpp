@@ -15,6 +15,8 @@
 #ifndef RCLCPP__LOGGER_HPP_
 #define RCLCPP__LOGGER_HPP_
 
+#include <memory>
+
 #include "rclcpp/visibility_control.hpp"
 
 // When this define evaluates to true (default), logger factory functions will be enabled.
@@ -52,7 +54,7 @@ public:
   }
 
   RCLCPP_PUBLIC
-  Logger sublogger(const std::string & suffix) {
+  Logger get_child(const std::string & suffix) {
     if (!name_) {
       return Logger();
     }

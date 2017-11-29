@@ -297,6 +297,9 @@ if(BUILD_TESTING)
     target_link_libraries(test_executor ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_logger test/test_logger.cpp)
+  target_link_libraries(test_logger ${PROJECT_NAME})
+
   ament_add_gmock(test_logging test/test_logging.cpp)
   target_link_libraries(test_logging ${PROJECT_NAME})
 
