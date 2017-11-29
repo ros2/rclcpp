@@ -24,6 +24,7 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -51,6 +52,13 @@ public:
   virtual
   const char *
   get_namespace() const = 0;
+
+  /// Return the logger of the node.
+  /** \return The logger of the node. */
+  RCLCPP_PUBLIC
+  virtual
+  Logger
+  get_logger() const = 0;
 
   /// Return the context of the node.
   /** \return SharedPtr to the node's context. */

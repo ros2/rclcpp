@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "rclcpp/context.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -54,6 +55,11 @@ public:
   virtual
   const char *
   get_namespace() const;
+
+  RCLCPP_PUBLIC
+  virtual
+  Logger
+  get_logger() const;
 
   RCLCPP_PUBLIC
   virtual

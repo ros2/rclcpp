@@ -176,6 +176,14 @@ NodeBase::get_namespace() const
   return rcl_node_get_namespace(node_handle_.get());
 }
 
+rclcpp::Logger
+NodeBase::get_logger() const
+{
+  // TODO(dhood): calculate once and store in the node
+  // TODO(dhood): use the namespace (slashes converted to dots)
+  return rclcpp::get_logger(this->get_name());
+}
+
 rclcpp::context::Context::SharedPtr
 NodeBase::get_context()
 {

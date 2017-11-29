@@ -84,6 +84,12 @@ Node::get_namespace() const
   return node_base_->get_namespace();
 }
 
+rclcpp::Logger
+Node::get_logger() const
+{
+  return node_base_->get_logger();
+}
+
 rclcpp::callback_group::CallbackGroup::SharedPtr
 Node::create_callback_group(
   rclcpp::callback_group::CallbackGroupType group_type)
