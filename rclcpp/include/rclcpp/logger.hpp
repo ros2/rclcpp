@@ -17,6 +17,14 @@
 
 #include "rclcpp/visibility_control.hpp"
 
+// When this define evaluates to true (default), logger factory functions will be enabled.
+// When false, logger factory functions will create dummy loggers to avoid computational expense.
+// This should be used in combination with `RCLCPP_LOG_MIN_SEVERITY` to compile out logging macros.
+// TODO(dhood): determine this automatically from `RCLCPP_LOG_MIN_SEVERITY`
+#ifndef RCLCPP_LOGGING_ENABLED
+#define RCLCPP_LOGGING_ENABLED 1
+#endif
+
 namespace rclcpp
 {
 
@@ -53,7 +61,11 @@ public:
 };
 
 inline Logger get_logger(const std::string & name) {
+#ifdef RCLCPP_LOGGING_ENABLED
   return rclcpp::Logger(name);
+#else
+  return rclcpp::Logger();
+#endif
 }
 
 namespace logging_macro_utilities {
