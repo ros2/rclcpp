@@ -16,6 +16,7 @@
 #define RCLCPP__LOGGER_HPP_
 
 #include <memory>
+#include <string>
 
 #include "rclcpp/visibility_control.hpp"
 
@@ -32,11 +33,16 @@ namespace rclcpp
 
 class Logger
 {
-// Prevent users from calling constructors directly in favour of factory functions.
 private:
   friend Logger rclcpp::get_logger(const std::string & name);
-  Logger() : name_(nullptr) {}  // used by factory when logging is disabled globally
-  Logger(const std::string & name) : name_(new std::string(name)) {}
+
+  // Constructors are private to force use of factory functions.
+  Logger()
+  : name_(nullptr) {}
+
+  explicit Logger(const std::string & name)
+  : name_(new std::string(name)) {}
+
   std::shared_ptr<const std::string> name_;
 
 public:
@@ -46,23 +52,24 @@ public:
   RCLCPP_PUBLIC
   const char * get_name() const
   {
-    if (!name_)
-    {
+    if (!name_) {
       return nullptr;
     }
     return name_->c_str();
   }
 
   RCLCPP_PUBLIC
-  Logger get_child(const std::string & suffix) {
+  Logger get_child(const std::string & child_name)
+  {
     if (!name_) {
       return Logger();
     }
-    return Logger(*name_ + "." + suffix);
+    return Logger(*name_ + "." + child_name);
   }
 };
 
-inline Logger get_logger(const std::string & name) {
+inline Logger get_logger(const std::string & name)
+{
 #ifdef RCLCPP_LOGGING_ENABLED
   return rclcpp::Logger(name);
 #else
@@ -70,7 +77,8 @@ inline Logger get_logger(const std::string & name) {
 #endif
 }
 
-namespace logging_macro_utilities {
+namespace logging_macro_utilities
+{
 
 /// Helper function to give useful compiler errors in logging macros if passed incorrect type.
 inline const char * get_logger_name(const Logger & logger)
