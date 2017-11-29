@@ -105,17 +105,18 @@ rclcpp::expand_topic_or_service_name(
       if (validation_result == RCL_TOPIC_NAME_VALID) {
         throw std::runtime_error("topic name unexpectedly valid");
       }
-      const char * validation_message = rcl_topic_name_validation_result_string(validation_result);
-      if (!validation_message) {
-        throw std::runtime_error("unable to get validation error message");
+      eles {
+        const char * validation_message =
+          rcl_topic_name_validation_result_string(validation_result);
+        if (is_service) {
+          using rclcpp::exceptions::InvalidServiceNameError;
+          throw InvalidServiceNameError(name.c_str(), validation_message, invalid_index);
+        } else {
+          using rclcpp::exceptions::InvalidTopicNameError;
+          throw InvalidTopicNameError(name.c_str(), validation_message, invalid_index);
+        }
       }
-      if (is_service) {
-        using rclcpp::exceptions::InvalidServiceNameError;
-        throw InvalidServiceNameError(name.c_str(), validation_message, invalid_index);
-      } else {
-        using rclcpp::exceptions::InvalidTopicNameError;
-        throw InvalidTopicNameError(name.c_str(), validation_message, invalid_index);
-      }
+
       // if invalid node name
     } else if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // explicitly discard error from rcl_expand_topic_name()
@@ -134,15 +135,13 @@ rclcpp::expand_topic_or_service_name(
           rmw_get_error_state(), rmw_reset_error);
       }
 
-      const char * validation_result_string = rmw_node_name_validation_result_string(
-        validation_result);
-      if (!validation_result_string) {
-        validation_result_string = "undefined node name type";
+      if (validation_result != RMW_NODE_NAME_VALID) {
+        throw rclcpp::exceptions::InvalidNodeNameError(
+                node_name.c_str(),
+                rmw_node_name_validation_result_string(validation_result),
+                invalid_index);
       }
-      throw rclcpp::exceptions::InvalidNodeNameError(
-              node_name.c_str(),
-              validation_result_string,
-              invalid_index);
+
       // if invalid namespace
     } else if (ret == RCL_RET_NODE_INVALID_NAMESPACE) {
       rcl_reset_error();  // explicitly discard error from rcl_expand_topic_name()
@@ -161,15 +160,12 @@ rclcpp::expand_topic_or_service_name(
           rmw_get_error_state(), rmw_reset_error);
       }
 
-      const char * validation_result_string = rmw_namespace_validation_result_string(
-        validation_result);
-      if (!validation_result_string) {
-        validation_result_string = "undefined namespace type";
+      if (validation_result != RMW_NAMESPACE_VALID) {
+        throw rclcpp::exceptions::InvalidNamespaceError(
+                namespace_.c_str(),
+                rmw_namespace_validation_result_string(validation_result),
+                invalid_index);
       }
-      throw rclcpp::exceptions::InvalidNamespaceError(
-              namespace_.c_str(),
-              validation_result_string,
-              invalid_index);
       // something else happened
     } else {
       throw_from_rcl_error(ret);
@@ -191,22 +187,17 @@ rclcpp::expand_topic_or_service_name(
       RCL_RET_ERROR, "failed to validate full topic name",
       rmw_get_error_state(), rmw_reset_error);
   }
-  if (validation_result != RMW_TOPIC_VALID) {
-    const char * validation_result_string = rmw_full_topic_name_validation_result_string(
-      validation_result);
-    if (!validation_result_string) {
-      validation_result_string = "undefined topic name type";
-    }
 
+  if (validation_result != RMW_TOPIC_VALID) {
     if (is_service) {
       throw rclcpp::exceptions::InvalidServiceNameError(
               result.c_str(),
-              validation_result_string,
+              rmw_full_topic_name_validation_result_string(validation_result),
               invalid_index);
     } else {
       throw rclcpp::exceptions::InvalidTopicNameError(
               result.c_str(),
-              validation_result_string,
+              rmw_full_topic_name_validation_result_string(validation_result),
               invalid_index);
     }
   }
