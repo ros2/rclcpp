@@ -37,6 +37,12 @@
 namespace rclcpp
 {
 
+// Forward declaration is used for friend statement.
+namespace node_interfaces
+{
+class NodeBase;
+}
+
 class Logger;
 
 /// Return a named logger.
@@ -57,6 +63,7 @@ class Logger
 {
 private:
   friend Logger rclcpp::get_logger(const std::string & name);
+  friend ::rclcpp::node_interfaces::NodeBase;
 
   /// Constructor of a dummy logger.
   /**

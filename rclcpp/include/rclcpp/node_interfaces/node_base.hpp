@@ -58,7 +58,7 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  Logger
+  rclcpp::Logger
   get_logger() const;
 
   RCLCPP_PUBLIC
@@ -127,6 +127,8 @@ private:
   rclcpp::context::Context::SharedPtr context_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
+
+  Logger logger_;
 
   rclcpp::callback_group::CallbackGroup::SharedPtr default_callback_group_;
   std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> callback_groups_;
