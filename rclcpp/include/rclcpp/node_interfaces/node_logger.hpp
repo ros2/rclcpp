@@ -43,7 +43,7 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::Logger
+  rclcpp::logger::Logger
   get_logger() const;
 
 private:
@@ -52,7 +52,7 @@ private:
   /// Handle to the NodeBaseInterface given in the constructor.
   rclcpp::node_interfaces::NodeBaseInterface * node_base_;
 
-  Logger logger_;
+  rclcpp::logger::Logger logger_;
 };
 
 }  // namespace node_interfaces

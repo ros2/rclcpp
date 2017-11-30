@@ -19,20 +19,25 @@
 namespace rclcpp
 {
 
+namespace logger
+{
+
 Logger get_logger(const std::string & name)
 {
 #if RCLCPP_LOGGING_ENABLED
-  return rclcpp::Logger(name);
+  return Logger(name);
 #else
   (void)name;
-  return rclcpp::Logger();
+  return Logger();
 #endif
 }
+
+}  // namespace logger
 
 namespace logging_macro_utilities
 {
 
-const char * get_logger_name(const Logger & logger)
+const char * get_logger_name(const rclcpp::logger::Logger & logger)
 {
   return logger.get_name();
 }

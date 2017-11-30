@@ -43,6 +43,8 @@ namespace node_interfaces
 class NodeLogger;
 }
 
+namespace logger
+{
 class Logger;
 
 /// Return a named logger.
@@ -62,7 +64,7 @@ Logger get_logger(const std::string & name);
 class Logger
 {
 private:
-  friend Logger rclcpp::get_logger(const std::string & name);
+  friend Logger rclcpp::logger::get_logger(const std::string & name);
   friend ::rclcpp::node_interfaces::NodeLogger;
 
   /// Constructor of a dummy logger.
@@ -123,6 +125,8 @@ public:
   }
 };
 
+}  // namespace logger
+
 namespace logging_macro_utilities
 {
 
@@ -138,7 +142,7 @@ namespace logging_macro_utilities
  * \return the name of the logger
  */
 RCLCPP_PUBLIC
-const char * get_logger_name(const Logger & logger);
+const char * get_logger_name(const rclcpp::logger::Logger & logger);
 
 }  // namespace logging_macro_utilities
 

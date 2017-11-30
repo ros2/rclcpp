@@ -20,14 +20,14 @@ NodeLogger::NodeLogger(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
 {
   // TODO(dhood): use the namespace (slashes converted to dots)
-  logger_ = rclcpp::get_logger(node_base_->get_name());
+  logger_ = rclcpp::logger::get_logger(node_base_->get_name());
 }
 
 NodeLogger::~NodeLogger()
 {
 }
 
-rclcpp::Logger
+rclcpp::logger::Logger
 NodeLogger::get_logger() const
 {
   return logger_;
