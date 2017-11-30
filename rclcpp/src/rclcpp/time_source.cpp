@@ -44,15 +44,53 @@ TimeSource::TimeSource()
 {
 }
 
-void TimeSource::attachNode(std::shared_ptr<rclcpp::node::Node> node)
+void TimeSource::attachNode(rclcpp::node::Node::SharedPtr node)
 {
-  node_ = node;
-  // TODO(tfoote): Update QOS
-  clock_subscription_ = node_->create_subscription<builtin_interfaces::msg::Time>(
-    "clock", std::bind(&TimeSource::clock_cb, this, std::placeholders::_1),
-    rmw_qos_profile_default);
+  attachNode(
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface());
+}
 
-  parameter_client_ = std::make_shared<rclcpp::parameter_client::AsyncParametersClient>(node);
+void TimeSource::attachNode(
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+  const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface)
+{
+  node_base_ = node_base_interface;
+  node_topics_ = node_topics_interface;
+  node_graph_ = node_graph_interface;
+  node_services_ = node_services_interface;
+  // TODO(tfoote): Update QOS
+
+  const std::string & topic_name = "/clock";
+
+  rclcpp::callback_group::CallbackGroup::SharedPtr group;
+  using rclcpp::message_memory_strategy::MessageMemoryStrategy;
+  auto msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
+  auto allocator = std::make_shared<Alloc>();
+
+  auto cb = std::bind(&TimeSource::clock_cb, this, std::placeholders::_1);
+
+  clock_subscription_ = rclcpp::create_subscription<MessageT, decltype(cb), Alloc, SubscriptionT>(
+    node_topics_.get(),
+    topic_name,
+    std::move(cb),
+    rmw_qos_profile_default,
+    group,
+    false,
+    false,
+    msg_mem_strat,
+    allocator);
+
+  parameter_client_ = std::make_shared<rclcpp::parameter_client::AsyncParametersClient>(
+    node_base_,
+    node_topics_,
+    node_graph_,
+    node_services_
+    );
   parameter_subscription_ =
     parameter_client_->on_parameter_event(std::bind(&TimeSource::on_parameter_event,
       this, std::placeholders::_1));
@@ -63,7 +101,10 @@ void TimeSource::detachNode()
   this->ros_time_active_ = false;
   clock_subscription_.reset();
   parameter_client_.reset();
-  node_.reset();
+  node_base_.reset();
+  node_topics_.reset();
+  node_graph_.reset();
+  node_services_.reset();
   disable_ros_time();
 }
 
@@ -94,7 +135,7 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
 
 TimeSource::~TimeSource()
 {
-  if (node_) {
+  if (node_base_ || node_topics_ || node_graph_ || node_services_) {
     this->detachNode();
   }
 }

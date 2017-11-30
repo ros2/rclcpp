@@ -73,3 +73,19 @@ TEST_F(TestNode, get_name_and_namespace) {
     EXPECT_STREQ("/my/ns", node->get_namespace());
   }
 }
+
+TEST_F(TestNode, get_clock) {
+  auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+  auto ros_clock = node->get_clock();
+  EXPECT_TRUE(ros_clock != nullptr);
+  EXPECT_EQ(ros_clock->get_clock_type(), RCL_ROS_TIME);
+}
+
+TEST_F(TestNode, now) {
+  auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+  auto clock = node->get_clock();
+  auto now_builtin = node->now().nanoseconds();
+  auto now_external = clock->now().nanoseconds();
+  EXPECT_GE(now_external, now_builtin);
+  EXPECT_LT(now_external - now_builtin, 50000ul);
+}

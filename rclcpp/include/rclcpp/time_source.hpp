@@ -20,6 +20,7 @@
 
 #include "rcl/time.h"
 
+#include "builtin_interfaces/msg/time.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
@@ -44,6 +45,13 @@ public:
   void attachNode(rclcpp::node::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
+  void attachNode(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+    const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+    const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+    const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface);
+
+  RCLCPP_PUBLIC
   void detachNode();
 
   /// Attach a clock to the time source to be updated
@@ -61,7 +69,10 @@ public:
 
 private:
   // Preserve the node reference
-  rclcpp::node::Node::SharedPtr node_;
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
 
   // The subscription for the clock callback
   using MessageT = builtin_interfaces::msg::Time;
