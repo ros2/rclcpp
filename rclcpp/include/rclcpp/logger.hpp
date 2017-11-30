@@ -127,25 +127,6 @@ public:
 
 }  // namespace logger
 
-namespace logging_macro_utilities
-{
-
-/// Helper function to give useful compiler errors in logging macros.
-/**
- * This is not intended for regular use: the `Logger::get_name` method should be
- * used.
- * This will provide a compiler error that includes the `Logger` class if an
- * incorrect type is passed as a parameter, e.g. through incorrect usage of
- * logging macros such as `RCLCPP_INFO()`.
- *
- * \param[in] logger the logger to get the name of
- * \return the name of the logger
- */
-RCLCPP_PUBLIC
-const char * get_logger_name(const rclcpp::logger::Logger & logger);
-
-}  // namespace logging_macro_utilities
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__LOGGER_HPP_

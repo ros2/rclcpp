@@ -17,6 +17,7 @@
 #include <string>
 
 #include "rclcpp/logger.hpp"
+#include "rclcpp/logging.hpp"
 
 TEST(TestLogger, factory_functions) {
   rclcpp::logger::Logger logger = rclcpp::logger::get_logger("test_logger");
@@ -35,5 +36,5 @@ TEST(TestLogger, hierarchy) {
 
 TEST(TestLogger, helper_functions) {
   rclcpp::logger::Logger logger = rclcpp::logger::get_logger("test_logger");
-  EXPECT_STREQ(logger.get_name(), rclcpp::logging_macro_utilities::get_logger_name(logger));
+  EXPECT_STREQ(logger.get_name(), rclcpp::logging_macro_utilities::_get_logger_name(logger));
 }

@@ -38,6 +38,31 @@
 #define RCLCPP_LOG_MIN_SEVERITY RCLCPP_LOG_MIN_SEVERITY_DEBUG
 #endif
 
+namespace rclcpp
+{
+
+namespace logging_macro_utilities
+{
+
+/// Helper function to give useful compiler errors in logging macros.
+/**
+ * This is not intended for regular use: the `rclcpp::logger::Logger::get_name`
+ * method should be used.
+ * This will provide a compiler error that includes the `rclcpp::logger::Logger`
+ * class if an incorrect type is passed as a parameter, e.g. through incorrect
+ * usage of logging macros such as `RCLCPP_INFO()`.
+ *
+ * \param[in] logger the logger to get the name of
+ * \return the name of the logger
+ */
+inline const char * _get_logger_name(const rclcpp::logger::Logger & logger)
+{
+  return logger.get_name();
+}
+
+}  // namespace logging_macro_utilities
+
+}  // namespace rclcpp
 
 @{
 from rcutils.logging import feature_combinations
@@ -89,7 +114,7 @@ def is_supported_feature_combination(feature_combination):
 @[ if params]@
 @(''.join(['    ' + p + ', \\\n' for p in params]))@
 @[ end if]@
-    rclcpp::logging_macro_utilities::get_logger_name(logger), \
+    rclcpp::logging_macro_utilities::_get_logger_name(logger), \
     __VA_ARGS__)
 
 @[ end for]@

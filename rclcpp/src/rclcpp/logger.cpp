@@ -34,14 +34,4 @@ Logger get_logger(const std::string & name)
 
 }  // namespace logger
 
-namespace logging_macro_utilities
-{
-
-const char * get_logger_name(const rclcpp::logger::Logger & logger)
-{
-  return logger.get_name();
-}
-
-}  // namespace logging_macro_utilities
-
 }  // namespace rclcpp
