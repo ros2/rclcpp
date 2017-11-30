@@ -103,7 +103,7 @@
  *     - RCLCPP_ERROR_SKIPFIRST()
  *   - rclcpp/logging.hpp
  * - Logger:
- *   - rclcpp::logger::Logger
+ *   - rclcpp::Logger
  *   - rclcpp/logger.hpp
  *
  * Finally, there are many internal API's and utilities:
@@ -172,8 +172,6 @@ using rclcpp::timer::GenericTimer;
 using rclcpp::timer::TimerBase;
 using rclcpp::timer::WallTimer;
 using ContextSharedPtr = rclcpp::context::Context::SharedPtr;
-using rclcpp::logger::Logger;
-using rclcpp::logger::get_logger;
 using rclcpp::utilities::ok;
 using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;

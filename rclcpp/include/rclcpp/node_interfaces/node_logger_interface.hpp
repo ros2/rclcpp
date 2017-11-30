@@ -37,7 +37,7 @@ public:
   /** \return The logger of the node. */
   RCLCPP_PUBLIC
   virtual
-  rclcpp::logger::Logger
+  rclcpp::Logger
   get_logger() const = 0;
 };
 

@@ -20,21 +20,21 @@
 #include "rclcpp/logging.hpp"
 
 TEST(TestLogger, factory_functions) {
-  rclcpp::logger::Logger logger = rclcpp::logger::get_logger("test_logger");
+  rclcpp::Logger logger = rclcpp::get_logger("test_logger");
   EXPECT_STREQ("test_logger", logger.get_name());
-  rclcpp::logger::Logger logger_copy = rclcpp::logger::Logger(logger);
+  rclcpp::Logger logger_copy = rclcpp::Logger(logger);
   EXPECT_STREQ("test_logger", logger_copy.get_name());
 }
 
 TEST(TestLogger, hierarchy) {
-  rclcpp::logger::Logger logger = rclcpp::logger::get_logger("test_logger");
-  rclcpp::logger::Logger sublogger = logger.get_child("child");
+  rclcpp::Logger logger = rclcpp::get_logger("test_logger");
+  rclcpp::Logger sublogger = logger.get_child("child");
   EXPECT_STREQ("test_logger.child", sublogger.get_name());
-  rclcpp::logger::Logger subsublogger = sublogger.get_child("grandchild");
+  rclcpp::Logger subsublogger = sublogger.get_child("grandchild");
   EXPECT_STREQ("test_logger.child.grandchild", subsublogger.get_name());
 }
 
 TEST(TestLogger, helper_functions) {
-  rclcpp::logger::Logger logger = rclcpp::logger::get_logger("test_logger");
+  rclcpp::Logger logger = rclcpp::get_logger("test_logger");
   EXPECT_STREQ(logger.get_name(), rclcpp::logging_macro_utilities::_get_logger_name(logger));
 }

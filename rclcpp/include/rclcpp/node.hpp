@@ -113,7 +113,7 @@ public:
   /// Get the logger of the node.
   /** \return The logger of the node. */
   RCLCPP_PUBLIC
-  rclcpp::logger::Logger
+  rclcpp::Logger
   get_logger() const;
 
   /// Create and return a callback group.

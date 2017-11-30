@@ -27,7 +27,7 @@
 using ::testing::EndsWith;
 
 size_t g_log_calls = 0;
-rclcpp::logger::Logger g_logger = rclcpp::logger::get_logger("name");
+rclcpp::Logger g_logger = rclcpp::get_logger("name");
 
 struct LogEvent
 {

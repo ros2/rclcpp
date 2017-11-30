@@ -19,19 +19,14 @@
 namespace rclcpp
 {
 
-namespace logger
-{
-
 Logger get_logger(const std::string & name)
 {
 #if RCLCPP_LOGGING_ENABLED
-  return Logger(name);
+  return rclcpp::Logger(name);
 #else
   (void)name;
-  return Logger();
+  return rclcpp::Logger();
 #endif
 }
-
-}  // namespace logger
 
 }  // namespace rclcpp

@@ -86,7 +86,7 @@ Node::get_namespace() const
   return node_base_->get_namespace();
 }
 
-rclcpp::logger::Logger
+rclcpp::Logger
 Node::get_logger() const
 {
   return node_logger_->get_logger();
