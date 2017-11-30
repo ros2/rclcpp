@@ -52,6 +52,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_interfaces/node_base.cpp
   src/rclcpp/node_interfaces/node_clock.cpp
   src/rclcpp/node_interfaces/node_graph.cpp
+  src/rclcpp/node_interfaces/node_logger.cpp
   src/rclcpp/node_interfaces/node_parameters.cpp
   src/rclcpp/node_interfaces/node_services.cpp
   src/rclcpp/node_interfaces/node_timers.cpp

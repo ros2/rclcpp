@@ -20,7 +20,6 @@
 #include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/logger.hpp"
 #include "rmw/validate_node_name.h"
 #include "rmw/validate_namespace.h"
 
@@ -34,7 +33,6 @@ NodeBase::NodeBase(
   rclcpp::context::Context::SharedPtr context)
 : context_(context),
   node_handle_(nullptr),
-  logger_(),
   default_callback_group_(nullptr),
   associated_with_executor_(false),
   notify_guard_condition_is_valid_(false)
@@ -145,9 +143,6 @@ NodeBase::NodeBase(
       delete node;
     });
 
-  // TODO(dhood): use the namespace (slashes converted to dots)
-  logger_ = rclcpp::get_logger(this->get_name());
-
   // Create the default callback group.
   using rclcpp::callback_group::CallbackGroupType;
   default_callback_group_ = create_callback_group(CallbackGroupType::MutuallyExclusive);
@@ -179,12 +174,6 @@ const char *
 NodeBase::get_namespace() const
 {
   return rcl_node_get_namespace(node_handle_.get());
-}
-
-rclcpp::Logger
-NodeBase::get_logger() const
-{
-  return logger_;
 }
 
 rclcpp::context::Context::SharedPtr

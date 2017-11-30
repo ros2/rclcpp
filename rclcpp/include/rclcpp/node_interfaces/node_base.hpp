@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "rclcpp/context.hpp"
-#include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -55,11 +54,6 @@ public:
   virtual
   const char *
   get_namespace() const;
-
-  RCLCPP_PUBLIC
-  virtual
-  rclcpp::Logger
-  get_logger() const;
 
   RCLCPP_PUBLIC
   virtual
@@ -127,8 +121,6 @@ private:
   rclcpp::context::Context::SharedPtr context_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
-
-  Logger logger_;
 
   rclcpp::callback_group::CallbackGroup::SharedPtr default_callback_group_;
   std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> callback_groups_;
