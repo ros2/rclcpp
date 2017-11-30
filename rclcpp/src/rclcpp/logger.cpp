@@ -19,7 +19,8 @@
 namespace rclcpp
 {
 
-Logger get_logger(const std::string & name)
+rclcpp::Logger
+get_logger(const std::string & name)
 {
 #if RCLCPP_LOGGING_ENABLED
   return rclcpp::Logger(name);

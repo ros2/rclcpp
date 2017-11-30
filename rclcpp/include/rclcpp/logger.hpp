@@ -57,7 +57,8 @@ class Logger;
  * \return a dummy logger if logging is disabled.
  */
 RCLCPP_PUBLIC
-Logger get_logger(const std::string & name);
+Logger
+get_logger(const std::string & name);
 
 class Logger
 {
@@ -93,7 +94,8 @@ public:
    *   disabled).
    */
   RCLCPP_PUBLIC
-  const char * get_name() const
+  const char *
+  get_name() const
   {
     if (!name_) {
       return nullptr;
@@ -114,7 +116,8 @@ public:
    *   disabled).
    */
   RCLCPP_PUBLIC
-  Logger get_child(const std::string & suffix)
+  Logger
+  get_child(const std::string & suffix)
   {
     if (!name_) {
       return Logger();
