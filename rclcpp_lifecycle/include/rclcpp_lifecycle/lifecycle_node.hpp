@@ -32,10 +32,12 @@
 #include "rclcpp/client.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
+#include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_logger_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
@@ -107,6 +109,12 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   const char *
   get_namespace() const;
+
+  /// Get the logger of the node.
+  /** \return The logger of the node. */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::Logger
+  get_logger() const;
 
   /// Create and return a callback group.
   RCLCPP_LIFECYCLE_PUBLIC
@@ -467,6 +475,7 @@ private:
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
+  rclcpp::node_interfaces::NodeLoggerInterface::SharedPtr node_logger_;
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
