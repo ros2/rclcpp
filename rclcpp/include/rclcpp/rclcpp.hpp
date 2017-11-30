@@ -150,8 +150,16 @@ namespace rclcpp
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
 using rclcpp::publisher::Publisher;
-using rclcpp::subscription::SubscriptionBase;
+using rclcpp::publisher::PublisherBase;
 using rclcpp::subscription::Subscription;
+using rclcpp::subscription::SubscriptionBase;
+using rclcpp::client::Client;
+using rclcpp::client::ClientBase;
+using rclcpp::service::Service;
+using rclcpp::service::ServiceBase;
+using rclcpp::parameter_client::AsyncParametersClient;
+using rclcpp::parameter_client::SyncParametersClient;
+using rclcpp::parameter_service::ParameterService;
 using rclcpp::rate::GenericRate;
 using rclcpp::rate::WallRate;
 using rclcpp::timer::GenericTimer;
