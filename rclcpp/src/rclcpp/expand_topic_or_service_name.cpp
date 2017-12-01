@@ -104,8 +104,7 @@ rclcpp::expand_topic_or_service_name(
 
       if (validation_result == RCL_TOPIC_NAME_VALID) {
         throw std::runtime_error("topic name unexpectedly valid");
-      }
-      eles {
+      } else {
         const char * validation_message =
           rcl_topic_name_validation_result_string(validation_result);
         if (is_service) {
