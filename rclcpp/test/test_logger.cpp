@@ -33,8 +33,3 @@ TEST(TestLogger, hierarchy) {
   rclcpp::Logger subsublogger = sublogger.get_child("grandchild");
   EXPECT_STREQ("test_logger.child.grandchild", subsublogger.get_name());
 }
-
-TEST(TestLogger, helper_functions) {
-  rclcpp::Logger logger = rclcpp::get_logger("test_logger");
-  EXPECT_STREQ(logger.get_name(), rclcpp::logging_macro_utilities::_get_logger_name(logger));
-}

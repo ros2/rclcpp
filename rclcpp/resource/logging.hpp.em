@@ -17,6 +17,8 @@
 #ifndef RCLCPP__LOGGING_HPP_
 #define RCLCPP__LOGGING_HPP_
 
+#include <type_traits>
+
 #include "rclcpp/logger.hpp"
 #include "rcutils/logging_macros.h"
 
@@ -37,32 +39,6 @@
 #ifndef RCLCPP_LOG_MIN_SEVERITY
 #define RCLCPP_LOG_MIN_SEVERITY RCLCPP_LOG_MIN_SEVERITY_DEBUG
 #endif
-
-namespace rclcpp
-{
-
-namespace logging_macro_utilities
-{
-
-/// Helper function to give useful compiler errors in logging macros.
-/**
- * This is not intended for regular use: the `rclcpp::Logger::get_name` method
- * should be used.
- * This will provide a compiler error that includes the `rclcpp::Logger` class
- * if an incorrect type is passed as a parameter, e.g. through incorrect usage
- * of logging macros such as `RCLCPP_INFO()`.
- *
- * \param[in] logger the logger to get the name of
- * \return the name of the logger
- */
-inline const char * _get_logger_name(const rclcpp::Logger & logger)
-{
-  return logger.get_name();
-}
-
-}  // namespace logging_macro_utilities
-
-}  // namespace rclcpp
 
 @{
 from rcutils.logging import feature_combinations
@@ -109,12 +85,13 @@ def is_supported_feature_combination(feature_combination):
  * \param ... The format string, followed by the variable arguments for the format string
  */
 #define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+  static_assert(std::is_same<decltype(logger), rclcpp::Logger>::value, "First argument to logging macros must be an rclcpp::Logger"); \
   RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = get_macro_parameters(feature_combination).keys()}@
 @[ if params]@
 @(''.join(['    ' + p + ', \\\n' for p in params]))@
 @[ end if]@
-    rclcpp::logging_macro_utilities::_get_logger_name(logger), \
+    logger.get_name(), \
     __VA_ARGS__)
 
 @[ end for]@
