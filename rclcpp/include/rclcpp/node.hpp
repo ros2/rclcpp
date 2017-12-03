@@ -137,7 +137,7 @@ public:
    */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
-    typename PublisherT = ::rclcpp::publisher::Publisher<MessageT, Alloc>>
+    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name, size_t qos_history_depth,
@@ -152,7 +152,7 @@ public:
    */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
-    typename PublisherT = ::rclcpp::publisher::Publisher<MessageT, Alloc>>
+    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,

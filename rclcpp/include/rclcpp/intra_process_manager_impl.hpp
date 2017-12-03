@@ -55,7 +55,7 @@ public:
 
   virtual void add_publisher(
     uint64_t id,
-    publisher::PublisherBase::WeakPtr publisher,
+    PublisherBase::WeakPtr publisher,
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
     size_t size) = 0;
 
@@ -118,7 +118,7 @@ public:
 
   void add_publisher(
     uint64_t id,
-    publisher::PublisherBase::WeakPtr publisher,
+    PublisherBase::WeakPtr publisher,
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
     size_t size)
   {
@@ -286,7 +286,7 @@ private:
 
     PublisherInfo() = default;
 
-    publisher::PublisherBase::WeakPtr publisher;
+    PublisherBase::WeakPtr publisher;
     std::atomic<uint64_t> sequence_number;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
 

@@ -47,7 +47,7 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::publisher::PublisherBase::SharedPtr
+  rclcpp::PublisherBase::SharedPtr
   create_publisher(
     const std::string & topic_name,
     const rclcpp::PublisherFactory & publisher_factory,
@@ -58,7 +58,7 @@ public:
   virtual
   void
   add_publisher(
-    rclcpp::publisher::PublisherBase::SharedPtr publisher);
+    rclcpp::PublisherBase::SharedPtr publisher);
 
   RCLCPP_PUBLIC
   virtual

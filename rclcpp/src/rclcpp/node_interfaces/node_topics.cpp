@@ -30,7 +30,7 @@ NodeTopics::NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 NodeTopics::~NodeTopics()
 {}
 
-rclcpp::publisher::PublisherBase::SharedPtr
+rclcpp::PublisherBase::SharedPtr
 NodeTopics::create_publisher(
   const std::string & topic_name,
   const rclcpp::PublisherFactory & publisher_factory,
@@ -63,7 +63,7 @@ NodeTopics::create_publisher(
 
 void
 NodeTopics::add_publisher(
-  rclcpp::publisher::PublisherBase::SharedPtr publisher)
+  rclcpp::PublisherBase::SharedPtr publisher)
 {
   // The publisher is not added to a callback group or anthing like that for now.
   // It may be stored within the NodeTopics class or the NodeBase class in the future.

@@ -33,7 +33,7 @@ NodeParameters::NodeParameters(
 : node_topics_(node_topics)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
-  using PublisherT = rclcpp::publisher::Publisher<MessageT>;
+  using PublisherT = rclcpp::Publisher<MessageT>;
   using AllocatorT = std::allocator<void>;
   // TODO(wjwwood): expose this allocator through the Parameter interface.
   auto allocator = std::make_shared<AllocatorT>();

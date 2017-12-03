@@ -22,8 +22,8 @@
  *   - rclcpp/node.hpp
  * - Publisher
  *   - rclcpp::node::Node::create_publisher()
- *   - rclcpp::publisher::Publisher
- *   - rclcpp::publisher::Publisher::publish()
+ *   - rclcpp::Publisher
+ *   - rclcpp::Publisher::publish()
  *   - rclcpp/publisher.hpp
  * - Subscription
  *   - rclcpp::node::Node::create_subscription()
@@ -156,8 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::publisher::Publisher;
-using rclcpp::publisher::PublisherBase;
 using rclcpp::subscription::Subscription;
 using rclcpp::subscription::SubscriptionBase;
 using rclcpp::client::Client;
