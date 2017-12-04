@@ -334,7 +334,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  auto parameter_service = std::make_shared<rclcpp::parameter_service::ParameterService>(node);
+  auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
 
   using namespace std::chrono_literals;

@@ -156,7 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::parameter_service::ParameterService;
 using rclcpp::rate::GenericRate;
 using rclcpp::rate::WallRate;
 using rclcpp::timer::GenericTimer;

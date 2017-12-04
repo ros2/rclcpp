@@ -32,8 +32,6 @@
 
 namespace rclcpp
 {
-namespace parameter_service
-{
 
 class ParameterService
 {
@@ -58,7 +56,6 @@ private:
   rclcpp::Service<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_service_;
 };
 
-}  // namespace parameter_service
 }  // namespace rclcpp
 
 #endif  // RCLCPP__PARAMETER_SERVICE_HPP_

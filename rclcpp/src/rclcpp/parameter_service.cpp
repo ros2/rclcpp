@@ -21,7 +21,7 @@
 
 #include "./parameter_service_names.hpp"
 
-using rclcpp::parameter_service::ParameterService;
+using rclcpp::ParameterService;
 
 ParameterService::ParameterService(
   const rclcpp::node::Node::SharedPtr node,
