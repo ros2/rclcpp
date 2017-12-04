@@ -96,14 +96,14 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::event::Event::SharedPtr
+  rclcpp::Event::SharedPtr
   get_graph_event();
 
   RCLCPP_PUBLIC
   virtual
   void
   wait_for_graph_change(
-    rclcpp::event::Event::SharedPtr event,
+    rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
@@ -127,7 +127,7 @@ private:
   /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
   std::condition_variable graph_cv_;
   /// Weak references to graph events out on loan.
-  std::vector<rclcpp::event::Event::WeakPtr> graph_events_;
+  std::vector<rclcpp::Event::WeakPtr> graph_events_;
   /// Number of graph events out on loan, used to determine if the graph should be monitored.
   /** graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
   std::atomic_size_t graph_users_count_;

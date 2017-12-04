@@ -313,7 +313,7 @@ public:
    * out of scope.
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  rclcpp::event::Event::SharedPtr
+  rclcpp::Event::SharedPtr
   get_graph_event();
 
   /// Wait for a graph event to occur by waiting on an Event to become set.
@@ -326,7 +326,7 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   void
   wait_for_graph_change(
-    rclcpp::event::Event::SharedPtr event,
+    rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_LIFECYCLE_PUBLIC

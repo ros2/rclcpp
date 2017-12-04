@@ -23,8 +23,6 @@
 
 namespace rclcpp
 {
-namespace event
-{
 
 class Event
 {
@@ -52,7 +50,6 @@ private:
   std::atomic_bool state_;
 };
 
-}  // namespace event
 }  // namespace rclcpp
 
 #endif  // RCLCPP__EVENT_HPP_
