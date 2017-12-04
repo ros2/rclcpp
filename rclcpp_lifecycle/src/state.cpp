@@ -44,6 +44,9 @@ State::State(
 
   auto state_handle = reinterpret_cast<rcl_lifecycle_state_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+  if (!state_handle) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+  }
   state_handle->id = id;
   state_handle->label =
     rcutils_strndup(label.c_str(), label.size(), allocator_);
@@ -86,6 +89,9 @@ State::operator=(const State & rhs)
     if (owns_rcl_state_handle_) {
       auto state_handle = reinterpret_cast<rcl_lifecycle_state_t *>(
         allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+      if (!state_handle) {
+        throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+      }
       state_handle->id = rhs.state_handle_->id;
       state_handle->label = rcutils_strndup(
         rhs.state_handle_->label,
@@ -104,7 +110,7 @@ uint8_t
 State::id() const
 {
   if (!state_handle_) {
-    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+    throw std::runtime_error("internal state_handle is null");
   }
   return state_handle_->id;
 }
@@ -113,7 +119,7 @@ std::string
 State::label() const
 {
   if (!state_handle_) {
-    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+    throw std::runtime_error("internal state_handle is null");
   }
   return state_handle_->label;
 }

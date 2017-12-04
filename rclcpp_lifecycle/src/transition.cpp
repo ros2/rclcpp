@@ -36,6 +36,9 @@ Transition::Transition(
 {
   auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
+  if (!transition_handle) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
+  }
   transition_handle->id = id;
   transition_handle->label = rcutils_strndup(
     label.c_str(), label.size(), allocator_);
@@ -55,18 +58,27 @@ Transition::Transition(
 {
   auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
+  if (!transition_handle) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
+  }
   transition_handle->id = id;
   transition_handle->label = rcutils_strndup(
     label.c_str(), label.size(), allocator_);
 
   auto start_state = reinterpret_cast<rcl_lifecycle_state_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+  if (!start_state) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+  }
   start_state->id = start.id();
   start_state->label =
     rcutils_strndup(start.label().c_str(), start.label().size(), allocator_);
 
   auto goal_state = reinterpret_cast<rcl_lifecycle_state_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+  if (!goal_state) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+  }
   goal_state->id = goal.id();
   goal_state->label =
     rcutils_strndup(goal.label().c_str(), goal.label().size(), allocator_);
@@ -111,6 +123,9 @@ Transition::operator=(const Transition & rhs)
     if (owns_rcl_transition_handle_) {
       auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
         allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
+      if (!transition_handle) {
+        throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
+      }
       transition_handle->id = rhs.transition_handle_->id;
       transition_handle->label = rcutils_strndup(
         rhs.transition_handle_->label,
@@ -133,24 +148,36 @@ Transition::operator=(const Transition & rhs)
 uint8_t
 Transition::id() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("internal transition_handle is null");
+  }
   return transition_handle_->id;
 }
 
 std::string
 Transition::label() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("internal transition_handle is null");
+  }
   return transition_handle_->label;
 }
 
 State
 Transition::start_state() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("internal transition_handle is null");
+  }
   return State(transition_handle_->start);
 }
 
 State
 Transition::goal_state() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("internal transition_handle is null");
+  }
   return State(transition_handle_->goal);
 }
 
