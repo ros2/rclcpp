@@ -29,7 +29,7 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
-#include "rclcpp/node_interfaces/node_logger.hpp"
+#include "rclcpp/node_interfaces/node_logging.hpp"
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
@@ -58,7 +58,7 @@ LifecycleNode::LifecycleNode(
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, namespace_, context)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
-  node_logger_(new rclcpp::node_interfaces::NodeLogger(node_base_.get())),
+  node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
@@ -101,7 +101,7 @@ LifecycleNode::get_namespace() const
 rclcpp::Logger
 LifecycleNode::get_logger() const
 {
-  return node_logger_->get_logger();
+  return node_logging_->get_logger();
 }
 
 rclcpp::callback_group::CallbackGroup::SharedPtr

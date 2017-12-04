@@ -12,23 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/node_interfaces/node_logger.hpp"
+#include "rclcpp/node_interfaces/node_logging.hpp"
 
-using rclcpp::node_interfaces::NodeLogger;
+using rclcpp::node_interfaces::NodeLogging;
 
-NodeLogger::NodeLogger(rclcpp::node_interfaces::NodeBaseInterface * node_base)
+NodeLogging::NodeLogging(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
 {
   // TODO(dhood): use the namespace (slashes converted to dots)
   logger_ = rclcpp::get_logger(node_base_->get_name());
 }
 
-NodeLogger::~NodeLogger()
+NodeLogging::~NodeLogging()
 {
 }
 
 rclcpp::Logger
-NodeLogger::get_logger() const
+NodeLogging::get_logger() const
 {
   return logger_;
 }

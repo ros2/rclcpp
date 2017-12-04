@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NODE_INTERFACES__NODE_LOGGER_INTERFACE_HPP_
-#define RCLCPP__NODE_INTERFACES__NODE_LOGGER_INTERFACE_HPP_
+#ifndef RCLCPP__NODE_INTERFACES__NODE_LOGGING_INTERFACE_HPP_
+#define RCLCPP__NODE_INTERFACES__NODE_LOGGING_INTERFACE_HPP_
 
 #include <memory>
 
@@ -27,11 +27,11 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-/// Pure virtual interface class for the NodeLogger part of the Node API.
-class NodeLoggerInterface
+/// Pure virtual interface class for the NodeLogging part of the Node API.
+class NodeLoggingInterface
 {
 public:
-  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeLoggerInterface)
+  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeLoggingInterface)
 
   /// Return the logger of the node.
   /** \return The logger of the node. */
@@ -44,4 +44,4 @@ public:
 }  // namespace node_interfaces
 }  // namespace rclcpp
 
-#endif  // RCLCPP__NODE_INTERFACES__NODE_LOGGER_INTERFACE_HPP_
+#endif  // RCLCPP__NODE_INTERFACES__NODE_LOGGING_INTERFACE_HPP_
