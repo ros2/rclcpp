@@ -31,7 +31,7 @@
  *   - rclcpp/subscription.hpp
  * - Service Client
  *   - rclcpp::node::Node::create_client()
- *   - rclcpp::client::Client
+ *   - rclcpp::Client
  *   - rclcpp/client.hpp
  * - Service Server
  *   - rclcpp::node::Node::create_service()
@@ -156,8 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::client::Client;
-using rclcpp::client::ClientBase;
 using rclcpp::service::Service;
 using rclcpp::service::ServiceBase;
 using rclcpp::parameter_client::AsyncParametersClient;

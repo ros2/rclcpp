@@ -54,7 +54,7 @@ NodeServices::add_service(
 
 void
 NodeServices::add_client(
-  rclcpp::client::ClientBase::SharedPtr client_base_ptr,
+  rclcpp::ClientBase::SharedPtr client_base_ptr,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   if (group) {

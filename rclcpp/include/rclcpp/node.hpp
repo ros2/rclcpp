@@ -236,7 +236,7 @@ public:
 
   /* Create and return a Client. */
   template<typename ServiceT>
-  typename rclcpp::client::Client<ServiceT>::SharedPtr
+  typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,

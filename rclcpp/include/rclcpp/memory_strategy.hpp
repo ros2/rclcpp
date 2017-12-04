@@ -89,7 +89,7 @@ public:
   static rclcpp::service::ServiceBase::SharedPtr
   get_service_by_handle(const rcl_service_t * service_handle, const WeakNodeVector & weak_nodes);
 
-  static rclcpp::client::ClientBase::SharedPtr
+  static rclcpp::ClientBase::SharedPtr
   get_client_by_handle(const rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
@@ -109,7 +109,7 @@ public:
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_client(
-    rclcpp::client::ClientBase::SharedPtr client,
+    rclcpp::ClientBase::SharedPtr client,
     const WeakNodeVector & weak_nodes);
 };
 

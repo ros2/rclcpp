@@ -45,7 +45,7 @@ public:
   virtual
   void
   add_client(
-    rclcpp::client::ClientBase::SharedPtr client_base_ptr,
+    rclcpp::ClientBase::SharedPtr client_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
   RCLCPP_PUBLIC

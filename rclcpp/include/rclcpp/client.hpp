@@ -47,9 +47,6 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
-namespace client
-{
-
 class ClientBase
 {
 public:
@@ -282,7 +279,6 @@ private:
   std::mutex pending_requests_mutex_;
 };
 
-}  // namespace client
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CLIENT_HPP_

@@ -44,7 +44,7 @@ CallbackGroup::get_service_ptrs() const
   return service_ptrs_;
 }
 
-const std::vector<rclcpp::client::ClientBase::WeakPtr> &
+const std::vector<rclcpp::ClientBase::WeakPtr> &
 CallbackGroup::get_client_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -86,7 +86,7 @@ CallbackGroup::add_service(const rclcpp::service::ServiceBase::SharedPtr service
 }
 
 void
-CallbackGroup::add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr)
+CallbackGroup::add_client(const rclcpp::ClientBase::SharedPtr client_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   client_ptrs_.push_back(client_ptr);

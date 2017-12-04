@@ -42,8 +42,8 @@ AsyncParametersClient::AsyncParametersClient(
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos_profile;
 
-  using rclcpp::client::Client;
-  using rclcpp::client::ClientBase;
+  using rclcpp::Client;
+  using rclcpp::ClientBase;
 
   get_parameters_client_ = Client<rcl_interfaces::srv::GetParameters>::make_shared(
     node_base_interface.get(),
@@ -131,7 +131,7 @@ AsyncParametersClient::get_parameters(
   get_parameters_client_->async_send_request(
     request,
     [request, promise_result, future_result, callback](
-      rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f)
+      rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f)
     {
       std::vector<rclcpp::parameter::ParameterVariant> parameter_variants;
       auto & pvalues = cb_f.get()->values;
@@ -172,7 +172,7 @@ AsyncParametersClient::get_parameter_types(
   get_parameter_types_client_->async_send_request(
     request,
     [promise_result, future_result, callback](
-      rclcpp::client::Client<rcl_interfaces::srv::GetParameterTypes>::SharedFuture cb_f)
+      rclcpp::Client<rcl_interfaces::srv::GetParameterTypes>::SharedFuture cb_f)
     {
       std::vector<rclcpp::parameter::ParameterType> types;
       auto & pts = cb_f.get()->types;
@@ -211,7 +211,7 @@ AsyncParametersClient::set_parameters(
   set_parameters_client_->async_send_request(
     request,
     [promise_result, future_result, callback](
-      rclcpp::client::Client<rcl_interfaces::srv::SetParameters>::SharedFuture cb_f)
+      rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedFuture cb_f)
     {
       promise_result->set_value(cb_f.get()->results);
       if (callback != nullptr) {
@@ -245,7 +245,7 @@ AsyncParametersClient::set_parameters_atomically(
   set_parameters_atomically_client_->async_send_request(
     request,
     [promise_result, future_result, callback](
-      rclcpp::client::Client<rcl_interfaces::srv::SetParametersAtomically>::SharedFuture cb_f)
+      rclcpp::Client<rcl_interfaces::srv::SetParametersAtomically>::SharedFuture cb_f)
     {
       promise_result->set_value(cb_f.get()->result);
       if (callback != nullptr) {
@@ -276,7 +276,7 @@ AsyncParametersClient::list_parameters(
   list_parameters_client_->async_send_request(
     request,
     [promise_result, future_result, callback](
-      rclcpp::client::Client<rcl_interfaces::srv::ListParameters>::SharedFuture cb_f)
+      rclcpp::Client<rcl_interfaces::srv::ListParameters>::SharedFuture cb_f)
     {
       promise_result->set_value(cb_f.get()->result);
       if (callback != nullptr) {
@@ -302,7 +302,7 @@ AsyncParametersClient::service_is_ready() const
 bool
 AsyncParametersClient::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
 {
-  const std::vector<std::shared_ptr<rclcpp::client::ClientBase>> clients = {
+  const std::vector<std::shared_ptr<rclcpp::ClientBase>> clients = {
     get_parameters_client_,
     get_parameter_types_client_,
     set_parameters_client_,

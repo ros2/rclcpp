@@ -72,7 +72,7 @@ MemoryStrategy::get_service_by_handle(
   return nullptr;
 }
 
-rclcpp::client::ClientBase::SharedPtr
+rclcpp::ClientBase::SharedPtr
 MemoryStrategy::get_client_by_handle(
   const rcl_client_t * client_handle,
   const WeakNodeVector & weak_nodes)
@@ -175,7 +175,7 @@ MemoryStrategy::get_group_by_service(
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_client(
-  rclcpp::client::ClientBase::SharedPtr client,
+  rclcpp::ClientBase::SharedPtr client,
   const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {

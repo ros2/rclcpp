@@ -46,7 +46,7 @@ struct AnyExecutable
   rclcpp::SubscriptionBase::SharedPtr subscription_intra_process;
   rclcpp::timer::TimerBase::SharedPtr timer;
   rclcpp::service::ServiceBase::SharedPtr service;
-  rclcpp::client::ClientBase::SharedPtr client;
+  rclcpp::ClientBase::SharedPtr client;
   // These are used to keep the scope on the containing items
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base;

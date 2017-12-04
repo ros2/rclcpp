@@ -145,7 +145,7 @@ LifecycleNode::create_wall_timer(
 }
 
 template<typename ServiceT>
-typename rclcpp::client::Client<ServiceT>::SharedPtr
+typename rclcpp::Client<ServiceT>::SharedPtr
 LifecycleNode::create_client(
   const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
@@ -154,8 +154,8 @@ LifecycleNode::create_client(
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos_profile;
 
-  using rclcpp::client::Client;
-  using rclcpp::client::ClientBase;
+  using rclcpp::Client;
+  using rclcpp::ClientBase;
 
   auto cli = Client<ServiceT>::make_shared(
     node_base_.get(),

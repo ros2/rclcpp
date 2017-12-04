@@ -71,7 +71,7 @@ public:
   get_service_ptrs() const;
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::client::ClientBase::WeakPtr> &
+  const std::vector<rclcpp::ClientBase::WeakPtr> &
   get_client_ptrs() const;
 
   RCLCPP_PUBLIC
@@ -99,7 +99,7 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr);
+  add_client(const rclcpp::ClientBase::SharedPtr client_ptr);
 
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
@@ -107,7 +107,7 @@ protected:
   std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
   std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::service::ServiceBase::WeakPtr> service_ptrs_;
-  std::vector<rclcpp::client::ClientBase::WeakPtr> client_ptrs_;
+  std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
 };
 

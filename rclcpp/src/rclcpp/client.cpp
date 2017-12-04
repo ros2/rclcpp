@@ -27,7 +27,7 @@
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/utilities.hpp"
 
-using rclcpp::client::ClientBase;
+using rclcpp::ClientBase;
 using rclcpp::exceptions::InvalidNodeError;
 using rclcpp::exceptions::throw_from_rcl_error;
 

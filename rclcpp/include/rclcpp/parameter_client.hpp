@@ -156,14 +156,14 @@ protected:
 
 private:
   const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface_;
-  rclcpp::client::Client<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
+  rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_client_;
+  rclcpp::Client<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
     get_parameter_types_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::SetParameters>::SharedPtr set_parameters_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::SetParametersAtomically>::SharedPtr
+  rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedPtr set_parameters_client_;
+  rclcpp::Client<rcl_interfaces::srv::SetParametersAtomically>::SharedPtr
     set_parameters_atomically_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_client_;
-  rclcpp::client::Client<rcl_interfaces::srv::DescribeParameters>::SharedPtr
+  rclcpp::Client<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_client_;
+  rclcpp::Client<rcl_interfaces::srv::DescribeParameters>::SharedPtr
     describe_parameters_client_;
   std::string remote_node_name_;
 };

@@ -339,7 +339,7 @@ Executor::execute_service(
 
 void
 Executor::execute_client(
-  rclcpp::client::ClientBase::SharedPtr client)
+  rclcpp::ClientBase::SharedPtr client)
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();

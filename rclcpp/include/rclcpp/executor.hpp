@@ -312,7 +312,7 @@ protected:
 
   RCLCPP_PUBLIC
   static void
-  execute_client(rclcpp::client::ClientBase::SharedPtr client);
+  execute_client(rclcpp::ClientBase::SharedPtr client);
 
   RCLCPP_PUBLIC
   void
