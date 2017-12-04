@@ -54,15 +54,6 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_lifecycle_node ${PROJECT_NAME})
   endif()
-  ament_add_gtest(test_default_state_machine test/test_default_state_machine.cpp)
-  if(TARGET test_default_state_machine)
-    target_include_directories(test_default_state_machine PUBLIC
-      ${rcl_lifecycle_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
-      ${rclcpp_lifecycle_INCLUDE_DIRS}
-    )
-    target_link_libraries(test_default_state_machine ${PROJECT_NAME})
-  endif()
   ament_add_gtest(test_state_machine_info test/test_state_machine_info.cpp)
   if(TARGET test_state_machine_info)
     target_include_directories(test_state_machine_info PUBLIC
