@@ -77,7 +77,7 @@ private:
   // The subscription for the clock callback
   using MessageT = builtin_interfaces::msg::Time;
   using Alloc = std::allocator<void>;
-  using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
+  using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
   std::shared_ptr<SubscriptionT> clock_subscription_;
 
   // The clock callback itself
@@ -88,7 +88,7 @@ private:
 
   // Parameter Event subscription
   using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
-  using ParamSubscriptionT = rclcpp::subscription::Subscription<ParamMessageT, Alloc>;
+  using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
   std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
 
   // Callback for parameter updates

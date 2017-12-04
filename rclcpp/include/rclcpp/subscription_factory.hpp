@@ -47,7 +47,7 @@ struct SubscriptionFactory
 {
   // Creates a Subscription<MessageT> object and returns it as a SubscriptionBase.
   using SubscriptionFactoryFunction = std::function<
-      rclcpp::subscription::SubscriptionBase::SharedPtr(
+      rclcpp::SubscriptionBase::SharedPtr(
         rclcpp::node_interfaces::NodeBaseInterface * node_base,
         const std::string & topic_name,
         rcl_subscription_options_t & subscription_options)>;
@@ -58,7 +58,7 @@ struct SubscriptionFactory
   using SetupIntraProcessFunction = std::function<
       void(
         rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
-        rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+        rclcpp::SubscriptionBase::SharedPtr subscription,
         const rcl_subscription_options_t & subscription_options)>;
 
   SetupIntraProcessFunction setup_intra_process;
@@ -75,12 +75,12 @@ create_subscription_factory(
 {
   SubscriptionFactory factory;
 
-  using rclcpp::subscription::AnySubscriptionCallback;
+  using rclcpp::AnySubscriptionCallback;
   AnySubscriptionCallback<MessageT, Alloc> any_subscription_callback(allocator);
   any_subscription_callback.set(std::forward<CallbackT>(callback));
 
   auto message_alloc =
-    std::make_shared<typename subscription::Subscription<MessageT, Alloc>::MessageAlloc>();
+    std::make_shared<typename Subscription<MessageT, Alloc>::MessageAlloc>();
 
   // factory function that creates a MessageT specific SubscriptionT
   factory.create_typed_subscription =
@@ -88,13 +88,13 @@ create_subscription_factory(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic_name,
     rcl_subscription_options_t & subscription_options
-    ) -> rclcpp::subscription::SubscriptionBase::SharedPtr
+    ) -> rclcpp::SubscriptionBase::SharedPtr
     {
       subscription_options.allocator =
         rclcpp::allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
 
-      using rclcpp::subscription::Subscription;
-      using rclcpp::subscription::SubscriptionBase;
+      using rclcpp::Subscription;
+      using rclcpp::SubscriptionBase;
 
       auto sub = Subscription<MessageT, Alloc>::make_shared(
         node_base->get_shared_rcl_node_handle(),
@@ -110,7 +110,7 @@ create_subscription_factory(
   factory.setup_intra_process =
     [message_alloc](
     rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    rclcpp::SubscriptionBase::SharedPtr subscription,
     const rcl_subscription_options_t & subscription_options)
     {
       rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = ipm;
@@ -128,7 +128,7 @@ create_subscription_factory(
         uint64_t publisher_id,
         uint64_t message_sequence,
         uint64_t subscription_id,
-        typename rclcpp::subscription::Subscription<MessageT, Alloc>::MessageUniquePtr & message)
+        typename rclcpp::Subscription<MessageT, Alloc>::MessageUniquePtr & message)
         {
           auto ipm = weak_ipm.lock();
           if (!ipm) {

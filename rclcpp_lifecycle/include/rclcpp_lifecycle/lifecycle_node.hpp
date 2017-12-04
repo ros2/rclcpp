@@ -172,7 +172,7 @@ public:
     typename MessageT,
     typename CallbackT,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -202,7 +202,7 @@ public:
     typename MessageT,
     typename CallbackT,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,

@@ -59,7 +59,7 @@ public:
   explicit CallbackGroup(CallbackGroupType group_type);
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
+  const std::vector<rclcpp::SubscriptionBase::WeakPtr> &
   get_subscription_ptrs() const;
 
   RCLCPP_PUBLIC
@@ -87,7 +87,7 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  add_subscription(const rclcpp::subscription::SubscriptionBase::SharedPtr subscription_ptr);
+  add_subscription(const rclcpp::SubscriptionBase::SharedPtr subscription_ptr);
 
   RCLCPP_PUBLIC
   void
@@ -104,7 +104,7 @@ protected:
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;
-  std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
+  std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
   std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::service::ServiceBase::WeakPtr> service_ptrs_;
   std::vector<rclcpp::client::ClientBase::WeakPtr> client_ptrs_;

@@ -25,7 +25,7 @@
 #include "rmw/rmw.h"
 
 
-using rclcpp::subscription::SubscriptionBase;
+using rclcpp::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
   std::shared_ptr<rcl_node_t> node_handle,

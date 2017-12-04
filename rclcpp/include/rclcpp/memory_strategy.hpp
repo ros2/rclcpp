@@ -81,7 +81,7 @@ public:
   virtual rcl_allocator_t
   get_allocator() = 0;
 
-  static rclcpp::subscription::SubscriptionBase::SharedPtr
+  static rclcpp::SubscriptionBase::SharedPtr
   get_subscription_by_handle(
     const rcl_subscription_t * subscriber_handle,
     const WeakNodeVector & weak_nodes);
@@ -99,7 +99,7 @@ public:
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    rclcpp::SubscriptionBase::SharedPtr subscription,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr

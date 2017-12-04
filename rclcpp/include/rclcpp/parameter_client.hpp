@@ -114,8 +114,8 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT =
-    rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent, Alloc>>
-  typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+    rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent, Alloc>>
+  typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(CallbackT && callback)
   {
     using rclcpp::message_memory_strategy::MessageMemoryStrategy;
@@ -246,7 +246,7 @@ public:
     uint64_t depth);
 
   template<typename CallbackT>
-  typename rclcpp::subscription::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(CallbackT && callback)
   {
     return async_parameters_client_->on_parameter_event(std::forward<CallbackT>(callback));

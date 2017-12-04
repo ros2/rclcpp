@@ -23,7 +23,7 @@ CallbackGroup::CallbackGroup(CallbackGroupType group_type)
 : type_(group_type), can_be_taken_from_(true)
 {}
 
-const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
+const std::vector<rclcpp::SubscriptionBase::WeakPtr> &
 CallbackGroup::get_subscription_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -65,7 +65,7 @@ CallbackGroup::type() const
 
 void
 CallbackGroup::add_subscription(
-  const rclcpp::subscription::SubscriptionBase::SharedPtr subscription_ptr)
+  const rclcpp::SubscriptionBase::SharedPtr subscription_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   subscription_ptrs_.push_back(subscription_ptr);

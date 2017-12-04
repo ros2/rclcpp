@@ -90,7 +90,7 @@ LifecycleNode::create_subscription(
 
   return rclcpp::create_subscription<
     MessageT, CallbackT, Alloc,
-    rclcpp::subscription::Subscription<MessageT, Alloc>>(
+    rclcpp::Subscription<MessageT, Alloc>>(
     this->node_topics_.get(),
     topic_name,
     std::forward<CallbackT>(callback),

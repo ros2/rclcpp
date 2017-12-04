@@ -82,8 +82,6 @@ public:
 
 namespace rclcpp
 {
-namespace subscription
-{
 namespace mock
 {
 
@@ -109,7 +107,6 @@ public:
 };
 
 }  // namespace mock
-}  // namespace subscription
 }  // namespace rclcpp
 
 // Prevent rclcpp/publisher.hpp and rclcpp/subscription.hpp from being imported.
@@ -154,7 +151,7 @@ TEST(TestIntraProcessManager, nominal) {
   p2->mock_topic_name = "nominal2";
   p2->mock_queue_size = 10;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
@@ -239,7 +236,7 @@ TEST(TestIntraProcessManager, remove_publisher_before_trying_to_take) {
   p1->mock_topic_name = "nominal1";
   p1->mock_queue_size = 10;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
@@ -281,15 +278,15 @@ TEST(TestIntraProcessManager, removed_subscription_affects_take) {
   p1->mock_topic_name = "nominal1";
   p1->mock_queue_size = 10;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
-  auto s2 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s2 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s2->mock_topic_name = "nominal1";
   s2->mock_queue_size = 10;
 
-  auto s3 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s3 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s3->mock_topic_name = "nominal1";
   s3->mock_queue_size = 10;
 
@@ -352,15 +349,15 @@ TEST(TestIntraProcessManager, multiple_subscriptions_one_publisher) {
   p1->mock_topic_name = "nominal1";
   p1->mock_queue_size = 10;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
-  auto s2 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s2 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s2->mock_topic_name = "nominal1";
   s2->mock_queue_size = 10;
 
-  auto s3 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s3 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s3->mock_topic_name = "nominal1";
   s3->mock_queue_size = 10;
 
@@ -436,7 +433,7 @@ TEST(TestIntraProcessManager, multiple_publishers_one_subscription) {
   p3->mock_topic_name = "nominal1";
   p3->mock_queue_size = 10;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
@@ -536,15 +533,15 @@ TEST(TestIntraProcessManager, multiple_publishers_multiple_subscription) {
   p3->mock_topic_name = "nominal1";
   p3->mock_queue_size = 10;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
-  auto s2 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s2 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s2->mock_topic_name = "nominal1";
   s2->mock_queue_size = 10;
 
-  auto s3 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s3 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s3->mock_topic_name = "nominal1";
   s3->mock_queue_size = 10;
 
@@ -691,7 +688,7 @@ TEST(TestIntraProcessManager, ring_buffer_displacement) {
   p1->mock_topic_name = "nominal1";
   p1->mock_queue_size = 2;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
@@ -775,7 +772,7 @@ TEST(TestIntraProcessManager, subscription_creation_race_condition) {
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
   ASSERT_EQ(nullptr, unique_msg);
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 
@@ -796,7 +793,7 @@ TEST(TestIntraProcessManager, subscription_creation_race_condition) {
 TEST(TestIntraProcessManager, publisher_out_of_scope_take) {
   rclcpp::intra_process_manager::IntraProcessManager ipm;
 
-  auto s1 = std::make_shared<rclcpp::subscription::mock::SubscriptionBase>();
+  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
   s1->mock_topic_name = "nominal1";
   s1->mock_queue_size = 10;
 

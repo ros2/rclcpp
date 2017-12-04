@@ -16,7 +16,7 @@
 
 using rclcpp::memory_strategy::MemoryStrategy;
 
-rclcpp::subscription::SubscriptionBase::SharedPtr
+rclcpp::SubscriptionBase::SharedPtr
 MemoryStrategy::get_subscription_by_handle(
   const rcl_subscription_t * subscriber_handle, const WeakNodeVector & weak_nodes)
 {
@@ -123,7 +123,7 @@ MemoryStrategy::get_node_by_group(
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+  rclcpp::SubscriptionBase::SharedPtr subscription,
   const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {

@@ -269,7 +269,7 @@ Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
 
 void
 Executor::execute_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   std::shared_ptr<void> message = subscription->create_message();
   rmw_message_info_t message_info;
@@ -290,7 +290,7 @@ Executor::execute_subscription(
 
 void
 Executor::execute_intra_process_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   rcl_interfaces::msg::IntraProcessMessage ipm;
   rmw_message_info_t message_info;

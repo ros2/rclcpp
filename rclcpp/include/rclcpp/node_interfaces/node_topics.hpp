@@ -62,7 +62,7 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::subscription::SubscriptionBase::SharedPtr
+  rclcpp::SubscriptionBase::SharedPtr
   create_subscription(
     const std::string & topic_name,
     const rclcpp::SubscriptionFactory & subscription_factory,
@@ -73,7 +73,7 @@ public:
   virtual
   void
   add_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    rclcpp::SubscriptionBase::SharedPtr subscription,
     rclcpp::callback_group::CallbackGroup::SharedPtr callback_group);
 
 private:

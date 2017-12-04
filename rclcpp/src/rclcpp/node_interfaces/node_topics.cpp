@@ -79,7 +79,7 @@ NodeTopics::add_publisher(
   }
 }
 
-rclcpp::subscription::SubscriptionBase::SharedPtr
+rclcpp::SubscriptionBase::SharedPtr
 NodeTopics::create_subscription(
   const std::string & topic_name,
   const rclcpp::SubscriptionFactory & subscription_factory,
@@ -104,7 +104,7 @@ NodeTopics::create_subscription(
 
 void
 NodeTopics::add_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+  rclcpp::SubscriptionBase::SharedPtr subscription,
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
 {
   // Assign to a group.

@@ -31,7 +31,7 @@ IntraProcessManager::~IntraProcessManager()
 
 uint64_t
 IntraProcessManager::add_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   auto id = IntraProcessManager::get_next_unique_id();
   impl_->add_subscription(id, subscription);

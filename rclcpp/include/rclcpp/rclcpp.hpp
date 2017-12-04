@@ -27,7 +27,7 @@
  *   - rclcpp/publisher.hpp
  * - Subscription
  *   - rclcpp::node::Node::create_subscription()
- *   - rclcpp::subscription::Subscription
+ *   - rclcpp::Subscription
  *   - rclcpp/subscription.hpp
  * - Service Client
  *   - rclcpp::node::Node::create_client()
@@ -156,8 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::subscription::Subscription;
-using rclcpp::subscription::SubscriptionBase;
 using rclcpp::client::Client;
 using rclcpp::client::ClientBase;
 using rclcpp::service::Service;

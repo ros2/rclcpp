@@ -295,12 +295,12 @@ protected:
   RCLCPP_PUBLIC
   static void
   execute_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription);
+    rclcpp::SubscriptionBase::SharedPtr subscription);
 
   RCLCPP_PUBLIC
   static void
   execute_intra_process_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription);
+    rclcpp::SubscriptionBase::SharedPtr subscription);
 
   RCLCPP_PUBLIC
   static void
