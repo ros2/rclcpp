@@ -64,6 +64,12 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
+  AsyncParametersClient(
+    rclcpp::node::Node * node,
+    const std::string & remote_node_name = "",
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+
+  RCLCPP_PUBLIC
   std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
   get_parameters(
     const std::vector<std::string> & names,

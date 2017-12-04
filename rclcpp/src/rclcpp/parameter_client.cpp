@@ -101,6 +101,19 @@ AsyncParametersClient::AsyncParametersClient(
     qos_profile)
 {}
 
+AsyncParametersClient::AsyncParametersClient(
+  rclcpp::node::Node * node,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile)
+: AsyncParametersClient(
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
+    qos_profile)
+{}
+
 std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
 AsyncParametersClient::get_parameters(
   const std::vector<std::string> & names,
