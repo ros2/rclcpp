@@ -33,7 +33,7 @@
 namespace rclcpp
 {
 
-TimeSource::TimeSource(std::shared_ptr<rclcpp::node::Node> node)
+TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node)
 : ros_time_active_(false)
 {
   this->attachNode(node);
@@ -44,7 +44,7 @@ TimeSource::TimeSource()
 {
 }
 
-void TimeSource::attachNode(rclcpp::node::Node::SharedPtr node)
+void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
 {
   attachNode(
     node->get_node_base_interface(),

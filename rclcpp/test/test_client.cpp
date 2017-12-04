@@ -32,7 +32,7 @@ protected:
 
   void SetUp()
   {
-    node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   }
 
   void TearDown()
@@ -40,7 +40,7 @@ protected:
     node.reset();
   }
 
-  rclcpp::node::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr node;
 };
 
 /*

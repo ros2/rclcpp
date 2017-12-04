@@ -129,7 +129,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 }
 
 void
-Executor::add_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify)
+Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->add_node(node_ptr->get_node_base_interface(), notify);
 }
@@ -163,7 +163,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 }
 
 void
-Executor::remove_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify)
+Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->remove_node(node_ptr->get_node_base_interface(), notify);
 }
@@ -188,7 +188,7 @@ Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr n
 }
 
 void
-Executor::spin_node_some(std::shared_ptr<rclcpp::node::Node> node)
+Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
 {
   this->spin_node_some(node->get_node_base_interface());
 }

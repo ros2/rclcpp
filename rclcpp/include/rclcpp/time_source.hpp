@@ -36,13 +36,13 @@ class TimeSource
 {
 public:
   RCLCPP_PUBLIC
-  explicit TimeSource(rclcpp::node::Node::SharedPtr node);
+  explicit TimeSource(rclcpp::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
   TimeSource();
 
   RCLCPP_PUBLIC
-  void attachNode(rclcpp::node::Node::SharedPtr node);
+  void attachNode(rclcpp::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
   void attachNode(

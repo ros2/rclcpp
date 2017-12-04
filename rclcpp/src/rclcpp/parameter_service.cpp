@@ -24,11 +24,11 @@
 using rclcpp::ParameterService;
 
 ParameterService::ParameterService(
-  const rclcpp::node::Node::SharedPtr node,
+  const rclcpp::Node::SharedPtr node,
   const rmw_qos_profile_t & qos_profile)
 : node_(node)
 {
-  std::weak_ptr<rclcpp::node::Node> captured_node = node_;
+  std::weak_ptr<rclcpp::Node> captured_node = node_;
   get_parameters_service_ = node_->create_service<rcl_interfaces::srv::GetParameters>(
     std::string(node_->get_name()) + "/" + parameter_service_names::get_parameters,
     [captured_node](

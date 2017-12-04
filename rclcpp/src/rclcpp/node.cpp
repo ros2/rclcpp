@@ -32,7 +32,7 @@
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
-using rclcpp::node::Node;
+using rclcpp::Node;
 using rclcpp::exceptions::throw_from_rcl_error;
 
 Node::Node(

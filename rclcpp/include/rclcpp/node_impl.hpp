@@ -49,8 +49,6 @@
 
 namespace rclcpp
 {
-namespace node
-{
 
 template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
@@ -248,7 +246,6 @@ Node::get_parameter_or(
   return got_parameter;
 }
 
-}  // namespace node
 }  // namespace rclcpp
 
 #endif  // RCLCPP__NODE_IMPL_HPP_

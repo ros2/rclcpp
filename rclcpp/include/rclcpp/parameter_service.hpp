@@ -40,11 +40,11 @@ public:
 
   RCLCPP_PUBLIC
   explicit ParameterService(
-    const rclcpp::node::Node::SharedPtr node,
+    const rclcpp::Node::SharedPtr node,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
 private:
-  const rclcpp::node::Node::SharedPtr node_;
+  const rclcpp::Node::SharedPtr node_;
   rclcpp::Service<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_service_;
   rclcpp::Service<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
     get_parameter_types_service_;

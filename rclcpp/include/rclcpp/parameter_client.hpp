@@ -57,13 +57,13 @@ public:
 
   RCLCPP_PUBLIC
   AsyncParametersClient(
-    const rclcpp::node::Node::SharedPtr node,
+    const rclcpp::Node::SharedPtr node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
   AsyncParametersClient(
-    rclcpp::node::Node * node,
+    rclcpp::Node * node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
@@ -173,14 +173,14 @@ public:
 
   RCLCPP_PUBLIC
   explicit SyncParametersClient(
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
   SyncParametersClient(
     rclcpp::executor::Executor::SharedPtr executor,
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
@@ -267,7 +267,7 @@ public:
 
 private:
   rclcpp::executor::Executor::SharedPtr executor_;
-  rclcpp::node::Node::SharedPtr node_;
+  rclcpp::Node::SharedPtr node_;
   AsyncParametersClient::SharedPtr async_parameters_client_;
 };
 

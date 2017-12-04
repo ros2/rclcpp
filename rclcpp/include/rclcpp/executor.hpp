@@ -38,10 +38,7 @@ namespace rclcpp
 {
 
 // Forward declaration is used in convenience method signature.
-namespace node
-{
 class Node;
-}  // namespace node
 
 namespace executor
 {
@@ -124,7 +121,7 @@ public:
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
   virtual void
-  add_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify = true);
+  add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
 
   /// Remove a node from the executor.
   /**
@@ -140,7 +137,7 @@ public:
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
   virtual void
-  remove_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify = true);
+  remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
 
   /// Add a node to executor, execute the next available unit of work, and remove the node.
   /**
@@ -162,7 +159,7 @@ public:
   }
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
-  template<typename NodeT = rclcpp::node::Node, typename T = std::milli>
+  template<typename NodeT = rclcpp::Node, typename T = std::milli>
   void
   spin_node_once(
     std::shared_ptr<NodeT> node,
@@ -185,7 +182,7 @@ public:
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
   void
-  spin_node_some(std::shared_ptr<rclcpp::node::Node> node);
+  spin_node_some(std::shared_ptr<rclcpp::Node> node);
 
   /// Complete all available queued work without blocking.
   /**

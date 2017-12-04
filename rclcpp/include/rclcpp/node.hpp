@@ -60,9 +60,6 @@
 namespace rclcpp
 {
 
-namespace node
-{
-
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node : public std::enable_shared_from_this<Node>
 {
@@ -432,7 +429,6 @@ private:
   bool use_intra_process_comms_;
 };
 
-}  // namespace node
 }  // namespace rclcpp
 
 #ifndef RCLCPP__NODE_IMPL_HPP_
