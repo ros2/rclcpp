@@ -102,9 +102,7 @@ rclcpp::expand_topic_or_service_name(
         throw_from_rcl_error(ret);
       }
 
-      if (validation_result == RCL_TOPIC_NAME_VALID) {
-        throw std::runtime_error("topic name unexpectedly valid");
-      } else {
+      if (validation_result != RCL_TOPIC_NAME_VALID) {
         const char * validation_message =
           rcl_topic_name_validation_result_string(validation_result);
         if (is_service) {
@@ -114,6 +112,8 @@ rclcpp::expand_topic_or_service_name(
           using rclcpp::exceptions::InvalidTopicNameError;
           throw InvalidTopicNameError(name.c_str(), validation_message, invalid_index);
         }
+      } else {
+        throw std::runtime_error("topic name unexpectedly valid");
       }
 
       // if invalid node name
@@ -139,6 +139,8 @@ rclcpp::expand_topic_or_service_name(
                 node_name.c_str(),
                 rmw_node_name_validation_result_string(validation_result),
                 invalid_index);
+      } else {
+        throw std::runtime_error("invalid rcl node name but valid rmw node name");
       }
 
       // if invalid namespace
@@ -164,6 +166,8 @@ rclcpp::expand_topic_or_service_name(
                 namespace_.c_str(),
                 rmw_namespace_validation_result_string(validation_result),
                 invalid_index);
+      } else {
+        throw std::runtime_error("invalid rcl namespace but valid rmw namespace");
       }
       // something else happened
     } else {

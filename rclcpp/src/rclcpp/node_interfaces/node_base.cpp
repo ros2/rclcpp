@@ -112,6 +112,8 @@ NodeBase::NodeBase(
                 node_name.c_str(),
                 rmw_node_name_validation_result_string(validation_result),
                 invalid_index);
+      } else {
+        throw std::runtime_error("valid rmw node name but invalid rcl node name");
       }
     }
 
@@ -133,6 +135,8 @@ NodeBase::NodeBase(
                 namespace_.c_str(),
                 rmw_namespace_validation_result_string(validation_result),
                 invalid_index);
+      } else {
+        throw std::runtime_error("valid rmw node namespace but invalid rcl node namespace");
       }
     }
     throw_from_rcl_error(ret, "failed to initialize rcl node");
