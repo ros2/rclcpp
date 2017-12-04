@@ -118,8 +118,6 @@ private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
 };
 
-using any_subscription_callback::AnySubscriptionCallback;
-
 /// Subscription implementation, templated on the type of message this subscription receives.
 template<typename MessageT, typename Alloc = std::allocator<void>>
 class Subscription : public SubscriptionBase

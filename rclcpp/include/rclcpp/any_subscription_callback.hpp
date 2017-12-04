@@ -30,9 +30,6 @@
 namespace rclcpp
 {
 
-namespace any_subscription_callback
-{
-
 template<typename MessageT, typename Alloc>
 class AnySubscriptionCallback
 {
@@ -209,7 +206,6 @@ private:
   MessageDeleter message_deleter_;
 };
 
-}  // namespace any_subscription_callback
 }  // namespace rclcpp
 
 #endif  // RCLCPP__ANY_SUBSCRIPTION_CALLBACK_HPP_
