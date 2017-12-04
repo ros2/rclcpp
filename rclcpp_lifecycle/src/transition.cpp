@@ -103,12 +103,10 @@ Transition &
 Transition::operator=(const Transition & rhs)
 {
   if (this != &rhs) {
-    if (owns_rcl_transition_handle_) {
-      reset();
+    reset();
 
-      allocator_ = rhs.allocator_;
-      owns_rcl_transition_handle_ = rhs.owns_rcl_transition_handle_;
-    }
+    allocator_ = rhs.allocator_;
+    owns_rcl_transition_handle_ = rhs.owns_rcl_transition_handle_;
 
     if (owns_rcl_transition_handle_) {
       auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
