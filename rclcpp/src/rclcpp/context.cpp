@@ -14,6 +14,6 @@
 
 #include "rclcpp/context.hpp"
 
-using rclcpp::context::Context;
+using rclcpp::Context;
 
 Context::Context() {}

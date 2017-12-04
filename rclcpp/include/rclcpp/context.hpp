@@ -30,9 +30,6 @@
 namespace rclcpp
 {
 
-namespace context
-{
-
 class Context
 {
 public:
@@ -72,7 +69,6 @@ private:
   std::mutex mutex_;
 };
 
-}  // namespace context
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CONTEXT_HPP_

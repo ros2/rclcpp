@@ -25,7 +25,7 @@ namespace contexts
 namespace default_context
 {
 
-class DefaultContext : public rclcpp::context::Context
+class DefaultContext : public rclcpp::Context
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(DefaultContext)

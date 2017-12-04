@@ -79,7 +79,7 @@ public:
     const std::string & namespace_ = "",
     bool use_intra_process_comms = false);
 
-  /// Create a node based on the node name and a rclcpp::context::Context.
+  /// Create a node based on the node name and a rclcpp::Context.
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
@@ -91,7 +91,7 @@ public:
   Node(
     const std::string & node_name,
     const std::string & namespace_,
-    rclcpp::context::Context::SharedPtr context,
+    rclcpp::Context::SharedPtr context,
     bool use_intra_process_comms = false);
 
   RCLCPP_PUBLIC

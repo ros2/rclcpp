@@ -49,7 +49,7 @@ Node::Node(
 Node::Node(
   const std::string & node_name,
   const std::string & namespace_,
-  rclcpp::context::Context::SharedPtr context,
+  rclcpp::Context::SharedPtr context,
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, namespace_, context)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),

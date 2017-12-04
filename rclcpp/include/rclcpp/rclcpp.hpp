@@ -121,7 +121,7 @@
  *   - rclcpp/strategies/allocator_memory_strategy.hpp
  *   - rclcpp/strategies/message_pool_memory_strategy.hpp
  * - Context object which is shared amongst multiple Nodes:
- *   - rclcpp::context::Context
+ *   - rclcpp::Context
  *   - rclcpp/context.hpp
  *   - rclcpp/contexts/default_context.hpp
  * - Various utilities:
