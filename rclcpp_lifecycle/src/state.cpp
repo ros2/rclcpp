@@ -132,7 +132,7 @@ State::reset()
   }
 
   if (state_handle_->label) {
-    allocator_.deallocate(const_cast<char *>(state_handle_->label), allocator_.state);
+    allocator_.deallocate(state_handle_->label, allocator_.state);
     state_handle_->label = nullptr;
   }
   allocator_.deallocate(state_handle_, allocator_.state);

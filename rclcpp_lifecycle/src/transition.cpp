@@ -174,7 +174,7 @@ Transition::reset()
   if (transition_handle_->start) {
     if (transition_handle_->start->label) {
       allocator_.deallocate(
-        const_cast<char *>(transition_handle_->start->label), allocator_.state);
+        transition_handle_->start->label, allocator_.state);
       transition_handle_->start->label = nullptr;
     }
     allocator_.deallocate(transition_handle_->start, allocator_.state);
@@ -183,7 +183,7 @@ Transition::reset()
   if (transition_handle_->goal) {
     if (transition_handle_->goal->label) {
       allocator_.deallocate(
-        const_cast<char *>(transition_handle_->goal->label), allocator_.state);
+        transition_handle_->goal->label, allocator_.state);
       transition_handle_->goal->label = nullptr;
     }
     allocator_.deallocate(transition_handle_->goal, allocator_.state);
@@ -192,7 +192,7 @@ Transition::reset()
   if (transition_handle_) {
     if (transition_handle_->label) {
       allocator_.deallocate(
-        const_cast<char *>(transition_handle_->label), allocator_.state);
+        transition_handle_->label, allocator_.state);
       transition_handle_->label = nullptr;
     }
     allocator_.deallocate(transition_handle_, allocator_.state);
