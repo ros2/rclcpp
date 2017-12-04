@@ -67,7 +67,7 @@ public:
   get_timer_ptrs() const;
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::service::ServiceBase::WeakPtr> &
+  const std::vector<rclcpp::ServiceBase::WeakPtr> &
   get_service_ptrs() const;
 
   RCLCPP_PUBLIC
@@ -95,7 +95,7 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  add_service(const rclcpp::service::ServiceBase::SharedPtr service_ptr);
+  add_service(const rclcpp::ServiceBase::SharedPtr service_ptr);
 
   RCLCPP_PUBLIC
   void
@@ -106,7 +106,7 @@ protected:
   mutable std::mutex mutex_;
   std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
   std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
-  std::vector<rclcpp::service::ServiceBase::WeakPtr> service_ptrs_;
+  std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
 };

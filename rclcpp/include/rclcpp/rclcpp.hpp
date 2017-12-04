@@ -35,7 +35,7 @@
  *   - rclcpp/client.hpp
  * - Service Server
  *   - rclcpp::node::Node::create_service()
- *   - rclcpp::service::Service
+ *   - rclcpp::Service
  *   - rclcpp/service.hpp
  * - Timer
  *   - rclcpp::node::Node::create_wall_timer()
@@ -156,8 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::service::Service;
-using rclcpp::service::ServiceBase;
 using rclcpp::parameter_client::AsyncParametersClient;
 using rclcpp::parameter_client::SyncParametersClient;
 using rclcpp::parameter_service::ParameterService;

@@ -86,7 +86,7 @@ public:
     const rcl_subscription_t * subscriber_handle,
     const WeakNodeVector & weak_nodes);
 
-  static rclcpp::service::ServiceBase::SharedPtr
+  static rclcpp::ServiceBase::SharedPtr
   get_service_by_handle(const rcl_service_t * service_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::ClientBase::SharedPtr
@@ -104,7 +104,7 @@ public:
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_service(
-    rclcpp::service::ServiceBase::SharedPtr service,
+    rclcpp::ServiceBase::SharedPtr service,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr

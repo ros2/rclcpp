@@ -319,7 +319,7 @@ Executor::execute_timer(
 
 void
 Executor::execute_service(
-  rclcpp::service::ServiceBase::SharedPtr service)
+  rclcpp::ServiceBase::SharedPtr service)
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();

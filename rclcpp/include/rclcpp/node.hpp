@@ -244,7 +244,7 @@ public:
 
   /* Create and return a Service. */
   template<typename ServiceT, typename CallbackT>
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
     CallbackT && callback,

@@ -67,7 +67,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_uninitialized) {
   // don't initialize the service
   // expect fail
   try {
-    rclcpp::service::Service<rclcpp::srv::Mock>(
+    rclcpp::Service<rclcpp::srv::Mock>(
       node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
       &service_handle, cb);
   } catch (const std::runtime_error &) {
@@ -98,7 +98,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
   rclcpp::any_service_callback::AnyServiceCallback<rclcpp::srv::Mock> cb;
 
   try {
-    rclcpp::service::Service<rclcpp::srv::Mock>(
+    rclcpp::Service<rclcpp::srv::Mock>(
       node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
       &service_handle, cb);
   } catch (const std::runtime_error &) {
@@ -129,7 +129,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
 
   {
     // Call constructor
-    rclcpp::service::Service<rclcpp::srv::Mock> srv_cpp(
+    rclcpp::Service<rclcpp::srv::Mock> srv_cpp(
       node_handle->get_node_base_interface()->get_shared_rcl_node_handle(),
       &service_handle, cb);
     // Call destructor

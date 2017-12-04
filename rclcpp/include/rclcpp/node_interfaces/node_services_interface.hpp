@@ -43,7 +43,7 @@ public:
   virtual
   void
   add_service(
-    rclcpp::service::ServiceBase::SharedPtr service_base_ptr,
+    rclcpp::ServiceBase::SharedPtr service_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
 };
 

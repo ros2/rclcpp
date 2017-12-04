@@ -169,23 +169,23 @@ LifecycleNode::create_client(
 }
 
 template<typename ServiceT, typename CallbackT>
-typename rclcpp::service::Service<ServiceT>::SharedPtr
+typename rclcpp::Service<ServiceT>::SharedPtr
 LifecycleNode::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  rclcpp::service::AnyServiceCallback<ServiceT> any_service_callback;
+  rclcpp::AnyServiceCallback<ServiceT> any_service_callback;
   any_service_callback.set(std::forward<CallbackT>(callback));
 
   rcl_service_options_t service_options = rcl_service_get_default_options();
   service_options.qos = qos_profile;
 
-  auto serv = rclcpp::service::Service<ServiceT>::make_shared(
+  auto serv = rclcpp::Service<ServiceT>::make_shared(
     node_base_->get_shared_rcl_node_handle(),
     service_name, any_service_callback, service_options);
-  auto serv_base_ptr = std::dynamic_pointer_cast<rclcpp::service::ServiceBase>(serv);
+  auto serv_base_ptr = std::dynamic_pointer_cast<rclcpp::ServiceBase>(serv);
   node_services_->add_service(serv_base_ptr, group);
   return serv;
 }

@@ -107,12 +107,12 @@ public:
       rclcpp::any_service_callback::AnyServiceCallback<ChangeStateSrv> any_cb;
       any_cb.set(std::move(cb));
 
-      srv_change_state_ = std::make_shared<rclcpp::service::Service<ChangeStateSrv>>(
+      srv_change_state_ = std::make_shared<rclcpp::Service<ChangeStateSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
         &state_machine_.com_interface.srv_change_state,
         any_cb);
       node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::service::ServiceBase>(srv_change_state_),
+        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_change_state_),
         nullptr);
     }
 
@@ -122,12 +122,12 @@ public:
       rclcpp::any_service_callback::AnyServiceCallback<GetStateSrv> any_cb;
       any_cb.set(std::move(cb));
 
-      srv_get_state_ = std::make_shared<rclcpp::service::Service<GetStateSrv>>(
+      srv_get_state_ = std::make_shared<rclcpp::Service<GetStateSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
         &state_machine_.com_interface.srv_get_state,
         any_cb);
       node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::service::ServiceBase>(srv_get_state_),
+        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_state_),
         nullptr);
     }
 
@@ -137,12 +137,12 @@ public:
       rclcpp::any_service_callback::AnyServiceCallback<GetAvailableStatesSrv> any_cb;
       any_cb.set(std::move(cb));
 
-      srv_get_available_states_ = std::make_shared<rclcpp::service::Service<GetAvailableStatesSrv>>(
+      srv_get_available_states_ = std::make_shared<rclcpp::Service<GetAvailableStatesSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
         &state_machine_.com_interface.srv_get_available_states,
         any_cb);
       node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::service::ServiceBase>(srv_get_available_states_),
+        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_states_),
         nullptr);
     }
 
@@ -153,12 +153,12 @@ public:
       any_cb.set(std::move(cb));
 
       srv_get_available_transitions_ =
-        std::make_shared<rclcpp::service::Service<GetAvailableTransitionsSrv>>(
+        std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
         &state_machine_.com_interface.srv_get_available_transitions,
         any_cb);
       node_services_interface_->add_service(
-        std::dynamic_pointer_cast<rclcpp::service::ServiceBase>(srv_get_available_transitions_),
+        std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_transitions_),
         nullptr);
     }
   }
@@ -404,12 +404,12 @@ public:
 
   using NodeBasePtr = std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface>;
   using NodeServicesPtr = std::shared_ptr<rclcpp::node_interfaces::NodeServicesInterface>;
-  using ChangeStateSrvPtr = std::shared_ptr<rclcpp::service::Service<ChangeStateSrv>>;
-  using GetStateSrvPtr = std::shared_ptr<rclcpp::service::Service<GetStateSrv>>;
+  using ChangeStateSrvPtr = std::shared_ptr<rclcpp::Service<ChangeStateSrv>>;
+  using GetStateSrvPtr = std::shared_ptr<rclcpp::Service<GetStateSrv>>;
   using GetAvailableStatesSrvPtr =
-      std::shared_ptr<rclcpp::service::Service<GetAvailableStatesSrv>>;
+      std::shared_ptr<rclcpp::Service<GetAvailableStatesSrv>>;
   using GetAvailableTransitionsSrvPtr =
-      std::shared_ptr<rclcpp::service::Service<GetAvailableTransitionsSrv>>;
+      std::shared_ptr<rclcpp::Service<GetAvailableTransitionsSrv>>;
 
   NodeBasePtr node_base_interface_;
   NodeServicesPtr node_services_interface_;

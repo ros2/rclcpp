@@ -46,7 +46,7 @@ MemoryStrategy::get_subscription_by_handle(
   return nullptr;
 }
 
-rclcpp::service::ServiceBase::SharedPtr
+rclcpp::ServiceBase::SharedPtr
 MemoryStrategy::get_service_by_handle(
   const rcl_service_t * service_handle,
   const WeakNodeVector & weak_nodes)
@@ -149,7 +149,7 @@ MemoryStrategy::get_group_by_subscription(
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_service(
-  rclcpp::service::ServiceBase::SharedPtr service,
+  rclcpp::ServiceBase::SharedPtr service,
   const WeakNodeVector & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {

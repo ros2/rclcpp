@@ -308,7 +308,7 @@ protected:
 
   RCLCPP_PUBLIC
   static void
-  execute_service(rclcpp::service::ServiceBase::SharedPtr service);
+  execute_service(rclcpp::ServiceBase::SharedPtr service);
 
   RCLCPP_PUBLIC
   static void

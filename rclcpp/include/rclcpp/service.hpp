@@ -35,8 +35,6 @@
 
 namespace rclcpp
 {
-namespace service
-{
 
 class ServiceBase
 {
@@ -223,7 +221,6 @@ private:
   AnyServiceCallback<ServiceT> any_callback_;
 };
 
-}  // namespace service
 }  // namespace rclcpp
 
 #endif  // RCLCPP__SERVICE_HPP_
