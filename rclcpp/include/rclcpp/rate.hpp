@@ -25,8 +25,6 @@
 
 namespace rclcpp
 {
-namespace rate
-{
 
 class RateBase
 {
@@ -116,7 +114,6 @@ private:
 using Rate = GenericRate<std::chrono::system_clock>;
 using WallRate = GenericRate<std::chrono::steady_clock>;
 
-}  // namespace rate
 }  // namespace rclcpp
 
 #endif  // RCLCPP__RATE_HPP_

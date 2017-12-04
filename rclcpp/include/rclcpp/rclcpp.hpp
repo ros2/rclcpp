@@ -56,8 +56,8 @@
  *   - rclcpp/parameter_client.hpp
  *   - rclcpp/parameter_service.hpp
  * - Rate:
- *   - rclcpp::rate::Rate
- *   - rclcpp::rate::WallRate
+ *   - rclcpp::Rate
+ *   - rclcpp::WallRate
  *   - rclcpp/rate.hpp
  *
  * There are also some components which help control the execution of callbacks:
@@ -156,8 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::rate::GenericRate;
-using rclcpp::rate::WallRate;
 using rclcpp::timer::GenericTimer;
 using rclcpp::timer::TimerBase;
 using rclcpp::timer::WallTimer;

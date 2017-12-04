@@ -28,7 +28,7 @@ TEST(TestRate, rate_basics) {
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::system_clock::now();
-  rclcpp::rate::Rate r(period);
+  rclcpp::Rate r(period);
   ASSERT_FALSE(r.is_steady());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::system_clock::now();
@@ -67,7 +67,7 @@ TEST(TestRate, wall_rate_basics) {
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::steady_clock::now();
-  rclcpp::rate::WallRate r(period);
+  rclcpp::WallRate r(period);
   ASSERT_TRUE(r.is_steady());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::steady_clock::now();
