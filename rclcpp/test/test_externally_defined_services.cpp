@@ -62,7 +62,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_uninitialized) {
   // mock for externally defined service
   rcl_service_t service_handle = rcl_get_zero_initialized_service();
 
-  rclcpp::any_service_callback::AnyServiceCallback<rclcpp::srv::Mock> cb;
+  rclcpp::AnyServiceCallback<rclcpp::srv::Mock> cb;
 
   // don't initialize the service
   // expect fail
@@ -95,7 +95,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
     return;
   }
 
-  rclcpp::any_service_callback::AnyServiceCallback<rclcpp::srv::Mock> cb;
+  rclcpp::AnyServiceCallback<rclcpp::srv::Mock> cb;
 
   try {
     rclcpp::Service<rclcpp::srv::Mock>(
@@ -125,7 +125,7 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
     FAIL();
     return;
   }
-  rclcpp::any_service_callback::AnyServiceCallback<rclcpp::srv::Mock> cb;
+  rclcpp::AnyServiceCallback<rclcpp::srv::Mock> cb;
 
   {
     // Call constructor

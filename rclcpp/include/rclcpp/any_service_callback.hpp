@@ -27,9 +27,6 @@
 namespace rclcpp
 {
 
-namespace any_service_callback
-{
-
 template<typename ServiceT>
 class AnyServiceCallback
 {
@@ -100,7 +97,6 @@ public:
   }
 };
 
-}  // namespace any_service_callback
 }  // namespace rclcpp
 
 #endif  // RCLCPP__ANY_SERVICE_CALLBACK_HPP_

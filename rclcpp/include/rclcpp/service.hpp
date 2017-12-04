@@ -89,8 +89,6 @@ protected:
   bool owns_rcl_handle_ = true;
 };
 
-using any_service_callback::AnyServiceCallback;
-
 template<typename ServiceT>
 class Service : public ServiceBase
 {

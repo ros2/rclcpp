@@ -104,7 +104,7 @@ public:
     {  // change_state
       auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_change_state, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::any_service_callback::AnyServiceCallback<ChangeStateSrv> any_cb;
+      rclcpp::AnyServiceCallback<ChangeStateSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_change_state_ = std::make_shared<rclcpp::Service<ChangeStateSrv>>(
@@ -119,7 +119,7 @@ public:
     {  // get_state
       auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_get_state, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::any_service_callback::AnyServiceCallback<GetStateSrv> any_cb;
+      rclcpp::AnyServiceCallback<GetStateSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_get_state_ = std::make_shared<rclcpp::Service<GetStateSrv>>(
@@ -134,7 +134,7 @@ public:
     {  // get_available_states
       auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_get_available_states, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::any_service_callback::AnyServiceCallback<GetAvailableStatesSrv> any_cb;
+      rclcpp::AnyServiceCallback<GetAvailableStatesSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_get_available_states_ = std::make_shared<rclcpp::Service<GetAvailableStatesSrv>>(
@@ -149,7 +149,7 @@ public:
     {  // get_available_transitions
       auto cb = std::bind(&LifecycleNodeInterfaceImpl::on_get_available_transitions, this,
           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-      rclcpp::any_service_callback::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
+      rclcpp::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_get_available_transitions_ =
