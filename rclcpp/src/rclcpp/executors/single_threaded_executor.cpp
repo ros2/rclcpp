@@ -15,7 +15,7 @@
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/scope_exit.hpp"
 
-using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
+using rclcpp::executors::SingleThreadedExecutor;
 
 SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
 : executor::Executor(args) {}
