@@ -154,7 +154,7 @@ namespace rclcpp
 {
 
 // Namespace escalations.
-using ContextSharedPtr = rclcpp::context::Context::SharedPtr;
+using rclcpp::utilities::ok;
 using rclcpp::utilities::ok;
 using rclcpp::utilities::shutdown;
 using rclcpp::utilities::init;
