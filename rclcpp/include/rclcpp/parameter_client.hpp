@@ -40,8 +40,6 @@
 
 namespace rclcpp
 {
-namespace parameter_client
-{
 
 class AsyncParametersClient
 {
@@ -273,7 +271,6 @@ private:
   AsyncParametersClient::SharedPtr async_parameters_client_;
 };
 
-}  // namespace parameter_client
 }  // namespace rclcpp
 
 #endif  // RCLCPP__PARAMETER_CLIENT_HPP_

@@ -21,8 +21,8 @@
 
 #include "./parameter_service_names.hpp"
 
-using rclcpp::parameter_client::AsyncParametersClient;
-using rclcpp::parameter_client::SyncParametersClient;
+using rclcpp::AsyncParametersClient;
+using rclcpp::SyncParametersClient;
 
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,

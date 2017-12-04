@@ -85,7 +85,7 @@ void TimeSource::attachNode(
     msg_mem_strat,
     allocator);
 
-  parameter_client_ = std::make_shared<rclcpp::parameter_client::AsyncParametersClient>(
+  parameter_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     node_base_,
     node_topics_,
     node_graph_,

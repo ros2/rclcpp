@@ -50,8 +50,8 @@
  *   - rclcpp::node::Node::list_parameters()
  *   - rclcpp::node::Node::register_param_change_callback()
  *   - rclcpp::parameter::ParameterVariant
- *   - rclcpp::parameter_client::AsyncParametersClient
- *   - rclcpp::parameter_client::SyncParametersClient
+ *   - rclcpp::AsyncParametersClient
+ *   - rclcpp::SyncParametersClient
  *   - rclcpp/parameter.hpp
  *   - rclcpp/parameter_client.hpp
  *   - rclcpp/parameter_service.hpp
@@ -156,8 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::parameter_client::AsyncParametersClient;
-using rclcpp::parameter_client::SyncParametersClient;
 using rclcpp::parameter_service::ParameterService;
 using rclcpp::rate::GenericRate;
 using rclcpp::rate::WallRate;

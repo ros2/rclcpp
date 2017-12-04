@@ -84,7 +84,7 @@ private:
   void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
 
   // Parameter Client pointer
-  std::shared_ptr<rclcpp::parameter_client::AsyncParametersClient> parameter_client_;
+  std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
 
   // Parameter Event subscription
   using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
