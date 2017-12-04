@@ -187,14 +187,12 @@ Transition::reset()
     allocator_.deallocate(transition_handle_->goal, allocator_.state);
     transition_handle_->goal = nullptr;
   }
-  if (transition_handle_) {
-    if (transition_handle_->label) {
-      allocator_.deallocate(
-        transition_handle_->label, allocator_.state);
-      transition_handle_->label = nullptr;
-    }
-    allocator_.deallocate(transition_handle_, allocator_.state);
-    transition_handle_ = nullptr;
+  if (transition_handle_->label) {
+    allocator_.deallocate(
+      transition_handle_->label, allocator_.state);
+    transition_handle_->label = nullptr;
   }
+  allocator_.deallocate(transition_handle_, allocator_.state);
+  transition_handle_ = nullptr;
 }
 }  // namespace rclcpp_lifecycle
