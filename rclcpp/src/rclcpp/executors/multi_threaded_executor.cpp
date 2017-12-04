@@ -21,7 +21,7 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/scope_exit.hpp"
 
-using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
+using rclcpp::executors::MultiThreadedExecutor;
 
 MultiThreadedExecutor::MultiThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
 : executor::Executor(args)

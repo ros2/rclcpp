@@ -50,7 +50,7 @@ spin(rclcpp::Node::SharedPtr node_ptr);
 namespace executors
 {
 
-using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
+using rclcpp::executors::MultiThreadedExecutor;
 using rclcpp::executors::SingleThreadedExecutor;
 
 /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.

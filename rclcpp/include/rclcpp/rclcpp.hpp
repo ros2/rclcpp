@@ -69,9 +69,9 @@
  *   - rclcpp::executors::SingleThreadedExecutor
  *   - rclcpp::executors::SingleThreadedExecutor::add_node()
  *   - rclcpp::executors::SingleThreadedExecutor::spin()
- *   - rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor
- *   - rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor::add_node()
- *   - rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor::spin()
+ *   - rclcpp::executors::MultiThreadedExecutor
+ *   - rclcpp::executors::MultiThreadedExecutor::add_node()
+ *   - rclcpp::executors::MultiThreadedExecutor::spin()
  *   - rclcpp/executor.hpp
  *   - rclcpp/executors.hpp
  *   - rclcpp/executors/single_threaded_executor.hpp
