@@ -216,7 +216,6 @@ Node::now()
   return node_clock_->get_clock()->now();
 }
 
-
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 Node::get_node_base_interface()
 {
@@ -228,7 +227,6 @@ Node::get_node_clock_interface()
 {
   return node_clock_;
 }
-
 
 rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
 Node::get_node_graph_interface()
