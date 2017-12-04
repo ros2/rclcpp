@@ -131,13 +131,13 @@ LifecycleNode::create_subscription(
 }
 
 template<typename DurationT, typename CallbackT>
-typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
+typename rclcpp::WallTimer<CallbackT>::SharedPtr
 LifecycleNode::create_wall_timer(
   std::chrono::duration<int64_t, DurationT> period,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  auto timer = rclcpp::timer::WallTimer<CallbackT>::make_shared(
+  auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
     std::chrono::duration_cast<std::chrono::nanoseconds>(period),
     std::move(callback));
   node_timers_->add_timer(timer, group);

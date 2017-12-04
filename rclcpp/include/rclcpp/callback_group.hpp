@@ -63,7 +63,7 @@ public:
   get_subscription_ptrs() const;
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::timer::TimerBase::WeakPtr> &
+  const std::vector<rclcpp::TimerBase::WeakPtr> &
   get_timer_ptrs() const;
 
   RCLCPP_PUBLIC
@@ -91,7 +91,7 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr);
+  add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr);
 
   RCLCPP_PUBLIC
   void
@@ -105,7 +105,7 @@ protected:
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;
   std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
-  std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
+  std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;

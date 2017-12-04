@@ -30,7 +30,7 @@ CallbackGroup::get_subscription_ptrs() const
   return subscription_ptrs_;
 }
 
-const std::vector<rclcpp::timer::TimerBase::WeakPtr> &
+const std::vector<rclcpp::TimerBase::WeakPtr> &
 CallbackGroup::get_timer_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -72,7 +72,7 @@ CallbackGroup::add_subscription(
 }
 
 void
-CallbackGroup::add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr)
+CallbackGroup::add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   timer_ptrs_.push_back(timer_ptr);

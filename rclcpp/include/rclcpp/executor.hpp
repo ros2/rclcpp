@@ -304,7 +304,7 @@ protected:
 
   RCLCPP_PUBLIC
   static void
-  execute_timer(rclcpp::timer::TimerBase::SharedPtr timer);
+  execute_timer(rclcpp::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
   static void
@@ -324,7 +324,7 @@ protected:
 
   RCLCPP_PUBLIC
   rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_timer(rclcpp::timer::TimerBase::SharedPtr timer);
+  get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
   void

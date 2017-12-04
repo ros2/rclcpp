@@ -312,7 +312,7 @@ Executor::execute_intra_process_subscription(
 
 void
 Executor::execute_timer(
-  rclcpp::timer::TimerBase::SharedPtr timer)
+  rclcpp::TimerBase::SharedPtr timer)
 {
   timer->execute_callback();
 }
@@ -471,7 +471,7 @@ Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr gro
 }
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
-Executor::get_group_by_timer(rclcpp::timer::TimerBase::SharedPtr timer)
+Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 {
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();

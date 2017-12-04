@@ -39,8 +39,8 @@
  *   - rclcpp/service.hpp
  * - Timer
  *   - rclcpp::node::Node::create_wall_timer()
- *   - rclcpp::timer::WallTimer
- *   - rclcpp::timer::TimerBase
+ *   - rclcpp::WallTimer
+ *   - rclcpp::TimerBase
  *   - rclcpp/timer.hpp
  * - Parameters:
  *   - rclcpp::node::Node::set_parameters()
@@ -156,9 +156,6 @@ namespace rclcpp
 // Namespace escalations.
 // For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
 using rclcpp::node::Node;
-using rclcpp::timer::GenericTimer;
-using rclcpp::timer::TimerBase;
-using rclcpp::timer::WallTimer;
 using ContextSharedPtr = rclcpp::context::Context::SharedPtr;
 using rclcpp::utilities::ok;
 using rclcpp::utilities::shutdown;

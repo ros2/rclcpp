@@ -449,7 +449,7 @@ LifecycleNode::add_publisher_handle(
 }
 
 void
-LifecycleNode::add_timer_handle(std::shared_ptr<rclcpp::timer::TimerBase> timer)
+LifecycleNode::add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer)
 {
   impl_->add_timer_handle(timer);
 }

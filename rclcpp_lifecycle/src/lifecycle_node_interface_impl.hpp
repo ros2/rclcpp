@@ -391,7 +391,7 @@ public:
   }
 
   void
-  add_timer_handle(std::shared_ptr<rclcpp::timer::TimerBase> timer)
+  add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer)
   {
     weak_timers_.push_back(timer);
   }
@@ -420,7 +420,7 @@ public:
 
   // to controllable things
   std::vector<std::weak_ptr<rclcpp_lifecycle::LifecyclePublisherInterface>> weak_pubs_;
-  std::vector<std::weak_ptr<rclcpp::timer::TimerBase>> weak_timers_;
+  std::vector<std::weak_ptr<rclcpp::TimerBase>> weak_timers_;
 };
 
 }  // namespace rclcpp_lifecycle

@@ -221,7 +221,7 @@ public:
    * \param[in] group Callback group to execute this timer's callback in.
    */
   template<typename DurationT = std::milli, typename CallbackT>
-  typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
+  typename rclcpp::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
     std::chrono::duration<int64_t, DurationT> period,
     CallbackT callback,
@@ -480,7 +480,7 @@ protected:
 
   RCLCPP_LIFECYCLE_PUBLIC
   void
-  add_timer_handle(std::shared_ptr<rclcpp::timer::TimerBase> timer);
+  add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer);
 
 private:
   RCLCPP_DISABLE_COPY(LifecycleNode)
