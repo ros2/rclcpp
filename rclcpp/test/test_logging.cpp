@@ -46,7 +46,7 @@ public:
   {
     g_log_calls = 0;
     ASSERT_EQ(RCUTILS_RET_OK, rcutils_logging_initialize());
-    rcutils_logging_set_default_severity_threshold(RCUTILS_LOG_SEVERITY_DEBUG);
+    rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_DEBUG);
 
     auto rcutils_logging_console_output_handler = [](
       rcutils_log_location_t * location,
