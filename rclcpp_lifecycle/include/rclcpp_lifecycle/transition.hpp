@@ -76,6 +76,10 @@ protected:
   bool owns_rcl_transition_handle_;
 
   rcl_lifecycle_transition_t * transition_handle_;
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  reset();
 };
 
 }  // namespace rclcpp_lifecycle

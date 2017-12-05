@@ -41,16 +41,18 @@ State::State(
     throw std::runtime_error("Lifecycle State cannot have an empty label.");
   }
 
-  auto state_handle = reinterpret_cast<rcl_lifecycle_state_t *>(
+  state_handle_ = static_cast<rcl_lifecycle_state_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
-  if (!state_handle) {
+  if (!state_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
-  state_handle->id = id;
-  state_handle->label =
+  state_handle_->id = id;
+  state_handle_->label =
     rcutils_strndup(label.c_str(), label.size(), allocator_);
-
-  state_handle_ = state_handle;
+  if (!state_handle_->label) {
+    reset();
+    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
+  }
 }
 
 State::State(
@@ -60,37 +62,42 @@ State::State(
   owns_rcl_state_handle_(false),
   state_handle_(nullptr)
 {
+  if (!rcl_lifecycle_state_handle) {
+    throw std::runtime_error("rcl_lifecycle_state_handle is null");
+  }
   state_handle_ = const_cast<rcl_lifecycle_state_t *>(rcl_lifecycle_state_handle);
 }
 
 State::~State()
 {
-  if (owns_rcl_state_handle_) {
-    if (state_handle_->label) {
-      allocator_.deallocate(const_cast<char *>(state_handle_->label), allocator_.state);
-      state_handle_->label = nullptr;
-    }
-    allocator_.deallocate(state_handle_, allocator_.state);
-    state_handle_ = nullptr;
-  }
+  reset();
 }
 
 uint8_t
 State::id() const
 {
-  if (!state_handle_) {
-    throw std::runtime_error("internal state_handle is null");
-  }
   return state_handle_->id;
 }
 
 std::string
 State::label() const
 {
-  if (!state_handle_) {
-    throw std::runtime_error("internal state_handle is null");
-  }
   return state_handle_->label;
 }
 
+void
+State::reset()
+{
+  if (!owns_rcl_state_handle_) {
+    state_handle_ = nullptr;
+    return;
+  }
+
+  if (state_handle_->label) {
+    allocator_.deallocate(const_cast<char *>(state_handle_->label), allocator_.state);
+    state_handle_->label = nullptr;
+  }
+  allocator_.deallocate(state_handle_, allocator_.state);
+  state_handle_ = nullptr;
+}
 }  // namespace rclcpp_lifecycle

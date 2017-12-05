@@ -34,18 +34,21 @@ Transition::Transition(
   owns_rcl_transition_handle_(true),
   transition_handle_(nullptr)
 {
-  auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
+  transition_handle_ = static_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
-  if (!transition_handle) {
+  if (!transition_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
   }
-  transition_handle->id = id;
-  transition_handle->label = rcutils_strndup(
-    label.c_str(), label.size(), allocator_);
+  transition_handle_->start = nullptr;
+  transition_handle_->goal = nullptr;
 
-  transition_handle->start = nullptr;
-  transition_handle->goal = nullptr;
-  transition_handle_ = transition_handle;
+  transition_handle_->id = id;
+  transition_handle_->label = rcutils_strndup(
+    label.c_str(), label.size(), allocator_);
+  if (!transition_handle_->label) {
+    reset();
+    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_transition_t");
+  }
 }
 
 Transition::Transition(
@@ -56,36 +59,49 @@ Transition::Transition(
   owns_rcl_transition_handle_(true),
   transition_handle_(nullptr)
 {
-  auto transition_handle = reinterpret_cast<rcl_lifecycle_transition_t *>(
+  transition_handle_ = static_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
-  if (!transition_handle) {
+  if (!transition_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
   }
-  transition_handle->id = id;
-  transition_handle->label = rcutils_strndup(
+  transition_handle_->start = nullptr;
+  transition_handle_->goal = nullptr;
+
+  transition_handle_->id = id;
+  transition_handle_->label = rcutils_strndup(
     label.c_str(), label.size(), allocator_);
+  if (!transition_handle_->label) {
+    reset();
+    std::runtime_error("failed to duplicate label for rcl_lifecycle_transition_t");
+  }
 
-  auto start_state = reinterpret_cast<rcl_lifecycle_state_t *>(
+  transition_handle_->start = static_cast<rcl_lifecycle_state_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
-  if (!start_state) {
+  if (!transition_handle_->start) {
+    reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
-  start_state->id = start.id();
-  start_state->label =
+  transition_handle_->start->id = start.id();
+  transition_handle_->start->label =
     rcutils_strndup(start.label().c_str(), start.label().size(), allocator_);
+  if (!transition_handle_->start->label) {
+    reset();
+    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
+  }
 
-  auto goal_state = reinterpret_cast<rcl_lifecycle_state_t *>(
+  transition_handle_->goal = static_cast<rcl_lifecycle_state_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
-  if (!goal_state) {
+  if (!transition_handle_->goal) {
+    reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
-  goal_state->id = goal.id();
-  goal_state->label =
+  transition_handle_->goal->id = goal.id();
+  transition_handle_->goal->label =
     rcutils_strndup(goal.label().c_str(), goal.label().size(), allocator_);
-
-  transition_handle->start = start_state;
-  transition_handle->goal = goal_state;
-  transition_handle_ = transition_handle;
+  if (!transition_handle_->goal->label) {
+    reset();
+    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
+  }
 }
 
 Transition::Transition(
@@ -95,16 +111,46 @@ Transition::Transition(
   owns_rcl_transition_handle_(false),
   transition_handle_(nullptr)
 {
+  if (!rcl_lifecycle_transition_handle) {
+    throw std::runtime_error("rcl_lifecycle_transition_handle is null");
+  }
   transition_handle_ = const_cast<rcl_lifecycle_transition_t *>(rcl_lifecycle_transition_handle);
 }
 
 Transition::~Transition()
 {
-  if (!transition_handle_) {
-    owns_rcl_transition_handle_ = false;
-    return;
-  }
+  reset();
+}
 
+uint8_t
+Transition::id() const
+{
+  return transition_handle_->id;
+}
+
+std::string
+Transition::label() const
+{
+  return transition_handle_->label;
+}
+
+State
+Transition::start_state() const
+{
+  // State constructor throws if start pointer is null
+  return State(transition_handle_->start, allocator_);
+}
+
+State
+Transition::goal_state() const
+{
+  // State constructor throws if goal pointer is null
+  return State(transition_handle_->goal, allocator_);
+}
+
+void
+Transition::reset()
+{
   // can't free anything which is not owned
   if (!owns_rcl_transition_handle_) {
     transition_handle_ = nullptr;
@@ -137,35 +183,4 @@ Transition::~Transition()
   allocator_.deallocate(transition_handle_, allocator_.state);
   transition_handle_ = nullptr;
 }
-
-uint8_t
-Transition::id() const
-{
-  if (!transition_handle_) {
-    throw std::runtime_error("internal transition_handle is null");
-  }
-  return transition_handle_->id;
-}
-
-std::string
-Transition::label() const
-{
-  if (!transition_handle_) {
-    throw std::runtime_error("internal transition_handle is null");
-  }
-  return transition_handle_->label;
-}
-
-State
-Transition::start_state() const
-{
-  return State(transition_handle_->start);
-}
-
-State
-Transition::goal_state() const
-{
-  return State(transition_handle_->goal);
-}
-
 }  // namespace rclcpp_lifecycle
