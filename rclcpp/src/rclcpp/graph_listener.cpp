@@ -43,7 +43,7 @@ GraphListener::GraphListener()
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
 
-  shutdown_guard_condition_ = rclcpp::utilities::get_sigint_guard_condition(&wait_set_);
+  shutdown_guard_condition_ = rclcpp::get_sigint_guard_condition(&wait_set_);
 }
 
 GraphListener::~GraphListener()
@@ -75,7 +75,7 @@ GraphListener::start_if_not_started()
     // This is important to ensure that the wait set is finalized before
     // destruction of static objects occurs.
     std::weak_ptr<GraphListener> weak_this = shared_from_this();
-    rclcpp::utilities::on_shutdown(
+    rclcpp::on_shutdown(
       [weak_this]() {
         auto shared_this = weak_this.lock();
         if (shared_this) {
@@ -335,7 +335,7 @@ GraphListener::shutdown()
       throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
     }
     if (shutdown_guard_condition_) {
-      rclcpp::utilities::release_sigint_guard_condition(&wait_set_);
+      rclcpp::release_sigint_guard_condition(&wait_set_);
       shutdown_guard_condition_ = nullptr;
     }
     if (is_started_) {

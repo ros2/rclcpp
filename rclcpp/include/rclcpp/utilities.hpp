@@ -44,8 +44,6 @@ std::string to_string(T value)
 
 namespace rclcpp
 {
-namespace utilities
-{
 
 /// Initialize communications via the rmw implementation and set up a global signal handler.
 /**
@@ -111,7 +109,6 @@ RCLCPP_PUBLIC
 bool
 sleep_for(const std::chrono::nanoseconds & nanoseconds);
 
-}  // namespace utilities
 }  // namespace rclcpp
 
 #endif  // RCLCPP__UTILITIES_HPP_

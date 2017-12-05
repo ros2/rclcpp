@@ -150,16 +150,4 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-namespace rclcpp
-{
-
-// Namespace escalations.
-using rclcpp::utilities::ok;
-using rclcpp::utilities::ok;
-using rclcpp::utilities::shutdown;
-using rclcpp::utilities::init;
-using rclcpp::utilities::sleep_for;
-
-}  // namespace rclcpp
-
 #endif  // RCLCPP__RCLCPP_HPP_

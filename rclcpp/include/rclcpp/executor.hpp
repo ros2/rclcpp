@@ -233,7 +233,7 @@ public:
     }
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
-    while (rclcpp::utilities::ok()) {
+    while (rclcpp::ok()) {
       // Do one item of work.
       spin_once(timeout_left);
       // Check if the future is set, return SUCCESS if it is.

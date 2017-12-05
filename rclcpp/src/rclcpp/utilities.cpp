@@ -157,7 +157,7 @@ signal_handler(int signal_value)
 }
 
 void
-rclcpp::utilities::init(int argc, char * argv[])
+rclcpp::init(int argc, char * argv[])
 {
   g_is_interrupted.store(false);
   if (rcl_init(argc, argv, rcl_get_default_allocator()) != RCL_RET_OK) {
@@ -174,14 +174,14 @@ rclcpp::utilities::init(int argc, char * argv[])
   action.sa_flags = SA_SIGINFO;
   ::old_action = set_sigaction(SIGINT, action);
   // Register an on_shutdown hook to restore the old action.
-  rclcpp::utilities::on_shutdown(
+  rclcpp::on_shutdown(
     []() {
       set_sigaction(SIGINT, ::old_action);
     });
 #else
   ::old_signal_handler = set_signal_handler(SIGINT, ::signal_handler);
   // Register an on_shutdown hook to restore the old signal handler.
-  rclcpp::utilities::on_shutdown(
+  rclcpp::on_shutdown(
     []() {
       set_signal_handler(SIGINT, ::old_signal_handler);
     });
@@ -189,7 +189,7 @@ rclcpp::utilities::init(int argc, char * argv[])
 }
 
 bool
-rclcpp::utilities::ok()
+rclcpp::ok()
 {
   return ::g_signal_status == 0;
 }
@@ -198,7 +198,7 @@ static std::mutex on_shutdown_mutex_;
 static std::vector<std::function<void(void)>> on_shutdown_callbacks_;
 
 void
-rclcpp::utilities::shutdown()
+rclcpp::shutdown()
 {
   trigger_interrupt_guard_condition(SIGINT);
 
@@ -211,14 +211,14 @@ rclcpp::utilities::shutdown()
 }
 
 void
-rclcpp::utilities::on_shutdown(std::function<void(void)> callback)
+rclcpp::on_shutdown(std::function<void(void)> callback)
 {
   std::lock_guard<std::mutex> lock(on_shutdown_mutex_);
   on_shutdown_callbacks_.push_back(callback);
 }
 
 rcl_guard_condition_t *
-rclcpp::utilities::get_sigint_guard_condition(rcl_wait_set_t * wait_set)
+rclcpp::get_sigint_guard_condition(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
   auto kv = g_sigint_guard_cond_handles.find(wait_set);
@@ -240,7 +240,7 @@ rclcpp::utilities::get_sigint_guard_condition(rcl_wait_set_t * wait_set)
 }
 
 void
-rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * wait_set)
+rclcpp::release_sigint_guard_condition(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
   auto kv = g_sigint_guard_cond_handles.find(wait_set);
@@ -262,7 +262,7 @@ rclcpp::utilities::release_sigint_guard_condition(rcl_wait_set_t * wait_set)
 }
 
 bool
-rclcpp::utilities::sleep_for(const std::chrono::nanoseconds & nanoseconds)
+rclcpp::sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
   std::chrono::nanoseconds time_left = nanoseconds;
   {

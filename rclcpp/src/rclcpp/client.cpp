@@ -100,7 +100,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   }
   // continue forever if timeout is negative, otherwise continue until out of time_to_wait
   do {
-    if (!rclcpp::utilities::ok()) {
+    if (!rclcpp::ok()) {
       return false;
     }
     node_ptr->wait_for_graph_change(event, time_to_wait);

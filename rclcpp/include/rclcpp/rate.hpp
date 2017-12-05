@@ -82,7 +82,7 @@ public:
       return false;
     }
     // Sleep (will get interrupted by ctrl-c, may not sleep full time)
-    rclcpp::utilities::sleep_for(time_to_sleep);
+    rclcpp::sleep_for(time_to_sleep);
     return true;
   }
 

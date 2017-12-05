@@ -297,7 +297,7 @@ NodeGraph::wait_for_graph_change(
     }
   }
   auto pred = [&event]() {
-      return event->check() || !rclcpp::utilities::ok();
+      return event->check() || !rclcpp::ok();
     };
   std::unique_lock<std::mutex> graph_lock(graph_mutex_);
   if (!pred()) {
