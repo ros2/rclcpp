@@ -56,15 +56,15 @@ public:
   label() const;
 
 protected:
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  reset();
+
   rcutils_allocator_t allocator_;
 
   bool owns_rcl_state_handle_;
 
   rcl_lifecycle_state_t * state_handle_;
-
-  RCLCPP_LIFECYCLE_PUBLIC
-  void
-  reset();
 };
 
 }  // namespace rclcpp_lifecycle

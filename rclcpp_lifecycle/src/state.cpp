@@ -76,12 +76,18 @@ State::~State()
 uint8_t
 State::id() const
 {
+  if (!state_handle_) {
+    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+  }
   return state_handle_->id;
 }
 
 std::string
 State::label() const
 {
+  if (!state_handle_) {
+    throw std::runtime_error("Error in state! Internal state_handle is NULL.");
+  }
   return state_handle_->label;
 }
 
@@ -90,6 +96,9 @@ State::reset()
 {
   if (!owns_rcl_state_handle_) {
     state_handle_ = nullptr;
+  }
+
+  if (!state_handle_) {
     return;
   }
 
@@ -100,4 +109,5 @@ State::reset()
   allocator_.deallocate(state_handle_, allocator_.state);
   state_handle_ = nullptr;
 }
+
 }  // namespace rclcpp_lifecycle

@@ -71,15 +71,15 @@ public:
   goal_state() const;
 
 protected:
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  reset();
+
   rcutils_allocator_t allocator_;
 
   bool owns_rcl_transition_handle_;
 
   rcl_lifecycle_transition_t * transition_handle_;
-
-  RCLCPP_LIFECYCLE_PUBLIC
-  void
-  reset();
 };
 
 }  // namespace rclcpp_lifecycle

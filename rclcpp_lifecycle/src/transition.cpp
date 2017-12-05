@@ -55,26 +55,8 @@ Transition::Transition(
   uint8_t id, const std::string & label,
   State && start, State && goal,
   rcutils_allocator_t allocator)
-: allocator_(allocator),
-  owns_rcl_transition_handle_(true),
-  transition_handle_(nullptr)
+: Transition(id, label, allocator)
 {
-  transition_handle_ = static_cast<rcl_lifecycle_transition_t *>(
-    allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
-  if (!transition_handle_) {
-    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
-  }
-  transition_handle_->start = nullptr;
-  transition_handle_->goal = nullptr;
-
-  transition_handle_->id = id;
-  transition_handle_->label = rcutils_strndup(
-    label.c_str(), label.size(), allocator_);
-  if (!transition_handle_->label) {
-    reset();
-    std::runtime_error("failed to duplicate label for rcl_lifecycle_transition_t");
-  }
-
   transition_handle_->start = static_cast<rcl_lifecycle_state_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
   if (!transition_handle_->start) {
@@ -125,18 +107,27 @@ Transition::~Transition()
 uint8_t
 Transition::id() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
   return transition_handle_->id;
 }
 
 std::string
 Transition::label() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
   return transition_handle_->label;
 }
 
 State
 Transition::start_state() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
   // State constructor throws if start pointer is null
   return State(transition_handle_->start, allocator_);
 }
@@ -144,6 +135,9 @@ Transition::start_state() const
 State
 Transition::goal_state() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
   // State constructor throws if goal pointer is null
   return State(transition_handle_->goal, allocator_);
 }
@@ -154,6 +148,9 @@ Transition::reset()
   // can't free anything which is not owned
   if (!owns_rcl_transition_handle_) {
     transition_handle_ = nullptr;
+  }
+
+  if (!transition_handle_) {
     return;
   }
 
