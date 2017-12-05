@@ -85,7 +85,9 @@ def is_supported_feature_combination(feature_combination):
  * \param ... The format string, followed by the variable arguments for the format string
  */
 #define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
-  static_assert(::std::is_same<decltype(logger), ::rclcpp::Logger>::value, "First argument to logging macros must be an rclcpp::Logger"); \
+  static_assert( \
+    ::std::is_same<std::remove_reference<decltype(logger)>::type, ::rclcpp::Logger>::value, \
+    "First argument to logging macros must be an rclcpp::Logger"); \
   RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = get_macro_parameters(feature_combination).keys()}@
 @[ if params]@
