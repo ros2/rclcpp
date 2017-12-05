@@ -34,8 +34,6 @@ namespace rclcpp
 {
 namespace executors
 {
-namespace single_threaded_executor
-{
 
 /// Single-threaded executor implementation
 // This is the default executor created by rclcpp::spin.
@@ -64,7 +62,6 @@ private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)
 };
 
-}  // namespace single_threaded_executor
 }  // namespace executors
 }  // namespace rclcpp
 

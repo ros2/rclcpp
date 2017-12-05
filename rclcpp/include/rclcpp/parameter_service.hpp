@@ -32,8 +32,6 @@
 
 namespace rclcpp
 {
-namespace parameter_service
-{
 
 class ParameterService
 {
@@ -42,23 +40,22 @@ public:
 
   RCLCPP_PUBLIC
   explicit ParameterService(
-    const rclcpp::node::Node::SharedPtr node,
+    const rclcpp::Node::SharedPtr node,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
 private:
-  const rclcpp::node::Node::SharedPtr node_;
-  rclcpp::service::Service<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
+  const rclcpp::Node::SharedPtr node_;
+  rclcpp::Service<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_service_;
+  rclcpp::Service<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
     get_parameter_types_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::SetParameters>::SharedPtr set_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::SetParametersAtomically>::SharedPtr
+  rclcpp::Service<rcl_interfaces::srv::SetParameters>::SharedPtr set_parameters_service_;
+  rclcpp::Service<rcl_interfaces::srv::SetParametersAtomically>::SharedPtr
     set_parameters_atomically_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::DescribeParameters>::SharedPtr
+  rclcpp::Service<rcl_interfaces::srv::DescribeParameters>::SharedPtr
     describe_parameters_service_;
-  rclcpp::service::Service<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_service_;
+  rclcpp::Service<rcl_interfaces::srv::ListParameters>::SharedPtr list_parameters_service_;
 };
 
-}  // namespace parameter_service
 }  // namespace rclcpp
 
 #endif  // RCLCPP__PARAMETER_SERVICE_HPP_

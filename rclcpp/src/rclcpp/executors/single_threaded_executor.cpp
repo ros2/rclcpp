@@ -15,7 +15,7 @@
 #include "rclcpp/executors/single_threaded_executor.hpp"
 #include "rclcpp/scope_exit.hpp"
 
-using rclcpp::executors::single_threaded_executor::SingleThreadedExecutor;
+using rclcpp::executors::SingleThreadedExecutor;
 
 SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
 : executor::Executor(args) {}
@@ -29,7 +29,7 @@ SingleThreadedExecutor::spin()
     throw std::runtime_error("spin() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-  while (rclcpp::utilities::ok() && spinning.load()) {
+  while (rclcpp::ok() && spinning.load()) {
     auto any_exec = get_next_executable();
     execute_any_executable(any_exec);
   }

@@ -113,7 +113,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  rclcpp::event::Event::SharedPtr
+  rclcpp::Event::SharedPtr
   get_graph_event() = 0;
 
   /// Wait for a graph event to occur by waiting on an Event to become set.
@@ -128,7 +128,7 @@ public:
   virtual
   void
   wait_for_graph_change(
-    rclcpp::event::Event::SharedPtr event,
+    rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout) = 0;
 
   /// Return the number of on loan graph events, see get_graph_event().

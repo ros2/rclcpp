@@ -28,7 +28,7 @@ TEST(TestRate, rate_basics) {
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::system_clock::now();
-  rclcpp::rate::Rate r(period);
+  rclcpp::Rate r(period);
   ASSERT_FALSE(r.is_steady());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::system_clock::now();
@@ -36,14 +36,14 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(period < delta);
   ASSERT_TRUE(period * overrun_ratio > delta);
 
-  rclcpp::utilities::sleep_for(offset);
+  rclcpp::sleep_for(offset);
   ASSERT_TRUE(r.sleep());
   auto two = std::chrono::system_clock::now();
   delta = two - start;
   ASSERT_TRUE(2 * period < delta);
   ASSERT_TRUE(2 * period * overrun_ratio > delta);
 
-  rclcpp::utilities::sleep_for(offset);
+  rclcpp::sleep_for(offset);
   auto two_offset = std::chrono::system_clock::now();
   r.reset();
   ASSERT_TRUE(r.sleep());
@@ -52,7 +52,7 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(period < delta);
   ASSERT_TRUE(period * overrun_ratio > delta);
 
-  rclcpp::utilities::sleep_for(offset + period);
+  rclcpp::sleep_for(offset + period);
   auto four = std::chrono::system_clock::now();
   ASSERT_FALSE(r.sleep());
   auto five = std::chrono::system_clock::now();
@@ -67,7 +67,7 @@ TEST(TestRate, wall_rate_basics) {
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::steady_clock::now();
-  rclcpp::rate::WallRate r(period);
+  rclcpp::WallRate r(period);
   ASSERT_TRUE(r.is_steady());
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::steady_clock::now();
@@ -75,14 +75,14 @@ TEST(TestRate, wall_rate_basics) {
   ASSERT_TRUE(period < delta);
   ASSERT_TRUE(period * overrun_ratio > delta);
 
-  rclcpp::utilities::sleep_for(offset);
+  rclcpp::sleep_for(offset);
   ASSERT_TRUE(r.sleep());
   auto two = std::chrono::steady_clock::now();
   delta = two - start;
   ASSERT_TRUE(2 * period < delta + epsilon);
   ASSERT_TRUE(2 * period * overrun_ratio > delta);
 
-  rclcpp::utilities::sleep_for(offset);
+  rclcpp::sleep_for(offset);
   auto two_offset = std::chrono::steady_clock::now();
   r.reset();
   ASSERT_TRUE(r.sleep());
@@ -91,7 +91,7 @@ TEST(TestRate, wall_rate_basics) {
   ASSERT_TRUE(period < delta);
   ASSERT_TRUE(period * overrun_ratio > delta);
 
-  rclcpp::utilities::sleep_for(offset + period);
+  rclcpp::sleep_for(offset + period);
   auto four = std::chrono::steady_clock::now();
   ASSERT_FALSE(r.sleep());
   auto five = std::chrono::steady_clock::now();

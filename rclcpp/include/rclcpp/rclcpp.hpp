@@ -18,46 +18,46 @@
  * It consists of these main components:
  *
  * - Node
- *   - rclcpp::node::Node
+ *   - rclcpp::Node
  *   - rclcpp/node.hpp
  * - Publisher
- *   - rclcpp::node::Node::create_publisher()
- *   - rclcpp::publisher::Publisher
- *   - rclcpp::publisher::Publisher::publish()
+ *   - rclcpp::Node::create_publisher()
+ *   - rclcpp::Publisher
+ *   - rclcpp::Publisher::publish()
  *   - rclcpp/publisher.hpp
  * - Subscription
- *   - rclcpp::node::Node::create_subscription()
- *   - rclcpp::subscription::Subscription
+ *   - rclcpp::Node::create_subscription()
+ *   - rclcpp::Subscription
  *   - rclcpp/subscription.hpp
  * - Service Client
- *   - rclcpp::node::Node::create_client()
- *   - rclcpp::client::Client
+ *   - rclcpp::Node::create_client()
+ *   - rclcpp::Client
  *   - rclcpp/client.hpp
  * - Service Server
- *   - rclcpp::node::Node::create_service()
- *   - rclcpp::service::Service
+ *   - rclcpp::Node::create_service()
+ *   - rclcpp::Service
  *   - rclcpp/service.hpp
  * - Timer
- *   - rclcpp::node::Node::create_wall_timer()
- *   - rclcpp::timer::WallTimer
- *   - rclcpp::timer::TimerBase
+ *   - rclcpp::Node::create_wall_timer()
+ *   - rclcpp::WallTimer
+ *   - rclcpp::TimerBase
  *   - rclcpp/timer.hpp
  * - Parameters:
- *   - rclcpp::node::Node::set_parameters()
- *   - rclcpp::node::Node::get_parameters()
- *   - rclcpp::node::Node::get_parameter()
- *   - rclcpp::node::Node::describe_parameters()
- *   - rclcpp::node::Node::list_parameters()
- *   - rclcpp::node::Node::register_param_change_callback()
+ *   - rclcpp::Node::set_parameters()
+ *   - rclcpp::Node::get_parameters()
+ *   - rclcpp::Node::get_parameter()
+ *   - rclcpp::Node::describe_parameters()
+ *   - rclcpp::Node::list_parameters()
+ *   - rclcpp::Node::register_param_change_callback()
  *   - rclcpp::parameter::ParameterVariant
- *   - rclcpp::parameter_client::AsyncParametersClient
- *   - rclcpp::parameter_client::SyncParametersClient
+ *   - rclcpp::AsyncParametersClient
+ *   - rclcpp::SyncParametersClient
  *   - rclcpp/parameter.hpp
  *   - rclcpp/parameter_client.hpp
  *   - rclcpp/parameter_service.hpp
  * - Rate:
- *   - rclcpp::rate::Rate
- *   - rclcpp::rate::WallRate
+ *   - rclcpp::Rate
+ *   - rclcpp::WallRate
  *   - rclcpp/rate.hpp
  *
  * There are also some components which help control the execution of callbacks:
@@ -66,32 +66,32 @@
  *   - rclcpp::spin()
  *   - rclcpp::spin_some()
  *   - rclcpp::spin_until_future_complete()
- *   - rclcpp::executors::single_threaded_executor::SingleThreadedExecutor
- *   - rclcpp::executors::single_threaded_executor::SingleThreadedExecutor::add_node()
- *   - rclcpp::executors::single_threaded_executor::SingleThreadedExecutor::spin()
- *   - rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor
- *   - rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor::add_node()
- *   - rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor::spin()
+ *   - rclcpp::executors::SingleThreadedExecutor
+ *   - rclcpp::executors::SingleThreadedExecutor::add_node()
+ *   - rclcpp::executors::SingleThreadedExecutor::spin()
+ *   - rclcpp::executors::MultiThreadedExecutor
+ *   - rclcpp::executors::MultiThreadedExecutor::add_node()
+ *   - rclcpp::executors::MultiThreadedExecutor::spin()
  *   - rclcpp/executor.hpp
  *   - rclcpp/executors.hpp
  *   - rclcpp/executors/single_threaded_executor.hpp
  *   - rclcpp/executors/multi_threaded_executor.hpp
  * - CallbackGroups (mechanism for enforcing concurrency rules for callbacks):
- *   - rclcpp::node::Node::create_callback_group()
+ *   - rclcpp::Node::create_callback_group()
  *   - rclcpp::callback_group::CallbackGroup
  *   - rclcpp/callback_group.hpp
  *
  * Additionally, there are some methods for introspecting the ROS graph:
  *
  * - Graph Events (a waitable event object that wakes up when the graph changes):
- *   - rclcpp::node::Node::get_graph_event()
- *   - rclcpp::node::Node::wait_for_graph_change()
- *   - rclcpp::event::Event
+ *   - rclcpp::Node::get_graph_event()
+ *   - rclcpp::Node::wait_for_graph_change()
+ *   - rclcpp::Event
  * - List topic names and types:
- *   - rclcpp::node::Node::get_topic_names_and_types()
+ *   - rclcpp::Node::get_topic_names_and_types()
  * - Get the number of publishers or subscribers on a topic:
- *   - rclcpp::node::Node::count_publishers()
- *   - rclcpp::node::Node::count_subscribers()
+ *   - rclcpp::Node::count_publishers()
+ *   - rclcpp::Node::count_subscribers()
  *
  * And components related to logging:
  *
@@ -105,7 +105,7 @@
  * - Logger:
  *   - rclcpp::Logger
  *   - rclcpp/logger.hpp
- *   - rclcpp::node::Node::get_logger()
+ *   - rclcpp::Node::get_logger()
  *
  * Finally, there are many internal API's and utilities:
  *
@@ -121,7 +121,7 @@
  *   - rclcpp/strategies/allocator_memory_strategy.hpp
  *   - rclcpp/strategies/message_pool_memory_strategy.hpp
  * - Context object which is shared amongst multiple Nodes:
- *   - rclcpp::context::Context
+ *   - rclcpp::Context
  *   - rclcpp/context.hpp
  *   - rclcpp/contexts/default_context.hpp
  * - Various utilities:
@@ -149,35 +149,5 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
-
-namespace rclcpp
-{
-
-// Namespace escalations.
-// For example, this next line escalates type "rclcpp:node::Node" to "rclcpp::Node"
-using rclcpp::node::Node;
-using rclcpp::publisher::Publisher;
-using rclcpp::publisher::PublisherBase;
-using rclcpp::subscription::Subscription;
-using rclcpp::subscription::SubscriptionBase;
-using rclcpp::client::Client;
-using rclcpp::client::ClientBase;
-using rclcpp::service::Service;
-using rclcpp::service::ServiceBase;
-using rclcpp::parameter_client::AsyncParametersClient;
-using rclcpp::parameter_client::SyncParametersClient;
-using rclcpp::parameter_service::ParameterService;
-using rclcpp::rate::GenericRate;
-using rclcpp::rate::WallRate;
-using rclcpp::timer::GenericTimer;
-using rclcpp::timer::TimerBase;
-using rclcpp::timer::WallTimer;
-using ContextSharedPtr = rclcpp::context::Context::SharedPtr;
-using rclcpp::utilities::ok;
-using rclcpp::utilities::shutdown;
-using rclcpp::utilities::init;
-using rclcpp::utilities::sleep_for;
-
-}  // namespace rclcpp
 
 #endif  // RCLCPP__RCLCPP_HPP_

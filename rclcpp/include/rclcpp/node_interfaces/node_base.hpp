@@ -39,7 +39,7 @@ public:
   NodeBase(
     const std::string & node_name,
     const std::string & namespace_,
-    rclcpp::context::Context::SharedPtr context);
+    rclcpp::Context::SharedPtr context);
 
   RCLCPP_PUBLIC
   virtual
@@ -57,7 +57,7 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::context::Context::SharedPtr
+  rclcpp::Context::SharedPtr
   get_context();
 
   RCLCPP_PUBLIC
@@ -118,7 +118,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeBase)
 
-  rclcpp::context::Context::SharedPtr context_;
+  rclcpp::Context::SharedPtr context_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
 

@@ -38,7 +38,7 @@ protected:
 
   void SetUp()
   {
-    node = std::make_shared<rclcpp::node::Node>("my_node");
+    node = std::make_shared<rclcpp::Node>("my_node");
   }
 
   void TearDown()
@@ -46,7 +46,7 @@ protected:
     node.reset();
   }
 
-  rclcpp::node::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr node;
 };
 
 // Make sure that executors detach from nodes when destructing

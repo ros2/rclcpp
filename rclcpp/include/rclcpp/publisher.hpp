@@ -45,9 +45,6 @@ namespace node_interfaces
 class NodeTopicsInterface;
 }
 
-namespace publisher
-{
-
 class PublisherBase
 {
   friend ::rclcpp::node_interfaces::NodeTopicsInterface;
@@ -304,8 +301,6 @@ protected:
 
   MessageDeleter message_deleter_;
 };
-
-}  // namespace publisher
 
 }  // namespace rclcpp
 

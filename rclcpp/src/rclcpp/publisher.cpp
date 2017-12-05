@@ -33,7 +33,7 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 
-using rclcpp::publisher::PublisherBase;
+using rclcpp::PublisherBase;
 
 PublisherBase::PublisherBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,

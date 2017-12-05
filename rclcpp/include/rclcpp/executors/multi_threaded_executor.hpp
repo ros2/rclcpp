@@ -28,8 +28,6 @@ namespace rclcpp
 {
 namespace executors
 {
-namespace multi_threaded_executor
-{
 
 class MultiThreadedExecutor : public executor::Executor
 {
@@ -63,7 +61,6 @@ private:
   size_t number_of_threads_;
 };
 
-}  // namespace multi_threaded_executor
 }  // namespace executors
 }  // namespace rclcpp
 

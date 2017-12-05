@@ -21,7 +21,7 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/scope_exit.hpp"
 
-using rclcpp::executors::multi_threaded_executor::MultiThreadedExecutor;
+using rclcpp::executors::MultiThreadedExecutor;
 
 MultiThreadedExecutor::MultiThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
 : executor::Executor(args)
@@ -66,11 +66,11 @@ MultiThreadedExecutor::get_number_of_threads()
 void
 MultiThreadedExecutor::run(size_t)
 {
-  while (rclcpp::utilities::ok() && spinning.load()) {
+  while (rclcpp::ok() && spinning.load()) {
     executor::AnyExecutable::SharedPtr any_exec;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      if (!rclcpp::utilities::ok() || !spinning.load()) {
+      if (!rclcpp::ok() || !spinning.load()) {
         return;
       }
       any_exec = get_next_executable();

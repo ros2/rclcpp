@@ -56,7 +56,7 @@ public:
   /** \return SharedPtr to the node's context. */
   RCLCPP_PUBLIC
   virtual
-  rclcpp::context::Context::SharedPtr
+  rclcpp::Context::SharedPtr
   get_context() = 0;
 
   /// Return the rcl_node_t node handle (non-const version).

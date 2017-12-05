@@ -59,19 +59,19 @@ public:
   explicit CallbackGroup(CallbackGroupType group_type);
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
+  const std::vector<rclcpp::SubscriptionBase::WeakPtr> &
   get_subscription_ptrs() const;
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::timer::TimerBase::WeakPtr> &
+  const std::vector<rclcpp::TimerBase::WeakPtr> &
   get_timer_ptrs() const;
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::service::ServiceBase::WeakPtr> &
+  const std::vector<rclcpp::ServiceBase::WeakPtr> &
   get_service_ptrs() const;
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::client::ClientBase::WeakPtr> &
+  const std::vector<rclcpp::ClientBase::WeakPtr> &
   get_client_ptrs() const;
 
   RCLCPP_PUBLIC
@@ -87,27 +87,27 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  add_subscription(const rclcpp::subscription::SubscriptionBase::SharedPtr subscription_ptr);
+  add_subscription(const rclcpp::SubscriptionBase::SharedPtr subscription_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr);
+  add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_service(const rclcpp::service::ServiceBase::SharedPtr service_ptr);
+  add_service(const rclcpp::ServiceBase::SharedPtr service_ptr);
 
   RCLCPP_PUBLIC
   void
-  add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr);
+  add_client(const rclcpp::ClientBase::SharedPtr client_ptr);
 
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;
-  std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> subscription_ptrs_;
-  std::vector<rclcpp::timer::TimerBase::WeakPtr> timer_ptrs_;
-  std::vector<rclcpp::service::ServiceBase::WeakPtr> service_ptrs_;
-  std::vector<rclcpp::client::ClientBase::WeakPtr> client_ptrs_;
+  std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
+  std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;
+  std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;
+  std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::atomic_bool can_be_taken_from_;
 };
 

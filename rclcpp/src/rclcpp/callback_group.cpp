@@ -23,28 +23,28 @@ CallbackGroup::CallbackGroup(CallbackGroupType group_type)
 : type_(group_type), can_be_taken_from_(true)
 {}
 
-const std::vector<rclcpp::subscription::SubscriptionBase::WeakPtr> &
+const std::vector<rclcpp::SubscriptionBase::WeakPtr> &
 CallbackGroup::get_subscription_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   return subscription_ptrs_;
 }
 
-const std::vector<rclcpp::timer::TimerBase::WeakPtr> &
+const std::vector<rclcpp::TimerBase::WeakPtr> &
 CallbackGroup::get_timer_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   return timer_ptrs_;
 }
 
-const std::vector<rclcpp::service::ServiceBase::WeakPtr> &
+const std::vector<rclcpp::ServiceBase::WeakPtr> &
 CallbackGroup::get_service_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   return service_ptrs_;
 }
 
-const std::vector<rclcpp::client::ClientBase::WeakPtr> &
+const std::vector<rclcpp::ClientBase::WeakPtr> &
 CallbackGroup::get_client_ptrs() const
 {
   std::lock_guard<std::mutex> lock(mutex_);
@@ -65,28 +65,28 @@ CallbackGroup::type() const
 
 void
 CallbackGroup::add_subscription(
-  const rclcpp::subscription::SubscriptionBase::SharedPtr subscription_ptr)
+  const rclcpp::SubscriptionBase::SharedPtr subscription_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   subscription_ptrs_.push_back(subscription_ptr);
 }
 
 void
-CallbackGroup::add_timer(const rclcpp::timer::TimerBase::SharedPtr timer_ptr)
+CallbackGroup::add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   timer_ptrs_.push_back(timer_ptr);
 }
 
 void
-CallbackGroup::add_service(const rclcpp::service::ServiceBase::SharedPtr service_ptr)
+CallbackGroup::add_service(const rclcpp::ServiceBase::SharedPtr service_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   service_ptrs_.push_back(service_ptr);
 }
 
 void
-CallbackGroup::add_client(const rclcpp::client::ClientBase::SharedPtr client_ptr)
+CallbackGroup::add_client(const rclcpp::ClientBase::SharedPtr client_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   client_ptrs_.push_back(client_ptr);

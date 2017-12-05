@@ -45,9 +45,6 @@ namespace node_interfaces
 class NodeTopicsInterface;
 }  // namespace node_interfaces
 
-namespace subscription
-{
-
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
 class SubscriptionBase
@@ -120,8 +117,6 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
 };
-
-using any_subscription_callback::AnySubscriptionCallback;
 
 /// Subscription implementation, templated on the type of message this subscription receives.
 template<typename MessageT, typename Alloc = std::allocator<void>>
@@ -292,7 +287,6 @@ private:
   uint64_t intra_process_subscription_id_;
 };
 
-}  // namespace subscription
 }  // namespace rclcpp
 
 #endif  // RCLCPP__SUBSCRIPTION_HPP_

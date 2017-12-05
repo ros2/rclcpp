@@ -37,8 +37,6 @@
 
 namespace rclcpp
 {
-namespace timer
-{
 
 class TimerBase
 {
@@ -182,7 +180,6 @@ protected:
 template<typename CallbackType>
 using WallTimer = GenericTimer<CallbackType, std::chrono::steady_clock>;
 
-}  // namespace timer
 }  // namespace rclcpp
 
 #endif  // RCLCPP__TIMER_HPP_

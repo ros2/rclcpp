@@ -36,13 +36,13 @@ class TimeSource
 {
 public:
   RCLCPP_PUBLIC
-  explicit TimeSource(rclcpp::node::Node::SharedPtr node);
+  explicit TimeSource(rclcpp::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
   TimeSource();
 
   RCLCPP_PUBLIC
-  void attachNode(rclcpp::node::Node::SharedPtr node);
+  void attachNode(rclcpp::Node::SharedPtr node);
 
   RCLCPP_PUBLIC
   void attachNode(
@@ -77,18 +77,18 @@ private:
   // The subscription for the clock callback
   using MessageT = builtin_interfaces::msg::Time;
   using Alloc = std::allocator<void>;
-  using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
+  using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
   std::shared_ptr<SubscriptionT> clock_subscription_;
 
   // The clock callback itself
   void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
 
   // Parameter Client pointer
-  std::shared_ptr<rclcpp::parameter_client::AsyncParametersClient> parameter_client_;
+  std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
 
   // Parameter Event subscription
   using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
-  using ParamSubscriptionT = rclcpp::subscription::Subscription<ParamMessageT, Alloc>;
+  using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
   std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
 
   // Callback for parameter updates

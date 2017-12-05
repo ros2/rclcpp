@@ -113,7 +113,7 @@ private:
 
   std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
 
-  publisher::Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
+  Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 };
 
 }  // namespace node_interfaces

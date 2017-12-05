@@ -60,9 +60,6 @@
 namespace rclcpp
 {
 
-namespace node
-{
-
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node : public std::enable_shared_from_this<Node>
 {
@@ -82,7 +79,7 @@ public:
     const std::string & namespace_ = "",
     bool use_intra_process_comms = false);
 
-  /// Create a node based on the node name and a rclcpp::context::Context.
+  /// Create a node based on the node name and a rclcpp::Context.
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
@@ -94,7 +91,7 @@ public:
   Node(
     const std::string & node_name,
     const std::string & namespace_,
-    rclcpp::context::Context::SharedPtr context,
+    rclcpp::Context::SharedPtr context,
     bool use_intra_process_comms = false);
 
   RCLCPP_PUBLIC
@@ -137,7 +134,7 @@ public:
    */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
-    typename PublisherT = ::rclcpp::publisher::Publisher<MessageT, Alloc>>
+    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name, size_t qos_history_depth,
@@ -152,7 +149,7 @@ public:
    */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
-    typename PublisherT = ::rclcpp::publisher::Publisher<MessageT, Alloc>>
+    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
@@ -178,7 +175,7 @@ public:
     typename MessageT,
     typename CallbackT,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -209,7 +206,7 @@ public:
     typename MessageT,
     typename CallbackT,
     typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>>
+    typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -228,7 +225,7 @@ public:
    * \param[in] group Callback group to execute this timer's callback in.
    */
   template<typename DurationT = std::milli, typename CallbackT>
-  typename rclcpp::timer::WallTimer<CallbackT>::SharedPtr
+  typename rclcpp::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
     std::chrono::duration<int64_t, DurationT> period,
     CallbackT callback,
@@ -236,7 +233,7 @@ public:
 
   /* Create and return a Client. */
   template<typename ServiceT>
-  typename rclcpp::client::Client<ServiceT>::SharedPtr
+  typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
@@ -244,7 +241,7 @@ public:
 
   /* Create and return a Service. */
   template<typename ServiceT, typename CallbackT>
-  typename rclcpp::service::Service<ServiceT>::SharedPtr
+  typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
     CallbackT && callback,
@@ -353,7 +350,7 @@ public:
    * out of scope.
    */
   RCLCPP_PUBLIC
-  rclcpp::event::Event::SharedPtr
+  rclcpp::Event::SharedPtr
   get_graph_event();
 
   /// Wait for a graph event to occur by waiting on an Event to become set.
@@ -367,7 +364,7 @@ public:
   RCLCPP_PUBLIC
   void
   wait_for_graph_change(
-    rclcpp::event::Event::SharedPtr event,
+    rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
@@ -432,7 +429,6 @@ private:
   bool use_intra_process_comms_;
 };
 
-}  // namespace node
 }  // namespace rclcpp
 
 #ifndef RCLCPP__NODE_IMPL_HPP_

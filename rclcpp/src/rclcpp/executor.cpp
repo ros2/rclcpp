@@ -50,7 +50,7 @@ Executor::Executor(const ExecutorArgs & args)
   // and one for the executor's guard cond (interrupt_guard_condition_)
 
   // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(rclcpp::utilities::get_sigint_guard_condition(&wait_set_));
+  memory_strategy_->add_guard_condition(rclcpp::get_sigint_guard_condition(&wait_set_));
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
@@ -97,8 +97,8 @@ Executor::~Executor()
   }
   // Remove and release the sigint guard condition
   memory_strategy_->remove_guard_condition(
-    rclcpp::utilities::get_sigint_guard_condition(&wait_set_));
-  rclcpp::utilities::release_sigint_guard_condition(&wait_set_);
+    rclcpp::get_sigint_guard_condition(&wait_set_));
+  rclcpp::release_sigint_guard_condition(&wait_set_);
 }
 
 void
@@ -129,7 +129,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 }
 
 void
-Executor::add_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify)
+Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->add_node(node_ptr->get_node_base_interface(), notify);
 }
@@ -163,7 +163,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 }
 
 void
-Executor::remove_node(std::shared_ptr<rclcpp::node::Node> node_ptr, bool notify)
+Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->remove_node(node_ptr->get_node_base_interface(), notify);
 }
@@ -188,7 +188,7 @@ Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr n
 }
 
 void
-Executor::spin_node_some(std::shared_ptr<rclcpp::node::Node> node)
+Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
 {
   this->spin_node_some(node->get_node_base_interface());
 }
@@ -269,7 +269,7 @@ Executor::execute_any_executable(AnyExecutable::SharedPtr any_exec)
 
 void
 Executor::execute_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   std::shared_ptr<void> message = subscription->create_message();
   rmw_message_info_t message_info;
@@ -290,7 +290,7 @@ Executor::execute_subscription(
 
 void
 Executor::execute_intra_process_subscription(
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription)
+  rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   rcl_interfaces::msg::IntraProcessMessage ipm;
   rmw_message_info_t message_info;
@@ -312,14 +312,14 @@ Executor::execute_intra_process_subscription(
 
 void
 Executor::execute_timer(
-  rclcpp::timer::TimerBase::SharedPtr timer)
+  rclcpp::TimerBase::SharedPtr timer)
 {
   timer->execute_callback();
 }
 
 void
 Executor::execute_service(
-  rclcpp::service::ServiceBase::SharedPtr service)
+  rclcpp::ServiceBase::SharedPtr service)
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
@@ -339,7 +339,7 @@ Executor::execute_service(
 
 void
 Executor::execute_client(
-  rclcpp::client::ClientBase::SharedPtr client)
+  rclcpp::ClientBase::SharedPtr client)
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
@@ -471,7 +471,7 @@ Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr gro
 }
 
 rclcpp::callback_group::CallbackGroup::SharedPtr
-Executor::get_group_by_timer(rclcpp::timer::TimerBase::SharedPtr timer)
+Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 {
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();

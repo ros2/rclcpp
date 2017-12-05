@@ -81,15 +81,15 @@ public:
   virtual rcl_allocator_t
   get_allocator() = 0;
 
-  static rclcpp::subscription::SubscriptionBase::SharedPtr
+  static rclcpp::SubscriptionBase::SharedPtr
   get_subscription_by_handle(
     const rcl_subscription_t * subscriber_handle,
     const WeakNodeVector & weak_nodes);
 
-  static rclcpp::service::ServiceBase::SharedPtr
+  static rclcpp::ServiceBase::SharedPtr
   get_service_by_handle(const rcl_service_t * service_handle, const WeakNodeVector & weak_nodes);
 
-  static rclcpp::client::ClientBase::SharedPtr
+  static rclcpp::ClientBase::SharedPtr
   get_client_by_handle(const rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
 
   static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
@@ -99,17 +99,17 @@ public:
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_subscription(
-    rclcpp::subscription::SubscriptionBase::SharedPtr subscription,
+    rclcpp::SubscriptionBase::SharedPtr subscription,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_service(
-    rclcpp::service::ServiceBase::SharedPtr service,
+    rclcpp::ServiceBase::SharedPtr service,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_client(
-    rclcpp::client::ClientBase::SharedPtr client,
+    rclcpp::ClientBase::SharedPtr client,
     const WeakNodeVector & weak_nodes);
 };
 

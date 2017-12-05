@@ -35,8 +35,6 @@
 
 namespace rclcpp
 {
-namespace service
-{
 
 class ServiceBase
 {
@@ -90,8 +88,6 @@ protected:
   std::string service_name_;
   bool owns_rcl_handle_ = true;
 };
-
-using any_service_callback::AnyServiceCallback;
 
 template<typename ServiceT>
 class Service : public ServiceBase
@@ -223,7 +219,6 @@ private:
   AnyServiceCallback<ServiceT> any_callback_;
 };
 
-}  // namespace service
 }  // namespace rclcpp
 
 #endif  // RCLCPP__SERVICE_HPP_

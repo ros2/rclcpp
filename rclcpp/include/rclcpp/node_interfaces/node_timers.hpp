@@ -45,7 +45,7 @@ public:
   virtual
   void
   add_timer(
-    rclcpp::timer::TimerBase::SharedPtr timer,
+    rclcpp::TimerBase::SharedPtr timer,
     rclcpp::callback_group::CallbackGroup::SharedPtr callback_group);
 
 private:

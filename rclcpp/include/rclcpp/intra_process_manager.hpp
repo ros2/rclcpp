@@ -149,7 +149,7 @@ public:
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_subscription(subscription::SubscriptionBase::SharedPtr subscription);
+  add_subscription(SubscriptionBase::SharedPtr subscription);
 
   /// Unregister a subscription using the subscription's unique id.
   /**
@@ -187,14 +187,14 @@ public:
   template<typename MessageT, typename Alloc>
   uint64_t
   add_publisher(
-    typename publisher::Publisher<MessageT, Alloc>::SharedPtr publisher,
+    typename Publisher<MessageT, Alloc>::SharedPtr publisher,
     size_t buffer_size = 0)
   {
     auto id = IntraProcessManager::get_next_unique_id();
     size_t size = buffer_size > 0 ? buffer_size : publisher->get_queue_size();
     auto mrb = mapped_ring_buffer::MappedRingBuffer<
       MessageT,
-      typename publisher::Publisher<MessageT, Alloc>::MessageAlloc
+      typename Publisher<MessageT, Alloc>::MessageAlloc
       >::make_shared(size, publisher->get_allocator());
     impl_->add_publisher(id, publisher, mrb, size);
     return id;

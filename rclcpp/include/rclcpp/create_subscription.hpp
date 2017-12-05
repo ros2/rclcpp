@@ -27,7 +27,7 @@ namespace rclcpp
 {
 
 template<typename MessageT, typename CallbackT, typename AllocatorT, typename SubscriptionT>
-typename rclcpp::subscription::Subscription<MessageT, AllocatorT>::SharedPtr
+typename rclcpp::Subscription<MessageT, AllocatorT>::SharedPtr
 create_subscription(
   rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
   const std::string & topic_name,

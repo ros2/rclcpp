@@ -48,14 +48,14 @@ public:
   ~IntraProcessManagerImplBase() = default;
 
   virtual void
-  add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription) = 0;
+  add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription) = 0;
 
   virtual void
   remove_subscription(uint64_t intra_process_subscription_id) = 0;
 
   virtual void add_publisher(
     uint64_t id,
-    publisher::PublisherBase::WeakPtr publisher,
+    PublisherBase::WeakPtr publisher,
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
     size_t size) = 0;
 
@@ -92,7 +92,7 @@ public:
   ~IntraProcessManagerImpl() = default;
 
   void
-  add_subscription(uint64_t id, subscription::SubscriptionBase::SharedPtr subscription)
+  add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription)
   {
     subscriptions_[id] = subscription;
     // subscription->get_topic_name() -> const char * can be used as the key,
@@ -118,7 +118,7 @@ public:
 
   void add_publisher(
     uint64_t id,
-    publisher::PublisherBase::WeakPtr publisher,
+    PublisherBase::WeakPtr publisher,
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
     size_t size)
   {
@@ -258,9 +258,9 @@ private:
 
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
   using SubscriptionMap = std::unordered_map<
-      uint64_t, subscription::SubscriptionBase::WeakPtr,
+      uint64_t, SubscriptionBase::WeakPtr,
       std::hash<uint64_t>, std::equal_to<uint64_t>,
-      RebindAlloc<std::pair<const uint64_t, subscription::SubscriptionBase::WeakPtr>>>;
+      RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
 
   struct strcmp_wrapper : public std::binary_function<const char *, const char *, bool>
   {
@@ -286,7 +286,7 @@ private:
 
     PublisherInfo() = default;
 
-    publisher::PublisherBase::WeakPtr publisher;
+    PublisherBase::WeakPtr publisher;
     std::atomic<uint64_t> sequence_number;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
 

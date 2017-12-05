@@ -42,11 +42,11 @@ struct AnyExecutable
   virtual ~AnyExecutable();
 
   // Only one of the following pointers will be set.
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription;
-  rclcpp::subscription::SubscriptionBase::SharedPtr subscription_intra_process;
-  rclcpp::timer::TimerBase::SharedPtr timer;
-  rclcpp::service::ServiceBase::SharedPtr service;
-  rclcpp::client::ClientBase::SharedPtr client;
+  rclcpp::SubscriptionBase::SharedPtr subscription;
+  rclcpp::SubscriptionBase::SharedPtr subscription_intra_process;
+  rclcpp::TimerBase::SharedPtr timer;
+  rclcpp::ServiceBase::SharedPtr service;
+  rclcpp::ClientBase::SharedPtr client;
   // These are used to keep the scope on the containing items
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base;

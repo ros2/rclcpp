@@ -16,8 +16,6 @@
 
 namespace rclcpp
 {
-namespace event
-{
 
 Event::Event()
 : state_(false) {}
@@ -40,5 +38,4 @@ Event::check_and_clear()
   return state_.exchange(false);
 }
 
-}  // namespace event
 }  // namespace rclcpp

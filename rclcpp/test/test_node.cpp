@@ -35,40 +35,40 @@ protected:
  */
 TEST_F(TestNode, construction_and_destruction) {
   {
-    auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   }
 
   {
     ASSERT_THROW({
-      auto node = std::make_shared<rclcpp::node::Node>("invalid_node?", "/ns");
+      auto node = std::make_shared<rclcpp::Node>("invalid_node?", "/ns");
     }, rclcpp::exceptions::InvalidNodeNameError);
   }
 
   {
     ASSERT_THROW({
-      auto node = std::make_shared<rclcpp::node::Node>("my_node", "/invalid_ns?");
+      auto node = std::make_shared<rclcpp::Node>("my_node", "/invalid_ns?");
     }, rclcpp::exceptions::InvalidNamespaceError);
   }
 }
 
 TEST_F(TestNode, get_name_and_namespace) {
   {
-    auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/ns", node->get_namespace());
   }
   {
-    auto node = std::make_shared<rclcpp::node::Node>("my_node", "ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/ns", node->get_namespace());
   }
   {
-    auto node = std::make_shared<rclcpp::node::Node>("my_node", "/my/ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/my/ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/my/ns", node->get_namespace());
   }
   {
-    auto node = std::make_shared<rclcpp::node::Node>("my_node", "my/ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "my/ns");
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/my/ns", node->get_namespace());
   }
@@ -77,24 +77,24 @@ TEST_F(TestNode, get_name_and_namespace) {
 TEST_F(TestNode, get_logger) {
   // Currently the namespace is not taken into account with the node logger name
   {
-    auto node = std::make_shared<rclcpp::node::Node>("my_node");
+    auto node = std::make_shared<rclcpp::Node>("my_node");
     EXPECT_STREQ("my_node", node->get_logger().get_name());
   }
   {
-    auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
     EXPECT_STREQ("my_node", node->get_logger().get_name());
   }
 }
 
 TEST_F(TestNode, get_clock) {
-  auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto ros_clock = node->get_clock();
   EXPECT_TRUE(ros_clock != nullptr);
   EXPECT_EQ(ros_clock->get_clock_type(), RCL_ROS_TIME);
 }
 
 TEST_F(TestNode, now) {
-  auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto clock = node->get_clock();
   auto now_builtin = node->now().nanoseconds();
   auto now_external = clock->now().nanoseconds();

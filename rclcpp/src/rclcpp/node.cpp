@@ -32,7 +32,7 @@
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 
-using rclcpp::node::Node;
+using rclcpp::Node;
 using rclcpp::exceptions::throw_from_rcl_error;
 
 Node::Node(
@@ -49,7 +49,7 @@ Node::Node(
 Node::Node(
   const std::string & node_name,
   const std::string & namespace_,
-  rclcpp::context::Context::SharedPtr context,
+  rclcpp::Context::SharedPtr context,
   bool use_intra_process_comms)
 : node_base_(new rclcpp::node_interfaces::NodeBase(node_name, namespace_, context)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
@@ -190,7 +190,7 @@ Node::get_callback_groups() const
   return node_base_->get_callback_groups();
 }
 
-rclcpp::event::Event::SharedPtr
+rclcpp::Event::SharedPtr
 Node::get_graph_event()
 {
   return node_graph_->get_graph_event();
@@ -198,7 +198,7 @@ Node::get_graph_event()
 
 void
 Node::wait_for_graph_change(
-  rclcpp::event::Event::SharedPtr event,
+  rclcpp::Event::SharedPtr event,
   std::chrono::nanoseconds timeout)
 {
   node_graph_->wait_for_graph_change(event, timeout);

@@ -34,8 +34,8 @@ TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes) {
   // A vector of weak pointers to nodes
   auto memory_strategy = std::make_shared<
     rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
-  auto existing_node = rclcpp::node::Node::make_shared("existing_node");
-  auto dead_node = rclcpp::node::Node::make_shared("dead_node");
+  auto existing_node = rclcpp::Node::make_shared("existing_node");
+  auto dead_node = rclcpp::Node::make_shared("dead_node");
   rclcpp::memory_strategy::MemoryStrategy::WeakNodeVector weak_nodes;
   weak_nodes.push_back(existing_node->get_node_base_interface());
   weak_nodes.push_back(dead_node->get_node_base_interface());
@@ -59,8 +59,8 @@ TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
   // A vector of weak pointers to nodes, all valid
   auto memory_strategy = std::make_shared<
     rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
-  auto existing_node1 = rclcpp::node::Node::make_shared("existing_node1");
-  auto existing_node2 = rclcpp::node::Node::make_shared("existing_node2");
+  auto existing_node1 = rclcpp::Node::make_shared("existing_node1");
+  auto existing_node2 = rclcpp::Node::make_shared("existing_node2");
   rclcpp::memory_strategy::MemoryStrategy::WeakNodeVector weak_nodes;
   weak_nodes.push_back(existing_node1->get_node_base_interface());
   weak_nodes.push_back(existing_node2->get_node_base_interface());

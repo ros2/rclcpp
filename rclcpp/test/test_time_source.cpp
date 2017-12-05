@@ -39,7 +39,7 @@ protected:
 
   void SetUp()
   {
-    node = std::make_shared<rclcpp::node::Node>("my_node");
+    node = std::make_shared<rclcpp::Node>("my_node");
   }
 
   void TearDown()
@@ -47,7 +47,7 @@ protected:
     node.reset();
   }
 
-  rclcpp::node::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr node;
 };
 
 
@@ -228,7 +228,7 @@ TEST_F(TestTimeSource, callbacks) {
 }
 
 void trigger_clock_changes(
-  rclcpp::node::Node::SharedPtr node)
+  rclcpp::Node::SharedPtr node)
 {
   auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
       rmw_qos_profile_default);
@@ -334,8 +334,8 @@ TEST_F(TestTimeSource, parameter_activation) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  auto parameter_service = std::make_shared<rclcpp::parameter_service::ParameterService>(node);
-  auto parameters_client = std::make_shared<rclcpp::parameter_client::SyncParametersClient>(node);
+  auto parameter_service = std::make_shared<rclcpp::ParameterService>(node);
+  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
 
   using namespace std::chrono_literals;
   EXPECT_TRUE(parameters_client->wait_for_service(2s));

@@ -46,7 +46,7 @@ struct PublisherFactory
 {
   // Creates a PublisherT<MessageT, ...> publisher object and returns it as a PublisherBase.
   using PublisherFactoryFunction = std::function<
-      rclcpp::publisher::PublisherBase::SharedPtr(
+      rclcpp::PublisherBase::SharedPtr(
         rclcpp::node_interfaces::NodeBaseInterface * node_base,
         const std::string & topic_name,
         rcl_publisher_options_t & publisher_options)>;
@@ -58,7 +58,7 @@ struct PublisherFactory
   using AddPublisherToIntraProcessManagerFunction = std::function<
       uint64_t(
         rclcpp::intra_process_manager::IntraProcessManager * ipm,
-        rclcpp::publisher::PublisherBase::SharedPtr publisher)>;
+        rclcpp::PublisherBase::SharedPtr publisher)>;
 
   AddPublisherToIntraProcessManagerFunction add_publisher_to_intra_process_manager;
 
@@ -66,7 +66,7 @@ struct PublisherFactory
   // PublisherT::publish() and which handles the intra process transmission of
   // the message being published.
   using SharedPublishCallbackFactoryFunction = std::function<
-      rclcpp::publisher::PublisherBase::StoreMessageCallbackT(
+      rclcpp::PublisherBase::StoreMessageCallbackT(
         rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
 
   SharedPublishCallbackFactoryFunction create_shared_publish_callback;
@@ -96,13 +96,13 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
   factory.add_publisher_to_intra_process_manager =
     [](
     rclcpp::intra_process_manager::IntraProcessManager * ipm,
-    rclcpp::publisher::PublisherBase::SharedPtr publisher) -> uint64_t
+    rclcpp::PublisherBase::SharedPtr publisher) -> uint64_t
     {
       return ipm->add_publisher<MessageT, Alloc>(std::dynamic_pointer_cast<PublisherT>(publisher));
     };
 
   // function to create a shared publish callback std::function
-  using StoreMessageCallbackT = rclcpp::publisher::PublisherBase::StoreMessageCallbackT;
+  using StoreMessageCallbackT = rclcpp::PublisherBase::StoreMessageCallbackT;
   factory.create_shared_publish_callback =
     [](rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm) -> StoreMessageCallbackT
     {
@@ -129,7 +129,7 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
                     "' is incompatible from the publisher type '" + message_type_info.name() + "'");
           }
           MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
-          using MessageDeleter = typename publisher::Publisher<MessageT, Alloc>::MessageDeleter;
+          using MessageDeleter = typename Publisher<MessageT, Alloc>::MessageDeleter;
           std::unique_ptr<MessageT, MessageDeleter> unique_msg(typed_message_ptr);
           uint64_t message_seq =
             ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);

@@ -25,8 +25,6 @@
 
 namespace rclcpp
 {
-namespace rate
-{
 
 class RateBase
 {
@@ -84,7 +82,7 @@ public:
       return false;
     }
     // Sleep (will get interrupted by ctrl-c, may not sleep full time)
-    rclcpp::utilities::sleep_for(time_to_sleep);
+    rclcpp::sleep_for(time_to_sleep);
     return true;
   }
 
@@ -116,7 +114,6 @@ private:
 using Rate = GenericRate<std::chrono::system_clock>;
 using WallRate = GenericRate<std::chrono::steady_clock>;
 
-}  // namespace rate
 }  // namespace rclcpp
 
 #endif  // RCLCPP__RATE_HPP_

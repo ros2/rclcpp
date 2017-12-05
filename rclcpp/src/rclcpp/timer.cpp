@@ -17,7 +17,7 @@
 #include <chrono>
 #include <string>
 
-using rclcpp::timer::TimerBase;
+using rclcpp::TimerBase;
 
 TimerBase::TimerBase(std::chrono::nanoseconds period)
 {
