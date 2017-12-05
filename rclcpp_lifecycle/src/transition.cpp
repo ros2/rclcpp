@@ -100,7 +100,6 @@ Transition::Transition(
 
 Transition::~Transition()
 {
-    // nothing to free here
   if (!transition_handle_) {
     owns_rcl_transition_handle_ = false;
     return;

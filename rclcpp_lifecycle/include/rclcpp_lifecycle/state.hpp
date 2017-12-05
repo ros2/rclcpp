@@ -31,7 +31,7 @@ class State
 {
 public:
   RCLCPP_LIFECYCLE_PUBLIC
-  State(rcutils_allocator_t allocator = rcutils_get_default_allocator());
+  explicit State(rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC
   State(

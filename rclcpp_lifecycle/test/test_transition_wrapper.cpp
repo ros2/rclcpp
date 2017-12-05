@@ -34,7 +34,6 @@ TEST_F(TestTransitionWrapper, empty_transition) {
 }
 
 TEST_F(TestTransitionWrapper, wrapper) {
-
   {
     rclcpp_lifecycle::Transition t(12, "no_states_set");
     EXPECT_EQ(12, t.id());
