@@ -216,8 +216,8 @@ Node::set_parameter_if_not_set(
   rclcpp::parameter::ParameterVariant parameter_variant;
   if (!this->get_parameter(name, parameter_variant)) {
     this->set_parameters({
-          rclcpp::parameter::ParameterVariant(name, value),
-        });
+        rclcpp::parameter::ParameterVariant(name, value),
+      });
   }
 }
 
