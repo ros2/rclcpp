@@ -35,6 +35,7 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/event.hpp"
 #include "rclcpp/logger.hpp"
@@ -52,6 +53,7 @@
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 
