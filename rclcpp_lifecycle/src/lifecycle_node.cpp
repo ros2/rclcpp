@@ -28,6 +28,7 @@
 #include "rclcpp/logger.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
+#include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_logging.hpp"
 #include "rclcpp/node_interfaces/node_parameters.hpp"
@@ -65,6 +66,12 @@ LifecycleNode::LifecycleNode(
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_topics_.get(),
       use_intra_process_comms
+    )),
+  node_clock_(new rclcpp::node_interfaces::NodeClock(
+      node_base_,
+      node_topics_,
+      node_graph_,
+      node_services_
     )),
   use_intra_process_comms_(use_intra_process_comms),
   impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
@@ -216,10 +223,28 @@ LifecycleNode::wait_for_graph_change(
   node_graph_->wait_for_graph_change(event, timeout);
 }
 
+rclcpp::Clock::SharedPtr
+LifecycleNode::get_clock()
+{
+  return node_clock_->get_clock();
+}
+
+rclcpp::Time
+LifecycleNode::now()
+{
+  return node_clock_->get_clock()->now();
+}
+
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 LifecycleNode::get_node_base_interface()
 {
   return node_base_;
+}
+
+rclcpp::node_interfaces::NodeClockInterface::SharedPtr
+LifecycleNode::get_node_clock_interface()
+{
+  return node_clock_;
 }
 
 rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
