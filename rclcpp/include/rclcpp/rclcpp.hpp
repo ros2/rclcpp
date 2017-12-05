@@ -17,7 +17,7 @@
  * `rclcpp` provides the canonical C++ API for interacting with ROS.
  * It consists of these main components:
  *
- * - Nodes
+ * - Node
  *   - rclcpp::node::Node
  *   - rclcpp/node.hpp
  * - Publisher
@@ -93,6 +93,20 @@
  *   - rclcpp::node::Node::count_publishers()
  *   - rclcpp::node::Node::count_subscribers()
  *
+ * And components related to logging:
+ *
+ * - Logging macros:
+ *   - Some examples (not exhaustive):
+ *     - RCLCPP_DEBUG()
+ *     - RCLCPP_INFO()
+ *     - RCLCPP_WARN_ONCE()
+ *     - RCLCPP_ERROR_SKIPFIRST()
+ *   - rclcpp/logging.hpp
+ * - Logger:
+ *   - rclcpp::Logger
+ *   - rclcpp/logger.hpp
+ *   - rclcpp::node::Node::get_logger()
+ *
  * Finally, there are many internal API's and utilities:
  *
  * - Exceptions:
@@ -110,13 +124,6 @@
  *   - rclcpp::context::Context
  *   - rclcpp/context.hpp
  *   - rclcpp/contexts/default_context.hpp
- * - Logging macros:
- *   - Some examples (not exhaustive):
- *     - RCLCPP_DEBUG()
- *     - RCLCPP_INFO()
- *     - RCLCPP_WARN_ONCE()
- *     - RCLCPP_ERROR_SKIPFIRST()
- *   - rclcpp/logging.hpp
  * - Various utilities:
  *   - rclcpp/function_traits.hpp
  *   - rclcpp/macros.hpp

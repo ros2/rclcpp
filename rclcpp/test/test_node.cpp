@@ -74,6 +74,18 @@ TEST_F(TestNode, get_name_and_namespace) {
   }
 }
 
+TEST_F(TestNode, get_logger) {
+  // Currently the namespace is not taken into account with the node logger name
+  {
+    auto node = std::make_shared<rclcpp::node::Node>("my_node");
+    EXPECT_STREQ("my_node", node->get_logger().get_name());
+  }
+  {
+    auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
+    EXPECT_STREQ("my_node", node->get_logger().get_name());
+  }
+}
+
 TEST_F(TestNode, get_clock) {
   auto node = std::make_shared<rclcpp::node::Node>("my_node", "/ns");
   auto ros_clock = node->get_clock();

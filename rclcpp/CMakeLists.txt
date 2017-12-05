@@ -45,12 +45,14 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/graph_listener.cpp
   src/rclcpp/intra_process_manager.cpp
   src/rclcpp/intra_process_manager_impl.cpp
+  src/rclcpp/logger.cpp
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
   src/rclcpp/node.cpp
   src/rclcpp/node_interfaces/node_base.cpp
   src/rclcpp/node_interfaces/node_clock.cpp
   src/rclcpp/node_interfaces/node_graph.cpp
+  src/rclcpp/node_interfaces/node_logging.cpp
   src/rclcpp/node_interfaces/node_parameters.cpp
   src/rclcpp/node_interfaces/node_services.cpp
   src/rclcpp/node_interfaces/node_timers.cpp
@@ -296,6 +298,9 @@ if(BUILD_TESTING)
       "rcl")
     target_link_libraries(test_executor ${PROJECT_NAME})
   endif()
+
+  ament_add_gtest(test_logger test/test_logger.cpp)
+  target_link_libraries(test_logger ${PROJECT_NAME})
 
   ament_add_gmock(test_logging test/test_logging.cpp)
   target_link_libraries(test_logging ${PROJECT_NAME})

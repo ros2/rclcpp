@@ -17,6 +17,9 @@
 #ifndef RCLCPP__LOGGING_HPP_
 #define RCLCPP__LOGGING_HPP_
 
+#include <type_traits>
+
+#include "rclcpp/logger.hpp"
 #include "rcutils/logging_macros.h"
 
 // These are used for compiling out logging macros lower than a minimum severity.
@@ -31,12 +34,11 @@
  * \def RCLCPP_LOG_MIN_SEVERITY
  * Define RCLCPP_LOG_MIN_SEVERITY=RCLCPP_LOG_MIN_SEVERITY_[DEBUG|INFO|WARN|ERROR|FATAL]
  * in your build options to compile out anything below that severity.
- * Use RCUTILS_LOG_MIN_SEVERITY_NONE to compile out all macros.
+ * Use RCLCPP_LOG_MIN_SEVERITY_NONE to compile out all macros.
  */
 #ifndef RCLCPP_LOG_MIN_SEVERITY
 #define RCLCPP_LOG_MIN_SEVERITY RCLCPP_LOG_MIN_SEVERITY_DEBUG
 #endif
-
 
 @{
 from rcutils.logging import feature_combinations
@@ -76,20 +78,20 @@ def is_supported_feature_combination(feature_combination):
 @[ for doc_line in feature_combinations[feature_combination].doc_lines]@
  * @(doc_line)
 @[ end for]@
- * \param name The name of the logger
+ * \param logger The `rclcpp::Logger` to use
 @[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
  * \param ... The format string, followed by the variable arguments for the format string
  */
-// TODO(dhood): Replace the name argument with a logger object.
-#define RCLCPP_@(severity)@(suffix)(name, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+  static_assert(::std::is_same<decltype(logger), ::rclcpp::Logger>::value, "First argument to logging macros must be an rclcpp::Logger"); \
   RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = get_macro_parameters(feature_combination).keys()}@
 @[ if params]@
 @(''.join(['    ' + p + ', \\\n' for p in params]))@
 @[ end if]@
-    std::string(name).c_str(), \
+    logger.get_name(), \
     __VA_ARGS__)
 
 @[ end for]@
