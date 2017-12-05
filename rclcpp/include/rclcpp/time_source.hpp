@@ -20,7 +20,7 @@
 
 #include "rcl/time.h"
 
-#include "builtin_interfaces/msg/time.hpp"
+#include "rcl_interfaces/msg/time.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
@@ -75,13 +75,13 @@ private:
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
 
   // The subscription for the clock callback
-  using MessageT = builtin_interfaces::msg::Time;
+  using MessageT = rcl_interfaces::msg::Time;
   using Alloc = std::allocator<void>;
   using SubscriptionT = rclcpp::subscription::Subscription<MessageT, Alloc>;
   std::shared_ptr<SubscriptionT> clock_subscription_;
 
   // The clock callback itself
-  void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
+  void clock_cb(const rcl_interfaces::msg::Time::SharedPtr msg);
 
   // Parameter Client pointer
   std::shared_ptr<rclcpp::parameter_client::AsyncParametersClient> parameter_client_;
@@ -107,7 +107,7 @@ private:
   static void enable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void disable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void set_clock(
-    const builtin_interfaces::msg::Time::SharedPtr msg,
+    const rcl_interfaces::msg::Time::SharedPtr msg,
     bool set_ros_time_enabled,
     rclcpp::Clock::SharedPtr clock);
 
@@ -115,7 +115,7 @@ private:
   // This is needed when new clocks are added.
   bool ros_time_active_;
   // Last set message to be passed to newly registered clocks
-  builtin_interfaces::msg::Time::SharedPtr last_msg_set_;
+  rcl_interfaces::msg::Time::SharedPtr last_msg_set_;
 
   // A lock to protect iterating the associated_clocks_ field.
   std::mutex clock_list_lock_;

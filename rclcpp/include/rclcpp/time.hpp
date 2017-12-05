@@ -16,6 +16,7 @@
 #define RCLCPP__TIME_HPP_
 
 #include "builtin_interfaces/msg/time.hpp"
+#include "rcl_interfaces/msg/time.hpp"
 
 #include "rclcpp/visibility_control.hpp"
 
@@ -46,6 +47,11 @@ public:
     rcl_clock_type_t ros_time = RCL_ROS_TIME);
 
   RCLCPP_PUBLIC
+  Time(
+    const rcl_interfaces::msg::Time & time_msg,
+    rcl_clock_type_t ros_time = RCL_ROS_TIME);
+
+  RCLCPP_PUBLIC
   explicit Time(const rcl_time_point_t & time_point);
 
   RCLCPP_PUBLIC
@@ -55,12 +61,19 @@ public:
   operator builtin_interfaces::msg::Time() const;
 
   RCLCPP_PUBLIC
+  operator rcl_interfaces::msg::Time() const;
+
+  RCLCPP_PUBLIC
   Time &
   operator=(const Time & rhs);
 
   RCLCPP_PUBLIC
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
+
+  RCLCPP_PUBLIC
+  Time &
+  operator=(const rcl_interfaces::msg::Time & time_msg);
 
   RCLCPP_PUBLIC
   bool

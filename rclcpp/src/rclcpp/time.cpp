@@ -79,6 +79,19 @@ Time::Time(
   rcl_time_.nanoseconds += time_msg.nanosec;
 }
 
+Time::Time(
+  const rcl_interfaces::msg::Time & time_msg,
+  rcl_clock_type_t ros_time)
+{
+  rcl_time_ = init_time_point(ros_time);
+  if (time_msg.sec < 0) {
+    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
+  }
+
+  rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
+  rcl_time_.nanoseconds += time_msg.nanosec;
+}
+
 Time::Time(const rcl_time_point_t & time_point)
 : rcl_time_(time_point)
 {
@@ -97,6 +110,14 @@ Time::operator builtin_interfaces::msg::Time() const
   return msg_time;
 }
 
+Time::operator rcl_interfaces::msg::Time() const
+{
+  rcl_interfaces::msg::Time msg_time;
+  msg_time.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_time_.nanoseconds));
+  msg_time.nanosec = static_cast<std::uint32_t>(rcl_time_.nanoseconds % (1000 * 1000 * 1000));
+  return msg_time;
+}
+
 Time &
 Time::operator=(const Time & rhs)
 {
@@ -106,6 +127,22 @@ Time::operator=(const Time & rhs)
 
 Time &
 Time::operator=(const builtin_interfaces::msg::Time & time_msg)
+{
+  if (time_msg.sec < 0) {
+    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
+  }
+
+
+  rcl_clock_type_t ros_time = RCL_ROS_TIME;
+  rcl_time_ = init_time_point(ros_time);  // TODO(tfoote) hard coded ROS here
+
+  rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(time_msg.sec));
+  rcl_time_.nanoseconds += time_msg.nanosec;
+  return *this;
+}
+
+Time &
+Time::operator=(const rcl_interfaces::msg::Time & time_msg)
 {
   if (time_msg.sec < 0) {
     throw std::runtime_error("cannot store a negative time point in rclcpp::Time");

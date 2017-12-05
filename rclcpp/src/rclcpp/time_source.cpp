@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-#include "builtin_interfaces/msg/time.hpp"
+#include "rcl_interfaces/msg/time.hpp"
 
 #include "rcl/time.h"
 
@@ -141,7 +141,7 @@ TimeSource::~TimeSource()
 }
 
 void TimeSource::set_clock(
-  const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
+  const rcl_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
   std::shared_ptr<rclcpp::Clock> clock)
 {
   // Compute diff
@@ -194,7 +194,7 @@ void TimeSource::set_clock(
   clock->invoke_postjump_callbacks(active_callbacks, jump);
 }
 
-void TimeSource::clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg)
+void TimeSource::clock_cb(const rcl_interfaces::msg::Time::SharedPtr msg)
 {
   if (!this->ros_time_active_) {
     enable_ros_time();
@@ -268,7 +268,7 @@ void TimeSource::enable_ros_time()
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
+    auto msg = std::make_shared<rcl_interfaces::msg::Time>();
     msg->sec = 0;
     msg->nanosec = 0;
     set_clock(msg, true, *it);
@@ -288,7 +288,7 @@ void TimeSource::disable_ros_time()
   // Update all attached clocks
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
+    auto msg = std::make_shared<rcl_interfaces::msg::Time>();
     set_clock(msg, false, *it);
   }
 }
