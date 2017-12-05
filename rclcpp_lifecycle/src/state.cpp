@@ -23,7 +23,6 @@
 #include "rclcpp/exceptions.hpp"
 
 #include "rcutils/allocator.h"
-#include "rcutils/strdup.h"
 
 namespace rclcpp_lifecycle
 {
@@ -70,9 +69,52 @@ State::State(
   state_handle_ = const_cast<rcl_lifecycle_state_t *>(rcl_lifecycle_state_handle);
 }
 
+State::State(const State & rhs)
+: allocator_(rhs.allocator_),
+  owns_rcl_state_handle_(false),
+  state_handle_(nullptr)
+{
+  *this = rhs;
+}
+
 State::~State()
 {
   reset();
+}
+
+State &
+State::operator=(const State & rhs)
+{
+  if (this == &rhs) {
+    return *this;
+  }
+
+  // reset all currently used resources
+  reset();
+
+  allocator_ = rhs.allocator_;
+  owns_rcl_state_handle_ = rhs.owns_rcl_state_handle_;
+
+  // we don't own the handle, so we can return straight ahead
+  if (!owns_rcl_state_handle_) {
+    state_handle_ = rhs.state_handle_;
+    return *this;
+  }
+
+  // we own the handle, so we have to deep-copy the rhs object
+  state_handle_ = static_cast<rcl_lifecycle_state_t *>(
+    allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+  if (!state_handle_) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+  }
+  auto ret = rcl_lifecycle_state_init(
+    state_handle_, rhs.id(), rhs.label().c_str(), &allocator_);
+  if (ret != RCL_RET_OK) {
+    reset();
+    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
+  }
+
+  return *this;
 }
 
 uint8_t

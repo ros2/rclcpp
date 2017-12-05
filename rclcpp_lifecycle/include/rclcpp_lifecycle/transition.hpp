@@ -52,7 +52,13 @@ public:
     rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC
+  Transition(const Transition & rhs);
+
+  RCLCPP_LIFECYCLE_PUBLIC
   virtual ~Transition();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  Transition & operator=(const Transition & rhs);
 
   RCLCPP_LIFECYCLE_PUBLIC
   uint8_t
