@@ -63,3 +63,24 @@ TEST_F(TestTransitionWrapper, wrapper) {
     EXPECT_STREQ("from_start_to_goal", t.label().c_str());
   }
 }
+
+TEST_F(TestTransitionWrapper, copy_constructor) {
+  auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "my_transition");
+  rclcpp_lifecycle::Transition b(*a);
+
+  a.reset();
+
+  EXPECT_EQ(1, b.id());
+  EXPECT_STREQ("my_transition", b.label().c_str());
+}
+
+TEST_F(TestTransitionWrapper, assignment_operator) {
+  auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "one");
+  auto b = std::make_shared<rclcpp_lifecycle::Transition>(2, "two");
+  *b = *a;
+
+  a.reset();
+
+  EXPECT_EQ(1, b->id());
+  EXPECT_STREQ("one", b->label().c_str());
+}

@@ -45,7 +45,13 @@ public:
     rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC
+  State(const State & rhs);
+
+  RCLCPP_LIFECYCLE_PUBLIC
   virtual ~State();
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  State & operator=(const State & rhs);
 
   RCLCPP_LIFECYCLE_PUBLIC
   uint8_t

@@ -23,7 +23,6 @@
 #include "rclcpp/exceptions.hpp"
 
 #include "rcutils/allocator.h"
-#include "rcutils/strdup.h"
 
 namespace rclcpp_lifecycle
 {
@@ -41,6 +40,11 @@ Transition::Transition(
   if (!transition_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
   }
+  // zero initialize
+  transition_handle_->id = 0;
+  transition_handle_->label = nullptr;
+  transition_handle_->start = nullptr;
+  transition_handle_->goal = nullptr;
 
   auto ret = rcl_lifecycle_transition_init(
     transition_handle_, id, label.c_str(), nullptr, nullptr, &allocator_);
@@ -62,6 +66,10 @@ Transition::Transition(
     reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
+  // zero initialize
+  transition_handle_->start->id = 0;
+  transition_handle_->start->label = nullptr;
+
   auto ret = rcl_lifecycle_state_init(
     transition_handle_->start, start.id(), start.label().c_str(), &allocator_);
   if (ret != RCL_RET_OK) {
@@ -75,6 +83,10 @@ Transition::Transition(
     reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
+  // zero initialize
+  transition_handle_->goal->id = 0;
+  transition_handle_->goal->label = nullptr;
+
   ret = rcl_lifecycle_state_init(
     transition_handle_->goal, goal.id(), goal.label().c_str(), &allocator_);
   if (ret != RCL_RET_OK) {
@@ -96,16 +108,110 @@ Transition::Transition(
   transition_handle_ = const_cast<rcl_lifecycle_transition_t *>(rcl_lifecycle_transition_handle);
 }
 
+Transition::Transition(const Transition & rhs)
+: allocator_(rhs.allocator_),
+  owns_rcl_transition_handle_(false),
+  transition_handle_(nullptr)
+{
+  *this = rhs;
+}
+
 Transition::~Transition()
 {
   reset();
+}
+
+Transition &
+Transition::operator=(const Transition & rhs)
+{
+  if (this == &rhs) {
+    return *this;
+  }
+
+  // reset all currently used resources
+  reset();
+
+  allocator_ = rhs.allocator_;
+  owns_rcl_transition_handle_ = rhs.owns_rcl_transition_handle_;
+
+  // we don't own the handle, so we can return straight ahead
+  if (!owns_rcl_transition_handle_) {
+    transition_handle_ = rhs.transition_handle_;
+    return *this;
+  }
+
+  // we own the handle, so we have to deep-copy the rhs object
+  transition_handle_ = static_cast<rcl_lifecycle_transition_t *>(
+    allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
+  if (!transition_handle_) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
+  }
+  // zero initialize
+  transition_handle_->id = 0;
+  transition_handle_->label = nullptr;
+  transition_handle_->start = nullptr;
+  transition_handle_->goal = nullptr;
+
+  auto ret = rcl_lifecycle_transition_init(
+    transition_handle_, rhs.id(), rhs.label().c_str(), nullptr, nullptr, &allocator_);
+  if (ret != RCL_RET_OK) {
+    reset();
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  // only copy start state when available
+  if (rhs.transition_handle_->start) {
+    transition_handle_->start = static_cast<rcl_lifecycle_state_t *>(
+      allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+    if (!transition_handle_->start) {
+      reset();
+      throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+    }
+    // zero initialize
+    transition_handle_->start->id = 0;
+    transition_handle_->start->label = nullptr;
+
+    ret = rcl_lifecycle_state_init(
+      transition_handle_->start,
+      rhs.start_state().id(),
+      rhs.start_state().label().c_str(),
+      &allocator_);
+    if (ret != RCL_RET_OK) {
+      reset();
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+  }
+
+  // only copy goal state when available
+  if (rhs.transition_handle_->goal) {
+    transition_handle_->goal = static_cast<rcl_lifecycle_state_t *>(
+      allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+    if (!transition_handle_->goal) {
+      reset();
+      throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+    }
+    // zero initialize
+    transition_handle_->goal->id = 0;
+    transition_handle_->goal->label = nullptr;
+
+    ret = rcl_lifecycle_state_init(
+      transition_handle_->goal,
+      rhs.goal_state().id(),
+      rhs.goal_state().label().c_str(),
+      &allocator_);
+    if (ret != RCL_RET_OK) {
+      reset();
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+  }
+  return *this;
 }
 
 uint8_t
 Transition::id() const
 {
   if (!transition_handle_) {
-    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+    throw std::runtime_error("internal transition_handle is null");
   }
   return transition_handle_->id;
 }
@@ -114,7 +220,7 @@ std::string
 Transition::label() const
 {
   if (!transition_handle_) {
-    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+    throw std::runtime_error("internal transition_handle is null");
   }
   return transition_handle_->label;
 }
@@ -123,7 +229,7 @@ State
 Transition::start_state() const
 {
   if (!transition_handle_) {
-    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+    throw std::runtime_error("internal transition_handle is null");
   }
   // State constructor throws if start pointer is null
   return State(transition_handle_->start, allocator_);
@@ -133,7 +239,7 @@ State
 Transition::goal_state() const
 {
   if (!transition_handle_) {
-    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+    throw std::runtime_error("internal transition_handle is null");
   }
   // State constructor throws if goal pointer is null
   return State(transition_handle_->goal, allocator_);
@@ -151,6 +257,10 @@ Transition::reset()
     return;
   }
 
+  // TODO(karsten1987): Fini currently deallocate the transition_handle_ instance as well
+  // this should be changed to only deallocate members of the pointer so that stack
+  // variables can be correctly used as well.
+  // see https://github.com/ros2/rclcpp/pull/419#discussion_r155157098
   auto ret = rcl_lifecycle_transition_fini(transition_handle_, &allocator_);
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
