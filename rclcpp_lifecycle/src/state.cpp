@@ -48,6 +48,9 @@ State::State(
   if (!state_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
+  // zero initialize
+  state_handle_->id = 0;
+  state_handle_->label = nullptr;
 
   auto ret = rcl_lifecycle_state_init(state_handle_, id, label.c_str(), &allocator_);
   if (ret != RCL_RET_OK) {
@@ -107,6 +110,10 @@ State::operator=(const State & rhs)
   if (!state_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
+  // zero initialize
+  state_handle_->id = 0;
+  state_handle_->label = nullptr;
+
   auto ret = rcl_lifecycle_state_init(
     state_handle_, rhs.id(), rhs.label().c_str(), &allocator_);
   if (ret != RCL_RET_OK) {

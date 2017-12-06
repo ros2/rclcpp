@@ -40,6 +40,11 @@ Transition::Transition(
   if (!transition_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
   }
+  // zero initialize
+  transition_handle_->id = 0;
+  transition_handle_->label = nullptr;
+  transition_handle_->start = nullptr;
+  transition_handle_->goal = nullptr;
 
   auto ret = rcl_lifecycle_transition_init(
     transition_handle_, id, label.c_str(), nullptr, nullptr, &allocator_);
@@ -61,6 +66,10 @@ Transition::Transition(
     reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
+  // zero initialize
+  transition_handle_->start->id = 0;
+  transition_handle_->start->label = nullptr;
+
   auto ret = rcl_lifecycle_state_init(
     transition_handle_->start, start.id(), start.label().c_str(), &allocator_);
   if (ret != RCL_RET_OK) {
@@ -74,6 +83,10 @@ Transition::Transition(
     reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
+  // zero initialize
+  transition_handle_->goal->id = 0;
+  transition_handle_->goal->label = nullptr;
+
   ret = rcl_lifecycle_state_init(
     transition_handle_->goal, goal.id(), goal.label().c_str(), &allocator_);
   if (ret != RCL_RET_OK) {
@@ -128,11 +141,17 @@ Transition::operator=(const Transition & rhs)
   }
 
   // we own the handle, so we have to deep-copy the rhs object
-  transition_handle_ = reinterpret_cast<rcl_lifecycle_transition_t *>(
+  transition_handle_ = static_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
   if (!transition_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
   }
+  // zero initialize
+  transition_handle_->id = 0;
+  transition_handle_->label = nullptr;
+  transition_handle_->start = nullptr;
+  transition_handle_->goal = nullptr;
+
   auto ret = rcl_lifecycle_transition_init(
     transition_handle_, rhs.id(), rhs.label().c_str(), nullptr, nullptr, &allocator_);
   if (ret != RCL_RET_OK) {
@@ -148,6 +167,10 @@ Transition::operator=(const Transition & rhs)
       reset();
       throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
     }
+    // zero initialize
+    transition_handle_->start->id = 0;
+    transition_handle_->start->label = nullptr;
+
     ret = rcl_lifecycle_state_init(
       transition_handle_->start,
       rhs.start_state().id(),
@@ -167,6 +190,10 @@ Transition::operator=(const Transition & rhs)
       reset();
       throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
     }
+    // zero initialize
+    transition_handle_->goal->id = 0;
+    transition_handle_->goal->label = nullptr;
+
     ret = rcl_lifecycle_state_init(
       transition_handle_->goal,
       rhs.goal_state().id(),
