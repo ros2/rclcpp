@@ -14,89 +14,146 @@
 
 #include "rclcpp_lifecycle/transition.hpp"
 
-#include <lifecycle_msgs/msg/transition.hpp>
-#include <rcl_lifecycle/data_types.h>
-
 #include <string>
+
+#include "lifecycle_msgs/msg/transition.hpp"
+
+#include "rcl_lifecycle/rcl_lifecycle.h"
+
+#include "rclcpp/exceptions.hpp"
+
+#include "rcutils/allocator.h"
+#include "rcutils/strdup.h"
 
 namespace rclcpp_lifecycle
 {
 
-Transition::Transition(uint8_t id, const std::string & label)
-: owns_rcl_transition_handle_(true)
+Transition::Transition(
+  uint8_t id,
+  const std::string & label,
+  rcutils_allocator_t allocator)
+: allocator_(allocator),
+  owns_rcl_transition_handle_(true),
+  transition_handle_(nullptr)
 {
-  auto transition_handle = new rcl_lifecycle_transition_t;
-  transition_handle->id = id;
-  transition_handle->label = label.c_str();
+  transition_handle_ = static_cast<rcl_lifecycle_transition_t *>(
+    allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
+  if (!transition_handle_) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
+  }
 
-  transition_handle->start = nullptr;
-  transition_handle->goal = nullptr;
-  transition_handle_ = transition_handle;
+  auto ret = rcl_lifecycle_transition_init(
+    transition_handle_, id, label.c_str(), nullptr, nullptr, &allocator_);
+  if (ret != RCL_RET_OK) {
+    reset();
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }
 
 Transition::Transition(
   uint8_t id, const std::string & label,
-  State && start, State && goal)
-: owns_rcl_transition_handle_(true)
+  State && start, State && goal,
+  rcutils_allocator_t allocator)
+: Transition(id, label, allocator)
 {
-  auto transition_handle = new rcl_lifecycle_transition_t;
-  transition_handle->id = id;
-  transition_handle->label = label.c_str();
+  transition_handle_->start = static_cast<rcl_lifecycle_state_t *>(
+    allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+  if (!transition_handle_->start) {
+    reset();
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+  }
+  auto ret = rcl_lifecycle_state_init(
+    transition_handle_->start, start.id(), start.label().c_str(), &allocator_);
+  if (ret != RCL_RET_OK) {
+    reset();
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 
-  auto start_state = new rcl_lifecycle_state_t;
-  start_state->id = start.id();
-  start_state->label = start.label().c_str();
-
-  auto goal_state = new rcl_lifecycle_state_t;
-  goal_state->id = goal.id();
-  goal_state->label = start.label().c_str();
-
-  transition_handle->start = start_state;
-  transition_handle->goal = goal_state;
-  transition_handle_ = transition_handle;
+  transition_handle_->goal = static_cast<rcl_lifecycle_state_t *>(
+    allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+  if (!transition_handle_->goal) {
+    reset();
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+  }
+  ret = rcl_lifecycle_state_init(
+    transition_handle_->goal, goal.id(), goal.label().c_str(), &allocator_);
+  if (ret != RCL_RET_OK) {
+    reset();
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }
 
-Transition::Transition(const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle)
-: owns_rcl_transition_handle_(false)
+Transition::Transition(
+  const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle,
+  rcutils_allocator_t allocator)
+: allocator_(allocator),
+  owns_rcl_transition_handle_(false),
+  transition_handle_(nullptr)
 {
-  transition_handle_ = rcl_lifecycle_transition_handle;
+  if (!rcl_lifecycle_transition_handle) {
+    throw std::runtime_error("rcl_lifecycle_transition_handle is null");
+  }
+  transition_handle_ = const_cast<rcl_lifecycle_transition_t *>(rcl_lifecycle_transition_handle);
 }
 
 Transition::~Transition()
 {
-  if (owns_rcl_transition_handle_) {
-    if (transition_handle_->start) {
-      delete transition_handle_->start;
-    }
-    if (transition_handle_->goal) {
-      delete transition_handle_->goal;
-    }
-    delete transition_handle_;
-  }
+  reset();
 }
 
 uint8_t
 Transition::id() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
   return transition_handle_->id;
 }
 
 std::string
 Transition::label() const
 {
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
   return transition_handle_->label;
 }
 
 State
 Transition::start_state() const
 {
-  return State(transition_handle_->start);
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
+  // State constructor throws if start pointer is null
+  return State(transition_handle_->start, allocator_);
 }
 
 State
 Transition::goal_state() const
 {
-  return State(transition_handle_->goal);
+  if (!transition_handle_) {
+    throw std::runtime_error("Error in state! Internal transition_handle_ is NULL.");
+  }
+  // State constructor throws if goal pointer is null
+  return State(transition_handle_->goal, allocator_);
 }
 
+void
+Transition::reset()
+{
+  // can't free anything which is not owned
+  if (!owns_rcl_transition_handle_) {
+    transition_handle_ = nullptr;
+  }
+
+  if (!transition_handle_) {
+    return;
+  }
+
+  auto ret = rcl_lifecycle_transition_fini(transition_handle_, &allocator_);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+}
 }  // namespace rclcpp_lifecycle

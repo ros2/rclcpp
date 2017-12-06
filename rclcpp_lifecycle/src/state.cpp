@@ -14,47 +14,65 @@
 
 #include "rclcpp_lifecycle/state.hpp"
 
-#include <lifecycle_msgs/msg/state.hpp>
-
-#include <rcutils/allocator.h>
-#include <rcutils/strdup.h>
-#include <rcl_lifecycle/data_types.h>
-
 #include <string>
+
+#include "lifecycle_msgs/msg/state.hpp"
+
+#include "rcl_lifecycle/rcl_lifecycle.h"
+
+#include "rclcpp/exceptions.hpp"
+
+#include "rcutils/allocator.h"
+#include "rcutils/strdup.h"
 
 namespace rclcpp_lifecycle
 {
 
-State::State()
-: State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown")
+State::State(rcutils_allocator_t allocator)
+: State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown", allocator)
 {}
 
-State::State(uint8_t id, const std::string & label)
-: owns_rcl_state_handle_(true)
+State::State(
+  uint8_t id,
+  const std::string & label,
+  rcutils_allocator_t allocator)
+: allocator_(allocator),
+  owns_rcl_state_handle_(true),
+  state_handle_(nullptr)
 {
   if (label.empty()) {
     throw std::runtime_error("Lifecycle State cannot have an empty label.");
   }
 
-  auto state_handle = new rcl_lifecycle_state_t;
-  state_handle->id = id;
-  state_handle->label =
-    rcutils_strndup(label.c_str(), label.size(), rcutils_get_default_allocator());
+  state_handle_ = static_cast<rcl_lifecycle_state_t *>(
+    allocator_.allocate(sizeof(rcl_lifecycle_state_t), allocator_.state));
+  if (!state_handle_) {
+    throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
+  }
 
-  state_handle_ = state_handle;
+  auto ret = rcl_lifecycle_state_init(state_handle_, id, label.c_str(), &allocator_);
+  if (ret != RCL_RET_OK) {
+    reset();
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }
 
-State::State(const rcl_lifecycle_state_t * rcl_lifecycle_state_handle)
-: owns_rcl_state_handle_(false)
+State::State(
+  const rcl_lifecycle_state_t * rcl_lifecycle_state_handle,
+  rcutils_allocator_t allocator)
+: allocator_(allocator),
+  owns_rcl_state_handle_(false),
+  state_handle_(nullptr)
 {
-  state_handle_ = rcl_lifecycle_state_handle;
+  if (!rcl_lifecycle_state_handle) {
+    throw std::runtime_error("rcl_lifecycle_state_handle is null");
+  }
+  state_handle_ = const_cast<rcl_lifecycle_state_t *>(rcl_lifecycle_state_handle);
 }
 
 State::~State()
 {
-  if (owns_rcl_state_handle_) {
-    delete state_handle_;
-  }
+  reset();
 }
 
 uint8_t
@@ -73,6 +91,23 @@ State::label() const
     throw std::runtime_error("Error in state! Internal state_handle is NULL.");
   }
   return state_handle_->label;
+}
+
+void
+State::reset()
+{
+  if (!owns_rcl_state_handle_) {
+    state_handle_ = nullptr;
+  }
+
+  if (!state_handle_) {
+    return;
+  }
+
+  auto ret = rcl_lifecycle_state_fini(state_handle_, &allocator_);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }
 
 }  // namespace rclcpp_lifecycle
