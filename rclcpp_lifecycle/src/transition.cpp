@@ -18,7 +18,9 @@
 
 #include "lifecycle_msgs/msg/transition.hpp"
 
-#include "rcl_lifecycle/data_types.h"
+#include "rcl_lifecycle/rcl_lifecycle.h"
+
+#include "rclcpp/exceptions.hpp"
 
 #include "rcutils/allocator.h"
 #include "rcutils/strdup.h"
@@ -39,15 +41,12 @@ Transition::Transition(
   if (!transition_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_transition_t");
   }
-  transition_handle_->start = nullptr;
-  transition_handle_->goal = nullptr;
 
-  transition_handle_->id = id;
-  transition_handle_->label = rcutils_strndup(
-    label.c_str(), label.size(), allocator_);
-  if (!transition_handle_->label) {
+  auto ret = rcl_lifecycle_transition_init(
+    transition_handle_, id, label.c_str(), nullptr, nullptr, &allocator_);
+  if (ret != RCL_RET_OK) {
     reset();
-    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_transition_t");
+    rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
 
@@ -63,12 +62,11 @@ Transition::Transition(
     reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
-  transition_handle_->start->id = start.id();
-  transition_handle_->start->label =
-    rcutils_strndup(start.label().c_str(), start.label().size(), allocator_);
-  if (!transition_handle_->start->label) {
+  auto ret = rcl_lifecycle_state_init(
+    transition_handle_->start, start.id(), start.label().c_str(), &allocator_);
+  if (ret != RCL_RET_OK) {
     reset();
-    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
+    rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
   transition_handle_->goal = static_cast<rcl_lifecycle_state_t *>(
@@ -77,12 +75,11 @@ Transition::Transition(
     reset();
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
-  transition_handle_->goal->id = goal.id();
-  transition_handle_->goal->label =
-    rcutils_strndup(goal.label().c_str(), goal.label().size(), allocator_);
-  if (!transition_handle_->goal->label) {
+  ret = rcl_lifecycle_state_init(
+    transition_handle_->goal, goal.id(), goal.label().c_str(), &allocator_);
+  if (ret != RCL_RET_OK) {
     reset();
-    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
+    rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
 
@@ -154,30 +151,9 @@ Transition::reset()
     return;
   }
 
-  if (transition_handle_->start) {
-    if (transition_handle_->start->label) {
-      allocator_.deallocate(
-        const_cast<char *>(transition_handle_->start->label), allocator_.state);
-      transition_handle_->start->label = nullptr;
-    }
-    allocator_.deallocate(transition_handle_->start, allocator_.state);
-    transition_handle_->start = nullptr;
+  auto ret = rcl_lifecycle_transition_fini(transition_handle_, &allocator_);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  if (transition_handle_->goal) {
-    if (transition_handle_->goal->label) {
-      allocator_.deallocate(
-        const_cast<char *>(transition_handle_->goal->label), allocator_.state);
-      transition_handle_->goal->label = nullptr;
-    }
-    allocator_.deallocate(transition_handle_->goal, allocator_.state);
-    transition_handle_->goal = nullptr;
-  }
-  if (transition_handle_->label) {
-    allocator_.deallocate(
-      const_cast<char *>(transition_handle_->label), allocator_.state);
-    transition_handle_->label = nullptr;
-  }
-  allocator_.deallocate(transition_handle_, allocator_.state);
-  transition_handle_ = nullptr;
 }
 }  // namespace rclcpp_lifecycle

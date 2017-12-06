@@ -14,13 +14,16 @@
 
 #include "rclcpp_lifecycle/state.hpp"
 
-#include <lifecycle_msgs/msg/state.hpp>
-
-#include <rcutils/allocator.h>
-#include <rcutils/strdup.h>
-#include <rcl_lifecycle/data_types.h>
-
 #include <string>
+
+#include "lifecycle_msgs/msg/state.hpp"
+
+#include "rcl_lifecycle/rcl_lifecycle.h"
+
+#include "rclcpp/exceptions.hpp"
+
+#include "rcutils/allocator.h"
+#include "rcutils/strdup.h"
 
 namespace rclcpp_lifecycle
 {
@@ -46,12 +49,11 @@ State::State(
   if (!state_handle_) {
     throw std::runtime_error("failed to allocate memory for rcl_lifecycle_state_t");
   }
-  state_handle_->id = id;
-  state_handle_->label =
-    rcutils_strndup(label.c_str(), label.size(), allocator_);
-  if (!state_handle_->label) {
+
+  auto ret = rcl_lifecycle_state_init(state_handle_, id, label.c_str(), &allocator_);
+  if (ret != RCL_RET_OK) {
     reset();
-    throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
+    rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
 
@@ -102,12 +104,10 @@ State::reset()
     return;
   }
 
-  if (state_handle_->label) {
-    allocator_.deallocate(const_cast<char *>(state_handle_->label), allocator_.state);
-    state_handle_->label = nullptr;
+  auto ret = rcl_lifecycle_state_fini(state_handle_, &allocator_);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  allocator_.deallocate(state_handle_, allocator_.state);
-  state_handle_ = nullptr;
 }
 
 }  // namespace rclcpp_lifecycle
