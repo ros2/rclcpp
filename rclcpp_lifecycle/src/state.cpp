@@ -154,11 +154,11 @@ State::reset()
   }
 
   auto ret = rcl_lifecycle_state_fini(state_handle_, &allocator_);
+  allocator_.deallocate(state_handle_, allocator_.state);
+  state_handle_ = nullptr;
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  allocator_.deallocate(state_handle_, allocator_.state);
-  state_handle_ = nullptr;
 }
 
 }  // namespace rclcpp_lifecycle

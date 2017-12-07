@@ -258,10 +258,10 @@ Transition::reset()
   }
 
   auto ret = rcl_lifecycle_transition_fini(transition_handle_, &allocator_);
+  allocator_.deallocate(transition_handle_, allocator_.state);
+  transition_handle_ = nullptr;
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  allocator_.deallocate(transition_handle_, allocator_.state);
-  transition_handle_ = nullptr;
 }
 }  // namespace rclcpp_lifecycle
