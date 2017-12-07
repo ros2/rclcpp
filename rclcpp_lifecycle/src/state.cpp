@@ -153,11 +153,9 @@ State::reset()
     return;
   }
 
-  // TODO(karsten1987): Fini currently deallocate the state_handle_ instance as well
-  // this should be changed to only deallocate members of the pointer so that stack
-  // variables can be correctly used as well.
-  // see https://github.com/ros2/rclcpp/pull/419#discussion_r155157098
   auto ret = rcl_lifecycle_state_fini(state_handle_, &allocator_);
+  allocator_.deallocate(state_handle_, allocator_.state);
+  state_handle_ = nullptr;
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
