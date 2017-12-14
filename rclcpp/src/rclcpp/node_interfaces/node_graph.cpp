@@ -174,8 +174,7 @@ NodeGraph::count_publishers(const std::string & topic_name) const
     false);    // false = not a service
 
   size_t count;
-  // TODO(wjwwood): use the rcl equivalent methods
-  auto ret = rmw_count_publishers(rmw_node_handle, fqdn.c_str(), &count);
+  auto ret = rcl_count_publishers(rmw_node_handle, fqdn.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
