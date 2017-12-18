@@ -158,8 +158,13 @@ public:
         std::string("rcl_service_t in constructor argument must be initialized beforehand."));
       // *INDENT-ON*
     }
+
+    const char * service_name = rcl_service_get_service_name(service_handle);
+    if (!service_name) {
+      throw std::runtime_error("Get a invalid null service name");
+    }
     service_handle_ = service_handle;
-    service_name_ = std::string(rcl_service_get_service_name(service_handle));
+    service_name_ = std::string(service_name);
     owns_rcl_handle_ = false;
   }
 
