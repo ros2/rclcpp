@@ -171,12 +171,11 @@ PublisherBase::setup_intra_process(
   const rcl_publisher_options_t & intra_process_options)
 {
   const char * topic_name = this->get_topic_name();
-  std::string intra_process_topic_name = "";
-  if (topic_name) {
-    intra_process_topic_name = std::string(topic_name) + "/_intra";
-  } else {
+  if (!topic_name) {
     throw std::runtime_error("Get a invalid null topic name");
   }
+
+  auto intra_process_topic_name = std::string(topic_name) + "/_intra";
 
   rcl_ret_t ret = rcl_publisher_init(
     &intra_process_publisher_handle_,
