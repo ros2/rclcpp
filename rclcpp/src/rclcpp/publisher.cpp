@@ -170,7 +170,13 @@ PublisherBase::setup_intra_process(
   StoreMessageCallbackT callback,
   const rcl_publisher_options_t & intra_process_options)
 {
-  auto intra_process_topic_name = std::string(this->get_topic_name()) + "/_intra";
+  const char * topic_name = this->get_topic_name();
+  if (!topic_name) {
+    throw std::runtime_error("failed to get topic name");
+  }
+
+  auto intra_process_topic_name = std::string(topic_name) + "/_intra";
+
   rcl_ret_t ret = rcl_publisher_init(
     &intra_process_publisher_handle_,
     rcl_node_handle_.get(),
