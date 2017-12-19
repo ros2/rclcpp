@@ -172,7 +172,7 @@ PublisherBase::setup_intra_process(
 {
   const char * topic_name = this->get_topic_name();
   if (!topic_name) {
-    throw std::runtime_error("Get a invalid null topic name");
+    throw std::runtime_error("failed to get topic name");
   }
 
   auto intra_process_topic_name = std::string(topic_name) + "/_intra";
