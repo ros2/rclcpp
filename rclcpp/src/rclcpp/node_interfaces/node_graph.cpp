@@ -166,16 +166,16 @@ NodeGraph::get_node_names() const
 size_t
 NodeGraph::count_publishers(const std::string & topic_name) const
 {
-  auto rmw_node_handle = rcl_node_get_rmw_handle(node_base_->get_rcl_node_handle());
+  auto rcl_node_handle = node_base_->get_rcl_node_handle();
+
   auto fqdn = rclcpp::expand_topic_or_service_name(
     topic_name,
-    rmw_node_handle->name,
-    rmw_node_handle->namespace_,
+    rcl_node_get_name(rcl_node_handle),
+    rcl_node_get_namespace(rcl_node_handle),
     false);    // false = not a service
 
   size_t count;
-  // TODO(wjwwood): use the rcl equivalent methods
-  auto ret = rmw_count_publishers(rmw_node_handle, fqdn.c_str(), &count);
+  auto ret = rcl_count_publishers(rcl_node_handle, fqdn.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
@@ -188,16 +188,16 @@ NodeGraph::count_publishers(const std::string & topic_name) const
 size_t
 NodeGraph::count_subscribers(const std::string & topic_name) const
 {
-  auto rmw_node_handle = rcl_node_get_rmw_handle(node_base_->get_rcl_node_handle());
+  auto rcl_node_handle = node_base_->get_rcl_node_handle();
+
   auto fqdn = rclcpp::expand_topic_or_service_name(
     topic_name,
-    rmw_node_handle->name,
-    rmw_node_handle->namespace_,
+    rcl_node_get_name(rcl_node_handle),
+    rcl_node_get_namespace(rcl_node_handle),
     false);    // false = not a service
 
   size_t count;
-  // TODO(wjwwood): use the rcl equivalent methods
-  auto ret = rmw_count_subscribers(rmw_node_handle, fqdn.c_str(), &count);
+  auto ret = rcl_count_subscribers(rcl_node_handle, fqdn.c_str(), &count);
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
