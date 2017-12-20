@@ -167,13 +167,11 @@ size_t
 NodeGraph::count_publishers(const std::string & topic_name) const
 {
   auto rcl_node_handle = node_base_->get_rcl_node_handle();
-  auto name = rcl_node_get_name(rcl_node_handle);
-  auto namespace_ = rcl_node_get_namespace(rcl_node_handle);
 
   auto fqdn = rclcpp::expand_topic_or_service_name(
     topic_name,
-    name,
-    namespace_,
+    rcl_node_get_name(rcl_node_handle),
+    rcl_node_get_namespace(rcl_node_handle),
     false);    // false = not a service
 
   size_t count;
@@ -191,13 +189,11 @@ size_t
 NodeGraph::count_subscribers(const std::string & topic_name) const
 {
   auto rcl_node_handle = node_base_->get_rcl_node_handle();
-  auto name = rcl_node_get_name(rcl_node_handle);
-  auto namespace_ = rcl_node_get_namespace(rcl_node_handle);
 
   auto fqdn = rclcpp::expand_topic_or_service_name(
     topic_name,
-    name,
-    namespace_,
+    rcl_node_get_name(rcl_node_handle),
+    rcl_node_get_namespace(rcl_node_handle),
     false);    // false = not a service
 
   size_t count;
