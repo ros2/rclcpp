@@ -106,10 +106,15 @@ NodeBase::NodeBase(
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate node name");
       }
-      throw rclcpp::exceptions::InvalidNodeNameError(
-              node_name.c_str(),
-              rmw_node_name_validation_result_string(validation_result),
-              invalid_index);
+
+      if (validation_result != RMW_NODE_NAME_VALID) {
+        throw rclcpp::exceptions::InvalidNodeNameError(
+                node_name.c_str(),
+                rmw_node_name_validation_result_string(validation_result),
+                invalid_index);
+      } else {
+        throw std::runtime_error("valid rmw node name but invalid rcl node name");
+      }
     }
 
     if (ret == RCL_RET_NODE_INVALID_NAMESPACE) {
@@ -124,12 +129,16 @@ NodeBase::NodeBase(
         }
         throw_from_rcl_error(RCL_RET_ERROR, "failed to validate namespace");
       }
-      throw rclcpp::exceptions::InvalidNamespaceError(
-              namespace_.c_str(),
-              rmw_namespace_validation_result_string(validation_result),
-              invalid_index);
-    }
 
+      if (validation_result != RMW_NAMESPACE_VALID) {
+        throw rclcpp::exceptions::InvalidNamespaceError(
+                namespace_.c_str(),
+                rmw_namespace_validation_result_string(validation_result),
+                invalid_index);
+      } else {
+        throw std::runtime_error("valid rmw node namespace but invalid rcl node namespace");
+      }
+    }
     throw_from_rcl_error(ret, "failed to initialize rcl node");
   }
 

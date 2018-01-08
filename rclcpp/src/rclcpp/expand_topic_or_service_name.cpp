@@ -102,20 +102,20 @@ rclcpp::expand_topic_or_service_name(
         throw_from_rcl_error(ret);
       }
 
-      if (validation_result == RCL_TOPIC_NAME_VALID) {
+      if (validation_result != RCL_TOPIC_NAME_VALID) {
+        const char * validation_message =
+          rcl_topic_name_validation_result_string(validation_result);
+        if (is_service) {
+          using rclcpp::exceptions::InvalidServiceNameError;
+          throw InvalidServiceNameError(name.c_str(), validation_message, invalid_index);
+        } else {
+          using rclcpp::exceptions::InvalidTopicNameError;
+          throw InvalidTopicNameError(name.c_str(), validation_message, invalid_index);
+        }
+      } else {
         throw std::runtime_error("topic name unexpectedly valid");
       }
-      const char * validation_message = rcl_topic_name_validation_result_string(validation_result);
-      if (!validation_message) {
-        throw std::runtime_error("unable to get validation error message");
-      }
-      if (is_service) {
-        using rclcpp::exceptions::InvalidServiceNameError;
-        throw InvalidServiceNameError(name.c_str(), validation_message, invalid_index);
-      } else {
-        using rclcpp::exceptions::InvalidTopicNameError;
-        throw InvalidTopicNameError(name.c_str(), validation_message, invalid_index);
-      }
+
       // if invalid node name
     } else if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // explicitly discard error from rcl_expand_topic_name()
@@ -133,10 +133,16 @@ rclcpp::expand_topic_or_service_name(
           RCL_RET_ERROR, "failed to validate node name",
           rmw_get_error_state(), rmw_reset_error);
       }
-      throw rclcpp::exceptions::InvalidNodeNameError(
-              node_name.c_str(),
-              rmw_node_name_validation_result_string(validation_result),
-              invalid_index);
+
+      if (validation_result != RMW_NODE_NAME_VALID) {
+        throw rclcpp::exceptions::InvalidNodeNameError(
+                node_name.c_str(),
+                rmw_node_name_validation_result_string(validation_result),
+                invalid_index);
+      } else {
+        throw std::runtime_error("invalid rcl node name but valid rmw node name");
+      }
+
       // if invalid namespace
     } else if (ret == RCL_RET_NODE_INVALID_NAMESPACE) {
       rcl_reset_error();  // explicitly discard error from rcl_expand_topic_name()
@@ -154,10 +160,15 @@ rclcpp::expand_topic_or_service_name(
           RCL_RET_ERROR, "failed to validate namespace",
           rmw_get_error_state(), rmw_reset_error);
       }
-      throw rclcpp::exceptions::InvalidNamespaceError(
-              namespace_.c_str(),
-              rmw_namespace_validation_result_string(validation_result),
-              invalid_index);
+
+      if (validation_result != RMW_NAMESPACE_VALID) {
+        throw rclcpp::exceptions::InvalidNamespaceError(
+                namespace_.c_str(),
+                rmw_namespace_validation_result_string(validation_result),
+                invalid_index);
+      } else {
+        throw std::runtime_error("invalid rcl namespace but valid rmw namespace");
+      }
       // something else happened
     } else {
       throw_from_rcl_error(ret);
@@ -179,6 +190,7 @@ rclcpp::expand_topic_or_service_name(
       RCL_RET_ERROR, "failed to validate full topic name",
       rmw_get_error_state(), rmw_reset_error);
   }
+
   if (validation_result != RMW_TOPIC_VALID) {
     if (is_service) {
       throw rclcpp::exceptions::InvalidServiceNameError(
