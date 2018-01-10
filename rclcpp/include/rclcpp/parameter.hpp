@@ -62,7 +62,7 @@ public:
   RCLCPP_PUBLIC
   explicit ParameterVariant(const std::string & name, const char * string_value);
   RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & bytes_value);
+  explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & byte_values);
 
   RCLCPP_PUBLIC
   ParameterType
@@ -135,7 +135,7 @@ public:
       // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
-    return value_.bytes_value;
+    return value_.byte_values;
   }
 
   // The following get_value() variants allow the use of primitive types
