@@ -38,7 +38,7 @@ enum ParameterType
   PARAMETER_INTEGER = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
   PARAMETER_DOUBLE = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
   PARAMETER_STRING = rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
-  PARAMETER_BYTES = rcl_interfaces::msg::ParameterType::PARAMETER_BYTES,
+  PARAMETER_BYTE_ARRAY = rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
 };
 
 // Structure to store an arbitrary parameter with templated get/set methods
@@ -128,10 +128,10 @@ public:
 
   template<ParameterType type>
   typename std::enable_if<
-    type == ParameterType::PARAMETER_BYTES, const std::vector<uint8_t> &>::type
+    type == ParameterType::PARAMETER_BYTE_ARRAY, const std::vector<uint8_t> &>::type
   get_value() const
   {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTES) {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY) {
       // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
@@ -175,7 +175,7 @@ public:
       type, const std::vector<uint8_t> &>::value, const std::vector<uint8_t> &>::type
   get_value() const
   {
-    return get_value<ParameterType::PARAMETER_BYTES>();
+    return get_value<ParameterType::PARAMETER_BYTE_ARRAY>();
   }
 
   RCLCPP_PUBLIC

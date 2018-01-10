@@ -80,7 +80,7 @@ ParameterVariant::ParameterVariant(
 : name_(name)
 {
   value_.byte_values = byte_values;
-  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BYTES;
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY;
 }
 
 ParameterType
@@ -101,7 +101,7 @@ ParameterVariant::get_type_name() const
       return "double";
     case rclcpp::parameter::ParameterType::PARAMETER_STRING:
       return "string";
-    case rclcpp::parameter::ParameterType::PARAMETER_BYTES:
+    case rclcpp::parameter::ParameterType::PARAMETER_BYTE_ARRAY:
       return "bytes";
     case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
       return "not set";
@@ -152,7 +152,7 @@ ParameterVariant::as_bool() const
 const std::vector<uint8_t> &
 ParameterVariant::as_bytes() const
 {
-  return get_value<ParameterType::PARAMETER_BYTES>();
+  return get_value<ParameterType::PARAMETER_BYTE_ARRAY>();
 }
 
 ParameterVariant
@@ -167,7 +167,7 @@ ParameterVariant::from_parameter(const rcl_interfaces::msg::Parameter & paramete
       return ParameterVariant(parameter.name, parameter.value.double_value);
     case PARAMETER_STRING:
       return ParameterVariant(parameter.name, parameter.value.string_value);
-    case PARAMETER_BYTES:
+    case PARAMETER_BYTE_ARRAY:
       return ParameterVariant(parameter.name, parameter.value.byte_values);
     case PARAMETER_NOT_SET:
       throw std::runtime_error("Type from ParameterValue is not set");
@@ -201,7 +201,7 @@ ParameterVariant::value_to_string() const
       return std::to_string(as_double());
     case rclcpp::parameter::ParameterType::PARAMETER_STRING:
       return as_string();
-    case rclcpp::parameter::ParameterType::PARAMETER_BYTES:
+    case rclcpp::parameter::ParameterType::PARAMETER_BYTE_ARRAY:
       {
         std::stringstream bytes;
         bool first_byte = true;
