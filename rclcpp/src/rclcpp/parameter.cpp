@@ -76,10 +76,10 @@ ParameterVariant::ParameterVariant(const std::string & name, const char * string
 {}
 
 ParameterVariant::ParameterVariant(
-  const std::string & name, const std::vector<uint8_t> & byte_values)
+  const std::string & name, const std::vector<uint8_t> & byte_array_value)
 : name_(name)
 {
-  value_.byte_values = byte_values;
+  value_.byte_array_value = byte_array_value;
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY;
 }
 
@@ -168,7 +168,7 @@ ParameterVariant::from_parameter(const rcl_interfaces::msg::Parameter & paramete
     case PARAMETER_STRING:
       return ParameterVariant(parameter.name, parameter.value.string_value);
     case PARAMETER_BYTE_ARRAY:
-      return ParameterVariant(parameter.name, parameter.value.byte_values);
+      return ParameterVariant(parameter.name, parameter.value.byte_array_value);
     case PARAMETER_NOT_SET:
       throw std::runtime_error("Type from ParameterValue is not set");
     default:
