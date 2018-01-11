@@ -376,6 +376,22 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       )
     );
   }
+  // clear wait set 
+  if (rcl_wait_set_clear_subscriptions(&wait_set_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear subscriptions from wait set");
+  }
+  if (rcl_wait_set_clear_services(&wait_set_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear servicess from wait set");
+  }
+  if (rcl_wait_set_clear_clients(&wait_set_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear clients from wait set");
+  }
+  if (rcl_wait_set_clear_guard_conditions(&wait_set_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear guard conditions from wait set");
+  }
+  if (rcl_wait_set_clear_timers(&wait_set_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear timers from wait set");
+  }
 
   if (rcl_wait_set_resize_subscriptions(
       &wait_set_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
@@ -432,21 +448,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // check the null handles in the wait set and remove them from the handles in memory strategy
   // for callback-based entities
   memory_strategy_->remove_null_handles(&wait_set_);
-  if (rcl_wait_set_clear_subscriptions(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear subscriptions from wait set");
-  }
-  if (rcl_wait_set_clear_services(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear servicess from wait set");
-  }
-  if (rcl_wait_set_clear_clients(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear clients from wait set");
-  }
-  if (rcl_wait_set_clear_guard_conditions(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear guard conditions from wait set");
-  }
-  if (rcl_wait_set_clear_timers(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear timers from wait set");
-  }
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
