@@ -376,7 +376,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       )
     );
   }
-  // clear wait set 
+  // clear wait set
   if (rcl_wait_set_clear_subscriptions(&wait_set_) != RCL_RET_OK) {
     throw std::runtime_error("Couldn't clear subscriptions from wait set");
   }
