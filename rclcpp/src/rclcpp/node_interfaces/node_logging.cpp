@@ -19,8 +19,7 @@ using rclcpp::node_interfaces::NodeLogging;
 NodeLogging::NodeLogging(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
 {
-  // TODO(dhood): use the namespace (slashes converted to dots)
-  logger_ = rclcpp::get_logger(node_base_->get_name());
+  logger_ = rclcpp::get_logger(rcl_node_get_logger_name(node_base_->get_rcl_node_handle()));
 }
 
 NodeLogging::~NodeLogging()
