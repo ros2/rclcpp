@@ -57,6 +57,11 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  const char *
+  get_logger_name() const;
+
+  RCLCPP_PUBLIC
+  virtual
   rclcpp::Context::SharedPtr
   get_context();
 

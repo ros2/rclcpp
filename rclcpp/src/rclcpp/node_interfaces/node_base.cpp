@@ -185,6 +185,12 @@ NodeBase::get_namespace() const
   return rcl_node_get_namespace(node_handle_.get());
 }
 
+const char *
+NodeBase::get_logger_name() const
+{
+  return rcl_node_get_logger_name(node_handle_.get());
+}
+
 rclcpp::Context::SharedPtr
 NodeBase::get_context()
 {
