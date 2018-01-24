@@ -19,7 +19,7 @@ using rclcpp::node_interfaces::NodeLogging;
 NodeLogging::NodeLogging(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
 {
-  logger_ = rclcpp::get_logger(node_base->get_logger_name());
+  logger_ = rclcpp::get_logger(node_base_->get_logger_name());
 }
 
 NodeLogging::~NodeLogging()
