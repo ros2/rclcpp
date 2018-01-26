@@ -38,7 +38,7 @@ enum ParameterType
   PARAMETER_INTEGER = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
   PARAMETER_DOUBLE = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
   PARAMETER_STRING = rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
-  PARAMETER_BYTES = rcl_interfaces::msg::ParameterType::PARAMETER_BYTES,
+  PARAMETER_BYTE_ARRAY = rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
 };
 
 // Structure to store an arbitrary parameter with templated get/set methods
@@ -62,7 +62,9 @@ public:
   RCLCPP_PUBLIC
   explicit ParameterVariant(const std::string & name, const char * string_value);
   RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & bytes_value);
+  explicit ParameterVariant(
+    const std::string & name,
+    const std::vector<uint8_t> & byte_array_value);
 
   RCLCPP_PUBLIC
   ParameterType
@@ -128,14 +130,14 @@ public:
 
   template<ParameterType type>
   typename std::enable_if<
-    type == ParameterType::PARAMETER_BYTES, const std::vector<uint8_t> &>::type
+    type == ParameterType::PARAMETER_BYTE_ARRAY, const std::vector<uint8_t> &>::type
   get_value() const
   {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTES) {
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY) {
       // TODO(wjwwood): use custom exception
       throw std::runtime_error("Invalid type");
     }
-    return value_.bytes_value;
+    return value_.byte_array_value;
   }
 
   // The following get_value() variants allow the use of primitive types
@@ -175,7 +177,7 @@ public:
       type, const std::vector<uint8_t> &>::value, const std::vector<uint8_t> &>::type
   get_value() const
   {
-    return get_value<ParameterType::PARAMETER_BYTES>();
+    return get_value<ParameterType::PARAMETER_BYTE_ARRAY>();
   }
 
   RCLCPP_PUBLIC
