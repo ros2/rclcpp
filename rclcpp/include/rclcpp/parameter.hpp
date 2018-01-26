@@ -62,7 +62,9 @@ public:
   RCLCPP_PUBLIC
   explicit ParameterVariant(const std::string & name, const char * string_value);
   RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const std::vector<uint8_t> & byte_array_value);
+  explicit ParameterVariant(
+    const std::string & name,
+    const std::vector<uint8_t> & byte_array_value);
 
   RCLCPP_PUBLIC
   ParameterType
