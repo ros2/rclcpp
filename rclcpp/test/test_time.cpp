@@ -89,9 +89,9 @@ TEST(TestTime, conversions) {
 
   rclcpp::Time time = msg;
   EXPECT_EQ(
-    RCL_S_TO_NS(static_cast<uint64_t>(msg.sec)) + static_cast<uint64_t>(msg.nanosec),
+    RCL_S_TO_NS(static_cast<int64_t>(msg.sec)) + static_cast<int64_t>(msg.nanosec),
     time.nanoseconds());
-  EXPECT_EQ(static_cast<uint64_t>(msg.sec), RCL_NS_TO_S(time.nanoseconds()));
+  EXPECT_EQ(static_cast<int64_t>(msg.sec), RCL_NS_TO_S(time.nanoseconds()));
 
   builtin_interfaces::msg::Time negative_time_msg;
   negative_time_msg.sec = -1;
