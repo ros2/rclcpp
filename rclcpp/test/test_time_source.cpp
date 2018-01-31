@@ -190,7 +190,7 @@ TEST_F(TestTimeSource, callbacks) {
 
   auto t_out = ros_clock->now();
 
-  EXPECT_NE(0UL, t_out.nanoseconds());
+  EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 
@@ -222,7 +222,7 @@ TEST_F(TestTimeSource, callbacks) {
 
   t_out = ros_clock->now();
 
-  EXPECT_NE(0UL, t_out.nanoseconds());
+  EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 }
@@ -296,7 +296,7 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
 
   auto t_out = ros_clock->now();
 
-  EXPECT_NE(0UL, t_out.nanoseconds());
+  EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 
@@ -320,7 +320,7 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
 
   t_out = ros_clock->now();
 
-  EXPECT_NE(0UL, t_out.nanoseconds());
+  EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 }
