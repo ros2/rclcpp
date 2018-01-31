@@ -116,7 +116,7 @@ TEST_F(TestTimeSource, clock) {
 
   auto t_out = ros_clock->now();
 
-  EXPECT_NE(0UL, t_out.nanoseconds());
+  EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 }
