@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <functional>
+#include <limits>
 
 #include "rclcpp/visibility_control.hpp"
 
@@ -108,6 +109,74 @@ release_sigint_guard_condition(rcl_wait_set_t * wait_set);
 RCLCPP_PUBLIC
 bool
 sleep_for(const std::chrono::nanoseconds & nanoseconds);
+
+/// Safely check if addition will overflow.
+/**
+ * The type of the operands, T, should have defined
+ * std::numeric_limits<T>::max(), `>`, `<` and `-` operators.
+ *
+ * \param[in] x is the first addend.
+ * \param[in] y is the second addend.
+ * \tparam T is type of the operands.
+ * \return True if the x + y sum is greater than T::max value.
+ */
+template<typename T>
+bool
+add_will_overflow(const T x, const T y)
+{
+  return (y > 0) && (x > (std::numeric_limits<T>::max() - y));
+}
+
+/// Safely check if addition will underflow.
+/**
+ * The type of the operands, T, should have defined
+ * std::numeric_limits<T>::min(), `>`, `<` and `-` operators.
+ *
+ * \param[in] x is the first addend.
+ * \param[in] y is the second addend.
+ * \tparam T is type of the operands.
+ * \return True if the x + y sum is less than T::min value.
+ */
+template<typename T>
+bool
+add_will_underflow(const T x, const T y)
+{
+  return (y < 0) && (x < (std::numeric_limits<T>::min() - y));
+}
+
+/// Safely check if subtraction will overflow.
+/**
+ * The type of the operands, T, should have defined
+ * std::numeric_limits<T>::max(), `>`, `<` and `+` operators.
+ *
+ * \param[in] x is the minuend.
+ * \param[in] y is the subtrahend.
+ * \tparam T is type of the operands.
+ * \return True if the difference `x - y` sum is grater than T::max value.
+ */
+template<typename T>
+bool
+sub_will_overflow(const T x, const T y)
+{
+  return (y < 0) && (x > (std::numeric_limits<T>::max() + y));
+}
+
+/// Safely check if subtraction will underflow.
+/**
+ * The type of the operands, T, should have defined
+ * std::numeric_limits<T>::min(), `>`, `<` and `+` operators.
+ *
+ * \param[in] x is the minuend.
+ * \param[in] y is the subtrahend.
+ * \tparam T is type of the operands.
+ * \return True if the difference `x - y` sum is less than T::min value.
+ */
+template<typename T>
+bool
+sub_will_underflow(const T x, const T y)
+{
+  return (y > 0) && (x < (std::numeric_limits<T>::min() + y));
+}
 
 }  // namespace rclcpp
 
