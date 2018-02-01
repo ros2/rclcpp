@@ -35,7 +35,7 @@ public:
   Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
-  explicit Time(uint64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
+  explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   Time(const Time & rhs);
