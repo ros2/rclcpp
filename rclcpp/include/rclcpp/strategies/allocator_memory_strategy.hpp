@@ -78,7 +78,7 @@ public:
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
-        it = guard_conditions_.erase(it);
+        guard_conditions_.erase(it);
         break;
       }
     }
@@ -266,7 +266,7 @@ public:
         }
         any_exec->callback_group = group;
         any_exec->node_base = get_node_by_group(group, weak_nodes);
-        it = subscription_handles_.erase(it);
+        subscription_handles_.erase(it);
         return;
       }
       // Else, the subscription is no longer valid, remove it and continue
@@ -301,7 +301,7 @@ public:
         any_exec->service = service;
         any_exec->callback_group = group;
         any_exec->node_base = get_node_by_group(group, weak_nodes);
-        it = service_handles_.erase(it);
+        service_handles_.erase(it);
         return;
       }
       // Else, the service is no longer valid, remove it and continue
@@ -334,7 +334,7 @@ public:
         any_exec->client = client;
         any_exec->callback_group = group;
         any_exec->node_base = get_node_by_group(group, weak_nodes);
-        it = client_handles_.erase(it);
+        client_handles_.erase(it);
         return;
       }
       // Else, the service is no longer valid, remove it and continue
