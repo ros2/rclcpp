@@ -78,7 +78,7 @@ public:
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
-        guard_conditions_.erase(it);
+        it = guard_conditions_.erase(it);
         break;
       }
     }
@@ -249,7 +249,7 @@ public:
         if (!group) {
           // Group was not found, meaning the subscription is not valid...
           // Remove it from the ready list and continue looking
-          subscription_handles_.erase(it);
+          it = subscription_handles_.erase(it);
           continue;
         }
         if (!group->can_be_taken_from().load()) {
@@ -266,11 +266,11 @@ public:
         }
         any_exec->callback_group = group;
         any_exec->node_base = get_node_by_group(group, weak_nodes);
-        subscription_handles_.erase(it);
+        it = subscription_handles_.erase(it);
         return;
       }
       // Else, the subscription is no longer valid, remove it and continue
-      subscription_handles_.erase(it);
+      it = subscription_handles_.erase(it);
     }
   }
 
@@ -288,7 +288,7 @@ public:
         if (!group) {
           // Group was not found, meaning the service is not valid...
           // Remove it from the ready list and continue looking
-          service_handles_.erase(it);
+          it = service_handles_.erase(it);
           continue;
         }
         if (!group->can_be_taken_from().load()) {
@@ -301,11 +301,11 @@ public:
         any_exec->service = service;
         any_exec->callback_group = group;
         any_exec->node_base = get_node_by_group(group, weak_nodes);
-        service_handles_.erase(it);
+        it = service_handles_.erase(it);
         return;
       }
       // Else, the service is no longer valid, remove it and continue
-      service_handles_.erase(it);
+      it = service_handles_.erase(it);
     }
   }
 
@@ -321,7 +321,7 @@ public:
         if (!group) {
           // Group was not found, meaning the service is not valid...
           // Remove it from the ready list and continue looking
-          client_handles_.erase(it);
+          it = client_handles_.erase(it);
           continue;
         }
         if (!group->can_be_taken_from().load()) {
@@ -334,11 +334,11 @@ public:
         any_exec->client = client;
         any_exec->callback_group = group;
         any_exec->node_base = get_node_by_group(group, weak_nodes);
-        client_handles_.erase(it);
+        it = client_handles_.erase(it);
         return;
       }
       // Else, the service is no longer valid, remove it and continue
-      client_handles_.erase(it);
+      it = client_handles_.erase(it);
     }
   }
 
