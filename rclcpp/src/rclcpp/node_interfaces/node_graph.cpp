@@ -149,8 +149,12 @@ NodeGraph::get_node_names() const
     throw std::runtime_error(error_msg);
   }
 
-  std::vector<std::string> node_names(&node_names_c.data[0],
-    &node_names_c.data[0 + node_names_c.size]);
+  std::vector<std::string> node_names(node_names_c.size);
+  for (size_t i = 0; i < node_names_c.size; ++i) {
+    if (node_names_c.data[i]) {
+      node_names[i] = node_names_c.data[i];
+    }
+  }
   ret = rcutils_string_array_fini(&node_names_c);
   if (ret != RCUTILS_RET_OK) {
     // *INDENT-OFF*
