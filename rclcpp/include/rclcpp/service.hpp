@@ -21,6 +21,8 @@
 #include <sstream>
 #include <string>
 
+#include "rcutils/logging_macros.h"
+
 #include "rcl/error_handling.h"
 #include "rcl/service.h"
 
@@ -58,11 +60,11 @@ public:
   get_service_name();
 
   RCLCPP_PUBLIC
-  rcl_service_t *
+  std::shared_ptr<rcl_service_t>
   get_service_handle();
 
   RCLCPP_PUBLIC
-  const rcl_service_t *
+  std::shared_ptr<const rcl_service_t>
   get_service_handle() const;
 
   virtual std::shared_ptr<void> create_request() = 0;
@@ -84,7 +86,7 @@ protected:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_service_t * service_handle_ = nullptr;
+  std::shared_ptr<rcl_service_t> service_handle_;
   std::string service_name_;
   bool owns_rcl_handle_ = true;
 };
@@ -116,11 +118,22 @@ public:
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
 
     // rcl does the static memory allocation here
-    service_handle_ = new rcl_service_t;
-    *service_handle_ = rcl_get_zero_initialized_service();
+    service_handle_ = std::shared_ptr<rcl_service_t>(
+      new rcl_service_t, [ = ](rcl_service_t * service)
+      {
+        if (rcl_service_fini(service, node_handle_.get()) != RCL_RET_OK) {
+          RCUTILS_LOG_ERROR_NAMED(
+            "rclcpp",
+            "Error in destruction of rcl service handle: %s",
+            rcl_get_error_string_safe());
+          rcl_reset_error();
+        }
+        delete service;
+      });
+    *service_handle_.get() = rcl_get_zero_initialized_service();
 
     rcl_ret_t ret = rcl_service_init(
-      service_handle_,
+      service_handle_.get(),
       node_handle.get(),
       service_type_support_handle,
       service_name.c_str(),
@@ -143,16 +156,36 @@ public:
 
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
+    std::shared_ptr<rcl_service_t> service_handle,
+    AnyServiceCallback<ServiceT> any_callback)
+  : ServiceBase(node_handle),
+    any_callback_(any_callback)
+  {
+    // check if service handle was initialized
+    if (!rcl_service_is_valid(service_handle.get(), nullptr)) {
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+      throw std::runtime_error(
+        std::string("rcl_service_t in constructor argument must be initialized beforehand."));
+      // *INDENT-ON*
+    }
+
+    const char * service_name = rcl_service_get_service_name(service_handle.get());
+    if (!service_name) {
+      throw std::runtime_error("failed to get service name");
+    }
+    service_handle_ = service_handle;
+    service_name_ = std::string(service_name);
+  }
+
+  Service(
+    std::shared_ptr<rcl_node_t> node_handle,
     rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle),
     any_callback_(any_callback)
   {
     // check if service handle was initialized
-    // TODO(karsten1987): Take this verification
-    // directly in rcl_*_t
-    // see: https://github.com/ros2/rcl/issues/81
-    if (!service_handle->impl) {
+    if (!rcl_service_is_valid(service_handle, nullptr)) {
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("rcl_service_t in constructor argument must be initialized beforehand."));
@@ -163,26 +196,18 @@ public:
     if (!service_name) {
       throw std::runtime_error("failed to get service name");
     }
-    service_handle_ = service_handle;
     service_name_ = std::string(service_name);
-    owns_rcl_handle_ = false;
+
+    // In this case, rcl owns the service handle memory
+    service_handle_ = std::shared_ptr<rcl_service_t>(new rcl_service_t);
+    service_handle_->impl = service_handle->impl;
   }
+
 
   Service() = delete;
 
   virtual ~Service()
   {
-    // check if you have ownership of the handle
-    if (owns_rcl_handle_) {
-      if (rcl_service_fini(service_handle_, node_handle_.get()) != RCL_RET_OK) {
-        std::stringstream ss;
-        ss << "Error in destruction of rcl service_handle_ handle: " <<
-          rcl_get_error_string_safe() << '\n';
-        (std::cerr << ss.str()).flush();
-        rcl_reset_error();
-      }
-      delete service_handle_;
-    }
   }
 
   std::shared_ptr<void> create_request()
@@ -211,7 +236,7 @@ public:
     std::shared_ptr<rmw_request_id_t> req_id,
     std::shared_ptr<typename ServiceT::Response> response)
   {
-    rcl_ret_t status = rcl_send_response(get_service_handle(), req_id.get(), response.get());
+    rcl_ret_t status = rcl_send_response(get_service_handle().get(), req_id.get(), response.get());
 
     if (status != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to send response");

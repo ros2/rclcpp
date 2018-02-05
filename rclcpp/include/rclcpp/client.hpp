@@ -68,11 +68,11 @@ public:
   get_service_name() const;
 
   RCLCPP_PUBLIC
-  rcl_client_t *
+  std::shared_ptr<rcl_client_t>
   get_client_handle();
 
   RCLCPP_PUBLIC
-  const rcl_client_t *
+  std::shared_ptr<const rcl_client_t>
   get_client_handle() const;
 
   RCLCPP_PUBLIC
@@ -112,7 +112,7 @@ protected:
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rcl_client_t client_handle_ = rcl_get_zero_initialized_client();
+  std::shared_ptr<rcl_client_t> client_handle_;
   std::string service_name_;
 };
 
@@ -148,7 +148,7 @@ public:
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
-      &client_handle_,
+      client_handle_.get(),
       this->get_rcl_node_handle(),
       service_type_support_handle,
       service_name.c_str(),
@@ -170,11 +170,6 @@ public:
 
   virtual ~Client()
   {
-    if (rcl_client_fini(&client_handle_, this->get_rcl_node_handle()) != RCL_RET_OK) {
-      fprintf(stderr,
-        "Error in destruction of rcl client handle: %s\n", rcl_get_error_string_safe());
-      rcl_reset_error();
-    }
   }
 
   std::shared_ptr<void>
@@ -238,7 +233,7 @@ public:
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
-    rcl_ret_t ret = rcl_send_request(get_client_handle(), request.get(), &sequence_number);
+    rcl_ret_t ret = rcl_send_request(get_client_handle().get(), request.get(), &sequence_number);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send request");
     }

@@ -62,7 +62,7 @@ public:
   execute_callback() = 0;
 
   RCLCPP_PUBLIC
-  const rcl_timer_t *
+  std::shared_ptr<const rcl_timer_t>
   get_timer_handle();
 
   /// Check how long the timer has until its next scheduled callback.
@@ -85,7 +85,7 @@ public:
   bool is_ready();
 
 protected:
-  rcl_timer_t timer_handle_ = rcl_get_zero_initialized_timer();
+  std::shared_ptr<rcl_timer_t> timer_handle_;
 };
 
 
@@ -122,15 +122,12 @@ public:
   {
     // Stop the timer from running.
     cancel();
-    if (rcl_timer_fini(&timer_handle_) != RCL_RET_OK) {
-      fprintf(stderr, "Failed to clean up rcl timer handle: %s\n", rcl_get_error_string_safe());
-    }
   }
 
   void
   execute_callback()
   {
-    rcl_ret_t ret = rcl_timer_call(&timer_handle_);
+    rcl_ret_t ret = rcl_timer_call(timer_handle_.get());
     if (ret == RCL_RET_TIMER_CANCELED) {
       return;
     }

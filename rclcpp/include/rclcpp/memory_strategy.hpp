@@ -83,14 +83,18 @@ public:
 
   static rclcpp::SubscriptionBase::SharedPtr
   get_subscription_by_handle(
-    const rcl_subscription_t * subscriber_handle,
+    std::shared_ptr<const rcl_subscription_t> subscriber_handle,
     const WeakNodeVector & weak_nodes);
 
   static rclcpp::ServiceBase::SharedPtr
-  get_service_by_handle(const rcl_service_t * service_handle, const WeakNodeVector & weak_nodes);
+  get_service_by_handle(
+    std::shared_ptr<const rcl_service_t> service_handle,
+    const WeakNodeVector & weak_nodes);
 
   static rclcpp::ClientBase::SharedPtr
-  get_client_by_handle(const rcl_client_t * client_handle, const WeakNodeVector & weak_nodes);
+  get_client_by_handle(
+    std::shared_ptr<const rcl_client_t> client_handle,
+    const WeakNodeVector & weak_nodes);
 
   static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(
