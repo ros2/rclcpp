@@ -113,6 +113,7 @@ protected:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::shared_ptr<rcl_client_t> client_handle_;
+
   std::string service_name_;
 };
 
@@ -148,7 +149,7 @@ public:
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
-      client_handle_.get(),
+      get_client_handle().get(),
       this->get_rcl_node_handle(),
       service_type_support_handle,
       service_name.c_str(),
