@@ -110,7 +110,7 @@ Node::create_subscription(
     msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
   }
 
-  return rclcpp::create_subscription_with_factory<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
+  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
     topic_name,
     std::forward<CallbackT>(callback),

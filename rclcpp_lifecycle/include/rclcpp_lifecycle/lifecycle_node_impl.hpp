@@ -89,7 +89,7 @@ LifecycleNode::create_subscription(
     msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
   }
 
-  return rclcpp::create_subscription_with_factory<
+  return rclcpp::create_subscription<
     MessageT, CallbackT, Alloc,
     rclcpp::Subscription<MessageT, Alloc>>(
     this->node_topics_.get(),

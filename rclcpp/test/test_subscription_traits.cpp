@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "rcl/types.h"
@@ -22,17 +23,25 @@
 #include "rclcpp/subscription_traits.hpp"
 
 
-void raw_callback_copy(rcl_message_raw_t /* raw_copy */)
-{}
+void raw_callback_copy(rcl_message_raw_t unused)
+{
+  (void) unused;
+}
 
-void raw_callback_shared_ptr(std::shared_ptr<rcl_message_raw_t> /* raw_shared_ptr */)
-{}
+void raw_callback_shared_ptr(std::shared_ptr<rcl_message_raw_t> unused)
+{
+  (void) unused;
+}
 
-void not_raw_callback(char * /* char_ptr */)
-{}
+void not_raw_callback(char * unused)
+{
+  (void) unused;
+}
 
-void not_raw_shared_ptr_callback(std::shared_ptr<char> /* shared_char_ptr */)
-{}
+void not_raw_shared_ptr_callback(std::shared_ptr<char> unused)
+{
+  (void) unused;
+}
 
 TEST(TestSubscriptionTraits, is_raw_callback) {
   // Test regular functions
@@ -57,20 +66,24 @@ TEST(TestSubscriptionTraits, is_raw_callback) {
     "passing a std::shared_tr<char> is not a raw callback");
 }
 
-TEST(TestSubscriptionTraits, callback_messages)
-{
+TEST(TestSubscriptionTraits, callback_messages) {
   static_assert(
     std::is_same<
       std::shared_ptr<char>,
-      rclcpp::function_traits::function_traits<decltype(not_raw_shared_ptr_callback)>::template argument_type<0>>::value, "wrong!");
+      rclcpp::function_traits::function_traits<
+        decltype(not_raw_shared_ptr_callback)
+      >::template argument_type<0>
+    >::value, "wrong!");
 
   static_assert(
     std::is_same<
       char,
       rclcpp::subscription_traits::extract_message_type<
-        rclcpp::function_traits::function_traits<decltype(not_raw_shared_ptr_callback)>::template argument_type<0>
-        >::type
-    >::value, "wrong!1");
+        rclcpp::function_traits::function_traits<
+          decltype(not_raw_shared_ptr_callback)
+        >::template argument_type<0>
+      >::type
+    >::value, "wrong!");
 
   auto cb1 = &raw_callback_copy;
   static_assert(

@@ -297,12 +297,15 @@ public:
       return RCL_RET_ERROR;
     }
 
+    // TODO(karsten1987): Set this back to true whenever we have c-raw publisher
     constexpr bool publish_update = false;
     // keep the initial state to pass to a transition callback
     State initial_state(state_machine_.current_state);
 
     uint8_t transition_id = lifecycle_transition;
-    if (rcl_lifecycle_trigger_transition(&state_machine_, transition_id, publish_update) != RCL_RET_OK) {
+    if (rcl_lifecycle_trigger_transition(
+        &state_machine_, transition_id, publish_update) != RCL_RET_OK)
+    {
       RCUTILS_LOG_ERROR("Unable to start transition %u from current state %s: %s",
         transition_id, state_machine_.current_state->label, rcl_get_error_string_safe())
       return RCL_RET_ERROR;
@@ -327,13 +330,17 @@ public:
         state_machine_.current_state->id, initial_state);
       if (error_resolved == lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS) {
         // We call cleanup on the error state
-        if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, publish_update) != RCL_RET_OK) {
+        if (rcl_lifecycle_trigger_transition(
+            &state_machine_, error_resolved, publish_update) != RCL_RET_OK)
+        {
           RCUTILS_LOG_ERROR("Failed to call cleanup on error state")
           return RCL_RET_ERROR;
         }
       } else {
         // We call shutdown on the error state
-        if (rcl_lifecycle_trigger_transition(&state_machine_, error_resolved, publish_update) != RCL_RET_OK) {
+        if (rcl_lifecycle_trigger_transition(
+            &state_machine_, error_resolved, publish_update) != RCL_RET_OK)
+        {
           RCUTILS_LOG_ERROR("Failed to call cleanup on error state")
           return RCL_RET_ERROR;
         }

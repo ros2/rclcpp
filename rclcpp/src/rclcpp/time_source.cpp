@@ -74,7 +74,8 @@ void TimeSource::attachNode(
 
   auto cb = std::bind(&TimeSource::clock_cb, this, std::placeholders::_1);
 
-  clock_subscription_ = rclcpp::create_subscription_with_factory<MessageT, decltype(cb), Alloc, MessageT, SubscriptionT>(
+  clock_subscription_ = rclcpp::create_subscription<
+    MessageT, decltype(cb), Alloc, MessageT, SubscriptionT>(
     node_topics_.get(),
     topic_name,
     std::move(cb),

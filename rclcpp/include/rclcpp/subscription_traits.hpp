@@ -15,6 +15,8 @@
 #ifndef RCLCPP__SUBSCRIPTION_TRAITS_HPP_
 #define RCLCPP__SUBSCRIPTION_TRAITS_HPP_
 
+#include <memory>
+
 #include "rclcpp/function_traits.hpp"
 
 namespace rclcpp
@@ -22,16 +24,24 @@ namespace rclcpp
 namespace subscription_traits
 {
 
+/*
+ * The current version of uncrustify has a misinterpretion here
+ * between `:` used for inheritance vs for initializer list
+ * The result is that whenever a templated struct is used,
+ * the colon has to be without any whitespace next to it whereas
+ * when no template is used, the colon has to be separated by a space.
+ * Cheers!
+ */
 template<typename T>
 struct is_raw_subscription_argument : std::false_type
 {};
 
 template<>
-struct is_raw_subscription_argument<rcl_message_raw_t> : std::true_type
+struct is_raw_subscription_argument<rcl_message_raw_t>: std::true_type
 {};
 
 template<>
-struct is_raw_subscription_argument<std::shared_ptr<rcl_message_raw_t>> : std::true_type
+struct is_raw_subscription_argument<std::shared_ptr<rcl_message_raw_t>>: std::true_type
 {};
 
 template<typename T>
@@ -51,16 +61,15 @@ struct extract_message_type
 };
 
 template<typename MessageT>
-struct extract_message_type<std::shared_ptr<MessageT>> : extract_message_type<MessageT>
+struct extract_message_type<std::shared_ptr<MessageT>>: extract_message_type<MessageT>
 {};
 
 template<typename MessageT>
-struct extract_message_type<std::unique_ptr<MessageT>> : extract_message_type<MessageT>
+struct extract_message_type<std::unique_ptr<MessageT>>: extract_message_type<MessageT>
 {};
 
 template<typename CallbackT>
-struct has_message_type
-: extract_message_type<
+struct has_message_type : extract_message_type<
     typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>>
 {};
 

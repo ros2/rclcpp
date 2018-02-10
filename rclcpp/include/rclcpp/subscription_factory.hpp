@@ -75,11 +75,11 @@ template<
 SubscriptionFactory
 create_subscription_factory(
   CallbackT && callback,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    CallbackMessageT, Alloc>::SharedPtr
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
-
   SubscriptionFactory factory;
 
   using rclcpp::AnySubscriptionCallback;

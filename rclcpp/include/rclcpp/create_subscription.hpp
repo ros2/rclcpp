@@ -33,7 +33,7 @@ template<
   typename CallbackMessageT,
   typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>>
 typename std::shared_ptr<SubscriptionT>
-create_subscription_with_factory(
+create_subscription(
   rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
   const std::string & topic_name,
   CallbackT && callback,
@@ -41,7 +41,8 @@ create_subscription_with_factory(
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   bool use_intra_process_comms,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    CallbackMessageT, AllocatorT>::SharedPtr
   msg_mem_strat,
   typename std::shared_ptr<AllocatorT> allocator)
 {
@@ -49,8 +50,8 @@ create_subscription_with_factory(
   subscription_options.qos = qos_profile;
   subscription_options.ignore_local_publications = ignore_local_publications;
 
-  auto factory =
-    rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
+  auto factory = rclcpp::create_subscription_factory
+    <MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
     std::forward<CallbackT>(callback), msg_mem_strat, allocator);
 
   auto sub = node_topics->create_subscription(
