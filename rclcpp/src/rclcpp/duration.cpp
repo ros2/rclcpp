@@ -182,6 +182,12 @@ Duration::operator-(const rclcpp::Duration & rhs) const
     rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
 }
 
+Duration
+Duration::operator*(double scale) const
+{
+  return Duration(rcl_duration_.nanoseconds * scale);
+}
+
 rcl_duration_value_t
 Duration::nanoseconds() const
 {
