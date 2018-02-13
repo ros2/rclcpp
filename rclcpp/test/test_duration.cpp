@@ -54,6 +54,9 @@ TEST(TestDuration, operators) {
   EXPECT_EQ(sub.nanoseconds(), (rcl_duration_value_t)(young.nanoseconds() - old.nanoseconds()));
   EXPECT_EQ(sub, young - old);
 
+  rclcpp::Duration scale = old * 3;
+  EXPECT_EQ(scale.nanoseconds(), (rcl_duration_value_t)(old.nanoseconds() * 3));
+
   rclcpp::Duration time = rclcpp::Duration(0, 0);
   rclcpp::Duration copy_constructor_duration(time);
   rclcpp::Duration assignment_op_duration = rclcpp::Duration(1, 0);
@@ -85,4 +88,12 @@ TEST(TestDuration, overflows) {
   EXPECT_THROW(min - one, std::underflow_error);
   EXPECT_THROW(negative_one + min, std::underflow_error);
   EXPECT_THROW(negative_one - max, std::underflow_error);
+
+  rclcpp::Duration base_d = max * 0.3;
+  EXPECT_THROW(base_d * 4, std::overflow_error);
+  EXPECT_THROW(base_d * (-4), std::underflow_error);
+
+  rclcpp::Duration base_d_neg = max * (-0.3);
+  EXPECT_THROW(base_d_neg * (-4), std::overflow_error);
+  EXPECT_THROW(base_d_neg * 4, std::underflow_error);
 }

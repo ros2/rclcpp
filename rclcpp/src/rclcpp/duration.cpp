@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cmath>
 #include <cstdlib>
 #include <limits>
 #include <utility>
@@ -180,6 +181,34 @@ Duration::operator-(const rclcpp::Duration & rhs) const
 
   return Duration(
     rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
+}
+
+void
+bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
+{
+  auto abs_dns = static_cast<uint64_t>(std::abs(dns));
+  auto abs_scale = std::abs(scale);
+
+  if (abs_scale > 1.0 && abs_dns > static_cast<uint64_t>(max / abs_scale)) {
+    if ((dns > 0 && scale > 0) || (dns < 0 && scale < 0)) {
+      throw std::overflow_error("duration scaling leads to int64_t overflow");
+    } else {
+      throw std::underflow_error("duration scaling leads to int64_t underflow");
+    }
+  }
+}
+
+Duration
+Duration::operator*(double scale) const
+{
+  if (!std::isfinite(scale)) {
+    throw std::runtime_error("abnormal scale in rclcpp::Duration");
+  }
+  bounds_check_duration_scale(
+    this->rcl_duration_.nanoseconds,
+    scale,
+    std::numeric_limits<rcl_duration_value_t>::max());
+  return Duration(static_cast<rcl_duration_value_t>(rcl_duration_.nanoseconds * scale));
 }
 
 rcl_duration_value_t

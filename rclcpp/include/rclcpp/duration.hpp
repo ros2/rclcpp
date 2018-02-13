@@ -90,6 +90,10 @@ public:
   operator-(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
+  Duration
+  operator*(double scale) const;
+
+  RCLCPP_PUBLIC
   rcl_duration_value_t
   nanoseconds() const;
 
