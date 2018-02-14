@@ -56,7 +56,6 @@ TEST(TestDuration, operators) {
 
   rclcpp::Duration scale = old * 3;
   EXPECT_EQ(scale.nanoseconds(), (rcl_duration_value_t)(old.nanoseconds() * 3));
-  EXPECT_EQ(scale, old * 3);
 
   rclcpp::Duration time = rclcpp::Duration(0, 0);
   rclcpp::Duration copy_constructor_duration(time);

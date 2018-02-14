@@ -182,9 +182,33 @@ Duration::operator-(const rclcpp::Duration & rhs) const
     rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
 }
 
+void
+bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
+{
+  auto abs_dns = (uint64_t)std::abs(dns);
+  auto abs_scale = (uint64_t)std::abs(scale);
+
+  if ((abs_scale >= 1.0 && abs_dns > (uint64_t)(max / abs_scale)) ||
+    (abs_scale < 1.0 && (uint64_t)(abs_dns * abs_scale > max)))
+  {
+    if ((dns > 0 && scale > 0) || (dns < 0 && scale < 0)) {
+      throw std::overflow_error("addition leads to int64_t overflow");
+    } else {
+      throw std::underflow_error("addition leads to int64_t underflow");
+    }
+  }
+}
+
 Duration
 Duration::operator*(double scale) const
 {
+  if (!std::isnormal(scale)) {
+    throw std::runtime_error("abnormal scale in rclcpp::Duration");
+  }
+  bounds_check_duration_scale(
+    this->rcl_duration_.nanoseconds,
+    scale,
+    std::numeric_limits<rcl_duration_value_t>::max());
   return Duration(rcl_duration_.nanoseconds * scale);
 }
 
