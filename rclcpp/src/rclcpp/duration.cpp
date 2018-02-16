@@ -185,16 +185,14 @@ Duration::operator-(const rclcpp::Duration & rhs) const
 void
 bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
 {
-  auto abs_dns = (uint64_t)std::abs(dns);
-  auto abs_scale = (uint64_t)std::abs(scale);
+  auto abs_dns = static_cast<uint64_t>(std::abs(dns));
+  auto abs_scale = std::abs(scale);
 
-  if ((abs_scale >= 1.0 && abs_dns > (uint64_t)(max / abs_scale)) ||
-    (abs_scale < 1.0 && (uint64_t)(abs_dns * abs_scale > max)))
-  {
+  if (abs_scale > 1.0 && abs_dns > static_cast<uint64_t>(max / abs_scale)) {
     if ((dns > 0 && scale > 0) || (dns < 0 && scale < 0)) {
-      throw std::overflow_error("addition leads to int64_t overflow");
+      throw std::overflow_error("duration scaling leads to int64_t overflow");
     } else {
-      throw std::underflow_error("addition leads to int64_t underflow");
+      throw std::underflow_error("duration scaling leads to int64_t underflow");
     }
   }
 }
