@@ -33,6 +33,8 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 
+#include "rcutils/logging_macros.h"
+
 using rclcpp::PublisherBase;
 
 PublisherBase::PublisherBase(
@@ -79,17 +81,17 @@ PublisherBase::PublisherBase(
 PublisherBase::~PublisherBase()
 {
   if (rcl_publisher_fini(&intra_process_publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
-    fprintf(
-      stderr,
-      "Error in destruction of intra process rcl publisher handle: %s\n",
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Error in destruction of intra process rcl publisher handle: %s",
       rcl_get_error_string_safe());
     rcl_reset_error();
   }
 
   if (rcl_publisher_fini(&publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
-    fprintf(
-      stderr,
-      "Error in destruction of rcl publisher handle: %s\n",
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Error in destruction of rcl publisher handle: %s",
       rcl_get_error_string_safe());
     rcl_reset_error();
   }

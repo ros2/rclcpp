@@ -28,6 +28,8 @@
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "rcutils/logging_macros.h"
+
 using rclcpp::executor::AnyExecutable;
 using rclcpp::executor::Executor;
 using rclcpp::executor::ExecutorArgs;
@@ -59,12 +61,14 @@ Executor::Executor(const ExecutorArgs & args)
   if (rcl_wait_set_init(
       &wait_set_, 0, 2, 0, 0, 0, allocator) != RCL_RET_OK)
   {
-    fprintf(stderr,
-      "[rclcpp::error] failed to create wait set: %s\n", rcl_get_error_string_safe());
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "failed to create wait set: %s", rcl_get_error_string_safe());
     rcl_reset_error();
     if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "failed to destroy guard condition: %s", rcl_get_error_string_safe());
       rcl_reset_error();
     }
     throw std::runtime_error("Failed to create wait set in Executor constructor");
@@ -85,14 +89,16 @@ Executor::~Executor()
 
   // Finalize the wait set.
   if (rcl_wait_set_fini(&wait_set_) != RCL_RET_OK) {
-    fprintf(stderr,
-      "[rclcpp::error] failed to destroy wait set: %s\n", rcl_get_error_string_safe());
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "failed to destroy wait set: %s", rcl_get_error_string_safe());
     rcl_reset_error();
   }
   // Finalize the interrupt guard condition.
   if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
-    fprintf(stderr,
-      "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "failed to destroy guard condition: %s", rcl_get_error_string_safe());
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
@@ -280,8 +286,9 @@ Executor::execute_subscription(
     message_info.from_intra_process = false;
     subscription->handle_message(message, message_info);
   } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
-    fprintf(stderr,
-      "[rclcpp::error] take failed for subscription on topic '%s': %s\n",
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "take failed for subscription on topic '%s': %s",
       subscription->get_topic_name(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
@@ -303,8 +310,9 @@ Executor::execute_intra_process_subscription(
     message_info.from_intra_process = true;
     subscription->handle_intra_process_message(ipm, message_info);
   } else if (status != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
-    fprintf(stderr,
-      "[rclcpp::error] take failed for intra process subscription on topic '%s': %s\n",
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "take failed for intra process subscription on topic '%s': %s",
       subscription->get_topic_name(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
@@ -330,8 +338,9 @@ Executor::execute_service(
   if (status == RCL_RET_OK) {
     service->handle_request(request_header, request);
   } else if (status != RCL_RET_SERVICE_TAKE_FAILED) {
-    fprintf(stderr,
-      "[rclcpp::error] take request failed for server of service '%s': %s\n",
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "take request failed for server of service '%s': %s",
       service->get_service_name().c_str(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
@@ -350,8 +359,9 @@ Executor::execute_client(
   if (status == RCL_RET_OK) {
     client->handle_response(request_header, response);
   } else if (status != RCL_RET_CLIENT_TAKE_FAILED) {
-    fprintf(stderr,
-      "[rclcpp::error] take response failed for client of service '%s': %s\n",
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "take response failed for client of service '%s': %s",
       client->get_service_name().c_str(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
@@ -439,7 +449,9 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   rcl_ret_t status =
     rcl_wait(&wait_set_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
   if (status == RCL_RET_WAIT_SET_EMPTY) {
-    fprintf(stderr, "Warning: empty wait set received in rcl_wait(). This should never happen.\n");
+    RCUTILS_LOG_WARN_NAMED(
+      "rclcpp",
+      "empty wait set received in rcl_wait(). This should never happen.");
   } else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {
     using rclcpp::exceptions::throw_from_rcl_error;
     throw_from_rcl_error(status, "rcl_wait() failed");

@@ -39,6 +39,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rcutils/logging_macros.h"
+
 namespace rclcpp
 {
 
@@ -199,7 +201,9 @@ public:
     int64_t sequence_number = request_header->sequence_number;
     // TODO(esteve) this should throw instead since it is not expected to happen in the first place
     if (this->pending_requests_.count(sequence_number) == 0) {
-      fprintf(stderr, "Received invalid sequence number. Ignoring...\n");
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Received invalid sequence number. Ignoring...");
       return;
     }
     auto tuple = this->pending_requests_[sequence_number];
