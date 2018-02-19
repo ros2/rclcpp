@@ -202,6 +202,16 @@ if(BUILD_TESTING)
     target_link_libraries(test_node_global_args ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_parameter_events_filter test/test_parameter_events_filter.cpp)
+  ament_add_gtest(test_parameter test/test_parameter.cpp)
+  if(TARGET test_parameter)
+    target_include_directories(test_parameter PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_parameter ${PROJECT_NAME})
+  endif()
   if(TARGET test_parameter_events_filter)
     target_include_directories(test_parameter_events_filter PUBLIC
       ${rcl_interfaces_INCLUDE_DIRS}
