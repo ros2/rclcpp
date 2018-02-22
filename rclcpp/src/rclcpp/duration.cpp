@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <limits>
 #include <utility>
+#include <cmath>
 
 #include "rclcpp/clock.hpp"
 #include "rclcpp/time.hpp"
