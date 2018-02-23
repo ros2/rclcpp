@@ -10,7 +10,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_lifecycle REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -20,7 +20,6 @@ include_directories(include)
 
 ### CPP High level library
 add_library(rclcpp_lifecycle
-  SHARED
   src/lifecycle_node.cpp
   src/node_interfaces/lifecycle_node_interface.cpp
   src/state.cpp
