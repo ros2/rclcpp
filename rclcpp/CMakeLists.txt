@@ -98,7 +98,6 @@ add_library(${PROJECT_NAME}
 ament_target_dependencies(${PROJECT_NAME}
   "builtin_interfaces"
   "rcl"
-  "rmw"
   "rosidl_generator_cpp"
   "rosidl_typesupport_cpp")
 
@@ -117,7 +116,6 @@ install(
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rcl)
-ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_typesupport_cpp)
