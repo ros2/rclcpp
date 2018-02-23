@@ -20,10 +20,9 @@
 #include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rclcpp/exceptions.hpp"
+#include "rcutils/logging_macros.h"
 #include "rmw/validate_node_name.h"
 #include "rmw/validate_namespace.h"
-
-#include "rcutils/logging_macros.h"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 

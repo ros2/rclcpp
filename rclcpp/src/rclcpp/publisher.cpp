@@ -24,6 +24,7 @@
 #include <string>
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
+#include "rcutils/logging_macros.h"
 #include "rmw/impl/cpp/demangle.hpp"
 
 #include "rclcpp/allocator/allocator_common.hpp"
@@ -32,8 +33,6 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
-
-#include "rcutils/logging_macros.h"
 
 using rclcpp::PublisherBase;
 

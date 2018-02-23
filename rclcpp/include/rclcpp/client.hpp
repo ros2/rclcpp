@@ -36,10 +36,10 @@
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
-
-#include "rcutils/logging_macros.h"
 
 namespace rclcpp
 {

@@ -25,9 +25,9 @@
 #include "rclcpp/node.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rmw/types.h"
-
 #include "rcutils/logging_macros.h"
+
+#include "rmw/types.h"
 
 namespace rclcpp
 {
