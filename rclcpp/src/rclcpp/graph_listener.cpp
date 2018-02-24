@@ -26,6 +26,8 @@
 #include "rclcpp/node.hpp"
 #include "rmw/impl/cpp/demangle.hpp"
 
+#include "rcutils/logging_macros.h"
+
 using rclcpp::exceptions::throw_from_rcl_error;
 
 namespace rclcpp
@@ -94,13 +96,16 @@ GraphListener::run()
   try {
     run_loop();
   } catch (const std::exception & exc) {
-    fprintf(stderr,
-      "[rclcpp] caught %s exception in GraphListener thread: %s\n",
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "caught %s exception in GraphListener thread: %s",
       rmw::impl::cpp::demangle(exc).c_str(),
       exc.what());
     std::rethrow_exception(std::current_exception());
   } catch (...) {
-    fprintf(stderr, "[rclcpp] unknown error in GraphListener thread\n");
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "unknown error in GraphListener thread");
     std::rethrow_exception(std::current_exception());
   }
 }

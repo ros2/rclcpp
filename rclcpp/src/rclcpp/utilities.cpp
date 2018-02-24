@@ -30,6 +30,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rcutils/logging_macros.h"
+
 // Determine if sigaction is available
 #if __APPLE__ || _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
 #define HAS_SIGACTION
@@ -114,8 +116,9 @@ trigger_interrupt_guard_condition(int signal_value)
     for (auto & kv : g_sigint_guard_cond_handles) {
       rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
       if (status != RCL_RET_OK) {
-        fprintf(stderr,
-          "[rclcpp::error] failed to trigger guard condition: %s\n", rcl_get_error_string_safe());
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "failed to trigger guard condition: %s", rcl_get_error_string_safe());
       }
     }
   }

@@ -20,6 +20,7 @@
 #include "rclcpp/node_interfaces/node_base.hpp"
 
 #include "rclcpp/exceptions.hpp"
+#include "rcutils/logging_macros.h"
 #include "rmw/validate_node_name.h"
 #include "rmw/validate_namespace.h"
 
@@ -48,8 +49,9 @@ NodeBase::NodeBase(
   auto finalize_notify_guard_condition = [this]() {
       // Finalize the interrupt guard condition.
       if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-        fprintf(stderr,
-          "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "failed to destroy guard condition: %s", rcl_get_error_string_safe());
       }
     };
 
@@ -146,8 +148,9 @@ NodeBase::NodeBase(
     rcl_node,
     [](rcl_node_t * node) -> void {
       if (rcl_node_fini(node) != RCL_RET_OK) {
-        fprintf(
-          stderr, "Error in destruction of rcl node handle: %s\n", rcl_get_error_string_safe());
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "Error in destruction of rcl node handle: %s", rcl_get_error_string_safe());
       }
       delete node;
     });
@@ -167,8 +170,9 @@ NodeBase::~NodeBase()
     std::lock_guard<std::recursive_mutex> notify_condition_lock(notify_guard_condition_mutex_);
     notify_guard_condition_is_valid_ = false;
     if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp::error] failed to destroy guard condition: %s\n", rcl_get_error_string_safe());
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "failed to destroy guard condition: %s", rcl_get_error_string_safe());
     }
   }
 }

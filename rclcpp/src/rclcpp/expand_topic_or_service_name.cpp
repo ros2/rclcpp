@@ -20,6 +20,7 @@
 #include "rcl/validate_topic_name.h"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/scope_exit.hpp"
+#include "rcutils/logging_macros.h"
 #include "rcutils/types/string_map.h"
 #include "rmw/error_handling.h"
 #include "rmw/validate_namespace.h"
@@ -61,9 +62,9 @@ rclcpp::expand_topic_or_service_name(
     // finalize the string map before throwing
     rcutils_ret = rcutils_string_map_fini(&substitutions_map);
     if (rcutils_ret != RCUTILS_RET_OK) {
-      fprintf(stderr,
-        "[rclcpp|" RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__LINE__) "]: "
-        "failed to fini string_map (%d) during error handling: %s\n",
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "failed to fini string_map (%d) during error handling: %s",
         rcutils_ret,
         rcutils_get_error_string_safe());
       rcutils_reset_error();
