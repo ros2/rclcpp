@@ -208,7 +208,7 @@ Duration::operator*(double scale) const
     this->rcl_duration_.nanoseconds,
     scale,
     std::numeric_limits<rcl_duration_value_t>::max());
-  return Duration(rcl_duration_.nanoseconds * scale);
+  return Duration(static_cast<rcl_duration_value_t>(rcl_duration_.nanoseconds * scale));
 }
 
 rcl_duration_value_t
