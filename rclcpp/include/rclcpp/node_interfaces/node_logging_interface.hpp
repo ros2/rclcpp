@@ -39,6 +39,13 @@ public:
   virtual
   rclcpp::Logger
   get_logger() const = 0;
+
+  /// Return the logger name associated with the node.
+  /** \return The logger name associated with the node. */
+  RCLCPP_PUBLIC
+  virtual
+  const char *
+  get_logger_name() const = 0;
 };
 
 }  // namespace node_interfaces
