@@ -32,6 +32,7 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/logging.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -122,8 +123,8 @@ public:
       new rcl_service_t, [ = ](rcl_service_t * service)
       {
         if (rcl_service_fini(service, node_handle_.get()) != RCL_RET_OK) {
-          RCUTILS_LOG_ERROR_NAMED(
-            "rclcpp",
+          RCLCPP_ERROR(
+            rclcpp::get_logger(rcl_node_get_name(node_handle.get())).get_child("rclcpp"),
             "Error in destruction of rcl service handle: %s",
             rcl_get_error_string_safe());
           rcl_reset_error();
@@ -202,7 +203,6 @@ public:
     service_handle_ = std::shared_ptr<rcl_service_t>(new rcl_service_t);
     service_handle_->impl = service_handle->impl;
   }
-
 
   Service() = delete;
 
