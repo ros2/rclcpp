@@ -49,7 +49,7 @@ template<typename FunctionT>
 struct function_traits
 {
   using arguments = typename tuple_tail<
-      typename function_traits<decltype( & FunctionT::operator())>::arguments>::type;
+    typename function_traits<decltype( & FunctionT::operator())>::arguments>::type;
 
   static constexpr std::size_t arity = std::tuple_size<arguments>::value;
 

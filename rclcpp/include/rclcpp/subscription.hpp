@@ -229,7 +229,7 @@ public:
   }
 
   using GetMessageCallbackType =
-      std::function<void(uint64_t, uint64_t, uint64_t, MessageUniquePtr &)>;
+    std::function<void(uint64_t, uint64_t, uint64_t, MessageUniquePtr &)>;
   using MatchesAnyPublishersCallbackType = std::function<bool(const rmw_gid_t *)>;
 
   /// Implemenation detail.

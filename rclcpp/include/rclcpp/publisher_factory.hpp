@@ -46,19 +46,19 @@ struct PublisherFactory
 {
   // Creates a PublisherT<MessageT, ...> publisher object and returns it as a PublisherBase.
   using PublisherFactoryFunction = std::function<
-      rclcpp::PublisherBase::SharedPtr(
-        rclcpp::node_interfaces::NodeBaseInterface * node_base,
-        const std::string & topic_name,
-        rcl_publisher_options_t & publisher_options)>;
+    rclcpp::PublisherBase::SharedPtr(
+      rclcpp::node_interfaces::NodeBaseInterface * node_base,
+      const std::string & topic_name,
+      rcl_publisher_options_t & publisher_options)>;
 
   PublisherFactoryFunction create_typed_publisher;
 
   // Adds the PublisherBase to the intraprocess manager with the correctly
   // templated call to IntraProcessManager::store_intra_process_message.
   using AddPublisherToIntraProcessManagerFunction = std::function<
-      uint64_t(
-        rclcpp::intra_process_manager::IntraProcessManager * ipm,
-        rclcpp::PublisherBase::SharedPtr publisher)>;
+    uint64_t(
+      rclcpp::intra_process_manager::IntraProcessManager * ipm,
+      rclcpp::PublisherBase::SharedPtr publisher)>;
 
   AddPublisherToIntraProcessManagerFunction add_publisher_to_intra_process_manager;
 
@@ -66,8 +66,8 @@ struct PublisherFactory
   // PublisherT::publish() and which handles the intra process transmission of
   // the message being published.
   using SharedPublishCallbackFactoryFunction = std::function<
-      rclcpp::PublisherBase::StoreMessageCallbackT(
-        rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
+    rclcpp::PublisherBase::StoreMessageCallbackT(
+      rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
 
   SharedPublishCallbackFactoryFunction create_shared_publish_callback;
 };

@@ -227,7 +227,7 @@ ParameterVariant::value_to_string() const
 }
 
 std::string
-rclcpp::parameter::_to_json_dict_entry(const ParameterVariant & param)
+rclcpp::parameter::_to_json_dict_entry(const ParameterVariant &param)
 {
   std::stringstream ss;
   ss << "\"" << param.get_name() << "\": ";
