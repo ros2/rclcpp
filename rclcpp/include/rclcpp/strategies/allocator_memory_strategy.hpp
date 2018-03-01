@@ -387,7 +387,7 @@ public:
 private:
   template<typename T>
   using VectorRebind =
-      std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
+    std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 
   VectorRebind<const rcl_guard_condition_t *> guard_conditions_;
 

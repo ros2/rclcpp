@@ -258,9 +258,9 @@ private:
 
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
   using SubscriptionMap = std::unordered_map<
-      uint64_t, SubscriptionBase::WeakPtr,
-      std::hash<uint64_t>, std::equal_to<uint64_t>,
-      RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
+    uint64_t, SubscriptionBase::WeakPtr,
+    std::hash<uint64_t>, std::equal_to<uint64_t>,
+    RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
 
   struct strcmp_wrapper : public std::binary_function<const char *, const char *, bool>
   {
@@ -271,10 +271,10 @@ private:
     }
   };
   using IDTopicMap = std::map<
-      const char *,
-      AllocSet,
-      strcmp_wrapper,
-      RebindAlloc<std::pair<const char * const, AllocSet>>>;
+    const char *,
+    AllocSet,
+    strcmp_wrapper,
+    RebindAlloc<std::pair<const char * const, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
@@ -291,16 +291,16 @@ private:
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
 
     using TargetSubscriptionsMap = std::unordered_map<
-        uint64_t, AllocSet,
-        std::hash<uint64_t>, std::equal_to<uint64_t>,
-        RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
+      uint64_t, AllocSet,
+      std::hash<uint64_t>, std::equal_to<uint64_t>,
+      RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
     TargetSubscriptionsMap target_subscriptions_by_message_sequence;
   };
 
   using PublisherMap = std::unordered_map<
-      uint64_t, PublisherInfo,
-      std::hash<uint64_t>, std::equal_to<uint64_t>,
-      RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
+    uint64_t, PublisherInfo,
+    std::hash<uint64_t>, std::equal_to<uint64_t>,
+    RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
 
   PublisherMap publishers_;
 

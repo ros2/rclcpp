@@ -409,9 +409,9 @@ public:
   using ChangeStateSrvPtr = std::shared_ptr<rclcpp::Service<ChangeStateSrv>>;
   using GetStateSrvPtr = std::shared_ptr<rclcpp::Service<GetStateSrv>>;
   using GetAvailableStatesSrvPtr =
-      std::shared_ptr<rclcpp::Service<GetAvailableStatesSrv>>;
+    std::shared_ptr<rclcpp::Service<GetAvailableStatesSrv>>;
   using GetAvailableTransitionsSrvPtr =
-      std::shared_ptr<rclcpp::Service<GetAvailableTransitionsSrv>>;
+    std::shared_ptr<rclcpp::Service<GetAvailableTransitionsSrv>>;
 
   NodeBasePtr node_base_interface_;
   NodeServicesPtr node_services_interface_;
