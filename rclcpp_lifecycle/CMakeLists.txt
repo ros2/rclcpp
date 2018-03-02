@@ -25,10 +25,11 @@ add_library(rclcpp_lifecycle
   src/state.cpp
   src/transition.cpp
 )
+# specific order: dependents before dependencies
 ament_target_dependencies(rclcpp_lifecycle
-  "lifecycle_msgs"
+  "rclcpp"
   "rcl_lifecycle"
-  "rclcpp")
+  "lifecycle_msgs")
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -100,11 +101,12 @@ if(BUILD_TESTING)
   endif()
 endif()
 
+# specific order: dependents before dependencies
+ament_export_include_directories(include)
+ament_export_libraries(${PROJECT_NAME})
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rcl_lifecycle)
 ament_export_dependencies(lifecycle_msgs)
-ament_export_include_directories(include)
-ament_export_libraries(${PROJECT_NAME})
 ament_package()
 
 install(DIRECTORY include/
