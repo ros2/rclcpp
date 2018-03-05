@@ -64,8 +64,8 @@ template<typename MessageT>
 struct extract_message_type<std::shared_ptr<MessageT>>: extract_message_type<MessageT>
 {};
 
-template<typename MessageT>
-struct extract_message_type<std::unique_ptr<MessageT>>: extract_message_type<MessageT>
+template<typename MessageT, typename Deleter>
+struct extract_message_type<std::unique_ptr<MessageT, Deleter>>: extract_message_type<MessageT>
 {};
 
 template<typename CallbackT>
