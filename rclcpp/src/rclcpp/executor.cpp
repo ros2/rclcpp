@@ -290,8 +290,6 @@ Executor::execute_subscription(
     ret = rcl_take_raw(
       subscription->get_subscription_handle(),
       reinterpret_cast<rcl_message_raw_t *>(message.get()), &message_info);
-    auto rcl_ptr = message.get();
-    (void) rcl_ptr;
   } else {
     ret = rcl_take(
       subscription->get_subscription_handle(),

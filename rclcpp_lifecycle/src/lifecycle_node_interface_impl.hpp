@@ -297,8 +297,7 @@ public:
       return RCL_RET_ERROR;
     }
 
-    // TODO(karsten1987): Set this back to true whenever we have c-raw publisher
-    constexpr bool publish_update = false;
+    constexpr bool publish_update = true;
     // keep the initial state to pass to a transition callback
     State initial_state(state_machine_.current_state);
 
