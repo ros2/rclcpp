@@ -201,7 +201,7 @@ bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
 Duration
 Duration::operator*(double scale) const
 {
-  if (!std::isnormal(scale)) {
+  if (!std::isfinite(scale)) {
     throw std::runtime_error("abnormal scale in rclcpp::Duration");
   }
   bounds_check_duration_scale(
