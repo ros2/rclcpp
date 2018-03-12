@@ -16,16 +16,36 @@
 
 #include <chrono>
 #include <string>
+#include <memory>
+
+#include "rcutils/logging_macros.h"
 
 using rclcpp::TimerBase;
 
 TimerBase::TimerBase(std::chrono::nanoseconds period)
 {
+  timer_handle_ = std::shared_ptr<rcl_timer_t>(
+    new rcl_timer_t, [ = ](rcl_timer_t * timer)
+    {
+      if (rcl_timer_fini(timer) != RCL_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "Failed to clean up rcl timer handle: %s", rcl_get_error_string_safe());
+        rcl_reset_error();
+      }
+      delete timer;
+    });
+
+  *timer_handle_.get() = rcl_get_zero_initialized_timer();
+
   if (rcl_timer_init(
-      &timer_handle_, period.count(), nullptr,
+      timer_handle_.get(), period.count(), nullptr,
       rcl_get_default_allocator()) != RCL_RET_OK)
   {
-    fprintf(stderr, "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string_safe());
+    rcl_reset_error();
   }
 }
 
@@ -35,7 +55,7 @@ TimerBase::~TimerBase()
 void
 TimerBase::cancel()
 {
-  if (rcl_timer_cancel(&timer_handle_) != RCL_RET_OK) {
+  if (rcl_timer_cancel(timer_handle_.get()) != RCL_RET_OK) {
     throw std::runtime_error(std::string("Couldn't cancel timer: ") + rcl_get_error_string_safe());
   }
 }
@@ -43,7 +63,7 @@ TimerBase::cancel()
 void
 TimerBase::reset()
 {
-  if (rcl_timer_reset(&timer_handle_) != RCL_RET_OK) {
+  if (rcl_timer_reset(timer_handle_.get()) != RCL_RET_OK) {
     throw std::runtime_error(std::string("Couldn't reset timer: ") + rcl_get_error_string_safe());
   }
 }
@@ -52,7 +72,7 @@ bool
 TimerBase::is_ready()
 {
   bool ready = false;
-  if (rcl_timer_is_ready(&timer_handle_, &ready) != RCL_RET_OK) {
+  if (rcl_timer_is_ready(timer_handle_.get(), &ready) != RCL_RET_OK) {
     throw std::runtime_error(std::string("Failed to check timer: ") + rcl_get_error_string_safe());
   }
   return ready;
@@ -62,7 +82,9 @@ std::chrono::nanoseconds
 TimerBase::time_until_trigger()
 {
   int64_t time_until_next_call = 0;
-  if (rcl_timer_get_time_until_next_call(&timer_handle_, &time_until_next_call) != RCL_RET_OK) {
+  if (rcl_timer_get_time_until_next_call(timer_handle_.get(),
+    &time_until_next_call) != RCL_RET_OK)
+  {
     throw std::runtime_error(
             std::string("Timer could not get time until next call: ") +
             rcl_get_error_string_safe());
@@ -70,8 +92,8 @@ TimerBase::time_until_trigger()
   return std::chrono::nanoseconds(time_until_next_call);
 }
 
-const rcl_timer_t *
+std::shared_ptr<const rcl_timer_t>
 TimerBase::get_timer_handle()
 {
-  return &timer_handle_;
+  return timer_handle_;
 }
