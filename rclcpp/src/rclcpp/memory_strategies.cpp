@@ -21,6 +21,7 @@
 using rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy;
 
 rclcpp::memory_strategy::MemoryStrategy::SharedPtr
-rclcpp::memory_strategies::create_default_strategy() {
+rclcpp::memory_strategies::create_default_strategy()
+{
   return std::make_shared<AllocatorMemoryStrategy<>>();
 }

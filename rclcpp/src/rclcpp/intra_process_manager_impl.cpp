@@ -17,6 +17,7 @@
 #include <memory>
 
 rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr
-rclcpp::intra_process_manager::create_default_impl() {
+rclcpp::intra_process_manager::create_default_impl()
+{
   return std::make_shared<IntraProcessManagerImpl<>>();
 }
