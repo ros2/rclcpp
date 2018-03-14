@@ -14,8 +14,6 @@
 
 #include "rclcpp/subscription.hpp"
 
-#include <rcutils/logging_macros.h>
-
 #include <cstdio>
 #include <memory>
 #include <string>
@@ -26,6 +24,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+
 using rclcpp::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
@@ -35,28 +34,8 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options)
 : node_handle_(node_handle)
 {
-  auto custom_deletor = [ = ](rcl_subscription_t * rcl_subs)
-    {
-      if (rcl_subscription_fini(rcl_subs, node_handle_.get()) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Error in destruction of rcl subscription handle: %s",
-          rcl_get_error_string_safe());
-        rcl_reset_error();
-      }
-      delete rcl_subs;
-    };
-
-  subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
-    new rcl_subscription_t, custom_deletor);
-  *subscription_handle_.get() = rcl_get_zero_initialized_subscription();
-
-  intra_process_subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
-    new rcl_subscription_t, custom_deletor);
-  *intra_process_subscription_handle_.get() = rcl_get_zero_initialized_subscription();
-
   rcl_ret_t ret = rcl_subscription_init(
-    subscription_handle_.get(),
+    &subscription_handle_,
     node_handle_.get(),
     &type_support_handle,
     topic_name.c_str(),
@@ -78,28 +57,42 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
+  if (rcl_subscription_fini(&subscription_handle_, node_handle_.get()) != RCL_RET_OK) {
+    std::stringstream ss;
+    ss << "Error in destruction of rcl subscription handle: " <<
+      rcl_get_error_string_safe() << '\n';
+    (std::cerr << ss.str()).flush();
+  }
+  if (rcl_subscription_fini(
+      &intra_process_subscription_handle_, node_handle_.get()) != RCL_RET_OK)
+  {
+    std::stringstream ss;
+    ss << "Error in destruction of rmw intra process subscription handle: " <<
+      rcl_get_error_string_safe() << '\n';
+    (std::cerr << ss.str()).flush();
+  }
 }
 
 const char *
 SubscriptionBase::get_topic_name() const
 {
-  return rcl_subscription_get_topic_name(subscription_handle_.get());
+  return rcl_subscription_get_topic_name(&subscription_handle_);
 }
 
-std::shared_ptr<rcl_subscription_t>
+rcl_subscription_t *
 SubscriptionBase::get_subscription_handle()
 {
-  return subscription_handle_;
+  return &subscription_handle_;
 }
 
-const std::shared_ptr<rcl_subscription_t>
+const rcl_subscription_t *
 SubscriptionBase::get_subscription_handle() const
 {
-  return subscription_handle_;
+  return &subscription_handle_;
 }
 
-const std::shared_ptr<rcl_subscription_t>
+const rcl_subscription_t *
 SubscriptionBase::get_intra_process_subscription_handle() const
 {
-  return intra_process_subscription_handle_;
+  return &intra_process_subscription_handle_;
 }
