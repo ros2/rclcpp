@@ -46,13 +46,13 @@ ServiceBase::get_service_name()
   return this->service_name_;
 }
 
-std::shared_ptr<rcl_service_t>
+rcl_service_t *
 ServiceBase::get_service_handle()
 {
   return service_handle_;
 }
 
-std::shared_ptr<const rcl_service_t>
+const rcl_service_t *
 ServiceBase::get_service_handle() const
 {
   return service_handle_;

@@ -19,8 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "rcutils/logging_macros.h"
-
 #include "rcl/graph.h"
 #include "rcl/node.h"
 #include "rcl/wait.h"
@@ -40,20 +38,7 @@ ClientBase::ClientBase(
 : node_graph_(node_graph),
   node_handle_(node_base->get_shared_rcl_node_handle()),
   service_name_(service_name)
-{
-  client_handle_ = std::shared_ptr<rcl_client_t>(
-    new rcl_client_t, [ = ](rcl_client_t * client)
-    {
-      if (rcl_client_fini(client, node_handle_.get()) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Error in destruction of rcl client handle: %s", rcl_get_error_string_safe());
-        rcl_reset_error();
-        delete client;
-      }
-    });
-  *client_handle_.get() = rcl_get_zero_initialized_client();
-}
+{}
 
 ClientBase::~ClientBase() {}
 
@@ -63,16 +48,16 @@ ClientBase::get_service_name() const
   return this->service_name_;
 }
 
-std::shared_ptr<rcl_client_t>
+rcl_client_t *
 ClientBase::get_client_handle()
 {
-  return client_handle_;
+  return &client_handle_;
 }
 
-std::shared_ptr<const rcl_client_t>
+const rcl_client_t *
 ClientBase::get_client_handle() const
 {
-  return client_handle_;
+  return &client_handle_;
 }
 
 bool
@@ -80,7 +65,7 @@ ClientBase::service_is_ready() const
 {
   bool is_ready;
   rcl_ret_t ret =
-    rcl_service_server_is_available(this->get_rcl_node_handle(), client_handle_.get(), &is_ready);
+    rcl_service_server_is_available(this->get_rcl_node_handle(), &client_handle_, &is_ready);
   if (ret != RCL_RET_OK) {
     throw_from_rcl_error(ret, "rcl_service_server_is_available failed");
   }

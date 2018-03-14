@@ -76,15 +76,15 @@ public:
   get_topic_name() const;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rcl_subscription_t>
+  rcl_subscription_t *
   get_subscription_handle();
 
   RCLCPP_PUBLIC
-  const std::shared_ptr<rcl_subscription_t>
+  const rcl_subscription_t *
   get_subscription_handle() const;
 
   RCLCPP_PUBLIC
-  virtual const std::shared_ptr<rcl_subscription_t>
+  virtual const rcl_subscription_t *
   get_intra_process_subscription_handle() const;
 
   /// Borrow a new message.
@@ -110,8 +110,8 @@ public:
     const rmw_message_info_t & message_info) = 0;
 
 protected:
-  std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
-  std::shared_ptr<rcl_subscription_t> subscription_handle_;
+  rcl_subscription_t intra_process_subscription_handle_ = rcl_get_zero_initialized_subscription();
+  rcl_subscription_t subscription_handle_ = rcl_get_zero_initialized_subscription();
   std::shared_ptr<rcl_node_t> node_handle_;
 
 private:
@@ -241,7 +241,7 @@ public:
   {
     std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";
     rcl_ret_t ret = rcl_subscription_init(
-      intra_process_subscription_handle_.get(),
+      &intra_process_subscription_handle_,
       node_handle_.get(),
       rclcpp::type_support::get_intra_process_message_msg_type_support(),
       intra_process_topic_name.c_str(),
@@ -266,13 +266,13 @@ public:
   }
 
   /// Implemenation detail.
-  const std::shared_ptr<rcl_subscription_t>
+  const rcl_subscription_t *
   get_intra_process_subscription_handle() const
   {
     if (!get_intra_process_message_callback_) {
       return nullptr;
     }
-    return intra_process_subscription_handle_;
+    return &intra_process_subscription_handle_;
   }
 
 private:
