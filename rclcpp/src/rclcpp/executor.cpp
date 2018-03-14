@@ -280,7 +280,7 @@ Executor::execute_subscription(
   std::shared_ptr<void> message = subscription->create_message();
   rmw_message_info_t message_info;
 
-  auto ret = rcl_take(subscription->get_subscription_handle(),
+  auto ret = rcl_take(subscription->get_subscription_handle().get(),
       message.get(), &message_info);
   if (ret == RCL_RET_OK) {
     message_info.from_intra_process = false;
@@ -302,7 +302,7 @@ Executor::execute_intra_process_subscription(
   rcl_interfaces::msg::IntraProcessMessage ipm;
   rmw_message_info_t message_info;
   rcl_ret_t status = rcl_take(
-    subscription->get_intra_process_subscription_handle(),
+    subscription->get_intra_process_subscription_handle().get(),
     &ipm,
     &message_info);
 
@@ -332,7 +332,7 @@ Executor::execute_service(
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
   rcl_ret_t status = rcl_take_request(
-    service->get_service_handle(),
+    service->get_service_handle().get(),
     request_header.get(),
     request.get());
   if (status == RCL_RET_OK) {
@@ -353,7 +353,7 @@ Executor::execute_client(
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
   rcl_ret_t status = rcl_take_response(
-    client->get_client_handle(),
+    client->get_client_handle().get(),
     request_header.get(),
     response.get());
   if (status == RCL_RET_OK) {
