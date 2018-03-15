@@ -31,7 +31,7 @@ rclcpp::Logger g_logger = rclcpp::get_logger("name");
 
 struct LogEvent
 {
-  rcutils_log_location_t * location;
+  const rcutils_log_location_t * location;
   int level;
   std::string name;
   std::string message;
@@ -49,7 +49,7 @@ public:
     rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_DEBUG);
 
     auto rcutils_logging_console_output_handler = [](
-      rcutils_log_location_t * location,
+      const rcutils_log_location_t * location,
       int level, const char * name, const char * format, va_list * args) -> void
       {
         g_log_calls += 1;
