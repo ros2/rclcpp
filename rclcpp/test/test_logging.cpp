@@ -34,6 +34,7 @@ struct LogEvent
   const rcutils_log_location_t * location;
   int level;
   std::string name;
+  rcutils_time_point_value_t timestamp;
   std::string message;
 };
 LogEvent g_last_log_event;
@@ -50,12 +51,14 @@ public:
 
     auto rcutils_logging_console_output_handler = [](
       const rcutils_log_location_t * location,
-      int level, const char * name, const char * format, va_list * args) -> void
+      int level, const char * name, rcutils_time_point_value_t timestamp,
+      const char * format, va_list * args) -> void
       {
         g_log_calls += 1;
         g_last_log_event.location = location;
         g_last_log_event.level = level;
         g_last_log_event.name = name ? name : "";
+        g_last_log_event.timestamp = timestamp;
         char buffer[1024];
         vsnprintf(buffer, sizeof(buffer), format, *args);
         g_last_log_event.message = buffer;
@@ -82,7 +85,7 @@ TEST_F(TestLoggingMacros, test_logging_named) {
   if (g_last_log_event.location) {
     EXPECT_STREQ("TestBody", g_last_log_event.location->function_name);
     EXPECT_THAT(g_last_log_event.location->file_name, EndsWith("test_logging.cpp"));
-    EXPECT_EQ(78u, g_last_log_event.location->line_number);
+    EXPECT_EQ(81u, g_last_log_event.location->line_number);
   }
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_DEBUG, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
