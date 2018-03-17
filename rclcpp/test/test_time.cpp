@@ -63,7 +63,7 @@ TEST(TestTime, time_sources) {
   EXPECT_NE(0, ros_now.sec);
   EXPECT_NE(0u, ros_now.nanosec);
 
-  rclcpp::Clock system_clock(RCL_ROS_TIME);
+  rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
   Time system_now = system_clock.now();
   EXPECT_NE(0, system_now.sec);
   EXPECT_NE(0u, system_now.nanosec);
@@ -75,7 +75,7 @@ TEST(TestTime, time_sources) {
 }
 
 TEST(TestTime, conversions) {
-  rclcpp::Clock system_clock(RCL_ROS_TIME);
+  rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
 
   rclcpp::Time now = system_clock.now();
   builtin_interfaces::msg::Time now_msg = now;
@@ -135,7 +135,7 @@ TEST(TestTime, operators) {
   EXPECT_ANY_THROW((void)(system_time > steady_time));
   EXPECT_ANY_THROW((void)(system_time - steady_time));
 
-  rclcpp::Clock system_clock(RCL_ROS_TIME);
+  rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
   rclcpp::Clock steady_clock(RCL_STEADY_TIME);
 
   rclcpp::Time now = system_clock.now();
