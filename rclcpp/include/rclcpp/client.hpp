@@ -149,7 +149,7 @@ public:
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
-      get_client_handle().get(),
+      this->get_client_handle().get(),
       this->get_rcl_node_handle(),
       service_type_support_handle,
       service_name.c_str(),
