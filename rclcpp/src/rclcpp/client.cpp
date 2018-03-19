@@ -91,10 +91,10 @@ bool
 ClientBase::service_is_ready() const
 {
   bool is_ready;
-  rcl_ret_t ret =
-    rcl_service_server_is_available(this->get_rcl_node_handle(),
-                                    this->get_client_handle().get(),
-                                    &is_ready);
+  rcl_ret_t ret = rcl_service_server_is_available(
+    this->get_rcl_node_handle(),
+    this->get_client_handle().get(),
+    &is_ready);
   if (ret != RCL_RET_OK) {
     throw_from_rcl_error(ret, "rcl_service_server_is_available failed");
   }
