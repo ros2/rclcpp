@@ -26,6 +26,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/utilities.hpp"
+#include "rclcpp/logging.hpp"
 
 using rclcpp::ClientBase;
 using rclcpp::exceptions::InvalidNodeError;
@@ -38,9 +39,35 @@ ClientBase::ClientBase(
 : node_graph_(node_graph),
   node_handle_(node_base->get_shared_rcl_node_handle()),
   service_name_(service_name)
-{}
+{
+  std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
+  client_handle_ = std::shared_ptr<rcl_client_t>(
+    new rcl_client_t, [weak_node_handle](rcl_client_t * client)
+    {
+      auto handle = weak_node_handle.lock();
+      if (handle) {
+        if (rcl_client_fini(client, handle.get()) != RCL_RET_OK) {
+          RCLCPP_ERROR(
+            rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp"),
+            "Error in destruction of rcl client handle: %s", rcl_get_error_string_safe());
+          rcl_reset_error();
+        }
+      } else {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"),
+          "Error in destruction of rcl client handle: "
+          "the Node Handle was destructed too early. You will leak memory");
+      }
+      delete client;
+    });
+  *client_handle_.get() = rcl_get_zero_initialized_client();
+}
 
-ClientBase::~ClientBase() {}
+ClientBase::~ClientBase()
+{
+  // Make sure the client handle is destructed as early as possible and before the node handle
+  client_handle_.reset();
+}
 
 const std::string &
 ClientBase::get_service_name() const
@@ -48,24 +75,26 @@ ClientBase::get_service_name() const
   return this->service_name_;
 }
 
-rcl_client_t *
+std::shared_ptr<rcl_client_t>
 ClientBase::get_client_handle()
 {
-  return &client_handle_;
+  return client_handle_;
 }
 
-const rcl_client_t *
+std::shared_ptr<const rcl_client_t>
 ClientBase::get_client_handle() const
 {
-  return &client_handle_;
+  return client_handle_;
 }
 
 bool
 ClientBase::service_is_ready() const
 {
   bool is_ready;
-  rcl_ret_t ret =
-    rcl_service_server_is_available(this->get_rcl_node_handle(), &client_handle_, &is_ready);
+  rcl_ret_t ret = rcl_service_server_is_available(
+    this->get_rcl_node_handle(),
+    this->get_client_handle().get(),
+    &is_ready);
   if (ret != RCL_RET_OK) {
     throw_from_rcl_error(ret, "rcl_service_server_is_available failed");
   }

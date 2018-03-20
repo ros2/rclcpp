@@ -106,6 +106,15 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized) {
     return;
   }
 
+  // Destruct the service
+  ret = rcl_service_fini(
+    &service_handle,
+    node_handle->get_node_base_interface()->get_rcl_node_handle());
+  if (ret != RCL_RET_OK) {
+    FAIL();
+    return;
+  }
+
   SUCCEED();
 }
 
@@ -139,5 +148,15 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor) {
     FAIL();
     return;
   }
+
+  // Destruct the service
+  ret = rcl_service_fini(
+    &service_handle,
+    node_handle->get_node_base_interface()->get_rcl_node_handle());
+  if (ret != RCL_RET_OK) {
+    FAIL();
+    return;
+  }
+
   SUCCEED();
 }

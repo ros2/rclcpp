@@ -68,7 +68,7 @@ public:
   void TearDown()
   {
     rcutils_logging_set_output_handler(this->previous_output_handler);
-    g_rcutils_logging_initialized = false;
+    ASSERT_EQ(RCUTILS_RET_OK, rcutils_logging_shutdown());
     EXPECT_FALSE(g_rcutils_logging_initialized);
   }
 };

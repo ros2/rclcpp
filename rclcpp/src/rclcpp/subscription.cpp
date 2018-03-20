@@ -20,10 +20,10 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
+#include "rclcpp/logging.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
-
 
 using rclcpp::SubscriptionBase;
 
@@ -34,8 +34,37 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options)
 : node_handle_(node_handle)
 {
+  std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
+  auto custom_deletor = [weak_node_handle](rcl_subscription_t * rcl_subs)
+    {
+      auto handle = weak_node_handle.lock();
+      if (handle) {
+        if (rcl_subscription_fini(rcl_subs, handle.get()) != RCL_RET_OK) {
+          RCLCPP_ERROR(
+            rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp"),
+            "Error in destruction of rcl subscription handle: %s",
+            rcl_get_error_string_safe());
+          rcl_reset_error();
+        }
+      } else {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"),
+          "Error in destruction of rcl subscription handle: "
+          "the Node Handle was destructed too early. You will leak memory");
+      }
+      delete rcl_subs;
+    };
+
+  subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
+    new rcl_subscription_t, custom_deletor);
+  *subscription_handle_.get() = rcl_get_zero_initialized_subscription();
+
+  intra_process_subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
+    new rcl_subscription_t, custom_deletor);
+  *intra_process_subscription_handle_.get() = rcl_get_zero_initialized_subscription();
+
   rcl_ret_t ret = rcl_subscription_init(
-    &subscription_handle_,
+    subscription_handle_.get(),
     node_handle_.get(),
     &type_support_handle,
     topic_name.c_str(),
@@ -57,42 +86,28 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
-  if (rcl_subscription_fini(&subscription_handle_, node_handle_.get()) != RCL_RET_OK) {
-    std::stringstream ss;
-    ss << "Error in destruction of rcl subscription handle: " <<
-      rcl_get_error_string_safe() << '\n';
-    (std::cerr << ss.str()).flush();
-  }
-  if (rcl_subscription_fini(
-      &intra_process_subscription_handle_, node_handle_.get()) != RCL_RET_OK)
-  {
-    std::stringstream ss;
-    ss << "Error in destruction of rmw intra process subscription handle: " <<
-      rcl_get_error_string_safe() << '\n';
-    (std::cerr << ss.str()).flush();
-  }
 }
 
 const char *
 SubscriptionBase::get_topic_name() const
 {
-  return rcl_subscription_get_topic_name(&subscription_handle_);
+  return rcl_subscription_get_topic_name(subscription_handle_.get());
 }
 
-rcl_subscription_t *
+std::shared_ptr<rcl_subscription_t>
 SubscriptionBase::get_subscription_handle()
 {
-  return &subscription_handle_;
+  return subscription_handle_;
 }
 
-const rcl_subscription_t *
+const std::shared_ptr<rcl_subscription_t>
 SubscriptionBase::get_subscription_handle() const
 {
-  return &subscription_handle_;
+  return subscription_handle_;
 }
 
-const rcl_subscription_t *
+const std::shared_ptr<rcl_subscription_t>
 SubscriptionBase::get_intra_process_subscription_handle() const
 {
-  return &intra_process_subscription_handle_;
+  return intra_process_subscription_handle_;
 }

@@ -52,6 +52,9 @@ TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes) {
   // THEN
   // The result of finding dangling node pointers should be true
   ASSERT_TRUE(has_invalid_weak_nodes);
+
+  // Prevent memory leak due to the order of destruction
+  memory_strategy->clear_handles();
 }
 
 TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
@@ -73,4 +76,7 @@ TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
   // THEN
   // The result of finding dangling node pointers should be false
   ASSERT_FALSE(has_invalid_weak_nodes);
+
+  // Prevent memory leak due to the order of destruction
+  memory_strategy->clear_handles();
 }

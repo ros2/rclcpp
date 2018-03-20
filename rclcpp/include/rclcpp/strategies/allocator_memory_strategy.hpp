@@ -98,22 +98,22 @@ public:
   {
     for (size_t i = 0; i < wait_set->size_of_subscriptions; ++i) {
       if (!wait_set->subscriptions[i]) {
-        subscription_handles_[i] = nullptr;
+        subscription_handles_[i].reset();
       }
     }
     for (size_t i = 0; i < wait_set->size_of_services; ++i) {
       if (!wait_set->services[i]) {
-        service_handles_[i] = nullptr;
+        service_handles_[i].reset();
       }
     }
     for (size_t i = 0; i < wait_set->size_of_clients; ++i) {
       if (!wait_set->clients[i]) {
-        client_handles_[i] = nullptr;
+        client_handles_[i].reset();
       }
     }
     for (size_t i = 0; i < wait_set->size_of_timers; ++i) {
       if (!wait_set->timers[i]) {
-        timer_handles_[i] = nullptr;
+        timer_handles_[i].reset();
       }
     }
 
@@ -188,7 +188,7 @@ public:
   bool add_handles_to_wait_set(rcl_wait_set_t * wait_set)
   {
     for (auto subscription : subscription_handles_) {
-      if (rcl_wait_set_add_subscription(wait_set, subscription) != RCL_RET_OK) {
+      if (rcl_wait_set_add_subscription(wait_set, subscription.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Couldn't add subscription to wait set: %s", rcl_get_error_string_safe());
@@ -197,7 +197,7 @@ public:
     }
 
     for (auto client : client_handles_) {
-      if (rcl_wait_set_add_client(wait_set, client) != RCL_RET_OK) {
+      if (rcl_wait_set_add_client(wait_set, client.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Couldn't add client to wait set: %s", rcl_get_error_string_safe());
@@ -206,7 +206,7 @@ public:
     }
 
     for (auto service : service_handles_) {
-      if (rcl_wait_set_add_service(wait_set, service) != RCL_RET_OK) {
+      if (rcl_wait_set_add_service(wait_set, service.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Couldn't add service to wait set: %s", rcl_get_error_string_safe());
@@ -215,7 +215,7 @@ public:
     }
 
     for (auto timer : timer_handles_) {
-      if (rcl_wait_set_add_timer(wait_set, timer) != RCL_RET_OK) {
+      if (rcl_wait_set_add_timer(wait_set, timer.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Couldn't add timer to wait set: %s", rcl_get_error_string_safe());
@@ -391,10 +391,10 @@ private:
 
   VectorRebind<const rcl_guard_condition_t *> guard_conditions_;
 
-  VectorRebind<const rcl_subscription_t *> subscription_handles_;
-  VectorRebind<const rcl_service_t *> service_handles_;
-  VectorRebind<const rcl_client_t *> client_handles_;
-  VectorRebind<const rcl_timer_t *> timer_handles_;
+  VectorRebind<std::shared_ptr<const rcl_subscription_t>> subscription_handles_;
+  VectorRebind<std::shared_ptr<const rcl_service_t>> service_handles_;
+  VectorRebind<std::shared_ptr<const rcl_client_t>> client_handles_;
+  VectorRebind<std::shared_ptr<const rcl_timer_t>> timer_handles_;
 
   std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;
