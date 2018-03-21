@@ -337,7 +337,9 @@ public:
   rcl_interfaces::msg::Parameter
   to_parameter();
 
-  std::string value_to_string() const;
+  RCLCPP_PUBLIC
+  std::string
+  value_to_string() const;
 
 private:
   template<typename ValType, typename PrintType = ValType>

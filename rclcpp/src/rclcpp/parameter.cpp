@@ -277,7 +277,8 @@ ParameterVariant::to_parameter()
   return parameter;
 }
 
-std::string ParameterVariant::value_to_string() const
+std::string
+ParameterVariant::value_to_string() const
 {
   switch (get_type()) {
     case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:

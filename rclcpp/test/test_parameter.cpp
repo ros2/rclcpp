@@ -137,22 +137,10 @@ TEST(TestParameter, integer_variant) {
 
   EXPECT_EQ(integer_variant.value_to_string(), "42");
 
-  const int64_t TEST_VALUE_L {std::numeric_limits<int64_t>::max()};
-
-  rclcpp::parameter::ParameterVariant long_variant("integer_param", TEST_VALUE_L);
-  EXPECT_EQ(long_variant.get_name(), "integer_param");
-  EXPECT_EQ(long_variant.get_type(), rclcpp::parameter::ParameterType::PARAMETER_INTEGER);
-  EXPECT_EQ(long_variant.get_type_name(), "integer");
-  EXPECT_EQ(long_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER>(),
-    TEST_VALUE_L);
-  EXPECT_EQ(long_variant.get_parameter_value().integer_value, TEST_VALUE_L);
-  EXPECT_EQ(long_variant.get_parameter_value().type,
-    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
-
-  rcl_interfaces::msg::Parameter integer_param = long_variant.to_parameter();
+  rcl_interfaces::msg::Parameter integer_param = integer_variant.to_parameter();
   EXPECT_EQ(integer_param.name, "integer_param");
   EXPECT_EQ(integer_param.value.type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
-  EXPECT_EQ(integer_param.value.integer_value, TEST_VALUE_L);
+  EXPECT_EQ(integer_param.value.integer_value, TEST_VALUE);
 
   // From parameter message
   rclcpp::parameter::ParameterVariant from_msg =
@@ -161,10 +149,98 @@ TEST(TestParameter, integer_variant) {
   EXPECT_EQ(from_msg.get_type(), rclcpp::parameter::ParameterType::PARAMETER_INTEGER);
   EXPECT_EQ(from_msg.get_type_name(), "integer");
   EXPECT_EQ(from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER>(),
-    TEST_VALUE_L);
-  EXPECT_EQ(from_msg.get_parameter_value().integer_value, TEST_VALUE_L);
+    TEST_VALUE);
+  EXPECT_EQ(from_msg.get_parameter_value().integer_value, TEST_VALUE);
   EXPECT_EQ(from_msg.get_parameter_value().type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+}
+
+TEST(TestParameter, long_integer_variant) {
+  const int64_t TEST_VALUE {std::numeric_limits<int64_t>::max()};
+
+  // Direct instantiation
+  rclcpp::parameter::ParameterVariant long_variant("long_integer_param", TEST_VALUE);
+  EXPECT_EQ(long_variant.get_name(), "long_integer_param");
+  EXPECT_EQ(long_variant.get_type(), rclcpp::parameter::ParameterType::PARAMETER_INTEGER);
+  EXPECT_EQ(long_variant.get_type_name(), "integer");
+  EXPECT_EQ(long_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER>(),
+    TEST_VALUE);
+  EXPECT_EQ(long_variant.get_parameter_value().integer_value, TEST_VALUE);
+  EXPECT_EQ(long_variant.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+  EXPECT_EQ(long_variant.as_int(), TEST_VALUE);
+
+  EXPECT_THROW(long_variant.as_bool(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_double(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_string(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_byte_array(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_bool_array(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_integer_array(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_double_array(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_string_array(), std::runtime_error);
+
+  EXPECT_EQ(long_variant.value_to_string(), "9223372036854775807");
+
+  rcl_interfaces::msg::Parameter integer_param = long_variant.to_parameter();
+  EXPECT_EQ(integer_param.name, "long_integer_param");
+  EXPECT_EQ(integer_param.value.type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+  EXPECT_EQ(integer_param.value.integer_value, TEST_VALUE);
+
+  // From parameter message
+  rclcpp::parameter::ParameterVariant from_msg =
+    rclcpp::parameter::ParameterVariant::from_parameter(integer_param);
+  EXPECT_EQ(from_msg.get_name(), "long_integer_param");
+  EXPECT_EQ(from_msg.get_type(), rclcpp::parameter::ParameterType::PARAMETER_INTEGER);
+  EXPECT_EQ(from_msg.get_type_name(), "integer");
+  EXPECT_EQ(from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER>(),
+    TEST_VALUE);
+  EXPECT_EQ(from_msg.get_parameter_value().integer_value, TEST_VALUE);
+  EXPECT_EQ(from_msg.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+}
+
+TEST(TestParameter, float_variant) {
+  const float TEST_VALUE {42.0f};
+
+  // Direct instantiation
+  rclcpp::parameter::ParameterVariant float_variant("float_param", TEST_VALUE);
+  EXPECT_EQ(float_variant.get_name(), "float_param");
+  EXPECT_EQ(float_variant.get_type(), rclcpp::parameter::ParameterType::PARAMETER_DOUBLE);
+  EXPECT_EQ(float_variant.get_type_name(), "double");
+  EXPECT_EQ(float_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE>(),
+    TEST_VALUE);
+  EXPECT_EQ(float_variant.get_parameter_value().double_value, TEST_VALUE);
+  EXPECT_EQ(float_variant.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
+  EXPECT_EQ(float_variant.as_double(), TEST_VALUE);
+
+  EXPECT_THROW(float_variant.as_bool(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_int(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_string(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_byte_array(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_bool_array(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_integer_array(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_double_array(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_string_array(), std::runtime_error);
+
+  EXPECT_EQ(float_variant.value_to_string(), "42.000000");
+
+  rcl_interfaces::msg::Parameter float_param = float_variant.to_parameter();
+  EXPECT_EQ(float_param.name, "float_param");
+  EXPECT_EQ(float_param.value.type, rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
+  EXPECT_EQ(float_param.value.double_value, TEST_VALUE);
+
+  // From parameter message
+  rclcpp::parameter::ParameterVariant from_msg =
+    rclcpp::parameter::ParameterVariant::from_parameter(float_param);
+  EXPECT_EQ(from_msg.get_name(), "float_param");
+  EXPECT_EQ(from_msg.get_type(), rclcpp::parameter::ParameterType::PARAMETER_DOUBLE);
+  EXPECT_EQ(from_msg.get_type_name(), "double");
+  EXPECT_EQ(from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE>(),
+    TEST_VALUE);
+  EXPECT_EQ(from_msg.get_parameter_value().double_value, TEST_VALUE);
+  EXPECT_EQ(from_msg.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
 }
 
 TEST(TestParameter, double_variant) {
@@ -193,17 +269,6 @@ TEST(TestParameter, double_variant) {
 
   EXPECT_EQ(double_variant.value_to_string(), "-42.100000");
 
-  const float TEST_VALUE_F {static_cast<float>(-TEST_VALUE)};
-  rclcpp::parameter::ParameterVariant float_variant("float_param", TEST_VALUE_F);
-  EXPECT_EQ(float_variant.get_name(), "float_param");
-  EXPECT_EQ(float_variant.get_type(), rclcpp::parameter::ParameterType::PARAMETER_DOUBLE);
-  EXPECT_EQ(float_variant.get_type_name(), "double");
-  EXPECT_EQ(float_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE>(),
-    TEST_VALUE_F);
-  EXPECT_EQ(float_variant.get_parameter_value().double_value, TEST_VALUE_F);
-  EXPECT_EQ(float_variant.get_parameter_value().type,
-    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
-
   rcl_interfaces::msg::Parameter double_param = double_variant.to_parameter();
   EXPECT_EQ(double_param.name, "double_param");
   EXPECT_EQ(double_param.value.type, rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
@@ -215,7 +280,8 @@ TEST(TestParameter, double_variant) {
   EXPECT_EQ(from_msg.get_name(), "double_param");
   EXPECT_EQ(from_msg.get_type(), rclcpp::parameter::ParameterType::PARAMETER_DOUBLE);
   EXPECT_EQ(from_msg.get_type_name(), "double");
-  EXPECT_EQ(from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE>(), TEST_VALUE);
+  EXPECT_EQ(from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE>(),
+    TEST_VALUE);
   EXPECT_EQ(from_msg.get_parameter_value().double_value, TEST_VALUE);
   EXPECT_EQ(from_msg.get_parameter_value().type,
     rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE);
@@ -358,43 +424,91 @@ TEST(TestParameter, integer_array_variant) {
 
   // Direct instantiation
   rclcpp::parameter::ParameterVariant integer_array_variant("integer_array_param", TEST_VALUE);
+
   EXPECT_EQ(integer_array_variant.get_name(), "integer_array_param");
   EXPECT_EQ(integer_array_variant.get_type(),
     rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY);
   EXPECT_EQ(integer_array_variant.get_type_name(), "integer_array");
+  EXPECT_EQ(integer_array_variant.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
 
   // No direct comparison of vectors of ints and long ints
   const auto & param_value_ref =
     integer_array_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY>();
-  const auto mismatches_get_val = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(),
-      param_value_ref.begin());
-  EXPECT_EQ(mismatches_get_val.first, TEST_VALUE.end());
-  EXPECT_EQ(mismatches_get_val.second, param_value_ref.end());
+  auto mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value_ref.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value_ref.end());
 
-  const auto mismatches_get_param = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(),
-      integer_array_variant.get_parameter_value().integer_array_value.begin());
-  EXPECT_EQ(mismatches_get_param.first, TEST_VALUE.end());
-  EXPECT_EQ(mismatches_get_param.second,
-    integer_array_variant.get_parameter_value().integer_array_value.end());
+  auto param_value = integer_array_variant.get_parameter_value().integer_array_value;
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
 
-  EXPECT_EQ(integer_array_variant.get_parameter_value().type,
+  param_value = integer_array_variant.as_integer_array();
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  EXPECT_THROW(integer_array_variant.as_bool(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_int(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_double(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_string(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_byte_array(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_bool_array(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_double_array(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_string_array(), std::runtime_error);
+
+  EXPECT_EQ(
+    integer_array_variant.value_to_string(),
+    "[42, -99, 2147483647, -2147483648, 0]");
+
+  rcl_interfaces::msg::Parameter integer_array_param = integer_array_variant.to_parameter();
+  EXPECT_EQ(integer_array_param.name, "integer_array_param");
+  EXPECT_EQ(integer_array_param.value.type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
 
-  const std::vector<int64_t> TEST_VALUE_L
+  param_value = integer_array_param.value.integer_array_value;
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  // From parameter message
+  rclcpp::parameter::ParameterVariant from_msg =
+    rclcpp::parameter::ParameterVariant::from_parameter(integer_array_param);
+  EXPECT_EQ(from_msg.get_name(), "integer_array_param");
+  EXPECT_EQ(from_msg.get_type(), rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY);
+  EXPECT_EQ(from_msg.get_type_name(), "integer_array");
+
+  param_value = from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY>();
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  param_value = from_msg.get_parameter_value().integer_array_value;
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  EXPECT_EQ(from_msg.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+}
+
+TEST(TestParameter, long_integer_array_variant) {
+  const std::vector<int64_t> TEST_VALUE
   {42, -99, std::numeric_limits<int64_t>::max(), std::numeric_limits<int64_t>::lowest(), 0};
 
-  rclcpp::parameter::ParameterVariant long_array_variant("integer_array_param", TEST_VALUE_L);
-  EXPECT_EQ(long_array_variant.get_name(), "integer_array_param");
+  rclcpp::parameter::ParameterVariant long_array_variant("long_integer_array_param", TEST_VALUE);
+  EXPECT_EQ(long_array_variant.get_name(), "long_integer_array_param");
   EXPECT_EQ(long_array_variant.get_type(),
     rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY);
   EXPECT_EQ(long_array_variant.get_type_name(), "integer_array");
-  EXPECT_EQ(
-    long_array_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY>(),
-    TEST_VALUE_L);
-  EXPECT_EQ(long_array_variant.get_parameter_value().integer_array_value, TEST_VALUE_L);
   EXPECT_EQ(long_array_variant.get_parameter_value().type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
-  EXPECT_EQ(long_array_variant.as_integer_array(), TEST_VALUE_L);
+  EXPECT_EQ(
+    long_array_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY>(),
+    TEST_VALUE);
+  EXPECT_EQ(long_array_variant.get_parameter_value().integer_array_value, TEST_VALUE);
+  EXPECT_EQ(long_array_variant.as_integer_array(), TEST_VALUE);
 
   EXPECT_THROW(long_array_variant.as_bool(), std::runtime_error);
   EXPECT_THROW(long_array_variant.as_int(), std::runtime_error);
@@ -410,40 +524,114 @@ TEST(TestParameter, integer_array_variant) {
     "[42, -99, 9223372036854775807, -9223372036854775808, 0]");
 
   rcl_interfaces::msg::Parameter integer_array_param = long_array_variant.to_parameter();
-  EXPECT_EQ(integer_array_param.name, "integer_array_param");
+  EXPECT_EQ(integer_array_param.name, "long_integer_array_param");
   EXPECT_EQ(integer_array_param.value.type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
-  EXPECT_EQ(integer_array_param.value.integer_array_value, TEST_VALUE_L);
+  EXPECT_EQ(integer_array_param.value.integer_array_value, TEST_VALUE);
 
   // From parameter message
   rclcpp::parameter::ParameterVariant from_msg =
     rclcpp::parameter::ParameterVariant::from_parameter(integer_array_param);
-  EXPECT_EQ(from_msg.get_name(), "integer_array_param");
+  EXPECT_EQ(from_msg.get_name(), "long_integer_array_param");
   EXPECT_EQ(from_msg.get_type(), rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY);
   EXPECT_EQ(from_msg.get_type_name(), "integer_array");
   EXPECT_EQ(from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY>(),
-    TEST_VALUE_L);
-  EXPECT_EQ(from_msg.get_parameter_value().integer_array_value, TEST_VALUE_L);
+    TEST_VALUE);
+  EXPECT_EQ(from_msg.get_parameter_value().integer_array_value, TEST_VALUE);
   EXPECT_EQ(from_msg.get_parameter_value().type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
+}
+
+TEST(TestParameter, float_array_variant) {
+  const std::vector<float> TEST_VALUE
+  {42.1f, -99.1f, std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest(), 0.1f};
+
+  // Direct instantiation
+  rclcpp::parameter::ParameterVariant float_array_variant("float_array_param", TEST_VALUE);
+
+  EXPECT_EQ(float_array_variant.get_name(), "float_array_param");
+  EXPECT_EQ(float_array_variant.get_type(),
+    rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY);
+  EXPECT_EQ(float_array_variant.get_type_name(), "double_array");
+  EXPECT_EQ(float_array_variant.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
+
+  // No direct comparison of vectors of floats and doubles
+  const auto & param_value_ref =
+    float_array_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY>();
+  auto mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value_ref.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value_ref.end());
+
+  auto param_value = float_array_variant.get_parameter_value().double_array_value;
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  param_value = float_array_variant.as_double_array();
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  EXPECT_THROW(float_array_variant.as_bool(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_int(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_double(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_string(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_byte_array(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_bool_array(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_integer_array(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_string_array(), std::runtime_error);
+
+  EXPECT_EQ(
+    float_array_variant.value_to_string(),
+    "[42.1, -99.1, 3.40282e+38, -3.40282e+38, 0.1]");
+
+  rcl_interfaces::msg::Parameter float_array_param = float_array_variant.to_parameter();
+  EXPECT_EQ(float_array_param.name, "float_array_param");
+  EXPECT_EQ(float_array_param.value.type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
+
+  param_value = float_array_param.value.double_array_value;
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  // From parameter message
+  rclcpp::parameter::ParameterVariant from_msg =
+    rclcpp::parameter::ParameterVariant::from_parameter(float_array_param);
+  EXPECT_EQ(from_msg.get_name(), "float_array_param");
+  EXPECT_EQ(from_msg.get_type(), rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY);
+  EXPECT_EQ(from_msg.get_type_name(), "double_array");
+
+  param_value = from_msg.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY>();
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  param_value = from_msg.get_parameter_value().double_array_value;
+  mismatches = std::mismatch(TEST_VALUE.begin(), TEST_VALUE.end(), param_value.begin());
+  EXPECT_EQ(mismatches.first, TEST_VALUE.end());
+  EXPECT_EQ(mismatches.second, param_value.end());
+
+  EXPECT_EQ(from_msg.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
 }
 
 TEST(TestParameter, double_array_variant) {
   const std::vector<double> TEST_VALUE
   {42.1, -99.1, std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(), 0.1};
 
-  // Direct instantiation
   rclcpp::parameter::ParameterVariant double_array_variant("double_array_param", TEST_VALUE);
   EXPECT_EQ(double_array_variant.get_name(), "double_array_param");
   EXPECT_EQ(double_array_variant.get_type(),
     rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY);
   EXPECT_EQ(double_array_variant.get_type_name(), "double_array");
+  EXPECT_EQ(double_array_variant.get_parameter_value().type,
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
   EXPECT_EQ(
     double_array_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY>(),
     TEST_VALUE);
   EXPECT_EQ(double_array_variant.get_parameter_value().double_array_value, TEST_VALUE);
-  EXPECT_EQ(double_array_variant.get_parameter_value().type,
-    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
   EXPECT_EQ(double_array_variant.as_double_array(), TEST_VALUE);
 
   EXPECT_THROW(double_array_variant.as_bool(), std::runtime_error);
@@ -456,33 +644,8 @@ TEST(TestParameter, double_array_variant) {
   EXPECT_THROW(double_array_variant.as_string_array(), std::runtime_error);
 
   EXPECT_EQ(
-    double_array_variant.value_to_string(), "[42.1, -99.1, 1.79769e+308, -1.79769e+308, 0.1]");
-
-  const std::vector<float> TEST_VALUE_F
-  {42.1f, -99.1f, std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest(), 0.1f};
-
-  rclcpp::parameter::ParameterVariant float_array_variant("double_array_param", TEST_VALUE_F);
-  EXPECT_EQ(float_array_variant.get_name(), "double_array_param");
-  EXPECT_EQ(float_array_variant.get_type(),
-    rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY);
-  EXPECT_EQ(float_array_variant.get_type_name(), "double_array");
-
-  // No direct comparison of vectors of doubles and floats
-  const auto & param_value_ref =
-    float_array_variant.get_value<rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY>();
-  const auto mismatches_get_val = std::mismatch(TEST_VALUE_F.begin(), TEST_VALUE_F.end(),
-      param_value_ref.begin());
-  EXPECT_EQ(mismatches_get_val.first, TEST_VALUE_F.end());
-  EXPECT_EQ(mismatches_get_val.second, param_value_ref.end());
-
-  const auto mismatches_get_param = std::mismatch(TEST_VALUE_F.begin(), TEST_VALUE_F.end(),
-      float_array_variant.get_parameter_value().double_array_value.begin());
-  EXPECT_EQ(mismatches_get_param.first, TEST_VALUE_F.end());
-  EXPECT_EQ(mismatches_get_param.second,
-    double_array_variant.get_parameter_value().double_array_value.end());
-
-  EXPECT_EQ(float_array_variant.get_parameter_value().type,
-    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY);
+    double_array_variant.value_to_string(),
+    "[42.1, -99.1, 1.79769e+308, -1.79769e+308, 0.1]");
 
   rcl_interfaces::msg::Parameter double_array_param = double_array_variant.to_parameter();
   EXPECT_EQ(double_array_param.name, "double_array_param");
