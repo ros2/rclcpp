@@ -191,6 +191,54 @@ rclcpp::init(int argc, char const * const argv[])
 #endif
 }
 
+std::vector<std::string>
+rclcpp::remove_ros_arguments(int argc, char const * const argv[])
+{
+  rcl_allocator_t alloc = rcl_get_default_allocator();
+  rcl_arguments_t parsed_args;
+
+  if (rcl_parse_arguments(argc, argv, alloc, &parsed_args) != RCL_RET_OK) {
+    std::string msg = "failed to parse arguments: ";
+    msg += rcl_get_error_string_safe();
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+
+  int nonros_argc = 0;
+  const char ** nonros_argv = NULL;
+
+  if (rcl_remove_ros_arguments(
+      argv,
+      &parsed_args,
+      alloc,
+      &nonros_argc,
+      &nonros_argv) != RCL_RET_OK)
+  {
+    std::string msg = "failed to remove ROS arguments: ";
+    msg += rcl_get_error_string_safe();
+    rcl_reset_error();
+    if (NULL != nonros_argv) {
+      alloc.deallocate(nonros_argv, alloc.state);
+    }
+    throw std::runtime_error(msg);
+  }
+
+  std::vector<std::string> return_arguments;
+  return_arguments.resize(nonros_argc);
+
+  for (int ii = 0; ii < nonros_argc; ++ii) {
+    return_arguments[ii] = std::string(nonros_argv[ii]);
+  }
+  return return_arguments;
+}
+
+std::vector<std::string>
+rclcpp::init_and_remove_ros_arguments(int argc, char const * const argv[])
+{
+  rclcpp::init(argc, argv);
+  return rclcpp::remove_ros_arguments(argc, argv);
+}
+
 bool
 rclcpp::ok()
 {
