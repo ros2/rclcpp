@@ -89,7 +89,7 @@ TEST(TestParameter, bool_variant) {
   rcl_interfaces::msg::Parameter bool_param = bool_variant_true.to_parameter();
   EXPECT_EQ(bool_param.name, "bool_param");
   EXPECT_EQ(bool_param.value.type, rcl_interfaces::msg::ParameterType::PARAMETER_BOOL);
-  EXPECT_EQ(bool_param.value.bool_value, true);
+  EXPECT_TRUE(bool_param.value.bool_value);
 
   // From parameter message
   rclcpp::parameter::ParameterVariant from_msg_true =
