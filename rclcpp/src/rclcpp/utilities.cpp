@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 #include "rclcpp/utilities.hpp"
 
 #include <atomic>
@@ -23,6 +24,8 @@
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include "rclcpp/exceptions.hpp"
 
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
@@ -192,35 +195,40 @@ rclcpp::init(int argc, char const * const argv[])
 }
 
 std::vector<std::string>
+rclcpp::init_and_remove_ros_arguments(int argc, char const * const argv[])
+{
+  rclcpp::init(argc, argv);
+  return rclcpp::remove_ros_arguments(argc, argv);
+}
+
+std::vector<std::string>
 rclcpp::remove_ros_arguments(int argc, char const * const argv[])
 {
   rcl_allocator_t alloc = rcl_get_default_allocator();
   rcl_arguments_t parsed_args;
 
-  if (rcl_parse_arguments(argc, argv, alloc, &parsed_args) != RCL_RET_OK) {
-    std::string msg = "failed to parse arguments: ";
-    msg += rcl_get_error_string_safe();
-    rcl_reset_error();
-    throw std::runtime_error(msg);
+  rcl_ret_t ret;
+
+  ret = rcl_parse_arguments(argc, argv, alloc, &parsed_args);
+  if (RCL_RET_OK != ret) {
+    exceptions::throw_from_rcl_error(ret, "Failed to parse arguments");
   }
 
   int nonros_argc = 0;
   const char ** nonros_argv = NULL;
 
-  if (rcl_remove_ros_arguments(
-      argv,
-      &parsed_args,
-      alloc,
-      &nonros_argc,
-      &nonros_argv) != RCL_RET_OK)
-  {
-    std::string msg = "failed to remove ROS arguments: ";
-    msg += rcl_get_error_string_safe();
-    rcl_reset_error();
+  ret = rcl_remove_ros_arguments(
+    argv,
+    &parsed_args,
+    alloc,
+    &nonros_argc,
+    &nonros_argv);
+
+  if (RCL_RET_OK != ret) {
     if (NULL != nonros_argv) {
       alloc.deallocate(nonros_argv, alloc.state);
     }
-    throw std::runtime_error(msg);
+    exceptions::throw_from_rcl_error(ret, "Failed to remove ROS arguments: ");
   }
 
   std::vector<std::string> return_arguments;
@@ -229,14 +237,12 @@ rclcpp::remove_ros_arguments(int argc, char const * const argv[])
   for (int ii = 0; ii < nonros_argc; ++ii) {
     return_arguments[ii] = std::string(nonros_argv[ii]);
   }
-  return return_arguments;
-}
 
-std::vector<std::string>
-rclcpp::init_and_remove_ros_arguments(int argc, char const * const argv[])
-{
-  rclcpp::init(argc, argv);
-  return rclcpp::remove_ros_arguments(argc, argv);
+  if (NULL != nonros_argv) {
+    alloc.deallocate(nonros_argv, alloc.state);
+  }
+
+  return return_arguments;
 }
 
 bool

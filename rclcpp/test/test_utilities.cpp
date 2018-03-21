@@ -17,13 +17,13 @@
 #include <string>
 #include <memory>
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
 TEST(TestUtilities, remove_ros_arguments) {
   const char * const argv[] = {"process_name", "-d", "__ns:=/foo/bar",
     "__ns:=/fiz/buz", "--foo=bar", "--baz"};
   int argc = sizeof(argv) / sizeof(const char *);
-  rclcpp::init(argc, argv);
   auto args = rclcpp::remove_ros_arguments(argc, argv);
 
   ASSERT_EQ(4u, args.size());
@@ -31,4 +31,21 @@ TEST(TestUtilities, remove_ros_arguments) {
   ASSERT_EQ(std::string{"-d"}, args[1]);
   ASSERT_EQ(std::string{"--foo=bar"}, args[2]);
   ASSERT_EQ(std::string{"--baz"}, args[3]);
+}
+
+TEST(TestUtilities, remove_ros_arguments_null) {
+  // In the case of a C executable, we would expect to get
+  // argc=1 and argv = ["process_name"], so this is an invalid input.
+  ASSERT_THROW({
+    rclcpp::remove_ros_arguments(0, nullptr);
+  }, rclcpp::exceptions::RCLErrorBase);
+}
+
+TEST(TestUtilities, init_with_args) {
+  const char * const argv[] = {"process_name"};
+  int argc = sizeof(argv) / sizeof(const char *);
+  auto other_args = rclcpp::init_and_remove_ros_arguments(argc, argv);
+
+  ASSERT_EQ(1u, other_args.size());
+  ASSERT_EQ(std::string{"process_name"}, other_args[0]);
 }

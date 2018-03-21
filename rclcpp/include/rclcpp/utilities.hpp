@@ -55,11 +55,23 @@ RCLCPP_PUBLIC
 void
 init(int argc, char const * const argv[]);
 
+/// Initialize communications via the rmw implementation and set up a global signal handler.
+/**
+ * Additionally removes ROS-specific arguments from the argument vector.
+ * \param[in] argc Number of arguments.
+ * \param[in] argv Argument vector.
+ * \returns Members of the argument vector that are not ROS arguments.
+ */
+RCLCPP_PUBLIC
+std::vector<std::string>
+init_and_remove_ros_arguments(int argc, char const * const argv[]);
+
 /// Remove ROS-specific arguments from argument vector.
 /**
- * Some arguments may not have been intended as ROS arguments. This function
- * populates a the aruments in a vector. Since the first argument is always assumed
- * to be a process name, the vector will always contain the process name.
+ * Some arguments may not have been intended as ROS arguments.
+ * This function populates a the aruments in a vector.
+ * Since the first argument is always assumed to be a process name, the vector
+ * will always contain the process name.
  *
  * \param[in] argc Number of arguments.
  * \param[in] argv Argument vector.
@@ -68,18 +80,6 @@ init(int argc, char const * const argv[]);
 RCLCPP_PUBLIC
 std::vector<std::string>
 remove_ros_arguments(int argc, char const * const argv[]);
-
-/// Initialize communications via the rmw implementaiton and set up a global signal handler.
-/**
- * This does everything that init does, but additionally removes ROS-specific command line
- * arguments
- * \param[in] argc Number of arguments.
- * \param[in] argv Argument vector.
- * \return Members of the argument vector that are not ROS arguments.
- */
-RCLCPP_PUBLIC
-std::vector<std::string>
-init_and_remove_ros_arguments(int argc, char const * const argv[]);
 
 /// Check rclcpp's status.
 /** \return True if SIGINT hasn't fired yet, false otherwise. */
