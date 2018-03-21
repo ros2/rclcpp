@@ -53,7 +53,7 @@ namespace rclcpp
  */
 RCLCPP_PUBLIC
 void
-init(int argc, char * argv[]);
+init(int argc, char const * const argv[]);
 
 /// Check rclcpp's status.
 /** \return True if SIGINT hasn't fired yet, false otherwise. */

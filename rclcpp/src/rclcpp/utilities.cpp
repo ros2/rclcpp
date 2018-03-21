@@ -160,7 +160,7 @@ signal_handler(int signal_value)
 }
 
 void
-rclcpp::init(int argc, char * argv[])
+rclcpp::init(int argc, char const * const argv[])
 {
   g_is_interrupted.store(false);
   if (rcl_init(argc, argv, rcl_get_default_allocator()) != RCL_RET_OK) {
