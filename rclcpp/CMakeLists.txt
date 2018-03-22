@@ -95,11 +95,12 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 
 add_library(${PROJECT_NAME}
   ${${PROJECT_NAME}_SRCS})
+# specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
-  "builtin_interfaces"
   "rcl"
-  "rosidl_generator_cpp"
-  "rosidl_typesupport_cpp")
+  "builtin_interfaces"
+  "rosidl_typesupport_cpp"
+  "rosidl_generator_cpp")
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -113,16 +114,16 @@ install(
   RUNTIME DESTINATION bin
 )
 
-ament_export_dependencies(ament_cmake)
-ament_export_dependencies(builtin_interfaces)
-ament_export_dependencies(rcl)
-ament_export_dependencies(rosidl_generator_cpp)
-ament_export_dependencies(rosidl_typesupport_c)
-ament_export_dependencies(rosidl_typesupport_cpp)
-
+# specific order: dependents before dependencies
 ament_export_include_directories(include)
-
 ament_export_libraries(${PROJECT_NAME})
+
+ament_export_dependencies(ament_cmake)
+ament_export_dependencies(rcl)
+ament_export_dependencies(builtin_interfaces)
+ament_export_dependencies(rosidl_typesupport_cpp)
+ament_export_dependencies(rosidl_typesupport_c)
+ament_export_dependencies(rosidl_generator_cpp)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
