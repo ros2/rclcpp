@@ -24,6 +24,8 @@
 #include <string>
 #include <vector>
 
+#include "rclcpp/exceptions.hpp"
+
 #include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 
@@ -160,7 +162,7 @@ signal_handler(int signal_value)
 }
 
 void
-rclcpp::init(int argc, char * argv[])
+rclcpp::init(int argc, char const * const argv[])
 {
   g_is_interrupted.store(false);
   if (rcl_init(argc, argv, rcl_get_default_allocator()) != RCL_RET_OK) {
@@ -189,6 +191,57 @@ rclcpp::init(int argc, char * argv[])
       set_signal_handler(SIGINT, ::old_signal_handler);
     });
 #endif
+}
+
+std::vector<std::string>
+rclcpp::init_and_remove_ros_arguments(int argc, char const * const argv[])
+{
+  rclcpp::init(argc, argv);
+  return rclcpp::remove_ros_arguments(argc, argv);
+}
+
+std::vector<std::string>
+rclcpp::remove_ros_arguments(int argc, char const * const argv[])
+{
+  rcl_allocator_t alloc = rcl_get_default_allocator();
+  rcl_arguments_t parsed_args;
+
+  rcl_ret_t ret;
+
+  ret = rcl_parse_arguments(argc, argv, alloc, &parsed_args);
+  if (RCL_RET_OK != ret) {
+    exceptions::throw_from_rcl_error(ret, "Failed to parse arguments");
+  }
+
+  int nonros_argc = 0;
+  const char ** nonros_argv = NULL;
+
+  ret = rcl_remove_ros_arguments(
+    argv,
+    &parsed_args,
+    alloc,
+    &nonros_argc,
+    &nonros_argv);
+
+  if (RCL_RET_OK != ret) {
+    if (NULL != nonros_argv) {
+      alloc.deallocate(nonros_argv, alloc.state);
+    }
+    exceptions::throw_from_rcl_error(ret, "Failed to remove ROS arguments: ");
+  }
+
+  std::vector<std::string> return_arguments;
+  return_arguments.resize(nonros_argc);
+
+  for (int ii = 0; ii < nonros_argc; ++ii) {
+    return_arguments[ii] = std::string(nonros_argv[ii]);
+  }
+
+  if (NULL != nonros_argv) {
+    alloc.deallocate(nonros_argv, alloc.state);
+  }
+
+  return return_arguments;
 }
 
 bool
