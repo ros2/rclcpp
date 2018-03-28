@@ -29,7 +29,7 @@ using namespace std::chrono_literals;
 
 using rcl_interfaces::msg::IntraProcessMessage;
 
-class TestMultiThreadedExecutor : public::testing::Test
+class TestMultiThreadedExecutor : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -63,21 +63,28 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   std::mutex last_mutex;
   auto last = system_clock.now();
 
-  auto timer_callback = [&executor, &system_clock, &last_mutex, &last]() {
-    rclcpp::Time now = system_clock.now();
+  std::atomic_int timer_count {0};
 
-    {
-      std::lock_guard<std::mutex> lock(last_mutex);
-      double diff = labs((now - last).nanoseconds()) / 1.0e9;
-      last = now;
+  auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex, &last]() {
+      rclcpp::Time now = system_clock.now();
+      timer_count++;
 
-      if (diff < 0.09 || diff > 0.11) {
+      if (timer_count > 20) {
         executor.cancel();
-        ASSERT_TRUE(diff > 0.09);
-        ASSERT_TRUE(diff < 0.11);
       }
-    }
-  };
+
+      {
+        std::lock_guard<std::mutex> lock(last_mutex);
+        double diff = labs((now - last).nanoseconds()) / 1.0e9;
+        last = now;
+
+        if (diff < 0.09 || diff > 0.11) {
+          executor.cancel();
+          ASSERT_TRUE(diff > 0.09);
+          ASSERT_TRUE(diff < 0.11);
+        }
+      }
+    };
 
   auto timer = node->create_wall_timer(100ms, timer_callback, cbg);
   executor.add_node(node);
