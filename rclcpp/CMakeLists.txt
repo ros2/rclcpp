@@ -387,7 +387,15 @@ if(BUILD_TESTING)
       "rcl")
     target_link_libraries(test_utilities ${PROJECT_NAME})
   endif()
-endif()
+
+  ament_add_gtest(test_multi_threaded_executor test/executors/test_multi_threaded_executor.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_multi_threaded_executor)
+    ament_target_dependencies(test_multi_threaded_executor
+      "rcl")
+    target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
+  endif()
+endif(BUILD_TESTING)
 
 ament_package(
   CONFIG_EXTRAS rclcpp-extras.cmake
