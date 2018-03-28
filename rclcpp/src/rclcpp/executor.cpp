@@ -255,6 +255,10 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
   if (any_exec.timer) {
     execute_timer(any_exec.timer);
+    auto it = taken_timers_.find(any_exec.timer);
+    if (it != taken_timers_.end()) {
+      taken_timers_.erase(it);
+    }
   }
   if (any_exec.subscription) {
     execute_subscription(any_exec.subscription);
@@ -545,10 +549,12 @@ Executor::get_next_timer(AnyExecutable & any_exec)
       }
       for (auto & timer_ref : group->get_timer_ptrs()) {
         auto timer = timer_ref.lock();
-        if (timer && timer->is_ready()) {
+
+        if (timer && timer->is_ready() && taken_timers_.count(timer) == 0) {
           any_exec.timer = timer;
           any_exec.callback_group = group;
           node = get_node_by_group(group);
+          taken_timers_.insert(timer);
           return;
         }
       }

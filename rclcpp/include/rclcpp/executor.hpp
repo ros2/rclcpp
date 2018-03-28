@@ -22,6 +22,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -353,6 +354,7 @@ private:
   RCLCPP_DISABLE_COPY(Executor)
 
   std::vector<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
+  std::set<rclcpp::TimerBase::SharedPtr> taken_timers_;
 };
 
 }  // namespace executor
