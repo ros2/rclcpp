@@ -23,10 +23,12 @@
 
 using rclcpp::executors::MultiThreadedExecutor;
 
-MultiThreadedExecutor::MultiThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
+MultiThreadedExecutor::MultiThreadedExecutor(
+  const rclcpp::executor::ExecutorArgs & args,
+  size_t number_of_threads)
 : executor::Executor(args)
 {
-  number_of_threads_ = std::thread::hardware_concurrency();
+  number_of_threads_ = number_of_threads ? number_of_threads : std::thread::hardware_concurrency();
   if (number_of_threads_ == 0) {
     number_of_threads_ = 1;
   }

@@ -36,7 +36,8 @@ public:
 
   RCLCPP_PUBLIC
   MultiThreadedExecutor(
-    const executor::ExecutorArgs & args = rclcpp::executor::create_default_executor_arguments());
+    const executor::ExecutorArgs & args = rclcpp::executor::create_default_executor_arguments(),
+    size_t number_of_threads = 0);
 
   RCLCPP_PUBLIC
   virtual ~MultiThreadedExecutor();
