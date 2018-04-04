@@ -210,7 +210,16 @@ rclcpp::remove_ros_arguments(int argc, char const * const argv[])
 
   ret = rcl_parse_arguments(argc, argv, alloc, &parsed_args);
   if (RCL_RET_OK != ret) {
-    exceptions::throw_from_rcl_error(ret, "Failed to parse arguments");
+    // Not using throw_from_rcl_error, because we may need to append deallocation failures.
+    exceptions::RCLErrorBase base_exec(ret, rcl_get_error_state());
+    rcl_reset_error();
+    if (RCL_RET_OK != rcl_arguments_fini(&parsed_args)) {
+      base_exec.formatted_message += std::string(
+        ", failed also to cleanup parsed arguments, leaking memory: ") +
+        rcl_get_error_string_safe();
+      rcl_reset_error();
+    }
+    throw base_exec;
   }
 
   int nonros_argc = 0;
@@ -224,10 +233,19 @@ rclcpp::remove_ros_arguments(int argc, char const * const argv[])
     &nonros_argv);
 
   if (RCL_RET_OK != ret) {
+    // Not using throw_from_rcl_error, because we may need to append deallocation failures.
+    exceptions::RCLErrorBase base_exec(ret, rcl_get_error_state());
+    rcl_reset_error();
     if (NULL != nonros_argv) {
       alloc.deallocate(nonros_argv, alloc.state);
     }
-    exceptions::throw_from_rcl_error(ret, "Failed to remove ROS arguments: ");
+    if (RCL_RET_OK != rcl_arguments_fini(&parsed_args)) {
+      base_exec.formatted_message += std::string(
+        ", failed also to cleanup parsed arguments, leaking memory: ") +
+        rcl_get_error_string_safe();
+      rcl_reset_error();
+    }
+    throw base_exec;
   }
 
   std::vector<std::string> return_arguments;
@@ -239,6 +257,11 @@ rclcpp::remove_ros_arguments(int argc, char const * const argv[])
 
   if (NULL != nonros_argv) {
     alloc.deallocate(nonros_argv, alloc.state);
+  }
+
+  ret = rcl_arguments_fini(&parsed_args);
+  if (RCL_RET_OK != ret) {
+    exceptions::throw_from_rcl_error(ret, "failed to cleanup parsed arguments, leaking memory: ");
   }
 
   return return_arguments;
