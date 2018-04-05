@@ -111,5 +111,5 @@ TEST_F(TestNode, now) {
   auto now_builtin = node->now().nanoseconds();
   auto now_external = clock->now().nanoseconds();
   EXPECT_GE(now_external, now_builtin);
-  EXPECT_LT(now_external - now_builtin, 50000L);
+  EXPECT_LT(now_external - now_builtin, 5000000L);
 }
