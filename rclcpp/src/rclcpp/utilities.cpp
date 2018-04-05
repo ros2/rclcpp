@@ -204,7 +204,7 @@ std::vector<std::string>
 rclcpp::remove_ros_arguments(int argc, char const * const argv[])
 {
   rcl_allocator_t alloc = rcl_get_default_allocator();
-  rcl_arguments_t parsed_args;
+  rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
 
   rcl_ret_t ret;
 
