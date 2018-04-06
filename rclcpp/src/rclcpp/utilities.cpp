@@ -252,7 +252,7 @@ rclcpp::remove_ros_arguments(int argc, char const * const argv[])
 
   ret = rcl_arguments_fini(&parsed_args);
   if (RCL_RET_OK != ret) {
-    exceptions::throw_from_rcl_error(ret, "failed to cleanup parsed arguments, leaking memory: ");
+    exceptions::throw_from_rcl_error(ret, "failed to cleanup parsed arguments, leaking memory");
   }
 
   return return_arguments;
