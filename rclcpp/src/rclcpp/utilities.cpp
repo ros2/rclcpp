@@ -225,18 +225,18 @@ rclcpp::remove_ros_arguments(int argc, char const * const argv[])
 
   if (RCL_RET_OK != ret) {
     // Not using throw_from_rcl_error, because we may need to append deallocation failures.
-    exceptions::RCLErrorBase base_exec(ret, rcl_get_error_state());
+    exceptions::RCLErrorBase base_exc(ret, rcl_get_error_state());
     rcl_reset_error();
     if (NULL != nonros_argv) {
       alloc.deallocate(nonros_argv, alloc.state);
     }
     if (RCL_RET_OK != rcl_arguments_fini(&parsed_args)) {
-      base_exec.formatted_message += std::string(
+      base_exc.formatted_message += std::string(
         ", failed also to cleanup parsed arguments, leaking memory: ") +
         rcl_get_error_string_safe();
       rcl_reset_error();
     }
-    throw base_exec;
+    throw exceptions::RCLError(base_exc, "");
   }
 
   std::vector<std::string> return_arguments;
