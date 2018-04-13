@@ -49,6 +49,8 @@ LifecycleNode::LifecycleNode(
     node_name,
     namespace_,
     rclcpp::contexts::default_context::get_global_default_context(),
+    {},
+    true,
     use_intra_process_comms)
 {}
 
@@ -56,8 +58,11 @@ LifecycleNode::LifecycleNode(
   const std::string & node_name,
   const std::string & namespace_,
   rclcpp::Context::SharedPtr context,
+  const std::vector<std::string> & arguments,
+  bool use_global_arguments,
   bool use_intra_process_comms)
-: node_base_(new rclcpp::node_interfaces::NodeBase(node_name, namespace_, context)),
+: node_base_(new rclcpp::node_interfaces::NodeBase(
+      node_name, namespace_, context, arguments, use_global_arguments)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),

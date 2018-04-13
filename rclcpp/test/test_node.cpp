@@ -16,6 +16,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"

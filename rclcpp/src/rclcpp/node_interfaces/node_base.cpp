@@ -19,6 +19,7 @@
 
 #include "rclcpp/node_interfaces/node_base.hpp"
 
+#include "rcl/arguments.h"
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/validate_node_name.h"
@@ -31,7 +32,9 @@ using rclcpp::node_interfaces::NodeBase;
 NodeBase::NodeBase(
   const std::string & node_name,
   const std::string & namespace_,
-  rclcpp::Context::SharedPtr context)
+  rclcpp::Context::SharedPtr context,
+  const std::vector<std::string> & arguments,
+  bool use_global_arguments)
 : context_(context),
   node_handle_(nullptr),
   default_callback_group_(nullptr),
@@ -84,17 +87,32 @@ NodeBase::NodeBase(
   }
 
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
-  rcl_node_t * rcl_node = new rcl_node_t(rcl_get_zero_initialized_node());
+  std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
 
   rcl_node_options_t options = rcl_node_get_default_options();
+  std::unique_ptr<const char *[]> c_args;
+  if (!arguments.empty()) {
+    c_args.reset(new const char *[arguments.size()]);
+    for (std::size_t i = 0; i < arguments.size(); ++i) {
+      c_args[i] = arguments[i].c_str();
+    }
+  }
+  // TODO(sloretz) Pass an allocator to argument parsing
+  ret = rcl_parse_arguments(
+    arguments.size(), c_args.get(), rcl_get_default_allocator(), &(options.arguments));
+  if (RCL_RET_OK != ret) {
+    finalize_notify_guard_condition();
+    throw_from_rcl_error(ret, "failed to parse arguments");
+  }
+
+  options.use_global_arguments = use_global_arguments;
   // TODO(wjwwood): pass the Allocator to the options
   options.domain_id = domain_id;
-  ret = rcl_node_init(rcl_node, node_name.c_str(), namespace_.c_str(), &options);
+
+  ret = rcl_node_init(rcl_node.get(), node_name.c_str(), namespace_.c_str(), &options);
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
-
-    delete rcl_node;
 
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
@@ -145,7 +163,7 @@ NodeBase::NodeBase(
   }
 
   node_handle_.reset(
-    rcl_node,
+    rcl_node.release(),
     [](rcl_node_t * node) -> void {
       if (rcl_node_fini(node) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
