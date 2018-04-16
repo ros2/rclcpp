@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/any_executable.hpp"
 #include "rclcpp/scope_exit.hpp"
 
 using rclcpp::executors::SingleThreadedExecutor;
@@ -30,7 +31,9 @@ SingleThreadedExecutor::spin()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   while (rclcpp::ok() && spinning.load()) {
-    auto any_exec = get_next_executable();
-    execute_any_executable(any_exec);
+    rclcpp::executor::AnyExecutable any_executable;
+    if (get_next_executable(any_executable)) {
+      execute_any_executable(any_executable);
+    }
   }
 }

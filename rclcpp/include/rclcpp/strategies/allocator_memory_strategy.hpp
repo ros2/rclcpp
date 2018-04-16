@@ -48,21 +48,16 @@ class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AllocatorMemoryStrategy<Alloc>)
 
-  using ExecAllocTraits = allocator::AllocRebind<executor::AnyExecutable, Alloc>;
-  using ExecAlloc = typename ExecAllocTraits::allocator_type;
-  using ExecDeleter = allocator::Deleter<ExecAlloc, executor::AnyExecutable>;
   using VoidAllocTraits = typename allocator::AllocRebind<void *, Alloc>;
   using VoidAlloc = typename VoidAllocTraits::allocator_type;
 
   explicit AllocatorMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
-    executable_allocator_ = std::make_shared<ExecAlloc>(*allocator.get());
     allocator_ = std::make_shared<VoidAlloc>(*allocator.get());
   }
 
   AllocatorMemoryStrategy()
   {
-    executable_allocator_ = std::make_shared<ExecAlloc>();
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
@@ -235,16 +230,9 @@ public:
     return true;
   }
 
-  /// Provide a newly initialized AnyExecutable object.
-  // \return Shared pointer to the fresh executable.
-  executor::AnyExecutable::SharedPtr instantiate_next_executable()
-  {
-    return std::allocate_shared<executor::AnyExecutable>(*executable_allocator_.get());
-  }
-
   virtual void
   get_next_subscription(
-    executor::AnyExecutable::SharedPtr any_exec,
+    executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes)
   {
     auto it = subscription_handles_.begin();
@@ -272,12 +260,12 @@ public:
         }
         // Otherwise it is safe to set and return the any_exec
         if (is_intra_process) {
-          any_exec->subscription_intra_process = subscription;
+          any_exec.subscription_intra_process = subscription;
         } else {
-          any_exec->subscription = subscription;
+          any_exec.subscription = subscription;
         }
-        any_exec->callback_group = group;
-        any_exec->node_base = get_node_by_group(group, weak_nodes);
+        any_exec.callback_group = group;
+        any_exec.node_base = get_node_by_group(group, weak_nodes);
         subscription_handles_.erase(it);
         return;
       }
@@ -288,7 +276,7 @@ public:
 
   virtual void
   get_next_service(
-    executor::AnyExecutable::SharedPtr any_exec,
+    executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes)
   {
     auto it = service_handles_.begin();
@@ -310,9 +298,9 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->service = service;
-        any_exec->callback_group = group;
-        any_exec->node_base = get_node_by_group(group, weak_nodes);
+        any_exec.service = service;
+        any_exec.callback_group = group;
+        any_exec.node_base = get_node_by_group(group, weak_nodes);
         service_handles_.erase(it);
         return;
       }
@@ -322,7 +310,7 @@ public:
   }
 
   virtual void
-  get_next_client(executor::AnyExecutable::SharedPtr any_exec, const WeakNodeVector & weak_nodes)
+  get_next_client(executor::AnyExecutable & any_exec, const WeakNodeVector & weak_nodes)
   {
     auto it = client_handles_.begin();
     while (it != client_handles_.end()) {
@@ -343,9 +331,9 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        any_exec->client = client;
-        any_exec->callback_group = group;
-        any_exec->node_base = get_node_by_group(group, weak_nodes);
+        any_exec.client = client;
+        any_exec.callback_group = group;
+        any_exec.node_base = get_node_by_group(group, weak_nodes);
         client_handles_.erase(it);
         return;
       }
@@ -396,7 +384,6 @@ private:
   VectorRebind<std::shared_ptr<const rcl_client_t>> client_handles_;
   VectorRebind<std::shared_ptr<const rcl_timer_t>> timer_handles_;
 
-  std::shared_ptr<ExecAlloc> executable_allocator_;
   std::shared_ptr<VoidAlloc> allocator_;
 };
 
