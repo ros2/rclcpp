@@ -98,8 +98,12 @@ NodeBase::NodeBase(
     }
   }
   // TODO(sloretz) Pass an allocator to argument parsing
+  if (arguments.size() > std::numeric_limits<int>::max()) {
+    throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
+  }
   ret = rcl_parse_arguments(
-    arguments.size(), c_args.get(), rcl_get_default_allocator(), &(options.arguments));
+    static_cast<int>(arguments.size()), c_args.get(), rcl_get_default_allocator(),
+    &(options.arguments));
   if (RCL_RET_OK != ret) {
     finalize_notify_guard_condition();
     throw_from_rcl_error(ret, "failed to parse arguments");
