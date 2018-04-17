@@ -39,7 +39,9 @@ public:
   NodeBase(
     const std::string & node_name,
     const std::string & namespace_,
-    rclcpp::Context::SharedPtr context);
+    rclcpp::Context::SharedPtr context,
+    const std::vector<std::string> & arguments,
+    bool use_global_arguments);
 
   RCLCPP_PUBLIC
   virtual
