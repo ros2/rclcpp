@@ -222,9 +222,7 @@ Executor::spin_once(std::chrono::nanoseconds timeout)
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT({
-    this->spinning.store(false);
-  });
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   AnyExecutable any_exec;
   if (get_next_executable(any_exec, timeout)) {
     execute_any_executable(any_exec);
