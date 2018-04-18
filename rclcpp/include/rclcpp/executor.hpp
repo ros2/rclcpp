@@ -287,7 +287,7 @@ protected:
    */
   RCLCPP_PUBLIC
   void
-  execute_any_executable(AnyExecutable::SharedPtr any_exec);
+  execute_any_executable(AnyExecutable & any_exec);
 
   RCLCPP_PUBLIC
   static void
@@ -325,15 +325,17 @@ protected:
 
   RCLCPP_PUBLIC
   void
-  get_next_timer(AnyExecutable::SharedPtr any_exec);
+  get_next_timer(AnyExecutable & any_exec);
 
   RCLCPP_PUBLIC
-  AnyExecutable::SharedPtr
-  get_next_ready_executable();
+  bool
+  get_next_ready_executable(AnyExecutable & any_executable);
 
   RCLCPP_PUBLIC
-  AnyExecutable::SharedPtr
-  get_next_executable(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
+  bool
+  get_next_executable(
+    AnyExecutable & any_executable,
+    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;

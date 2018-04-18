@@ -55,27 +55,23 @@ public:
   virtual void clear_handles() = 0;
   virtual void remove_null_handles(rcl_wait_set_t * wait_set) = 0;
 
-  /// Provide a newly initialized AnyExecutable object.
-  // \return Shared pointer to the fresh executable.
-  virtual rclcpp::executor::AnyExecutable::SharedPtr instantiate_next_executable() = 0;
-
   virtual void add_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
   virtual void remove_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
   virtual void
   get_next_subscription(
-    rclcpp::executor::AnyExecutable::SharedPtr any_exec,
+    rclcpp::executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
   virtual void
   get_next_service(
-    rclcpp::executor::AnyExecutable::SharedPtr any_exec,
+    rclcpp::executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
   virtual void
   get_next_client(
-    rclcpp::executor::AnyExecutable::SharedPtr any_exec,
+    rclcpp::executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
   virtual rcl_allocator_t

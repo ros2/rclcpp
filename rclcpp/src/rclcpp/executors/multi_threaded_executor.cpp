@@ -69,13 +69,15 @@ void
 MultiThreadedExecutor::run(size_t)
 {
   while (rclcpp::ok() && spinning.load()) {
-    executor::AnyExecutable::SharedPtr any_exec;
+    executor::AnyExecutable any_exec;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       if (!rclcpp::ok() || !spinning.load()) {
         return;
       }
-      any_exec = get_next_executable();
+      if (!get_next_executable(any_exec)) {
+        continue;
+      }
     }
     execute_any_executable(any_exec);
   }
