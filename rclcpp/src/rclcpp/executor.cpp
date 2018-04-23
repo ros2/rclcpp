@@ -281,31 +281,45 @@ void
 Executor::execute_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription)
 {
-  // may have to overwrite create_message here
-  std::shared_ptr<void> message = subscription->create_message();
+  auto raw_msg = subscription->create_raw_message();
   rmw_message_info_t message_info;
 
-  auto ret = RCL_RET_ERROR;
-  if (subscription->is_raw()) {
-    ret = rcl_take_raw(
-      subscription->get_subscription_handle(),
-      reinterpret_cast<rcl_message_raw_t *>(message.get()), &message_info);
-  } else {
-    ret = rcl_take(
-      subscription->get_subscription_handle(),
-      message.get(), &message_info);
-  }
-  if (ret == RCL_RET_OK) {
-    message_info.from_intra_process = false;
-    subscription->handle_message(message, message_info);
-  } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
+  auto ret = rcl_take_raw(
+      subscription->get_subscription_handle().get(),
+      raw_msg.get(), &message_info);
+  if (ret != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "take failed for subscription on topic '%s': %s",
-      subscription->get_topic_name(), rcl_get_error_string_safe());
+        "rclcpp",
+        "take_raw failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
-  subscription->return_message(message);
+
+  // TODO(karsten1987): Can this be set to false directly after initialization?
+  message_info.from_intra_process = false;
+
+  if (subscription->is_raw()) {
+    // TODO(karsten1987): Raise if opensplice !?
+    auto void_raw_msg = std::static_pointer_cast<void>(raw_msg);
+    subscription->handle_message(void_raw_msg, message_info);
+  } else {
+    std::shared_ptr<void> message = subscription->create_message();
+    auto ts = subscription->get_message_type_support_handle();
+    ret = rmw_deserialize(raw_msg.get(), &ts, message.get());
+    if (ret == RCL_RET_OK) {
+      message_info.from_intra_process = false;
+      subscription->handle_message(message, message_info);
+    } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
+      RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "could not deserialize raw message on topic '%s': %s",
+          subscription->get_topic_name(), rcl_get_error_string_safe());
+      rcl_reset_error();
+    }
+    subscription->return_message(message);
+  }
+
+  subscription->return_raw_message(raw_msg);
 }
 
 void

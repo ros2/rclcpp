@@ -93,6 +93,12 @@ public:
   /** \return Shared pointer to the fresh message. */
   virtual std::shared_ptr<void>
   create_message() = 0;
+
+  /// Borrow a new raw message
+  /** \return Shared pointer to a rcl_message_raw_t. */
+  virtual std::shared_ptr<rcl_message_raw_t>
+  create_raw_message() = 0;
+
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.
@@ -106,10 +112,18 @@ public:
   virtual void
   return_message(std::shared_ptr<void> & message) = 0;
 
+  /// Return the message borrowed in create_raw_message.
+  /** \param[in] message Shared pointer to the returned message. */
+  virtual void
+  return_raw_message(std::shared_ptr<rcl_message_raw_t> & message) = 0;
+
   virtual void
   handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
+
+  rosidl_message_type_support_t
+  get_message_type_support_handle() const;
 
   bool
   is_raw() const;
@@ -122,6 +136,7 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
 
+  rosidl_message_type_support_t type_support_;
   bool is_raw_;
 };
 
@@ -193,6 +208,11 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
+  std::shared_ptr<rcl_message_raw_t> create_raw_message()
+  {
+    return message_memory_strategy_->borrow_raw_message();
+  }
+
   void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
   {
     if (matches_any_intra_process_publishers_) {
@@ -212,6 +232,11 @@ public:
   {
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     message_memory_strategy_->return_message(typed_message);
+  }
+
+  void return_raw_message(std::shared_ptr<rcl_message_raw_t> & message)
+  {
+    message_memory_strategy_->return_raw_message(message);
   }
 
   void handle_intra_process_message(

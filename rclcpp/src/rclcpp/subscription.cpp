@@ -34,6 +34,7 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   bool is_raw)
 : node_handle_(node_handle),
+  type_support_(type_support_handle),
   is_raw_(is_raw)
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
@@ -112,6 +113,12 @@ const std::shared_ptr<rcl_subscription_t>
 SubscriptionBase::get_intra_process_subscription_handle() const
 {
   return intra_process_subscription_handle_;
+}
+
+rosidl_message_type_support_t
+SubscriptionBase::get_message_type_support_handle() const
+{
+  return type_support_;
 }
 
 bool
