@@ -82,10 +82,6 @@ public:
 
   virtual std::shared_ptr<rcl_message_raw_t> borrow_raw_message(unsigned int capacity)
   {
-    // get rcutils_default allocator
-    // initialize raw message
-    // does this have to be a shared pointer ?!
-    //auto raw_msg = std::make_shared<rcl_message_raw_t>(rmw_get_zero_initialized_raw_message());
     auto raw_msg = std::make_shared<rcl_message_raw_t>();
     raw_msg->buffer_length = 0;
     raw_msg->buffer_capacity = 0;

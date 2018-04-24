@@ -25,7 +25,8 @@
 
 TEST(TestRawMessageAllocator, default_allocator) {
   using DummyMessageT = float;
-  auto mem_strategy = rclcpp::message_memory_strategy::MessageMemoryStrategy<DummyMessageT>::create_default();
+  auto mem_strategy =
+    rclcpp::message_memory_strategy::MessageMemoryStrategy<DummyMessageT>::create_default();
 
   auto msg0 = mem_strategy->borrow_raw_message();
   ASSERT_EQ(msg0->buffer_capacity, 0u);
@@ -53,7 +54,9 @@ TEST(TestRawMessageAllocator, borrow_from_subscription) {
   rclcpp::init(0, NULL);
 
   auto node = std::make_shared<rclcpp::Node>("test_raw_message_allocator_node");
-  std::shared_ptr<rclcpp::SubscriptionBase> sub = node->create_subscription<test_msgs::msg::Empty>("~/dummy_topic", [](std::shared_ptr<test_msgs::msg::Empty> test_msg){ (void) test_msg;});
+  std::shared_ptr<rclcpp::SubscriptionBase> sub =
+    node->create_subscription<test_msgs::msg::Empty>("~/dummy_topic", [](
+        std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;});
 
   auto msg0 = sub->create_raw_message();
   EXPECT_EQ(0u, msg0->buffer_capacity);

@@ -285,13 +285,13 @@ Executor::execute_subscription(
   rmw_message_info_t message_info;
 
   auto ret = rcl_take_raw(
-      subscription->get_subscription_handle().get(),
-      raw_msg.get(), &message_info);
+    subscription->get_subscription_handle().get(),
+    raw_msg.get(), &message_info);
   if (ret != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "take_raw failed for subscription on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string_safe());
+      "rclcpp",
+      "take_raw failed for subscription on topic '%s': %s",
+      subscription->get_topic_name(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
 
@@ -311,9 +311,9 @@ Executor::execute_subscription(
       subscription->handle_message(message, message_info);
     } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
       RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "could not deserialize raw message on topic '%s': %s",
-          subscription->get_topic_name(), rcl_get_error_string_safe());
+        "rclcpp",
+        "could not deserialize raw message on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string_safe());
       rcl_reset_error();
     }
     subscription->return_message(message);

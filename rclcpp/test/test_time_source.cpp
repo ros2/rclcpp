@@ -280,6 +280,8 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
 
   trigger_clock_changes(node);
 
+  fprintf(stderr, "trigger clock changes successful\n");
+
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
