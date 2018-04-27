@@ -359,9 +359,9 @@ public:
       } catch (const std::exception &) {
         // TODO(karsten1987): Windows CI doens't let me print the msg here
         // the todo is to forward the exception to the on_error callback
-        // fprintf(stderr, "Caught exception in callback for transition %d\n",
-        //  it->first);
-        // fprintf(stderr, "Original error msg: %s\n", e.what());
+        // RCUTILS_LOG_ERROR("Caught exception in callback for transition %d\n",
+        //  it->first)
+        // RCUTILS_LOG_ERROR("Original error msg: %s\n", e.what())
         // maybe directly go for error handling here
         // and pass exception along with it
         cb_success = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
