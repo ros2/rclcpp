@@ -117,7 +117,11 @@ NodeBase::NodeBase(
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
-
+    // Finalize previously allocated node arguments
+    if (!rcl_arguments_fini(&options.arguments) == RCL_RET_OK) {
+      throw_from_rcl_error(RCL_RET_ERROR, "failed to deallocate node arguments");
+    }
+    
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
       int validation_result;
