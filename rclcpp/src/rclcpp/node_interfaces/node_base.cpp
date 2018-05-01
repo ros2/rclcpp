@@ -117,6 +117,14 @@ NodeBase::NodeBase(
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
+    // Finalize previously allocated node arguments
+    if (RCL_RET_OK != rcl_arguments_fini(&options.arguments)) {
+      // Print message because exception will be thrown later in this code block
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Failed to fini arguments during error handling: %s", rcl_get_error_string_safe());
+      rcl_reset_error();
+    }
 
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
@@ -183,6 +191,15 @@ NodeBase::NodeBase(
 
   // Indicate the notify_guard_condition is now valid.
   notify_guard_condition_is_valid_ = true;
+
+  // Finalize previously allocated node arguments
+  if (RCL_RET_OK != rcl_arguments_fini(&options.arguments)) {
+    // print message because throwing would prevent the destructor from being called
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Failed to fini arguments: %s", rcl_get_error_string_safe());
+    rcl_reset_error();
+  }
 }
 
 NodeBase::~NodeBase()
