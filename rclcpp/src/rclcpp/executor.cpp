@@ -206,12 +206,19 @@ Executor::spin_some()
     throw std::runtime_error("spin_some() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-  while (spinning.load()) {
+  if (spinning.load()) {
     AnyExecutable any_exec;
-    if (get_next_executable(any_exec, std::chrono::milliseconds::zero())) {
-      execute_any_executable(any_exec);
-    } else {
-      break;
+    vector<AnyExecutable> all_executables;
+
+    //Collect all of the executables that are pending. 
+    //But don't execute them until the queue of actions
+    //is flushed out.
+    while ( get_next_executable(any_exec, std::chrono::milliseconds::zero())) {
+      all_executables.push_back ( any_exec );
+    }
+
+    for ( auto cur_exec : all_executables ) {
+      execute_any_executable( cur_exec );
     }
   }
 }
