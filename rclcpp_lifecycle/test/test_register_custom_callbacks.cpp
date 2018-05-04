@@ -137,16 +137,16 @@ public:
 TEST_F(TestRegisterCustomCallbacks, custom_callbacks) {
   auto test_node = std::make_shared<CustomLifecycleNode>("testnode");
 
-  test_node->register_on_configure(
-    std::bind(&CustomLifecycleNode::on_custom_configure, test_node, std::placeholders::_1));
-  test_node->register_on_cleanup(std::bind(&CustomLifecycleNode::on_custom_cleanup, test_node,
-    std::placeholders::_1));
-  test_node->register_on_shutdown(std::bind(&CustomLifecycleNode::on_custom_shutdown, test_node,
-    std::placeholders::_1));
-  test_node->register_on_activate(std::bind(&CustomLifecycleNode::on_custom_activate, test_node,
-    std::placeholders::_1));
+  test_node->register_on_configure(std::bind(&CustomLifecycleNode::on_custom_configure,
+    test_node.get(), std::placeholders::_1));
+  test_node->register_on_cleanup(std::bind(&CustomLifecycleNode::on_custom_cleanup,
+    test_node.get(), std::placeholders::_1));
+  test_node->register_on_shutdown(std::bind(&CustomLifecycleNode::on_custom_shutdown,
+    test_node.get(), std::placeholders::_1));
+  test_node->register_on_activate(std::bind(&CustomLifecycleNode::on_custom_activate,
+    test_node.get(), std::placeholders::_1));
   test_node->register_on_deactivate(std::bind(&CustomLifecycleNode::on_custom_deactivate,
-    test_node, std::placeholders::_1));
+    test_node.get(), std::placeholders::_1));
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
