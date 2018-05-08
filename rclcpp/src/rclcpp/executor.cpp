@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
@@ -208,17 +209,17 @@ Executor::spin_some()
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   if (spinning.load()) {
     AnyExecutable any_exec;
-    vector<AnyExecutable> all_executables;
+    std::vector<AnyExecutable> all_executables;
 
-    //Collect all of the executables that are pending. 
-    //But don't execute them until the queue of actions
-    //is flushed out.
-    while ( get_next_executable(any_exec, std::chrono::milliseconds::zero())) {
-      all_executables.push_back ( any_exec );
+    // Collect all of the executables that are pending.
+    // But don't execute them until the queue of actions
+    // is flushed out.
+    while (get_next_executable(any_exec, std::chrono::milliseconds::zero())) {
+      all_executables.push_back(any_exec);
     }
 
-    for ( auto cur_exec : all_executables ) {
-      execute_any_executable( cur_exec );
+    for (auto cur_exec : all_executables) {
+      execute_any_executable(cur_exec);
     }
   }
 }
@@ -616,7 +617,7 @@ rclcpp::executor::operator<<(std::ostream & os, const FutureReturnCode & future_
 }
 
 std::string
-rclcpp::executor::to_string(const FutureReturnCode &future_return_code)
+rclcpp::executor::to_string(const FutureReturnCode & future_return_code)
 {
   using enum_type = std::underlying_type<FutureReturnCode>::type;
   std::string prefix = "Unknown enum value (";
