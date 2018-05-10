@@ -83,6 +83,54 @@ ParameterVariant::ParameterVariant(
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY;
 }
 
+ParameterVariant::ParameterVariant(
+  const std::string & name, const std::vector<bool> & bool_array_value)
+: name_(name)
+{
+  value_.bool_array_value = bool_array_value;
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY;
+}
+
+ParameterVariant::ParameterVariant(
+  const std::string & name, const std::vector<int> & int_array_value)
+: name_(name)
+{
+  vector_assign(value_.integer_array_value, int_array_value);
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
+}
+
+ParameterVariant::ParameterVariant(
+  const std::string & name, const std::vector<int64_t> & int_array_value)
+: name_(name)
+{
+  value_.integer_array_value = int_array_value;
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
+}
+
+ParameterVariant::ParameterVariant(
+  const std::string & name, const std::vector<float> & double_array_value)
+: name_(name)
+{
+  vector_assign(value_.double_array_value, double_array_value);
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY;
+}
+
+ParameterVariant::ParameterVariant(
+  const std::string & name, const std::vector<double> & double_array_value)
+: name_(name)
+{
+  value_.double_array_value = double_array_value;
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY;
+}
+
+ParameterVariant::ParameterVariant(
+  const std::string & name, const std::vector<std::string> & string_array_value)
+: name_(name)
+{
+  value_.string_array_value = string_array_value;
+  value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY;
+}
+
 ParameterType
 ParameterVariant::get_type() const
 {
@@ -93,6 +141,8 @@ std::string
 ParameterVariant::get_type_name() const
 {
   switch (get_type()) {
+    case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
+      return "not set";
     case rclcpp::parameter::ParameterType::PARAMETER_BOOL:
       return "bool";
     case rclcpp::parameter::ParameterType::PARAMETER_INTEGER:
@@ -102,9 +152,15 @@ ParameterVariant::get_type_name() const
     case rclcpp::parameter::ParameterType::PARAMETER_STRING:
       return "string";
     case rclcpp::parameter::ParameterType::PARAMETER_BYTE_ARRAY:
-      return "bytes";
-    case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
-      return "not set";
+      return "byte_array";
+    case rclcpp::parameter::ParameterType::PARAMETER_BOOL_ARRAY:
+      return "bool_array";
+    case rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY:
+      return "integer_array";
+    case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY:
+      return "double_array";
+    case rclcpp::parameter::ParameterType::PARAMETER_STRING_ARRAY:
+      return "string_array";
     default:
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
@@ -125,6 +181,12 @@ ParameterVariant::get_parameter_value() const
   return value_;
 }
 
+bool
+ParameterVariant::as_bool() const
+{
+  return get_value<ParameterType::PARAMETER_BOOL>();
+}
+
 int64_t
 ParameterVariant::as_int() const
 {
@@ -143,22 +205,42 @@ ParameterVariant::as_string() const
   return get_value<ParameterType::PARAMETER_STRING>();
 }
 
-bool
-ParameterVariant::as_bool() const
-{
-  return get_value<ParameterType::PARAMETER_BOOL>();
-}
-
 const std::vector<uint8_t> &
-ParameterVariant::as_bytes() const
+ParameterVariant::as_byte_array() const
 {
   return get_value<ParameterType::PARAMETER_BYTE_ARRAY>();
+}
+
+const std::vector<bool> &
+ParameterVariant::as_bool_array() const
+{
+  return get_value<ParameterType::PARAMETER_BOOL_ARRAY>();
+}
+
+const std::vector<int64_t> &
+ParameterVariant::as_integer_array() const
+{
+  return get_value<ParameterType::PARAMETER_INTEGER_ARRAY>();
+}
+
+const std::vector<double> &
+ParameterVariant::as_double_array() const
+{
+  return get_value<ParameterType::PARAMETER_DOUBLE_ARRAY>();
+}
+
+const std::vector<std::string> &
+ParameterVariant::as_string_array() const
+{
+  return get_value<ParameterType::PARAMETER_STRING_ARRAY>();
 }
 
 ParameterVariant
 ParameterVariant::from_parameter(const rcl_interfaces::msg::Parameter & parameter)
 {
   switch (parameter.value.type) {
+    case PARAMETER_NOT_SET:
+      throw std::runtime_error("Type from ParameterValue is not set");
     case PARAMETER_BOOL:
       return ParameterVariant(parameter.name, parameter.value.bool_value);
     case PARAMETER_INTEGER:
@@ -169,8 +251,14 @@ ParameterVariant::from_parameter(const rcl_interfaces::msg::Parameter & paramete
       return ParameterVariant(parameter.name, parameter.value.string_value);
     case PARAMETER_BYTE_ARRAY:
       return ParameterVariant(parameter.name, parameter.value.byte_array_value);
-    case PARAMETER_NOT_SET:
-      throw std::runtime_error("Type from ParameterValue is not set");
+    case PARAMETER_BOOL_ARRAY:
+      return ParameterVariant(parameter.name, parameter.value.bool_array_value);
+    case PARAMETER_INTEGER_ARRAY:
+      return ParameterVariant(parameter.name, parameter.value.integer_array_value);
+    case PARAMETER_DOUBLE_ARRAY:
+      return ParameterVariant(parameter.name, parameter.value.double_array_value);
+    case PARAMETER_STRING_ARRAY:
+      return ParameterVariant(parameter.name, parameter.value.string_array_value);
     default:
       // TODO(wjwwood): use custom exception
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
@@ -193,6 +281,8 @@ std::string
 ParameterVariant::value_to_string() const
 {
   switch (get_type()) {
+    case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
+      return "not set";
     case rclcpp::parameter::ParameterType::PARAMETER_BOOL:
       return as_bool() ? "true" : "false";
     case rclcpp::parameter::ParameterType::PARAMETER_INTEGER:
@@ -202,22 +292,15 @@ ParameterVariant::value_to_string() const
     case rclcpp::parameter::ParameterType::PARAMETER_STRING:
       return as_string();
     case rclcpp::parameter::ParameterType::PARAMETER_BYTE_ARRAY:
-      {
-        std::stringstream bytes;
-        bool first_byte = true;
-        bytes << "[" << std::hex;
-        for (auto & byte : as_bytes()) {
-          bytes << "0x" << byte;
-          if (!first_byte) {
-            bytes << ", ";
-          } else {
-            first_byte = false;
-          }
-        }
-        return bytes.str();
-      }
-    case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
-      return "not set";
+      return array_to_string<uint8_t, int>(as_byte_array(), std::ios::hex);
+    case rclcpp::parameter::ParameterType::PARAMETER_BOOL_ARRAY:
+      return array_to_string(as_bool_array(), std::ios::boolalpha);
+    case rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY:
+      return array_to_string(as_integer_array());
+    case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY:
+      return array_to_string(as_double_array());
+    case rclcpp::parameter::ParameterType::PARAMETER_STRING_ARRAY:
+      return array_to_string(as_string_array());
     default:
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
