@@ -86,7 +86,7 @@ public:
     raw_msg->buffer_length = 0;
     raw_msg->buffer_capacity = 0;
     raw_msg->buffer = NULL;
-    rmw_initialize_raw_message(raw_msg.get(), 0, &rcutils_allocator_);
+    rmw_raw_message_init(raw_msg.get(), 0, &rcutils_allocator_);
     rmw_raw_message_resize(raw_msg.get(), capacity);
     return raw_msg;
   }
