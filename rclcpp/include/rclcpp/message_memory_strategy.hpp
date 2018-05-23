@@ -82,12 +82,13 @@ public:
 
   virtual std::shared_ptr<rcl_message_raw_t> borrow_raw_message(unsigned int capacity)
   {
-    auto raw_msg = std::make_shared<rcl_message_raw_t>();
-    raw_msg->buffer_length = 0;
-    raw_msg->buffer_capacity = 0;
-    raw_msg->buffer = NULL;
-    rmw_raw_message_init(raw_msg.get(), 0, &rcutils_allocator_);
-    rmw_raw_message_resize(raw_msg.get(), capacity);
+    auto raw_msg = std::shared_ptr<rcl_message_raw_t>(new rcl_message_raw_t,
+        [](rmw_message_raw_t * msg) {
+          rmw_raw_message_fini(msg);
+          delete msg;
+        });
+    *raw_msg = rmw_get_zero_initialized_raw_message();
+    rmw_raw_message_init(raw_msg.get(), capacity, &rcutils_allocator_);
     return raw_msg;
   }
 

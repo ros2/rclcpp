@@ -205,11 +205,8 @@ public:
       ipm.publisher_id = intra_process_publisher_id_;
       ipm.message_sequence = message_seq;
       auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
-      if (status != RCL_RET_OK) {
-        // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-        throw std::runtime_error(
-          std::string("failed to publish intra process message: ") + rcl_get_error_string_safe());
-        // *INDENT-ON*
+      if (RCL_RET_OK != status) {
+        rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
       }
     } else {
       // Always destroy the message, even if we don't consume it, for consistency.
@@ -287,11 +284,8 @@ public:
       throw std::runtime_error("storing raw messages in intra process is not supported yet.");
     }
     auto status = rcl_publish_raw(&publisher_handle_, raw_msg);
-    if (status != RCL_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to publish raw message: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish raw message");
     }
   }
 
@@ -305,11 +299,8 @@ protected:
   do_inter_process_publish(const MessageT * msg)
   {
     auto status = rcl_publish(&publisher_handle_, msg);
-    if (status != RCL_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to publish message: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
     }
   }
 
