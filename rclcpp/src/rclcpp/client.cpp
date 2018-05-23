@@ -14,6 +14,7 @@
 
 #include "rclcpp/client.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <cstdio>
 #include <memory>
@@ -132,12 +133,18 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
     if (!rclcpp::ok()) {
       return false;
     }
-    node_ptr->wait_for_graph_change(event, time_to_wait);
-    event->check_and_clear();  // reset the event
-
-    // always check if the service is ready, even if the graph event wasn't triggered
-    // this is needed to avoid a race condition that is specific to the Connext RMW implementation
+    // Limit each wait to 100ms to workaround an issue specific to the Connext RMW implementation.
+    // A race condition means that graph changes for services becoming available may trigger the
+    // wait set to wake up, but then not be reported as ready immediately after the wake up
     // (see https://github.com/ros2/rmw_connext/issues/201)
+    // If no other graph events occur, the wait set will not be triggered again until the timeout
+    // has been reached, despite the service being available, so we artificially limit the wait
+    // time to limit the delay.
+    node_ptr->wait_for_graph_change(
+      event, std::min(time_to_wait, std::chrono::nanoseconds(RCL_MS_TO_NS(100))));
+    // Because of the aforementioned race condition, we check if the service is ready even if the
+    // graph event wasn't triggered.
+    event->check_and_clear();
     if (this->service_is_ready()) {
       return true;
     }
