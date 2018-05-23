@@ -6,6 +6,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
+find_package(rcl_yaml_param_parser REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
@@ -99,6 +100,7 @@ add_library(${PROJECT_NAME}
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
   "rcl"
+  "rcl_yaml_param_parser"
   "builtin_interfaces"
   "rosgraph_msgs"
   "rosidl_typesupport_cpp"
@@ -122,6 +124,8 @@ ament_export_libraries(${PROJECT_NAME})
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
+# TODO(sloretz) Delete this if it doesn't end up being used in an installed header
+ament_export_dependencies(rcl_yaml_param_parser)
 ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rosgraph_msgs)
 ament_export_dependencies(rosidl_typesupport_cpp)

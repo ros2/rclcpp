@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
+#include "rcl_yaml_param_parser/parser.h"
 #include "rclcpp/create_publisher.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/qos_profiles.h"
@@ -50,6 +51,118 @@ NodeParameters::NodeParameters(
     rmw_qos_profile_parameter_events,
     use_intra_process,
     allocator);
+
+  // Get the node's allocator
+  const rcl_node_t * node = node_base->get_rcl_node_handle();
+  if (NULL == node) {
+    throw std::runtime_error("Need valid node handle in NodeParameters");
+  }
+  const rcl_node_options_t * options = rcl_node_get_options(node);
+  if (NULL == options) {
+    throw std::runtime_error("Need valid node options NodeParameters");
+  }
+
+  // TODO(sloretz) remove when circular dependency between rcl and rcl_yaml_param_parser is solved
+  // TODO(sloretz) Somehow need to get yaml parameters from RCL
+  const std::string yaml_path("/tmp/sloretz-test-params.yaml");
+  rcl_params_t * yaml_params = rcl_yaml_node_struct_init(options->allocator);
+  if (NULL == yaml_params) {
+    throw std::runtime_error("Failed to initialize yaml params struct");
+  }
+  if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params, options->allocator)) {
+    throw std::runtime_error("Failed to parse parameters " + yaml_path);
+  }
+
+  // Get namespace + node name
+  const std::string node_name = node_base->get_name();
+  const std::string node_namespace = node_base->get_namespace();
+  if (0u == node_namespace.size() || 0u == node_name.size()) {
+    // Should never happen
+    throw std::runtime_error("Node name and namespace were not set");
+  }
+  std::string combined_name;
+  if ('/' == node_namespace.at(node_namespace.size()-1)) {
+    combined_name = node_namespace + node_name;
+  } else {
+    combined_name = node_namespace + '/' + node_name;
+  }
+
+  // TODO(sloretz) should yaml param parser provide node names with a leading slash?
+  // Strip leading slash
+  combined_name.erase(combined_name.begin());
+
+  // Convert c structs into a list of parameters to set
+  std::vector<rclcpp::parameter::ParameterVariant> parameters;
+  for (size_t n = 0; n < yaml_params->num_nodes; ++n) {
+    if (combined_name != yaml_params->node_names[n]) {
+      continue;
+    }
+    const rcl_node_params_t * const params_node = &(yaml_params->params[n]);
+    for (size_t p = 0; p < params_node->num_params; ++p) {
+      const std::string param_name = params_node->parameter_names[p];
+      const rcl_variant_t * const param_value = &(params_node->parameter_values[p]);
+
+      if (param_value->bool_value) {
+        parameters.emplace_back(param_name, *(param_value->bool_value));
+      } else if (param_value->integer_value) {
+        parameters.emplace_back(param_name, *(param_value->integer_value));
+      } else if (param_value->double_value) {
+        parameters.emplace_back(param_name, *(param_value->double_value));
+      } else if (param_value->string_value) {
+        parameters.emplace_back(param_name, std::string(param_value->string_value));
+      } else if (param_value->byte_array_value) {
+        const rcl_byte_array_t * const byte_array = param_value->byte_array_value;
+        std::vector<uint8_t> bytes;
+        bytes.reserve(byte_array->size);
+        for (size_t v = 0; v < byte_array->size; ++v) {
+          bytes.push_back(byte_array->values[v]);
+        }
+        parameters.emplace_back(param_name, bytes);
+      } else if (param_value->bool_array_value) {
+        const rcl_bool_array_t * const bool_array = param_value->bool_array_value;
+        std::vector<bool> bools;
+        bools.reserve(bool_array->size);
+        for (size_t v = 0; v < bool_array->size; ++v) {
+          bools.push_back(bool_array->values[v]);
+        }
+        parameters.emplace_back(param_name, bools);
+      } else if (param_value->integer_array_value) {
+        const rcl_int64_array_t * const int_array = param_value->integer_array_value;
+        std::vector<int64_t> integers;
+        integers.reserve(int_array->size);
+        for (size_t v = 0; v < int_array->size; ++v) {
+          integers.push_back(int_array->values[v]);
+        }
+        parameters.emplace_back(param_name, integers);
+      } else if (param_value->double_array_value) {
+        const rcl_double_array_t * const double_array = param_value->double_array_value;
+        std::vector<double> doubles;
+        doubles.reserve(double_array->size);
+        for (size_t v = 0; v < double_array->size; ++v) {
+          doubles.push_back(double_array->values[v]);
+        }
+        parameters.emplace_back(param_name, doubles);
+      } else if (param_value->string_array_value) {
+        const rcutils_string_array_t * const string_array = param_value->string_array_value;
+        std::vector<std::string> strings;
+        strings.reserve(string_array->size);
+        for (size_t v = 0; v < string_array->size; ++v) {
+          strings.emplace_back(string_array->data[v]);
+        }
+        parameters.emplace_back(param_name, strings);
+      } else {
+        rcl_yaml_node_struct_fini(yaml_params, options->allocator);
+        throw std::runtime_error("Invalid parameter from parser");
+      }
+    }
+  }
+  rcl_yaml_node_struct_fini(yaml_params, options->allocator);
+
+  // Set the parameters
+  rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(parameters);
+  if (!result.successful) {
+    throw std::runtime_error("Failed to set initial parameters");
+  }
 }
 
 NodeParameters::~NodeParameters()
