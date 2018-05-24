@@ -28,9 +28,9 @@
 using rclcpp::node_interfaces::NodeParameters;
 
 NodeParameters::NodeParameters(
-  const node_interfaces::NodeBaseInterface::SharedPtr node_base,
-  const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
-  const node_interfaces::NodeServicesInterface::SharedPtr node_services,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
+  const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
   bool use_intra_process)
 : parameter_service_(std::make_shared<ParameterService>(node_base, node_services, this))
 {
