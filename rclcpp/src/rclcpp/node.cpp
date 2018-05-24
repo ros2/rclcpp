@@ -63,7 +63,9 @@ Node::Node(
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
-      node_topics_.get(),
+      node_base_,
+      node_topics_,
+      node_services_,
       use_intra_process_comms
     )),
   node_clock_(new rclcpp::node_interfaces::NodeClock(

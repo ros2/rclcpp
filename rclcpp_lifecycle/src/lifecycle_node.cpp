@@ -35,6 +35,7 @@
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/parameter_service.hpp"
 
 #include "lifecycle_node_interface_impl.hpp"  // implementation
 
@@ -69,7 +70,9 @@ LifecycleNode::LifecycleNode(
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
-      node_topics_.get(),
+      node_base_,
+      node_topics_,
+      node_services_,
       use_intra_process_comms
     )),
   node_clock_(new rclcpp::node_interfaces::NodeClock(

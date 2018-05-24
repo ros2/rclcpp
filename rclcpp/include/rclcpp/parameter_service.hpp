@@ -15,6 +15,7 @@
 #ifndef RCLCPP__PARAMETER_SERVICE_HPP_
 #define RCLCPP__PARAMETER_SERVICE_HPP_
 
+#include <memory>
 #include <string>
 
 #include "rcl_interfaces/srv/describe_parameters.hpp"
@@ -40,11 +41,12 @@ public:
 
   RCLCPP_PUBLIC
   explicit ParameterService(
-    const rclcpp::Node::SharedPtr node,
+    const std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
+    const std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
+    node_interfaces::NodeParametersInterface * node_params,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
 private:
-  const rclcpp::Node::SharedPtr node_;
   rclcpp::Service<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_service_;
   rclcpp::Service<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
     get_parameter_types_service_;

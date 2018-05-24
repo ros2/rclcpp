@@ -28,9 +28,11 @@
 using rclcpp::node_interfaces::NodeParameters;
 
 NodeParameters::NodeParameters(
-  rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
+  const node_interfaces::NodeBaseInterface::SharedPtr node_base,
+  const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
+  const node_interfaces::NodeServicesInterface::SharedPtr node_services,
   bool use_intra_process)
-: node_topics_(node_topics)
+: parameter_service_(std::make_shared<ParameterService>(node_base, node_services, this))
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::Publisher<MessageT>;
@@ -39,7 +41,7 @@ NodeParameters::NodeParameters(
   auto allocator = std::make_shared<AllocatorT>();
 
   events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
-    node_topics_,
+    node_topics.get(),
     "parameter_events",
     rmw_qos_profile_parameter_events,
     use_intra_process,
