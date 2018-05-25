@@ -155,15 +155,15 @@ AsyncParametersClient::get_parameters(
   return future_result;
 }
 
-std::shared_future<std::vector<rclcpp::parameter::ParameterType>>
+std::shared_future<std::vector<rclcpp::ParameterType>>
 AsyncParametersClient::get_parameter_types(
   const std::vector<std::string> & names,
   std::function<
-    void(std::shared_future<std::vector<rclcpp::parameter::ParameterType>>)
+    void(std::shared_future<std::vector<rclcpp::ParameterType>>)
   > callback)
 {
   auto promise_result =
-    std::make_shared<std::promise<std::vector<rclcpp::parameter::ParameterType>>>();
+    std::make_shared<std::promise<std::vector<rclcpp::ParameterType>>>();
   auto future_result = promise_result->get_future().share();
 
   auto request = std::make_shared<rcl_interfaces::srv::GetParameterTypes::Request>();
@@ -174,10 +174,10 @@ AsyncParametersClient::get_parameter_types(
     [promise_result, future_result, callback](
       rclcpp::Client<rcl_interfaces::srv::GetParameterTypes>::SharedFuture cb_f)
     {
-      std::vector<rclcpp::parameter::ParameterType> types;
+      std::vector<rclcpp::ParameterType> types;
       auto & pts = cb_f.get()->types;
       for (auto & pt : pts) {
-        pts.push_back(static_cast<rclcpp::parameter::ParameterType>(pt));
+        pts.push_back(static_cast<rclcpp::ParameterType>(pt));
       }
       promise_result->set_value(types);
       if (callback != nullptr) {
@@ -370,7 +370,7 @@ SyncParametersClient::has_parameter(const std::string & parameter_name)
   return vars.names.size() > 0;
 }
 
-std::vector<rclcpp::parameter::ParameterType>
+std::vector<rclcpp::ParameterType>
 SyncParametersClient::get_parameter_types(const std::vector<std::string> & parameter_names)
 {
   auto f = async_parameters_client_->get_parameter_types(parameter_names);
@@ -381,7 +381,7 @@ SyncParametersClient::get_parameter_types(const std::vector<std::string> & param
   {
     return f.get();
   }
-  return std::vector<rclcpp::parameter::ParameterType>();
+  return std::vector<rclcpp::ParameterType>();
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>

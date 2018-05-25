@@ -76,11 +76,11 @@ public:
     > callback = nullptr);
 
   RCLCPP_PUBLIC
-  std::shared_future<std::vector<rclcpp::parameter::ParameterType>>
+  std::shared_future<std::vector<rclcpp::ParameterType>>
   get_parameter_types(
     const std::vector<std::string> & names,
     std::function<
-      void(std::shared_future<std::vector<rclcpp::parameter::ParameterType>>)
+      void(std::shared_future<std::vector<rclcpp::ParameterType>>)
     > callback = nullptr);
 
   RCLCPP_PUBLIC
@@ -200,7 +200,7 @@ public:
     std::vector<std::string> names;
     names.push_back(parameter_name);
     auto vars = get_parameters(names);
-    if ((vars.size() != 1) || (vars[0].get_type() == rclcpp::parameter::PARAMETER_NOT_SET)) {
+    if ((vars.size() != 1) || (vars[0].get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET)) {
       return parameter_not_found_handler();
     } else {
       return static_cast<T>(vars[0].get_value<T>());
@@ -226,7 +226,7 @@ public:
   }
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::parameter::ParameterType>
+  std::vector<rclcpp::ParameterType>
   get_parameter_types(const std::vector<std::string> & parameter_names);
 
   RCLCPP_PUBLIC

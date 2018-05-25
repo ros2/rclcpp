@@ -349,7 +349,7 @@ TEST_F(TestTimeSource, parameter_activation) {
 
 
   set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
+    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::ParameterType::PARAMETER_NOT_SET)
   });
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
@@ -365,7 +365,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
+    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::ParameterType::PARAMETER_NOT_SET)
   });
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);

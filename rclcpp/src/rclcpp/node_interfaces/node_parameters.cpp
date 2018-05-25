@@ -89,11 +89,11 @@ NodeParameters::set_parameters_atomically(
 
   for (auto p : parameters) {
     if (parameters_.find(p.get_name()) == parameters_.end()) {
-      if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+      if (p.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
         // case: parameter not set before, and input is something other than "NOT_SET"
         parameter_event->new_parameters.push_back(p.to_parameter());
       }
-    } else if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+    } else if (p.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
       // case: parameter was set before, and input is something other than "NOT_SET"
       parameter_event->changed_parameters.push_back(p.to_parameter());
     } else {

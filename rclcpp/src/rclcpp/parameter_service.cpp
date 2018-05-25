@@ -57,7 +57,7 @@ ParameterService::ParameterService(
       auto types = node_params->get_parameter_types(request->names);
       std::transform(types.cbegin(), types.cend(),
       std::back_inserter(response->types), [](const uint8_t & type) {
-        return static_cast<rclcpp::parameter::ParameterType>(type);
+        return static_cast<rclcpp::ParameterType>(type);
       });
     },
     qos_profile, nullptr);

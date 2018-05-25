@@ -20,7 +20,7 @@
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/utilities.hpp"
 
-using rclcpp::parameter::ParameterType;
+using rclcpp::ParameterType;
 using rclcpp::parameter::ParameterVariant;
 
 ParameterVariant::ParameterVariant()
@@ -140,33 +140,7 @@ ParameterVariant::get_type() const
 std::string
 ParameterVariant::get_type_name() const
 {
-  switch (get_type()) {
-    case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
-      return "not set";
-    case rclcpp::parameter::ParameterType::PARAMETER_BOOL:
-      return "bool";
-    case rclcpp::parameter::ParameterType::PARAMETER_INTEGER:
-      return "integer";
-    case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE:
-      return "double";
-    case rclcpp::parameter::ParameterType::PARAMETER_STRING:
-      return "string";
-    case rclcpp::parameter::ParameterType::PARAMETER_BYTE_ARRAY:
-      return "byte_array";
-    case rclcpp::parameter::ParameterType::PARAMETER_BOOL_ARRAY:
-      return "bool_array";
-    case rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY:
-      return "integer_array";
-    case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY:
-      return "double_array";
-    case rclcpp::parameter::ParameterType::PARAMETER_STRING_ARRAY:
-      return "string_array";
-    default:
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        "Unexpected type from ParameterVariant: " + std::to_string(get_type()));
-      // *INDENT-ON*
-  }
+  return rclcpp::to_string(get_type());
 }
 
 const std::string &
@@ -281,25 +255,25 @@ std::string
 ParameterVariant::value_to_string() const
 {
   switch (get_type()) {
-    case rclcpp::parameter::ParameterType::PARAMETER_NOT_SET:
+    case ParameterType::PARAMETER_NOT_SET:
       return "not set";
-    case rclcpp::parameter::ParameterType::PARAMETER_BOOL:
+    case ParameterType::PARAMETER_BOOL:
       return as_bool() ? "true" : "false";
-    case rclcpp::parameter::ParameterType::PARAMETER_INTEGER:
+    case ParameterType::PARAMETER_INTEGER:
       return std::to_string(as_int());
-    case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE:
+    case ParameterType::PARAMETER_DOUBLE:
       return std::to_string(as_double());
-    case rclcpp::parameter::ParameterType::PARAMETER_STRING:
+    case ParameterType::PARAMETER_STRING:
       return as_string();
-    case rclcpp::parameter::ParameterType::PARAMETER_BYTE_ARRAY:
+    case ParameterType::PARAMETER_BYTE_ARRAY:
       return array_to_string<uint8_t, int>(as_byte_array(), std::ios::hex);
-    case rclcpp::parameter::ParameterType::PARAMETER_BOOL_ARRAY:
+    case ParameterType::PARAMETER_BOOL_ARRAY:
       return array_to_string(as_bool_array(), std::ios::boolalpha);
-    case rclcpp::parameter::ParameterType::PARAMETER_INTEGER_ARRAY:
+    case ParameterType::PARAMETER_INTEGER_ARRAY:
       return array_to_string(as_integer_array());
-    case rclcpp::parameter::ParameterType::PARAMETER_DOUBLE_ARRAY:
+    case ParameterType::PARAMETER_DOUBLE_ARRAY:
       return array_to_string(as_double_array());
-    case rclcpp::parameter::ParameterType::PARAMETER_STRING_ARRAY:
+    case ParameterType::PARAMETER_STRING_ARRAY:
       return array_to_string(as_string_array());
     default:
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)

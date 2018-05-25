@@ -58,6 +58,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/node_interfaces/node_timers.cpp
   src/rclcpp/node_interfaces/node_topics.cpp
   src/rclcpp/parameter.cpp
+  src/rclcpp/parameter_value.cpp
   src/rclcpp/parameter_client.cpp
   src/rclcpp/parameter_events_filter.cpp
   src/rclcpp/parameter_service.cpp
