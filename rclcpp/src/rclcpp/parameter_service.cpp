@@ -33,7 +33,7 @@ ParameterService::ParameterService(
 
   get_parameters_service_ = create_service<rcl_interfaces::srv::GetParameters>(
     node_base, node_services,
-    std::string(node_name) + "/" + parameter_service_names::get_parameters,
+    node_name + "/" + parameter_service_names::get_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::GetParameters::Request> request,
@@ -48,7 +48,7 @@ ParameterService::ParameterService(
 
   get_parameter_types_service_ = create_service<rcl_interfaces::srv::GetParameterTypes>(
     node_base, node_services,
-    std::string(node_name) + "/" + parameter_service_names::get_parameter_types,
+    node_name + "/" + parameter_service_names::get_parameter_types,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Request> request,
@@ -64,7 +64,7 @@ ParameterService::ParameterService(
 
   set_parameters_service_ = create_service<rcl_interfaces::srv::SetParameters>(
     node_base, node_services,
-    std::string(node_name) + "/" + parameter_service_names::set_parameters,
+    node_name + "/" + parameter_service_names::set_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::SetParameters::Request> request,
@@ -81,7 +81,7 @@ ParameterService::ParameterService(
 
   set_parameters_atomically_service_ = create_service<rcl_interfaces::srv::SetParametersAtomically>(
     node_base, node_services,
-    std::string(node_name) + "/" + parameter_service_names::set_parameters_atomically,
+    node_name + "/" + parameter_service_names::set_parameters_atomically,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Request> request,
@@ -100,7 +100,7 @@ ParameterService::ParameterService(
 
   describe_parameters_service_ = create_service<rcl_interfaces::srv::DescribeParameters>(
     node_base, node_services,
-    std::string(node_name) + "/" + parameter_service_names::describe_parameters,
+    node_name + "/" + parameter_service_names::describe_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Request> request,
@@ -113,7 +113,7 @@ ParameterService::ParameterService(
 
   list_parameters_service_ = create_service<rcl_interfaces::srv::ListParameters>(
     node_base, node_services,
-    std::string(node_name) + "/" + parameter_service_names::list_parameters,
+    node_name + "/" + parameter_service_names::list_parameters,
     [node_params](
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request> request,
