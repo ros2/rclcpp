@@ -31,14 +31,18 @@ NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-  bool use_intra_process)
-: parameter_service_(std::make_shared<ParameterService>(node_base, node_services, this))
+  bool use_intra_process,
+  bool start_parameter_services)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::Publisher<MessageT>;
   using AllocatorT = std::allocator<void>;
   // TODO(wjwwood): expose this allocator through the Parameter interface.
   auto allocator = std::make_shared<AllocatorT>();
+
+  if (start_parameter_services) {
+    parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, this);
+  }
 
   events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
     node_topics.get(),

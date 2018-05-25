@@ -51,7 +51,8 @@ public:
     const node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     const node_interfaces::NodeServicesInterface::SharedPtr node_services,
-    bool use_intra_process);
+    bool use_intra_process,
+    bool start_parameter_services);
 
   RCLCPP_PUBLIC
   virtual
