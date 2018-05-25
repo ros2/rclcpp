@@ -97,7 +97,8 @@ public:
     rclcpp::Context::SharedPtr context,
     const std::vector<std::string> & arguments,
     bool use_global_arguments = true,
-    bool use_intra_process_comms = false);
+    bool use_intra_process_comms = false,
+    bool start_parameter_services = true);
 
   RCLCPP_PUBLIC
   virtual ~Node();

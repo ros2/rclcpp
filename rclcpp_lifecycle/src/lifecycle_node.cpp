@@ -35,6 +35,7 @@
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/parameter_service.hpp"
 
 #include "lifecycle_node_interface_impl.hpp"  // implementation
 
@@ -51,7 +52,8 @@ LifecycleNode::LifecycleNode(
     rclcpp::contexts::default_context::get_global_default_context(),
     {},
     true,
-    use_intra_process_comms)
+    use_intra_process_comms,
+    true)
 {}
 
 LifecycleNode::LifecycleNode(
@@ -60,7 +62,8 @@ LifecycleNode::LifecycleNode(
   rclcpp::Context::SharedPtr context,
   const std::vector<std::string> & arguments,
   bool use_global_arguments,
-  bool use_intra_process_comms)
+  bool use_intra_process_comms,
+  bool start_parameter_services)
 : node_base_(new rclcpp::node_interfaces::NodeBase(
       node_name, namespace_, context, arguments, use_global_arguments)),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
@@ -69,8 +72,11 @@ LifecycleNode::LifecycleNode(
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
-      node_topics_.get(),
-      use_intra_process_comms
+      node_base_,
+      node_topics_,
+      node_services_,
+      use_intra_process_comms,
+      start_parameter_services
     )),
   node_clock_(new rclcpp::node_interfaces::NodeClock(
       node_base_,
