@@ -126,29 +126,6 @@ public:
   value_to_string() const;
 
 private:
-  template<typename ValType, typename PrintType = ValType>
-  std::string
-  array_to_string(
-    const std::vector<ValType> & array,
-    const std::ios::fmtflags format_flags = std::ios::dec) const
-  {
-    std::stringstream type_array;
-    bool first_item = true;
-    type_array << "[";
-    type_array.setf(format_flags, std::ios_base::basefield | std::ios::boolalpha);
-    type_array << std::showbase;
-    for (const ValType value : array) {
-      if (!first_item) {
-        type_array << ", ";
-      } else {
-        first_item = false;
-      }
-      type_array << static_cast<PrintType>(value);
-    }
-    type_array << "]";
-    return type_array.str();
-  }
-
   std::string name_;
   ParameterValue value_;
 };
