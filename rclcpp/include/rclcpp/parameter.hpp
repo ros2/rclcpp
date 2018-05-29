@@ -22,11 +22,8 @@
 #include <vector>
 
 #include "rcl_interfaces/msg/parameter.hpp"
-#include "rcl_interfaces/msg/parameter_type.hpp"
-#include "rcl_interfaces/msg/parameter_value.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rmw/rmw.h"
 
 namespace rclcpp
 {
