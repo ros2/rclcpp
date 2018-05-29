@@ -24,6 +24,12 @@
 
 class TestSubscription : public ::testing::Test
 {
+public:
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
+
 protected:
   static void SetUpTestCase()
   {
@@ -114,5 +120,14 @@ TEST_F(TestSubscription, callback_bind) {
     // Member callback for class inheriting from rclcpp::Node
     SubscriptionClassNodeInheritance subscriptionObject;
     subscriptionObject.CreateSubscription();
+  }
+  {
+    // This gives the following error with gcc 7:
+    // "decltype cannot resolve address of overloaded function"
+    /*
+    // Member callback for class inheriting from testing::Test
+    auto callback = std::bind(&TestSubscription::OnMessage, this, std::placeholders::_1);
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", callback);
+    */
   }
 }
