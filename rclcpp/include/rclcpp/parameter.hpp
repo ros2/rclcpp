@@ -119,7 +119,7 @@ public:
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::Parameter
-  to_parameter();
+  to_parameter() const;
 
   RCLCPP_PUBLIC
   std::string

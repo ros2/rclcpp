@@ -118,7 +118,7 @@ Parameter::from_parameter(const rcl_interfaces::msg::Parameter & parameter)
 }
 
 rcl_interfaces::msg::Parameter
-Parameter::to_parameter()
+Parameter::to_parameter() const
 {
   rcl_interfaces::msg::Parameter parameter;
   parameter.name = name_;
