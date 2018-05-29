@@ -32,7 +32,7 @@ protected:
 
   void SetUp()
   {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns");
   }
 
   void TearDown()
@@ -41,6 +41,44 @@ protected:
   }
 
   rclcpp::Node::SharedPtr node;
+};
+
+class SubscriptionClassNodeInheritance : public rclcpp::Node
+{
+public:
+  SubscriptionClassNodeInheritance()
+  : Node("subscription_class_node_inheritance")
+  {
+  }
+
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
+
+  void CreateSubscription()
+  {
+    auto callback = std::bind(&SubscriptionClassNodeInheritance::OnMessage, this, std::placeholders::_1);
+    using rcl_interfaces::msg::IntraProcessMessage;
+    auto sub = this->create_subscription<IntraProcessMessage>("topic", callback);
+  }
+};
+
+class SubscriptionClass
+{
+public:
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
+
+  void CreateSubscription()
+  {
+    auto node = std::make_shared<rclcpp::Node>("test_subscription_member_callback", "/ns");
+    auto callback = std::bind(&SubscriptionClass::OnMessage, this, std::placeholders::_1);
+    using rcl_interfaces::msg::IntraProcessMessage;
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", callback);
+  }
 };
 
 /*
@@ -59,5 +97,22 @@ TEST_F(TestSubscription, construction_and_destruction) {
     ASSERT_THROW({
       auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", callback);
     }, rclcpp::exceptions::InvalidTopicNameError);
+  }
+}
+
+/*
+   Testing subscriptions using std::bind.
+ */
+TEST_F(TestSubscription, callback_bind) {
+  using rcl_interfaces::msg::IntraProcessMessage;
+  {
+    // Member callback for plain class
+    SubscriptionClass subscriptionObject;
+    subscriptionObject.CreateSubscription();
+  }
+  {
+    // Member callback for class inheriting from rclcpp::Node
+    SubscriptionClassNodeInheritance subscriptionObject;
+    subscriptionObject.CreateSubscription();
   }
 }
