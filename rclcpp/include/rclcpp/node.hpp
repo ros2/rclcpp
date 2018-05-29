@@ -256,11 +256,11 @@ public:
 
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  set_parameters(const std::vector<rclcpp::Parameter> & parameters);
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
   template<typename ParameterT>
   void
@@ -269,18 +269,18 @@ public:
     const ParameterT & value);
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::parameter::ParameterVariant>
+  std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
 
   RCLCPP_PUBLIC
-  rclcpp::parameter::ParameterVariant
+  rclcpp::Parameter
   get_parameter(const std::string & name) const;
 
   RCLCPP_PUBLIC
   bool
   get_parameter(
     const std::string & name,
-    rclcpp::parameter::ParameterVariant & parameter) const;
+    rclcpp::Parameter & parameter) const;
 
   /// Assign the value of the parameter if set into the parameter argument.
   /**

@@ -68,11 +68,11 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
-  std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
+  std::shared_future<std::vector<rclcpp::Parameter>>
   get_parameters(
     const std::vector<std::string> & names,
     std::function<
-      void(std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>)
+      void(std::shared_future<std::vector<rclcpp::Parameter>>)
     > callback = nullptr);
 
   RCLCPP_PUBLIC
@@ -86,7 +86,7 @@ public:
   RCLCPP_PUBLIC
   std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
   set_parameters(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
+    const std::vector<rclcpp::Parameter> & parameters,
     std::function<
       void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
     > callback = nullptr);
@@ -94,7 +94,7 @@ public:
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::SetParametersResult>
   set_parameters_atomically(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
+    const std::vector<rclcpp::Parameter> & parameters,
     std::function<
       void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)
     > callback = nullptr);
@@ -185,7 +185,7 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::parameter::ParameterVariant>
+  std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & parameter_names);
 
   RCLCPP_PUBLIC
@@ -231,11 +231,11 @@ public:
 
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  set_parameters(const std::vector<rclcpp::Parameter> & parameters);
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult

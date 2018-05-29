@@ -62,22 +62,22 @@ public:
   virtual
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+    const std::vector<rclcpp::Parameter> & parameters);
 
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+    const std::vector<rclcpp::Parameter> & parameters);
 
   RCLCPP_PUBLIC
   virtual
-  std::vector<rclcpp::parameter::ParameterVariant>
+  std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::parameter::ParameterVariant
+  rclcpp::Parameter
   get_parameter(const std::string & name) const;
 
   RCLCPP_PUBLIC
@@ -85,7 +85,7 @@ public:
   bool
   get_parameter(
     const std::string & name,
-    rclcpp::parameter::ParameterVariant & parameter) const;
+    rclcpp::Parameter & parameter) const;
 
   RCLCPP_PUBLIC
   virtual
@@ -114,7 +114,7 @@ private:
 
   ParametersCallbackFunction parameters_callback_ = nullptr;
 
-  std::map<std::string, rclcpp::parameter::ParameterVariant> parameters_;
+  std::map<std::string, rclcpp::Parameter> parameters_;
 
   Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 

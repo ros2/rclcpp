@@ -70,9 +70,9 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::SetParameters::Request> request,
       std::shared_ptr<rcl_interfaces::srv::SetParameters::Response> response)
     {
-      std::vector<rclcpp::parameter::ParameterVariant> pvariants;
+      std::vector<rclcpp::Parameter> pvariants;
       for (auto & p : request->parameters) {
-        pvariants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(p));
+        pvariants.push_back(rclcpp::Parameter::from_parameter(p));
       }
       auto results = node_params->set_parameters(pvariants);
       response->results = results;
@@ -87,11 +87,11 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Request> request,
       std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Response> response)
     {
-      std::vector<rclcpp::parameter::ParameterVariant> pvariants;
+      std::vector<rclcpp::Parameter> pvariants;
       std::transform(request->parameters.cbegin(), request->parameters.cend(),
       std::back_inserter(pvariants),
       [](const rcl_interfaces::msg::Parameter & p) {
-        return rclcpp::parameter::ParameterVariant::from_parameter(p);
+        return rclcpp::Parameter::from_parameter(p);
       });
       auto result = node_params->set_parameters_atomically(pvariants);
       response->result = result;

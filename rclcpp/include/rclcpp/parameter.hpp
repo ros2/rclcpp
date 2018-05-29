@@ -27,23 +27,21 @@
 
 namespace rclcpp
 {
-namespace parameter
-{
 
 // Structure to store an arbitrary parameter with templated get/set methods
-class ParameterVariant
+class Parameter
 {
 public:
   RCLCPP_PUBLIC
-  ParameterVariant();
+  Parameter();
 
   RCLCPP_PUBLIC
-  ParameterVariant(const std::string & name, const ParameterValue & value);
+  Parameter(const std::string & name, const ParameterValue & value);
 
   template<typename ValueTypeT>
   RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, ValueTypeT value)
-  : ParameterVariant(name, ParameterValue(value))
+  explicit Parameter(const std::string & name, ValueTypeT value)
+  : Parameter(name, ParameterValue(value))
   {
   }
 
@@ -116,7 +114,7 @@ public:
   as_string_array() const;
 
   RCLCPP_PUBLIC
-  static ParameterVariant
+  static Parameter
   from_parameter(const rcl_interfaces::msg::Parameter & parameter);
 
   RCLCPP_PUBLIC
@@ -158,17 +156,16 @@ private:
 /// Return a json encoded version of the parameter intended for a dict.
 RCLCPP_PUBLIC
 std::string
-_to_json_dict_entry(const ParameterVariant & param);
+_to_json_dict_entry(const Parameter & param);
 
 RCLCPP_PUBLIC
 std::ostream &
-operator<<(std::ostream & os, const rclcpp::parameter::ParameterVariant & pv);
+operator<<(std::ostream & os, const rclcpp::Parameter & pv);
 
 RCLCPP_PUBLIC
 std::ostream &
-operator<<(std::ostream & os, const std::vector<ParameterVariant> & parameters);
+operator<<(std::ostream & os, const std::vector<Parameter> & parameters);
 
-}  // namespace parameter
 }  // namespace rclcpp
 
 namespace std
@@ -177,12 +174,12 @@ namespace std
 /// Return a json encoded version of the parameter intended for a list.
 RCLCPP_PUBLIC
 std::string
-to_string(const rclcpp::parameter::ParameterVariant & param);
+to_string(const rclcpp::Parameter & param);
 
 /// Return a json encoded version of a vector of parameters, as a string.
 RCLCPP_PUBLIC
 std::string
-to_string(const std::vector<rclcpp::parameter::ParameterVariant> & parameters);
+to_string(const std::vector<rclcpp::Parameter> & parameters);
 
 }  // namespace std
 

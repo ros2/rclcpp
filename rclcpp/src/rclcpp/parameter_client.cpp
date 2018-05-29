@@ -114,15 +114,15 @@ AsyncParametersClient::AsyncParametersClient(
     qos_profile)
 {}
 
-std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>
+std::shared_future<std::vector<rclcpp::Parameter>>
 AsyncParametersClient::get_parameters(
   const std::vector<std::string> & names,
   std::function<
-    void(std::shared_future<std::vector<rclcpp::parameter::ParameterVariant>>)
+    void(std::shared_future<std::vector<rclcpp::Parameter>>)
   > callback)
 {
   auto promise_result =
-    std::make_shared<std::promise<std::vector<rclcpp::parameter::ParameterVariant>>>();
+    std::make_shared<std::promise<std::vector<rclcpp::Parameter>>>();
   auto future_result = promise_result->get_future().share();
 
   auto request = std::make_shared<rcl_interfaces::srv::GetParameters::Request>();
@@ -133,7 +133,7 @@ AsyncParametersClient::get_parameters(
     [request, promise_result, future_result, callback](
       rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f)
     {
-      std::vector<rclcpp::parameter::ParameterVariant> parameter_variants;
+      std::vector<rclcpp::Parameter> parameters;
       auto & pvalues = cb_f.get()->values;
 
       for (auto & pvalue : pvalues) {
@@ -141,11 +141,11 @@ AsyncParametersClient::get_parameters(
         rcl_interfaces::msg::Parameter parameter;
         parameter.name = request->names[i];
         parameter.value = pvalue;
-        parameter_variants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(
+        parameters.push_back(rclcpp::Parameter::from_parameter(
           parameter));
       }
 
-      promise_result->set_value(parameter_variants);
+      promise_result->set_value(parameters);
       if (callback != nullptr) {
         callback(future_result);
       }
@@ -191,7 +191,7 @@ AsyncParametersClient::get_parameter_types(
 
 std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>
 AsyncParametersClient::set_parameters(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
+  const std::vector<rclcpp::Parameter> & parameters,
   std::function<
     void(std::shared_future<std::vector<rcl_interfaces::msg::SetParametersResult>>)
   > callback)
@@ -203,7 +203,7 @@ AsyncParametersClient::set_parameters(
   auto request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
 
   std::transform(parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
-    [](rclcpp::parameter::ParameterVariant p) {
+    [](rclcpp::Parameter p) {
       return p.to_parameter();
     }
   );
@@ -225,7 +225,7 @@ AsyncParametersClient::set_parameters(
 
 std::shared_future<rcl_interfaces::msg::SetParametersResult>
 AsyncParametersClient::set_parameters_atomically(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters,
+  const std::vector<rclcpp::Parameter> & parameters,
   std::function<
     void(std::shared_future<rcl_interfaces::msg::SetParametersResult>)
   > callback)
@@ -237,7 +237,7 @@ AsyncParametersClient::set_parameters_atomically(
   auto request = std::make_shared<rcl_interfaces::srv::SetParametersAtomically::Request>();
 
   std::transform(parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
-    [](rclcpp::parameter::ParameterVariant p) {
+    [](rclcpp::Parameter p) {
       return p.to_parameter();
     }
   );
@@ -347,7 +347,7 @@ SyncParametersClient::SyncParametersClient(
     std::make_shared<AsyncParametersClient>(node, remote_node_name, qos_profile);
 }
 
-std::vector<rclcpp::parameter::ParameterVariant>
+std::vector<rclcpp::Parameter>
 SyncParametersClient::get_parameters(const std::vector<std::string> & parameter_names)
 {
   auto f = async_parameters_client_->get_parameters(parameter_names);
@@ -358,7 +358,7 @@ SyncParametersClient::get_parameters(const std::vector<std::string> & parameter_
     return f.get();
   }
   // Return an empty vector if unsuccessful
-  return std::vector<rclcpp::parameter::ParameterVariant>();
+  return std::vector<rclcpp::Parameter>();
 }
 
 bool
@@ -386,7 +386,7 @@ SyncParametersClient::get_parameter_types(const std::vector<std::string> & param
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 SyncParametersClient::set_parameters(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   auto f = async_parameters_client_->set_parameters(parameters);
 
@@ -401,7 +401,7 @@ SyncParametersClient::set_parameters(
 
 rcl_interfaces::msg::SetParametersResult
 SyncParametersClient::set_parameters_atomically(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   auto f = async_parameters_client_->set_parameters_atomically(parameters);
 

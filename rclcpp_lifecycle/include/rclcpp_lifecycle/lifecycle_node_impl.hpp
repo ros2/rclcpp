@@ -186,9 +186,9 @@ template<typename ParameterT>
 bool
 LifecycleNode::get_parameter(const std::string & name, ParameterT & parameter) const
 {
-  rclcpp::parameter::ParameterVariant parameter_variant(name, parameter);
-  bool result = get_parameter(name, parameter_variant);
-  parameter = parameter_variant.get_value<ParameterT>();
+  rclcpp::Parameter param(name, parameter);
+  bool result = get_parameter(name, param);
+  parameter = param.get_value<ParameterT>();
 
   return result;
 }

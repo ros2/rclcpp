@@ -41,22 +41,22 @@ public:
   virtual
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters) = 0;
+    const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
-    const std::vector<rclcpp::parameter::ParameterVariant> & parameters) = 0;
+    const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   RCLCPP_PUBLIC
   virtual
-  std::vector<rclcpp::parameter::ParameterVariant>
+  std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const = 0;
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::parameter::ParameterVariant
+  rclcpp::Parameter
   get_parameter(const std::string & name) const = 0;
 
   RCLCPP_PUBLIC
@@ -64,7 +64,7 @@ public:
   bool
   get_parameter(
     const std::string & name,
-    rclcpp::parameter::ParameterVariant & parameter) const = 0;
+    rclcpp::Parameter & parameter) const = 0;
 
   RCLCPP_PUBLIC
   virtual
@@ -83,7 +83,7 @@ public:
 
   using ParametersCallbackFunction = std::function<
     rcl_interfaces::msg::SetParametersResult(
-      const std::vector<rclcpp::parameter::ParameterVariant> &)>;
+      const std::vector<rclcpp::Parameter> &)>;
 
   RCLCPP_PUBLIC
   virtual
