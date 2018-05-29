@@ -102,23 +102,23 @@ rclcpp::to_string(const ParameterValue & value)
     case ParameterType::PARAMETER_NOT_SET:
       return "not set";
     case ParameterType::PARAMETER_BOOL:
-      return value.as_bool() ? "true" : "false";
+      return value.get<bool>() ? "true" : "false";
     case ParameterType::PARAMETER_INTEGER:
-      return std::to_string(value.as_int());
+      return std::to_string(value.get<int>());
     case ParameterType::PARAMETER_DOUBLE:
-      return std::to_string(value.as_double());
+      return std::to_string(value.get<double>());
     case ParameterType::PARAMETER_STRING:
-      return value.as_string();
+      return value.get<std::string>();
     case ParameterType::PARAMETER_BYTE_ARRAY:
-      return array_to_string<uint8_t, int>(value.as_byte_array(), std::ios::hex);
+      return array_to_string<uint8_t, int>(value.get<std::vector<uint8_t>>(), std::ios::hex);
     case ParameterType::PARAMETER_BOOL_ARRAY:
-      return array_to_string(value.as_bool_array(), std::ios::boolalpha);
+      return array_to_string(value.get<std::vector<bool>>(), std::ios::boolalpha);
     case ParameterType::PARAMETER_INTEGER_ARRAY:
-      return array_to_string(value.as_integer_array());
+      return array_to_string(value.get<std::vector<int64_t>>());
     case ParameterType::PARAMETER_DOUBLE_ARRAY:
-      return array_to_string(value.as_double_array());
+      return array_to_string(value.get<std::vector<double>>());
     case ParameterType::PARAMETER_STRING_ARRAY:
-      return array_to_string(value.as_string_array());
+      return array_to_string(value.get<std::vector<std::string>>());
     default:
       return "unknown type";
   }
@@ -243,58 +243,4 @@ rcl_interfaces::msg::ParameterValue
 ParameterValue::get_value_message() const
 {
   return value_;
-}
-
-bool
-ParameterValue::as_bool() const
-{
-  return get<ParameterType::PARAMETER_BOOL>();
-}
-
-int64_t
-ParameterValue::as_int() const
-{
-  return get<ParameterType::PARAMETER_INTEGER>();
-}
-
-double
-ParameterValue::as_double() const
-{
-  return get<ParameterType::PARAMETER_DOUBLE>();
-}
-
-const std::string &
-ParameterValue::as_string() const
-{
-  return get<ParameterType::PARAMETER_STRING>();
-}
-
-const std::vector<uint8_t> &
-ParameterValue::as_byte_array() const
-{
-  return get<ParameterType::PARAMETER_BYTE_ARRAY>();
-}
-
-const std::vector<bool> &
-ParameterValue::as_bool_array() const
-{
-  return get<ParameterType::PARAMETER_BOOL_ARRAY>();
-}
-
-const std::vector<int64_t> &
-ParameterValue::as_integer_array() const
-{
-  return get<ParameterType::PARAMETER_INTEGER_ARRAY>();
-}
-
-const std::vector<double> &
-ParameterValue::as_double_array() const
-{
-  return get<ParameterType::PARAMETER_DOUBLE_ARRAY>();
-}
-
-const std::vector<std::string> &
-ParameterValue::as_string_array() const
-{
-  return get<ParameterType::PARAMETER_STRING_ARRAY>();
 }

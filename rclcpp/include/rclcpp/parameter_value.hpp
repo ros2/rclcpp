@@ -297,42 +297,6 @@ public:
     return get<ParameterType::PARAMETER_STRING_ARRAY>();
   }
 
-  RCLCPP_PUBLIC
-  bool
-  as_bool() const;
-
-  RCLCPP_PUBLIC
-  int64_t
-  as_int() const;
-
-  RCLCPP_PUBLIC
-  double
-  as_double() const;
-
-  RCLCPP_PUBLIC
-  const std::string &
-  as_string() const;
-
-  RCLCPP_PUBLIC
-  const std::vector<uint8_t> &
-  as_byte_array() const;
-
-  RCLCPP_PUBLIC
-  const std::vector<bool> &
-  as_bool_array() const;
-
-  RCLCPP_PUBLIC
-  const std::vector<int64_t> &
-  as_integer_array() const;
-
-  RCLCPP_PUBLIC
-  const std::vector<double> &
-  as_double_array() const;
-
-  RCLCPP_PUBLIC
-  const std::vector<std::string> &
-  as_string_array() const;
-
 private:
   rcl_interfaces::msg::ParameterValue value_;
 };
