@@ -121,7 +121,7 @@ public:
   /// Return a message populated with the parameter value
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ParameterValue
-  get_value_message() const;
+  get_message() const;
 
   // The following get() variants require the use of ParameterType
 

@@ -240,7 +240,7 @@ ParameterValue::get_type() const
 }
 
 rcl_interfaces::msg::ParameterValue
-ParameterValue::get_value_message() const
+ParameterValue::get_message() const
 {
   return value_;
 }

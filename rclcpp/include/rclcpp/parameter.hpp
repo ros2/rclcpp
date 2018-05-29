@@ -61,7 +61,7 @@ public:
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ParameterValue
-  get_parameter_value() const;
+  get_value_message() const;
 
   /// Get value of parameter using rclcpp::ParameterType as template argument.
   template<ParameterType ParamT>

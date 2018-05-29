@@ -41,7 +41,7 @@ ParameterService::ParameterService(
     {
       auto values = node_params->get_parameters(request->names);
       for (auto & pvariant : values) {
-        response->values.push_back(pvariant.get_parameter_value());
+        response->values.push_back(pvariant.get_value_message());
       }
     },
     qos_profile, nullptr);

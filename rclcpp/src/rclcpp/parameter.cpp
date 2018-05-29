@@ -52,9 +52,9 @@ ParameterVariant::get_name() const
 }
 
 rcl_interfaces::msg::ParameterValue
-ParameterVariant::get_parameter_value() const
+ParameterVariant::get_value_message() const
 {
-  return value_.get_value_message();
+  return value_.get_message();
 }
 
 bool
@@ -122,7 +122,7 @@ ParameterVariant::to_parameter()
 {
   rcl_interfaces::msg::Parameter parameter;
   parameter.name = name_;
-  parameter.value = value_.get_value_message();
+  parameter.value = value_.get_message();
   return parameter;
 }
 
