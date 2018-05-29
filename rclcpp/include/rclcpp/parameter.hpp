@@ -39,48 +39,16 @@ class ParameterVariant
 public:
   RCLCPP_PUBLIC
   ParameterVariant();
+
   RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const bool bool_value);
+  ParameterVariant(const std::string & name, const ParameterValue & value);
+
+  template<typename ValueTypeT>
   RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const int int_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const int64_t int_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const float double_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const double double_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const std::string & string_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(const std::string & name, const char * string_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(
-    const std::string & name,
-    const std::vector<uint8_t> & byte_array_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(
-    const std::string & name,
-    const std::vector<bool> & bool_array_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(
-    const std::string & name,
-    const std::vector<int> & int_array_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(
-    const std::string & name,
-    const std::vector<int64_t> & int_array_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(
-    const std::string & name,
-    const std::vector<float> & double_array_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(
-    const std::string & name,
-    const std::vector<double> & double_array_value);
-  RCLCPP_PUBLIC
-  explicit ParameterVariant(
-    const std::string & name,
-    const std::vector<std::string> & string_array_value);
+  explicit ParameterVariant(const std::string & name, ValueTypeT value)
+  : ParameterVariant(name, ParameterValue(value))
+  {
+  }
 
   RCLCPP_PUBLIC
   ParameterType
@@ -98,186 +66,20 @@ public:
   rcl_interfaces::msg::ParameterValue
   get_parameter_value() const;
 
-  // The following get_value() variants require the use of ParameterType
-
-  template<ParameterType type>
-  typename std::enable_if<type == ParameterType::PARAMETER_BOOL, bool>::type
+  /// Get value of parameter using rclcpp::ParameterType as template argument.
+  template<ParameterType ParamT>
+  decltype(ParameterValue().get<ParamT>())
   get_value() const
   {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BOOL) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.bool_value;
+    return value_.get<ParamT>();
   }
 
-  template<ParameterType type>
-  typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, int64_t>::type
+  /// Get value of parameter using c++ types as template argument
+  template<typename T>
+  decltype(ParameterValue().get<T>())
   get_value() const
   {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.integer_value;
-  }
-
-  template<ParameterType type>
-  typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, double>::type
-  get_value() const
-  {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.double_value;
-  }
-
-  template<ParameterType type>
-  typename std::enable_if<type == ParameterType::PARAMETER_STRING, const std::string &>::type
-  get_value() const
-  {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_STRING) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.string_value;
-  }
-
-  template<ParameterType type>
-  typename std::enable_if<
-    type == ParameterType::PARAMETER_BYTE_ARRAY, const std::vector<uint8_t> &>::type
-  get_value() const
-  {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.byte_array_value;
-  }
-
-  template<ParameterType type>
-  typename std::enable_if<
-    type == ParameterType::PARAMETER_BOOL_ARRAY, const std::vector<bool> &>::type
-  get_value() const
-  {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.bool_array_value;
-  }
-
-  template<ParameterType type>
-  typename std::enable_if<
-    type == ParameterType::PARAMETER_INTEGER_ARRAY, const std::vector<int64_t> &>::type
-  get_value() const
-  {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.integer_array_value;
-  }
-
-  template<ParameterType type>
-  typename std::enable_if<
-    type == ParameterType::PARAMETER_DOUBLE_ARRAY, const std::vector<double> &>::type
-  get_value() const
-  {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.double_array_value;
-  }
-
-  template<ParameterType type>
-  typename std::enable_if<
-    type == ParameterType::PARAMETER_STRING_ARRAY, const std::vector<std::string> &>::type
-  get_value() const
-  {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY) {
-      // TODO(wjwwood): use custom exception
-      throw std::runtime_error("Invalid type");
-    }
-    return value_.string_array_value;
-  }
-
-  // The following get_value() variants allow the use of primitive types
-
-  template<typename type>
-  typename std::enable_if<std::is_same<type, bool>::value, bool>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_BOOL>();
-  }
-
-  template<typename type>
-  typename std::enable_if<
-    std::is_integral<type>::value && !std::is_same<type, bool>::value, int64_t>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_INTEGER>();
-  }
-
-  template<typename type>
-  typename std::enable_if<std::is_floating_point<type>::value, double>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_DOUBLE>();
-  }
-
-  template<typename type>
-  typename std::enable_if<std::is_convertible<type, std::string>::value, const std::string &>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_STRING>();
-  }
-
-  template<typename type>
-  typename std::enable_if<
-    std::is_convertible<
-      type, const std::vector<uint8_t> &>::value, const std::vector<uint8_t> &>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_BYTE_ARRAY>();
-  }
-
-  template<typename type>
-  typename std::enable_if<
-    std::is_convertible<
-      type, const std::vector<bool> &>::value, const std::vector<bool> &>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_BOOL_ARRAY>();
-  }
-
-  template<typename type>
-  typename std::enable_if<
-    std::is_convertible<
-      type, const std::vector<int64_t> &>::value, const std::vector<int64_t> &>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_INTEGER_ARRAY>();
-  }
-
-  template<typename type>
-  typename std::enable_if<
-    std::is_convertible<
-      type, const std::vector<double> &>::value, const std::vector<double> &>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_DOUBLE_ARRAY>();
-  }
-
-  template<typename type>
-  typename std::enable_if<
-    std::is_convertible<
-      type, const std::vector<std::string> &>::value, const std::vector<std::string> &>::type
-  get_value() const
-  {
-    return get_value<ParameterType::PARAMETER_STRING_ARRAY>();
+    return value_.get<T>();
   }
 
   RCLCPP_PUBLIC
@@ -352,14 +154,8 @@ private:
     return type_array.str();
   }
 
-  template<typename OutputType, typename InputType>
-  void vector_assign(OutputType & output, const InputType & input)
-  {
-    output.assign(input.begin(), input.end());
-  }
-
   std::string name_;
-  rcl_interfaces::msg::ParameterValue value_;
+  ParameterValue value_;
 };
 
 /// Return a json encoded version of the parameter intended for a dict.

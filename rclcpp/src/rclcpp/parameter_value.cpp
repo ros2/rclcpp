@@ -96,7 +96,7 @@ array_to_string(
 }
 
 std::string
-to_string(const ParameterValue & value)
+rclcpp::to_string(const ParameterValue & value)
 {
   switch (value.get_type()) {
     case ParameterType::PARAMETER_NOT_SET:
@@ -127,6 +127,28 @@ to_string(const ParameterValue & value)
 ParameterValue::ParameterValue()
 {
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET;
+}
+
+ParameterValue::ParameterValue(const rcl_interfaces::msg::ParameterValue & value)
+{
+  value_ = value;
+  switch (value.type) {
+    case PARAMETER_BOOL:
+    case PARAMETER_INTEGER:
+    case PARAMETER_DOUBLE:
+    case PARAMETER_STRING:
+    case PARAMETER_BYTE_ARRAY:
+    case PARAMETER_BOOL_ARRAY:
+    case PARAMETER_INTEGER_ARRAY:
+    case PARAMETER_DOUBLE_ARRAY:
+    case PARAMETER_STRING_ARRAY:
+      break;
+    case PARAMETER_NOT_SET:
+      throw std::runtime_error("Type from ParameterValue is not set");
+    default:
+      // TODO(wjwwood): use custom exception
+      throw std::runtime_error("Unknown type: " + std::to_string(value.type));
+  }
 }
 
 ParameterValue::ParameterValue(const bool bool_value)
@@ -193,9 +215,9 @@ ParameterValue::ParameterValue(const std::vector<int64_t> & int_array_value)
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
 }
 
-ParameterValue::ParameterValue(const std::vector<float> & double_array_value)
+ParameterValue::ParameterValue(const std::vector<float> & float_array_value)
 {
-  value_.integer_array_value.assign(double_array_value.cbegin(), double_array_value.cend());
+  value_.double_array_value.assign(float_array_value.cbegin(), float_array_value.cend());
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY;
 }
 

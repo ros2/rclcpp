@@ -38,15 +38,15 @@ TEST(TestParameter, not_set_variant) {
   EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, not_set_variant.get_type());
   EXPECT_EQ("not set", not_set_variant.get_type_name());
 
-  EXPECT_THROW(not_set_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(not_set_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(not_set_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(not_set_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   rcl_interfaces::msg::Parameter not_set_param = not_set_variant.to_parameter();
   EXPECT_EQ("", not_set_param.name);
@@ -69,14 +69,14 @@ TEST(TestParameter, bool_variant) {
     bool_variant_true.get_parameter_value().type);
   EXPECT_TRUE(bool_variant_true.as_bool());
 
-  EXPECT_THROW(bool_variant_true.as_int(), std::runtime_error);
-  EXPECT_THROW(bool_variant_true.as_double(), std::runtime_error);
-  EXPECT_THROW(bool_variant_true.as_string(), std::runtime_error);
-  EXPECT_THROW(bool_variant_true.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(bool_variant_true.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(bool_variant_true.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(bool_variant_true.as_double_array(), std::runtime_error);
-  EXPECT_THROW(bool_variant_true.as_string_array(), std::runtime_error);
+  EXPECT_THROW(bool_variant_true.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_variant_true.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_variant_true.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_variant_true.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_variant_true.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_variant_true.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_variant_true.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_variant_true.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("true", bool_variant_true.value_to_string());
 
@@ -126,14 +126,14 @@ TEST(TestParameter, integer_variant) {
     integer_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, integer_variant.as_int());
 
-  EXPECT_THROW(integer_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(integer_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(integer_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(integer_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(integer_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(integer_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(integer_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(integer_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(integer_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("42", integer_variant.value_to_string());
 
@@ -170,14 +170,14 @@ TEST(TestParameter, long_integer_variant) {
     long_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, long_variant.as_int());
 
-  EXPECT_THROW(long_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(long_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(long_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(long_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(long_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(long_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(long_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(long_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(long_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("9223372036854775807", long_variant.value_to_string());
 
@@ -214,14 +214,14 @@ TEST(TestParameter, float_variant) {
     float_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, float_variant.as_double());
 
-  EXPECT_THROW(float_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(float_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(float_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(float_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(float_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(float_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(float_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(float_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(float_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("42.000000", float_variant.value_to_string());
 
@@ -258,14 +258,14 @@ TEST(TestParameter, double_variant) {
     double_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, double_variant.as_double());
 
-  EXPECT_THROW(double_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(double_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(double_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(double_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(double_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(double_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(double_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(double_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(double_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("-42.100000", double_variant.value_to_string());
 
@@ -302,14 +302,14 @@ TEST(TestParameter, string_variant) {
     string_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, string_variant.as_string());
 
-  EXPECT_THROW(string_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(string_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(string_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(string_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(string_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(string_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(string_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(string_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(string_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ(TEST_VALUE, string_variant.value_to_string());
 
@@ -345,14 +345,14 @@ TEST(TestParameter, byte_array_variant) {
     byte_array_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, byte_array_variant.as_byte_array());
 
-  EXPECT_THROW(byte_array_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(byte_array_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(byte_array_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(byte_array_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(byte_array_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(byte_array_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(byte_array_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(byte_array_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(byte_array_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(byte_array_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(byte_array_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(byte_array_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(byte_array_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(byte_array_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(byte_array_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(byte_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("[0x52, 0x4f, 0x53, 0x32]", byte_array_variant.value_to_string());
 
@@ -389,14 +389,14 @@ TEST(TestParameter, bool_array_variant) {
     bool_array_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, bool_array_variant.as_bool_array());
 
-  EXPECT_THROW(bool_array_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(bool_array_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(bool_array_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(bool_array_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(bool_array_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(bool_array_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(bool_array_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(bool_array_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(bool_array_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_array_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_array_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_array_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_array_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_array_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_array_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(bool_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("[false, true, true, false, false, true]", bool_array_variant.value_to_string());
 
@@ -449,14 +449,14 @@ TEST(TestParameter, integer_array_variant) {
   EXPECT_EQ(TEST_VALUE.end(), mismatches.first);
   EXPECT_EQ(param_value.end(), mismatches.second);
 
-  EXPECT_THROW(integer_array_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(integer_array_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(integer_array_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(integer_array_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(integer_array_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(integer_array_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(integer_array_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(integer_array_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(integer_array_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_array_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_array_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_array_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_array_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_array_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_array_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(integer_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ(
     "[42, -99, 2147483647, -2147483648, 0]",
@@ -509,14 +509,14 @@ TEST(TestParameter, long_integer_array_variant) {
   EXPECT_EQ(TEST_VALUE, long_array_variant.get_parameter_value().integer_array_value);
   EXPECT_EQ(TEST_VALUE, long_array_variant.as_integer_array());
 
-  EXPECT_THROW(long_array_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(long_array_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(long_array_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(long_array_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(long_array_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(long_array_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(long_array_variant.as_double_array(), std::runtime_error);
-  EXPECT_THROW(long_array_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(long_array_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_array_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_array_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_array_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_array_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_array_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_array_variant.as_double_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(long_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ(
     "[42, -99, 9223372036854775807, -9223372036854775808, 0]",
@@ -572,14 +572,14 @@ TEST(TestParameter, float_array_variant) {
   EXPECT_EQ(TEST_VALUE.end(), mismatches.first);
   EXPECT_EQ(param_value.end(), mismatches.second);
 
-  EXPECT_THROW(float_array_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(float_array_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(float_array_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(float_array_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(float_array_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(float_array_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(float_array_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(float_array_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(float_array_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_array_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_array_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_array_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_array_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_array_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_array_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(float_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ(
     "[42.1, -99.1, 3.40282e+38, -3.40282e+38, 0.1]",
@@ -632,14 +632,14 @@ TEST(TestParameter, double_array_variant) {
   EXPECT_EQ(TEST_VALUE, double_array_variant.get_parameter_value().double_array_value);
   EXPECT_EQ(TEST_VALUE, double_array_variant.as_double_array());
 
-  EXPECT_THROW(double_array_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(double_array_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(double_array_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(double_array_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(double_array_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(double_array_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(double_array_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(double_array_variant.as_string_array(), std::runtime_error);
+  EXPECT_THROW(double_array_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_array_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_array_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_array_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_array_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_array_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_array_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(double_array_variant.as_string_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ(
     "[42.1, -99.1, 1.79769e+308, -1.79769e+308, 0.1]",
@@ -680,14 +680,14 @@ TEST(TestParameter, string_array_variant) {
     string_array_variant.get_parameter_value().type);
   EXPECT_EQ(TEST_VALUE, string_array_variant.as_string_array());
 
-  EXPECT_THROW(string_array_variant.as_bool(), std::runtime_error);
-  EXPECT_THROW(string_array_variant.as_int(), std::runtime_error);
-  EXPECT_THROW(string_array_variant.as_double(), std::runtime_error);
-  EXPECT_THROW(string_array_variant.as_string(), std::runtime_error);
-  EXPECT_THROW(string_array_variant.as_byte_array(), std::runtime_error);
-  EXPECT_THROW(string_array_variant.as_bool_array(), std::runtime_error);
-  EXPECT_THROW(string_array_variant.as_integer_array(), std::runtime_error);
-  EXPECT_THROW(string_array_variant.as_double_array(), std::runtime_error);
+  EXPECT_THROW(string_array_variant.as_bool(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_array_variant.as_int(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_array_variant.as_double(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_array_variant.as_string(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_array_variant.as_byte_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_array_variant.as_bool_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_array_variant.as_integer_array(), rclcpp::ParameterTypeException);
+  EXPECT_THROW(string_array_variant.as_double_array(), rclcpp::ParameterTypeException);
 
   EXPECT_EQ("[R, O, S2]", string_array_variant.value_to_string());
 
