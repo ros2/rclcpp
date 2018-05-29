@@ -28,7 +28,7 @@ Parameter::Parameter()
 {
 }
 
-Parameter::Parameter(const std::string & name, const ParameterValue & value)
+Parameter::Parameter(const std::string & name, const rclcpp::ParameterValue & value)
 : name_(name), value_(value)
 {
 }
