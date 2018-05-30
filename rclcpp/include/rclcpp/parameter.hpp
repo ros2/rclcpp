@@ -39,7 +39,6 @@ public:
   Parameter(const std::string & name, const ParameterValue & value);
 
   template<typename ValueTypeT>
-  RCLCPP_PUBLIC
   explicit Parameter(const std::string & name, ValueTypeT value)
   : Parameter(name, ParameterValue(value))
   {
