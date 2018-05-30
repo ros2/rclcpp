@@ -69,7 +69,7 @@ NodeParameters::NodeParameters(
   if (NULL == yaml_params) {
     throw std::runtime_error("Failed to initialize yaml params struct");
   }
-  if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params, options->allocator)) {
+  if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params)) {
     throw std::runtime_error("Failed to parse parameters " + yaml_path);
   }
 
@@ -81,7 +81,7 @@ NodeParameters::NodeParameters(
     throw std::runtime_error("Node name and namespace were not set");
   }
   std::string combined_name;
-  if ('/' == node_namespace.at(node_namespace.size()-1)) {
+  if ('/' == node_namespace.at(node_namespace.size() - 1)) {
     combined_name = node_namespace + node_name;
   } else {
     combined_name = node_namespace + '/' + node_name;
@@ -151,12 +151,12 @@ NodeParameters::NodeParameters(
         }
         parameters.emplace_back(param_name, strings);
       } else {
-        rcl_yaml_node_struct_fini(yaml_params, options->allocator);
+        rcl_yaml_node_struct_fini(yaml_params);
         throw std::runtime_error("Invalid parameter from parser");
       }
     }
   }
-  rcl_yaml_node_struct_fini(yaml_params, options->allocator);
+  rcl_yaml_node_struct_fini(yaml_params);
 
   // Set the parameters
   rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(parameters);
