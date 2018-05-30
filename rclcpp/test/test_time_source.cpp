@@ -92,18 +92,17 @@ TEST_F(TestTimeSource, clock) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
+  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
       rmw_qos_profile_default);
   rclcpp::WallRate loop_rate(50);
   for (int i = 0; i < 5; ++i) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
-    msg->sec = i;
-    msg->nanosec = 1000;
+    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
+    msg->clock.sec = i;
+    msg->clock.nanosec = 1000;
     clock_pub->publish(msg);
-    // std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
     rclcpp::spin_some(node);
     loop_rate.sleep();
   }
@@ -162,7 +161,7 @@ TEST_F(TestTimeSource, callbacks) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
+  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
       rmw_qos_profile_default);
 
   rclcpp::WallRate loop_rate(50);
@@ -170,11 +169,10 @@ TEST_F(TestTimeSource, callbacks) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
-    msg->sec = i;
-    msg->nanosec = 1000;
+    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
+    msg->clock.sec = i;
+    msg->clock.nanosec = 1000;
     clock_pub->publish(msg);
-    // std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
     rclcpp::spin_some(node);
     loop_rate.sleep();
   }
@@ -204,11 +202,10 @@ TEST_F(TestTimeSource, callbacks) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
-    msg->sec = i;
-    msg->nanosec = 2000;
+    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
+    msg->clock.sec = i;
+    msg->clock.nanosec = 2000;
     clock_pub->publish(msg);
-    // std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
     rclcpp::spin_some(node);
     loop_rate.sleep();
   }
@@ -229,7 +226,7 @@ TEST_F(TestTimeSource, callbacks) {
 void trigger_clock_changes(
   rclcpp::Node::SharedPtr node)
 {
-  auto clock_pub = node->create_publisher<builtin_interfaces::msg::Time>("clock",
+  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
       rmw_qos_profile_default);
 
   rclcpp::executors::SingleThreadedExecutor executor;
@@ -240,11 +237,10 @@ void trigger_clock_changes(
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
-    msg->sec = i;
-    msg->nanosec = 1000;
+    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
+    msg->clock.sec = i;
+    msg->clock.nanosec = 1000;
     clock_pub->publish(msg);
-    // std::cout << "Publishing: '" << msg->sec << ".000000" << msg->nanosec << "'" << std::endl;
     executor.spin_once(1000000ns);
     loop_rate.sleep();
   }

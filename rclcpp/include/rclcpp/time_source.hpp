@@ -21,6 +21,7 @@
 #include "rcl/time.h"
 
 #include "builtin_interfaces/msg/time.hpp"
+#include "rosgraph_msgs/msg/clock.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
@@ -75,13 +76,13 @@ private:
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
 
   // The subscription for the clock callback
-  using MessageT = builtin_interfaces::msg::Time;
+  using MessageT = rosgraph_msgs::msg::Clock;
   using Alloc = std::allocator<void>;
   using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
   std::shared_ptr<SubscriptionT> clock_subscription_;
 
   // The clock callback itself
-  void clock_cb(const builtin_interfaces::msg::Time::SharedPtr msg);
+  void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);
 
   // Parameter Client pointer
   std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
@@ -115,7 +116,7 @@ private:
   // This is needed when new clocks are added.
   bool ros_time_active_;
   // Last set message to be passed to newly registered clocks
-  builtin_interfaces::msg::Time::SharedPtr last_msg_set_;
+  rosgraph_msgs::msg::Clock::SharedPtr last_msg_set_;
 
   // A lock to protect iterating the associated_clocks_ field.
   std::mutex clock_list_lock_;
