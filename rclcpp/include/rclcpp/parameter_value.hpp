@@ -49,10 +49,13 @@ public:
   /// Construct an instance.
   /// \param[in] expected the expected parameter type.
   /// \param[in] actual the actual parameter type.
+  RCLCPP_PUBLIC
   ParameterTypeException(ParameterType expected, ParameterType actual);
 
+  RCLCPP_PUBLIC
   ~ParameterTypeException();
 
+  RCLCPP_PUBLIC
   const char *
   what() const noexcept override;
 
