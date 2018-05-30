@@ -50,7 +50,6 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-
 TEST_F(TestTimeSource, detachUnattached) {
   rclcpp::TimeSource ts;
 
@@ -344,9 +343,11 @@ TEST_F(TestTimeSource, parameter_activation) {
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
+  // SyncParametersClient returns when parameters have been set on the node_parameters interface,
+  // but it doesn't mean the on_parameter_event subscription in TimeSource has been called.
+  // Spin some to handle that subscription.
   rclcpp::spin_some(node);
   EXPECT_TRUE(ros_clock->ros_time_is_active());
-
 
   set_parameters_results = parameters_client->set_parameters({
     rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
@@ -354,6 +355,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
+  rclcpp::spin_some(node);
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
@@ -362,6 +364,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
+  rclcpp::spin_some(node);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
@@ -370,5 +373,6 @@ TEST_F(TestTimeSource, parameter_activation) {
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
+  rclcpp::spin_some(node);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 }
