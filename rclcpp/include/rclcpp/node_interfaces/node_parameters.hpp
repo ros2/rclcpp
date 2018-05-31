@@ -51,6 +51,7 @@ public:
     const node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     const node_interfaces::NodeServicesInterface::SharedPtr node_services,
+    const std::vector<Parameter> & initial_values,
     bool use_intra_process,
     bool start_parameter_services);
 

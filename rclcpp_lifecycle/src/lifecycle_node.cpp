@@ -51,6 +51,7 @@ LifecycleNode::LifecycleNode(
     namespace_,
     rclcpp::contexts::default_context::get_global_default_context(),
     {},
+    {},
     true,
     use_intra_process_comms,
     true)
@@ -61,6 +62,7 @@ LifecycleNode::LifecycleNode(
   const std::string & namespace_,
   rclcpp::Context::SharedPtr context,
   const std::vector<std::string> & arguments,
+  const std::vector<rclcpp::Parameter> & initial_values,
   bool use_global_arguments,
   bool use_intra_process_comms,
   bool start_parameter_services)
@@ -75,6 +77,7 @@ LifecycleNode::LifecycleNode(
       node_base_,
       node_topics_,
       node_services_,
+      initial_values,
       use_intra_process_comms,
       start_parameter_services
     )),

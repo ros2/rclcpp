@@ -100,6 +100,7 @@ public:
     const std::string & namespace_,
     rclcpp::Context::SharedPtr context,
     const std::vector<std::string> & arguments,
+    const std::vector<rclcpp::Parameter> & initial_values,
     bool use_global_arguments = true,
     bool use_intra_process_comms = false,
     bool start_parameter_services = true);
