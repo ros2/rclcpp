@@ -18,7 +18,6 @@
 #include <vector>
 
 using rclcpp::ParameterType;
-using rclcpp::ParameterTypeException;
 using rclcpp::ParameterValue;
 
 std::string
@@ -55,21 +54,6 @@ rclcpp::operator<<(std::ostream & os, const ParameterType type)
 {
   os << rclcpp::to_string(type);
   return os;
-}
-
-ParameterTypeException::ParameterTypeException(ParameterType expected, ParameterType actual)
-: msg_("expected [" + rclcpp::to_string(expected) + "] got [" + rclcpp::to_string(actual) + "]")
-{
-}
-
-ParameterTypeException::~ParameterTypeException()
-{
-}
-
-const char *
-ParameterTypeException::what() const throw ()
-{
-  return msg_.c_str();
 }
 
 template<typename ValType, typename PrintType = ValType>

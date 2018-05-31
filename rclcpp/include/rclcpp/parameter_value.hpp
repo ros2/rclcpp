@@ -42,25 +42,26 @@ enum ParameterType
   PARAMETER_STRING_ARRAY = rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
 };
 
+/// Return the name of a parameter type
+RCLCPP_PUBLIC
+std::string
+to_string(const ParameterType type);
+
+RCLCPP_PUBLIC
+std::ostream &
+operator<<(std::ostream & os, const ParameterType type);
+
 /// Indicate the parameter type does not match the expected type.
-class ParameterTypeException : public std::exception
+class ParameterTypeException : public std::runtime_error
 {
 public:
   /// Construct an instance.
   /// \param[in] expected the expected parameter type.
   /// \param[in] actual the actual parameter type.
   RCLCPP_PUBLIC
-  ParameterTypeException(ParameterType expected, ParameterType actual);
-
-  RCLCPP_PUBLIC
-  ~ParameterTypeException();
-
-  RCLCPP_PUBLIC
-  const char *
-  what() const noexcept override;
-
-private:
-  const std::string msg_;
+  ParameterTypeException(ParameterType expected, ParameterType actual)
+  : std::runtime_error("expected [" + to_string(expected) + "] got [" + to_string(actual) + "]")
+  {}
 };
 
 /// Store the type and value of a parameter.
@@ -307,15 +308,6 @@ private:
 RCLCPP_PUBLIC
 std::string
 to_string(const ParameterValue & type);
-
-/// Return the name of a parameter type
-RCLCPP_PUBLIC
-std::string
-to_string(const ParameterType type);
-
-RCLCPP_PUBLIC
-std::ostream &
-operator<<(std::ostream & os, const ParameterType type);
 
 }  // namespace rclcpp
 
