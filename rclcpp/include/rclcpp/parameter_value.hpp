@@ -56,8 +56,10 @@ class ParameterTypeException : public std::runtime_error
 {
 public:
   /// Construct an instance.
-  /// \param[in] expected the expected parameter type.
-  /// \param[in] actual the actual parameter type.
+  /**
+   * \param[in] expected the expected parameter type.
+   * \param[in] actual the actual parameter type.
+   */
   RCLCPP_PUBLIC
   ParameterTypeException(ParameterType expected, ParameterType actual)
   : std::runtime_error("expected [" + to_string(expected) + "] got [" + to_string(actual) + "]")
