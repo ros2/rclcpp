@@ -62,7 +62,7 @@ public:
 
   /// Get value of parameter using rclcpp::ParameterType as template argument.
   template<ParameterType ParamT>
-  decltype(ParameterValue().get<ParamT>())
+  decltype(auto)
   get_value() const
   {
     return value_.get<ParamT>();
@@ -70,7 +70,7 @@ public:
 
   /// Get value of parameter using c++ types as template argument
   template<typename T>
-  decltype(ParameterValue().get<T>())
+  decltype(auto)
   get_value() const
   {
     return value_.get<T>();
