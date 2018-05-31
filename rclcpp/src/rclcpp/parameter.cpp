@@ -54,7 +54,7 @@ Parameter::get_name() const
 rcl_interfaces::msg::ParameterValue
 Parameter::get_value_message() const
 {
-  return value_.get_message();
+  return value_.to_value_msg();
 }
 
 bool
@@ -112,17 +112,17 @@ Parameter::as_string_array() const
 }
 
 Parameter
-Parameter::from_parameter(const rcl_interfaces::msg::Parameter & parameter)
+Parameter::from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter)
 {
   return Parameter(parameter.name, parameter.value);
 }
 
 rcl_interfaces::msg::Parameter
-Parameter::to_parameter() const
+Parameter::to_parameter_msg() const
 {
   rcl_interfaces::msg::Parameter parameter;
   parameter.name = name_;
-  parameter.value = value_.get_message();
+  parameter.value = value_.to_value_msg();
   return parameter;
 }
 

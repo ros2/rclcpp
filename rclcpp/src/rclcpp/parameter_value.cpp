@@ -224,7 +224,7 @@ ParameterValue::get_type() const
 }
 
 rcl_interfaces::msg::ParameterValue
-ParameterValue::get_message() const
+ParameterValue::to_value_msg() const
 {
   return value_;
 }

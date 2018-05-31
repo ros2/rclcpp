@@ -141,7 +141,7 @@ AsyncParametersClient::get_parameters(
         rcl_interfaces::msg::Parameter parameter;
         parameter.name = request->names[i];
         parameter.value = pvalue;
-        parameters.push_back(rclcpp::Parameter::from_parameter(
+        parameters.push_back(rclcpp::Parameter::from_parameter_msg(
           parameter));
       }
 
@@ -204,7 +204,7 @@ AsyncParametersClient::set_parameters(
 
   std::transform(parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
     [](rclcpp::Parameter p) {
-      return p.to_parameter();
+      return p.to_parameter_msg();
     }
   );
 
@@ -238,7 +238,7 @@ AsyncParametersClient::set_parameters_atomically(
 
   std::transform(parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
     [](rclcpp::Parameter p) {
-      return p.to_parameter();
+      return p.to_parameter_msg();
     }
   );
 

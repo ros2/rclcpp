@@ -114,11 +114,11 @@ public:
 
   RCLCPP_PUBLIC
   static Parameter
-  from_parameter(const rcl_interfaces::msg::Parameter & parameter);
+  from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter);
 
   RCLCPP_PUBLIC
   rcl_interfaces::msg::Parameter
-  to_parameter() const;
+  to_parameter_msg() const;
 
   RCLCPP_PUBLIC
   std::string
