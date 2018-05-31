@@ -28,7 +28,7 @@
 namespace rclcpp
 {
 
-// Structure to store an arbitrary parameter with templated get/set methods
+/// Structure to store an arbitrary parameter with templated get/set methods.
 class Parameter
 {
 public:
@@ -68,7 +68,7 @@ public:
     return value_.get<ParamT>();
   }
 
-  /// Get value of parameter using c++ types as template argument
+  /// Get value of parameter using c++ types as template argument.
   template<typename T>
   decltype(auto)
   get_value() const
