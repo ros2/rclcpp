@@ -706,3 +706,19 @@ TEST(TestFunctionTraits, sfinae_match) {
 
   EXPECT_EQ("foo", func_accept_callback_return_type(lambda_no_args_string));
 }
+
+class TestMember : public ::testing::Test
+{
+public:
+  void MemberFunctor(int, float, std::string) {}
+};
+
+TEST_F(TestMember, bind_member_functor) {
+  auto bind_member_functor = std::bind(&TestMember::MemberFunctor, this, std::placeholders::_1,
+      std::placeholders::_2, std::placeholders::_3);
+
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_member_functor), int, float,
+    std::string>::value,
+    "Functor accepts an int, a float and a string as arguments");
+}
