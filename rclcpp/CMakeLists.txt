@@ -6,6 +6,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
+find_package(rcl_yaml_param_parser REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
@@ -62,6 +63,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/parameter_value.cpp
   src/rclcpp/parameter_client.cpp
   src/rclcpp/parameter_events_filter.cpp
+  src/rclcpp/parameter_map.cpp
   src/rclcpp/parameter_service.cpp
   src/rclcpp/publisher.cpp
   src/rclcpp/service.cpp
@@ -100,6 +102,7 @@ add_library(${PROJECT_NAME}
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
   "rcl"
+  "rcl_yaml_param_parser"
   "builtin_interfaces"
   "rosgraph_msgs"
   "rosidl_typesupport_cpp"
@@ -128,6 +131,7 @@ ament_export_dependencies(rosgraph_msgs)
 ament_export_dependencies(rosidl_typesupport_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_generator_cpp)
+ament_export_dependencies(rcl_yaml_param_parser)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
@@ -224,6 +228,10 @@ if(BUILD_TESTING)
       ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
     target_link_libraries(test_parameter ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_parameter_map test/test_parameter_map.cpp)
+  if(TARGET test_parameter_map)
+    target_link_libraries(test_parameter_map ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_publisher test/test_publisher.cpp)
   if(TARGET test_publisher)
