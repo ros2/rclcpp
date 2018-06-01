@@ -17,25 +17,10 @@
 
 #include "rclcpp/parameter_map.hpp"
 
-using rclcpp::InvalidParametersException;
-using rclcpp::InvalidParameterValueException;
+using rclcpp::exceptions::InvalidParametersException;
+using rclcpp::exceptions::InvalidParameterValueException;
 using rclcpp::ParameterMap;
 using rclcpp::ParameterValue;
-
-InvalidParametersException::InvalidParametersException(std::string message)
-: msg_(message)
-{
-}
-
-InvalidParametersException::~InvalidParametersException()
-{
-}
-
-const char *
-InvalidParametersException::what() const noexcept
-{
-  return msg_.c_str();
-}
 
 ParameterMap
 rclcpp::parameter_map_from(const rcl_params_t * const c_params)

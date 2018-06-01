@@ -84,7 +84,7 @@ make_node_params(rcl_params_t * c_params, size_t node_idx, std::vector<std::stri
 
 TEST(Test_parameter_map_from, null_c_parameter)
 {
-  EXPECT_THROW(rclcpp::parameter_map_from(NULL), rclcpp::InvalidParametersException);
+  EXPECT_THROW(rclcpp::parameter_map_from(NULL), rclcpp::exceptions::InvalidParametersException);
 }
 
 TEST(Test_parameter_map_from, null_node_names)
@@ -92,7 +92,8 @@ TEST(Test_parameter_map_from, null_node_names)
   rcl_params_t * c_params = make_params({});
   c_params->num_nodes = 1;
 
-  EXPECT_THROW(rclcpp::parameter_map_from(c_params), rclcpp::InvalidParametersException);
+  EXPECT_THROW(
+    rclcpp::parameter_map_from(c_params), rclcpp::exceptions::InvalidParametersException);
 
   c_params->num_nodes = 0;
   rcl_yaml_node_struct_fini(c_params);
@@ -105,7 +106,8 @@ TEST(Test_parameter_map_from, null_node_params)
   auto allocated_params = c_params->params;
   c_params->params = NULL;
 
-  EXPECT_THROW(rclcpp::parameter_map_from(c_params), rclcpp::InvalidParametersException);
+  EXPECT_THROW(
+    rclcpp::parameter_map_from(c_params), rclcpp::exceptions::InvalidParametersException);
 
   c_params->params = allocated_params;
   rcl_yaml_node_struct_fini(c_params);
@@ -117,7 +119,8 @@ TEST(Test_parameter_map_from, null_node_name_in_node_names)
   auto allocated_name = c_params->node_names[0];
   c_params->node_names[0] = NULL;
 
-  EXPECT_THROW(rclcpp::parameter_map_from(c_params), rclcpp::InvalidParametersException);
+  EXPECT_THROW(
+    rclcpp::parameter_map_from(c_params), rclcpp::exceptions::InvalidParametersException);
 
   c_params->node_names[0] = allocated_name;
   rcl_yaml_node_struct_fini(c_params);
@@ -128,7 +131,8 @@ TEST(Test_parameter_map_from, null_node_param_value)
   rcl_params_t * c_params = make_params({"foo"});
   make_node_params(c_params, 0, {"bar"});
 
-  EXPECT_THROW(rclcpp::parameter_map_from(c_params), rclcpp::InvalidParameterValueException);
+  EXPECT_THROW(
+    rclcpp::parameter_map_from(c_params), rclcpp::exceptions::InvalidParameterValueException);
 
   rcl_yaml_node_struct_fini(c_params);
 }
@@ -140,7 +144,8 @@ TEST(Test_parameter_map_from, null_node_param_name)
   auto allocated_name = c_params->params[0].parameter_names[0];
   c_params->params[0].parameter_names[0] = NULL;
 
-  EXPECT_THROW(rclcpp::parameter_map_from(c_params), rclcpp::InvalidParametersException);
+  EXPECT_THROW(
+    rclcpp::parameter_map_from(c_params), rclcpp::exceptions::InvalidParametersException);
 
   c_params->params[0].parameter_names[0] = allocated_name;
   rcl_yaml_node_struct_fini(c_params);

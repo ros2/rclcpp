@@ -15,45 +15,19 @@
 #ifndef RCLCPP__PARAMETER_MAP_HPP_
 #define RCLCPP__PARAMETER_MAP_HPP_
 
-#include <exception>
+#include <rcl_yaml_param_parser/types.h>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rcl_yaml_param_parser/types.h"
 
 namespace rclcpp
 {
-
-/// Indicate `rcl_params_t` is or invalid.
-class InvalidParametersException : public std::exception
-{
-public:
-  /// Instantiate exception with a message.
-  /// \param[in] message A message to be included in the output of what().
-  RCLCPP_PUBLIC
-  explicit InvalidParametersException(std::string message);
-
-  RCLCPP_PUBLIC
-  ~InvalidParametersException();
-
-  RCLCPP_PUBLIC
-  const char *
-  what() const noexcept override;
-
-private:
-  std::string msg_;
-};
-
-/// Indicate `rcl_variant_t` is or invalid.
-class InvalidParameterValueException : public InvalidParametersException
-{
-  // inherit constructor
-  using InvalidParametersException::InvalidParametersException;
-};
 
 /// A map of fully qualified node names to a list of parameters
 using ParameterMap = std::unordered_map<std::string, std::vector<Parameter>>;
