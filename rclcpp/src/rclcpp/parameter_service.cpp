@@ -41,7 +41,7 @@ ParameterService::ParameterService(
     {
       auto values = node_params->get_parameters(request->names);
       for (auto & pvariant : values) {
-        response->values.push_back(pvariant.get_parameter_value());
+        response->values.push_back(pvariant.get_value_message());
       }
     },
     qos_profile, nullptr);
@@ -57,7 +57,7 @@ ParameterService::ParameterService(
       auto types = node_params->get_parameter_types(request->names);
       std::transform(types.cbegin(), types.cend(),
       std::back_inserter(response->types), [](const uint8_t & type) {
-        return static_cast<rclcpp::parameter::ParameterType>(type);
+        return static_cast<rclcpp::ParameterType>(type);
       });
     },
     qos_profile, nullptr);
@@ -70,9 +70,9 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::SetParameters::Request> request,
       std::shared_ptr<rcl_interfaces::srv::SetParameters::Response> response)
     {
-      std::vector<rclcpp::parameter::ParameterVariant> pvariants;
+      std::vector<rclcpp::Parameter> pvariants;
       for (auto & p : request->parameters) {
-        pvariants.push_back(rclcpp::parameter::ParameterVariant::from_parameter(p));
+        pvariants.push_back(rclcpp::Parameter::from_parameter_msg(p));
       }
       auto results = node_params->set_parameters(pvariants);
       response->results = results;
@@ -87,11 +87,11 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Request> request,
       std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Response> response)
     {
-      std::vector<rclcpp::parameter::ParameterVariant> pvariants;
+      std::vector<rclcpp::Parameter> pvariants;
       std::transform(request->parameters.cbegin(), request->parameters.cend(),
       std::back_inserter(pvariants),
       [](const rcl_interfaces::msg::Parameter & p) {
-        return rclcpp::parameter::ParameterVariant::from_parameter(p);
+        return rclcpp::Parameter::from_parameter_msg(p);
       });
       auto result = node_params->set_parameters_atomically(pvariants);
       response->result = result;

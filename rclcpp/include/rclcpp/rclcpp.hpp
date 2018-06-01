@@ -49,10 +49,12 @@
  *   - rclcpp::Node::describe_parameters()
  *   - rclcpp::Node::list_parameters()
  *   - rclcpp::Node::register_param_change_callback()
- *   - rclcpp::parameter::ParameterVariant
+ *   - rclcpp::Parameter
+ *   - rclcpp::ParameterValue
  *   - rclcpp::AsyncParametersClient
  *   - rclcpp::SyncParametersClient
  *   - rclcpp/parameter.hpp
+ *   - rclcpp/parameter_value.hpp
  *   - rclcpp/parameter_client.hpp
  *   - rclcpp/parameter_service.hpp
  * - Rate:

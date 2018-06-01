@@ -203,10 +203,10 @@ Node::set_parameter_if_not_set(
   const std::string & name,
   const ParameterT & value)
 {
-  rclcpp::parameter::ParameterVariant parameter_variant;
-  if (!this->get_parameter(name, parameter_variant)) {
+  rclcpp::Parameter parameter;
+  if (!this->get_parameter(name, parameter)) {
     this->set_parameters({
-        rclcpp::parameter::ParameterVariant(name, value),
+        rclcpp::Parameter(name, value),
       });
   }
 }
@@ -215,10 +215,10 @@ template<typename ParameterT>
 bool
 Node::get_parameter(const std::string & name, ParameterT & value) const
 {
-  rclcpp::parameter::ParameterVariant parameter_variant;
-  bool result = get_parameter(name, parameter_variant);
+  rclcpp::Parameter parameter;
+  bool result = get_parameter(name, parameter);
   if (result) {
-    value = parameter_variant.get_value<ParameterT>();
+    value = parameter.get_value<ParameterT>();
   }
 
   return result;

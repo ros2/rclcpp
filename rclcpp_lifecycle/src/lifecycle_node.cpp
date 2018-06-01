@@ -137,26 +137,26 @@ LifecycleNode::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr gr
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 LifecycleNode::set_parameters(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   return node_parameters_->set_parameters(parameters);
 }
 
 rcl_interfaces::msg::SetParametersResult
 LifecycleNode::set_parameters_atomically(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   return node_parameters_->set_parameters_atomically(parameters);
 }
 
-std::vector<rclcpp::parameter::ParameterVariant>
+std::vector<rclcpp::Parameter>
 LifecycleNode::get_parameters(
   const std::vector<std::string> & names) const
 {
   return node_parameters_->get_parameters(names);
 }
 
-rclcpp::parameter::ParameterVariant
+rclcpp::Parameter
 LifecycleNode::get_parameter(const std::string & name) const
 {
   return node_parameters_->get_parameter(name);
@@ -164,7 +164,7 @@ LifecycleNode::get_parameter(const std::string & name) const
 
 bool LifecycleNode::get_parameter(
   const std::string & name,
-  rclcpp::parameter::ParameterVariant & parameter) const
+  rclcpp::Parameter & parameter) const
 {
   return node_parameters_->get_parameter(name, parameter);
 }

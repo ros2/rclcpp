@@ -57,7 +57,7 @@ NodeParameters::~NodeParameters()
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 NodeParameters::set_parameters(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
   for (auto p : parameters) {
@@ -69,10 +69,10 @@ NodeParameters::set_parameters(
 
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically(
-  const std::vector<rclcpp::parameter::ParameterVariant> & parameters)
+  const std::vector<rclcpp::Parameter> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::map<std::string, rclcpp::parameter::ParameterVariant> tmp_map;
+  std::map<std::string, rclcpp::Parameter> tmp_map;
   auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
 
   // TODO(jacquelinekay): handle parameter constraints
@@ -89,20 +89,20 @@ NodeParameters::set_parameters_atomically(
 
   for (auto p : parameters) {
     if (parameters_.find(p.get_name()) == parameters_.end()) {
-      if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+      if (p.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
         // case: parameter not set before, and input is something other than "NOT_SET"
-        parameter_event->new_parameters.push_back(p.to_parameter());
+        parameter_event->new_parameters.push_back(p.to_parameter_msg());
       }
-    } else if (p.get_type() != rclcpp::parameter::ParameterType::PARAMETER_NOT_SET) {
+    } else if (p.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
       // case: parameter was set before, and input is something other than "NOT_SET"
-      parameter_event->changed_parameters.push_back(p.to_parameter());
+      parameter_event->changed_parameters.push_back(p.to_parameter_msg());
     } else {
       // case: parameter was set before, and input is "NOT_SET"
       // therefore we will "unset" the previously set parameter
       // it is not necessary to erase the parameter from parameters_
       // because the new value for this key (p.get_name()) will be a
-      // ParameterVariant with type "NOT_SET"
-      parameter_event->deleted_parameters.push_back(p.to_parameter());
+      // Parameter with type "NOT_SET"
+      parameter_event->deleted_parameters.push_back(p.to_parameter_msg());
     }
     tmp_map[p.get_name()] = p;
   }
@@ -116,15 +116,15 @@ NodeParameters::set_parameters_atomically(
   return result;
 }
 
-std::vector<rclcpp::parameter::ParameterVariant>
+std::vector<rclcpp::Parameter>
 NodeParameters::get_parameters(const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::vector<rclcpp::parameter::ParameterVariant> results;
+  std::vector<rclcpp::Parameter> results;
 
   for (auto & name : names) {
     if (std::any_of(parameters_.cbegin(), parameters_.cend(),
-      [&name](const std::pair<std::string, rclcpp::parameter::ParameterVariant> & kv) {
+      [&name](const std::pair<std::string, rclcpp::Parameter> & kv) {
         return name == kv.first;
       }))
     {
@@ -134,10 +134,10 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
   return results;
 }
 
-rclcpp::parameter::ParameterVariant
+rclcpp::Parameter
 NodeParameters::get_parameter(const std::string & name) const
 {
-  rclcpp::parameter::ParameterVariant parameter;
+  rclcpp::Parameter parameter;
 
   if (get_parameter(name, parameter)) {
     return parameter;
@@ -149,7 +149,7 @@ NodeParameters::get_parameter(const std::string & name) const
 bool
 NodeParameters::get_parameter(
   const std::string & name,
-  rclcpp::parameter::ParameterVariant & parameter) const
+  rclcpp::Parameter & parameter) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
 

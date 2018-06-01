@@ -334,7 +334,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   using namespace std::chrono_literals;
   EXPECT_TRUE(parameters_client->wait_for_service(2s));
   auto set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("use_sim_time", true)
+    rclcpp::Parameter("use_sim_time", true)
   });
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
@@ -346,7 +346,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
+    rclcpp::Parameter("use_sim_time", rclcpp::ParameterType::PARAMETER_NOT_SET)
   });
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
@@ -355,7 +355,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("use_sim_time", false)
+    rclcpp::Parameter("use_sim_time", false)
   });
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
@@ -364,7 +364,7 @@ TEST_F(TestTimeSource, parameter_activation) {
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   set_parameters_results = parameters_client->set_parameters({
-    rclcpp::parameter::ParameterVariant("use_sim_time", rclcpp::parameter::PARAMETER_NOT_SET)
+    rclcpp::Parameter("use_sim_time", rclcpp::ParameterType::PARAMETER_NOT_SET)
   });
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
