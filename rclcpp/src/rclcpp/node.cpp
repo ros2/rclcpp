@@ -55,7 +55,7 @@ Node::Node(
   const std::string & namespace_,
   rclcpp::Context::SharedPtr context,
   const std::vector<std::string> & arguments,
-  const std::vector<Parameter> & initial_values,
+  const std::vector<rclcpp::Parameter> & initial_values,
   bool use_global_arguments,
   bool use_intra_process_comms,
   bool start_parameter_services)
