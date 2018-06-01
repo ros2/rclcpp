@@ -122,12 +122,10 @@ TEST_F(TestSubscription, callback_bind) {
     subscriptionObject.CreateSubscription();
   }
   {
-    // This gives the following error with gcc 7:
-    // "decltype cannot resolve address of overloaded function"
-    /*
     // Member callback for class inheriting from testing::Test
+    // Regression test for https://github.com/ros2/rclcpp/issues/479 where the TEST_F GTest macro
+    // was interfering with rclcpp's `function_traits`. 
     auto callback = std::bind(&TestSubscription::OnMessage, this, std::placeholders::_1);
     auto sub = node->create_subscription<IntraProcessMessage>("topic", callback);
-    */
   }
 }
