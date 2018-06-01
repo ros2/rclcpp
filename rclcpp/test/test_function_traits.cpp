@@ -713,6 +713,10 @@ public:
   void MemberFunctor(int, float, std::string) {}
 };
 
+/*
+   Regression test for https://github.com/ros2/rclcpp/issues/479, specific to classes using the
+   TEST_F GTest macro.
+*/
 TEST_F(TestMember, bind_member_functor) {
   auto bind_member_functor = std::bind(&TestMember::MemberFunctor, this, std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3);
