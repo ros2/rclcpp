@@ -62,11 +62,6 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
         throw InvalidParametersException(message);
       }
       const rcl_variant_t * const c_param_value = &(c_params_node->parameter_values[p]);
-      if (NULL == c_param_name) {
-        std::string message(
-          "At node " + std::to_string(n) + " parameter " + std::to_string(p) + " value is NULL");
-        throw InvalidParametersException(message);
-      }
       params_node.emplace_back(c_param_name, parameter_value_from(c_param_value));
     }
   }
