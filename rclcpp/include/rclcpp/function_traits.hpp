@@ -83,7 +83,7 @@ template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... 
 #if defined _LIBCPP_VERSION  // libc++ (Clang)
 struct function_traits<std::__1::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
 #elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
-struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(ClassT *, FArgs ...))(Args ...)>>
+struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(FArgs ...))(Args ...)>>
 #elif defined __GLIBCXX__  // glibc++ (GNU C++)
 struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)>(FArgs ...)>>
 #elif defined _MSC_VER  // MS Visual Studio
