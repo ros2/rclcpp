@@ -53,8 +53,8 @@ TEST(TestParameter, not_set_variant) {
   EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET, not_set_param.value.type);
 
   // From parameter message
-  EXPECT_THROW(rclcpp::Parameter::from_parameter_msg(not_set_param),
-    std::runtime_error);
+  EXPECT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET,
+    rclcpp::Parameter::from_parameter_msg(not_set_param).get_type());
 }
 
 TEST(TestParameter, bool_variant) {

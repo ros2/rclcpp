@@ -88,27 +88,34 @@ NodeParameters::set_parameters_atomically(
   }
 
   for (auto p : parameters) {
-    if (parameters_.find(p.get_name()) == parameters_.end()) {
-      if (p.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
+    if (p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
+      if (parameters_.find(p.get_name()) != parameters_.end()) {
+        // case: parameter was set before, and input is "NOT_SET"
+        // therefore we will erase the parameter from parameters_ later
+        parameter_event->deleted_parameters.push_back(p.to_parameter_msg());
+      }
+    } else {
+      if (parameters_.find(p.get_name()) == parameters_.end()) {
         // case: parameter not set before, and input is something other than "NOT_SET"
         parameter_event->new_parameters.push_back(p.to_parameter_msg());
+      } else {
+        // case: parameter was set before, and input is something other than "NOT_SET"
+        parameter_event->changed_parameters.push_back(p.to_parameter_msg());
       }
-    } else if (p.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      // case: parameter was set before, and input is something other than "NOT_SET"
-      parameter_event->changed_parameters.push_back(p.to_parameter_msg());
-    } else {
-      // case: parameter was set before, and input is "NOT_SET"
-      // therefore we will "unset" the previously set parameter
-      // it is not necessary to erase the parameter from parameters_
-      // because the new value for this key (p.get_name()) will be a
-      // Parameter with type "NOT_SET"
-      parameter_event->deleted_parameters.push_back(p.to_parameter_msg());
+      tmp_map[p.get_name()] = p;
     }
-    tmp_map[p.get_name()] = p;
   }
   // std::map::insert will not overwrite elements, so we'll keep the new
   // ones and add only those that already exist in the Node's internal map
   tmp_map.insert(parameters_.begin(), parameters_.end());
+
+  // remove explicitly deleted parameters
+  for (auto p : parameters) {
+    if (p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
+      tmp_map.erase(p.get_name());
+    }
+  }
+
   std::swap(tmp_map, parameters_);
 
   events_publisher_->publish(parameter_event);

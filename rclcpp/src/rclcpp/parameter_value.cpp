@@ -126,9 +126,8 @@ ParameterValue::ParameterValue(const rcl_interfaces::msg::ParameterValue & value
     case PARAMETER_INTEGER_ARRAY:
     case PARAMETER_DOUBLE_ARRAY:
     case PARAMETER_STRING_ARRAY:
-      break;
     case PARAMETER_NOT_SET:
-      throw std::runtime_error("Type from ParameterValue is not set");
+      break;
     default:
       // TODO(wjwwood): use custom exception
       throw std::runtime_error("Unknown type: " + std::to_string(value.type));
