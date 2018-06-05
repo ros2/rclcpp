@@ -181,6 +181,21 @@ public:
   : std::runtime_error("event already registered") {}
 };
 
+/// Thrown if passed parameters are inconsistent or invalid
+class InvalidParametersException : public std::runtime_error
+{
+public:
+  // Inherit constructors from runtime_error;
+  using std::runtime_error::runtime_error;
+};
+
+/// Throwing if passed parameter value is invalid.
+class InvalidParameterValueException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error;
+  using std::runtime_error::runtime_error;
+};
+
 }  // namespace exceptions
 }  // namespace rclcpp
 
