@@ -52,7 +52,7 @@ NodeParameters::NodeParameters(
     use_intra_process,
     allocator);
 
-  // TODO(sloretz) store initial values and use them when a parameter is created
+  // TODO(sloretz) store initial values and use them when a parameter is created ros2/rclcpp#475
   // Set initial parameter values
   if (!initial_parameters.empty()) {
     rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(initial_parameters);
