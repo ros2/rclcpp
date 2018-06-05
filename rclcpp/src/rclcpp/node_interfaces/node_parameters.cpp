@@ -68,19 +68,19 @@ NodeParameters::NodeParameters(
   // Get paths to yaml files containing initial parameter values
   std::vector<std::string> yaml_paths;
 
-  auto get_yaml_paths = [&yaml_paths, &options] (const rcl_arguments_t * args) {
-    int num_yaml_files = rcl_arguments_get_param_files_count(args);
-    if (num_yaml_files > 0) {
-      char ** param_files;
-      rcl_ret_t ret = rcl_arguments_get_param_files(args, options->allocator, &param_files);
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
+  auto get_yaml_paths = [&yaml_paths, &options](const rcl_arguments_t * args) {
+      int num_yaml_files = rcl_arguments_get_param_files_count(args);
+      if (num_yaml_files > 0) {
+        char ** param_files;
+        rcl_ret_t ret = rcl_arguments_get_param_files(args, options->allocator, &param_files);
+        if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
+        for (int i = 0; i < num_yaml_files; ++i) {
+          yaml_paths.emplace_back(param_files[i]);
+        }
       }
-      for (int i = 0; i < num_yaml_files; ++i) {
-        yaml_paths.emplace_back(param_files[i]);
-      }
-    }
-  };
+    };
 
   // global before local so that local overwrites global
   if (options->use_global_arguments) {
