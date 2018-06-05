@@ -28,6 +28,11 @@ protected:
   {
     rclcpp::init(0, NULL);
   }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 };
 
 TEST_F(TestNodeWithInitialValues, no_initial_values) {
