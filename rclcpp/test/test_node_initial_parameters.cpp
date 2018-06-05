@@ -47,7 +47,7 @@ TEST_F(TestNodeWithInitialValues, no_initial_values) {
   EXPECT_EQ(0u, list_params_result.names.size());
 }
 
-TEST_F(TestNodeWithInitialValues, many_initial_values) {
+TEST_F(TestNodeWithInitialValues, multiple_initial_values) {
   auto context = rclcpp::contexts::default_context::get_global_default_context();
   const std::vector<std::string> arguments = {};
   const std::vector<rclcpp::Parameter> initial_values = {
