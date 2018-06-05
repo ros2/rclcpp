@@ -31,7 +31,7 @@ NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-  const std::vector<rclcpp::Parameter> & initial_values,
+  const std::vector<rclcpp::Parameter> & initial_parameters,
   bool use_intra_process,
   bool start_parameter_services)
 {
@@ -54,8 +54,8 @@ NodeParameters::NodeParameters(
 
   // TODO(sloretz) store initial values and use them when a parameter is created
   // Set initial parameter values
-  if (!initial_values.empty()) {
-    rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(initial_values);
+  if (!initial_parameters.empty()) {
+    rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(initial_parameters);
     if (!result.successful) {
       throw std::runtime_error("Failed to set initial parameters");
     }
