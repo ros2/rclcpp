@@ -126,6 +126,8 @@ ament_export_libraries(${PROJECT_NAME})
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
+# TODO(sloretz) Delete this if it doesn't end up being used in an installed header
+ament_export_dependencies(rcl_yaml_param_parser)
 ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rosgraph_msgs)
 ament_export_dependencies(rosidl_typesupport_cpp)
