@@ -120,7 +120,7 @@ NodeParameters::NodeParameters(
       continue;
     }
 
-    // Combind parameter yaml files, overwriting values in older ones
+    // Combine parameter yaml files, overwriting values in older ones
     for (auto & param : iter->second) {
       parameters[param.get_name()] = param;
     }
