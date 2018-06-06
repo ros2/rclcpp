@@ -110,7 +110,7 @@ NodeParameters::NodeParameters(
   for (const std::string & yaml_path : yaml_paths) {
     rcl_params_t * yaml_params = rcl_yaml_node_struct_init(options->allocator);
     if (nullptr == yaml_params) {
-      throw std::runtime_error("Failed to initialize yaml params struct");
+      throw std::bad_alloc();
     }
     if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params)) {
       throw std::runtime_error("Failed to parse parameters " + yaml_path);
