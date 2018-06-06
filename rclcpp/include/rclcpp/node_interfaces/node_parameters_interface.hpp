@@ -49,16 +49,35 @@ public:
   set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
 
+  /// Return descriptions of parameters given their names.
+  /*
+   * \param[in] names a list of parameter names to check.
+   * \return the list of parameters that were found.
+   * Any parameter not found is omitted from the returned list.
+   */
   RCLCPP_PUBLIC
   virtual
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const = 0;
 
+  /// Return the description of one parameter given a name.
+  /*
+   * \param[in] name the name of the parameter to look for.
+   * \return the parameter if it exists on the node.
+   * \throws std::out_of_range if the parameter does not exist on the node.
+   */
   RCLCPP_PUBLIC
   virtual
   rclcpp::Parameter
   get_parameter(const std::string & name) const = 0;
 
+  /// Return the description of one parameter given a name.
+  /*
+   * \param[in] name the name of the parameter to look for.
+   * \param[out] parameter the description if parameter exists on the node.
+   * \return true if the parameter exists on the node, or
+   * \return false if the parameter does not exist.
+   */
   RCLCPP_PUBLIC
   virtual
   bool
