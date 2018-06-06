@@ -117,6 +117,7 @@ NodeParameters::NodeParameters(
     }
 
     rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(yaml_params);
+    rcl_yaml_node_struct_fini(yaml_params);
     auto iter = initial_map.find(combined_name);
     if (initial_map.end() == iter) {
       continue;
