@@ -78,7 +78,9 @@ NodeParameters::NodeParameters(
         }
         for (int i = 0; i < num_yaml_files; ++i) {
           yaml_paths.emplace_back(param_files[i]);
+          options->allocator.deallocate(param_files[i], options->allocator.state);
         }
+        options->allocator.deallocate(param_files, options->allocator.state);
       }
     };
 
