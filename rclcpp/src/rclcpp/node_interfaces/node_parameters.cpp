@@ -57,11 +57,11 @@ NodeParameters::NodeParameters(
 
   // Get the node options
   const rcl_node_t * node = node_base->get_rcl_node_handle();
-  if (NULL == node) {
+  if (nullptr == node) {
     throw std::runtime_error("Need valid node handle in NodeParameters");
   }
   const rcl_node_options_t * options = rcl_node_get_options(node);
-  if (NULL == options) {
+  if (nullptr == options) {
     throw std::runtime_error("Need valid node options NodeParameters");
   }
 
@@ -107,7 +107,7 @@ NodeParameters::NodeParameters(
   // TODO(sloretz) rcl too parse yaml when circular dependency is solved
   for (const std::string & yaml_path : yaml_paths) {
     rcl_params_t * yaml_params = rcl_yaml_node_struct_init(options->allocator);
-    if (NULL == yaml_params) {
+    if (nullptr == yaml_params) {
       throw std::runtime_error("Failed to initialize yaml params struct");
     }
     if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params)) {
