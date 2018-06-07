@@ -25,6 +25,7 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/parameter_map.hpp"
+#include "rclcpp/scope_exit.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/qos_profiles.h"
 
@@ -76,11 +77,16 @@ NodeParameters::NodeParameters(
         if (RCL_RET_OK != ret) {
           rclcpp::exceptions::throw_from_rcl_error(ret);
         }
+        auto cleanup_param_files = make_scope_exit(
+          [&param_files, &num_yaml_files, &options]() {
+            for (int i = 0; i < num_yaml_files; ++i) {
+              options->allocator.deallocate(param_files[i], options->allocator.state);
+            }
+            options->allocator.deallocate(param_files, options->allocator.state);
+          });
         for (int i = 0; i < num_yaml_files; ++i) {
           yaml_paths.emplace_back(param_files[i]);
-          options->allocator.deallocate(param_files[i], options->allocator.state);
         }
-        options->allocator.deallocate(param_files, options->allocator.state);
       }
     };
 
