@@ -42,7 +42,8 @@ TEST_F(TestNodeWithInitialValues, no_initial_values) {
 
   auto node = rclcpp::Node::make_shared("node_name", options);
   auto list_params_result = node->list_parameters({}, 0);
-  EXPECT_EQ(0u, list_params_result.names.size());
+  // Has use_sim_time parameter
+  EXPECT_EQ(1u, list_params_result.names.size());
 }
 
 TEST_F(TestNodeWithInitialValues, multiple_undeclared_initial_values) {
@@ -59,7 +60,8 @@ TEST_F(TestNodeWithInitialValues, multiple_undeclared_initial_values) {
 
   auto node = rclcpp::Node::make_shared("node_name", options);
   auto list_params_result = node->list_parameters({}, 0);
-  EXPECT_EQ(0u, list_params_result.names.size());
+  // Has use_sim_time parameter
+  EXPECT_EQ(1u, list_params_result.names.size());
 }
 
 TEST_F(TestNodeWithInitialValues, multiple_declared_initial_values) {
@@ -80,7 +82,31 @@ TEST_F(TestNodeWithInitialValues, multiple_declared_initial_values) {
   node->create_parameter("baz");
 
   auto list_params_result = node->list_parameters({}, 0);
-  EXPECT_EQ(3u, list_params_result.names.size());
+  EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());
+  EXPECT_STREQ("hello world", node->get_parameter("bar").get_value<std::string>().c_str());
+  std::vector<double> double_array = node->get_parameter("baz").get_value<std::vector<double>>();
+  ASSERT_EQ(2u, double_array.size());
+  EXPECT_DOUBLE_EQ(3.14, double_array.at(0));
+  EXPECT_DOUBLE_EQ(2.718, double_array.at(1));
+}
+
+TEST_F(TestNodeWithInitialValues, multiple_undeclared_initial_values_allowed) {
+  auto context = rclcpp::contexts::default_context::get_global_default_context();
+  const std::vector<std::string> arguments = {};
+  const std::vector<rclcpp::Parameter> initial_values = {
+    rclcpp::Parameter("foo", true),
+    rclcpp::Parameter("bar", "hello world"),
+    rclcpp::Parameter("baz", std::vector<double>{3.14, 2.718})
+  };
+  const bool use_global_arguments = false;
+  const bool use_intra_process = false;
+  const bool start_param_services = true;
+  const bool allow_undeclared_params = true;
+  auto node = rclcpp::Node::make_shared(
+    "node_name", "", context, arguments, initial_values, use_global_arguments, use_intra_process,
+    start_param_services, allow_undeclared_params);
+
+  auto list_params_result = node->list_parameters({}, 0);
   EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());
   EXPECT_STREQ("hello world", node->get_parameter("bar").get_value<std::string>().c_str());
   std::vector<double> double_array = node->get_parameter("baz").get_value<std::vector<double>>();
