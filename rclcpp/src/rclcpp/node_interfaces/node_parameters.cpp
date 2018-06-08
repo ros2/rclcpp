@@ -378,8 +378,12 @@ NodeParameters::get_parameter(
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  if (parameters_.count(name)) {
-    parameter = {name, parameters_.at(name).value};
+  auto param_iter = parameters_.find(name);
+  if (
+    parameters_.end() != param_iter &&
+    param_iter->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET)
+  {
+    parameter = {name, param_iter->second.value};
     return true;
   } else {
     return false;
