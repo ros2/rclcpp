@@ -178,8 +178,7 @@ NodeParameters::create_parameter(
   if (param_iter != parameters_.end() && param_iter->second.is_declared) {
     if (
       param_iter->second.descriptor.type != default_value.get_type() ||
-      param_iter->second.descriptor.read_only != read_only
-    )
+      param_iter->second.descriptor.read_only != read_only)
     {
       throw std::runtime_error("parameter '" + name + "' exists with conflicting description");
     }
