@@ -121,7 +121,8 @@ Node::Node(
       options.use_intra_process_comms(),
       options.start_parameter_services(),
       options.start_parameter_event_publisher(),
-      options.parameter_event_qos_profile()
+      options.parameter_event_qos_profile(),
+      options.allow_undeclared_parameters()
     )),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
       node_base_,
@@ -207,6 +208,15 @@ bool
 Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return node_base_->callback_group_in_node(group);
+}
+
+void
+Node::create_parameter(
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  bool read_only)
+{
+  return this->node_parameters_->create_parameter(name, default_value, read_only);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>

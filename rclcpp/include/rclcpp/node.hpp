@@ -258,6 +258,24 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  /// Declare and initialize a parameter.
+  /* This method is used to declare that a parameter exists on this node.
+   * If a run-time user has provided an an initial value then it will be set in this method,
+   * otherwise the default_value will be set.
+   * \param[in] name the name of the parameter
+   * \param[in] default_value An initial value to be used if a run-time user did not override it.
+   * \param[in] read_only if True then this parameter may not be changed after initialization.
+   * \throws std::runtime_error if parameter has already been declared.
+   * \throws std::runtime_error if a parameter name is invalid.
+   * \throws rclcpp::exceptions::InvalidParameterValueException if initial value fails to be set.
+   */
+  RCLCPP_PUBLIC
+  void
+  create_parameter(
+    const std::string & name,
+    const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
+    bool read_only = false);
+
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters);

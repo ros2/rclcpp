@@ -213,6 +213,21 @@ public:
   NodeOptions &
   parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile);
 
+  /// Return a reference to the allow_undeclared_parameters flag.
+  RCLCPP_PUBLIC
+  const bool &
+  allow_undeclared_parameters() const;
+
+  /// Set the allow_undeclared_parameters, return this for parameter idiom.
+  /**
+   * If true, allow any parameter name to be set on the node without first
+   * being declared.
+   * Otherwise, setting an undeclared parameter will raise an exception.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  allow_undeclared_parameters(const bool & allow_undeclared_parameters);
+
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
   const rcl_allocator_t &
@@ -255,6 +270,8 @@ private:
   bool start_parameter_event_publisher_ {true};
 
   rmw_qos_profile_t parameter_event_qos_profile_ {rmw_qos_profile_parameter_events};
+
+  bool allow_undeclared_parameters_ {false};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
 };

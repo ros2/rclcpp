@@ -40,6 +40,19 @@ namespace rclcpp
 namespace node_interfaces
 {
 
+// Internal struct for holding useful info about parameters
+typedef struct
+{
+  /// True if a user called create_parameter()
+  bool is_declared = false;
+
+  /// Current value of the parameter.
+  rclcpp::ParameterValue value;
+
+  /// A description of the parameter
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+} ParameterInfo_t;
+
 /// Implementation of the NodeParameters part of the Node API.
 class NodeParameters : public NodeParametersInterface
 {
@@ -56,11 +69,19 @@ public:
     bool use_intra_process,
     bool start_parameter_services,
     bool start_parameter_event_publisher,
-    const rmw_qos_profile_t & parameter_event_qos_profile);
+    const rmw_qos_profile_t & parameter_event_qos_profile,
+    bool allow_undeclared_parameters);
 
   RCLCPP_PUBLIC
   virtual
   ~NodeParameters();
+
+  RCLCPP_PUBLIC
+  void
+  create_parameter(
+    const std::string & name,
+    const rclcpp::ParameterValue & default_value,
+    bool read_only) override;
 
   RCLCPP_PUBLIC
   virtual
@@ -125,7 +146,11 @@ private:
 
   ParametersCallbackFunction parameters_callback_ = nullptr;
 
-  std::map<std::string, rclcpp::Parameter> parameters_;
+  std::map<std::string, ParameterInfo_t> parameters_;
+
+  std::map<std::string, rclcpp::ParameterValue> initial_parameter_values_;
+
+  bool allow_undeclared_ = false;
 
   Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 

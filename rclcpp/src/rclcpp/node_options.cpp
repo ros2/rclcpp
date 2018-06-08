@@ -218,6 +218,19 @@ NodeOptions::parameter_event_qos_profile(const rmw_qos_profile_t & parameter_eve
   return *this;
 }
 
+const bool &
+NodeOptions::allow_undeclared_parameters() const
+{
+  return this->allow_undeclared_parameters_;
+}
+
+NodeOptions &
+NodeOptions::allow_undeclared_parameters(const bool & allow_undeclared_parameters)
+{
+  this->allow_undeclared_parameters_ = allow_undeclared_parameters;
+  return *this;
+}
+
 const rcl_allocator_t &
 NodeOptions::allocator() const
 {

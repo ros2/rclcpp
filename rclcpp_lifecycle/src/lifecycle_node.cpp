@@ -79,7 +79,8 @@ LifecycleNode::LifecycleNode(
       options.use_intra_process_comms(),
       options.start_parameter_services(),
       options.start_parameter_event_publisher(),
-      options.parameter_event_qos_profile()
+      options.parameter_event_qos_profile(),
+      options.allow_undeclared_parameters()
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   use_intra_process_comms_(options.use_intra_process_comms()),
