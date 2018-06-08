@@ -39,8 +39,9 @@ NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   const std::vector<rclcpp::Parameter> & initial_parameters,
   bool use_intra_process,
-  bool start_parameter_services)
-: node_clock_(node_clock)
+  bool start_parameter_services,
+  bool allow_undeclared_parameters)
+: node_clock_(node_clock), allow_undeclared_(allow_undeclared_parameters)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::Publisher<MessageT>;
@@ -114,8 +115,6 @@ NodeParameters::NodeParameters(
     combined_name_ = node_namespace + '/' + node_name;
   }
 
-  std::map<std::string, rclcpp::Parameter> parameters;
-
   // TODO(sloretz) use rcl to parse yaml when circular dependency is solved
   // See https://github.com/ros2/rcl/issues/252
   for (const std::string & yaml_path : yaml_paths) {
@@ -140,25 +139,19 @@ NodeParameters::NodeParameters(
 
     // Combine parameter yaml files, overwriting values in older ones
     for (auto & param : iter->second) {
-      parameters[param.get_name()] = param;
+      initial_parameter_values_[param.get_name()] =
+        rclcpp::ParameterValue(param.get_value_message());
     }
   }
 
   // initial values passed to constructor overwrite yaml file sources
   for (auto & param : initial_parameters) {
-    parameters[param.get_name()] = param;
+    initial_parameter_values_[param.get_name()] =
+      rclcpp::ParameterValue(param.get_value_message());
   }
 
-  std::vector<rclcpp::Parameter> combined_values;
-  combined_values.reserve(parameters.size());
-  for (auto & kv : parameters) {
-    combined_values.emplace_back(kv.second);
-  }
-
-  // TODO(sloretz) store initial values and use them when a parameter is created ros2/rclcpp#475
-  // Set initial parameter values
-  if (!combined_values.empty()) {
-    rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(combined_values);
+  if (!initial_parameters.empty() && allow_undeclared_) {
+    rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(initial_parameters);
     if (!result.successful) {
       throw std::runtime_error("Failed to set initial parameters");
     }
@@ -167,6 +160,60 @@ NodeParameters::NodeParameters(
 
 NodeParameters::~NodeParameters()
 {}
+
+void
+NodeParameters::create_parameter(
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  bool read_only)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  // TODO(sloretz) parameter name validation
+  if (name.empty()) {
+    throw std::runtime_error("parameter name must not be empty");
+  }
+
+  // Error if this parameter has already been declared and is different
+  auto param_iter = parameters_.find(name);
+  if (param_iter != parameters_.end() && param_iter->second.is_declared) {
+    if (
+      param_iter->second.descriptor.type != default_value.get_type() ||
+      param_iter->second.descriptor.read_only != read_only
+    )
+    {
+      throw std::runtime_error("parameter '" + name + "' exists with conflicting description");
+    }
+  }
+
+  // Check if run-time user passed an initial value, else use the default.
+  rclcpp::ParameterValue initial_value = default_value;
+  auto value_iter = initial_parameter_values_.find(name);
+  if (value_iter != initial_parameter_values_.end()) {
+    initial_value = value_iter->second;
+  }
+
+  // Save a description of the parameter
+  rcl_interfaces::msg::ParameterDescriptor desc;
+  desc.name = name;
+  desc.type = initial_value.get_type();
+  desc.read_only = read_only;
+
+  rclcpp::node_interfaces::ParameterInfo_t pinfo;
+  pinfo.is_declared = true;
+  pinfo.value = initial_value;
+  pinfo.descriptor = desc;
+
+  // Add declared parameters to storage, even when they're not set.
+  parameters_[name] = pinfo;
+
+  // If it has an actual value then add it to 'new_parameters' event
+  if (rclcpp::ParameterType::PARAMETER_NOT_SET != initial_value.get_type()) {
+    auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
+    parameter_event->new_parameters.push_back(
+      rclcpp::Parameter(name, initial_value).to_parameter_msg());
+    events_publisher_->publish(parameter_event);
+  }
+}
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
 NodeParameters::set_parameters(
@@ -185,7 +232,7 @@ NodeParameters::set_parameters_atomically(
   const std::vector<rclcpp::Parameter> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::map<std::string, rclcpp::Parameter> tmp_map;
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo_t> tmp_map;
   auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
 
   parameter_event->node = combined_name_;
@@ -202,33 +249,79 @@ NodeParameters::set_parameters_atomically(
     return result;
   }
 
+  std::vector<std::string> to_delete;
+
   for (auto p : parameters) {
-    if (p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      if (parameters_.find(p.get_name()) != parameters_.end()) {
-        // case: parameter was set before, and input is "NOT_SET"
-        // therefore we will erase the parameter from parameters_ later
+    auto param_iter = parameters_.find(p.get_name());
+    bool exists = parameters_.end() != param_iter;
+    bool want_to_delete = p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET;
+
+    if (exists) {
+      if (param_iter->second.descriptor.read_only) {
+        result.successful = false;
+        result.reason = "read_only parameter: '" + p.get_name() + "'";
+        return result;
+      }
+      if (want_to_delete) {
         parameter_event->deleted_parameters.push_back(p.to_parameter_msg());
+        if (param_iter->second.is_declared) {
+          // clear declared parameter value, but don't delete it
+          rclcpp::node_interfaces::ParameterInfo_t cleared_param_info = param_iter->second;
+          cleared_param_info.value = rclcpp::ParameterValue();
+          tmp_map[p.get_name()] = cleared_param_info;
+        } else {
+          // Truly delete an undeclared parameter
+          to_delete.push_back(p.get_name());
+        }
+      } else {
+        if (param_iter->second.value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
+          // case: setting a value on a declared parameter that currently is unset
+          parameter_event->new_parameters.push_back(p.to_parameter_msg());
+        } else {
+          // case: changing a parameter value
+          parameter_event->changed_parameters.push_back(p.to_parameter_msg());
+        }
+        rclcpp::node_interfaces::ParameterInfo_t changed_param_info = param_iter->second;
+        // TODO(sloretz) Add accessor for ParameterValue on Parameter class
+        changed_param_info.value = rclcpp::ParameterValue(p.get_value_message());
+        tmp_map[p.get_name()] = changed_param_info;
       }
     } else {
-      if (parameters_.find(p.get_name()) == parameters_.end()) {
-        // case: parameter not set before, and input is something other than "NOT_SET"
-        parameter_event->new_parameters.push_back(p.to_parameter_msg());
+      // case: parameter does not exist already
+      if (!allow_undeclared_) {
+        result.successful = false;
+        result.reason = "undeclared parameter: '" + p.get_name() + "'";
+        return result;
+      } else if (want_to_delete) {
+        result.successful = false;
+        result.reason = "deleting parameter: '" + p.get_name() + "' that does not exist";
+        return result;
       } else {
-        // case: parameter was set before, and input is something other than "NOT_SET"
-        parameter_event->changed_parameters.push_back(p.to_parameter_msg());
+        // Create new undeclared parameter
+        parameter_event->new_parameters.push_back(p.to_parameter_msg());
+
+        rcl_interfaces::msg::ParameterDescriptor desc;
+        desc.name = p.get_name();
+        desc.type = p.get_type();
+        desc.read_only = false;
+
+        rclcpp::node_interfaces::ParameterInfo_t new_param_info;
+        new_param_info.is_declared = false;
+        // TODO(sloretz) Add accessor for ParameterValue on Parameter class
+        new_param_info.value = rclcpp::ParameterValue(p.get_value_message());
+        new_param_info.descriptor = desc;
+
+        tmp_map[p.get_name()] = new_param_info;
       }
-      tmp_map[p.get_name()] = p;
     }
   }
   // std::map::insert will not overwrite elements, so we'll keep the new
   // ones and add only those that already exist in the Node's internal map
   tmp_map.insert(parameters_.begin(), parameters_.end());
 
-  // remove explicitly deleted parameters
-  for (auto p : parameters) {
-    if (p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
-      tmp_map.erase(p.get_name());
-    }
+  // remove truly deleted parameters
+  for (const std::string & param_name : to_delete) {
+    tmp_map.erase(param_name);
   }
 
   std::swap(tmp_map, parameters_);
@@ -246,11 +339,11 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
 
   for (auto & name : names) {
     if (std::any_of(parameters_.cbegin(), parameters_.cend(),
-      [&name](const std::pair<std::string, rclcpp::Parameter> & kv) {
+      [&name](const std::pair<std::string, rclcpp::node_interfaces::ParameterInfo_t> & kv) {
         return name == kv.first;
       }))
     {
-      results.push_back(parameters_.at(name));
+      results.emplace_back(name, parameters_.at(name).value);
     }
   }
   return results;
@@ -276,7 +369,7 @@ NodeParameters::get_parameter(
   std::lock_guard<std::mutex> lock(mutex_);
 
   if (parameters_.count(name)) {
-    parameter = parameters_.at(name);
+    parameter = {name, parameters_.at(name).value};
     return true;
   } else {
     return false;
@@ -314,10 +407,7 @@ NodeParameters::describe_parameters(const std::vector<std::string> & names) cons
         return name == kv.first;
       }))
     {
-      rcl_interfaces::msg::ParameterDescriptor parameter_descriptor;
-      parameter_descriptor.name = kv.first;
-      parameter_descriptor.type = kv.second.get_type();
-      results.push_back(parameter_descriptor);
+      results.push_back(kv.second.descriptor);
     }
   }
   return results;
@@ -333,7 +423,7 @@ NodeParameters::get_parameter_types(const std::vector<std::string> & names) cons
         return name == kv.first;
       }))
     {
-      results.push_back(kv.second.get_type());
+      results.push_back(kv.second.value.get_type());
     } else {
       results.push_back(rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     }

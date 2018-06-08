@@ -38,6 +38,25 @@ class NodeParametersInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeParametersInterface)
 
+  /// Declare and initialize a parameter.
+  /* This method is used to declare that a parameter exists on this node.
+   * If a run-time user has provided an an initial value then it will be set in this method,
+   * otherwise the default_value will be set.
+   * \param[in] name the name of the parameter
+   * \param[in] default_value An initial value to be used if a run-time user did not override it.
+   * \param[in] read_only if True then this parameter may not be changed after initialization.
+   * \throws std::runtime_error if parameter has already been declared.
+   * \throws std::runtime_error if a parameter name is invalid.
+   * \throws rclcpp::exceptions::InvalidParameterValueException if initial value fails to be set.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  create_parameter(
+    const std::string & name,
+    const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
+    bool read_only = false) = 0;
+
   RCLCPP_PUBLIC
   virtual
   ~NodeParametersInterface() = default;

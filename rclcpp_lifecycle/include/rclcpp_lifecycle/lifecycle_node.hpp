@@ -97,6 +97,7 @@ public:
    * pipeline to pass messages between nodes in the same process using shared memory.
    * \param[in] start_parameter_services True to setup ROS interfaces for accessing parameters
    * in the node.
+   * \param[in] allow_undeclared_parameters True to allow any parameter name to be set on the node.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNode(
@@ -107,7 +108,8 @@ public:
     const std::vector<rclcpp::Parameter> & initial_parameters,
     bool use_global_arguments = true,
     bool use_intra_process_comms = false,
-    bool start_parameter_services = true);
+    bool start_parameter_services = true,
+    bool allow_undeclared_parameters = false);
 
   RCLCPP_LIFECYCLE_PUBLIC
   virtual ~LifecycleNode();

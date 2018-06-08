@@ -47,7 +47,7 @@ TEST_F(TestNodeWithInitialValues, no_initial_values) {
   EXPECT_EQ(0u, list_params_result.names.size());
 }
 
-TEST_F(TestNodeWithInitialValues, multiple_initial_values) {
+TEST_F(TestNodeWithInitialValues, multiple_undeclared_initial_values) {
   auto context = rclcpp::contexts::default_context::get_global_default_context();
   const std::vector<std::string> arguments = {};
   const std::vector<rclcpp::Parameter> initial_values = {
@@ -59,6 +59,27 @@ TEST_F(TestNodeWithInitialValues, multiple_initial_values) {
   const bool use_intra_process = false;
   auto node = rclcpp::Node::make_shared(
     "node_name", "", context, arguments, initial_values, use_global_arguments, use_intra_process);
+  auto list_params_result = node->list_parameters({}, 0);
+  EXPECT_EQ(0u, list_params_result.names.size());
+}
+
+TEST_F(TestNodeWithInitialValues, multiple_declared_initial_values) {
+  auto context = rclcpp::contexts::default_context::get_global_default_context();
+  const std::vector<std::string> arguments = {};
+  const std::vector<rclcpp::Parameter> initial_values = {
+    rclcpp::Parameter("foo", true),
+    rclcpp::Parameter("bar", "hello world"),
+    rclcpp::Parameter("baz", std::vector<double>{3.14, 2.718})
+  };
+  const bool use_global_arguments = false;
+  const bool use_intra_process = false;
+  auto node = rclcpp::Node::make_shared(
+    "node_name", "", context, arguments, initial_values, use_global_arguments, use_intra_process);
+
+  node->create_parameter("foo");
+  node->create_parameter("bar");
+  node->create_parameter("baz");
+
   auto list_params_result = node->list_parameters({}, 0);
   EXPECT_EQ(3u, list_params_result.names.size());
   EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());
