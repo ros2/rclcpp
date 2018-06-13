@@ -115,7 +115,7 @@ SubscriptionBase::get_intra_process_subscription_handle() const
   return intra_process_subscription_handle_;
 }
 
-rosidl_message_type_support_t
+const rosidl_message_type_support_t &
 SubscriptionBase::get_message_type_support_handle() const
 {
   return type_support_;

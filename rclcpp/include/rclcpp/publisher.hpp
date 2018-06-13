@@ -280,7 +280,7 @@ public:
   publish(const rcl_message_raw_t * raw_msg)
   {
     if (store_intra_process_message_) {
-      // not supported atm
+      // TODO(Karsten1987): support raw message passed by intraprocess
       throw std::runtime_error("storing raw messages in intra process is not supported yet.");
     }
     auto status = rcl_publish_raw(&publisher_handle_, raw_msg);

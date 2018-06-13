@@ -21,6 +21,7 @@
 #include "rcl/types.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -82,13 +83,22 @@ public:
 
   virtual std::shared_ptr<rcl_message_raw_t> borrow_raw_message(unsigned int capacity)
   {
-    auto raw_msg = std::shared_ptr<rcl_message_raw_t>(new rcl_message_raw_t,
+    auto msg = new rcl_message_raw_t;
+    *msg = rmw_get_zero_initialized_raw_message();
+    auto ret = rmw_raw_message_init(msg, capacity, &rcutils_allocator_);
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+
+    auto raw_msg = std::shared_ptr<rcl_message_raw_t>(msg,
         [](rmw_message_raw_t * msg) {
-          rmw_raw_message_fini(msg);
+          auto ret = rmw_raw_message_fini(msg);
           delete msg;
+          if (ret != RCL_RET_OK) {
+            rclcpp::exceptions::throw_from_rcl_error(ret, "leaking memory");
+          }
         });
-    *raw_msg = rmw_get_zero_initialized_raw_message();
-    rmw_raw_message_init(raw_msg.get(), capacity, &rcutils_allocator_);
+
     return raw_msg;
   }
 
@@ -111,7 +121,6 @@ public:
 
   virtual void return_raw_message(std::shared_ptr<rcl_message_raw_t> & raw_msg)
   {
-    rmw_raw_message_fini(raw_msg.get());
     raw_msg.reset();
   }
 

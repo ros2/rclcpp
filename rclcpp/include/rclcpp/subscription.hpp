@@ -122,7 +122,7 @@ public:
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
 
-  rosidl_message_type_support_t
+  const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
   bool

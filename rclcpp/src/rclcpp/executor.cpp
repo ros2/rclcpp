@@ -282,11 +282,9 @@ Executor::execute_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   rmw_message_info_t message_info;
-  // TODO(karsten1987): Can this be set to false directly after initialization?
   message_info.from_intra_process = false;
 
   if (subscription->is_raw()) {
-    // TODO(karsten1987): Raise if opensplice !?
     auto raw_msg = subscription->create_raw_message();
     auto ret = rcl_take_raw(
       subscription->get_subscription_handle().get(),
