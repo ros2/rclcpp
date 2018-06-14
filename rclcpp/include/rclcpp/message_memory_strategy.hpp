@@ -82,7 +82,7 @@ public:
     return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_.get());
   }
 
-  virtual std::shared_ptr<rcl_serialized_message_t> borrow_serialized_message(unsigned int capacity)
+  virtual std::shared_ptr<rcl_serialized_message_t> borrow_serialized_message(size_t capacity)
   {
     auto msg = new rcl_serialized_message_t;
     *msg = rmw_get_zero_initialized_serialized_message();
@@ -108,7 +108,7 @@ public:
     return borrow_serialized_message(default_buffer_capacity_);
   }
 
-  virtual void set_default_buffer_capacity(unsigned int capacity)
+  virtual void set_default_buffer_capacity(size_t capacity)
   {
     default_buffer_capacity_ = capacity;
   }
@@ -133,7 +133,7 @@ public:
 
   std::shared_ptr<BufferAlloc> buffer_allocator_;
   BufferDeleter buffer_deleter_;
-  unsigned int default_buffer_capacity_ = 0;
+  size_t default_buffer_capacity_ = 0;
 
   rcutils_allocator_t rcutils_allocator_;
 };
