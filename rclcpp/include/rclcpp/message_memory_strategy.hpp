@@ -25,7 +25,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rmw/raw_message.h"
+#include "rmw/serialized_message.h"
 
 namespace rclcpp
 {
@@ -44,9 +44,10 @@ public:
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
   using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
 
-  using RawMessageAllocTraits = allocator::AllocRebind<rcl_message_raw_t, Alloc>;
-  using RawMessageAlloc = typename RawMessageAllocTraits::allocator_type;
-  using RawMessageDeleter = allocator::Deleter<RawMessageAlloc, rcl_message_raw_t>;
+  using SerializedMessageAllocTraits = allocator::AllocRebind<rcl_serialized_message_t, Alloc>;
+  using SerializedMessageAlloc = typename SerializedMessageAllocTraits::allocator_type;
+  using SerializedMessageDeleter =
+    allocator::Deleter<SerializedMessageAlloc, rcl_serialized_message_t>;
 
   using BufferAllocTraits = allocator::AllocRebind<char, Alloc>;
   using BufferAlloc = typename BufferAllocTraits::allocator_type;
@@ -55,7 +56,7 @@ public:
   MessageMemoryStrategy()
   {
     message_allocator_ = std::make_shared<MessageAlloc>();
-    raw_message_allocator_ = std::make_shared<RawMessageAlloc>();
+    serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>();
     buffer_allocator_ = std::make_shared<BufferAlloc>();
     rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
   }
@@ -63,7 +64,7 @@ public:
   explicit MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
-    raw_message_allocator_ = std::make_shared<RawMessageAlloc>(*allocator.get());
+    serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>(*allocator.get());
     buffer_allocator_ = std::make_shared<BufferAlloc>(*allocator.get());
     rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
   }
@@ -81,30 +82,30 @@ public:
     return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_.get());
   }
 
-  virtual std::shared_ptr<rcl_message_raw_t> borrow_raw_message(unsigned int capacity)
+  virtual std::shared_ptr<rcl_serialized_message_t> borrow_serialized_message(unsigned int capacity)
   {
-    auto msg = new rcl_message_raw_t;
-    *msg = rmw_get_zero_initialized_raw_message();
-    auto ret = rmw_raw_message_init(msg, capacity, &rcutils_allocator_);
+    auto msg = new rcl_serialized_message_t;
+    *msg = rmw_get_zero_initialized_serialized_message();
+    auto ret = rmw_serialized_message_init(msg, capacity, &rcutils_allocator_);
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
 
-    auto raw_msg = std::shared_ptr<rcl_message_raw_t>(msg,
-        [](rmw_message_raw_t * msg) {
-          auto ret = rmw_raw_message_fini(msg);
+    auto serialized_msg = std::shared_ptr<rcl_serialized_message_t>(msg,
+        [](rmw_serialized_message_t * msg) {
+          auto ret = rmw_serialized_message_fini(msg);
           delete msg;
           if (ret != RCL_RET_OK) {
             rclcpp::exceptions::throw_from_rcl_error(ret, "leaking memory");
           }
         });
 
-    return raw_msg;
+    return serialized_msg;
   }
 
-  virtual std::shared_ptr<rcl_message_raw_t> borrow_raw_message()
+  virtual std::shared_ptr<rcl_serialized_message_t> borrow_serialized_message()
   {
-    return borrow_raw_message(default_buffer_capacity_);
+    return borrow_serialized_message(default_buffer_capacity_);
   }
 
   virtual void set_default_buffer_capacity(unsigned int capacity)
@@ -119,16 +120,16 @@ public:
     msg.reset();
   }
 
-  virtual void return_raw_message(std::shared_ptr<rcl_message_raw_t> & raw_msg)
+  virtual void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & serialized_msg)
   {
-    raw_msg.reset();
+    serialized_msg.reset();
   }
 
   std::shared_ptr<MessageAlloc> message_allocator_;
   MessageDeleter message_deleter_;
 
-  std::shared_ptr<RawMessageAlloc> raw_message_allocator_;
-  RawMessageDeleter raw_message_deleter_;
+  std::shared_ptr<SerializedMessageAlloc> serialized_message_allocator_;
+  SerializedMessageDeleter serialized_message_deleter_;
 
   std::shared_ptr<BufferAlloc> buffer_allocator_;
   BufferDeleter buffer_deleter_;

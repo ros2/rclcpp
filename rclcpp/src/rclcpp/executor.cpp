@@ -284,22 +284,22 @@ Executor::execute_subscription(
   rmw_message_info_t message_info;
   message_info.from_intra_process = false;
 
-  if (subscription->is_raw()) {
-    auto raw_msg = subscription->create_raw_message();
-    auto ret = rcl_take_raw(
+  if (subscription->is_serialized()) {
+    auto serialized_msg = subscription->create_serialized_message();
+    auto ret = rcl_take_serialized_message(
       subscription->get_subscription_handle().get(),
-      raw_msg.get(), &message_info);
+      serialized_msg.get(), &message_info);
     if (RCL_RET_OK == ret) {
-      auto void_raw_msg = std::static_pointer_cast<void>(raw_msg);
-      subscription->handle_message(void_raw_msg, message_info);
+      auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
+      subscription->handle_message(void_serialized_msg, message_info);
     } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
-        "take_raw failed for subscription on topic '%s': %s",
+        "take_serialized failed for subscription on topic '%s': %s",
         subscription->get_topic_name(), rcl_get_error_string_safe());
       rcl_reset_error();
     }
-    subscription->return_raw_message(raw_msg);
+    subscription->return_serialized_message(serialized_msg);
   } else {
     std::shared_ptr<void> message = subscription->create_message();
     auto ret = rcl_take(
@@ -310,7 +310,7 @@ Executor::execute_subscription(
     } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
-        "could not deserialize raw message on topic '%s': %s",
+        "could not deserialize serialized message on topic '%s': %s",
         subscription->get_topic_name(), rcl_get_error_string_safe());
       rcl_reset_error();
     }

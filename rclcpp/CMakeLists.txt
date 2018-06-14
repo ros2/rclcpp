@@ -260,13 +260,13 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
-  ament_add_gtest(test_raw_message_allocator test/test_raw_message_allocator.cpp
+  ament_add_gtest(test_serialized_message_allocator test/test_serialized_message_allocator.cpp
     ENV RCL_ASSERT_RMW_ID_MATCHES=${rmw_implementation})
-  if(TARGET test_raw_message_allocator)
-    target_include_directories(test_raw_message_allocator PUBLIC
+  if(TARGET test_serialized_message_allocator)
+    target_include_directories(test_serialized_message_allocator PUBLIC
       ${test_msgs_INCLUDE_DIRS}
     )
-    target_link_libraries(test_raw_message_allocator
+    target_link_libraries(test_serialized_message_allocator
       ${PROJECT_NAME}
       ${test_msgs_LIBRARIES}
     )

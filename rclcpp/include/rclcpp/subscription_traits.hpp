@@ -33,24 +33,25 @@ namespace subscription_traits
  * Cheers!
  */
 template<typename T>
-struct is_raw_subscription_argument : std::false_type
+struct is_serialized_subscription_argument : std::false_type
 {};
 
 template<>
-struct is_raw_subscription_argument<rcl_message_raw_t>: std::true_type
+struct is_serialized_subscription_argument<rcl_serialized_message_t>: std::true_type
 {};
 
 template<>
-struct is_raw_subscription_argument<std::shared_ptr<rcl_message_raw_t>>: std::true_type
+struct is_serialized_subscription_argument<std::shared_ptr<rcl_serialized_message_t>>
+  : std::true_type
 {};
 
 template<typename T>
-struct is_raw_subscription : is_raw_subscription_argument<T>
+struct is_serialized_subscription : is_serialized_subscription_argument<T>
 {};
 
 template<typename CallbackT>
-struct is_raw_callback
-  : is_raw_subscription_argument<
+struct is_serialized_callback
+  : is_serialized_subscription_argument<
     typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>>
 {};
 

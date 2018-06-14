@@ -23,45 +23,45 @@
 
 #include "test_msgs/msg/empty.hpp"
 
-TEST(TestRawMessageAllocator, default_allocator) {
+TEST(TestSerializedMessageAllocator, default_allocator) {
   using DummyMessageT = float;
   auto mem_strategy =
     rclcpp::message_memory_strategy::MessageMemoryStrategy<DummyMessageT>::create_default();
 
-  auto msg0 = mem_strategy->borrow_raw_message();
+  auto msg0 = mem_strategy->borrow_serialized_message();
   ASSERT_EQ(msg0->buffer_capacity, 0u);
-  mem_strategy->return_raw_message(msg0);
+  mem_strategy->return_serialized_message(msg0);
 
-  auto msg100 = mem_strategy->borrow_raw_message(100);
+  auto msg100 = mem_strategy->borrow_serialized_message(100);
   ASSERT_EQ(msg100->buffer_capacity, 100u);
-  mem_strategy->return_raw_message(msg100);
+  mem_strategy->return_serialized_message(msg100);
 
-  auto msg200 = mem_strategy->borrow_raw_message();
-  auto ret = rmw_raw_message_resize(msg200.get(), 200);
+  auto msg200 = mem_strategy->borrow_serialized_message();
+  auto ret = rmw_serialized_message_resize(msg200.get(), 200);
   ASSERT_EQ(RCL_RET_OK, ret);
   EXPECT_EQ(0u, msg200->buffer_length);
   EXPECT_EQ(200u, msg200->buffer_capacity);
-  mem_strategy->return_raw_message(msg200);
+  mem_strategy->return_serialized_message(msg200);
 
-  auto msg1000 = mem_strategy->borrow_raw_message(1000);
+  auto msg1000 = mem_strategy->borrow_serialized_message(1000);
   ASSERT_EQ(msg1000->buffer_capacity, 1000u);
-  ret = rmw_raw_message_resize(msg1000.get(), 2000);
+  ret = rmw_serialized_message_resize(msg1000.get(), 2000);
   ASSERT_EQ(RCL_RET_OK, ret);
   EXPECT_EQ(2000u, msg1000->buffer_capacity);
-  mem_strategy->return_raw_message(msg1000);
+  mem_strategy->return_serialized_message(msg1000);
 }
 
-TEST(TestRawMessageAllocator, borrow_from_subscription) {
+TEST(TestSerializedMessageAllocator, borrow_from_subscription) {
   rclcpp::init(0, NULL);
 
-  auto node = std::make_shared<rclcpp::Node>("test_raw_message_allocator_node");
+  auto node = std::make_shared<rclcpp::Node>("test_serialized_message_allocator_node");
   std::shared_ptr<rclcpp::SubscriptionBase> sub =
     node->create_subscription<test_msgs::msg::Empty>("~/dummy_topic", [](
         std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;});
 
-  auto msg0 = sub->create_raw_message();
+  auto msg0 = sub->create_serialized_message();
   EXPECT_EQ(0u, msg0->buffer_capacity);
-  sub->return_raw_message(msg0);
+  sub->return_serialized_message(msg0);
 
   rclcpp::shutdown();
 }

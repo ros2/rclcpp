@@ -277,15 +277,15 @@ public:
   }
 
   void
-  publish(const rcl_message_raw_t * raw_msg)
+  publish(const rcl_serialized_message_t * serialized_msg)
   {
     if (store_intra_process_message_) {
-      // TODO(Karsten1987): support raw message passed by intraprocess
-      throw std::runtime_error("storing raw messages in intra process is not supported yet.");
+      // TODO(Karsten1987): support serialized message passed by intraprocess
+      throw std::runtime_error("storing serialized messages in intra process is not supported yet");
     }
-    auto status = rcl_publish_raw(&publisher_handle_, raw_msg);
+    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg);
     if (RCL_RET_OK != status) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish raw message");
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
     }
   }
 

@@ -66,7 +66,7 @@ public:
     const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
-    bool is_raw = false);
+    bool is_serialized = false);
 
   /// Default destructor.
   RCLCPP_PUBLIC
@@ -94,10 +94,10 @@ public:
   virtual std::shared_ptr<void>
   create_message() = 0;
 
-  /// Borrow a new raw message
-  /** \return Shared pointer to a rcl_message_raw_t. */
-  virtual std::shared_ptr<rcl_message_raw_t>
-  create_raw_message() = 0;
+  /// Borrow a new serialized message
+  /** \return Shared pointer to a rcl_message_serialized_t. */
+  virtual std::shared_ptr<rcl_serialized_message_t>
+  create_serialized_message() = 0;
 
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
@@ -112,10 +112,10 @@ public:
   virtual void
   return_message(std::shared_ptr<void> & message) = 0;
 
-  /// Return the message borrowed in create_raw_message.
+  /// Return the message borrowed in create_serialized_message.
   /** \param[in] message Shared pointer to the returned message. */
   virtual void
-  return_raw_message(std::shared_ptr<rcl_message_raw_t> & message) = 0;
+  return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
 
   virtual void
   handle_intra_process_message(
@@ -126,7 +126,7 @@ public:
   get_message_type_support_handle() const;
 
   bool
-  is_raw() const;
+  is_serialized() const;
 
 protected:
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
@@ -137,7 +137,7 @@ private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
 
   rosidl_message_type_support_t type_support_;
-  bool is_raw_;
+  bool is_serialized_;
 };
 
 /// Subscription implementation, templated on the type of message this subscription receives.
@@ -180,7 +180,7 @@ public:
       ts,
       topic_name,
       subscription_options,
-      rclcpp::subscription_traits::is_raw_subscription_argument<CallbackMessageT>::value),
+      rclcpp::subscription_traits::is_serialized_subscription_argument<CallbackMessageT>::value),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy),
     get_intra_process_message_callback_(nullptr),
@@ -208,9 +208,9 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  std::shared_ptr<rcl_message_raw_t> create_raw_message()
+  std::shared_ptr<rcl_serialized_message_t> create_serialized_message()
   {
-    return message_memory_strategy_->borrow_raw_message();
+    return message_memory_strategy_->borrow_serialized_message();
   }
 
   void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
@@ -234,9 +234,9 @@ public:
     message_memory_strategy_->return_message(typed_message);
   }
 
-  void return_raw_message(std::shared_ptr<rcl_message_raw_t> & message)
+  void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message)
   {
-    message_memory_strategy_->return_raw_message(message);
+    message_memory_strategy_->return_serialized_message(message);
   }
 
   void handle_intra_process_message(
