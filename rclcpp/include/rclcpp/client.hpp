@@ -57,14 +57,13 @@ public:
   RCLCPP_PUBLIC
   ClientBase(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
-    const std::string & service_name);
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph);
 
   RCLCPP_PUBLIC
   virtual ~ClientBase();
 
   RCLCPP_PUBLIC
-  const std::string &
+  const char *
   get_service_name() const;
 
   RCLCPP_PUBLIC
@@ -113,8 +112,6 @@ protected:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::shared_ptr<rcl_client_t> client_handle_;
-
-  std::string service_name_;
 };
 
 template<typename ServiceT>
@@ -143,7 +140,7 @@ public:
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name,
     rcl_client_options_t & client_options)
-  : ClientBase(node_base, node_graph, service_name)
+  : ClientBase(node_base, node_graph)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle =

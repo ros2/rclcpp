@@ -35,11 +35,9 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
-  const std::string & service_name)
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph)
 : node_graph_(node_graph),
-  node_handle_(node_base->get_shared_rcl_node_handle()),
-  service_name_(service_name)
+  node_handle_(node_base->get_shared_rcl_node_handle())
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
   client_handle_ = std::shared_ptr<rcl_client_t>(
@@ -70,10 +68,10 @@ ClientBase::~ClientBase()
   client_handle_.reset();
 }
 
-const std::string &
+const char *
 ClientBase::get_service_name() const
 {
-  return this->service_name_;
+  return rcl_client_get_service_name(this->get_client_handle().get());
 }
 
 std::shared_ptr<rcl_client_t>
