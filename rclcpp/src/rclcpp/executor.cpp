@@ -345,7 +345,7 @@ Executor::execute_service(
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take request failed for server of service '%s': %s",
-      service->get_service_name().c_str(), rcl_get_error_string_safe());
+      service->get_service_name(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
 }
@@ -366,7 +366,7 @@ Executor::execute_client(
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take response failed for client of service '%s': %s",
-      client->get_service_name().c_str(), rcl_get_error_string_safe());
+      client->get_service_name(), rcl_get_error_string_safe());
     rcl_reset_error();
   }
 }

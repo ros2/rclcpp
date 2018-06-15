@@ -43,11 +43,6 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
 
   RCLCPP_PUBLIC
-  ServiceBase(
-    std::shared_ptr<rcl_node_t> node_handle,
-    const std::string & service_name);
-
-  RCLCPP_PUBLIC
   explicit ServiceBase(
     std::shared_ptr<rcl_node_t> node_handle);
 
@@ -55,7 +50,7 @@ public:
   virtual ~ServiceBase();
 
   RCLCPP_PUBLIC
-  std::string
+  const char *
   get_service_name();
 
   RCLCPP_PUBLIC
@@ -86,7 +81,6 @@ protected:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::shared_ptr<rcl_service_t> service_handle_;
-  std::string service_name_;
   bool owns_rcl_handle_ = true;
 };
 
@@ -111,7 +105,7 @@ public:
     const std::string & service_name,
     AnyServiceCallback<ServiceT> any_callback,
     rcl_service_options_t & service_options)
-  : ServiceBase(node_handle, service_name), any_callback_(any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
@@ -177,12 +171,7 @@ public:
       // *INDENT-ON*
     }
 
-    const char * service_name = rcl_service_get_service_name(service_handle.get());
-    if (!service_name) {
-      throw std::runtime_error("failed to get service name");
-    }
     service_handle_ = service_handle;
-    service_name_ = std::string(service_name);
   }
 
   Service(
@@ -199,12 +188,6 @@ public:
         std::string("rcl_service_t in constructor argument must be initialized beforehand."));
       // *INDENT-ON*
     }
-
-    const char * service_name = rcl_service_get_service_name(service_handle);
-    if (!service_name) {
-      throw std::runtime_error("failed to get service name");
-    }
-    service_name_ = std::string(service_name);
 
     // In this case, rcl owns the service handle memory
     service_handle_ = std::shared_ptr<rcl_service_t>(new rcl_service_t);
