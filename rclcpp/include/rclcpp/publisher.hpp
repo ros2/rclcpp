@@ -205,11 +205,8 @@ public:
       ipm.publisher_id = intra_process_publisher_id_;
       ipm.message_sequence = message_seq;
       auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
-      if (status != RCL_RET_OK) {
-        // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-        throw std::runtime_error(
-          std::string("failed to publish intra process message: ") + rcl_get_error_string_safe());
-        // *INDENT-ON*
+      if (RCL_RET_OK != status) {
+        rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
       }
     } else {
       // Always destroy the message, even if we don't consume it, for consistency.
@@ -279,6 +276,19 @@ public:
     return this->publish(*msg);
   }
 
+  void
+  publish(const rcl_serialized_message_t * serialized_msg)
+  {
+    if (store_intra_process_message_) {
+      // TODO(Karsten1987): support serialized message passed by intraprocess
+      throw std::runtime_error("storing serialized messages in intra process is not supported yet");
+    }
+    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg);
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
+    }
+  }
+
   std::shared_ptr<MessageAlloc> get_allocator() const
   {
     return message_allocator_;
@@ -289,11 +299,8 @@ protected:
   do_inter_process_publish(const MessageT * msg)
   {
     auto status = rcl_publish(&publisher_handle_, msg);
-    if (status != RCL_RET_OK) {
-      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-      throw std::runtime_error(
-        std::string("failed to publish message: ") + rcl_get_error_string_safe());
-      // *INDENT-ON*
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
     }
   }
 

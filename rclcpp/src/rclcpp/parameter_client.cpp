@@ -399,8 +399,9 @@ SyncParametersClient::set_parameters(
 {
   auto f = async_parameters_client_->set_parameters(parameters);
 
+  auto node_base_interface = node_->get_node_base_interface();
   using rclcpp::executors::spin_node_until_future_complete;
-  if (spin_node_until_future_complete(*executor_, node_->get_node_base_interface(), f) ==
+  if (spin_node_until_future_complete(*executor_, node_base_interface, f) ==
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();

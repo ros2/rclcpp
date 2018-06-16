@@ -260,6 +260,17 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
+  ament_add_gtest(test_serialized_message_allocator test/test_serialized_message_allocator.cpp
+    ENV RCL_ASSERT_RMW_ID_MATCHES=${rmw_implementation})
+  if(TARGET test_serialized_message_allocator)
+    target_include_directories(test_serialized_message_allocator PUBLIC
+      ${test_msgs_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_serialized_message_allocator
+      ${PROJECT_NAME}
+      ${test_msgs_LIBRARIES}
+    )
+  endif()
   ament_add_gtest(test_service test/test_service.cpp)
   if(TARGET test_service)
     target_include_directories(test_service PUBLIC
@@ -279,6 +290,16 @@ if(BUILD_TESTING)
       ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
     target_link_libraries(test_subscription ${PROJECT_NAME})
+  endif()
+  find_package(test_msgs REQUIRED)
+  ament_add_gtest(test_subscription_traits test/test_subscription_traits.cpp)
+  if(TARGET test_subscription_traits)
+    target_include_directories(test_subscription_traits PUBLIC
+      ${rcl_INCLUDE_DIRS}
+    )
+  ament_target_dependencies(test_subscription_traits
+    "test_msgs"
+  )
   endif()
   ament_add_gtest(test_find_weak_nodes test/test_find_weak_nodes.cpp)
   if(TARGET test_find_weak_nodes)

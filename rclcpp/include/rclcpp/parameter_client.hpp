@@ -120,8 +120,9 @@ public:
     auto msg_mem_strat =
       MessageMemoryStrategy<rcl_interfaces::msg::ParameterEvent, Alloc>::create_default();
 
+    using rcl_interfaces::msg::ParameterEvent;
     return rclcpp::create_subscription<
-      rcl_interfaces::msg::ParameterEvent, CallbackT, Alloc, SubscriptionT>(
+      ParameterEvent, CallbackT, Alloc, ParameterEvent, SubscriptionT>(
       this->node_topics_interface_.get(),
       "parameter_events",
       std::forward<CallbackT>(callback),

@@ -281,22 +281,41 @@ void
 Executor::execute_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription)
 {
-  std::shared_ptr<void> message = subscription->create_message();
   rmw_message_info_t message_info;
+  message_info.from_intra_process = false;
 
-  auto ret = rcl_take(subscription->get_subscription_handle().get(),
+  if (subscription->is_serialized()) {
+    auto serialized_msg = subscription->create_serialized_message();
+    auto ret = rcl_take_serialized_message(
+      subscription->get_subscription_handle().get(),
+      serialized_msg.get(), &message_info);
+    if (RCL_RET_OK == ret) {
+      auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
+      subscription->handle_message(void_serialized_msg, message_info);
+    } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "take_serialized failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string_safe());
+      rcl_reset_error();
+    }
+    subscription->return_serialized_message(serialized_msg);
+  } else {
+    std::shared_ptr<void> message = subscription->create_message();
+    auto ret = rcl_take(
+      subscription->get_subscription_handle().get(),
       message.get(), &message_info);
-  if (ret == RCL_RET_OK) {
-    message_info.from_intra_process = false;
-    subscription->handle_message(message, message_info);
-  } else if (ret != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "take failed for subscription on topic '%s': %s",
-      subscription->get_topic_name(), rcl_get_error_string_safe());
-    rcl_reset_error();
+    if (RCL_RET_OK == ret) {
+      subscription->handle_message(message, message_info);
+    } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "could not deserialize serialized message on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string_safe());
+      rcl_reset_error();
+    }
+    subscription->return_message(message);
   }
-  subscription->return_message(message);
 }
 
 void

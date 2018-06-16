@@ -18,9 +18,14 @@
 #include <memory>
 #include <stdexcept>
 
+#include "rcl/types.h"
+
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rmw/serialized_message.h"
 
 namespace rclcpp
 {
@@ -39,14 +44,29 @@ public:
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
   using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
 
+  using SerializedMessageAllocTraits = allocator::AllocRebind<rcl_serialized_message_t, Alloc>;
+  using SerializedMessageAlloc = typename SerializedMessageAllocTraits::allocator_type;
+  using SerializedMessageDeleter =
+    allocator::Deleter<SerializedMessageAlloc, rcl_serialized_message_t>;
+
+  using BufferAllocTraits = allocator::AllocRebind<char, Alloc>;
+  using BufferAlloc = typename BufferAllocTraits::allocator_type;
+  using BufferDeleter = allocator::Deleter<BufferAlloc, char>;
+
   MessageMemoryStrategy()
   {
     message_allocator_ = std::make_shared<MessageAlloc>();
+    serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>();
+    buffer_allocator_ = std::make_shared<BufferAlloc>();
+    rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
   }
 
   explicit MessageMemoryStrategy(std::shared_ptr<Alloc> allocator)
   {
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    serialized_message_allocator_ = std::make_shared<SerializedMessageAlloc>(*allocator.get());
+    buffer_allocator_ = std::make_shared<BufferAlloc>(*allocator.get());
+    rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
   }
 
   /// Default factory method
@@ -62,6 +82,37 @@ public:
     return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_.get());
   }
 
+  virtual std::shared_ptr<rcl_serialized_message_t> borrow_serialized_message(size_t capacity)
+  {
+    auto msg = new rcl_serialized_message_t;
+    *msg = rmw_get_zero_initialized_serialized_message();
+    auto ret = rmw_serialized_message_init(msg, capacity, &rcutils_allocator_);
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+
+    auto serialized_msg = std::shared_ptr<rcl_serialized_message_t>(msg,
+        [](rmw_serialized_message_t * msg) {
+          auto ret = rmw_serialized_message_fini(msg);
+          delete msg;
+          if (ret != RCL_RET_OK) {
+            rclcpp::exceptions::throw_from_rcl_error(ret, "leaking memory");
+          }
+        });
+
+    return serialized_msg;
+  }
+
+  virtual std::shared_ptr<rcl_serialized_message_t> borrow_serialized_message()
+  {
+    return borrow_serialized_message(default_buffer_capacity_);
+  }
+
+  virtual void set_default_buffer_capacity(size_t capacity)
+  {
+    default_buffer_capacity_ = capacity;
+  }
+
   /// Release ownership of the message, which will deallocate it if it has no more owners.
   /** \param[in] msg Shared pointer to the message we are returning. */
   virtual void return_message(std::shared_ptr<MessageT> & msg)
@@ -69,8 +120,22 @@ public:
     msg.reset();
   }
 
+  virtual void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & serialized_msg)
+  {
+    serialized_msg.reset();
+  }
+
   std::shared_ptr<MessageAlloc> message_allocator_;
   MessageDeleter message_deleter_;
+
+  std::shared_ptr<SerializedMessageAlloc> serialized_message_allocator_;
+  SerializedMessageDeleter serialized_message_deleter_;
+
+  std::shared_ptr<BufferAlloc> buffer_allocator_;
+  BufferDeleter buffer_deleter_;
+  size_t default_buffer_capacity_ = 0;
+
+  rcutils_allocator_t rcutils_allocator_;
 };
 
 }  // namespace message_memory_strategy

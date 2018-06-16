@@ -82,7 +82,11 @@ Node::create_publisher(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename Alloc,
+  typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
@@ -90,20 +94,23 @@ Node::create_subscription(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
+  using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
+
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
 
   if (!msg_mem_strat) {
     using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-    msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
+    msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
   }
 
-  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
+  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
     topic_name,
     std::forward<CallbackT>(callback),
@@ -115,21 +122,26 @@ Node::create_subscription(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename Alloc,
+  typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
-  size_t qos_history_depth,
   CallbackT && callback,
+  size_t qos_history_depth,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
+  return this->create_subscription<MessageT>(
     topic_name,
     std::forward<CallbackT>(callback),
     qos,
