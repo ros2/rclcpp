@@ -188,7 +188,8 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
