@@ -203,3 +203,12 @@ TEST_F(TestDefaultStateMachine, bad_mood) {
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(static_cast<size_t>(1), test_node->number_of_callbacks);
 }
+
+TEST_F(TestDefaultStateMachine, lifecycle_subscriber) {
+  auto test_node = std::make_shared<MoodyLifecycleNode<GoodMood>>("testnode");
+
+  auto cb = [](const std::shared_ptr<lifecycle_msgs::msg::State> msg) {(void) msg;};
+  auto lifecycle_sub = test_node->create_subscription<lifecycle_msgs::msg::State>("~/empty", cb);
+
+  SUCCEED();
+}
