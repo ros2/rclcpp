@@ -71,8 +71,11 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   std::atomic_int timer_count {0};
 
   auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex, &last]() {
+      // While this tolerance is a little wide, if the bug occurs, the next step will
+      // happen almost instantly. The purpose of this test is not to measure the jitter
+      // in timers, just assert that a reasonable amount of time has passed.
       const double PERIOD = 0.1f;
-      const double TOLERANCE = 0.01f;
+      const double TOLERANCE = 0.025f;
 
       rclcpp::Time now = system_clock.now();
       timer_count++;
@@ -88,8 +91,8 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 
         if (diff < PERIOD - TOLERANCE || diff > PERIOD + TOLERANCE) {
           executor.cancel();
-          ASSERT_TRUE(diff > PERIOD - TOLERANCE);
-          ASSERT_TRUE(diff < PERIOD + TOLERANCE);
+          ASSERT_GT(diff, PERIOD - TOLERANCE);
+          ASSERT_LT(diff, PERIOD + TOLERANCE);
         }
       }
     };
