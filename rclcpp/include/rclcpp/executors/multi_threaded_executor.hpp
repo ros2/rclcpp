@@ -15,7 +15,9 @@
 #ifndef RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
 
+#include <memory>
 #include <mutex>
+#include <set>
 #include <thread>
 #include <unordered_map>
 
@@ -34,10 +36,22 @@ class MultiThreadedExecutor : public executor::Executor
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MultiThreadedExecutor)
 
+  /// Constructor for MultiThreadedExecutor.
+  /**
+   * For the yield_before_execute option, when true std::this_thread::yield()
+   * will be called after acquiring work (as an AnyExecutable) and
+   * releasing the spinning lock, but before executing the work.
+   * This is useful for reproducing some bugs related to taking work more than
+   * once.
+   *
+   * \param args common arguments for all executors
+   * \param yield_before_execute if true std::this_thread::yield() is called
+   */
   RCLCPP_PUBLIC
   MultiThreadedExecutor(
     const executor::ExecutorArgs & args = rclcpp::executor::create_default_executor_arguments(),
-    size_t number_of_threads = 0);
+    size_t number_of_threads = 0,
+    bool yield_before_execute = false);
 
   RCLCPP_PUBLIC
   virtual ~MultiThreadedExecutor();
@@ -60,6 +74,10 @@ private:
 
   std::mutex wait_mutex_;
   size_t number_of_threads_;
+  bool yield_before_execute_;
+
+  std::mutex scheduled_timers_mutex_;
+  std::set<TimerBase::SharedPtr> scheduled_timers_;
 };
 
 }  // namespace executors
