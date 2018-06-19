@@ -39,7 +39,7 @@ public:
   /// Constructor for MultiThreadedExecutor.
   /**
    * For the yield_before_execute option, when true std::this_thread::yield()
-   * will be called after acquiring work (as an AnyExecutable) and after
+   * will be called after acquiring work (as an AnyExecutable) and
    * releasing the spinning lock, but before executing the work.
    * This is useful for reproducing some bugs related to taking work more than
    * once.
