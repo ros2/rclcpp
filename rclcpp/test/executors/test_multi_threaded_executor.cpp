@@ -101,4 +101,3 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   executor.add_node(node);
   executor.spin();
 }
-
