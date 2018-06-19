@@ -359,7 +359,7 @@ public:
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
-   * The Event object is scoped and therefore to return the load just let it go
+   * The Event object is scoped and therefore to return the loan just let it go
    * out of scope.
    */
   RCLCPP_PUBLIC
