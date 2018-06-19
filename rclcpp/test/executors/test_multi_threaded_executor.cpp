@@ -42,7 +42,6 @@ protected:
    Test that timers are not taken multiple times when using reentrant callback groups.
  */
 TEST_F(TestMultiThreadedExecutor, timer_over_take) {
-
   struct sched_param param;
   param.sched_priority = 0;
   if (sched_setscheduler(0, SCHED_BATCH, &param) != 0) {
@@ -78,15 +77,15 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
         double diff = labs((now - last).nanoseconds()) / 1.0e9;
         last = now;
 
-        if (diff < 0.09 || diff > 0.11) {
+        if (diff < 0.009 || diff > 0.011) {
           executor.cancel();
-          ASSERT_TRUE(diff > 0.09);
-          ASSERT_TRUE(diff < 0.11);
+          ASSERT_TRUE(diff > 0.009);
+          ASSERT_TRUE(diff < 0.011);
         }
       }
     };
 
-  auto timer = node->create_wall_timer(100ms, timer_callback, cbg);
+  auto timer = node->create_wall_timer(10ms, timer_callback, cbg);
   executor.add_node(node);
   executor.spin();
 }

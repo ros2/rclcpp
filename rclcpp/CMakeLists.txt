@@ -395,7 +395,7 @@ if(BUILD_TESTING)
       "rcl")
     target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
   endif()
-endif(BUILD_TESTING)
+endif()
 
 ament_package(
   CONFIG_EXTRAS rclcpp-extras.cmake

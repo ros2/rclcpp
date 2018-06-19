@@ -16,6 +16,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <vector>
 
 #include "rclcpp/utilities.hpp"
@@ -70,19 +71,33 @@ void
 MultiThreadedExecutor::run(size_t)
 {
   while (rclcpp::ok() && spinning.load()) {
-    executor::AnyExecutable any_exec;
+    auto any_exec = std::make_shared<executor::AnyExecutable>();
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       if (!rclcpp::ok() || !spinning.load()) {
         return;
       }
-      if (!get_next_executable(any_exec)) {
+      if (!get_next_executable(*any_exec)) {
         continue;
+      }
+      {
+        std::lock_guard<std::mutex> lock(scheduled_mutex_);
+        if (scheduled_.count(any_exec) != 0) {
+          continue;
+        }
+        scheduled_.insert(any_exec);
       }
     }
     if (yield_before_execute_) {
       std::this_thread::yield();
     }
-    execute_any_executable(any_exec);
+    execute_any_executable(*any_exec);
+    {
+      std::lock_guard<std::mutex> lock(scheduled_mutex_);
+      auto it = scheduled_.find(any_exec);
+      if (it != scheduled_.end()) {
+        scheduled_.erase(it);
+      }
+    }
   }
 }

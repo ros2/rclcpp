@@ -15,7 +15,9 @@
 #ifndef RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__MULTI_THREADED_EXECUTOR_HPP_
 
+#include <memory>
 #include <mutex>
+#include <set>
 #include <thread>
 #include <unordered_map>
 
@@ -73,6 +75,9 @@ private:
   std::mutex wait_mutex_;
   size_t number_of_threads_;
   bool yield_before_execute_;
+
+  std::mutex scheduled_mutex_;
+  std::set<std::shared_ptr<executor::AnyExecutable>> scheduled_;
 };
 
 }  // namespace executors
