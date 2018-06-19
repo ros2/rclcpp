@@ -76,8 +76,8 @@ private:
   size_t number_of_threads_;
   bool yield_before_execute_;
 
-  std::mutex scheduled_mutex_;
-  std::set<std::shared_ptr<executor::AnyExecutable>> scheduled_;
+  std::mutex scheduled_timers_mutex_;
+  std::set<TimerBase::SharedPtr> scheduled_timers_;
 };
 
 }  // namespace executors
