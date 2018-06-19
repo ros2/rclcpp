@@ -52,8 +52,10 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   }
 #endif
 
+  bool yield_before_execute = true;
+
   rclcpp::executors::MultiThreadedExecutor executor(
-    rclcpp::executor::create_default_executor_arguments(), 0, true);
+    rclcpp::executor::create_default_executor_arguments(), 2u, yield_before_execute);
 
   ASSERT_GT(executor.get_number_of_threads(), 1u);
 
@@ -69,19 +71,19 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   std::atomic_int timer_count {0};
 
   auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex, &last]() {
-      const double PERIOD = 0.01f;
-      const double TOLERANCE = 0.001f;
+      const double PERIOD = 0.1f;
+      const double TOLERANCE = 0.01f;
 
       rclcpp::Time now = system_clock.now();
       timer_count++;
 
-      if (timer_count > 20) {
+      if (timer_count > 5) {
         executor.cancel();
       }
 
       {
         std::lock_guard<std::mutex> lock(last_mutex);
-        double diff = labs((now - last).nanoseconds()) / 1.0e9;
+        double diff = std::abs((now - last).nanoseconds()) / 1.0e9;
         last = now;
 
         if (diff < PERIOD - TOLERANCE || diff > PERIOD + TOLERANCE) {
@@ -92,7 +94,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
       }
     };
 
-  auto timer = node->create_wall_timer(10ms, timer_callback, cbg);
+  auto timer = node->create_wall_timer(100ms, timer_callback, cbg);
   executor.add_node(node);
   executor.spin();
 }
