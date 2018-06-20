@@ -222,8 +222,8 @@ public:
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
-    CallbackT && callback,
     size_t qos_history_depth,
+    CallbackT && callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<

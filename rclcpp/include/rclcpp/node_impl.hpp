@@ -130,8 +130,8 @@ template<
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
-  CallbackT && callback,
   size_t qos_history_depth,
+  CallbackT && callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
