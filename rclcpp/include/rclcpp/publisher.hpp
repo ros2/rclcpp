@@ -188,7 +188,6 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
-    this->do_inter_process_publish(msg.get());
     if (store_intra_process_message_) {
       // Take the pointer from the unique_msg, release it and pass as a void *
       // to the ipm. The ipm should then capture it again as a unique_ptr of
@@ -209,6 +208,7 @@ public:
         rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
       }
     } else {
+      this->do_inter_process_publish(msg.get());
       // Always destroy the message, even if we don't consume it, for consistency.
       msg.reset();
     }
