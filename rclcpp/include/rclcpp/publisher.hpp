@@ -207,6 +207,7 @@ public:
       if (RCL_RET_OK != status) {
         rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
       }
+      this->do_inter_process_publish(msg_ptr);
     } else {
       this->do_inter_process_publish(msg.get());
       // Always destroy the message, even if we don't consume it, for consistency.
