@@ -37,23 +37,14 @@ SubscriptionBase::SubscriptionBase(
   type_support_(type_support_handle),
   is_serialized_(is_serialized)
 {
-  std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
-  auto custom_deletor = [weak_node_handle](rcl_subscription_t * rcl_subs)
+  auto custom_deletor = [node_handle](rcl_subscription_t * rcl_subs)
     {
-      auto handle = weak_node_handle.lock();
-      if (handle) {
-        if (rcl_subscription_fini(rcl_subs, handle.get()) != RCL_RET_OK) {
-          RCLCPP_ERROR(
-            rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp"),
-            "Error in destruction of rcl subscription handle: %s",
-            rcl_get_error_string_safe());
-          rcl_reset_error();
-        }
-      } else {
+      if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {
         RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"),
-          "Error in destruction of rcl subscription handle: "
-          "the Node Handle was destructed too early. You will leak memory");
+          rclcpp::get_logger(rcl_node_get_logger_name(node_handle.get())).get_child("rclcpp"),
+          "Error in destruction of rcl subscription handle: %s",
+          rcl_get_error_string_safe());
+        rcl_reset_error();
       }
       delete rcl_subs;
     };
