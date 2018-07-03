@@ -13,6 +13,7 @@ endif()
 find_package(ament_cmake_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_lifecycle REQUIRED)
+find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
@@ -29,7 +30,9 @@ add_library(rclcpp_lifecycle
 ament_target_dependencies(rclcpp_lifecycle
   "rclcpp"
   "rcl_lifecycle"
-  "lifecycle_msgs")
+  "lifecycle_msgs"
+  "rosidl_typesupport_cpp"
+)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
