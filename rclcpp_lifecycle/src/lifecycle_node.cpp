@@ -194,9 +194,9 @@ LifecycleNode::list_parameters(
 }
 
 std::vector<std::string>
-LifecycleNode::get_node_names(bool no_demangle) const
+LifecycleNode::get_node_names() const
 {
-  return node_graph_->get_node_names(no_demangle);
+  return node_graph_->get_node_names();
 }
 
 std::map<std::string, std::vector<std::string>>

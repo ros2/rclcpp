@@ -302,7 +302,7 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<std::string>
-  get_node_names(bool no_demangle = false) const;
+  get_node_names() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
   std::map<std::string, std::vector<std::string>>
