@@ -32,12 +32,12 @@ class AnyServiceCallback
 {
 private:
   using SharedPtrCallback = std::function<
-    void(
+    void (
       const std::shared_ptr<typename ServiceT::Request>,
       std::shared_ptr<typename ServiceT::Response>
     )>;
   using SharedPtrWithRequestHeaderCallback = std::function<
-    void(
+    void (
       const std::shared_ptr<rmw_request_id_t>,
       const std::shared_ptr<typename ServiceT::Request>,
       std::shared_ptr<typename ServiceT::Response>

@@ -57,7 +57,7 @@ struct SubscriptionFactory
 
   // Function that takes a MessageT from the intra process manager
   using SetupIntraProcessFunction = std::function<
-    void(
+    void (
       rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
       rclcpp::SubscriptionBase::SharedPtr subscription,
       const rcl_subscription_options_t & subscription_options)>;

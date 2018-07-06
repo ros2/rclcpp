@@ -89,8 +89,8 @@ protected:
 };
 
 
-using VoidCallbackType = std::function<void()>;
-using TimerCallbackType = std::function<void(TimerBase &)>;
+using VoidCallbackType = std::function<void ()>;
+using TimerCallbackType = std::function<void (TimerBase &)>;
 
 /// Generic timer templated on the clock type. Periodically executes a user-specified callback.
 template<

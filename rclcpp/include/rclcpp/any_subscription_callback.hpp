@@ -38,15 +38,15 @@ class AnySubscriptionCallback
   using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
-  using SharedPtrCallback = std::function<void(const std::shared_ptr<MessageT>)>;
+  using SharedPtrCallback = std::function<void (const std::shared_ptr<MessageT>)>;
   using SharedPtrWithInfoCallback =
-    std::function<void(const std::shared_ptr<MessageT>, const rmw_message_info_t &)>;
-  using ConstSharedPtrCallback = std::function<void(const std::shared_ptr<const MessageT>)>;
+    std::function<void (const std::shared_ptr<MessageT>, const rmw_message_info_t &)>;
+  using ConstSharedPtrCallback = std::function<void (const std::shared_ptr<const MessageT>)>;
   using ConstSharedPtrWithInfoCallback =
-    std::function<void(const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
-  using UniquePtrCallback = std::function<void(MessageUniquePtr)>;
+    std::function<void (const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
+  using UniquePtrCallback = std::function<void (MessageUniquePtr)>;
   using UniquePtrWithInfoCallback =
-    std::function<void(MessageUniquePtr, const rmw_message_info_t &)>;
+    std::function<void (MessageUniquePtr, const rmw_message_info_t &)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback_;
