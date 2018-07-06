@@ -628,7 +628,7 @@ rclcpp::executor::operator<<(std::ostream & os, const FutureReturnCode & future_
 }
 
 std::string
-rclcpp::executor::to_string(const FutureReturnCode &future_return_code)
+rclcpp::executor::to_string(const FutureReturnCode & future_return_code)
 {
   using enum_type = std::underlying_type<FutureReturnCode>::type;
   std::string prefix = "Unknown enum value (";
