@@ -53,7 +53,6 @@ if(BUILD_TESTING)
     target_include_directories(test_lifecycle_node PUBLIC
       ${rcl_lifecycle_INCLUDE_DIRS}
       ${rclcpp_INCLUDE_DIRS}
-      ${rclcpp_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_lifecycle_node ${PROJECT_NAME})
   endif()
@@ -62,7 +61,6 @@ if(BUILD_TESTING)
     target_include_directories(test_state_machine_info PUBLIC
       ${rcl_lifecycle_INCLUDE_DIRS}
       ${rclcpp_INCLUDE_DIRS}
-      ${rclcpp_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_state_machine_info ${PROJECT_NAME})
   endif()
@@ -71,7 +69,6 @@ if(BUILD_TESTING)
     target_include_directories(test_register_custom_callbacks PUBLIC
       ${rcl_lifecycle_INCLUDE_DIRS}
       ${rclcpp_INCLUDE_DIRS}
-      ${rclcpp_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_register_custom_callbacks ${PROJECT_NAME})
   endif()
@@ -80,7 +77,6 @@ if(BUILD_TESTING)
     target_include_directories(test_callback_exceptions PUBLIC
       ${rcl_lifecycle_INCLUDE_DIRS}
       ${rclcpp_INCLUDE_DIRS}
-      ${rclcpp_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_callback_exceptions ${PROJECT_NAME})
   endif()
@@ -89,7 +85,6 @@ if(BUILD_TESTING)
     target_include_directories(test_state_wrapper PUBLIC
       ${rcl_lifecycle_INCLUDE_DIRS}
       ${rclcpp_INCLUDE_DIRS}
-      ${rclcpp_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_state_wrapper ${PROJECT_NAME})
   endif()
@@ -98,7 +93,6 @@ if(BUILD_TESTING)
     target_include_directories(test_transition_wrapper PUBLIC
       ${rcl_lifecycle_INCLUDE_DIRS}
       ${rclcpp_INCLUDE_DIRS}
-      ${rclcpp_lifecycle_INCLUDE_DIRS}
     )
     target_link_libraries(test_transition_wrapper ${PROJECT_NAME})
   endif()
