@@ -14,7 +14,6 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_lifecycle REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
-find_package(std_msgs REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
 include_directories(include)
