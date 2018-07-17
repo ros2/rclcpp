@@ -221,6 +221,33 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
+
+  // Register a callback handler with only pre_callback
+  rclcpp::JumpHandler::SharedPtr callback_handler3 = ros_clock->create_jump_callback(
+    std::bind(&CallbackObject::pre_callback, &cbo, 3),
+    std::function<void(rclcpp::TimeJump)>(),
+    jump_threshold);
+
+  for (int i = 0; i < 5; ++i) {
+    if (!rclcpp::ok()) {
+      break;  // Break for ctrl-c
+    }
+    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
+    msg->clock.sec = i;
+    msg->clock.nanosec = 2000;
+    clock_pub->publish(msg);
+    rclcpp::spin_some(node);
+    loop_rate.sleep();
+  }
+
+  // Register a callback handler with only post_callback
+  rclcpp::JumpHandler::SharedPtr callback_handler4 = ros_clock->create_jump_callback(
+    std::function<void()>(),
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 4),
+    jump_threshold);
+
+  EXPECT_EQ(3, cbo.last_precallback_id_);
+  EXPECT_EQ(4, cbo.last_postcallback_id_);
 }
 
 void trigger_clock_changes(
