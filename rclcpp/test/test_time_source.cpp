@@ -50,6 +50,29 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
+void trigger_clock_changes(
+  rclcpp::Node::SharedPtr node)
+{
+  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
+      rmw_qos_profile_default);
+
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(node);
+
+  rclcpp::WallRate loop_rate(50);
+  for (int i = 0; i < 5; ++i) {
+    if (!rclcpp::ok()) {
+      break;  // Break for ctrl-c
+    }
+    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
+    msg->clock.sec = i;
+    msg->clock.nanosec = 1000;
+    clock_pub->publish(msg);
+    executor.spin_once(1000000ns);
+    loop_rate.sleep();
+  }
+}
+
 TEST_F(TestTimeSource, detachUnattached) {
   rclcpp::TimeSource ts;
 
@@ -92,20 +115,8 @@ TEST_F(TestTimeSource, clock) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
-      rmw_qos_profile_default);
-  rclcpp::WallRate loop_rate(50);
-  for (int i = 0; i < 5; ++i) {
-    if (!rclcpp::ok()) {
-      break;  // Break for ctrl-c
-    }
-    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
-    msg->clock.sec = i;
-    msg->clock.nanosec = 1000;
-    clock_pub->publish(msg);
-    rclcpp::spin_some(node);
-    loop_rate.sleep();
-  }
+  trigger_clock_changes(node);
+
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
@@ -161,21 +172,7 @@ TEST_F(TestTimeSource, callbacks) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
-      rmw_qos_profile_default);
-
-  rclcpp::WallRate loop_rate(50);
-  for (int i = 0; i < 5; ++i) {
-    if (!rclcpp::ok()) {
-      break;  // Break for ctrl-c
-    }
-    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
-    msg->clock.sec = i;
-    msg->clock.nanosec = 1000;
-    clock_pub->publish(msg);
-    rclcpp::spin_some(node);
-    loop_rate.sleep();
-  }
+  trigger_clock_changes(node);
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
@@ -198,17 +195,7 @@ TEST_F(TestTimeSource, callbacks) {
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
     jump_threshold);
 
-  for (int i = 0; i < 5; ++i) {
-    if (!rclcpp::ok()) {
-      break;  // Break for ctrl-c
-    }
-    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
-    msg->clock.sec = i;
-    msg->clock.nanosec = 2000;
-    clock_pub->publish(msg);
-    rclcpp::spin_some(node);
-    loop_rate.sleep();
-  }
+  trigger_clock_changes(node);
 
   EXPECT_EQ(2, cbo.last_precallback_id_);
   EXPECT_EQ(2, cbo.last_postcallback_id_);
@@ -228,17 +215,9 @@ TEST_F(TestTimeSource, callbacks) {
     std::function<void(rclcpp::TimeJump)>(),
     jump_threshold);
 
-  for (int i = 0; i < 5; ++i) {
-    if (!rclcpp::ok()) {
-      break;  // Break for ctrl-c
-    }
-    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
-    msg->clock.sec = i;
-    msg->clock.nanosec = 2000;
-    clock_pub->publish(msg);
-    rclcpp::spin_some(node);
-    loop_rate.sleep();
-  }
+  trigger_clock_changes(node);
+  EXPECT_EQ(3, cbo.last_precallback_id_);
+  EXPECT_EQ(2, cbo.last_postcallback_id_);
 
   // Register a callback handler with only post_callback
   rclcpp::JumpHandler::SharedPtr callback_handler4 = ros_clock->create_jump_callback(
@@ -246,31 +225,9 @@ TEST_F(TestTimeSource, callbacks) {
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 4),
     jump_threshold);
 
+  trigger_clock_changes(node);
   EXPECT_EQ(3, cbo.last_precallback_id_);
   EXPECT_EQ(4, cbo.last_postcallback_id_);
-}
-
-void trigger_clock_changes(
-  rclcpp::Node::SharedPtr node)
-{
-  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
-      rmw_qos_profile_default);
-
-  rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node);
-
-  rclcpp::WallRate loop_rate(50);
-  for (int i = 0; i < 5; ++i) {
-    if (!rclcpp::ok()) {
-      break;  // Break for ctrl-c
-    }
-    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
-    msg->clock.sec = i;
-    msg->clock.nanosec = 1000;
-    clock_pub->publish(msg);
-    executor.spin_once(1000000ns);
-    loop_rate.sleep();
-  }
 }
 
 
