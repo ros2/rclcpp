@@ -153,7 +153,9 @@ Clock::invoke_prejump_callbacks(
   const std::vector<JumpHandler::SharedPtr> & callbacks)
 {
   for (const auto cb : callbacks) {
-    cb->pre_callback();
+    if (cb->pre_callback != nullptr) {
+      cb->pre_callback();
+    }
   }
 }
 
@@ -163,7 +165,9 @@ Clock::invoke_postjump_callbacks(
   const TimeJump & jump)
 {
   for (auto cb : callbacks) {
-    cb->post_callback(jump);
+    if (cb->post_callback != nullptr) {
+      cb->post_callback(jump);
+    }
   }
 }
 
