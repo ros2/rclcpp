@@ -264,6 +264,12 @@ rclcpp::ok()
   return ::g_signal_status == 0;
 }
 
+bool
+rclcpp::is_initialized()
+{
+  return rcl_ok();
+}
+
 static std::mutex on_shutdown_mutex_;
 static std::vector<std::function<void(void)>> on_shutdown_callbacks_;
 
