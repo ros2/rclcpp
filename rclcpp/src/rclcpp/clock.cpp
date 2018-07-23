@@ -103,6 +103,12 @@ Clock::ros_time_is_active()
   return is_enabled;
 }
 
+rcl_clock_t *
+Clock::get_clock_handle()
+{
+  return &rcl_clock_;
+}
+
 rcl_clock_type_t
 Clock::get_clock_type()
 {

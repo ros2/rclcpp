@@ -65,7 +65,7 @@ void TimeSource::attachNode(
   node_services_ = node_services_interface;
   // TODO(tfoote): Update QOS
 
-  const std::string & topic_name = "/clock";
+  const std::string topic_name = "/clock";
 
   rclcpp::callback_group::CallbackGroup::SharedPtr group;
   using rclcpp::message_memory_strategy::MessageMemoryStrategy;

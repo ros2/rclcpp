@@ -23,6 +23,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "rclcpp/clock.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rate.hpp"
@@ -44,7 +45,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase)
 
   RCLCPP_PUBLIC
-  explicit TimerBase(std::chrono::nanoseconds period);
+  explicit TimerBase(Clock::SharedPtr clock, std::chrono::nanoseconds period);
 
   RCLCPP_PUBLIC
   ~TimerBase();
@@ -85,6 +86,7 @@ public:
   bool is_ready();
 
 protected:
+  Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
 };
 
@@ -95,11 +97,9 @@ using TimerCallbackType = std::function<void (TimerBase &)>;
 /// Generic timer templated on the clock type. Periodically executes a user-specified callback.
 template<
   typename FunctorT,
-  class Clock,
   typename std::enable_if<
-    (rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
-    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value) &&
-    Clock::is_steady
+    rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value
   >::type * = nullptr
 >
 class GenericTimer : public TimerBase
@@ -112,8 +112,10 @@ public:
    * \param[in] period The interval at which the timer fires.
    * \param[in] callback User-specified callback function.
    */
-  GenericTimer(std::chrono::nanoseconds period, FunctorT && callback)
-  : TimerBase(period), callback_(std::forward<FunctorT>(callback))
+  explicit GenericTimer(
+    Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback
+  )
+  : TimerBase(clock, period), callback_(std::forward<FunctorT>(callback))
   {
   }
 
@@ -165,7 +167,7 @@ public:
   virtual bool
   is_steady()
   {
-    return Clock::is_steady;
+    return clock_->get_clock_type() == RCL_STEADY_TIME;
   }
 
 protected:
@@ -174,8 +176,26 @@ protected:
   FunctorT callback_;
 };
 
-template<typename CallbackType>
-using WallTimer = GenericTimer<CallbackType, std::chrono::steady_clock>;
+template<
+  typename FunctorT,
+  typename std::enable_if<
+    rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
+    rclcpp::function_traits::same_arguments<FunctorT, TimerCallbackType>::value
+  >::type * = nullptr
+>
+class WallTimer : public GenericTimer<FunctorT>
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(WallTimer)
+
+  explicit WallTimer(std::chrono::nanoseconds period, FunctorT && callback)
+  : GenericTimer<FunctorT>(
+      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback))
+  {}
+
+protected:
+  RCLCPP_DISABLE_COPY(WallTimer)
+};
 
 }  // namespace rclcpp
 

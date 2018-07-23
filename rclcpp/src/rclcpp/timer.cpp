@@ -22,8 +22,10 @@
 
 using rclcpp::TimerBase;
 
-TimerBase::TimerBase(std::chrono::nanoseconds period)
+TimerBase::TimerBase(rclcpp::Clock::SharedPtr clock, std::chrono::nanoseconds period)
 {
+  clock_ = clock;
+
   timer_handle_ = std::shared_ptr<rcl_timer_t>(
     new rcl_timer_t, [ = ](rcl_timer_t * timer)
     {
@@ -38,8 +40,9 @@ TimerBase::TimerBase(std::chrono::nanoseconds period)
 
   *timer_handle_.get() = rcl_get_zero_initialized_timer();
 
+  rcl_clock_t * clock_handle = clock_->get_clock_handle();
   if (rcl_timer_init(
-      timer_handle_.get(), period.count(), nullptr,
+      timer_handle_.get(), clock_handle, period.count(), nullptr,
       rcl_get_default_allocator()) != RCL_RET_OK)
   {
     RCUTILS_LOG_ERROR_NAMED(
