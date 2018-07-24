@@ -94,7 +94,7 @@ protected:
 using VoidCallbackType = std::function<void ()>;
 using TimerCallbackType = std::function<void (TimerBase &)>;
 
-/// Generic timer templated on the clock type. Periodically executes a user-specified callback.
+/// Generic timer. Periodically executes a user-specified callback.
 template<
   typename FunctorT,
   typename std::enable_if<
@@ -109,6 +109,7 @@ public:
 
   /// Default constructor.
   /**
+   * \param[in] clock The clock providing the current time.
    * \param[in] period The interval at which the timer fires.
    * \param[in] callback User-specified callback function.
    */
