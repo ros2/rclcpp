@@ -77,7 +77,7 @@ Clock::now()
 {
   Time now(0, 0, rcl_clock_.type);
 
-  auto ret = rcl_clock_get_now(&rcl_clock_, &now.rcl_time_);
+  auto ret = rcl_clock_get_now(&rcl_clock_, &now.rcl_time_.nanoseconds);
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "could not get current time stamp");
