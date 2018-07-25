@@ -17,7 +17,6 @@
 #include "rclcpp/utilities.hpp"
 
 TEST(TestInit, is_initialized) {
-
   EXPECT_FALSE(rclcpp::is_initialized());
 
   rclcpp::init(0, nullptr);
@@ -28,4 +27,3 @@ TEST(TestInit, is_initialized) {
 
   EXPECT_TRUE(rclcpp::is_initialized());
 }
-
