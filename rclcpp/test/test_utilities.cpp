@@ -48,4 +48,6 @@ TEST(TestUtilities, init_with_args) {
 
   ASSERT_EQ(1u, other_args.size());
   ASSERT_EQ(std::string{"process_name"}, other_args[0]);
+
+  EXPECT_TRUE(rclcpp::is_initialized());
 }

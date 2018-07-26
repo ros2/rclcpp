@@ -87,6 +87,12 @@ RCLCPP_PUBLIC
 bool
 ok();
 
+/// Returns true if init() has already been called.
+/** \return True if init() has been called, false otherwise. */
+RCLCPP_PUBLIC
+bool
+is_initialized();
+
 /// Notify the signal handler and rmw that rclcpp is shutting down.
 RCLCPP_PUBLIC
 void

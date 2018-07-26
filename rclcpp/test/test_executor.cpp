@@ -28,7 +28,7 @@
 
 using namespace std::chrono_literals;
 
-class TestExcutors : public ::testing::Test
+class TestExecutors : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -50,7 +50,7 @@ protected:
 };
 
 // Make sure that executors detach from nodes when destructing
-TEST_F(TestExcutors, detachOnDestruction) {
+TEST_F(TestExecutors, detachOnDestruction) {
   {
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
