@@ -244,3 +244,9 @@ TEST(TestTime, overflows) {
   rclcpp::Time two_time(2);
   EXPECT_NO_THROW(one_time - two_time);
 }
+
+TEST(TestTime, seconds) {
+  EXPECT_DOUBLE_EQ(0.0, rclcpp::Time(0, 0).seconds());
+  EXPECT_DOUBLE_EQ(4.5, rclcpp::Time(4, 500000000).seconds());
+  EXPECT_DOUBLE_EQ(2.5, rclcpp::Time(0, 2500000000).seconds());
+}

@@ -227,6 +227,12 @@ Time::nanoseconds() const
   return rcl_time_.nanoseconds;
 }
 
+double
+Time::seconds() const
+{
+  return std::chrono::duration<double>(std::chrono::nanoseconds(rcl_time_.nanoseconds)).count();
+}
+
 rcl_clock_type_t
 Time::get_clock_type() const
 {
