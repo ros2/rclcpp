@@ -97,3 +97,16 @@ TEST(TestDuration, overflows) {
   EXPECT_THROW(base_d_neg * (-4), std::overflow_error);
   EXPECT_THROW(base_d_neg * 4, std::underflow_error);
 }
+
+TEST(TestDuration, negative_duration) {
+  rclcpp::Duration assignable_duration = rclcpp::Duration(0) - rclcpp::Duration(5, 0);
+
+  EXPECT_EQ(-5000000000, assignable_duration.nanoseconds());
+
+  builtin_interfaces::msg::Duration duration_msg;
+  duration_msg.sec = -4;
+  duration_msg.nanosec = -500000000;
+
+  assignable_duration = duration_msg;
+  EXPECT_EQ(-4500000000, assignable_duration.nanoseconds());
+}
