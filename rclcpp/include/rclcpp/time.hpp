@@ -102,6 +102,11 @@ public:
   rcl_time_point_value_t
   nanoseconds() const;
 
+  /// \return the seconds since epoch as a floating point number.
+  RCLCPP_PUBLIC
+  double
+  seconds() const;
+
   RCLCPP_PUBLIC
   rcl_clock_type_t
   get_clock_type() const;
