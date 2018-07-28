@@ -100,6 +100,10 @@ public:
   ros_time_is_active();
 
   RCLCPP_PUBLIC
+  rcl_clock_t *
+  get_clock_handle();
+
+  RCLCPP_PUBLIC
   rcl_clock_type_t
   get_clock_type();
 
