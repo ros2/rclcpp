@@ -101,12 +101,15 @@ TEST(TestDuration, overflows) {
 TEST(TestDuration, negative_duration) {
   rclcpp::Duration assignable_duration = rclcpp::Duration(0) - rclcpp::Duration(5, 0);
 
-  EXPECT_EQ(-5000000000, assignable_duration.nanoseconds());
+  // Since number is smaller than -INT_MAX, must explicitly set the type for windows.
+  const int64_t expected_value_1 = -5000000000;
+  EXPECT_EQ(expected_value_1, assignable_duration.nanoseconds());
 
   builtin_interfaces::msg::Duration duration_msg;
   duration_msg.sec = -4;
   duration_msg.nanosec = 250000000;
 
   assignable_duration = duration_msg;
-  EXPECT_EQ(-3750000000, assignable_duration.nanoseconds());
+  const int64_t expected_value_2 = -3750000000;
+  EXPECT_EQ(expected_value_2, assignable_duration.nanoseconds());
 }
