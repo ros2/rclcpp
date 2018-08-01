@@ -105,8 +105,8 @@ TEST(TestDuration, negative_duration) {
 
   builtin_interfaces::msg::Duration duration_msg;
   duration_msg.sec = -4;
-  duration_msg.nanosec = -500000000;
+  duration_msg.nanosec = 250000000;
 
   assignable_duration = duration_msg;
-  EXPECT_EQ(-4500000000, assignable_duration.nanoseconds());
+  EXPECT_EQ(-3750000000, assignable_duration.nanoseconds());
 }
