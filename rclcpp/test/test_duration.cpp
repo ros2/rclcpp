@@ -101,15 +101,22 @@ TEST(TestDuration, overflows) {
 TEST(TestDuration, negative_duration) {
   rclcpp::Duration assignable_duration = rclcpp::Duration(0) - rclcpp::Duration(5, 0);
 
-  // Since number is smaller than -INT_MAX, must explicitly set the type for windows.
-  const int64_t expected_value_1 = -5000000000;
-  EXPECT_EQ(expected_value_1, assignable_duration.nanoseconds());
+  {
+    // avoid windows converting a literal number less than -INT_MAX to unsigned int C4146
+    int64_t expected_value = -5000;
+    expected_value *= 1000 * 1000;
+    EXPECT_EQ(expected_value, assignable_duration.nanoseconds());
+  }
 
-  builtin_interfaces::msg::Duration duration_msg;
-  duration_msg.sec = -4;
-  duration_msg.nanosec = 250000000;
+  {
+    builtin_interfaces::msg::Duration duration_msg;
+    duration_msg.sec = -4;
+    duration_msg.nanosec = 250000000;
 
-  assignable_duration = duration_msg;
-  const int64_t expected_value_2 = -3750000000;
-  EXPECT_EQ(expected_value_2, assignable_duration.nanoseconds());
+    assignable_duration = duration_msg;
+    // avoid windows converting a literal number less than -INT_MAX to unsigned int C4146
+    int64_t expected_value = -3750;
+    expected_value *= 1000 * 1000;
+    EXPECT_EQ(expected_value, assignable_duration.nanoseconds());
+  }
 }
