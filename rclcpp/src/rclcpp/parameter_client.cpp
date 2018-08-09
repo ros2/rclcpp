@@ -146,7 +146,7 @@ AsyncParametersClient::get_parameters(
       auto & pvalues = cb_f.get()->values;
 
       for (auto & pvalue : pvalues) {
-        auto i = &pvalue - &pvalues[0];
+        size_t i = static_cast<size_t>(&pvalue - &pvalues[0]);
         rcl_interfaces::msg::Parameter parameter;
         parameter.name = request->names[i];
         parameter.value = pvalue;

@@ -69,7 +69,7 @@ NodeBase::NodeBase(
   _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
 #endif
   if (ros_domain_id) {
-    uint32_t number = strtoul(ros_domain_id, NULL, 0);
+    uint32_t number = static_cast<uint32_t>(strtoul(ros_domain_id, NULL, 0));
     if (number == (std::numeric_limits<uint32_t>::max)()) {
       // Finalize the interrupt guard condition.
       finalize_notify_guard_condition();

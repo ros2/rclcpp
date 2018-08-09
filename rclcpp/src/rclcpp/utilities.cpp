@@ -96,9 +96,10 @@ set_signal_handler(int signal_value, signal_handler_t signal_handler)
     strerror_s(error_string, error_length, errno);
 #endif
     // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-    throw std::runtime_error(
-      std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
-      error_string);
+    std::string error_message("Failed to set SIGINT signal handler: (");
+    error_message += std::to_string(errno) + ")";
+    error_message += error_string;
+    throw std::runtime_error(error_message);
     // *INDENT-ON*
   }
 
@@ -240,9 +241,9 @@ rclcpp::remove_ros_arguments(int argc, char const * const argv[])
   }
 
   std::vector<std::string> return_arguments;
-  return_arguments.resize(nonros_argc);
+  return_arguments.resize(static_cast<uint32_t>(nonros_argc));
 
-  for (int ii = 0; ii < nonros_argc; ++ii) {
+  for (uint32_t ii = 0U; ii < static_cast<uint32_t>(nonros_argc); ++ii) {
     return_arguments[ii] = std::string(nonros_argv[ii]);
   }
 

@@ -37,8 +37,8 @@ JumpThreshold::is_exceeded(const TimeJump & jump)
   {
     return true;
   }
-  if ((uint64_t)jump.delta_.nanoseconds > min_forward_ ||
-    (uint64_t)jump.delta_.nanoseconds < min_backward_)
+  if ((static_cast<uint64_t>(jump.delta_.nanoseconds) > min_forward_) ||
+    (static_cast<uint64_t>(jump.delta_.nanoseconds) < min_backward_))
   {
     return true;
   }
