@@ -29,13 +29,11 @@ namespace rclcpp
 {
 
 /// Structure to store an arbitrary parameter with templated get/set methods.
-class Parameter
+class RCLCPP_PUBLIC Parameter
 {
 public:
-  RCLCPP_PUBLIC
   Parameter();
 
-  RCLCPP_PUBLIC
   Parameter(const std::string & name, const ParameterValue & value);
 
   template<typename ValueTypeT>
@@ -44,19 +42,15 @@ public:
   {
   }
 
-  RCLCPP_PUBLIC
   ParameterType
   get_type() const;
 
-  RCLCPP_PUBLIC
   std::string
   get_type_name() const;
 
-  RCLCPP_PUBLIC
   const std::string &
   get_name() const;
 
-  RCLCPP_PUBLIC
   rcl_interfaces::msg::ParameterValue
   get_value_message() const;
 
@@ -76,51 +70,39 @@ public:
     return value_.get<T>();
   }
 
-  RCLCPP_PUBLIC
   bool
   as_bool() const;
 
-  RCLCPP_PUBLIC
   int64_t
   as_int() const;
 
-  RCLCPP_PUBLIC
   double
   as_double() const;
 
-  RCLCPP_PUBLIC
   const std::string &
   as_string() const;
 
-  RCLCPP_PUBLIC
   const std::vector<uint8_t> &
   as_byte_array() const;
 
-  RCLCPP_PUBLIC
   const std::vector<bool> &
   as_bool_array() const;
 
-  RCLCPP_PUBLIC
   const std::vector<int64_t> &
   as_integer_array() const;
 
-  RCLCPP_PUBLIC
   const std::vector<double> &
   as_double_array() const;
 
-  RCLCPP_PUBLIC
   const std::vector<std::string> &
   as_string_array() const;
 
-  RCLCPP_PUBLIC
   static Parameter
   from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter);
 
-  RCLCPP_PUBLIC
   rcl_interfaces::msg::Parameter
   to_parameter_msg() const;
 
-  RCLCPP_PUBLIC
   std::string
   value_to_string() const;
 

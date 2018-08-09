@@ -39,36 +39,29 @@
 namespace rclcpp
 {
 
-class TimerBase
+class RCLCPP_PUBLIC TimerBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase)
 
-  RCLCPP_PUBLIC
   explicit TimerBase(Clock::SharedPtr clock, std::chrono::nanoseconds period);
 
-  RCLCPP_PUBLIC
   ~TimerBase();
 
-  RCLCPP_PUBLIC
   void
   cancel();
 
-  RCLCPP_PUBLIC
   void
   reset();
 
-  RCLCPP_PUBLIC
   virtual void
   execute_callback() = 0;
 
-  RCLCPP_PUBLIC
   std::shared_ptr<const rcl_timer_t>
   get_timer_handle();
 
   /// Check how long the timer has until its next scheduled callback.
   /** \return A std::chrono::duration representing the relative time until the next callback. */
-  RCLCPP_PUBLIC
   std::chrono::nanoseconds
   time_until_trigger();
 
@@ -82,7 +75,6 @@ public:
    * since it maintains the last time the callback was triggered.
    * \return True if the timer needs to trigger.
    */
-  RCLCPP_PUBLIC
   bool is_ready();
 
 protected:

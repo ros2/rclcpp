@@ -34,12 +34,11 @@
 namespace rclcpp
 {
 
-class ParameterService
+class RCLCPP_PUBLIC ParameterService
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterService)
 
-  RCLCPP_PUBLIC
   explicit ParameterService(
     const std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
     const std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,

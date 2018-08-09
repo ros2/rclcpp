@@ -62,7 +62,7 @@ namespace rclcpp
 {
 
 /// Node is the single point of entry for creating publishers and subscribers.
-class Node : public std::enable_shared_from_this<Node>
+class RCLCPP_PUBLIC Node : public std::enable_shared_from_this<Node>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Node)
@@ -74,7 +74,6 @@ public:
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
-  RCLCPP_PUBLIC
   explicit Node(
     const std::string & node_name,
     const std::string & namespace_ = "",
@@ -92,7 +91,6 @@ public:
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
-  RCLCPP_PUBLIC
   Node(
     const std::string & node_name,
     const std::string & namespace_,
@@ -103,34 +101,28 @@ public:
     bool use_intra_process_comms = false,
     bool start_parameter_services = true);
 
-  RCLCPP_PUBLIC
   virtual ~Node();
 
   /// Get the name of the node.
   /** \return The name of the node. */
-  RCLCPP_PUBLIC
   const char *
   get_name() const;
 
   /// Get the namespace of the node.
   /** \return The namespace of the node. */
-  RCLCPP_PUBLIC
   const char *
   get_namespace() const;
 
   /// Get the logger of the node.
   /** \return The logger of the node. */
-  RCLCPP_PUBLIC
   rclcpp::Logger
   get_logger() const;
 
   /// Create and return a callback group.
-  RCLCPP_PUBLIC
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
   /// Return the list of callback groups in the node.
-  RCLCPP_PUBLIC
   const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
@@ -261,11 +253,9 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters);
 
-  RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
@@ -275,15 +265,12 @@ public:
     const std::string & name,
     const ParameterT & value);
 
-  RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
 
-  RCLCPP_PUBLIC
   rclcpp::Parameter
   get_parameter(const std::string & name) const;
 
-  RCLCPP_PUBLIC
   bool
   get_parameter(
     const std::string & name,
@@ -319,15 +306,12 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value) const;
 
-  RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
 
-  RCLCPP_PUBLIC
   std::vector<uint8_t>
   get_parameter_types(const std::vector<std::string> & names) const;
 
-  RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
@@ -345,19 +329,15 @@ public:
   std::vector<std::string>
   get_node_names() const;
 
-  RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types() const;
 
-  RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
 
-  RCLCPP_PUBLIC
   size_t
   count_publishers(const std::string & topic_name) const;
 
-  RCLCPP_PUBLIC
   size_t
   count_subscribers(const std::string & topic_name) const;
 
@@ -366,7 +346,6 @@ public:
    * The Event object is scoped and therefore to return the loan just let it go
    * out of scope.
    */
-  RCLCPP_PUBLIC
   rclcpp::Event::SharedPtr
   get_graph_event();
 
@@ -378,59 +357,48 @@ public:
    * \throws EventNotRegisteredError if the given event was not acquired with
    *   get_graph_event().
    */
-  RCLCPP_PUBLIC
   void
   wait_for_graph_change(
     rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
-  RCLCPP_PUBLIC
   rclcpp::Clock::SharedPtr
   get_clock();
 
-  RCLCPP_PUBLIC
   Time
   now();
 
   /// Return the Node's internal NodeBaseInterface implementation.
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_base_interface();
 
   /// Return the Node's internal NodeClockInterface implementation.
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr
   get_node_clock_interface();
 
   /// Return the Node's internal NodeGraphInterface implementation.
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
 
   /// Return the Node's internal NodeTimersInterface implementation.
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
   get_node_timers_interface();
 
   /// Return the Node's internal NodeTopicsInterface implementation.
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
   get_node_topics_interface();
 
   /// Return the Node's internal NodeServicesInterface implementation.
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
   get_node_services_interface();
 
   /// Return the Node's internal NodeParametersInterface implementation.
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
   get_node_parameters_interface();
 
 private:
   RCLCPP_DISABLE_COPY(Node)
 
-  RCLCPP_PUBLIC
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 

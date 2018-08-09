@@ -67,65 +67,47 @@ public:
 };
 
 /// Store the type and value of a parameter.
-class ParameterValue
+class RCLCPP_PUBLIC ParameterValue
 {
 public:
   /// Construct a parameter value with type PARAMETER_NOT_SET.
-  RCLCPP_PUBLIC
   ParameterValue();
   /// Construct a parameter value from a message.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const rcl_interfaces::msg::ParameterValue & value);
   /// Construct a parameter value with type PARAMETER_BOOL.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const bool bool_value);
   /// Construct a parameter value with type PARAMETER_INTEGER.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const int int_value);
   /// Construct a parameter value with type PARAMETER_INTEGER.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const int64_t int_value);
   /// Construct a parameter value with type PARAMETER_DOUBLE.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const float double_value);
   /// Construct a parameter value with type PARAMETER_DOUBLE.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const double double_value);
   /// Construct a parameter value with type PARAMETER_STRING.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::string & string_value);
   /// Construct a parameter value with type PARAMETER_STRING.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const char * string_value);
   /// Construct a parameter value with type PARAMETER_BYTE_ARRAY.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<uint8_t> & byte_array_value);
   /// Construct a parameter value with type PARAMETER_BOOL_ARRAY.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<bool> & bool_array_value);
   /// Construct a parameter value with type PARAMETER_INTEGER_ARRAY.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<int> & int_array_value);
   /// Construct a parameter value with type PARAMETER_INTEGER_ARRAY.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<int64_t> & int_array_value);
   /// Construct a parameter value with type PARAMETER_DOUBLE_ARRAY.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<float> & double_array_value);
   /// Construct a parameter value with type PARAMETER_DOUBLE_ARRAY.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<double> & double_array_value);
   /// Construct a parameter value with type PARAMETER_STRING_ARRAY.
-  RCLCPP_PUBLIC
   explicit ParameterValue(const std::vector<std::string> & string_array_value);
 
   /// Return an enum indicating the type of the set value.
-  RCLCPP_PUBLIC
   ParameterType
   get_type() const;
 
   /// Return a message populated with the parameter value
-  RCLCPP_PUBLIC
   rcl_interfaces::msg::ParameterValue
   to_value_msg() const;
 

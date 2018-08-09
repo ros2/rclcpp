@@ -45,7 +45,7 @@ namespace node_interfaces
 class NodeTopicsInterface;
 }
 
-class PublisherBase
+class RCLCPP_PUBLIC PublisherBase
 {
   friend ::rclcpp::node_interfaces::NodeTopicsInterface;
 
@@ -61,49 +61,41 @@ public:
    * \param[in] type_support The type support structure for the type to be published.
    * \param[in] publisher_options QoS settings for this publisher.
    */
-  RCLCPP_PUBLIC
   PublisherBase(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rosidl_message_type_support_t & type_support,
     const rcl_publisher_options_t & publisher_options);
 
-  RCLCPP_PUBLIC
   virtual ~PublisherBase();
 
   /// Get the topic that this publisher publishes on.
   /** \return The topic name. */
-  RCLCPP_PUBLIC
   const char *
   get_topic_name() const;
 
   /// Get the queue size for this publisher.
   /** \return The queue size. */
-  RCLCPP_PUBLIC
   size_t
   get_queue_size() const;
 
   /// Get the global identifier for this publisher (used in rmw and by DDS).
   /** \return The gid. */
-  RCLCPP_PUBLIC
   const rmw_gid_t &
   get_gid() const;
 
   /// Get the global identifier for this publisher used by intra-process communication.
   /** \return The intra-process gid. */
-  RCLCPP_PUBLIC
   const rmw_gid_t &
   get_intra_process_gid() const;
 
   /// Get the rcl publisher handle.
   /** \return The rcl publisher handle. */
-  RCLCPP_PUBLIC
   rcl_publisher_t *
   get_publisher_handle();
 
   /// Get the rcl publisher handle.
   /** \return The rcl publisher handle. */
-  RCLCPP_PUBLIC
   const rcl_publisher_t *
   get_publisher_handle() const;
 
@@ -113,7 +105,6 @@ public:
    * \param[in] gid Reference to a gid.
    * \return True if the publisher's gid matches the input.
    */
-  RCLCPP_PUBLIC
   bool
   operator==(const rmw_gid_t & gid) const;
 
@@ -123,14 +114,12 @@ public:
    * \param[in] gid A pointer to a gid.
    * \return True if this publisher's gid matches the input.
    */
-  RCLCPP_PUBLIC
   bool
   operator==(const rmw_gid_t * gid) const;
 
   using StoreMessageCallbackT = std::function<uint64_t(uint64_t, void *, const std::type_info &)>;
 
   /// Implementation utility function used to setup intra process publishing after creation.
-  RCLCPP_PUBLIC
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,

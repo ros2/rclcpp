@@ -28,88 +28,67 @@ namespace rclcpp
 
 class Clock;
 
-class Time
+class RCLCPP_PUBLIC Time
 {
 public:
-  RCLCPP_PUBLIC
   Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
-  RCLCPP_PUBLIC
   explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
 
-  RCLCPP_PUBLIC
   Time(const Time & rhs);
 
-  RCLCPP_PUBLIC
   Time(
     const builtin_interfaces::msg::Time & time_msg,
     rcl_clock_type_t ros_time = RCL_ROS_TIME);
 
-  RCLCPP_PUBLIC
   explicit Time(const rcl_time_point_t & time_point);
 
-  RCLCPP_PUBLIC
   virtual ~Time();
 
-  RCLCPP_PUBLIC
   operator builtin_interfaces::msg::Time() const;
 
-  RCLCPP_PUBLIC
   Time &
   operator=(const Time & rhs);
 
-  RCLCPP_PUBLIC
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
 
-  RCLCPP_PUBLIC
   bool
   operator==(const rclcpp::Time & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator!=(const rclcpp::Time & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator<(const rclcpp::Time & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator<=(const rclcpp::Time & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator>=(const rclcpp::Time & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator>(const rclcpp::Time & rhs) const;
 
-  RCLCPP_PUBLIC
   Time
   operator+(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   Duration
   operator-(const rclcpp::Time & rhs) const;
 
-  RCLCPP_PUBLIC
   Time
   operator-(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   rcl_time_point_value_t
   nanoseconds() const;
 
   /// \return the seconds since epoch as a floating point number.
   /// \warning Depending on sizeof(double) there could be significant precision loss.
   /// When an exact time is required use nanoseconds() instead.
-  RCLCPP_PUBLIC
   double
   seconds() const;
 
-  RCLCPP_PUBLIC
   rcl_clock_type_t
   get_clock_type() const;
 

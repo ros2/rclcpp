@@ -31,7 +31,7 @@
 namespace rclcpp
 {
 
-class ParameterEventsFilter
+class RCLCPP_PUBLIC ParameterEventsFilter
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterEventsFilter)
@@ -54,7 +54,6 @@ public:
   *      {"foo", "bar"},
   *      {rclcpp::ParameterEventsFilter::EventType::NEW, rclcpp::ParameterEventsFilter::EventType::CHANGED});
   */
-  RCLCPP_PUBLIC
   ParameterEventsFilter(
     rcl_interfaces::msg::ParameterEvent::SharedPtr event,
     const std::vector<std::string> & names,
@@ -64,7 +63,6 @@ public:
   /**
    * \return A std::vector<EventPair> of all matching parameter changes in this event.
    */
-  RCLCPP_PUBLIC
   const std::vector<EventPair> & get_events() const;
 
 private:

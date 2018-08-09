@@ -48,7 +48,7 @@ class NodeTopicsInterface;
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
-class SubscriptionBase
+class RCLCPP_PUBLIC SubscriptionBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)
@@ -60,7 +60,6 @@ public:
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options options for the subscription.
    */
-  RCLCPP_PUBLIC
   SubscriptionBase(
     std::shared_ptr<rcl_node_t> node_handle,
     const rosidl_message_type_support_t & type_support_handle,
@@ -69,23 +68,18 @@ public:
     bool is_serialized = false);
 
   /// Default destructor.
-  RCLCPP_PUBLIC
   virtual ~SubscriptionBase();
 
   /// Get the topic that this subscription is subscribed on.
-  RCLCPP_PUBLIC
   const char *
   get_topic_name() const;
 
-  RCLCPP_PUBLIC
   std::shared_ptr<rcl_subscription_t>
   get_subscription_handle();
 
-  RCLCPP_PUBLIC
   const std::shared_ptr<rcl_subscription_t>
   get_subscription_handle() const;
 
-  RCLCPP_PUBLIC
   virtual const std::shared_ptr<rcl_subscription_t>
   get_intra_process_subscription_handle() const;
 

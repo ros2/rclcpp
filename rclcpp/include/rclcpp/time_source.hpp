@@ -33,39 +33,31 @@ namespace rclcpp
 {
 class Clock;
 
-class TimeSource
+class RCLCPP_PUBLIC TimeSource
 {
 public:
-  RCLCPP_PUBLIC
   explicit TimeSource(rclcpp::Node::SharedPtr node);
 
-  RCLCPP_PUBLIC
   TimeSource();
 
-  RCLCPP_PUBLIC
   void attachNode(rclcpp::Node::SharedPtr node);
 
-  RCLCPP_PUBLIC
   void attachNode(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
     const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
     const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
     const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface);
 
-  RCLCPP_PUBLIC
   void detachNode();
 
   /// Attach a clock to the time source to be updated
   /**
    * \throws std::invalid_argument if node is nullptr
    */
-  RCLCPP_PUBLIC
   void attachClock(rclcpp::Clock::SharedPtr clock);
 
-  RCLCPP_PUBLIC
   void detachClock(rclcpp::Clock::SharedPtr clock);
 
-  RCLCPP_PUBLIC
   ~TimeSource();
 
 private:
@@ -95,6 +87,10 @@ private:
   // Callback for parameter updates
   void on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
 
+  // Local storage of validity of ROS time
+  // This is needed when new clocks are added.
+  bool ros_time_active_;
+
   // An enum to hold the parameter state
   enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
   UseSimTimeParameterState parameter_state_;
@@ -112,9 +108,6 @@ private:
     bool set_ros_time_enabled,
     rclcpp::Clock::SharedPtr clock);
 
-  // Local storage of validity of ROS time
-  // This is needed when new clocks are added.
-  bool ros_time_active_;
   // Last set message to be passed to newly registered clocks
   rosgraph_msgs::msg::Clock::SharedPtr last_msg_set_;
 
