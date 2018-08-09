@@ -97,3 +97,26 @@ TEST(TestDuration, overflows) {
   EXPECT_THROW(base_d_neg * (-4), std::overflow_error);
   EXPECT_THROW(base_d_neg * 4, std::underflow_error);
 }
+
+TEST(TestDuration, negative_duration) {
+  rclcpp::Duration assignable_duration = rclcpp::Duration(0) - rclcpp::Duration(5, 0);
+
+  {
+    // avoid windows converting a literal number less than -INT_MAX to unsigned int C4146
+    int64_t expected_value = -5000;
+    expected_value *= 1000 * 1000;
+    EXPECT_EQ(expected_value, assignable_duration.nanoseconds());
+  }
+
+  {
+    builtin_interfaces::msg::Duration duration_msg;
+    duration_msg.sec = -4;
+    duration_msg.nanosec = 250000000;
+
+    assignable_duration = duration_msg;
+    // avoid windows converting a literal number less than -INT_MAX to unsigned int C4146
+    int64_t expected_value = -3750;
+    expected_value *= 1000 * 1000;
+    EXPECT_EQ(expected_value, assignable_duration.nanoseconds());
+  }
+}
