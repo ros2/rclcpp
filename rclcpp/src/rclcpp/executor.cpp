@@ -410,20 +410,8 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     );
   }
   // clear wait set
-  if (rcl_wait_set_clear_subscriptions(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear subscriptions from wait set");
-  }
-  if (rcl_wait_set_clear_services(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear servicess from wait set");
-  }
-  if (rcl_wait_set_clear_clients(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear clients from wait set");
-  }
-  if (rcl_wait_set_clear_guard_conditions(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear guard conditions from wait set");
-  }
-  if (rcl_wait_set_clear_timers(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear timers from wait set");
+  if (rcl_wait_set_clear(&wait_set_) != RCL_RET_OK) {
+    throw std::runtime_error("Couldn't clear wait set");
   }
 
   if (rcl_wait_set_resize_subscriptions(

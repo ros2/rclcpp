@@ -136,8 +136,8 @@ GraphListener::run_loop()
         throw_from_rcl_error(ret, "failed to resize wait set");
       }
     }
-    // Clear the wait set's guard conditions.
-    ret = rcl_wait_set_clear_guard_conditions(&wait_set_);
+    // Clear the wait set.
+    ret = rcl_wait_set_clear(&wait_set_);
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to clear wait set");
     }
