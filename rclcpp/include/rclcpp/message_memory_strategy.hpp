@@ -25,6 +25,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/serialized_message.h"
 
 namespace rclcpp
@@ -96,7 +98,9 @@ public:
           auto ret = rmw_serialized_message_fini(msg);
           delete msg;
           if (ret != RCL_RET_OK) {
-            rclcpp::exceptions::throw_from_rcl_error(ret, "leaking memory");
+            RCUTILS_LOG_ERROR_NAMED(
+              "rclcpp",
+              "failed to destroy serialized message: %s", rcl_get_error_string_safe());
           }
         });
 
