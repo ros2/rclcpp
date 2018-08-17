@@ -131,7 +131,7 @@ GraphListener::run_loop()
 
     // Resize the wait set if necessary.
     if (wait_set_.size_of_guard_conditions < (node_graph_interfaces_.size() + 2)) {
-      ret = rcl_wait_set_resize_guard_conditions(&wait_set_, node_graph_interfaces_.size() + 2);
+      ret = rcl_wait_set_resize(&wait_set_, 0u, node_graph_interfaces_.size() + 2, 0u, 0u, 0u);
       if (RCL_RET_OK != ret) {
         throw_from_rcl_error(ret, "failed to resize wait set");
       }

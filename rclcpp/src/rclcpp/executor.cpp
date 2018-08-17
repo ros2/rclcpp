@@ -414,44 +414,13 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     throw std::runtime_error("Couldn't clear wait set");
   }
 
-  if (rcl_wait_set_resize_subscriptions(
-      &wait_set_, memory_strategy_->number_of_ready_subscriptions()) != RCL_RET_OK)
-  {
+  rcl_ret_t ret = rcl_wait_set_resize(
+    &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
+    memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
+    memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services());
+  if (RCL_RET_OK != ret) {
     throw std::runtime_error(
-            std::string("Couldn't resize the number of subscriptions in wait set : ") +
-            rcl_get_error_string_safe());
-  }
-
-  if (rcl_wait_set_resize_services(
-      &wait_set_, memory_strategy_->number_of_ready_services()) != RCL_RET_OK)
-  {
-    throw std::runtime_error(
-            std::string("Couldn't resize the number of services in wait set : ") +
-            rcl_get_error_string_safe());
-  }
-
-  if (rcl_wait_set_resize_clients(
-      &wait_set_, memory_strategy_->number_of_ready_clients()) != RCL_RET_OK)
-  {
-    throw std::runtime_error(
-            std::string("Couldn't resize the number of clients in wait set : ") +
-            rcl_get_error_string_safe());
-  }
-
-  if (rcl_wait_set_resize_guard_conditions(
-      &wait_set_, memory_strategy_->number_of_guard_conditions()) != RCL_RET_OK)
-  {
-    throw std::runtime_error(
-            std::string("Couldn't resize the number of guard_conditions in wait set : ") +
-            rcl_get_error_string_safe());
-  }
-
-  if (rcl_wait_set_resize_timers(
-      &wait_set_, memory_strategy_->number_of_ready_timers()) != RCL_RET_OK)
-  {
-    throw std::runtime_error(
-            std::string("Couldn't resize the number of timers in wait set : ") +
-            rcl_get_error_string_safe());
+            std::string("Couldn't resize the wait set : ") + rcl_get_error_string_safe());
   }
 
   if (!memory_strategy_->add_handles_to_wait_set(&wait_set_)) {
