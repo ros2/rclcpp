@@ -239,6 +239,12 @@ Time::get_clock_type() const
   return rcl_time_.clock_type;
 }
 
+bool
+Time::is_zero() const
+{
+  return 0 == rcl_time_.nanoseconds;
+}
+
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
 {
