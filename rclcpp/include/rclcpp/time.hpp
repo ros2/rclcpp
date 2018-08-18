@@ -113,10 +113,6 @@ public:
   rcl_clock_type_t
   get_clock_type() const;
 
-  RCLCPP_PUBLIC
-  bool
-  is_zero() const;
-
 private:
   rcl_time_point_t rcl_time_;
   friend Clock;  // Allow clock to manipulate internal data
