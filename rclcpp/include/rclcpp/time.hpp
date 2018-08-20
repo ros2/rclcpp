@@ -102,6 +102,11 @@ public:
   rcl_time_point_value_t
   nanoseconds() const;
 
+  RCLCPP_PUBLIC
+  static Time
+  TIME_MAX();
+
+
   /// \return the seconds since epoch as a floating point number.
   /// \warning Depending on sizeof(double) there could be significant precision loss.
   /// When an exact time is required use nanoseconds() instead.

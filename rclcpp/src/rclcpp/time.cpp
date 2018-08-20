@@ -251,5 +251,12 @@ operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
   return Time(lhs.nanoseconds() + rhs.nanoseconds(), rhs.get_clock_type());
 }
 
+Time
+TIME_MAX()
+{
+  Time time_max(std::numeric_limits<int32_t>::max(),999999999);
+  return time_max;
+}
+
 
 }  // namespace rclcpp

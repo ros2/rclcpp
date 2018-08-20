@@ -119,4 +119,13 @@ TEST(TestDuration, negative_duration) {
     expected_value *= 1000 * 1000;
     EXPECT_EQ(expected_value, assignable_duration.nanoseconds());
   }
+}  
+
+TEST(TestDuration, maximum_duration) {
+
+  rclcpp::Duration max_duration = rclcpp::Duration::DURATION_MAX();
+  rclcpp::Duration max(std::numeric_limits<int32_t>::max(),999999999);
+
+  EXPECT_EQ(max_duration, max);
 }
+

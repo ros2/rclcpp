@@ -214,4 +214,12 @@ Duration::nanoseconds() const
   return rcl_duration_.nanoseconds;
 }
 
+Duration
+Duration::DURATION_MAX()
+{
+  Duration duration_max(std::numeric_limits<int32_t>::max(),999999999);
+  return duration_max;
+}
+
+
 }  // namespace rclcpp
