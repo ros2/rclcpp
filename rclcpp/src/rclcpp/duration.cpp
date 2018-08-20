@@ -214,4 +214,10 @@ Duration::nanoseconds() const
   return rcl_duration_.nanoseconds;
 }
 
+double
+Duration::seconds() const
+{
+  return std::chrono::duration<double>(std::chrono::nanoseconds(rcl_duration_.nanoseconds)).count();
+}
+
 }  // namespace rclcpp
