@@ -221,5 +221,10 @@ Duration::DURATION_MAX()
   return duration_max;
 }
 
+double
+Duration::seconds() const
+{
+  return std::chrono::duration<double>(std::chrono::nanoseconds(rcl_duration_.nanoseconds)).count();
+}
 
 }  // namespace rclcpp

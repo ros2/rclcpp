@@ -101,6 +101,13 @@ public:
   rcl_duration_value_t
   nanoseconds() const;
 
+  /// \return the duration in seconds as a floating point number.
+  /// \warning Depending on sizeof(double) there could be significant precision loss.
+  /// When an exact time is required use nanoseconds() instead.
+  RCLCPP_PUBLIC
+  double
+  seconds() const;
+
 private:
   rcl_duration_t rcl_duration_;
 };
