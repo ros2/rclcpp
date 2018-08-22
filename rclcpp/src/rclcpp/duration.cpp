@@ -217,7 +217,7 @@ Duration::nanoseconds() const
 Duration
 Duration::DURATION_MAX()
 {
-  Duration duration_max(std::numeric_limits<int32_t>::max(),999999999);
+  Duration duration_max(std::numeric_limits<int32_t>::max(), 999999999);
   return duration_max;
 }
 
