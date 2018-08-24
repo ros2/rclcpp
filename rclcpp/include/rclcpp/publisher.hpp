@@ -290,7 +290,7 @@ public:
   }
 
   void
-  publish(std::shared_ptr<rcl_serialized_message_t> serialized_msg)
+  publish(std::shared_ptr<const rcl_serialized_message_t> serialized_msg)
   {
     return this->publish(serialized_msg.get());
   }
