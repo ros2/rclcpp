@@ -289,6 +289,12 @@ public:
     }
   }
 
+  void
+  publish(std::shared_ptr<rcl_serialized_message_t> serialized_msg)
+  {
+    return this->publish(serialized_msg.get());
+  }
+
   std::shared_ptr<MessageAlloc> get_allocator() const
   {
     return message_allocator_;
