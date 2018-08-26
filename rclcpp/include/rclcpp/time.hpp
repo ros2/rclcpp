@@ -104,7 +104,7 @@ public:
 
   RCLCPP_PUBLIC
   static Time
-  TIME_MAX();
+  max();
 
 
   /// \return the seconds since epoch as a floating point number.
