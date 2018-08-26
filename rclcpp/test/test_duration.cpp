@@ -122,7 +122,7 @@ TEST(TestDuration, negative_duration) {
 }
 
 TEST(TestDuration, maximum_duration) {
-  rclcpp::Duration max_duration = rclcpp::Duration::DURATION_MAX();
+  rclcpp::Duration max_duration = rclcpp::Duration::max();
   rclcpp::Duration max(std::numeric_limits<int32_t>::max(), 999999999);
 
   EXPECT_EQ(max_duration, max);
