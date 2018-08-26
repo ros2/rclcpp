@@ -91,7 +91,7 @@ public:
 
   RCLCPP_PUBLIC
   static Duration
-  DURATION_MAX();
+  max();
 
   RCLCPP_PUBLIC
   Duration
