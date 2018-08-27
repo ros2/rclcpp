@@ -147,54 +147,18 @@ void TimeSource::set_clock(
   const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
   std::shared_ptr<rclcpp::Clock> clock)
 {
-  // Compute diff
-  rclcpp::Time msg_time = rclcpp::Time(*msg);
-  rclcpp::Time now = clock->now();
-  auto diff = now - msg_time;
-  rclcpp::TimeJump jump;
-  jump.delta_.nanoseconds = diff.nanoseconds();
-
-  // Compute jump type
-  if (clock->ros_time_is_active()) {
-    if (set_ros_time_enabled) {
-      jump.jump_type_ = TimeJump::ClockChange_t::ROS_TIME_NO_CHANGE;
-    } else {
-      jump.jump_type_ = TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED;
-    }
-  } else if (!clock->ros_time_is_active()) {
-    if (set_ros_time_enabled) {
-      jump.jump_type_ = TimeJump::ClockChange_t::ROS_TIME_ACTIVATED;
-    } else {
-      jump.jump_type_ = TimeJump::ClockChange_t::SYSTEM_TIME_NO_CHANGE;
-    }
-  }
-
-  if (jump.jump_type_ == TimeJump::ClockChange_t::SYSTEM_TIME_NO_CHANGE) {
-    // No change/no updates don't act.
-    return;
-  }
-
-  auto active_callbacks = clock->get_triggered_callback_handlers(jump);
-  clock->invoke_prejump_callbacks(active_callbacks);
-
   // Do change
-  if (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED) {
+  if (!set_ros_time_enabled && clock->ros_time_is_active()) {
     disable_ros_time(clock);
-  } else if (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_ACTIVATED) {
+  } else if (set_ros_time_enabled && !clock->ros_time_is_active()) {
     enable_ros_time(clock);
   }
 
-  if (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_ACTIVATED ||
-    jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_NO_CHANGE)
-  {
-    auto ret = rcl_set_ros_time_override(&(clock->rcl_clock_), msg_time.nanoseconds());
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "Failed to set ros_time_override_status");
-    }
+  auto ret = rcl_set_ros_time_override(&(clock->rcl_clock_), rclcpp::Time(*msg).nanoseconds());
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "Failed to set ros_time_override_status");
   }
-  // Post change callbacks
-  clock->invoke_postjump_callbacks(active_callbacks, jump);
 }
 
 void TimeSource::clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg)

@@ -141,8 +141,8 @@ public:
   void pre_callback(int id) {last_precallback_id_ = id;}
 
   int last_postcallback_id_;
-  rclcpp::TimeJump last_timejump_;
-  void post_callback(const rclcpp::TimeJump & jump, int id)
+  rcl_time_jump_t last_timejump_;
+  void post_callback(const rcl_time_jump_t & jump, int id)
   {
     last_postcallback_id_ = id; last_timejump_ = jump;
   }
@@ -150,10 +150,10 @@ public:
 
 TEST_F(TestTimeSource, callbacks) {
   CallbackObject cbo;
-  rclcpp::JumpThreshold jump_threshold;
-  jump_threshold.min_forward_ = 0;
-  jump_threshold.min_backward_ = 0;
-  jump_threshold.on_clock_change_ = true;
+  rcl_jump_threshold_t jump_threshold;
+  jump_threshold.min_forward.nanoseconds = 0;
+  jump_threshold.min_backward.nanoseconds = 0;
+  jump_threshold.on_clock_change = true;
 
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
@@ -212,7 +212,7 @@ TEST_F(TestTimeSource, callbacks) {
   // Register a callback handler with only pre_callback
   rclcpp::JumpHandler::SharedPtr callback_handler3 = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 3),
-    std::function<void(rclcpp::TimeJump)>(),
+    std::function<void(rcl_time_jump_t)>(),
     jump_threshold);
 
   trigger_clock_changes(node);
@@ -233,10 +233,10 @@ TEST_F(TestTimeSource, callbacks) {
 
 TEST_F(TestTimeSource, callback_handler_erasure) {
   CallbackObject cbo;
-  rclcpp::JumpThreshold jump_threshold;
-  jump_threshold.min_forward_ = 0;
-  jump_threshold.min_backward_ = 0;
-  jump_threshold.on_clock_change_ = true;
+  rcl_jump_threshold_t jump_threshold;
+  jump_threshold.min_forward.nanoseconds = 0;
+  jump_threshold.min_backward.nanoseconds = 0;
+  jump_threshold.on_clock_change = true;
 
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
