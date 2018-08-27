@@ -214,6 +214,12 @@ Duration::nanoseconds() const
   return rcl_duration_.nanoseconds;
 }
 
+Duration
+Duration::max()
+{
+  return Duration(std::numeric_limits<int32_t>::max(), 999999999);
+}
+
 double
 Duration::seconds() const
 {

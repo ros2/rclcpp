@@ -90,6 +90,10 @@ public:
   operator-(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
+  static Duration
+  max();
+
+  RCLCPP_PUBLIC
   Duration
   operator*(double scale) const;
 
