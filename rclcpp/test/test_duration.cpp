@@ -127,4 +127,3 @@ TEST(TestDuration, maximum_duration) {
 
   EXPECT_EQ(max_duration, max);
 }
-
