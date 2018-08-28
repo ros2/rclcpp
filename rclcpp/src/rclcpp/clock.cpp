@@ -108,7 +108,7 @@ Clock::on_time_jump(
   rclcpp::JumpHandler * handler = static_cast<rclcpp::JumpHandler *>(user_data);
   if (before_jump && handler->pre_callback) {
     handler->pre_callback();
-  } else if (handler->post_callback) {
+  } else if (!before_jump && handler->post_callback) {
     handler->post_callback(*time_jump);
   }
 }
