@@ -28,27 +28,11 @@
 
 namespace rclcpp
 {
-bool
-JumpThreshold::is_exceeded(const TimeJump & jump)
-{
-  if (on_clock_change_ &&
-    (jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_ACTIVATED ||
-    jump.jump_type_ == TimeJump::ClockChange_t::ROS_TIME_DEACTIVATED))
-  {
-    return true;
-  }
-  if ((uint64_t)jump.delta_.nanoseconds > min_forward_ ||
-    (uint64_t)jump.delta_.nanoseconds < min_backward_)
-  {
-    return true;
-  }
-  return false;
-}
 
 JumpHandler::JumpHandler(
   std::function<void()> pre_callback,
-  std::function<void(TimeJump)> post_callback,
-  JumpThreshold & threshold)
+  std::function<void(const rcl_time_jump_t &)> post_callback,
+  const rcl_jump_threshold_t & threshold)
 : pre_callback(pre_callback),
   post_callback(post_callback),
   notice_threshold(threshold)
@@ -115,66 +99,51 @@ Clock::get_clock_type()
   return rcl_clock_.type;
 }
 
+void
+Clock::on_time_jump(
+  const struct rcl_time_jump_t * time_jump,
+  bool before_jump,
+  void * user_data)
+{
+  rclcpp::JumpHandler * handler = static_cast<rclcpp::JumpHandler *>(user_data);
+  if (before_jump && handler->pre_callback) {
+    handler->pre_callback();
+  } else if (!before_jump && handler->post_callback) {
+    handler->post_callback(*time_jump);
+  }
+}
+
 rclcpp::JumpHandler::SharedPtr
 Clock::create_jump_callback(
   std::function<void()> pre_callback,
-  std::function<void(const TimeJump &)> post_callback,
-  JumpThreshold & threshold)
+  std::function<void(const rcl_time_jump_t &)> post_callback,
+  const rcl_jump_threshold_t & threshold)
 {
-  // JumpHandler jump_callback;
-  auto jump_callback =
-    std::make_shared<rclcpp::JumpHandler>(pre_callback, post_callback, threshold);
-  {
-    std::lock_guard<std::mutex> guard(callback_list_mutex_);
-    active_jump_handlers_.push_back(jump_callback);
+  // Allocate a new jump handler
+  auto handler = new rclcpp::JumpHandler(pre_callback, post_callback, threshold);
+  if (nullptr == handler) {
+    rclcpp::exceptions::throw_from_rcl_error(RCL_RET_BAD_ALLOC, "Failed to allocate jump handler");
   }
-  return jump_callback;
-}
 
-std::vector<JumpHandler::SharedPtr>
-Clock::get_triggered_callback_handlers(const TimeJump & jump)
-{
-  std::vector<JumpHandler::SharedPtr> callbacks;
-  std::lock_guard<std::mutex> guard(callback_list_mutex_);
-  active_jump_handlers_.erase(
-    std::remove_if(
-      active_jump_handlers_.begin(),
-      active_jump_handlers_.end(),
-      [&callbacks, &jump](const std::weak_ptr<JumpHandler> & wjcb) {
-        if (auto jcb = wjcb.lock()) {
-          if (jcb->notice_threshold.is_exceeded(jump)) {
-            callbacks.push_back(jcb);
-          }
-          return false;
-        }
-        // Lock failed so clear the weak pointer.
-        return true;
-      }),
-    active_jump_handlers_.end());
-  return callbacks;
-}
+  // Try to add the jump callback to the clock
+  rcl_ret_t ret = rcl_clock_add_jump_callback(&rcl_clock_, threshold,
+      rclcpp::Clock::on_time_jump, handler);
+  if (RCL_RET_OK != ret) {
+    delete handler;
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+  }
 
-void
-Clock::invoke_prejump_callbacks(
-  const std::vector<JumpHandler::SharedPtr> & callbacks)
-{
-  for (const auto cb : callbacks) {
-    if (cb->pre_callback != nullptr) {
-      cb->pre_callback();
+  // *INDENT-OFF*
+  // create shared_ptr that removes the callback automatically when all copies are destructed
+  return rclcpp::JumpHandler::SharedPtr(handler, [this](rclcpp::JumpHandler * handler) noexcept {
+    rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, rclcpp::Clock::on_time_jump,
+        handler);
+    delete handler;
+    if (RCL_RET_OK != ret) {
+      RCUTILS_LOG_ERROR("Failed to remove time jump callback");
     }
-  }
-}
-
-void
-Clock::invoke_postjump_callbacks(
-  const std::vector<JumpHandler::SharedPtr> & callbacks,
-  const TimeJump & jump)
-{
-  for (auto cb : callbacks) {
-    if (cb->post_callback != nullptr) {
-      cb->post_callback(jump);
-    }
-  }
+  });
+  // *INDENT-ON*
 }
 
 }  // namespace rclcpp
