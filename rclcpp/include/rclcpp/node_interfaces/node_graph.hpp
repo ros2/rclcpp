@@ -71,6 +71,11 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  std::vector<std::pair<std::string, std::string>>
+  get_node_names_and_namespaces() const;
+
+  RCLCPP_PUBLIC
+  virtual
   size_t
   count_publishers(const std::string & topic_name) const;
 

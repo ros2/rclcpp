@@ -66,6 +66,12 @@ public:
   std::vector<std::string>
   get_node_names() const = 0;
 
+  /// Return a vector of existing node names (string).
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::pair<std::string, std::string>>
+  get_node_names_and_namespaces() const = 0;
+
   /// Return the number of publishers that are advertised on a given topic.
   RCLCPP_PUBLIC
   virtual
