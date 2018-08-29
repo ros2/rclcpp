@@ -18,6 +18,7 @@
 #include <chrono>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "rcl/guard_condition.h"
@@ -66,7 +67,7 @@ public:
   std::vector<std::string>
   get_node_names() const = 0;
 
-  /// Return a vector of existing node names (string).
+  /// Return a vector of existing node names and namespaces (pair of string).
   RCLCPP_PUBLIC
   virtual
   std::vector<std::pair<std::string, std::string>>
