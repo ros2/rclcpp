@@ -160,10 +160,12 @@ NodeGraph::get_node_names_and_namespaces() const
     if (rcutils_string_array_fini(&node_names_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
         rcl_get_error_string_safe();
+      rcl_reset_error();
     }
     if (rcutils_string_array_fini(&node_namespaces_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node namespaces, leaking memory: ") +
         rcl_get_error_string_safe();
+      rcl_reset_error();
     }
     // TODO(karsten1987): Append rcutils_error_message once it's in master
     throw std::runtime_error(error_msg);
@@ -175,26 +177,29 @@ NodeGraph::get_node_names_and_namespaces() const
       node_names.push_back(std::make_pair(node_names_c.data[i], node_namespaces_c.data[i]));
     }
   }
-  ret = rcutils_string_array_fini(&node_names_c);
-  if (ret != RCUTILS_RET_OK) {
+
+  std::string error;
+  rcl_ret_t ret_names = rcutils_string_array_fini(&node_names_c);
+  if (ret_names != RCUTILS_RET_OK) {
     // *INDENT-OFF*
     // TODO(karsten1987): Append rcutils_error_message once it's in master
-    throw std::runtime_error(
-      std::string("could not destroy node names: "));
+    error = "could not destroy node names";
     // *INDENT-ON*
   }
-  ret = rcutils_string_array_fini(&node_namespaces_c);
-  if (ret != RCUTILS_RET_OK) {
+  rcl_ret_t ret_ns = rcutils_string_array_fini(&node_namespaces_c);
+  if (ret_ns != RCUTILS_RET_OK) {
     // *INDENT-OFF*
     // TODO(karsten1987): Append rcutils_error_message once it's in master
-    throw std::runtime_error(
-      std::string("could not destroy node names: "));
+    error += ", could not destroy node namespaces";
     // *INDENT-ON*
+  }
+
+  if (ret_names != RCUTILS_RET_OK || ret_ns != RCUTILS_RET_OK) {
+    throw std::runtime_error(error);
   }
 
   return node_names;
 }
-
 
 size_t
 NodeGraph::count_publishers(const std::string & topic_name) const
