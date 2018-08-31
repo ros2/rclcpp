@@ -73,7 +73,7 @@ public:
   /// Create a new lifecycle node with the specified name.
   /**
    * \param[in] node_name Name of the node.
-   * \param[in] node_name Namespace of the node.
+   * \param[in] namespace_ Namespace of the node.
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
    */
@@ -86,7 +86,7 @@ public:
   /// Create a node based on the node name and a rclcpp::Context.
   /**
    * \param[in] node_name Name of the node.
-   * \param[in] node_name Namespace of the node.
+   * \param[in] namespace_ Namespace of the node.
    * \param[in] context The context for the node (usually represents the state of a process).
    * \param[in] arguments Command line arguments that should apply only to this node.
    * \param[in] initial_parameters a list of initial values for parameters on the node.
@@ -94,6 +94,8 @@ public:
    * \param[in] use_global_arguments False to prevent node using arguments passed to the process.
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
+   * \param[in] start_parameter_services True to setup ROS interfaces for accessing parameters
+   * in the node.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNode(
@@ -141,6 +143,7 @@ public:
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \param[in] allocator allocator to use during publishing activities.
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
@@ -152,7 +155,8 @@ public:
   /// Create and return a LifecyclePublisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
-   * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \param[in] qos_profile The QoS settings for this publisher.
+   * \param[in] allocator allocator to use during publishing activities.
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
@@ -201,6 +205,7 @@ public:
    * \param[in] group The callback group for this subscription. NULL for no callback group.
    * \param[in] ignore_local_publications True to ignore local publications.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \param[in] allocator allocator to be used during handling of subscription callbacks.
    * \return Shared pointer to the created subscription.
    */
   /* TODO(jacquelinekay):
@@ -293,7 +298,7 @@ public:
 
   /// Register the callback for parameter changes
   /**
-   * \param[in] User defined callback function, It is expected to atomically set parameters.
+   * \param[in] callback User defined function which is expected to atomically set parameters.
    * \note Repeated invocations of this function will overwrite previous callbacks
    */
   template<typename CallbackT>
