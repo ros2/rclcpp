@@ -59,6 +59,7 @@ public:
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options options for the subscription.
+   * \param[in] is_serialized is true if the message will be delivered still serialized
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
@@ -161,6 +162,7 @@ public:
    * The constructor for a subscription is almost never called directly. Instead, subscriptions
    * should be instantiated through Node::create_subscription.
    * \param[in] node_handle rcl representation of the node that owns this subscription.
+   * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options options for the subscription.
    * \param[in] callback User defined callback to call when a message is received.
@@ -168,7 +170,7 @@ public:
    */
   Subscription(
     std::shared_ptr<rcl_node_t> node_handle,
-    const rosidl_message_type_support_t & ts,
+    const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
@@ -177,7 +179,7 @@ public:
     Alloc>::create_default())
   : SubscriptionBase(
       node_handle,
-      ts,
+      type_support_handle,
       topic_name,
       subscription_options,
       rclcpp::subscription_traits::is_serialized_subscription_argument<CallbackMessageT>::value),

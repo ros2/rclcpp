@@ -91,6 +91,8 @@ public:
    * \param[in] use_global_arguments False to prevent node using arguments passed to the process.
    * \param[in] use_intra_process_comms True to use the optimized intra-process communication
    * pipeline to pass messages between nodes in the same process using shared memory.
+   * \param[in] start_parameter_services True to setup ROS interfaces for accessing parameters
+   * in the node.
    */
   RCLCPP_PUBLIC
   Node(
