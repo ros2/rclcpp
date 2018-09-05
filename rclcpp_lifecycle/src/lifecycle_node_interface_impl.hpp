@@ -293,7 +293,7 @@ public:
   {
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR("Unable to change state for state machine for %s: %s",
-        node_base_interface_->get_name(), rcl_get_error_string_safe())
+        node_base_interface_->get_name(), rcl_get_error_string_safe());
       return RCL_RET_ERROR;
     }
 
@@ -306,7 +306,7 @@ public:
         &state_machine_, transition_id, publish_update) != RCL_RET_OK)
     {
       RCUTILS_LOG_ERROR("Unable to start transition %u from current state %s: %s",
-        transition_id, state_machine_.current_state->label, rcl_get_error_string_safe())
+        transition_id, state_machine_.current_state->label, rcl_get_error_string_safe());
       return RCL_RET_ERROR;
     }
 
@@ -317,14 +317,14 @@ public:
         &state_machine_, cb_return_code, publish_update) != RCL_RET_OK)
     {
       RCUTILS_LOG_ERROR("Failed to finish transition %u. Current state is now: %s",
-        transition_id, state_machine_.current_state->label)
+        transition_id, state_machine_.current_state->label);
       return RCL_RET_ERROR;
     }
 
     // error handling ?!
     // TODO(karsten1987): iterate over possible ret value
     if (cb_return_code == lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR) {
-      RCUTILS_LOG_WARN("Error occurred while doing error handling.")
+      RCUTILS_LOG_WARN("Error occurred while doing error handling.");
       rcl_lifecycle_transition_key_t error_resolved = execute_callback(
         state_machine_.current_state->id, initial_state);
       if (error_resolved == lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS) {
@@ -332,7 +332,7 @@ public:
         if (rcl_lifecycle_trigger_transition(
             &state_machine_, error_resolved, publish_update) != RCL_RET_OK)
         {
-          RCUTILS_LOG_ERROR("Failed to call cleanup on error state")
+          RCUTILS_LOG_ERROR("Failed to call cleanup on error state");
           return RCL_RET_ERROR;
         }
       } else {
@@ -340,7 +340,7 @@ public:
         if (rcl_lifecycle_trigger_transition(
             &state_machine_, error_resolved, publish_update) != RCL_RET_OK)
         {
-          RCUTILS_LOG_ERROR("Failed to call cleanup on error state")
+          RCUTILS_LOG_ERROR("Failed to call cleanup on error state");
           return RCL_RET_ERROR;
         }
       }
@@ -364,11 +364,11 @@ public:
       try {
         cb_success = callback(State(previous_state));
       } catch (const std::exception &) {
-        // TODO(karsten1987): Windows CI doens't let me print the msg here
+        // TODO(karsten1987): Windows CI doesn't let me print the msg here
         // the todo is to forward the exception to the on_error callback
         // RCUTILS_LOG_ERROR("Caught exception in callback for transition %d\n",
-        //  it->first)
-        // RCUTILS_LOG_ERROR("Original error msg: %s\n", e.what())
+        //  it->first);
+        // RCUTILS_LOG_ERROR("Original error msg: %s\n", e.what());
         // maybe directly go for error handling here
         // and pass exception along with it
         cb_success = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR;
