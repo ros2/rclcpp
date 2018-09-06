@@ -321,6 +321,24 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value) const;
 
+  /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
+  /**
+   * If the parameter is set, then the "value" argument is assigned the value
+   * in the parameter.  If the parameter is not set, then the "value" argument
+   * is assigned the "alternative_value", and the parameter is set to the
+   * "alternative_value" on the node.
+   *
+   * \param[in] name The name of the parameter to get.
+   * \param[out] value The output where the value of the parameter should be assigned.
+   * \param[in] alternative_value Value to be stored in output and parameter if the parameter was not set.
+   */
+  template<typename ParameterT>
+  void
+  get_parameter_or_set_default(
+    const std::string & name,
+    ParameterT & value,
+    const ParameterT & alternative_value);
+
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
