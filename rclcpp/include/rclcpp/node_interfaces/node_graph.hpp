@@ -20,6 +20,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "rcl/guard_condition.h"
@@ -68,6 +69,11 @@ public:
   virtual
   std::vector<std::string>
   get_node_names() const;
+
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::pair<std::string, std::string>>
+  get_node_names_and_namespaces() const;
 
   RCLCPP_PUBLIC
   virtual

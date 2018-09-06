@@ -16,6 +16,7 @@
 
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "rcl/graph.h"
@@ -130,38 +131,71 @@ NodeGraph::get_service_names_and_types() const
 std::vector<std::string>
 NodeGraph::get_node_names() const
 {
+  std::vector<std::string> nodes;
+  auto names_and_namespaces = get_node_names_and_namespaces();
+
+  for (const auto & it : names_and_namespaces) {
+    nodes.push_back(it.first);
+  }
+  return nodes;
+}
+
+std::vector<std::pair<std::string, std::string>>
+NodeGraph::get_node_names_and_namespaces() const
+{
   rcutils_string_array_t node_names_c =
+    rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t node_namespaces_c =
     rcutils_get_zero_initialized_string_array();
 
   auto allocator = rcl_get_default_allocator();
   auto ret = rcl_get_node_names(
     node_base_->get_rcl_node_handle(),
     allocator,
-    &node_names_c);
+    &node_names_c,
+    &node_namespaces_c);
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string_safe();
     rcl_reset_error();
     if (rcutils_string_array_fini(&node_names_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
         rcl_get_error_string_safe();
+      rcl_reset_error();
+    }
+    if (rcutils_string_array_fini(&node_namespaces_c) != RCUTILS_RET_OK) {
+      error_msg += std::string(", failed also to cleanup node namespaces, leaking memory: ") +
+        rcl_get_error_string_safe();
+      rcl_reset_error();
     }
     // TODO(karsten1987): Append rcutils_error_message once it's in master
     throw std::runtime_error(error_msg);
   }
 
-  std::vector<std::string> node_names(node_names_c.size);
+  std::vector<std::pair<std::string, std::string>> node_names(node_names_c.size);
   for (size_t i = 0; i < node_names_c.size; ++i) {
-    if (node_names_c.data[i]) {
-      node_names[i] = node_names_c.data[i];
+    if (node_names_c.data[i] && node_namespaces_c.data[i]) {
+      node_names.push_back(std::make_pair(node_names_c.data[i], node_namespaces_c.data[i]));
     }
   }
-  ret = rcutils_string_array_fini(&node_names_c);
-  if (ret != RCUTILS_RET_OK) {
+
+  std::string error;
+  rcl_ret_t ret_names = rcutils_string_array_fini(&node_names_c);
+  if (ret_names != RCUTILS_RET_OK) {
     // *INDENT-OFF*
     // TODO(karsten1987): Append rcutils_error_message once it's in master
-    throw std::runtime_error(
-      std::string("could not destroy node names: "));
+    error = "could not destroy node names";
     // *INDENT-ON*
+  }
+  rcl_ret_t ret_ns = rcutils_string_array_fini(&node_namespaces_c);
+  if (ret_ns != RCUTILS_RET_OK) {
+    // *INDENT-OFF*
+    // TODO(karsten1987): Append rcutils_error_message once it's in master
+    error += ", could not destroy node namespaces";
+    // *INDENT-ON*
+  }
+
+  if (ret_names != RCUTILS_RET_OK || ret_ns != RCUTILS_RET_OK) {
+    throw std::runtime_error(error);
   }
 
   return node_names;
