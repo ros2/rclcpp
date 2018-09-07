@@ -36,7 +36,7 @@ TimerBase::TimerBase(rclcpp::Clock::SharedPtr clock, std::chrono::nanoseconds pe
         rcl_reset_error();
       }
       delete timer;
-      // Captured shared pointer by copy, reset to make sure timer is finialized before clock
+      // Captured shared pointer by copy, reset to make sure timer is finalized before clock
       clock.reset();
     });
 
