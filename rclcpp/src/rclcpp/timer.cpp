@@ -27,7 +27,7 @@ TimerBase::TimerBase(rclcpp::Clock::SharedPtr clock, std::chrono::nanoseconds pe
   clock_ = clock;
 
   timer_handle_ = std::shared_ptr<rcl_timer_t>(
-    new rcl_timer_t, [ = ](rcl_timer_t * timer)
+    new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
     {
       if (rcl_timer_fini(timer) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
@@ -36,6 +36,8 @@ TimerBase::TimerBase(rclcpp::Clock::SharedPtr clock, std::chrono::nanoseconds pe
         rcl_reset_error();
       }
       delete timer;
+      // Captured shared pointer by copy, reset to make sure timer is finialized before clock
+      clock.reset();
     });
 
   *timer_handle_.get() = rcl_get_zero_initialized_timer();
