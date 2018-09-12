@@ -51,7 +51,7 @@ protected:
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -59,7 +59,7 @@ protected:
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -67,7 +67,7 @@ protected:
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -75,7 +75,7 @@ protected:
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -83,7 +83,7 @@ protected:
   {
     ADD_FAILURE();
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   // Custom callbacks
@@ -95,7 +95,7 @@ public:
     EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_CONFIGURING, get_current_state().id());
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -104,7 +104,7 @@ public:
     EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_ACTIVATING, get_current_state().id());
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -113,7 +113,7 @@ public:
     EXPECT_EQ(State::PRIMARY_STATE_ACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_DEACTIVATING, get_current_state().id());
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -122,7 +122,7 @@ public:
     EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_CLEANINGUP, get_current_state().id());
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 
   rcl_lifecycle_transition_key_t
@@ -130,7 +130,7 @@ public:
   {
     EXPECT_EQ(State::TRANSITION_STATE_SHUTTINGDOWN, get_current_state().id());
     ++number_of_callbacks;
-    return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+    return {lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS, ""};
   }
 };
 

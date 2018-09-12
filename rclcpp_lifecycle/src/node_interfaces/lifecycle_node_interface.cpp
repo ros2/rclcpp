@@ -12,48 +12,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "lifecycle_msgs/msg/transition.hpp"
-
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
+
+#include "rcl_lifecycle/rcl_lifecycle.h"
 
 namespace rclcpp_lifecycle
 {
 namespace node_interfaces
 {
+
 rcl_lifecycle_transition_key_t
 LifecycleNodeInterface::on_configure(const State &)
 {
-  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
 }
 
 rcl_lifecycle_transition_key_t
 LifecycleNodeInterface::on_cleanup(const State &)
 {
-  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
 }
 
 rcl_lifecycle_transition_key_t
 LifecycleNodeInterface::on_shutdown(const State &)
 {
-  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
 }
 
 rcl_lifecycle_transition_key_t
 LifecycleNodeInterface::on_activate(const State &)
 {
-  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
 }
 
 rcl_lifecycle_transition_key_t
 LifecycleNodeInterface::on_deactivate(const State &)
 {
-  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS;
+  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
 }
 
 rcl_lifecycle_transition_key_t
 LifecycleNodeInterface::on_error(const State &)
 {
-  return lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE;
+  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
 }
 
 }  // namespace node_interfaces

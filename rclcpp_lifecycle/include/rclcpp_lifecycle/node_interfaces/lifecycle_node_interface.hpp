@@ -15,7 +15,7 @@
 #ifndef RCLCPP_LIFECYCLE__NODE_INTERFACES__LIFECYCLE_NODE_INTERFACE_HPP_
 #define RCLCPP_LIFECYCLE__NODE_INTERFACES__LIFECYCLE_NODE_INTERFACE_HPP_
 
-#include "rcl_lifecycle/data_types.h"
+#include "rcl_lifecycle/rcl_lifecycle.h"
 
 #include "rclcpp_lifecycle/state.hpp"
 #include "rclcpp_lifecycle/visibility_control.h"
