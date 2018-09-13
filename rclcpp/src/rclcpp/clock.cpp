@@ -135,10 +135,10 @@ Clock::create_jump_callback(
 
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
-  return rclcpp::JumpHandler::SharedPtr(handler, [this](rclcpp::JumpHandler * handler) noexcept {
+  return rclcpp::JumpHandler::SharedPtr(handler, [this](rclcpp::JumpHandler * jhandler) noexcept {
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, rclcpp::Clock::on_time_jump,
-        handler);
-    delete handler;
+        jhandler);
+    delete jhandler;
     if (RCL_RET_OK != ret) {
       RCUTILS_LOG_ERROR("Failed to remove time jump callback");
     }
