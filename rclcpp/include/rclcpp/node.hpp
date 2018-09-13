@@ -324,9 +324,9 @@ public:
   /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
   /**
    * If the parameter is set, then the "value" argument is assigned the value
-   * in the parameter.  If the parameter is not set, then the "value" argument
-   * is assigned the "alternative_value", and the parameter is set to the
-   * "alternative_value" on the node.
+   * in the parameter.
+   * If the parameter is not set, then the "value" argument is assigned the "alternative_value",
+   * and the parameter is set to the "alternative_value" on the node.
    *
    * \param[in] name The name of the parameter to get.
    * \param[out] value The output where the value of the parameter should be assigned.
