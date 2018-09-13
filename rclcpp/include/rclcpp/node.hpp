@@ -334,7 +334,7 @@ public:
    */
   template<typename ParameterT>
   void
-  get_parameter_or_set_default(
+  get_parameter_or_set(
     const std::string & name,
     ParameterT & value,
     const ParameterT & alternative_value);

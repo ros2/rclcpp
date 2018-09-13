@@ -252,7 +252,7 @@ Node::get_parameter_or(
 
 template<typename ParameterT>
 void
-Node::get_parameter_or_set_default(
+Node::get_parameter_or_set(
   const std::string & name,
   ParameterT & value,
   const ParameterT & alternative_value)
