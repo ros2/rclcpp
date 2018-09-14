@@ -113,6 +113,7 @@ NodeParameters::NodeParameters(
   std::map<std::string, rclcpp::Parameter> parameters;
 
   // TODO(sloretz) use rcl to parse yaml when circular dependency is solved
+  // See https://github.com/ros2/rcl/issues/252
   for (const std::string & yaml_path : yaml_paths) {
     rcl_params_t * yaml_params = rcl_yaml_node_struct_init(options->allocator);
     if (nullptr == yaml_params) {
