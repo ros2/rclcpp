@@ -18,6 +18,7 @@
 
 #include <map>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -120,7 +121,11 @@ NodeParameters::NodeParameters(
       throw std::bad_alloc();
     }
     if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params)) {
-      throw std::runtime_error("Failed to parse parameters " + yaml_path);
+      std::ostringstream ss;
+      ss << "Failed to parse parameters from file '" << yaml_path << "': " <<
+        rcl_get_error_string_safe();
+      rcl_reset_error();
+      throw std::runtime_error(ss.str());
     }
 
     rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(yaml_params);
