@@ -15,6 +15,8 @@
 #ifndef RCLCPP_LIFECYCLE__NODE_INTERFACES__LIFECYCLE_NODE_INTERFACE_HPP_
 #define RCLCPP_LIFECYCLE__NODE_INTERFACES__LIFECYCLE_NODE_INTERFACE_HPP_
 
+#include "lifecycle_msgs/msg/transition.hpp"
+
 #include "rcl_lifecycle/rcl_lifecycle.h"
 
 #include "rclcpp_lifecycle/state.hpp"
@@ -44,12 +46,19 @@ protected:
   LifecycleNodeInterface() {}
 
 public:
+  enum class CallbackReturn : uint8_t
+  {
+    SUCCESS = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS,
+    FAILURE = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE,
+    ERROR = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR
+  };
+
   /// Callback function for configure transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_transition_key_t
+  virtual CallbackReturn
   on_configure(const State & previous_state);
 
   /// Callback function for cleanup transition
@@ -57,7 +66,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_transition_key_t
+  virtual CallbackReturn
   on_cleanup(const State & previous_state);
 
   /// Callback function for shutdown transition
@@ -65,7 +74,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_transition_key_t
+  virtual CallbackReturn
   on_shutdown(const State & previous_state);
 
   /// Callback function for activate transition
@@ -73,7 +82,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_transition_key_t
+  virtual CallbackReturn
   on_activate(const State & previous_state);
 
   /// Callback function for deactivate transition
@@ -81,7 +90,7 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_transition_key_t
+  virtual CallbackReturn
   on_deactivate(const State & previous_state);
 
   /// Callback function for errorneous transition
@@ -89,7 +98,7 @@ public:
    * \return false by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual rcl_lifecycle_transition_key_t
+  virtual CallbackReturn
   on_error(const State & previous_state);
 };
 

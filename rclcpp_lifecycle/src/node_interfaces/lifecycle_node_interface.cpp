@@ -21,40 +21,40 @@ namespace rclcpp_lifecycle
 namespace node_interfaces
 {
 
-rcl_lifecycle_transition_key_t
+LifecycleNodeInterface::CallbackReturn
 LifecycleNodeInterface::on_configure(const State &)
 {
-  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-rcl_lifecycle_transition_key_t
+LifecycleNodeInterface::CallbackReturn
 LifecycleNodeInterface::on_cleanup(const State &)
 {
-  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-rcl_lifecycle_transition_key_t
+LifecycleNodeInterface::CallbackReturn
 LifecycleNodeInterface::on_shutdown(const State &)
 {
-  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-rcl_lifecycle_transition_key_t
+LifecycleNodeInterface::CallbackReturn
 LifecycleNodeInterface::on_activate(const State &)
 {
-  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-rcl_lifecycle_transition_key_t
+LifecycleNodeInterface::CallbackReturn
 LifecycleNodeInterface::on_deactivate(const State &)
 {
-  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-rcl_lifecycle_transition_key_t
+LifecycleNodeInterface::CallbackReturn
 LifecycleNodeInterface::on_error(const State &)
 {
-  return RCL_LIFECYCLE_TRANSITION_KEY_CALLBACK_SUCCESS;
+  return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
 }  // namespace node_interfaces
