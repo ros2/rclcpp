@@ -190,10 +190,14 @@ public:
    * single-threaded model of execution.
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
+   *
+   * \param[in] max_duration The maximum amount of time to spend executing work, or 0 for no limit.
+   * Note that spin_some() may take longer than this time as it only returns once max_duration has
+   * been exceeded.
    */
   RCLCPP_PUBLIC
   virtual void
-  spin_some();
+  spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0));
 
   RCLCPP_PUBLIC
   virtual void
