@@ -140,6 +140,7 @@ Clock::create_jump_callback(
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, rclcpp::Clock::on_time_jump,
         handler);
     delete handler;
+    handler = NULL;
     if (RCL_RET_OK != ret) {
       RCUTILS_LOG_ERROR("Failed to remove time jump callback");
     }
