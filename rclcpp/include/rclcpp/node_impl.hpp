@@ -250,6 +250,22 @@ Node::get_parameter_or(
   return got_parameter;
 }
 
+template<typename ParameterT>
+void
+Node::get_parameter_or_set(
+  const std::string & name,
+  ParameterT & value,
+  const ParameterT & alternative_value)
+{
+  bool got_parameter = get_parameter(name, value);
+  if (!got_parameter) {
+    this->set_parameters({
+        rclcpp::Parameter(name, alternative_value),
+      });
+    value = alternative_value;
+  }
+}
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__NODE_IMPL_HPP_
