@@ -65,28 +65,6 @@ void TimeSource::attachNode(
   node_services_ = node_services_interface;
   // TODO(tfoote): Update QOS
 
-  const std::string topic_name = "/clock";
-
-  rclcpp::callback_group::CallbackGroup::SharedPtr group;
-  using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-  auto msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
-  auto allocator = std::make_shared<Alloc>();
-
-  auto cb = std::bind(&TimeSource::clock_cb, this, std::placeholders::_1);
-
-  clock_subscription_ = rclcpp::create_subscription<
-    MessageT, decltype(cb), Alloc, MessageT, SubscriptionT
-    >(
-    node_topics_.get(),
-    topic_name,
-    std::move(cb),
-    rmw_qos_profile_default,
-    group,
-    false,
-    false,
-    msg_mem_strat,
-    allocator);
-
   parameter_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     node_base_,
     node_topics_,
@@ -163,17 +141,43 @@ void TimeSource::set_clock(
 
 void TimeSource::clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg)
 {
-  if (!this->ros_time_active_) {
+  if (!this->ros_time_active_ && SET_TRUE == this->parameter_state_) {
     enable_ros_time();
   }
   // Cache the last message in case a new clock is attached.
   last_msg_set_ = msg;
   auto time_msg = std::make_shared<builtin_interfaces::msg::Time>(msg->clock);
 
-  std::lock_guard<std::mutex> guard(clock_list_lock_);
-  for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    set_clock(time_msg, true, *it);
+  if (SET_TRUE == this->parameter_state_) {
+    std::lock_guard<std::mutex> guard(clock_list_lock_);
+    for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
+      set_clock(time_msg, true, *it);
+    }
   }
+}
+
+void TimeSource::create_clock_sub()
+{
+  const std::string topic_name = "/clock";
+
+  rclcpp::callback_group::CallbackGroup::SharedPtr group;
+  using rclcpp::message_memory_strategy::MessageMemoryStrategy;
+  auto msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
+  auto allocator = std::make_shared<Alloc>();
+  auto cb = std::bind(&TimeSource::clock_cb, this, std::placeholders::_1);
+
+  clock_subscription_ = rclcpp::create_subscription<
+    MessageT, decltype(cb), Alloc, MessageT, SubscriptionT
+    >(
+    node_topics_.get(),
+    topic_name,
+    std::move(cb),
+    rmw_qos_profile_default,
+    group,
+    false,
+    false,
+    msg_mem_strat,
+    allocator);
 }
 
 void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
@@ -190,6 +194,7 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
     if (it.second->value.bool_value) {
       parameter_state_ = SET_TRUE;
       enable_ros_time();
+      create_clock_sub();
     } else {
       parameter_state_ = SET_FALSE;
       disable_ros_time();

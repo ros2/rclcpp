@@ -84,6 +84,9 @@ private:
   // The clock callback itself
   void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);
 
+  // Create the subscription for the clock topic
+  void create_clock_sub();
+
   // Parameter Client pointer
   std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
 
