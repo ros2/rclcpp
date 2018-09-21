@@ -362,6 +362,10 @@ TEST_F(TestTimeSource, parameter_activation) {
   // should not be affected by the presence of a clock publisher.
   trigger_clock_changes(node);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(false));
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 }
 
 TEST_F(TestTimeSource, no_pre_jump_callback) {
