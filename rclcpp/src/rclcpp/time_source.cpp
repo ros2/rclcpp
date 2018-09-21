@@ -37,6 +37,7 @@ TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node)
 : ros_time_active_(false)
 {
   this->attachNode(node);
+  clock_subscription_.reset();
 }
 
 TimeSource::TimeSource()
@@ -158,6 +159,11 @@ void TimeSource::clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg)
 
 void TimeSource::create_clock_sub()
 {
+  std::lock_guard<std::mutex> guard(clock_sub_lock_);
+  if (clock_subscription_) {
+    // Subscription already created.
+    return;
+  }
   const std::string topic_name = "/clock";
 
   rclcpp::callback_group::CallbackGroup::SharedPtr group;
@@ -180,6 +186,16 @@ void TimeSource::create_clock_sub()
     allocator);
 }
 
+void TimeSource::destroy_clock_sub()
+{
+  std::lock_guard<std::mutex> guard(clock_sub_lock_);
+  if (!clock_subscription_) {
+    // Subscription already destroyed/never created.
+    return;
+  }
+  clock_subscription_.reset();
+}
+
 void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
 {
   // Filter for only 'use_sim_time' being added or changed.
@@ -198,6 +214,7 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
     } else {
       parameter_state_ = SET_FALSE;
       disable_ros_time();
+      destroy_clock_sub();
     }
   }
   // Handle the case that use_sim_time was deleted.

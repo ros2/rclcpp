@@ -80,12 +80,16 @@ private:
   using Alloc = std::allocator<void>;
   using SubscriptionT = rclcpp::Subscription<MessageT, Alloc>;
   std::shared_ptr<SubscriptionT> clock_subscription_;
+  std::mutex clock_sub_lock_;
 
   // The clock callback itself
   void clock_cb(const rosgraph_msgs::msg::Clock::SharedPtr msg);
 
   // Create the subscription for the clock topic
   void create_clock_sub();
+
+  // Destroy the subscription for the clock topic
+  void destroy_clock_sub();
 
   // Parameter Client pointer
   std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
