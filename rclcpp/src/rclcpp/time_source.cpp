@@ -34,10 +34,10 @@ namespace rclcpp
 {
 
 TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node)
-: ros_time_active_(false)
+: clock_subscription_(nullptr),
+  ros_time_active_(false)
 {
   this->attachNode(node);
-  clock_subscription_.reset();
 }
 
 TimeSource::TimeSource()
