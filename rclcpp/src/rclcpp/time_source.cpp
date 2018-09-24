@@ -189,10 +189,6 @@ void TimeSource::create_clock_sub()
 void TimeSource::destroy_clock_sub()
 {
   std::lock_guard<std::mutex> guard(clock_sub_lock_);
-  if (!clock_subscription_) {
-    // Subscription already destroyed/never created.
-    return;
-  }
   clock_subscription_.reset();
 }
 
