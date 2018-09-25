@@ -73,6 +73,24 @@ void trigger_clock_changes(
   }
 }
 
+void set_use_sim_time_parameter(rclcpp::Node::SharedPtr node, rclcpp::ParameterValue value)
+{
+  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
+
+  using namespace std::chrono_literals;
+  EXPECT_TRUE(parameters_client->wait_for_service(2s));
+  auto set_parameters_results = parameters_client->set_parameters({
+    rclcpp::Parameter("use_sim_time", value)
+  });
+  for (auto & result : set_parameters_results) {
+    EXPECT_TRUE(result.successful);
+  }
+  // SyncParametersClient returns when parameters have been set on the node_parameters interface,
+  // but it doesn't mean the on_parameter_event subscription in TimeSource has been called.
+  // Spin some to handle that subscription.
+  rclcpp::spin_some(node);
+}
+
 TEST_F(TestTimeSource, detachUnattached) {
   rclcpp::TimeSource ts;
 
@@ -117,14 +135,21 @@ TEST_F(TestTimeSource, clock) {
 
   trigger_clock_changes(node);
 
-  auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
-  auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
+  // Even now that we've recieved a message, ROS time should still not be active since the
+  // parameter has not been explicitly set.
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  // Now that we've recieved a message it should be active with parameter unset
+  // Activate ROS time.
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
   EXPECT_TRUE(ros_clock->ros_time_is_active());
+
+  trigger_clock_changes(node);
 
   auto t_out = ros_clock->now();
 
+  // Time from clock should now reflect what was published on the /clock topic.
+  auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
+  auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
   EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
@@ -179,11 +204,15 @@ TEST_F(TestTimeSource, callbacks) {
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
-  EXPECT_EQ(1, cbo.last_precallback_id_);
-  EXPECT_EQ(1, cbo.last_postcallback_id_);
+  // Callbacks will not be triggered since ROS time is not active.
+  EXPECT_EQ(0, cbo.last_precallback_id_);
+  EXPECT_EQ(0, cbo.last_postcallback_id_);
 
-  // Now that we've recieved a message it should be active with parameter unset
+  // Activate ROS time.
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
   EXPECT_TRUE(ros_clock->ros_time_is_active());
+
+  trigger_clock_changes(node);
 
   auto t_out = ros_clock->now();
 
@@ -191,6 +220,9 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 
+  // Callbacks will now have been triggered since ROS time is active.
+  EXPECT_EQ(1, cbo.last_precallback_id_);
+  EXPECT_EQ(1, cbo.last_postcallback_id_);
 
   // Change callbacks
   rclcpp::JumpHandler::SharedPtr callback_handler2 = ros_clock->create_jump_callback(
@@ -203,7 +235,6 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_EQ(2, cbo.last_precallback_id_);
   EXPECT_EQ(2, cbo.last_postcallback_id_);
 
-  // Now that we've recieved a message it should be active with parameter unset
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   t_out = ros_clock->now();
@@ -258,23 +289,22 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
     jump_threshold);
 
-
+  // Callbacks will not be triggered since ROS time is not active.
   EXPECT_EQ(0, cbo.last_precallback_id_);
   EXPECT_EQ(0, cbo.last_postcallback_id_);
 
-
-  EXPECT_FALSE(ros_clock->ros_time_is_active());
+  // Activate ROS time.
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   trigger_clock_changes(node);
 
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
+  // Callbacks will now have been triggered since ROS time is active.
   EXPECT_EQ(1, cbo.last_precallback_id_);
   EXPECT_EQ(1, cbo.last_postcallback_id_);
-
-  // Now that we've recieved a message it should be active with parameter unset
-  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   auto t_out = ros_clock->now();
 
@@ -293,11 +323,9 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
 
   trigger_clock_changes(node);
 
-
   EXPECT_EQ(2, cbo.last_precallback_id_);
   EXPECT_EQ(2, cbo.last_postcallback_id_);
 
-  // Now that we've recieved a message it should be active with parameter unset
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   t_out = ros_clock->now();
@@ -316,48 +344,28 @@ TEST_F(TestTimeSource, parameter_activation) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-
-  using namespace std::chrono_literals;
-  EXPECT_TRUE(parameters_client->wait_for_service(2s));
-  auto set_parameters_results = parameters_client->set_parameters({
-    rclcpp::Parameter("use_sim_time", true)
-  });
-  for (auto & result : set_parameters_results) {
-    EXPECT_TRUE(result.successful);
-  }
-  // SyncParametersClient returns when parameters have been set on the node_parameters interface,
-  // but it doesn't mean the on_parameter_event subscription in TimeSource has been called.
-  // Spin some to handle that subscription.
-  rclcpp::spin_some(node);
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
-  set_parameters_results = parameters_client->set_parameters({
-    rclcpp::Parameter("use_sim_time", rclcpp::ParameterType::PARAMETER_NOT_SET)
-  });
-  for (auto & result : set_parameters_results) {
-    EXPECT_TRUE(result.successful);
-  }
-  rclcpp::spin_some(node);
+  set_use_sim_time_parameter(
+    node, rclcpp::ParameterValue(rclcpp::ParameterType::PARAMETER_NOT_SET));
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
-  set_parameters_results = parameters_client->set_parameters({
-    rclcpp::Parameter("use_sim_time", false)
-  });
-  for (auto & result : set_parameters_results) {
-    EXPECT_TRUE(result.successful);
-  }
-  rclcpp::spin_some(node);
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(false));
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  set_parameters_results = parameters_client->set_parameters({
-    rclcpp::Parameter("use_sim_time", rclcpp::ParameterType::PARAMETER_NOT_SET)
-  });
-  for (auto & result : set_parameters_results) {
-    EXPECT_TRUE(result.successful);
-  }
-  rclcpp::spin_some(node);
+  set_use_sim_time_parameter(
+    node, rclcpp::ParameterValue(rclcpp::ParameterType::PARAMETER_NOT_SET));
   EXPECT_FALSE(ros_clock->ros_time_is_active());
+
+  // If the use_sim_time parameter is not explicitly set to True, this clock's use of sim time
+  // should not be affected by the presence of a clock publisher.
+  trigger_clock_changes(node);
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(false));
+  EXPECT_FALSE(ros_clock->ros_time_is_active());
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 }
 
 TEST_F(TestTimeSource, no_pre_jump_callback) {
@@ -381,18 +389,7 @@ TEST_F(TestTimeSource, no_pre_jump_callback) {
   ts.attachClock(ros_clock);
 
   // Activate ROS time
-  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-  ASSERT_TRUE(parameters_client->wait_for_service(2s));
-  auto set_parameters_results = parameters_client->set_parameters({
-    rclcpp::Parameter("use_sim_time", true)
-  });
-  for (auto & result : set_parameters_results) {
-    EXPECT_TRUE(result.successful);
-  }
-  // SyncParametersClient returns when parameters have been set on the node_parameters interface,
-  // but it doesn't mean the on_parameter_event subscription in TimeSource has been called.
-  // Spin some to handle that subscription.
-  rclcpp::spin_some(node);
+  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
   ASSERT_TRUE(ros_clock->ros_time_is_active());
 
   EXPECT_EQ(0, cbo.last_precallback_id_);
