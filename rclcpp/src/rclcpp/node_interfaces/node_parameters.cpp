@@ -362,7 +362,7 @@ NodeParameters::register_param_change_callback(ParametersCallbackFunction callba
 {
   if (parameters_callback_) {
     RCUTILS_LOG_WARN("param_change_callback already registered, "
-      "overwriting previous callback")
+      "overwriting previous callback");
   }
   parameters_callback_ = callback;
 }
