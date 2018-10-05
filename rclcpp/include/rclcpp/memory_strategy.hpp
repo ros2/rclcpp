@@ -43,6 +43,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(MemoryStrategy)
   using WeakNodeVector = std::vector<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>;
 
+  virtual ~MemoryStrategy() = default;
+
   virtual bool collect_entities(const WeakNodeVector & weak_nodes) = 0;
 
   virtual size_t number_of_ready_subscriptions() const = 0;
