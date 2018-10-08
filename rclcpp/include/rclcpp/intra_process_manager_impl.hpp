@@ -45,7 +45,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(IntraProcessManagerImplBase)
 
   IntraProcessManagerImplBase() = default;
-  ~IntraProcessManagerImplBase() = default;
+  virtual ~IntraProcessManagerImplBase() = default;
 
   virtual void
   add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription) = 0;

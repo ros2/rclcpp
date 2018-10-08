@@ -71,6 +71,8 @@ public:
     rcutils_allocator_ = allocator::get_rcl_allocator<char, BufferAlloc>(*buffer_allocator_.get());
   }
 
+  virtual ~MessageMemoryStrategy() = default;
+
   /// Default factory method
   static SharedPtr create_default()
   {
