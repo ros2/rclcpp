@@ -377,14 +377,14 @@ public:
     // error handling ?!
     // TODO(karsten1987): iterate over possible ret value
     if (cb_return_code == node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR) {
-      RCUTILS_LOG_WARN("Error occurred while doing error handling.")
+      RCUTILS_LOG_WARN("Error occurred while doing error handling.");
 
       auto error_cb_code = execute_callback(state_machine_.current_state->id, initial_state);
       auto error_cb_label = get_label_for_return_code(error_cb_code);
       if (rcl_lifecycle_trigger_transition_by_label(
           &state_machine_, error_cb_label, publish_update) != RCL_RET_OK)
       {
-        RCUTILS_LOG_ERROR("Failed to call cleanup on error state")
+        RCUTILS_LOG_ERROR("Failed to call cleanup on error state");
         return RCL_RET_ERROR;
       }
     }
