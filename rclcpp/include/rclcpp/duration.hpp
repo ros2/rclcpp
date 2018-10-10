@@ -94,6 +94,10 @@ public:
   double
   seconds() const;
 
+  // Create a duration object from a floating point number representing seconds
+  static Duration
+  from_seconds(double seconds);
+
   template<class DurationT>
   DurationT
   to_chrono() const

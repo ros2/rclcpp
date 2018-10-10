@@ -233,4 +233,10 @@ Duration::to_rmw_time() const
   return result;
 }
 
+Duration
+Duration::from_seconds(double seconds)
+{
+  return Duration(static_cast<int64_t>(RCL_S_TO_NS(seconds)));
+}
+
 }  // namespace rclcpp
