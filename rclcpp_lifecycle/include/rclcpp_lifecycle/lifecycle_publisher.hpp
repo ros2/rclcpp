@@ -48,6 +48,8 @@ class LifecyclePublisher : public LifecyclePublisherInterface,
   public rclcpp::Publisher<MessageT, Alloc>
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS(LifecyclePublisher)
+
   using MessageAllocTraits = rclcpp::allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
   using MessageDeleter = rclcpp::allocator::Deleter<MessageAlloc, MessageT>;
