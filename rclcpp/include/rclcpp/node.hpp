@@ -268,7 +268,8 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /// Declare and initialize a parameter.
-  /* This method is used to declare that a parameter exists on this node.
+  /**
+   * This method is used to declare that a parameter exists on this node.
    * If a run-time user has provided an an initial value then it will be set in this method,
    * otherwise the default_value will be set.
    * \param[in] name the name of the parameter
