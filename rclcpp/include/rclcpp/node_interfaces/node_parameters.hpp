@@ -82,33 +82,28 @@ public:
     bool read_only) override;
 
   RCLCPP_PUBLIC
-  virtual
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(
-    const std::vector<rclcpp::Parameter> & parameters);
+    const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
-  virtual
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(
-    const std::vector<rclcpp::Parameter> & parameters);
+    const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
-  virtual
   std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & names) const;
+  get_parameters(const std::vector<std::string> & names) const override;
 
   RCLCPP_PUBLIC
-  virtual
   rclcpp::Parameter
-  get_parameter(const std::string & name) const;
+  get_parameter(const std::string & name) const override;
 
   RCLCPP_PUBLIC
-  virtual
   bool
   get_parameter(
     const std::string & name,
-    rclcpp::Parameter & parameter) const;
+    rclcpp::Parameter & parameter) const override;
 
   RCLCPP_PUBLIC
   virtual
@@ -120,22 +115,19 @@ public:
   RCLCPP_PUBLIC
   virtual
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
-  describe_parameters(const std::vector<std::string> & names) const;
+  describe_parameters(const std::vector<std::string> & names) const override;
 
   RCLCPP_PUBLIC
-  virtual
   std::vector<uint8_t>
-  get_parameter_types(const std::vector<std::string> & names) const;
+  get_parameter_types(const std::vector<std::string> & names) const override;
 
   RCLCPP_PUBLIC
-  virtual
   rcl_interfaces::msg::ListParametersResult
-  list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
+  list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const override;
 
   RCLCPP_PUBLIC
-  virtual
   void
-  register_param_change_callback(ParametersCallbackFunction callback);
+  register_param_change_callback(ParametersCallbackFunction callback) override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
