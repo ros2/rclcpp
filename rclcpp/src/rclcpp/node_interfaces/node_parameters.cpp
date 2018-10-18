@@ -197,7 +197,7 @@ NodeParameters::create_parameter(
   desc.type = initial_value.get_type();
   desc.read_only = read_only;
 
-  rclcpp::node_interfaces::ParameterInfo_t pinfo;
+  rclcpp::node_interfaces::ParameterInfo pinfo;
   pinfo.is_declared = true;
   pinfo.value = initial_value;
   pinfo.descriptor = desc;
@@ -231,7 +231,7 @@ NodeParameters::set_parameters_atomically(
   const std::vector<rclcpp::Parameter> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::map<std::string, rclcpp::node_interfaces::ParameterInfo_t> tmp_map;
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> tmp_map;
   auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
 
   parameter_event->node = combined_name_;
@@ -265,7 +265,7 @@ NodeParameters::set_parameters_atomically(
         parameter_event->deleted_parameters.push_back(p.to_parameter_msg());
         if (param_iter->second.is_declared) {
           // clear declared parameter value, but don't delete it
-          rclcpp::node_interfaces::ParameterInfo_t cleared_param_info = param_iter->second;
+          rclcpp::node_interfaces::ParameterInfo cleared_param_info = param_iter->second;
           cleared_param_info.value = rclcpp::ParameterValue();
           tmp_map[p.get_name()] = cleared_param_info;
         } else {
@@ -280,7 +280,7 @@ NodeParameters::set_parameters_atomically(
           // case: changing a parameter value
           parameter_event->changed_parameters.push_back(p.to_parameter_msg());
         }
-        rclcpp::node_interfaces::ParameterInfo_t changed_param_info = param_iter->second;
+        rclcpp::node_interfaces::ParameterInfo changed_param_info = param_iter->second;
         // TODO(sloretz) Add accessor for ParameterValue on Parameter class
         changed_param_info.value = rclcpp::ParameterValue(p.get_value_message());
         tmp_map[p.get_name()] = changed_param_info;
@@ -304,7 +304,7 @@ NodeParameters::set_parameters_atomically(
         desc.type = p.get_type();
         desc.read_only = false;
 
-        rclcpp::node_interfaces::ParameterInfo_t new_param_info;
+        rclcpp::node_interfaces::ParameterInfo new_param_info;
         new_param_info.is_declared = false;
         // TODO(sloretz) Add accessor for ParameterValue on Parameter class
         new_param_info.value = rclcpp::ParameterValue(p.get_value_message());
@@ -338,7 +338,7 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
 
   for (auto & name : names) {
     if (std::any_of(parameters_.cbegin(), parameters_.cend(),
-      [&name](const std::pair<std::string, rclcpp::node_interfaces::ParameterInfo_t> & kv) {
+      [&name](const std::pair<std::string, rclcpp::node_interfaces::ParameterInfo> & kv) {
         return name == kv.first;
       }))
     {
