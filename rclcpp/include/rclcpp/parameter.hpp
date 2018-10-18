@@ -60,6 +60,11 @@ public:
   rcl_interfaces::msg::ParameterValue
   get_value_message() const;
 
+  /// Get the internal storage for the parameter value.
+  RCLCPP_PUBLIC
+  const rclcpp::ParameterValue &
+  get_parameter_value() const;
+
   /// Get value of parameter using rclcpp::ParameterType as template argument.
   template<ParameterType ParamT>
   decltype(auto)

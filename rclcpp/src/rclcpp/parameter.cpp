@@ -57,6 +57,12 @@ Parameter::get_value_message() const
   return value_.to_value_msg();
 }
 
+const rclcpp::ParameterValue &
+Parameter::get_parameter_value() const
+{
+  return value_;
+}
+
 bool
 Parameter::as_bool() const
 {
