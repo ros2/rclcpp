@@ -45,11 +45,11 @@ enum ParameterType
 /// Return the name of a parameter type
 RCLCPP_PUBLIC
 std::string
-to_string(const ParameterType type);
+to_string(ParameterType type);
 
 RCLCPP_PUBLIC
 std::ostream &
-operator<<(std::ostream & os, const ParameterType type);
+operator<<(std::ostream & os, ParameterType type);
 
 /// Indicate the parameter type does not match the expected type.
 class ParameterTypeException : public std::runtime_error
