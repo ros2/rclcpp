@@ -41,7 +41,7 @@ namespace node_interfaces
 {
 
 // Internal struct for holding useful info about parameters
-typedef struct
+struct ParameterInfo
 {
   /// True if a user called create_parameter()
   bool is_declared = false;
@@ -51,7 +51,7 @@ typedef struct
 
   /// A description of the parameter
   rcl_interfaces::msg::ParameterDescriptor descriptor;
-} ParameterInfo_t;
+};
 
 /// Implementation of the NodeParameters part of the Node API.
 class NodeParameters : public NodeParametersInterface
@@ -138,7 +138,7 @@ private:
 
   ParametersCallbackFunction parameters_callback_ = nullptr;
 
-  std::map<std::string, ParameterInfo_t> parameters_;
+  std::map<std::string, ParameterInfo> parameters_;
 
   std::map<std::string, rclcpp::ParameterValue> initial_parameter_values_;
 
