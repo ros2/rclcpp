@@ -28,7 +28,8 @@
 
 namespace rclcpp
 {
-enum ParameterType
+
+enum ParameterType : uint8_t
 {
   PARAMETER_NOT_SET = rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET,
   PARAMETER_BOOL = rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
