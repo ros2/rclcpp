@@ -210,6 +210,12 @@ sub_will_underflow(const T x, const T y)
   return (y > 0) && (x < (std::numeric_limits<T>::min() + y));
 }
 
+const char *
+get_c_string(const char * string_in);
+
+const char *
+get_c_string(const std::string & string_in);
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__UTILITIES_HPP_
