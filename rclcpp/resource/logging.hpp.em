@@ -31,8 +31,8 @@
 #define RCLCPP_LOG_MIN_SEVERITY_FATAL 4
 #define RCLCPP_LOG_MIN_SEVERITY_NONE 5
 
-#define FIRST_ARG(N, ...) N
-#define ALL_BUT_FIRST_ARGS(N, ...) , ##__VA_ARGS__
+#define RCLCPP_FIRST_ARG(N, ...) N
+#define RCLCPP_ALL_BUT_FIRST_ARGS(N, ...) , ##__VA_ARGS__
 
 /**
  * \def RCLCPP_LOG_MIN_SEVERITY
@@ -98,7 +98,8 @@ def is_supported_feature_combination(feature_combination):
 @(''.join(['    ' + p + ', \\\n' for p in params]))@
 @[ end if]@
     logger.get_name(), \
-    rclcpp::get_c_string(FIRST_ARG(__VA_ARGS__, "")) ALL_BUT_FIRST_ARGS(__VA_ARGS__,""))
+    rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")) \
+      RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,""))
 
 @[ end for]@
 #endif

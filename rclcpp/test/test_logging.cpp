@@ -98,6 +98,15 @@ TEST_F(TestLoggingMacros, test_logging_string) {
   }
   EXPECT_EQ(3u, g_log_calls);
   EXPECT_EQ("message three", g_last_log_event.message);
+
+  RCLCPP_DEBUG(g_logger, "message " "four");
+  EXPECT_EQ("message four", g_last_log_event.message);
+
+  RCLCPP_DEBUG(g_logger, std::string("message " "five"));
+  EXPECT_EQ("message five", g_last_log_event.message);
+
+  RCLCPP_DEBUG(g_logger, std::string("message %s"), "six");
+  EXPECT_EQ("message six", g_last_log_event.message);
 }
 
 TEST_F(TestLoggingMacros, test_logging_once) {
