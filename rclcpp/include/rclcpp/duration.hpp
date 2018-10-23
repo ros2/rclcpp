@@ -28,10 +28,12 @@ class RCLCPP_PUBLIC Duration
 public:
   Duration(int32_t seconds, uint32_t nanoseconds);
 
+  // This constructor matches any numeric value - ints or floats
   explicit Duration(rcl_duration_value_t nanoseconds);
 
   explicit Duration(std::chrono::nanoseconds nanoseconds);
 
+  // This constructor matches any std::chrono value other than nanoseconds
   // intentionally not using explicit to create a conversion constructor
   template<class Rep, class Period>
   // cppcheck-suppress noExplicitConstructor
