@@ -225,7 +225,7 @@ get_c_string(const char * string_in);
 /**
  *
  * \param[in] string_in is a std::string
- * \return The string tranformed to C string.
+ * \return The string transformed to C string.
  */
 RCLCPP_PUBLIC
 const char *
