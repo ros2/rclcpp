@@ -86,7 +86,8 @@ def is_supported_feature_combination(feature_combination):
 @[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
- * \param ... The format string, followed by the variable arguments for the format string
+ * \param ... The format string, followed by the variable arguments for the format string.
+ * It also accepts a single argument of type std::string.
  */
 #define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
   static_assert( \
