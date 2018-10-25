@@ -353,3 +353,15 @@ rclcpp::sleep_for(const std::chrono::nanoseconds & nanoseconds)
   // Return true if the timeout elapsed successfully, otherwise false.
   return !g_is_interrupted;
 }
+
+const char *
+rclcpp::get_c_string(const char * string_in)
+{
+  return string_in;
+}
+
+const char *
+rclcpp::get_c_string(const std::string & string_in)
+{
+  return string_in.c_str();
+}
