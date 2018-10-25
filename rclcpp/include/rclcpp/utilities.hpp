@@ -210,22 +210,21 @@ sub_will_underflow(const T x, const T y)
   return (y > 0) && (x < (std::numeric_limits<T>::min() + y));
 }
 
-/// Return the same string.
+/// Return the given string.
 /**
- * This function is overloaded to transform any string to C-style string
+ * This function is overloaded to transform any string to C-style string.
  *
  * \param[in] string_in is the string to be returned
- * \return The same string.
+ * \return the given string
  */
 RCLCPP_PUBLIC
 const char *
 get_c_string(const char * string_in);
 
-/// Return the string, converted to C string
+/// Return the C string from the given std::string.
 /**
- *
  * \param[in] string_in is a std::string
- * \return The string transformed to C string.
+ * \return the C string from the std::string
  */
 RCLCPP_PUBLIC
 const char *
