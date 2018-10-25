@@ -107,6 +107,9 @@ TEST_F(TestLoggingMacros, test_logging_string) {
 
   RCLCPP_DEBUG(g_logger, std::string("message %s"), "six");
   EXPECT_EQ("message six", g_last_log_event.message);
+
+  RCLCPP_DEBUG(g_logger, "message seven");
+  EXPECT_EQ("message seven", g_last_log_event.message);
 }
 
 TEST_F(TestLoggingMacros, test_logging_once) {
