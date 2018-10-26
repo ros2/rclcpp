@@ -325,8 +325,9 @@ public:
    */
   template<typename MapValueT>
   bool
-  get_parameter(const std::string & name,
-                std::map<std::string, MapValueT> & values) const;
+  get_parameter(
+    const std::string & name,
+    std::map<std::string, MapValueT> & values) const;
 
   /// Get the parameter value, or the "alternative value" if not set, and assign it to "value".
   /**

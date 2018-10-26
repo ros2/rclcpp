@@ -264,8 +264,9 @@ Node::get_parameter(const std::string & name, ParameterT & value) const
 // type is the value in the map.
 template<typename MapValueT>
 bool
-Node::get_parameter(const std::string & name,
-                    std::map<std::string, MapValueT> & values) const
+Node::get_parameter(
+  const std::string & name,
+  std::map<std::string, MapValueT> & values) const
 {
   std::map<std::string, rclcpp::Parameter> params;
   bool result = node_parameters_->get_parameters_by_prefix(name, params);
