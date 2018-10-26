@@ -89,6 +89,20 @@ public:
     const std::string & name,
     rclcpp::Parameter & parameter) const = 0;
 
+  /// Get all parameters that have the specified prefix into the parameters map.
+  /*
+   * \param[in] prefix the name of the prefix to look for.
+   * \param[out] parameters a map of parameters that matched the prefix.
+   * \return true if any parameters with the prefix exists on the node, or
+   * \return false otherwise.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  get_parameters_by_prefix(
+    const std::string & prefix,
+    std::map<std::string, rclcpp::Parameter> & parameters) const = 0;
+
   RCLCPP_PUBLIC
   virtual
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
