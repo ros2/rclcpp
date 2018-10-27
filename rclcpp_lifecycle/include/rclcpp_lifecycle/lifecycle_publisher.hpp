@@ -18,9 +18,9 @@
 #include <memory>
 #include <string>
 
-#include <rclcpp/logging.hpp>
-
 #include "rclcpp/publisher.hpp"
+
+#include "rclcpp/logging.hpp"
 
 namespace rclcpp_lifecycle
 {
@@ -64,8 +64,10 @@ public:
     std::shared_ptr<MessageAlloc> allocator)
   : rclcpp::Publisher<MessageT, Alloc>(
       node_base, topic, publisher_options, allocator),
-    enabled_(false)
-  {}
+    enabled_(false),
+    logger_(rclcpp::get_logger("LifecyclePublisher"))
+  {
+  }
 
   ~LifecyclePublisher() {}
 
@@ -79,8 +81,8 @@ public:
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
     if (!enabled_) {
-      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
-      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -98,8 +100,8 @@ public:
   publish(const std::shared_ptr<MessageT> & msg)
   {
     if (!enabled_) {
-      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
-      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -117,8 +119,8 @@ public:
   publish(std::shared_ptr<const MessageT> msg)
   {
     if (!enabled_) {
-      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
-      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -136,8 +138,8 @@ public:
   publish(const MessageT & msg)
   {
     if (!enabled_) {
-      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
-      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -164,8 +166,8 @@ public:
   publish(std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
-      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
-      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -193,6 +195,7 @@ public:
 
 private:
   bool enabled_ = false;
+  rclcpp::Logger logger_;
 };
 
 }  // namespace rclcpp_lifecycle
