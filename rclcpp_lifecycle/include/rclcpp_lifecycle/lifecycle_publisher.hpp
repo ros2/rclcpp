@@ -18,6 +18,8 @@
 #include <memory>
 #include <string>
 
+#include <rclcpp/logging.hpp>
+
 #include "rclcpp/publisher.hpp"
 
 namespace rclcpp_lifecycle
@@ -77,6 +79,10 @@ public:
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
     if (!enabled_) {
+      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
+      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -92,6 +98,10 @@ public:
   publish(const std::shared_ptr<MessageT> & msg)
   {
     if (!enabled_) {
+      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
+      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -107,6 +117,10 @@ public:
   publish(std::shared_ptr<const MessageT> msg)
   {
     if (!enabled_) {
+      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
+      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -122,6 +136,10 @@ public:
   publish(const MessageT & msg)
   {
     if (!enabled_) {
+      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
+      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -146,6 +164,10 @@ public:
   publish(std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
+      rclcpp::Logger logger = rclcpp::get_logger("LifecyclePublisher");
+      RCLCPP_WARN(logger, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
