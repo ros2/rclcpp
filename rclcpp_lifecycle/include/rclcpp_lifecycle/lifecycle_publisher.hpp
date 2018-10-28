@@ -20,6 +20,8 @@
 
 #include "rclcpp/publisher.hpp"
 
+#include "rclcpp/logging.hpp"
+
 namespace rclcpp_lifecycle
 {
 /// base class with only
@@ -62,8 +64,10 @@ public:
     std::shared_ptr<MessageAlloc> allocator)
   : rclcpp::Publisher<MessageT, Alloc>(
       node_base, topic, publisher_options, allocator),
-    enabled_(false)
-  {}
+    enabled_(false),
+    logger_(rclcpp::get_logger("LifecyclePublisher"))
+  {
+  }
 
   ~LifecyclePublisher() {}
 
@@ -77,6 +81,10 @@ public:
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
     if (!enabled_) {
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -92,6 +100,10 @@ public:
   publish(const std::shared_ptr<MessageT> & msg)
   {
     if (!enabled_) {
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -107,6 +119,10 @@ public:
   publish(std::shared_ptr<const MessageT> msg)
   {
     if (!enabled_) {
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -122,6 +138,10 @@ public:
   publish(const MessageT & msg)
   {
     if (!enabled_) {
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -146,6 +166,10 @@ public:
   publish(std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
@@ -171,6 +195,7 @@ public:
 
 private:
   bool enabled_ = false;
+  rclcpp::Logger logger_;
 };
 
 }  // namespace rclcpp_lifecycle
