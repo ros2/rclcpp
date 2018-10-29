@@ -202,8 +202,28 @@ public:
       throw std::runtime_error(
               "Can't get state. State machine is not initialized.");
     }
+
+    auto transition_id = req->transition.id;
+    // if there's a label attached to the request,
+    // we check the transition attached to this label.
+    // we further can't compare the id of the looked up transition
+    // because ros2 service call defaults all intergers to zero.
+    // that means if we call ros2 service call ... {transition: {label: shutdown}}
+    // the id of the request is 0 (zero) whereas the id from the lookup up transition
+    // can be different.
+    // the result of this is that the label takes presedence of the id.
+    if (req->transition.label.size() != 0) {
+      auto rcl_transition = rcl_lifecycle_get_transition_by_label(
+        state_machine_.current_state, req->transition.label.c_str());
+      if (rcl_transition == nullptr) {
+        resp->success = false;
+        return;
+      }
+      transition_id = rcl_transition->id;
+    }
+
     node_interfaces::LifecycleNodeInterface::CallbackReturn cb_return_code;
-    auto ret = change_state(req->transition.id, cb_return_code);
+    auto ret = change_state(transition_id, cb_return_code);
     (void) ret;
     // TODO(karsten1987): Lifecycle msgs have to be extended to keep both returns
     // 1. return is the actual transition
