@@ -401,6 +401,17 @@ if(BUILD_TESTING)
       "rcl")
     target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
   endif()
+
+  ament_add_gtest(test_local_parameters test/test_local_parameters.cpp)
+  if(TARGET test_local_parameters)
+    target_include_directories(test_local_parameters PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_local_parameters ${PROJECT_NAME})
+  endif()
 endif()
 
 ament_package(
