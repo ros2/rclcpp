@@ -51,14 +51,7 @@ rclcpp::expand_topic_or_service_name(
   }
   rcl_ret_t ret = rcl_get_default_topic_name_substitutions(&substitutions_map);
   if (ret != RCL_RET_OK) {
-    rcutils_error_state_t error_state;
-    if (rcutils_error_state_copy(rcl_get_error_state(), &error_state) != RCUTILS_RET_OK) {
-      throw std::bad_alloc();
-    }
-    auto error_state_scope_exit = rclcpp::make_scope_exit(
-      [&error_state]() {
-        rcutils_error_state_fini(&error_state);
-      });
+    const rcutils_error_state_t * error_state = rcl_get_error_state();
     // finalize the string map before throwing
     rcutils_ret = rcutils_string_map_fini(&substitutions_map);
     if (rcutils_ret != RCUTILS_RET_OK) {
@@ -66,10 +59,10 @@ rclcpp::expand_topic_or_service_name(
         "rclcpp",
         "failed to fini string_map (%d) during error handling: %s",
         rcutils_ret,
-        rcutils_get_error_string_safe());
+        rcutils_get_error_string().str);
       rcutils_reset_error();
     }
-    throw_from_rcl_error(ret, "", &error_state);
+    throw_from_rcl_error(ret, "", error_state);
   }
 
   ret = rcl_expand_topic_name(

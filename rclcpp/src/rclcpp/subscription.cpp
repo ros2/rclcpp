@@ -43,7 +43,7 @@ SubscriptionBase::SubscriptionBase(
         RCLCPP_ERROR(
           rclcpp::get_logger(rcl_node_get_logger_name(node_handle.get())).get_child("rclcpp"),
           "Error in destruction of rcl subscription handle: %s",
-          rcl_get_error_string_safe());
+          rcl_get_error_string().str);
         rcl_reset_error();
       }
       delete rcl_subs;

@@ -123,7 +123,7 @@ NodeParameters::NodeParameters(
     if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params)) {
       std::ostringstream ss;
       ss << "Failed to parse parameters from file '" << yaml_path << "': " <<
-        rcl_get_error_string_safe();
+        rcl_get_error_string().str;
       rcl_reset_error();
       throw std::runtime_error(ss.str());
     }
