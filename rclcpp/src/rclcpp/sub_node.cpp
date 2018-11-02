@@ -70,8 +70,7 @@ SubNode::SubNode(
   node_clock_(other->original_->node_clock_),
   use_intra_process_comms_(other->original_->use_intra_process_comms_)
 {
-  extended_namespace_ = validated_extended_ns(
-    other->extended_namespace_+"/"+namespace_);
+  extended_namespace_ = validated_extended_ns(other->extended_namespace_ + "/" + namespace_);
 }
 
 SubNode::~SubNode()
@@ -86,7 +85,7 @@ SubNode::get_name() const
 const char *
 SubNode::get_namespace() const
 {
-  return node_base_->get_namespace();
+  return (std::string(original_->get_namespace()) + "/" + extended_namespace_).c_str();
 }
 
 rclcpp::Logger
@@ -270,7 +269,19 @@ SubNode::get_node_parameters_interface()
 const std::string
 SubNode::validated_extended_ns(const std::string & extended_ns) const
 {
-  std::string full_namespace = std::string(original_->get_namespace())+"/"+extended_ns;
+  std::string ret_ns = extended_ns;
+
+  if (ret_ns[0] == '/') {
+    ret_ns.erase(ret_ns.begin());
+  }
+  // converts "//" to "/"
+  std::string::size_type found = ret_ns.find("//");
+  while (found != std::string::npos) {
+    ret_ns.replace(found, 2, "/");
+    found = ret_ns.find("//");
+  }
+
+  std::string full_namespace = std::string(original_->get_namespace()) + "/" + ret_ns;
 
   int validation_result;
   size_t invalid_index;
@@ -291,14 +302,14 @@ SubNode::validated_extended_ns(const std::string & extended_ns) const
             invalid_index);
   }
 
-  return extended_ns;
+  return ret_ns;
 }
 
 RCLCPP_PUBLIC
 const std::string
 SubNode::add_extended_ns_prefix(const std::string & original_name) const
 {
-  return extended_namespace_+"/"+original_name;
+  return std::string(original_->get_namespace()) + "/" + extended_namespace_ + "/" + original_name;
 }
 
 

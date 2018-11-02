@@ -427,11 +427,21 @@ public:
 private:
   RCLCPP_DISABLE_COPY(SubNode)
 
+  /// Create a new subnode from a node extending its namespace.
+  /**
+   * \param[in] original Node to create a subnode.
+   * \param[in] namespace_ Extended namespace.
+   */
   RCLCPP_PUBLIC
   explicit SubNode(
     const Node::SharedPtr original,
     const std::string & namespace_);
 
+  /// Create a new subnode from a subnode extending its namespace.
+  /**
+   * \param[in] othe Subnode to create another subnode.
+   * \param[in] namespace_ Extended namespace.
+   */
   RCLCPP_PUBLIC
   explicit SubNode(
     const SubNode::SharedPtr other,
@@ -472,4 +482,4 @@ private:
 #include "sub_node_impl.hpp"
 #endif
 
-#endif  // RCLCPP__NODE_HPP_
+#endif  // RCLCPP__SUB_NODE_HPP_

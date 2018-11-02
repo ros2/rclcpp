@@ -75,6 +75,39 @@ TEST_F(TestNode, get_name_and_namespace) {
   }
 }
 
+/*
+   Testing node construction and destruction.
+ */
+TEST_F(TestNode, subnode_construction_and_destruction) {
+  {
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    auto subnode = node->create_sub_node("sub_ns");
+  }
+
+  {
+    ASSERT_THROW({
+      auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+      auto subnode = node->create_sub_node("invalid_ns?");
+    }, rclcpp::exceptions::InvalidNamespaceError);
+  }
+}
+
+TEST_F(TestNode, subnode_get_name_and_namespace) {
+  {
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    auto subnode = node->create_sub_node("sub_ns");
+    EXPECT_STREQ("my_node", subnode->get_name());
+    EXPECT_STREQ("/ns/sub_ns", subnode->get_namespace());
+  }
+  {
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    auto subnode = node->create_sub_node("/sub_ns");
+    EXPECT_STREQ("my_node", subnode->get_name());
+    EXPECT_STREQ("/ns/sub_ns", subnode->get_namespace());
+  }
+}
+
+
 TEST_F(TestNode, get_logger) {
   {
     auto node = std::make_shared<rclcpp::Node>("my_node");
