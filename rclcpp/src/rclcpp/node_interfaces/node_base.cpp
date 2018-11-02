@@ -54,7 +54,7 @@ NodeBase::NodeBase(
       if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
-          "failed to destroy guard condition: %s", rcl_get_error_string_safe());
+          "failed to destroy guard condition: %s", rcl_get_error_string().str);
       }
     };
 
@@ -122,7 +122,7 @@ NodeBase::NodeBase(
       // Print message because exception will be thrown later in this code block
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
-        "Failed to fini arguments during error handling: %s", rcl_get_error_string_safe());
+        "Failed to fini arguments during error handling: %s", rcl_get_error_string().str);
       rcl_reset_error();
     }
 
@@ -180,7 +180,7 @@ NodeBase::NodeBase(
       if (rcl_node_fini(node) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
-          "Error in destruction of rcl node handle: %s", rcl_get_error_string_safe());
+          "Error in destruction of rcl node handle: %s", rcl_get_error_string().str);
       }
       delete node;
     });
@@ -197,7 +197,7 @@ NodeBase::NodeBase(
     // print message because throwing would prevent the destructor from being called
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
-      "Failed to fini arguments: %s", rcl_get_error_string_safe());
+      "Failed to fini arguments: %s", rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
@@ -211,7 +211,7 @@ NodeBase::~NodeBase()
     if (rcl_guard_condition_fini(&notify_guard_condition_) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
-        "failed to destroy guard condition: %s", rcl_get_error_string_safe());
+        "failed to destroy guard condition: %s", rcl_get_error_string().str);
     }
   }
 }

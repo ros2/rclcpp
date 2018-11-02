@@ -356,7 +356,7 @@ public:
   {
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR("Unable to change state for state machine for %s: %s",
-        node_base_interface_->get_name(), rcl_get_error_string_safe());
+        node_base_interface_->get_name(), rcl_get_error_string().str);
       return RCL_RET_ERROR;
     }
 
@@ -368,7 +368,7 @@ public:
         &state_machine_, transition_id, publish_update) != RCL_RET_OK)
     {
       RCUTILS_LOG_ERROR("Unable to start transition %u from current state %s: %s",
-        transition_id, state_machine_.current_state->label, rcl_get_error_string_safe());
+        transition_id, state_machine_.current_state->label, rcl_get_error_string().str);
       return RCL_RET_ERROR;
     }
 

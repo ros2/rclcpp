@@ -102,7 +102,7 @@ public:
           if (ret != RCL_RET_OK) {
             RCUTILS_LOG_ERROR_NAMED(
               "rclcpp",
-              "failed to destroy serialized message: %s", rcl_get_error_string_safe());
+              "failed to destroy serialized message: %s", rcl_get_error_string().str);
           }
         });
 

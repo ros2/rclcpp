@@ -121,7 +121,7 @@ public:
             RCLCPP_ERROR(
               rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp"),
               "Error in destruction of rcl service handle: %s",
-              rcl_get_error_string_safe());
+              rcl_get_error_string().str);
             rcl_reset_error();
           }
         } else {
@@ -164,7 +164,7 @@ public:
     any_callback_(any_callback)
   {
     // check if service handle was initialized
-    if (!rcl_service_is_valid(service_handle.get(), nullptr)) {
+    if (!rcl_service_is_valid(service_handle.get())) {
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("rcl_service_t in constructor argument must be initialized beforehand."));
@@ -182,7 +182,7 @@ public:
     any_callback_(any_callback)
   {
     // check if service handle was initialized
-    if (!rcl_service_is_valid(service_handle, nullptr)) {
+    if (!rcl_service_is_valid(service_handle)) {
       // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
       throw std::runtime_error(
         std::string("rcl_service_t in constructor argument must be initialized beforehand."));

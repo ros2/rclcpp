@@ -45,7 +45,7 @@ Executor::Executor(const ExecutorArgs & args)
   {
     throw std::runtime_error(
             std::string("Failed to create interrupt guard condition in Executor constructor: ") +
-            rcl_get_error_string_safe());
+            rcl_get_error_string().str);
   }
 
   // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
@@ -63,12 +63,12 @@ Executor::Executor(const ExecutorArgs & args)
   {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
-      "failed to create wait set: %s", rcl_get_error_string_safe());
+      "failed to create wait set: %s", rcl_get_error_string().str);
     rcl_reset_error();
     if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
-        "failed to destroy guard condition: %s", rcl_get_error_string_safe());
+        "failed to destroy guard condition: %s", rcl_get_error_string().str);
       rcl_reset_error();
     }
     throw std::runtime_error("Failed to create wait set in Executor constructor");
@@ -91,14 +91,14 @@ Executor::~Executor()
   if (rcl_wait_set_fini(&wait_set_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
-      "failed to destroy wait set: %s", rcl_get_error_string_safe());
+      "failed to destroy wait set: %s", rcl_get_error_string().str);
     rcl_reset_error();
   }
   // Finalize the interrupt guard condition.
   if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
-      "failed to destroy guard condition: %s", rcl_get_error_string_safe());
+      "failed to destroy guard condition: %s", rcl_get_error_string().str);
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
@@ -127,7 +127,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   if (notify) {
     // Interrupt waiting to handle new node
     if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-      throw std::runtime_error(rcl_get_error_string_safe());
+      throw std::runtime_error(rcl_get_error_string().str);
     }
   }
   // Add the node's notify condition to the guard condition handles
@@ -161,7 +161,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
       if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-        throw std::runtime_error(rcl_get_error_string_safe());
+        throw std::runtime_error(rcl_get_error_string().str);
       }
     }
   }
@@ -247,7 +247,7 @@ Executor::cancel()
 {
   spinning.store(false);
   if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(rcl_get_error_string_safe());
+    throw std::runtime_error(rcl_get_error_string().str);
   }
 }
 
@@ -286,7 +286,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
   if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-    throw std::runtime_error(rcl_get_error_string_safe());
+    throw std::runtime_error(rcl_get_error_string().str);
   }
 }
 
@@ -309,7 +309,7 @@ Executor::execute_subscription(
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "take_serialized failed for subscription on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string_safe());
+        subscription->get_topic_name(), rcl_get_error_string().str);
       rcl_reset_error();
     }
     subscription->return_serialized_message(serialized_msg);
@@ -324,7 +324,7 @@ Executor::execute_subscription(
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "could not deserialize serialized message on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string_safe());
+        subscription->get_topic_name(), rcl_get_error_string().str);
       rcl_reset_error();
     }
     subscription->return_message(message);
@@ -349,7 +349,7 @@ Executor::execute_intra_process_subscription(
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take failed for intra process subscription on topic '%s': %s",
-      subscription->get_topic_name(), rcl_get_error_string_safe());
+      subscription->get_topic_name(), rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
@@ -377,7 +377,7 @@ Executor::execute_service(
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take request failed for server of service '%s': %s",
-      service->get_service_name(), rcl_get_error_string_safe());
+      service->get_service_name(), rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
@@ -398,7 +398,7 @@ Executor::execute_client(
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take response failed for client of service '%s': %s",
-      client->get_service_name(), rcl_get_error_string_safe());
+      client->get_service_name(), rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
@@ -433,7 +433,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services());
   if (RCL_RET_OK != ret) {
     throw std::runtime_error(
-            std::string("Couldn't resize the wait set : ") + rcl_get_error_string_safe());
+            std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
   }
 
   if (!memory_strategy_->add_handles_to_wait_set(&wait_set_)) {
