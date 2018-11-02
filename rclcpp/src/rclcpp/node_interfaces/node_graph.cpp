@@ -59,13 +59,13 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
     &topic_names_and_types);
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get topic names and types: ") +
-      rcl_get_error_string_safe();
+      rcl_get_error_string().str;
     rcl_reset_error();
     if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
       error_msg += std::string(", failed also to cleanup topic names and types, leaking memory: ") +
-        rcl_get_error_string_safe();
+        rcl_get_error_string().str;
     }
-    throw std::runtime_error(error_msg + rcl_get_error_string_safe());
+    throw std::runtime_error(error_msg + rcl_get_error_string().str);
   }
 
   std::map<std::string, std::vector<std::string>> topics_and_types;
@@ -80,7 +80,7 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
   if (ret != RCL_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not destroy topic names and types: ") + rcl_get_error_string_safe());
+      std::string("could not destroy topic names and types: ") + rcl_get_error_string().str);
     // *INDENT-ON*
   }
 
@@ -99,14 +99,14 @@ NodeGraph::get_service_names_and_types() const
     &service_names_and_types);
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get service names and types: ") +
-      rcl_get_error_string_safe();
+      rcl_get_error_string().str;
     rcl_reset_error();
     if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
       error_msg +=
         std::string(", failed also to cleanup service names and types, leaking memory: ") +
-        rcl_get_error_string_safe();
+        rcl_get_error_string().str;
     }
-    throw std::runtime_error(error_msg + rcl_get_error_string_safe());
+    throw std::runtime_error(error_msg + rcl_get_error_string().str);
   }
 
   std::map<std::string, std::vector<std::string>> services_and_types;
@@ -121,7 +121,7 @@ NodeGraph::get_service_names_and_types() const
   if (ret != RCL_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not destroy service names and types: ") + rcl_get_error_string_safe());
+      std::string("could not destroy service names and types: ") + rcl_get_error_string().str);
     // *INDENT-ON*
   }
 
@@ -155,16 +155,16 @@ NodeGraph::get_node_names_and_namespaces() const
     &node_names_c,
     &node_namespaces_c);
   if (ret != RCL_RET_OK) {
-    auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string_safe();
+    auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string().str;
     rcl_reset_error();
     if (rcutils_string_array_fini(&node_names_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
-        rcl_get_error_string_safe();
+        rcl_get_error_string().str;
       rcl_reset_error();
     }
     if (rcutils_string_array_fini(&node_namespaces_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node namespaces, leaking memory: ") +
-        rcl_get_error_string_safe();
+        rcl_get_error_string().str;
       rcl_reset_error();
     }
     // TODO(karsten1987): Append rcutils_error_message once it's in master
@@ -217,7 +217,7 @@ NodeGraph::count_publishers(const std::string & topic_name) const
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not count publishers: ") + rmw_get_error_string_safe());
+      std::string("could not count publishers: ") + rmw_get_error_string().str);
     // *INDENT-ON*
   }
   return count;
@@ -239,7 +239,7 @@ NodeGraph::count_subscribers(const std::string & topic_name) const
   if (ret != RMW_RET_OK) {
     // *INDENT-OFF*
     throw std::runtime_error(
-      std::string("could not count subscribers: ") + rmw_get_error_string_safe());
+      std::string("could not count subscribers: ") + rmw_get_error_string().str);
     // *INDENT-ON*
   }
   return count;

@@ -66,12 +66,12 @@ PublisherBase::PublisherBase(
   // Life time of this object is tied to the publisher handle.
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
   if (!publisher_rmw_handle) {
-    auto msg = std::string("failed to get rmw handle: ") + rcl_get_error_string_safe();
+    auto msg = std::string("failed to get rmw handle: ") + rcl_get_error_string().str;
     rcl_reset_error();
     throw std::runtime_error(msg);
   }
   if (rmw_get_gid_for_publisher(publisher_rmw_handle, &rmw_gid_) != RMW_RET_OK) {
-    auto msg = std::string("failed to get publisher gid: ") + rmw_get_error_string_safe();
+    auto msg = std::string("failed to get publisher gid: ") + rmw_get_error_string().str;
     rmw_reset_error();
     throw std::runtime_error(msg);
   }
@@ -83,7 +83,7 @@ PublisherBase::~PublisherBase()
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "Error in destruction of intra process rcl publisher handle: %s",
-      rcl_get_error_string_safe());
+      rcl_get_error_string().str);
     rcl_reset_error();
   }
 
@@ -91,7 +91,7 @@ PublisherBase::~PublisherBase()
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "Error in destruction of rcl publisher handle: %s",
-      rcl_get_error_string_safe());
+      rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
@@ -107,7 +107,7 @@ PublisherBase::get_queue_size() const
 {
   const rcl_publisher_options_t * publisher_options = rcl_publisher_get_options(&publisher_handle_);
   if (!publisher_options) {
-    auto msg = std::string("failed to get publisher options: ") + rcl_get_error_string_safe();
+    auto msg = std::string("failed to get publisher options: ") + rcl_get_error_string().str;
     rcl_reset_error();
     throw std::runtime_error(msg);
   }
@@ -150,14 +150,14 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
   bool result = false;
   auto ret = rmw_compare_gids_equal(gid, &this->get_gid(), &result);
   if (ret != RMW_RET_OK) {
-    auto msg = std::string("failed to compare gids: ") + rmw_get_error_string_safe();
+    auto msg = std::string("failed to compare gids: ") + rmw_get_error_string().str;
     rmw_reset_error();
     throw std::runtime_error(msg);
   }
   if (!result) {
     ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
     if (ret != RMW_RET_OK) {
-      auto msg = std::string("failed to compare gids: ") + rmw_get_error_string_safe();
+      auto msg = std::string("failed to compare gids: ") + rmw_get_error_string().str;
       rmw_reset_error();
       throw std::runtime_error(msg);
     }
@@ -204,7 +204,7 @@ PublisherBase::setup_intra_process(
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(
     &intra_process_publisher_handle_);
   if (publisher_rmw_handle == nullptr) {
-    auto msg = std::string("Failed to get rmw publisher handle") + rcl_get_error_string_safe();
+    auto msg = std::string("Failed to get rmw publisher handle") + rcl_get_error_string().str;
     rcl_reset_error();
     throw std::runtime_error(msg);
   }
@@ -212,7 +212,7 @@ PublisherBase::setup_intra_process(
     publisher_rmw_handle, &intra_process_rmw_gid_);
   if (rmw_ret != RMW_RET_OK) {
     auto msg =
-      std::string("failed to create intra process publisher gid: ") + rmw_get_error_string_safe();
+      std::string("failed to create intra process publisher gid: ") + rmw_get_error_string().str;
     rmw_reset_error();
     throw std::runtime_error(msg);
   }

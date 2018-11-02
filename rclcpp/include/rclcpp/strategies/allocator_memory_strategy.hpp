@@ -186,7 +186,7 @@ public:
       if (rcl_wait_set_add_subscription(wait_set, subscription.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
-          "Couldn't add subscription to wait set: %s", rcl_get_error_string_safe());
+          "Couldn't add subscription to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -195,7 +195,7 @@ public:
       if (rcl_wait_set_add_client(wait_set, client.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
-          "Couldn't add client to wait set: %s", rcl_get_error_string_safe());
+          "Couldn't add client to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -204,7 +204,7 @@ public:
       if (rcl_wait_set_add_service(wait_set, service.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
-          "Couldn't add service to wait set: %s", rcl_get_error_string_safe());
+          "Couldn't add service to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -213,7 +213,7 @@ public:
       if (rcl_wait_set_add_timer(wait_set, timer.get()) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
-          "Couldn't add timer to wait set: %s", rcl_get_error_string_safe());
+          "Couldn't add timer to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -223,7 +223,7 @@ public:
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Couldn't add guard_condition to wait set: %s",
-          rcl_get_error_string_safe());
+          rcl_get_error_string().str);
         return false;
       }
     }
