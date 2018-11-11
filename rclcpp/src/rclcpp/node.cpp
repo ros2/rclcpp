@@ -32,6 +32,7 @@
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
+
 #include "rmw/validate_namespace.h"
 
 using rclcpp::Node;
