@@ -33,6 +33,8 @@
 #include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 
+#include "rmw/validate_namespace.h"
+
 using rclcpp::Node;
 using rclcpp::exceptions::throw_from_rcl_error;
 
@@ -86,6 +88,52 @@ Node::Node(
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   use_intra_process_comms_(use_intra_process_comms)
 {
+}
+
+Node::Node(
+  const Node & other,
+  const std::string & extended_namespace)
+: node_base_(other.node_base_),
+  node_graph_(other.node_graph_),
+  node_logging_(other.node_logging_),
+  node_timers_(other.node_timers_),
+  node_topics_(other.node_topics_),
+  node_services_(other.node_services_),
+  node_clock_(other.node_clock_),
+  node_parameters_(other.node_parameters_),
+  use_intra_process_comms_(other.use_intra_process_comms_)
+{
+  if (other.extended_namespace_ == "") {
+    extended_namespace_ = extended_namespace;
+  } else {
+    extended_namespace_ = other.extended_namespace_ + "/" + extended_namespace;
+  }
+
+  std::string full_namespace;
+  if (strcmp(node_base_->get_namespace(), "/") == 0) {
+    full_namespace = "/" + extended_namespace_;
+  } else {
+    full_namespace = std::string(node_base_->get_namespace()) + "/" + extended_namespace_;
+  }
+
+  int validation_result;
+  size_t invalid_index;
+  rmw_ret_t rmw_ret =
+    rmw_validate_namespace(full_namespace.c_str(), &validation_result, &invalid_index);
+
+  if (rmw_ret != RMW_RET_OK) {
+    if (rmw_ret == RMW_RET_INVALID_ARGUMENT) {
+      throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "failed to validate subnode namespace");
+    }
+    throw_from_rcl_error(RCL_RET_ERROR, "failed to validate subnode namespace");
+  }
+
+  if (validation_result != RMW_NAMESPACE_VALID) {
+    throw rclcpp::exceptions::InvalidNamespaceError(
+            full_namespace.c_str(),
+            rmw_namespace_validation_result_string(validation_result),
+            invalid_index);
+  }
 }
 
 Node::~Node()
@@ -291,4 +339,30 @@ rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
 Node::get_node_waitables_interface()
 {
   return node_waitables_;
+}
+
+Node::SharedPtr
+Node::create_sub_node(const std::string & extended_namespace)
+{
+  auto new_node = std::make_shared<Node>(*this, extended_namespace);
+
+  return new_node;
+}
+
+std::string
+Node::get_extended_name(const std::string & name) const
+{
+  std::string exteded_name;
+
+  if (extended_namespace_ == "") {
+    exteded_name = name;
+  } else {
+    if (name[0] == '/') {
+      exteded_name = extended_namespace_ + name;
+    } else {
+      exteded_name = extended_namespace_ + "/" + name;
+    }
+  }
+
+  return exteded_name;
 }
