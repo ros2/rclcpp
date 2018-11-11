@@ -93,6 +93,11 @@ public:
     const NodeOptions & options = NodeOptions());
 
   RCLCPP_PUBLIC
+  Node(
+    const Node & other,
+    const std::string & extended_namespace_);
+
+  RCLCPP_PUBLIC
   virtual ~Node();
 
   /// Get the name of the node.
@@ -481,8 +486,15 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
+  RCLCPP_PUBLIC
+  Node::SharedPtr
+  create_sub_node(const std::string & extended_namespace_);
+
 private:
   RCLCPP_DISABLE_COPY(Node)
+
+  RCLCPP_PUBLIC
+  std::string get_extended_name(const std::string & name) const;
 
   RCLCPP_PUBLIC
   bool
@@ -500,6 +512,7 @@ private:
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
   bool use_intra_process_comms_;
+  std::string extended_namespace_;
 };
 
 }  // namespace rclcpp
