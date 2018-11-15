@@ -34,8 +34,6 @@ create_server(
 {
   return Server<ACTION>::make_shared(
     node->get_node_base_interface(),
-    node->get_node_services_interface(),
-    node->get_node_topics_interface(),
     name,
     handle_goal,
     handle_cancel);
