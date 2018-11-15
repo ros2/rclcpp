@@ -70,8 +70,6 @@ public:
   RCLCPP_ACTION_PUBLIC
   Server(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-    rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_srv,
-    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topic,
     const std::string & name,
     Callback handle_goal,
     Callback handle_cancel) :
