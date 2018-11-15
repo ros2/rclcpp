@@ -34,6 +34,8 @@ namespace rclcpp_action
 // Forward declaration
 class ServerBaseImpl;
 
+/// Base Action Server implementation
+/// It is responsible for interfacing with the C action server API.
 class ServerBase
 {
 public:
@@ -47,19 +49,16 @@ public:
   RCLCPP_ACTION_PUBLIC
   virtual ~ServerBase();
 
+  // TODO(sloretz) add a link between this class and callbacks in the server class
+
 private:
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
 
-template <typename SERVICE, typename CALLBACK>
-rclcpp::AnyServiceCallback<SERVICE>
-make_service_callback(CALLBACK callback)
-{
-  rclcpp::AnyServiceCallback<SERVICE> any_callback;
-  any_callback.set(std::forward<CALLBACK>(callback));
-  return any_callback;
-}
 
+/// Templated Action Server class
+/// It is responsible for getting the C action type support struct from the C++ type, and
+/// calling user callbacks with goal handles of the appropriate type.
 template <typename ACTION>
 class Server : public ServerBase
 {
@@ -83,123 +82,16 @@ public:
       handle_goal_(handle_goal),
       handle_cancel_(handle_cancel)
   {
-    auto goal_request_callback = make_service_callback<typename ACTION::GoalRequestService>(
-      [this](
-        const std::shared_ptr<typename ACTION::GoalRequestService::Request> req,
-        std::shared_ptr<typename ACTION::GoalRequestService::Response> resp)
-      {
-        this->handle_goal(req, resp);
-      });
-
-    auto cancel_goal_callback = make_service_callback<typename ACTION::CancelGoalService>(
-      [this](
-        const std::shared_ptr<typename ACTION::CancelGoalService::Request> req,
-        std::shared_ptr<typename ACTION::CancelGoalService::Response> resp)
-      {
-        this->handle_cancel(req, resp);
-      });
-
-    auto get_result_callback = make_service_callback<typename ACTION::GoalResultService>(
-      [this](
-        const std::shared_ptr<typename ACTION::GoalResultService::Request> req,
-        std::shared_ptr<typename ACTION::GoalResultService::Response> resp)
-      {
-        this->handle_result(req, resp);
-      });
-
-    rcl_service_options_t options = rcl_service_get_default_options();
-
-    // TODO(sloretz) Use rcl_action API to generate service and topic names
-
-    send_goal_server_ = std::make_shared<rclcpp::Service<typename ACTION::GoalRequestService>>(
-      node_base->get_shared_rcl_node_handle(),
-      name + "/_action/send_goal",
-      goal_request_callback,
-      options);
-    node_srv->add_service(send_goal_server_, node_base->get_default_callback_group());
-
-    cancel_goal_server_ = std::make_shared<rclcpp::Service<typename ACTION::CancelGoalService>>(
-      node_base->get_shared_rcl_node_handle(),
-      name + "/_action/cancel_goal",
-      cancel_goal_callback,
-      options);
-    node_srv->add_service(cancel_goal_server_, node_base->get_default_callback_group());
-
-    get_result_server_ = std::make_shared<rclcpp::Service<typename ACTION::GoalResultService>>(
-      node_base->get_shared_rcl_node_handle(),
-      name + "/_action/get_result",
-      get_result_callback,
-      options);
-    node_srv->add_service(get_result_server_, node_base->get_default_callback_group());
-
-    rmw_qos_profile_t qos = rmw_qos_profile_default;
-    feedback_publisher_ = rclcpp::create_publisher<
-        typename ACTION::Feedback, std::allocator<void>,
-        rclcpp::Publisher<typename ACTION::Feedback>>
-    (
-      node_topic.get(),
-      name + "/_action/feedback",
-      qos,
-      true,
-      nullptr);
-    status_publisher_ = rclcpp::create_publisher<
-        typename ACTION::GoalStatusMessage, std::allocator<void>,
-        rclcpp::Publisher<typename ACTION::GoalStatusMessage>>
-    (
-      node_topic.get(),
-      name + "/_action/status",
-      qos,
-      true,
-      nullptr);
+    // TODO(sloretz) what's the link that causes `handle_goal_` and `handle_cancel_` to be called?
   }
 
   virtual ~Server()
   {
   }
 
-protected:
-
-  void
-  handle_goal(
-    const std::shared_ptr<typename ACTION::GoalRequestService::Request> & req,
-    std::shared_ptr<typename ACTION::GoalRequestService::Response> & resp)
-  {
-    // TODO(sloretz) create goal handle and pass that to user callback
-    (void)req;
-    (void)resp;
-  }
-
-  void
-  handle_cancel(
-    const std::shared_ptr<typename ACTION::CancelGoalService::Request> & req,
-    std::shared_ptr<typename ACTION::CancelGoalService::Response> & resp)
-  {
-    // TODO(sloretz) look up goal handle and pass that to user callback
-    (void)req;
-    (void)resp;
-  }
-
-  void
-  handle_result(
-    const std::shared_ptr<typename ACTION::GoalResultService::Request> & req,
-    std::shared_ptr<typename ACTION::GoalResultService::Response> & resp)
-  {
-    // TODO(sloretz) Start a background thread because rclcpp api currently isn't asynchronous
-    // Store the result in future objects that are requested from the goal handle
-    (void)req;
-    (void)resp;
-  }
-
 private:
   Callback handle_goal_;
   Callback handle_cancel_;
-
-  std::shared_ptr<rclcpp::Service<typename ACTION::GoalRequestService>> send_goal_server_;
-  std::shared_ptr<rclcpp::Service<typename ACTION::CancelGoalService>> cancel_goal_server_;
-  std::shared_ptr<rclcpp::Service<typename ACTION::GoalResultService>> get_result_server_;
-
-  std::shared_ptr<rclcpp::Publisher<typename ACTION::Feedback>> feedback_publisher_;
-  std::shared_ptr<rclcpp::Publisher<typename ACTION::GoalStatusMessage>> status_publisher_;
 };
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__SERVER_HPP_
