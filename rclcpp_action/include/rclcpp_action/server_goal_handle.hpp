@@ -38,6 +38,8 @@ public:
 
   bool publish_feedback(const typename ACTION::Feedback * feedback_msg);
 
+  // TODO(sloretz) attribute "goal" which is request
+
 private:
   friend ServerBase;
 
