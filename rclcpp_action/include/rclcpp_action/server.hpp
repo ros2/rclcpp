@@ -39,7 +39,8 @@ class ServerBaseImpl;
 class ServerBase
 {
 public:
-  // TODO(slorez) NodeLoggingInterface when it can be gotten off a node
+  // TODO(sloretz) NodeLoggingInterface when it can be gotten off a node
+  // TODO(sloretz) accept clock instance
   RCLCPP_ACTION_PUBLIC
   ServerBase(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -67,6 +68,7 @@ public:
 
   using Callback = std::function<void(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
+  // TODO(sloretz) accept clock instance
   RCLCPP_ACTION_PUBLIC
   Server(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
