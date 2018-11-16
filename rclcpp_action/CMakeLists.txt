@@ -5,6 +5,7 @@ project(rclcpp_action)
 find_package(ament_cmake_ros REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rcl_action REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 
 # Default to C++14
@@ -28,6 +29,7 @@ add_library(${PROJECT_NAME}
 
 ament_target_dependencies(${PROJECT_NAME}
   "action_msgs"
+  "rcl_action"
   "rclcpp"
   "rosidl_generator_c"
   "rosidl_generator_cpp")

@@ -17,6 +17,7 @@
 
   <depend>action_msgs</depend>
   <depend>rclcpp</depend>
+  <depend>rcl_action</depend>
 
   <depend>ament_cmake</depend>
 

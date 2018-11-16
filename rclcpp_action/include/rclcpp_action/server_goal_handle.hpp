@@ -18,13 +18,15 @@
 #include <functional>
 #include <memory>
 
+#include <rcl_action/goal_handle.h>
+
 #include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
 {
 // Forward declarations
-class ServerBase;
-class ServerGoalHandleImpl;
+template <typename ACTION>
+class Server;
 
 template <typename ACTION>
 class ServerGoalHandle
@@ -33,21 +35,31 @@ public:
   RCLCPP_ACTION_PUBLIC
   virtual ~ServerGoalHandle();
 
+  /// Indicate if client has requested this goal be cancelled.
+  /// \return true if a cancelation request has been accepted for this goal.
   bool
-  is_cancel_request();
+  is_cancel_request() const;
 
-  bool publish_feedback(const typename ACTION::Feedback * feedback_msg);
+  /// Send an update about the progress of a goal.
+  void publish_feedback(const typename ACTION::Feedback * feedback_msg);
 
-  // TODO(sloretz) attribute "goal" which is request
+  // TODO(sloretz) examples has this attribute as 'goal'
+  /// The original request message describing the goal.
+  const typename ACTION::Goal goal_;
 
 private:
-  friend ServerBase;
+  // The templated Server creates goal handles
+  friend Server<ACTION>;
 
   RCLCPP_ACTION_PUBLIC
-  ServerGoalHandle(std::unique_ptr<ServerGoalHandleImpl> impl);
+  ServerGoalHandle(rcl_action_server_t * rcl_server, const typename ACTION::Goal goal,
+    rcl_action_goal_handle_t * rcl_handle);
 
-  std::unique_ptr<ServerGoalHandleImpl> pimpl_;
+  // TODO(sloretz) shared pointer to keep rcl_server_ alive while goal handles are alive
+  rcl_action_server_t * rcl_server_;
+  rcl_action_goal_handle_t * rcl_handle_;
 };
 }  // namespace rclcpp_action
-#endif  // RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_
 
+#include <rclcpp_action/server_goal_handle_impl.hpp>
+#endif  // RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_
