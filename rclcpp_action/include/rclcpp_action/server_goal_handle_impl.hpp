@@ -51,6 +51,7 @@ template<typename ACTION>
 void
 ServerGoalHandle<ACTION>::publish_feedback(const typename ACTION::Feedback * feedback_msg)
 {
+  (void)feedback_msg;
   // TODO(sloretz) what is ros_message and how does IntraProcessmessage come into play?
   // if (RCL_RET_OK != rcl_action_publish_feedback(rcl_server_, ros_message) {
   //   // TODO(sloretz) more specific exception
