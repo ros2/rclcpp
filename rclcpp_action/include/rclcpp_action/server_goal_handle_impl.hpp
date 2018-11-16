@@ -12,37 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_ACTION__SERVER_IMPL_HPP_
-#define RCLCPP_ACTION__SERVER_IMPL_HPP_
+#ifndef RCLCPP_ACTION__SERVER_GOAL_HANDLE_IMPL_HPP_
+#define RCLCPP_ACTION__SERVER_GOAL_HANDLE_IMPL_HPP_
 
+#include <rcl_action/goal_handle.h>
 #include <rcl_action/types.h>
-
-#include <memory>
 
 namespace rclcpp_action
 {
 template<typename ACTION>
-Server<ACTION>::GoalHandle::GoalHandle(
-  std::shared_ptr<rcl_action_server_t> rcl_server,
+ServerGoalHandle<ACTION>::ServerGoalHandle(
+  rcl_action_server_t * rcl_server,
   const typename ACTION::Goal goal,
-  std::shared_ptr<rcl_action_goal_handle_t> rcl_handle
+  rcl_action_goal_handle_t * rcl_handle
 )
-: ServerGoalHandle<ACTION, Server<ACTION>::GoalHandle>(goal),
-  rcl_server_(rcl_server), rcl_handle_(rcl_handle)
+: rcl_server_(rcl_server), goal_(goal), rcl_handle_(rcl_handle)
 {
 }
 
 template<typename ACTION>
-Server<ACTION>::GoalHandle::~GoalHandle()
+ServerGoalHandle<ACTION>::~ServerGoalHandle()
 {
 }
 
 template<typename ACTION>
 bool
-Server<ACTION>::GoalHandle::is_cancel_request() const
+ServerGoalHandle<ACTION>::is_cancel_request() const
 {
   rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
-  if (RCL_RET_OK != rcl_action_goal_handle_get_status(rcl_handle_.get(), &state)) {
+  if (RCL_RET_OK != rcl_action_goal_handle_get_status(rcl_handle_, &state)) {
     // TODO(sloretz) more specific exception
     throw std::runtime_error("Failed to get goal handle state");
   }
@@ -51,7 +49,7 @@ Server<ACTION>::GoalHandle::is_cancel_request() const
 
 template<typename ACTION>
 void
-Server<ACTION>::GoalHandle::publish_feedback(const typename ACTION::Feedback * feedback_msg)
+ServerGoalHandle<ACTION>::publish_feedback(const typename ACTION::Feedback * feedback_msg)
 {
   (void)feedback_msg;
   // TODO(sloretz) what is ros_message and how does IntraProcessmessage come into play?
@@ -63,4 +61,4 @@ Server<ACTION>::GoalHandle::publish_feedback(const typename ACTION::Feedback * f
 }
 }  // namespace rclcpp_action
 
-#endif  // RCLCPP_ACTION__SERVER_IMPL_HPP_
+#endif  // RCLCPP_ACTION__SERVER_GOAL_HANDLE_IMPL_HPP_
