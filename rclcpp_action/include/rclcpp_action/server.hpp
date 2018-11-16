@@ -67,7 +67,6 @@ public:
   using CancelCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   // TODO(sloretz) accept clock instance
-  RCLCPP_ACTION_PUBLIC
   Server(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const std::string & name,

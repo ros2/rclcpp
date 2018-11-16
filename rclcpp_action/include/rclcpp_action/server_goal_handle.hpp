@@ -32,7 +32,6 @@ template<typename ACTION>
 class ServerGoalHandle
 {
 public:
-  RCLCPP_ACTION_PUBLIC
   virtual ~ServerGoalHandle();
 
   /// Indicate if client has requested this goal be cancelled.

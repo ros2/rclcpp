@@ -32,7 +32,6 @@ template<typename ACTION>
 class ClientGoalHandle
 {
 public:
-  RCLCPP_ACTION_PUBLIC
   virtual ~ClientGoalHandle();
 
   /// TODO(sloretz) examples have this on client as `async_cancel_goal(goal_handle)`
@@ -47,7 +46,6 @@ private:
   // The templated Server creates goal handles
   friend Client<ACTION>;
 
-  RCLCPP_ACTION_PUBLIC
   ClientGoalHandle(rcl_action_client_t * rcl_client, const rcl_action_goal_info_t rcl_info);
 
   // TODO(sloretz) shared pointer to keep rcl_client_ alive while goal handles are alive

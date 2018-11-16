@@ -26,7 +26,6 @@
 namespace rclcpp_action
 {
 template<typename ACTION>
-RCLCPP_ACTION_PUBLIC
 typename Client<ACTION>::SharedPtr
 create_client(
   rclcpp::Node * node,

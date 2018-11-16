@@ -26,7 +26,6 @@
 namespace rclcpp_action
 {
 template<typename ACTION>
-RCLCPP_ACTION_PUBLIC
 typename Server<ACTION>::SharedPtr
 create_server(
   rclcpp::Node * node,

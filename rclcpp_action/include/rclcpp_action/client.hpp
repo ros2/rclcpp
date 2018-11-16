@@ -67,7 +67,6 @@ public:
   using FeedbackCallback = std::function<void (
         std::shared_ptr<ClientGoalHandle<ACTION>>, const typename ACTION::Feedback)>;
 
-  RCLCPP_ACTION_PUBLIC
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const std::string & name
