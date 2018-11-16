@@ -42,7 +42,7 @@ ClientGoalHandle<ACTION>::async_cancel()
 
 template<typename ACTION>
 std::future<typename ACTION::Result>
-ClientGoalHandle<ACTION>::result_future()
+ClientGoalHandle<ACTION>::async_result()
 {
   throw std::runtime_error("Failed to get result future");
 }
