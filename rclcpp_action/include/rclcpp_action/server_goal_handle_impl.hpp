@@ -18,47 +18,59 @@
 #include <rcl_action/goal_handle.h>
 #include <rcl_action/types.h>
 
+#include <memory>
+
 namespace rclcpp_action
 {
 template<typename ACTION>
-ServerGoalHandle<ACTION>::ServerGoalHandle(
-  rcl_action_server_t * rcl_server,
-  const typename ACTION::Goal goal,
-  rcl_action_goal_handle_t * rcl_handle
-)
-: rcl_server_(rcl_server), goal_(goal), rcl_handle_(rcl_handle)
-{
-}
+class Server;
 
 template<typename ACTION>
-ServerGoalHandle<ACTION>::~ServerGoalHandle()
+class ServerGoalHandleImpl : public ServerGoalHandle<ACTION>
 {
-}
-
-template<typename ACTION>
-bool
-ServerGoalHandle<ACTION>::is_cancel_request() const
-{
-  rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
-  if (RCL_RET_OK != rcl_action_goal_handle_get_status(rcl_handle_, &state)) {
-    // TODO(sloretz) more specific exception
-    throw std::runtime_error("Failed to get goal handle state");
+public:
+  virtual ~ServerGoalHandleImpl()
+  {
   }
-  return GOAL_STATE_CANCELING == state;
-}
 
-template<typename ACTION>
-void
-ServerGoalHandle<ACTION>::publish_feedback(const typename ACTION::Feedback * feedback_msg)
-{
-  (void)feedback_msg;
-  // TODO(sloretz) what is ros_message and how does IntraProcessmessage come into play?
-  // if (RCL_RET_OK != rcl_action_publish_feedback(rcl_server_, ros_message) {
-  //   // TODO(sloretz) more specific exception
-  //   throw std::runtime_error("Failed to publish feedback");
-  // }
-  throw std::runtime_error("Failed to publish feedback");
-}
+  bool
+  is_cancel_request() const override
+  {
+    rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
+    if (RCL_RET_OK != rcl_action_goal_handle_get_status(rcl_handle_.get(), &state)) {
+      // TODO(sloretz) more specific exception
+      throw std::runtime_error("Failed to get goal handle state");
+    }
+    return GOAL_STATE_CANCELING == state;
+  }
+
+  void
+  publish_feedback(const typename ACTION::Feedback * feedback_msg) override
+  {
+    (void)feedback_msg;
+    // TODO(sloretz) what is ros_message and how does IntraProcessmessage come into play?
+    // if (RCL_RET_OK != rcl_action_publish_feedback(rcl_server_, ros_message) {
+    //   // TODO(sloretz) more specific exception
+    //   throw std::runtime_error("Failed to publish feedback");
+    // }
+    throw std::runtime_error("Failed to publish feedback");
+  }
+
+protected:
+  ServerGoalHandleImpl(
+    rcl_action_server_t * rcl_server,
+    const typename ACTION::Goal goal,
+    rcl_action_goal_handle_t * rcl_handle
+  )
+  : rcl_server_(rcl_server), rcl_handle_(rcl_handle), ServerGoalHandle<ACTION>(goal)
+  {
+  }
+
+private:
+  friend Server<ACTION>;
+  std::shared_ptr<rcl_action_server_t> rcl_server_;
+  std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
+};
 }  // namespace rclcpp_action
 
 #endif  // RCLCPP_ACTION__SERVER_GOAL_HANDLE_IMPL_HPP_

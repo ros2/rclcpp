@@ -24,10 +24,6 @@
 
 namespace rclcpp_action
 {
-// Forward declarations
-template<typename ACTION>
-class Server;
-
 template<typename ACTION>
 class ServerGoalHandle
 {
@@ -36,30 +32,22 @@ public:
 
   /// Indicate if client has requested this goal be cancelled.
   /// \return true if a cancelation request has been accepted for this goal.
-  bool
-  is_cancel_request() const;
+  virtual bool
+  is_cancel_request() const = 0;
 
   /// Send an update about the progress of a goal.
-  void publish_feedback(const typename ACTION::Feedback * feedback_msg);
+  virtual void
+  publish_feedback(const typename ACTION::Feedback * feedback_msg) = 0;
+
+  // TODO(sloretz) `set_cancelled`, `set_succeeded`, `set_aborted`
 
   // TODO(sloretz) examples has this attribute as 'goal'
   /// The original request message describing the goal.
   const typename ACTION::Goal goal_;
 
-  // TODO(sloretz) `set_cancelled`, `set_succeeded`, `set_aborted`
-
-private:
-  // The templated Server creates goal handles
-  friend Server<ACTION>;
-
-  RCLCPP_ACTION_PUBLIC
-  ServerGoalHandle(
-    rcl_action_server_t * rcl_server, const typename ACTION::Goal goal,
-    rcl_action_goal_handle_t * rcl_handle);
-
-  // TODO(sloretz) shared pointer to keep rcl_server_ alive while goal handles are alive
-  rcl_action_server_t * rcl_server_;
-  rcl_action_goal_handle_t * rcl_handle_;
+protected:
+  explicit ServerGoalHandle(const typename ACTION::Goal goal)
+  : goal_(goal) {}
 };
 }  // namespace rclcpp_action
 
