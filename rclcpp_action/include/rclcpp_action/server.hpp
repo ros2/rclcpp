@@ -15,6 +15,8 @@
 #ifndef RCLCPP_ACTION__SERVER_HPP_
 #define RCLCPP_ACTION__SERVER_HPP_
 
+#include <rcl_action/action_server.h>
+#include <rcl_action/goal_handle.h>
 #include <rosidl_generator_c/action_type_support_struct.h>
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
@@ -53,7 +55,6 @@ private:
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
 
-
 /// Templated Action Server class
 /// It is responsible for getting the C action type support struct from the C++ type, and
 /// calling user callbacks with goal handles of the appropriate type.
@@ -61,10 +62,34 @@ template<typename ACTION>
 class Server : public ServerBase
 {
 public:
+  class GoalHandle : public ServerGoalHandle<ACTION, GoalHandle>
+  {
+    // *INDENT-OFF*
+  public:
+    // *INDENT-ON*
+    GoalHandle(
+      std::shared_ptr<rcl_action_server_t> rcl_server, const typename ACTION::Goal goal,
+      std::shared_ptr<rcl_action_goal_handle_t> rcl_handle);
+
+    virtual ~GoalHandle();
+
+    bool
+    is_cancel_request() const;
+
+    void
+    publish_feedback(const typename ACTION::Feedback * feedback_msg);
+
+    // *INDENT-OFF*
+  protected:
+    // *INDENT-ON*
+    std::shared_ptr<rcl_action_server_t> rcl_server_;
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
+  };
+
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
   using GoalCallback = std::function<void (rcl_action_goal_info_t &, typename ACTION::Goal *)>;
-  using CancelCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using CancelCallback = std::function<void (std::shared_ptr<GoalHandle>)>;
 
   // TODO(sloretz) accept clock instance
   Server(
@@ -92,4 +117,6 @@ private:
   CancelCallback handle_cancel_;
 };
 }  // namespace rclcpp_action
+
+#include <rclcpp_action/server_impl.hpp>  // NOLINT(build/include_order)
 #endif  // RCLCPP_ACTION__SERVER_HPP_
