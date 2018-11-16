@@ -39,6 +39,7 @@ public:
   std::future<bool>
   async_cancel();
 
+  // TODO(sloretz) `async_result` to make method names consistent?
   std::future<typename ACTION::Result>
   result_future();
 
