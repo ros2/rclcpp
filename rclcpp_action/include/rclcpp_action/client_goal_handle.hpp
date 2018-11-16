@@ -56,7 +56,3 @@ private:
 
 #include <rclcpp_action/client_goal_handle_impl.hpp>  // NOLINT(build/include_order)
 #endif  // RCLCPP_ACTION__CLIENT_GOAL_HANDLE_HPP_
-
-
-// TODO(sloretz) goal_handle->result_future()
-// TODO(sloretz) goal_handle->cancel()
