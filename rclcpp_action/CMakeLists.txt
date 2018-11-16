@@ -63,23 +63,21 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_client test/test_client.cpp)
   if(TARGET test_client)
-    target_include_directories(test_client PUBLIC
-      ${test_msgs_INCLUDE_DIRS}
+    ament_target_dependencies(test_client
+      "test_msgs"
     )
     target_link_libraries(test_client
       ${PROJECT_NAME}
-      ${test_msgs_LIBRARIES}
     )
   endif()
 
   ament_add_gtest(test_server test/test_server.cpp)
   if(TARGET test_server)
-    target_include_directories(test_server PUBLIC
-      ${test_msgs_INCLUDE_DIRS}
+    ament_target_dependencies(test_server
+      "test_msgs"
     )
     target_link_libraries(test_server
       ${PROJECT_NAME}
-      ${test_msgs_LIBRARIES}
     )
   endif()
 
