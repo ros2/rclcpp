@@ -18,6 +18,7 @@
 
 #include <rosidl_generator_c/action_type_support_struct.h>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/time.hpp>
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
 
 #include <functional>
@@ -81,6 +82,14 @@ public:
 
   ClientGoalHandle<ACTION>
   async_send_goal(typename ACTION::Goal * goal, FeedbackCallback callback = nullptr);
+
+  RCLCPP_ACTION_PUBLIC
+  std::future<typename ACTION::CancelGoalService::Response>
+  async_cancel_all_goals();
+
+  RCLCPP_ACTION_PUBLIC
+  std::future<typename ACTION::CancelGoalService::Response>
+  async_cancel_goals_before(rclcpp::Time);
 
   virtual ~Client()
   {
