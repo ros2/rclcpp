@@ -13,3 +13,27 @@
 // limitations under the License.
 
 #include <rclcpp_action/client.hpp>
+
+using rclcpp_action::ClientBase;
+
+namespace rclcpp_action
+{
+class ClientBaseImpl
+{
+};
+}
+
+ClientBase::ClientBase(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+  const std::string & name,
+  const rosidl_action_type_support_t * type_support)
+{
+  // TODO(sloretz) use rcl_action API when available
+  (void)node_base;
+  (void)name;
+  (void)type_support;
+}
+
+ClientBase::~ClientBase()
+{
+}
