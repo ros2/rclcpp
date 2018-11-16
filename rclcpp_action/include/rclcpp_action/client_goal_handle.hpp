@@ -38,9 +38,8 @@ public:
   std::future<bool>
   async_cancel();
 
-  // TODO(sloretz) `async_result` to make method names consistent?
   std::future<typename ACTION::Result>
-  result_future();
+  async_result();
 
 private:
   // The templated Server creates goal handles
