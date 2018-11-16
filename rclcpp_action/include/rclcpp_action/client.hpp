@@ -15,14 +15,17 @@
 #ifndef RCLCPP_ACTION__CLIENT_HPP_
 #define RCLCPP_ACTION__CLIENT_HPP_
 
+
+#include <rosidl_generator_c/action_type_support_struct.h>
+#include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rosidl_typesupport_cpp/action_type_support.hpp>
+
 #include <functional>
 #include <memory>
+#include <string>
 
-#include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include "rclcpp_action/client_goal_handle.hpp"
 #include "rclcpp_action/visibility_control.hpp"
-#include <rosidl_generator_c/action_type_support_struct.h>
-#include <rosidl_typesupport_cpp/action_type_support.hpp>
 
 
 namespace rclcpp_action
@@ -55,24 +58,24 @@ private:
 /// Templated Action Client class
 /// It is responsible for getting the C action type support struct from the C++ type, and
 /// calling user callbacks with goal handles of the appropriate type.
-template <typename ACTION>
+template<typename ACTION>
 class Client : public ClientBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Client)
 
-  using FeedbackCallback = std::function<void(
-    std::shared_ptr<ClientGoalHandle<ACTION>>, const typename ACTION::Feedback)>;
+  using FeedbackCallback = std::function<void (
+        std::shared_ptr<ClientGoalHandle<ACTION>>, const typename ACTION::Feedback)>;
 
   RCLCPP_ACTION_PUBLIC
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const std::string & name
-    ) :
-      ClientBase(
-          node_base,
-          name,
-          rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>())
+  )
+  : ClientBase(
+      node_base,
+      name,
+      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>())
   {
     // TODO(sloretz) what's the link that causes a feedback topic to be called ?
   }

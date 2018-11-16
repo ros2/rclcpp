@@ -14,13 +14,15 @@
 
 #include <gtest/gtest.h>
 
-#include "rclcpp/exceptions.hpp"
-#include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include <rclcpp_action/create_client.hpp>
-#include <rclcpp_action/client.hpp>
+#include <rclcpp/exceptions.hpp>
+#include <rclcpp/node.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <test_msgs/action/fibonacci.hpp>
 
+#include <memory>
+
+#include "rclcpp_action/create_client.hpp"
+#include "rclcpp_action/client.hpp"
 
 class TestClient : public ::testing::Test
 {

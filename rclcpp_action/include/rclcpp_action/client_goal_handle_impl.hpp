@@ -19,28 +19,28 @@
 
 namespace rclcpp_action
 {
-template <typename ACTION>
+template<typename ACTION>
 ClientGoalHandle<ACTION>::ClientGoalHandle(
   rcl_action_client_t * rcl_client,
   const rcl_action_goal_info_t rcl_info
-) :
-  rcl_client_(rcl_client), rcl_info_(rcl_info)
+)
+: rcl_client_(rcl_client), rcl_info_(rcl_info)
 {
 }
 
-template <typename ACTION>
+template<typename ACTION>
 ClientGoalHandle<ACTION>::~ClientGoalHandle()
 {
 }
 
-template <typename ACTION>
+template<typename ACTION>
 std::future<bool>
 ClientGoalHandle<ACTION>::async_cancel()
 {
   throw std::runtime_error("Failed to cancel goal");
 }
 
-template <typename ACTION>
+template<typename ACTION>
 std::future<typename ACTION::Result>
 ClientGoalHandle<ACTION>::result_future()
 {

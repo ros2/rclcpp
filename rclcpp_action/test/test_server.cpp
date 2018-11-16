@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rclcpp/exceptions.hpp>
+#include <rclcpp/node.hpp>
+#include <rclcpp/rclcpp.hpp>
+#include <test_msgs/action/fibonacci.hpp>
+
 #include <gtest/gtest.h>
 
-#include "rclcpp/exceptions.hpp"
-#include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include <rclcpp_action/create_server.hpp>
-#include <rclcpp_action/server.hpp>
-#include <test_msgs/action/fibonacci.hpp>
+#include <memory>
+
+#include "rclcpp_action/create_server.hpp"
+#include "rclcpp_action/server.hpp"
 
 
 class TestServer : public ::testing::Test

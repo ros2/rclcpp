@@ -20,22 +20,22 @@
 
 namespace rclcpp_action
 {
-template <typename ACTION>
+template<typename ACTION>
 ServerGoalHandle<ACTION>::ServerGoalHandle(
   rcl_action_server_t * rcl_server,
   const typename ACTION::Goal goal,
   rcl_action_goal_handle_t * rcl_handle
-) :
-  rcl_server_(rcl_server), goal_(goal), rcl_handle_(rcl_handle)
+)
+: rcl_server_(rcl_server), goal_(goal), rcl_handle_(rcl_handle)
 {
 }
 
-template <typename ACTION>
+template<typename ACTION>
 ServerGoalHandle<ACTION>::~ServerGoalHandle()
 {
 }
 
-template <typename ACTION>
+template<typename ACTION>
 bool
 ServerGoalHandle<ACTION>::is_cancel_request() const
 {
@@ -47,7 +47,7 @@ ServerGoalHandle<ACTION>::is_cancel_request() const
   return GOAL_STATE_CANCELING == state;
 }
 
-template <typename ACTION>
+template<typename ACTION>
 void
 ServerGoalHandle<ACTION>::publish_feedback(const typename ACTION::Feedback * feedback_msg)
 {

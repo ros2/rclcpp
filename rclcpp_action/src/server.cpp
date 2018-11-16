@@ -14,6 +14,8 @@
 
 #include <rclcpp_action/server.hpp>
 
+#include <string>
+
 using rclcpp_action::ServerBase;
 
 namespace rclcpp_action

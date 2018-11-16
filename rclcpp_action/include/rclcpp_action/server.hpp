@@ -15,19 +15,16 @@
 #ifndef RCLCPP_ACTION__SERVER_HPP_
 #define RCLCPP_ACTION__SERVER_HPP_
 
-#include <functional>
-#include <memory>
-
-#include <rclcpp/create_publisher.hpp>
-#include <rclcpp/node_interfaces/node_base_interface.hpp>
-#include <rclcpp/node_interfaces/node_services_interface.hpp>
-#include <rclcpp/node_interfaces/node_topics_interface.hpp>
-#include "rclcpp_action/visibility_control.hpp"
-#include "rclcpp_action/server_goal_handle.hpp"
 #include <rosidl_generator_c/action_type_support_struct.h>
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
+#include <rclcpp/node_interfaces/node_base_interface.hpp>
 
-#include "rcl/service.h"
+#include <functional>
+#include <memory>
+#include <string>
+
+#include "rclcpp_action/visibility_control.hpp"
+#include "rclcpp_action/server_goal_handle.hpp"
 
 namespace rclcpp_action
 {
@@ -60,14 +57,14 @@ private:
 /// Templated Action Server class
 /// It is responsible for getting the C action type support struct from the C++ type, and
 /// calling user callbacks with goal handles of the appropriate type.
-template <typename ACTION>
+template<typename ACTION>
 class Server : public ServerBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
-  using GoalCallback = std::function<void(rcl_action_goal_info_t &, typename ACTION::Goal *)>;
-  using CancelCallback = std::function<void(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using GoalCallback = std::function<void (rcl_action_goal_info_t &, typename ACTION::Goal *)>;
+  using CancelCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   // TODO(sloretz) accept clock instance
   RCLCPP_ACTION_PUBLIC
@@ -75,13 +72,14 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const std::string & name,
     GoalCallback handle_goal,
-    CancelCallback handle_cancel) :
-      ServerBase(
-          node_base,
-          name,
-          rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>()),
-      handle_goal_(handle_goal),
-      handle_cancel_(handle_cancel)
+    CancelCallback handle_cancel
+  )
+  : ServerBase(
+      node_base,
+      name,
+      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>()),
+    handle_goal_(handle_goal),
+    handle_cancel_(handle_cancel)
   {
     // TODO(sloretz) what's the link that causes `handle_goal_` and `handle_cancel_` to be called?
   }

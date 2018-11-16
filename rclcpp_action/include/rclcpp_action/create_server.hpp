@@ -15,15 +15,17 @@
 #ifndef RCLCPP_ACTION__CREATE_SERVER_HPP_
 #define RCLCPP_ACTION__CREATE_SERVER_HPP_
 
+#include <rclcpp/node.hpp>
+
 #include <memory>
+#include <string>
 
 #include "rclcpp_action/server.hpp"
 #include "rclcpp_action/visibility_control.hpp"
-#include <rclcpp/node.hpp>
 
 namespace rclcpp_action
 {
-template <typename ACTION>
+template<typename ACTION>
 RCLCPP_ACTION_PUBLIC
 typename Server<ACTION>::SharedPtr
 create_server(

@@ -14,6 +14,8 @@
 
 #include <rclcpp_action/client.hpp>
 
+#include <string>
+
 using rclcpp_action::ClientBase;
 
 namespace rclcpp_action

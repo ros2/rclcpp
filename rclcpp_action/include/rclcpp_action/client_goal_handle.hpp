@@ -15,20 +15,20 @@
 #ifndef RCLCPP_ACTION__CLIENT_GOAL_HANDLE_HPP_
 #define RCLCPP_ACTION__CLIENT_GOAL_HANDLE_HPP_
 
+#include <rcl_action/action_client.h>
+
 #include <functional>
 #include <memory>
-
-#include <rcl_action/action_client.h>
 
 #include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
 {
 // Forward declarations
-template <typename ACTION>
+template<typename ACTION>
 class Client;
 
-template <typename ACTION>
+template<typename ACTION>
 class ClientGoalHandle
 {
 public:
@@ -56,7 +56,7 @@ private:
 };
 }  // namespace rclcpp_action
 
-#include <rclcpp_action/client_goal_handle_impl.hpp>
+#include <rclcpp_action/client_goal_handle_impl.hpp>  // NOLINT(build/include_order)
 #endif  // RCLCPP_ACTION__CLIENT_GOAL_HANDLE_HPP_
 
 

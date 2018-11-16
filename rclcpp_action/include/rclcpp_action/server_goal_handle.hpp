@@ -15,20 +15,20 @@
 #ifndef RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_
 #define RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_
 
+#include <rcl_action/goal_handle.h>
+
 #include <functional>
 #include <memory>
-
-#include <rcl_action/goal_handle.h>
 
 #include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
 {
 // Forward declarations
-template <typename ACTION>
+template<typename ACTION>
 class Server;
 
-template <typename ACTION>
+template<typename ACTION>
 class ServerGoalHandle
 {
 public:
@@ -54,7 +54,8 @@ private:
   friend Server<ACTION>;
 
   RCLCPP_ACTION_PUBLIC
-  ServerGoalHandle(rcl_action_server_t * rcl_server, const typename ACTION::Goal goal,
+  ServerGoalHandle(
+    rcl_action_server_t * rcl_server, const typename ACTION::Goal goal,
     rcl_action_goal_handle_t * rcl_handle);
 
   // TODO(sloretz) shared pointer to keep rcl_server_ alive while goal handles are alive
@@ -63,5 +64,5 @@ private:
 };
 }  // namespace rclcpp_action
 
-#include <rclcpp_action/server_goal_handle_impl.hpp>
+#include <rclcpp_action/server_goal_handle_impl.hpp>  // NOLINT(build/include_order)
 #endif  // RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_
