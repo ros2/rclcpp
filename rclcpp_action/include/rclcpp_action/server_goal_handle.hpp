@@ -47,6 +47,8 @@ public:
   /// The original request message describing the goal.
   const typename ACTION::Goal goal_;
 
+  // TODO(sloretz) `set_cancelled`, `set_succeeded`, `set_aborted`
+
 private:
   // The templated Server creates goal handles
   friend Server<ACTION>;
