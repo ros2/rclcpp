@@ -66,15 +66,16 @@ class Server : public ServerBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
-  using Callback = std::function<void(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using GoalCallback = std::function<void(rcl_action_goal_info_t &, typename ACTION::Goal *)>;
+  using CancelCallback = std::function<void(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   // TODO(sloretz) accept clock instance
   RCLCPP_ACTION_PUBLIC
   Server(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const std::string & name,
-    Callback handle_goal,
-    Callback handle_cancel) :
+    GoalCallback handle_goal,
+    CancelCallback handle_cancel) :
       ServerBase(
           node_base,
           name,
@@ -90,8 +91,8 @@ public:
   }
 
 private:
-  Callback handle_goal_;
-  Callback handle_cancel_;
+  GoalCallback handle_goal_;
+  CancelCallback handle_cancel_;
 };
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__SERVER_HPP_

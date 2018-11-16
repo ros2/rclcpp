@@ -29,8 +29,8 @@ typename Server<ACTION>::SharedPtr
 create_server(
   rclcpp::Node * node,
   const std::string & name,
-  typename Server<ACTION>::Callback handle_goal,
-  typename Server<ACTION>::Callback handle_cancel)
+  typename Server<ACTION>::GoalCallback handle_goal,
+  typename Server<ACTION>::CancelCallback handle_cancel)
 {
   return Server<ACTION>::make_shared(
     node->get_node_base_interface(),
