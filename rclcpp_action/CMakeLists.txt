@@ -40,6 +40,10 @@ target_compile_definitions(${PROJECT_NAME}
   PRIVATE "RCLCPP_ACTION_BUILDING_LIBRARY")
 
 install(
+  DIRECTORY include/
+  DESTINATION include)
+
+install(
   TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
