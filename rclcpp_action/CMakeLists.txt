@@ -57,6 +57,7 @@ ament_export_libraries(${PROJECT_NAME})
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(action_msgs)
 ament_export_dependencies(rclcpp)
+ament_export_dependencies(rcl_action)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rosidl_generator_cpp)
 
