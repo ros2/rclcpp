@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "../rcl_context_wrapper.hpp"
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/parameter_map.hpp"
@@ -64,7 +65,7 @@ NodeParameters::NodeParameters(
   }
   const rcl_node_options_t * options = rcl_node_get_options(node);
   if (nullptr == options) {
-    throw std::runtime_error("Need valid node options NodeParameters");
+    throw std::runtime_error("Need valid node options in NodeParameters");
   }
 
   // Get paths to yaml files containing initial parameter values
@@ -93,7 +94,9 @@ NodeParameters::NodeParameters(
 
   // global before local so that local overwrites global
   if (options->use_global_arguments) {
-    get_yaml_paths(rcl_get_global_arguments());
+    auto rcl_context_wrapper = node_base->get_context()->get_sub_context<RclContextWrapper>();
+    auto context_ptr = rcl_context_wrapper->get_context();
+    get_yaml_paths(&(context_ptr->global_arguments));
   }
   get_yaml_paths(&(options->arguments));
 

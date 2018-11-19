@@ -110,6 +110,7 @@ protected:
 
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_node_t> node_handle_;
+  std::shared_ptr<rclcpp::Context> context_;
 
   std::shared_ptr<rcl_client_t> client_handle_;
 };

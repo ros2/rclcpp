@@ -17,6 +17,7 @@
 #include <string>
 #include <memory>
 
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
@@ -49,5 +50,15 @@ TEST(TestUtilities, init_with_args) {
   ASSERT_EQ(1u, other_args.size());
   ASSERT_EQ(std::string{"process_name"}, other_args[0]);
 
-  EXPECT_TRUE(rclcpp::is_initialized());
+  EXPECT_TRUE(rclcpp::ok());
+  rclcpp::shutdown();
+}
+
+TEST(TestUtilities, multi_init) {
+  auto context1 = std::make_shared<rclcpp::contexts::default_context::DefaultContext>();
+  auto context2 = std::make_shared<rclcpp::contexts::default_context::DefaultContext>();
+  EXPECT_TRUE(rclcpp::ok(context1));
+  EXPECT_TRUE(rclcpp::ok(context2));
+  rclcpp::shutdown(context1);
+  rclcpp::shutdown(context2);
 }

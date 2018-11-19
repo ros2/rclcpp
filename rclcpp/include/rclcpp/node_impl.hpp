@@ -160,7 +160,8 @@ Node::create_wall_timer(
 {
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
     std::chrono::duration_cast<std::chrono::nanoseconds>(period),
-    std::move(callback));
+    std::move(callback),
+    this->node_base_->get_context());
   node_timers_->add_timer(timer, group);
   return timer;
 }

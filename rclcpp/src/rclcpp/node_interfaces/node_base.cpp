@@ -19,11 +19,12 @@
 
 #include "rclcpp/node_interfaces/node_base.hpp"
 
+#include "../rcl_context_wrapper.hpp"
 #include "rcl/arguments.h"
 #include "rclcpp/exceptions.hpp"
 #include "rcutils/logging_macros.h"
-#include "rmw/validate_node_name.h"
 #include "rmw/validate_namespace.h"
+#include "rmw/validate_node_name.h"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
@@ -43,7 +44,9 @@ NodeBase::NodeBase(
 {
   // Setup the guard condition that is notified when changes occur in the graph.
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
-  rcl_ret_t ret = rcl_guard_condition_init(&notify_guard_condition_, guard_condition_options);
+  auto rcl_context_wrapper = context->get_sub_context<RclContextWrapper>();
+  rcl_ret_t ret = rcl_guard_condition_init(
+    &notify_guard_condition_, rcl_context_wrapper->get_context().get(), guard_condition_options);
   if (ret != RCL_RET_OK) {
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
@@ -113,7 +116,10 @@ NodeBase::NodeBase(
   // TODO(wjwwood): pass the Allocator to the options
   options.domain_id = domain_id;
 
-  ret = rcl_node_init(rcl_node.get(), node_name.c_str(), namespace_.c_str(), &options);
+  ret = rcl_node_init(
+    rcl_node.get(),
+    node_name.c_str(), namespace_.c_str(),
+    rcl_context_wrapper->get_context().get(), &options);
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();

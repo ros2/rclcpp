@@ -23,6 +23,7 @@
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
+#include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -62,7 +63,8 @@ class GraphListener : public std::enable_shared_from_this<GraphListener>
 {
 public:
   RCLCPP_PUBLIC
-  GraphListener();
+  explicit
+  GraphListener(std::shared_ptr<rclcpp::Context> parent_context);
 
   RCLCPP_PUBLIC
   virtual ~GraphListener();
@@ -164,6 +166,7 @@ private:
   std::vector<rclcpp::node_interfaces::NodeGraphInterface *> node_graph_interfaces_;
 
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
+  std::shared_ptr<rcl_context_t> interrupt_guard_condition_context_;
   rcl_guard_condition_t * shutdown_guard_condition_;
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 };

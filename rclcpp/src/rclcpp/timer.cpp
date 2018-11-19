@@ -18,13 +18,24 @@
 #include <string>
 #include <memory>
 
+#include "./rcl_context_wrapper.hpp"
+#include "rclcpp/contexts/default_context.hpp"
 #include "rcutils/logging_macros.h"
 
 using rclcpp::TimerBase;
 
-TimerBase::TimerBase(rclcpp::Clock::SharedPtr clock, std::chrono::nanoseconds period)
+TimerBase::TimerBase(
+  rclcpp::Clock::SharedPtr clock,
+  std::chrono::nanoseconds period,
+  rclcpp::Context::SharedPtr context)
+: clock_(clock), timer_handle_(nullptr)
 {
-  clock_ = clock;
+  if (nullptr == context) {
+    context = rclcpp::contexts::default_context::get_global_default_context();
+  }
+
+  auto rcl_context_wrapper = context->get_sub_context<RclContextWrapper>();
+  auto rcl_context = rcl_context_wrapper->get_context();
 
   timer_handle_ = std::shared_ptr<rcl_timer_t>(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
@@ -36,15 +47,16 @@ TimerBase::TimerBase(rclcpp::Clock::SharedPtr clock, std::chrono::nanoseconds pe
         rcl_reset_error();
       }
       delete timer;
-      // Captured shared pointer by copy, reset to make sure timer is finalized before clock
+      // Captured shared pointers by copy, reset to make sure timer is finalized before clock
       clock.reset();
+      rcl_context.reset();
     });
 
   *timer_handle_.get() = rcl_get_zero_initialized_timer();
 
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
   if (rcl_timer_init(
-      timer_handle_.get(), clock_handle, period.count(), nullptr,
+      timer_handle_.get(), clock_handle, rcl_context.get(), period.count(), nullptr,
       rcl_get_default_allocator()) != RCL_RET_OK)
   {
     RCUTILS_LOG_ERROR_NAMED(

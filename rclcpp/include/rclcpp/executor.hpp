@@ -28,9 +28,10 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/memory_strategy.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -66,6 +67,7 @@ to_string(const FutureReturnCode & future_return_code);
 struct ExecutorArgs
 {
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
+  std::shared_ptr<rclcpp::Context> context;
   size_t max_conditions = 0;
 };
 
@@ -73,6 +75,7 @@ static inline ExecutorArgs create_default_executor_arguments()
 {
   ExecutorArgs args;
   args.memory_strategy = memory_strategies::create_default_strategy();
+  args.context = rclcpp::contexts::default_context::get_global_default_context();
   args.max_conditions = 0;
   return args;
 }
@@ -237,7 +240,7 @@ public:
     }
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
-    while (rclcpp::ok()) {
+    while (rclcpp::ok(this->context_)) {
       // Do one item of work.
       spin_once(timeout_left);
       // Check if the future is set, return SUCCESS if it is.
@@ -352,6 +355,9 @@ protected:
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
+
+  /// The context associated with this executor.
+  std::shared_ptr<rclcpp::Context> context_;
 
 private:
   RCLCPP_DISABLE_COPY(Executor)

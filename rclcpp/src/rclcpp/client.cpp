@@ -37,7 +37,8 @@ ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph)
 : node_graph_(node_graph),
-  node_handle_(node_base->get_shared_rcl_node_handle())
+  node_handle_(node_base->get_shared_rcl_node_handle()),
+  context_(node_base->get_context())
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
   client_handle_ = std::shared_ptr<rcl_client_t>(
@@ -128,7 +129,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   }
   // continue forever if timeout is negative, otherwise continue until out of time_to_wait
   do {
-    if (!rclcpp::ok()) {
+    if (!rclcpp::ok(this->context_)) {
       return false;
     }
     // Limit each wait to 100ms to workaround an issue specific to the Connext RMW implementation.

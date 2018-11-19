@@ -30,7 +30,9 @@ using rclcpp::graph_listener::GraphListener;
 
 NodeGraph::NodeGraph(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base),
-  graph_listener_(node_base->get_context()->get_sub_context<GraphListener>()),
+  graph_listener_(
+    node_base->get_context()->get_sub_context<GraphListener>(node_base->get_context())
+  ),
   should_add_to_graph_listener_(true),
   graph_users_count_(0)
 {}
@@ -334,8 +336,8 @@ NodeGraph::wait_for_graph_change(
       throw EventNotRegisteredError();
     }
   }
-  auto pred = [&event]() {
-      return event->check() || !rclcpp::ok();
+  auto pred = [&event, context=node_base_->get_context()]() {
+      return event->check() || !rclcpp::ok(context);
     };
   std::unique_lock<std::mutex> graph_lock(graph_mutex_);
   if (!pred()) {
