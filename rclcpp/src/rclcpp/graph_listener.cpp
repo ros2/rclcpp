@@ -130,8 +130,10 @@ GraphListener::run_loop()
     std::lock_guard<std::mutex> nodes_lock(node_graph_interfaces_mutex_, std::adopt_lock);
 
     // Resize the wait set if necessary.
-    if (wait_set_.size_of_guard_conditions < (node_graph_interfaces_.size() + 2)) {
-      ret = rcl_wait_set_resize(&wait_set_, 0, node_graph_interfaces_.size() + 2, 0, 0, 0);
+    const size_t node_graph_interfaces_size = node_graph_interfaces_.size();
+    // Add 2 for the interrupt and shutdown guard conditions
+    if (wait_set_.size_of_guard_conditions < (node_graph_interfaces_size + 2)) {
+      ret = rcl_wait_set_resize(&wait_set_, 0, node_graph_interfaces_size + 2, 0, 0, 0);
       if (RCL_RET_OK != ret) {
         throw_from_rcl_error(ret, "failed to resize wait set");
       }
@@ -142,17 +144,21 @@ GraphListener::run_loop()
       throw_from_rcl_error(ret, "failed to clear wait set");
     }
     // Put the interrupt guard condition in the wait set.
-    ret = rcl_wait_set_add_guard_condition(&wait_set_, &interrupt_guard_condition_);
+    ret = rcl_wait_set_add_guard_condition(&wait_set_, &interrupt_guard_condition_, NULL);
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to add interrupt guard condition to wait set");
     }
     // Put the shutdown guard condition in the wait set.
-    ret = rcl_wait_set_add_guard_condition(&wait_set_, shutdown_guard_condition_);
+    size_t shutdown_guard_condition_index = 0u;
+    ret = rcl_wait_set_add_guard_condition(
+      &wait_set_, shutdown_guard_condition_, &shutdown_guard_condition_index);
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to add shutdown guard condition to wait set");
     }
     // Put graph guard conditions for each node into the wait set.
-    for (const auto node_ptr : node_graph_interfaces_) {
+    std::vector<size_t> graph_gc_indexes(node_graph_interfaces_size, 0u);
+    for (size_t i = 0u; i < node_graph_interfaces_size; ++i) {
+      auto node_ptr = node_graph_interfaces_[i];
       // Only wait on graph changes if some user of the node is watching.
       if (node_ptr->count_graph_users() == 0) {
         continue;
@@ -162,7 +168,7 @@ GraphListener::run_loop()
       if (!graph_gc) {
         throw_from_rcl_error(RCL_RET_ERROR, "failed to get graph guard condition");
       }
-      ret = rcl_wait_set_add_guard_condition(&wait_set_, graph_gc);
+      ret = rcl_wait_set_add_guard_condition(&wait_set_, graph_gc, &graph_gc_indexes[i]);
       if (RCL_RET_OK != ret) {
         throw_from_rcl_error(ret, "failed to add graph guard condition to wait set");
       }
@@ -177,23 +183,18 @@ GraphListener::run_loop()
       throw_from_rcl_error(ret, "failed to wait on wait set");
     }
 
-    bool shutdown_guard_condition_triggered = false;
     // Check to see if the shutdown guard condition has been triggered.
-    for (size_t i = 0; i < wait_set_.size_of_guard_conditions; ++i) {
-      if (shutdown_guard_condition_ == wait_set_.guard_conditions[i]) {
-        shutdown_guard_condition_triggered = true;
-      }
-    }
+    bool shutdown_guard_condition_triggered =
+      (shutdown_guard_condition_ == wait_set_.guard_conditions[shutdown_guard_condition_index]);
     // Notify nodes who's guard conditions are set (triggered).
-    for (const auto node_ptr : node_graph_interfaces_) {
+    for (size_t i = 0u; i < node_graph_interfaces_size; ++i) {
+      const auto node_ptr = node_graph_interfaces_[i];
       auto graph_gc = node_ptr->get_graph_guard_condition();
       if (!graph_gc) {
         throw_from_rcl_error(RCL_RET_ERROR, "failed to get graph guard condition");
       }
-      for (size_t i = 0; i < wait_set_.size_of_guard_conditions; ++i) {
-        if (graph_gc == wait_set_.guard_conditions[i]) {
-          node_ptr->notify_graph_change();
-        }
+      if (graph_gc == wait_set_.guard_conditions[graph_gc_indexes[i]]) {
+        node_ptr->notify_graph_change();
       }
       if (shutdown_guard_condition_triggered) {
         // If shutdown, then notify the node of this as well.
