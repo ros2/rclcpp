@@ -12,29 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_ACTION__CREATE_CLIENT_HPP_
-#define RCLCPP_ACTION__CREATE_CLIENT_HPP_
+#ifndef RCLCPP_ACTION__TYPES_HPP_
+#define RCLCPP_ACTION__TYPES_HPP_
 
-#include <rclcpp/node.hpp>
+#include <functional>
 
-#include <memory>
-#include <string>
+namespace rclcpp_action {
 
-#include "rclcpp_action/client.hpp"
-#include "rclcpp_action/visibility_control.hpp"
+using GoalID = unique_identifier_msgs::msg::UUID;
 
-namespace rclcpp_action
-{
-template<typename ACTION>
-typename Client<ACTION>::SharedPtr
-create_client(
-  rclcpp::Node * node,
-  const std::string & name)
-{
-  return Client<ACTION>::make_shared(
-    node->get_node_base_interface(),
-    name);
-}
-}  // namespace rclcpp_action
+}  // namespace
 
-#endif  // RCLCPP_ACTION__CREATE_CLIENT_HPP_
+namespace std {
+
+template<>
+struct less<rclcpp_action::GoalID> {
+  bool operator()(
+    const rclcpp_action::GoalID & id0,
+    const rclcpp_action::GoalID & id1) {
+    return !uuidcmp(id0.uuid, id1.uuid);
+  }
+};
+
+}  // namespace std
+
+
+#endif  // RCLCPP_ACTION__TYPES_HPP_

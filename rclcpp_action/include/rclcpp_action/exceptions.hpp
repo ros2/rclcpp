@@ -12,29 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_ACTION__CREATE_CLIENT_HPP_
-#define RCLCPP_ACTION__CREATE_CLIENT_HPP_
+#ifndef RCLCPP_ACTION__EXCEPTIONS_HPP_
+#define RCLCPP_ACTION__EXCEPTIONS_HPP_
 
-#include <rclcpp/node.hpp>
-
-#include <memory>
-#include <string>
-
-#include "rclcpp_action/client.hpp"
-#include "rclcpp_action/visibility_control.hpp"
+#include <stdexcept>
 
 namespace rclcpp_action
 {
-template<typename ACTION>
-typename Client<ACTION>::SharedPtr
-create_client(
-  rclcpp::Node * node,
-  const std::string & name)
+namespace exceptions
 {
-  return Client<ACTION>::make_shared(
-    node->get_node_base_interface(),
-    name);
-}
+
+class InvalidGoalHandle : public std::invalid_argument
+{
+  InvalidGoalHandle()
+  : std::invalid_argument("") {}
+};
+
+}  // namespace exceptions
+
 }  // namespace rclcpp_action
 
-#endif  // RCLCPP_ACTION__CREATE_CLIENT_HPP_
+#endif  // RCLCPP_ACTION__EXCEPTIONS_HPP_

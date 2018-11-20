@@ -34,7 +34,6 @@ class ClientGoalHandle
 public:
   virtual ~ClientGoalHandle();
 
-  /// TODO(sloretz) examples have this on client as `async_cancel_goal(goal_handle)`
   std::future<bool>
   async_cancel();
 
