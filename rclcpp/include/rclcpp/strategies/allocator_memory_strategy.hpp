@@ -118,7 +118,7 @@ public:
         timer_handles_[i].reset();
       }
     }
-    for (size_t i = 0; i < timer_handles_.size(); ++i) {
+    for (size_t i = 0; i < waitable_handles_.size(); ++i) {
       if (!waitable_handles_[i]->is_ready(wait_set)) {
         waitable_handles_[i].reset();
       }
