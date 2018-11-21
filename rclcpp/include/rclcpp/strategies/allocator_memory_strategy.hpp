@@ -91,25 +91,34 @@ public:
 
   virtual void remove_null_handles(rcl_wait_set_t * wait_set)
   {
-    for (size_t i = 0; i < wait_set->size_of_subscriptions; ++i) {
+    // TODO(jacobperron): Check if wait set sizes are what we expect them to be?
+    //                    e.g. wait_set->size_of_clients == client_handles_.size()
+
+    // Important to use subscription_handles_.size() instead of wait set's size since
+    // there may be more subscriptions in the wait set due to Waitables added to the end.
+    // The same logic applies for other entities.
+    for (size_t i = 0; i < subscription_handles_.size(); ++i) {
       if (!wait_set->subscriptions[i]) {
         subscription_handles_[i].reset();
       }
     }
-    for (size_t i = 0; i < wait_set->size_of_services; ++i) {
+    for (size_t i = 0; i < service_handles_.size(); ++i) {
       if (!wait_set->services[i]) {
         service_handles_[i].reset();
       }
     }
-    for (size_t i = 0; i < wait_set->size_of_clients; ++i) {
+    for (size_t i = 0; i < client_handles_.size(); ++i) {
       if (!wait_set->clients[i]) {
         client_handles_[i].reset();
       }
     }
-    for (size_t i = 0; i < wait_set->size_of_timers; ++i) {
+    for (size_t i = 0; i < timer_handles_.size(); ++i) {
       if (!wait_set->timers[i]) {
         timer_handles_[i].reset();
       }
+    }
+    for (auto waitable : waitable_handles_) {
+      waitable->update(wait_set);
     }
 
     subscription_handles_.erase(
@@ -175,6 +184,12 @@ public:
             timer_handles_.push_back(timer->get_timer_handle());
           }
         }
+        for (auto & weak_waitable : group->get_waitable_ptrs()) {
+          auto waitable = weak_waitable.lock();
+          if (waitable) {
+            waitable_handles_.push_back(waitable);
+          }
+        }
       }
     }
     return has_invalid_weak_nodes;
@@ -224,6 +239,15 @@ public:
           "rclcpp",
           "Couldn't add guard_condition to wait set: %s",
           rcl_get_error_string().str);
+        return false;
+      }
+    }
+
+    for (auto waitable : waitable_handles_) {
+      if (!waitable->add_to_wait_set(wait_set)) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "Couldn't add waitable to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
