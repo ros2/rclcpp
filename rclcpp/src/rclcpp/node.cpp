@@ -31,6 +31,7 @@
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
+#include "rclcpp/node_interfaces/node_waitables.hpp"
 
 using rclcpp::Node;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -80,6 +81,7 @@ Node::Node(
       node_graph_,
       node_services_
     )),
+  node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   use_intra_process_comms_(use_intra_process_comms)
 {
 }
@@ -275,4 +277,10 @@ rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
 Node::get_node_parameters_interface()
 {
   return node_parameters_;
+}
+
+rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
+Node::get_node_waitables_interface()
+{
+  return node_waitables_;
 }
