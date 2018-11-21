@@ -78,6 +78,11 @@ public:
     rclcpp::executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
+  virtual void
+  get_next_waitable(
+    rclcpp::executor::AnyExecutable & any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
   virtual rcl_allocator_t
   get_allocator() = 0;
 

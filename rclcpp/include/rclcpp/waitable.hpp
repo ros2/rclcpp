@@ -23,22 +23,6 @@
 namespace rclcpp
 {
 
-struct NumberOfWaitables
-{
-  size_t number_of_subscriptions;
-  size_t number_of_services;
-  size_t number_of_clients;
-  size_t number_of_timers;
-  size_t number_of_guard_conditions;
-  NumberOfWaitables()
-  : number_of_subscriptions(0),
-    number_of_services(0),
-    number_of_clients(0),
-    number_of_timers(0),
-    number_of_guard_conditions(0)
-  {}
-};
-
 class Waitable
 {
 public:
@@ -47,8 +31,20 @@ public:
   Waitable() {}
   virtual ~Waitable() {}
 
-  /// Get the number of waitable entities.
-  virtual NumberOfWaitables get_number_of_entities() = 0;
+  /// Get the number of ready subscriptions
+  virtual size_t get_number_of_ready_subscriptions();
+
+  /// Get the number of ready timers
+  virtual size_t get_number_of_ready_timers();
+
+  /// Get the number of ready clients
+  virtual size_t get_number_of_ready_clients();
+
+  /// Get the number of ready services
+  virtual size_t get_number_of_ready_services();
+
+  /// Get the number of ready guard_conditions
+  virtual size_t get_number_of_ready_guard_conditions();
 
   // TODO(jacobperron): smart pointer?
   /// Add the Waitable to a wait set.

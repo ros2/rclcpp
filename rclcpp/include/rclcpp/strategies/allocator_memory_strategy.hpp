@@ -382,27 +382,47 @@ public:
 
   size_t number_of_ready_subscriptions() const
   {
-    return subscription_handles_.size();
+    size_t number_of_subscriptions = subscription_handles_.size();
+    for (auto waitable : waitable_handles_) {
+      number_of_subscriptions += waitable->get_number_of_ready_subscriptions();
+    }
+    return number_of_subscriptions;
   }
 
   size_t number_of_ready_services() const
   {
-    return service_handles_.size();
+    size_t number_of_services = service_handles_.size();
+    for (auto waitable : waitable_handles_) {
+      number_of_services += waitable->get_number_of_ready_services();
+    }
+    return number_of_services;
   }
 
   size_t number_of_ready_clients() const
   {
-    return client_handles_.size();
+    size_t number_of_clients = client_handles_.size();
+    for (auto waitable : waitable_handles_) {
+      number_of_clients += waitable->get_number_of_ready_clients();
+    }
+    return number_of_clients;
   }
 
   size_t number_of_guard_conditions() const
   {
-    return guard_conditions_.size();
+    size_t number_of_guard_conditions = guard_conditions_.size();
+    for (auto waitable : waitable_handles_) {
+      number_of_guard_conditions += waitable->get_number_of_ready_guard_conditions();
+    }
+    return number_of_guard_conditions;
   }
 
   size_t number_of_ready_timers() const
   {
-    return timer_handles_.size();
+    size_t number_of_timers = timer_handles_.size();
+    for (auto waitable : waitable_handles_) {
+      number_of_timers += waitable->get_number_of_ready_timers();
+    }
+    return number_of_timers;
   }
 
   size_t number_of_waitables() const
