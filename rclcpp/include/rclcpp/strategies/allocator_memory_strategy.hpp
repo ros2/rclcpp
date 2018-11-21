@@ -342,6 +342,39 @@ public:
     }
   }
 
+  virtual void
+  get_next_waitable(executor::AnyExecutable & any_exec, const WeakNodeVector & weak_nodes)
+  {
+    auto it = waitable_handles_.begin();
+    while (it != waitable_handles_.end()) {
+      auto waitable = *it;
+      if (waitable) {
+        // Find the group for this handle and see if it can be serviced
+        auto group = get_group_by_waitable(waitable, weak_nodes);
+        if (!group) {
+          // Group was not found, meaning the waitable is not valid...
+          // Remove it from the ready list and continue looking
+          it = waitable_handles_.erase(it);
+          continue;
+        }
+        if (!group->can_be_taken_from().load()) {
+          // Group is mutually exclusive and is being used, so skip it for now
+          // Leave it to be checked next time, but continue searching
+          ++it;
+          continue;
+        }
+        // Otherwise it is safe to set and return the any_exec
+        any_exec.waitable = waitable;
+        any_exec.callback_group = group;
+        any_exec.node_base = get_node_by_group(group, weak_nodes);
+        waitable_handles_.erase(it);
+        return;
+      }
+      // Else, the waitable is no longer valid, remove it and continue
+      it = waitable_handles_.erase(it);
+    }
+  }
+
   virtual rcl_allocator_t get_allocator()
   {
     return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
@@ -372,6 +405,11 @@ public:
     return timer_handles_.size();
   }
 
+  size_t number_of_waitables() const
+  {
+    return waitable_handles_.size();
+  }
+
 private:
   template<typename T>
   using VectorRebind =
@@ -383,6 +421,7 @@ private:
   VectorRebind<std::shared_ptr<const rcl_service_t>> service_handles_;
   VectorRebind<std::shared_ptr<const rcl_client_t>> client_handles_;
   VectorRebind<std::shared_ptr<const rcl_timer_t>> timer_handles_;
+  VectorRebind<std::shared_ptr<Waitable>> waitable_handles_;
 
   std::shared_ptr<VoidAlloc> allocator_;
 };

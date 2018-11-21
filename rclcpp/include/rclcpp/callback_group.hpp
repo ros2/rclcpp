@@ -25,6 +25,7 @@
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -75,6 +76,10 @@ public:
   get_client_ptrs() const;
 
   RCLCPP_PUBLIC
+  const std::vector<rclcpp::Waitable::WeakPtr> &
+  get_waitable_ptrs() const;
+
+  RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
 
@@ -101,6 +106,10 @@ protected:
   void
   add_client(const rclcpp::ClientBase::SharedPtr client_ptr);
 
+  RCLCPP_PUBLIC
+  void
+  add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr);
+
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;
@@ -108,6 +117,7 @@ protected:
   std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
+  std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
 };
 
