@@ -69,6 +69,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/timer.cpp
   src/rclcpp/type_support.cpp
   src/rclcpp/utilities.cpp
+  src/rclcpp/waitable.cpp
 )
 
 # "watch" template for changes

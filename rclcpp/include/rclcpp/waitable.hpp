@@ -29,34 +29,59 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Waitable)
 
   /// Get the number of ready subscriptions
+  /**
+   * Returns a value of 0 by default.
+   * This should be overridden if the Waitable contains one or more subscriptions.
+   * \return The number of subscriptions associated with the Waitable.
+   */
   RCLCPP_PUBLIC
   virtual
   size_t
-  get_number_of_ready_subscriptions() = 0;
+  get_number_of_ready_subscriptions();
 
   /// Get the number of ready timers
+  /**
+   * Returns a value of 0 by default.
+   * This should be overridden if the Waitable contains one or more timers.
+   * \return The number of timers associated with the Waitable.
+   */
   RCLCPP_PUBLIC
   virtual
   size_t
-  get_number_of_ready_timers() = 0;
+  get_number_of_ready_timers();
 
   /// Get the number of ready clients
+  /**
+   * Returns a value of 0 by default.
+   * This should be overridden if the Waitable contains one or more clients.
+   * \return The number of clients associated with the Waitable.
+   */
   RCLCPP_PUBLIC
   virtual
   size_t
-  get_number_of_ready_clients() = 0;
+  get_number_of_ready_clients();
 
   /// Get the number of ready services
+  /**
+   * Returns a value of 0 by default.
+   * This should be overridden if the Waitable contains one or more services.
+   * \return The number of services associated with the Waitable.
+   */
   RCLCPP_PUBLIC
   virtual
   size_t
-  get_number_of_ready_services() = 0;
+  get_number_of_ready_services();
 
   /// Get the number of ready guard_conditions
+  /**
+   * Returns a value of 0 by default.
+   * This should be overridden if the Waitable contains one or more guard_conditions.
+   * \return The number of guard_conditions associated with the Waitable.
+   */
   RCLCPP_PUBLIC
   virtual
   size_t
-  get_number_of_ready_guard_conditions() = 0;
+  get_number_of_ready_guard_conditions();
 
   // TODO(jacobperron): smart pointer?
   /// Add the Waitable to a wait set.
