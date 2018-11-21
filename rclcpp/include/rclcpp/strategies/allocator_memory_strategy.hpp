@@ -118,8 +118,10 @@ public:
         timer_handles_[i].reset();
       }
     }
-    for (auto waitable : waitable_handles_) {
-      waitable->update(wait_set);
+    for (size_t i = 0; i < timer_handles_.size(); ++i) {
+      if (!waitable_handles_[i]->is_ready(wait_set)) {
+        waitable_handles_[i].reset();
+      }
     }
 
     subscription_handles_.erase(
@@ -140,6 +142,11 @@ public:
     timer_handles_.erase(
       std::remove(timer_handles_.begin(), timer_handles_.end(), nullptr),
       timer_handles_.end()
+    );
+
+    waitable_handles_.erase(
+      std::remove(waitable_handles_.begin(), waitable_handles_.end(), nullptr),
+      waitable_handles_.end()
     );
   }
 

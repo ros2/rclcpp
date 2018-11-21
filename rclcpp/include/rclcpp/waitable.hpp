@@ -94,7 +94,7 @@ public:
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
 
-  /// Update the entities in the Waitable based on a wait set.
+  /// Check if the Waitable is ready.
   /**
    * The input wait set should be the same that was used in a previously call to
    * `add_to_wait_set()`.
@@ -102,11 +102,12 @@ public:
    *
    * \param[in] wait_set A handle to the wait set the Waitable was previously added to
    *   and that has been waited on.
+   * \return `true` if the Waitable is ready, `false` otherwise.
    */
   RCLCPP_PUBLIC
   virtual
-  void
-  update(rcl_wait_set_t *) = 0;
+  bool
+  is_ready(rcl_wait_set_t *) = 0;
 
   /// Execute any entities of the Waitable that are ready.
   /**
