@@ -49,6 +49,7 @@
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/service.hpp"
@@ -442,6 +443,11 @@ public:
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
   get_node_services_interface();
 
+  /// Return the Node's internal NodeWaitablesInterface implementation.
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
+  get_node_waitables_interface();
+
   /// Return the Node's internal NodeParametersInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
@@ -460,6 +466,7 @@ private:
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timers_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
+  rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
 
