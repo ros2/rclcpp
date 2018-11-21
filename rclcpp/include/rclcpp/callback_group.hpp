@@ -36,6 +36,7 @@ namespace node_interfaces
 class NodeServices;
 class NodeTimers;
 class NodeTopics;
+class NodeWaitables;
 }  // namespace node_interfaces
 
 namespace callback_group
@@ -52,6 +53,7 @@ class CallbackGroup
   friend class rclcpp::node_interfaces::NodeServices;
   friend class rclcpp::node_interfaces::NodeTimers;
   friend class rclcpp::node_interfaces::NodeTopics;
+  friend class rclcpp::node_interfaces::NodeWaitables;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup)
