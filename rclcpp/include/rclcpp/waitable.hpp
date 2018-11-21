@@ -28,23 +28,35 @@ class Waitable
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Waitable)
 
-  Waitable() {}
-  virtual ~Waitable() {}
-
   /// Get the number of ready subscriptions
-  virtual size_t get_number_of_ready_subscriptions();
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  get_number_of_ready_subscriptions() = 0;
 
   /// Get the number of ready timers
-  virtual size_t get_number_of_ready_timers();
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  get_number_of_ready_timers() = 0;
 
   /// Get the number of ready clients
-  virtual size_t get_number_of_ready_clients();
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  get_number_of_ready_clients() = 0;
 
   /// Get the number of ready services
-  virtual size_t get_number_of_ready_services();
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  get_number_of_ready_services() = 0;
 
   /// Get the number of ready guard_conditions
-  virtual size_t get_number_of_ready_guard_conditions();
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  get_number_of_ready_guard_conditions() = 0;
 
   // TODO(jacobperron): smart pointer?
   /// Add the Waitable to a wait set.
@@ -52,7 +64,10 @@ public:
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
    * \return `true` if the Waitable is added successfully, `false` otherwise.
    */
-  virtual bool add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
 
   /// Update the entities in the Waitable based on a wait set.
   /**
@@ -63,7 +78,10 @@ public:
    * \param[in] wait_set A handle to the wait set the Waitable was previously added to
    *   and that has been waited on.
    */
-  virtual void update(rcl_wait_set_t *) = 0;
+  RCLCPP_PUBLIC
+  virtual
+  void
+  update(rcl_wait_set_t *) = 0;
 
   /// Execute any entities of the Waitable that are ready.
   /**
@@ -86,7 +104,10 @@ public:
    * waitable.execute();
    * ```
    */
-  virtual void execute() = 0;
+  RCLCPP_PUBLIC
+  virtual
+  void
+  execute() = 0;
 };  // class Waitable
 
 }  // namespace rclcpp
