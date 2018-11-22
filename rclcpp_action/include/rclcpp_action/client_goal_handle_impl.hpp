@@ -17,6 +17,8 @@
 
 #include <rcl_action/types.h>
 
+#include <mutex>
+
 namespace rclcpp_action
 {
 template<typename ACTION>
@@ -38,6 +40,13 @@ std::future<typename ACTION::Result>
 ClientGoalHandle<ACTION>::async_result()
 {
   throw std::runtime_error("Failed to get result future");
+}
+
+template<typename ACTION>
+void ClientGoalHandle<ACTION>::handle_status(rcl_action_goal_status_t status)
+{
+	std::lock_guard<std::mutex> guard(handler_mutex);
+  status_ = status;
 }
 }  // namespace rclcpp_action
 

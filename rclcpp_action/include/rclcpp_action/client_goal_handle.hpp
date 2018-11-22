@@ -19,6 +19,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 
 #include "rclcpp_action/visibility_control.hpp"
 
@@ -43,9 +44,14 @@ private:
 
   ClientGoalHandle(rcl_action_client_t * rcl_client, const rcl_action_goal_info_t rcl_info);
 
+  void handle_status(rcl_action_goal_status_t status);
+
   // TODO(sloretz) shared pointer to keep rcl_client_ alive while goal handles are alive
   rcl_action_client_t * rcl_client_;
   rcl_action_goal_info_t rcl_info_;
+  rcl_action_goal_status_t rcl_status_;
+
+  std::mutex handler_mutex;
 };
 }  // namespace rclcpp_action
 
