@@ -65,7 +65,7 @@ private:
   // The templated Server creates goal handles
   friend Client<ACTION>;
 
-  ClientGoalHandle(rcl_action_client_t * rcl_client, const action_msgs::msg::GoalInfo info);
+  ClientGoalHandle(const action_msgs::msg::GoalInfo info);
 
   void
   set_feedback_callback(std::function<void()> callback);
@@ -75,9 +75,6 @@ private:
 
   void
   set_result(typename ACTION::Result result);
-
-  // TODO(sloretz) shared pointer to keep rcl_client_ alive while goal handles are alive
-  rcl_action_client_t * rcl_client_;
 
   action_msgs::msg::GoalInfo info_;
   action_msgs::msg::GoalStatus status_;

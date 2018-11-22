@@ -20,12 +20,8 @@
 namespace rclcpp_action
 {
 template<typename ACTION>
-ClientGoalHandle<ACTION>::ClientGoalHandle(
-  rcl_action_client_t * rcl_client,
-  const action_msgs::msg::GoalInfo info
-)
-: rcl_client_(rcl_client),
-  info_(info),
+ClientGoalHandle<ACTION>::ClientGoalHandle(const action_msgs::msg::GoalInfo info)
+: info_(info),
   feedback_callback_(nullptr),
   is_result_aware_(false),
   is_handler_valid_(true)
