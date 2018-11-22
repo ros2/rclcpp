@@ -45,14 +45,14 @@ ClientGoalHandle<ACTION>::async_result()
 template<typename ACTION>
 void ClientGoalHandle<ACTION>::handle_status(rcl_action_goal_status_t status)
 {
-	std::lock_guard<std::mutex> guard(handler_mutex);
+  std::lock_guard<std::mutex> guard(handler_mutex);
   rcl_status_ = status;
 }
 
 template<typename ACTION>
 void ClientGoalHandle<ACTION>::handle_result(typename ACTION::Result result)
 {
-	std::lock_guard<std::mutex> guard(handler_mutex);
+  std::lock_guard<std::mutex> guard(handler_mutex);
   result_.set_value(result);
 }
 }  // namespace rclcpp_action
