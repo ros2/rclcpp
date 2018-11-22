@@ -46,6 +46,21 @@ public:
   action_msgs::msg::GoalStatus
   get_status();
 
+  bool
+  is_feedback_aware();
+
+  bool
+  is_result_aware();
+
+  void
+  set_result_awareness(bool awareness);
+
+  bool
+  is_valid();
+
+  void
+  invalidate();
+
 private:
   // The templated Server creates goal handles
   friend Client<ACTION>;
@@ -66,9 +81,13 @@ private:
 
   action_msgs::msg::GoalInfo info_;
   action_msgs::msg::GoalStatus status_;
-  std::promise<typename ACTION::Result> result_;
 
   std::function<void()> feedback_callback_;
+
+  bool is_result_aware_;
+  std::promise<typename ACTION::Result> result_;
+
+  bool is_handler_valid_;
 
   std::mutex handler_mutex_;
 };
