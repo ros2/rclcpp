@@ -17,8 +17,6 @@
 
 #include <rcl_action/types.h>
 
-#include <mutex>
-
 namespace rclcpp_action
 {
 template<typename ACTION>
@@ -43,16 +41,39 @@ ClientGoalHandle<ACTION>::async_result()
 }
 
 template<typename ACTION>
-void ClientGoalHandle<ACTION>::handle_status(rcl_action_goal_status_t status)
+std::function<void()>
+ClientGoalHandle<ACTION>::get_feedback_callback()
 {
-  std::lock_guard<std::mutex> guard(handler_mutex);
+  return feedback_callback_;
+}
+
+template<typename ACTION>
+void
+ClientGoalHandle<ACTION>::set_feedback_callback(std::function<void()> callback)
+{
+  feedback_callback_ = callback;
+}
+
+template<typename ACTION>
+rcl_action_goal_status_t
+ClientGoalHandle<ACTION>::get_status()
+{
+  return rcl_status_;
+}
+
+template<typename ACTION>
+void
+ClientGoalHandle<ACTION>::handle_status(rcl_action_goal_status_t status)
+{
+  std::lock_guard<std::mutex> guard(handler_mutex_);
   rcl_status_ = status;
 }
 
 template<typename ACTION>
-void ClientGoalHandle<ACTION>::handle_result(typename ACTION::Result result)
+void
+ClientGoalHandle<ACTION>::handle_result(typename ACTION::Result result)
 {
-  std::lock_guard<std::mutex> guard(handler_mutex);
+  std::lock_guard<std::mutex> guard(handler_mutex_);
   result_.set_value(result);
 }
 }  // namespace rclcpp_action

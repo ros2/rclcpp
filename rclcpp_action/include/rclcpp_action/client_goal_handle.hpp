@@ -38,18 +38,26 @@ public:
   std::future<typename ACTION::Result>
   async_result();
 
+  std::function<void()>
+  get_feedback_callback();
+
+  void
+  set_feedback_callback(std::function<void()> callback);
+
+  rcl_action_goal_status_t
+  get_status();
+
 private:
   // The templated Server creates goal handles
   friend Client<ACTION>;
 
   ClientGoalHandle(rcl_action_client_t * rcl_client, const rcl_action_goal_info_t rcl_info);
 
-  void handle_status(rcl_action_goal_status_t status);
+  void
+  handle_status(rcl_action_goal_status_t status);
 
-  void handle_result(typename ACTION::Result result);
-  void handle_feedback();
-
-  void set_feedback_callback();
+  void
+  handle_result(typename ACTION::Result result);
 
   // TODO(sloretz) shared pointer to keep rcl_client_ alive while goal handles are alive
   rcl_action_client_t * rcl_client_;
@@ -58,7 +66,9 @@ private:
 
   std::promise<typename ACTION::Result> result_;
 
-  std::mutex handler_mutex;
+  std::function<void()> feedback_callback_;
+
+  std::mutex handler_mutex_;
 };
 }  // namespace rclcpp_action
 
