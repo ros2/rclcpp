@@ -25,6 +25,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -52,6 +53,7 @@ public:
   virtual size_t number_of_ready_clients() const = 0;
   virtual size_t number_of_ready_timers() const = 0;
   virtual size_t number_of_guard_conditions() const = 0;
+  virtual size_t number_of_waitables() const = 0;
 
   virtual bool add_handles_to_wait_set(rcl_wait_set_t * wait_set) = 0;
   virtual void clear_handles() = 0;
@@ -73,6 +75,11 @@ public:
 
   virtual void
   get_next_client(
+    rclcpp::executor::AnyExecutable & any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
+  virtual void
+  get_next_waitable(
     rclcpp::executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes) = 0;
 
@@ -112,6 +119,11 @@ public:
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_client(
     rclcpp::ClientBase::SharedPtr client,
+    const WeakNodeVector & weak_nodes);
+
+  static rclcpp::callback_group::CallbackGroup::SharedPtr
+  get_group_by_waitable(
+    rclcpp::Waitable::SharedPtr waitable,
     const WeakNodeVector & weak_nodes);
 };
 

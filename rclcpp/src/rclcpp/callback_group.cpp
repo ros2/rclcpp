@@ -51,6 +51,13 @@ CallbackGroup::get_client_ptrs() const
   return client_ptrs_;
 }
 
+const std::vector<rclcpp::Waitable::WeakPtr> &
+CallbackGroup::get_waitable_ptrs() const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  return waitable_ptrs_;
+}
+
 std::atomic_bool &
 CallbackGroup::can_be_taken_from()
 {
@@ -90,4 +97,11 @@ CallbackGroup::add_client(const rclcpp::ClientBase::SharedPtr client_ptr)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   client_ptrs_.push_back(client_ptr);
+}
+
+void
+CallbackGroup::add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  waitable_ptrs_.push_back(waitable_ptr);
 }

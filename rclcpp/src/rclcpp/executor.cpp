@@ -281,6 +281,9 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   if (any_exec.client) {
     execute_client(any_exec.client);
   }
+  if (any_exec.waitable) {
+    any_exec.waitable->execute();
+  }
   // Reset the callback_group, regardless of type
   any_exec.callback_group->can_be_taken_from().store(true);
   // Wake the wait, because it may need to be recalculated or work that
@@ -427,6 +430,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     throw std::runtime_error("Couldn't clear wait set");
   }
 
+  // The size of waitables are accounted for in size of the other entities
   rcl_ret_t ret = rcl_wait_set_resize(
     &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
     memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
@@ -547,6 +551,11 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   // Check the clients to see if there are any that are ready
   memory_strategy_->get_next_client(any_executable, weak_nodes_);
   if (any_executable.client) {
+    return true;
+  }
+  // Check the waitables to see if there are any that are ready
+  memory_strategy_->get_next_waitable(any_executable, weak_nodes_);
+  if (any_executable.waitable) {
     return true;
   }
   // If there is no ready executable, return a null ptr

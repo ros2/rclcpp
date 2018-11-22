@@ -25,6 +25,7 @@
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -35,6 +36,7 @@ namespace node_interfaces
 class NodeServices;
 class NodeTimers;
 class NodeTopics;
+class NodeWaitables;
 }  // namespace node_interfaces
 
 namespace callback_group
@@ -51,6 +53,7 @@ class CallbackGroup
   friend class rclcpp::node_interfaces::NodeServices;
   friend class rclcpp::node_interfaces::NodeTimers;
   friend class rclcpp::node_interfaces::NodeTopics;
+  friend class rclcpp::node_interfaces::NodeWaitables;
 
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup)
@@ -73,6 +76,10 @@ public:
   RCLCPP_PUBLIC
   const std::vector<rclcpp::ClientBase::WeakPtr> &
   get_client_ptrs() const;
+
+  RCLCPP_PUBLIC
+  const std::vector<rclcpp::Waitable::WeakPtr> &
+  get_waitable_ptrs() const;
 
   RCLCPP_PUBLIC
   std::atomic_bool &
@@ -101,6 +108,10 @@ protected:
   void
   add_client(const rclcpp::ClientBase::SharedPtr client_ptr);
 
+  RCLCPP_PUBLIC
+  void
+  add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr);
+
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;
@@ -108,6 +119,7 @@ protected:
   std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
+  std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
 };
 

@@ -200,3 +200,29 @@ MemoryStrategy::get_group_by_client(
   }
   return nullptr;
 }
+
+rclcpp::callback_group::CallbackGroup::SharedPtr
+MemoryStrategy::get_group_by_waitable(
+  rclcpp::Waitable::SharedPtr waitable,
+  const WeakNodeVector & weak_nodes)
+{
+  for (auto & weak_node : weak_nodes) {
+    auto node = weak_node.lock();
+    if (!node) {
+      continue;
+    }
+    for (auto & weak_group : node->get_callback_groups()) {
+      auto group = weak_group.lock();
+      if (!group) {
+        continue;
+      }
+      for (auto & weak_waitable : group->get_waitable_ptrs()) {
+        auto group_waitable = weak_waitable.lock();
+        if (group_waitable && group_waitable == waitable) {
+          return group;
+        }
+      }
+    }
+  }
+  return nullptr;
+}
