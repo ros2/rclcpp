@@ -22,9 +22,9 @@ namespace rclcpp_action
 template<typename ACTION>
 ClientGoalHandle<ACTION>::ClientGoalHandle(
   rcl_action_client_t * rcl_client,
-  const rcl_action_goal_info_t rcl_info
+  const action_msgs::msg::GoalInfo info
 )
-: rcl_client_(rcl_client), rcl_info_(rcl_info)
+: rcl_client_(rcl_client), info_(info)
 {
 }
 
@@ -51,27 +51,28 @@ template<typename ACTION>
 void
 ClientGoalHandle<ACTION>::set_feedback_callback(std::function<void()> callback)
 {
+  std::lock_guard<std::mutex> guard(handler_mutex_);
   feedback_callback_ = callback;
 }
 
 template<typename ACTION>
-rcl_action_goal_status_t
+action_msgs::msg::GoalStatus
 ClientGoalHandle<ACTION>::get_status()
 {
-  return rcl_status_;
+  return status_;
 }
 
 template<typename ACTION>
 void
-ClientGoalHandle<ACTION>::handle_status(rcl_action_goal_status_t status)
+ClientGoalHandle<ACTION>::set_status(action_msgs::msg::GoalStatus status)
 {
   std::lock_guard<std::mutex> guard(handler_mutex_);
-  rcl_status_ = status;
+  status_ = status;
 }
 
 template<typename ACTION>
 void
-ClientGoalHandle<ACTION>::handle_result(typename ACTION::Result result)
+ClientGoalHandle<ACTION>::set_result(typename ACTION::Result result)
 {
   std::lock_guard<std::mutex> guard(handler_mutex_);
   result_.set_value(result);

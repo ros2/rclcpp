@@ -21,6 +21,8 @@
 #include <memory>
 #include <mutex>
 
+#include "action_msgs/msg/goal_status.hpp"
+#include "action_msgs/msg/goal_info.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
@@ -41,29 +43,29 @@ public:
   std::function<void()>
   get_feedback_callback();
 
-  void
-  set_feedback_callback(std::function<void()> callback);
-
-  rcl_action_goal_status_t
+  action_msgs::msg::GoalStatus
   get_status();
 
 private:
   // The templated Server creates goal handles
   friend Client<ACTION>;
 
-  ClientGoalHandle(rcl_action_client_t * rcl_client, const rcl_action_goal_info_t rcl_info);
+  ClientGoalHandle(rcl_action_client_t * rcl_client, const action_msgs::msg::GoalInfo info);
 
   void
-  handle_status(rcl_action_goal_status_t status);
+  set_feedback_callback(std::function<void()> callback);
 
   void
-  handle_result(typename ACTION::Result result);
+  set_status(action_msgs::msg::GoalStatus status);
+
+  void
+  set_result(typename ACTION::Result result);
 
   // TODO(sloretz) shared pointer to keep rcl_client_ alive while goal handles are alive
   rcl_action_client_t * rcl_client_;
-  rcl_action_goal_info_t rcl_info_;
-  rcl_action_goal_status_t rcl_status_;
 
+  action_msgs::msg::GoalInfo info_;
+  action_msgs::msg::GoalStatus status_;
   std::promise<typename ACTION::Result> result_;
 
   std::function<void()> feedback_callback_;
