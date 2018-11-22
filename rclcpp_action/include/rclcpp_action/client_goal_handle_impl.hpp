@@ -34,13 +34,6 @@ ClientGoalHandle<ACTION>::~ClientGoalHandle()
 }
 
 template<typename ACTION>
-std::future<bool>
-ClientGoalHandle<ACTION>::async_cancel()
-{
-  throw std::runtime_error("Failed to cancel goal");
-}
-
-template<typename ACTION>
 std::future<typename ACTION::Result>
 ClientGoalHandle<ACTION>::async_result()
 {

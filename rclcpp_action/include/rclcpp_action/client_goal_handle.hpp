@@ -34,9 +34,6 @@ class ClientGoalHandle
 public:
   virtual ~ClientGoalHandle();
 
-  std::future<bool>
-  async_cancel();
-
   std::future<typename ACTION::Result>
   async_result();
 
