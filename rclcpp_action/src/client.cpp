@@ -266,6 +266,7 @@ void
 ClientBase::execute() override
 {
   void * message = nullptr;
+  rmw_request_id_t * header = nullptr;
   if(is_feedback_ready_)
   {
     rcl_action_take_feedback(rcl_action_client, message);
@@ -276,15 +277,15 @@ ClientBase::execute() override
   }
   if(is_goal_response_ready_)
   {
-    rcl_action_take_goal_response(rcl_action_client, message);
+    rcl_action_take_goal_response(rcl_action_client, header, message);
   }
   if(is_cancel_response_ready_)
   {
-    rcl_action_take_cancel_response(rcl_action_client, message);
+    rcl_action_take_cancel_response(rcl_action_client, header, message);
   }
   if(is_result_response_ready_)
   {
-    rcl_action_take_result_response(rcl_action_client, message);
+    rcl_action_take_result_response(rcl_action_client, header, message);
   }
 }
 
