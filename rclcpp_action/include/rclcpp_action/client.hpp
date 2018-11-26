@@ -230,7 +230,7 @@ public:
               std::static_pointer_cast<Result>(response);
           goal_handle->set_result(result);
         });
-      goal_handle->set_result_tracking();
+      goal_handle->set_result_awareness(true);
     }
     return goal_handle->async_result();
   }
