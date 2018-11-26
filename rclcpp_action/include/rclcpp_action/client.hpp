@@ -82,6 +82,15 @@ protected:
     ResponseCallback callback);
 
 private:
+  void set_rcl_entities();
+
+  // rcl interface entities
+  site_t num_subscriptions_,
+         num_guard_conditions_,
+         num_timers_,
+         num_clients_,
+         num_services_;
+
   std::unique_ptr<ClientBaseImpl> pimpl_;
 };
 

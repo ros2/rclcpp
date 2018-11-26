@@ -160,7 +160,7 @@ ClientBase::ClientBase(
       node_base, action_name,
       type_support, client_options))
 {
-  
+  set_rcl_entities();
 }
 
 bool
@@ -174,3 +174,57 @@ ClientBase::~ClientBase()
 {
   
 }
+
+void
+ClientBase::set_rcl_entities()
+{
+  rcl_action_client_wait_set_get_num_entities(
+    num_subscriptions_.
+    num_guard_conditions_,
+    num_timers_,
+    num_clients_,
+    num_services_
+  );
+}
+
+size_t
+ClientBase::get_number_of_ready_subscriptions() override
+{
+  return num_subscriptions_;
+}
+
+size_t
+ClientBase::get_number_of_ready_guard_conditions() override
+{
+  return num_guard_conditions_;
+}
+
+size_t
+ClientBase::get_number_of_ready_timers() override
+{
+  return num_timers_;
+}
+
+size_t
+ClientBase::get_number_of_ready_clients() override
+{
+  return num_clients_;
+}
+
+size_t
+ClientBase::get_number_of_ready_services() override
+{
+  return num_services_;
+}
+
+bool
+ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set) override
+{}
+
+bool
+ClientBase::is_ready(rcl_wait_set_t *) override
+{}
+
+void
+ClientBase::execute() override
+{}
