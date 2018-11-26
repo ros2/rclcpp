@@ -184,12 +184,16 @@ ClientBase::~ClientBase()
 void
 ClientBase::set_rcl_entities()
 {
-  rcl_action_client_wait_set_get_num_entities(
+  rcl_ret_t ret = rcl_action_client_wait_set_get_num_entities(
     num_subscriptions_.
     num_guard_conditions_,
     num_timers_,
     num_clients_,
     num_services_);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set action client rcl entities");
+  }
 }
 
 size_t
@@ -225,9 +229,13 @@ ClientBase::get_number_of_ready_services() override
 bool
 ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set) override
 {
-  rcl_action_wait_set_add_action_client(
+  rcl_ret_t ret = rcl_action_wait_set_add_action_client(
     wait_set,
     pimpl_->get_action_client().get());
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to add action client to wait set");
+  }
 }
 
 bool
@@ -240,7 +248,7 @@ ClientBase::is_ready(rcl_wait_set_t * wait_set) override
        is_cancel_response_ready,
        is_result_response_ready;
 
-  rcl_action_client_wait_set_get_entities_ready(
+  rcl_ret_t ret = rcl_action_client_wait_set_get_entities_ready(
     wait_set,
     pimpl_->get_action_client().get(),
     &is_feedback_ready,
@@ -248,6 +256,10 @@ ClientBase::is_ready(rcl_wait_set_t * wait_set) override
     &is_goal_response_ready,
     &is_cancel_response_ready,
     &is_result_response_ready);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed get ready entities in action client");
+  }
 
   return is_feedback_ready ||
          is_status_ready ||
@@ -275,6 +287,11 @@ ClientBase::execute() override
     &is_goal_response_ready,
     &is_cancel_response_ready,
     &is_result_response_ready);
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret,
+      "failed get ready entities to execute in action client");
+  }
 
   void * message = nullptr;
   if(is_feedback_ready)
