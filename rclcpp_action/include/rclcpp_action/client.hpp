@@ -91,6 +91,12 @@ private:
          num_clients_,
          num_services_;
 
+  bool is_feedback_ready_,
+       is_status_ready_,
+       is_goal_response_ready_,
+       is_cancel_response_ready_,
+       is_result_response_ready_;
+
   std::unique_ptr<ClientBaseImpl> pimpl_;
 };
 

@@ -242,75 +242,47 @@ bool
 ClientBase::is_ready(rcl_wait_set_t * wait_set) override
 {
 
-  bool is_feedback_ready,
-       is_status_ready,
-       is_goal_response_ready,
-       is_cancel_response_ready,
-       is_result_response_ready;
-
   rcl_ret_t ret = rcl_action_client_wait_set_get_entities_ready(
     wait_set,
     pimpl_->get_action_client().get(),
-    &is_feedback_ready,
-    &is_status_ready,
-    &is_goal_response_ready,
-    &is_cancel_response_ready,
-    &is_result_response_ready);
+    &is_feedback_ready_,
+    &is_status_ready_,
+    &is_goal_response_ready_,
+    &is_cancel_response_ready_,
+    &is_result_response_ready_);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed get ready entities in action client");
   }
 
-  return is_feedback_ready ||
-         is_status_ready ||
-         is_goal_response_ready ||
-         is_cancel_response_ready ||
-         is_result_response_ready;
+  return is_feedback_ready_ ||
+         is_status_ready_ ||
+         is_goal_response_ready_ ||
+         is_cancel_response_ready_ ||
+         is_result_response_ready_;
 }
 
 void
 ClientBase::execute() override
 {
-  bool is_feedback_ready,
-       is_status_ready,
-       is_goal_response_ready,
-       is_cancel_response_ready,
-       is_result_response_ready;
-
-  auto rcl_action_client = pimpl_->get_action_client().get();
-
-  rcl_action_client_wait_set_get_entities_ready(
-    wait_set,
-    rcl_action_client,
-    &is_feedback_ready,
-    &is_status_ready,
-    &is_goal_response_ready,
-    &is_cancel_response_ready,
-    &is_result_response_ready);
-
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret,
-      "failed get ready entities to execute in action client");
-  }
-
   void * message = nullptr;
-  if(is_feedback_ready)
+  if(is_feedback_ready_)
   {
     rcl_action_take_feedback(rcl_action_client, message);
   }
-  if(is_status_ready)
+  if(is_status_ready_)
   {
     rcl_action_take_status(rcl_action_client, message);
   }
-  if(is_goal_response_ready)
+  if(is_goal_response_ready_)
   {
     rcl_action_take_goal_response(rcl_action_client, message);
   }
-  if(is_cancel_response_ready)
+  if(is_cancel_response_ready_)
   {
     rcl_action_take_cancel_response(rcl_action_client, message);
   }
-  if(is_result_response_ready)
+  if(is_result_response_ready_)
   {
     rcl_action_take_result_response(rcl_action_client, message);
   }
