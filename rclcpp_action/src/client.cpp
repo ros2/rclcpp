@@ -141,6 +141,12 @@ public:
     pending_cancel_responses_[sequence_number] = callback;
   }
 
+  std::shared_ptr<rcl_action_client_t>
+  get_action_client()
+  {
+    return client_handle_;
+  }
+
 private:
   std::map<int64_t, ResponseCallback> pending_goal_responses_;
   std::map<int64_t, ResponseCallback> pending_result_responses_;
@@ -183,8 +189,7 @@ ClientBase::set_rcl_entities()
     num_guard_conditions_,
     num_timers_,
     num_clients_,
-    num_services_
-  );
+    num_services_);
 }
 
 size_t
@@ -219,12 +224,79 @@ ClientBase::get_number_of_ready_services() override
 
 bool
 ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set) override
-{}
+{
+  rcl_action_wait_set_add_action_client(
+    wait_set,
+    pimpl_->get_action_client().get());
+}
 
 bool
-ClientBase::is_ready(rcl_wait_set_t *) override
-{}
+ClientBase::is_ready(rcl_wait_set_t * wait_set) override
+{
+
+  bool is_feedback_ready,
+       is_status_ready,
+       is_goal_response_ready,
+       is_cancel_response_ready,
+       is_result_response_ready;
+
+  rcl_action_client_wait_set_get_entities_ready(
+    wait_set,
+    pimpl_->get_action_client().get(),
+    &is_feedback_ready,
+    &is_status_ready,
+    &is_goal_response_ready,
+    &is_cancel_response_ready,
+    &is_result_response_ready);
+
+  return is_feedback_ready ||
+         is_status_ready ||
+         is_goal_response_ready ||
+         is_cancel_response_ready ||
+         is_result_response_ready;
+}
 
 void
 ClientBase::execute() override
-{}
+{
+  bool is_feedback_ready,
+       is_status_ready,
+       is_goal_response_ready,
+       is_cancel_response_ready,
+       is_result_response_ready;
+
+  auto rcl_action_client = pimpl_->get_action_client().get();
+
+  rcl_action_client_wait_set_get_entities_ready(
+    wait_set,
+    rcl_action_client,
+    &is_feedback_ready,
+    &is_status_ready,
+    &is_goal_response_ready,
+    &is_cancel_response_ready,
+    &is_result_response_ready);
+
+  void * message = nullptr;
+  if(is_feedback_ready)
+  {
+    rcl_action_take_feedback(rcl_action_client, message);
+  }
+  if(is_status_ready)
+  {
+    rcl_action_take_status(rcl_action_client, message);
+  }
+  if(is_goal_response_ready)
+  {
+    rcl_action_take_goal_response(rcl_action_client, message);
+  }
+  if(is_cancel_response_ready)
+  {
+    rcl_action_take_cancel_response(rcl_action_client, message);
+  }
+  if(is_result_response_ready)
+  {
+    rcl_action_take_result_response(rcl_action_client, message);
+  }
+}
+
+//TODO: treat return values
