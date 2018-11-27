@@ -96,14 +96,14 @@ protected:
   // The subclass should convert to the real type and call a user's callback.
   virtual
   std::pair<GoalResponse, std::shared_ptr<void>>
-  base_handle_goal_(rcl_action_goal_info_t &, std::shared_ptr<void> request) = 0;
+  call_handle_goal_callback(rcl_action_goal_info_t &, std::shared_ptr<void> request) = 0;
 
   // ServerBase will determine which goal ids are being cancelled, and then call this function for
   // each goal id.
   // The subclass should look up a goal handle and call the user's callback.
   virtual
   CancelResponse
-  base_handle_cancel_(rcl_action_goal_info_t &) = 0;
+  call_handle_cancel_callback(rcl_action_goal_info_t &) = 0;
 
   /// Given a goal request message, return the UUID contained within.
   virtual
@@ -156,7 +156,7 @@ public:
 
 protected:
   std::pair<GoalResponse, std::shared_ptr<void>>
-  base_handle_goal_(rcl_action_goal_info_t & info, std::shared_ptr<void> message) override
+  call_handle_goal_callback(rcl_action_goal_info_t & info, std::shared_ptr<void> message) override
   {
     // TODO(sloretz) update and remove assert when IDL pipeline allows nesting user's type
     static_assert(
@@ -174,7 +174,7 @@ protected:
   }
 
   CancelResponse
-  base_handle_cancel_(rcl_action_goal_info_t & info)
+  call_handle_cancel_callback(rcl_action_goal_info_t & info)
   {
     // TODO(sloretz) look up goal handle and call users' callback with it
     (void)info;

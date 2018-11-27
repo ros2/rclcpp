@@ -179,7 +179,10 @@ ServerBase::execute()
       info.uuid[i] = uuid[i];
     }
 
-    auto response_pair = base_handle_goal_(info, message);
+    // Call user's callback, getting the user's response and a ros message to send back
+    auto response_pair = call_handle_goal_callback(info, message);
+
+    // if goal is accepted, create a goal handle, and store it
 
     // TODO(sloretz) if goal was accepted then does anything need to be stored here?
 
