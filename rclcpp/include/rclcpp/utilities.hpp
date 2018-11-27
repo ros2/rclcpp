@@ -179,7 +179,7 @@ ok(rclcpp::Context::SharedPtr context = nullptr);
  *
  * Deprecated, as it is no longer different from rcl_ok().
  *
- * \param[in] context to check for shutdown of
+ * \param[in] context Check for initialization of this Context.
  * \return true if the context is initialized, and false otherwise
  */
 RCLCPP_PUBLIC
