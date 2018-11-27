@@ -50,33 +50,16 @@ enum class CancelResponse : int8_t
 class ServerBase : public rclcpp::Waitable
 {
 public:
-  using UUIDGetter = std::function<std::array<uint8_t, 16> (void * message)>;
-
   // TODO(sloretz) NodeLoggingInterface when it can be gotten off a node
-  // TODO(sloretz) accept clock instance
   RCLCPP_ACTION_PUBLIC
   ServerBase(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const std::string & name,
-    const rosidl_action_type_support_t * type_support,
-    UUIDGetter uuid_getter);
+    const rosidl_action_type_support_t * type_support);
 
   RCLCPP_ACTION_PUBLIC
   virtual ~ServerBase();
-
-  // ServerBase will call this function when a goal request is received.
-  // The subclass should convert to the real type and call a user's callback.
-  virtual
-  std::pair<GoalResponse, std::shared_ptr<void>>
-  base_handle_goal_(rcl_action_goal_info_t &, void *) = 0;
-
-  // ServerBase will determine which goal ids are being cancelled, and then call this function for
-  // each goal id.
-  // The subclass should look up a goal handle and call the user's callback.
-  virtual
-  CancelResponse
-  base_handle_cancel_(rcl_action_goal_info_t &) = 0;
 
   // -------------
   // Waitables API
@@ -108,16 +91,33 @@ public:
   // End Waitables API
   // -----------------
 
+protected:
+  // ServerBase will call this function when a goal request is received.
+  // The subclass should convert to the real type and call a user's callback.
+  virtual
+  std::pair<GoalResponse, std::shared_ptr<void>>
+  base_handle_goal_(rcl_action_goal_info_t &, std::shared_ptr<void> request) = 0;
+
+  // ServerBase will determine which goal ids are being cancelled, and then call this function for
+  // each goal id.
+  // The subclass should look up a goal handle and call the user's callback.
+  virtual
+  CancelResponse
+  base_handle_cancel_(rcl_action_goal_info_t &) = 0;
+
+  /// Given a goal request message, return the UUID contained within.
+  virtual
+  std::array<uint8_t, 16>
+  get_goal_id_from_goal_request(void * message) = 0;
+
+  /// Create an empty goal request message so it can be taken from a lower layer.
+  virtual
+  std::shared_ptr<void>
+  create_goal_request() = 0;
+
 private:
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
-
-template<typename ACTION>
-std::array<uint8_t, 16>
-get_goal_id_from_goal_request(void * message)
-{
-  return static_cast<typename ACTION::GoalRequestService::Request *>(message)->uuid;
-}
 
 /// Templated Action Server class
 /// It is responsible for getting the C action type support struct from the C++ type, and
@@ -128,7 +128,8 @@ class Server : public ServerBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
-  using GoalCallback = std::function<GoalResponse (rcl_action_goal_info_t &, typename ACTION::Goal *)>;
+  using GoalCallback = std::function<GoalResponse (
+    rcl_action_goal_info_t &, std::shared_ptr<typename ACTION::Goal>)>;
   using CancelCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   // TODO(sloretz) accept clock instance
@@ -143,33 +144,27 @@ public:
       node_base,
       node_clock,
       name,
-      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>(),
-      get_goal_id_from_goal_request<ACTION>),
+      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>()),
     handle_goal_(handle_goal),
     handle_cancel_(handle_cancel)
   {
-    // TODO(sloretz) what's the link that causes `handle_goal_` and `handle_cancel_` to be called?
-    //    Why, it's the Waitable::execute() method of course
-    // TODO(sloretz) what implements Waitable?
-    //    Well, execute must be Server and not ServerBase because Server has the callbacks,
-    //    unless of course functions are passed into server base
-    //
-    //    Functions to pass into server base:
-    //      Given goal request, return UUID and a type to pass to a user's callback
   }
 
   virtual ~Server()
   {
   }
 
+protected:
   std::pair<GoalResponse, std::shared_ptr<void>>
-  base_handle_goal_(rcl_action_goal_info_t & info, void * message) override
+  base_handle_goal_(rcl_action_goal_info_t & info, std::shared_ptr<void> message) override
   {
     // TODO(sloretz) update and remove assert when IDL pipeline allows nesting user's type
     static_assert(
       std::is_same<typename ACTION::Goal, typename ACTION::GoalRequestService::Request>::value,
       "Assuming user fields were merged with goal request fields");
-    GoalResponse user_response = handle_goal_(info, static_cast<typename ACTION::Goal *>(message));
+    GoalResponse user_response = handle_goal_(
+      info, std::static_pointer_cast<typename ACTION::Goal>(message));
+
     // TODO(sloretz) if goal is accepted then create a goal handle
 
     auto ros_response = std::make_shared<typename ACTION::GoalRequestService::Response>();
@@ -184,6 +179,18 @@ public:
     // TODO(sloretz) look up goal handle and call users' callback with it
     (void)info;
     return CancelResponse::REJECT;
+  }
+
+  std::array<uint8_t, 16>
+  get_goal_id_from_goal_request(void * message) override
+  {
+    return static_cast<typename ACTION::GoalRequestService::Request *>(message)->uuid;
+  }
+
+  std::shared_ptr<void>
+  create_goal_request() override
+  {
+    return std::shared_ptr<void>(new typename ACTION::GoalRequestService::Request());
   }
 
 private:

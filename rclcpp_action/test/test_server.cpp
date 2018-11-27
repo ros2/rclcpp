@@ -36,11 +36,11 @@ protected:
 
 TEST_F(TestServer, construction_and_destruction)
 {
-  auto node = std::make_shared<rclcpp::Node>("my_node", "/rclcpp_action/test/server");
+  auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-      [](rcl_action_goal_info_t &, test_msgs::action::Fibonacci::Goal *) {
+      [](rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>) {
         return rclcpp_action::GoalResponse::REJECT;
       },
       [](std::shared_ptr<GoalHandle>) {});
@@ -49,11 +49,11 @@ TEST_F(TestServer, construction_and_destruction)
 
 TEST_F(TestServer, handle_goal_called)
 {
-  auto node = std::make_shared<rclcpp::Node>("my_node", "/rclcpp_action/test/server");
+  auto node = std::make_shared<rclcpp::Node>("handle_goal_node", "/rclcpp_action/handle_goal");
   rcl_action_goal_info_t received_info;
 
   auto handle_goal = [&received_info](
-      rcl_action_goal_info_t & info, test_msgs::action::Fibonacci::Goal *)
+      rcl_action_goal_info_t & info, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       received_info = info;
       return rclcpp_action::GoalResponse::REJECT;
@@ -69,11 +69,9 @@ TEST_F(TestServer, handle_goal_called)
   // Make sure the UUID received is the same as the one sent
 
   auto client = node->create_client<test_msgs::action::Fibonacci::GoalRequestService>(
-    "fibonacci/_action/goal");
+    "fibonacci/_action/send_goal");
 
-  std::cerr << "About to wait for service\n";
   ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(20)));
-  std::cerr << "service is ready\n";
 
   auto request = std::make_shared<test_msgs::action::Fibonacci::GoalRequestService::Request>();
 

@@ -28,7 +28,6 @@ class ServerBaseImpl
 {
 public:
   rcl_action_server_t action_server_;
-  ServerBase::UUIDGetter uuid_getter_;
   rclcpp::Clock::SharedPtr clock_;
 
   size_t num_subscriptions_ = 0;
@@ -47,14 +46,12 @@ ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   const std::string & name,
-  const rosidl_action_type_support_t * type_support,
-  ServerBase::UUIDGetter uuid_getter
+  const rosidl_action_type_support_t * type_support
   )
   : pimpl_(new ServerBaseImpl)
 {
   rcl_ret_t ret;
   // Create action server
-  pimpl_->uuid_getter_ = uuid_getter;
   pimpl_->clock_ = node_clock->get_clock();
   pimpl_->action_server_ = rcl_action_get_zero_initialized_server();
 
@@ -132,7 +129,6 @@ ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
-  std::cerr<< "Is_ready called\n";
   rcl_ret_t ret = rcl_action_server_wait_set_get_entities_ready(
     wait_set,
     &pimpl_->action_server_,
@@ -149,7 +145,6 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
     || pimpl_->result_request_ready_;
 
   if (result) {
-    std::cerr << "SOmething became ready\n";
   }
   return result;
 }
@@ -157,24 +152,25 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
 void
 ServerBase::execute()
 {
-  std::cerr << "Action server is executing\n";
   rcl_ret_t ret;
 
   if (pimpl_->goal_request_ready_) {
     rcl_action_goal_info_t info;
     rmw_request_id_t request_header;
-    void * message;
+
+    // TODO this needs to be available here
+    std::shared_ptr<void> message = create_goal_request();
     ret = rcl_action_take_goal_request(
       &pimpl_->action_server_,
       &request_header,
-      &message);
+      message.get());
 
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
 
     pimpl_->goal_request_ready_ = false;
-    std::array<uint8_t, 16> uuid = pimpl_->uuid_getter_(message);
+    std::array<uint8_t, 16> uuid = get_goal_id_from_goal_request(message.get());
     for (size_t i = 0; i < 16; ++i) {
       info.uuid[i] = uuid[i];
     }
