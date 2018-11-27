@@ -229,7 +229,7 @@ on_shutdown(
  *
  * \param[in] wait_set Pointer to the rcl_wait_set_t that will be using the
  *   resulting guard condition.
- * \param[in] context to check for shutdown of
+ * \param[in] context The context associated with the guard condition.
  * \return Pointer to the guard condition.
  */
 RCLCPP_PUBLIC
