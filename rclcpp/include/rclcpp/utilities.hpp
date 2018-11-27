@@ -165,7 +165,7 @@ remove_ros_arguments(int argc, char const * const argv[]);
  * If nullptr is given for the context, then the global context is used, i.e.
  * the context initialized by rclcpp::init().
  *
- * \param[in] context to check for shutdown of
+ * \param[in] context Check for shutdown of this Context.
  * \return true if shutdown has been called, false otherwise
  */
 RCLCPP_PUBLIC
