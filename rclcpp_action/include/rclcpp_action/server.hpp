@@ -115,6 +115,14 @@ protected:
   std::shared_ptr<void>
   create_goal_request() = 0;
 
+  /// Call user callback to begin execution
+  virtual
+  void
+  call_begin_execution_callback(
+    std::shared_ptr<rcl_action_server_t> rcl_server,
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
+    std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
+
 private:
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
@@ -131,6 +139,7 @@ public:
   using GoalCallback = std::function<GoalResponse (
     rcl_action_goal_info_t &, std::shared_ptr<typename ACTION::Goal>)>;
   using CancelCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using ExecuteCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   // TODO(sloretz) accept clock instance
   Server(
@@ -138,7 +147,8 @@ public:
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const std::string & name,
     GoalCallback handle_goal,
-    CancelCallback handle_cancel
+    CancelCallback handle_cancel,
+    ExecuteCallback handle_execute
   )
   : ServerBase(
       node_base,
@@ -146,7 +156,8 @@ public:
       name,
       rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>()),
     handle_goal_(handle_goal),
-    handle_cancel_(handle_cancel)
+    handle_cancel_(handle_cancel),
+    handle_execute_(handle_execute)
   {
   }
 
@@ -181,6 +192,26 @@ protected:
     return CancelResponse::REJECT;
   }
 
+  void
+  call_begin_execution_callback(
+    std::shared_ptr<rcl_action_server_t> rcl_server,
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
+    std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message)
+  {
+    // TODO(sloretz) pass in action server, and use this to create ServerGoalHandleImpl instance
+    // Also make action server a shared pointer so it can live longer than this class if handle lives on
+    // (void)rcl_server;
+    // (void)rcl_goal_handle;
+    // (void)uuid;
+    // (void)goal_request_message;
+    std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
+    goal_handle.reset(
+      new ServerGoalHandle<ACTION>(
+        rcl_server, rcl_goal_handle,
+        uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message)));
+    handle_execute_(goal_handle);
+  }
+
   std::array<uint8_t, 16>
   get_goal_id_from_goal_request(void * message) override
   {
@@ -196,6 +227,7 @@ protected:
 private:
   GoalCallback handle_goal_;
   CancelCallback handle_cancel_;
+  ExecuteCallback handle_execute_;
 };
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__SERVER_HPP_

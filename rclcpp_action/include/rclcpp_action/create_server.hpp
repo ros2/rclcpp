@@ -32,14 +32,16 @@ create_server(
   rclcpp::Node * node,
   const std::string & name,
   typename Server<ACTION>::GoalCallback handle_goal,
-  typename Server<ACTION>::CancelCallback handle_cancel)
+  typename Server<ACTION>::CancelCallback handle_cancel,
+  typename Server<ACTION>::ExecuteCallback handle_execute)
 {
   auto action_server = Server<ACTION>::make_shared(
     node->get_node_base_interface(),
     node->get_node_clock_interface(),
     name,
     handle_goal,
-    handle_cancel);
+    handle_cancel,
+    handle_execute);
 
   // TODO(sloretz) shared pointer destructor should remove self from node waitables
   // TODO(sloretz) pass in callback group to this API

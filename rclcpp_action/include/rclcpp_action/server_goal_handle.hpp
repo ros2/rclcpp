@@ -24,32 +24,73 @@
 
 namespace rclcpp_action
 {
-template<typename ACTION>
-class ServerGoalHandle
+
+class ServerGoalHandleBase
 {
 public:
-  virtual ~ServerGoalHandle();
-
   /// Indicate if client has requested this goal be cancelled.
   /// \return true if a cancelation request has been accepted for this goal.
-  virtual bool
-  is_cancel_request() const = 0;
+  bool
+  is_cancel_request() const;
+
+  virtual
+  ~ServerGoalHandleBase();
+
+protected:
+  ServerGoalHandleBase(
+    std::shared_ptr<rcl_action_server_t> rcl_server,
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle
+  )
+  : rcl_server_(rcl_server), rcl_handle_(rcl_handle)
+  {
+  }
+
+  void
+  publish_feedback(std::shared_ptr<void> feedback_msg);
+
+private:
+  std::shared_ptr<rcl_action_server_t> rcl_server_;
+  std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
+};
+
+// Forward declar server
+template<typename ACTION>
+class Server;
+
+template<typename ACTION>
+class ServerGoalHandle : public ServerGoalHandleBase
+{
+public:
+  virtual ~ServerGoalHandle() = default;
 
   /// Send an update about the progress of a goal.
-  virtual void
-  publish_feedback(const typename ACTION::Feedback * feedback_msg) = 0;
+  void
+  publish_feedback(std::shared_ptr<typename ACTION::Feedback> feedback_msg)
+  {
+    publish_feedback(std::static_pointer_cast<void>(feedback_msg));
+  }
 
   // TODO(sloretz) `set_cancelled`, `set_succeeded`, `set_aborted`
 
-  // TODO(sloretz) examples has this attribute as 'goal'
   /// The original request message describing the goal.
-  const typename ACTION::Goal goal_;
+  const std::shared_ptr<const typename ACTION::Goal> goal_;
+
+  /// A unique id for the goal request.
+  const std::array<uint8_t, 16> uuid_;
 
 protected:
-  explicit ServerGoalHandle(const typename ACTION::Goal goal)
-  : goal_(goal) {}
+  ServerGoalHandle(
+    std::shared_ptr<rcl_action_server_t> rcl_server,
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
+    std::array<uint8_t, 16> uuid,
+    std::shared_ptr<const typename ACTION::Goal> goal
+  )
+  : ServerGoalHandleBase(rcl_server, rcl_handle), goal_(goal), uuid_(uuid)
+  {
+  }
+
+  friend Server<ACTION>;
 };
 }  // namespace rclcpp_action
 
-#include <rclcpp_action/server_goal_handle_impl.hpp>  // NOLINT(build/include_order)
 #endif  // RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_

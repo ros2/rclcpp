@@ -27,8 +27,7 @@ namespace rclcpp_action
 class ServerBaseImpl
 {
 public:
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  rcl_action_server_t action_server_;
+  std::shared_ptr<rcl_action_server_t> action_server_;
   rclcpp::Clock::SharedPtr clock_;
 
   size_t num_subscriptions_ = 0;
@@ -52,9 +51,21 @@ ServerBase::ServerBase(
   : pimpl_(new ServerBaseImpl)
 {
   rcl_ret_t ret;
-  pimpl_->node_base_ = node_base;
   pimpl_->clock_ = node_clock->get_clock();
-  pimpl_->action_server_ = rcl_action_get_zero_initialized_server();
+
+  auto deleter = [node_base](rcl_action_server_t * ptr)
+    {
+      if (nullptr != ptr) {
+        rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
+        rcl_ret_t ret = rcl_action_server_fini(ptr, rcl_node);
+        // TODO(sloretz) do something if error occurs during destruction
+        (void)ret;
+      }
+      delete ptr;
+    };
+
+  pimpl_->action_server_.reset(new rcl_action_server_t, deleter);
+  *(pimpl_->action_server_) = rcl_action_get_zero_initialized_server();
 
   // TODO(sloretz) pass options into API
   const rcl_action_server_options_t server_options = rcl_action_server_get_default_options();
@@ -63,14 +74,14 @@ ServerBase::ServerBase(
   rcl_clock_t * rcl_clock = pimpl_->clock_->get_clock_handle();
 
   ret = rcl_action_server_init(
-    &pimpl_->action_server_, rcl_node, rcl_clock, type_support, name.c_str(), &server_options);
+    pimpl_->action_server_.get(), rcl_node, rcl_clock, type_support, name.c_str(), &server_options);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
   ret = rcl_action_server_wait_set_get_num_entities(
-    &pimpl_->action_server_,
+    pimpl_->action_server_.get(),
     &pimpl_->num_subscriptions_,
     &pimpl_->num_guard_conditions_,
     &pimpl_->num_timers_,
@@ -78,7 +89,7 @@ ServerBase::ServerBase(
     &pimpl_->num_services_);
 
   if (RCL_RET_OK != ret) {
-    if (RCL_RET_OK != rcl_action_server_fini(&pimpl_->action_server_, rcl_node)) {
+    if (RCL_RET_OK != rcl_action_server_fini(pimpl_->action_server_.get(), rcl_node)) {
       // Ignoring error during finalization
     }
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -87,10 +98,6 @@ ServerBase::ServerBase(
 
 ServerBase::~ServerBase()
 {
-  rcl_node_t * rcl_node = pimpl_->node_base_->get_rcl_node_handle();
-  rcl_ret_t ret = rcl_action_server_fini(&pimpl_->action_server_, rcl_node);
-  // TODO(sloretz) do something if error occurs during destruction
-  (void)ret;
 }
 
 size_t
@@ -126,7 +133,7 @@ ServerBase::get_number_of_ready_guard_conditions()
 bool
 ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  rcl_ret_t ret = rcl_action_wait_set_add_action_server(wait_set, &pimpl_->action_server_, NULL);
+  rcl_ret_t ret = rcl_action_wait_set_add_action_server(wait_set, pimpl_->action_server_.get(), NULL);
   return RCL_RET_OK == ret;
 }
 
@@ -135,7 +142,7 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
   rcl_ret_t ret = rcl_action_server_wait_set_get_entities_ready(
     wait_set,
-    &pimpl_->action_server_,
+    pimpl_->action_server_.get(),
     &pimpl_->goal_request_ready_,
     &pimpl_->cancel_request_ready_,
     &pimpl_->result_request_ready_);
@@ -159,13 +166,12 @@ ServerBase::execute()
   rcl_ret_t ret;
 
   if (pimpl_->goal_request_ready_) {
-    rcl_action_goal_info_t info;
+    rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
     rmw_request_id_t request_header;
 
-    // TODO this needs to be available here
     std::shared_ptr<void> message = create_goal_request();
     ret = rcl_action_take_goal_request(
-      &pimpl_->action_server_,
+      pimpl_->action_server_.get(),
       &request_header,
       message.get());
 
@@ -176,18 +182,14 @@ ServerBase::execute()
     pimpl_->goal_request_ready_ = false;
     std::array<uint8_t, 16> uuid = get_goal_id_from_goal_request(message.get());
     for (size_t i = 0; i < 16; ++i) {
-      info.uuid[i] = uuid[i];
+      goal_info.uuid[i] = uuid[i];
     }
 
     // Call user's callback, getting the user's response and a ros message to send back
-    auto response_pair = call_handle_goal_callback(info, message);
-
-    // if goal is accepted, create a goal handle, and store it
-
-    // TODO(sloretz) if goal was accepted then does anything need to be stored here?
+    auto response_pair = call_handle_goal_callback(goal_info, message);
 
     ret = rcl_action_send_goal_response(
-      &pimpl_->action_server_,
+      pimpl_->action_server_.get(),
       &request_header,
       response_pair.second.get());
 
@@ -195,8 +197,26 @@ ServerBase::execute()
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
 
-    // TODO(sloretz) if goal was accepted then tell Server<> to begin execution
-    // maybe a base_handle_execute_ that sends a goal id so Server<> can look up the goal handle?
+    // if goal is accepted, create a goal handle, and store it
+    if (GoalResponse::ACCEPT == response_pair.first) {
+      // rcl_action will set time stamp
+      auto deleter = [](rcl_action_goal_handle_t * ptr)
+        {
+          if (nullptr != ptr) {
+            rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
+            (void)fail_ret;  // TODO(sloretz) do something with error during cleanup
+          }
+        };
+      std::shared_ptr<rcl_action_goal_handle_t> handle;
+      handle.reset(rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info), deleter);
+      if (!handle) {
+        throw std::runtime_error("Failed to accept new goal\n");
+      }
+      // TODO publish status since a goal's state has changed
+
+      // Tell user to start executing action
+      call_begin_execution_callback(pimpl_->action_server_, handle, uuid, message);
+    }
   } else if (pimpl_->cancel_request_ready_) {
     // TODO(sloretz) figure out which goals where canceled and notify Server<>
   } else if (pimpl_->result_request_ready_) {

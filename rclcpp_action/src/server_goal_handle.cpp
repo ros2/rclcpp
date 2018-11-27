@@ -13,3 +13,35 @@
 // limitations under the License.
 
 #include <rclcpp_action/server_goal_handle.hpp>
+
+#include <rclcpp/exceptions.hpp>
+
+namespace rclcpp_action
+{
+ServerGoalHandleBase::~ServerGoalHandleBase()
+{
+}
+
+bool
+ServerGoalHandleBase::is_cancel_request() const
+{
+  rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
+  rcl_ret_t ret = rcl_action_goal_handle_get_status(rcl_handle_.get(), &state);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to get goal handle state");
+  }
+  return GOAL_STATE_CANCELING == state;
+}
+
+void
+ServerGoalHandleBase::publish_feedback(std::shared_ptr<void> feedback_msg)
+{
+  (void)feedback_msg;
+  // TODO(sloretz) what is ros_message and how does IntraProcessmessage come into play?
+  // if (RCL_RET_OK != rcl_action_publish_feedback(rcl_server_, ros_message) {
+  //   // TODO(sloretz) more specific exception
+  //   throw std::runtime_error("Failed to publish feedback");
+  // }
+  throw std::runtime_error("Failed to publish feedback");
+}
+}  // namespace rclcpp_action
