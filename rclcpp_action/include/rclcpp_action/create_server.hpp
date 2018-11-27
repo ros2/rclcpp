@@ -16,6 +16,7 @@
 #define RCLCPP_ACTION__CREATE_SERVER_HPP_
 
 #include <rclcpp/node.hpp>
+#include <rclcpp/node_interfaces/node_waitables_interface.hpp>
 
 #include <memory>
 #include <string>
@@ -33,11 +34,17 @@ create_server(
   typename Server<ACTION>::GoalCallback handle_goal,
   typename Server<ACTION>::CancelCallback handle_cancel)
 {
-  return Server<ACTION>::make_shared(
+  auto action_server = Server<ACTION>::make_shared(
     node->get_node_base_interface(),
+    node->get_node_clock_interface(),
     name,
     handle_goal,
     handle_cancel);
+
+  // TODO(sloretz) shared pointer destructor should remove self from node waitables
+  // TODO(sloretz) pass in callback group to this API
+  node->get_node_waitables_interface()->add_waitable(action_server, nullptr);
+  return action_server;
 }
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__CREATE_SERVER_HPP_
