@@ -188,7 +188,7 @@ rclcpp::init_local(
   rcl_ret_t ret = rcl_init(
     argc, argv, init_options.get_rcl_init_options(), rcl_context_wrapper->get_context().get());
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl: ");
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
   }
 }
 
