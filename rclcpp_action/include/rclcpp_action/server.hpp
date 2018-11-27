@@ -198,12 +198,6 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message)
   {
-    // TODO(sloretz) pass in action server, and use this to create ServerGoalHandleImpl instance
-    // Also make action server a shared pointer so it can live longer than this class if handle lives on
-    // (void)rcl_server;
-    // (void)rcl_goal_handle;
-    // (void)uuid;
-    // (void)goal_request_message;
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
     goal_handle.reset(
       new ServerGoalHandle<ACTION>(
