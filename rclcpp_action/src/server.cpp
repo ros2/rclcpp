@@ -163,65 +163,81 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
 void
 ServerBase::execute()
 {
-  rcl_ret_t ret;
-
   if (pimpl_->goal_request_ready_) {
-    rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
-    rmw_request_id_t request_header;
-
-    std::shared_ptr<void> message = create_goal_request();
-    ret = rcl_action_take_goal_request(
-      pimpl_->action_server_.get(),
-      &request_header,
-      message.get());
-
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
-
-    pimpl_->goal_request_ready_ = false;
-    std::array<uint8_t, 16> uuid = get_goal_id_from_goal_request(message.get());
-    for (size_t i = 0; i < 16; ++i) {
-      goal_info.uuid[i] = uuid[i];
-    }
-
-    // Call user's callback, getting the user's response and a ros message to send back
-    auto response_pair = call_handle_goal_callback(goal_info, message);
-
-    ret = rcl_action_send_goal_response(
-      pimpl_->action_server_.get(),
-      &request_header,
-      response_pair.second.get());
-
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
-
-    // if goal is accepted, create a goal handle, and store it
-    if (GoalResponse::ACCEPT == response_pair.first) {
-      // rcl_action will set time stamp
-      auto deleter = [](rcl_action_goal_handle_t * ptr)
-        {
-          if (nullptr != ptr) {
-            rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
-            (void)fail_ret;  // TODO(sloretz) do something with error during cleanup
-          }
-        };
-      std::shared_ptr<rcl_action_goal_handle_t> handle;
-      handle.reset(rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info), deleter);
-      if (!handle) {
-        throw std::runtime_error("Failed to accept new goal\n");
-      }
-      // TODO publish status since a goal's state has changed
-
-      // Tell user to start executing action
-      call_begin_execution_callback(pimpl_->action_server_, handle, uuid, message);
-    }
+    execute_goal_request_received();
   } else if (pimpl_->cancel_request_ready_) {
-    // TODO(sloretz) figure out which goals where canceled and notify Server<>
+    execute_cancel_request_received();
   } else if (pimpl_->result_request_ready_) {
-    // TODO(sloretz) store the result request so it can be responded to later
+    execute_result_request_received();
   } else {
     throw std::runtime_error("Executing action server but nothing is ready");
   }
+}
+
+void
+ServerBase::execute_goal_request_received()
+{
+  rcl_ret_t ret;
+  rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
+  rmw_request_id_t request_header;
+
+  std::shared_ptr<void> message = create_goal_request();
+  ret = rcl_action_take_goal_request(
+    pimpl_->action_server_.get(),
+    &request_header,
+    message.get());
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  pimpl_->goal_request_ready_ = false;
+  std::array<uint8_t, 16> uuid = get_goal_id_from_goal_request(message.get());
+  for (size_t i = 0; i < 16; ++i) {
+    goal_info.uuid[i] = uuid[i];
+  }
+
+  // Call user's callback, getting the user's response and a ros message to send back
+  auto response_pair = call_handle_goal_callback(goal_info, message);
+
+  ret = rcl_action_send_goal_response(
+    pimpl_->action_server_.get(),
+    &request_header,
+    response_pair.second.get());
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  // if goal is accepted, create a goal handle, and store it
+  if (GoalResponse::ACCEPT == response_pair.first) {
+    // rcl_action will set time stamp
+    auto deleter = [](rcl_action_goal_handle_t * ptr)
+      {
+        if (nullptr != ptr) {
+          rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
+          (void)fail_ret;  // TODO(sloretz) do something with error during cleanup
+        }
+      };
+    std::shared_ptr<rcl_action_goal_handle_t> handle;
+    handle.reset(rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info), deleter);
+    if (!handle) {
+      throw std::runtime_error("Failed to accept new goal\n");
+    }
+    // TODO publish status since a goal's state has changed
+
+    // Tell user to start executing action
+    call_begin_execution_callback(pimpl_->action_server_, handle, uuid, message);
+  }
+}
+
+void
+ServerBase::execute_cancel_request_received()
+{
+}
+
+void
+ServerBase::execute_result_request_received()
+{
+  // TODO(sloretz) store the result request so it can be responded to later
 }

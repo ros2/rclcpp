@@ -124,6 +124,15 @@ protected:
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
 
 private:
+  void
+  execute_goal_request_received();
+
+  void
+  execute_cancel_request_received();
+
+  void
+  execute_result_request_received();
+
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
 
@@ -138,7 +147,7 @@ public:
 
   using GoalCallback = std::function<GoalResponse (
     rcl_action_goal_info_t &, std::shared_ptr<typename ACTION::Goal>)>;
-  using CancelCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using CancelCallback = std::function<CancelResponse (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
   using ExecuteCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   // TODO(sloretz) accept clock instance
