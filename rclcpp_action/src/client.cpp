@@ -60,7 +60,17 @@ public:
       rclcpp::exceptions::throw_from_rcl_error(
         ret, "could not create action client");
     }
-
+    ret = rcl_action_client_wait_set_get_num_entities(
+        client_handle_.get()
+        &num_subscriptions,
+        &num_guard_conditions,
+        &num_timers,
+        &num_clients,
+        &num_services);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "could not retrieve action client details");
+    }
   }
 
   void
@@ -88,12 +98,10 @@ public:
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send goal request");
     }
-    if (pending_goal_responses_.count(sequence_number) != 0) {
-      
-    }
+    assert(pending_goal_responses_.count(sequence_number) != 0);
     pending_goal_responses_[sequence_number] = callback;
   }
-  
+
   void
   send_result_request(std::shared_ptr<void> request, ResponseCallback callback)
   {
@@ -104,9 +112,7 @@ public:
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send goal request");
     }
-    if (pending_result_responses_.count(sequence_number) != 0) {
-      
-    }
+    assert(pending_result_responses_.count(sequence_number) != 0);
     pending_result_responses_[sequence_number] = callback;
   }
 
@@ -147,6 +153,17 @@ public:
     return client_handle_;
   }
 
+    // rcl interface entities
+  site_t num_subscriptions_,
+         num_guard_conditions_,
+         num_timers_,
+         num_clients_,
+         num_services_;
+  bool is_feedback_ready_,
+    is_status_ready_,
+    is_goal_response_ready_,
+    is_cancel_response_ready_,
+    is_result_response_ready_;
 private:
   std::map<int64_t, ResponseCallback> pending_goal_responses_;
   std::map<int64_t, ResponseCallback> pending_result_responses_;
@@ -166,7 +183,6 @@ ClientBase::ClientBase(
       node_base, action_name,
       type_support, client_options))
 {
-  set_rcl_entities();
 }
 
 bool
@@ -181,80 +197,58 @@ ClientBase::~ClientBase()
   
 }
 
-void
-ClientBase::set_rcl_entities()
-{
-  rcl_ret_t ret = rcl_action_client_wait_set_get_num_entities(
-    num_subscriptions_.
-    num_guard_conditions_,
-    num_timers_,
-    num_clients_,
-    num_services_);
-
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set action client rcl entities");
-  }
-}
-
 size_t
 ClientBase::get_number_of_ready_subscriptions() override
 {
-  return num_subscriptions_;
+  return pimpl_->num_subscriptions;
 }
 
 size_t
 ClientBase::get_number_of_ready_guard_conditions() override
 {
-  return num_guard_conditions_;
+  return pimpl_->num_guard_conditions;
 }
 
 size_t
 ClientBase::get_number_of_ready_timers() override
 {
-  return num_timers_;
+  return pimpl_->num_timers;
 }
 
 size_t
 ClientBase::get_number_of_ready_clients() override
 {
-  return num_clients_;
+  return pimpl_->num_clients;
 }
 
 size_t
 ClientBase::get_number_of_ready_services() override
 {
-  return num_services_;
+  return pimpl_->num_services;
 }
 
 bool
 ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set) override
 {
   rcl_ret_t ret = rcl_action_wait_set_add_action_client(
-    wait_set,
-    pimpl_->get_action_client().get());
-
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to add action client to wait set");
-  }
+    wait_set, pimpl_->get_action_client().get());
+  return (RCL_RET_OK != ret);
 }
 
 bool
 ClientBase::is_ready(rcl_wait_set_t * wait_set) override
 {
-
   rcl_ret_t ret = rcl_action_client_wait_set_get_entities_ready(
-    wait_set,
-    pimpl_->get_action_client().get(),
+    wait_set, pimpl_->get_action_client().get(),
     &is_feedback_ready_,
     &is_status_ready_,
     &is_goal_response_ready_,
     &is_cancel_response_ready_,
     &is_result_response_ready_);
-
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed get ready entities in action client");
+    rclcpp::exceptions::throw_from_rcl_error(
+      ret, "failed to check for ready entities");
   }
-
   return is_feedback_ready_ ||
          is_status_ready_ ||
          is_goal_response_ready_ ||
@@ -265,27 +259,63 @@ ClientBase::is_ready(rcl_wait_set_t * wait_set) override
 void
 ClientBase::execute() override
 {
-  void * message = nullptr;
-  rmw_request_id_t * header = nullptr;
-  if(is_feedback_ready_)
+  std::shared_ptr<void> client_handle = pimpl_->get_client_handle();
+  if (pimpl_->is_feedback_ready)
   {
-    rcl_action_take_feedback(rcl_action_client, message);
+    std::shared_ptr<void> feedback_message = this->create_feedback_message();
+    rcl_ret_t ret = rcl_action_take_feedback(client_handle.get(), feedback_message.get());
+    if (RCL_RET_OK == ret) {
+    } else {
+      this->handle_feedback(feedback_message);
+      is_feedback_ready = false;
+    }
   }
-  if(is_status_ready_)
+  if (is_status_ready_)
   {
-    rcl_action_take_status(rcl_action_client, message);
+    std::shared_ptr<void> status_message = this->create_status_message();
+    rcl_ret_t ret = rcl_action_take_status(client_handle.get(), status_message.get());
+    if (RCL_RET_OK == ret) {
+      is_status_ready = false;
+      this->handle_status(status_message);
+    }
   }
-  if(is_goal_response_ready_)
+  if (is_goal_response_ready_)
   {
-    rcl_action_take_goal_response(rcl_action_client, header, message);
+    std::shared_ptr<void> goal_response = this->create_goal_response();
+    std::shared_ptr<rmw_request_id_t> response_header = this->create_response_header();
+    rcl_ret_t ret = rcl_action_take_goal_response(
+      client_handle.get(), response_header.get(), goal_response.get());
+
   }
-  if(is_cancel_response_ready_)
+  if (is_cancel_response_ready_)
   {
-    rcl_action_take_cancel_response(rcl_action_client, header, message);
+    std::shared_ptr<void> cancel_response = this->create_cancel_response();
+    std::shared_ptr<rmw_request_id_t> response_header = this->create_response_header();
+    rcl_ret_t ret = rcl_action_take_cancel_response(
+      client_handle.get(), response_header.get(), cancel_response.get());
+    if (RCL_RET_OK == ret) {
+      is_cancel_response_ready = false;
+      this->handle_cancel_response(response_header, cancel_response);
+    } else {
+      RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "take goal response failed for client of action '%s': %s",
+          pimpl_->get_action_name(), rcl_get_error_string().str);
+      rcl_reset_error();
+    }
   }
-  if(is_result_response_ready_)
+  if (is_result_response_ready_)
   {
-    rcl_action_take_result_response(rcl_action_client, header, message);
+    std::shared_ptr<void> result_response = this->create_result_response();
+    std::shared_ptr<rmw_request_id_t> response_header = this->create_response_header();
+    rcl_ret_t ret = rcl_action_take_result_response(
+      client_handle.get(), response_header.get(), result_response.get());
+    if (RCL_RET_OK == ret) {
+      is_result_response_ready = false;
+      this->handle_result_response(response_header, result_response);
+    } else {
+
+    }
   }
 }
 

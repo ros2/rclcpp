@@ -50,25 +50,9 @@ public:
   RCLCPP_ACTION_PUBLIC
   virtual ~ClientBase();
 
-  RCLCPP_ACTION_PUBLIC
-  void handle_goal_response(
-    std::shared_ptr<rmw_request_id_t> response_header,
-    std::shared_ptr<void> response);
-
-  RCLCPP_ACTION_PUBLIC
-  void handle_result_response(
-    std::shared_ptr<rmw_request_id_t> response_header,
-    std::shared_ptr<void> response);
-
-  RCLCPP_ACTION_PUBLIC
-  void handle_cancel_response(
-    std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> response);
-
 protected:
   RCLCPP_ACTION_PUBLIC  
-  void send_goal_request(
-    std::shared_ptr<void> request,
+  void send_goal_request(std::shared_ptr<void> request,
     ResponseCallback callback);
 
   RCLCPP_ACTION_PUBLIC
@@ -82,20 +66,33 @@ protected:
     ResponseCallback callback);
 
 private:
-  void set_rcl_entities();
+  std::shared_ptr<void> create_response_header();
 
-  // rcl interface entities
-  site_t num_subscriptions_,
-         num_guard_conditions_,
-         num_timers_,
-         num_clients_,
-         num_services_;
+  virtual std::shared_ptr<void> create_goal_response() = 0;
 
-  bool is_feedback_ready_,
-       is_status_ready_,
-       is_goal_response_ready_,
-       is_cancel_response_ready_,
-       is_result_response_ready_;
+  void handle_goal_response(
+    std::shared_ptr<rmw_request_id_t> response_header,
+    std::shared_ptr<void> response);
+
+  virtual std::shared_ptr<void> create_result_response() = 0;
+
+  void handle_result_response(
+    std::shared_ptr<rmw_request_id_t> response_header,
+    std::shared_ptr<void> response);
+
+  virtual std::shared_ptr<void> create_cancel_response() = 0;
+
+  void handle_cancel_response(
+    std::shared_ptr<rmw_request_id_t> request_header,
+    std::shared_ptr<void> response);
+
+  virtual std::shared_ptr<void> create_feedback_message() = 0;
+
+  virtual void handle_feedback_message(std::shared_ptr<void> message) = 0;
+
+  virtual std::shared_ptr<void> create_status_message() = 0;
+
+  virtual void handle_status_message(std::shared_ptr<void> message) = 0;
 
   std::unique_ptr<ClientBaseImpl> pimpl_;
 };
@@ -111,11 +108,10 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Client)
 
   using Goal = typename ACTION::Goal;
-  using Feedback = typename ACTION::Feedback;
   using Result = typename ACTION::Result;
   using GoalHandle = ClientGoalHandle<ACTION>;
   using FeedbackCallback = std::function<void (
-      GoalHandle::SharedPtr, const Feedback &)>;
+      GoalHandle::SharedPtr, const typename ACTION::Feedback &)>;
   using CancelRequest = typename ACTION::CancelGoalService::Request;
   using CancelResponse = typename ACTION::CancelGoalService::Response;
   
@@ -130,8 +126,27 @@ public:
   {
   }
 
+  std::shared_ptr<void> create_goal_response() override
+  {
+    using GoalResponse = typename ACTION::GoalService::Response;
+    return std::shared_ptr<void>(new GoalResponse());
+  }
+
+  std::shared_ptr<void> create_result_response() override
+  {
+    using GoalResultResponse = typename ACTION::GoalResultService::Response;
+    return std::shared_ptr<void>(new GoalResultResponse());
+  }
+
+  std::shared_ptr<void> create_feedback_message() override
+  {
+    using Feedback = typename ACTION::Feedback;
+    return std::shared_ptr<void>(new Feedback());
+  }
+
   RCLCPP_ACTION_PUBLIC
-  void handle_feedback(std::shared_ptr<void> message) {
+  void handle_feedback_message(std::shared_ptr<void> message) override
+  {
     using Feedback = typename ACTION::Feedback;
     Feedback::SharedPtr feedback = std::static_pointer_cast<Feedback>(message);
     std::unique_lock<std::mutex> lock(goal_handles_mutex_);
@@ -151,7 +166,14 @@ public:
   }
 
   RCLCPP_ACTION_PUBLIC
-  void handle_status(std::shared_ptr<void> message)
+  std::shared_ptr<void> create_status_message() override
+  {
+    using GoalStatusArray = typename ACTION::GoalStatusArray;
+    return std::shared_ptr<void>(new GoalStatusArray());
+  }
+
+  RCLCPP_ACTION_PUBLIC
+  void handle_status_message(std::shared_ptr<void> message) override
   {
     using GoalStatusArray = typename ACTION::GoalStatusArray;
     GoalStatusArray::SharedPtr status_array =
