@@ -153,12 +153,14 @@ public:
     return client_handle_;
   }
 
-    // rcl interface entities
+  // rcl interface entities
   site_t num_subscriptions_,
-         num_guard_conditions_,
-         num_timers_,
-         num_clients_,
-         num_services_;
+    num_guard_conditions_,
+    num_timers_,
+    num_clients_,
+    num_services_;
+
+  // rcl interface flags
   bool is_feedback_ready_,
     is_status_ready_,
     is_goal_response_ready_,
@@ -200,31 +202,31 @@ ClientBase::~ClientBase()
 size_t
 ClientBase::get_number_of_ready_subscriptions() override
 {
-  return pimpl_->num_subscriptions;
+  return pimpl_->num_subscriptions_;
 }
 
 size_t
 ClientBase::get_number_of_ready_guard_conditions() override
 {
-  return pimpl_->num_guard_conditions;
+  return pimpl_->num_guard_conditions_;
 }
 
 size_t
 ClientBase::get_number_of_ready_timers() override
 {
-  return pimpl_->num_timers;
+  return pimpl_->num_timers_;
 }
 
 size_t
 ClientBase::get_number_of_ready_clients() override
 {
-  return pimpl_->num_clients;
+  return pimpl_->num_clients_;
 }
 
 size_t
 ClientBase::get_number_of_ready_services() override
 {
-  return pimpl_->num_services;
+  return pimpl_->num_services_;
 }
 
 bool
