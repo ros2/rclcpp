@@ -27,6 +27,7 @@ namespace rclcpp_action
 class ServerBaseImpl
 {
 public:
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rcl_action_server_t action_server_;
   rclcpp::Clock::SharedPtr clock_;
 
@@ -51,7 +52,7 @@ ServerBase::ServerBase(
   : pimpl_(new ServerBaseImpl)
 {
   rcl_ret_t ret;
-  // Create action server
+  pimpl_->node_base_ = node_base;
   pimpl_->clock_ = node_clock->get_clock();
   pimpl_->action_server_ = rcl_action_get_zero_initialized_server();
 
@@ -86,8 +87,11 @@ ServerBase::ServerBase(
 
 ServerBase::~ServerBase()
 {
+  rcl_node_t * rcl_node = pimpl_->node_base_->get_rcl_node_handle();
+  rcl_ret_t ret = rcl_action_server_fini(&pimpl_->action_server_, rcl_node);
+  // TODO(sloretz) do something if error occurs during destruction
+  (void)ret;
 }
-
 
 size_t
 ServerBase::get_number_of_ready_subscriptions()
