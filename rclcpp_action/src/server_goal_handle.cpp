@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rcl_action/action_server.h>
+#include <rcl_action/goal_handle.h>
+
 #include <rclcpp_action/server_goal_handle.hpp>
 
 #include <rclcpp/exceptions.hpp>
@@ -70,14 +73,11 @@ ServerGoalHandleBase::get_rcl_handle() const
 }
 
 void
-ServerGoalHandleBase::publish_feedback(std::shared_ptr<void> feedback_msg)
+ServerGoalHandleBase::_publish_feedback(std::shared_ptr<void> feedback_msg)
 {
-  (void)feedback_msg;
-  // TODO(sloretz) what is ros_message and how does IntraProcessmessage come into play?
-  // if (RCL_RET_OK != rcl_action_publish_feedback(rcl_server_, ros_message) {
-  //   // TODO(sloretz) more specific exception
-  //   throw std::runtime_error("Failed to publish feedback");
-  // }
-  throw std::runtime_error("Failed to publish feedback");
+  rcl_ret_t ret = rcl_action_publish_feedback(rcl_server_.get(), feedback_msg.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to publish feedback");
+  }
 }
 }  // namespace rclcpp_action

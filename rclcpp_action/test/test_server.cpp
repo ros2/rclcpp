@@ -486,4 +486,61 @@ TEST_F(TestServer, publish_status_aborted)
   EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
 }
 
+TEST_F(TestServer, publish_feedback)
+{
+  auto node = std::make_shared<rclcpp::Node>("pub_feedback", "/rclcpp_action/pub_feedback");
+  const std::array<uint8_t, 16> uuid = {1, 20, 30, 4, 5, 6, 70, 8, 9, 1, 11, 120, 13, 14, 15, 160};
+
+  auto handle_goal = [](
+      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::REJECT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_execute = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_execute);
+  (void)as;
+
+  // Subscribe to feedback messages
+  using FeedbackT = test_msgs::action::Fibonacci::Feedback;
+  std::vector<FeedbackT::SharedPtr> received_msgs;
+  auto subscriber = node->create_subscription<FeedbackT>(
+    "fibonacci/_action/feedback", [&received_msgs](FeedbackT::SharedPtr msg)
+      {
+        received_msgs.push_back(msg);
+      });
+
+  send_goal_request(node, uuid);
+
+  auto sent_message = std::make_shared<FeedbackT>();
+  sent_message->sequence = {1, 1, 2, 3, 5};
+  received_handle->publish_feedback(sent_message);
+
+  // 10 seconds
+  const size_t max_tries = 10 * 1000 / 100;
+  for (size_t retry = 0; retry < max_tries && received_msgs.size() < 1u; ++retry) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    rclcpp::spin_some(node);
+  }
+
+  ASSERT_EQ(1u, received_msgs.size());
+  auto & msg = received_msgs.back();
+  ASSERT_EQ(sent_message->sequence, msg->sequence);
+}
+
 // TODO request result service

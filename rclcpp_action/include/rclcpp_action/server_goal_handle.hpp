@@ -15,6 +15,7 @@
 #ifndef RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_
 #define RCLCPP_ACTION__SERVER_GOAL_HANDLE_HPP_
 
+#include <rcl_action/types.h>
 #include <rcl_action/goal_handle.h>
 
 #include <functional>
@@ -62,7 +63,7 @@ protected:
   }
 
   void
-  publish_feedback(std::shared_ptr<void> feedback_msg);
+  _publish_feedback(std::shared_ptr<void> feedback_msg);
 
 private:
   std::shared_ptr<rcl_action_server_t> rcl_server_;
@@ -84,7 +85,7 @@ public:
   void
   publish_feedback(std::shared_ptr<typename ACTION::Feedback> feedback_msg)
   {
-    publish_feedback(std::static_pointer_cast<void>(feedback_msg));
+    _publish_feedback(std::static_pointer_cast<void>(feedback_msg));
   }
 
   /// The original request message describing the goal.
