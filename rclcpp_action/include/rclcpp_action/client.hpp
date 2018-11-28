@@ -127,7 +127,7 @@ private:
     const rmw_request_id_t & response_header,
     std::shared_ptr<void> result_response);
 
-  virtual std::shared_ptr<void> create_cancel_response() const;
+  virtual std::shared_ptr<void> create_cancel_response() const = 0;
 
   virtual void handle_cancel_response(
     const rmw_request_id_t & response_header,
@@ -137,7 +137,7 @@ private:
 
   virtual void handle_feedback_message(std::shared_ptr<void> message) = 0;
 
-  virtual std::shared_ptr<void> create_status_message() const;
+  virtual std::shared_ptr<void> create_status_message() const = 0;
 
   virtual void handle_status_message(std::shared_ptr<void> message) = 0;
 
@@ -321,17 +321,21 @@ private:
 
   std::shared_ptr<void> create_feedback_message() const override
   {
-    using FeedbackMessage = typename ACTION::FeedbackMessage;
-    return std::shared_ptr<void>(new FeedbackMessage());
+    // using FeedbackMessage = typename ACTION::FeedbackMessage;
+    // return std::shared_ptr<void>(new FeedbackMessage());
+    return std::shared_ptr<void>(new Feedback());
   }
 
   void handle_feedback_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    using FeedbackMessage = typename ACTION::FeedbackMessage;
-    typename FeedbackMessage::SharedPtr feedback_message =
-      std::static_pointer_cast<FeedbackMessage>(message);
-    const GoalID & goal_id = feedback_message->goal_id;
+    // using FeedbackMessage = typename ACTION::FeedbackMessage;
+    // typename FeedbackMessage::SharedPtr feedback_message =
+    //   std::static_pointer_cast<FeedbackMessage>(message);
+    typename Feedback::SharedPtr feedback_message =
+      std::static_pointer_cast<Feedback>(message);
+    // const GoalID & goal_id = feedback_message->goal_id;
+    const GoalID & goal_id = feedback_message->uuid;
     if (goal_handles_.count(goal_id) == 0) {
       RCLCPP_DEBUG(
         this->get_logger(),
@@ -346,7 +350,8 @@ private:
       return;
     }
     const FeedbackCallback & callback = goal_handle->get_feedback_callback();
-    callback(goal_handle, feedback_message->feedback);
+    // callback(goal_handle, feedback_message->feedback);
+    callback(goal_handle, *feedback_message);
   }
 
   std::shared_ptr<void> create_status_message() const override

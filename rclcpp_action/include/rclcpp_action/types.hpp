@@ -38,7 +38,7 @@ template<>
 struct less<rclcpp_action::GoalID> {
   bool operator()(
     const rclcpp_action::GoalID & id0,
-    const rclcpp_action::GoalID & id1) {
+    const rclcpp_action::GoalID & id1) const {
     // return (id0.uuid < id1.uuid);
     return id0 < id1;
   }
