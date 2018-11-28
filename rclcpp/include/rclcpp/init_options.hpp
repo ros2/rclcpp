@@ -32,13 +32,11 @@ public:
 
   /// Constructor which allows you to specify the allocator used within the init options.
   RCLCPP_PUBLIC
-  explicit
-  InitOptions(rcl_allocator_t allocator = rcl_get_default_allocator());
+  explicit InitOptions(rcl_allocator_t allocator = rcl_get_default_allocator());
 
   /// Constructor which is initialized by an existing init_options.
   RCLCPP_PUBLIC
-  explicit
-  InitOptions(const rcl_init_options_t & init_options);
+  explicit InitOptions(const rcl_init_options_t & init_options);
 
   /// Copy constructor.
   RCLCPP_PUBLIC

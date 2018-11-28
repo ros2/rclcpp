@@ -63,8 +63,7 @@ class GraphListener : public std::enable_shared_from_this<GraphListener>
 {
 public:
   RCLCPP_PUBLIC
-  explicit
-  GraphListener(std::shared_ptr<rclcpp::Context> parent_context);
+  explicit GraphListener(std::shared_ptr<rclcpp::Context> parent_context);
 
   RCLCPP_PUBLIC
   virtual ~GraphListener();

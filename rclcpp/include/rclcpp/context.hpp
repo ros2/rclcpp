@@ -18,6 +18,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <typeindex>
 #include <typeinfo>
 #include <unordered_map>
