@@ -205,6 +205,16 @@ public:
       ipm.publisher_id = intra_process_publisher_id_;
       ipm.message_sequence = message_seq;
       auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
+      if (RCL_RET_PUBLISHER_INVALID == status) {
+        rcl_reset_error();  // next call will reset error message if not context
+        if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
+          rcl_context_t * context = rcl_publisher_get_context(&intra_process_publisher_handle_);
+          if (nullptr != context && !rcl_context_is_valid(context)) {
+            // publisher is invalid due to context being shutdown
+            return;
+          }
+        }
+      }
       if (RCL_RET_OK != status) {
         rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
       }
@@ -305,6 +315,16 @@ protected:
   do_inter_process_publish(const MessageT * msg)
   {
     auto status = rcl_publish(&publisher_handle_, msg);
+    if (RCL_RET_PUBLISHER_INVALID == status) {
+      rcl_reset_error();  // next call will reset error message if not context
+      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
+        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
+        if (nullptr != context && !rcl_context_is_valid(context)) {
+          // publisher is invalid due to context being shutdown
+          return;
+        }
+      }
+    }
     if (RCL_RET_OK != status) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
     }
