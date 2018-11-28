@@ -336,7 +336,7 @@ NodeGraph::wait_for_graph_change(
       throw EventNotRegisteredError();
     }
   }
-  auto pred = [&event, context=node_base_->get_context()]() {
+  auto pred = [&event, context = node_base_->get_context()]() {
       return event->check() || !rclcpp::ok(context);
     };
   std::unique_lock<std::mutex> graph_lock(graph_mutex_);

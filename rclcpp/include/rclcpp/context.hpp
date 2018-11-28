@@ -15,7 +15,7 @@
 #ifndef RCLCPP__CONTEXT_HPP_
 #define RCLCPP__CONTEXT_HPP_
 
-#include <iostream>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <typeindex>
@@ -162,7 +162,7 @@ public:
   bool
   shutdown(const std::string & reason, bool notify_all = true);
 
-  using OnShutdownCallback = std::function<void(rclcpp::Context::SharedPtr)>;
+  using OnShutdownCallback = std::function<void (rclcpp::Context::SharedPtr)>;
 
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**

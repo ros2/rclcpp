@@ -30,7 +30,8 @@ static std::vector<std::weak_ptr<rclcpp::Context>> g_contexts;
 
 using rclcpp::Context;
 
-Context::Context() : rcl_context_(nullptr), shutdown_reason_("") {}
+Context::Context()
+: rcl_context_(nullptr), shutdown_reason_("") {}
 
 Context::~Context()
 {
@@ -153,7 +154,7 @@ Context::shutdown(const std::string & reason, bool notify_all)
   // remove self from the global contexts
   std::lock_guard<std::mutex> context_lock(g_contexts_mutex);
   auto shared_this = this->shared_from_this();
-  for (auto it = g_contexts.begin(); it != g_contexts.end();) {
+  for (auto it = g_contexts.begin(); it != g_contexts.end(); ) {
     auto shared_context = it->lock();
     if (shared_context == shared_this) {
       it = g_contexts.erase(it);
