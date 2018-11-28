@@ -202,11 +202,8 @@ protected:
     GoalResponse user_response = handle_goal_(
       info, std::static_pointer_cast<typename ACTION::Goal>(message));
 
-    // TODO(sloretz) if goal is accepted then create a goal handle
-
     auto ros_response = std::make_shared<typename ACTION::GoalRequestService::Response>();
     ros_response->accepted = GoalResponse::ACCEPT == user_response;
-    // TODO(sloretz) set timestamp in response and give that to ServerBase too
     return std::make_pair(user_response, ros_response);
   }
 
