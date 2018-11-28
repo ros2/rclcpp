@@ -18,11 +18,13 @@
 #include <rcl_action/action_client.h>
 
 #include <functional>
+#include <future>
 #include <memory>
 #include <mutex>
 
-#include "action_msgs/msg/goal_status.hpp"
-#include "action_msgs/msg/goal_info.hpp"
+#include <rclcpp/macros.h>
+
+#include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
@@ -44,6 +46,8 @@ public:
 
   virtual ~ClientGoalHandle();
 
+  const GoalID & get_goal_id() const;
+
   std::shared_future<Result>
   async_result();
 
@@ -60,7 +64,7 @@ public:
   is_result_aware();
 
 private:
-  // The templated Server creates goal handles
+  // The templated Client creates goal handles
   friend Client<ACTION>;
 
   ClientGoalHandle(const GoalInfo & info, FeedbackCallback callback);
@@ -81,9 +85,11 @@ private:
   invalidate();
 
   GoalInfo info_;
+
   bool is_result_aware_{false};
   std::promise<Result> result_promise_;
   std::shared_future<Result> result_future_;
+
   FeedbackCallback feedback_callback_{nullptr};
   int8_t status_{GoalStatus::STATE_ACCEPTED};
 

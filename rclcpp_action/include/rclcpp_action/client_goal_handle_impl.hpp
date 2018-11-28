@@ -17,8 +17,11 @@
 
 #include <rcl_action/types.h>
 
+#include "rclcpp_action/exceptions.hpp"
+
 namespace rclcpp_action
 {
+
 template<typename ACTION>
 ClientGoalHandle<ACTION>::ClientGoalHandle(
   const GoalInfo & info, FeedbackCallback callback)
@@ -29,6 +32,13 @@ ClientGoalHandle<ACTION>::ClientGoalHandle(
 template<typename ACTION>
 ClientGoalHandle<ACTION>::~ClientGoalHandle()
 {
+}
+
+template<typename ACTION>
+const GoalID &
+ClientGoalHandle<ACTION>::get_goal_id() const
+{
+  return info_.goal_id;
 }
 
 template<typename ACTION>

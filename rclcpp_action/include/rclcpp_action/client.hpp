@@ -15,17 +15,23 @@
 #ifndef RCLCPP_ACTION__CLIENT_HPP_
 #define RCLCPP_ACTION__CLIENT_HPP_
 
-
-#include <rosidl_generator_c/action_type_support_struct.h>
-#include <rclcpp/node_interfaces/node_base_interface.hpp>
-#include <rclcpp/time.hpp>
-#include <rosidl_typesupport_cpp/action_type_support.hpp>
-
+#include <algorithm>
 #include <functional>
+#include <future>
 #include <memory>
+#include <mutex>
 #include <string>
 
+#include <rclcpp/macros.h>
+#include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/time.hpp>
+#include <rclcpp/waitable.hpp>
+
+#include <rosidl_generator_c/action_type_support_struct.h>
+#include <rosidl_typesupport_cpp/action_type_support.hpp>
+
 #include "rclcpp_action/client_goal_handle.hpp"
+#include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
 
@@ -198,7 +204,7 @@ public:
             return;
           }
         }
-        this->goal_handles_[goal_handle->goal_id()] = goal_handle;
+        this->goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         promise->set_value(goal_handle);
       });
     return future;
@@ -208,7 +214,7 @@ public:
   std::shared_future<Result>
   async_get_result(GoalHandle::SharedPtr goal_handle) {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
-    if (goal_handles_.count(goal_handle->goal_id()) == 0) {
+    if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError(goal_handle);
     }
     if (!goal_handle->is_result_aware()) {
@@ -221,14 +227,14 @@ public:
   std::shared_future<bool>
   async_cancel_goal(GoalHandle::SharedPtr goal_handle) {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
-    if (goal_handles_.count(goal_handle->goal_id()) == 0) {
+    if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError(goal_handle);
     }
     std::promise<bool> promise;
     std::shared_future<bool> future(promise.get_future());
     using CancelGoalRequest = typename ACTION::CancelGoalService::Request;
     auto cancel_goal_request = std::make_shared<CancelGoalRequest>();
-    cancel_goal_request->goal_info.goal_id = goal_handle->goal_id();
+    cancel_goal_request->goal_info.goal_id = goal_handle->get_goal_id();
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_goal_request),
       [goal_handle, promise{std::move(promise)}] (std::shared_ptr<void> response)
@@ -238,7 +244,7 @@ public:
         bool goal_canceled = false;
         if (!cancel_response->goals_canceling.empty()) {
           const GoalInfo & canceled_goal_info = cancel_response->goals_canceling[0];
-          if (canceled_goal_info.goal_id == goal_handle->goal_id()) {
+          if (canceled_goal_info.goal_id == goal_handle->get_goal_id()) {
             goal_canceled = canceled_goal_info.accepted;
           }
         }
@@ -340,10 +346,12 @@ private:
         continue;
       }
       GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id];
-      goal_handle->set_status(status);
+      goal_handle->set_status(status.status);
+      const int8_t goal_status = goal_handle->get_status();
       if (
-        goal_handle->get_status() == STATUS_CANCELED ||
-        goal_handle->get_status() == STATUS_ABORTED
+        goal_status == GoalStatus::STATUS_SUCCEDED ||
+        goal_status == GoalStatus::STATUS_CANCELED ||
+        goal_status == GoalStatus::STATUS_ABORTED
       ) {
         goal_handles_.erase(goal_id);
       }
@@ -353,7 +361,7 @@ private:
   void make_result_aware(GoalHandle::SharedPtr goal_handle) {
     using GoalResultRequest = typename ACTION::GoalResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
-    goal_result_request.goal_id = goal_handle->goal_id();
+    goal_result_request.goal_id = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
       [goal_handle] (std::shared_ptr<void> response)

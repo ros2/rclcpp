@@ -14,6 +14,8 @@
 
 #include <rclcpp_action/client.hpp>
 
+#include <algorithms>
+#include <random>
 #include <string>
 
 #include <rcl_action/client.h>
@@ -191,7 +193,7 @@ ClientBase::handle_goal_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::lock_guard<std::mutex> lock(pimpl_->goal_requests_mutex);
+  std::lock_guard<std::mutex> guard(pimpl_->goal_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_goal_responses.count(sequence_number) == 0) {
     RCLCPP_ERROR(pimpl_->logger, "unknown goal response, ignoring...");
@@ -204,7 +206,7 @@ ClientBase::handle_goal_response(
 void
 ClientBase::send_goal_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
-  std::unique_lock<std::mutex> lock(pimpl_->goal_requests_mutex);
+  std::unique_lock<std::mutex> guard(pimpl_->goal_requests_mutex);
   int64_t sequence_number;
   rcl_ret_t ret = rcl_action_send_goal_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);
@@ -220,7 +222,7 @@ ClientBase::handle_result_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::lock_guard<std::mutex> lock(pimpl_->result_requests_mutex);
+  std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_result_responses.count(sequence_number) == 0) {
     RCLCPP_ERROR(pimpl_->logger, "unknown result response, ignoring...");
@@ -233,7 +235,7 @@ ClientBase::handle_result_response(
 void
 ClientBase::send_result_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
-  std::lock_guard<std::mutex> lock(pimpl_->result_requests_mutex);
+  std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
   int64_t sequence_number;
   rcl_ret_t ret = rcl_action_send_result_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);
@@ -249,7 +251,7 @@ ClientBase::handle_cancel_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::lock_guard<std::mutex> lock(pimpl_->goal_cancellations_mutex);
+  std::lock_guard<std::mutex> guard(pimpl_->goal_cancellations_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_cancel_responses.count(sequence_number) == 0) {
     RCLCPP_ERROR(pimpl_->logger, "unknown cancel response, ignoring...");
@@ -262,7 +264,7 @@ ClientBase::handle_cancel_response(
 void
 ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
-  std::lock_guard<std::mutex> lock(pimpl_->goal_cancellations_mutex);
+  std::lock_guard<std::mutex> guard(pimpl_->goal_cancellations_mutex);
   int64_t sequence_number;
   rcl_ret_t ret = rcl_action_send_cancel_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);

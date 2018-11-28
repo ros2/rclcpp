@@ -17,12 +17,17 @@
 
 #include <functional>
 
+#include <action_msgs/msg/goal_status.hpp>
+#include <action_msgs/msg/goal_info.hpp>
+
 #include <rcl_action/types.h>
+
 
 namespace rclcpp_action {
 
 using GoalID = unique_identifier_msgs::msg::UUID;
 using GoalStatus = action_msgs::msg::GoalStatus;
+using GoalInfo = action_msgs::msg::GoalInfo;
 
 }  // namespace
 
@@ -33,7 +38,7 @@ struct less<rclcpp_action::GoalID> {
   bool operator()(
     const rclcpp_action::GoalID & id0,
     const rclcpp_action::GoalID & id1) {
-    return id0.uuid < id1.uuid;
+    return (id0.uuid < id1.uuid);
   }
 };
 
