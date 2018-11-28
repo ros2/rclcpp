@@ -41,7 +41,8 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
-    rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services);
+    rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging);
 
   RCLCPP_PUBLIC
   virtual
@@ -60,6 +61,7 @@ private:
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
 
   rclcpp::Clock::SharedPtr ros_clock_;
   rclcpp::TimeSource time_source_;

@@ -194,9 +194,7 @@ shutdown(
  */
 RCLCPP_PUBLIC
 void
-on_shutdown(
-  std::function<void(rclcpp::Context::SharedPtr)> callback,
-  rclcpp::Context::SharedPtr context = nullptr);
+on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context = nullptr);
 
 /// Get a handle to the rmw guard condition that manages the signal handler.
 /**

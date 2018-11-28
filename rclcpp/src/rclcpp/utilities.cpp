@@ -312,10 +312,12 @@ rclcpp::shutdown(rclcpp::Context::SharedPtr context, const std::string & reason)
 }
 
 void
-rclcpp::on_shutdown(
-  std::function<void(rclcpp::Context::SharedPtr)> callback,
-  rclcpp::Context::SharedPtr context)
+rclcpp::on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context)
 {
+  using rclcpp::contexts::default_context::get_global_default_context;
+  if (nullptr == context) {
+    context = get_global_default_context();
+  }
   context->on_shutdown(callback);
 }
 

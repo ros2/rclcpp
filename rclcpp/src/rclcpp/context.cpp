@@ -145,7 +145,7 @@ Context::shutdown(const std::string & reason, bool notify_all)
   shutdown_reason_ = reason;
   // call each shutdown callback
   for (const auto & callback : on_shutdown_callbacks_) {
-    callback(this->shared_from_this());
+    callback();
   }
   // notify all blocking calls, if asked
   if (notify_all) {
@@ -153,10 +153,9 @@ Context::shutdown(const std::string & reason, bool notify_all)
   }
   // remove self from the global contexts
   std::lock_guard<std::mutex> context_lock(g_contexts_mutex);
-  auto shared_this = this->shared_from_this();
   for (auto it = g_contexts.begin(); it != g_contexts.end(); ) {
     auto shared_context = it->lock();
-    if (shared_context == shared_this) {
+    if (shared_context.get() == this) {
       it = g_contexts.erase(it);
     } else {
       ++it;

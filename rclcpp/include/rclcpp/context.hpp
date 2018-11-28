@@ -163,13 +163,10 @@ public:
   bool
   shutdown(const std::string & reason, bool notify_all = true);
 
-  using OnShutdownCallback = std::function<void (rclcpp::Context::SharedPtr)>;
+  using OnShutdownCallback = std::function<void ()>;
 
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
-   * The callbacks receive a pointer to the rclcpp::Context with which they were
-   * associated, i.e. this context.
-   *
    * These callbacks will be called in the order they are added as the second
    * to last step in shutdown().
    *

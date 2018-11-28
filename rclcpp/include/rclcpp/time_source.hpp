@@ -47,10 +47,11 @@ public:
 
   RCLCPP_PUBLIC
   void attachNode(
-    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
-    const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
-    const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
-    const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface);
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+    rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface);
 
   RCLCPP_PUBLIC
   void detachNode();
@@ -74,6 +75,10 @@ private:
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
+
+  // Store (and update on node attach) logger for logging.
+  Logger logger_;
 
   // The subscription for the clock callback
   using MessageT = rosgraph_msgs::msg::Clock;

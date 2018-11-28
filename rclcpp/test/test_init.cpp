@@ -25,5 +25,5 @@ TEST(TestInit, is_initialized) {
 
   rclcpp::shutdown();
 
-  EXPECT_TRUE(rclcpp::is_initialized());
+  EXPECT_FALSE(rclcpp::is_initialized());
 }

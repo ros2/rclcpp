@@ -79,7 +79,8 @@ Node::Node(
       node_base_,
       node_topics_,
       node_graph_,
-      node_services_
+      node_services_,
+      node_logging_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   use_intra_process_comms_(use_intra_process_comms)
@@ -253,6 +254,12 @@ rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
 Node::get_node_graph_interface()
 {
   return node_graph_;
+}
+
+rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr
+Node::get_node_logging_interface()
+{
+  return node_logging_;
 }
 
 rclcpp::node_interfaces::NodeTimersInterface::SharedPtr

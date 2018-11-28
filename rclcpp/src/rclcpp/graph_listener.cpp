@@ -87,7 +87,7 @@ GraphListener::start_if_not_started()
     // destruction of static objects occurs.
     std::weak_ptr<GraphListener> weak_this = shared_from_this();
     rclcpp::on_shutdown(
-      [weak_this](rclcpp::Context::SharedPtr) {
+      [weak_this]() {
         auto shared_this = weak_this.lock();
         if (shared_this) {
           shared_this->shutdown();
