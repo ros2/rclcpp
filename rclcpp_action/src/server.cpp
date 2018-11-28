@@ -295,6 +295,11 @@ ServerBase::execute_cancel_request_received()
     }
   }
 
+  if (!response->goals_canceling.empty()) {
+    // at least one goal state changed, publish a new status message
+    publish_status();
+  }
+
   // TODO(sloretz) make this fini happen in an exception safe way
   ret = rcl_action_cancel_response_fini(&cancel_response);
   if (RCL_RET_OK != ret) {
@@ -306,6 +311,7 @@ ServerBase::execute_cancel_request_received()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
+
 }
 
 void
