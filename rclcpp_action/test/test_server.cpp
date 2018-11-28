@@ -245,16 +245,23 @@ TEST_F(TestServer, publish_status_accepted)
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
-  for (size_t retry = 0; retry < max_tries && received_msgs.size() == 0u; ++retry) {
+  for (size_t retry = 0; retry < max_tries && received_msgs.size() != 1u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     rclcpp::spin_some(node);
   }
 
-  ASSERT_EQ(1u, received_msgs.size());
-  ASSERT_EQ(1u, received_msgs.at(0)->status_list.size());
-  EXPECT_EQ(
-    action_msgs::msg::GoalStatus::STATUS_ACCEPTED, received_msgs.at(0)->status_list.at(0).status);
-  EXPECT_EQ(uuid, received_msgs.at(0)->status_list.at(0).goal_info.uuid);
+  ASSERT_LT(0u, received_msgs.size());
+  // Not sure whether accepted will come through because not sure when subscriber will match
+  for (auto & msg : received_msgs) {
+    ASSERT_EQ(1u, msg->status_list.size());
+    EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+    auto status = msg->status_list.at(0).status;
+    if (action_msgs::msg::GoalStatus::STATUS_ACCEPTED == status) {
+      EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_ACCEPTED, status);
+    } else {
+      EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_EXECUTING, status);
+    }
+  }
 }
 
 TEST_F(TestServer, publish_status_canceling)
@@ -300,17 +307,183 @@ TEST_F(TestServer, publish_status_canceling)
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
-  for (size_t retry = 0; retry < max_tries && received_msgs.size() != 2u; ++retry) {
+  for (size_t retry = 0; retry < max_tries && received_msgs.size() < 2u; ++retry) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
     rclcpp::spin_some(node);
   }
 
-  ASSERT_EQ(2u, received_msgs.size());
-  ASSERT_EQ(1u, received_msgs.at(0)->status_list.size());
-  EXPECT_EQ(
-    action_msgs::msg::GoalStatus::STATUS_CANCELING, received_msgs.at(1)->status_list.at(0).status);
-  EXPECT_EQ(uuid, received_msgs.at(1)->status_list.at(0).goal_info.uuid);
+  ASSERT_LT(0u, received_msgs.size());
+  auto & msg = received_msgs.back();
+  ASSERT_EQ(1u, msg->status_list.size());
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_CANCELING, msg->status_list.at(0).status);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
 }
 
-// TODO publish_status set_aborted, set_suceeded, set_cancelled
+TEST_F(TestServer, publish_status_canceled)
+{
+  auto node = std::make_shared<rclcpp::Node>("status_canceled", "/rclcpp_action/status_canceled");
+  const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
+
+  auto handle_goal = [](
+      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::ACCEPT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_execute = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_execute);
+  (void)as;
+
+  // Subscribe to status messages
+  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
+    "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+      {
+        received_msgs.push_back(list);
+      });
+
+  send_goal_request(node, uuid);
+  send_cancel_request(node, uuid);
+
+  received_handle->set_canceled();
+
+  // 10 seconds
+  const size_t max_tries = 10 * 1000 / 100;
+  for (size_t retry = 0; retry < max_tries && received_msgs.size() < 3u; ++retry) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    rclcpp::spin_some(node);
+  }
+
+  ASSERT_LT(0u, received_msgs.size());
+  auto & msg = received_msgs.back();
+  ASSERT_EQ(1u, msg->status_list.size());
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_CANCELED, msg->status_list.at(0).status);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+}
+
+TEST_F(TestServer, publish_status_succeeded)
+{
+  auto node = std::make_shared<rclcpp::Node>("status_succeeded", "/rclcpp_action/status_succeeded");
+  const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
+
+  auto handle_goal = [](
+      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::REJECT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_execute = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_execute);
+  (void)as;
+
+  // Subscribe to status messages
+  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
+    "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+      {
+        received_msgs.push_back(list);
+      });
+
+  send_goal_request(node, uuid);
+  received_handle->set_succeeded();
+
+  // 10 seconds
+  const size_t max_tries = 10 * 1000 / 100;
+  for (size_t retry = 0; retry < max_tries && received_msgs.size() < 2u; ++retry) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    rclcpp::spin_some(node);
+  }
+
+  ASSERT_LT(0u, received_msgs.size());
+  auto & msg = received_msgs.back();
+  ASSERT_EQ(1u, msg->status_list.size());
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, msg->status_list.at(0).status);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+}
+
+TEST_F(TestServer, publish_status_aborted)
+{
+  auto node = std::make_shared<rclcpp::Node>("status_aborted", "/rclcpp_action/status_aborted");
+  const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
+
+  auto handle_goal = [](
+      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::REJECT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_execute = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_execute);
+  (void)as;
+
+  // Subscribe to status messages
+  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
+    "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+      {
+        received_msgs.push_back(list);
+      });
+
+  send_goal_request(node, uuid);
+  received_handle->set_aborted();
+
+  // 10 seconds
+  const size_t max_tries = 10 * 1000 / 100;
+  for (size_t retry = 0; retry < max_tries && received_msgs.size() < 2u; ++retry) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    rclcpp::spin_some(node);
+  }
+
+  ASSERT_LT(0u, received_msgs.size());
+  auto & msg = received_msgs.back();
+  ASSERT_EQ(1u, msg->status_list.size());
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_ABORTED, msg->status_list.at(0).status);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+}
+
 // TODO request result service

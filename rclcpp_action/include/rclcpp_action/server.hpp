@@ -125,6 +125,9 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
 
+  void
+  publish_status();
+
 private:
   void
   execute_goal_request_received();
@@ -134,9 +137,6 @@ private:
 
   void
   execute_result_request_received();
-
-  void
-  publish_status();
 
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
@@ -233,9 +233,15 @@ protected:
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message)
   {
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
+    // TODO(sloretz) how to make sure this lambda is not called beyond lifetime of this?
+    std::function<void ()> on_terminal_state = [this]()
+      {
+        // Publish a status message any time a goal handle changes state
+        publish_status();
+      };
     goal_handle.reset(
       new ServerGoalHandle<ACTION>(
-        rcl_server, rcl_goal_handle,
+        rcl_server, rcl_goal_handle, on_terminal_state,
         uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message)));
     goal_handles_[uuid] = goal_handle;
     handle_execute_(goal_handle);

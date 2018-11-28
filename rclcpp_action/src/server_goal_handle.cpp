@@ -40,6 +40,7 @@ ServerGoalHandleBase::set_aborted()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
+  on_terminal_state_();
 }
 
 void
@@ -49,15 +50,17 @@ ServerGoalHandleBase::set_succeeded()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
+  on_terminal_state_();
 }
 
 void
-ServerGoalHandleBase::set_cancelled()
+ServerGoalHandleBase::set_canceled()
 {
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_SET_CANCELED);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
+  on_terminal_state_();
 }
 
 std::shared_ptr<rcl_action_goal_handle_t>

@@ -230,6 +230,15 @@ ServerBase::execute_goal_request_received()
     // publish status since a goal's state has changed (was accepted)
     publish_status();
 
+    // Change status to executing
+    ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+
+    // publish status since a goal's state has changed (now executing)
+    publish_status();
+
     // Tell user to start executing action
     call_begin_execution_callback(pimpl_->action_server_, handle, uuid, message);
   }
@@ -319,7 +328,6 @@ ServerBase::execute_result_request_received()
 {
   // TODO(sloretz) store the result request so it can be responded to later
 }
-
 
 void
 ServerBase::publish_status()

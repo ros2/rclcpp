@@ -43,7 +43,7 @@ public:
 
   /// Indicate that a goal has been canceled.
   void
-  set_cancelled();
+  set_canceled();
 
   virtual
   ~ServerGoalHandleBase();
@@ -54,9 +54,10 @@ public:
 protected:
   ServerGoalHandleBase(
     std::shared_ptr<rcl_action_server_t> rcl_server,
-    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
+    std::function<void ()> on_terminal_state
   )
-  : rcl_server_(rcl_server), rcl_handle_(rcl_handle)
+  : rcl_server_(rcl_server), rcl_handle_(rcl_handle), on_terminal_state_(on_terminal_state)
   {
   }
 
@@ -66,6 +67,7 @@ protected:
 private:
   std::shared_ptr<rcl_action_server_t> rcl_server_;
   std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
+  std::function<void ()> on_terminal_state_;
 };
 
 // Forward declar server
@@ -85,8 +87,6 @@ public:
     publish_feedback(std::static_pointer_cast<void>(feedback_msg));
   }
 
-  // TODO(sloretz) `set_cancelled`, `set_succeeded`, `set_aborted`
-
   /// The original request message describing the goal.
   const std::shared_ptr<const typename ACTION::Goal> goal_;
 
@@ -97,10 +97,11 @@ protected:
   ServerGoalHandle(
     std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
+    std::function<void ()> on_terminal_state,
     std::array<uint8_t, 16> uuid,
     std::shared_ptr<const typename ACTION::Goal> goal
   )
-  : ServerGoalHandleBase(rcl_server, rcl_handle), goal_(goal), uuid_(uuid)
+  : ServerGoalHandleBase(rcl_server, rcl_handle, on_terminal_state), goal_(goal), uuid_(uuid)
   {
   }
 
