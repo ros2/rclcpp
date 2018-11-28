@@ -16,10 +16,12 @@
 
 #include "rclcpp/logger.hpp"
 
+#include "rclcpp/logging.hpp"
+
 namespace rclcpp
 {
 
-rclcpp::Logger
+Logger
 get_logger(const std::string & name)
 {
 #if RCLCPP_LOGGING_ENABLED
@@ -28,6 +30,18 @@ get_logger(const std::string & name)
   (void)name;
   return rclcpp::Logger();
 #endif
+}
+
+Logger
+get_node_logger(const rcl_node_t * node)
+{
+  const char * logger_name = rcl_node_get_logger_name(node);
+  if (nullptr == logger_name) {
+    auto logger = rclcpp::get_logger("rclcpp");
+    RCLCPP_ERROR(logger, "failed to get logger name from node at address %p", node);
+    return logger;
+  }
+  return rclcpp::get_logger(logger_name);
 }
 
 }  // namespace rclcpp
