@@ -35,15 +35,22 @@ template<typename ACTION>
 class ClientGoalHandle
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientGoalHandle)
+
+  using Result = typename ACTION::Result;
+  using Feedback = typename ACTION::Feedback;
+  using FeedbackCallback = std::function<void (
+    ClientGoalHandle::SharedPtr, const Feedback &)>;
+
   virtual ~ClientGoalHandle();
 
-  std::future<typename ACTION::Result>
+  std::shared_future<Result>
   async_result();
 
-  std::function<void()>
+  FeedbackCallback
   get_feedback_callback();
 
-  action_msgs::msg::GoalStatus
+  int8_t
   get_status();
 
   bool
@@ -52,41 +59,35 @@ public:
   bool
   is_result_aware();
 
-  void
-  set_result_awareness(bool awareness);
-
-  bool
-  is_valid();
-
-  void
-  invalidate();
-
 private:
   // The templated Server creates goal handles
   friend Client<ACTION>;
 
-  ClientGoalHandle(const action_msgs::msg::GoalInfo info);
+  ClientGoalHandle(const GoalInfo & info, FeedbackCallback callback);
 
   void
-  set_feedback_callback(std::function<void()> callback);
+  set_feedback_callback(FeedbackCallback callback);
 
   void
-  set_status(action_msgs::msg::GoalStatus status);
+  set_result_awareness(bool awareness);
 
   void
-  set_result(typename ACTION::Result result);
+  set_status(int8_t status);
 
-  action_msgs::msg::GoalInfo info_;
-  action_msgs::msg::GoalStatus status_;
+  void
+  set_result(const Result & result);
+  
+  void
+  invalidate();
 
-  std::function<void()> feedback_callback_;
+  GoalInfo info_;
+  bool is_result_aware_{false};
+  std::promise<Result> result_promise_;
+  std::shared_future<Result> result_future_;
+  FeedbackCallback feedback_callback_{nullptr};
+  int8_t status_{GoalStatus::STATE_ACCEPTED};
 
-  bool is_result_aware_;
-  std::promise<typename ACTION::Result> result_;
-
-  bool is_handler_valid_;
-
-  std::mutex handler_mutex_;
+  std::mutex handle_mutex_;
 };
 }  // namespace rclcpp_action
 

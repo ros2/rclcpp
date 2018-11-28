@@ -24,8 +24,12 @@ namespace exceptions
 
 class InvalidGoalHandle : public std::invalid_argument
 {
-  InvalidGoalHandle()
-  : std::invalid_argument("") {}
+  InvalidGoalHandle() = default;
+};
+
+class UnawareGoalHandle : public std::runtime_error
+{
+  UnawareGoalHandle() = default;
 };
 
 }  // namespace exceptions
