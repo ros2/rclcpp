@@ -50,6 +50,23 @@ protected:
     }
     return request;
   }
+
+  void
+  send_cancel_request(rclcpp::Node::SharedPtr node, std::array<uint8_t, 16> uuid)
+  {
+    auto cancel_client = node->create_client<test_msgs::action::Fibonacci::CancelGoalService>(
+      "fibonacci/_action/cancel_goal");
+    if (!cancel_client->wait_for_service(std::chrono::seconds(20))) {
+      throw std::runtime_error("cancel goal service didn't become available");
+    }
+    auto request = std::make_shared<test_msgs::action::Fibonacci::CancelGoalService::Request>();
+    request->goal_info.uuid = uuid;
+    auto future = cancel_client->async_send_request(request);
+    if (rclcpp::executor::FutureReturnCode::SUCCESS !=
+        rclcpp::spin_until_future_complete(node, future)) {
+      throw std::runtime_error("cancel goal future didn't complete succesfully");
+    }
+  }
 };
 
 TEST_F(TestServer, construction_and_destruction)
@@ -182,18 +199,7 @@ TEST_F(TestServer, handle_cancel_called)
   EXPECT_EQ(uuid, received_handle->uuid_);
   EXPECT_FALSE(received_handle->is_cancel_request());
 
-  // Send cancel request
-  {
-    auto cancel_client = node->create_client<test_msgs::action::Fibonacci::CancelGoalService>(
-      "fibonacci/_action/cancel_goal");
-    ASSERT_TRUE(cancel_client->wait_for_service(std::chrono::seconds(20)));
-    auto request = std::make_shared<test_msgs::action::Fibonacci::CancelGoalService::Request>();
-    request->goal_info.uuid = uuid;
-    auto future = cancel_client->async_send_request(request);
-    ASSERT_EQ(
-      rclcpp::executor::FutureReturnCode::SUCCESS,
-      rclcpp::spin_until_future_complete(node, future));
-  }
+  send_cancel_request(node, uuid);
   EXPECT_TRUE(received_handle->is_cancel_request());
 }
 
@@ -290,19 +296,7 @@ TEST_F(TestServer, publish_status_canceling)
       });
 
   send_goal_request(node, uuid);
-
-  // Send cancel request
-  {
-    auto cancel_client = node->create_client<test_msgs::action::Fibonacci::CancelGoalService>(
-      "fibonacci/_action/cancel_goal");
-    ASSERT_TRUE(cancel_client->wait_for_service(std::chrono::seconds(20)));
-    auto request = std::make_shared<test_msgs::action::Fibonacci::CancelGoalService::Request>();
-    request->goal_info.uuid = uuid;
-    auto future = cancel_client->async_send_request(request);
-    ASSERT_EQ(
-      rclcpp::executor::FutureReturnCode::SUCCESS,
-      rclcpp::spin_until_future_complete(node, future));
-  }
+  send_cancel_request(node, uuid);
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
