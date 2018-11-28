@@ -19,6 +19,7 @@
 
 #include <action_msgs/msg/goal_status.hpp>
 #include <rclcpp/macros.hpp>
+#include <rclcpp/time.hpp>
 
 #include <functional>
 #include <future>
@@ -68,6 +69,8 @@ public:
 
   const GoalID & get_goal_id() const;
 
+  const rclcpp::Time & get_goal_stamp() const;
+  
   std::shared_future<Result>
   async_result();
 

@@ -31,6 +31,15 @@ public:
   }
 };
 
+class DuplicatedGoalUuidError : public std::invalid_argument
+{
+public:
+  DuplicatedGoalUuidError()
+  : std::invalid_argument("")
+  {
+  }
+};
+
 class UnknownGoalHandleError : public std::invalid_argument
 {
 public:

@@ -43,6 +43,14 @@ ClientGoalHandle<ACTION>::get_goal_id() const
 }
 
 template<typename ACTION>
+const rclcpp::Time &
+ClientGoalHandle<ACTION>::get_goal_stamp() const
+{
+  return info_.stamp;
+}
+
+
+template<typename ACTION>
 std::shared_future<typename ClientGoalHandle<ACTION>::Result>
 ClientGoalHandle<ACTION>::async_result()
 {
