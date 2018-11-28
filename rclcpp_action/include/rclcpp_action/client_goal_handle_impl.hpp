@@ -25,7 +25,7 @@ namespace rclcpp_action
 template<typename ACTION>
 ClientGoalHandle<ACTION>::ClientGoalHandle(
   const GoalInfo & info, FeedbackCallback callback)
-: info_(info), feedback_callback_(callback),
+: info_(info), feedback_callback_(callback)
 {
 }
 
@@ -38,7 +38,8 @@ template<typename ACTION>
 const GoalID &
 ClientGoalHandle<ACTION>::get_goal_id() const
 {
-  return info_.goal_id;
+  // return info_.goal_id;
+  return info_.uuid;
 }
 
 template<typename ACTION>
@@ -58,7 +59,7 @@ ClientGoalHandle<ACTION>::set_result(const Result & result)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   status_ = result.status;
-  promise_result_.set_value(result);
+  result_promise_.set_value(result);
 }
 
 template<typename ACTION>
@@ -118,11 +119,11 @@ ClientGoalHandle<ACTION>::set_result_awareness(bool awareness)
 }
 
 template<typename ACTION>
-bool
+void
 ClientGoalHandle<ACTION>::invalidate()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
-  status_ = GoalStatus::STATE_UNKNOWN;
+  status_ = GoalStatus::STATUS_UNKNOWN;
   result_promise_.set_exception(std::make_exception_ptr(
       exceptions::UnawareGoalHandleError()));
 }

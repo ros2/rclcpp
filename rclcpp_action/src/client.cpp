@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rclcpp_action/client.hpp>
+#include "rclcpp_action/client.hpp"
 
-#include <algorithms>
+#include <algorithm>
 #include <random>
 #include <string>
 
-#include <rcl_action/client.h>
+#include <rcl_action/action_client.h>
+#include <rcl_action/wait.h>
 
 namespace rclcpp_action
 {
@@ -31,13 +32,13 @@ public:
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
-  : node_handle(node_base.get_shared_rcl_node_handle()),
+  : node_handle(node_base->get_shared_rcl_node_handle()),
     logger(rclcpp::get_logger(rcl_node_get_logger_name(
       node_handle.get())).get_child("rclcpp"))
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
     client_handle = std::shared_ptr<rcl_action_client_t>(
-      new rcl_client_t, [weak_node_handle](rcl_action_client_t * client)
+      new rcl_action_client_t, [weak_node_handle](rcl_action_client_t * client)
       {
         auto handle = weak_node_handle.lock();
         if (handle) {
@@ -55,17 +56,17 @@ public:
         }
         delete client;
       });
-    *client_handle = rcl_get_zero_initialized_client();
+    *client_handle = rcl_action_get_zero_initialized_client();
     rcl_ret_t ret = rcl_action_client_init(
       client_handle.get(), node_handle.get(), type_support,
-      action_name.c_str(), &action_client_options);
+      action_name.c_str(), &client_options);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(
         ret, "could not initialize rcl action client");
     }
 
     ret = rcl_action_client_wait_set_get_num_entities(
-      client_handle.get()
+      client_handle.get(),
       &num_subscriptions,
       &num_guard_conditions,
       &num_timers,
@@ -91,7 +92,10 @@ public:
 
   std::shared_ptr<rcl_action_client_t> client_handle{nullptr};
   std::shared_ptr<rcl_node_t> node_handle{nullptr};
-  Logger logger;
+  rclcpp::Logger logger;
+
+  using ResponseCallback =
+    std::function<void(std::shared_ptr<void> response)>;
 
   std::map<int64_t, ResponseCallback> pending_goal_responses;
   std::mutex goal_requests_mutex;
@@ -122,7 +126,7 @@ ClientBase::~ClientBase()
   
 }
 
-Logger
+rclcpp::Logger
 ClientBase::get_logger()
 {
   return pimpl_->logger;
@@ -162,7 +166,7 @@ bool
 ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   rcl_ret_t ret = rcl_action_wait_set_add_action_client(
-    wait_set, pimpl_->client_handle.get());
+      wait_set, pimpl_->client_handle.get(), nullptr, nullptr);
   return (RCL_RET_OK == ret);
 }
 
@@ -251,7 +255,7 @@ ClientBase::handle_cancel_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::lock_guard<std::mutex> guard(pimpl_->goal_cancellations_mutex);
+  std::lock_guard<std::mutex> guard(pimpl_->cancel_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_cancel_responses.count(sequence_number) == 0) {
     RCLCPP_ERROR(pimpl_->logger, "unknown cancel response, ignoring...");
@@ -264,7 +268,7 @@ ClientBase::handle_cancel_response(
 void
 ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
-  std::lock_guard<std::mutex> guard(pimpl_->goal_cancellations_mutex);
+  std::lock_guard<std::mutex> guard(pimpl_->cancel_requests_mutex);
   int64_t sequence_number;
   rcl_ret_t ret = rcl_action_send_cancel_request(
     pimpl_->client_handle.get(), request.get(), &sequence_number);
@@ -280,8 +284,11 @@ ClientBase::generate_goal_id()
 {
   GoalID goal_id;
   // TODO(hidmic): Do something better than this for UUID generation.
+  // std::generate(
+  //   goal_id.uuid.begin(), goal_id.uuid.end(),
+  //   std::ref(pimpl_->random_bytes_generator));
   std::generate(
-    goal_id.uuid.begin(), goal_id.uuid.end(),
+    goal_id.begin(), goal_id.end(),
     std::ref(pimpl_->random_bytes_generator));
   return goal_id;
 }

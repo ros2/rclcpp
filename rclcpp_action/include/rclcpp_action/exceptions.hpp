@@ -22,14 +22,31 @@ namespace rclcpp_action
 namespace exceptions
 {
 
-class InvalidGoalHandle : public std::invalid_argument
+class RejectedGoalError : public std::runtime_error
 {
-  InvalidGoalHandle() = default;
+public:
+  RejectedGoalError()
+  : std::runtime_error("")
+  {
+  }
 };
 
-class UnawareGoalHandle : public std::runtime_error
+class UnknownGoalHandleError : public std::invalid_argument
 {
-  UnawareGoalHandle() = default;
+public:
+  UnknownGoalHandleError()
+  : std::invalid_argument("")
+  {
+  }
+};
+
+class UnawareGoalHandleError : public std::runtime_error
+{
+public:
+  UnawareGoalHandleError()
+  : std::runtime_error("")
+  {
+  }
 };
 
 }  // namespace exceptions

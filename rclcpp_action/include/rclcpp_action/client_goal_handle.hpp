@@ -22,7 +22,7 @@
 #include <memory>
 #include <mutex>
 
-#include <rclcpp/macros.h>
+#include <rclcpp/macros.hpp>
 
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
@@ -91,7 +91,7 @@ private:
   std::shared_future<Result> result_future_;
 
   FeedbackCallback feedback_callback_{nullptr};
-  int8_t status_{GoalStatus::STATE_ACCEPTED};
+  int8_t status_{GoalStatus::STATUS_ACCEPTED};
 
   std::mutex handle_mutex_;
 };
