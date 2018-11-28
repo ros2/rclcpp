@@ -20,7 +20,6 @@
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
 
-#include "./rcl_context_wrapper.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/executor.hpp"
 #include "rclcpp/node.hpp"
@@ -42,9 +41,8 @@ Executor::Executor(const ExecutorArgs & args)
   memory_strategy_(args.memory_strategy)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
-  auto rcl_context_wrapper = args.context->get_sub_context<RclContextWrapper>();
   rcl_ret_t ret = rcl_guard_condition_init(
-    &interrupt_guard_condition_, rcl_context_wrapper->get_context().get(), guard_condition_options);
+    &interrupt_guard_condition_, args.context->get_rcl_context().get(), guard_condition_options);
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "Failed to create interrupt guard condition in Executor constructor");
   }

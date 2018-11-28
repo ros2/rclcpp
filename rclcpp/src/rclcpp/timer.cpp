@@ -18,7 +18,6 @@
 #include <string>
 #include <memory>
 
-#include "./rcl_context_wrapper.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rcutils/logging_macros.h"
 
@@ -34,8 +33,7 @@ TimerBase::TimerBase(
     context = rclcpp::contexts::default_context::get_global_default_context();
   }
 
-  auto rcl_context_wrapper = context->get_sub_context<RclContextWrapper>();
-  auto rcl_context = rcl_context_wrapper->get_context();
+  auto rcl_context = context->get_rcl_context();
 
   timer_handle_ = std::shared_ptr<rcl_timer_t>(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable

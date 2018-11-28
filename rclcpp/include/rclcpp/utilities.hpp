@@ -50,51 +50,26 @@ namespace rclcpp
 {
 /// Initialize communications via the rmw implementation and set up a global signal handler.
 /**
- * \param[in] argc Number of arguments.
- * \param[in] argv Argument array which may contain arguments intended for ROS.
- * \param[in] init_options Initialization options for rclcpp and underlying layers.
+ * Initializes the global context which is accessible via the function
+ * rclcpp::contexts::default_context::get_global_default_context().
+ * Also, installs the global signal handlers with the function
+ * rclcpp::install_signal_handlers().
+ *
+ * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
  */
 RCLCPP_PUBLIC
 void
 init(int argc, char const * const argv[], const InitOptions & init_options = InitOptions());
 
-/// Initialize communications via the rmw implementation for a local context.
-/**
- * Unlike rclcpp::init(), this function does not initialize signal handling.
- * Use rclcpp::install_signal_handlers() to setup signal handling manually.
- *
- * \param[in] argc Number of arguments.
- * \param[in] argv Argument array which may contain arguments intended for ROS.
- * \param[out] context_out Argument array which may contain arguments intended for ROS.
- * \param[in] init_options Initialization options for rclcpp and underlying layers.
- */
-RCLCPP_PUBLIC
-void
-init_local(
-  int argc,
-  char const * const argv[],
-  rclcpp::Context::SharedPtr context_out,
-  const InitOptions & init_options = InitOptions());
-
-/// Convenience version of init_local with a templated Context type.
-template<typename ContextT = rclcpp::Context, typename... Args>
-std::shared_ptr<ContextT>
-init_local(
-  int argc,
-  char const * const argv[],
-  Args &&... args,
-  const InitOptions & init_options = InitOptions())
-{
-  auto result = std::make_shared<ContextT>(std::forward<Args>(args)...);
-  init_local(argc, argv, result, init_options);
-  return result;
-}
-
 /// Install the global signal handler for rclcpp.
 /**
- * This function should only need to be run one time per process, and is
- * implicitly run by rclcpp::init(), and therefore this function does not need
- * to be run manually if rclcpp::init() has already been run.
+ * This function should only need to be run one time per process.
+ * It is implicitly run by rclcpp::init(), and therefore this function does not
+ * need to be run manually if rclcpp::init() has already been run.
+ *
+ * The signal handler will shutdown all initialized context.
+ * It will also interrupt any blocking functions in ROS allowing them react to
+ * any changes in the state of the system (like shutdown).
  *
  * This function is thread-safe.
  *
@@ -114,9 +89,9 @@ signal_handlers_installed();
  * This function does not necessarily need to be called, but can be used to
  * undo what rclcpp::install_signal_handlers() or rclcpp::init() do with
  * respect to signal handling.
- * If you choose to use it, this function only needs to be run one time, and is
- * implicitly run by rclcpp::shutdown(), and therefore this function does not
- * need to be run manually if rclcpp::shutdown() has already been run.
+ * If you choose to use it, this function only needs to be run one time.
+ * It is implicitly run by rclcpp::shutdown(), and therefore this function does
+ * not need to be run manually if rclcpp::shutdown() has already been run.
  *
  * This function is thread-safe.
  *
@@ -129,9 +104,8 @@ uninstall_signal_handlers();
 /// Initialize communications via the rmw implementation and set up a global signal handler.
 /**
  * Additionally removes ROS-specific arguments from the argument vector.
- * \param[in] argc Number of arguments.
- * \param[in] argv Argument vector.
- * \param[in] init_options Initialization options for rclcpp and underlying layers.
+ *
+ * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
  * \returns Members of the argument vector that are not ROS arguments.
  */
 RCLCPP_PUBLIC
@@ -191,24 +165,30 @@ is_initialized(rclcpp::Context::SharedPtr context = nullptr);
  * If nullptr is given for the context, then the global context is used, i.e.
  * the context initialized by rclcpp::init().
  *
+ * If the global context is used, then the signal handlers are also uninstalled.
+ *
  * This will also cause the "on_shutdown" callbacks to be called.
  *
+ * \sa rclcpp::Context::shutdown()
  * \param[in] context to be shutdown
+ * \return true if shutdown was successful, false if context was already shutdown
  */
 RCLCPP_PUBLIC
-void
-shutdown(rclcpp::Context::SharedPtr context = nullptr);
+bool
+shutdown(
+  rclcpp::Context::SharedPtr context = nullptr,
+  const std::string & reason = "user called rclcpp::shutdown()");
 
 /// Register a function to be called when shutdown is called on the context.
 /**
- * Calling the callbacks is the last thing shutdown() does.
- *
- * The callbacks receive a pointer to the rclcpp::Context with which they were
- * associated.
- *
  * If nullptr is given for the context, then the global context is used, i.e.
  * the context initialized by rclcpp::init().
  *
+ * Note that these callbacks should be non-blocking and not throw exceptions,
+ * as they may be called from signal handlers and from the destructor of the
+ * context.
+ *
+ * \sa rclcpp::Context::on_shutdown()
  * \param[in] callback to be called when the given context is shutdown
  * \param[in] context with which to associate the context
  */
@@ -271,6 +251,11 @@ bool
 sleep_for(
   const std::chrono::nanoseconds & nanoseconds,
   rclcpp::Context::SharedPtr context = nullptr);
+
+/// Notify all blocking calls so they can check for changes in rclcpp::ok().
+RCLCPP_PUBLIC
+void
+notify_all();
 
 /// Safely check if addition will overflow.
 /**

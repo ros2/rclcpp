@@ -27,6 +27,9 @@ namespace rclcpp
 class InitOptions
 {
 public:
+  /// If true, the context will be shutdown on SIGINT by the signal handler (if it was installed).
+  bool shutdown_on_sigint = true;
+
   /// Constructor which allows you to specify the allocator used within the init options.
   RCLCPP_PUBLIC
   explicit

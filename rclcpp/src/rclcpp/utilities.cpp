@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "./rcl_context_wrapper.hpp"
 #include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/scope_exit.hpp"
 
@@ -42,8 +42,6 @@
 #define HAS_SIGACTION
 #endif
 
-/// Represent the status of the global interrupt signal.
-static volatile sig_atomic_t g_signal_status = 0;
 /// Mutex to protect installation and uninstallation of signal handlers.
 static std::mutex g_signal_handlers_mutex;
 /// Atomic bool to control setup of signal handlers.
@@ -118,32 +116,13 @@ set_signal_handler(int signal_value, signal_handler_t signal_handler)
 }
 
 void
-trigger_interrupt_guard_condition(int signal_value)
-{
-  g_signal_status = signal_value;
-  {
-    std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
-    for (auto & kv : g_sigint_guard_cond_handles) {
-      rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
-      if (status != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "failed to trigger guard condition: %s", rcl_get_error_string().str);
-      }
-    }
-  }
-  g_interrupt_condition_variable.notify_all();
-}
-
-void
 #ifdef HAS_SIGACTION
 signal_handler(int signal_value, siginfo_t * siginfo, void * context)
 #else
 signal_handler(int signal_value)
 #endif
 {
-  // TODO(wjwwood): remove? move to console logging at some point?
-  printf("signal_handler(%d)\n", signal_value);
+  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "signal_handler(signal_value=%d)", signal_value);
 
 #ifdef HAS_SIGACTION
   if (old_action.sa_flags & SA_SIGINFO) {
@@ -165,31 +144,22 @@ signal_handler(int signal_value)
   }
 #endif
 
-  trigger_interrupt_guard_condition(signal_value);
+  for (auto context_ptr : rclcpp::get_contexts()) {
+    if (context_ptr->get_init_options().shutdown_on_sigint) {
+      // do not notify all, instead do that once after all are shutdown
+      context_ptr->shutdown("signal handler", false /* notify_all */);
+    }
+  }
+  rclcpp::notify_all();
 }
 
 void
 rclcpp::init(int argc, char const * const argv[], const rclcpp::InitOptions & init_options)
 {
   using rclcpp::contexts::default_context::get_global_default_context;
-  init_local(argc, argv, get_global_default_context(), init_options);
+  get_global_default_context()->init(argc, argv, init_options);
   // Install the signal handlers.
   rclcpp::install_signal_handlers();
-}
-
-void
-rclcpp::init_local(
-  int argc,
-  char const * const argv[],
-  rclcpp::Context::SharedPtr context_out,
-  const rclcpp::InitOptions & init_options)
-{
-  auto rcl_context_wrapper = context_out->get_sub_context<RclContextWrapper>();
-  rcl_ret_t ret = rcl_init(
-    argc, argv, init_options.get_rcl_init_options(), rcl_context_wrapper->get_context().get());
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
-  }
 }
 
 bool
@@ -210,6 +180,7 @@ rclcpp::install_signal_handlers()
 #else
   ::old_signal_handler = set_signal_handler(SIGINT, ::signal_handler);
 #endif
+  RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler installed");
   return true;
 }
 
@@ -232,6 +203,7 @@ rclcpp::uninstall_signal_handlers()
 #else
   set_signal_handler(SIGINT, ::old_signal_handler);
 #endif
+  RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler uninstalled");
   return true;
 }
 
@@ -308,58 +280,35 @@ bool
 rclcpp::ok(rclcpp::Context::SharedPtr context)
 {
   using rclcpp::contexts::default_context::get_global_default_context;
-  if (nullptr != context) {
+  if (nullptr == context) {
     context = get_global_default_context();
   }
-  auto rcl_context_wrapper = context->get_sub_context<RclContextWrapper>();
-  return rcl_context_is_valid(rcl_context_wrapper->get_context().get());
+  return context->is_valid();
 }
 
 bool
 rclcpp::is_initialized(rclcpp::Context::SharedPtr context)
 {
-  using rclcpp::contexts::default_context::get_global_default_context;
-  if (nullptr != context) {
-    context = get_global_default_context();
-  }
-  auto rcl_context_wrapper = context->get_sub_context<RclContextWrapper>();
-  return rcl_context_is_valid(rcl_context_wrapper->get_context().get());
+  return rclcpp::ok(context);
 }
 
-static std::mutex on_shutdown_mutex_;
-
-static
-std::vector<std::pair<rclcpp::Context::SharedPtr, std::function<void(rclcpp::Context::SharedPtr)>>>
-on_shutdown_callbacks_;
-
-void
-rclcpp::shutdown(rclcpp::Context::SharedPtr context)
+bool
+rclcpp::shutdown(rclcpp::Context::SharedPtr context, const std::string & reason)
 {
-  trigger_interrupt_guard_condition(SIGINT);
-
   using rclcpp::contexts::default_context::get_global_default_context;
-  if (nullptr != context) {
-    context = get_global_default_context();
+  auto default_context = get_global_default_context();
+  if (nullptr == context) {
+    context = default_context;
   }
-  auto rcl_context_wrapper = context->get_sub_context<RclContextWrapper>();
-  auto ret = rcl_shutdown(rcl_context_wrapper->get_context().get());
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  rcl_context_wrapper->reset();
 
-  // Uninstall the signal handlers.
-  uninstall_signal_handlers();
+  bool ret = context->shutdown(reason);
 
-  // Execute on shutdown callbacks.
-  {
-    std::lock_guard<std::mutex> lock(on_shutdown_mutex_);
-    for (auto & on_shutdown_context_callback_pair : on_shutdown_callbacks_) {
-      if (context == on_shutdown_context_callback_pair.first) {
-        on_shutdown_context_callback_pair.second(on_shutdown_context_callback_pair.first);
-      }
-    }
+  // Uninstall the signal handlers if this is the default context's shutdown.
+  if (context == default_context) {
+    uninstall_signal_handlers();
   }
+
+  return ret;
 }
 
 void
@@ -367,8 +316,7 @@ rclcpp::on_shutdown(
   std::function<void(rclcpp::Context::SharedPtr)> callback,
   rclcpp::Context::SharedPtr context)
 {
-  std::lock_guard<std::mutex> lock(on_shutdown_mutex_);
-  on_shutdown_callbacks_.push_back({context, callback});
+  context->on_shutdown(callback);
 }
 
 rcl_guard_condition_t *
@@ -383,10 +331,9 @@ rclcpp::get_sigint_guard_condition(rcl_wait_set_t * wait_set, rclcpp::Context::S
     if (nullptr != context) {
       context = get_global_default_context();
     }
-    auto rcl_context_wrapper = context->get_sub_context<RclContextWrapper>();
     rcl_guard_condition_t handle = rcl_get_zero_initialized_guard_condition();
     rcl_guard_condition_options_t options = rcl_guard_condition_get_default_options();
-    auto ret = rcl_guard_condition_init(&handle, rcl_context_wrapper->get_context().get(), options);
+    auto ret = rcl_guard_condition_init(&handle, context->get_rcl_context().get(), options);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't initialize guard condition: ");
     }
@@ -433,6 +380,23 @@ rclcpp::sleep_for(const std::chrono::nanoseconds & nanoseconds, rclcpp::Context:
   }
   // Return true if the timeout elapsed successfully, otherwise false.
   return ok(context);
+}
+
+void
+rclcpp::notify_all()
+{
+  {
+    std::lock_guard<std::mutex> lock(g_sigint_guard_cond_handles_mutex);
+    for (auto & kv : g_sigint_guard_cond_handles) {
+      rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
+      if (status != RCL_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "failed to trigger guard condition: %s", rcl_get_error_string().str);
+      }
+    }
+  }
+  g_interrupt_condition_variable.notify_all();
 }
 
 const char *

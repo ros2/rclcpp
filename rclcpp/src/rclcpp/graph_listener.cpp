@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "./rcl_context_wrapper.hpp"
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
 #include "rclcpp/exceptions.hpp"
@@ -42,12 +41,11 @@ GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
   interrupt_guard_condition_context_(nullptr),
   shutdown_guard_condition_(nullptr)
 {
-  auto rcl_context_wrapper = parent_context->get_sub_context<RclContextWrapper>();
   // TODO(wjwwood): make a guard condition class in rclcpp so this can be tracked
   //   automatically with the rcl guard condition
   // hold on to this context to prevent it from going out of scope while this
   // guard condition is using it.
-  interrupt_guard_condition_context_ = rcl_context_wrapper->get_context();
+  interrupt_guard_condition_context_ = parent_context->get_rcl_context();
   rcl_ret_t ret = rcl_guard_condition_init(
     &interrupt_guard_condition_,
     interrupt_guard_condition_context_.get(),

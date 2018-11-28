@@ -23,7 +23,6 @@
 #include <utility>
 #include <vector>
 
-#include "../rcl_context_wrapper.hpp"
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/parameter_map.hpp"
@@ -94,8 +93,7 @@ NodeParameters::NodeParameters(
 
   // global before local so that local overwrites global
   if (options->use_global_arguments) {
-    auto rcl_context_wrapper = node_base->get_context()->get_sub_context<RclContextWrapper>();
-    auto context_ptr = rcl_context_wrapper->get_context();
+    auto context_ptr = node_base->get_context()->get_rcl_context();
     get_yaml_paths(&(context_ptr->global_arguments));
   }
   get_yaml_paths(&(options->arguments));
