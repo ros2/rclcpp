@@ -116,7 +116,7 @@ throw_from_rcl_error(
   rcl_ret_t ret,
   const std::string & prefix = "",
   const rcl_error_state_t * error_state = nullptr,
-  void (* reset_error)() = rcl_reset_error);
+  void (*reset_error)() = rcl_reset_error);
 
 class RCLErrorBase
 {

@@ -268,8 +268,8 @@ public:
   }
 
   using GetMessageCallbackType =
-    std::function<void (uint64_t, uint64_t, uint64_t, MessageUniquePtr &)>;
-  using MatchesAnyPublishersCallbackType = std::function<bool (const rmw_gid_t *)>;
+    std::function<void(uint64_t, uint64_t, uint64_t, MessageUniquePtr &)>;
+  using MatchesAnyPublishersCallbackType = std::function<bool(const rmw_gid_t *)>;
 
   /// Implemenation detail.
   void setup_intra_process(

@@ -326,7 +326,7 @@ public:
       message_sequence_number,
       requesting_subscriptions_intra_process_id,
       target_subs_size
-    );
+      );
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       return;

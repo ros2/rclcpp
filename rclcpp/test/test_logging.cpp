@@ -89,7 +89,7 @@ TEST_F(TestLoggingMacros, test_logging_named) {
   }
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_DEBUG, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
-  EXPECT_EQ("message 3", g_last_log_event.message);
+  EXPECT_EQ("[DEBUG] [name]: message 3", g_last_log_event.message);
 }
 
 TEST_F(TestLoggingMacros, test_logging_string) {
@@ -97,19 +97,19 @@ TEST_F(TestLoggingMacros, test_logging_string) {
     RCLCPP_DEBUG(g_logger, "message " + i);
   }
   EXPECT_EQ(3u, g_log_calls);
-  EXPECT_EQ("message three", g_last_log_event.message);
+  EXPECT_EQ("[DEBUG] [name]: message three", g_last_log_event.message);
 
   RCLCPP_DEBUG(g_logger, "message " "four");
-  EXPECT_EQ("message four", g_last_log_event.message);
+  EXPECT_EQ("[DEBUG] [name]: message four", g_last_log_event.message);
 
   RCLCPP_DEBUG(g_logger, std::string("message " "five"));
-  EXPECT_EQ("message five", g_last_log_event.message);
+  EXPECT_EQ("[DEBUG] [name]: message five", g_last_log_event.message);
 
   RCLCPP_DEBUG(g_logger, std::string("message %s"), "six");
-  EXPECT_EQ("message six", g_last_log_event.message);
+  EXPECT_EQ("[DEBUG] [name]: message six", g_last_log_event.message);
 
   RCLCPP_DEBUG(g_logger, "message seven");
-  EXPECT_EQ("message seven", g_last_log_event.message);
+  EXPECT_EQ("[DEBUG] [name]: message seven", g_last_log_event.message);
 }
 
 TEST_F(TestLoggingMacros, test_logging_once) {
@@ -119,7 +119,7 @@ TEST_F(TestLoggingMacros, test_logging_once) {
   EXPECT_EQ(1u, g_log_calls);
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
-  EXPECT_EQ("message 1", g_last_log_event.message);
+  EXPECT_EQ("[INFO] [name]: message 1", g_last_log_event.message);
 
   // Check that another instance has a context that's independent to the call above's
   g_log_calls = 0;
@@ -129,7 +129,7 @@ TEST_F(TestLoggingMacros, test_logging_once) {
   EXPECT_EQ(1u, g_log_calls);
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_INFO, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
-  EXPECT_EQ("second message 1", g_last_log_event.message);
+  EXPECT_EQ("[INFO] [name]: second message 1", g_last_log_event.message);
 }
 
 TEST_F(TestLoggingMacros, test_logging_expression) {
@@ -137,7 +137,7 @@ TEST_F(TestLoggingMacros, test_logging_expression) {
     RCLCPP_INFO_EXPRESSION(g_logger, i % 3, "message %d", i);
   }
   EXPECT_EQ(4u, g_log_calls);
-  EXPECT_EQ("message 5", g_last_log_event.message);
+  EXPECT_EQ("[INFO] [name]: message 5", g_last_log_event.message);
 }
 
 int g_counter = 0;
@@ -153,7 +153,7 @@ TEST_F(TestLoggingMacros, test_logging_function) {
     RCLCPP_INFO_FUNCTION(g_logger, &mod3, "message %d", i);
   }
   EXPECT_EQ(4u, g_log_calls);
-  EXPECT_EQ("message 5", g_last_log_event.message);
+  EXPECT_EQ("[INFO] [name]: message 5", g_last_log_event.message);
 }
 
 TEST_F(TestLoggingMacros, test_logging_skipfirst) {
