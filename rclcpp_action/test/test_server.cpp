@@ -311,3 +311,6 @@ TEST_F(TestServer, publish_status_canceling)
     action_msgs::msg::GoalStatus::STATUS_CANCELING, received_msgs.at(1)->status_list.at(0).status);
   EXPECT_EQ(uuid, received_msgs.at(1)->status_list.at(0).goal_info.uuid);
 }
+
+// TODO publish_status set_aborted, set_suceeded, set_cancelled
+// TODO request result service
