@@ -36,6 +36,9 @@ public:
   virtual
   ~ServerGoalHandleBase();
 
+  std::shared_ptr<rcl_action_goal_handle_t>
+  get_rcl_handle() const;
+
 protected:
   ServerGoalHandleBase(
     std::shared_ptr<rcl_action_server_t> rcl_server,

@@ -21,9 +21,11 @@
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include <rclcpp/waitable.hpp>
 
+#include <climits>
 #include <functional>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
@@ -102,8 +104,8 @@ protected:
   // each goal id.
   // The subclass should look up a goal handle and call the user's callback.
   virtual
-  CancelResponse
-  call_handle_cancel_callback(rcl_action_goal_info_t &) = 0;
+  std::pair<CancelResponse, std::shared_ptr<rcl_action_goal_handle_t>>
+  call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) = 0;
 
   /// Given a goal request message, return the UUID contained within.
   virtual
@@ -134,6 +136,21 @@ private:
   execute_result_request_received();
 
   std::unique_ptr<ServerBaseImpl> pimpl_;
+};
+
+struct UUIDHash
+{
+  size_t operator()(std::array<uint8_t, 16> const & uuid) const noexcept
+  {
+    // TODO(sloretz) Use someone else's hash function and cite it
+    size_t result = 0;
+    for (size_t i = 0; i < 16; ++i) {
+      for (size_t b = 0; b < sizeof(size_t); ++b) {
+        result ^= uuid[i] << CHAR_BIT * b;
+      }
+    }
+    return result;
+  }
 };
 
 /// Templated Action Server class
@@ -193,12 +210,20 @@ protected:
     return std::make_pair(user_response, ros_response);
   }
 
-  CancelResponse
-  call_handle_cancel_callback(rcl_action_goal_info_t & info)
+  std::pair<CancelResponse, std::shared_ptr<rcl_action_goal_handle_t>>
+  call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid)
   {
-    // TODO(sloretz) look up goal handle and call users' callback with it
-    (void)info;
-    return CancelResponse::REJECT;
+    CancelResponse resp = CancelResponse::REJECT;
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle;
+    auto element = goal_handles_.find(uuid);
+    if (element != goal_handles_.end()) {
+      std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle = element->second.lock();
+      if (goal_handle) {
+        resp = handle_cancel_(goal_handle);
+        rcl_handle = goal_handle->get_rcl_handle();
+      }
+    }
+    return std::make_pair(resp, rcl_handle);
   }
 
   void
@@ -212,6 +237,7 @@ protected:
       new ServerGoalHandle<ACTION>(
         rcl_server, rcl_goal_handle,
         uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message)));
+    goal_handles_[uuid] = goal_handle;
     handle_execute_(goal_handle);
   }
 
@@ -231,6 +257,9 @@ private:
   GoalCallback handle_goal_;
   CancelCallback handle_cancel_;
   ExecuteCallback handle_execute_;
+
+  using GoalHandleWeakPtr = std::weak_ptr<ServerGoalHandle<ACTION>>;
+  std::unordered_map<std::array<uint8_t, 16>, GoalHandleWeakPtr, UUIDHash> goal_handles_;
 };
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__SERVER_HPP_

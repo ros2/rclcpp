@@ -33,6 +33,12 @@ ServerGoalHandleBase::is_cancel_request() const
   return GOAL_STATE_CANCELING == state;
 }
 
+std::shared_ptr<rcl_action_goal_handle_t>
+ServerGoalHandleBase::get_rcl_handle() const
+{
+  return rcl_handle_;
+}
+
 void
 ServerGoalHandleBase::publish_feedback(std::shared_ptr<void> feedback_msg)
 {

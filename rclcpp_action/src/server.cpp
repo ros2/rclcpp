@@ -15,6 +15,7 @@
 #include <rcl_action/action_server.h>
 #include <rcl_action/wait.h>
 
+#include <action_msgs/srv/cancel_goal.hpp>
 #include <rclcpp/exceptions.hpp>
 #include <rclcpp_action/server.hpp>
 
@@ -234,6 +235,74 @@ ServerBase::execute_goal_request_received()
 void
 ServerBase::execute_cancel_request_received()
 {
+  rcl_ret_t ret;
+  rmw_request_id_t request_header;
+
+  // Initialize cancel request
+  auto request = std::make_shared<action_msgs::srv::CancelGoal::Request>();
+
+  ret = rcl_action_take_cancel_request(
+    pimpl_->action_server_.get(),
+    &request_header,
+    request.get());
+
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  // Convert c++ message to C message
+  rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
+  for (size_t i = 0; i < 16; ++i) {
+    cancel_request.goal_info.uuid[i] = request->goal_info.uuid[i];
+  }
+  cancel_request.goal_info.stamp.sec = request->goal_info.stamp.sec;
+  cancel_request.goal_info.stamp.nanosec = request->goal_info.stamp.nanosec;
+
+  // Get a list of goal info that should be attempted to be cancelled
+  rcl_action_cancel_response_t cancel_response = rcl_action_get_zero_initialized_cancel_response();
+  ret = rcl_action_process_cancel_request(
+    pimpl_->action_server_.get(),
+    &cancel_request,
+    &cancel_response);
+
+  auto response = std::make_shared<action_msgs::srv::CancelGoal::Response>();
+
+  auto & goals = cancel_response.msg.goals_canceling;
+  // For each canceled goal, call cancel callback
+  for (size_t i = 0; i < goals.size; ++i) {
+    const rcl_action_goal_info_t & goal_info = goals.data[i];
+    std::array<uint8_t, 16> uuid;
+    for (size_t i = 0; i < 16; ++i) {
+      uuid[i] = goal_info.uuid[i];
+    }
+    auto response_pair = call_handle_cancel_callback(uuid);
+    if (CancelResponse::ACCEPT == response_pair.first) {
+      ret = rcl_action_update_goal_state(response_pair.second.get(), GOAL_EVENT_CANCEL);
+      if (RCL_RET_OK != ret) {
+        rcl_ret_t fail_ret = rcl_action_cancel_response_fini(&cancel_response);
+        (void)fail_ret;  // TODO(sloretz) do something with error during cleanup
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      } else {
+        action_msgs::msg::GoalInfo cpp_info;
+        cpp_info.uuid = uuid;
+        cpp_info.stamp.sec = goal_info.stamp.sec;
+        cpp_info.stamp.nanosec = goal_info.stamp.nanosec;
+        response->goals_canceling.push_back(cpp_info);
+      }
+    }
+  }
+
+  // TODO(sloretz) make this fini happen in an exception safe way
+  ret = rcl_action_cancel_response_fini(&cancel_response);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  ret = rcl_action_send_cancel_response(
+    pimpl_->action_server_.get(), &request_header, response.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }
 
 void
