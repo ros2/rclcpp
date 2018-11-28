@@ -15,6 +15,7 @@
 #include <rcl_action/action_server.h>
 #include <rcl_action/wait.h>
 
+#include <action_msgs/msg/goal_status_array.hpp>
 #include <action_msgs/srv/cancel_goal.hpp>
 #include <rclcpp/exceptions.hpp>
 #include <rclcpp_action/server.hpp>
@@ -225,7 +226,9 @@ ServerBase::execute_goal_request_received()
     if (!handle) {
       throw std::runtime_error("Failed to accept new goal\n");
     }
-    // TODO publish status since a goal's state has changed
+
+    // publish status since a goal's state has changed (was accepted)
+    publish_status();
 
     // Tell user to start executing action
     call_begin_execution_callback(pimpl_->action_server_, handle, uuid, message);
@@ -309,4 +312,55 @@ void
 ServerBase::execute_result_request_received()
 {
   // TODO(sloretz) store the result request so it can be responded to later
+}
+
+
+void
+ServerBase::publish_status()
+{
+  rcl_ret_t ret;
+
+  // Get all goal handles known to C action server
+  rcl_action_goal_handle_t ** goal_handles = NULL;
+  size_t num_goals = 0;
+  ret = rcl_action_server_get_goal_handles(pimpl_->action_server_.get(), &goal_handles, &num_goals);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  auto status_msg = std::make_shared<action_msgs::msg::GoalStatusArray>();
+  status_msg->status_list.reserve(num_goals);
+  // Populate a c++ status message with the goals and their statuses
+  for (size_t i = 0; i < num_goals; ++i) {
+    rcl_action_goal_handle_t * goal_handle = goal_handles[i];
+    rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
+    rcl_action_goal_state_t goal_state;
+
+    ret = rcl_action_goal_handle_get_info(goal_handle, &goal_info);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+
+    ret = rcl_action_goal_handle_get_status(goal_handle, &goal_state);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+
+    action_msgs::msg::GoalStatus msg;
+    msg.status = goal_state;
+    // Convert C goal info to C++ goal info
+    for (size_t i = 0; i < 16; ++i) {
+      msg.goal_info.uuid[i] = goal_info.uuid[i];
+    }
+    msg.goal_info.stamp.sec = goal_info.stamp.sec;
+    msg.goal_info.stamp.nanosec = goal_info.stamp.nanosec;
+
+    status_msg->status_list.push_back(msg);
+  }
+
+  // Publish the message through the status publisher
+  ret = rcl_action_publish_status(pimpl_->action_server_.get(), status_msg.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }

@@ -33,6 +33,18 @@ public:
   bool
   is_cancel_request() const;
 
+  /// Indicate that a goal could not be reached and has been aborted.
+  void
+  set_aborted();
+
+  /// Indicate that a goal has been reached.
+  void
+  set_succeeded();
+
+  /// Indicate that a goal has been canceled.
+  void
+  set_cancelled();
+
   virtual
   ~ServerGoalHandleBase();
 

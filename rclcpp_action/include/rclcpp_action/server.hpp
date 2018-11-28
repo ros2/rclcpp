@@ -135,6 +135,9 @@ private:
   void
   execute_result_request_received();
 
+  void
+  publish_status();
+
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
 
