@@ -20,7 +20,10 @@
 #include <rclcpp/exceptions.hpp>
 #include <rclcpp_action/server.hpp>
 
+#include <memory>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 using rclcpp_action::ServerBase;
 
@@ -47,9 +50,9 @@ public:
   std::unordered_map<std::array<uint8_t, 16>, std::shared_ptr<void>, UUIDHash> goal_results_;
   // Requests for results are kept until a result becomes available
   std::unordered_map<std::array<uint8_t, 16>, std::vector<rmw_request_id_t>, UUIDHash>
-    result_requests_;
+  result_requests_;
 };
-}
+}  // namespace rclcpp_action
 
 ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -57,8 +60,8 @@ ServerBase::ServerBase(
   const std::string & name,
   const rosidl_action_type_support_t * type_support,
   const rcl_action_server_options_t & options
-  )
-  : pimpl_(new ServerBaseImpl)
+)
+: pimpl_(new ServerBaseImpl)
 {
   rcl_ret_t ret;
   pimpl_->clock_ = node_clock->get_clock();
@@ -140,7 +143,8 @@ ServerBase::get_number_of_ready_guard_conditions()
 bool
 ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  rcl_ret_t ret = rcl_action_wait_set_add_action_server(wait_set, pimpl_->action_server_.get(), NULL);
+  rcl_ret_t ret = rcl_action_wait_set_add_action_server(
+    wait_set, pimpl_->action_server_.get(), NULL);
   return RCL_RET_OK == ret;
 }
 
@@ -159,13 +163,9 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  bool result = pimpl_->goal_request_ready_
-    || pimpl_->cancel_request_ready_
-    || pimpl_->result_request_ready_;
-
-  if (result) {
-  }
-  return result;
+  return pimpl_->goal_request_ready_ ||
+         pimpl_->cancel_request_ready_ ||
+         pimpl_->result_request_ready_;
 }
 
 void
@@ -328,7 +328,6 @@ ServerBase::execute_cancel_request_received()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-
 }
 
 void

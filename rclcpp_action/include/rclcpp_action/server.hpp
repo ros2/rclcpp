@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
@@ -187,9 +188,9 @@ class Server : public ServerBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
-  using GoalCallback = std::function<GoalResponse (
-    rcl_action_goal_info_t &, std::shared_ptr<typename ACTION::Goal>)>;
-  using CancelCallback = std::function<CancelResponse (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using GoalCallback = std::function<GoalResponse(
+        rcl_action_goal_info_t &, std::shared_ptr<typename ACTION::Goal>)>;
+  using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
   using ExecuteCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   Server(
@@ -257,7 +258,7 @@ protected:
   {
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
     // TODO(sloretz) how to make sure this lambda is not called beyond lifetime of this?
-    std::function<void (const std::array<uint8_t, 16> &, std::shared_ptr<void>)> on_terminal_state =
+    std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state =
       [this](const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_message)
       {
         // Send result message to anyone that asked

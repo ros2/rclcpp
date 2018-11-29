@@ -129,7 +129,7 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
     std::array<uint8_t, 16> uuid,
     std::shared_ptr<const typename ACTION::Goal> goal,
-    std::function<void (const std::array<uint8_t, 16> &, std::shared_ptr<void>)> on_terminal_state
+    std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state
   )
   : ServerGoalHandleBase(rcl_server, rcl_handle), goal_(goal), uuid_(uuid),
     on_terminal_state_(on_terminal_state)
@@ -138,7 +138,7 @@ protected:
 
   friend Server<ACTION>;
 
-  std::function<void (const std::array<uint8_t, 16> &, std::shared_ptr<void>)> on_terminal_state_;
+  std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state_;
 };
 }  // namespace rclcpp_action
 

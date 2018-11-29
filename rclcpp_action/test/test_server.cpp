@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <vector>
 
 #include "rclcpp_action/create_server.hpp"
 #include "rclcpp_action/server.hpp"
@@ -45,7 +46,8 @@ protected:
     request->uuid = uuid;
     auto future = client->async_send_request(request);
     if (rclcpp::executor::FutureReturnCode::SUCCESS !=
-        rclcpp::spin_until_future_complete(node, future)) {
+      rclcpp::spin_until_future_complete(node, future))
+    {
       throw std::runtime_error("send goal future didn't complete succesfully");
     }
     return request;
@@ -63,7 +65,8 @@ protected:
     request->goal_info.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
     if (rclcpp::executor::FutureReturnCode::SUCCESS !=
-        rclcpp::spin_until_future_complete(node, future)) {
+      rclcpp::spin_until_future_complete(node, future))
+    {
       throw std::runtime_error("cancel goal future didn't complete succesfully");
     }
   }
@@ -91,7 +94,7 @@ TEST_F(TestServer, handle_goal_called)
   rcl_action_goal_info_t received_info;
 
   auto handle_goal = [&received_info](
-      rcl_action_goal_info_t & info, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t & info, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       received_info = info;
       return rclcpp_action::GoalResponse::REJECT;
@@ -99,11 +102,11 @@ TEST_F(TestServer, handle_goal_called)
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    [](std::shared_ptr<GoalHandle>) {
-      return rclcpp_action::CancelResponse::REJECT;
-    },
-    [](std::shared_ptr<GoalHandle>) {});
+      handle_goal,
+      [](std::shared_ptr<GoalHandle>) {
+        return rclcpp_action::CancelResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {});
   (void)as;
 
   // Create a client that calls the goal request service
@@ -135,7 +138,7 @@ TEST_F(TestServer, handle_execute_called)
   const std::array<uint8_t, 16> uuid = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -149,11 +152,11 @@ TEST_F(TestServer, handle_execute_called)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    [](std::shared_ptr<GoalHandle>) {
-      return rclcpp_action::CancelResponse::REJECT;
-    },
-    handle_execute);
+      handle_goal,
+      [](std::shared_ptr<GoalHandle>) {
+        return rclcpp_action::CancelResponse::REJECT;
+      },
+      handle_execute);
   (void)as;
 
   auto request = send_goal_request(node, uuid);
@@ -170,7 +173,7 @@ TEST_F(TestServer, handle_cancel_called)
   const std::array<uint8_t, 16> uuid = {10, 20, 30, 40, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -189,9 +192,9 @@ TEST_F(TestServer, handle_cancel_called)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   send_goal_request(node, uuid);
@@ -210,7 +213,7 @@ TEST_F(TestServer, publish_status_accepted)
   const std::array<uint8_t, 16> uuid = {1, 2, 3, 4, 5, 6, 7, 8, 9, 100, 110, 120, 13, 14, 15, 16};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -229,18 +232,18 @@ TEST_F(TestServer, publish_status_accepted)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   // Subscribe to status messages
   std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
-      {
-        received_msgs.push_back(list);
-      });
+    {
+      received_msgs.push_back(list);
+    });
 
   send_goal_request(node, uuid);
 
@@ -271,7 +274,7 @@ TEST_F(TestServer, publish_status_canceling)
   const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 7, 80, 9, 10, 11, 120, 13, 14, 15, 160};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -290,18 +293,18 @@ TEST_F(TestServer, publish_status_canceling)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   // Subscribe to status messages
   std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
-      {
-        received_msgs.push_back(list);
-      });
+    {
+      received_msgs.push_back(list);
+    });
 
   send_goal_request(node, uuid);
   send_cancel_request(node, uuid);
@@ -326,7 +329,7 @@ TEST_F(TestServer, publish_status_canceled)
   const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -345,18 +348,18 @@ TEST_F(TestServer, publish_status_canceled)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   // Subscribe to status messages
   std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
-      {
-        received_msgs.push_back(list);
-      });
+    {
+      received_msgs.push_back(list);
+    });
 
   send_goal_request(node, uuid);
   send_cancel_request(node, uuid);
@@ -383,7 +386,7 @@ TEST_F(TestServer, publish_status_succeeded)
   const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -402,18 +405,18 @@ TEST_F(TestServer, publish_status_succeeded)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   // Subscribe to status messages
   std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
-      {
-        received_msgs.push_back(list);
-      });
+    {
+      received_msgs.push_back(list);
+    });
 
   send_goal_request(node, uuid);
   received_handle->set_succeeded(std::make_shared<test_msgs::action::Fibonacci::Result>());
@@ -438,7 +441,7 @@ TEST_F(TestServer, publish_status_aborted)
   const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -457,18 +460,18 @@ TEST_F(TestServer, publish_status_aborted)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   // Subscribe to status messages
   std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
   auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
     "fibonacci/_action/status", [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
-      {
-        received_msgs.push_back(list);
-      });
+    {
+      received_msgs.push_back(list);
+    });
 
   send_goal_request(node, uuid);
   received_handle->set_aborted(std::make_shared<test_msgs::action::Fibonacci::Result>());
@@ -493,7 +496,7 @@ TEST_F(TestServer, publish_feedback)
   const std::array<uint8_t, 16> uuid = {1, 20, 30, 4, 5, 6, 70, 8, 9, 1, 11, 120, 13, 14, 15, 160};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -512,9 +515,9 @@ TEST_F(TestServer, publish_feedback)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   // Subscribe to feedback messages
@@ -522,9 +525,9 @@ TEST_F(TestServer, publish_feedback)
   std::vector<FeedbackT::SharedPtr> received_msgs;
   auto subscriber = node->create_subscription<FeedbackT>(
     "fibonacci/_action/feedback", [&received_msgs](FeedbackT::SharedPtr msg)
-      {
-        received_msgs.push_back(msg);
-      });
+    {
+      received_msgs.push_back(msg);
+    });
 
   send_goal_request(node, uuid);
 
@@ -550,7 +553,7 @@ TEST_F(TestServer, get_result)
   const std::array<uint8_t, 16> uuid = {1, 2, 3, 4, 5, 6, 7, 80, 90, 10, 11, 12, 13, 14, 15, 160};
 
   auto handle_goal = [](
-      rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
     {
       return rclcpp_action::GoalResponse::ACCEPT;
     };
@@ -569,9 +572,9 @@ TEST_F(TestServer, get_result)
     };
 
   auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
-    handle_goal,
-    handle_cancel,
-    handle_execute);
+      handle_goal,
+      handle_cancel,
+      handle_execute);
   (void)as;
 
   send_goal_request(node, uuid);

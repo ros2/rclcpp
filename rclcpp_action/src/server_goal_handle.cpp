@@ -16,8 +16,9 @@
 #include <rcl_action/goal_handle.h>
 
 #include <rclcpp_action/server_goal_handle.hpp>
-
 #include <rclcpp/exceptions.hpp>
+
+#include <memory>
 
 namespace rclcpp_action
 {
