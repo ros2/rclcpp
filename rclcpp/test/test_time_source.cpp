@@ -348,14 +348,14 @@ TEST_F(TestTimeSource, parameter_activation) {
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   set_use_sim_time_parameter(
-    node, rclcpp::ParameterValue(rclcpp::ParameterType::PARAMETER_NOT_SET));
+    node, rclcpp::ParameterValue());
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   set_use_sim_time_parameter(node, rclcpp::ParameterValue(false));
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   set_use_sim_time_parameter(
-    node, rclcpp::ParameterValue(rclcpp::ParameterType::PARAMETER_NOT_SET));
+    node, rclcpp::ParameterValue());
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   // If the use_sim_time parameter is not explicitly set to True, this clock's use of sim time
