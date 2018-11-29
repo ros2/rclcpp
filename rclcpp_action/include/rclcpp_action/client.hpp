@@ -15,13 +15,6 @@
 #ifndef RCLCPP_ACTION__CLIENT_HPP_
 #define RCLCPP_ACTION__CLIENT_HPP_
 
-#include <algorithm>
-#include <functional>
-#include <future>
-#include <memory>
-#include <mutex>
-#include <string>
-
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/logger.hpp>
@@ -30,6 +23,15 @@
 
 #include <rosidl_generator_c/action_type_support_struct.h>
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
+
+#include <algorithm>
+#include <functional>
+#include <future>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <utility>
 
 #include "rclcpp_action/client_goal_handle.hpp"
 #include "rclcpp_action/types.hpp"

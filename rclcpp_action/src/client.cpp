@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp_action/client.hpp"
+#include <rcl_action/action_client.h>
+#include <rcl_action/wait.h>
 
 #include <algorithm>
+#include <map>
+#include <memory>
 #include <random>
 #include <string>
 
-#include <rcl_action/action_client.h>
-#include <rcl_action/wait.h>
+#include "rclcpp_action/client.hpp"
 
 namespace rclcpp_action
 {
@@ -123,7 +125,6 @@ ClientBase::ClientBase(
 
 ClientBase::~ClientBase()
 {
-  
 }
 
 rclcpp::Logger

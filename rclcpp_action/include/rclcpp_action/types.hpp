@@ -15,22 +15,22 @@
 #ifndef RCLCPP_ACTION__TYPES_HPP_
 #define RCLCPP_ACTION__TYPES_HPP_
 
-#include <functional>
+#include <rcl_action/types.h>
 
 #include <action_msgs/msg/goal_status.hpp>
 #include <action_msgs/msg/goal_info.hpp>
 
-#include <rcl_action/types.h>
+#include <functional>
 
 
 namespace rclcpp_action {
 
-//using GoalID = unique_identifier_msgs::msg::UUID;
+// using GoalID = unique_identifier_msgs::msg::UUID;
 using GoalID = std::array<uint8_t, 16>;
 using GoalStatus = action_msgs::msg::GoalStatus;
 using GoalInfo = action_msgs::msg::GoalInfo;
 
-}  // namespace
+}  // namespace rclcpp_action
 
 namespace std {
 

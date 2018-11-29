@@ -17,12 +17,12 @@
 
 #include <rcl_action/action_client.h>
 
+#include <rclcpp/macros.hpp>
+
 #include <functional>
 #include <future>
 #include <memory>
 #include <mutex>
-
-#include <rclcpp/macros.hpp>
 
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
@@ -80,7 +80,7 @@ private:
 
   void
   set_result(const Result & result);
-  
+
   void
   invalidate();
 
