@@ -18,6 +18,8 @@
 #include <rcl_action/types.h>
 #include <rcl_action/goal_handle.h>
 
+#include <action_msgs/msg/goal_status.hpp>
+
 #include <functional>
 #include <memory>
 
@@ -34,18 +36,6 @@ public:
   bool
   is_cancel_request() const;
 
-  /// Indicate that a goal could not be reached and has been aborted.
-  void
-  set_aborted();
-
-  /// Indicate that a goal has been reached.
-  void
-  set_succeeded();
-
-  /// Indicate that a goal has been canceled.
-  void
-  set_canceled();
-
   virtual
   ~ServerGoalHandleBase();
 
@@ -55,20 +45,27 @@ public:
 protected:
   ServerGoalHandleBase(
     std::shared_ptr<rcl_action_server_t> rcl_server,
-    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
-    std::function<void ()> on_terminal_state
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle
   )
-  : rcl_server_(rcl_server), rcl_handle_(rcl_handle), on_terminal_state_(on_terminal_state)
+  : rcl_server_(rcl_server), rcl_handle_(rcl_handle)
   {
   }
 
   void
   _publish_feedback(std::shared_ptr<void> feedback_msg);
 
+  void
+  _set_aborted();
+
+  void
+  _set_succeeded();
+
+  void
+  _set_canceled();
+
 private:
   std::shared_ptr<rcl_action_server_t> rcl_server_;
   std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
-  std::function<void ()> on_terminal_state_;
 };
 
 // Forward declar server
@@ -88,6 +85,33 @@ public:
     _publish_feedback(std::static_pointer_cast<void>(feedback_msg));
   }
 
+  /// Indicate that a goal could not be reached and has been aborted.
+  void
+  set_aborted(typename ACTION::Result::SharedPtr result_msg)
+  {
+    _set_aborted();
+    result_msg->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
+    on_terminal_state_(uuid_, result_msg);
+  }
+
+  /// Indicate that a goal has been reached.
+  void
+  set_succeeded(typename ACTION::Result::SharedPtr result_msg)
+  {
+    _set_succeeded();
+    result_msg->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
+    on_terminal_state_(uuid_, result_msg);
+  }
+
+  /// Indicate that a goal has been canceled.
+  void
+  set_canceled(typename ACTION::Result::SharedPtr result_msg)
+  {
+    _set_canceled();
+    result_msg->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+    on_terminal_state_(uuid_, result_msg);
+  }
+
   /// The original request message describing the goal.
   const std::shared_ptr<const typename ACTION::Goal> goal_;
 
@@ -98,15 +122,18 @@ protected:
   ServerGoalHandle(
     std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
-    std::function<void ()> on_terminal_state,
     std::array<uint8_t, 16> uuid,
-    std::shared_ptr<const typename ACTION::Goal> goal
+    std::shared_ptr<const typename ACTION::Goal> goal,
+    std::function<void (const std::array<uint8_t, 16> &, std::shared_ptr<void>)> on_terminal_state
   )
-  : ServerGoalHandleBase(rcl_server, rcl_handle, on_terminal_state), goal_(goal), uuid_(uuid)
+  : ServerGoalHandleBase(rcl_server, rcl_handle), goal_(goal), uuid_(uuid),
+    on_terminal_state_(on_terminal_state)
   {
   }
 
   friend Server<ACTION>;
+
+  std::function<void (const std::array<uint8_t, 16> &, std::shared_ptr<void>)> on_terminal_state_;
 };
 }  // namespace rclcpp_action
 

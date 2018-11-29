@@ -41,6 +41,12 @@ public:
   bool goal_request_ready_ = false;
   bool cancel_request_ready_ = false;
   bool result_request_ready_ = false;
+
+  // Results to be kept until the goal expires after reaching a terminal state
+  std::unordered_map<std::array<uint8_t, 16>, std::shared_ptr<void>, UUIDHash> goal_results_;
+  // Requests for results are kept until a result becomes available
+  std::unordered_map<std::array<uint8_t, 16>, std::vector<rmw_request_id_t>, UUIDHash>
+    result_requests_;
 };
 }
 
@@ -326,7 +332,51 @@ ServerBase::execute_cancel_request_received()
 void
 ServerBase::execute_result_request_received()
 {
-  // TODO(sloretz) store the result request so it can be responded to later
+  rcl_ret_t ret;
+  // Get the result request message
+  rmw_request_id_t request_header;
+  std::shared_ptr<void> result_request = create_result_request();
+  ret = rcl_action_take_result_request(
+    pimpl_->action_server_.get(), &request_header, result_request.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  std::shared_ptr<void> result_response;
+
+  // check if the goal exists
+  std::array<uint8_t, 16> uuid = get_goal_id_from_result_request(result_request.get());
+  rcl_action_goal_info_t goal_info;
+  for (size_t i = 0; i < 16; ++i) {
+    goal_info.uuid[i] = uuid[i];
+  }
+  if (!rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info)) {
+    // Goal does not exists
+    result_response = create_result_response(action_msgs::msg::GoalStatus::STATUS_UNKNOWN);
+  } else {
+    // Goal exists, check if a result is already available
+    auto iter = pimpl_->goal_results_.find(uuid);
+    if (iter != pimpl_->goal_results_.end()) {
+      result_response = iter->second;
+    }
+  }
+
+  if (result_response) {
+    // Send the result now
+    ret = rcl_action_send_result_response(
+      pimpl_->action_server_.get(), &request_header, result_response.get());
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+  } else {
+    // Store the request so it can be responded to later
+    auto iter = pimpl_->result_requests_.find(uuid);
+    if (iter == pimpl_->result_requests_.end()) {
+      pimpl_->result_requests_[uuid] = std::vector<rmw_request_id_t>{request_header};
+    } else {
+      iter->second.push_back(request_header);
+    }
+  }
 }
 
 void
@@ -376,5 +426,32 @@ ServerBase::publish_status()
   ret = rcl_action_publish_status(pimpl_->action_server_.get(), status_msg.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+}
+
+void
+ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_msg)
+{
+  // Check that the goal exists
+  rcl_action_goal_info_t goal_info;
+  for (size_t i = 0; i < 16; ++i) {
+    goal_info.uuid[i] = uuid[i];
+  }
+  if (!rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info)) {
+    throw std::runtime_error("Asked to publish result for goal that does not exist");
+  }
+
+  pimpl_->goal_results_[uuid] = result_msg;
+
+  // if there are clients who already asked for the result, send it to them
+  auto iter = pimpl_->result_requests_.find(uuid);
+  if (iter != pimpl_->result_requests_.end()) {
+    for (auto & request_header : iter->second) {
+      rcl_ret_t ret = rcl_action_send_result_response(
+        pimpl_->action_server_.get(), &request_header, result_msg.get());
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+    }
   }
 }

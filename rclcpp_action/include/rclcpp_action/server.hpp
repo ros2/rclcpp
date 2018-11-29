@@ -125,8 +125,26 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
 
+  /// Given a result request message, return the UUID contained within.
+  virtual
+  std::array<uint8_t, 16>
+  get_goal_id_from_result_request(void * message) = 0;
+
+  /// Create an empty goal request message so it can be taken from a lower layer.
+  virtual
+  std::shared_ptr<void>
+  create_result_request() = 0;
+
+  /// Create an empty goal result message so it can be sent as a reply in a lower layer
+  virtual
+  std::shared_ptr<void>
+  create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) = 0;
+
   void
   publish_status();
+
+  void
+  publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_msg);
 
 private:
   void
@@ -234,15 +252,21 @@ protected:
   {
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
     // TODO(sloretz) how to make sure this lambda is not called beyond lifetime of this?
-    std::function<void ()> on_terminal_state = [this]()
+    std::function<void (const std::array<uint8_t, 16> &, std::shared_ptr<void>)> on_terminal_state =
+      [this](const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_message)
       {
+        // Send result message to anyone that asked
+        publish_result(uuid, result_message);
         // Publish a status message any time a goal handle changes state
         publish_status();
+        // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
+        goal_handles_.erase(uuid);
       };
     goal_handle.reset(
       new ServerGoalHandle<ACTION>(
-        rcl_server, rcl_goal_handle, on_terminal_state,
-        uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message)));
+        rcl_server, rcl_goal_handle,
+        uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message),
+        on_terminal_state));
     goal_handles_[uuid] = goal_handle;
     handle_execute_(goal_handle);
   }
@@ -257,6 +281,26 @@ protected:
   create_goal_request() override
   {
     return std::shared_ptr<void>(new typename ACTION::GoalRequestService::Request());
+  }
+
+  std::array<uint8_t, 16>
+  get_goal_id_from_result_request(void * message) override
+  {
+    return static_cast<typename ACTION::GoalResultService::Request *>(message)->uuid;
+  }
+
+  std::shared_ptr<void>
+  create_result_request() override
+  {
+    return std::shared_ptr<void>(new typename ACTION::GoalResultService::Request());
+  }
+
+  std::shared_ptr<void>
+  create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) override
+  {
+    auto result = std::make_shared<typename ACTION::GoalResultService::Response>();
+    result->status = status;
+    return std::static_pointer_cast<void>(result);
   }
 
 private:

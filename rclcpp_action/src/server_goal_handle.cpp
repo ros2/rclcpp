@@ -37,33 +37,30 @@ ServerGoalHandleBase::is_cancel_request() const
 }
 
 void
-ServerGoalHandleBase::set_aborted()
+ServerGoalHandleBase::_set_aborted()
 {
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_SET_ABORTED);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  on_terminal_state_();
 }
 
 void
-ServerGoalHandleBase::set_succeeded()
+ServerGoalHandleBase::_set_succeeded()
 {
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_SET_SUCCEEDED);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  on_terminal_state_();
 }
 
 void
-ServerGoalHandleBase::set_canceled()
+ServerGoalHandleBase::_set_canceled()
 {
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_SET_CANCELED);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-  on_terminal_state_();
 }
 
 std::shared_ptr<rcl_action_goal_handle_t>
