@@ -188,7 +188,6 @@ public:
   using CancelCallback = std::function<CancelResponse (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
   using ExecuteCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
-  // TODO(sloretz) accept clock instance
   Server(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
