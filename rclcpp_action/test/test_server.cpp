@@ -119,7 +119,7 @@ TEST_F(TestServer, handle_goal_called)
 
   auto request = std::make_shared<test_msgs::action::Fibonacci::GoalRequestService::Request>();
 
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
   request->uuid = uuid;
 
   auto future = client->async_send_request(request);
@@ -135,7 +135,7 @@ TEST_F(TestServer, handle_goal_called)
 TEST_F(TestServer, handle_execute_called)
 {
   auto node = std::make_shared<rclcpp::Node>("handle_exec_node", "/rclcpp_action/handle_execute");
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -170,7 +170,7 @@ TEST_F(TestServer, handle_execute_called)
 TEST_F(TestServer, handle_cancel_called)
 {
   auto node = std::make_shared<rclcpp::Node>("handle_cancel_node", "/rclcpp_action/handle_cancel");
-  const std::array<uint8_t, 16> uuid = {10, 20, 30, 40, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+  const std::array<uint8_t, 16> uuid{10, 20, 30, 40, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -210,7 +210,7 @@ TEST_F(TestServer, handle_cancel_called)
 TEST_F(TestServer, publish_status_accepted)
 {
   auto node = std::make_shared<rclcpp::Node>("status_accept_node", "/rclcpp_action/status_accept");
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 4, 5, 6, 7, 8, 9, 100, 110, 120, 13, 14, 15, 16};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 4, 5, 6, 7, 8, 9, 100, 110, 120, 13, 14, 15, 16};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -271,7 +271,7 @@ TEST_F(TestServer, publish_status_accepted)
 TEST_F(TestServer, publish_status_canceling)
 {
   auto node = std::make_shared<rclcpp::Node>("status_cancel_node", "/rclcpp_action/status_cancel");
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 7, 80, 9, 10, 11, 120, 13, 14, 15, 160};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 40, 5, 6, 7, 80, 9, 10, 11, 120, 13, 14, 15, 160};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -326,7 +326,7 @@ TEST_F(TestServer, publish_status_canceling)
 TEST_F(TestServer, publish_status_canceled)
 {
   auto node = std::make_shared<rclcpp::Node>("status_canceled", "/rclcpp_action/status_canceled");
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -383,7 +383,7 @@ TEST_F(TestServer, publish_status_canceled)
 TEST_F(TestServer, publish_status_succeeded)
 {
   auto node = std::make_shared<rclcpp::Node>("status_succeeded", "/rclcpp_action/status_succeeded");
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -438,7 +438,7 @@ TEST_F(TestServer, publish_status_succeeded)
 TEST_F(TestServer, publish_status_aborted)
 {
   auto node = std::make_shared<rclcpp::Node>("status_aborted", "/rclcpp_action/status_aborted");
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -493,7 +493,7 @@ TEST_F(TestServer, publish_status_aborted)
 TEST_F(TestServer, publish_feedback)
 {
   auto node = std::make_shared<rclcpp::Node>("pub_feedback", "/rclcpp_action/pub_feedback");
-  const std::array<uint8_t, 16> uuid = {1, 20, 30, 4, 5, 6, 70, 8, 9, 1, 11, 120, 13, 14, 15, 160};
+  const std::array<uint8_t, 16> uuid{1, 20, 30, 4, 5, 6, 70, 8, 9, 1, 11, 120, 13, 14, 15, 160};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
@@ -550,7 +550,7 @@ TEST_F(TestServer, publish_feedback)
 TEST_F(TestServer, get_result)
 {
   auto node = std::make_shared<rclcpp::Node>("get_result", "/rclcpp_action/get_result");
-  const std::array<uint8_t, 16> uuid = {1, 2, 3, 4, 5, 6, 7, 80, 90, 10, 11, 12, 13, 14, 15, 160};
+  const std::array<uint8_t, 16> uuid{1, 2, 3, 4, 5, 6, 7, 80, 90, 10, 11, 12, 13, 14, 15, 160};
 
   auto handle_goal = [](
     rcl_action_goal_info_t &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)

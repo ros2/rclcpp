@@ -235,7 +235,7 @@ protected:
   }
 
   std::pair<CancelResponse, std::shared_ptr<rcl_action_goal_handle_t>>
-  call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid)
+  call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) override
   {
     CancelResponse resp = CancelResponse::REJECT;
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle;
@@ -254,7 +254,7 @@ protected:
   call_begin_execution_callback(
     std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message)
+    std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
     // TODO(sloretz) how to make sure this lambda is not called beyond lifetime of this?
