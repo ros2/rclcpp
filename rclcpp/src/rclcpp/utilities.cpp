@@ -330,7 +330,7 @@ rclcpp::get_sigint_guard_condition(rcl_wait_set_t * wait_set, rclcpp::Context::S
     return &kv->second;
   } else {
     using rclcpp::contexts::default_context::get_global_default_context;
-    if (nullptr != context) {
+    if (nullptr == context) {
       context = get_global_default_context();
     }
     rcl_guard_condition_t handle = rcl_get_zero_initialized_guard_condition();
