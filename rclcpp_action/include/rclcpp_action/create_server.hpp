@@ -15,6 +15,8 @@
 #ifndef RCLCPP_ACTION__CREATE_SERVER_HPP_
 #define RCLCPP_ACTION__CREATE_SERVER_HPP_
 
+#include <rcl_action/action_server.h>
+
 #include <rclcpp/node.hpp>
 #include <rclcpp/node_interfaces/node_waitables_interface.hpp>
 
@@ -33,12 +35,14 @@ create_server(
   const std::string & name,
   typename Server<ACTION>::GoalCallback handle_goal,
   typename Server<ACTION>::CancelCallback handle_cancel,
-  typename Server<ACTION>::ExecuteCallback handle_execute)
+  typename Server<ACTION>::ExecuteCallback handle_execute,
+  const rcl_action_server_options_t & options = rcl_action_server_get_default_options())
 {
   auto action_server = Server<ACTION>::make_shared(
     node->get_node_base_interface(),
     node->get_node_clock_interface(),
     name,
+    options,
     handle_goal,
     handle_cancel,
     handle_execute);

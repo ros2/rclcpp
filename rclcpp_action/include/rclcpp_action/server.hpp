@@ -58,7 +58,8 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const std::string & name,
-    const rosidl_action_type_support_t * type_support);
+    const rosidl_action_type_support_t * type_support,
+    const rcl_action_server_options_t & options);
 
   RCLCPP_ACTION_PUBLIC
   virtual ~ServerBase();
@@ -195,6 +196,7 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const std::string & name,
+    const rcl_action_server_options_t & options,
     GoalCallback handle_goal,
     CancelCallback handle_cancel,
     ExecuteCallback handle_execute
@@ -203,7 +205,8 @@ public:
       node_base,
       node_clock,
       name,
-      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>()),
+      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>(),
+      options),
     handle_goal_(handle_goal),
     handle_cancel_(handle_cancel),
     handle_execute_(handle_execute)

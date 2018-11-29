@@ -55,7 +55,8 @@ ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   const std::string & name,
-  const rosidl_action_type_support_t * type_support
+  const rosidl_action_type_support_t * type_support,
+  const rcl_action_server_options_t & options
   )
   : pimpl_(new ServerBaseImpl)
 {
@@ -76,14 +77,11 @@ ServerBase::ServerBase(
   pimpl_->action_server_.reset(new rcl_action_server_t, deleter);
   *(pimpl_->action_server_) = rcl_action_get_zero_initialized_server();
 
-  // TODO(sloretz) pass options into API
-  const rcl_action_server_options_t server_options = rcl_action_server_get_default_options();
-
   rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
   rcl_clock_t * rcl_clock = pimpl_->clock_->get_clock_handle();
 
   ret = rcl_action_server_init(
-    pimpl_->action_server_.get(), rcl_node, rcl_clock, type_support, name.c_str(), &server_options);
+    pimpl_->action_server_.get(), rcl_node, rcl_clock, type_support, name.c_str(), &options);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
