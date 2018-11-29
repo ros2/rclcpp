@@ -227,13 +227,18 @@ ServerBase::execute_goal_request_received()
         if (nullptr != ptr) {
           rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
           (void)fail_ret;  // TODO(sloretz) do something with error during cleanup
+          delete ptr;
         }
       };
-    std::shared_ptr<rcl_action_goal_handle_t> handle;
-    handle.reset(rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info), deleter);
-    if (!handle) {
+    rcl_action_goal_handle_t * rcl_handle = rcl_action_accept_new_goal(
+      pimpl_->action_server_.get(), &goal_info);
+    if (!rcl_handle) {
       throw std::runtime_error("Failed to accept new goal\n");
     }
+
+    std::shared_ptr<rcl_action_goal_handle_t> handle(new rcl_action_goal_handle_t, deleter);
+    // Copy out goal handle since action server storage disappears when it is fini'd
+    *handle = *rcl_handle;
 
     // publish status since a goal's state has changed (was accepted)
     publish_status();
