@@ -188,8 +188,9 @@ public:
   std::shared_future<typename GoalHandle::SharedPtr> async_send_goal(
     const Goal & goal, FeedbackCallback callback = nullptr, bool ignore_result = false)
   {
-    std::promise<typename GoalHandle::SharedPtr> promise;
-    std::shared_future<typename GoalHandle::SharedPtr> future(promise.get_future());
+    // Put promise in the heap to move it around.
+    auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>;
+    std::shared_future<typename GoalHandle::SharedPtr> future(promise->get_future());
     using GoalRequest = typename ACTION::GoalRequestService::Request;
     // auto goal_request = std::make_shared<GoalRequest>();
     // goal_request->goal_id = this->generate_goal_id();
@@ -198,23 +199,22 @@ public:
     goal_request->uuid = this->generate_goal_id();
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
-      [this, goal_request,
-       promise{std::move(promise)},
-       callback, ignore_result] (std::shared_ptr<void> response) mutable
+      [this, goal_request, callback, ignore_result,
+       promise] (std::shared_ptr<void> response) mutable
       {
-        using GoalResponse = typename ACTION::GoalService::Response;
+        using GoalResponse = typename ACTION::GoalRequestService::Response;
         typename GoalResponse::SharedPtr goal_response =
           std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
-          promise->set_exception(std::make_exception_ptr(
-            exceptions::RejectedGoalError(goal_request->goal)));
+          promise->set_exception(std::make_exception_ptr(exceptions::RejectedGoalError()));
           return;
         }
         GoalInfo goal_info;
         // goal_info.goal_id = goal_request->goal_id;
         goal_info.uuid = goal_request->uuid;
         goal_info.stamp = goal_response->stamp;
-        auto goal_handle = std::make_shared<GoalHandle>(goal_info, callback);
+        // Do not use std::make_shared as friendship cannot be forwarded.
+        std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
         if (!ignore_result) {
           try {
             this->make_result_aware(goal_handle);
@@ -250,14 +250,15 @@ public:
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError(goal_handle);
     }
-    std::promise<bool> promise;
-    std::shared_future<bool> future(promise.get_future());
+    // Put promise in the heap to move it around.
+    auto promise = std::make_shared<std::promise<bool>>();
+    std::shared_future<bool> future(promise->get_future());
     auto cancel_request = std::make_shared<CancelRequest>();
     // cancel_request->goal_info.goal_id = goal_handle->get_goal_id();
     cancel_request->goal_info.uuid = goal_handle->get_goal_id();
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [goal_handle, promise{std::move(promise)}] (std::shared_ptr<void> response) mutable
+      [goal_handle, promise] (std::shared_ptr<void> response) mutable
       {
         typename CancelResponse::SharedPtr cancel_response =
           std::static_pointer_cast<CancelResponse>(response);
@@ -267,7 +268,7 @@ public:
           // goal_canceled = (canceled_goal_info.goal_id == goal_handle->get_goal_id());
           goal_canceled = (canceled_goal_info.uuid == goal_handle->get_goal_id());
         }
-        promise.set_value(goal_canceled);
+        promise->set_value(goal_canceled);
       });
     return future;
   }
@@ -397,7 +398,7 @@ private:
     goal_result_request.uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
-      [goal_handle] (std::shared_ptr<void> response)
+      [goal_handle] (std::shared_ptr<void> response) mutable
       {
         using GoalResultResponse = typename ACTION::GoalResultService::Response;
         typename GoalResultResponse::SharedPtr goal_result_response =
@@ -410,15 +411,16 @@ private:
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel(typename CancelRequest::SharedPtr cancel_request)
   {
-    std::promise<typename CancelResponse::SharedPtr> promise;
-    std::shared_future<typename CancelResponse::SharedPtr> future(promise.get_future());
+    // Put promise in the heap to move it around.
+    auto promise = std::make_shared<std::promise<typename CancelResponse::SharedPtr>>();
+    std::shared_future<typename CancelResponse::SharedPtr> future(promise->get_future());
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [promise{std::move(promise)}] (std::shared_ptr<void> response) mutable
+      [promise] (std::shared_ptr<void> response) mutable
       {
         typename CancelResponse::SharedPtr cancel_response =
           std::static_pointer_cast<CancelResponse>(response);
-        promise.set_value(cancel_response);
+        promise->set_value(cancel_response);
       });
     return future;
   }
