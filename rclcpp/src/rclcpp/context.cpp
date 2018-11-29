@@ -157,6 +157,7 @@ Context::shutdown(const std::string & reason, bool notify_all)
     auto shared_context = it->lock();
     if (shared_context.get() == this) {
       it = g_contexts.erase(it);
+      break;
     } else {
       ++it;
     }
