@@ -68,27 +68,35 @@ public:
   // -------------
   // Waitables API
 
+  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_subscriptions() override;
 
+  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_timers() override;
 
+  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_clients() override;
 
+  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_services() override;
 
+  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_guard_conditions() override;
 
+  RCLCPP_ACTION_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
+  RCLCPP_ACTION_PUBLIC
   bool
   is_ready(rcl_wait_set_t *) override;
 
+  RCLCPP_ACTION_PUBLIC
   void
   execute() override;
 
@@ -98,6 +106,7 @@ public:
 protected:
   // ServerBase will call this function when a goal request is received.
   // The subclass should convert to the real type and call a user's callback.
+  RCLCPP_ACTION_PUBLIC
   virtual
   std::pair<GoalResponse, std::shared_ptr<void>>
   call_handle_goal_callback(rcl_action_goal_info_t &, std::shared_ptr<void> request) = 0;
@@ -105,21 +114,25 @@ protected:
   // ServerBase will determine which goal ids are being cancelled, and then call this function for
   // each goal id.
   // The subclass should look up a goal handle and call the user's callback.
+  RCLCPP_ACTION_PUBLIC
   virtual
   std::pair<CancelResponse, std::shared_ptr<rcl_action_goal_handle_t>>
   call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) = 0;
 
   /// Given a goal request message, return the UUID contained within.
+  RCLCPP_ACTION_PUBLIC
   virtual
   std::array<uint8_t, 16>
   get_goal_id_from_goal_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
+  RCLCPP_ACTION_PUBLIC
   virtual
   std::shared_ptr<void>
   create_goal_request() = 0;
 
   /// Call user callback to begin execution
+  RCLCPP_ACTION_PUBLIC
   virtual
   void
   call_begin_execution_callback(
@@ -128,36 +141,45 @@ protected:
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
 
   /// Given a result request message, return the UUID contained within.
+  RCLCPP_ACTION_PUBLIC
   virtual
   std::array<uint8_t, 16>
   get_goal_id_from_result_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
+  RCLCPP_ACTION_PUBLIC
   virtual
   std::shared_ptr<void>
   create_result_request() = 0;
 
   /// Create an empty goal result message so it can be sent as a reply in a lower layer
+  RCLCPP_ACTION_PUBLIC
   virtual
   std::shared_ptr<void>
   create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) = 0;
 
+  RCLCPP_ACTION_PUBLIC
   void
   publish_status();
 
+  RCLCPP_ACTION_PUBLIC
   void
   publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_msg);
 
 private:
+  RCLCPP_ACTION_PUBLIC
   void
   execute_goal_request_received();
 
+  RCLCPP_ACTION_PUBLIC
   void
   execute_cancel_request_received();
 
+  RCLCPP_ACTION_PUBLIC
   void
   execute_result_request_received();
 
+  RCLCPP_ACTION_PUBLIC
   void
   execute_check_expired_goals();
 

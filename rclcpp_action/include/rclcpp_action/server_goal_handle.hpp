@@ -33,21 +33,26 @@ class ServerGoalHandleBase
 public:
   /// Indicate if client has requested this goal be cancelled.
   /// \return true if a cancelation request has been accepted for this goal.
+  RCLCPP_ACTION_PUBLIC
   bool
   is_cancel_request() const;
 
   /// Indicate if goal is being worked on.
   /// \return false if goal has reached a terminal state.
+  RCLCPP_ACTION_PUBLIC
   bool
   is_active() const;
 
+  RCLCPP_ACTION_PUBLIC
   virtual
   ~ServerGoalHandleBase();
 
+  RCLCPP_ACTION_PUBLIC
   std::shared_ptr<rcl_action_goal_handle_t>
   get_rcl_handle() const;
 
 protected:
+  RCLCPP_ACTION_PUBLIC
   ServerGoalHandleBase(
     std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle
@@ -56,15 +61,19 @@ protected:
   {
   }
 
+  RCLCPP_ACTION_PUBLIC
   void
   _publish_feedback(std::shared_ptr<void> feedback_msg);
 
+  RCLCPP_ACTION_PUBLIC
   void
   _set_aborted();
 
+  RCLCPP_ACTION_PUBLIC
   void
   _set_succeeded();
 
+  RCLCPP_ACTION_PUBLIC
   void
   _set_canceled();
 
