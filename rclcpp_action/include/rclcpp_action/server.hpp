@@ -172,7 +172,9 @@ struct UUIDHash
     size_t result = 0;
     for (size_t i = 0; i < 16; ++i) {
       for (size_t b = 0; b < sizeof(size_t); ++b) {
-        result ^= uuid[i] << CHAR_BIT * b;
+        size_t part = uuid[i];
+        part <<= CHAR_BIT * b;
+        result ^= part;
       }
     }
     return result;
