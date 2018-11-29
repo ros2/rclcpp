@@ -49,6 +49,11 @@ ServerGoalHandleBase::_set_aborted()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
+
+  ret = rcl_action_notify_goal_done(rcl_server_.get(), rcl_handle_.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }
 
 void
@@ -58,12 +63,22 @@ ServerGoalHandleBase::_set_succeeded()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
+
+  ret = rcl_action_notify_goal_done(rcl_server_.get(), rcl_handle_.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 }
 
 void
 ServerGoalHandleBase::_set_canceled()
 {
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_SET_CANCELED);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  ret = rcl_action_notify_goal_done(rcl_server_.get(), rcl_handle_.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }

@@ -41,6 +41,7 @@ public:
   bool goal_request_ready_ = false;
   bool cancel_request_ready_ = false;
   bool result_request_ready_ = false;
+  bool goal_expired_ = false;
 
   // Results to be kept until the goal expires after reaching a terminal state
   std::unordered_map<std::array<uint8_t, 16>, std::shared_ptr<void>, UUIDHash> goal_results_;
@@ -153,7 +154,8 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
     pimpl_->action_server_.get(),
     &pimpl_->goal_request_ready_,
     &pimpl_->cancel_request_ready_,
-    &pimpl_->result_request_ready_);
+    &pimpl_->result_request_ready_,
+    &pimpl_->goal_expired_);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -177,6 +179,8 @@ ServerBase::execute()
     execute_cancel_request_received();
   } else if (pimpl_->result_request_ready_) {
     execute_result_request_received();
+  } else if (pimpl_->goal_expired_) {
+    execute_check_expired_goals();
   } else {
     throw std::runtime_error("Executing action server but nothing is ready");
   }
@@ -375,6 +379,31 @@ ServerBase::execute_result_request_received()
       pimpl_->result_requests_[uuid] = std::vector<rmw_request_id_t>{request_header};
     } else {
       iter->second.push_back(request_header);
+    }
+  }
+}
+
+void
+ServerBase::execute_check_expired_goals()
+{
+  // Allocate expecting only one goal to expire at a time
+  rcl_action_goal_info_t expired_goals[1];
+  size_t num_expired = 1;
+
+  // Loop in case more than 1 goal expired
+  while (num_expired > 0u) {
+    rcl_ret_t ret = rcl_action_expire_goals(
+      pimpl_->action_server_.get(), expired_goals, 1, &num_expired);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    } else if (num_expired) {
+      // A goal expired!
+      std::array<uint8_t, 16> uuid;
+      for (size_t i = 0; i < 16; ++i) {
+        uuid[i] = expired_goals[0].uuid[i];
+      }
+      pimpl_->goal_results_.erase(uuid);
+      pimpl_->result_requests_.erase(uuid);
     }
   }
 }

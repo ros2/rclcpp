@@ -156,6 +156,9 @@ private:
   void
   execute_result_request_received();
 
+  void
+  execute_check_expired_goals();
+
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
 
