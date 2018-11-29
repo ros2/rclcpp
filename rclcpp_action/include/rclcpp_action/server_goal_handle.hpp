@@ -36,6 +36,11 @@ public:
   bool
   is_cancel_request() const;
 
+  /// Indicate if goal is being worked on.
+  /// \return false if goal has reached a terminal state.
+  bool
+  is_active() const;
+
   virtual
   ~ServerGoalHandleBase();
 

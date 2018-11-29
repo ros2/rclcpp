@@ -36,6 +36,12 @@ ServerGoalHandleBase::is_cancel_request() const
   return GOAL_STATE_CANCELING == state;
 }
 
+bool
+ServerGoalHandleBase::is_active() const
+{
+  return rcl_action_goal_handle_is_active(rcl_handle_.get());
+}
+
 void
 ServerGoalHandleBase::_set_aborted()
 {

@@ -159,6 +159,7 @@ TEST_F(TestServer, handle_execute_called)
   auto request = send_goal_request(node, uuid);
 
   ASSERT_TRUE(received_handle);
+  ASSERT_TRUE(received_handle->is_active());
   EXPECT_EQ(uuid, received_handle->uuid_);
   EXPECT_EQ(*request, *(received_handle->goal_));
 }
