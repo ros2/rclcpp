@@ -37,6 +37,11 @@ protected:
     rclcpp::init(0, nullptr);
   }
 
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
   void SetUp()
   {
     node = std::make_shared<rclcpp::Node>("my_node");
