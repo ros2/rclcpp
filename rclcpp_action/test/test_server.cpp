@@ -601,3 +601,41 @@ TEST_F(TestServer, get_result)
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
   EXPECT_EQ(result->sequence, response->sequence);
 }
+
+TEST_F(TestServer, deferred_execution)
+{
+  auto node = std::make_shared<rclcpp::Node>("defer_exec", "/rclcpp_action/defer_exec");
+  const std::array<uint8_t, 16> uuid{{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}};
+
+  auto handle_goal = [](
+    std::array<uint8_t, 16> &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT_AND_DEFER;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::REJECT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_accepted = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+      handle_goal,
+      handle_cancel,
+      handle_accepted);
+  (void)as;
+
+  send_goal_request(node, uuid);
+
+  EXPECT_TRUE(received_handle->is_active());
+  EXPECT_FALSE(received_handle->is_executing());
+  received_handle->set_executing();
+  EXPECT_TRUE(received_handle->is_executing());
+}

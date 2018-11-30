@@ -380,6 +380,7 @@ protected:
   {
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
     // TODO(sloretz) how to make sure this lambda is not called beyond lifetime of this?
+
     std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state =
       [this](const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_message)
       {
@@ -390,11 +391,20 @@ protected:
         // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
         goal_handles_.erase(uuid);
       };
+
+    std::function<void(const std::array<uint8_t, 16>&)> on_executing =
+      [this](const std::array<uint8_t, 16> & uuid)
+      {
+        (void)uuid;
+        // Publish a status message any time a goal handle changes state
+        publish_status();
+      };
+
     goal_handle.reset(
       new ServerGoalHandle<ACTION>(
         rcl_server, rcl_goal_handle,
         uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message),
-        on_terminal_state));
+        on_terminal_state, on_executing));
     goal_handles_[uuid] = goal_handle;
     handle_accepted_(goal_handle);
   }

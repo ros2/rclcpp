@@ -43,6 +43,17 @@ ServerGoalHandleBase::is_active() const
   return rcl_action_goal_handle_is_active(rcl_handle_.get());
 }
 
+bool
+ServerGoalHandleBase::is_executing() const
+{
+  rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
+  rcl_ret_t ret = rcl_action_goal_handle_get_status(rcl_handle_.get(), &state);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to get goal handle state");
+  }
+  return GOAL_STATE_EXECUTING == state;
+}
+
 void
 ServerGoalHandleBase::_set_aborted()
 {
@@ -80,6 +91,15 @@ ServerGoalHandleBase::_set_canceled()
   }
 
   ret = rcl_action_notify_goal_done(rcl_server_.get(), rcl_handle_.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+}
+
+void
+ServerGoalHandleBase::_set_executing()
+{
+  rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_EXECUTE);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }

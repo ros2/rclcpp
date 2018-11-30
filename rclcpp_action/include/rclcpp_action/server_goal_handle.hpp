@@ -45,11 +45,17 @@ public:
   bool
   is_cancel_request() const;
 
-  /// Indicate if goal is being worked on.
+  /// Indicate if goal is pending or executing.
   /// \return false if goal has reached a terminal state.
   RCLCPP_ACTION_PUBLIC
   bool
   is_active() const;
+
+  /// Indicate if goal is executing.
+  /// \return true only if the goal is in an executing state.
+  RCLCPP_ACTION_PUBLIC
+  bool
+  is_executing() const;
 
   RCLCPP_ACTION_PUBLIC
   virtual
@@ -93,6 +99,11 @@ protected:
   RCLCPP_ACTION_PUBLIC
   void
   _set_canceled();
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  _set_executing();
 
   // End API for communication between ServerGoalHandleBase and ServerGoalHandle<>
   // -----------------------------------------------------------------------------
@@ -147,6 +158,13 @@ public:
     on_terminal_state_(uuid_, result_msg);
   }
 
+  void
+  set_executing()
+  {
+    _set_executing();
+    on_executing_(uuid_);
+  }
+
   /// Get the original request message describing the goal.
   const std::shared_ptr<const typename ACTION::Goal>
   get_goal() const
@@ -167,10 +185,11 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
     std::array<uint8_t, 16> uuid,
     std::shared_ptr<const typename ACTION::Goal> goal,
-    std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state
+    std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state,
+    std::function<void(const std::array<uint8_t, 16>&)> on_executing
   )
   : ServerGoalHandleBase(rcl_server, rcl_handle), goal_(goal), uuid_(uuid),
-    on_terminal_state_(on_terminal_state)
+    on_terminal_state_(on_terminal_state), on_executing_(on_executing)
   {
   }
 
@@ -184,6 +203,7 @@ protected:
   friend Server<ACTION>;
 
   std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state_;
+  std::function<void(const std::array<uint8_t, 16>&)> on_executing_;
 };
 }  // namespace rclcpp_action
 
