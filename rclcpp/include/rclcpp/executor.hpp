@@ -66,18 +66,20 @@ to_string(const FutureReturnCode & future_return_code);
  */
 struct ExecutorArgs
 {
+  ExecutorArgs()
+  : memory_strategy(memory_strategies::create_default_strategy()),
+    context(rclcpp::contexts::default_context::get_global_default_context()),
+    max_conditions(0)
+  {}
+
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
   std::shared_ptr<rclcpp::Context> context;
-  size_t max_conditions = 0;
+  size_t max_conditions;
 };
 
 static inline ExecutorArgs create_default_executor_arguments()
 {
-  ExecutorArgs args;
-  args.memory_strategy = memory_strategies::create_default_strategy();
-  args.context = rclcpp::contexts::default_context::get_global_default_context();
-  args.max_conditions = 0;
-  return args;
+  return ExecutorArgs();
 }
 
 /// Coordinate the order and timing of available communication tasks.
@@ -98,7 +100,7 @@ public:
   /// Default constructor.
   // \param[in] ms The memory strategy to be used with this executor.
   RCLCPP_PUBLIC
-  explicit Executor(const ExecutorArgs & args = create_default_executor_arguments());
+  explicit Executor(const ExecutorArgs & args = ExecutorArgs());
 
   /// Default destructor.
   RCLCPP_PUBLIC
