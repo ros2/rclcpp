@@ -126,11 +126,19 @@ public:
     on_terminal_state_(uuid_, result_msg);
   }
 
-  /// The original request message describing the goal.
-  const std::shared_ptr<const typename ACTION::Goal> goal_;
+  /// Get the original request message describing the goal.
+  const std::shared_ptr<const typename ACTION::Goal>
+  get_goal() const
+  {
+    return goal_;
+  }
 
-  /// A unique id for the goal request.
-  const std::array<uint8_t, 16> uuid_;
+  /// Get the unique identifier of the goal
+  const std::array<uint8_t, 16>
+  get_uuid() const
+  {
+    return uuid_;
+  }
 
 protected:
   ServerGoalHandle(
@@ -144,6 +152,13 @@ protected:
     on_terminal_state_(on_terminal_state)
   {
   }
+
+  /// The original request message describing the goal.
+  const std::shared_ptr<const typename ACTION::Goal> goal_;
+
+  /// A unique id for the goal request.
+  const std::array<uint8_t, 16> uuid_;
+
 
   friend Server<ACTION>;
 
