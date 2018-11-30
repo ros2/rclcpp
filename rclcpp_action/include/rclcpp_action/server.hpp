@@ -39,18 +39,20 @@ class ServerBaseImpl;
 /// A response returned by an action server callback when a goal is requested.
 enum class GoalResponse : int8_t
 {
-  /// Returned when the action server decides it will not act on the requested goal.
+  /// The goal is rejected and will not be executed.
   REJECT = 1,
-  /// Returned when the action server decides it will try to reach the requested goal.
-  ACCEPT = 2,
+  /// The server accepts the goal, and is going to begin execution immediately.
+  ACCEPT_AND_EXECUTE = 2,
+  /// The server accepts the goal, and is going to execute it later.
+  ACCEPT_AND_DEFER = 3,
 };
 
 /// A response returned by an action server callback when a goal has been asked to be canceled.
 enum class CancelResponse : int8_t
 {
-  /// Returned when the server decides it is impossible to cancel a goal.
+  /// The server will not try to cancel the goal.
   REJECT = 1,
-  /// Returned when the server agrees to try to cancel a goal.
+  /// The server has agreed to try to cancel the goal.
   ACCEPT = 2,
 };
 
@@ -166,12 +168,12 @@ protected:
   std::shared_ptr<void>
   create_goal_request() = 0;
 
-  /// Call user callback to begin execution
+  /// Call user callback to inform them a goal has been accepted.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
   void
-  call_begin_execution_callback(
+  call_goal_accepted_callback(
     std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
@@ -280,8 +282,8 @@ public:
         std::array<uint8_t, 16>&, std::shared_ptr<typename ACTION::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
-  /// Signature of a callback that is used to notify when execution of a goal should begin.
-  using ExecuteCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  /// Signature of a callback that is used to notify when the goal has been accepted.
+  using AcceptedCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
   /// Construct an action server.
   /**
@@ -291,7 +293,7 @@ public:
    * Three callbacks must be provided:
    *  - one to accept or reject goals sent to the server,
    *  - one to accept or reject requests to cancel a goal,
-   *  - one to be notified when execution of the goal should begin.
+   *  - one to given a goal handle after a goal has been accepted.
    * All callbacks must be non-blocking.
    * The result of a goal should be set using methods on `rclcpp_action::ServerGoalHandle<>`.
    *
@@ -305,7 +307,7 @@ public:
    * \param[in] handle_cancel a callback that decides if a goal should be attemted to be canceled.
    *  The return from this callback only indicates if the server will try to cancel a goal.
    *  It does not indicate if the goal was actually canceled.
-   * \param[in] handle_execute a callback that is called to notify when a goal should begin
+   * \param[in] handle_accepted a callback that is called to give the user a handle to the goal.
    *  execution.
    */
   Server(
@@ -315,7 +317,7 @@ public:
     const rcl_action_server_options_t & options,
     GoalCallback handle_goal,
     CancelCallback handle_cancel,
-    ExecuteCallback handle_execute
+    AcceptedCallback handle_accepted
   )
   : ServerBase(
       node_base,
@@ -325,7 +327,7 @@ public:
       options),
     handle_goal_(handle_goal),
     handle_cancel_(handle_cancel),
-    handle_execute_(handle_execute)
+    handle_accepted_(handle_accepted)
   {
   }
 
@@ -347,7 +349,8 @@ protected:
       uuid, std::static_pointer_cast<typename ACTION::Goal>(message));
 
     auto ros_response = std::make_shared<typename ACTION::GoalRequestService::Response>();
-    ros_response->accepted = GoalResponse::ACCEPT == user_response;
+    ros_response->accepted = GoalResponse::ACCEPT_AND_EXECUTE == user_response ||
+      GoalResponse::ACCEPT_AND_DEFER == user_response;
     return std::make_pair(user_response, ros_response);
   }
 
@@ -370,7 +373,7 @@ protected:
 
   /// \internal
   void
-  call_begin_execution_callback(
+  call_goal_accepted_callback(
     std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) override
@@ -393,7 +396,7 @@ protected:
         uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message),
         on_terminal_state));
     goal_handles_[uuid] = goal_handle;
-    handle_execute_(goal_handle);
+    handle_accepted_(goal_handle);
   }
 
   /// \internal
@@ -439,7 +442,7 @@ protected:
 private:
   GoalCallback handle_goal_;
   CancelCallback handle_cancel_;
-  ExecuteCallback handle_execute_;
+  AcceptedCallback handle_accepted_;
 
   using GoalHandleWeakPtr = std::weak_ptr<ServerGoalHandle<ACTION>>;
   /// A map of goal id to goal handle weak pointers.

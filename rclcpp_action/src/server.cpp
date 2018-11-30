@@ -219,8 +219,10 @@ ServerBase::execute_goal_request_received()
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
+  const auto status = response_pair.first;
+
   // if goal is accepted, create a goal handle, and store it
-  if (GoalResponse::ACCEPT == response_pair.first) {
+  if (GoalResponse::ACCEPT_AND_EXECUTE == status || GoalResponse::ACCEPT_AND_DEFER == status) {
     // rcl_action will set time stamp
     auto deleter = [](rcl_action_goal_handle_t * ptr)
       {
@@ -240,20 +242,18 @@ ServerBase::execute_goal_request_received()
     // Copy out goal handle since action server storage disappears when it is fini'd
     *handle = *rcl_handle;
 
-    // publish status since a goal's state has changed (was accepted)
-    publish_status();
-
-    // Change status to executing
-    ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
+    if (GoalResponse::ACCEPT_AND_EXECUTE == status) {
+      // Change status to executing
+      ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
     }
-
-    // publish status since a goal's state has changed (now executing)
+    // publish status since a goal's state has changed (was accepted or has begun execution)
     publish_status();
 
     // Tell user to start executing action
-    call_begin_execution_callback(pimpl_->action_server_, handle, uuid, message);
+    call_goal_accepted_callback(pimpl_->action_server_, handle, uuid, message);
   }
 }
 

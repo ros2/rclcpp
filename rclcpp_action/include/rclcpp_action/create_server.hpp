@@ -35,7 +35,7 @@ create_server(
   const std::string & name,
   typename Server<ACTION>::GoalCallback handle_goal,
   typename Server<ACTION>::CancelCallback handle_cancel,
-  typename Server<ACTION>::ExecuteCallback handle_execute,
+  typename Server<ACTION>::AcceptedCallback handle_accepted,
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options())
 {
   auto action_server = Server<ACTION>::make_shared(
@@ -45,7 +45,7 @@ create_server(
     options,
     handle_goal,
     handle_cancel,
-    handle_execute);
+    handle_accepted);
 
   // TODO(sloretz) shared pointer destructor should remove self from node waitables
   // TODO(sloretz) pass in callback group to this API
@@ -60,11 +60,11 @@ create_server(
   const std::string & name,
   typename Server<ACTION>::GoalCallback handle_goal,
   typename Server<ACTION>::CancelCallback handle_cancel,
-  typename Server<ACTION>::ExecuteCallback handle_execute,
+  typename Server<ACTION>::AcceptedCallback handle_accepted,
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options())
 {
   return create_server<ACTION>(
-    node.get(), name, handle_goal, handle_cancel, handle_execute, options);
+    node.get(), name, handle_goal, handle_cancel, handle_accepted, options);
 }
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__CREATE_SERVER_HPP_

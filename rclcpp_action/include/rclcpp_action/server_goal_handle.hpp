@@ -28,6 +28,14 @@
 namespace rclcpp_action
 {
 
+/// Base class to interact with goals on a server.
+/**
+ *
+ * This class should not be used directly by users writing an action server.
+ * Instead users should use `rclcpp_action::ServerGoalHandle<>`.
+ *
+ * Internally, this class is responsible for interfacing with the `rcl_action` API.
+ */
 class ServerGoalHandleBase
 {
 public:
@@ -47,11 +55,16 @@ public:
   virtual
   ~ServerGoalHandleBase();
 
+  /// Return a shared pointer to the C struct this class wraps.
   RCLCPP_ACTION_PUBLIC
   std::shared_ptr<rcl_action_goal_handle_t>
   get_rcl_handle() const;
 
 protected:
+  // -------------------------------------------------------------------------
+  // API for communication between ServerGoalHandleBase and ServerGoalHandle<>
+
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   ServerGoalHandleBase(
     std::shared_ptr<rcl_action_server_t> rcl_server,
@@ -61,21 +74,28 @@ protected:
   {
   }
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   void
   _publish_feedback(std::shared_ptr<void> feedback_msg);
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   void
   _set_aborted();
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   void
   _set_succeeded();
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   void
   _set_canceled();
+
+  // End API for communication between ServerGoalHandleBase and ServerGoalHandle<>
+  // -----------------------------------------------------------------------------
 
 private:
   std::shared_ptr<rcl_action_server_t> rcl_server_;
