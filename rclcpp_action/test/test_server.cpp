@@ -543,6 +543,7 @@ TEST_F(TestServer, publish_feedback)
   ASSERT_EQ(1u, received_msgs.size());
   auto & msg = received_msgs.back();
   ASSERT_EQ(sent_message->sequence, msg->sequence);
+  ASSERT_EQ(uuid, msg->uuid);
 }
 
 TEST_F(TestServer, get_result)

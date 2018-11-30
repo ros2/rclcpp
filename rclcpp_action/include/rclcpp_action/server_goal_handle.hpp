@@ -96,6 +96,7 @@ public:
   void
   publish_feedback(std::shared_ptr<typename ACTION::Feedback> feedback_msg)
   {
+    feedback_msg->uuid = uuid_;
     _publish_feedback(std::static_pointer_cast<void>(feedback_msg));
   }
 
