@@ -145,6 +145,8 @@ public:
    * If execution of a goal is deferred then `ServerGoalHandle<>::set_executing()` must be called
    * first.
    * `std::runtime_error` is raised if the goal is in any state besides executing.
+   *
+   * \param[in] feedback_msg the message to publish to clients.
    */
   void
   publish_feedback(std::shared_ptr<typename ACTION::Feedback> feedback_msg)
@@ -160,6 +162,8 @@ public:
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
    * An exception is raised if the goal is in any state besides executing.
+   *
+   * \param[in] result_msg the final result to send to clients.
    */
   void
   set_aborted(typename ACTION::Result::SharedPtr result_msg)
@@ -175,6 +179,8 @@ public:
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
    * An exception is raised if the goal is in any state besides executing.
+   *
+   * \param[in] result_msg the final result to send to clients.
    */
   void
   set_succeeded(typename ACTION::Result::SharedPtr result_msg)
@@ -190,6 +196,8 @@ public:
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
    * An exception is raised if the goal is in any state besides executing or pending.
+   *
+   * \param[in] result_msg the final result to send to clients.
    */
   void
   set_canceled(typename ACTION::Result::SharedPtr result_msg)
