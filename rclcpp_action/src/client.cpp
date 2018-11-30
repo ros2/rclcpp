@@ -36,7 +36,8 @@ public:
     const rcl_action_client_options_t & client_options)
   : node_handle(node_base->get_shared_rcl_node_handle()),
     logger(rclcpp::get_logger(rcl_node_get_logger_name(
-      node_handle.get())).get_child("rclcpp"))
+      node_handle.get())).get_child("rclcpp")),
+    random_bytes_generator(std::random_device{}())
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
     client_handle = std::shared_ptr<rcl_action_client_t>(
@@ -198,6 +199,7 @@ ClientBase::handle_goal_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
+  std::cerr << "handle goal response received xxx\n";
   std::lock_guard<std::mutex> guard(pimpl_->goal_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_goal_responses.count(sequence_number) == 0) {
@@ -218,7 +220,7 @@ ClientBase::send_goal_request(std::shared_ptr<void> request, ResponseCallback ca
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send goal request");
   }
-  assert(pimpl_->pending_goal_responses.count(sequence_number) != 0);
+  assert(pimpl_->pending_goal_responses.count(sequence_number) == 0);
   pimpl_->pending_goal_responses[sequence_number] = callback;
 }
 
@@ -247,7 +249,7 @@ ClientBase::send_result_request(std::shared_ptr<void> request, ResponseCallback 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send result request");
   }
-  assert(pimpl_->pending_result_responses.count(sequence_number) != 0);
+  assert(pimpl_->pending_result_responses.count(sequence_number) == 0);
   pimpl_->pending_result_responses[sequence_number] = callback;
 }
 

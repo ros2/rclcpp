@@ -25,7 +25,7 @@ namespace rclcpp_action
 template<typename ACTION>
 ClientGoalHandle<ACTION>::ClientGoalHandle(
   const GoalInfo & info, FeedbackCallback callback)
-: info_(info), feedback_callback_(callback)
+: info_(info), result_future_(result_promise_.get_future()), feedback_callback_(callback)
 {
 }
 

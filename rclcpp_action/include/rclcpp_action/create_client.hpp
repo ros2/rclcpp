@@ -31,9 +31,11 @@ create_client(
   rclcpp::Node * node,
   const std::string & name)
 {
-  return Client<ACTION>::make_shared(
+  auto action_client = Client<ACTION>::make_shared(
     node->get_node_base_interface(),
     name);
+  node->get_node_waitables_interface()->add_waitable(action_client, nullptr);
+  return action_client;
 }
 
 template<typename ACTION>

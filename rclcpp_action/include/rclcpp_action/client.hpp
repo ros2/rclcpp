@@ -398,12 +398,14 @@ private:
     goal_result_request->uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
-      [goal_handle] (std::shared_ptr<void> response) mutable
+      [goal_handle, this] (std::shared_ptr<void> response) mutable
       {
         using GoalResultResponse = typename ACTION::GoalResultService::Response;
         typename GoalResultResponse::SharedPtr goal_result_response =
           std::static_pointer_cast<GoalResultResponse>(response);
         goal_handle->set_result(goal_result_response);
+        std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+        goal_handles_.erase(goal_handle->get_goal_id());
       });
     goal_handle->set_result_awareness(true);
   }
