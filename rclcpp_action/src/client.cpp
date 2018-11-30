@@ -199,7 +199,6 @@ ClientBase::handle_goal_response(
   const rmw_request_id_t & response_header,
   std::shared_ptr<void> response)
 {
-  std::cerr << "handle goal response received xxx\n";
   std::lock_guard<std::mutex> guard(pimpl_->goal_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
   if (pimpl_->pending_goal_responses.count(sequence_number) == 0) {
