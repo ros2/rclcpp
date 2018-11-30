@@ -29,10 +29,11 @@ namespace rclcpp_action
 {
 
 /// Base class to interact with goals on a server.
+/// \internal
 /**
  *
- * This class should not be used directly by users writing an action server.
- * Instead users should use `rclcpp_action::ServerGoalHandle<>`.
+ * This class in not be used directly by users writing an action server.
+ * Instead users will be given an instance of `rclcpp_action::ServerGoalHandle<>`.
  *
  * Internally, this class is responsible for interfacing with the `rcl_action` API.
  */
@@ -61,7 +62,11 @@ public:
   virtual
   ~ServerGoalHandleBase();
 
-  /// Return a shared pointer to the C struct this class wraps.
+  /// Get a shared pointer to the C struct this class wraps.
+  /**
+   * It is not thread safe to use the returned pointer in any `rcl_action` functions while calling
+   * any of the other functions on this class.
+   */
   RCLCPP_ACTION_PUBLIC
   std::shared_ptr<rcl_action_goal_handle_t>
   get_rcl_handle() const;
@@ -113,10 +118,21 @@ private:
   std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
 };
 
-// Forward declar server
+// Forward declare server
 template<typename ACTION>
 class Server;
 
+/// Class to interact with goals on a server.
+/**
+ * Use this class to check the status of a goal as well as set the result.
+ * This class is not meant to be created by a user, instead it is created when a goal has been
+ * accepted.
+ * The class `rclcpp_action::Server<>` will create an instance and give it to the user in their
+ * `handle_accepted` callback.
+ *
+ * Internally, this class is responsible for coverting between the C++ action type and generic
+ * types for `rclcpp_action::ServerGoalHandleBase`.
+ */
 template<typename ACTION>
 class ServerGoalHandle : public ServerGoalHandleBase
 {
@@ -124,6 +140,12 @@ public:
   virtual ~ServerGoalHandle() = default;
 
   /// Send an update about the progress of a goal.
+  /**
+   * This must only be called when the goal is executing.
+   * If execution of a goal is deferred then `ServerGoalHandle<>::set_executing()` must be called
+   * first.
+   * `std::runtime_error` is raised if the goal is in any state besides executing.
+   */
   void
   publish_feedback(std::shared_ptr<typename ACTION::Feedback> feedback_msg)
   {
@@ -131,7 +153,14 @@ public:
     _publish_feedback(std::static_pointer_cast<void>(feedback_msg));
   }
 
+  // TODO(sloretz) which exception is raised?
   /// Indicate that a goal could not be reached and has been aborted.
+  /**
+   * Only call this if the goal was executing but cannot be completed.
+   * This is a terminal state, no more methods should be called on a goal handle after this is
+   * called.
+   * An exception is raised if the goal is in any state besides executing.
+   */
   void
   set_aborted(typename ACTION::Result::SharedPtr result_msg)
   {
@@ -141,6 +170,12 @@ public:
   }
 
   /// Indicate that a goal has been reached.
+  /**
+   * Only call this if the goal is executing and has reached the desired final state.
+   * This is a terminal state, no more methods should be called on a goal handle after this is
+   * called.
+   * An exception is raised if the goal is in any state besides executing.
+   */
   void
   set_succeeded(typename ACTION::Result::SharedPtr result_msg)
   {
@@ -150,6 +185,12 @@ public:
   }
 
   /// Indicate that a goal has been canceled.
+  /**
+   * Only call this if the goal is executing or pending, but has been canceled.
+   * This is a terminal state, no more methods should be called on a goal handle after this is
+   * called.
+   * An exception is raised if the goal is in any state besides executing or pending.
+   */
   void
   set_canceled(typename ACTION::Result::SharedPtr result_msg)
   {
@@ -158,6 +199,11 @@ public:
     on_terminal_state_(uuid_, result_msg);
   }
 
+  /// Indicate that the server is starting to execute a goal.
+  /**
+   * Only call this if the goal is pending.
+   * An exception is raised if the goal is in any state besides pending.
+   */
   void
   set_executing()
   {
@@ -180,6 +226,7 @@ public:
   }
 
 protected:
+  /// \internal
   ServerGoalHandle(
     std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
@@ -198,7 +245,6 @@ protected:
 
   /// A unique id for the goal request.
   const std::array<uint8_t, 16> uuid_;
-
 
   friend Server<ACTION>;
 
