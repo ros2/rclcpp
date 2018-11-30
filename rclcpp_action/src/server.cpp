@@ -208,7 +208,7 @@ ServerBase::execute_goal_request_received()
   }
 
   // Call user's callback, getting the user's response and a ros message to send back
-  auto response_pair = call_handle_goal_callback(goal_info, message);
+  auto response_pair = call_handle_goal_callback(uuid, message);
 
   ret = rcl_action_send_goal_response(
     pimpl_->action_server_.get(),

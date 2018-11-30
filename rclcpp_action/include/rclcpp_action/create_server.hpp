@@ -52,5 +52,19 @@ create_server(
   node->get_node_waitables_interface()->add_waitable(action_server, nullptr);
   return action_server;
 }
+
+template<typename ACTION>
+typename Server<ACTION>::SharedPtr
+create_server(
+  rclcpp::Node::SharedPtr node,
+  const std::string & name,
+  typename Server<ACTION>::GoalCallback handle_goal,
+  typename Server<ACTION>::CancelCallback handle_cancel,
+  typename Server<ACTION>::ExecuteCallback handle_execute,
+  const rcl_action_server_options_t & options = rcl_action_server_get_default_options())
+{
+  return create_server<ACTION>(
+    node.get(), name, handle_goal, handle_cancel, handle_execute, options);
+}
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__CREATE_SERVER_HPP_

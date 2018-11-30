@@ -109,7 +109,7 @@ protected:
   RCLCPP_ACTION_PUBLIC
   virtual
   std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(rcl_action_goal_info_t &, std::shared_ptr<void> request) = 0;
+  call_handle_goal_callback(std::array<uint8_t, 16> &, std::shared_ptr<void> request) = 0;
 
   // ServerBase will determine which goal ids are being cancelled, and then call this function for
   // each goal id.
@@ -213,7 +213,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
   using GoalCallback = std::function<GoalResponse(
-        rcl_action_goal_info_t &, std::shared_ptr<typename ACTION::Goal>)>;
+        std::array<uint8_t, 16>&, std::shared_ptr<typename ACTION::Goal>)>;
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
   using ExecuteCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
 
@@ -244,14 +244,14 @@ public:
 
 protected:
   std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(rcl_action_goal_info_t & info, std::shared_ptr<void> message) override
+  call_handle_goal_callback(std::array<uint8_t, 16> & uuid, std::shared_ptr<void> message) override
   {
     // TODO(sloretz) update and remove assert when IDL pipeline allows nesting user's type
     static_assert(
       std::is_same<typename ACTION::Goal, typename ACTION::GoalRequestService::Request>::value,
       "Assuming user fields were merged with goal request fields");
     GoalResponse user_response = handle_goal_(
-      info, std::static_pointer_cast<typename ACTION::Goal>(message));
+      uuid, std::static_pointer_cast<typename ACTION::Goal>(message));
 
     auto ros_response = std::make_shared<typename ACTION::GoalRequestService::Response>();
     ros_response->accepted = GoalResponse::ACCEPT == user_response;
