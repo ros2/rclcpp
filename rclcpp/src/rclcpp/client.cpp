@@ -37,17 +37,20 @@ ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph)
 : node_graph_(node_graph),
-  node_handle_(node_base->get_shared_rcl_node_handle())
+  node_handle_(node_base->get_shared_rcl_node_handle()),
+  context_(node_base->get_context())
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
-  client_handle_ = std::shared_ptr<rcl_client_t>(
-    new rcl_client_t, [weak_node_handle](rcl_client_t * client)
+  rcl_client_t * new_rcl_client = new rcl_client_t;
+  *new_rcl_client = rcl_get_zero_initialized_client();
+  client_handle_.reset(
+    new_rcl_client, [weak_node_handle](rcl_client_t * client)
     {
       auto handle = weak_node_handle.lock();
       if (handle) {
         if (rcl_client_fini(client, handle.get()) != RCL_RET_OK) {
           RCLCPP_ERROR(
-            rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp"),
+            rclcpp::get_node_logger(handle.get()).get_child("rclcpp"),
             "Error in destruction of rcl client handle: %s", rcl_get_error_string().str);
           rcl_reset_error();
         }
@@ -59,7 +62,6 @@ ClientBase::ClientBase(
       }
       delete client;
     });
-  *client_handle_.get() = rcl_get_zero_initialized_client();
 }
 
 ClientBase::~ClientBase()
@@ -94,6 +96,13 @@ ClientBase::service_is_ready() const
     this->get_rcl_node_handle(),
     this->get_client_handle().get(),
     &is_ready);
+  if (RCL_RET_NODE_INVALID == ret) {
+    const rcl_node_t * node_handle = this->get_rcl_node_handle();
+    if (node_handle && !rcl_context_is_valid(node_handle->context)) {
+      // context is shutdown, do a soft failure
+      return false;
+    }
+  }
   if (ret != RCL_RET_OK) {
     throw_from_rcl_error(ret, "rcl_service_server_is_available failed");
   }
@@ -128,7 +137,7 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   }
   // continue forever if timeout is negative, otherwise continue until out of time_to_wait
   do {
-    if (!rclcpp::ok()) {
+    if (!rclcpp::ok(this->context_)) {
       return false;
     }
     // Limit each wait to 100ms to workaround an issue specific to the Connext RMW implementation.

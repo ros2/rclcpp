@@ -20,6 +20,8 @@
 
 #include "rclcpp/visibility_control.hpp"
 
+#include "rcl/node.h"
+
 /**
  * \def RCLCPP_LOGGING_ENABLED
  * When this define evaluates to true (default), logger factory functions will
@@ -59,6 +61,18 @@ class Logger;
 RCLCPP_PUBLIC
 Logger
 get_logger(const std::string & name);
+
+/// Return a named logger using an rcl_node_t.
+/**
+ * This is a convenience function that does error checking and returns the node
+ * logger name, or "rclcpp" if it is unable to get the node name.
+ *
+ * \param[in] node the rcl node from which to get the logger name
+ * \return a logger based on the node name, or "rclcpp" if there's an error
+ */
+RCLCPP_PUBLIC
+Logger
+get_node_logger(const rcl_node_t * node);
 
 class Logger
 {

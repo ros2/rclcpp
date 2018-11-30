@@ -70,11 +70,11 @@ MultiThreadedExecutor::get_number_of_threads()
 void
 MultiThreadedExecutor::run(size_t)
 {
-  while (rclcpp::ok() && spinning.load()) {
+  while (rclcpp::ok(this->context_) && spinning.load()) {
     executor::AnyExecutable any_exec;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
-      if (!rclcpp::ok() || !spinning.load()) {
+      if (!rclcpp::ok(this->context_) || !spinning.load()) {
         return;
       }
       if (!get_next_executable(any_exec)) {

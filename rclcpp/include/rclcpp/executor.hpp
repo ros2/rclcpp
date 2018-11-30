@@ -28,9 +28,10 @@
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
 
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/memory_strategy.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -65,16 +66,20 @@ to_string(const FutureReturnCode & future_return_code);
  */
 struct ExecutorArgs
 {
+  ExecutorArgs()
+  : memory_strategy(memory_strategies::create_default_strategy()),
+    context(rclcpp::contexts::default_context::get_global_default_context()),
+    max_conditions(0)
+  {}
+
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
-  size_t max_conditions = 0;
+  std::shared_ptr<rclcpp::Context> context;
+  size_t max_conditions;
 };
 
 static inline ExecutorArgs create_default_executor_arguments()
 {
-  ExecutorArgs args;
-  args.memory_strategy = memory_strategies::create_default_strategy();
-  args.max_conditions = 0;
-  return args;
+  return ExecutorArgs();
 }
 
 /// Coordinate the order and timing of available communication tasks.
@@ -95,7 +100,7 @@ public:
   /// Default constructor.
   // \param[in] ms The memory strategy to be used with this executor.
   RCLCPP_PUBLIC
-  explicit Executor(const ExecutorArgs & args = create_default_executor_arguments());
+  explicit Executor(const ExecutorArgs & args = ExecutorArgs());
 
   /// Default destructor.
   RCLCPP_PUBLIC
@@ -237,7 +242,7 @@ public:
     }
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
-    while (rclcpp::ok()) {
+    while (rclcpp::ok(this->context_)) {
       // Do one item of work.
       spin_once(timeout_left);
       // Check if the future is set, return SUCCESS if it is.
@@ -352,6 +357,9 @@ protected:
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
+
+  /// The context associated with this executor.
+  std::shared_ptr<rclcpp::Context> context_;
 
 private:
   RCLCPP_DISABLE_COPY(Executor)

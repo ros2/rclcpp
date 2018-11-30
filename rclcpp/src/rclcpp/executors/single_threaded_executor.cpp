@@ -30,7 +30,7 @@ SingleThreadedExecutor::spin()
     throw std::runtime_error("spin() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-  while (rclcpp::ok() && spinning.load()) {
+  while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::executor::AnyExecutable any_executable;
     if (get_next_executable(any_executable)) {
       execute_any_executable(any_executable);

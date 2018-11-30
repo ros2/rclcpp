@@ -35,17 +35,26 @@ namespace rclcpp
 namespace graph_listener
 {
 
-GraphListener::GraphListener()
-: is_started_(false), is_shutdown_(false), shutdown_guard_condition_(nullptr)
+GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
+: is_started_(false),
+  is_shutdown_(false),
+  interrupt_guard_condition_context_(nullptr),
+  shutdown_guard_condition_(nullptr)
 {
+  // TODO(wjwwood): make a guard condition class in rclcpp so this can be tracked
+  //   automatically with the rcl guard condition
+  // hold on to this context to prevent it from going out of scope while this
+  // guard condition is using it.
+  interrupt_guard_condition_context_ = parent_context->get_rcl_context();
   rcl_ret_t ret = rcl_guard_condition_init(
     &interrupt_guard_condition_,
+    interrupt_guard_condition_context_.get(),
     rcl_guard_condition_get_default_options());
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
 
-  shutdown_guard_condition_ = rclcpp::get_sigint_guard_condition(&wait_set_);
+  shutdown_guard_condition_ = rclcpp::get_sigint_guard_condition(&wait_set_, parent_context);
 }
 
 GraphListener::~GraphListener()
@@ -337,6 +346,7 @@ GraphListener::shutdown()
       listener_thread_.join();
     }
     rcl_ret_t ret = rcl_guard_condition_fini(&interrupt_guard_condition_);
+    interrupt_guard_condition_context_.reset();  // release context guard condition was using
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
     }

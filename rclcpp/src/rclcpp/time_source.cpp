@@ -21,10 +21,9 @@
 
 #include "rcl/time.h"
 
-#include "rcutils/logging_macros.h"
-
 #include "rclcpp/clock.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
@@ -34,14 +33,16 @@ namespace rclcpp
 {
 
 TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node)
-: clock_subscription_(nullptr),
+: logger_(rclcpp::get_logger("rclcpp")),
+  clock_subscription_(nullptr),
   ros_time_active_(false)
 {
   this->attachNode(node);
 }
 
 TimeSource::TimeSource()
-: ros_time_active_(false)
+: logger_(rclcpp::get_logger("rclcpp")),
+  ros_time_active_(false)
 {
 }
 
@@ -51,20 +52,25 @@ void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
     node->get_node_graph_interface(),
-    node->get_node_services_interface());
+    node->get_node_services_interface(),
+    node->get_node_logging_interface());
 }
 
 void TimeSource::attachNode(
-  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
-  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
-  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
-  const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface)
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface)
 {
   node_base_ = node_base_interface;
   node_topics_ = node_topics_interface;
   node_graph_ = node_graph_interface;
   node_services_ = node_services_interface;
+  node_logging_ = node_logging_interface;
   // TODO(tfoote): Update QOS
+
+  logger_ = node_logging_->get_logger();
 
   parameter_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     node_base_,
@@ -111,7 +117,7 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
   if (result != associated_clocks_.end()) {
     associated_clocks_.erase(result);
   } else {
-    RCUTILS_LOG_ERROR("Failed to remove clock");
+    RCLCPP_ERROR(logger_, "failed to remove clock");
   }
 }
 
@@ -200,7 +206,7 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
       rclcpp::ParameterEventsFilter::EventType::CHANGED});
   for (auto & it : filter.get_events()) {
     if (it.second->value.type != ParameterType::PARAMETER_BOOL) {
-      RCUTILS_LOG_ERROR("use_sim_time parameter set to something besides a bool");
+      RCLCPP_ERROR(logger_, "use_sim_time parameter set to something besides a bool");
       continue;
     }
     if (it.second->value.bool_value) {

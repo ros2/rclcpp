@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "rclcpp/clock.hpp"
+#include "rclcpp/context.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/rate.hpp"
@@ -45,7 +46,10 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase)
 
   RCLCPP_PUBLIC
-  explicit TimerBase(Clock::SharedPtr clock, std::chrono::nanoseconds period);
+  explicit TimerBase(
+    Clock::SharedPtr clock,
+    std::chrono::nanoseconds period,
+    rclcpp::Context::SharedPtr context);
 
   RCLCPP_PUBLIC
   ~TimerBase();
@@ -114,9 +118,10 @@ public:
    * \param[in] callback User-specified callback function.
    */
   explicit GenericTimer(
-    Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback
+    Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
+    rclcpp::Context::SharedPtr context
   )
-  : TimerBase(clock, period), callback_(std::forward<FunctorT>(callback))
+  : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback))
   {
   }
 
@@ -128,7 +133,7 @@ public:
   }
 
   void
-  execute_callback()
+  execute_callback() override
   {
     rcl_ret_t ret = rcl_timer_call(timer_handle_.get());
     if (ret == RCL_RET_TIMER_CANCELED) {
@@ -165,8 +170,8 @@ public:
     callback_(*this);
   }
 
-  virtual bool
-  is_steady()
+  bool
+  is_steady() override
   {
     return clock_->get_clock_type() == RCL_STEADY_TIME;
   }
@@ -189,9 +194,12 @@ class WallTimer : public GenericTimer<FunctorT>
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(WallTimer)
 
-  explicit WallTimer(std::chrono::nanoseconds period, FunctorT && callback)
+  WallTimer(
+    std::chrono::nanoseconds period,
+    FunctorT && callback,
+    rclcpp::Context::SharedPtr context)
   : GenericTimer<FunctorT>(
-      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback))
+      std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context)
   {}
 
 protected:

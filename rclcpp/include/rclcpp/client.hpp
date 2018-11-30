@@ -110,6 +110,7 @@ protected:
 
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_node_t> node_handle_;
+  std::shared_ptr<rclcpp::Context> context_;
 
   std::shared_ptr<rcl_client_t> client_handle_;
 };
@@ -171,13 +172,13 @@ public:
   }
 
   std::shared_ptr<void>
-  create_response()
+  create_response() override
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
   }
 
   std::shared_ptr<rmw_request_id_t>
-  create_request_header()
+  create_request_header() override
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
@@ -187,7 +188,7 @@ public:
   void
   handle_response(
     std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> response)
+    std::shared_ptr<void> response) override
   {
     std::unique_lock<std::mutex> lock(pending_requests_mutex_);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);

@@ -86,7 +86,8 @@ LifecycleNode::LifecycleNode(
       node_base_,
       node_topics_,
       node_graph_,
-      node_services_
+      node_services_,
+      node_logging_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   use_intra_process_comms_(use_intra_process_comms),

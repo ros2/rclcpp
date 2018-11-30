@@ -64,7 +64,7 @@ NodeParameters::NodeParameters(
   }
   const rcl_node_options_t * options = rcl_node_get_options(node);
   if (nullptr == options) {
-    throw std::runtime_error("Need valid node options NodeParameters");
+    throw std::runtime_error("Need valid node options in NodeParameters");
   }
 
   // Get paths to yaml files containing initial parameter values
@@ -93,7 +93,8 @@ NodeParameters::NodeParameters(
 
   // global before local so that local overwrites global
   if (options->use_global_arguments) {
-    get_yaml_paths(rcl_get_global_arguments());
+    auto context_ptr = node_base->get_context()->get_rcl_context();
+    get_yaml_paths(&(context_ptr->global_arguments));
   }
   get_yaml_paths(&(options->arguments));
 

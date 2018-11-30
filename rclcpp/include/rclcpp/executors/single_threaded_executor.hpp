@@ -45,7 +45,7 @@ public:
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
   SingleThreadedExecutor(
-    const executor::ExecutorArgs & args = rclcpp::executor::create_default_executor_arguments());
+    const executor::ExecutorArgs & args = executor::ExecutorArgs());
 
   /// Default destrcutor.
   RCLCPP_PUBLIC
