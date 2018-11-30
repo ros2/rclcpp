@@ -114,6 +114,10 @@ ServerGoalHandleBase::get_rcl_handle() const
 void
 ServerGoalHandleBase::_publish_feedback(std::shared_ptr<void> feedback_msg)
 {
+  if (!is_executing()) {
+    // TODO(sloretz) custom exception
+    throw std::runtime_error("Publishing feedback for goal that's not executing\n");
+  }
   rcl_ret_t ret = rcl_action_publish_feedback(rcl_server_.get(), feedback_msg.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to publish feedback");
