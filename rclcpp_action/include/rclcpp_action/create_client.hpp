@@ -35,6 +35,15 @@ create_client(
     node->get_node_base_interface(),
     name);
 }
+
+template<typename ACTION>
+typename Client<ACTION>::SharedPtr
+create_client(
+  rclcpp::Node::SharedPtr node,
+  const std::string & name)
+{
+  return create_client<ACTION>(node.get(), name);
+}
 }  // namespace rclcpp_action
 
 #endif  // RCLCPP_ACTION__CREATE_CLIENT_HPP_

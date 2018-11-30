@@ -82,6 +82,12 @@ private:
   set_result(const Result & result);
 
   void
+  set_result(const typename Result::SharedPtr & result)
+  {
+    return set_result(*(result.get()));
+  }
+
+  void
   invalidate();
 
   GoalInfo info_;
