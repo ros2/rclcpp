@@ -17,6 +17,7 @@
 
 #include <rcl_action/action_client.h>
 
+#include <action_msgs/msg/goal_status.hpp>
 #include <rclcpp/macros.hpp>
 
 #include <functional>
@@ -29,6 +30,16 @@
 
 namespace rclcpp_action
 {
+/// The possible statuses that an action goal can finish with.
+enum class ResultCode : int8_t
+{
+  UNKNOWN = action_msgs::msg::GoalStatus::STATUS_UNKNOWN,
+  SUCCEEDED = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED,
+  CANCELED = action_msgs::msg::GoalStatus::STATUS_CANCELED,
+  ABORTED = action_msgs::msg::GoalStatus::STATUS_ABORTED
+};
+
+
 // Forward declarations
 template<typename ACTION>
 class Client;
@@ -39,7 +50,17 @@ class ClientGoalHandle
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientGoalHandle)
 
-  using Result = typename ACTION::Result;
+  // A wrapper that defines the result of an action
+  typedef struct Result
+  {
+    /// The unique identifier of the goal
+    GoalID goal_id;
+    /// A status to indicate if the goal was canceled, aborted, or suceeded
+    ResultCode code;
+    /// User defined fields sent back with an action
+    typename ACTION::Result::SharedPtr response;
+  } Result;
+
   using Feedback = typename ACTION::Feedback;
   using FeedbackCallback = std::function<void (
     ClientGoalHandle::SharedPtr, const Feedback &)>;
@@ -80,12 +101,6 @@ private:
 
   void
   set_result(const Result & result);
-
-  void
-  set_result(const typename Result::SharedPtr & result)
-  {
-    return set_result(*(result.get()));
-  }
 
   void
   invalidate();

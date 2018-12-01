@@ -157,9 +157,9 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Client)
 
   using Goal = typename ACTION::Goal;
-  using Result = typename ACTION::Result;
   using Feedback = typename ACTION::Feedback;
   using GoalHandle = ClientGoalHandle<ACTION>;
+  using Result = typename GoalHandle::Result;
   using FeedbackCallback = std::function<void (
       typename GoalHandle::SharedPtr, const Feedback &)>;
   using CancelRequest = typename ACTION::CancelGoalService::Request;
@@ -400,10 +400,13 @@ private:
       std::static_pointer_cast<void>(goal_result_request),
       [goal_handle, this] (std::shared_ptr<void> response) mutable
       {
+        // Wrap the response in a struct with the fields a user cares about
+        Result result;
         using GoalResultResponse = typename ACTION::GoalResultService::Response;
-        typename GoalResultResponse::SharedPtr goal_result_response =
-          std::static_pointer_cast<GoalResultResponse>(response);
-        goal_handle->set_result(goal_result_response);
+        result.response = std::static_pointer_cast<GoalResultResponse>(response);
+        result.goal_id = goal_handle->get_goal_id();
+        result.code = static_cast<ResultCode>(result.response->status);
+        goal_handle->set_result(result);
         std::lock_guard<std::mutex> lock(goal_handles_mutex_);
         goal_handles_.erase(goal_handle->get_goal_id());
       });

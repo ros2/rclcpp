@@ -58,7 +58,7 @@ void
 ClientGoalHandle<ACTION>::set_result(const Result & result)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
-  status_ = result.status;
+  status_ = static_cast<int8_t>(result.code);
   result_promise_.set_value(result);
 }
 
