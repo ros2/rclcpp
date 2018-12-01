@@ -99,9 +99,6 @@ ServerBase::ServerBase(
     &pimpl_->num_services_);
 
   if (RCL_RET_OK != ret) {
-    if (RCL_RET_OK != rcl_action_server_fini(pimpl_->action_server_.get(), rcl_node)) {
-      // Ignoring error during finalization
-    }
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
