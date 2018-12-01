@@ -277,7 +277,7 @@ ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send cancel request");
   }
-  assert(pimpl_->pending_cancel_responses.count(sequence_number) != 0);
+  assert(pimpl_->pending_cancel_responses.count(sequence_number) == 0);
   pimpl_->pending_cancel_responses[sequence_number] = callback;
 }
 

@@ -248,7 +248,7 @@ public:
   async_cancel_goal(typename GoalHandle::SharedPtr goal_handle) {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
-      throw exceptions::UnknownGoalHandleError(goal_handle);
+      throw exceptions::UnknownGoalHandleError();
     }
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<bool>>();
