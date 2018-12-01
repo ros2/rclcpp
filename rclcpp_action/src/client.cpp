@@ -304,13 +304,7 @@ ClientBase::execute()
       pimpl_->client_handle.get(), feedback_message.get());
     pimpl_->is_feedback_ready = false;
     if (RCL_RET_OK != ret) {
-      // TODO(hidmic): should throw instead?
-      RCLCPP_ERROR(
-        pimpl_->logger,
-        "Error taking feedback in '%s' action client: %s",
-        rcl_action_client_get_action_name(pimpl_->client_handle.get()),
-        rcl_get_error_string().str);
-      rcl_reset_error();
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking feedback");
     } else {
       this->handle_feedback_message(feedback_message);
     }
@@ -322,13 +316,7 @@ ClientBase::execute()
       pimpl_->client_handle.get(), status_message.get());
     pimpl_->is_status_ready = false;
     if (RCL_RET_OK != ret) {
-      // TODO(hidmic): should throw instead?
-      RCLCPP_ERROR(
-        pimpl_->logger,
-        "Error taking status in '%s' action client: %s",
-        rcl_action_client_get_action_name(pimpl_->client_handle.get()),
-        rcl_get_error_string().str);
-      rcl_reset_error();
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking status");
     } else {
       this->handle_status_message(status_message);
     }
@@ -341,13 +329,7 @@ ClientBase::execute()
       pimpl_->client_handle.get(), &response_header, goal_response.get());
     pimpl_->is_goal_response_ready = false;
     if (RCL_RET_OK != ret) {
-      // TODO(hidmic): should throw instead?
-      RCLCPP_ERROR(
-        pimpl_->logger,
-        "Error taking goal response in '%s' action client: %s",
-        rcl_action_client_get_action_name(pimpl_->client_handle.get()),
-        rcl_get_error_string().str);
-      rcl_reset_error();
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking goal response");
     } else {
       this->handle_goal_response(response_header, goal_response);
     }
@@ -360,13 +342,7 @@ ClientBase::execute()
       pimpl_->client_handle.get(), &response_header, result_response.get());
     pimpl_->is_result_response_ready = false;
     if (RCL_RET_OK != ret) {
-      // TODO(hidmic): should throw instead?
-      RCLCPP_ERROR(
-        pimpl_->logger,
-        "Error taking result response in '%s' action client: %s",
-        rcl_action_client_get_action_name(pimpl_->client_handle.get()),
-        rcl_get_error_string().str);
-      rcl_reset_error();
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking result response");
     } else {
       this->handle_result_response(response_header, result_response);
     }
@@ -379,13 +355,7 @@ ClientBase::execute()
       pimpl_->client_handle.get(), &response_header, cancel_response.get());
     pimpl_->is_cancel_response_ready = false;
     if (RCL_RET_OK != ret) {
-      // TODO(hidmic): should throw instead?
-      RCLCPP_ERROR(
-        pimpl_->logger,
-        "Error taking cancel response in '%s' action client: %s",
-        rcl_action_client_get_action_name(pimpl_->client_handle.get()),
-        rcl_get_error_string().str);
-      rcl_reset_error();
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking cancel response");
     } else {
       this->handle_cancel_response(response_header, cancel_response);
     }
