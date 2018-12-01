@@ -105,3 +105,16 @@ CallbackGroup::add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr)
   std::lock_guard<std::mutex> lock(mutex_);
   waitable_ptrs_.push_back(waitable_ptr);
 }
+
+void
+CallbackGroup::remove_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr) noexcept
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  for (auto iter = waitable_ptrs_.begin(); iter != waitable_ptrs_.end(); ++iter) {
+    const auto shared_ptr = iter->lock();
+    if (shared_ptr.get() == waitable_ptr.get()) {
+      waitable_ptrs_.erase(iter);
+      break;
+    }
+  }
+}
