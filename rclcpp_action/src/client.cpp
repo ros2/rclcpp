@@ -35,9 +35,8 @@ public:
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
   : node_handle(node_base->get_shared_rcl_node_handle()),
-    logger(rclcpp::get_logger(rcl_node_get_logger_name(
-      node_handle.get())).get_child("rclcpp")),
-    random_bytes_generator(std::random_device{}())
+    logger(rclcpp::get_logger(rcl_node_get_logger_name(node_handle.get())).get_child("rclcpp")),
+    random_bytes_generator(std::random_device{} ())
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
     client_handle = std::shared_ptr<rcl_action_client_t>(
@@ -97,8 +96,7 @@ public:
   std::shared_ptr<rcl_node_t> node_handle{nullptr};
   rclcpp::Logger logger;
 
-  using ResponseCallback =
-    std::function<void(std::shared_ptr<void> response)>;
+  using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
 
   std::map<int64_t, ResponseCallback> pending_goal_responses;
   std::mutex goal_requests_mutex;
@@ -118,9 +116,7 @@ ClientBase::ClientBase(
   const std::string & action_name,
   const rosidl_action_type_support_t * type_support,
   const rcl_action_client_options_t & client_options)
-    : pimpl_(new ClientBaseImpl(
-      node_base, action_name,
-      type_support, client_options))
+: pimpl_(new ClientBaseImpl(node_base, action_name, type_support, client_options))
 {
 }
 
@@ -168,8 +164,8 @@ bool
 ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   rcl_ret_t ret = rcl_action_wait_set_add_action_client(
-      wait_set, pimpl_->client_handle.get(), nullptr, nullptr);
-  return (RCL_RET_OK == ret);
+    wait_set, pimpl_->client_handle.get(), nullptr, nullptr);
+  return RCL_RET_OK == ret;
 }
 
 bool
@@ -186,12 +182,12 @@ ClientBase::is_ready(rcl_wait_set_t * wait_set)
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "failed to check for any ready entities");
   }
-  return (
+  return
     pimpl_->is_feedback_ready ||
     pimpl_->is_status_ready ||
     pimpl_->is_goal_response_ready ||
     pimpl_->is_cancel_response_ready ||
-    pimpl_->is_result_response_ready);
+    pimpl_->is_result_response_ready;
 }
 
 void

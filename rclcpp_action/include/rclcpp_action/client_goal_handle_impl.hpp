@@ -99,7 +99,7 @@ bool
 ClientGoalHandle<ACTION>::is_feedback_aware()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
-  return (feedback_callback_ != nullptr);
+  return feedback_callback_ != nullptr;
 }
 
 template<typename ACTION>

@@ -47,7 +47,7 @@ create_client(
         return;
       }
       // API expects a shared pointer, give it one with a deleter that does nothing.
-      std::shared_ptr<Client<ACTION>> fake_shared_ptr(ptr, [] (Client<ACTION> *) {});
+      std::shared_ptr<Client<ACTION>> fake_shared_ptr(ptr, [](Client<ACTION> *) {});
 
       if (group_is_null) {
         // Was added to default group

@@ -92,8 +92,7 @@ public:
   execute() override;
 
 protected:
-  using ResponseCallback =
-    std::function<void(std::shared_ptr<void> response)>;
+  using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
 
   RCLCPP_ACTION_PUBLIC
   rclcpp::Logger get_logger();
@@ -160,8 +159,7 @@ public:
   using Feedback = typename ACTION::Feedback;
   using GoalHandle = ClientGoalHandle<ACTION>;
   using Result = typename GoalHandle::Result;
-  using FeedbackCallback = std::function<void (
-      typename GoalHandle::SharedPtr, const Feedback &)>;
+  using FeedbackCallback = std::function<void (typename GoalHandle::SharedPtr, const Feedback &)>;
   using CancelRequest = typename ACTION::CancelGoalService::Request;
   using CancelResponse = typename ACTION::CancelGoalService::Response;
 
@@ -199,12 +197,11 @@ public:
     goal_request->uuid = this->generate_goal_id();
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
-      [this, goal_request, callback, ignore_result,
-       promise] (std::shared_ptr<void> response) mutable
+      [this, goal_request, callback, ignore_result, promise](
+        std::shared_ptr<void> response) mutable
       {
         using GoalResponse = typename ACTION::GoalRequestService::Response;
-        typename GoalResponse::SharedPtr goal_response =
-          std::static_pointer_cast<GoalResponse>(response);
+        auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
           promise->set_exception(std::make_exception_ptr(exceptions::RejectedGoalError()));
           return;
@@ -232,7 +229,8 @@ public:
 
   RCLCPP_ACTION_PUBLIC
   std::shared_future<Result>
-  async_get_result(typename GoalHandle::SharedPtr goal_handle) {
+  async_get_result(typename GoalHandle::SharedPtr goal_handle)
+  {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError(goal_handle);
@@ -245,7 +243,8 @@ public:
 
   RCLCPP_ACTION_PUBLIC
   std::shared_future<bool>
-  async_cancel_goal(typename GoalHandle::SharedPtr goal_handle) {
+  async_cancel_goal(typename GoalHandle::SharedPtr goal_handle)
+  {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
@@ -258,10 +257,9 @@ public:
     cancel_request->goal_info.goal_id.uuid = goal_handle->get_goal_id();
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [goal_handle, promise] (std::shared_ptr<void> response) mutable
+      [goal_handle, promise](std::shared_ptr<void> response) mutable
       {
-        typename CancelResponse::SharedPtr cancel_response =
-          std::static_pointer_cast<CancelResponse>(response);
+        auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
         bool goal_canceled = false;
         if (!cancel_response->goals_canceling.empty()) {
           const GoalInfo & canceled_goal_info = cancel_response->goals_canceling[0];
@@ -367,8 +365,7 @@ private:
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     using GoalStatusMessage = typename ACTION::GoalStatusMessage;
-    typename GoalStatusMessage::SharedPtr status_message =
-        std::static_pointer_cast<GoalStatusMessage>(message);
+    auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
       // const GoalID & goal_id = status.goal_info.goal_id;
       const GoalID & goal_id = status.goal_info.goal_id.uuid;
@@ -384,21 +381,22 @@ private:
       if (
         goal_status == GoalStatus::STATUS_SUCCEEDED ||
         goal_status == GoalStatus::STATUS_CANCELED ||
-        goal_status == GoalStatus::STATUS_ABORTED
-      ) {
+        goal_status == GoalStatus::STATUS_ABORTED)
+      {
         goal_handles_.erase(goal_id);
       }
     }
   }
 
-  void make_result_aware(typename GoalHandle::SharedPtr goal_handle) {
+  void make_result_aware(typename GoalHandle::SharedPtr goal_handle)
+  {
     using GoalResultRequest = typename ACTION::GoalResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
     // goal_result_request.goal_id = goal_handle->get_goal_id();
     goal_result_request->uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
-      [goal_handle, this] (std::shared_ptr<void> response) mutable
+      [goal_handle, this](std::shared_ptr<void> response) mutable
       {
         // Wrap the response in a struct with the fields a user cares about
         Result result;
@@ -421,10 +419,9 @@ private:
     std::shared_future<typename CancelResponse::SharedPtr> future(promise->get_future());
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [promise] (std::shared_ptr<void> response) mutable
+      [promise](std::shared_ptr<void> response) mutable
       {
-        typename CancelResponse::SharedPtr cancel_response =
-          std::static_pointer_cast<CancelResponse>(response);
+        auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
         promise->set_value(cancel_response);
       });
     return future;
