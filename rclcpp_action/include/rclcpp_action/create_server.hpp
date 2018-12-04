@@ -54,7 +54,7 @@ create_server(
         return;
       }
       // API expects a shared pointer, give it one with a deleter that does nothing.
-      std::shared_ptr<Server<ACTION>> fake_shared_ptr(ptr, [] (Server<ACTION> *) {});
+      std::shared_ptr<Server<ACTION>> fake_shared_ptr(ptr, [](Server<ACTION> *) {});
 
       if (group_is_null) {
         // Was added to default group
@@ -70,13 +70,13 @@ create_server(
     };
 
   std::shared_ptr<Server<ACTION>> action_server(new Server<ACTION>(
-    node->get_node_base_interface(),
-    node->get_node_clock_interface(),
-    name,
-    options,
-    handle_goal,
-    handle_cancel,
-    handle_accepted), deleter);
+      node->get_node_base_interface(),
+      node->get_node_clock_interface(),
+      name,
+      options,
+      handle_goal,
+      handle_cancel,
+      handle_accepted), deleter);
 
   node->get_node_waitables_interface()->add_waitable(action_server, group);
   return action_server;
