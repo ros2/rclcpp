@@ -51,6 +51,7 @@ public:
     const node_interfaces::NodeBaseInterface::SharedPtr node_base,
     const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     const node_interfaces::NodeServicesInterface::SharedPtr node_services,
+    const node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const std::vector<Parameter> & initial_parameters,
     bool use_intra_process,
     bool start_parameter_services);
@@ -120,6 +121,10 @@ private:
   Publisher<rcl_interfaces::msg::ParameterEvent>::SharedPtr events_publisher_;
 
   std::shared_ptr<ParameterService> parameter_service_;
+
+  std::string combined_name_;
+
+  node_interfaces::NodeClockInterface::SharedPtr node_clock_;
 };
 
 }  // namespace node_interfaces
