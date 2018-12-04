@@ -62,7 +62,7 @@ protected:
       throw std::runtime_error("cancel goal service didn't become available");
     }
     auto request = std::make_shared<test_msgs::action::Fibonacci::CancelGoalService::Request>();
-    request->goal_info.uuid = uuid;
+    request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
     if (rclcpp::executor::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
@@ -256,7 +256,7 @@ TEST_F(TestServer, publish_status_accepted)
   // Not sure whether accepted will come through because not sure when subscriber will match
   for (auto & msg : received_msgs) {
     ASSERT_EQ(1u, msg->status_list.size());
-    EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+    EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.goal_id.uuid);
     auto status = msg->status_list.at(0).status;
     if (action_msgs::msg::GoalStatus::STATUS_ACCEPTED == status) {
       EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_ACCEPTED, status);
@@ -318,7 +318,7 @@ TEST_F(TestServer, publish_status_canceling)
   auto & msg = received_msgs.back();
   ASSERT_EQ(1u, msg->status_list.size());
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_CANCELING, msg->status_list.at(0).status);
-  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.goal_id.uuid);
 }
 
 TEST_F(TestServer, publish_status_canceled)
@@ -375,7 +375,7 @@ TEST_F(TestServer, publish_status_canceled)
   auto & msg = received_msgs.back();
   ASSERT_EQ(1u, msg->status_list.size());
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_CANCELED, msg->status_list.at(0).status);
-  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.goal_id.uuid);
 }
 
 TEST_F(TestServer, publish_status_succeeded)
@@ -430,7 +430,7 @@ TEST_F(TestServer, publish_status_succeeded)
   auto & msg = received_msgs.back();
   ASSERT_EQ(1u, msg->status_list.size());
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, msg->status_list.at(0).status);
-  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.goal_id.uuid);
 }
 
 TEST_F(TestServer, publish_status_aborted)
@@ -485,7 +485,7 @@ TEST_F(TestServer, publish_status_aborted)
   auto & msg = received_msgs.back();
   ASSERT_EQ(1u, msg->status_list.size());
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_ABORTED, msg->status_list.at(0).status);
-  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.uuid);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.goal_id.uuid);
 }
 
 TEST_F(TestServer, publish_feedback)

@@ -201,7 +201,7 @@ ServerBase::execute_goal_request_received()
   pimpl_->goal_request_ready_ = false;
   std::array<uint8_t, 16> uuid = get_goal_id_from_goal_request(message.get());
   for (size_t i = 0; i < 16; ++i) {
-    goal_info.uuid[i] = uuid[i];
+    goal_info.goal_id.uuid[i] = uuid[i];
   }
 
   // Call user's callback, getting the user's response and a ros message to send back
@@ -275,7 +275,7 @@ ServerBase::execute_cancel_request_received()
   // Convert c++ message to C message
   rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
   for (size_t i = 0; i < 16; ++i) {
-    cancel_request.goal_info.uuid[i] = request->goal_info.uuid[i];
+    cancel_request.goal_info.goal_id.uuid[i] = request->goal_info.goal_id.uuid[i];
   }
   cancel_request.goal_info.stamp.sec = request->goal_info.stamp.sec;
   cancel_request.goal_info.stamp.nanosec = request->goal_info.stamp.nanosec;
@@ -295,7 +295,7 @@ ServerBase::execute_cancel_request_received()
     const rcl_action_goal_info_t & goal_info = goals.data[i];
     std::array<uint8_t, 16> uuid;
     for (size_t i = 0; i < 16; ++i) {
-      uuid[i] = goal_info.uuid[i];
+      uuid[i] = goal_info.goal_id.uuid[i];
     }
     auto response_pair = call_handle_cancel_callback(uuid);
     if (CancelResponse::ACCEPT == response_pair.first) {
@@ -306,7 +306,7 @@ ServerBase::execute_cancel_request_received()
         rclcpp::exceptions::throw_from_rcl_error(ret);
       } else {
         action_msgs::msg::GoalInfo cpp_info;
-        cpp_info.uuid = uuid;
+        cpp_info.goal_id.uuid = uuid;
         cpp_info.stamp.sec = goal_info.stamp.sec;
         cpp_info.stamp.nanosec = goal_info.stamp.nanosec;
         response->goals_canceling.push_back(cpp_info);
@@ -351,7 +351,7 @@ ServerBase::execute_result_request_received()
   std::array<uint8_t, 16> uuid = get_goal_id_from_result_request(result_request.get());
   rcl_action_goal_info_t goal_info;
   for (size_t i = 0; i < 16; ++i) {
-    goal_info.uuid[i] = uuid[i];
+    goal_info.goal_id.uuid[i] = uuid[i];
   }
   if (!rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info)) {
     // Goal does not exists
@@ -399,7 +399,7 @@ ServerBase::execute_check_expired_goals()
       // A goal expired!
       std::array<uint8_t, 16> uuid;
       for (size_t i = 0; i < 16; ++i) {
-        uuid[i] = expired_goals[0].uuid[i];
+        uuid[i] = expired_goals[0].goal_id.uuid[i];
       }
       pimpl_->goal_results_.erase(uuid);
       pimpl_->result_requests_.erase(uuid);
@@ -442,7 +442,7 @@ ServerBase::publish_status()
     msg.status = goal_state;
     // Convert C goal info to C++ goal info
     for (size_t i = 0; i < 16; ++i) {
-      msg.goal_info.uuid[i] = goal_info.uuid[i];
+      msg.goal_info.goal_id.uuid[i] = goal_info.goal_id.uuid[i];
     }
     msg.goal_info.stamp.sec = goal_info.stamp.sec;
     msg.goal_info.stamp.nanosec = goal_info.stamp.nanosec;
@@ -463,7 +463,7 @@ ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr
   // Check that the goal exists
   rcl_action_goal_info_t goal_info;
   for (size_t i = 0; i < 16; ++i) {
-    goal_info.uuid[i] = uuid[i];
+    goal_info.goal_id.uuid[i] = uuid[i];
   }
   if (!rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info)) {
     throw std::runtime_error("Asked to publish result for goal that does not exist");
