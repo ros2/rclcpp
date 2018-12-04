@@ -77,7 +77,7 @@ TEST_F(TestServer, construction_and_destruction)
   auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       [](std::array<uint8_t, 16> &, std::shared_ptr<test_msgs::action::Fibonacci::Goal>) {
         return rclcpp_action::GoalResponse::REJECT;
       },
@@ -101,7 +101,7 @@ TEST_F(TestServer, handle_goal_called)
     };
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>;
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       [](std::shared_ptr<GoalHandle>) {
         return rclcpp_action::CancelResponse::REJECT;
@@ -149,7 +149,7 @@ TEST_F(TestServer, handle_accepted_called)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       [](std::shared_ptr<GoalHandle>) {
         return rclcpp_action::CancelResponse::REJECT;
@@ -189,7 +189,7 @@ TEST_F(TestServer, handle_cancel_called)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -229,7 +229,7 @@ TEST_F(TestServer, publish_status_accepted)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -290,7 +290,7 @@ TEST_F(TestServer, publish_status_canceling)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -345,7 +345,7 @@ TEST_F(TestServer, publish_status_canceled)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -402,7 +402,7 @@ TEST_F(TestServer, publish_status_succeeded)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -457,7 +457,7 @@ TEST_F(TestServer, publish_status_aborted)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -512,7 +512,7 @@ TEST_F(TestServer, publish_feedback)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -570,7 +570,7 @@ TEST_F(TestServer, get_result)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
@@ -626,7 +626,7 @@ TEST_F(TestServer, deferred_execution)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node.get(), "fibonacci",
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
       handle_goal,
       handle_cancel,
       handle_accepted);
