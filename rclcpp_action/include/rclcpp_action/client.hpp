@@ -211,7 +211,7 @@ public:
         }
         GoalInfo goal_info;
         // goal_info.goal_id = goal_request->goal_id;
-        goal_info.uuid = goal_request->uuid;
+        goal_info.goal_id.uuid = goal_request->uuid;
         goal_info.stamp = goal_response->stamp;
         // Do not use std::make_shared as friendship cannot be forwarded.
         std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
@@ -255,7 +255,7 @@ public:
     std::shared_future<bool> future(promise->get_future());
     auto cancel_request = std::make_shared<CancelRequest>();
     // cancel_request->goal_info.goal_id = goal_handle->get_goal_id();
-    cancel_request->goal_info.uuid = goal_handle->get_goal_id();
+    cancel_request->goal_info.goal_id.uuid = goal_handle->get_goal_id();
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
       [goal_handle, promise] (std::shared_ptr<void> response) mutable
@@ -266,7 +266,7 @@ public:
         if (!cancel_response->goals_canceling.empty()) {
           const GoalInfo & canceled_goal_info = cancel_response->goals_canceling[0];
           // goal_canceled = (canceled_goal_info.goal_id == goal_handle->get_goal_id());
-          goal_canceled = (canceled_goal_info.uuid == goal_handle->get_goal_id());
+          goal_canceled = (canceled_goal_info.goal_id.uuid == goal_handle->get_goal_id());
         }
         promise->set_value(goal_canceled);
       });
@@ -371,7 +371,7 @@ private:
         std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
       // const GoalID & goal_id = status.goal_info.goal_id;
-      const GoalID & goal_id = status.goal_info.uuid;
+      const GoalID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
         RCLCPP_DEBUG(
           this->get_logger(),
