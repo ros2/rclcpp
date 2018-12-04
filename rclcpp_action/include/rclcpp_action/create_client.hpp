@@ -28,23 +28,45 @@ namespace rclcpp_action
 template<typename ACTION>
 typename Client<ACTION>::SharedPtr
 create_client(
-  rclcpp::Node * node,
-  const std::string & name)
-{
-  auto action_client = Client<ACTION>::make_shared(
-    node->get_node_base_interface(),
-    name);
-  node->get_node_waitables_interface()->add_waitable(action_client, nullptr);
-  return action_client;
-}
-
-template<typename ACTION>
-typename Client<ACTION>::SharedPtr
-create_client(
   rclcpp::Node::SharedPtr node,
-  const std::string & name)
+  const std::string & name,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
-  return create_client<ACTION>(node.get(), name);
+  std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
+    node->get_node_waitables_interface();
+  std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
+  bool group_is_null = (nullptr == group.get());
+
+  auto deleter = [weak_node, weak_group, group_is_null](Client<ACTION> * ptr)
+    {
+      if (nullptr == ptr) {
+        return;
+      }
+      auto shared_node = weak_node.lock();
+      if (!shared_node) {
+        return;
+      }
+      // API expects a shared pointer, give it one with a deleter that does nothing.
+      std::shared_ptr<Client<ACTION>> fake_shared_ptr(ptr, [] (Client<ACTION> *) {});
+
+      if (group_is_null) {
+        // Was added to default group
+        shared_node->remove_waitable(fake_shared_ptr, nullptr);
+      } else {
+        // Was added to a specfic group
+        auto shared_group = weak_group.lock();
+        if (shared_group) {
+          shared_node->remove_waitable(fake_shared_ptr, shared_group);
+        }
+      }
+      delete ptr;
+    };
+
+  std::shared_ptr<Client<ACTION>> action_client(
+    new Client<ACTION>(node->get_node_base_interface(), name), deleter);
+
+  node->get_node_waitables_interface()->add_waitable(action_client, group);
+  return action_client;
 }
 }  // namespace rclcpp_action
 

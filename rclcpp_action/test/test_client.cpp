@@ -37,6 +37,6 @@ TEST_F(TestClient, construction_and_destruction)
 {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/rclcpp_action/test/client");
 
-  auto ac = rclcpp_action::create_client<test_msgs::action::Fibonacci>(node.get(), "fibonacci");
+  auto ac = rclcpp_action::create_client<test_msgs::action::Fibonacci>(node, "fibonacci");
   (void)ac;
 }
