@@ -112,6 +112,10 @@ protected:
   void
   add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr);
 
+  RCLCPP_PUBLIC
+  void
+  remove_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr) noexcept;
+
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;

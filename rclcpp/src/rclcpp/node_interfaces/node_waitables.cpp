@@ -51,3 +51,18 @@ NodeWaitables::add_waitable(
     }
   }
 }
+
+void
+NodeWaitables::remove_waitable(
+  rclcpp::Waitable::SharedPtr waitable_ptr,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept
+{
+  if (group) {
+    if (!node_base_->callback_group_in_node(group)) {
+      return;
+    }
+    group->remove_waitable(waitable_ptr);
+  } else {
+    node_base_->get_default_callback_group()->remove_waitable(waitable_ptr);
+  }
+}

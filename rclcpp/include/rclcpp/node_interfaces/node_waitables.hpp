@@ -48,6 +48,13 @@ public:
     rclcpp::Waitable::SharedPtr waitable_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
+  RCLCPP_PUBLIC
+  virtual
+  void
+  remove_waitable(
+    rclcpp::Waitable::SharedPtr waitable_ptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept;
+
 private:
   RCLCPP_DISABLE_COPY(NodeWaitables)
 
