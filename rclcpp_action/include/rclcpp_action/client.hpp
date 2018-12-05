@@ -240,16 +240,8 @@ public:
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name
-  )
-  : Client(node_base, node_logging, action_name, rcl_action_client_get_default_options())
-  {
-  }
-
-  Client(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name, const rcl_action_client_options_t & client_options
+    const std::string & action_name,
+    const rcl_action_client_options_t client_options = rcl_action_client_get_default_options()
   )
   : ClientBase(
       node_base, node_logging, action_name,
