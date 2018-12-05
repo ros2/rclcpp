@@ -277,7 +277,7 @@ TEST_F(TestClient, async_send_goal_but_ignore_feedback_and_result)
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
     client_executor.spin_until_future_complete(future_goal_handle));
-  EXPECT_THROW(future_goal_handle.get(), rclcpp_action::exceptions::RejectedGoalError);
+  EXPECT_EQ(nullptr, future_goal_handle.get().get());
 
   ActionGoal good_goal;
   good_goal.order = 5;

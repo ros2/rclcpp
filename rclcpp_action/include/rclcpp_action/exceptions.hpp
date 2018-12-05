@@ -21,16 +21,6 @@ namespace rclcpp_action
 {
 namespace exceptions
 {
-
-class RejectedGoalError : public std::runtime_error
-{
-public:
-  RejectedGoalError()
-  : std::runtime_error("Goal was rejected by the server.")
-  {
-  }
-};
-
 class UnknownGoalHandleError : public std::invalid_argument
 {
 public:

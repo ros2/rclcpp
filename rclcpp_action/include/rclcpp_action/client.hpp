@@ -250,7 +250,7 @@ public:
         using GoalResponse = typename ACTION::GoalRequestService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
-          promise->set_exception(std::make_exception_ptr(exceptions::RejectedGoalError()));
+          promise->set_value(nullptr);
           return;
         }
         GoalInfo goal_info;
