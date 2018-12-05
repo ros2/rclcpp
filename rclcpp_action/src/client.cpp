@@ -56,7 +56,7 @@ public:
           }
         } else {
           RCLCPP_ERROR(
-            rclcpp::get_logger("rclcpp"),
+            rclcpp::get_logger("rclcpp_action"),
             "Error in destruction of rcl action client handle: "
             "the Node Handle was destructed too early. You will leak memory");
         }
