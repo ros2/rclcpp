@@ -236,6 +236,7 @@ public:
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
+    // If the user chose to ignore the result before, then ask the server for the result now.
     if (!goal_handle->is_result_aware()) {
       this->make_result_aware(goal_handle);
     }
