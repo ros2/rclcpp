@@ -17,39 +17,112 @@
 
 #include <rcl_action/action_client.h>
 
-#include <functional>
-#include <memory>
+#include <action_msgs/msg/goal_status.hpp>
+#include <rclcpp/macros.hpp>
+#include <rclcpp/time.hpp>
 
+#include <functional>
+#include <future>
+#include <memory>
+#include <mutex>
+
+#include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
 {
+/// The possible statuses that an action goal can finish with.
+enum class ResultCode : int8_t
+{
+  UNKNOWN = action_msgs::msg::GoalStatus::STATUS_UNKNOWN,
+  SUCCEEDED = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED,
+  CANCELED = action_msgs::msg::GoalStatus::STATUS_CANCELED,
+  ABORTED = action_msgs::msg::GoalStatus::STATUS_ABORTED
+};
+
+
 // Forward declarations
-template<typename ACTION>
+template<typename ActionT>
 class Client;
 
-template<typename ACTION>
+template<typename ActionT>
 class ClientGoalHandle
 {
 public:
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientGoalHandle)
+
+  // A wrapper that defines the result of an action
+  typedef struct Result
+  {
+    /// The unique identifier of the goal
+    GoalID goal_id;
+    /// A status to indicate if the goal was canceled, aborted, or suceeded
+    ResultCode code;
+    /// User defined fields sent back with an action
+    typename ActionT::Result::SharedPtr response;
+  } Result;
+
+  using Feedback = typename ActionT::Feedback;
+  using FeedbackCallback =
+    std::function<void (
+        typename ClientGoalHandle<ActionT>::SharedPtr, const std::shared_ptr<const Feedback>)>;
+
   virtual ~ClientGoalHandle();
 
-  /// TODO(sloretz) examples have this on client as `async_cancel_goal(goal_handle)`
-  std::future<bool>
-  async_cancel();
+  const GoalID &
+  get_goal_id() const;
 
-  std::future<typename ACTION::Result>
+  rclcpp::Time
+  get_goal_stamp() const;
+
+  std::shared_future<Result>
   async_result();
 
+  int8_t
+  get_status();
+
+  bool
+  is_feedback_aware();
+
+  bool
+  is_result_aware();
+
 private:
-  // The templated Server creates goal handles
-  friend Client<ACTION>;
+  // The templated Client creates goal handles
+  friend Client<ActionT>;
 
-  ClientGoalHandle(rcl_action_client_t * rcl_client, const rcl_action_goal_info_t rcl_info);
+  ClientGoalHandle(const GoalInfo & info, FeedbackCallback callback);
 
-  // TODO(sloretz) shared pointer to keep rcl_client_ alive while goal handles are alive
-  rcl_action_client_t * rcl_client_;
-  rcl_action_goal_info_t rcl_info_;
+  void
+  set_feedback_callback(FeedbackCallback callback);
+
+  void
+  call_feedback_callback(
+    typename ClientGoalHandle<ActionT>::SharedPtr shared_this,
+    typename std::shared_ptr<const Feedback> feedback_message);
+
+  void
+  set_result_awareness(bool awareness);
+
+  void
+  set_status(int8_t status);
+
+  void
+  set_result(const Result & result);
+
+  void
+  invalidate();
+
+  GoalInfo info_;
+
+  bool is_result_aware_{false};
+  std::promise<Result> result_promise_;
+  std::shared_future<Result> result_future_;
+
+  FeedbackCallback feedback_callback_{nullptr};
+  int8_t status_{GoalStatus::STATUS_ACCEPTED};
+
+  std::mutex handle_mutex_;
 };
 }  // namespace rclcpp_action
 

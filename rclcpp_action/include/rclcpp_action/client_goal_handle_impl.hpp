@@ -17,35 +17,137 @@
 
 #include <rcl_action/types.h>
 
+#include <memory>
+
+#include "rclcpp_action/exceptions.hpp"
+
 namespace rclcpp_action
 {
-template<typename ACTION>
-ClientGoalHandle<ACTION>::ClientGoalHandle(
-  rcl_action_client_t * rcl_client,
-  const rcl_action_goal_info_t rcl_info
-)
-: rcl_client_(rcl_client), rcl_info_(rcl_info)
+
+template<typename ActionT>
+ClientGoalHandle<ActionT>::ClientGoalHandle(
+  const GoalInfo & info, FeedbackCallback callback)
+: info_(info), result_future_(result_promise_.get_future()), feedback_callback_(callback)
 {
 }
 
-template<typename ACTION>
-ClientGoalHandle<ACTION>::~ClientGoalHandle()
+template<typename ActionT>
+ClientGoalHandle<ActionT>::~ClientGoalHandle()
 {
 }
 
-template<typename ACTION>
-std::future<bool>
-ClientGoalHandle<ACTION>::async_cancel()
+template<typename ActionT>
+const GoalID &
+ClientGoalHandle<ActionT>::get_goal_id() const
 {
-  throw std::runtime_error("Failed to cancel goal");
+  // return info_.goal_id;
+  return info_.goal_id.uuid;
 }
 
-template<typename ACTION>
-std::future<typename ACTION::Result>
-ClientGoalHandle<ACTION>::async_result()
+template<typename ActionT>
+rclcpp::Time
+ClientGoalHandle<ActionT>::get_goal_stamp() const
 {
-  throw std::runtime_error("Failed to get result future");
+  return info_.stamp;
 }
+
+template<typename ActionT>
+std::shared_future<typename ClientGoalHandle<ActionT>::Result>
+ClientGoalHandle<ActionT>::async_result()
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  if (!is_result_aware_) {
+    throw exceptions::UnawareGoalHandleError();
+  }
+  return result_future_;
+}
+
+template<typename ActionT>
+void
+ClientGoalHandle<ActionT>::set_result(const Result & result)
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  status_ = static_cast<int8_t>(result.code);
+  result_promise_.set_value(result);
+}
+
+template<typename ActionT>
+void
+ClientGoalHandle<ActionT>::set_feedback_callback(FeedbackCallback callback)
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  feedback_callback_ = callback;
+}
+
+template<typename ActionT>
+int8_t
+ClientGoalHandle<ActionT>::get_status()
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  return status_;
+}
+
+template<typename ActionT>
+void
+ClientGoalHandle<ActionT>::set_status(int8_t status)
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  status_ = status;
+}
+
+template<typename ActionT>
+bool
+ClientGoalHandle<ActionT>::is_feedback_aware()
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  return feedback_callback_ != nullptr;
+}
+
+template<typename ActionT>
+bool
+ClientGoalHandle<ActionT>::is_result_aware()
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  return is_result_aware_;
+}
+
+template<typename ActionT>
+void
+ClientGoalHandle<ActionT>::set_result_awareness(bool awareness)
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  is_result_aware_ = awareness;
+}
+
+template<typename ActionT>
+void
+ClientGoalHandle<ActionT>::invalidate()
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  status_ = GoalStatus::STATUS_UNKNOWN;
+  result_promise_.set_exception(std::make_exception_ptr(
+      exceptions::UnawareGoalHandleError()));
+}
+
+template<typename ActionT>
+void
+ClientGoalHandle<ActionT>::call_feedback_callback(
+  typename ClientGoalHandle<ActionT>::SharedPtr shared_this,
+  typename std::shared_ptr<const Feedback> feedback_message)
+{
+  if (shared_this.get() != this) {
+    RCLCPP_ERROR(rclcpp::get_logger("rclcpp_action"), "Sent feedback to wrong goal handle.");
+    return;
+  }
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  if (nullptr == feedback_callback_) {
+    // Normal, some feedback messages may arrive after the goal result.
+    RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"), "Received feedback but goal ignores it.");
+    return;
+  }
+  feedback_callback_(shared_this, feedback_message);
+}
+
 }  // namespace rclcpp_action
 
 #endif  // RCLCPP_ACTION__CLIENT_GOAL_HANDLE_IMPL_HPP_
