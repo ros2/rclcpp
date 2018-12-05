@@ -326,7 +326,7 @@ TEST_F(TestClient, async_send_goal_with_feedback_and_result)
     goal,
     [&feedback_count](
       typename ActionGoalHandle::SharedPtr goal_handle,
-      const ActionFeedback & feedback) mutable
+      const std::shared_ptr<const ActionFeedback> feedback) mutable
     {
       (void)goal_handle;
       (void)feedback;
