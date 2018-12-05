@@ -17,6 +17,8 @@
 
 #include <rcl_action/types.h>
 
+#include <memory>
+
 #include "rclcpp_action/exceptions.hpp"
 
 namespace rclcpp_action

@@ -161,8 +161,8 @@ protected:
         std::fill(zero_uuid.begin(), zero_uuid.end(), 0u);
         const rclcpp::Time cancel_stamp = request->goal_info.stamp;
         bool cancel_all = (
-          request->goal_info.goal_id.uuid == zero_uuid
-          && cancel_stamp == zero_stamp);
+          request->goal_info.goal_id.uuid == zero_uuid &&
+          cancel_stamp == zero_stamp);
         ActionStatusMessage status_message;
         auto it = goals.begin();
         while (it != goals.end()) {
@@ -202,7 +202,8 @@ protected:
     ret = rcl_action_get_status_topic_name(
       action_name, allocator, &status_topic_name);
     ASSERT_EQ(RCL_RET_OK, ret);
-    status_publisher = server_node->create_publisher<ActionStatusMessage>(status_topic_name, rcl_action_qos_profile_status_default);
+    status_publisher = server_node->create_publisher<ActionStatusMessage>(
+      status_topic_name, rcl_action_qos_profile_status_default);
     ASSERT_TRUE(status_publisher != nullptr);
     allocator.deallocate(status_topic_name, allocator.state);
     server_executor.add_node(server_node);
@@ -233,12 +234,12 @@ protected:
       server_executor.spin_some();
       client_executor.spin_some();
       status = future.wait_for(std::chrono::seconds(0));
-    } while(std::future_status::ready != status);
+    } while (std::future_status::ready != status);
   }
 
   rclcpp::Clock clock{RCL_ROS_TIME};
   const rclcpp::Time zero_stamp{0, 0, RCL_ROS_TIME};
-  
+
   rclcpp::Node::SharedPtr server_node;
   rclcpp::executors::SingleThreadedExecutor server_executor;
   rclcpp::Node::SharedPtr client_node;
@@ -390,7 +391,7 @@ TEST_F(TestClient, async_cancel_all_goals)
   dual_spin_until_future_complete(future_cancel_all);
   auto cancel_response = future_cancel_all.get();
 
-  ASSERT_EQ(2ul, cancel_response->goals_canceling.size()); 
+  ASSERT_EQ(2ul, cancel_response->goals_canceling.size());
   EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
   EXPECT_EQ(goal_handle1->get_goal_id(), cancel_response->goals_canceling[1].goal_id.uuid);
 }
