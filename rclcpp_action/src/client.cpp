@@ -305,9 +305,7 @@ ClientBase::execute()
     } else {
       this->handle_feedback_message(feedback_message);
     }
-  }
-
-  if (pimpl_->is_status_ready) {
+  } else if (pimpl_->is_status_ready) {
     std::shared_ptr<void> status_message = this->create_status_message();
     rcl_ret_t ret = rcl_action_take_status(
       pimpl_->client_handle.get(), status_message.get());
@@ -317,9 +315,7 @@ ClientBase::execute()
     } else {
       this->handle_status_message(status_message);
     }
-  }
-
-  if (pimpl_->is_goal_response_ready) {
+  } else if (pimpl_->is_goal_response_ready) {
     rmw_request_id_t response_header;
     std::shared_ptr<void> goal_response = this->create_goal_response();
     rcl_ret_t ret = rcl_action_take_goal_response(
@@ -330,9 +326,7 @@ ClientBase::execute()
     } else {
       this->handle_goal_response(response_header, goal_response);
     }
-  }
-
-  if (pimpl_->is_result_response_ready) {
+  } else if (pimpl_->is_result_response_ready) {
     rmw_request_id_t response_header;
     std::shared_ptr<void> result_response = this->create_result_response();
     rcl_ret_t ret = rcl_action_take_result_response(
@@ -343,9 +337,7 @@ ClientBase::execute()
     } else {
       this->handle_result_response(response_header, result_response);
     }
-  }
-
-  if (pimpl_->is_cancel_response_ready) {
+  } else if (pimpl_->is_cancel_response_ready) {
     rmw_request_id_t response_header;
     std::shared_ptr<void> cancel_response = this->create_cancel_response();
     rcl_ret_t ret = rcl_action_take_cancel_response(
@@ -356,6 +348,8 @@ ClientBase::execute()
     } else {
       this->handle_cancel_response(response_header, cancel_response);
     }
+  } else {
+    throw std::runtime_error("Executing action client but nothing is ready");
   }
 }
 
