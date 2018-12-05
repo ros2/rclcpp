@@ -250,7 +250,7 @@ ServerBase::execute_goal_request_received()
     publish_status();
 
     // Tell user to start executing action
-    call_goal_accepted_callback(pimpl_->action_server_, handle, uuid, message);
+    call_goal_accepted_callback(handle, uuid, message);
   }
 }
 
@@ -481,5 +481,23 @@ ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
     }
+  }
+}
+
+void
+ServerBase::notify_goal_terminal_state()
+{
+  rcl_ret_t ret = rcl_action_notify_goal_done(pimpl_->action_server_.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+}
+
+void
+ServerBase::publish_feedback(std::shared_ptr<void> feedback_msg)
+{
+  rcl_ret_t ret = rcl_action_publish_feedback(pimpl_->action_server_.get(), feedback_msg.get());
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to publish feedback");
   }
 }

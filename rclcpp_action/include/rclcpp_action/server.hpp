@@ -174,7 +174,6 @@ protected:
   virtual
   void
   call_goal_accepted_callback(
-    std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
 
@@ -207,7 +206,17 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
+  notify_goal_terminal_state();
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
   publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_msg);
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
+  publish_feedback(std::shared_ptr<void> feedback_msg);
 
   // End API for communication between ServerBase and Server<>
   // ---------------------------------------------------------
@@ -374,7 +383,6 @@ protected:
   /// \internal
   void
   call_goal_accepted_callback(
-    std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) override
   {
@@ -392,6 +400,8 @@ protected:
         shared_this->publish_result(uuid, result_message);
         // Publish a status message any time a goal handle changes state
         shared_this->publish_status();
+        // notify base so it can recalculate the expired goal timer
+        shared_this->notify_goal_terminal_state();
         // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
         shared_this->goal_handles_.erase(uuid);
       };
@@ -408,11 +418,21 @@ protected:
         shared_this->publish_status();
       };
 
+    std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback =
+      [weak_this](std::shared_ptr<typename ACTION::Feedback> feedback_msg)
+      {
+        std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
+        if (!shared_this) {
+          return;
+        }
+        shared_this->publish_feedback(std::static_pointer_cast<void>(feedback_msg));
+      };
+
     goal_handle.reset(
       new ServerGoalHandle<ACTION>(
-        rcl_server, rcl_goal_handle,
-        uuid, std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message),
-        on_terminal_state, on_executing));
+        rcl_goal_handle, uuid,
+        std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message),
+        on_terminal_state, on_executing, publish_feedback));
     goal_handles_[uuid] = goal_handle;
     handle_accepted_(goal_handle);
   }

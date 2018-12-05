@@ -61,11 +61,6 @@ ServerGoalHandleBase::_set_aborted()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-
-  ret = rcl_action_notify_goal_done(rcl_server_.get());
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
 }
 
 void
@@ -75,22 +70,12 @@ ServerGoalHandleBase::_set_succeeded()
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
-
-  ret = rcl_action_notify_goal_done(rcl_server_.get());
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
 }
 
 void
 ServerGoalHandleBase::_set_canceled()
 {
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_SET_CANCELED);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-
-  ret = rcl_action_notify_goal_done(rcl_server_.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -109,18 +94,5 @@ std::shared_ptr<rcl_action_goal_handle_t>
 ServerGoalHandleBase::get_rcl_handle() const
 {
   return rcl_handle_;
-}
-
-void
-ServerGoalHandleBase::_publish_feedback(std::shared_ptr<void> feedback_msg)
-{
-  if (!is_executing()) {
-    // TODO(sloretz) custom exception
-    throw std::runtime_error("Publishing feedback for goal that's not executing\n");
-  }
-  rcl_ret_t ret = rcl_action_publish_feedback(rcl_server_.get(), feedback_msg.get());
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to publish feedback");
-  }
 }
 }  // namespace rclcpp_action

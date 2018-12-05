@@ -78,17 +78,11 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   ServerGoalHandleBase(
-    std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle
   )
-  : rcl_server_(rcl_server), rcl_handle_(rcl_handle)
+  : rcl_handle_(rcl_handle)
   {
   }
-
-  /// \internal
-  RCLCPP_ACTION_PUBLIC
-  void
-  _publish_feedback(std::shared_ptr<void> feedback_msg);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
@@ -114,7 +108,6 @@ protected:
   // -----------------------------------------------------------------------------
 
 private:
-  std::shared_ptr<rcl_action_server_t> rcl_server_;
   std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
 };
 
@@ -152,7 +145,7 @@ public:
   publish_feedback(std::shared_ptr<typename ACTION::Feedback> feedback_msg)
   {
     feedback_msg->uuid = uuid_;
-    _publish_feedback(std::static_pointer_cast<void>(feedback_msg));
+    publish_feedback_(feedback_msg);
   }
 
   // TODO(sloretz) which exception is raised?
@@ -236,15 +229,16 @@ public:
 protected:
   /// \internal
   ServerGoalHandle(
-    std::shared_ptr<rcl_action_server_t> rcl_server,
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
     std::array<uint8_t, 16> uuid,
     std::shared_ptr<const typename ACTION::Goal> goal,
     std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state,
-    std::function<void(const std::array<uint8_t, 16>&)> on_executing
+    std::function<void(const std::array<uint8_t, 16>&)> on_executing,
+    std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback
   )
-  : ServerGoalHandleBase(rcl_server, rcl_handle), goal_(goal), uuid_(uuid),
-    on_terminal_state_(on_terminal_state), on_executing_(on_executing)
+  : ServerGoalHandleBase(rcl_handle), goal_(goal), uuid_(uuid),
+    on_terminal_state_(on_terminal_state), on_executing_(on_executing),
+    publish_feedback_(publish_feedback)
   {
   }
 
@@ -258,6 +252,7 @@ protected:
 
   std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state_;
   std::function<void(const std::array<uint8_t, 16>&)> on_executing_;
+  std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback_;
 };
 }  // namespace rclcpp_action
 
