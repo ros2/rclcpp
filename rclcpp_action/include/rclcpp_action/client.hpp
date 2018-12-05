@@ -44,7 +44,13 @@ namespace rclcpp_action
 class ClientBaseImpl;
 
 /// Base Action Client implementation
-/// It is responsible for interfacing with the C action client API.
+/// \internal
+/**
+ * This class should not be used directly by users wanting to create an aciton client.
+ * Instead users should use `rclcpp_action::Client<>`.
+ *
+ * Internally, this class is responsible for interfacing with the `rcl_action` API.
+ */
 class ClientBase : public rclcpp::Waitable
 {
 public:
@@ -59,96 +65,136 @@ public:
   RCLCPP_ACTION_PUBLIC
   virtual ~ClientBase();
 
+  // -------------
+  // Waitables API
+
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_subscriptions() override;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_timers() override;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_clients() override;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_services() override;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_guard_conditions() override;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   bool
   is_ready(rcl_wait_set_t * wait_set) override;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   void
   execute() override;
 
+  // End Waitables API
+  // -----------------
+
 protected:
+  // -----------------------------------------------------
+  // API for communication between ClientBase and Client<>
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   rclcpp::Logger get_logger();
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual GoalID generate_goal_id();
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual void send_goal_request(
     std::shared_ptr<void> request,
     ResponseCallback callback);
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual void send_result_request(
     std::shared_ptr<void> request,
     ResponseCallback callback);
 
+  /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual void send_cancel_request(
     std::shared_ptr<void> request,
     ResponseCallback callback);
 
-private:
+  /// \internal
   virtual std::shared_ptr<void> create_goal_response() const = 0;
 
+  /// \internal
   virtual void handle_goal_response(
     const rmw_request_id_t & response_header,
     std::shared_ptr<void> goal_response);
 
+  /// \internal
   virtual std::shared_ptr<void> create_result_response() const = 0;
 
+  /// \internal
   virtual void handle_result_response(
     const rmw_request_id_t & response_header,
     std::shared_ptr<void> result_response);
 
+  /// \internal
   virtual std::shared_ptr<void> create_cancel_response() const = 0;
 
+  /// \internal
   virtual void handle_cancel_response(
     const rmw_request_id_t & response_header,
     std::shared_ptr<void> cancel_response);
 
+  /// \internal
   virtual std::shared_ptr<void> create_feedback_message() const = 0;
 
+  /// \internal
   virtual void handle_feedback_message(std::shared_ptr<void> message) = 0;
 
+  /// \internal
   virtual std::shared_ptr<void> create_status_message() const = 0;
 
+  /// \internal
   virtual void handle_status_message(std::shared_ptr<void> message) = 0;
 
+  // End API for communication between ClientBase and Client<>
+  // ---------------------------------------------------------
+
+private:
   std::unique_ptr<ClientBaseImpl> pimpl_;
 };
 
-
-/// Templated Action Client class
-/// It is responsible for getting the C action type support struct from the C++ type, and
-/// calling user callbacks with goal handles of the appropriate type.
+/// Action Client
+/**
+ * This class creates an action client.
+ *
+ * Create an instance of this server using `rclcpp_action::create_client()`.
+ *
+ * Internally, this class is responsible for:
+ *  - coverting between the C++ action type and generic types for `rclcpp_action::ClientBase`, and
+ *  - calling user callbacks.
+ */
 template<typename ACTION>
 class Client : public ClientBase
 {
@@ -309,23 +355,27 @@ public:
   }
 
 private:
+  /// \internal
   std::shared_ptr<void> create_goal_response() const override
   {
     using GoalResponse = typename ACTION::GoalRequestService::Response;
     return std::shared_ptr<void>(new GoalResponse());
   }
 
+  /// \internal
   std::shared_ptr<void> create_result_response() const override
   {
     using GoalResultResponse = typename ACTION::GoalResultService::Response;
     return std::shared_ptr<void>(new GoalResultResponse());
   }
 
+  /// \internal
   std::shared_ptr<void> create_cancel_response() const override
   {
     return std::shared_ptr<void>(new CancelResponse());
   }
 
+  /// \internal
   std::shared_ptr<void> create_feedback_message() const override
   {
     // using FeedbackMessage = typename ACTION::FeedbackMessage;
@@ -333,6 +383,7 @@ private:
     return std::shared_ptr<void>(new Feedback());
   }
 
+  /// \internal
   void handle_feedback_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
@@ -361,12 +412,14 @@ private:
     callback(goal_handle, feedback_message);
   }
 
+  /// \internal
   std::shared_ptr<void> create_status_message() const override
   {
     using GoalStatusMessage = typename ACTION::GoalStatusMessage;
     return std::shared_ptr<void>(new GoalStatusMessage());
   }
 
+  /// \internal
   void handle_status_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
@@ -394,6 +447,7 @@ private:
     }
   }
 
+  /// \internal
   void make_result_aware(typename GoalHandle::SharedPtr goal_handle)
   {
     using GoalResultRequest = typename ACTION::GoalResultService::Request;
@@ -417,6 +471,7 @@ private:
     goal_handle->set_result_awareness(true);
   }
 
+  /// \internal
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel(typename CancelRequest::SharedPtr cancel_request)
   {
