@@ -264,19 +264,19 @@ private:
  *  - coverting between the C++ action type and generic types for `rclcpp_action::ServerBase`, and
  *  - calling user callbacks.
  */
-template<typename ACTION>
-class Server : public ServerBase, public std::enable_shared_from_this<Server<ACTION>>
+template<typename ActionT>
+class Server : public ServerBase, public std::enable_shared_from_this<Server<ActionT>>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
   /// Signature of a callback that accepts or rejects goal requests.
   using GoalCallback = std::function<GoalResponse(
-        const GoalID &, std::shared_ptr<const typename ACTION::Goal>)>;
+        const GoalID &, std::shared_ptr<const typename ActionT::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
-  using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ActionT>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
-  using AcceptedCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ACTION>>)>;
+  using AcceptedCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ActionT>>)>;
 
   /// Construct an action server.
   /**
@@ -319,7 +319,7 @@ public:
       node_clock,
       node_logging,
       name,
-      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>(),
+      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
       options),
     handle_goal_(handle_goal),
     handle_cancel_(handle_cancel),
@@ -339,12 +339,12 @@ protected:
   {
     // TODO(sloretz) update and remove assert when IDL pipeline allows nesting user's type
     static_assert(
-      std::is_same<typename ACTION::Goal, typename ACTION::GoalRequestService::Request>::value,
+      std::is_same<typename ActionT::Goal, typename ActionT::GoalRequestService::Request>::value,
       "Assuming user fields were merged with goal request fields");
     GoalResponse user_response = handle_goal_(
-      uuid, std::static_pointer_cast<typename ACTION::Goal>(message));
+      uuid, std::static_pointer_cast<typename ActionT::Goal>(message));
 
-    auto ros_response = std::make_shared<typename ACTION::GoalRequestService::Response>();
+    auto ros_response = std::make_shared<typename ActionT::GoalRequestService::Response>();
     ros_response->accepted = GoalResponse::ACCEPT_AND_EXECUTE == user_response ||
       GoalResponse::ACCEPT_AND_DEFER == user_response;
     return std::make_pair(user_response, ros_response);
@@ -359,7 +359,7 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle;
     auto element = goal_handles_.find(uuid);
     if (element != goal_handles_.end()) {
-      std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle = element->second.lock();
+      std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle = element->second.lock();
       if (goal_handle) {
         resp = handle_cancel_(goal_handle);
         if (CancelResponse::ACCEPT == resp) {
@@ -376,13 +376,13 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
     GoalID uuid, std::shared_ptr<void> goal_request_message) override
   {
-    std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
-    std::weak_ptr<Server<ACTION>> weak_this = this->shared_from_this();
+    std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;
+    std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();
 
     std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state =
       [weak_this](const GoalID & uuid, std::shared_ptr<void> result_message)
       {
-        std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
+        std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
@@ -400,7 +400,7 @@ protected:
     std::function<void(const GoalID &)> on_executing =
       [weak_this](const GoalID & uuid)
       {
-        std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
+        std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
@@ -409,10 +409,10 @@ protected:
         shared_this->publish_status();
       };
 
-    std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback =
-      [weak_this](std::shared_ptr<typename ACTION::Feedback> feedback_msg)
+    std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback =
+      [weak_this](std::shared_ptr<typename ActionT::Feedback> feedback_msg)
       {
-        std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
+        std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
         }
@@ -420,9 +420,9 @@ protected:
       };
 
     goal_handle.reset(
-      new ServerGoalHandle<ACTION>(
+      new ServerGoalHandle<ActionT>(
         rcl_goal_handle, uuid,
-        std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message),
+        std::static_pointer_cast<const typename ActionT::Goal>(goal_request_message),
         on_terminal_state, on_executing, publish_feedback));
     {
       std::lock_guard<std::mutex> lock(goal_handles_mutex_);
@@ -435,35 +435,35 @@ protected:
   GoalID
   get_goal_id_from_goal_request(void * message) override
   {
-    return static_cast<typename ACTION::GoalRequestService::Request *>(message)->uuid;
+    return static_cast<typename ActionT::GoalRequestService::Request *>(message)->uuid;
   }
 
   /// \internal
   std::shared_ptr<void>
   create_goal_request() override
   {
-    return std::shared_ptr<void>(new typename ACTION::GoalRequestService::Request());
+    return std::shared_ptr<void>(new typename ActionT::GoalRequestService::Request());
   }
 
   /// \internal
   GoalID
   get_goal_id_from_result_request(void * message) override
   {
-    return static_cast<typename ACTION::GoalResultService::Request *>(message)->uuid;
+    return static_cast<typename ActionT::GoalResultService::Request *>(message)->uuid;
   }
 
   /// \internal
   std::shared_ptr<void>
   create_result_request() override
   {
-    return std::shared_ptr<void>(new typename ACTION::GoalResultService::Request());
+    return std::shared_ptr<void>(new typename ActionT::GoalResultService::Request());
   }
 
   /// \internal
   std::shared_ptr<void>
   create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) override
   {
-    auto result = std::make_shared<typename ACTION::GoalResultService::Response>();
+    auto result = std::make_shared<typename ActionT::GoalResultService::Response>();
     result->status = status;
     return std::static_pointer_cast<void>(result);
   }
@@ -476,7 +476,7 @@ private:
   CancelCallback handle_cancel_;
   AcceptedCallback handle_accepted_;
 
-  using GoalHandleWeakPtr = std::weak_ptr<ServerGoalHandle<ACTION>>;
+  using GoalHandleWeakPtr = std::weak_ptr<ServerGoalHandle<ActionT>>;
   /// A map of goal id to goal handle weak pointers.
   /// This is used to provide a goal handle to handle_cancel.
   std::unordered_map<GoalID, GoalHandleWeakPtr> goal_handles_;

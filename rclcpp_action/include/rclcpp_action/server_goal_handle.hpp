@@ -111,7 +111,7 @@ private:
 };
 
 // Forward declare server
-template<typename ACTION>
+template<typename ActionT>
 class Server;
 
 /// Class to interact with goals on a server.
@@ -125,7 +125,7 @@ class Server;
  * Internally, this class is responsible for coverting between the C++ action type and generic
  * types for `rclcpp_action::ServerGoalHandleBase`.
  */
-template<typename ACTION>
+template<typename ActionT>
 class ServerGoalHandle : public ServerGoalHandleBase
 {
 public:
@@ -141,7 +141,7 @@ public:
    * \param[in] feedback_msg the message to publish to clients.
    */
   void
-  publish_feedback(std::shared_ptr<typename ACTION::Feedback> feedback_msg)
+  publish_feedback(std::shared_ptr<typename ActionT::Feedback> feedback_msg)
   {
     feedback_msg->uuid = uuid_;
     publish_feedback_(feedback_msg);
@@ -158,7 +158,7 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_aborted(typename ACTION::Result::SharedPtr result_msg)
+  set_aborted(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_aborted();
     result_msg->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
@@ -175,7 +175,7 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_succeeded(typename ACTION::Result::SharedPtr result_msg)
+  set_succeeded(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_succeeded();
     result_msg->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
@@ -192,7 +192,7 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_canceled(typename ACTION::Result::SharedPtr result_msg)
+  set_canceled(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_canceled();
     result_msg->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
@@ -212,7 +212,7 @@ public:
   }
 
   /// Get the original request message describing the goal.
-  const std::shared_ptr<const typename ACTION::Goal>
+  const std::shared_ptr<const typename ActionT::Goal>
   get_goal() const
   {
     return goal_;
@@ -230,10 +230,10 @@ protected:
   ServerGoalHandle(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
     GoalID uuid,
-    std::shared_ptr<const typename ACTION::Goal> goal,
+    std::shared_ptr<const typename ActionT::Goal> goal,
     std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state,
     std::function<void(const GoalID &)> on_executing,
-    std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback
+    std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback
   )
   : ServerGoalHandleBase(rcl_handle), goal_(goal), uuid_(uuid),
     on_terminal_state_(on_terminal_state), on_executing_(on_executing),
@@ -242,16 +242,16 @@ protected:
   }
 
   /// The original request message describing the goal.
-  const std::shared_ptr<const typename ACTION::Goal> goal_;
+  const std::shared_ptr<const typename ActionT::Goal> goal_;
 
   /// A unique id for the goal request.
   const GoalID uuid_;
 
-  friend Server<ACTION>;
+  friend Server<ActionT>;
 
   std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state_;
   std::function<void(const GoalID &)> on_executing_;
-  std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback_;
+  std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback_;
 };
 }  // namespace rclcpp_action
 

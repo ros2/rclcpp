@@ -31,14 +31,14 @@
 
 namespace rclcpp_action
 {
-template<typename ACTION>
-typename Server<ACTION>::SharedPtr
+template<typename ActionT>
+typename Server<ActionT>::SharedPtr
 create_server(
   rclcpp::Node::SharedPtr node,
   const std::string & name,
-  typename Server<ACTION>::GoalCallback handle_goal,
-  typename Server<ACTION>::CancelCallback handle_cancel,
-  typename Server<ACTION>::AcceptedCallback handle_accepted,
+  typename Server<ActionT>::GoalCallback handle_goal,
+  typename Server<ActionT>::CancelCallback handle_cancel,
+  typename Server<ActionT>::AcceptedCallback handle_accepted,
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options(),
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
@@ -47,7 +47,7 @@ create_server(
   std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
   bool group_is_null = (nullptr == group.get());
 
-  auto deleter = [weak_node, weak_group, group_is_null](Server<ACTION> * ptr)
+  auto deleter = [weak_node, weak_group, group_is_null](Server<ActionT> * ptr)
     {
       if (nullptr == ptr) {
         return;
@@ -57,7 +57,7 @@ create_server(
         return;
       }
       // API expects a shared pointer, give it one with a deleter that does nothing.
-      std::shared_ptr<Server<ACTION>> fake_shared_ptr(ptr, [](Server<ACTION> *) {});
+      std::shared_ptr<Server<ActionT>> fake_shared_ptr(ptr, [](Server<ActionT> *) {});
 
       if (group_is_null) {
         // Was added to default group
@@ -72,7 +72,7 @@ create_server(
       delete ptr;
     };
 
-  std::shared_ptr<Server<ACTION>> action_server(new Server<ACTION>(
+  std::shared_ptr<Server<ActionT>> action_server(new Server<ActionT>(
       node->get_node_base_interface(),
       node->get_node_clock_interface(),
       node->get_node_logging_interface(),
