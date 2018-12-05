@@ -227,7 +227,7 @@ template<typename ActionT>
 class Client : public ClientBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Client)
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Client<ActionT>)
 
   using Goal = typename ActionT::Goal;
   using Feedback = typename ActionT::Feedback;

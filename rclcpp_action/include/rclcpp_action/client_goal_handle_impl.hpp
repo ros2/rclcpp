@@ -133,7 +133,7 @@ ClientGoalHandle<ActionT>::invalidate()
 template<typename ActionT>
 void
 ClientGoalHandle<ActionT>::call_feedback_callback(
-  ClientGoalHandle<ActionT>::SharedPtr shared_this,
+  typename ClientGoalHandle<ActionT>::SharedPtr shared_this,
   typename std::shared_ptr<const Feedback> feedback_message)
 {
   if (shared_this.get() != this) {

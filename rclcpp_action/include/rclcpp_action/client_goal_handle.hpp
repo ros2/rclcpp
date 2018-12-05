@@ -64,7 +64,8 @@ public:
 
   using Feedback = typename ActionT::Feedback;
   using FeedbackCallback =
-    std::function<void (ClientGoalHandle::SharedPtr, const std::shared_ptr<const Feedback>)>;
+    std::function<void (
+        typename ClientGoalHandle<ActionT>::SharedPtr, const std::shared_ptr<const Feedback>)>;
 
   virtual ~ClientGoalHandle();
 
@@ -97,7 +98,7 @@ private:
 
   void
   call_feedback_callback(
-    ClientGoalHandle<ActionT>::SharedPtr shared_this,
+    typename ClientGoalHandle<ActionT>::SharedPtr shared_this,
     typename std::shared_ptr<const Feedback> feedback_message);
 
   void
