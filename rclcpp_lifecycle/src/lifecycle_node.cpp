@@ -80,7 +80,7 @@ LifecycleNode::LifecycleNode(
       node_graph_,
       node_services_,
       node_logging_
-    )),  
+    )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_base_,
       node_topics_,
