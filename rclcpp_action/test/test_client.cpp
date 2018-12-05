@@ -19,6 +19,7 @@
 #include <rcl/types.h>
 
 #include <rcl_action/names.h>
+#include <rcl_action/default_qos.h>
 
 #include <rclcpp/clock.hpp>
 #include <rclcpp/exceptions.hpp>
@@ -72,8 +73,9 @@ protected:
 
   void SetUp()
   {
-    server_node = std::make_shared<rclcpp::Node>(server_node_name, namespace_name);
     rcl_allocator_t allocator = rcl_get_default_allocator();
+
+    server_node = std::make_shared<rclcpp::Node>(server_node_name, namespace_name);
 
     char * goal_service_name = nullptr;
     rcl_ret_t ret = rcl_action_get_goal_service_name(
@@ -114,28 +116,28 @@ protected:
           goal_status.status = rclcpp_action::GoalStatus::STATUS_EXECUTING;
           status_message.status_list.push_back(goal_status);
           status_publisher->publish(status_message);
-          // executor.spin_once();
+          client_executor.spin_once();
           ActionFeedbackMessage feedback_message;
           feedback_message.uuid = goal_request->uuid;
-          response->sequence.push_back(0);
-          feedback_message.sequence = response->sequence;
+          feedback_message.sequence.push_back(0);
           feedback_publisher->publish(feedback_message);
-          // executor.spin_once();
+          client_executor.spin_once();
           if (goal_request->order > 0) {
-            response->sequence.push_back(1);
-            feedback_message.sequence = response->sequence;
+            feedback_message.sequence.push_back(1);
             feedback_publisher->publish(feedback_message);
-            // executor.spin_once();
+            client_executor.spin_once();
             for (int i = 1; i < goal_request->order; ++i) {
-              response->sequence.push_back(response->sequence[i] + response->sequence[i - 1]);
-              feedback_message.sequence = response->sequence;
+              feedback_message.sequence.push_back(
+                feedback_message.sequence[i] + feedback_message.sequence[i - 1]);
               feedback_publisher->publish(feedback_message);
-              // executor.spin_once();
+              client_executor.spin_once();
             }
           }
-          status_message.status_list[0].status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
+          goal_status.status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
+          status_message.status_list[0] = goal_status;
           status_publisher->publish(status_message);
-          // executor.spin_once();
+          client_executor.spin_once();
+          response->sequence = feedback_message.sequence;
           response->status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
           goals.erase(request->uuid);
         } else {
@@ -155,10 +157,9 @@ protected:
         const ActionCancelGoalRequest::SharedPtr request,
         ActionCancelGoalResponse::SharedPtr response)
       {
-        const rclcpp::Time zero_stamp;
-        const rclcpp::Time cancel_stamp = request->goal_info.stamp;
         rclcpp_action::GoalID zero_uuid;
         std::fill(zero_uuid.begin(), zero_uuid.end(), 0u);
+        const rclcpp::Time cancel_stamp = request->goal_info.stamp;
         bool cancel_all = (
           request->goal_info.goal_id.uuid == zero_uuid
           && cancel_stamp == zero_stamp);
@@ -179,9 +180,12 @@ protected:
             status_message.status_list.push_back(goal_status);
             response->goals_canceling.push_back(goal_status.goal_info);
             it = goals.erase(it);
+          } else {
+            ++it;
           }
         }
         status_publisher->publish(status_message);
+        client_executor.spin_once();
       });
     ASSERT_TRUE(cancel_service != nullptr);
     allocator.deallocate(cancel_service_name, allocator.state);
@@ -198,14 +202,16 @@ protected:
     ret = rcl_action_get_status_topic_name(
       action_name, allocator, &status_topic_name);
     ASSERT_EQ(RCL_RET_OK, ret);
-    status_publisher = server_node->create_publisher<ActionStatusMessage>(status_topic_name);
+    status_publisher = server_node->create_publisher<ActionStatusMessage>(status_topic_name, rcl_action_qos_profile_status_default);
     ASSERT_TRUE(status_publisher != nullptr);
     allocator.deallocate(status_topic_name, allocator.state);
+    server_executor.add_node(server_node);
 
-    executor.add_node(server_node);
+    client_node = std::make_shared<rclcpp::Node>(client_node_name, namespace_name);
+    client_executor.add_node(client_node);
 
-    client_node = std::make_shared<rclcpp::Node>(client_node_name, namespace_name);    
-    executor.add_node(client_node);
+    ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(clock.get_clock_handle()));
+    ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(1)));
   }
 
   void Teardown()
@@ -219,25 +225,28 @@ protected:
     client_node.reset();
   }
 
-  rclcpp::Clock clock;
+  rclcpp::Clock clock{RCL_ROS_TIME};
+  const rclcpp::Time zero_stamp{0, 0, RCL_ROS_TIME};
+  
   rclcpp::Node::SharedPtr server_node;
+  rclcpp::executors::SingleThreadedExecutor server_executor;
   rclcpp::Node::SharedPtr client_node;
-  rclcpp::executors::MultiThreadedExecutor executor;
+  rclcpp::executors::SingleThreadedExecutor client_executor;
   const char * const server_node_name{"fibonacci_action_test_server"};
   const char * const client_node_name{"fibonacci_action_test_client"};
   const char * const namespace_name{"/rclcpp_action/test/client"};
   const char * const action_name{"fibonacci_test"};
 
-  typename rclcpp::Service<ActionGoalRequestService>::SharedPtr goal_service;
-  typename rclcpp::Service<ActionGoalResultService>::SharedPtr result_service;
-  typename rclcpp::Service<ActionCancelGoalService>::SharedPtr cancel_service;
-  typename rclcpp::Publisher<ActionFeedbackMessage>::SharedPtr feedback_publisher;
-  typename rclcpp::Publisher<ActionStatusMessage>::SharedPtr status_publisher;
   std::map<
     rclcpp_action::GoalID,
     std::pair<
       typename ActionGoalRequest::SharedPtr,
       typename ActionGoalResponse::SharedPtr>> goals;
+  typename rclcpp::Service<ActionGoalRequestService>::SharedPtr goal_service;
+  typename rclcpp::Service<ActionGoalResultService>::SharedPtr result_service;
+  typename rclcpp::Service<ActionCancelGoalService>::SharedPtr cancel_service;
+  typename rclcpp::Publisher<ActionFeedbackMessage>::SharedPtr feedback_publisher;
+  typename rclcpp::Publisher<ActionStatusMessage>::SharedPtr status_publisher;
 };
 
 TEST_F(TestClient, construction_and_destruction)
@@ -252,17 +261,21 @@ TEST_F(TestClient, async_send_goal_but_ignore_feedback_and_result)
   ActionGoal bad_goal;
   bad_goal.order = -5;
   auto future_goal_handle = action_client->async_send_goal(bad_goal, nullptr, true);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle));
+    client_executor.spin_until_future_complete(future_goal_handle));
   EXPECT_THROW(future_goal_handle.get(), rclcpp_action::exceptions::RejectedGoalError);
 
   ActionGoal good_goal;
   good_goal.order = 5;
   future_goal_handle = action_client->async_send_goal(good_goal, nullptr, true);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle));
+    client_executor.spin_until_future_complete(future_goal_handle));
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
   EXPECT_FALSE(goal_handle->is_feedback_aware());
@@ -277,18 +290,21 @@ TEST_F(TestClient, async_send_goal_and_ignore_feedback_but_wait_for_result)
   ActionGoal goal;
   goal.order = 5;
   auto future_goal_handle = action_client->async_send_goal(goal);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle));
+    client_executor.spin_until_future_complete(future_goal_handle));
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
   EXPECT_FALSE(goal_handle->is_feedback_aware());
   EXPECT_TRUE(goal_handle->is_result_aware());
-
   auto future_result = goal_handle->async_result();
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_result));
+    client_executor.spin_until_future_complete(future_result));
   auto result = future_result.get();
   ASSERT_EQ(6ul, result.response->sequence.size());
   EXPECT_EQ(0, result.response->sequence[0]);
@@ -313,19 +329,21 @@ TEST_F(TestClient, async_send_goal_with_feedback_and_result)
       (void)feedback;
       feedback_count++;
     });
-
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle));
+    client_executor.spin_until_future_complete(future_goal_handle));
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
   EXPECT_TRUE(goal_handle->is_feedback_aware());
   EXPECT_TRUE(goal_handle->is_result_aware());
-
   auto future_result = goal_handle->async_result();
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_result));
+    client_executor.spin_until_future_complete(future_result));
   auto result = future_result.get();
 
   ASSERT_EQ(5u, result.response->sequence.size());
@@ -340,16 +358,20 @@ TEST_F(TestClient, async_cancel_one_goal)
   ActionGoal goal;
   goal.order = 5;
   auto future_goal_handle = action_client->async_send_goal(goal, nullptr, true);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle));
+    client_executor.spin_until_future_complete(future_goal_handle));
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
 
   auto future_cancel = action_client->async_cancel_goal(goal_handle);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_cancel));
+    client_executor.spin_until_future_complete(future_cancel));
   bool goal_canceled = future_cancel.get();
   EXPECT_TRUE(goal_canceled);
 }
@@ -361,25 +383,39 @@ TEST_F(TestClient, async_cancel_all_goals)
   ActionGoal goal;
   goal.order = 6;
   auto future_goal_handle0 = action_client->async_send_goal(goal, nullptr, true);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle0));
+    client_executor.spin_until_future_complete(future_goal_handle0));
   auto goal_handle0 = future_goal_handle0.get();
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(2)));
 
   goal.order = 8;
   auto future_goal_handle1 = action_client->async_send_goal(goal, nullptr, true);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle1));
+    client_executor.spin_until_future_complete(future_goal_handle1));
   auto goal_handle1 = future_goal_handle1.get();
 
+  if (goal_handle1->get_goal_id() < goal_handle0->get_goal_id()) {
+    goal_handle0.swap(goal_handle1);
+  }
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(3)));
+
   auto future_cancel_all = action_client->async_cancel_all_goals();
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_cancel_all));
+    client_executor.spin_until_future_complete(future_cancel_all));
   auto cancel_response = future_cancel_all.get();
 
-  ASSERT_EQ(2ul, cancel_response->goals_canceling.size());
+  ASSERT_EQ(2ul, cancel_response->goals_canceling.size()); 
   EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
   EXPECT_EQ(goal_handle1->get_goal_id(), cancel_response->goals_canceling[1].goal_id.uuid);
 }
@@ -391,25 +427,36 @@ TEST_F(TestClient, async_cancel_some_goals)
   ActionGoal goal;
   goal.order = 6;
   auto future_goal_handle0 = action_client->async_send_goal(goal, nullptr, true);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle0));
+    client_executor.spin_until_future_complete(future_goal_handle0));
   auto goal_handle0 = future_goal_handle0.get();
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(2)));
 
   goal.order = 8;
   auto future_goal_handle1 = action_client->async_send_goal(goal, nullptr, true);
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_goal_handle1));
+    client_executor.spin_until_future_complete(future_goal_handle1));
   auto goal_handle1 = future_goal_handle1.get();
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(3)));
 
   auto future_cancel_some =
     action_client->async_cancel_goals_before(goal_handle1->get_goal_stamp());
+  server_executor.spin_once();
+  server_executor.spin_some();
   ASSERT_EQ(
     rclcpp::executor::FutureReturnCode::SUCCESS,
-    executor.spin_until_future_complete(future_cancel_some));
+    client_executor.spin_until_future_complete(future_cancel_some));
   auto cancel_response = future_cancel_some.get();
 
   ASSERT_EQ(1ul, cancel_response->goals_canceling.size());
   EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
 }
