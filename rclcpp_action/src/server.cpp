@@ -391,6 +391,7 @@ ServerBase::execute_result_request_received()
     result_response = create_result_response(action_msgs::msg::GoalStatus::STATUS_UNKNOWN);
   } else {
     // Goal exists, check if a result is already available
+    std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
     auto iter = pimpl_->goal_results_.find(uuid);
     if (iter != pimpl_->goal_results_.end()) {
       result_response = iter->second;
@@ -409,6 +410,7 @@ ServerBase::execute_result_request_received()
     }
   } else {
     // Store the request so it can be responded to later
+    std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
     auto iter = pimpl_->result_requests_.find(uuid);
     if (iter == pimpl_->result_requests_.end()) {
       pimpl_->result_requests_[uuid] = std::vector<rmw_request_id_t>{request_header};
@@ -440,6 +442,7 @@ ServerBase::execute_check_expired_goals()
       for (size_t i = 0; i < 16; ++i) {
         uuid[i] = expired_goals[0].goal_id.uuid[i];
       }
+      std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
       pimpl_->goal_results_.erase(uuid);
       pimpl_->result_requests_.erase(uuid);
     }
@@ -520,6 +523,7 @@ ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr
     throw std::runtime_error("Asked to publish result for goal that does not exist");
   }
 
+  std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
   pimpl_->goal_results_[uuid] = result_msg;
 
   // if there are clients who already asked for the result, send it to them
