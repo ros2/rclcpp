@@ -43,7 +43,7 @@ ClientGoalHandle<ACTION>::get_goal_id() const
 }
 
 template<typename ACTION>
-const rclcpp::Time &
+rclcpp::Time
 ClientGoalHandle<ACTION>::get_goal_stamp() const
 {
   return info_.stamp;

@@ -25,8 +25,8 @@
 
 namespace rclcpp_action
 {
-// using GoalID = unique_identifier_msgs::msg::UUID;
-using GoalID = std::array<uint8_t, 16>;
+
+using GoalID = std::array<uint8_t, UUID_SIZE>;
 using GoalStatus = action_msgs::msg::GoalStatus;
 using GoalInfo = action_msgs::msg::GoalInfo;
 
@@ -38,11 +38,10 @@ template<>
 struct less<rclcpp_action::GoalID>
 {
   bool operator()(
-    const rclcpp_action::GoalID & id0,
-    const rclcpp_action::GoalID & id1) const
+    const rclcpp_action::GoalID & lhs,
+    const rclcpp_action::GoalID & rhs) const
   {
-    // return (id0.uuid < id1.uuid);
-    return id0 < id1;
+    return lhs < rhs;
   }
 };
 }  // namespace std

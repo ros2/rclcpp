@@ -26,16 +26,7 @@ class RejectedGoalError : public std::runtime_error
 {
 public:
   RejectedGoalError()
-  : std::runtime_error("")
-  {
-  }
-};
-
-class DuplicatedGoalUuidError : public std::invalid_argument
-{
-public:
-  DuplicatedGoalUuidError()
-  : std::invalid_argument("")
+  : std::runtime_error("Goal was rejected by the server.")
   {
   }
 };
@@ -44,7 +35,7 @@ class UnknownGoalHandleError : public std::invalid_argument
 {
 public:
   UnknownGoalHandleError()
-  : std::invalid_argument("")
+  : std::invalid_argument("Goal handle is not know to this client.")
   {
   }
 };
@@ -53,7 +44,7 @@ class UnawareGoalHandleError : public std::runtime_error
 {
 public:
   UnawareGoalHandleError()
-  : std::runtime_error("")
+  : std::runtime_error("Goal handle is not tracking the goal result.")
   {
   }
 };
