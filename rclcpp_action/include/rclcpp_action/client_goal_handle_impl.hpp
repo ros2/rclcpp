@@ -71,14 +71,6 @@ ClientGoalHandle<ACTION>::set_result(const Result & result)
 }
 
 template<typename ACTION>
-typename ClientGoalHandle<ACTION>::FeedbackCallback
-ClientGoalHandle<ACTION>::get_feedback_callback()
-{
-  std::lock_guard<std::mutex> guard(handle_mutex_);
-  return feedback_callback_;
-}
-
-template<typename ACTION>
 void
 ClientGoalHandle<ACTION>::set_feedback_callback(FeedbackCallback callback)
 {
@@ -134,6 +126,25 @@ ClientGoalHandle<ACTION>::invalidate()
   status_ = GoalStatus::STATUS_UNKNOWN;
   result_promise_.set_exception(std::make_exception_ptr(
       exceptions::UnawareGoalHandleError()));
+}
+
+template<typename ACTION>
+void
+ClientGoalHandle<ACTION>::call_feedback_callback(
+  ClientGoalHandle<ACTION>::SharedPtr shared_this,
+  typename std::shared_ptr<const Feedback> feedback_message)
+{
+  if (shared_this.get() != this) {
+    RCLCPP_ERROR(rclcpp::get_logger("rclcpp_action"), "Sent feedback to wrong goal handle.");
+    return;
+  }
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  if (feedback_callback_ == nullptr) {
+    // Normal, some feedback messages may arrive after the goal result.
+    RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"), "Received feedback but goal ignores it.");
+    return;
+  }
+  feedback_callback_(shared_this, feedback_message);
 }
 
 }  // namespace rclcpp_action

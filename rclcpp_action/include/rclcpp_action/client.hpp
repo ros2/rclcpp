@@ -205,8 +205,7 @@ public:
   using Feedback = typename ACTION::Feedback;
   using GoalHandle = ClientGoalHandle<ACTION>;
   using Result = typename GoalHandle::Result;
-  using FeedbackCallback =
-    std::function<void (typename GoalHandle::SharedPtr, const std::shared_ptr<Feedback>)>;
+  using FeedbackCallback = typename ClientGoalHandle<ACTION>::FeedbackCallback;
   using CancelRequest = typename ACTION::CancelGoalService::Request;
   using CancelResponse = typename ACTION::CancelGoalService::Response;
 
@@ -401,15 +400,8 @@ private:
       return;
     }
     typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id];
-    if (!goal_handle->is_feedback_aware()) {
-      RCLCPP_DEBUG(
-        this->get_logger(),
-        "Received feedback for goal but it ignores it.");
-      return;
-    }
-    const FeedbackCallback & callback = goal_handle->get_feedback_callback();
-    // callback(goal_handle, feedback_message->feedback);
-    callback(goal_handle, feedback_message);
+    // goal_handle->call_feedback_callback(goal_handle, feedback_message->feedback);
+    goal_handle->call_feedback_callback(goal_handle, feedback_message);
   }
 
   /// \internal

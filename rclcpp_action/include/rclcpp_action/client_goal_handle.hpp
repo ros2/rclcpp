@@ -64,7 +64,7 @@ public:
 
   using Feedback = typename ACTION::Feedback;
   using FeedbackCallback =
-    std::function<void (ClientGoalHandle::SharedPtr, const std::shared_ptr<Feedback>)>;
+    std::function<void (ClientGoalHandle::SharedPtr, const std::shared_ptr<const Feedback>)>;
 
   virtual ~ClientGoalHandle();
 
@@ -74,9 +74,6 @@ public:
 
   std::shared_future<Result>
   async_result();
-
-  FeedbackCallback
-  get_feedback_callback();
 
   int8_t
   get_status();
@@ -95,6 +92,11 @@ private:
 
   void
   set_feedback_callback(FeedbackCallback callback);
+
+  void
+  call_feedback_callback(
+    ClientGoalHandle<ACTION>::SharedPtr shared_this,
+    typename std::shared_ptr<const Feedback> feedback_message);
 
   void
   set_result_awareness(bool awareness);
