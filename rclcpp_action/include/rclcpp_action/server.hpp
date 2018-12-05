@@ -272,7 +272,7 @@ struct UUIDHash
  *  - calling user callbacks.
  */
 template<typename ACTION>
-class Server : public ServerBase
+class Server : public ServerBase, public std::enable_shared_from_this<Server<ACTION>>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
@@ -379,25 +379,33 @@ protected:
     std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
-    // TODO(sloretz) how to make sure this lambda is not called beyond lifetime of this?
+    std::weak_ptr<Server<ACTION>> weak_this = this->shared_from_this();
 
     std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state =
-      [this](const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_message)
+      [weak_this](const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_message)
       {
+        std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
+        if (!shared_this) {
+          return;
+        }
         // Send result message to anyone that asked
-        publish_result(uuid, result_message);
+        shared_this->publish_result(uuid, result_message);
         // Publish a status message any time a goal handle changes state
-        publish_status();
+        shared_this->publish_status();
         // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
-        goal_handles_.erase(uuid);
+        shared_this->goal_handles_.erase(uuid);
       };
 
     std::function<void(const std::array<uint8_t, 16>&)> on_executing =
-      [this](const std::array<uint8_t, 16> & uuid)
+      [weak_this](const std::array<uint8_t, 16> & uuid)
       {
+        std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
+        if (!shared_this) {
+          return;
+        }
         (void)uuid;
         // Publish a status message any time a goal handle changes state
-        publish_status();
+        shared_this->publish_status();
       };
 
     goal_handle.reset(
