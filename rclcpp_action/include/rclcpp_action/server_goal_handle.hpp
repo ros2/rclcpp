@@ -22,6 +22,7 @@
 
 #include <functional>
 #include <memory>
+#include <mutex>
 
 #include "rclcpp_action/visibility_control.hpp"
 
@@ -62,15 +63,6 @@ public:
   virtual
   ~ServerGoalHandleBase();
 
-  /// Get a shared pointer to the C struct this class wraps.
-  /**
-   * It is not thread safe to use the returned pointer in any `rcl_action` functions while calling
-   * any of the other functions on this class.
-   */
-  RCLCPP_ACTION_PUBLIC
-  std::shared_ptr<rcl_action_goal_handle_t>
-  get_rcl_handle() const;
-
 protected:
   // -------------------------------------------------------------------------
   // API for communication between ServerGoalHandleBase and ServerGoalHandle<>
@@ -97,6 +89,11 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
+  _set_canceling();
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
   _set_canceled();
 
   /// \internal
@@ -109,6 +106,7 @@ protected:
 
 private:
   std::shared_ptr<rcl_action_goal_handle_t> rcl_handle_;
+  mutable std::mutex rcl_handle_mutex_;
 };
 
 // Forward declare server

@@ -152,7 +152,7 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  std::pair<CancelResponse, std::shared_ptr<rcl_action_goal_handle_t>>
+  CancelResponse
   call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) = 0;
 
   /// Given a goal request message, return the UUID contained within.
@@ -365,7 +365,7 @@ protected:
   }
 
   /// \internal
-  std::pair<CancelResponse, std::shared_ptr<rcl_action_goal_handle_t>>
+  CancelResponse
   call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) override
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
@@ -376,10 +376,12 @@ protected:
       std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle = element->second.lock();
       if (goal_handle) {
         resp = handle_cancel_(goal_handle);
-        rcl_handle = goal_handle->get_rcl_handle();
+        if (CancelResponse::ACCEPT == resp) {
+          goal_handle->_set_canceling();
+        }
       }
     }
-    return std::make_pair(resp, rcl_handle);
+    return resp;
   }
 
   /// \internal

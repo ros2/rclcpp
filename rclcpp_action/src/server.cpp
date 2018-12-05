@@ -319,20 +319,17 @@ ServerBase::execute_cancel_request_received()
     for (size_t i = 0; i < 16; ++i) {
       uuid[i] = goal_info.goal_id.uuid[i];
     }
-    auto response_pair = call_handle_cancel_callback(uuid);
-    if (CancelResponse::ACCEPT == response_pair.first) {
-      ret = rcl_action_update_goal_state(response_pair.second.get(), GOAL_EVENT_CANCEL);
-      if (RCL_RET_OK != ret) {
-        rcl_ret_t fail_ret = rcl_action_cancel_response_fini(&cancel_response);
-        (void)fail_ret;  // TODO(sloretz) do something with error during cleanup
+    auto response_code = call_handle_cancel_callback(uuid);
+    if (CancelResponse::ACCEPT == response_code) {
+      rcl_ret_t fail_ret = rcl_action_cancel_response_fini(&cancel_response);
+      if (RCL_RET_OK != fail_ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
-      } else {
-        action_msgs::msg::GoalInfo cpp_info;
-        cpp_info.goal_id.uuid = uuid;
-        cpp_info.stamp.sec = goal_info.stamp.sec;
-        cpp_info.stamp.nanosec = goal_info.stamp.nanosec;
-        response->goals_canceling.push_back(cpp_info);
       }
+      action_msgs::msg::GoalInfo cpp_info;
+      cpp_info.goal_id.uuid = uuid;
+      cpp_info.stamp.sec = goal_info.stamp.sec;
+      cpp_info.stamp.nanosec = goal_info.stamp.nanosec;
+      response->goals_canceling.push_back(cpp_info);
     }
   }
 
