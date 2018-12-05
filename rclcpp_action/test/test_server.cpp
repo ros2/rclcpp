@@ -200,10 +200,10 @@ TEST_F(TestServer, handle_cancel_called)
 
   ASSERT_TRUE(received_handle);
   EXPECT_EQ(uuid, received_handle->get_uuid());
-  EXPECT_FALSE(received_handle->is_cancel_request());
+  EXPECT_FALSE(received_handle->is_canceling());
 
   send_cancel_request(node, uuid);
-  EXPECT_TRUE(received_handle->is_cancel_request());
+  EXPECT_TRUE(received_handle->is_canceling());
 }
 
 TEST_F(TestServer, publish_status_accepted)

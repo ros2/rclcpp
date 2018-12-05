@@ -45,7 +45,7 @@ public:
   /// \return true if a cancelation request has been accepted for this goal.
   RCLCPP_ACTION_PUBLIC
   bool
-  is_cancel_request() const;
+  is_canceling() const;
 
   /// Indicate if goal is pending or executing.
   /// \return false if goal has reached a terminal state.

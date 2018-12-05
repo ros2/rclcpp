@@ -27,7 +27,7 @@ ServerGoalHandleBase::~ServerGoalHandleBase()
 }
 
 bool
-ServerGoalHandleBase::is_cancel_request() const
+ServerGoalHandleBase::is_canceling() const
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
