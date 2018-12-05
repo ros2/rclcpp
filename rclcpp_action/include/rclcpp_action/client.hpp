@@ -55,14 +55,6 @@ class ClientBase : public rclcpp::Waitable
 {
 public:
   RCLCPP_ACTION_PUBLIC
-  ClientBase(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name,
-    const rosidl_action_type_support_t * type_support,
-    const rcl_action_client_options_t & options);
-
-  RCLCPP_ACTION_PUBLIC
   virtual ~ClientBase();
 
   // -------------
@@ -112,6 +104,14 @@ public:
   // -----------------
 
 protected:
+  RCLCPP_ACTION_PUBLIC
+  ClientBase(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    const std::string & action_name,
+    const rosidl_action_type_support_t * type_support,
+    const rcl_action_client_options_t & options);
+
   // -----------------------------------------------------
   // API for communication between ClientBase and Client<>
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
