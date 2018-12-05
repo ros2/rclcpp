@@ -24,6 +24,7 @@
 #include <climits>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -367,6 +368,7 @@ protected:
   std::pair<CancelResponse, std::shared_ptr<rcl_action_goal_handle_t>>
   call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) override
   {
+    std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     CancelResponse resp = CancelResponse::REJECT;
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle;
     auto element = goal_handles_.find(uuid);
@@ -403,6 +405,7 @@ protected:
         // notify base so it can recalculate the expired goal timer
         shared_this->notify_goal_terminal_state();
         // Delete data now (ServerBase and rcl_action_server_t keep data until goal handle expires)
+        std::lock_guard<std::mutex> lock(shared_this->goal_handles_mutex_);
         shared_this->goal_handles_.erase(uuid);
       };
 
@@ -433,7 +436,10 @@ protected:
         rcl_goal_handle, uuid,
         std::static_pointer_cast<const typename ACTION::Goal>(goal_request_message),
         on_terminal_state, on_executing, publish_feedback));
-    goal_handles_[uuid] = goal_handle;
+    {
+      std::lock_guard<std::mutex> lock(goal_handles_mutex_);
+      goal_handles_[uuid] = goal_handle;
+    }
     handle_accepted_(goal_handle);
   }
 
@@ -486,6 +492,7 @@ private:
   /// A map of goal id to goal handle weak pointers.
   /// This is used to provide a goal handle to handle_cancel.
   std::unordered_map<std::array<uint8_t, 16>, GoalHandleWeakPtr, UUIDHash> goal_handles_;
+  std::mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__SERVER_HPP_
