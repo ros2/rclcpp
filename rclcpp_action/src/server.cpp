@@ -21,6 +21,7 @@
 #include <rclcpp_action/server.hpp>
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -32,7 +33,9 @@ namespace rclcpp_action
 class ServerBaseImpl
 {
 public:
+  std::mutex server_mutex_;
   std::shared_ptr<rcl_action_server_t> action_server_;
+
   rclcpp::Clock::SharedPtr clock_;
 
   size_t num_subscriptions_ = 0;
@@ -46,6 +49,7 @@ public:
   bool result_request_ready_ = false;
   bool goal_expired_ = false;
 
+  std::mutex results_mutex_;
   // Results to be kept until the goal expires after reaching a terminal state
   std::unordered_map<std::array<uint8_t, 16>, std::shared_ptr<void>, UUIDHash> goal_results_;
   // Requests for results are kept until a result becomes available
@@ -140,6 +144,7 @@ ServerBase::get_number_of_ready_guard_conditions()
 bool
 ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
+  std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
   rcl_ret_t ret = rcl_action_wait_set_add_action_server(
     wait_set, pimpl_->action_server_.get(), NULL);
   return RCL_RET_OK == ret;
@@ -148,6 +153,7 @@ ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
+  std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
   rcl_ret_t ret = rcl_action_server_wait_set_get_entities_ready(
     wait_set,
     pimpl_->action_server_.get(),
@@ -189,10 +195,13 @@ ServerBase::execute_goal_request_received()
   rmw_request_id_t request_header;
 
   std::shared_ptr<void> message = create_goal_request();
-  ret = rcl_action_take_goal_request(
-    pimpl_->action_server_.get(),
-    &request_header,
-    message.get());
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_take_goal_request(
+      pimpl_->action_server_.get(),
+      &request_header,
+      message.get());
+  }
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -207,10 +216,13 @@ ServerBase::execute_goal_request_received()
   // Call user's callback, getting the user's response and a ros message to send back
   auto response_pair = call_handle_goal_callback(uuid, message);
 
-  ret = rcl_action_send_goal_response(
-    pimpl_->action_server_.get(),
-    &request_header,
-    response_pair.second.get());
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_send_goal_response(
+      pimpl_->action_server_.get(),
+      &request_header,
+      response_pair.second.get());
+  }
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -229,8 +241,11 @@ ServerBase::execute_goal_request_received()
           delete ptr;
         }
       };
-    rcl_action_goal_handle_t * rcl_handle = rcl_action_accept_new_goal(
-      pimpl_->action_server_.get(), &goal_info);
+    rcl_action_goal_handle_t * rcl_handle;
+    {
+      std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+      rcl_handle = rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info);
+    }
     if (!rcl_handle) {
       throw std::runtime_error("Failed to accept new goal\n");
     }
@@ -263,10 +278,13 @@ ServerBase::execute_cancel_request_received()
   // Initialize cancel request
   auto request = std::make_shared<action_msgs::srv::CancelGoal::Request>();
 
-  ret = rcl_action_take_cancel_request(
-    pimpl_->action_server_.get(),
-    &request_header,
-    request.get());
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_take_cancel_request(
+      pimpl_->action_server_.get(),
+      &request_header,
+      request.get());
+  }
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -282,10 +300,14 @@ ServerBase::execute_cancel_request_received()
 
   // Get a list of goal info that should be attempted to be cancelled
   rcl_action_cancel_response_t cancel_response = rcl_action_get_zero_initialized_cancel_response();
-  ret = rcl_action_process_cancel_request(
-    pimpl_->action_server_.get(),
-    &cancel_request,
-    &cancel_response);
+
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_process_cancel_request(
+      pimpl_->action_server_.get(),
+      &cancel_request,
+      &cancel_response);
+  }
 
   auto response = std::make_shared<action_msgs::srv::CancelGoal::Response>();
 
@@ -325,8 +347,11 @@ ServerBase::execute_cancel_request_received()
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  ret = rcl_action_send_cancel_response(
-    pimpl_->action_server_.get(), &request_header, response.get());
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_send_cancel_response(
+      pimpl_->action_server_.get(), &request_header, response.get());
+  }
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -339,8 +364,11 @@ ServerBase::execute_result_request_received()
   // Get the result request message
   rmw_request_id_t request_header;
   std::shared_ptr<void> result_request = create_result_request();
-  ret = rcl_action_take_result_request(
-    pimpl_->action_server_.get(), &request_header, result_request.get());
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_take_result_request(
+      pimpl_->action_server_.get(), &request_header, result_request.get());
+  }
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -353,7 +381,12 @@ ServerBase::execute_result_request_received()
   for (size_t i = 0; i < 16; ++i) {
     goal_info.goal_id.uuid[i] = uuid[i];
   }
-  if (!rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info)) {
+  bool goal_exists;
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    goal_exists = rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info);
+  }
+  if (!goal_exists) {
     // Goal does not exists
     result_response = create_result_response(action_msgs::msg::GoalStatus::STATUS_UNKNOWN);
   } else {
@@ -366,8 +399,11 @@ ServerBase::execute_result_request_received()
 
   if (result_response) {
     // Send the result now
-    ret = rcl_action_send_result_response(
-      pimpl_->action_server_.get(), &request_header, result_response.get());
+    {
+      std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+      ret = rcl_action_send_result_response(
+        pimpl_->action_server_.get(), &request_header, result_response.get());
+    }
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
@@ -391,8 +427,11 @@ ServerBase::execute_check_expired_goals()
 
   // Loop in case more than 1 goal expired
   while (num_expired > 0u) {
-    rcl_ret_t ret = rcl_action_expire_goals(
-      pimpl_->action_server_.get(), expired_goals, 1, &num_expired);
+    rcl_ret_t ret;
+    {
+      std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+      ret = rcl_action_expire_goals(pimpl_->action_server_.get(), expired_goals, 1, &num_expired);
+    }
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret);
     } else if (num_expired) {
@@ -415,7 +454,11 @@ ServerBase::publish_status()
   // Get all goal handles known to C action server
   rcl_action_goal_handle_t ** goal_handles = NULL;
   size_t num_goals = 0;
-  ret = rcl_action_server_get_goal_handles(pimpl_->action_server_.get(), &goal_handles, &num_goals);
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_server_get_goal_handles(
+      pimpl_->action_server_.get(), &goal_handles, &num_goals);
+  }
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -451,7 +494,10 @@ ServerBase::publish_status()
   }
 
   // Publish the message through the status publisher
-  ret = rcl_action_publish_status(pimpl_->action_server_.get(), status_msg.get());
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    ret = rcl_action_publish_status(pimpl_->action_server_.get(), status_msg.get());
+  }
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -465,7 +511,12 @@ ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr
   for (size_t i = 0; i < 16; ++i) {
     goal_info.goal_id.uuid[i] = uuid[i];
   }
-  if (!rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info)) {
+  bool goal_exists;
+  {
+    std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
+    goal_exists = rcl_action_server_goal_exists(pimpl_->action_server_.get(), &goal_info);
+  }
+  if (!goal_exists) {
     throw std::runtime_error("Asked to publish result for goal that does not exist");
   }
 
@@ -475,6 +526,7 @@ ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr
   auto iter = pimpl_->result_requests_.find(uuid);
   if (iter != pimpl_->result_requests_.end()) {
     for (auto & request_header : iter->second) {
+      std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
       rcl_ret_t ret = rcl_action_send_result_response(
         pimpl_->action_server_.get(), &request_header, result_msg.get());
       if (RCL_RET_OK != ret) {
@@ -487,6 +539,7 @@ ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr
 void
 ServerBase::notify_goal_terminal_state()
 {
+  std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
   rcl_ret_t ret = rcl_action_notify_goal_done(pimpl_->action_server_.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -496,6 +549,7 @@ ServerBase::notify_goal_terminal_state()
 void
 ServerBase::publish_feedback(std::shared_ptr<void> feedback_msg)
 {
+  std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
   rcl_ret_t ret = rcl_action_publish_feedback(pimpl_->action_server_.get(), feedback_msg.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to publish feedback");
