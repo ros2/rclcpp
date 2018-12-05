@@ -54,10 +54,10 @@ class ClientBaseImpl;
 class ClientBase : public rclcpp::Waitable
 {
 public:
-  // TODO(sloretz) NodeLoggingInterface when it can be gotten off a node
   RCLCPP_ACTION_PUBLIC
   ClientBase(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & options);
@@ -211,18 +211,20 @@ public:
 
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name
   )
-  : Client(node_base, action_name, rcl_action_client_get_default_options())
+  : Client(node_base, node_logging, action_name, rcl_action_client_get_default_options())
   {
   }
 
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name, const rcl_action_client_options_t & client_options
   )
   : ClientBase(
-      node_base, action_name,
+      node_base, node_logging, action_name,
       rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>(),
       client_options)
   {

@@ -14,6 +14,8 @@
 
 #include <rcl_action/action_client.h>
 #include <rcl_action/wait.h>
+#include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_logging_interface.hpp>
 
 #include <algorithm>
 #include <map>
@@ -32,11 +34,12 @@ class ClientBaseImpl
 public:
   ClientBaseImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
   : node_handle(node_base->get_shared_rcl_node_handle()),
-    logger(rclcpp::get_logger(rcl_node_get_logger_name(node_handle.get())).get_child("rclcpp")),
+    logger(node_logging->get_logger()),
     random_bytes_generator(std::random_device{} ())
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
@@ -114,10 +117,11 @@ public:
 
 ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   const std::string & action_name,
   const rosidl_action_type_support_t * type_support,
   const rcl_action_client_options_t & client_options)
-: pimpl_(new ClientBaseImpl(node_base, action_name, type_support, client_options))
+: pimpl_(new ClientBaseImpl(node_base, node_logging, action_name, type_support, client_options))
 {
 }
 
