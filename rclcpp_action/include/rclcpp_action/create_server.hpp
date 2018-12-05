@@ -18,6 +18,9 @@
 #include <rcl_action/action_server.h>
 
 #include <rclcpp/node.hpp>
+#include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_clock_interface.hpp>
+#include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/node_interfaces/node_waitables_interface.hpp>
 
 #include <memory>
@@ -72,6 +75,7 @@ create_server(
   std::shared_ptr<Server<ACTION>> action_server(new Server<ACTION>(
       node->get_node_base_interface(),
       node->get_node_clock_interface(),
+      node->get_node_logging_interface(),
       name,
       options,
       handle_goal,

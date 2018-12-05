@@ -22,7 +22,9 @@
 
 #include <climits>
 #include <functional>
+#include <string>
 
+#include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
 {
@@ -31,6 +33,10 @@ using GoalID = std::array<uint8_t, UUID_SIZE>;
 using GoalStatus = action_msgs::msg::GoalStatus;
 using GoalInfo = action_msgs::msg::GoalInfo;
 
+/// Convert a goal id to a human readable string.
+RCLCPP_ACTION_PUBLIC
+std::string
+to_string(const GoalID & goal_id);
 }  // namespace rclcpp_action
 
 namespace std
@@ -54,7 +60,7 @@ struct hash<rclcpp_action::GoalID>
   {
     // TODO(sloretz) Use someone else's hash function and cite it
     size_t result = 0;
-    for (size_t i = 0; i < 16; ++i) {
+    for (size_t i = 0; i < uuid.size(); ++i) {
       for (size_t b = 0; b < sizeof(size_t); ++b) {
         size_t part = uuid[i];
         part <<= CHAR_BIT * b;

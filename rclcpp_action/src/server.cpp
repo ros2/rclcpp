@@ -33,6 +33,14 @@ namespace rclcpp_action
 class ServerBaseImpl
 {
 public:
+  ServerBaseImpl(
+    rclcpp::Clock::SharedPtr clock,
+    rclcpp::Logger logger
+  )
+  : clock_(clock), logger_(logger)
+  {
+  }
+
   std::mutex server_mutex_;
   std::shared_ptr<rcl_action_server_t> action_server_;
 
@@ -56,28 +64,32 @@ public:
   std::unordered_map<GoalID, std::vector<rmw_request_id_t>> result_requests_;
   // rcl goal handles are kept so api to send result doesn't try to access freed memory
   std::unordered_map<GoalID, std::shared_ptr<rcl_action_goal_handle_t>> goal_handles_;
+
+  rclcpp::Logger logger_;
 };
 }  // namespace rclcpp_action
 
 ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   const std::string & name,
   const rosidl_action_type_support_t * type_support,
   const rcl_action_server_options_t & options
 )
-: pimpl_(new ServerBaseImpl)
+: pimpl_(new ServerBaseImpl(
+      node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
 {
   rcl_ret_t ret;
-  pimpl_->clock_ = node_clock->get_clock();
 
   auto deleter = [node_base](rcl_action_server_t * ptr)
     {
       if (nullptr != ptr) {
         rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
         rcl_ret_t ret = rcl_action_server_fini(ptr, rcl_node);
-        // TODO(sloretz) do something if error occurs during destruction
         (void)ret;
+        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"),
+          "failed to fini rcl_action_server_t in deleter");
       }
       delete ptr;
     };
@@ -233,12 +245,15 @@ ServerBase::execute_goal_request_received()
 
   // if goal is accepted, create a goal handle, and store it
   if (GoalResponse::ACCEPT_AND_EXECUTE == status || GoalResponse::ACCEPT_AND_DEFER == status) {
+    RCLCPP_DEBUG(pimpl_->logger_, "Accepted goal %s", to_string(uuid).c_str());
     // rcl_action will set time stamp
     auto deleter = [](rcl_action_goal_handle_t * ptr)
       {
         if (nullptr != ptr) {
           rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
-          (void)fail_ret;  // TODO(sloretz) do something with error during cleanup
+          (void)fail_ret;
+          RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"),
+            "failed to fini rcl_action_goal_handle_t in deleter");
           delete ptr;
         }
       };
@@ -445,6 +460,7 @@ ServerBase::execute_check_expired_goals()
       for (size_t i = 0; i < 16; ++i) {
         uuid[i] = expired_goals[0].goal_id.uuid[i];
       }
+      RCLCPP_DEBUG(pimpl_->logger_, "Expired goal %s", to_string(uuid).c_str());
       std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
       pimpl_->goal_results_.erase(uuid);
       pimpl_->result_requests_.erase(uuid);

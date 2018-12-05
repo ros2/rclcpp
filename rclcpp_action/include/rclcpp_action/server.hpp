@@ -20,6 +20,7 @@
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
+#include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/waitable.hpp>
 
 #include <functional>
@@ -69,15 +70,6 @@ enum class CancelResponse : int8_t
 class ServerBase : public rclcpp::Waitable
 {
 public:
-  // TODO(sloretz) NodeLoggingInterface when it can be gotten off a node
-  RCLCPP_ACTION_PUBLIC
-  ServerBase(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-    rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    const std::string & name,
-    const rosidl_action_type_support_t * type_support,
-    const rcl_action_server_options_t & options);
-
   RCLCPP_ACTION_PUBLIC
   virtual ~ServerBase();
 
@@ -136,6 +128,15 @@ public:
   // -----------------
 
 protected:
+  RCLCPP_ACTION_PUBLIC
+  ServerBase(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    const std::string & name,
+    const rosidl_action_type_support_t * type_support,
+    const rcl_action_server_options_t & options);
+
   // -----------------------------------------------------
   // API for communication between ServerBase and Server<>
 
@@ -291,6 +292,7 @@ public:
    *
    * \param[in] node_base a pointer to the base interface of a node.
    * \param[in] node_clock a pointer to an interface that allows getting a node's clock.
+   * \param[in] node_logging a pointer to an interface that allows getting a node's logger.
    * \param[in] name the name of an action.
    *  The same name and type must be used by both the action client and action server to
    *  communicate.
@@ -305,6 +307,7 @@ public:
   Server(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & name,
     const rcl_action_server_options_t & options,
     GoalCallback handle_goal,
@@ -314,6 +317,7 @@ public:
   : ServerBase(
       node_base,
       node_clock,
+      node_logging,
       name,
       rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>(),
       options),
