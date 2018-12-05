@@ -51,9 +51,9 @@ public:
 
   std::mutex results_mutex_;
   // Results to be kept until the goal expires after reaching a terminal state
-  std::unordered_map<std::array<uint8_t, 16>, std::shared_ptr<void>, UUIDHash> goal_results_;
+  std::unordered_map<GoalID, std::shared_ptr<void>, UUIDHash> goal_results_;
   // Requests for results are kept until a result becomes available
-  std::unordered_map<std::array<uint8_t, 16>, std::vector<rmw_request_id_t>, UUIDHash>
+  std::unordered_map<GoalID, std::vector<rmw_request_id_t>, UUIDHash>
   result_requests_;
 };
 }  // namespace rclcpp_action
@@ -208,7 +208,7 @@ ServerBase::execute_goal_request_received()
   }
 
   pimpl_->goal_request_ready_ = false;
-  std::array<uint8_t, 16> uuid = get_goal_id_from_goal_request(message.get());
+  GoalID uuid = get_goal_id_from_goal_request(message.get());
   for (size_t i = 0; i < 16; ++i) {
     goal_info.goal_id.uuid[i] = uuid[i];
   }
@@ -315,7 +315,7 @@ ServerBase::execute_cancel_request_received()
   // For each canceled goal, call cancel callback
   for (size_t i = 0; i < goals.size; ++i) {
     const rcl_action_goal_info_t & goal_info = goals.data[i];
-    std::array<uint8_t, 16> uuid;
+    GoalID uuid;
     for (size_t i = 0; i < 16; ++i) {
       uuid[i] = goal_info.goal_id.uuid[i];
     }
@@ -373,7 +373,7 @@ ServerBase::execute_result_request_received()
   std::shared_ptr<void> result_response;
 
   // check if the goal exists
-  std::array<uint8_t, 16> uuid = get_goal_id_from_result_request(result_request.get());
+  GoalID uuid = get_goal_id_from_result_request(result_request.get());
   rcl_action_goal_info_t goal_info;
   for (size_t i = 0; i < 16; ++i) {
     goal_info.goal_id.uuid[i] = uuid[i];
@@ -435,7 +435,7 @@ ServerBase::execute_check_expired_goals()
       rclcpp::exceptions::throw_from_rcl_error(ret);
     } else if (num_expired) {
       // A goal expired!
-      std::array<uint8_t, 16> uuid;
+      GoalID uuid;
       for (size_t i = 0; i < 16; ++i) {
         uuid[i] = expired_goals[0].goal_id.uuid[i];
       }
@@ -504,7 +504,7 @@ ServerBase::publish_status()
 }
 
 void
-ServerBase::publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_msg)
+ServerBase::publish_result(const GoalID & uuid, std::shared_ptr<void> result_msg)
 {
   // Check that the goal exists
   rcl_action_goal_info_t goal_info;

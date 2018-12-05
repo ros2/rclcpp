@@ -32,6 +32,7 @@
 
 #include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
+#include "rclcpp_action/types.hpp"
 
 namespace rclcpp_action
 {
@@ -145,7 +146,7 @@ protected:
   RCLCPP_ACTION_PUBLIC
   virtual
   std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(std::array<uint8_t, 16> &, std::shared_ptr<void> request) = 0;
+  call_handle_goal_callback(GoalID &, std::shared_ptr<void> request) = 0;
 
   // ServerBase will determine which goal ids are being cancelled, and then call this function for
   // each goal id.
@@ -154,13 +155,13 @@ protected:
   RCLCPP_ACTION_PUBLIC
   virtual
   CancelResponse
-  call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) = 0;
+  call_handle_cancel_callback(const GoalID & uuid) = 0;
 
   /// Given a goal request message, return the UUID contained within.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  std::array<uint8_t, 16>
+  GoalID
   get_goal_id_from_goal_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
@@ -177,13 +178,13 @@ protected:
   void
   call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) = 0;
+    GoalID uuid, std::shared_ptr<void> goal_request_message) = 0;
 
   /// Given a result request message, return the UUID contained within.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  std::array<uint8_t, 16>
+  GoalID
   get_goal_id_from_result_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
@@ -213,7 +214,7 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  publish_result(const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_msg);
+  publish_result(const GoalID & uuid, std::shared_ptr<void> result_msg);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
@@ -257,7 +258,7 @@ private:
 /// Hash a goal id so it can be used as a key in std::unordered_map
 struct UUIDHash
 {
-  size_t operator()(std::array<uint8_t, 16> const & uuid) const noexcept
+  size_t operator()(GoalID const & uuid) const noexcept
   {
     // TODO(sloretz) Use someone else's hash function and cite it
     size_t result = 0;
@@ -290,7 +291,7 @@ public:
 
   /// Signature of a callback that accepts or rejects goal requests.
   using GoalCallback = std::function<GoalResponse(
-        const std::array<uint8_t, 16>&, std::shared_ptr<const typename ACTION::Goal>)>;
+        const GoalID&, std::shared_ptr<const typename ACTION::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
@@ -350,7 +351,7 @@ protected:
 
   /// \internal
   std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(std::array<uint8_t, 16> & uuid, std::shared_ptr<void> message) override
+  call_handle_goal_callback(GoalID & uuid, std::shared_ptr<void> message) override
   {
     // TODO(sloretz) update and remove assert when IDL pipeline allows nesting user's type
     static_assert(
@@ -367,7 +368,7 @@ protected:
 
   /// \internal
   CancelResponse
-  call_handle_cancel_callback(const std::array<uint8_t, 16> & uuid) override
+  call_handle_cancel_callback(const GoalID & uuid) override
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     CancelResponse resp = CancelResponse::REJECT;
@@ -389,13 +390,13 @@ protected:
   void
   call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    std::array<uint8_t, 16> uuid, std::shared_ptr<void> goal_request_message) override
+    GoalID uuid, std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
     std::weak_ptr<Server<ACTION>> weak_this = this->shared_from_this();
 
-    std::function<void(const std::array<uint8_t, 16>&, std::shared_ptr<void>)> on_terminal_state =
-      [weak_this](const std::array<uint8_t, 16> & uuid, std::shared_ptr<void> result_message)
+    std::function<void(const GoalID&, std::shared_ptr<void>)> on_terminal_state =
+      [weak_this](const GoalID & uuid, std::shared_ptr<void> result_message)
       {
         std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
         if (!shared_this) {
@@ -412,8 +413,8 @@ protected:
         shared_this->goal_handles_.erase(uuid);
       };
 
-    std::function<void(const std::array<uint8_t, 16>&)> on_executing =
-      [weak_this](const std::array<uint8_t, 16> & uuid)
+    std::function<void(const GoalID&)> on_executing =
+      [weak_this](const GoalID & uuid)
       {
         std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
         if (!shared_this) {
@@ -447,7 +448,7 @@ protected:
   }
 
   /// \internal
-  std::array<uint8_t, 16>
+  GoalID
   get_goal_id_from_goal_request(void * message) override
   {
     return static_cast<typename ACTION::GoalRequestService::Request *>(message)->uuid;
@@ -461,7 +462,7 @@ protected:
   }
 
   /// \internal
-  std::array<uint8_t, 16>
+  GoalID
   get_goal_id_from_result_request(void * message) override
   {
     return static_cast<typename ACTION::GoalResultService::Request *>(message)->uuid;
@@ -494,7 +495,7 @@ private:
   using GoalHandleWeakPtr = std::weak_ptr<ServerGoalHandle<ACTION>>;
   /// A map of goal id to goal handle weak pointers.
   /// This is used to provide a goal handle to handle_cancel.
-  std::unordered_map<std::array<uint8_t, 16>, GoalHandleWeakPtr, UUIDHash> goal_handles_;
+  std::unordered_map<GoalID, GoalHandleWeakPtr, UUIDHash> goal_handles_;
   std::mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action

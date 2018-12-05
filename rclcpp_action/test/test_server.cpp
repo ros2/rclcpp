@@ -162,7 +162,7 @@ TEST_F(TestServer, handle_accepted_called)
 
   ASSERT_TRUE(received_handle);
   ASSERT_TRUE(received_handle->is_active());
-  EXPECT_EQ(uuid, received_handle->get_uuid());
+  EXPECT_EQ(uuid, received_handle->get_goal_id());
   EXPECT_EQ(*request, *(received_handle->get_goal()));
 }
 
@@ -199,7 +199,7 @@ TEST_F(TestServer, handle_cancel_called)
   send_goal_request(node, uuid);
 
   ASSERT_TRUE(received_handle);
-  EXPECT_EQ(uuid, received_handle->get_uuid());
+  EXPECT_EQ(uuid, received_handle->get_goal_id());
   EXPECT_FALSE(received_handle->is_canceling());
 
   send_cancel_request(node, uuid);
