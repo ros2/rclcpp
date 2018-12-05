@@ -53,8 +53,9 @@ public:
   // Results to be kept until the goal expires after reaching a terminal state
   std::unordered_map<GoalID, std::shared_ptr<void>, UUIDHash> goal_results_;
   // Requests for results are kept until a result becomes available
-  std::unordered_map<GoalID, std::vector<rmw_request_id_t>, UUIDHash>
-  result_requests_;
+  std::unordered_map<GoalID, std::vector<rmw_request_id_t>, UUIDHash> result_requests_;
+  // rcl goal handles are kept so api to send result doesn't try to access freed memory
+  std::unordered_map<GoalID, std::shared_ptr<rcl_action_goal_handle_t>, UUIDHash> goal_handles_;
 };
 }  // namespace rclcpp_action
 
@@ -254,6 +255,11 @@ ServerBase::execute_goal_request_received()
     // Copy out goal handle since action server storage disappears when it is fini'd
     *handle = *rcl_handle;
 
+    {
+      std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
+      pimpl_->goal_handles_[uuid] = handle;
+    }
+
     if (GoalResponse::ACCEPT_AND_EXECUTE == status) {
       // Change status to executing
       ret = rcl_action_update_goal_state(handle.get(), GOAL_EVENT_EXECUTE);
@@ -442,6 +448,7 @@ ServerBase::execute_check_expired_goals()
       std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
       pimpl_->goal_results_.erase(uuid);
       pimpl_->result_requests_.erase(uuid);
+      pimpl_->goal_handles_.erase(uuid);
     }
   }
 }
