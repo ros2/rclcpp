@@ -291,7 +291,7 @@ public:
 
   /// Signature of a callback that accepts or rejects goal requests.
   using GoalCallback = std::function<GoalResponse(
-        const GoalID&, std::shared_ptr<const typename ACTION::Goal>)>;
+        const GoalID &, std::shared_ptr<const typename ACTION::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ACTION>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
@@ -395,7 +395,7 @@ protected:
     std::shared_ptr<ServerGoalHandle<ACTION>> goal_handle;
     std::weak_ptr<Server<ACTION>> weak_this = this->shared_from_this();
 
-    std::function<void(const GoalID&, std::shared_ptr<void>)> on_terminal_state =
+    std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state =
       [weak_this](const GoalID & uuid, std::shared_ptr<void> result_message)
       {
         std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();
@@ -413,7 +413,7 @@ protected:
         shared_this->goal_handles_.erase(uuid);
       };
 
-    std::function<void(const GoalID&)> on_executing =
+    std::function<void(const GoalID &)> on_executing =
       [weak_this](const GoalID & uuid)
       {
         std::shared_ptr<Server<ACTION>> shared_this = weak_this.lock();

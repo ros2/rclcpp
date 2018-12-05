@@ -231,8 +231,8 @@ protected:
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
     GoalID uuid,
     std::shared_ptr<const typename ACTION::Goal> goal,
-    std::function<void(const GoalID&, std::shared_ptr<void>)> on_terminal_state,
-    std::function<void(const GoalID&)> on_executing,
+    std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state,
+    std::function<void(const GoalID &)> on_executing,
     std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback
   )
   : ServerGoalHandleBase(rcl_handle), goal_(goal), uuid_(uuid),
@@ -249,8 +249,8 @@ protected:
 
   friend Server<ACTION>;
 
-  std::function<void(const GoalID&, std::shared_ptr<void>)> on_terminal_state_;
-  std::function<void(const GoalID&)> on_executing_;
+  std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state_;
+  std::function<void(const GoalID &)> on_executing_;
   std::function<void(std::shared_ptr<typename ACTION::Feedback>)> publish_feedback_;
 };
 }  // namespace rclcpp_action
