@@ -122,61 +122,89 @@ protected:
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual GoalID generate_goal_id();
+  virtual
+  GoalID
+  generate_goal_id();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual void send_goal_request(
+  virtual
+  void
+  send_goal_request(
     std::shared_ptr<void> request,
     ResponseCallback callback);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual void send_result_request(
+  virtual
+  void
+  send_result_request(
     std::shared_ptr<void> request,
     ResponseCallback callback);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual void send_cancel_request(
+  virtual
+  void
+  send_cancel_request(
     std::shared_ptr<void> request,
     ResponseCallback callback);
 
   /// \internal
-  virtual std::shared_ptr<void> create_goal_response() const = 0;
+  virtual
+  std::shared_ptr<void>
+  create_goal_response() const = 0;
 
   /// \internal
-  virtual void handle_goal_response(
+  virtual
+  void
+  handle_goal_response(
     const rmw_request_id_t & response_header,
     std::shared_ptr<void> goal_response);
 
   /// \internal
-  virtual std::shared_ptr<void> create_result_response() const = 0;
+  virtual
+  std::shared_ptr<void>
+  create_result_response() const = 0;
 
   /// \internal
-  virtual void handle_result_response(
+  virtual
+  void
+  handle_result_response(
     const rmw_request_id_t & response_header,
     std::shared_ptr<void> result_response);
 
   /// \internal
-  virtual std::shared_ptr<void> create_cancel_response() const = 0;
+  virtual
+  std::shared_ptr<void>
+  create_cancel_response() const = 0;
 
   /// \internal
-  virtual void handle_cancel_response(
+  virtual
+  void
+  handle_cancel_response(
     const rmw_request_id_t & response_header,
     std::shared_ptr<void> cancel_response);
 
   /// \internal
-  virtual std::shared_ptr<void> create_feedback_message() const = 0;
+  virtual
+  std::shared_ptr<void>
+  create_feedback_message() const = 0;
 
   /// \internal
-  virtual void handle_feedback_message(std::shared_ptr<void> message) = 0;
+  virtual
+  void
+  handle_feedback_message(std::shared_ptr<void> message) = 0;
 
   /// \internal
-  virtual std::shared_ptr<void> create_status_message() const = 0;
+  virtual
+  std::shared_ptr<void>
+  create_status_message() const = 0;
 
   /// \internal
-  virtual void handle_status_message(std::shared_ptr<void> message) = 0;
+  virtual
+  void
+  handle_status_message(std::shared_ptr<void> message) = 0;
 
   // End API for communication between ClientBase and Client<>
   // ---------------------------------------------------------
@@ -231,7 +259,8 @@ public:
   }
 
   RCLCPP_ACTION_PUBLIC
-  std::shared_future<typename GoalHandle::SharedPtr> async_send_goal(
+  std::shared_future<typename GoalHandle::SharedPtr>
+  async_send_goal(
     const Goal & goal, FeedbackCallback callback = nullptr, bool ignore_result = false)
   {
     // Put promise in the heap to move it around.
@@ -345,7 +374,8 @@ public:
     return async_cancel(cancel_request);
   }
 
-  virtual ~Client()
+  virtual
+  ~Client()
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     auto it = goal_handles_.begin();
@@ -357,27 +387,31 @@ public:
 
 private:
   /// \internal
-  std::shared_ptr<void> create_goal_response() const override
+  std::shared_ptr<void>
+  create_goal_response() const override
   {
     using GoalResponse = typename ActionT::GoalRequestService::Response;
     return std::shared_ptr<void>(new GoalResponse());
   }
 
   /// \internal
-  std::shared_ptr<void> create_result_response() const override
+  std::shared_ptr<void>
+  create_result_response() const override
   {
     using GoalResultResponse = typename ActionT::GoalResultService::Response;
     return std::shared_ptr<void>(new GoalResultResponse());
   }
 
   /// \internal
-  std::shared_ptr<void> create_cancel_response() const override
+  std::shared_ptr<void>
+  create_cancel_response() const override
   {
     return std::shared_ptr<void>(new CancelResponse());
   }
 
   /// \internal
-  std::shared_ptr<void> create_feedback_message() const override
+  std::shared_ptr<void>
+  create_feedback_message() const override
   {
     // using FeedbackMessage = typename ActionT::FeedbackMessage;
     // return std::shared_ptr<void>(new FeedbackMessage());
@@ -385,7 +419,8 @@ private:
   }
 
   /// \internal
-  void handle_feedback_message(std::shared_ptr<void> message) override
+  void
+  handle_feedback_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     // using FeedbackMessage = typename ActionT::FeedbackMessage;
@@ -407,14 +442,16 @@ private:
   }
 
   /// \internal
-  std::shared_ptr<void> create_status_message() const override
+  std::shared_ptr<void>
+  create_status_message() const override
   {
     using GoalStatusMessage = typename ActionT::GoalStatusMessage;
     return std::shared_ptr<void>(new GoalStatusMessage());
   }
 
   /// \internal
-  void handle_status_message(std::shared_ptr<void> message) override
+  void
+  handle_status_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     using GoalStatusMessage = typename ActionT::GoalStatusMessage;
@@ -442,7 +479,8 @@ private:
   }
 
   /// \internal
-  void make_result_aware(typename GoalHandle::SharedPtr goal_handle)
+  void
+  make_result_aware(typename GoalHandle::SharedPtr goal_handle)
   {
     using GoalResultRequest = typename ActionT::GoalResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();

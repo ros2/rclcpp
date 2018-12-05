@@ -68,9 +68,11 @@ public:
 
   virtual ~ClientGoalHandle();
 
-  const GoalID & get_goal_id() const;
+  const GoalID &
+  get_goal_id() const;
 
-  rclcpp::Time get_goal_stamp() const;
+  rclcpp::Time
+  get_goal_stamp() const;
 
   std::shared_future<Result>
   async_result();
