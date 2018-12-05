@@ -39,7 +39,7 @@ public:
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
   : node_handle(node_base->get_shared_rcl_node_handle()),
-    logger(node_logging->get_logger()),
+    logger(node_logging->get_logger().get_child("rclcpp_acton")),
     random_bytes_generator(std::random_device{} ())
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
@@ -50,7 +50,7 @@ public:
         if (handle) {
           if (RCL_RET_OK != rcl_action_client_fini(client, handle.get())) {
             RCLCPP_ERROR(
-              rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp"),
+              rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp_action"),
               "Error in destruction of rcl action client handle: %s", rcl_get_error_string().str);
             rcl_reset_error();
           }
