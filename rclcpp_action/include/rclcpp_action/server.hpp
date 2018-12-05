@@ -22,7 +22,6 @@
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include <rclcpp/waitable.hpp>
 
-#include <climits>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -254,25 +253,6 @@ private:
   std::unique_ptr<ServerBaseImpl> pimpl_;
 };
 
-
-/// Hash a goal id so it can be used as a key in std::unordered_map
-struct UUIDHash
-{
-  size_t operator()(GoalID const & uuid) const noexcept
-  {
-    // TODO(sloretz) Use someone else's hash function and cite it
-    size_t result = 0;
-    for (size_t i = 0; i < 16; ++i) {
-      for (size_t b = 0; b < sizeof(size_t); ++b) {
-        size_t part = uuid[i];
-        part <<= CHAR_BIT * b;
-        result ^= part;
-      }
-    }
-    return result;
-  }
-};
-
 /// Action Server
 /**
  * This class creates an action server.
@@ -495,7 +475,7 @@ private:
   using GoalHandleWeakPtr = std::weak_ptr<ServerGoalHandle<ACTION>>;
   /// A map of goal id to goal handle weak pointers.
   /// This is used to provide a goal handle to handle_cancel.
-  std::unordered_map<GoalID, GoalHandleWeakPtr, UUIDHash> goal_handles_;
+  std::unordered_map<GoalID, GoalHandleWeakPtr> goal_handles_;
   std::mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action

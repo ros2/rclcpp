@@ -20,6 +20,7 @@
 #include <action_msgs/msg/goal_status.hpp>
 #include <action_msgs/msg/goal_info.hpp>
 
+#include <climits>
 #include <functional>
 
 
@@ -42,6 +43,25 @@ struct less<rclcpp_action::GoalID>
     const rclcpp_action::GoalID & rhs) const
   {
     return lhs < rhs;
+  }
+};
+
+/// Hash a goal id so it can be used as a key in std::unordered_map
+template<>
+struct hash<rclcpp_action::GoalID>
+{
+  size_t operator()(const rclcpp_action::GoalID & uuid) const noexcept
+  {
+    // TODO(sloretz) Use someone else's hash function and cite it
+    size_t result = 0;
+    for (size_t i = 0; i < 16; ++i) {
+      for (size_t b = 0; b < sizeof(size_t); ++b) {
+        size_t part = uuid[i];
+        part <<= CHAR_BIT * b;
+        result ^= part;
+      }
+    }
+    return result;
   }
 };
 }  // namespace std

@@ -51,11 +51,11 @@ public:
 
   std::mutex results_mutex_;
   // Results to be kept until the goal expires after reaching a terminal state
-  std::unordered_map<GoalID, std::shared_ptr<void>, UUIDHash> goal_results_;
+  std::unordered_map<GoalID, std::shared_ptr<void>> goal_results_;
   // Requests for results are kept until a result becomes available
-  std::unordered_map<GoalID, std::vector<rmw_request_id_t>, UUIDHash> result_requests_;
+  std::unordered_map<GoalID, std::vector<rmw_request_id_t>> result_requests_;
   // rcl goal handles are kept so api to send result doesn't try to access freed memory
-  std::unordered_map<GoalID, std::shared_ptr<rcl_action_goal_handle_t>, UUIDHash> goal_handles_;
+  std::unordered_map<GoalID, std::shared_ptr<rcl_action_goal_handle_t>> goal_handles_;
 };
 }  // namespace rclcpp_action
 
