@@ -51,7 +51,6 @@ ClientGoalHandle<ActionT>::get_goal_stamp() const
   return info_.stamp;
 }
 
-
 template<typename ActionT>
 std::shared_future<typename ClientGoalHandle<ActionT>::Result>
 ClientGoalHandle<ActionT>::async_result()
