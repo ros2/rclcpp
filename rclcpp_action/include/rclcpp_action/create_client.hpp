@@ -25,8 +25,8 @@
 
 namespace rclcpp_action
 {
-template<typename ACTION>
-typename Client<ACTION>::SharedPtr
+template<typename ActionT>
+typename Client<ActionT>::SharedPtr
 create_client(
   rclcpp::Node::SharedPtr node,
   const std::string & name,
@@ -37,7 +37,7 @@ create_client(
   std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
   bool group_is_null = (nullptr == group.get());
 
-  auto deleter = [weak_node, weak_group, group_is_null](Client<ACTION> * ptr)
+  auto deleter = [weak_node, weak_group, group_is_null](Client<ActionT> * ptr)
     {
       if (nullptr == ptr) {
         return;
@@ -47,7 +47,7 @@ create_client(
         return;
       }
       // API expects a shared pointer, give it one with a deleter that does nothing.
-      std::shared_ptr<Client<ACTION>> fake_shared_ptr(ptr, [](Client<ACTION> *) {});
+      std::shared_ptr<Client<ActionT>> fake_shared_ptr(ptr, [](Client<ActionT> *) {});
 
       if (group_is_null) {
         // Was added to default group
@@ -62,8 +62,8 @@ create_client(
       delete ptr;
     };
 
-  std::shared_ptr<Client<ACTION>> action_client(
-    new Client<ACTION>(node->get_node_base_interface(), node->get_node_logging_interface(), name),
+  std::shared_ptr<Client<ActionT>> action_client(
+    new Client<ActionT>(node->get_node_base_interface(), node->get_node_logging_interface(), name),
     deleter);
 
   node->get_node_waitables_interface()->add_waitable(action_client, group);

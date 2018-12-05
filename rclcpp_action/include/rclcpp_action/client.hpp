@@ -195,19 +195,19 @@ private:
  *  - coverting between the C++ action type and generic types for `rclcpp_action::ClientBase`, and
  *  - calling user callbacks.
  */
-template<typename ACTION>
+template<typename ActionT>
 class Client : public ClientBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Client)
 
-  using Goal = typename ACTION::Goal;
-  using Feedback = typename ACTION::Feedback;
-  using GoalHandle = ClientGoalHandle<ACTION>;
+  using Goal = typename ActionT::Goal;
+  using Feedback = typename ActionT::Feedback;
+  using GoalHandle = ClientGoalHandle<ActionT>;
   using Result = typename GoalHandle::Result;
-  using FeedbackCallback = typename ClientGoalHandle<ACTION>::FeedbackCallback;
-  using CancelRequest = typename ACTION::CancelGoalService::Request;
-  using CancelResponse = typename ACTION::CancelGoalService::Response;
+  using FeedbackCallback = typename ClientGoalHandle<ActionT>::FeedbackCallback;
+  using CancelRequest = typename ActionT::CancelGoalService::Request;
+  using CancelResponse = typename ActionT::CancelGoalService::Response;
 
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -225,7 +225,7 @@ public:
   )
   : ClientBase(
       node_base, node_logging, action_name,
-      rosidl_typesupport_cpp::get_action_type_support_handle<ACTION>(),
+      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
       client_options)
   {
   }
@@ -237,7 +237,7 @@ public:
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>();
     std::shared_future<typename GoalHandle::SharedPtr> future(promise->get_future());
-    using GoalRequest = typename ACTION::GoalRequestService::Request;
+    using GoalRequest = typename ActionT::GoalRequestService::Request;
     // auto goal_request = std::make_shared<GoalRequest>();
     // goal_request->goal_id = this->generate_goal_id();
     // goal_request->goal = goal;
@@ -248,7 +248,7 @@ public:
       [this, goal_request, callback, ignore_result, promise](
         std::shared_ptr<void> response) mutable
       {
-        using GoalResponse = typename ACTION::GoalRequestService::Response;
+        using GoalResponse = typename ActionT::GoalRequestService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
@@ -359,14 +359,14 @@ private:
   /// \internal
   std::shared_ptr<void> create_goal_response() const override
   {
-    using GoalResponse = typename ACTION::GoalRequestService::Response;
+    using GoalResponse = typename ActionT::GoalRequestService::Response;
     return std::shared_ptr<void>(new GoalResponse());
   }
 
   /// \internal
   std::shared_ptr<void> create_result_response() const override
   {
-    using GoalResultResponse = typename ACTION::GoalResultService::Response;
+    using GoalResultResponse = typename ActionT::GoalResultService::Response;
     return std::shared_ptr<void>(new GoalResultResponse());
   }
 
@@ -379,7 +379,7 @@ private:
   /// \internal
   std::shared_ptr<void> create_feedback_message() const override
   {
-    // using FeedbackMessage = typename ACTION::FeedbackMessage;
+    // using FeedbackMessage = typename ActionT::FeedbackMessage;
     // return std::shared_ptr<void>(new FeedbackMessage());
     return std::shared_ptr<void>(new Feedback());
   }
@@ -388,7 +388,7 @@ private:
   void handle_feedback_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    // using FeedbackMessage = typename ACTION::FeedbackMessage;
+    // using FeedbackMessage = typename ActionT::FeedbackMessage;
     // typename FeedbackMessage::SharedPtr feedback_message =
     //   std::static_pointer_cast<FeedbackMessage>(message);
     typename Feedback::SharedPtr feedback_message =
@@ -409,7 +409,7 @@ private:
   /// \internal
   std::shared_ptr<void> create_status_message() const override
   {
-    using GoalStatusMessage = typename ACTION::GoalStatusMessage;
+    using GoalStatusMessage = typename ActionT::GoalStatusMessage;
     return std::shared_ptr<void>(new GoalStatusMessage());
   }
 
@@ -417,7 +417,7 @@ private:
   void handle_status_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    using GoalStatusMessage = typename ACTION::GoalStatusMessage;
+    using GoalStatusMessage = typename ActionT::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
       // const GoalID & goal_id = status.goal_info.goal_id;
@@ -444,7 +444,7 @@ private:
   /// \internal
   void make_result_aware(typename GoalHandle::SharedPtr goal_handle)
   {
-    using GoalResultRequest = typename ACTION::GoalResultService::Request;
+    using GoalResultRequest = typename ActionT::GoalResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
     // goal_result_request.goal_id = goal_handle->get_goal_id();
     goal_result_request->uuid = goal_handle->get_goal_id();
@@ -454,7 +454,7 @@ private:
       {
         // Wrap the response in a struct with the fields a user cares about
         Result result;
-        using GoalResultResponse = typename ACTION::GoalResultService::Response;
+        using GoalResultResponse = typename ActionT::GoalResultService::Response;
         result.response = std::static_pointer_cast<GoalResultResponse>(response);
         result.goal_id = goal_handle->get_goal_id();
         result.code = static_cast<ResultCode>(result.response->status);

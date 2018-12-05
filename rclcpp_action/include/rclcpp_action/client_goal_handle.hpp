@@ -42,10 +42,10 @@ enum class ResultCode : int8_t
 
 
 // Forward declarations
-template<typename ACTION>
+template<typename ActionT>
 class Client;
 
-template<typename ACTION>
+template<typename ActionT>
 class ClientGoalHandle
 {
 public:
@@ -59,10 +59,10 @@ public:
     /// A status to indicate if the goal was canceled, aborted, or suceeded
     ResultCode code;
     /// User defined fields sent back with an action
-    typename ACTION::Result::SharedPtr response;
+    typename ActionT::Result::SharedPtr response;
   } Result;
 
-  using Feedback = typename ACTION::Feedback;
+  using Feedback = typename ActionT::Feedback;
   using FeedbackCallback =
     std::function<void (ClientGoalHandle::SharedPtr, const std::shared_ptr<const Feedback>)>;
 
@@ -86,7 +86,7 @@ public:
 
 private:
   // The templated Client creates goal handles
-  friend Client<ACTION>;
+  friend Client<ActionT>;
 
   ClientGoalHandle(const GoalInfo & info, FeedbackCallback callback);
 
@@ -95,7 +95,7 @@ private:
 
   void
   call_feedback_callback(
-    ClientGoalHandle<ACTION>::SharedPtr shared_this,
+    ClientGoalHandle<ActionT>::SharedPtr shared_this,
     typename std::shared_ptr<const Feedback> feedback_message);
 
   void
