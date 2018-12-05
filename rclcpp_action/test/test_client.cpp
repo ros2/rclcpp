@@ -273,21 +273,13 @@ TEST_F(TestClient, async_send_goal_but_ignore_feedback_and_result)
   ActionGoal bad_goal;
   bad_goal.order = -5;
   auto future_goal_handle = action_client->async_send_goal(bad_goal, nullptr, true);
-  server_executor.spin_once();
-  server_executor.spin_some();
-  ASSERT_EQ(
-    rclcpp::executor::FutureReturnCode::SUCCESS,
-    client_executor.spin_until_future_complete(future_goal_handle));
+  dual_spin_until_future_complete(future_goal_handle);
   EXPECT_EQ(nullptr, future_goal_handle.get().get());
 
   ActionGoal good_goal;
   good_goal.order = 5;
   future_goal_handle = action_client->async_send_goal(good_goal, nullptr, true);
-  server_executor.spin_once();
-  server_executor.spin_some();
-  ASSERT_EQ(
-    rclcpp::executor::FutureReturnCode::SUCCESS,
-    client_executor.spin_until_future_complete(future_goal_handle));
+  dual_spin_until_future_complete(future_goal_handle);
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
   EXPECT_FALSE(goal_handle->is_feedback_aware());
@@ -394,6 +386,8 @@ TEST_F(TestClient, async_cancel_all_goals)
   ASSERT_EQ(2ul, cancel_response->goals_canceling.size());
   EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
   EXPECT_EQ(goal_handle1->get_goal_id(), cancel_response->goals_canceling[1].goal_id.uuid);
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle1->get_status());
 }
 
 TEST_F(TestClient, async_cancel_some_goals)
