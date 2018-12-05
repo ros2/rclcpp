@@ -156,6 +156,7 @@ protected:
   create_goal_response() const = 0;
 
   /// \internal
+  RCLCPP_ACTION_PUBLIC
   virtual
   void
   handle_goal_response(
@@ -168,6 +169,7 @@ protected:
   create_result_response() const = 0;
 
   /// \internal
+  RCLCPP_ACTION_PUBLIC
   virtual
   void
   handle_result_response(
@@ -180,6 +182,7 @@ protected:
   create_cancel_response() const = 0;
 
   /// \internal
+  RCLCPP_ACTION_PUBLIC
   virtual
   void
   handle_cancel_response(
@@ -250,7 +253,6 @@ public:
   {
   }
 
-  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename GoalHandle::SharedPtr>
   async_send_goal(
     const Goal & goal, FeedbackCallback callback = nullptr, bool ignore_result = false)
@@ -296,7 +298,6 @@ public:
     return future;
   }
 
-  RCLCPP_ACTION_PUBLIC
   std::shared_future<Result>
   async_get_result(typename GoalHandle::SharedPtr goal_handle)
   {
@@ -311,7 +312,6 @@ public:
     return goal_handle->async_result();
   }
 
-  RCLCPP_ACTION_PUBLIC
   std::shared_future<bool>
   async_cancel_goal(typename GoalHandle::SharedPtr goal_handle)
   {
@@ -341,7 +341,6 @@ public:
     return future;
   }
 
-  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_all_goals()
   {
@@ -353,7 +352,6 @@ public:
     return async_cancel(cancel_request);
   }
 
-  RCLCPP_ACTION_PUBLIC
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_goals_before(const rclcpp::Time & stamp)
   {
