@@ -112,7 +112,7 @@ public:
   std::mutex cancel_requests_mutex;
 
   std::independent_bits_engine<
-    std::default_random_engine, 8, uint8_t> random_bytes_generator;
+    std::default_random_engine, 8, unsigned int> random_bytes_generator;
 };
 
 ClientBase::ClientBase(
