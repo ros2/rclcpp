@@ -140,7 +140,7 @@ ClientGoalHandle<ActionT>::call_feedback_callback(
     return;
   }
   std::lock_guard<std::mutex> guard(handle_mutex_);
-  if (feedback_callback_ == nullptr) {
+  if (nullptr == feedback_callback_) {
     // Normal, some feedback messages may arrive after the goal result.
     RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"), "Received feedback but goal ignores it.");
     return;
