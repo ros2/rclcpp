@@ -312,6 +312,13 @@ ServerBase::execute_cancel_request_received()
     &cancel_request,
     &cancel_response);
 
+  RCLCPP_SCOPE_EXIT({
+    ret = rcl_action_cancel_response_fini(&cancel_response);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(pimpl_->logger_, "Failed to fini cancel response");
+    }
+  });
+
   auto response = std::make_shared<action_msgs::srv::CancelGoal::Response>();
 
   auto & goals = cancel_response.msg.goals_canceling;
@@ -322,10 +329,6 @@ ServerBase::execute_cancel_request_received()
     convert(goal_info, &uuid);
     auto response_code = call_handle_cancel_callback(uuid);
     if (CancelResponse::ACCEPT == response_code) {
-      rcl_ret_t fail_ret = rcl_action_cancel_response_fini(&cancel_response);
-      if (RCL_RET_OK != fail_ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
-      }
       action_msgs::msg::GoalInfo cpp_info;
       cpp_info.goal_id.uuid = uuid;
       cpp_info.stamp.sec = goal_info.stamp.sec;
@@ -337,12 +340,6 @@ ServerBase::execute_cancel_request_received()
   if (!response->goals_canceling.empty()) {
     // at least one goal state changed, publish a new status message
     publish_status();
-  }
-
-  // TODO(sloretz) make this fini happen in an exception safe way
-  ret = rcl_action_cancel_response_fini(&cancel_response);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
   ret = rcl_action_send_cancel_response(
