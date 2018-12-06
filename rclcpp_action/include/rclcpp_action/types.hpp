@@ -37,6 +37,16 @@ using GoalInfo = action_msgs::msg::GoalInfo;
 RCLCPP_ACTION_PUBLIC
 std::string
 to_string(const GoalID & goal_id);
+
+// Convert C++ GoalID to rcl_action_goal_info_t
+RCLCPP_ACTION_PUBLIC
+void
+convert(const GoalID & goal_id, rcl_action_goal_info_t * info);
+
+// Convert rcl_action_goal_info_t to C++ GoalID
+RCLCPP_ACTION_PUBLIC
+void
+convert(const rcl_action_goal_info_t & info, GoalID * goal_id);
 }  // namespace rclcpp_action
 
 namespace std

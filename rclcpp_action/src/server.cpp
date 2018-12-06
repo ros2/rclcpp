@@ -222,9 +222,7 @@ ServerBase::execute_goal_request_received()
 
   pimpl_->goal_request_ready_ = false;
   GoalID uuid = get_goal_id_from_goal_request(message.get());
-  for (size_t i = 0; i < 16; ++i) {
-    goal_info.goal_id.uuid[i] = uuid[i];
-  }
+  convert(uuid, &goal_info);
 
   // Call user's callback, getting the user's response and a ros message to send back
   auto response_pair = call_handle_goal_callback(uuid, message);
@@ -313,9 +311,7 @@ ServerBase::execute_cancel_request_received()
 
   // Convert c++ message to C message
   rcl_action_cancel_request_t cancel_request = rcl_action_get_zero_initialized_cancel_request();
-  for (size_t i = 0; i < 16; ++i) {
-    cancel_request.goal_info.goal_id.uuid[i] = request->goal_info.goal_id.uuid[i];
-  }
+  convert(request->goal_info.goal_id.uuid, &cancel_request.goal_info);
   cancel_request.goal_info.stamp.sec = request->goal_info.stamp.sec;
   cancel_request.goal_info.stamp.nanosec = request->goal_info.stamp.nanosec;
 
@@ -337,9 +333,7 @@ ServerBase::execute_cancel_request_received()
   for (size_t i = 0; i < goals.size; ++i) {
     const rcl_action_goal_info_t & goal_info = goals.data[i];
     GoalID uuid;
-    for (size_t i = 0; i < 16; ++i) {
-      uuid[i] = goal_info.goal_id.uuid[i];
-    }
+    convert(goal_info, &uuid);
     auto response_code = call_handle_cancel_callback(uuid);
     if (CancelResponse::ACCEPT == response_code) {
       rcl_ret_t fail_ret = rcl_action_cancel_response_fini(&cancel_response);
@@ -396,9 +390,7 @@ ServerBase::execute_result_request_received()
   // check if the goal exists
   GoalID uuid = get_goal_id_from_result_request(result_request.get());
   rcl_action_goal_info_t goal_info;
-  for (size_t i = 0; i < 16; ++i) {
-    goal_info.goal_id.uuid[i] = uuid[i];
-  }
+  convert(uuid, &goal_info);
   bool goal_exists;
   {
     std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);
@@ -457,9 +449,7 @@ ServerBase::execute_check_expired_goals()
     } else if (num_expired) {
       // A goal expired!
       GoalID uuid;
-      for (size_t i = 0; i < 16; ++i) {
-        uuid[i] = expired_goals[0].goal_id.uuid[i];
-      }
+      convert(expired_goals[0], &uuid);
       RCLCPP_DEBUG(pimpl_->logger_, "Expired goal %s", to_string(uuid).c_str());
       std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
       pimpl_->goal_results_.erase(uuid);
@@ -507,9 +497,7 @@ ServerBase::publish_status()
     action_msgs::msg::GoalStatus msg;
     msg.status = goal_state;
     // Convert C goal info to C++ goal info
-    for (size_t i = 0; i < 16; ++i) {
-      msg.goal_info.goal_id.uuid[i] = goal_info.goal_id.uuid[i];
-    }
+    convert(goal_info, &msg.goal_info.goal_id.uuid);
     msg.goal_info.stamp.sec = goal_info.stamp.sec;
     msg.goal_info.stamp.nanosec = goal_info.stamp.nanosec;
 
@@ -531,9 +519,7 @@ ServerBase::publish_result(const GoalID & uuid, std::shared_ptr<void> result_msg
 {
   // Check that the goal exists
   rcl_action_goal_info_t goal_info;
-  for (size_t i = 0; i < 16; ++i) {
-    goal_info.goal_id.uuid[i] = uuid[i];
-  }
+  convert(uuid, &goal_info);
   bool goal_exists;
   {
     std::lock_guard<std::mutex> lock(pimpl_->server_mutex_);

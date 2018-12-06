@@ -29,4 +29,20 @@ to_string(const GoalID & goal_id)
   }
   return stream.str();
 }
+
+void
+convert(const GoalID & goal_id, rcl_action_goal_info_t * info)
+{
+  for (size_t i = 0; i < 16; ++i) {
+    info->goal_id.uuid[i] = goal_id[i];
+  }
+}
+
+void
+convert(const rcl_action_goal_info_t & info, GoalID * goal_id)
+{
+  for (size_t i = 0; i < 16; ++i) {
+    (*goal_id)[i] = info.goal_id.uuid[i];
+  }
+}
 }  // namespace rclcpp_action
