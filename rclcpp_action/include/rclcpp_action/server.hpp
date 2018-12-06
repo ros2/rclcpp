@@ -356,7 +356,6 @@ protected:
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     CancelResponse resp = CancelResponse::REJECT;
-    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle;
     auto element = goal_handles_.find(uuid);
     if (element != goal_handles_.end()) {
       std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle = element->second.lock();
