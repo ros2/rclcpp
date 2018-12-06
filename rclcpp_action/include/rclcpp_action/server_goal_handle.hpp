@@ -102,6 +102,12 @@ protected:
   void
   _set_executing();
 
+  /// Transition the goal to canceled state if it never reached a terminal state.
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  bool
+  try_canceling() noexcept;
+
   // End API for communication between ServerGoalHandleBase and ServerGoalHandle<>
   // -----------------------------------------------------------------------------
 
@@ -129,8 +135,6 @@ template<typename ActionT>
 class ServerGoalHandle : public ServerGoalHandleBase
 {
 public:
-  virtual ~ServerGoalHandle() = default;
-
   /// Send an update about the progress of a goal.
   /**
    * This must only be called when the goal is executing.
@@ -223,6 +227,16 @@ public:
   get_goal_id() const
   {
     return uuid_;
+  }
+
+  virtual ~ServerGoalHandle()
+  {
+    // Cancel goal if handle was allowed to destruct without reaching a terminal state
+    if (try_canceling()) {
+      auto null_result = std::make_shared<typename ActionT::Result>();
+      null_result->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+      on_terminal_state_(uuid_, null_result);
+    }
   }
 
 protected:
