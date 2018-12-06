@@ -286,7 +286,7 @@ public:
    * Three callbacks must be provided:
    *  - one to accept or reject goals sent to the server,
    *  - one to accept or reject requests to cancel a goal,
-   *  - one to given a goal handle after a goal has been accepted.
+   *  - one to receive a goal handle after a goal has been accepted.
    * All callbacks must be non-blocking.
    * The result of a goal should be set using methods on `rclcpp_action::ServerGoalHandle<>`.
    *
