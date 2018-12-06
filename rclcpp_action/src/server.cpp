@@ -18,6 +18,7 @@
 #include <action_msgs/msg/goal_status_array.hpp>
 #include <action_msgs/srv/cancel_goal.hpp>
 #include <rclcpp/exceptions.hpp>
+#include <rclcpp/scope_exit.hpp>
 #include <rclcpp_action/server.hpp>
 
 #include <memory>
@@ -473,27 +474,29 @@ ServerBase::publish_status()
   auto status_msg = std::make_shared<action_msgs::msg::GoalStatusArray>();
   status_msg->status_list.reserve(num_goals);
   // Populate a c++ status message with the goals and their statuses
-  for (size_t i = 0; i < num_goals; ++i) {
-    rcl_action_goal_handle_t * goal_handle = goal_handles[i];
-    rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
-    rcl_action_goal_state_t goal_state;
+  rcl_action_goal_status_array_t c_status_array =
+    rcl_action_get_zero_initialized_goal_status_array();
+  ret = rcl_action_get_goal_status_array(pimpl_->action_server_.get(), &c_status_array);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 
-    ret = rcl_action_goal_handle_get_info(goal_handle, &goal_info);
+  RCLCPP_SCOPE_EXIT({
+    ret = rcl_action_goal_status_array_fini(&c_status_array);
     if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
+      RCLCPP_ERROR(pimpl_->logger_, "Failed to fini status array message");
     }
+  });
 
-    ret = rcl_action_goal_handle_get_status(goal_handle, &goal_state);
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
+  for (size_t i = 0; i < c_status_array.msg.status_list.size; ++i) {
+    auto & c_status_msg = c_status_array.msg.status_list.data[i];
 
     action_msgs::msg::GoalStatus msg;
-    msg.status = goal_state;
+    msg.status = c_status_msg.status;
     // Convert C goal info to C++ goal info
-    convert(goal_info, &msg.goal_info.goal_id.uuid);
-    msg.goal_info.stamp.sec = goal_info.stamp.sec;
-    msg.goal_info.stamp.nanosec = goal_info.stamp.nanosec;
+    convert(c_status_msg.goal_info, &msg.goal_info.goal_id.uuid);
+    msg.goal_info.stamp.sec = c_status_msg.goal_info.stamp.sec;
+    msg.goal_info.stamp.nanosec = c_status_msg.goal_info.stamp.nanosec;
 
     status_msg->status_list.push_back(msg);
   }
