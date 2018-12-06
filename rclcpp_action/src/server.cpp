@@ -179,7 +179,8 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
 
   return pimpl_->goal_request_ready_ ||
          pimpl_->cancel_request_ready_ ||
-         pimpl_->result_request_ready_;
+         pimpl_->result_request_ready_ ||
+         pimpl_->goal_expired_;
 }
 
 void
