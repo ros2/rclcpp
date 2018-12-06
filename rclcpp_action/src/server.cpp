@@ -28,6 +28,7 @@
 #include <vector>
 
 using rclcpp_action::ServerBase;
+using rclcpp_action::GoalID;
 
 namespace rclcpp_action
 {
