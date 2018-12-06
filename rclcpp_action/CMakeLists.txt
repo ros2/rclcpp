@@ -22,6 +22,7 @@ set(${PROJECT_NAME}_SRCS
   src/client.cpp
   src/server.cpp
   src/server_goal_handle.cpp
+  src/types.cpp
 )
 
 add_library(${PROJECT_NAME}
