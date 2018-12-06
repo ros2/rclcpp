@@ -80,8 +80,6 @@ ServerBase::ServerBase(
 : pimpl_(new ServerBaseImpl(
       node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
 {
-  rcl_ret_t ret;
-
   auto deleter = [node_base](rcl_action_server_t * ptr)
     {
       if (nullptr != ptr) {
@@ -100,7 +98,7 @@ ServerBase::ServerBase(
   rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
   rcl_clock_t * rcl_clock = pimpl_->clock_->get_clock_handle();
 
-  ret = rcl_action_server_init(
+  rcl_ret_t ret = rcl_action_server_init(
     pimpl_->action_server_.get(), rcl_node, rcl_clock, type_support, name.c_str(), &options);
 
   if (RCL_RET_OK != ret) {
