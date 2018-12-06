@@ -265,7 +265,7 @@ public:
     // goal_request->goal_id = this->generate_goal_id();
     // goal_request->goal = goal;
     auto goal_request = std::make_shared<GoalRequest>(goal);
-    goal_request->uuid = this->generate_goal_id();
+    goal_request->action_goal_id.uuid = this->generate_goal_id();
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
       [this, goal_request, callback, ignore_result, promise](
@@ -279,7 +279,7 @@ public:
         }
         GoalInfo goal_info;
         // goal_info.goal_id = goal_request->goal_id;
-        goal_info.goal_id.uuid = goal_request->uuid;
+        goal_info.goal_id.uuid = goal_request->action_goal_id.uuid;
         goal_info.stamp = goal_response->stamp;
         // Do not use std::make_shared as friendship cannot be forwarded.
         std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
@@ -419,7 +419,7 @@ private:
     typename Feedback::SharedPtr feedback_message =
       std::static_pointer_cast<Feedback>(message);
     // const GoalID & goal_id = feedback_message->goal_id;
-    const GoalID & goal_id = feedback_message->uuid;
+    const GoalID & goal_id = feedback_message->action_goal_id.uuid;
     if (goal_handles_.count(goal_id) == 0) {
       RCLCPP_DEBUG(
         this->get_logger(),
@@ -475,7 +475,7 @@ private:
     using GoalResultRequest = typename ActionT::GoalResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
     // goal_result_request.goal_id = goal_handle->get_goal_id();
-    goal_result_request->uuid = goal_handle->get_goal_id();
+    goal_result_request->action_goal_id.uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
       [goal_handle, this](std::shared_ptr<void> response) mutable
@@ -485,7 +485,7 @@ private:
         using GoalResultResponse = typename ActionT::GoalResultService::Response;
         result.response = std::static_pointer_cast<GoalResultResponse>(response);
         result.goal_id = goal_handle->get_goal_id();
-        result.code = static_cast<ResultCode>(result.response->status);
+        result.code = static_cast<ResultCode>(result.response->action_status);
         goal_handle->set_result(result);
         std::lock_guard<std::mutex> lock(goal_handles_mutex_);
         goal_handles_.erase(goal_handle->get_goal_id());

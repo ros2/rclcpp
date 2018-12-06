@@ -45,7 +45,7 @@ protected:
       throw std::runtime_error("send goal service didn't become available");
     }
     auto request = std::make_shared<Fibonacci::GoalRequestService::Request>();
-    request->uuid = uuid;
+    request->action_goal_id.uuid = uuid;
     auto future = client->async_send_request(request);
     if (rclcpp::executor::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
@@ -122,7 +122,7 @@ TEST_F(TestServer, handle_goal_called)
   auto request = std::make_shared<Fibonacci::GoalRequestService::Request>();
 
   const GoalID uuid{{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}};
-  request->uuid = uuid;
+  request->action_goal_id.uuid = uuid;
 
   auto future = client->async_send_request(request);
   ASSERT_EQ(
@@ -545,7 +545,7 @@ TEST_F(TestServer, publish_feedback)
   ASSERT_EQ(1u, received_msgs.size());
   auto & msg = received_msgs.back();
   ASSERT_EQ(sent_message->sequence, msg->sequence);
-  ASSERT_EQ(uuid, msg->uuid);
+  ASSERT_EQ(uuid, msg->action_goal_id.uuid);
 }
 
 TEST_F(TestServer, get_result)
@@ -587,7 +587,7 @@ TEST_F(TestServer, get_result)
     throw std::runtime_error("get result service didn't become available");
   }
   auto request = std::make_shared<Fibonacci::GoalResultService::Request>();
-  request->uuid = uuid;
+  request->action_goal_id.uuid = uuid;
   auto future = result_client->async_send_request(request);
 
   // Send a result
@@ -600,7 +600,7 @@ TEST_F(TestServer, get_result)
     rclcpp::spin_until_future_complete(node, future));
 
   auto response = future.get();
-  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->action_status);
   EXPECT_EQ(result->sequence, response->sequence);
 }
 
