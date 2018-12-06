@@ -471,7 +471,8 @@ private:
   RCLCPP_DISABLE_COPY(Node)
 
   RCLCPP_PUBLIC
-  std::string get_extended_name(const std::string & name) const;
+  std::string
+  get_extended_name(const std::string & name) const;
 
   RCLCPP_PUBLIC
   bool
