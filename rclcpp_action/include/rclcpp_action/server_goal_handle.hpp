@@ -223,7 +223,7 @@ public:
   }
 
   /// Get the unique identifier of the goal
-  const GoalID
+  const GoalID &
   get_goal_id() const
   {
     return uuid_;
