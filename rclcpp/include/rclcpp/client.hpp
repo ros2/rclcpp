@@ -131,8 +131,8 @@ public:
   using SharedFuture = std::shared_future<SharedResponse>;
   using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
 
-  using CallbackType = std::function<void(SharedFuture)>;
-  using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
+  using CallbackType = std::function<void (SharedFuture)>;
+  using CallbackWithRequestType = std::function<void (SharedFutureWithRequest)>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 

@@ -44,7 +44,7 @@ throw_from_rcl_error(
   rcl_ret_t ret,
   const std::string & prefix,
   const rcl_error_state_t * error_state,
-  void (*reset_error)())
+  void (* reset_error)())
 {
   if (RCL_RET_OK == ret) {
     throw std::invalid_argument("ret is RCL_RET_OK");
