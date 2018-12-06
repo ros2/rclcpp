@@ -420,12 +420,7 @@ ServerBase::execute_result_request_received()
   } else {
     // Store the request so it can be responded to later
     std::lock_guard<std::mutex> lock(pimpl_->results_mutex_);
-    auto iter = pimpl_->result_requests_.find(uuid);
-    if (iter == pimpl_->result_requests_.end()) {
-      pimpl_->result_requests_[uuid] = std::vector<rmw_request_id_t>{request_header};
-    } else {
-      iter->second.push_back(request_header);
-    }
+    pimpl_->result_requests_[uuid].push_back(request_header);
   }
 }
 
