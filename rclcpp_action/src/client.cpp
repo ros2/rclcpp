@@ -34,11 +34,13 @@ class ClientBaseImpl
 public:
   ClientBaseImpl(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
-  : node_handle(node_base->get_shared_rcl_node_handle()),
+  : node_graph_(node_graph),
+    node_handle(node_base->get_shared_rcl_node_handle()),
     logger(node_logging->get_logger().get_child("rclcpp_acton")),
     random_bytes_generator(std::random_device{} ())
   {
@@ -96,6 +98,8 @@ public:
   bool is_cancel_response_ready{false};
   bool is_result_response_ready{false};
 
+  rclcpp::Context::SharedPtr context_;
+  rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_action_client_t> client_handle{nullptr};
   std::shared_ptr<rcl_node_t> node_handle{nullptr};
   rclcpp::Logger logger;
@@ -117,16 +121,96 @@ public:
 
 ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   const std::string & action_name,
   const rosidl_action_type_support_t * type_support,
   const rcl_action_client_options_t & client_options)
-: pimpl_(new ClientBaseImpl(node_base, node_logging, action_name, type_support, client_options))
+: pimpl_(new ClientBaseImpl(
+      node_base, node_graph, node_logging, action_name, type_support, client_options))
 {
 }
 
 ClientBase::~ClientBase()
 {
+}
+
+bool
+ClientBase::action_server_is_ready() const
+{
+  bool is_ready;
+  rcl_ret_t ret = rcl_action_server_is_available(
+    this->pimpl_->node_handle.get(),
+    this->pimpl_->client_handle.get(),
+    &is_ready);
+  if (RCL_RET_NODE_INVALID == ret) {
+    const rcl_node_t * node_handle = this->pimpl_->node_handle.get();
+    if (node_handle && !rcl_context_is_valid(node_handle->context)) {
+      // context is shutdown, do a soft failure
+      return false;
+    }
+  }
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "rcl_action_server_is_available failed");
+  }
+  return is_ready;
+}
+
+bool
+ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
+{
+  auto start = std::chrono::steady_clock::now();
+  // make an event to reuse, rather than create a new one each time
+  auto node_ptr = pimpl_->node_graph_.lock();
+  if (!node_ptr) {
+    throw rclcpp::exceptions::InvalidNodeError();
+  }
+  auto event = node_ptr->get_graph_event();
+  // check to see if the server is ready immediately
+  if (this->action_server_is_ready()) {
+    return true;
+  }
+  if (timeout == std::chrono::nanoseconds(0)) {
+    // check was non-blocking, return immediately
+    return false;
+  }
+  // update the time even on the first loop to account for time spent in the first call
+  // to this->server_is_ready()
+  std::chrono::nanoseconds time_to_wait =
+    timeout > std::chrono::nanoseconds(0) ?
+    timeout - (std::chrono::steady_clock::now() - start) :
+    std::chrono::nanoseconds::max();
+  if (time_to_wait < std::chrono::nanoseconds(0)) {
+    // Do not allow the time_to_wait to become negative when timeout was originally positive.
+    // Setting time_to_wait to 0 will allow one non-blocking wait because of the do-while.
+    time_to_wait = std::chrono::nanoseconds(0);
+  }
+  do {
+    if (!rclcpp::ok(this->pimpl_->context_)) {
+      return false;
+    }
+    // Limit each wait to 100ms to workaround an issue specific to the Connext RMW implementation.
+    // A race condition means that graph changes for services becoming available may trigger the
+    // wait set to wake up, but then not be reported as ready immediately after the wake up
+    // (see https://github.com/ros2/rmw_connext/issues/201)
+    // If no other graph events occur, the wait set will not be triggered again until the timeout
+    // has been reached, despite the service being available, so we artificially limit the wait
+    // time to limit the delay.
+    node_ptr->wait_for_graph_change(
+      event, std::min(time_to_wait, std::chrono::nanoseconds(RCL_MS_TO_NS(100))));
+    // Because of the aforementioned race condition, we check if the service is ready even if the
+    // graph event wasn't triggered.
+    event->check_and_clear();
+    if (this->action_server_is_ready()) {
+      return true;
+    }
+    // server is not ready, loop if there is time left
+    if (timeout > std::chrono::nanoseconds(0)) {
+      time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
+    }
+    // if timeout is negative, time_to_wait will never reach zero
+  } while (time_to_wait > std::chrono::nanoseconds(0));
+  return false;  // timeout exceeded while waiting for the server to be ready
 }
 
 rclcpp::Logger

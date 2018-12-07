@@ -19,6 +19,8 @@
 
 #include <memory>
 
+#include "rclcpp/logging.hpp"
+#include "rclcpp_action/client_goal_handle.hpp"
 #include "rclcpp_action/exceptions.hpp"
 
 namespace rclcpp_action

@@ -17,6 +17,8 @@
 
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_logging_interface.hpp>
+#include <rclcpp/node_interfaces/node_graph_interface.hpp>
 #include <rclcpp/logger.hpp>
 #include <rclcpp/time.hpp>
 #include <rclcpp/waitable.hpp>
@@ -25,6 +27,7 @@
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <future>
 #include <map>
@@ -56,6 +59,22 @@ class ClientBase : public rclcpp::Waitable
 public:
   RCLCPP_ACTION_PUBLIC
   virtual ~ClientBase();
+
+  /// Return true if there is an action server that is ready to take goal requests.
+  RCLCPP_ACTION_PUBLIC
+  bool
+  action_server_is_ready() const;
+
+  /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
+  template<typename RatioT = std::milli>
+  bool
+  wait_for_action_server(
+    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+  {
+    return wait_for_action_server_nanoseconds(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
+    );
+  }
 
   // -------------
   // Waitables API
@@ -107,10 +126,16 @@ protected:
   RCLCPP_ACTION_PUBLIC
   ClientBase(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & options);
+
+  /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
+  RCLCPP_ACTION_PUBLIC
+  bool
+  wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout);
 
   // -----------------------------------------------------
   // API for communication between ClientBase and Client<>
@@ -242,12 +267,13 @@ public:
 
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rcl_action_client_options_t client_options = rcl_action_client_get_default_options()
   )
   : ClientBase(
-      node_base, node_logging, action_name,
+      node_base, node_graph, node_logging, action_name,
       rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
       client_options)
   {

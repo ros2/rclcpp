@@ -63,7 +63,11 @@ create_client(
     };
 
   std::shared_ptr<Client<ActionT>> action_client(
-    new Client<ActionT>(node->get_node_base_interface(), node->get_node_logging_interface(), name),
+    new Client<ActionT>(
+      node->get_node_base_interface(),
+      node->get_node_graph_interface(),
+      node->get_node_logging_interface(),
+      name),
     deleter);
 
   node->get_node_waitables_interface()->add_waitable(action_client, group);

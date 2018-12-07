@@ -217,11 +217,17 @@ ServerBase::execute_goal_request_received()
     &request_header,
     message.get());
 
-  if (RCL_RET_OK != ret) {
+  pimpl_->goal_request_ready_ = false;
+
+  if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
+    // Ignore take failure because connext fails if it receives a sample without valid data.
+    // This happens when a client shuts down and connext receives a sample saying the client is
+    // no longer alive.
+    return;
+  } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  pimpl_->goal_request_ready_ = false;
   GoalID uuid = get_goal_id_from_goal_request(message.get());
   convert(uuid, &goal_info);
 
@@ -295,7 +301,14 @@ ServerBase::execute_cancel_request_received()
     &request_header,
     request.get());
 
-  if (RCL_RET_OK != ret) {
+  pimpl_->cancel_request_ready_ = false;
+
+  if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
+    // Ignore take failure because connext fails if it receives a sample without valid data.
+    // This happens when a client shuts down and connext receives a sample saying the client is
+    // no longer alive.
+    return;
+  } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
@@ -361,7 +374,14 @@ ServerBase::execute_result_request_received()
   ret = rcl_action_take_result_request(
     pimpl_->action_server_.get(), &request_header, result_request.get());
 
-  if (RCL_RET_OK != ret) {
+  pimpl_->result_request_ready_ = false;
+
+  if (RCL_RET_ACTION_SERVER_TAKE_FAILED == ret) {
+    // Ignore take failure because connext fails if it receives a sample without valid data.
+    // This happens when a client shuts down and connext receives a sample saying the client is
+    // no longer alive.
+    return;
+  } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
