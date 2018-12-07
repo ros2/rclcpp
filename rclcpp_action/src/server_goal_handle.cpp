@@ -111,30 +111,19 @@ bool
 ServerGoalHandleBase::try_canceling() noexcept
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
-  // Check if the goal reached a terminal state already
-  const bool active = rcl_action_goal_handle_is_active(rcl_handle_.get());
-  if (!active) {
-    return false;
-  }
-
   rcl_ret_t ret;
-
-  // Get the current state
-  rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
-  ret = rcl_action_goal_handle_get_status(rcl_handle_.get(), &state);
-  if (RCL_RET_OK != ret) {
-    return false;
-  }
-
-  // If it's not already canceling then transition to that state
-  if (GOAL_STATE_CANCELING != state) {
+  // Check if the goal is cancelable
+  const bool is_cancelable = rcl_action_goal_handle_is_cancelable(rcl_handle_.get());
+  if (is_cancelable) {
+    // Transition to CANCELING
     ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCEL);
     if (RCL_RET_OK != ret) {
       return false;
     }
   }
 
-  // Get the state again
+  rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
+  // Get the current state
   ret = rcl_action_goal_handle_get_status(rcl_handle_.get(), &state);
   if (RCL_RET_OK != ret) {
     return false;
