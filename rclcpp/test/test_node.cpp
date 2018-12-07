@@ -118,6 +118,17 @@ TEST_F(TestNode, subnode_construction_and_destruction) {
     }, rclcpp::exceptions::InvalidNamespaceError);
   }
   {
+    ASSERT_THROW({
+      auto node = std::make_shared<rclcpp::Node>("my_node", "ns/");
+    }, rclcpp::exceptions::InvalidNamespaceError);
+  }
+  {
+    ASSERT_THROW({
+      auto node = std::make_shared<rclcpp::Node>("my_node", "ns/");
+      auto subnode = node->create_sub_node("/sub_ns");
+    }, rclcpp::exceptions::InvalidNamespaceError);
+  }
+  {
     ASSERT_NO_THROW({
       auto node = std::make_shared<rclcpp::Node>("my_node", "ns");
       auto subnode = node->create_sub_node("/sub_ns");
