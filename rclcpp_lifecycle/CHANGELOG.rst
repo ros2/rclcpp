@@ -2,6 +2,13 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.1 (2018-12-07)
+------------------
+* Added node path and time stamp to parameter event message (`#584 <https://github.com/ros2/rclcpp/issues/584>`_)
+* Refactored init to allow for non-global init (`#587 <https://github.com/ros2/rclcpp/issues/587>`_)
+* Add class Waitable (`#589 <https://github.com/ros2/rclcpp/issues/589>`_)
+* Contributors: Dirk Thomas, Jacob Perron, William Woodall, bpwilcox
+
 0.6.0
 -----------
 * Updated to use new error handling API from rcutils (`#577 <https://github.com/ros2/rclcpp/issues/577>`_)

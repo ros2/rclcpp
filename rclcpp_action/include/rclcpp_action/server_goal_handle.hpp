@@ -147,7 +147,7 @@ public:
   void
   publish_feedback(std::shared_ptr<typename ActionT::Feedback> feedback_msg)
   {
-    feedback_msg->uuid = uuid_;
+    feedback_msg->action_goal_id.uuid = uuid_;
     publish_feedback_(feedback_msg);
   }
 
@@ -165,7 +165,7 @@ public:
   set_aborted(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_aborted();
-    result_msg->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
+    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
     on_terminal_state_(uuid_, result_msg);
   }
 
@@ -182,7 +182,7 @@ public:
   set_succeeded(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_succeeded();
-    result_msg->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
+    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
     on_terminal_state_(uuid_, result_msg);
   }
 
@@ -199,7 +199,7 @@ public:
   set_canceled(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_canceled();
-    result_msg->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
     on_terminal_state_(uuid_, result_msg);
   }
 
@@ -234,7 +234,7 @@ public:
     // Cancel goal if handle was allowed to destruct without reaching a terminal state
     if (try_canceling()) {
       auto null_result = std::make_shared<typename ActionT::Result>();
-      null_result->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+      null_result->action_status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
       on_terminal_state_(uuid_, null_result);
     }
   }

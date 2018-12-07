@@ -90,7 +90,7 @@ protected:
         response->stamp = clock.now();
         response->accepted = (request->order >= 0);
         if (response->accepted) {
-          goals[request->uuid] = {request, response};
+          goals[request->action_goal_id.uuid] = {request, response};
         }
       });
     ASSERT_TRUE(goal_service != nullptr);
@@ -106,19 +106,19 @@ protected:
         const ActionGoalResultRequest::SharedPtr request,
         ActionGoalResultResponse::SharedPtr response)
       {
-        if (goals.count(request->uuid) == 1) {
-          auto goal_request = goals[request->uuid].first;
-          auto goal_response = goals[request->uuid].second;
+        if (goals.count(request->action_goal_id.uuid) == 1) {
+          auto goal_request = goals[request->action_goal_id.uuid].first;
+          auto goal_response = goals[request->action_goal_id.uuid].second;
           ActionStatusMessage status_message;
           rclcpp_action::GoalStatus goal_status;
-          goal_status.goal_info.goal_id.uuid = goal_request->uuid;
+          goal_status.goal_info.goal_id.uuid = goal_request->action_goal_id.uuid;
           goal_status.goal_info.stamp = goal_response->stamp;
           goal_status.status = rclcpp_action::GoalStatus::STATUS_EXECUTING;
           status_message.status_list.push_back(goal_status);
           status_publisher->publish(status_message);
           client_executor.spin_once();
           ActionFeedbackMessage feedback_message;
-          feedback_message.uuid = goal_request->uuid;
+          feedback_message.action_goal_id.uuid = goal_request->action_goal_id.uuid;
           feedback_message.sequence.push_back(0);
           feedback_publisher->publish(feedback_message);
           client_executor.spin_once();
@@ -138,10 +138,10 @@ protected:
           status_publisher->publish(status_message);
           client_executor.spin_once();
           response->sequence = feedback_message.sequence;
-          response->status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
-          goals.erase(request->uuid);
+          response->action_status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
+          goals.erase(request->action_goal_id.uuid);
         } else {
-          response->status = rclcpp_action::GoalStatus::STATUS_UNKNOWN;
+          response->action_status = rclcpp_action::GoalStatus::STATUS_UNKNOWN;
         }
       });
     ASSERT_TRUE(result_service != nullptr);
@@ -170,11 +170,11 @@ protected:
           auto goal_response = it->second.second;
           const rclcpp::Time goal_stamp = goal_response->stamp;
           bool cancel_this = (
-            request->goal_info.goal_id.uuid == goal_request->uuid ||
+            request->goal_info.goal_id.uuid == goal_request->action_goal_id.uuid ||
             cancel_stamp > goal_stamp);
           if (cancel_all || cancel_this) {
             rclcpp_action::GoalStatus goal_status;
-            goal_status.goal_info.goal_id.uuid = goal_request->uuid;
+            goal_status.goal_info.goal_id.uuid = goal_request->action_goal_id.uuid;
             goal_status.goal_info.stamp = goal_response->stamp;
             goal_status.status = rclcpp_action::GoalStatus::STATUS_CANCELED;
             status_message.status_list.push_back(goal_status);

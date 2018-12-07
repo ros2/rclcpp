@@ -434,7 +434,8 @@ protected:
   GoalID
   get_goal_id_from_goal_request(void * message) override
   {
-    return static_cast<typename ActionT::GoalRequestService::Request *>(message)->uuid;
+    return
+      static_cast<typename ActionT::GoalRequestService::Request *>(message)->action_goal_id.uuid;
   }
 
   /// \internal
@@ -448,7 +449,8 @@ protected:
   GoalID
   get_goal_id_from_result_request(void * message) override
   {
-    return static_cast<typename ActionT::GoalResultService::Request *>(message)->uuid;
+    return
+      static_cast<typename ActionT::GoalResultService::Request *>(message)->action_goal_id.uuid;
   }
 
   /// \internal
@@ -463,7 +465,7 @@ protected:
   create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) override
   {
     auto result = std::make_shared<typename ActionT::GoalResultService::Response>();
-    result->status = status;
+    result->action_status = status;
     return std::static_pointer_cast<void>(result);
   }
 
