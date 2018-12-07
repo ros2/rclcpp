@@ -95,12 +95,12 @@ public:
   /// Create a subnode, extending the orginal namespace.
   /**
    * \param[in] other The node from which create a subnode.
-   * \param[in] extended_namespace_ Extended namespace of the node.
+   * \param[in] sub_namespace_ sub namespace of the node.
    */
   RCLCPP_PUBLIC
   Node(
     const Node & other,
-    const std::string & extended_namespace);
+    const std::string & sub_namespace);
 
   RCLCPP_PUBLIC
   virtual ~Node();
@@ -493,7 +493,7 @@ public:
 
   RCLCPP_PUBLIC
   Node::SharedPtr
-  create_sub_node(const std::string & extended_namespace_);
+  create_sub_node(const std::string & sub_namespace_);
 
 private:
   RCLCPP_DISABLE_COPY(Node)
@@ -514,7 +514,7 @@ private:
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
   bool use_intra_process_comms_;
-  std::string extended_namespace_;
+  std::string sub_namespace_;
 };
 
 }  // namespace rclcpp
