@@ -377,23 +377,3 @@ Node::create_sub_node(const std::string & extended_namespace)
 
   return new_node;
 }
-
-/*
-std::string
-Node::get_extended_name(const std::string & name) const
-{
-  std::string exteded_name;
-
-  if (extended_namespace_ == "") {
-    exteded_name = name;
-  } else {
-    if (name[0] == '/') {
-      exteded_name = extended_namespace_ + name;
-    } else {
-      exteded_name = extended_namespace_ + "/" + name;
-    }
-  }
-
-  return exteded_name;
-}
-*/
