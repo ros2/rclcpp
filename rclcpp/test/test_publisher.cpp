@@ -43,6 +43,28 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
+class TestPublisherSub : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase()
+  {
+  }
+
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    subnode = node->create_sub_node("sub_ns");
+  }
+
+  void TearDown()
+  {
+    node.reset();
+  }
+
+  rclcpp::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr subnode;
+};
+
 /*
    Testing publisher construction and destruction.
  */
@@ -55,6 +77,30 @@ TEST_F(TestPublisher, construction_and_destruction) {
   {
     ASSERT_THROW({
       auto publisher = node->create_publisher<IntraProcessMessage>("invalid_topic?");
+    }, rclcpp::exceptions::InvalidTopicNameError);
+  }
+}
+
+/*
+   Testing publisher construction and destruction for subnodes.
+ */
+TEST_F(TestPublisherSub, construction_and_destruction) {
+  using rcl_interfaces::msg::IntraProcessMessage;
+  {
+    auto publisher = subnode->create_publisher<IntraProcessMessage>("topic");
+
+    EXPECT_STREQ(publisher->get_topic_name(), "/ns/sub_ns/topic");
+  }
+
+  {
+    auto publisher = subnode->create_publisher<IntraProcessMessage>("/topic");
+
+    EXPECT_STREQ(publisher->get_topic_name(), "/topic");
+  }
+
+  {
+    ASSERT_THROW({
+      auto publisher = subnode->create_publisher<IntraProcessMessage>("invalid_topic?");
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
 }

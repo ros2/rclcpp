@@ -49,6 +49,34 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
+class TestSubscriptionSub : public ::testing::Test
+{
+public:
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
+
+protected:
+  static void SetUpTestCase()
+  {
+  }
+
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns");
+    subnode = node->create_sub_node("sub_ns");
+  }
+
+  void TearDown()
+  {
+    node.reset();
+  }
+
+  rclcpp::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr subnode;
+};
+
 class SubscriptionClassNodeInheritance : public rclcpp::Node
 {
 public:
@@ -98,6 +126,31 @@ TEST_F(TestSubscription, construction_and_destruction) {
     };
   {
     auto sub = node->create_subscription<IntraProcessMessage>("topic", callback);
+  }
+
+  {
+    ASSERT_THROW({
+      auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", callback);
+    }, rclcpp::exceptions::InvalidTopicNameError);
+  }
+}
+
+/*
+   Testing subscription construction and destruction for subnodes.
+ */
+TEST_F(TestSubscriptionSub, construction_and_destruction) {
+  using rcl_interfaces::msg::IntraProcessMessage;
+  auto callback = [](const IntraProcessMessage::SharedPtr msg) {
+      (void)msg;
+    };
+  {
+    auto sub = subnode->create_subscription<IntraProcessMessage>("topic", callback);
+    EXPECT_STREQ(sub->get_topic_name(), "/ns/sub_ns/topic");
+  }
+
+  {
+    auto sub = subnode->create_subscription<IntraProcessMessage>("/topic", callback);
+    EXPECT_STREQ(sub->get_topic_name(), "/topic");
   }
 
   {

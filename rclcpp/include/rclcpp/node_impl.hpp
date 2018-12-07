@@ -75,11 +75,14 @@ Node::create_publisher(
     allocator = std::make_shared<Alloc>();
   }
 
-  std::string exteded_topic_name = get_extended_name(topic_name);
+  std::string extended_topic_name(topic_name);
+  if (extended_namespace_ != "" && topic_name.front() != '/' && topic_name.front() != '~') {
+    extended_topic_name = extended_namespace_ + "/" + topic_name;
+  }
 
   return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
     this->node_topics_.get(),
-    exteded_topic_name,
+    extended_topic_name,
     qos_profile,
     use_intra_process_comms_,
     allocator);
@@ -113,11 +116,14 @@ Node::create_subscription(
     msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
   }
 
-  std::string exteded_topic_name = get_extended_name(topic_name);
+  std::string extended_topic_name(topic_name);
+  if (extended_namespace_ != "" && topic_name.front() != '/' && topic_name.front() != '~') {
+    extended_topic_name = extended_namespace_ + "/" + topic_name;
+  }
 
   return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
-    exteded_topic_name,
+    extended_topic_name,
     std::forward<CallbackT>(callback),
     qos_profile,
     group,
@@ -147,10 +153,8 @@ Node::create_subscription(
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
 
-  std::string exteded_topic_name = get_extended_name(topic_name);
-
   return this->create_subscription<MessageT>(
-    exteded_topic_name,
+    topic_name,
     std::forward<CallbackT>(callback),
     qos,
     group,
@@ -187,7 +191,10 @@ Node::create_client(
   using rclcpp::Client;
   using rclcpp::ClientBase;
 
-  std::string extended_service_name = get_extended_name(service_name);
+  std::string extended_service_name(service_name);
+  if (extended_namespace_ != "" && service_name.front() != '/' && service_name.front() != '~') {
+    extended_service_name = extended_namespace_ + "/" + service_name;
+  }
 
   auto cli = Client<ServiceT>::make_shared(
     node_base_.get(),
@@ -208,7 +215,10 @@ Node::create_service(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  std::string extended_service_name = get_extended_name(service_name);
+  std::string extended_service_name(service_name);
+  if (extended_namespace_ != "" && service_name.front() != '/' && service_name.front() != '~') {
+    extended_service_name = extended_namespace_ + "/" + service_name;
+  }
 
   return rclcpp::create_service<ServiceT, CallbackT>(
     node_base_, node_services_,
@@ -228,10 +238,15 @@ Node::set_parameter_if_not_set(
   const std::string & name,
   const ParameterT & value)
 {
+  std::string extended_name(name);
+  if (extended_namespace_ != "" && name.front() != '/' && name.front() != '~') {
+    extended_name = extended_namespace_ + "/" + name;
+  }
+
   rclcpp::Parameter parameter;
-  if (!this->get_parameter(name, parameter)) {
+  if (!this->get_parameter(extended_name, parameter)) {
     this->set_parameters({
-        rclcpp::Parameter(name, value),
+        rclcpp::Parameter(extended_name, value),
       });
   }
 }
@@ -240,10 +255,14 @@ template<typename ParameterT>
 bool
 Node::get_parameter(const std::string & name, ParameterT & value) const
 {
-  rclcpp::Parameter parameter;
-  std::string extended_name = get_extended_name(name);
+  std::string extended_name(name);
+  if (extended_namespace_ != "" && name.front() != '/' && name.front() != '~') {
+    extended_name = extended_namespace_ + "/" + name;
+  }
 
-  bool result = get_parameter(name, parameter);
+  rclcpp::Parameter parameter;
+
+  bool result = get_parameter(extended_name, parameter);
   if (result) {
     value = parameter.get_value<ParameterT>();
   }
@@ -258,7 +277,10 @@ Node::get_parameter_or(
   ParameterT & value,
   const ParameterT & alternative_value) const
 {
-  std::string extended_name = get_extended_name(name);
+  std::string extended_name(name);
+  if (extended_namespace_ != "" && name.front() != '/' && name.front() != '~') {
+    extended_name = extended_namespace_ + "/" + name;
+  }
 
   bool got_parameter = get_parameter(extended_name, value);
   if (!got_parameter) {
@@ -274,12 +296,15 @@ Node::get_parameter_or_set(
   ParameterT & value,
   const ParameterT & alternative_value)
 {
-  std::string extended_name = get_extended_name(name);
+  std::string extended_name(name);
+  if (extended_namespace_ != "" && name.front() != '/' && name.front() != '~') {
+    extended_name = extended_namespace_ + "/" + name;
+  }
 
   bool got_parameter = get_parameter(extended_name, value);
   if (!got_parameter) {
     this->set_parameters({
-        rclcpp::Parameter(name, alternative_value),
+        rclcpp::Parameter(extended_name, alternative_value),
       });
     value = alternative_value;
   }

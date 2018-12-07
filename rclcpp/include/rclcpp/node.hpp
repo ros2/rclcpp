@@ -106,10 +106,15 @@ public:
     bool use_intra_process_comms = false,
     bool start_parameter_services = true);
 
+  /// Create a subnode, extending the orginal namespace.
+  /**
+   * \param[in] other The node from which create a subnode.
+   * \param[in] extended_namespace_ Extended namespace of the node.
+   */
   RCLCPP_PUBLIC
   Node(
     const Node & other,
-    const std::string & extended_namespace_);
+    const std::string & extended_namespace);
 
   RCLCPP_PUBLIC
   virtual ~Node();
@@ -470,9 +475,9 @@ public:
 private:
   RCLCPP_DISABLE_COPY(Node)
 
-  RCLCPP_PUBLIC
+  /*RCLCPP_PUBLIC
   std::string
-  get_extended_name(const std::string & name) const;
+  get_extended_name(const std::string & name) const;*/
 
   RCLCPP_PUBLIC
   bool

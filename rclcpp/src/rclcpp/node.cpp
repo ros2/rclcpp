@@ -86,7 +86,8 @@ Node::Node(
       start_parameter_services
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
-  use_intra_process_comms_(use_intra_process_comms)
+  use_intra_process_comms_(use_intra_process_comms),
+  extended_namespace_("")
 {
 }
 
@@ -101,19 +102,29 @@ Node::Node(
   node_services_(other.node_services_),
   node_clock_(other.node_clock_),
   node_parameters_(other.node_parameters_),
-  use_intra_process_comms_(other.use_intra_process_comms_)
+  use_intra_process_comms_(other.use_intra_process_comms_),
+  extended_namespace_("")
 {
-  if (other.extended_namespace_ == "") {
-    extended_namespace_ = extended_namespace;
-  } else {
+  extended_namespace_ = extended_namespace;
+
+  if (extended_namespace_.front() == '/') {
+    extended_namespace_.replace(0, 1, "");
+  }
+
+  if (extended_namespace_.back() == '/') {
+    extended_namespace_ = extended_namespace_.substr(0, extended_namespace_.size() - 1);
+  }
+
+  if (other.extended_namespace_ != "") {
     extended_namespace_ = other.extended_namespace_ + "/" + extended_namespace;
   }
 
-  std::string full_namespace;
-  if (strcmp(node_base_->get_namespace(), "/") == 0) {
-    full_namespace = "/" + extended_namespace_;
+  std::string full_namespace(node_base_->get_namespace());
+
+  if (full_namespace.back() == '/') {
+    full_namespace += extended_namespace_;
   } else {
-    full_namespace = std::string(node_base_->get_namespace()) + "/" + extended_namespace_;
+    full_namespace += "/" + extended_namespace_;
   }
 
   int validation_result;
@@ -148,7 +159,19 @@ Node::get_name() const
 const char *
 Node::get_namespace() const
 {
-  return node_base_->get_namespace();
+  if (extended_namespace_ == "") {
+    return node_base_->get_namespace();
+  } else {
+    std::string full_namespace(node_base_->get_namespace());
+
+    if (full_namespace.back() == '/') {
+      full_namespace += extended_namespace_;
+    } else {
+      full_namespace += "/" + extended_namespace_;
+    }
+
+    return full_namespace.c_str();
+  }
 }
 
 rclcpp::Logger
@@ -349,6 +372,7 @@ Node::create_sub_node(const std::string & extended_namespace)
   return new_node;
 }
 
+/*
 std::string
 Node::get_extended_name(const std::string & name) const
 {
@@ -366,3 +390,4 @@ Node::get_extended_name(const std::string & name) const
 
   return exteded_name;
 }
+*/
