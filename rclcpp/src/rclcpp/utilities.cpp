@@ -22,6 +22,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "rclcpp/contexts/default_context.hpp"
@@ -42,10 +43,211 @@
 #define HAS_SIGACTION
 #endif
 
-/// Mutex to protect installation and uninstallation of signal handlers.
-static std::mutex g_signal_handlers_mutex;
-/// Atomic bool to control setup of signal handlers.
-static std::atomic<bool> g_signal_handlers_installed(false);
+class SignalHandler final {
+ public:
+  static SignalHandler & get_global_signal_handler() {
+    static SignalHandler singleton;
+    return singleton;
+  }
+
+  bool
+  install() {
+    bool already_installed = installed_.exchange(true);
+    if (already_installed) {
+      return false;
+    }
+    try {
+      signal_received.exchange(false);
+#ifdef HAS_SIGACTION
+      struct sigaction action;
+      memset(&action, 0, sizeof(action));
+      sigemptyset(&action.sa_mask);
+      action.sa_sigaction = signal_handler;
+      action.sa_flags = SA_SIGINFO;
+      old_action = set_sigaction(SIGINT, action);
+#else
+      old_signal_handler = set_signal_handler(SIGINT, signal_handler);
+#endif
+      signal_handler_thread_ =
+        std::thread(&SignalHandler::deferred_signal_handler, this);
+    } catch (...) {
+      installed_.exchange(false);
+      throw;
+    }
+    RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler installed");
+    return true;
+  }
+
+  bool
+  uninstall() {
+    bool installed = installed_.exchange(false);
+    if (!installed) {
+      return false;
+    }
+    try {
+#ifdef HAS_SIGACTION
+      set_sigaction(SIGINT, old_action);
+#else
+      set_signal_handler(SIGINT, old_signal_handler);
+#endif
+      events_condition_variable.notify_one();
+      signal_handler_thread_.join();
+    } catch (...) {
+      installed_.exchange(true);
+      throw;
+    }
+    RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler uninstalled");
+    return true;
+  }
+
+  bool
+  is_installed() {
+    return installed_.load();
+  }
+
+ private:
+  SignalHandler() = default;
+
+  ~SignalHandler() {
+    uninstall();
+  }
+
+  // A mutex to lock event signaling.
+  static std::mutex events_mutex;
+  // A cond var to wait on for event signaling.
+  static std::condition_variable events_condition_variable;
+  // Whether a signal has been received or not.
+  static std::atomic<bool> signal_received;
+
+  // POSIX signal handler structure.
+#ifdef HAS_SIGACTION
+  static struct sigaction old_action;
+#else
+  typedef void (* signal_handler_t)(int);
+  static signal_handler_t old_signal_handler;
+#endif
+
+  static
+#ifdef HAS_SIGACTION
+  struct sigaction
+  set_sigaction(int signal_value, const struct sigaction & action)
+#else
+  signal_handler_t
+  set_signal_handler(int signal_value, signal_handler_t signal_handler)
+#endif
+  {
+#ifdef HAS_SIGACTION
+    struct sigaction old_action;
+    ssize_t ret = sigaction(signal_value, &action, &old_action);
+    if (ret == -1)
+#else
+      signal_handler_t old_signal_handler = std::signal(signal_value, signal_handler);
+    // NOLINTNEXTLINE(readability/braces)
+    if (old_signal_handler == SIG_ERR)
+#endif
+    {
+      const size_t error_length = 1024;
+      // NOLINTNEXTLINE(runtime/arrays)
+      char error_string[error_length];
+#ifndef _WIN32
+#if (defined(_GNU_SOURCE) && !defined(ANDROID))
+      char * msg = strerror_r(errno, error_string, error_length);
+      if (msg != error_string) {
+        strncpy(error_string, msg, error_length);
+        msg[error_length - 1] = '\0';
+      }
+#else
+      int error_status = strerror_r(errno, error_string, error_length);
+      if (error_status != 0) {
+        throw std::runtime_error("Failed to get error string for errno: " + std::to_string(errno));
+      }
+#endif
+#else
+      strerror_s(error_string, error_length, errno);
+#endif
+      // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+      throw std::runtime_error(
+        std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
+        error_string);
+      // *INDENT-ON*
+    }
+    
+#ifdef HAS_SIGACTION
+    return old_action;
+#else
+    return old_signal_handler;
+#endif
+  }
+
+  static
+  void
+#ifdef HAS_SIGACTION
+  signal_handler(int signal_value, siginfo_t * siginfo, void * context)
+#else
+  signal_handler(int signal_value)
+#endif
+  {
+    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "signal_handler(signal_value=%d)", signal_value);
+
+#ifdef HAS_SIGACTION
+    if (old_action.sa_flags & SA_SIGINFO) {
+      if (old_action.sa_sigaction != NULL) {
+        old_action.sa_sigaction(signal_value, siginfo, context);
+      }
+    } else {
+      if (
+        old_action.sa_handler != NULL &&  // Is set
+        old_action.sa_handler != SIG_DFL &&  // Is not default
+        old_action.sa_handler != SIG_IGN)  // Is not ignored
+      {
+        old_action.sa_handler(signal_value);
+      } 
+    }
+#else
+    if (old_signal_handler) {
+      old_signal_handler(signal_value);
+    }
+#endif
+    signal_received.exchange(true);
+    events_condition_variable.notify_one();
+  }
+
+  void deferred_signal_handler() {
+    std::unique_lock<std::mutex> events_lock(events_mutex, std::defer_lock);
+    while (true) {
+      if (signal_received.exchange(false)) {
+        for (auto context_ptr : rclcpp::get_contexts()) {
+          if (context_ptr->get_init_options().shutdown_on_sigint) {
+            context_ptr->shutdown("signal handler", false);
+          }
+        }
+        rclcpp::notify_all();
+      }
+      if (!is_installed()) {
+        break;
+      }
+      events_lock.lock();
+      // TODO(hidmic): handle exception? how?
+      events_condition_variable.wait(events_lock);
+    }
+  }
+
+  // Whether this handler has been installed or not.
+  std::atomic<bool> installed_{false};
+  // A thread to defer signal handling tasks to.
+  std::thread signal_handler_thread_;
+};
+
+// Declare static class variables for SignalHandler
+std::mutex SignalHandler::events_mutex;
+std::condition_variable SignalHandler::events_condition_variable;
+std::atomic<bool> SignalHandler::signal_received;
+#ifdef HAS_SIGACTION
+struct sigaction SignalHandler::old_action;
+#else
+typedef void (* signal_handler_t)(int);
+signal_handler_t SignalHandler::old_signal_handler = 0;
+#endif
 
 /// Mutex to protect g_sigint_guard_cond_handles
 static std::mutex g_sigint_guard_cond_handles_mutex;
@@ -57,101 +259,6 @@ static std::condition_variable g_interrupt_condition_variable;
 /// Mutex for protecting the global condition variable.
 static std::mutex g_interrupt_mutex;
 
-#ifdef HAS_SIGACTION
-static struct sigaction old_action;
-#else
-typedef void (* signal_handler_t)(int);
-static signal_handler_t old_signal_handler = 0;
-#endif
-
-#ifdef HAS_SIGACTION
-struct sigaction
-set_sigaction(int signal_value, const struct sigaction & action)
-#else
-signal_handler_t
-set_signal_handler(int signal_value, signal_handler_t signal_handler)
-#endif
-{
-#ifdef HAS_SIGACTION
-  struct sigaction old_action;
-  ssize_t ret = sigaction(signal_value, &action, &old_action);
-  if (ret == -1)
-#else
-  signal_handler_t old_signal_handler = std::signal(signal_value, signal_handler);
-  // NOLINTNEXTLINE(readability/braces)
-  if (old_signal_handler == SIG_ERR)
-#endif
-  {
-    const size_t error_length = 1024;
-    // NOLINTNEXTLINE(runtime/arrays)
-    char error_string[error_length];
-#ifndef _WIN32
-#if (defined(_GNU_SOURCE) && !defined(ANDROID))
-    char * msg = strerror_r(errno, error_string, error_length);
-    if (msg != error_string) {
-      strncpy(error_string, msg, error_length);
-      msg[error_length - 1] = '\0';
-    }
-#else
-    int error_status = strerror_r(errno, error_string, error_length);
-    if (error_status != 0) {
-      throw std::runtime_error("Failed to get error string for errno: " + std::to_string(errno));
-    }
-#endif
-#else
-    strerror_s(error_string, error_length, errno);
-#endif
-    // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-    throw std::runtime_error(
-      std::string("Failed to set SIGINT signal handler: (" + std::to_string(errno) + ")") +
-      error_string);
-    // *INDENT-ON*
-  }
-
-#ifdef HAS_SIGACTION
-  return old_action;
-#else
-  return old_signal_handler;
-#endif
-}
-
-void
-#ifdef HAS_SIGACTION
-signal_handler(int signal_value, siginfo_t * siginfo, void * context)
-#else
-signal_handler(int signal_value)
-#endif
-{
-  RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "signal_handler(signal_value=%d)", signal_value);
-
-#ifdef HAS_SIGACTION
-  if (old_action.sa_flags & SA_SIGINFO) {
-    if (old_action.sa_sigaction != NULL) {
-      old_action.sa_sigaction(signal_value, siginfo, context);
-    }
-  } else {
-    if (
-      old_action.sa_handler != NULL &&  // Is set
-      old_action.sa_handler != SIG_DFL &&  // Is not default
-      old_action.sa_handler != SIG_IGN)  // Is not ignored
-    {
-      old_action.sa_handler(signal_value);
-    }
-  }
-#else
-  if (old_signal_handler) {
-    old_signal_handler(signal_value);
-  }
-#endif
-
-  for (auto context_ptr : rclcpp::get_contexts()) {
-    if (context_ptr->get_init_options().shutdown_on_sigint) {
-      // do not notify all, instead do that once after all are shutdown
-      context_ptr->shutdown("signal handler", false /* notify_all */);
-    }
-  }
-  rclcpp::notify_all();
-}
 
 void
 rclcpp::init(int argc, char const * const argv[], const rclcpp::InitOptions & init_options)
@@ -159,52 +266,25 @@ rclcpp::init(int argc, char const * const argv[], const rclcpp::InitOptions & in
   using rclcpp::contexts::default_context::get_global_default_context;
   get_global_default_context()->init(argc, argv, init_options);
   // Install the signal handlers.
-  rclcpp::install_signal_handlers();
+  SignalHandler::get_global_signal_handler().install();
 }
 
 bool
 rclcpp::install_signal_handlers()
 {
-  std::lock_guard<std::mutex> lock(g_signal_handlers_mutex);
-  bool already_installed = g_signal_handlers_installed.exchange(true);
-  if (already_installed) {
-    return false;
-  }
-#ifdef HAS_SIGACTION
-  struct sigaction action;
-  memset(&action, 0, sizeof(action));
-  sigemptyset(&action.sa_mask);
-  action.sa_sigaction = ::signal_handler;
-  action.sa_flags = SA_SIGINFO;
-  ::old_action = set_sigaction(SIGINT, action);
-#else
-  ::old_signal_handler = set_signal_handler(SIGINT, ::signal_handler);
-#endif
-  RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler installed");
-  return true;
+  return SignalHandler::get_global_signal_handler().install();
 }
 
 bool
 rclcpp::signal_handlers_installed()
 {
-  return g_signal_handlers_installed.load();
+  return SignalHandler::get_global_signal_handler().is_installed();
 }
 
 bool
 rclcpp::uninstall_signal_handlers()
 {
-  std::lock_guard<std::mutex> lock(g_signal_handlers_mutex);
-  bool installed = g_signal_handlers_installed.exchange(false);
-  if (!installed) {
-    return false;
-  }
-#ifdef HAS_SIGACTION
-  set_sigaction(SIGINT, ::old_action);
-#else
-  set_signal_handler(SIGINT, ::old_signal_handler);
-#endif
-  RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler uninstalled");
-  return true;
+  return SignalHandler::get_global_signal_handler().uninstall();
 }
 
 std::vector<std::string>
@@ -300,14 +380,10 @@ rclcpp::shutdown(rclcpp::Context::SharedPtr context, const std::string & reason)
   if (nullptr == context) {
     context = default_context;
   }
-
   bool ret = context->shutdown(reason);
-
-  // Uninstall the signal handlers if this is the default context's shutdown.
   if (context == default_context) {
-    uninstall_signal_handlers();
+    rclcpp::uninstall_signal_handlers();
   }
-
   return ret;
 }
 
