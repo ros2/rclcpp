@@ -15,6 +15,7 @@
 #ifndef RCLCPP__CONTEXT_HPP_
 #define RCLCPP__CONTEXT_HPP_
 
+#include <condition_variable>
 #include <functional>
 #include <map>
 #include <memory>
