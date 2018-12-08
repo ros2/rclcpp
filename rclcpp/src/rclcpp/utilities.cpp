@@ -212,8 +212,8 @@ class SignalHandler final {
     events_condition_variable.notify_one();
   }
 
-  void deferred_signal_handler() {
-    std::unique_lock<std::mutex> events_lock(events_mutex, std::defer_lock);
+  void deferred_signal_handler()
+  {
     while (true) {
       if (signal_received.exchange(false)) {
         for (auto context_ptr : rclcpp::get_contexts()) {
@@ -226,8 +226,7 @@ class SignalHandler final {
       if (!is_installed()) {
         break;
       }
-      events_lock.lock();
-      // TODO(hidmic): handle exception? how?
+      std::unique_lock<std::mutex> events_lock(events_mutex);
       events_condition_variable.wait(events_lock);
     }
   }
