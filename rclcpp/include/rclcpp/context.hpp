@@ -16,6 +16,7 @@
 #define RCLCPP__CONTEXT_HPP_
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -26,6 +27,8 @@
 #include <vector>
 
 #include "rcl/context.h"
+#include "rcl/guard_condition.h"
+#include "rcl/wait.h"
 #include "rclcpp/init_options.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -147,21 +150,21 @@ public:
    * - rcl_shutdown() is called on the internal rcl_context_t instance
    * - the shutdown reason is set
    * - each on_shutdown callback is called, in the order that they were added
-   * - if notify_all is true, rclcpp::notify_all is called to unblock some ROS functions
+   * - if notify all blocking sleep_for() calls, so they return early due to shutdown
+   * - if notify all blocking executors and wait sets
    *
    * The underlying rcl context is not finalized by this function.
    *
    * This function is thread-safe.
    *
    * \param[in] reason the description of why shutdown happened
-   * \param[in] notify_all if true, then rclcpp::notify_all will be called
    * \return true if shutdown was successful, false if context was already shutdown
    * \throw various exceptions derived from RCLErrorBase, if rcl_shutdown fails
    */
   RCLCPP_PUBLIC
   virtual
   bool
-  shutdown(const std::string & reason, bool notify_all = true);
+  shutdown(const std::string & reason);
 
   using OnShutdownCallback = std::function<void ()>;
 
@@ -210,6 +213,81 @@ public:
   RCLCPP_PUBLIC
   std::shared_ptr<rcl_context_t>
   get_rcl_context();
+
+  /// Sleep for a given period of time or until shutdown() is called.
+  /**
+   * This function can be interrupted early if:
+   *
+   *   - this context is shutdown()
+   *   - this context is destructed (resulting in shutdown)
+   *   - this context has shutdown_on_sigint=true and SIGINT occurs (resulting in shutdown)
+   *   - interrupt_all_sleep_for() is called
+   *
+   * \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
+   * \return true if the condition variable did not timeout, i.e. you were interrupted.
+   */
+  RCLCPP_PUBLIC
+  bool
+  sleep_for(const std::chrono::nanoseconds & nanoseconds);
+
+  /// Interrupt any blocking sleep_for calls, causing them to return immediately and return true.
+  RCLCPP_PUBLIC
+  virtual
+  void
+  interrupt_all_sleep_for();
+
+  /// Get a handle to the guard condition which is triggered when interrupted.
+  /**
+   * This guard condition is triggered any time interrupt_all_wait_sets() is
+   * called, which may be called by the user, or shutdown().
+   * And in turn, shutdown() may be called by the user, the destructor of this
+   * context, or the signal handler if installed and shutdown_on_sigint is true
+   * for this context.
+   *
+   * The first time that this function is called for a given wait set a new guard
+   * condition will be created and returned; thereafter the same guard condition
+   * will be returned for the same wait set.
+   * This mechanism is designed to ensure that the same guard condition is not
+   * reused across wait sets (e.g., when using multiple executors in the same
+   * process).
+   * This method will throw an exception if initialization of the guard
+   * condition fails.
+   *
+   * The returned guard condition needs to be released with the
+   * release_interrupt_guard_condition() method in order to reclaim resources.
+   *
+   * \param[in] wait_set Pointer to the rcl_wait_set_t that will be using the
+   *   resulting guard condition.
+   * \return Pointer to the guard condition.
+   */
+  RCLCPP_PUBLIC
+  rcl_guard_condition_t *
+  get_interrupt_guard_condition(rcl_wait_set_t * wait_set);
+
+  /// Release the previously allocated guard condition which is triggered when interrupted.
+  /**
+   * If you previously called get_interrupt_guard_condition() for a given wait
+   * set to get a interrupt guard condition, then you should call
+   * release_interrupt_guard_condition() when you're done, to free that
+   * condition.
+   * Will throw an exception if get_interrupt_guard_condition() wasn't
+   * previously called for the given wait set.
+   *
+   * After calling this, the pointer returned by get_interrupt_guard_condition()
+   * for the given wait_set is invalid.
+   *
+   * \param[in] wait_set Pointer to the rcl_wait_set_t that was using the
+   *   resulting guard condition.
+   */
+  RCLCPP_PUBLIC
+  void
+  release_interrupt_guard_condition(rcl_wait_set_t * wait_set);
+
+  /// Interrupt any blocking executors, or wait sets associated with this context.
+  RCLCPP_PUBLIC
+  virtual
+  void
+  interrupt_all_wait_sets();
 
   /// Return a singleton instance for the SubContext type, constructing one if necessary.
   template<typename SubContext, typename ... Args>
@@ -261,6 +339,16 @@ private:
 
   std::vector<OnShutdownCallback> on_shutdown_callbacks_;
   std::mutex on_shutdown_callbacks_mutex_;
+
+  /// Condition variable for timed sleep (see sleep_for).
+  std::condition_variable interrupt_condition_variable_;
+  /// Mutex for protecting the global condition variable.
+  std::mutex interrupt_mutex_;
+
+  /// Mutex to protect sigint_guard_cond_handles_.
+  std::mutex interrupt_guard_cond_handles_mutex_;
+  /// Guard conditions for interrupting of associated wait sets on interrupt_all_wait_sets().
+  std::map<rcl_wait_set_t *, rcl_guard_condition_t> interrupt_guard_cond_handles_;
 };
 
 /// Return a copy of the list of context shared pointers.

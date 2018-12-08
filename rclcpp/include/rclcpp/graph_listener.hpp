@@ -155,6 +155,8 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(GraphListener)
 
+  rclcpp::Context::SharedPtr parent_context_;
+
   std::thread listener_thread_;
   bool is_started_;
   std::atomic_bool is_shutdown_;

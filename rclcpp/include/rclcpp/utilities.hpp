@@ -24,9 +24,6 @@
 #include "rclcpp/init_options.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rcl/guard_condition.h"
-#include "rcl/wait.h"
-
 #include "rmw/macros.h"
 #include "rmw/rmw.h"
 
@@ -196,64 +193,24 @@ RCLCPP_PUBLIC
 void
 on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context = nullptr);
 
-/// Get a handle to the rmw guard condition that manages the signal handler.
-/**
- * The first time that this function is called for a given wait set a new guard
- * condition will be created and returned; thereafter the same guard condition
- * will be returned for the same wait set. This mechanism is designed to ensure
- * that the same guard condition is not reused across wait sets (e.g., when
- * using multiple executors in the same process). Will throw an exception if
- * initialization of the guard condition fails.
- *
- * \param[in] wait_set Pointer to the rcl_wait_set_t that will be using the
- *   resulting guard condition.
- * \param[in] context The context associated with the guard condition.
- * \return Pointer to the guard condition.
- */
-RCLCPP_PUBLIC
-rcl_guard_condition_t *
-get_sigint_guard_condition(rcl_wait_set_t * wait_set, rclcpp::Context::SharedPtr context);
-
-/// Release the previously allocated guard condition that manages the signal handler.
-/**
- * If you previously called get_sigint_guard_condition() for a given wait set
- * to get a sigint guard condition, then you should call
- * release_sigint_guard_condition() when you're done, to free that condition.
- * Will throw an exception if get_sigint_guard_condition() wasn't previously
- * called for the given wait set.
- *
- * If nullptr is given for the context, then the global context is used, i.e.
- * the context initialized by rclcpp::init().
- *
- * \param[in] wait_set Pointer to the rcl_wait_set_t that was using the
- *   resulting guard condition.
- */
-RCLCPP_PUBLIC
-void
-release_sigint_guard_condition(rcl_wait_set_t * wait_set);
-
 /// Use the global condition variable to block for the specified amount of time.
 /**
  * This function can be interrupted early if the associated context becomes
- * invalid due to rclcpp::shutdown() or the signal handler.
+ * invalid due to shutdown() or the signal handler.
+ * \sa rclcpp::Context::sleep_for
  *
  * If nullptr is given for the context, then the global context is used, i.e.
  * the context initialized by rclcpp::init().
  *
  * \param[in] nanoseconds A std::chrono::duration representing how long to sleep for.
  * \param[in] context which may interrupt this sleep
- * \return True if the condition variable did not timeout.
+ * \return true if the condition variable did not timeout.
  */
 RCLCPP_PUBLIC
 bool
 sleep_for(
   const std::chrono::nanoseconds & nanoseconds,
   rclcpp::Context::SharedPtr context = nullptr);
-
-/// Notify all blocking calls so they can check for changes in rclcpp::ok().
-RCLCPP_PUBLIC
-void
-notify_all();
 
 /// Safely check if addition will overflow.
 /**

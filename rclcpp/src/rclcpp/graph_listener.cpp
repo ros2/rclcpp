@@ -36,7 +36,8 @@ namespace graph_listener
 {
 
 GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
-: is_started_(false),
+: parent_context_(parent_context),
+  is_started_(false),
   is_shutdown_(false),
   interrupt_guard_condition_context_(nullptr),
   shutdown_guard_condition_(nullptr)
@@ -54,7 +55,7 @@ GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
 
-  shutdown_guard_condition_ = rclcpp::get_sigint_guard_condition(&wait_set_, parent_context);
+  shutdown_guard_condition_ = parent_context->get_interrupt_guard_condition(&wait_set_);
 }
 
 GraphListener::~GraphListener()
@@ -351,7 +352,7 @@ GraphListener::shutdown()
       throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
     }
     if (shutdown_guard_condition_) {
-      rclcpp::release_sigint_guard_condition(&wait_set_);
+      parent_context_->release_interrupt_guard_condition(&wait_set_);
       shutdown_guard_condition_ = nullptr;
     }
     if (is_started_) {
