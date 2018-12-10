@@ -150,8 +150,8 @@ public:
    * - rcl_shutdown() is called on the internal rcl_context_t instance
    * - the shutdown reason is set
    * - each on_shutdown callback is called, in the order that they were added
-   * - if notify all blocking sleep_for() calls, so they return early due to shutdown
-   * - if notify all blocking executors and wait sets
+   * - if interrupt blocking sleep_for() calls, so they return early due to shutdown
+   * - if interrupt blocking executors and wait sets
    *
    * The underlying rcl context is not finalized by this function.
    *
