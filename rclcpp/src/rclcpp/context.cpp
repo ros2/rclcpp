@@ -227,7 +227,7 @@ Context::get_interrupt_guard_condition(rcl_wait_set_t * wait_set)
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't initialize guard condition");
     }
-    interrupt_guard_cond_handles_[wait_set] = handle;
+    interrupt_guard_cond_handles_.emplace(wait_set, handle);
     return &interrupt_guard_cond_handles_[wait_set];
   }
 }
