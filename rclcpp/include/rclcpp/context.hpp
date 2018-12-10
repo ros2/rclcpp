@@ -17,7 +17,6 @@
 
 #include <condition_variable>
 #include <functional>
-#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -349,7 +348,7 @@ private:
   /// Mutex to protect sigint_guard_cond_handles_.
   std::mutex interrupt_guard_cond_handles_mutex_;
   /// Guard conditions for interrupting of associated wait sets on interrupt_all_wait_sets().
-  std::map<rcl_wait_set_t *, rcl_guard_condition_t> interrupt_guard_cond_handles_;
+  std::unordered_map<rcl_wait_set_t *, rcl_guard_condition_t> interrupt_guard_cond_handles_;
 };
 
 /// Return a copy of the list of context shared pointers.
