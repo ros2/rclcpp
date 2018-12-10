@@ -34,6 +34,7 @@
 #include "rcl/rcl.h"
 
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/demangle.hpp"
 #include "rmw/rmw.h"
 
 #include "rcutils/logging_macros.h"
@@ -120,7 +121,18 @@ private:
 
   ~SignalHandler()
   {
-    uninstall();
+    try {
+      uninstall();
+    } catch (const std::exception & exc) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "caught %s exception when uninstalling the sigint handler in rclcpp::~SignalHandler: %s",
+        rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+    } catch (...) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "caught unknown exception when uninstalling the sigint handler in rclcpp::~SignalHandler:");
+    }
   }
 
   // A mutex to lock event signaling.
