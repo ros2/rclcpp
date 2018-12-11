@@ -12,32 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/node_interfaces/node_clock.hpp"
+#include "rclcpp/node_interfaces/node_time_source.hpp"
 
 #include <memory>
 #include <string>
 
-using rclcpp::node_interfaces::NodeClock;
+using rclcpp::node_interfaces::NodeTimeSource;
 
-NodeClock::NodeClock(
+NodeTimeSource::NodeTimeSource(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging)
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters)
 : node_base_(node_base),
   node_topics_(node_topics),
   node_graph_(node_graph),
   node_services_(node_services),
   node_logging_(node_logging),
-  ros_clock_(std::make_shared<rclcpp::Clock>(RCL_ROS_TIME))
-{}
-
-NodeClock::~NodeClock()
-{}
-
-std::shared_ptr<rclcpp::Clock>
-NodeClock::get_clock()
+  node_clock_(node_clock),
+  node_parameters_(node_parameters)
 {
-  return ros_clock_;
+  time_source_.attachNode(
+    node_base_,
+    node_topics_,
+    node_graph_,
+    node_services_,
+    node_logging_,
+    node_clock_,
+    node_parameters_);
+  time_source_.attachClock(node_clock_->get_clock());
+
 }
+
+NodeTimeSource::~NodeTimeSource()
+{}

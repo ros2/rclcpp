@@ -53,7 +53,9 @@ void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
     node->get_node_topics_interface(),
     node->get_node_graph_interface(),
     node->get_node_services_interface(),
-    node->get_node_logging_interface());
+    node->get_node_logging_interface(),
+    node->get_node_clock_interface(),
+    node->get_node_parameters_interface());
 }
 
 void TimeSource::attachNode(
@@ -61,17 +63,23 @@ void TimeSource::attachNode(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface)
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface)
 {
   node_base_ = node_base_interface;
   node_topics_ = node_topics_interface;
   node_graph_ = node_graph_interface;
   node_services_ = node_services_interface;
   node_logging_ = node_logging_interface;
+  node_clock_ = node_clock_interface;
+  node_parameters_ = node_parameters_interface;
   // TODO(tfoote): Update QOS
 
   logger_ = node_logging_->get_logger();
 
+  //TODO(tfoote) query parameter interface for initial value
+  // TODO(tfoote) use parameters interface not subscribe
   parameter_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     node_base_,
     node_topics_,
@@ -92,6 +100,9 @@ void TimeSource::detachNode()
   node_topics_.reset();
   node_graph_.reset();
   node_services_.reset();
+  node_logging_.reset();
+  node_clock_.reset();
+  node_parameters_.reset();
   disable_ros_time();
 }
 
@@ -123,7 +134,7 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
 
 TimeSource::~TimeSource()
 {
-  if (node_base_ || node_topics_ || node_graph_ || node_services_) {
+  if (node_base_ || node_topics_ || node_graph_ || node_services_ || node_logging_ || node_clock_ || node_parameters_) {
     this->detachNode();
   }
 }
