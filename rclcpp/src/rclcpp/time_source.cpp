@@ -78,7 +78,24 @@ void TimeSource::attachNode(
 
   logger_ = node_logging_->get_logger();
 
-  //TODO(tfoote) query parameter interface for initial value
+  rclcpp::Parameter use_sim_time_param;
+  if (node_parameters_->get_parameter("use_sim_time", use_sim_time_param))
+  {
+    if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL)
+    {
+      if( use_sim_time_param.get_value<bool>() == true)
+      {
+        parameter_state_ = SET_TRUE;
+        enable_ros_time();
+        create_clock_sub();
+      }
+    } else {
+      RCLCPP_ERROR(logger_, "Invalid type for parameter 'use_sim_time' %s should be bool", use_sim_time_param.get_type_name());
+    }
+  } else {
+      RCLCPP_DEBUG(logger_, "'use_sim_time' parameter not set, using wall time by default.");
+  }
+
   // TODO(tfoote) use parameters interface not subscribe
   parameter_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     node_base_,
