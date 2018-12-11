@@ -150,8 +150,8 @@ public:
    * - rcl_shutdown() is called on the internal rcl_context_t instance
    * - the shutdown reason is set
    * - each on_shutdown callback is called, in the order that they were added
-   * - if interrupt blocking sleep_for() calls, so they return early due to shutdown
-   * - if interrupt blocking executors and wait sets
+   * - interrupt blocking sleep_for() calls, so they return early due to shutdown
+   * - interrupt blocking executors and wait sets
    *
    * The underlying rcl context is not finalized by this function.
    *
@@ -173,8 +173,9 @@ public:
    * These callbacks will be called in the order they are added as the second
    * to last step in shutdown().
    *
-   * These callbacks may be run in the signal handler as the signal handler
-   * may call shutdown() on this context.
+   * When shutdown occurs due to the signal handler, these callbacks are run
+   * asynchronoulsy in the dedicated singal handling thread.
+   *
    * Also, shutdown() may be called from the destructor of this function.
    * Therefore, it is not safe to throw exceptions from these callbacks.
    * Instead, log errors or use some other mechanism to indicate an error has

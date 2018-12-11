@@ -181,9 +181,11 @@ shutdown(
  * If nullptr is given for the context, then the global context is used, i.e.
  * the context initialized by rclcpp::init().
  *
- * Note that these callbacks should be non-blocking and not throw exceptions,
- * as they may be called from signal handlers and from the destructor of the
- * context.
+ * These callbacks are called when the associated Context is shutdown with the
+ * Context::shutdown() method.
+ * When shutdown by the SIGINT handler, shutdown, and therefore these callbacks,
+ * is called asynchronously from the dedicated signal handling thread, at some
+ * point after the SIGINT signal is received.
  *
  * \sa rclcpp::Context::on_shutdown()
  * \param[in] callback to be called when the given context is shutdown

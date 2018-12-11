@@ -131,7 +131,7 @@ private:
     } catch (...) {
       RCLCPP_ERROR(
         rclcpp::get_logger("rclcpp"),
-        "caught unknown exception when uninstalling the sigint handler in rclcpp::~SignalHandler:");
+        "caught unknown exception when uninstalling the sigint handler in rclcpp::~SignalHandler");
     }
   }
 
