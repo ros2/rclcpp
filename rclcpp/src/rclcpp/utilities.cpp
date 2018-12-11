@@ -61,6 +61,7 @@ public:
   bool
   install()
   {
+    std::lock_guard<std::mutex> lock(install_mutex_);
     bool already_installed = installed_.exchange(true);
     if (already_installed) {
       return false;
@@ -90,6 +91,7 @@ public:
   bool
   uninstall()
   {
+    std::lock_guard<std::mutex> lock(install_mutex_);
     bool installed = installed_.exchange(false);
     if (!installed) {
       return false;
@@ -134,13 +136,6 @@ private:
         "caught unknown exception when uninstalling the sigint handler in rclcpp::~SignalHandler");
     }
   }
-
-  // A mutex to lock event signaling.
-  static std::mutex events_mutex;
-  // A cond var to wait on for event signaling.
-  static std::condition_variable events_condition_variable;
-  // Whether a signal has been received or not.
-  static std::atomic<bool> signal_received;
 
   // POSIX signal handler structure.
 #ifdef HAS_SIGACTION
@@ -254,10 +249,19 @@ private:
     }
   }
 
-  // Whether this handler has been installed or not.
-  std::atomic<bool> installed_{false};
+  // A mutex to lock event signaling.
+  static std::mutex events_mutex;
+  // A cond var to wait on for event signaling.
+  static std::condition_variable events_condition_variable;
+  // Whether a signal has been received or not.
+  static std::atomic<bool> signal_received;
   // A thread to defer signal handling tasks to.
   std::thread signal_handler_thread_;
+
+  // A mutex to synchronize the install() and uninstall() methods.
+  std::mutex install_mutex_;
+  // Whether this handler has been installed or not.
+  std::atomic<bool> installed_{false};
 };
 
 }  // namespace rclcpp
