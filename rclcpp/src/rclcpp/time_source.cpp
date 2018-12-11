@@ -88,13 +88,13 @@ void TimeSource::attachNode(
       }
     } else {
       RCLCPP_ERROR(logger_, "Invalid type for parameter 'use_sim_time' %s should be bool",
-        use_sim_time_param.get_type_name());
+        use_sim_time_param.get_type_name().c_str());
     }
   } else {
     RCLCPP_DEBUG(logger_, "'use_sim_time' parameter not set, using wall time by default.");
   }
 
-  // TODO(tfoote) use parameters interface not subscribe
+  // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
   parameter_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     node_base_,
     node_topics_,
