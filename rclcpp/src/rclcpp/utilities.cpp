@@ -44,8 +44,36 @@
 #define HAS_SIGACTION
 #endif
 
+rclcpp::Logger g_logger = rclcpp::get_logger("rclcpp");
+
 namespace rclcpp
 {
+
+// This setups anything that is necessary for wait_for_signal() or notify_signal_handler().
+// This must be called before wait_for_signal() or notify_signal_handler().
+// This is not thread-safe.
+RCLCPP_LOCAL
+void
+setup_wait_for_signal();
+
+// Undo all setup done in setup_wait_for_signal().
+// Must not call wait_for_signal() or notify_signal_handler() after calling this.
+// This is not thread-safe.
+RCLCPP_LOCAL
+void
+teardown_wait_for_signal() noexcept;
+
+// This waits for a notification from notify_signal_handler() in a signal safe way.
+// This is not thread-safe.
+RCLCPP_LOCAL
+void
+wait_for_signal() noexcept;
+
+// This notifies the deferred_signal_handler() thread to wake up in a signal safe way.
+// This is thread-safe.
+RCLCPP_LOCAL
+void
+notify_signal_handler() noexcept;
 
 class SignalHandler final
 {
@@ -67,6 +95,7 @@ public:
       return false;
     }
     try {
+      setup_wait_for_signal();
       signal_received.exchange(false);
 #ifdef HAS_SIGACTION
       struct sigaction action;
@@ -84,7 +113,7 @@ public:
       installed_.exchange(false);
       throw;
     }
-    RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler installed");
+    RCLCPP_DEBUG(g_logger, "signal handler installed");
     return true;
   }
 
@@ -102,13 +131,15 @@ public:
 #else
       set_signal_handler(SIGINT, old_signal_handler);
 #endif
-      events_condition_variable.notify_one();
+      RCLCPP_DEBUG(g_logger, "SignalHandler::uninstall(): notifying deferred signal handler");
+      notify_signal_handler();
       signal_handler_thread_.join();
+      teardown_wait_for_signal();
     } catch (...) {
       installed_.exchange(true);
       throw;
     }
-    RCLCPP_DEBUG(rclcpp::get_logger("rclcpp"), "signal handler uninstalled");
+    RCLCPP_DEBUG(g_logger, "signal handler uninstalled");
     return true;
   }
 
@@ -127,12 +158,12 @@ private:
       uninstall();
     } catch (const std::exception & exc) {
       RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"),
+        g_logger,
         "caught %s exception when uninstalling the sigint handler in rclcpp::~SignalHandler: %s",
         rmw::impl::cpp::demangle(exc).c_str(), exc.what());
     } catch (...) {
       RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"),
+        g_logger,
         "caught unknown exception when uninstalling the sigint handler in rclcpp::~SignalHandler");
     }
   }
@@ -205,7 +236,7 @@ private:
   signal_handler(int signal_value)
 #endif
   {
-    RCLCPP_INFO(rclcpp::get_logger("rclcpp"), "signal_handler(signal_value=%d)", signal_value);
+    RCLCPP_INFO(g_logger, "signal_handler(signal_value=%d)", signal_value);
 
 #ifdef HAS_SIGACTION
     if (old_action.sa_flags & SA_SIGINFO) {
@@ -227,7 +258,8 @@ private:
     }
 #endif
     signal_received.exchange(true);
-    events_condition_variable.notify_one();
+    RCLCPP_DEBUG(g_logger, "signal_handler(): SIGINT received, notifying deferred signal handler");
+    notify_signal_handler();
   }
 
   void
@@ -235,24 +267,28 @@ private:
   {
     while (true) {
       if (signal_received.exchange(false)) {
+        RCLCPP_DEBUG(g_logger, "deferred_signal_handler(): SIGINT received, shutting down");
         for (auto context_ptr : rclcpp::get_contexts()) {
           if (context_ptr->get_init_options().shutdown_on_sigint) {
+            RCLCPP_DEBUG(
+              g_logger,
+              "deferred_signal_handler(): "
+              "shutting down rclcpp::Context @ %p, because it had shutdown_on_sigint == true",
+              context_ptr.get());
             context_ptr->shutdown("signal handler");
           }
         }
       }
       if (!is_installed()) {
+        RCLCPP_DEBUG(g_logger, "deferred_signal_handler(): signal handling uninstalled");
         break;
       }
-      std::unique_lock<std::mutex> events_lock(events_mutex);
-      events_condition_variable.wait(events_lock);
+      RCLCPP_DEBUG(g_logger, "deferred_signal_handler(): waiting for SIGINT or uninstall");
+      wait_for_signal();
+      RCLCPP_DEBUG(g_logger, "deferred_signal_handler(): woken up due to SIGINT or uninstall");
     }
   }
 
-  // A mutex to lock event signaling.
-  static std::mutex events_mutex;
-  // A cond var to wait on for event signaling.
-  static std::condition_variable events_condition_variable;
   // Whether a signal has been received or not.
   static std::atomic<bool> signal_received;
   // A thread to defer signal handling tasks to.
@@ -267,8 +303,6 @@ private:
 }  // namespace rclcpp
 
 // Declare static class variables for SignalHandler
-std::mutex rclcpp::SignalHandler::events_mutex;
-std::condition_variable rclcpp::SignalHandler::events_condition_variable;
 std::atomic<bool> rclcpp::SignalHandler::signal_received;
 #ifdef HAS_SIGACTION
 struct sigaction rclcpp::SignalHandler::old_action;
@@ -277,15 +311,121 @@ typedef void (* signal_handler_t)(int);
 signal_handler_t rclcpp::SignalHandler::old_signal_handler = 0;
 #endif
 
-/// Mutex to protect g_sigint_guard_cond_handles
-static std::mutex g_sigint_guard_cond_handles_mutex;
-/// Guard conditions for interrupting the rmw implementation when the global interrupt signal fired.
-static std::map<rcl_wait_set_t *, rcl_guard_condition_t> g_sigint_guard_cond_handles;
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <dispatch/dispatch.h>
+#else  // posix
+#include <semaphore.h>
+#endif
 
-/// Condition variable for timed sleep (see sleep_for).
-static std::condition_variable g_interrupt_condition_variable;
-/// Mutex for protecting the global condition variable.
-static std::mutex g_interrupt_mutex;
+static std::atomic_bool g_wait_for_signal_is_setup = ATOMIC_VAR_INIT(false);
+#if defined(_WIN32)
+HANDLE g_signal_handler_sem;
+#elif defined(__APPLE__)
+dispatch_semaphore_t g_signal_handler_sem;
+#else  // posix
+sem_t g_signal_handler_sem;
+#endif
+
+void
+rclcpp::setup_wait_for_signal()
+{
+#if defined(_WIN32)
+  g_signal_handler_sem = CreateSemaphore(
+    NULL,  // default security attributes
+    0,  // initial semaphore count
+    1,  // maximum semaphore count
+    NULL);  // unnamed semaphore
+  if (NULL == g_signal_handler_sem) {
+    throw std::runtime_error("CreateSemaphore() failed in setup_wait_for_signal()");
+  }
+#elif defined(__APPLE__)
+  g_signal_handler_sem = dispatch_semaphore_create(0);
+#else  // posix
+  if (-1 == sem_init(&g_signal_handler_sem, 0, 0)) {
+    throw std::runtime_error(std::string("sem_init() failed: ") + strerror(errno));
+  }
+#endif
+  g_wait_for_signal_is_setup.store(true);
+}
+
+void
+rclcpp::teardown_wait_for_signal() noexcept
+{
+  if (!g_wait_for_signal_is_setup.exchange(false)) {
+    return;
+  }
+#if defined(_WIN32)
+  CloseHandle(g_signal_handler_sem);
+#elif defined(__APPLE__)
+  dispatch_release(g_signal_handler_sem);
+#else  // posix
+  if (EINVAL == sem_destroy(&g_signal_handler_sem)) {
+    RCLCPP_ERROR(g_logger, "invalid semaphore in teardown_wait_for_signal()");
+  }
+#endif
+}
+
+void
+rclcpp::wait_for_signal() noexcept
+{
+  if (!g_wait_for_signal_is_setup.load()) {
+    RCLCPP_ERROR(g_logger, "called wait_for_signal() before setup_wait_for_signal()");
+    return;
+  }
+#if defined(_WIN32)
+  DWORD dw_wait_result = WaitForSingleObject(g_signal_handler_sem, INFINITE);
+  switch (dw_wait_result) {
+    case WAIT_ABANDONED:
+      RCLCPP_ERROR(
+        g_logger, "WaitForSingleObject() failed in wait_for_signal() with WAIT_ABANDONED: %s",
+        GetLastError());
+      break;
+    case WAIT_OBJECT_0:
+      // successful
+      break;
+    case WAIT_TIMEOUT:
+      RCLCPP_ERROR(g_logger, "WaitForSingleObject() timedout out in wait_for_signal()");
+      break;
+    case WAIT_FAILED:
+      RCLCPP_ERROR(
+        g_logger, "WaitForSingleObject() failed in wait_for_signal(): %s", GetLastError());
+      break;
+    default:
+      RCLCPP_ERROR(
+        g_logger, "WaitForSingleObject() gave unknown return in wait_for_signal(): %s",
+        GetLastError());
+  }
+#elif defined(__APPLE__)
+  dispatch_semaphore_wait(g_signal_handler_sem, DISPATCH_TIME_FOREVER);
+#else  // posix
+  int s;
+  do {
+    s = sem_wait(&g_signal_handler_sem);
+  } while (-1 == s && EINTR == errno);
+#endif
+}
+
+void
+rclcpp::notify_signal_handler() noexcept
+{
+  if (!g_wait_for_signal_is_setup.load()) {
+    return;
+  }
+#if defined(_WIN32)
+  if (!ReleaseSemaphore(g_signal_handler_sem, 1, NULL)) {
+    RCLCPP_ERROR(
+      g_logger, "ReleaseSemaphore() failed in notify_signal_handler(): %s", GetLastError());
+  }
+#elif defined(__APPLE__)
+  dispatch_semaphore_signal(g_signal_handler_sem);
+#else  // posix
+  if (-1 == sem_post(&g_signal_handler_sem)) {
+    RCLCPP_ERROR(g_logger, "sem_post failed in notify_signal_handler()");
+  }
+#endif
+}
 
 void
 rclcpp::init(int argc, char const * const argv[], const rclcpp::InitOptions & init_options)
