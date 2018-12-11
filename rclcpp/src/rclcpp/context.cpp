@@ -22,6 +22,7 @@
 #include "rcl/init.h"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
+#include "rmw/impl/cpp/demangle.hpp"
 
 /// Mutex to protect initialized contexts.
 static std::mutex g_contexts_mutex;
@@ -245,6 +246,25 @@ Context::release_interrupt_guard_condition(rcl_wait_set_t * wait_set)
     interrupt_guard_cond_handles_.erase(kv);
   } else {
     throw std::runtime_error("Tried to release sigint guard condition for nonexistent wait set");
+  }
+}
+
+void
+Context::release_interrupt_guard_condition(
+  rcl_wait_set_t * wait_set,
+  const std::nothrow_t &) noexcept
+{
+  try {
+    this->release_interrupt_guard_condition(wait_set);
+  } catch (const std::exception & exc) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "caught %s exception when releasing interrupt guard condition: %s",
+      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+  } catch (...) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "caught unknown exception when releasing interrupt guard condition");
   }
 }
 

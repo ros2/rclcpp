@@ -284,6 +284,11 @@ public:
   void
   release_interrupt_guard_condition(rcl_wait_set_t * wait_set);
 
+  /// Nothrow version of release_interrupt_guard_condition(), logs to RCLCPP_ERROR instead.
+  RCLCPP_PUBLIC
+  void
+  release_interrupt_guard_condition(rcl_wait_set_t * wait_set, const std::nothrow_t &) noexcept;
+
   /// Interrupt any blocking executors, or wait sets associated with this context.
   RCLCPP_PUBLIC
   virtual

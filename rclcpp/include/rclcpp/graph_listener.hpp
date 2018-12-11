@@ -134,6 +134,12 @@ public:
   void
   shutdown();
 
+  /// Nothrow version of shutdown(), logs to RCLCPP_ERROR instead.
+  RCLCPP_PUBLIC
+  virtual
+  void
+  shutdown(const std::nothrow_t &) noexcept;
+
   /// Return true if shutdown() has been called, else false.
   RCLCPP_PUBLIC
   virtual
@@ -154,6 +160,10 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(GraphListener)
+
+  /** \internal */
+  void
+  __shutdown(bool);
 
   rclcpp::Context::SharedPtr parent_context_;
 

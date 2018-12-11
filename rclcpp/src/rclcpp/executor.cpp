@@ -105,7 +105,7 @@ Executor::~Executor()
   }
   // Remove and release the sigint guard condition
   memory_strategy_->remove_guard_condition(context_->get_interrupt_guard_condition(&wait_set_));
-  context_->release_interrupt_guard_condition(&wait_set_);
+  context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
 }
 
 void
