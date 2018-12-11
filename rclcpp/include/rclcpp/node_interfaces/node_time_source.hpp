@@ -52,7 +52,6 @@ public:
   virtual
   ~NodeTimeSource();
 
-
 private:
   RCLCPP_DISABLE_COPY(NodeTimeSource)
 

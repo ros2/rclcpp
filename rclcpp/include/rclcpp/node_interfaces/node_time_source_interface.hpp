@@ -30,7 +30,6 @@ class NodeTimeSourceInterface
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimeSourceInterface)
-
 };
 
 }  // namespace node_interfaces

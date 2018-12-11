@@ -79,21 +79,19 @@ void TimeSource::attachNode(
   logger_ = node_logging_->get_logger();
 
   rclcpp::Parameter use_sim_time_param;
-  if (node_parameters_->get_parameter("use_sim_time", use_sim_time_param))
-  {
-    if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL)
-    {
-      if( use_sim_time_param.get_value<bool>() == true)
-      {
+  if (node_parameters_->get_parameter("use_sim_time", use_sim_time_param)) {
+    if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL) {
+      if (use_sim_time_param.get_value<bool>() == true) {
         parameter_state_ = SET_TRUE;
         enable_ros_time();
         create_clock_sub();
       }
     } else {
-      RCLCPP_ERROR(logger_, "Invalid type for parameter 'use_sim_time' %s should be bool", use_sim_time_param.get_type_name());
+      RCLCPP_ERROR(logger_, "Invalid type for parameter 'use_sim_time' %s should be bool",
+        use_sim_time_param.get_type_name());
     }
   } else {
-      RCLCPP_DEBUG(logger_, "'use_sim_time' parameter not set, using wall time by default.");
+    RCLCPP_DEBUG(logger_, "'use_sim_time' parameter not set, using wall time by default.");
   }
 
   // TODO(tfoote) use parameters interface not subscribe
@@ -152,7 +150,9 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
 
 TimeSource::~TimeSource()
 {
-  if (node_base_ || node_topics_ || node_graph_ || node_services_ || node_logging_ || node_clock_ || node_parameters_) {
+  if (node_base_ || node_topics_ || node_graph_ || node_services_ ||
+    node_logging_ || node_clock_ || node_parameters_)
+  {
     this->detachNode();
   }
 }
