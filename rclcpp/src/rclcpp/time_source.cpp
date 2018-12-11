@@ -131,11 +131,12 @@ void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
 
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   associated_clocks_.push_back(clock);
-  // Set the clock if there's already data for it
+  // Set the clock to zero unless there's a recently received message
+  auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
   if (last_msg_set_) {
-    auto time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
-    set_clock(time_msg, ros_time_active_, clock);
+    time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
   }
+  set_clock(time_msg, ros_time_active_, clock);
 }
 
 void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
@@ -285,13 +286,14 @@ void TimeSource::enable_ros_time()
   // Local storage
   ros_time_active_ = true;
 
-  // Update all attached clocks
+  // Update all attached clocks to zero or last recorded time
   std::lock_guard<std::mutex> guard(clock_list_lock_);
+  auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
+  if (last_msg_set_) {
+    time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
+  }
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
-    msg->sec = 0;
-    msg->nanosec = 0;
-    set_clock(msg, true, *it);
+    set_clock(time_msg, true, *it);
   }
 }
 
