@@ -64,7 +64,7 @@ public:
   rclcpp::Logger &
   get_logger();
 
-  /// Install the signal handler for SIGINT and start the dedicated singal handling thread.
+  /// Install the signal handler for SIGINT and start the dedicated signal handling thread.
   /**
    * Also stores the current signal handler to be called on SIGINT and to
    * restore when uninstalling this signal handler.
