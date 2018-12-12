@@ -17,6 +17,7 @@
 #include <atomic>
 #include <csignal>
 #include <mutex>
+#include <string>
 #include <thread>
 
 // includes for semaphore notification code
