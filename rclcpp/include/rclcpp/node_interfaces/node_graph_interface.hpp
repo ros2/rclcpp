@@ -38,6 +38,10 @@ class NodeGraphInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeGraphInterface)
 
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeGraphInterface() = default;
+
   /// Return a map of existing topic names to list of topic types.
   /**
    * A topic is considered to exist when at least one publisher or subscriber

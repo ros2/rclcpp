@@ -38,6 +38,10 @@ class NodeBaseInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBaseInterface)
 
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeBaseInterface() = default;
+
   /// Return the name of the node.
   /** \return The name of the node. */
   RCLCPP_PUBLIC
