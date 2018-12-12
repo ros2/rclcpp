@@ -69,7 +69,7 @@ SignalHandler::install()
   }
   try {
     setup_wait_for_signal();
-    signal_received_.exchange(false);
+    signal_received_.store(false);
 
     SignalHandler::signal_handler_type signal_handler_argument;
 #if defined(RCLCPP_HAS_SIGACTION)
@@ -85,7 +85,7 @@ SignalHandler::install()
 
     signal_handler_thread_ = std::thread(&SignalHandler::deferred_signal_handler, this);
   } catch (...) {
-    installed_.exchange(false);
+    installed_.store(false);
     throw;
   }
   RCLCPP_DEBUG(get_logger(), "signal handler installed");
@@ -186,7 +186,7 @@ SignalHandler::set_signal_handler(
 void
 SignalHandler::signal_handler_common()
 {
-  SignalHandler::signal_received_.exchange(true);
+  SignalHandler::signal_received_.store(true);
   RCLCPP_DEBUG(
     get_logger(),
     "signal_handler(): SIGINT received, notifying deferred signal handler");
