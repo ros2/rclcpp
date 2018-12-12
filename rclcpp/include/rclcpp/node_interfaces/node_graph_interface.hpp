@@ -37,7 +37,7 @@ class NodeGraphInterface
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeGraphInterface)
-  
+
   RCLCPP_PUBLIC
   virtual
   ~NodeGraphInterface() = default;
