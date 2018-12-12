@@ -39,6 +39,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  ~NodeParametersInterface() = default;
+
+  RCLCPP_PUBLIC
+  virtual
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
@@ -108,10 +112,6 @@ public:
   virtual
   void
   register_param_change_callback(ParametersCallbackFunction callback) = 0;
-
-  RCLCPP_PUBLIC
-  virtual
-  ~NodeParametersInterface() = default;
 };
 
 }  // namespace node_interfaces

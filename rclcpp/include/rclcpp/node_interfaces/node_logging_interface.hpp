@@ -33,6 +33,10 @@ class NodeLoggingInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeLoggingInterface)
 
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeLoggingInterface() = default;
+
   /// Return the logger of the node.
   /** \return The logger of the node. */
   RCLCPP_PUBLIC
@@ -46,10 +50,6 @@ public:
   virtual
   const char *
   get_logger_name() const = 0;
-
-  RCLCPP_PUBLIC
-  virtual
-  ~NodeLoggingInterface() = default;
 };
 
 }  // namespace node_interfaces
