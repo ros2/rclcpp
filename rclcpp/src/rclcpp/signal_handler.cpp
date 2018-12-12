@@ -187,11 +187,11 @@ SignalHandler::set_signal_handler(
 void
 SignalHandler::signal_handler_common()
 {
-  SignalHandler::signal_received_.store(true);
+  signal_received_.store(true);
   RCLCPP_DEBUG(
     get_logger(),
     "signal_handler(): SIGINT received, notifying deferred signal handler");
-  SignalHandler::notify_signal_handler();
+  notify_signal_handler();
 }
 
 #if defined(RCLCPP_HAS_SIGACTION)
@@ -214,7 +214,7 @@ SignalHandler::signal_handler(int signal_value, siginfo_t * siginfo, void * cont
     }
   }
 
-  SignalHandler::signal_handler_common();
+  signal_handler_common();
 }
 #else
 void
@@ -226,7 +226,7 @@ SignalHandler::signal_handler(int signal_value)
     old_signal_handler_(signal_value);
   }
 
-  SignalHandler::signal_handler_common();
+  signal_handler_common();
 }
 #endif
 
