@@ -64,6 +64,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/parameter_service.cpp
   src/rclcpp/publisher.cpp
   src/rclcpp/service.cpp
+  src/rclcpp/signal_handler.cpp
   src/rclcpp/subscription.cpp
   src/rclcpp/time.cpp
   src/rclcpp/time_source.cpp
