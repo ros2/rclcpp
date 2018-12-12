@@ -34,6 +34,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  ~NodeServicesInterface() = default;
+
+  RCLCPP_PUBLIC
+  virtual
   void
   add_client(
     rclcpp::ClientBase::SharedPtr client_base_ptr,
@@ -45,10 +49,6 @@ public:
   add_service(
     rclcpp::ServiceBase::SharedPtr service_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
-
-  RCLCPP_PUBLIC
-  virtual
-  ~NodeServicesInterface() = default;
 };
 
 }  // namespace node_interfaces

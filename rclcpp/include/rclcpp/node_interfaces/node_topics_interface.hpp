@@ -42,6 +42,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  ~NodeTopicsInterface() = default;
+
+  RCLCPP_PUBLIC
+  virtual
   rclcpp::PublisherBase::SharedPtr
   create_publisher(
     const std::string & topic_name,
@@ -70,10 +74,6 @@ public:
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
     rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
-
-  RCLCPP_PUBLIC
-  virtual
-  ~NodeTopicsInterface() = default;
 };
 
 }  // namespace node_interfaces

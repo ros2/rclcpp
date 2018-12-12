@@ -38,6 +38,10 @@ class NodeBaseInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBaseInterface)
 
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeBaseInterface() = default;
+
   /// Return the name of the node.
   /** \return The name of the node. */
   RCLCPP_PUBLIC
@@ -138,10 +142,6 @@ public:
   virtual
   std::unique_lock<std::recursive_mutex>
   acquire_notify_guard_condition_lock() const = 0;
-
-  RCLCPP_PUBLIC
-  virtual
-  ~NodeBaseInterface() = default;
 };
 
 }  // namespace node_interfaces

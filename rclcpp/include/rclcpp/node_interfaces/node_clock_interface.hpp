@@ -31,15 +31,15 @@ class NodeClockInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeClockInterface)
 
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeClockInterface() = default;
+
   /// Get a ROS clock which will be kept up to date by the node.
   RCLCPP_PUBLIC
   virtual
   rclcpp::Clock::SharedPtr
   get_clock() = 0;
-
-  RCLCPP_PUBLIC
-  virtual
-  ~NodeClockInterface() = default;
 };
 
 }  // namespace node_interfaces
