@@ -186,6 +186,19 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
+  explicit SyncParametersClient(
+    rclcpp::Node * node,
+    const std::string & remote_node_name = "",
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+
+  RCLCPP_PUBLIC
+  SyncParametersClient(
+    rclcpp::executor::Executor::SharedPtr executor,
+    rclcpp::Node * node,
+    const std::string & remote_node_name = "",
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+
+  RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & parameter_names);
 
