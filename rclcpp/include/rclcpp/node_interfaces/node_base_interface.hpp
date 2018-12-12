@@ -138,6 +138,10 @@ public:
   virtual
   std::unique_lock<std::recursive_mutex>
   acquire_notify_guard_condition_lock() const = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeBaseInterface() = default;
 };
 
 }  // namespace node_interfaces

@@ -45,6 +45,10 @@ public:
   remove_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeWaitablesInterface() = default;
 };
 
 }  // namespace node_interfaces

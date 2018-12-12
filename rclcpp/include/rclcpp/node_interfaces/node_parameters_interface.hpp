@@ -108,6 +108,10 @@ public:
   virtual
   void
   register_param_change_callback(ParametersCallbackFunction callback) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeParametersInterface() = default;
 };
 
 }  // namespace node_interfaces

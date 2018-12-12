@@ -46,6 +46,10 @@ public:
   virtual
   const char *
   get_logger_name() const = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeLoggingInterface() = default;
 };
 
 }  // namespace node_interfaces

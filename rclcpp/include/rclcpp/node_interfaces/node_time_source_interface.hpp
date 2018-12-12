@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,6 +30,10 @@ class NodeTimeSourceInterface
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimeSourceInterface)
+
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeTimeSourceInterface() = default;
 };
 
 }  // namespace node_interfaces

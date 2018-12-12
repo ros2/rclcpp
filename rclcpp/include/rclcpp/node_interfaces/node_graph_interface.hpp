@@ -146,6 +146,10 @@ public:
   virtual
   size_t
   count_graph_users() = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeGraphInterface() = default;
 };
 
 }  // namespace node_interfaces

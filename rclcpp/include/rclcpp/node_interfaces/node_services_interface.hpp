@@ -45,6 +45,10 @@ public:
   add_service(
     rclcpp::ServiceBase::SharedPtr service_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeServicesInterface() = default;
 };
 
 }  // namespace node_interfaces
