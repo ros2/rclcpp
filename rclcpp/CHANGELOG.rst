@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.2 (2018-12-13)
+------------------
+* Updated to use signal safe synchronization with platform specific semaphores (`#607 <https://github.com/ros2/rclcpp/issues/607>`_)
+* Resolved startup race condition for sim time (`#608 <https://github.com/ros2/rclcpp/issues/608>`_)
+  Resolves `#595 <https://github.com/ros2/rclcpp/issues/595>`_
+* Contributors: Tully Foote, William Woodall
+
 0.6.1 (2018-12-07)
 ------------------
 * Added wait_for_action_server() for action clients (`#598 <https://github.com/ros2/rclcpp/issues/598>`_)

@@ -2,6 +2,9 @@
 Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.2 (2018-12-13)
+------------------
+
 0.6.1 (2018-12-07)
 ------------------
 * Added wait_for_action_server() for action clients (`#598 <https://github.com/ros2/rclcpp/issues/598>`_)
