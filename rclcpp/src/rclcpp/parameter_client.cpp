@@ -350,11 +350,15 @@ SyncParametersClient::SyncParametersClient(
   rclcpp::Node::SharedPtr node,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
-: executor_(executor), node_(node.get())
-{
-  async_parameters_client_ =
-    std::make_shared<AsyncParametersClient>(node, remote_node_name, qos_profile);
-}
+: SyncParametersClient(
+    executor,
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
+    qos_profile)
+{}
 
 SyncParametersClient::SyncParametersClient(
   rclcpp::Node * node,
@@ -372,10 +376,34 @@ SyncParametersClient::SyncParametersClient(
   rclcpp::Node * node,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
-: executor_(executor), node_(node)
+: SyncParametersClient(
+    executor,
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
+    qos_profile)
+{}
+
+SyncParametersClient::SyncParametersClient(
+  rclcpp::executor::Executor::SharedPtr executor,
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+  const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+  const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile)
+: executor_(executor), node_base_interface_(node_base_interface)
 {
   async_parameters_client_ =
-    std::make_shared<AsyncParametersClient>(node, remote_node_name, qos_profile);
+    std::make_shared<AsyncParametersClient>(
+    node_base_interface,
+    node_topics_interface,
+    node_graph_interface,
+    node_services_interface,
+    remote_node_name,
+    qos_profile);
 }
 
 std::vector<rclcpp::Parameter>
@@ -383,7 +411,7 @@ SyncParametersClient::get_parameters(const std::vector<std::string> & parameter_
 {
   auto f = async_parameters_client_->get_parameters(parameter_names);
   using rclcpp::executors::spin_node_until_future_complete;
-  if (spin_node_until_future_complete(*executor_, node_->get_node_base_interface(), f) ==
+  if (spin_node_until_future_complete(*executor_, node_base_interface_, f) ==
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
@@ -407,7 +435,7 @@ SyncParametersClient::get_parameter_types(const std::vector<std::string> & param
   auto f = async_parameters_client_->get_parameter_types(parameter_names);
 
   using rclcpp::executors::spin_node_until_future_complete;
-  if (spin_node_until_future_complete(*executor_, node_->get_node_base_interface(), f) ==
+  if (spin_node_until_future_complete(*executor_, node_base_interface_, f) ==
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
@@ -421,9 +449,8 @@ SyncParametersClient::set_parameters(
 {
   auto f = async_parameters_client_->set_parameters(parameters);
 
-  auto node_base_interface = node_->get_node_base_interface();
   using rclcpp::executors::spin_node_until_future_complete;
-  if (spin_node_until_future_complete(*executor_, node_base_interface, f) ==
+  if (spin_node_until_future_complete(*executor_, node_base_interface_, f) ==
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
@@ -438,7 +465,7 @@ SyncParametersClient::set_parameters_atomically(
   auto f = async_parameters_client_->set_parameters_atomically(parameters);
 
   using rclcpp::executors::spin_node_until_future_complete;
-  if (spin_node_until_future_complete(*executor_, node_->get_node_base_interface(), f) ==
+  if (spin_node_until_future_complete(*executor_, node_base_interface_, f) ==
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
@@ -455,7 +482,7 @@ SyncParametersClient::list_parameters(
   auto f = async_parameters_client_->list_parameters(parameter_prefixes, depth);
 
   using rclcpp::executors::spin_node_until_future_complete;
-  if (spin_node_until_future_complete(*executor_, node_->get_node_base_interface(), f) ==
+  if (spin_node_until_future_complete(*executor_, node_base_interface_, f) ==
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     return f.get();
