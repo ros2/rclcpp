@@ -281,7 +281,7 @@ public:
 
 private:
   rclcpp::executor::Executor::SharedPtr executor_;
-  rclcpp::Node* node_;
+  rclcpp::Node * node_;
   AsyncParametersClient::SharedPtr async_parameters_client_;
 };
 
