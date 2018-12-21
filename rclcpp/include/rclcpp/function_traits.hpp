@@ -49,14 +49,14 @@ template<typename FunctionT>
 struct function_traits
 {
   using arguments = typename tuple_tail<
-    typename function_traits<decltype( & FunctionT::operator())>::arguments>::type;
+    typename function_traits<decltype( &FunctionT::operator())>::arguments>::type;
 
   static constexpr std::size_t arity = std::tuple_size<arguments>::value;
 
   template<std::size_t N>
   using argument_type = typename std::tuple_element<N, arguments>::type;
 
-  using return_type = typename function_traits<decltype( & FunctionT::operator())>::return_type;
+  using return_type = typename function_traits<decltype( &FunctionT::operator())>::return_type;
 };
 
 // Free functions
