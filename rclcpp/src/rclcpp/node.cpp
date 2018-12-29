@@ -40,10 +40,13 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 Node::Node(
   const std::string & node_name,
+<<<<<<< HEAD
   const NodeOptions & options)
 : Node(node_name, "", options)
 {
 }
+    // rmw_qos_profile_parameter_events,
+    // true)
 
 Node::Node(
   const std::string & node_name,
@@ -70,7 +73,9 @@ Node::Node(
       node_clock_,
       options.initial_parameters(),
       options.use_intra_process_comms(),
-      options.start_parameter_services()
+      options.start_parameter_services(),
+      options.start_parameter_event_publisher(),
+      options.parameter_event_qos_profile()
     )),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
       node_base_,

@@ -39,7 +39,9 @@ NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   const std::vector<rclcpp::Parameter> & initial_parameters,
   bool use_intra_process,
-  bool start_parameter_services)
+  bool start_parameter_services,
+  bool start_parameter_event_publisher,
+  const rmw_qos_profile_t &qos_profile)
 : node_clock_(node_clock)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
@@ -52,12 +54,14 @@ NodeParameters::NodeParameters(
     parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, this);
   }
 
-  events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
-    node_topics.get(),
-    "parameter_events",
-    rmw_qos_profile_parameter_events,
-    use_intra_process,
-    allocator);
+  if (start_parameter_event_publisher) {
+    events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+      node_topics.get(),
+      "parameter_events",
+      qos_profile,
+      use_intra_process,
+      allocator);
+  }
 
   // Get the node options
   const rcl_node_t * node = node_base->get_rcl_node_handle();
@@ -232,8 +236,11 @@ NodeParameters::set_parameters_atomically(
   }
 
   std::swap(tmp_map, parameters_);
-  parameter_event->stamp = node_clock_->get_clock()->now();
-  events_publisher_->publish(parameter_event);
+
+  if (nullptr != events_publisher_->get_topic_name()) {
+    parameter_event->stamp = node_clock_->get_clock()->now();
+    events_publisher_->publish(parameter_event);
+  }
 
   return result;
 }
