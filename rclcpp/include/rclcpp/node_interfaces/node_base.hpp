@@ -59,6 +59,11 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  const char *
+  get_fully_qualified_name() const;
+
+  RCLCPP_PUBLIC
+  virtual
   rclcpp::Context::SharedPtr
   get_context();
 
