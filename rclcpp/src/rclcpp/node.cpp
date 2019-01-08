@@ -29,6 +29,7 @@
 #include "rclcpp/node_interfaces/node_logging.hpp"
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
+#include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
@@ -82,6 +83,15 @@ Node::Node(
       initial_parameters,
       use_intra_process_comms,
       start_parameter_services
+    )),
+  node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
+      node_base_,
+      node_topics_,
+      node_graph_,
+      node_services_,
+      node_logging_,
+      node_clock_,
+      node_parameters_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   use_intra_process_comms_(use_intra_process_comms)
@@ -261,6 +271,12 @@ rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr
 Node::get_node_logging_interface()
 {
   return node_logging_;
+}
+
+rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
+Node::get_node_time_source_interface()
+{
+  return node_time_source_;
 }
 
 rclcpp::node_interfaces::NodeTimersInterface::SharedPtr

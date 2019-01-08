@@ -129,13 +129,15 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   }
   // update the time even on the first loop to account for time spent in the first call
   // to this->server_is_ready()
-  std::chrono::nanoseconds time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
-  if (timeout > std::chrono::nanoseconds(0) && time_to_wait < std::chrono::nanoseconds(0)) {
+  std::chrono::nanoseconds time_to_wait =
+    timeout > std::chrono::nanoseconds(0) ?
+    timeout - (std::chrono::steady_clock::now() - start) :
+    std::chrono::nanoseconds::max();
+  if (time_to_wait < std::chrono::nanoseconds(0)) {
     // Do not allow the time_to_wait to become negative when timeout was originally positive.
     // Setting time_to_wait to 0 will allow one non-blocking wait because of the do-while.
     time_to_wait = std::chrono::nanoseconds(0);
   }
-  // continue forever if timeout is negative, otherwise continue until out of time_to_wait
   do {
     if (!rclcpp::ok(this->context_)) {
       return false;
@@ -156,8 +158,11 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
       return true;
     }
     // server is not ready, loop if there is time left
-    time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
-  } while (time_to_wait > std::chrono::nanoseconds(0) || timeout < std::chrono::nanoseconds(0));
+    if (timeout > std::chrono::nanoseconds(0)) {
+      time_to_wait = timeout - (std::chrono::steady_clock::now() - start);
+    }
+    // if timeout is negative, time_to_wait will never reach zero
+  } while (time_to_wait > std::chrono::nanoseconds(0));
   return false;  // timeout exceeded while waiting for the server to be ready
 }
 

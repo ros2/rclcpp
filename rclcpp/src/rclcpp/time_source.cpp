@@ -53,7 +53,9 @@ void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
     node->get_node_topics_interface(),
     node->get_node_graph_interface(),
     node->get_node_services_interface(),
-    node->get_node_logging_interface());
+    node->get_node_logging_interface(),
+    node->get_node_clock_interface(),
+    node->get_node_parameters_interface());
 }
 
 void TimeSource::attachNode(
@@ -61,17 +63,38 @@ void TimeSource::attachNode(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface)
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface)
 {
   node_base_ = node_base_interface;
   node_topics_ = node_topics_interface;
   node_graph_ = node_graph_interface;
   node_services_ = node_services_interface;
   node_logging_ = node_logging_interface;
+  node_clock_ = node_clock_interface;
+  node_parameters_ = node_parameters_interface;
   // TODO(tfoote): Update QOS
 
   logger_ = node_logging_->get_logger();
 
+  rclcpp::Parameter use_sim_time_param;
+  if (node_parameters_->get_parameter("use_sim_time", use_sim_time_param)) {
+    if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL) {
+      if (use_sim_time_param.get_value<bool>() == true) {
+        parameter_state_ = SET_TRUE;
+        enable_ros_time();
+        create_clock_sub();
+      }
+    } else {
+      RCLCPP_ERROR(logger_, "Invalid type for parameter 'use_sim_time' %s should be bool",
+        use_sim_time_param.get_type_name().c_str());
+    }
+  } else {
+    RCLCPP_DEBUG(logger_, "'use_sim_time' parameter not set, using wall time by default.");
+  }
+
+  // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
   parameter_client_ = std::make_shared<rclcpp::AsyncParametersClient>(
     node_base_,
     node_topics_,
@@ -92,6 +115,9 @@ void TimeSource::detachNode()
   node_topics_.reset();
   node_graph_.reset();
   node_services_.reset();
+  node_logging_.reset();
+  node_clock_.reset();
+  node_parameters_.reset();
   disable_ros_time();
 }
 
@@ -103,11 +129,12 @@ void TimeSource::attachClock(std::shared_ptr<rclcpp::Clock> clock)
 
   std::lock_guard<std::mutex> guard(clock_list_lock_);
   associated_clocks_.push_back(clock);
-  // Set the clock if there's already data for it
+  // Set the clock to zero unless there's a recently received message
+  auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
   if (last_msg_set_) {
-    auto time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
-    set_clock(time_msg, ros_time_active_, clock);
+    time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
   }
+  set_clock(time_msg, ros_time_active_, clock);
 }
 
 void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
@@ -123,7 +150,9 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
 
 TimeSource::~TimeSource()
 {
-  if (node_base_ || node_topics_ || node_graph_ || node_services_) {
+  if (node_base_ || node_topics_ || node_graph_ || node_services_ ||
+    node_logging_ || node_clock_ || node_parameters_)
+  {
     this->detachNode();
   }
 }
@@ -257,13 +286,14 @@ void TimeSource::enable_ros_time()
   // Local storage
   ros_time_active_ = true;
 
-  // Update all attached clocks
+  // Update all attached clocks to zero or last recorded time
   std::lock_guard<std::mutex> guard(clock_list_lock_);
+  auto time_msg = std::make_shared<builtin_interfaces::msg::Time>();
+  if (last_msg_set_) {
+    time_msg = std::make_shared<builtin_interfaces::msg::Time>(last_msg_set_->clock);
+  }
   for (auto it = associated_clocks_.begin(); it != associated_clocks_.end(); ++it) {
-    auto msg = std::make_shared<builtin_interfaces::msg::Time>();
-    msg->sec = 0;
-    msg->nanosec = 0;
-    set_clock(msg, true, *it);
+    set_clock(time_msg, true, *it);
   }
 }
 

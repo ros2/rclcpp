@@ -36,7 +36,8 @@ namespace graph_listener
 {
 
 GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
-: is_started_(false),
+: parent_context_(parent_context),
+  is_started_(false),
   is_shutdown_(false),
   interrupt_guard_condition_context_(nullptr),
   shutdown_guard_condition_(nullptr)
@@ -54,12 +55,12 @@ GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
 
-  shutdown_guard_condition_ = rclcpp::get_sigint_guard_condition(&wait_set_, parent_context);
+  shutdown_guard_condition_ = parent_context->get_interrupt_guard_condition(&wait_set_);
 }
 
 GraphListener::~GraphListener()
 {
-  this->shutdown();
+  this->shutdown(std::nothrow);
 }
 
 void
@@ -90,7 +91,8 @@ GraphListener::start_if_not_started()
       [weak_this]() {
         auto shared_this = weak_this.lock();
         if (shared_this) {
-          shared_this->shutdown();
+          // should not throw from on_shutdown if it can be avoided
+          shared_this->shutdown(std::nothrow);
         }
       });
     // Start the listener thread.
@@ -337,7 +339,7 @@ GraphListener::remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_gr
 }
 
 void
-GraphListener::shutdown()
+GraphListener::__shutdown(bool should_throw)
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
   if (!is_shutdown_.exchange(true)) {
@@ -351,7 +353,11 @@ GraphListener::shutdown()
       throw_from_rcl_error(ret, "failed to finalize interrupt guard condition");
     }
     if (shutdown_guard_condition_) {
-      rclcpp::release_sigint_guard_condition(&wait_set_);
+      if (should_throw) {
+        parent_context_->release_interrupt_guard_condition(&wait_set_);
+      } else {
+        parent_context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
+      }
       shutdown_guard_condition_ = nullptr;
     }
     if (is_started_) {
@@ -360,6 +366,29 @@ GraphListener::shutdown()
         throw_from_rcl_error(ret, "failed to finalize wait set");
       }
     }
+  }
+}
+
+void
+GraphListener::shutdown()
+{
+  this->__shutdown(true);
+}
+
+void
+GraphListener::shutdown(const std::nothrow_t &) noexcept
+{
+  try {
+    this->__shutdown(false);
+  } catch (const std::exception & exc) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "caught %s exception when shutting down GraphListener: %s",
+      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+  } catch (...) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "caught unknown exception when shutting down GraphListener");
   }
 }
 
