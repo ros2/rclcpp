@@ -29,7 +29,7 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
       {"x", 0.5},
       {"y", 1.0},
     };
-    node->set_parameter_if_not_set("bar", bar_map);
+    node->set_parameters_if_not_set("bar", bar_map);
     double bar_x_value;
     ASSERT_TRUE(node->get_parameter("bar.x", bar_x_value));
     EXPECT_EQ(bar_x_value, 0.5);
@@ -37,7 +37,7 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
     ASSERT_TRUE(node->get_parameter("bar.y", bar_y_value));
     EXPECT_EQ(bar_y_value, 1.0);
     std::map<std::string, double> new_map;
-    ASSERT_TRUE(node->get_parameter("bar", new_map));
+    ASSERT_TRUE(node->get_parameters("bar", new_map));
     ASSERT_EQ(new_map.size(), 2U);
     EXPECT_EQ(new_map["x"], 0.5);
     EXPECT_EQ(new_map["y"], 1.0);
@@ -46,7 +46,7 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
   {
     // try to get a map of parameters that doesn't exist
     std::map<std::string, double> no_exist_map;
-    ASSERT_FALSE(node->get_parameter("no_exist", no_exist_map));
+    ASSERT_FALSE(node->get_parameters("no_exist", no_exist_map));
   }
 
   {
@@ -54,7 +54,7 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
     node->set_parameter_if_not_set("baz.x", 1.0);
     node->set_parameter_if_not_set("baz.y", "hello");
     std::map<std::string, double> baz_map;
-    EXPECT_THROW(node->get_parameter("baz", baz_map), rclcpp::ParameterTypeException);
+    EXPECT_THROW(node->get_parameters("baz", baz_map), rclcpp::ParameterTypeException);
   }
 }
 

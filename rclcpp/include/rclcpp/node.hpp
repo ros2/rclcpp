@@ -281,7 +281,7 @@ public:
 
   template<typename MapValueT>
   void
-  set_parameter_if_not_set(
+  set_parameters_if_not_set(
     const std::string & name,
     const std::map<std::string, MapValueT> & values);
 
@@ -325,7 +325,7 @@ public:
    */
   template<typename MapValueT>
   bool
-  get_parameter(
+  get_parameters(
     const std::string & name,
     std::map<std::string, MapValueT> & values) const;
 

@@ -229,7 +229,7 @@ Node::set_parameter_if_not_set(
 // type is the value in the map.
 template<typename MapValueT>
 void
-Node::set_parameter_if_not_set(
+Node::set_parameters_if_not_set(
   const std::string & name,
   const std::map<std::string, MapValueT> & values)
 {
@@ -264,7 +264,7 @@ Node::get_parameter(const std::string & name, ParameterT & value) const
 // type is the value in the map.
 template<typename MapValueT>
 bool
-Node::get_parameter(
+Node::get_parameters(
   const std::string & name,
   std::map<std::string, MapValueT> & values) const
 {
