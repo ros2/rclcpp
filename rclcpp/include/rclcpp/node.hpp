@@ -279,6 +279,20 @@ public:
     const std::string & name,
     const ParameterT & value);
 
+  /// Set a map of parameters with the same prefix.
+  /**
+   * For each key in the map, a parameter with a name of "name.key" will be set
+   * to the value in the map.
+   *
+   * \param[in] name The prefix of the parameters to set.
+   * \param[in] values The parameters to set in the given prefix.
+   */
+  template<typename MapValueT>
+  void
+  set_parameters_if_not_set(
+    const std::string & name,
+    const std::map<std::string, MapValueT> & values);
+
   RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
@@ -304,6 +318,24 @@ public:
   template<typename ParameterT>
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
+
+  /// Assign the value of the map parameter if set into the values argument.
+  /**
+   * Parameter names that are part of a map are of the form "name.member".
+   * This API gets all parameters that begin with "name", storing them into the
+   * map with the name of the parameter and their value.
+   * If there are no members in the named map, then the "values" argument is not changed.
+   *
+   * \param[in] name The prefix of the parameters to get.
+   * \param[out] values The map of output values, with one std::string,MapValueT
+   *                    per parameter.
+   * \returns true if values was changed, false otherwise
+   */
+  template<typename MapValueT>
+  bool
+  get_parameters(
+    const std::string & name,
+    std::map<std::string, MapValueT> & values) const;
 
   /// Get the parameter value, or the "alternative value" if not set, and assign it to "value".
   /**
