@@ -40,13 +40,10 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 Node::Node(
   const std::string & node_name,
-<<<<<<< HEAD
   const NodeOptions & options)
 : Node(node_name, "", options)
 {
 }
-    // rmw_qos_profile_parameter_events,
-    // true)
 
 Node::Node(
   const std::string & node_name,

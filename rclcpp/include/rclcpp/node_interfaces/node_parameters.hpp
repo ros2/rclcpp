@@ -56,7 +56,7 @@ public:
     bool use_intra_process,
     bool start_parameter_services,
     bool start_parameter_event_publisher,
-    const rmw_qos_profile_t &qos_profile);
+    const rmw_qos_profile_t & parameter_event_qos_profile);
 
   RCLCPP_PUBLIC
   virtual

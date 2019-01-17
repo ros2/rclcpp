@@ -41,8 +41,8 @@ NodeParameters::NodeParameters(
   bool use_intra_process,
   bool start_parameter_services,
   bool start_parameter_event_publisher,
-  const rmw_qos_profile_t &qos_profile)
-: node_clock_(node_clock)
+  const rmw_qos_profile_t & parameter_event_qos_profile)
+: events_publisher_(nullptr), node_clock_(node_clock)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::Publisher<MessageT>;
@@ -58,7 +58,7 @@ NodeParameters::NodeParameters(
     events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
       node_topics.get(),
       "parameter_events",
-      qos_profile,
+      parameter_event_qos_profile,
       use_intra_process,
       allocator);
   }
@@ -237,7 +237,8 @@ NodeParameters::set_parameters_atomically(
 
   std::swap(tmp_map, parameters_);
 
-  if (nullptr != events_publisher_->get_topic_name()) {
+  // events_publisher_ may be nullptr if it was disabled in constructor
+  if (nullptr != events_publisher_) {
     parameter_event->stamp = node_clock_->get_clock()->now();
     events_publisher_->publish(parameter_event);
   }
