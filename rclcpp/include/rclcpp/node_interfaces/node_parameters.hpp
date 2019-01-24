@@ -91,13 +91,6 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  bool
-  get_parameters_by_prefix(
-    const std::string & prefix,
-    std::map<std::string, rclcpp::Parameter> & parameters) const;
-
-  RCLCPP_PUBLIC
-  virtual
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
 

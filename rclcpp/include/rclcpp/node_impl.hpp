@@ -268,15 +268,16 @@ Node::get_parameters(
   const std::string & name,
   std::map<std::string, MapValueT> & values) const
 {
-  std::map<std::string, rclcpp::Parameter> params;
-  bool result = node_parameters_->get_parameters_by_prefix(name, params);
-  if (result) {
-    for (const auto & param : params) {
-      values[param.first] = param.second.get_value<MapValueT>();
-    }
+  bool retval = false;
+  std::vector<std::string> prefix{name};
+  std::string name_with_dot = name + ".";
+  rcl_interfaces::msg::ListParametersResult result = node_parameters_->list_parameters(prefix, 0);
+  for (const auto & param : result.names) {
+    values[param.substr(name_with_dot.length())] = node_parameters_->get_parameter(param).get_value<MapValueT>();
+    retval = true;
   }
 
-  return result;
+  return retval;
 }
 
 template<typename ParameterT>
