@@ -273,7 +273,8 @@ Node::get_parameters(
   std::string name_with_dot = name + ".";
   rcl_interfaces::msg::ListParametersResult result = node_parameters_->list_parameters(prefix, 0);
   for (const auto & param : result.names) {
-    values[param.substr(name_with_dot.length())] = node_parameters_->get_parameter(param).get_value<MapValueT>();
+    values[param.substr(name_with_dot.length())] =
+      node_parameters_->get_parameter(param).get_value<MapValueT>();
     retval = true;
   }
 

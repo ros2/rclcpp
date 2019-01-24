@@ -15,7 +15,6 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_INTERFACE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_INTERFACE_HPP_
 
-#include <map>
 #include <string>
 #include <vector>
 
