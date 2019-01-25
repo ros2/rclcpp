@@ -79,6 +79,7 @@ GraphListener::start_if_not_started()
       0,  // number_of_timers
       0,  // number_of_clients
       0,  // number_of_services
+      this->parent_context_->get_rcl_context().get(),
       rcl_get_default_allocator());
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to initialize wait set");
