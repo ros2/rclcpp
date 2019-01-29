@@ -224,6 +224,28 @@ Node::set_parameter_if_not_set(
   }
 }
 
+// this is a partially-specialized version of set_parameter_if_not_set above,
+// where our concrete type for ParameterT is std::map, but the to-be-determined
+// type is the value in the map.
+template<typename MapValueT>
+void
+Node::set_parameters_if_not_set(
+  const std::string & name,
+  const std::map<std::string, MapValueT> & values)
+{
+  std::vector<rclcpp::Parameter> params;
+
+  for (const auto & val : values) {
+    std::string param_name = name + "." + val.first;
+    rclcpp::Parameter parameter;
+    if (!this->get_parameter(param_name, parameter)) {
+      params.push_back(rclcpp::Parameter(param_name, val.second));
+    }
+  }
+
+  this->set_parameters(params);
+}
+
 template<typename ParameterT>
 bool
 Node::get_parameter(const std::string & name, ParameterT & value) const
@@ -235,6 +257,28 @@ Node::get_parameter(const std::string & name, ParameterT & value) const
   }
 
   return result;
+}
+
+// this is a partially-specialized version of get_parameter above,
+// where our concrete type for ParameterT is std::map, but the to-be-determined
+// type is the value in the map.
+template<typename MapValueT>
+bool
+Node::get_parameters(
+  const std::string & name,
+  std::map<std::string, MapValueT> & values) const
+{
+  bool retval = false;
+  std::vector<std::string> prefix{name};
+  std::string name_with_dot = name + ".";
+  rcl_interfaces::msg::ListParametersResult result = node_parameters_->list_parameters(prefix, 0);
+  for (const auto & param : result.names) {
+    values[param.substr(name_with_dot.length())] =
+      node_parameters_->get_parameter(param).get_value<MapValueT>();
+    retval = true;
+  }
+
+  return retval;
 }
 
 template<typename ParameterT>
