@@ -33,8 +33,7 @@ NodeBase::NodeBase(
   const std::string & node_name,
   const std::string & namespace_,
   rclcpp::Context::SharedPtr context,
-  const std::vector<std::string> & arguments,
-  bool use_global_arguments)
+  const rclcpp::NodeOptions & options)
 : context_(context),
   node_handle_(nullptr),
   default_callback_group_(nullptr),
@@ -58,34 +57,6 @@ NodeBase::NodeBase(
           "failed to destroy guard condition: %s", rcl_get_error_string().str);
       }
     };
-
-  // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
-  size_t domain_id = 0;
-  char * ros_domain_id = nullptr;
-  const char * env_var = "ROS_DOMAIN_ID";
-#ifndef _WIN32
-  ros_domain_id = getenv(env_var);
-#else
-  size_t ros_domain_id_size;
-  _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
-#endif
-  if (ros_domain_id) {
-    uint32_t number = strtoul(ros_domain_id, NULL, 0);
-    if (number == (std::numeric_limits<uint32_t>::max)()) {
-      // Finalize the interrupt guard condition.
-      finalize_notify_guard_condition();
-#ifdef _WIN32
-      // free the ros_domain_id before throwing, if getenv was used on Windows
-      free(ros_domain_id);
-#endif
-
-      throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
-    }
-    domain_id = static_cast<size_t>(number);
-#ifdef _WIN32
-    free(ros_domain_id);
-#endif
-  }
 
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));

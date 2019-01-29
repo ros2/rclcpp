@@ -81,7 +81,7 @@ public:
   explicit Node(
     const std::string & node_name,
     const std::string & namespace_ = "",
-    bool use_intra_process_comms = false);
+    const NodeOptions & options = NodeOptions());
 
   /// Create a node based on the node name and a rclcpp::Context.
   /**
@@ -102,11 +102,7 @@ public:
     const std::string & node_name,
     const std::string & namespace_,
     rclcpp::Context::SharedPtr context,
-    const std::vector<std::string> & arguments,
-    const std::vector<Parameter> & initial_parameters,
-    bool use_global_arguments = true,
-    bool use_intra_process_comms = false,
-    bool start_parameter_services = true);
+    const NodeOptions & options);
 
   RCLCPP_PUBLIC
   virtual ~Node();

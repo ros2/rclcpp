@@ -35,27 +35,25 @@
 #include "rclcpp/node_interfaces/node_waitables.hpp"
 
 using rclcpp::Node;
+using rclcpp::NodeOptions;
 using rclcpp::exceptions::throw_from_rcl_error;
 
 Node::Node(
   const std::string & node_name,
   const std::string & namespace_,
-  bool use_intra_process_comms)
+  const NodeOptions & options)
 : Node(
     node_name,
     namespace_,
     rclcpp::contexts::default_context::get_global_default_context(),
-    {},
-    {},
-    true,
-    use_intra_process_comms,
-    true)
+    options_)
 {}
 
 Node::Node(
   const std::string & node_name,
   const std::string & namespace_,
   rclcpp::Context::SharedPtr context,
+  const NodeOptions & options)
   const std::vector<std::string> & arguments,
   const std::vector<rclcpp::Parameter> & initial_parameters,
   bool use_global_arguments,

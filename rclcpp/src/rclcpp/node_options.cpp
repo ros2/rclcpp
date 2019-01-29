@@ -25,6 +25,7 @@ NodeOptions::NodeOptions(rcl_allocator_t allocator)
 {
   *node_options_ = rcl_node_get_default_options();
   node_options_->allocator = allocator;
+  set_domain_id_from_env();
 }
 
 NodeOptions::NodeOptions(const rcl_node_options_t & node_options)
@@ -59,6 +60,88 @@ NodeOptions::~NodeOptions()
   this->finalize_node_options();
 }
 
+const rcl_node_options_t *
+NodeOptions::get_rcl_node_options() const
+{
+  return this->node_options_.get();
+}
+
+const std::vector<rclcpp::Parameter> &
+NodeOptions::initial_parameters() const
+{
+  return this->initial_parameters_;
+}
+
+std::vector<rclcpp::Parameter> &
+NodeOptions::initial_parameters()
+{
+  return this->initial_parameters_;
+}
+
+const bool &
+NodeOptions::use_global_arguments() const
+{
+  return this->node_options_->use_global_arguments;
+}
+
+bool &
+NodeOptions::use_global_arguments()
+{
+  return this->node_options_->use_global_arguments;
+}
+
+const bool &
+NodeOptions::use_intra_process_comms() const
+{
+  return this->use_intra_process_comms_;
+}
+
+bool &
+NodeOptions::use_intra_process_comms()
+{
+  return this->use_intra_process_comms_;
+}
+
+const bool &
+NodeOptions::start_parameter_services() const
+{
+  return this->start_parameter_services_;
+}
+
+bool &
+NodeOptions::start_parameter_services()
+{
+  return this->start_parameter_services_;
+}
+
+void
+NodeOptions::set_domain_id_from_env()
+{
+  // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
+  char * ros_domain_id = nullptr;
+  const char * env_var = "ROS_DOMAIN_ID";
+#ifndef _WIN32
+  ros_domain_id = getenv(env_var);
+#else
+  size_t ros_domain_id_size;
+  _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
+#endif
+  if (ros_domain_id) {
+    uint32_t number = strtoul(ros_domain_id, NULL, 0);
+    if (number == (std::numeric_limits<uint32_t>::max)()) {
+#ifdef _WIN32
+      // free the ros_domain_id before throwing, if getenv was used on Windows
+      free(ros_domain_id);
+#endif
+      throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
+    }
+    this->node_options_->domain_id = static_cast<size_t>(number);
+#ifdef _WIN32
+    free(ros_domain_id);
+#endif
+  }
+}
+
 void
 NodeOptions::finalize_node_options()
 {
@@ -72,12 +155,5 @@ NodeOptions::finalize_node_options()
     }
   }
 }
-
-const rcl_node_options_t *
-NodeOptions::get_rcl_node_options() const
-{
-  return this->node_options_.get();
-}
-
 
 }  // namespace rclcpp

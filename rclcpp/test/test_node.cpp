@@ -32,7 +32,11 @@ protected:
 };
 
 TEST_F(TestNode, node_options) {
-  auto node_options = rclcpp::NodeOptions();
+  ASSERT_NO_THROW({
+    auto options = rclcpp::NodeOptions();
+    rclcpp::NodeOptions options2 = options;
+    rclcpp::NodeOptions options3(options2);
+  });
 }
 
 /*
