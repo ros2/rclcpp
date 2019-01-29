@@ -36,6 +36,7 @@
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
@@ -75,39 +76,27 @@ public:
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
-   * \param[in] use_intra_process_comms True to use the optimized intra-process communication
-   * pipeline to pass messages between nodes in the same process using shared memory.
+   * \param[in] options Additional options to control creation of the node.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   explicit LifecycleNode(
     const std::string & node_name,
     const std::string & namespace_ = "",
-    bool use_intra_process_comms = false);
+    const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
   /// Create a node based on the node name and a rclcpp::Context.
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
    * \param[in] context The context for the node (usually represents the state of a process).
-   * \param[in] arguments Command line arguments that should apply only to this node.
-   * \param[in] initial_parameters a list of initial values for parameters on the node.
-   * This can be used to provide remapping rules that only affect one instance.
-   * \param[in] use_global_arguments False to prevent node using arguments passed to the process.
-   * \param[in] use_intra_process_comms True to use the optimized intra-process communication
-   * pipeline to pass messages between nodes in the same process using shared memory.
-   * \param[in] start_parameter_services True to setup ROS interfaces for accessing parameters
-   * in the node.
+   * \param[in] options Additional options to control creation of the node.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNode(
     const std::string & node_name,
     const std::string & namespace_,
     rclcpp::Context::SharedPtr context,
-    const std::vector<std::string> & arguments,
-    const std::vector<rclcpp::Parameter> & initial_parameters,
-    bool use_global_arguments = true,
-    bool use_intra_process_comms = false,
-    bool start_parameter_services = true);
+    const rclcpp::NodeOptions & options);
 
   RCLCPP_LIFECYCLE_PUBLIC
   virtual ~LifecycleNode();
