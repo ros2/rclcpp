@@ -66,19 +66,18 @@ NodeOptions::NodeOptions(
   initial_parameters_ = initial_parameters;
 }
 
-NodeOptions::NodeOptions(const rcl_node_options_t & node_options)
+NodeOptions::NodeOptions(const NodeOptions & other)
 : node_options_(new rcl_node_options_t)
 {
-  *node_options_ = rcl_node_get_default_options();
-  rcl_ret_t ret = rcl_node_options_copy(&node_options, node_options_.get());
+  rcl_ret_t ret = rcl_node_options_copy(other.get_rcl_node_options(), node_options_.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to copy rcl node options");
   }
-}
 
-NodeOptions::NodeOptions(const NodeOptions & other)
-: NodeOptions(*other.get_rcl_node_options())
-{}
+  this->initial_parameters_ = other.initial_parameters();
+  this->use_intra_process_comms_ = other.use_intra_process_comms();
+  this->start_parameter_services_ = other.start_parameter_services();
+}
 
 NodeOptions &
 NodeOptions::operator=(const NodeOptions & other)
@@ -89,6 +88,10 @@ NodeOptions::operator=(const NodeOptions & other)
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to copy rcl node options");
     }
+
+    this->initial_parameters_ = other.initial_parameters();
+    this->use_intra_process_comms_ = other.use_intra_process_comms();
+    this->start_parameter_services_ = other.start_parameter_services();
   }
   return *this;
 }
