@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NODEOPTIONS_HPP_
-#define RCLCPP__NODEOPTIONS_HPP_
+#ifndef RCLCPP__NODE_OPTIONS_HPP_
+#define RCLCPP__NODE_OPTIONS_HPP_
 
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "rcl/node_options.h"
 #include "rclcpp/parameter.hpp"
@@ -28,9 +30,15 @@ namespace rclcpp
 class NodeOptions
 {
 public:
-  /// Constructor which allows you to specify the allocator used within the init options.
   RCLCPP_PUBLIC
-  explicit NodeOptions(rcl_allocator_t allocator = rcl_get_default_allocator());
+  explicit NodeOptions(
+    rcl_allocator_t allocator = rcl_get_default_allocator());
+
+  RCLCPP_PUBLIC
+  explicit NodeOptions(
+    const std::vector<std::string> & arguments,
+    const std::vector<rclcpp::Parameter> & initial_parameters = {},
+    rcl_allocator_t allocator = rcl_get_default_allocator());
 
   /// Constructor which is initialized by an existing node_options.
   RCLCPP_PUBLIC
@@ -75,7 +83,7 @@ protected:
   set_domain_id_from_env();
 
 private:
-  std::unique_ptr<rcl_node_options_t>  node_options_;
+  std::unique_ptr<rcl_node_options_t> node_options_;
 
   std::vector<rclcpp::Parameter> initial_parameters_;
 
@@ -86,4 +94,4 @@ private:
 
 }  // namespace rclcpp
 
-#endif  // RCLCPP__NODEOPTIONS_HPP_
+#endif  // RCLCPP__NODE_OPTIONS_HPP_
