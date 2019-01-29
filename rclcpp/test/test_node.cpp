@@ -31,6 +31,10 @@ protected:
   }
 };
 
+TEST_F(TestNode, node_options) {
+  auto node_options = rclcpp::NodeOptions();
+}
+
 /*
    Testing node construction and destruction.
  */

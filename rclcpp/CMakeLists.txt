@@ -47,6 +47,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
   src/rclcpp/node.cpp
+  src/rclcpp/node_options.cpp
   src/rclcpp/node_interfaces/node_base.cpp
   src/rclcpp/node_interfaces/node_clock.cpp
   src/rclcpp/node_interfaces/node_graph.cpp
