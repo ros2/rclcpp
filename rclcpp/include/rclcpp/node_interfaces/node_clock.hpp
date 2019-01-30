@@ -42,7 +42,6 @@ public:
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging);
 
   RCLCPP_PUBLIC

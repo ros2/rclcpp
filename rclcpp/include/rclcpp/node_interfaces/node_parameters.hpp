@@ -106,11 +106,10 @@ public:
     rclcpp::Parameter & parameter) const override;
 
   RCLCPP_PUBLIC
-  virtual
   bool
   get_parameters_by_prefix(
     const std::string & prefix,
-    std::map<std::string, rclcpp::Parameter> & parameters) const;
+    std::map<std::string, rclcpp::Parameter> & parameters) const override;
 
   RCLCPP_PUBLIC
   virtual

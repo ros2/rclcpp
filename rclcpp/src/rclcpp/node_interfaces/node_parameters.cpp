@@ -41,7 +41,7 @@ NodeParameters::NodeParameters(
   bool use_intra_process,
   bool start_parameter_services,
   bool allow_undeclared_parameters)
-: node_clock_(node_clock), allow_undeclared_(allow_undeclared_parameters)
+: allow_undeclared_(allow_undeclared_parameters), node_clock_(node_clock)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::Publisher<MessageT>;
