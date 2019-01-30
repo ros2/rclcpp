@@ -73,7 +73,6 @@ public:
   /// Create a new node with the specified name.
   /**
    * \param[in] node_name Name of the node.
-   * \param[in] namespace_ Namespace of the node.
    * \param[in] options Additional options to control creation of the node.
    */
   RCLCPP_PUBLIC
