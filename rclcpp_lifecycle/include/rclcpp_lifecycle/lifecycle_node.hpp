@@ -81,8 +81,7 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   explicit LifecycleNode(
     const std::string & node_name,
-    const std::string & namespace_ = "",
-    const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+    const rclcpp::NodeOptions & options = rclcpp::NodeOptions::Builder().build());
 
   /// Create a node based on the node name and a rclcpp::Context.
   /**
@@ -95,7 +94,6 @@ public:
   LifecycleNode(
     const std::string & node_name,
     const std::string & namespace_,
-    rclcpp::Context::SharedPtr context,
     const rclcpp::NodeOptions & options);
 
   RCLCPP_LIFECYCLE_PUBLIC
