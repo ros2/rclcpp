@@ -392,7 +392,7 @@ NodeParameters::get_parameters_by_prefix(
   for (const auto & param : parameters_) {
     if (param.first.find(prefix_with_dot) == 0 && param.first.length() > prefix_with_dot.length()) {
       // Found one!
-      parameters[param.first.substr(prefix_with_dot.length())] = param.second;
+      parameters[param.first.substr(prefix_with_dot.length())] = rclcpp::Parameter(param.second);
       ret = true;
     }
   }

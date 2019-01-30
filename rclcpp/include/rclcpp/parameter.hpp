@@ -30,6 +30,10 @@ namespace rclcpp
 
 class Parameter;
 
+namespace node_interfaces{
+struct ParameterInfo;
+}  // namespace node_interfaces
+
 namespace detail
 {
 
@@ -57,6 +61,9 @@ public:
   : Parameter(name, ParameterValue(value))
   {
   }
+
+  RCLCPP_PUBLIC
+  explicit Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_info);
 
   RCLCPP_PUBLIC
   ParameterType
