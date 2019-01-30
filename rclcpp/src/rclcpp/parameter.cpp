@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rclcpp/parameter.hpp"
+
 #include <ostream>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "rclcpp/parameter.hpp"
+#include "rclcpp/node_interfaces/node_parameters.hpp"
 #include "rclcpp/utilities.hpp"
 
 using rclcpp::ParameterType;
@@ -30,6 +32,11 @@ Parameter::Parameter()
 
 Parameter::Parameter(const std::string & name, const rclcpp::ParameterValue & value)
 : name_(name), value_(value)
+{
+}
+
+Parameter::Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_info)
+: Parameter(parameter_info.descriptor.name, parameter_info.value)
 {
 }
 
