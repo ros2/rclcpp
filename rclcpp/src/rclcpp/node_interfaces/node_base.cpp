@@ -32,9 +32,8 @@ using rclcpp::node_interfaces::NodeBase;
 NodeBase::NodeBase(
   const std::string & node_name,
   const std::string & namespace_,
-  rclcpp::Context::SharedPtr context,
   const rclcpp::NodeOptions & options)
-: context_(context),
+: context_(options.context()),
   node_handle_(nullptr),
   default_callback_group_(nullptr),
   associated_with_executor_(false),
@@ -43,7 +42,7 @@ NodeBase::NodeBase(
   // Setup the guard condition that is notified when changes occur in the graph.
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   rcl_ret_t ret = rcl_guard_condition_init(
-    &notify_guard_condition_, context->get_rcl_context().get(), guard_condition_options);
+    &notify_guard_condition_, options.context()->get_rcl_context().get(), guard_condition_options);
   if (ret != RCL_RET_OK) {
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
@@ -64,7 +63,7 @@ NodeBase::NodeBase(
   ret = rcl_node_init(
     rcl_node.get(),
     node_name.c_str(), namespace_.c_str(),
-    context->get_rcl_context().get(), options.get_rcl_node_options());
+    options.context()->get_rcl_context().get(), options.get_rcl_node_options());
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();

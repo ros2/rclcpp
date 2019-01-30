@@ -36,30 +36,30 @@ protected:
 };
 
 TEST_F(TestNodeWithInitialValues, no_initial_values) {
-  auto context = rclcpp::contexts::default_context::get_global_default_context();
+  auto options = rclcpp::NodeOptions::Builder()
+    .use_intra_process_comms(false)
+    .use_global_arguments(false)
+    .build();
 
-  rclcpp::NodeOptions node_options;
-  node_options.use_intra_process_comms() = false;
-  node_options.use_global_arguments() = false;
-
-  auto node = rclcpp::Node::make_shared("node_name", "", context, node_options);
+  auto node = rclcpp::Node::make_shared("node_name", options);
   auto list_params_result = node->list_parameters({}, 0);
   EXPECT_EQ(0u, list_params_result.names.size());
 }
 
 TEST_F(TestNodeWithInitialValues, multiple_initial_values) {
-  auto context = rclcpp::contexts::default_context::get_global_default_context();
-
-  rclcpp::NodeOptions node_options({}, {
+  auto parameters = std::vector<rclcpp::Parameter>({
     rclcpp::Parameter("foo", true),
     rclcpp::Parameter("bar", "hello world"),
     rclcpp::Parameter("baz", std::vector<double>{3.14, 2.718})
   });
 
-  node_options.use_global_arguments() = false;
-  node_options.use_intra_process_comms() = false;
+  auto options = rclcpp::NodeOptions::Builder()
+    .initial_parameters(parameters)
+    .use_global_arguments(false)
+    .use_intra_process_comms(false)
+    .build();
 
-  auto node = rclcpp::Node::make_shared("node_name", "", context, node_options);
+  auto node = rclcpp::Node::make_shared("node_name", options);
   auto list_params_result = node->list_parameters({}, 0);
   EXPECT_EQ(3u, list_params_result.names.size());
   EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());

@@ -79,22 +79,19 @@ public:
   RCLCPP_PUBLIC
   explicit Node(
     const std::string & node_name,
-    const std::string & namespace_ = "",
-    const NodeOptions & options = NodeOptions());
+    const NodeOptions & options = NodeOptions::Builder().build());
 
-  /// Create a node based on the node name and a rclcpp::Context.
+  /// Create a new node with the specified name.
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
-   * \param[in] context The context for the node (usually represents the state of a process).
    * \param[in] options Additional options to control creation of the node.
    */
   RCLCPP_PUBLIC
-  Node(
+  explicit Node(
     const std::string & node_name,
     const std::string & namespace_,
-    rclcpp::Context::SharedPtr context,
-    const NodeOptions & options);
+    const NodeOptions & options = NodeOptions::Builder().build());
 
   RCLCPP_PUBLIC
   virtual ~Node();

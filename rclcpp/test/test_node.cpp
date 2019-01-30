@@ -31,14 +31,6 @@ protected:
   }
 };
 
-TEST_F(TestNode, node_options) {
-  ASSERT_NO_THROW({
-    auto options = rclcpp::NodeOptions();
-    rclcpp::NodeOptions options2 = options;
-    rclcpp::NodeOptions options3(options2);
-  });
-}
-
 /*
    Testing node construction and destruction.
  */
