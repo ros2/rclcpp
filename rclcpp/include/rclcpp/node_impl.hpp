@@ -230,6 +230,16 @@ Node::register_param_change_callback(CallbackT && callback)
 
 template<typename ParameterT>
 void
+Node::declare_parameter(
+  const std::string & name,
+  const ParameterT & default_value,
+  bool read_only)
+{
+  this->declare_parameter(name, rclcpp::ParameterValue(default_value), read_only);
+}
+
+template<typename ParameterT>
+void
 Node::set_parameter_if_not_set(
   const std::string & name,
   const ParameterT & value)
