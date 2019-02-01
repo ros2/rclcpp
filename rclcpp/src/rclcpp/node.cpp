@@ -211,12 +211,12 @@ Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 }
 
 void
-Node::create_parameter(
+Node::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
   bool read_only)
 {
-  return this->node_parameters_->create_parameter(name, default_value, read_only);
+  return this->node_parameters_->declare_parameter(name, default_value, read_only);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>

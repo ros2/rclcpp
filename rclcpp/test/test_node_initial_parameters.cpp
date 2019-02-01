@@ -77,9 +77,9 @@ TEST_F(TestNodeWithInitialValues, multiple_declared_initial_values) {
     .use_intra_process_comms(false);
   auto node = rclcpp::Node::make_shared("node_name", options);
 
-  node->create_parameter("foo");
-  node->create_parameter("bar");
-  node->create_parameter("baz");
+  node->declare_parameter("foo");
+  node->declare_parameter("bar");
+  node->declare_parameter("baz");
 
   auto list_params_result = node->list_parameters({}, 0);
   EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());

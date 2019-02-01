@@ -169,7 +169,7 @@ NodeParameters::~NodeParameters()
 {}
 
 void
-NodeParameters::create_parameter(
+NodeParameters::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
   bool read_only)

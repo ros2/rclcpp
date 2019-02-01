@@ -52,7 +52,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  create_parameter(
+  declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
     bool read_only = false) = 0;
