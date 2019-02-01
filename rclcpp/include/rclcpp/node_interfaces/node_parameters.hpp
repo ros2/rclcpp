@@ -43,7 +43,7 @@ namespace node_interfaces
 // Internal struct for holding useful info about parameters
 struct ParameterInfo
 {
-  /// True if a user called create_parameter()
+  /// True if a user called declare_parameter()
   bool is_declared = false;
 
   /// Current value of the parameter.
@@ -76,7 +76,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  create_parameter(
+  declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value,
     bool read_only) override;

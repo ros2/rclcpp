@@ -281,9 +281,20 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  create_parameter(
+  declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
+    bool read_only = false);
+
+  /// Declare and initialize a parameter with a type.
+  /**
+   * See the non-templated declare_parameter() on this class for details.
+   */
+  template<typename ParameterT>
+  void
+  declare_parameter(
+    const std::string & name,
+    const ParameterT & default_value,
     bool read_only = false);
 
   RCLCPP_PUBLIC
