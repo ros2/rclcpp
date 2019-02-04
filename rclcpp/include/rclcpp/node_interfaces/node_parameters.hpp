@@ -112,7 +112,6 @@ public:
     std::map<std::string, rclcpp::Parameter> & parameters) const override;
 
   RCLCPP_PUBLIC
-  virtual
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const override;
 
