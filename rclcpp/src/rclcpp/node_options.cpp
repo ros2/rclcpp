@@ -27,86 +27,83 @@ using rclcpp::exceptions::throw_from_rcl_error;
 namespace rclcpp
 {
 
-NodeOptions::NodeOptions(
-  rclcpp::Context::SharedPtr context,
-  const std::vector<std::string> & arguments,
-  const std::vector<rclcpp::Parameter> & initial_parameters,
-  bool use_global_arguments,
-  bool use_intra_process_comms,
-  bool start_parameter_services,
-  rcl_allocator_t allocator)
-: node_options_(new rcl_node_options_t),
-  context_(context),
-  initial_parameters_(initial_parameters),
-  use_intra_process_comms_(use_intra_process_comms),
-  start_parameter_services_(start_parameter_services)
+namespace detail
 {
-  *node_options_ = rcl_node_get_default_options();
-  node_options_->allocator = allocator;
-  node_options_->use_global_arguments = use_global_arguments;
-  node_options_->domain_id = get_domain_id_from_env();
-
-  std::unique_ptr<const char *[]> c_args;
-  if (!arguments.empty()) {
-    c_args.reset(new const char *[arguments.size()]);
-    for (std::size_t i = 0; i < arguments.size(); ++i) {
-      c_args[i] = arguments[i].c_str();
+static
+void
+rcl_node_options_t_destructor(rcl_node_options_t * node_options)
+{
+  if (node_options) {
+    rcl_ret_t ret = rcl_node_options_fini(node_options);
+    if (RCL_RET_OK != ret) {
+      // Cannot throw here, as it may be called in the destructor.
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "failed to finalize rcl node options: %s", rcl_get_error_string().str);
+      rcl_reset_error();
     }
   }
-
-  if (arguments.size() > std::numeric_limits<int>::max()) {
-    throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
-  }
-
-  // TODO(sloretz) Pass an allocator to argument parsing
-  rmw_ret_t ret = rcl_parse_arguments(
-    static_cast<int>(arguments.size()), c_args.get(), allocator,
-    &(this->node_options_->arguments));
-
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "failed to parse arguments");
-  }
 }
+}  // namespace detail
+
+NodeOptions::NodeOptions(rcl_allocator_t allocator)
+: node_options_(nullptr, detail::rcl_node_options_t_destructor), allocator_(allocator)
+{}
 
 NodeOptions::NodeOptions(const NodeOptions & other)
-: node_options_(new rcl_node_options_t)
+: node_options_(nullptr, detail::rcl_node_options_t_destructor)
 {
-  rcl_ret_t ret = rcl_node_options_copy(other.get_rcl_node_options(), node_options_.get());
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to copy rcl node options");
-  }
-
-  this->initial_parameters_ = other.initial_parameters();
-  this->use_intra_process_comms_ = other.use_intra_process_comms();
-  this->start_parameter_services_ = other.start_parameter_services();
+  *this = other;
 }
 
 NodeOptions &
 NodeOptions::operator=(const NodeOptions & other)
 {
   if (this != &other) {
-    this->finalize_node_options();
-    rcl_ret_t ret = rcl_node_options_copy(other.get_rcl_node_options(), node_options_.get());
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to copy rcl node options");
-    }
-
-    this->initial_parameters_ = other.initial_parameters();
-    this->use_intra_process_comms_ = other.use_intra_process_comms();
-    this->start_parameter_services_ = other.start_parameter_services();
+    this->context_ = other.context_;
+    this->arguments_ = other.arguments_;
+    this->initial_parameters_ = other.initial_parameters_;
+    this->use_global_arguments_ = other.use_global_arguments_;
+    this->use_intra_process_comms_ = other.use_intra_process_comms_;
+    this->start_parameter_services_ = other.start_parameter_services_;
+    this->allocator_ = other.allocator_;
   }
   return *this;
-}
-
-NodeOptions::~NodeOptions()
-{
-  this->finalize_node_options();
 }
 
 const rcl_node_options_t *
 NodeOptions::get_rcl_node_options() const
 {
-  return this->node_options_.get();
+  // If it is nullptr, create it on demand.
+  if (!node_options_) {
+    node_options_.reset(new rcl_node_options_t);
+    *node_options_ = rcl_node_get_default_options();
+    node_options_->allocator = this->allocator_;
+    node_options_->use_global_arguments = this->use_global_arguments_;
+    node_options_->domain_id = this->get_domain_id_from_env();
+
+    std::unique_ptr<const char *[]> c_args;
+    if (!this->arguments_.empty()) {
+      c_args.reset(new const char *[this->arguments_.size()]);
+      for (std::size_t i = 0; i < this->arguments_.size(); ++i) {
+        c_args[i] = this->arguments_[i].c_str();
+      }
+    }
+
+    if (this->arguments_.size() > std::numeric_limits<int>::max()) {
+      throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
+    }
+
+    rmw_ret_t ret = rcl_parse_arguments(
+      static_cast<int>(this->arguments_.size()), c_args.get(), this->allocator_,
+      &(node_options_->arguments));
+
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, "failed to parse arguments");
+    }
+  }
+
+  return node_options_.get();
 }
 
 rclcpp::Context::SharedPtr
@@ -115,10 +112,44 @@ NodeOptions::context() const
   return this->context_;
 }
 
+NodeOptions &
+NodeOptions::context(rclcpp::Context::SharedPtr context)
+{
+  this->context_ = context;
+  return *this;
+}
+
+const std::vector<std::string> &
+NodeOptions::arguments() const
+{
+  return this->arguments_;
+}
+
+NodeOptions &
+NodeOptions::arguments(const std::vector<std::string> & arguments)
+{
+  this->node_options_.reset();  // reset node options to make it be recreated on next access.
+  this->arguments_ = arguments;
+  return *this;
+}
+
+std::vector<rclcpp::Parameter> &
+NodeOptions::initial_parameters()
+{
+  return this->initial_parameters_;
+}
+
 const std::vector<rclcpp::Parameter> &
 NodeOptions::initial_parameters() const
 {
   return this->initial_parameters_;
+}
+
+NodeOptions &
+NodeOptions::initial_parameters(const std::vector<rclcpp::Parameter> & initial_parameters)
+{
+  this->initial_parameters_ = initial_parameters;
+  return *this;
 }
 
 const bool &
@@ -127,16 +158,56 @@ NodeOptions::use_global_arguments() const
   return this->node_options_->use_global_arguments;
 }
 
+NodeOptions &
+NodeOptions::use_global_arguments(const bool & use_global_arguments)
+{
+  this->use_global_arguments_ = use_global_arguments;
+  return *this;
+}
+
 const bool &
 NodeOptions::use_intra_process_comms() const
 {
   return this->use_intra_process_comms_;
 }
 
+NodeOptions &
+NodeOptions::use_intra_process_comms(const bool & use_intra_process_comms)
+{
+  this->use_intra_process_comms_ = use_intra_process_comms;
+  return *this;
+}
+
 const bool &
 NodeOptions::start_parameter_services() const
 {
   return this->start_parameter_services_;
+}
+
+NodeOptions &
+NodeOptions::start_parameter_services(const bool & start_parameter_services)
+{
+  this->start_parameter_services_ = start_parameter_services;
+  return *this;
+}
+
+rcl_allocator_t &
+NodeOptions::allocator()
+{
+  return this->allocator_;
+}
+
+const rcl_allocator_t &
+NodeOptions::allocator() const
+{
+  return this->allocator_;
+}
+
+NodeOptions &
+NodeOptions::allocator(rcl_allocator_t allocator)
+{
+  this->allocator_ = allocator;
+  return *this;
 }
 
 size_t
@@ -168,83 +239,5 @@ NodeOptions::get_domain_id_from_env() const
   }
   return domain_id;
 }
-
-void
-NodeOptions::finalize_node_options()
-{
-  if (node_options_) {
-    rcl_ret_t ret = rcl_node_options_fini(node_options_.get());
-    if (RCL_RET_OK != ret) {
-      RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"),
-        "failed to finalize rcl node options: %s", rcl_get_error_string().str);
-      rcl_reset_error();
-    }
-  }
-}
-
-NodeOptions
-NodeOptions::Builder::build()
-{
-  return NodeOptions(
-    context_,
-    arguments_,
-    initial_parameters_,
-    use_global_arguments_,
-    use_intra_process_comms_,
-    start_parameter_services_,
-    allocator_);
-}
-
-NodeOptions::Builder &
-NodeOptions::Builder::context(rclcpp::Context::SharedPtr context)
-{
-  this->context_ = context;
-  return *this;
-}
-
-NodeOptions::Builder &
-NodeOptions::Builder::use_global_arguments(bool use_global_arguments)
-{
-  this->use_global_arguments_ = use_global_arguments;
-  return *this;
-}
-
-NodeOptions::Builder &
-NodeOptions::Builder::use_intra_process_comms(bool use_intra_process_comms)
-{
-  this->use_intra_process_comms_ = use_intra_process_comms;
-  return *this;
-}
-
-NodeOptions::Builder &
-NodeOptions::Builder::start_parameter_services(bool start_parameter_services)
-{
-  this->start_parameter_services_ = start_parameter_services;
-  return *this;
-}
-
-NodeOptions::Builder &
-NodeOptions::Builder::arguments(const std::vector<std::string> & arguments)
-{
-  this->arguments_ = arguments;
-  return *this;
-}
-
-NodeOptions::Builder &
-NodeOptions::Builder::initial_parameters(
-  const std::vector<rclcpp::Parameter> initial_parameters)
-{
-  this->initial_parameters_ = initial_parameters;
-  return *this;
-}
-
-NodeOptions::Builder &
-NodeOptions::Builder::allocator(rcl_allocator_t allocator)
-{
-  this->allocator_ = allocator;
-  return *this;
-}
-
 
 }  // namespace rclcpp

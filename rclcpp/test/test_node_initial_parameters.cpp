@@ -36,10 +36,9 @@ protected:
 };
 
 TEST_F(TestNodeWithInitialValues, no_initial_values) {
-  auto options = rclcpp::NodeOptions::Builder()
+  auto options = rclcpp::NodeOptions()
     .use_intra_process_comms(false)
-    .use_global_arguments(false)
-    .build();
+    .use_global_arguments(false);
 
   auto node = rclcpp::Node::make_shared("node_name", options);
   auto list_params_result = node->list_parameters({}, 0);
@@ -53,11 +52,10 @@ TEST_F(TestNodeWithInitialValues, multiple_initial_values) {
     rclcpp::Parameter("baz", std::vector<double>{3.14, 2.718})
   });
 
-  auto options = rclcpp::NodeOptions::Builder()
+  auto options = rclcpp::NodeOptions()
     .initial_parameters(parameters)
     .use_global_arguments(false)
-    .use_intra_process_comms(false)
-    .build();
+    .use_intra_process_comms(false);
 
   auto node = rclcpp::Node::make_shared("node_name", options);
   auto list_params_result = node->list_parameters({}, 0);
