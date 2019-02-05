@@ -206,6 +206,8 @@ NodeOptions::allocator(rcl_allocator_t allocator)
   return *this;
 }
 
+// TODO(wjwwood): reuse rcutils_get_env() to avoid code duplication.
+//   See also: https://github.com/ros2/rcl/issues/119
 size_t
 NodeOptions::get_domain_id_from_env() const
 {
