@@ -28,7 +28,7 @@
 namespace rclcpp
 {
 
-/// Encapsulation of options for initializing node.
+/// Encapsulation of options for node initialization.
 class NodeOptions
 {
 public:
