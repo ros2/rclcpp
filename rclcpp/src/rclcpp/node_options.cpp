@@ -161,6 +161,7 @@ NodeOptions::use_global_arguments() const
 NodeOptions &
 NodeOptions::use_global_arguments(const bool & use_global_arguments)
 {
+  this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->use_global_arguments_ = use_global_arguments;
   return *this;
 }
@@ -191,12 +192,6 @@ NodeOptions::start_parameter_services(const bool & start_parameter_services)
   return *this;
 }
 
-rcl_allocator_t &
-NodeOptions::allocator()
-{
-  return this->allocator_;
-}
-
 const rcl_allocator_t &
 NodeOptions::allocator() const
 {
@@ -206,6 +201,7 @@ NodeOptions::allocator() const
 NodeOptions &
 NodeOptions::allocator(rcl_allocator_t allocator)
 {
+  this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->allocator_ = allocator;
   return *this;
 }

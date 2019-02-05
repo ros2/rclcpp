@@ -125,6 +125,9 @@ public:
   use_global_arguments() const;
 
   /// Set the use_global_arguments flag, return this for parameter idiom.
+  /**
+   * This will cause the internal rcl_node_options_t struct to be invalidated.
+   */
   RCLCPP_PUBLIC
   NodeOptions &
   use_global_arguments(const bool & use_global_arguments);
@@ -151,14 +154,13 @@ public:
 
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
-  rcl_allocator_t &
-  allocator();
-
-  RCLCPP_PUBLIC
   const rcl_allocator_t &
   allocator() const;
 
   /// Set the rcl_allocator_t to be used, may cause deallocation of existing rcl_node_options_t.
+  /**
+   * This will cause the internal rcl_node_options_t struct to be invalidated.
+   */
   RCLCPP_PUBLIC
   NodeOptions &
   allocator(rcl_allocator_t allocator);
