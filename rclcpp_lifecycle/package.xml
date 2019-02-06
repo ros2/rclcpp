@@ -18,7 +18,6 @@
   <exec_depend>lifecycle_msgs</exec_depend>
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>rcl_lifecycle</exec_depend>
-  <exec_depend>rclpy</exec_depend>
   <exec_depend>rmw_implementation</exec_depend>
   <exec_depend>rosidl_typesupport_cpp</exec_depend>
 
