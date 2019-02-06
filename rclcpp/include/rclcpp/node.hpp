@@ -86,8 +86,6 @@ public:
    * \param[in] namespace_ Namespace of the node.
    * \param[in] options Additional options to control creation of the node.
    */
-   // * \param[in] parameter_event_qos_profile QoS to be used in the parameter event publisher
-   // * \param[in] start_parameter_event_publisher True to setup the parameter event publisher
   RCLCPP_PUBLIC
   explicit Node(
     const std::string & node_name,
