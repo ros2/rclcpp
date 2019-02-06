@@ -42,6 +42,8 @@ public:
    *   - use_global_arguments = true
    *   - use_intra_process_comms = false
    *   - start_parameter_services = true
+   *   - start_parameter_event_publisher = true
+   *   - parameter_event_qos_profile = rmw_qos_profile_parameter_events
    *   - allocator = rcl_get_default_allocator()
    *
    * \param[in] allocator allocator to use in construction of NodeOptions.
@@ -152,6 +154,26 @@ public:
   NodeOptions &
   start_parameter_services(const bool & start_parameter_services);
 
+  /// Return a reference to the start_parameter_event_publisher flag.
+  RCLCPP_PUBLIC
+  const bool &
+  start_parameter_event_publisher() const;
+
+  /// Set the start_parameter_event_publisher flag, return this for parameter idiom.
+  RCLCPP_PUBLIC
+  NodeOptions &
+  start_parameter_event_publisher(const bool & start_parameter_event_publisher);
+
+  /// Return a reference to the parameter_event_qos_profile QoS.
+  RCLCPP_PUBLIC
+  const rmw_qos_profile_t &
+  parameter_event_qos_profile() const;
+
+  /// Set the parameter_event_qos_profile QoS, return this for parameter idiom.
+  RCLCPP_PUBLIC
+  NodeOptions &
+  parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile);
+
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
   const rcl_allocator_t &
@@ -190,6 +212,10 @@ private:
   bool use_intra_process_comms_ {false};
 
   bool start_parameter_services_ {true};
+
+  bool start_parameter_event_publisher_ {true};
+
+  rmw_qos_profile_t parameter_event_qos_profile_ {rmw_qos_profile_parameter_events};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
 };

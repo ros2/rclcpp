@@ -192,6 +192,32 @@ NodeOptions::start_parameter_services(const bool & start_parameter_services)
   return *this;
 }
 
+const bool &
+NodeOptions::start_parameter_event_publisher() const
+{
+  return this->start_parameter_event_publisher_;
+}
+
+NodeOptions &
+NodeOptions::start_parameter_event_publisher(const bool & start_parameter_event_publisher)
+{
+  this->start_parameter_event_publisher_ = start_parameter_event_publisher;
+  return *this;
+}
+
+const rmw_qos_profile_t &
+NodeOptions::parameter_event_qos_profile() const
+{
+  return this->parameter_event_qos_profile_;
+}
+
+NodeOptions &
+NodeOptions::parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile)
+{
+  this->parameter_event_qos_profile_ = parameter_event_qos_profile;
+  return *this;
+}
+
 const rcl_allocator_t &
 NodeOptions::allocator() const
 {

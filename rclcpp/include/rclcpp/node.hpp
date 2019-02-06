@@ -93,8 +93,6 @@ public:
     const std::string & node_name,
     const std::string & namespace_,
     const NodeOptions & options = NodeOptions());
-    // const rmw_qos_profile_t & parameter_event_qos_profile = rmw_qos_profile_parameter_events,
-    // bool start_parameter_event_publisher = true);
 
   RCLCPP_PUBLIC
   virtual ~Node();
