@@ -42,6 +42,8 @@ public:
    *   - use_global_arguments = true
    *   - use_intra_process_comms = false
    *   - start_parameter_services = true
+   *   - start_parameter_event_publisher = true
+   *   - parameter_event_qos_profile = rmw_qos_profile_parameter_events
    *   - allocator = rcl_get_default_allocator()
    *
    * \param[in] allocator allocator to use in construction of NodeOptions.
@@ -90,6 +92,9 @@ public:
 
   /// Set the arguments, return this for parameter idiom.
   /**
+   * These arguments are used to extract remappings used by the node and other
+   * settings.
+   *
    * This will cause the internal rcl_node_options_t struct to be invalidated.
    */
   RCLCPP_PUBLIC
@@ -106,6 +111,11 @@ public:
   initial_parameters() const;
 
   /// Set the initial parameters, return this for parameter idiom.
+  /**
+   * These initial parameter values are used to change the initial value
+   * of declared parameters within the node, overriding hard coded default
+   * values if necessary.
+   */
   RCLCPP_PUBLIC
   NodeOptions &
   initial_parameters(const std::vector<rclcpp::Parameter> & initial_parameters);
@@ -126,6 +136,10 @@ public:
 
   /// Set the use_global_arguments flag, return this for parameter idiom.
   /**
+   * If true this will cause the node's behavior to be influenced by "global"
+   * arguments, i.e. arguments not targeted at specific nodes, as well as the
+   * arguments targeted at the current node.
+   *
    * This will cause the internal rcl_node_options_t struct to be invalidated.
    */
   RCLCPP_PUBLIC
@@ -138,6 +152,15 @@ public:
   use_intra_process_comms() const;
 
   /// Set the use_intra_process_comms flag, return this for parameter idiom.
+  /**
+   * If true, messages on topics which are published and subscribed to within
+   * this context will go through a special intra-process communication code
+   * code path which can avoid serialization and deserialization, unnecessary
+   * copies, and achieve lower latencies in some cases.
+   *
+   * Defaults to false for now, as there are still some cases where it is not
+   * desirable.
+   */
   RCLCPP_PUBLIC
   NodeOptions &
   use_intra_process_comms(const bool & use_intra_process_comms);
@@ -148,9 +171,47 @@ public:
   start_parameter_services() const;
 
   /// Set the start_parameter_services flag, return this for parameter idiom.
+  /**
+   * If true, ROS services are created to allow external nodes to list, get,
+   * and request to set parameters of this node.
+   *
+   * If false, parameters will still work locally, but will not be accessible
+   * remotely.
+   *
+   * \sa start_parameter_event_publisher()
+   */
   RCLCPP_PUBLIC
   NodeOptions &
   start_parameter_services(const bool & start_parameter_services);
+
+  /// Return a reference to the start_parameter_event_publisher flag.
+  RCLCPP_PUBLIC
+  const bool &
+  start_parameter_event_publisher() const;
+
+  /// Set the start_parameter_event_publisher flag, return this for parameter idiom.
+  /**
+   * If true, a publisher is created on which an event message is published
+   * each time a parameter's state changes.
+   * This is used for recording and introspection, but is configurable
+   * separately from the other parameter services.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  start_parameter_event_publisher(const bool & start_parameter_event_publisher);
+
+  /// Return a reference to the parameter_event_qos_profile QoS.
+  RCLCPP_PUBLIC
+  const rmw_qos_profile_t &
+  parameter_event_qos_profile() const;
+
+  /// Set the parameter_event_qos_profile QoS, return this for parameter idiom.
+  /**
+   * The QoS settings to be used for the parameter event publisher, if enabled.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile);
 
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
@@ -190,6 +251,10 @@ private:
   bool use_intra_process_comms_ {false};
 
   bool start_parameter_services_ {true};
+
+  bool start_parameter_event_publisher_ {true};
+
+  rmw_qos_profile_t parameter_event_qos_profile_ {rmw_qos_profile_parameter_events};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
 };
