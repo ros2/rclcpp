@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.3 (2019-02-08)
+------------------
+* Added the ability to get parameters in a map. (`#575 <https://github.com/ros2/rclcpp/issues/575>`_)
+  * Backported by (`#619 <https://github.com/ros2/rclcpp/issues/619>`_) for Crystal.
+* Fix errors from uncrustify v0.68 (`#613 <https://github.com/ros2/rclcpp/issues/613>`_)
+  * Backported by `#616 <https://github.com/ros2/rclcpp/issues/616>`_ for Crystal.
+* Contributors: Chris Lalancette, Jacob Perron, Steven! Ragnarök
+
 0.6.2 (2018-12-13)
 ------------------
 * Updated to use signal safe synchronization with platform specific semaphores (`#607 <https://github.com/ros2/rclcpp/issues/607>`_)
