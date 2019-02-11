@@ -40,6 +40,43 @@ using rclcpp::Node;
 using rclcpp::NodeOptions;
 using rclcpp::exceptions::throw_from_rcl_error;
 
+RCLCPP_LOCAL
+std::string
+extend_sub_namespace(const std::string & existing_sub_namespace, const std::string & extension)
+{
+  // Assumption is that the existing_sub_namespace does not need checking
+  // because it would be checked already when it was set with this function.
+
+  // check if the new sub-namespace extension is abolsute
+  if (extension.front() == '/') {
+    throw rclcpp::exceptions::NameValidationError(
+      "sub_namespace",
+      extension.c_str(),
+      "a sub-namespace should not have a leading /",
+      0);
+  }
+
+  std::string new_sub_namespace = existing_sub_namespace + "/" + extension;
+
+  // remove any trailing `/` so that new extensions do no result in `//`
+  if (new_sub_namespace.back() == '/') {
+    new_sub_namespace = new_sub_namespace.substr(0, new_sub_namespace.size() - 1);
+  }
+
+  return new_sub_namespace;
+}
+
+RCLCPP_LOCAL
+std::string
+create_effective_namespace(const std::string & node_namespace, const std::string & sub_namespace)
+{
+  // Assumption is that both the node_namespace and sub_namespace are conforming
+  // and do not need trimming of `/` and other things, as they were validated
+  // in other functions already.
+
+  return node_namespace + "/" + sub_namespace;
+}
+
 Node::Node(
   const std::string & node_name,
   const NodeOptions & options)
@@ -86,8 +123,9 @@ Node::Node(
       node_parameters_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
-  use_intra_process_comms_(options.use_intra_process_comms()),
-  sub_namespace_("")
+  node_options_(options),
+  sub_namespace_(""),
+  effective_namespace_(create_effective_namespace(this->get_namespace(), sub_namespace_))
 {
 }
 
@@ -102,35 +140,15 @@ Node::Node(
   node_services_(other.node_services_),
   node_clock_(other.node_clock_),
   node_parameters_(other.node_parameters_),
-  use_intra_process_comms_(other.use_intra_process_comms_),
-  sub_namespace_("")
+  node_options_(other.node_options_),
+  sub_namespace_(extend_sub_namespace(other.get_sub_namespace(), sub_namespace)),
+  effective_namespace_(create_effective_namespace(other.get_namespace(), sub_namespace_))
 {
-  sub_namespace_ = sub_namespace;
-
-  if (sub_namespace_.front() == '/') {
-    sub_namespace_.replace(0, 1, "");
-  }
-
-  if (sub_namespace_.back() == '/') {
-    sub_namespace_ = sub_namespace_.substr(0, sub_namespace_.size() - 1);
-  }
-
-  if (other.sub_namespace_ != "") {
-    sub_namespace_ = other.sub_namespace_ + "/" + sub_namespace;
-  }
-
-  std::string full_namespace(node_base_->get_namespace());
-
-  if (full_namespace.back() == '/') {
-    full_namespace += sub_namespace_;
-  } else {
-    full_namespace += "/" + sub_namespace_;
-  }
-
+  // Validate new effective namespace.
   int validation_result;
   size_t invalid_index;
   rmw_ret_t rmw_ret =
-    rmw_validate_namespace(full_namespace.c_str(), &validation_result, &invalid_index);
+    rmw_validate_namespace(effective_namespace_.c_str(), &validation_result, &invalid_index);
 
   if (rmw_ret != RMW_RET_OK) {
     if (rmw_ret == RMW_RET_INVALID_ARGUMENT) {
@@ -141,7 +159,7 @@ Node::Node(
 
   if (validation_result != RMW_NAMESPACE_VALID) {
     throw rclcpp::exceptions::InvalidNamespaceError(
-            full_namespace.c_str(),
+            effective_namespace_.c_str(),
             rmw_namespace_validation_result_string(validation_result),
             invalid_index);
   }
@@ -159,19 +177,7 @@ Node::get_name() const
 const char *
 Node::get_namespace() const
 {
-  if (sub_namespace_ == "") {
-    return node_base_->get_namespace();
-  } else {
-    std::string full_namespace(node_base_->get_namespace());
-
-    if (full_namespace.back() == '/') {
-      full_namespace += sub_namespace_;
-    } else {
-      full_namespace += "/" + sub_namespace_;
-    }
-
-    return full_namespace.c_str();
-  }
+  return node_base_->get_namespace();
 }
 
 rclcpp::Logger
@@ -370,10 +376,28 @@ Node::get_node_waitables_interface()
   return node_waitables_;
 }
 
+const std::string &
+Node::get_sub_namespace() const
+{
+  return this->sub_namespace_;
+}
+
+const std::string &
+Node::get_effective_namespace() const
+{
+  return this->effective_namespace_;
+}
+
 Node::SharedPtr
 Node::create_sub_node(const std::string & sub_namespace)
 {
-  auto new_node = std::make_shared<Node>(*this, sub_namespace);
+  // Cannot use make_shared<Node>() here as it requires the constructor to be
+  // public, and this constructor is intentionally protected instead.
+  return std::shared_ptr<Node>(new Node(*this, sub_namespace));
+}
 
-  return new_node;
+const NodeOptions &
+Node::get_node_options() const
+{
+  return this->node_options_;
 }

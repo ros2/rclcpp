@@ -92,16 +92,6 @@ public:
     const std::string & namespace_,
     const NodeOptions & options = NodeOptions());
 
-  /// Create a subnode, extending the orginal namespace.
-  /**
-   * \param[in] other The node from which create a subnode.
-   * \param[in] sub_namespace_ sub namespace of the node.
-   */
-  RCLCPP_PUBLIC
-  Node(
-    const Node & other,
-    const std::string & sub_namespace);
-
   RCLCPP_PUBLIC
   virtual ~Node();
 
@@ -112,7 +102,13 @@ public:
   get_name() const;
 
   /// Get the namespace of the node.
-  /** \return The namespace of the node. */
+  /**
+   * This namespace is the "node's" namespace, and therefore is not affected
+   * by any sub-namespace's that may affect entities created with this instance.
+   * Use get_effective_namespace() to get the full namespace used by entities.
+   *
+   * \return The namespace of the node.
+   */
   RCLCPP_PUBLIC
   const char *
   get_namespace() const;
@@ -491,9 +487,80 @@ public:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
 
+  /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
+  /**
+   * The returned sub-namespace is what was given to create_sub_node() or an
+   * empty string if this is an original node instance, i.e. not a sub-node.
+   *
+   * get_namespace() will return the original node namespace, and will not
+   * include the sub-namespace if one exists.
+   * To get that you need to call the get_effective_namespace() method.
+   *
+   * \sa get_namespace()
+   * \sa get_effective_namespace()
+   * \return the sub-namespace string, not including the node's original namespace
+   */
+  RCLCPP_PUBLIC
+  const std::string &
+  get_sub_namespace() const;
+
+  /// Return the effective namespace that is used when creating entities.
+  /**
+   * The returned namespace is a combination of the node namespace and the
+   * accumulated sub-namespaces, which is used as the namespace when creating
+   * entities which have relative names.
+   *
+   * \sa get_namespace()
+   * \sa get_sub_namespace()
+   * \return the sub-namespace string, not including the node's original namespace
+   */
+  RCLCPP_PUBLIC
+  const std::string &
+  get_effective_namespace() const;
+
+  /// Create a sub-node, which will extend the namespace of all entities created with it.
+  /**
+   * A normal node will not have a sub-namespace (short for subordinate
+   * namespace) and therefore entities created will be unaffected.
+   * However, if a sub-node (short for subordinate node) is created, then
+   * its sub-namespace will be extended with the sub-namespace given here, and
+   * any entities created with the sub-node object instead of a normal node
+   * object will be affected by the sub-namespace.
+   *
+   * Note that entities which use absolute names are not affected by any
+   * namespaces, neither the normal node namespace nor any sub-namespace.
+   * Note also that the fully qualified node name is unaffected by a
+   * sub-namespace.
+   *
+   * The sub-namespace should be relative, and an exception will be thrown if
+   * the sub-namespace is absolute, i.e. if it starts with a leading '/'.
+   *
+   * \param[in] sub_namespace sub-namespace of the sub-node.
+   * \return newly created sub-node
+   * \throws NameValidationError if the sub-namespace is absolute, i.e. starts
+   *   with a leading '/'.
+   */
   RCLCPP_PUBLIC
   Node::SharedPtr
-  create_sub_node(const std::string & sub_namespace_);
+  create_sub_node(const std::string & sub_namespace);
+
+  /// Return the NodeOptions used when creating this node.
+  RCLCPP_PUBLIC
+  const NodeOptions &
+  get_node_options() const;
+
+protected:
+  /// Construct a sub-node, which will extend the namespace of all entities created with it.
+  /**
+   * \sa create_sub_node()
+   *
+   * \param[in] other The node from which a new sub-node is created.
+   * \param[in] sub_namespace The sub-namespace of the sub-node.
+   */
+  RCLCPP_PUBLIC
+  Node(
+    const Node & other,
+    const std::string & sub_namespace);
 
 private:
   RCLCPP_DISABLE_COPY(Node)
@@ -516,8 +583,9 @@ private:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
-  bool use_intra_process_comms_;
-  std::string sub_namespace_;
+  const NodeOptions node_options_;
+  const std::string sub_namespace_;
+  const std::string effective_namespace_;
 };
 
 }  // namespace rclcpp
