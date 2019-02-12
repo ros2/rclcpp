@@ -31,6 +31,10 @@ class NodeTimersInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimersInterface)
 
+  RCLCPP_PUBLIC
+  virtual
+  ~NodeTimersInterface() = default;
+
   /// Add a timer to the node.
   RCLCPP_PUBLIC
   virtual

@@ -39,8 +39,10 @@ NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   const std::vector<rclcpp::Parameter> & initial_parameters,
   bool use_intra_process,
-  bool start_parameter_services)
-: node_clock_(node_clock)
+  bool start_parameter_services,
+  bool start_parameter_event_publisher,
+  const rmw_qos_profile_t & parameter_event_qos_profile)
+: events_publisher_(nullptr), node_clock_(node_clock)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
   using PublisherT = rclcpp::Publisher<MessageT>;
@@ -52,12 +54,14 @@ NodeParameters::NodeParameters(
     parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, this);
   }
 
-  events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
-    node_topics.get(),
-    "parameter_events",
-    rmw_qos_profile_parameter_events,
-    use_intra_process,
-    allocator);
+  if (start_parameter_event_publisher) {
+    events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+      node_topics.get(),
+      "parameter_events",
+      parameter_event_qos_profile,
+      use_intra_process,
+      allocator);
+  }
 
   // Get the node options
   const rcl_node_t * node = node_base->get_rcl_node_handle();
@@ -232,8 +236,12 @@ NodeParameters::set_parameters_atomically(
   }
 
   std::swap(tmp_map, parameters_);
-  parameter_event->stamp = node_clock_->get_clock()->now();
-  events_publisher_->publish(parameter_event);
+
+  // events_publisher_ may be nullptr if it was disabled in constructor
+  if (nullptr != events_publisher_) {
+    parameter_event->stamp = node_clock_->get_clock()->now();
+    events_publisher_->publish(parameter_event);
+  }
 
   return result;
 }
@@ -281,6 +289,27 @@ NodeParameters::get_parameter(
   } else {
     return false;
   }
+}
+
+bool
+NodeParameters::get_parameters_by_prefix(
+  const std::string & prefix,
+  std::map<std::string, rclcpp::Parameter> & parameters) const
+{
+  std::string prefix_with_dot = prefix + ".";
+  bool ret = false;
+
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  for (const auto & param : parameters_) {
+    if (param.first.find(prefix_with_dot) == 0 && param.first.length() > prefix_with_dot.length()) {
+      // Found one!
+      parameters[param.first.substr(prefix_with_dot.length())] = param.second;
+      ret = true;
+    }
+  }
+
+  return ret;
 }
 
 std::vector<rcl_interfaces::msg::ParameterDescriptor>

@@ -33,6 +33,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  ~NodeWaitablesInterface() = default;
+
+  RCLCPP_PUBLIC
+  virtual
   void
   add_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,

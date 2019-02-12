@@ -34,6 +34,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  ~NodeServicesInterface() = default;
+
+  RCLCPP_PUBLIC
+  virtual
   void
   add_client(
     rclcpp::ClientBase::SharedPtr client_base_ptr,

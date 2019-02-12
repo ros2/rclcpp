@@ -42,6 +42,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  ~NodeTopicsInterface() = default;
+
+  RCLCPP_PUBLIC
+  virtual
   rclcpp::PublisherBase::SharedPtr
   create_publisher(
     const std::string & topic_name,

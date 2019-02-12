@@ -186,6 +186,29 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
+  explicit SyncParametersClient(
+    rclcpp::Node * node,
+    const std::string & remote_node_name = "",
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+
+  RCLCPP_PUBLIC
+  SyncParametersClient(
+    rclcpp::executor::Executor::SharedPtr executor,
+    rclcpp::Node * node,
+    const std::string & remote_node_name = "",
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+
+  RCLCPP_PUBLIC
+  SyncParametersClient(
+    rclcpp::executor::Executor::SharedPtr executor,
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+    const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
+    const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+    const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
+    const std::string & remote_node_name = "",
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+
+  RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & parameter_names);
 
@@ -268,7 +291,7 @@ public:
 
 private:
   rclcpp::executor::Executor::SharedPtr executor_;
-  rclcpp::Node::SharedPtr node_;
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface_;
   AsyncParametersClient::SharedPtr async_parameters_client_;
 };
 

@@ -51,8 +51,7 @@ Executor::Executor(const ExecutorArgs & args)
   // and one for the executor's guard cond (interrupt_guard_condition_)
 
   // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(
-    rclcpp::get_sigint_guard_condition(&wait_set_, args.context));
+  memory_strategy_->add_guard_condition(args.context->get_interrupt_guard_condition(&wait_set_));
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
@@ -61,9 +60,8 @@ Executor::Executor(const ExecutorArgs & args)
   // Store the context for later use.
   context_ = args.context;
 
-  if (rcl_wait_set_init(
-      &wait_set_, 0, 2, 0, 0, 0, allocator) != RCL_RET_OK)
-  {
+  ret = rcl_wait_set_init(&wait_set_, 0, 2, 0, 0, 0, context_->get_rcl_context().get(), allocator);
+  if (RCL_RET_OK != ret) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "failed to create wait set: %s", rcl_get_error_string().str);
@@ -105,9 +103,8 @@ Executor::~Executor()
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
-  memory_strategy_->remove_guard_condition(
-    rclcpp::get_sigint_guard_condition(&wait_set_, context_));
-  rclcpp::release_sigint_guard_condition(&wait_set_);
+  memory_strategy_->remove_guard_condition(context_->get_interrupt_guard_condition(&wait_set_));
+  context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
 }
 
 void

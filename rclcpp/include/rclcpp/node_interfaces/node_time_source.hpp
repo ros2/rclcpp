@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NODE_INTERFACES__NODE_CLOCK_HPP_
-#define RCLCPP__NODE_INTERFACES__NODE_CLOCK_HPP_
+#ifndef RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_HPP_
+#define RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_HPP_
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
@@ -21,6 +21,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
+#include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/time_source.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -30,43 +31,42 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-/// Implementation of the NodeClock part of the Node API.
-class NodeClock : public NodeClockInterface
+/// Implementation of the NodeTimeSource part of the Node API.
+class NodeTimeSource : public NodeTimeSourceInterface
 {
 public:
-  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeClock)
+  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimeSource)
 
   RCLCPP_PUBLIC
-  explicit NodeClock(
+  explicit NodeTimeSource(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging);
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters
+  );
 
   RCLCPP_PUBLIC
   virtual
-  ~NodeClock();
-
-  /// Get a clock which will be kept up to date by the node.
-  RCLCPP_PUBLIC
-  virtual
-  rclcpp::Clock::SharedPtr
-  get_clock();
+  ~NodeTimeSource();
 
 private:
-  RCLCPP_DISABLE_COPY(NodeClock)
+  RCLCPP_DISABLE_COPY(NodeTimeSource)
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
 
-  rclcpp::Clock::SharedPtr ros_clock_;
+  rclcpp::TimeSource time_source_;
 };
 
 }  // namespace node_interfaces
 }  // namespace rclcpp
 
-#endif  // RCLCPP__NODE_INTERFACES__NODE_CLOCK_HPP_
+#endif  // RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_HPP_

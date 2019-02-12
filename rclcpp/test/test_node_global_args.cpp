@@ -20,6 +20,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 class TestNodeWithGlobalArgs : public ::testing::Test
@@ -33,32 +34,26 @@ protected:
 };
 
 TEST_F(TestNodeWithGlobalArgs, local_arguments_before_global) {
-  auto context = rclcpp::contexts::default_context::get_global_default_context();
-  const std::vector<std::string> arguments = {"__node:=local_arguments_test"};
-  const std::vector<rclcpp::Parameter> initial_values = {};
-  const bool use_global_arguments = true;
-  const bool use_intra_process = false;
-  auto node = rclcpp::Node::make_shared(
-    "orig_name", "", context, arguments, initial_values, use_global_arguments, use_intra_process);
+  auto options = rclcpp::NodeOptions()
+    .arguments({"__node:=local_arguments_test"});
+
+  auto node = rclcpp::Node::make_shared("orig_name", options);
   EXPECT_STREQ("local_arguments_test", node->get_name());
 }
 
 TEST_F(TestNodeWithGlobalArgs, use_or_ignore_global_arguments) {
-  auto context = rclcpp::contexts::default_context::get_global_default_context();
-  const std::vector<std::string> arguments = {};
-  const std::vector<rclcpp::Parameter> initial_values = {};
-  const bool use_intra_process = false;
-
   {  // Don't use global args
-    const bool use_global_arguments = false;
-    auto node = rclcpp::Node::make_shared(
-      "orig_name", "", context, arguments, initial_values, use_global_arguments, use_intra_process);
+    auto options = rclcpp::NodeOptions()
+      .use_global_arguments(false);
+
+    auto node = rclcpp::Node::make_shared("orig_name", options);
     EXPECT_STREQ("orig_name", node->get_name());
   }
   {  // Do use global args
-    const bool use_global_arguments = true;
-    auto node = rclcpp::Node::make_shared(
-      "orig_name", "", context, arguments, initial_values, use_global_arguments, use_intra_process);
+    auto options = rclcpp::NodeOptions()
+      .use_global_arguments(true);
+
+    auto node = rclcpp::Node::make_shared("orig_name", options);
     EXPECT_STREQ("global_node_name", node->get_name());
   }
 }

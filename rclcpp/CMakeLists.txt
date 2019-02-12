@@ -47,12 +47,14 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
   src/rclcpp/node.cpp
+  src/rclcpp/node_options.cpp
   src/rclcpp/node_interfaces/node_base.cpp
   src/rclcpp/node_interfaces/node_clock.cpp
   src/rclcpp/node_interfaces/node_graph.cpp
   src/rclcpp/node_interfaces/node_logging.cpp
   src/rclcpp/node_interfaces/node_parameters.cpp
   src/rclcpp/node_interfaces/node_services.cpp
+  src/rclcpp/node_interfaces/node_time_source.cpp
   src/rclcpp/node_interfaces/node_timers.cpp
   src/rclcpp/node_interfaces/node_topics.cpp
   src/rclcpp/node_interfaces/node_waitables.cpp
@@ -64,6 +66,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/parameter_service.cpp
   src/rclcpp/publisher.cpp
   src/rclcpp/service.cpp
+  src/rclcpp/signal_handler.cpp
   src/rclcpp/subscription.cpp
   src/rclcpp/time.cpp
   src/rclcpp/time_source.cpp
@@ -398,6 +401,17 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_multi_threaded_executor
       "rcl")
     target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
+  endif()
+
+  ament_add_gtest(test_local_parameters test/test_local_parameters.cpp)
+  if(TARGET test_local_parameters)
+    target_include_directories(test_local_parameters PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_local_parameters ${PROJECT_NAME})
   endif()
 endif()
 

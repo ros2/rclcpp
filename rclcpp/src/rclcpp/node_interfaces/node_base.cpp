@@ -32,10 +32,8 @@ using rclcpp::node_interfaces::NodeBase;
 NodeBase::NodeBase(
   const std::string & node_name,
   const std::string & namespace_,
-  rclcpp::Context::SharedPtr context,
-  const std::vector<std::string> & arguments,
-  bool use_global_arguments)
-: context_(context),
+  const rclcpp::NodeOptions & options)
+: context_(options.context()),
   node_handle_(nullptr),
   default_callback_group_(nullptr),
   associated_with_executor_(false),
@@ -44,7 +42,7 @@ NodeBase::NodeBase(
   // Setup the guard condition that is notified when changes occur in the graph.
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   rcl_ret_t ret = rcl_guard_condition_init(
-    &notify_guard_condition_, context->get_rcl_context().get(), guard_condition_options);
+    &notify_guard_condition_, options.context()->get_rcl_context().get(), guard_condition_options);
   if (ret != RCL_RET_OK) {
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
   }
@@ -59,76 +57,16 @@ NodeBase::NodeBase(
       }
     };
 
-  // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
-  size_t domain_id = 0;
-  char * ros_domain_id = nullptr;
-  const char * env_var = "ROS_DOMAIN_ID";
-#ifndef _WIN32
-  ros_domain_id = getenv(env_var);
-#else
-  size_t ros_domain_id_size;
-  _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
-#endif
-  if (ros_domain_id) {
-    uint32_t number = strtoul(ros_domain_id, NULL, 0);
-    if (number == (std::numeric_limits<uint32_t>::max)()) {
-      // Finalize the interrupt guard condition.
-      finalize_notify_guard_condition();
-#ifdef _WIN32
-      // free the ros_domain_id before throwing, if getenv was used on Windows
-      free(ros_domain_id);
-#endif
-
-      throw std::runtime_error("failed to interpret ROS_DOMAIN_ID as integral number");
-    }
-    domain_id = static_cast<size_t>(number);
-#ifdef _WIN32
-    free(ros_domain_id);
-#endif
-  }
-
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
-
-  rcl_node_options_t options = rcl_node_get_default_options();
-  std::unique_ptr<const char *[]> c_args;
-  if (!arguments.empty()) {
-    c_args.reset(new const char *[arguments.size()]);
-    for (std::size_t i = 0; i < arguments.size(); ++i) {
-      c_args[i] = arguments[i].c_str();
-    }
-  }
-  // TODO(sloretz) Pass an allocator to argument parsing
-  if (arguments.size() > std::numeric_limits<int>::max()) {
-    throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
-  }
-  ret = rcl_parse_arguments(
-    static_cast<int>(arguments.size()), c_args.get(), rcl_get_default_allocator(),
-    &(options.arguments));
-  if (RCL_RET_OK != ret) {
-    finalize_notify_guard_condition();
-    throw_from_rcl_error(ret, "failed to parse arguments");
-  }
-
-  options.use_global_arguments = use_global_arguments;
-  // TODO(wjwwood): pass the Allocator to the options
-  options.domain_id = domain_id;
 
   ret = rcl_node_init(
     rcl_node.get(),
     node_name.c_str(), namespace_.c_str(),
-    context->get_rcl_context().get(), &options);
+    options.context()->get_rcl_context().get(), options.get_rcl_node_options());
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
-    // Finalize previously allocated node arguments
-    if (RCL_RET_OK != rcl_arguments_fini(&options.arguments)) {
-      // Print message because exception will be thrown later in this code block
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "Failed to fini arguments during error handling: %s", rcl_get_error_string().str);
-      rcl_reset_error();
-    }
 
     if (ret == RCL_RET_NODE_INVALID_NAME) {
       rcl_reset_error();  // discard rcl_node_init error
@@ -195,15 +133,6 @@ NodeBase::NodeBase(
 
   // Indicate the notify_guard_condition is now valid.
   notify_guard_condition_is_valid_ = true;
-
-  // Finalize previously allocated node arguments
-  if (RCL_RET_OK != rcl_arguments_fini(&options.arguments)) {
-    // print message because throwing would prevent the destructor from being called
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Failed to fini arguments: %s", rcl_get_error_string().str);
-    rcl_reset_error();
-  }
 }
 
 NodeBase::~NodeBase()

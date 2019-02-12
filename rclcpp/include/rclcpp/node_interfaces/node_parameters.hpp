@@ -54,7 +54,9 @@ public:
     const node_interfaces::NodeClockInterface::SharedPtr node_clock,
     const std::vector<Parameter> & initial_parameters,
     bool use_intra_process,
-    bool start_parameter_services);
+    bool start_parameter_services,
+    bool start_parameter_event_publisher,
+    const rmw_qos_profile_t & parameter_event_qos_profile);
 
   RCLCPP_PUBLIC
   virtual
@@ -88,6 +90,13 @@ public:
   get_parameter(
     const std::string & name,
     rclcpp::Parameter & parameter) const;
+
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  get_parameters_by_prefix(
+    const std::string & prefix,
+    std::map<std::string, rclcpp::Parameter> & parameters) const;
 
   RCLCPP_PUBLIC
   virtual

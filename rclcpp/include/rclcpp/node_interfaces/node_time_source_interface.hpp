@@ -1,4 +1,4 @@
-// Copyright 2017 Open Source Robotics Foundation, Inc.
+// Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NODE_INTERFACES__NODE_CLOCK_INTERFACE_HPP_
-#define RCLCPP__NODE_INTERFACES__NODE_CLOCK_INTERFACE_HPP_
+#ifndef RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_INTERFACE_HPP_
+#define RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_INTERFACE_HPP_
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
@@ -25,24 +25,18 @@ namespace rclcpp
 namespace node_interfaces
 {
 
-/// Pure virtual interface class for the NodeClock part of the Node API.
-class NodeClockInterface
+/// Pure virtual interface class for the NodeTimeSource part of the Node API.
+class NodeTimeSourceInterface
 {
 public:
-  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeClockInterface)
+  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimeSourceInterface)
 
   RCLCPP_PUBLIC
   virtual
-  ~NodeClockInterface() = default;
-
-  /// Get a ROS clock which will be kept up to date by the node.
-  RCLCPP_PUBLIC
-  virtual
-  rclcpp::Clock::SharedPtr
-  get_clock() = 0;
+  ~NodeTimeSourceInterface() = default;
 };
 
 }  // namespace node_interfaces
 }  // namespace rclcpp
 
-#endif  // RCLCPP__NODE_INTERFACES__NODE_CLOCK_INTERFACE_HPP_
+#endif  // RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_INTERFACE_HPP_

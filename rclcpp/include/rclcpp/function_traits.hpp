@@ -49,14 +49,14 @@ template<typename FunctionT>
 struct function_traits
 {
   using arguments = typename tuple_tail<
-    typename function_traits<decltype( & FunctionT::operator())>::arguments>::type;
+    typename function_traits<decltype( &FunctionT::operator())>::arguments>::type;
 
   static constexpr std::size_t arity = std::tuple_size<arguments>::value;
 
   template<std::size_t N>
   using argument_type = typename std::tuple_element<N, arguments>::type;
 
-  using return_type = typename function_traits<decltype( & FunctionT::operator())>::return_type;
+  using return_type = typename function_traits<decltype( &FunctionT::operator())>::return_type;
 };
 
 // Free functions
@@ -81,7 +81,7 @@ struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(A
 // std::bind for object methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__1::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
+struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
 #elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
 struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(FArgs ...))(Args ...)>>
 #elif defined __GLIBCXX__  // glibc++ (GNU C++)
@@ -99,7 +99,7 @@ struct function_traits<
 // std::bind for free functions
 template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__1::__bind<ReturnTypeT( &)(Args ...), FArgs ...>>
+struct function_traits<std::__bind<ReturnTypeT( &)(Args ...), FArgs ...>>
 #elif defined __GLIBCXX__  // glibc++ (GNU C++)
 struct function_traits<std::_Bind<ReturnTypeT(*(FArgs ...))(Args ...)>>
 #elif defined _MSC_VER  // MS Visual Studio
