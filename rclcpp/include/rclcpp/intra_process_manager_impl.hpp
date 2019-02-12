@@ -80,6 +80,9 @@ public:
   virtual bool
   matches_any_publishers(const rmw_gid_t * id) const = 0;
 
+  virtual size_t
+  get_subscription_count(uint64_t intra_process_publisher_id_) const = 0;
+
 private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase)
 };
@@ -246,6 +249,26 @@ public:
       }
     }
     return false;
+  }
+
+  size_t
+  get_subscription_count(uint64_t id) const
+  {
+    auto publisher_it = publishers_.find(id);
+    if (publisher_it == publishers_.end()) {
+      // Publisher is either invalid or no longer exists.
+      return 0;
+    }
+    auto publisher = publisher_it->second.publisher.lock();
+    if (!publisher) {
+      throw std::runtime_error("publisher has unexpectedly gone out of scope");
+    }
+    auto sub_map_it = subscription_ids_by_topic_.find(publisher->get_topic_name());
+    if (sub_map_it == subscription_ids_by_topic_.end()) {
+      // No intraprocess subscriberes
+      return 0;
+    }
+    return sub_map_it->second.size();
   }
 
 private:

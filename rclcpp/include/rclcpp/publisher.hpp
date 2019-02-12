@@ -107,6 +107,12 @@ public:
   const rcl_publisher_t *
   get_publisher_handle() const;
 
+  /// Get subscription count
+  /** \return The number of subscription. */
+  RCLCPP_PUBLIC
+  size_t
+  get_subscription_count() const;
+
   /// Compare this publisher to a gid.
   /**
    * Note that this function calls the next function.
@@ -128,13 +134,15 @@ public:
   operator==(const rmw_gid_t * gid) const;
 
   using StoreMessageCallbackT = std::function<uint64_t(uint64_t, void *, const std::type_info &)>;
+  using GetIntraProcessSubscriberCountCallbackT = std::function<size_t(uint64_t)>;
 
   /// Implementation utility function used to setup intra process publishing after creation.
   RCLCPP_PUBLIC
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,
-    StoreMessageCallbackT callback,
+    StoreMessageCallbackT store_callback,
+    GetIntraProcessSubscriberCountCallbackT count_callback,
     const rcl_publisher_options_t & intra_process_options);
 
 protected:
@@ -145,6 +153,7 @@ protected:
 
   uint64_t intra_process_publisher_id_;
   StoreMessageCallbackT store_intra_process_message_;
+  GetIntraProcessSubscriberCountCallbackT get_intra_process_subscription_count_;
 
   rmw_gid_t rmw_gid_;
   rmw_gid_t intra_process_rmw_gid_;
@@ -188,7 +197,22 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
-    this->do_inter_process_publish(msg.get());
+    size_t inter_process_subscritpion_count;
+    size_t intra_process_subscritpion_count = 0;
+
+    inter_process_subscritpion_count = this->get_subscription_count();
+
+    if (get_intra_process_subscription_count_) {
+      intra_process_subscritpion_count = \
+        get_intra_process_subscription_count_(intra_process_publisher_id_);
+    }
+
+    if (!get_intra_process_subscription_count_ ||
+      inter_process_subscritpion_count > intra_process_subscritpion_count)
+    {
+      this->do_inter_process_publish(msg.get());
+    }
+
     if (store_intra_process_message_) {
       // Take the pointer from the unique_msg, release it and pass as a void *
       // to the ipm. The ipm should then capture it again as a unique_ptr of
@@ -206,11 +230,11 @@ public:
       ipm.message_sequence = message_seq;
       auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
       if (RCL_RET_PUBLISHER_INVALID == status) {
-        rcl_reset_error();  // next call will reset error message if not context
+        rcl_reset_error();  /* next call will reset error message if not context */
         if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
           rcl_context_t * context = rcl_publisher_get_context(&intra_process_publisher_handle_);
           if (nullptr != context && !rcl_context_is_valid(context)) {
-            // publisher is invalid due to context being shutdown
+            /* publisher is invalid due to context being shutdown */
             return;
           }
         }
