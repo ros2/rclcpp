@@ -102,16 +102,6 @@ public:
     const Node & other,
     const std::string & sub_namespace);
 
-  /// Create a subnode, extending the orginal namespace.
-  /**
-   * \param[in] other The node from which create a subnode.
-   * \param[in] sub_namespace_ sub namespace of the node.
-   */
-  RCLCPP_PUBLIC
-  Node(
-    const Node & other,
-    const std::string & sub_namespace);
-
   RCLCPP_PUBLIC
   virtual ~Node();
 
