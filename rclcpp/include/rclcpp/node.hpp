@@ -107,6 +107,8 @@ public:
    * by any sub-namespace's that may affect entities created with this instance.
    * Use get_effective_namespace() to get the full namespace used by entities.
    *
+   * \sa get_sub_namespace()
+   * \sa get_effective_namespace()
    * \return The namespace of the node.
    */
   RCLCPP_PUBLIC

@@ -80,25 +80,57 @@ TEST_F(TestNode, subnode_get_name_and_namespace) {
     auto node = std::make_shared<rclcpp::Node>("my_node", "ns");
     auto subnode = node->create_sub_node("sub_ns");
     EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/ns/sub_ns", subnode->get_namespace());
+    EXPECT_STREQ("/ns", subnode->get_namespace());
+    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
+    EXPECT_STREQ("/ns/sub_ns", subnode->get_effective_namespace().c_str());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
     auto subnode = node->create_sub_node("sub_ns");
     EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/ns/sub_ns", subnode->get_namespace());
+    EXPECT_STREQ("/ns", subnode->get_namespace());
+    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
+    EXPECT_STREQ("/ns/sub_ns", subnode->get_effective_namespace().c_str());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node");
     auto subnode = node->create_sub_node("sub_ns");
     EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/sub_ns", subnode->get_namespace());
+    EXPECT_STREQ("/", subnode->get_namespace());
+    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
+    EXPECT_STREQ("/sub_ns", subnode->get_effective_namespace().c_str());
+  }
+  {
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    auto subnode = node->create_sub_node("sub_ns");
+    EXPECT_STREQ("my_node", subnode->get_name());
+    EXPECT_STREQ("/ns", subnode->get_namespace());
+    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
+    EXPECT_STREQ("/ns/sub_ns", subnode->get_effective_namespace().c_str());
+    auto subnode2 = subnode->create_sub_node("sub_ns2");
+    EXPECT_STREQ("my_node", subnode2->get_name());
+    EXPECT_STREQ("/ns", subnode2->get_namespace());
+    EXPECT_STREQ("sub_ns/sub_ns2", subnode2->get_sub_namespace().c_str());
+    EXPECT_STREQ("/ns/sub_ns/sub_ns2", subnode2->get_effective_namespace().c_str());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node");
-    auto subnode = node->create_sub_node("/sub_ns");
+    auto subnode = node->create_sub_node("sub_ns");
     EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/sub_ns", subnode->get_namespace());
+    EXPECT_STREQ("/", subnode->get_namespace());
+    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
+    EXPECT_STREQ("/sub_ns", subnode->get_effective_namespace().c_str());
+    auto subnode2 = subnode->create_sub_node("sub_ns2");
+    EXPECT_STREQ("my_node", subnode2->get_name());
+    EXPECT_STREQ("/", subnode2->get_namespace());
+    EXPECT_STREQ("sub_ns/sub_ns2", subnode2->get_sub_namespace().c_str());
+    EXPECT_STREQ("/sub_ns/sub_ns2", subnode2->get_effective_namespace().c_str());
+  }
+  {
+    auto node = std::make_shared<rclcpp::Node>("my_node");
+    ASSERT_THROW({
+      auto subnode = node->create_sub_node("/sub_ns");
+    }, rclcpp::exceptions::NameValidationError);
   }
 }
 /*
@@ -129,10 +161,10 @@ TEST_F(TestNode, subnode_construction_and_destruction) {
     }, rclcpp::exceptions::InvalidNamespaceError);
   }
   {
-    ASSERT_NO_THROW({
+    ASSERT_THROW({
       auto node = std::make_shared<rclcpp::Node>("my_node", "ns");
       auto subnode = node->create_sub_node("/sub_ns");
-    });
+    }, rclcpp::exceptions::NameValidationError);
   }
   {
     ASSERT_THROW({
@@ -149,8 +181,14 @@ TEST_F(TestNode, subnode_construction_and_destruction) {
   {
     ASSERT_NO_THROW({
       auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-      auto subnode = node->create_sub_node("/sub_ns");
+      auto subnode = node->create_sub_node("sub_ns");
     });
+  }
+  {
+    ASSERT_THROW({
+      auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+      auto subnode = node->create_sub_node("/sub_ns");
+    }, rclcpp::exceptions::NameValidationError);
   }
   {
     ASSERT_THROW({
