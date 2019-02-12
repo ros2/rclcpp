@@ -240,8 +240,8 @@ Node::set_parameter_if_not_set(
   rclcpp::Parameter parameter;
   if (!this->get_parameter(parameter_name_with_sub_namespace, parameter)) {
     this->set_parameters({
-      rclcpp::Parameter(parameter_name_with_sub_namespace, value),
-    });
+        rclcpp::Parameter(parameter_name_with_sub_namespace, value),
+      });
   }
 }
 

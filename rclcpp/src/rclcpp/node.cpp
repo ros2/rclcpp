@@ -50,13 +50,18 @@ extend_sub_namespace(const std::string & existing_sub_namespace, const std::stri
   // check if the new sub-namespace extension is abolsute
   if (extension.front() == '/') {
     throw rclcpp::exceptions::NameValidationError(
-      "sub_namespace",
-      extension.c_str(),
-      "a sub-namespace should not have a leading /",
-      0);
+            "sub_namespace",
+            extension.c_str(),
+            "a sub-namespace should not have a leading /",
+            0);
   }
 
-  std::string new_sub_namespace = existing_sub_namespace + "/" + extension;
+  std::string new_sub_namespace;
+  if (existing_sub_namespace.empty()) {
+    new_sub_namespace = extension;
+  } else {
+    new_sub_namespace = existing_sub_namespace + "/" + extension;
+  }
 
   // remove any trailing `/` so that new extensions do no result in `//`
   if (new_sub_namespace.back() == '/') {
@@ -74,7 +79,12 @@ create_effective_namespace(const std::string & node_namespace, const std::string
   // and do not need trimming of `/` and other things, as they were validated
   // in other functions already.
 
-  return node_namespace + "/" + sub_namespace;
+  if (node_namespace.back() == '/') {
+    // this is the special case where node_namespace is just `/`
+    return node_namespace + sub_namespace;
+  } else {
+    return node_namespace + "/" + sub_namespace;
+  }
 }
 
 Node::Node(
