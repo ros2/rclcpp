@@ -36,16 +36,16 @@ protected:
     rclcpp::init(0, nullptr);
   }
 
-  std::shared_ptr<Fibonacci::GoalRequestService::Request>
+  std::shared_ptr<Fibonacci::Impl::SendGoalService::Request>
   send_goal_request(rclcpp::Node::SharedPtr node, GoalID uuid)
   {
-    auto client = node->create_client<Fibonacci::GoalRequestService>(
+    auto client = node->create_client<Fibonacci::Impl::SendGoalService>(
       "fibonacci/_action/send_goal");
     if (!client->wait_for_service(std::chrono::seconds(20))) {
       throw std::runtime_error("send goal service didn't become available");
     }
-    auto request = std::make_shared<Fibonacci::GoalRequestService::Request>();
-    request->action_goal_id.uuid = uuid;
+    auto request = std::make_shared<Fibonacci::Impl::SendGoalService::Request>();
+    request->goal_id = uuid;
     auto future = client->async_send_request(request);
     if (rclcpp::executor::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
@@ -58,12 +58,12 @@ protected:
   void
   send_cancel_request(rclcpp::Node::SharedPtr node, GoalID uuid)
   {
-    auto cancel_client = node->create_client<Fibonacci::CancelGoalService>(
+    auto cancel_client = node->create_client<Fibonacci::Impl::CancelGoalService>(
       "fibonacci/_action/cancel_goal");
     if (!cancel_client->wait_for_service(std::chrono::seconds(20))) {
       throw std::runtime_error("cancel goal service didn't become available");
     }
-    auto request = std::make_shared<Fibonacci::CancelGoalService::Request>();
+    auto request = std::make_shared<Fibonacci::Impl::CancelGoalService::Request>();
     request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
     if (rclcpp::executor::FutureReturnCode::SUCCESS !=
@@ -114,15 +114,15 @@ TEST_F(TestServer, handle_goal_called)
   // Create a client that calls the goal request service
   // Make sure the UUID received is the same as the one sent
 
-  auto client = node->create_client<Fibonacci::GoalRequestService>(
+  auto client = node->create_client<Fibonacci::Impl::SendGoalService>(
     "fibonacci/_action/send_goal");
 
   ASSERT_TRUE(client->wait_for_service(std::chrono::seconds(20)));
 
-  auto request = std::make_shared<Fibonacci::GoalRequestService::Request>();
+  auto request = std::make_shared<Fibonacci::Impl::SendGoalService::Request>();
 
   const GoalID uuid{{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}};
-  request->action_goal_id.uuid = uuid;
+  request->goal_id = uuid;
 
   auto future = client->async_send_request(request);
   ASSERT_EQ(
@@ -164,7 +164,7 @@ TEST_F(TestServer, handle_accepted_called)
   ASSERT_TRUE(received_handle);
   ASSERT_TRUE(received_handle->is_active());
   EXPECT_EQ(uuid, received_handle->get_goal_id());
-  EXPECT_EQ(*request, *(received_handle->get_goal()));
+  EXPECT_EQ(request->goal, *(received_handle->get_goal()));
 }
 
 TEST_F(TestServer, handle_cancel_called)
@@ -364,7 +364,7 @@ TEST_F(TestServer, publish_status_canceled)
   send_goal_request(node, uuid);
   send_cancel_request(node, uuid);
 
-  received_handle->set_canceled(std::make_shared<Fibonacci::Result>());
+  received_handle->set_canceled(std::make_shared<Fibonacci::Impl::GetResultService::Response>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -419,7 +419,7 @@ TEST_F(TestServer, publish_status_succeeded)
     });
 
   send_goal_request(node, uuid);
-  received_handle->set_succeeded(std::make_shared<Fibonacci::Result>());
+  received_handle->set_succeeded(std::make_shared<Fibonacci::Impl::GetResultService::Response>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -474,7 +474,7 @@ TEST_F(TestServer, publish_status_aborted)
     });
 
   send_goal_request(node, uuid);
-  received_handle->set_aborted(std::make_shared<Fibonacci::Result>());
+  received_handle->set_aborted(std::make_shared<Fibonacci::Impl::GetResultService::Response>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -521,7 +521,7 @@ TEST_F(TestServer, publish_feedback)
   (void)as;
 
   // Subscribe to feedback messages
-  using FeedbackT = Fibonacci::Feedback;
+  using FeedbackT = Fibonacci::Impl::FeedbackMessage;
   std::vector<FeedbackT::SharedPtr> received_msgs;
   auto subscriber = node->create_subscription<FeedbackT>(
     "fibonacci/_action/feedback", [&received_msgs](FeedbackT::SharedPtr msg)
@@ -532,7 +532,7 @@ TEST_F(TestServer, publish_feedback)
   send_goal_request(node, uuid);
 
   auto sent_message = std::make_shared<FeedbackT>();
-  sent_message->sequence = {1, 1, 2, 3, 5};
+  sent_message->feedback.sequence = {1, 1, 2, 3, 5};
   received_handle->publish_feedback(sent_message);
 
   // 10 seconds
@@ -544,8 +544,7 @@ TEST_F(TestServer, publish_feedback)
 
   ASSERT_EQ(1u, received_msgs.size());
   auto & msg = received_msgs.back();
-  ASSERT_EQ(sent_message->sequence, msg->sequence);
-  ASSERT_EQ(uuid, msg->action_goal_id.uuid);
+  ASSERT_EQ(sent_message->feedback.sequence, msg->feedback.sequence);
 }
 
 TEST_F(TestServer, get_result)
@@ -581,18 +580,18 @@ TEST_F(TestServer, get_result)
   send_goal_request(node, uuid);
 
   // Send result request
-  auto result_client = node->create_client<Fibonacci::GoalResultService>(
+  auto result_client = node->create_client<Fibonacci::Impl::GetResultService>(
     "fibonacci/_action/get_result");
   if (!result_client->wait_for_service(std::chrono::seconds(20))) {
     throw std::runtime_error("get result service didn't become available");
   }
-  auto request = std::make_shared<Fibonacci::GoalResultService::Request>();
-  request->action_goal_id.uuid = uuid;
+  auto request = std::make_shared<Fibonacci::Impl::GetResultService::Request>();
+  request->goal_id = uuid;
   auto future = result_client->async_send_request(request);
 
   // Send a result
-  auto result = std::make_shared<Fibonacci::Result>();
-  result->sequence = {5, 8, 13, 21};
+  auto result = std::make_shared<Fibonacci::Impl::GetResultService::Response>();
+  result->result.sequence = {5, 8, 13, 21};
   received_handle->set_succeeded(result);
 
   // Wait for the result request to be received
@@ -600,8 +599,8 @@ TEST_F(TestServer, get_result)
     rclcpp::spin_until_future_complete(node, future));
 
   auto response = future.get();
-  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->action_status);
-  EXPECT_EQ(result->sequence, response->sequence);
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
+  EXPECT_EQ(result->result.sequence, response->result.sequence);
 }
 
 TEST_F(TestServer, deferred_execution)

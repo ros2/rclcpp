@@ -337,14 +337,10 @@ protected:
   std::pair<GoalResponse, std::shared_ptr<void>>
   call_handle_goal_callback(GoalID & uuid, std::shared_ptr<void> message) override
   {
-    // TODO(sloretz) update and remove assert when IDL pipeline allows nesting user's type
-    static_assert(
-      std::is_same<typename ActionT::Goal, typename ActionT::GoalRequestService::Request>::value,
-      "Assuming user fields were merged with goal request fields");
     GoalResponse user_response = handle_goal_(
       uuid, std::static_pointer_cast<typename ActionT::Goal>(message));
 
-    auto ros_response = std::make_shared<typename ActionT::GoalRequestService::Response>();
+    auto ros_response = std::make_shared<typename ActionT::Impl::SendGoalService::Response>();
     ros_response->accepted = GoalResponse::ACCEPT_AND_EXECUTE == user_response ||
       GoalResponse::ACCEPT_AND_DEFER == user_response;
     return std::make_pair(user_response, ros_response);
@@ -408,8 +404,8 @@ protected:
         shared_this->publish_status();
       };
 
-    std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback =
-      [weak_this](std::shared_ptr<typename ActionT::Feedback> feedback_msg)
+    std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback =
+      [weak_this](std::shared_ptr<typename ActionT::Impl::FeedbackMessage> feedback_msg)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
@@ -435,14 +431,14 @@ protected:
   get_goal_id_from_goal_request(void * message) override
   {
     return
-      static_cast<typename ActionT::GoalRequestService::Request *>(message)->action_goal_id.uuid;
+      static_cast<typename ActionT::Impl::SendGoalService::Request *>(message)->goal_id;
   }
 
   /// \internal
   std::shared_ptr<void>
   create_goal_request() override
   {
-    return std::shared_ptr<void>(new typename ActionT::GoalRequestService::Request());
+    return std::shared_ptr<void>(new typename ActionT::Impl::SendGoalService::Request());
   }
 
   /// \internal
@@ -450,22 +446,22 @@ protected:
   get_goal_id_from_result_request(void * message) override
   {
     return
-      static_cast<typename ActionT::GoalResultService::Request *>(message)->action_goal_id.uuid;
+      static_cast<typename ActionT::Impl::GetResultService::Request *>(message)->goal_id;
   }
 
   /// \internal
   std::shared_ptr<void>
   create_result_request() override
   {
-    return std::shared_ptr<void>(new typename ActionT::GoalResultService::Request());
+    return std::shared_ptr<void>(new typename ActionT::Impl::GetResultService::Request());
   }
 
   /// \internal
   std::shared_ptr<void>
   create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) override
   {
-    auto result = std::make_shared<typename ActionT::GoalResultService::Response>();
-    result->action_status = status;
+    auto result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    result->status = status;
     return std::static_pointer_cast<void>(result);
   }
 

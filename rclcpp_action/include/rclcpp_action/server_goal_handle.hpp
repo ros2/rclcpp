@@ -145,9 +145,9 @@ public:
    * \param[in] feedback_msg the message to publish to clients.
    */
   void
-  publish_feedback(std::shared_ptr<typename ActionT::Feedback> feedback_msg)
+  publish_feedback(std::shared_ptr<typename ActionT::Impl::FeedbackMessage> feedback_msg)
   {
-    feedback_msg->action_goal_id.uuid = uuid_;
+    feedback_msg->goal_id = uuid_;
     publish_feedback_(feedback_msg);
   }
 
@@ -162,10 +162,10 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_aborted(typename ActionT::Result::SharedPtr result_msg)
+  set_aborted(typename ActionT::Impl::GetResultService::Response::SharedPtr result_msg)
   {
     _set_aborted();
-    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
+    result_msg->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
     on_terminal_state_(uuid_, result_msg);
   }
 
@@ -179,10 +179,10 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_succeeded(typename ActionT::Result::SharedPtr result_msg)
+  set_succeeded(typename ActionT::Impl::GetResultService::Response::SharedPtr result_msg)
   {
     _set_succeeded();
-    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
+    result_msg->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
     on_terminal_state_(uuid_, result_msg);
   }
 
@@ -196,10 +196,10 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_canceled(typename ActionT::Result::SharedPtr result_msg)
+  set_canceled(typename ActionT::Impl::GetResultService::Response::SharedPtr result_msg)
   {
     _set_canceled();
-    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+    result_msg->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
     on_terminal_state_(uuid_, result_msg);
   }
 
@@ -233,8 +233,8 @@ public:
   {
     // Cancel goal if handle was allowed to destruct without reaching a terminal state
     if (try_canceling()) {
-      auto null_result = std::make_shared<typename ActionT::Result>();
-      null_result->action_status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+      auto null_result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+      null_result->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
       on_terminal_state_(uuid_, null_result);
     }
   }
@@ -247,7 +247,7 @@ protected:
     std::shared_ptr<const typename ActionT::Goal> goal,
     std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state,
     std::function<void(const GoalID &)> on_executing,
-    std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback
+    std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback
   )
   : ServerGoalHandleBase(rcl_handle), goal_(goal), uuid_(uuid),
     on_terminal_state_(on_terminal_state), on_executing_(on_executing),
@@ -265,7 +265,7 @@ protected:
 
   std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state_;
   std::function<void(const GoalID &)> on_executing_;
-  std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback_;
+  std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback_;
 };
 }  // namespace rclcpp_action
 
