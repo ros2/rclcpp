@@ -81,7 +81,7 @@ public:
   matches_any_publishers(const rmw_gid_t * id) const = 0;
 
   virtual size_t
-  get_subscription_count(uint64_t intra_process_publisher_id_) const = 0;
+  get_subscription_count(uint64_t intra_process_publisher_id) const = 0;
 
 private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase)
@@ -252,9 +252,9 @@ public:
   }
 
   size_t
-  get_subscription_count(uint64_t id) const
+  get_subscription_count(uint64_t intra_process_publisher_id) const
   {
-    auto publisher_it = publishers_.find(id);
+    auto publisher_it = publishers_.find(intra_process_publisher_id);
     if (publisher_it == publishers_.end()) {
       // Publisher is either invalid or no longer exists.
       return 0;
@@ -265,7 +265,7 @@ public:
     }
     auto sub_map_it = subscription_ids_by_topic_.find(publisher->get_topic_name());
     if (sub_map_it == subscription_ids_by_topic_.end()) {
-      // No intraprocess subscriberes
+      // No intraprocess subscribers
       return 0;
     }
     return sub_map_it->second.size();

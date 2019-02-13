@@ -142,11 +142,11 @@ PublisherBase::get_publisher_handle() const
 size_t
 PublisherBase::get_subscription_count() const
 {
-  size_t inter_process_subscritpion_count = 0;
+  size_t inter_process_subscription_count = 0;
 
   auto status = rcl_publisher_get_subscription_count(
     &publisher_handle_,
-    &inter_process_subscritpion_count);
+    &inter_process_subscription_count);
 
   if (RCL_RET_PUBLISHER_INVALID == status) {
     rcl_reset_error();  /* next call will reset error message if not context */
@@ -161,7 +161,7 @@ PublisherBase::get_subscription_count() const
   if (RCL_RET_OK != status) {
     rclcpp::exceptions::throw_from_rcl_error(status, "failed to get get subscription count");
   }
-  return inter_process_subscritpion_count;
+  return inter_process_subscription_count;
 }
 
 bool

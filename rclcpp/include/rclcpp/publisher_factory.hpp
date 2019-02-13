@@ -70,6 +70,12 @@ struct PublisherFactory
       rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
 
   SharedPublishCallbackFactoryFunction create_shared_publish_callback;
+
+  using GetIntraProcessSubscriberCountCallbackT = std::function<
+    rclcpp::PublisherBase::GetIntraProcessSubscriberCountCallbackT(
+      rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
+
+  GetIntraProcessSubscriberCountCallbackT create_intra_process_subscription_count_callback;
 };
 
 /// Return a PublisherFactory with functions setup for creating a PublisherT<MessageT, Alloc>.
@@ -134,6 +140,33 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
           uint64_t message_seq =
             ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);
           return message_seq;
+        };
+
+      return shared_publish_callback;
+    };
+
+  // function to create a intraprocess subscriber count callback std::function
+  using GetIntraProcessSubscriberCountCallbackT =
+    rclcpp::PublisherBase::GetIntraProcessSubscriberCountCallbackT;
+  factory.create_intra_process_subscription_count_callback =
+    [](rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)
+    -> GetIntraProcessSubscriberCountCallbackT
+    {
+      rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = ipm;
+
+      // this function is called on each call to publish(), when checking if
+      // interprocess publishing is needed or not.
+      auto shared_publish_callback =
+        [weak_ipm](uint64_t publisher_id) -> uint64_t
+        {
+          auto ipm = weak_ipm.lock();
+          if (!ipm) {
+            // TODO(ivanpauno): same as wjwwood comment above in create_shared_publish_callback
+            throw std::runtime_error(
+                    "intra process subscriber count called after "
+                    "destruction of intra process manager");
+          }
+          return ipm->get_subscription_count(publisher_id);
         };
 
       return shared_publish_callback;

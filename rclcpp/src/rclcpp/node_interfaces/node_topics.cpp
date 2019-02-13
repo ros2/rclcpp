@@ -51,10 +51,7 @@ NodeTopics::create_publisher(
       publisher_factory.add_publisher_to_intra_process_manager(ipm.get(), publisher);
     // Create a function to be called when publisher to do the intra process publish.
     auto shared_publish_callback = publisher_factory.create_shared_publish_callback(ipm);
-    auto count_callback = std::bind(
-      &rclcpp::intra_process_manager::IntraProcessManager::get_subscription_count,
-      ipm.get(),
-      std::placeholders::_1);
+    auto count_callback = publisher_factory.create_intra_process_subscription_count_callback(ipm);
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,

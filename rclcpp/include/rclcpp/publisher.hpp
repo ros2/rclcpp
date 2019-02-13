@@ -197,18 +197,16 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
-    size_t inter_process_subscritpion_count;
-    size_t intra_process_subscritpion_count = 0;
-
-    inter_process_subscritpion_count = this->get_subscription_count();
+    size_t inter_process_subscription_count = this->get_subscription_count();
+    size_t intra_process_subscription_count = 0;
 
     if (get_intra_process_subscription_count_) {
-      intra_process_subscritpion_count = \
+      intra_process_subscription_count =
         get_intra_process_subscription_count_(intra_process_publisher_id_);
     }
 
     if (!get_intra_process_subscription_count_ ||
-      inter_process_subscritpion_count > intra_process_subscritpion_count)
+      inter_process_subscription_count > intra_process_subscription_count)
     {
       this->do_inter_process_publish(msg.get());
     }
@@ -230,11 +228,11 @@ public:
       ipm.message_sequence = message_seq;
       auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
       if (RCL_RET_PUBLISHER_INVALID == status) {
-        rcl_reset_error();  /* next call will reset error message if not context */
+        rcl_reset_error();  // next call will reset error message if not context
         if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
           rcl_context_t * context = rcl_publisher_get_context(&intra_process_publisher_handle_);
           if (nullptr != context && !rcl_context_is_valid(context)) {
-            /* publisher is invalid due to context being shutdown */
+            // publisher is invalid due to context being shutdown
             return;
           }
         }
