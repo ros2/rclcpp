@@ -177,7 +177,7 @@ NodeParameters::set_parameters(
   const std::vector<rclcpp::Parameter> & parameters)
 {
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
-  for (auto p : parameters) {
+  for (const auto & p : parameters) {
     auto result = set_parameters_atomically({{p}});
     results.push_back(result);
   }
@@ -206,7 +206,7 @@ NodeParameters::set_parameters_atomically(
     return result;
   }
 
-  for (auto p : parameters) {
+  for (const auto & p : parameters) {
     if (p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
       if (parameters_.find(p.get_name()) != parameters_.end()) {
         // case: parameter was set before, and input is "NOT_SET"
@@ -229,7 +229,7 @@ NodeParameters::set_parameters_atomically(
   tmp_map.insert(parameters_.begin(), parameters_.end());
 
   // remove explicitly deleted parameters
-  for (auto p : parameters) {
+  for (const auto & p : parameters) {
     if (p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
       tmp_map.erase(p.get_name());
     }
