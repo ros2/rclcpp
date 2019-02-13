@@ -568,9 +568,6 @@ private:
   RCLCPP_DISABLE_COPY(Node)
 
   RCLCPP_PUBLIC
-  std::string get_extended_name(const std::string & name) const;
-
-  RCLCPP_PUBLIC
   bool
   group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
