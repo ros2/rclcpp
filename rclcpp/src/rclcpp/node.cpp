@@ -47,7 +47,7 @@ extend_sub_namespace(const std::string & existing_sub_namespace, const std::stri
   // Assumption is that the existing_sub_namespace does not need checking
   // because it would be checked already when it was set with this function.
 
-  // check if the new sub-namespace extension is abolsute
+  // check if the new sub-namespace extension is absolute
   if (extension.front() == '/') {
     throw rclcpp::exceptions::NameValidationError(
             "sub_namespace",
