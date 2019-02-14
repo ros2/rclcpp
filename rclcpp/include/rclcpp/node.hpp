@@ -491,8 +491,21 @@ public:
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**
-   * The returned sub-namespace is what was given to create_sub_node() or an
-   * empty string if this is an original node instance, i.e. not a sub-node.
+   * The returned sub-namespace is either the accumulated sub-namespaces which
+   * were given to one-to-many create_sub_node() calls, or an empty string if
+   * this is an original node instance, i.e. not a sub-node.
+   *
+   * For example, consider:
+   *
+   *   auto node = std::make_shared<rclcpp::Node>("my_node", "my_ns");
+   *   node->get_sub_namespace();  // -> ""
+   *   auto sub_node1 = node->create_sub_node("a");
+   *   sub_node1->get_sub_namespace();  // -> "a"
+   *   auto sub_node2 = sub_node1->create_sub_node("b");
+   *   sub_node2->get_sub_namespace();  // -> "a/b"
+   *   auto sub_node3 = node->create_sub_node("foo");
+   *   sub_node3->get_sub_namespace();  // -> "foo"
+   *   node->get_sub_namespace();  // -> ""
    *
    * get_namespace() will return the original node namespace, and will not
    * include the sub-namespace if one exists.
@@ -508,9 +521,21 @@ public:
 
   /// Return the effective namespace that is used when creating entities.
   /**
-   * The returned namespace is a combination of the node namespace and the
+   * The returned namespace is a concatenation of the node namespace and the
    * accumulated sub-namespaces, which is used as the namespace when creating
    * entities which have relative names.
+   *
+   * For example, consider:
+   *
+   *   auto node = std::make_shared<rclcpp::Node>("my_node", "my_ns");
+   *   node->get_effective_namespace();  // -> "/my_ns"
+   *   auto sub_node1 = node->create_sub_node("a");
+   *   sub_node1->get_effective_namespace();  // -> "/my_ns/a"
+   *   auto sub_node2 = sub_node1->create_sub_node("b");
+   *   sub_node2->get_effective_namespace();  // -> "/my_ns/a/b"
+   *   auto sub_node3 = node->create_sub_node("foo");
+   *   sub_node3->get_effective_namespace();  // -> "/my_ns/foo"
+   *   node->get_effective_namespace();  // -> "/my_ns"
    *
    * \sa get_namespace()
    * \sa get_sub_namespace()
@@ -522,12 +547,26 @@ public:
 
   /// Create a sub-node, which will extend the namespace of all entities created with it.
   /**
-   * A normal node will not have a sub-namespace (short for subordinate
-   * namespace) and therefore entities created will be unaffected.
-   * However, if a sub-node (short for subordinate node) is created, then
-   * its sub-namespace will be extended with the sub-namespace given here, and
-   * any entities created with the sub-node object instead of a normal node
-   * object will be affected by the sub-namespace.
+   * A sub-node (short for subordinate node) is an instance of this class
+   * which has been created using an existing instance of this class, but which
+   * has an additional sub-namespace (short for subordinate namespace)
+   * associated with it.
+   * The sub-namespace will extend the node's namespace for the purpose of
+   * creating additional entities, such as Publishers, Subscriptions, Service
+   * Clients and Servers, and so on.
+   *
+   * By default, when an instance of this class is created using one of the
+   * public constructors, it has no sub-namespace associated with it, and
+   * therefore is not a sub-node.
+   * That "normal" node instance may, however, be used to create further
+   * instances of this class, based on the original instance, which have an
+   * additional sub-namespace associated with them.
+   * This may be done by using this method, create_sub_node().
+   *
+   * Furthermore, a sub-node may be used to create additional sub-node's, in
+   * which case the sub-namespace passed to this function will further
+   * extend the sub-namespace of the existing sub-node.
+   * See get_sub_namespace() and get_effective_namespace() for examples.
    *
    * Note that entities which use absolute names are not affected by any
    * namespaces, neither the normal node namespace nor any sub-namespace.
@@ -537,6 +576,8 @@ public:
    * The sub-namespace should be relative, and an exception will be thrown if
    * the sub-namespace is absolute, i.e. if it starts with a leading '/'.
    *
+   * \sa get_sub_namespace()
+   * \sa get_effective_namespace()
    * \param[in] sub_namespace sub-namespace of the sub-node.
    * \return newly created sub-node
    * \throws NameValidationError if the sub-namespace is absolute, i.e. starts
