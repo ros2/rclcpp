@@ -337,8 +337,10 @@ protected:
   std::pair<GoalResponse, std::shared_ptr<void>>
   call_handle_goal_callback(GoalID & uuid, std::shared_ptr<void> message) override
   {
-    GoalResponse user_response = handle_goal_(
-      uuid, std::static_pointer_cast<typename ActionT::Goal>(message));
+    auto request = std::static_pointer_cast<
+      typename ActionT::Impl::SendGoalService::Request>(message);
+    auto goal = std::shared_ptr<typename ActionT::Goal>(request, &request->goal);
+    GoalResponse user_response = handle_goal_(uuid, goal);
 
     auto ros_response = std::make_shared<typename ActionT::Impl::SendGoalService::Response>();
     ros_response->accepted = GoalResponse::ACCEPT_AND_EXECUTE == user_response ||
@@ -414,11 +416,12 @@ protected:
         shared_this->publish_feedback(std::static_pointer_cast<void>(feedback_msg));
       };
 
+    auto request = std::static_pointer_cast<
+      const typename ActionT::Impl::SendGoalService::Request>(goal_request_message);
+    auto goal = std::shared_ptr<const typename ActionT::Goal>(request, &request->goal);
     goal_handle.reset(
       new ServerGoalHandle<ActionT>(
-        rcl_goal_handle, uuid,
-        std::static_pointer_cast<const typename ActionT::Goal>(goal_request_message),
-        on_terminal_state, on_executing, publish_feedback));
+        rcl_goal_handle, uuid, goal, on_terminal_state, on_executing, publish_feedback));
     {
       std::lock_guard<std::mutex> lock(goal_handles_mutex_);
       goal_handles_[uuid] = goal_handle;
