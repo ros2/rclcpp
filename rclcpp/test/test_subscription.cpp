@@ -154,6 +154,13 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
   }
 
   {
+    auto sub = subnode->create_subscription<IntraProcessMessage>("~/topic", callback);
+    std::string expected_topic_name =
+      std::string(node->get_namespace()) + "/" + node->get_name() + "/topic";
+    EXPECT_STREQ(sub->get_topic_name(), expected_topic_name.c_str());
+  }
+
+  {
     ASSERT_THROW({
       auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", callback);
     }, rclcpp::exceptions::InvalidTopicNameError);
