@@ -37,7 +37,7 @@ public:
 
 using rcl_interfaces::msg::IntraProcessMessage;
 
-class TestPublisherSubscriberCount : public ::testing::Test
+class TestPublisherSubscriptionCount : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -66,14 +66,14 @@ protected:
   static std::chrono::milliseconds offset;
 };
 
-std::chrono::milliseconds TestPublisherSubscriberCount::offset = std::chrono::milliseconds(500);
+std::chrono::milliseconds TestPublisherSubscriptionCount::offset = std::chrono::milliseconds(2000);
 
 void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
 {
   (void)msg;
 }
 
-void TestPublisherSubscriberCount::test_common(
+void TestPublisherSubscriptionCount::test_common(
   rclcpp::NodeOptions options,
   const uint64_t intraprocess_count_results[2])
 {
@@ -114,27 +114,28 @@ void TestPublisherSubscriberCount::test_common(
 }
 
 /*
-   Testing publisher subscriber count api and internal process subscribers.
-   Two subscribers in same using intra_process comm.
+   Testing publisher subscription count api and internal process subscription count.
+   Two subscriptions in same using intra-process comm.
  */
-TEST_F(TestPublisherSubscriberCount, test_two_intra_comm) {
+TEST_F(TestPublisherSubscriptionCount, test_two_intra_comm) {
   const uint64_t results[2] = {1u, 2u};
   test_common(rclcpp::NodeOptions().use_intra_process_comms(true), results);
 }
 
 /*
-   Testing publisher subscriber count api and internal process subscribers.
-   Two subscribers, one using intra_process comm and the other not using it.
+   Testing publisher subscription count api and internal process subscription count.
+   Two subscriptions, one using intra-process comm and the other not using it.
  */
-TEST_F(TestPublisherSubscriberCount, test_one_intra_comm_one_inter_comm) {
+TEST_F(TestPublisherSubscriptionCount, test_one_intra_comm_one_inter_comm) {
   const uint64_t results[2] = {1u, 1u};
   test_common(rclcpp::NodeOptions().use_intra_process_comms(false), results);
 }
 
 /*
-   Testing publisher subscriber count api and internal process subscribers, with two contexts.
+   Testing publisher subscription count api and internal process subscription count.
+   Two contexts, both using intra-process.
  */
-TEST_F(TestPublisherSubscriberCount, test_with_two_contexts_both_using_intra) {
+TEST_F(TestPublisherSubscriptionCount, test_with_two_contexts_both_using_intra) {
   const uint64_t results[2] = {1u, 1u};
   auto context = rclcpp::Context::make_shared();
   context->init(0, nullptr);
@@ -143,7 +144,11 @@ TEST_F(TestPublisherSubscriberCount, test_with_two_contexts_both_using_intra) {
     results);
 }
 
-TEST_F(TestPublisherSubscriberCount, test_with_two_contexts_one_using_intra) {
+/*
+   Testing publisher subscription count api and internal process subscription count.
+   Two contexts, one using intra-process comm, the other not.
+ */
+TEST_F(TestPublisherSubscriptionCount, test_with_two_contexts_one_using_intra) {
   const uint64_t results[2] = {1u, 1u};
   auto context = rclcpp::Context::make_shared();
   context->init(0, nullptr);
