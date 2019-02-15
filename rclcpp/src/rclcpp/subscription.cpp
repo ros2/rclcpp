@@ -20,6 +20,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
+#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 
 #include "rmw/error_handling.h"
@@ -80,6 +81,12 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    // TODO(ivanpauno): should this raise an error?
+    return;
+  }
+  ipm->remove_subscription(intra_process_subscription_id_);
 }
 
 const char *

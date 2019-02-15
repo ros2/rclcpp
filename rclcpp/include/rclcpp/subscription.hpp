@@ -46,6 +46,11 @@ namespace node_interfaces
 class NodeTopicsInterface;
 }  // namespace node_interfaces
 
+namespace intra_process_manager
+{
+class IntraProcessManager;
+}
+
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
 class SubscriptionBase
@@ -129,7 +134,13 @@ public:
   bool
   is_serialized() const;
 
+  using IntraProcessManagerWeakPtr =
+    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+
 protected:
+  IntraProcessManagerWeakPtr weak_ipm_;
+  uint64_t intra_process_subscription_id_;
+
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
   std::shared_ptr<rcl_node_t> node_handle_;
@@ -272,10 +283,13 @@ public:
   using MatchesAnyPublishersCallbackType = std::function<bool (const rmw_gid_t *)>;
 
   /// Implemenation detail.
+  // TODO(ivanpauno): This can be moved to the base class. No reason to be here.
+  //  Also get_intra_process_message_callback_ and matches_any_intra_process_publishers_
   void setup_intra_process(
     uint64_t intra_process_subscription_id,
     GetMessageCallbackType get_message_callback,
     MatchesAnyPublishersCallbackType matches_any_publisher_callback,
+    IntraProcessManagerWeakPtr weak_ipm,
     const rcl_subscription_options_t & intra_process_options)
   {
     std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";
@@ -302,6 +316,7 @@ public:
     intra_process_subscription_id_ = intra_process_subscription_id;
     get_intra_process_message_callback_ = get_message_callback;
     matches_any_intra_process_publishers_ = matches_any_publisher_callback;
+    weak_ipm_ = weak_ipm;
   }
 
   /// Implemenation detail.
@@ -323,7 +338,6 @@ private:
 
   GetMessageCallbackType get_intra_process_message_callback_;
   MatchesAnyPublishersCallbackType matches_any_intra_process_publishers_;
-  uint64_t intra_process_subscription_id_;
 };
 
 }  // namespace rclcpp

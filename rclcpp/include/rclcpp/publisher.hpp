@@ -45,6 +45,11 @@ namespace node_interfaces
 class NodeTopicsInterface;
 }
 
+namespace intra_process_manager
+{
+class IntraProcessManager;
+}
+
 class PublisherBase
 {
   friend ::rclcpp::node_interfaces::NodeTopicsInterface;
@@ -108,10 +113,16 @@ public:
   get_publisher_handle() const;
 
   /// Get subscription count
-  /** \return The number of subscription. */
+  /** \return The number of subscriptions. */
   RCLCPP_PUBLIC
   size_t
   get_subscription_count() const;
+
+  /// Get intraprocess subscription count
+  /** \return The number of intraprocess subscriptions. */
+  RCLCPP_PUBLIC
+  size_t
+  get_intra_process_subscription_count() const;
 
   /// Compare this publisher to a gid.
   /**
@@ -134,7 +145,8 @@ public:
   operator==(const rmw_gid_t * gid) const;
 
   using StoreMessageCallbackT = std::function<uint64_t(uint64_t, void *, const std::type_info &)>;
-  using GetIntraProcessSubscriberCountCallbackT = std::function<size_t(uint64_t)>;
+  using IntraProcessManagerSharedPtr =
+    std::shared_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
 
   /// Implementation utility function used to setup intra process publishing after creation.
   RCLCPP_PUBLIC
@@ -142,7 +154,7 @@ public:
   setup_intra_process(
     uint64_t intra_process_publisher_id,
     StoreMessageCallbackT store_callback,
-    GetIntraProcessSubscriberCountCallbackT count_callback,
+    IntraProcessManagerSharedPtr ipm,
     const rcl_publisher_options_t & intra_process_options);
 
 protected:
@@ -151,9 +163,11 @@ protected:
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
   rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
 
+  using IntraProcessManagerWeakPtr =
+    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
   StoreMessageCallbackT store_intra_process_message_;
-  GetIntraProcessSubscriberCountCallbackT get_intra_process_subscription_count_;
 
   rmw_gid_t rmw_gid_;
   rmw_gid_t intra_process_rmw_gid_;
@@ -197,20 +211,7 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
-    size_t inter_process_subscription_count = this->get_subscription_count();
-    size_t intra_process_subscription_count = 0;
-
-    if (get_intra_process_subscription_count_) {
-      intra_process_subscription_count =
-        get_intra_process_subscription_count_(intra_process_publisher_id_);
-    }
-
-    if (!get_intra_process_subscription_count_ ||
-      inter_process_subscription_count > intra_process_subscription_count)
-    {
-      this->do_inter_process_publish(msg.get());
-    }
-
+    this->do_inter_process_publish(msg.get());
     if (store_intra_process_message_) {
       // Take the pointer from the unique_msg, release it and pass as a void *
       // to the ipm. The ipm should then capture it again as a unique_ptr of

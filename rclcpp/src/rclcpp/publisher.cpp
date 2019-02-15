@@ -30,6 +30,7 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -42,8 +43,7 @@ PublisherBase::PublisherBase(
   const rosidl_message_type_support_t & type_support,
   const rcl_publisher_options_t & publisher_options)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
-  intra_process_publisher_id_(0), store_intra_process_message_(nullptr),
-  get_intra_process_subscription_count_(nullptr)
+  intra_process_publisher_id_(0), store_intra_process_message_(nullptr)
 {
   rcl_ret_t ret = rcl_publisher_init(
     &publisher_handle_,
@@ -95,6 +95,13 @@ PublisherBase::~PublisherBase()
       rcl_get_error_string().str);
     rcl_reset_error();
   }
+
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    // TODO(ivanpauno): should this raise an error?
+    return;
+  }
+  ipm->remove_publisher(intra_process_publisher_id_);
 }
 
 const char *
@@ -164,6 +171,20 @@ PublisherBase::get_subscription_count() const
   return inter_process_subscription_count;
 }
 
+size_t
+PublisherBase::get_intra_process_subscription_count() const
+{
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
+    //                  Same as wjwwood comment in publisher_factory create_shared_publish_callback.
+    throw std::runtime_error(
+            "intra process subscriber count called after "
+            "destruction of intra process manager");
+  }
+  return ipm->get_subscription_count(intra_process_publisher_id_);
+}
+
 bool
 PublisherBase::operator==(const rmw_gid_t & gid) const
 {
@@ -195,7 +216,7 @@ void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
   StoreMessageCallbackT store_callback,
-  GetIntraProcessSubscriberCountCallbackT count_callback,
+  IntraProcessManagerSharedPtr ipm,
   const rcl_publisher_options_t & intra_process_options)
 {
   const char * topic_name = this->get_topic_name();
@@ -227,7 +248,7 @@ PublisherBase::setup_intra_process(
 
   intra_process_publisher_id_ = intra_process_publisher_id;
   store_intra_process_message_ = store_callback;
-  get_intra_process_subscription_count_ = count_callback;
+  weak_ipm_ = ipm;
   // Life time of this object is tied to the publisher handle.
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(
     &intra_process_publisher_handle_);

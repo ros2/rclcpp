@@ -23,18 +23,6 @@
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
-class MyPublisher : public rclcpp::PublisherBase
-{
-public:
-  size_t get_intraprocess_subscription_count()
-  {
-    if (get_intra_process_subscription_count_) {
-      return get_intra_process_subscription_count_(intra_process_publisher_id_);
-    }
-    return 0;
-  }
-};
-
 using rcl_interfaces::msg::IntraProcessMessage;
 
 class TestPublisherSubscriptionCount : public ::testing::Test
@@ -78,15 +66,12 @@ void TestPublisherSubscriptionCount::test_common(
   const uint64_t intraprocess_count_results[2])
 {
   EXPECT_EQ(publisher->get_subscription_count(), 0u);
-  EXPECT_EQ(
-    reinterpret_cast<MyPublisher *>(publisher.get())->get_intraprocess_subscription_count(), 0u);
+  EXPECT_EQ(publisher->get_intra_process_subscription_count(), 0u);
   {
     auto sub = node->create_subscription<IntraProcessMessage>("/topic", &OnMessage);
     rclcpp::sleep_for(offset);
     EXPECT_EQ(publisher->get_subscription_count(), 1u);
-    EXPECT_EQ(
-      reinterpret_cast<MyPublisher *>(publisher.get())->get_intraprocess_subscription_count(),
-      intraprocess_count_results[0]);
+    EXPECT_EQ(publisher->get_intra_process_subscription_count(), intraprocess_count_results[0]);
     {
       rclcpp::Node::SharedPtr another_node = std::make_shared<rclcpp::Node>(
         "another_node",
@@ -97,10 +82,11 @@ void TestPublisherSubscriptionCount::test_common(
 
       rclcpp::sleep_for(offset);
       EXPECT_EQ(publisher->get_subscription_count(), 2u);
-      EXPECT_EQ(
-        reinterpret_cast<MyPublisher *>(publisher.get())->get_intraprocess_subscription_count(),
-        intraprocess_count_results[1]);
+      EXPECT_EQ(publisher->get_intra_process_subscription_count(), intraprocess_count_results[1]);
     }
+    rclcpp::sleep_for(offset);
+    EXPECT_EQ(publisher->get_subscription_count(), 1u);
+    EXPECT_EQ(publisher->get_intra_process_subscription_count(), intraprocess_count_results[0]);
   }
   /**
     * Counts should be zero here, as all are subscriptions are out of scope.
@@ -108,9 +94,7 @@ void TestPublisherSubscriptionCount::test_common(
     * detected without it. */
   rclcpp::sleep_for(offset);
   EXPECT_EQ(publisher->get_subscription_count(), 0u);
-  EXPECT_EQ(
-    reinterpret_cast<MyPublisher *>(publisher.get())->get_intraprocess_subscription_count(),
-    0u);
+  EXPECT_EQ(publisher->get_intra_process_subscription_count(), 0u);
 }
 
 /*
