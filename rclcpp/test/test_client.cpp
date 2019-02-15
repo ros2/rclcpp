@@ -43,6 +43,28 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
+class TestClientSub : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase()
+  {
+  }
+
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    subnode = node->create_sub_node("sub_ns");
+  }
+
+  void TearDown()
+  {
+    node.reset();
+  }
+
+  rclcpp::Node::SharedPtr node;
+  rclcpp::Node::SharedPtr subnode;
+};
+
 /*
    Testing client construction and destruction.
  */
@@ -50,6 +72,23 @@ TEST_F(TestClient, construction_and_destruction) {
   using rcl_interfaces::srv::ListParameters;
   {
     auto client = node->create_client<ListParameters>("service");
+  }
+
+  {
+    ASSERT_THROW({
+      auto client = node->create_client<ListParameters>("invalid_service?");
+    }, rclcpp::exceptions::InvalidServiceNameError);
+  }
+}
+
+/*
+   Testing client construction and destruction for subnodes.
+ */
+TEST_F(TestClientSub, construction_and_destruction) {
+  using rcl_interfaces::srv::ListParameters;
+  {
+    auto client = subnode->create_client<ListParameters>("service");
+    EXPECT_STREQ(client->get_service_name(), "/ns/sub_ns/service");
   }
 
   {

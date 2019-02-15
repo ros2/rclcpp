@@ -65,6 +65,18 @@ Node::create_publisher(
   return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos, allocator);
 }
 
+RCLCPP_LOCAL
+inline
+std::string
+extend_name_with_sub_namespace(const std::string & name, const std::string & sub_namespace)
+{
+  std::string name_with_sub_namespace(name);
+  if (sub_namespace != "" && name.front() != '/' && name.front() != '~') {
+    name_with_sub_namespace = sub_namespace + "/" + name;
+  }
+  return name_with_sub_namespace;
+}
+
 template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
@@ -74,11 +86,12 @@ Node::create_publisher(
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
+
   return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
     this->node_topics_.get(),
-    topic_name,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos_profile,
-    use_intra_process_comms_,
+    this->get_node_options().use_intra_process_comms(),
     allocator);
 }
 
@@ -112,12 +125,12 @@ Node::create_subscription(
 
   return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
-    topic_name,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     std::forward<CallbackT>(callback),
     qos_profile,
     group,
     ignore_local_publications,
-    use_intra_process_comms_,
+    this->get_node_options().use_intra_process_comms(),
     msg_mem_strat,
     allocator);
 }
@@ -141,6 +154,7 @@ Node::create_subscription(
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
+
   return this->create_subscription<MessageT>(
     topic_name,
     std::forward<CallbackT>(callback),
@@ -182,7 +196,7 @@ Node::create_client(
   auto cli = Client<ServiceT>::make_shared(
     node_base_.get(),
     node_graph_,
-    service_name,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     options);
 
   auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
@@ -199,8 +213,12 @@ Node::create_service(
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_service<ServiceT, CallbackT>(
-    node_base_, node_services_,
-    service_name, std::forward<CallbackT>(callback), qos_profile, group);
+    node_base_,
+    node_services_,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
+    std::forward<CallbackT>(callback),
+    qos_profile,
+    group);
 }
 
 template<typename CallbackT>
@@ -216,10 +234,13 @@ Node::set_parameter_if_not_set(
   const std::string & name,
   const ParameterT & value)
 {
+  std::string parameter_name_with_sub_namespace =
+    extend_name_with_sub_namespace(name, this->get_sub_namespace());
+
   rclcpp::Parameter parameter;
-  if (!this->get_parameter(name, parameter)) {
+  if (!this->get_parameter(parameter_name_with_sub_namespace, parameter)) {
     this->set_parameters({
-        rclcpp::Parameter(name, value),
+        rclcpp::Parameter(parameter_name_with_sub_namespace, value),
       });
   }
 }
@@ -250,8 +271,11 @@ template<typename ParameterT>
 bool
 Node::get_parameter(const std::string & name, ParameterT & value) const
 {
+  std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
+
   rclcpp::Parameter parameter;
-  bool result = get_parameter(name, parameter);
+
+  bool result = get_parameter(sub_name, parameter);
   if (result) {
     value = parameter.get_value<ParameterT>();
   }
@@ -286,7 +310,9 @@ Node::get_parameter_or(
   ParameterT & value,
   const ParameterT & alternative_value) const
 {
-  bool got_parameter = get_parameter(name, value);
+  std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
+
+  bool got_parameter = get_parameter(sub_name, value);
   if (!got_parameter) {
     value = alternative_value;
   }
@@ -300,10 +326,12 @@ Node::get_parameter_or_set(
   ParameterT & value,
   const ParameterT & alternative_value)
 {
-  bool got_parameter = get_parameter(name, value);
+  std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
+
+  bool got_parameter = get_parameter(sub_name, value);
   if (!got_parameter) {
     this->set_parameters({
-        rclcpp::Parameter(name, alternative_value),
+        rclcpp::Parameter(sub_name, alternative_value),
       });
     value = alternative_value;
   }
