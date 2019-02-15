@@ -300,6 +300,15 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_subscription ${PROJECT_NAME})
   endif()
+  if(TARGET test_subscription_publisher_count_api)
+    target_include_directories(test_subscription_publisher_count_api PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_subscription_publisher_count_api ${PROJECT_NAME})
+  endif()
   find_package(test_msgs REQUIRED)
   ament_add_gtest(test_subscription_traits test/test_subscription_traits.cpp)
   if(TARGET test_subscription_traits)

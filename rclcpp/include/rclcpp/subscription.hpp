@@ -134,10 +134,15 @@ public:
   bool
   is_serialized() const;
 
-  using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  /// Get matching publisher count
+  /** \return The number of publishers on this topic. */
+  RCLCPP_PUBLIC
+  size_t
+  get_publisher_count() const;
 
 protected:
+  using IntraProcessManagerWeakPtr =
+    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_subscription_id_;
 

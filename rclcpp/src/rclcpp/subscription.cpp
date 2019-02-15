@@ -124,3 +124,18 @@ SubscriptionBase::is_serialized() const
 {
   return is_serialized_;
 }
+
+size_t
+SubscriptionBase::get_publisher_count() const
+{
+  size_t inter_process_publisher_count = 0;
+
+  auto status = rcl_subscription_get_publisher_count(
+    subscription_handle_.get(),
+    &inter_process_publisher_count);
+
+  if (RCL_RET_OK != status) {
+    rclcpp::exceptions::throw_from_rcl_error(status, "failed to get get publisher count");
+  }
+  return inter_process_publisher_count;
+}
