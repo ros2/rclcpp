@@ -305,11 +305,11 @@ TEST_F(TestClient, async_send_goal_and_ignore_feedback_but_wait_for_result)
   EXPECT_TRUE(goal_handle->is_result_aware());
   auto future_result = goal_handle->async_result();
   dual_spin_until_future_complete(future_result);
-  auto result = future_result.get();
-  ASSERT_EQ(6ul, result.response->sequence.size());
-  EXPECT_EQ(0, result.response->sequence[0]);
-  EXPECT_EQ(1, result.response->sequence[1]);
-  EXPECT_EQ(5, result.response->sequence[5]);
+  auto wrapped_result = future_result.get();
+  ASSERT_EQ(6ul, wrapped_result.result->sequence.size());
+  EXPECT_EQ(0, wrapped_result.result->sequence[0]);
+  EXPECT_EQ(1, wrapped_result.result->sequence[1]);
+  EXPECT_EQ(5, wrapped_result.result->sequence[5]);
 }
 
 TEST_F(TestClient, async_send_goal_with_feedback_and_result)
@@ -337,10 +337,10 @@ TEST_F(TestClient, async_send_goal_with_feedback_and_result)
   EXPECT_TRUE(goal_handle->is_result_aware());
   auto future_result = goal_handle->async_result();
   dual_spin_until_future_complete(future_result);
-  auto result = future_result.get();
+  auto wrapped_result = future_result.get();
 
-  ASSERT_EQ(5u, result.response->sequence.size());
-  EXPECT_EQ(3, result.response->sequence.back());
+  ASSERT_EQ(5u, wrapped_result.result->sequence.size());
+  EXPECT_EQ(3, wrapped_result.result->sequence.back());
   EXPECT_EQ(5, feedback_count);
 }
 

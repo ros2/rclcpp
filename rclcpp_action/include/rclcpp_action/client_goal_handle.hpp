@@ -52,15 +52,15 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientGoalHandle)
 
   // A wrapper that defines the result of an action
-  typedef struct Result
+  typedef struct WrappedResult
   {
     /// The unique identifier of the goal
     GoalID goal_id;
     /// A status to indicate if the goal was canceled, aborted, or suceeded
     ResultCode code;
     /// User defined fields sent back with an action
-    typename ActionT::Result::SharedPtr response;
-  } Result;
+    typename ActionT::Result::SharedPtr result;
+  } WrappedResult;
 
   using Feedback = typename ActionT::Feedback;
   using FeedbackCallback =
@@ -76,7 +76,7 @@ public:
   rclcpp::Time
   get_goal_stamp() const;
 
-  std::shared_future<Result>
+  std::shared_future<WrappedResult>
   async_result();
 
   int8_t
@@ -109,7 +109,7 @@ private:
   set_status(int8_t status);
 
   void
-  set_result(const Result & result);
+  set_result(const WrappedResult & wrapped_result);
 
   void
   invalidate();
@@ -117,8 +117,8 @@ private:
   GoalInfo info_;
 
   bool is_result_aware_{false};
-  std::promise<Result> result_promise_;
-  std::shared_future<Result> result_future_;
+  std::promise<WrappedResult> result_promise_;
+  std::shared_future<WrappedResult> result_future_;
 
   FeedbackCallback feedback_callback_{nullptr};
   int8_t status_{GoalStatus::STATUS_ACCEPTED};

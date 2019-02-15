@@ -215,7 +215,7 @@ public:
     on_executing_(uuid_);
   }
 
-  /// Get the original request message describing the goal.
+  /// Get the user provided message describing the goal.
   const std::shared_ptr<const typename ActionT::Goal>
   get_goal() const
   {
@@ -255,7 +255,7 @@ protected:
   {
   }
 
-  /// The original request message describing the goal.
+  /// The user provided message describing the goal.
   const std::shared_ptr<const typename ActionT::Goal> goal_;
 
   /// A unique id for the goal request.

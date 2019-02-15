@@ -260,7 +260,7 @@ public:
   using Goal = typename ActionT::Goal;
   using Feedback = typename ActionT::Feedback;
   using GoalHandle = ClientGoalHandle<ActionT>;
-  using Result = typename GoalHandle::Result;
+  using WrappedResult = typename GoalHandle::WrappedResult;
   using FeedbackCallback = typename ClientGoalHandle<ActionT>::FeedbackCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
@@ -322,7 +322,7 @@ public:
     return future;
   }
 
-  std::shared_future<Result>
+  std::shared_future<WrappedResult>
   async_get_result(typename GoalHandle::SharedPtr goal_handle)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
@@ -502,14 +502,14 @@ private:
       [goal_handle, this](std::shared_ptr<void> response) mutable
       {
         // Wrap the response in a struct with the fields a user cares about
-        Result result;
+        WrappedResult wrapped_result;
         using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
         auto result_response = std::static_pointer_cast<GoalResultResponse>(response);
-        result.response = std::make_shared<typename ActionT::Result>();
-        *result.response = result_response->result;
-        result.goal_id = goal_handle->get_goal_id();
-        result.code = static_cast<ResultCode>(result_response->status);
-        goal_handle->set_result(result);
+        wrapped_result.result = std::make_shared<typename ActionT::Result>();
+        *wrapped_result.result = result_response->result;
+        wrapped_result.goal_id = goal_handle->get_goal_id();
+        wrapped_result.code = static_cast<ResultCode>(result_response->status);
+        goal_handle->set_result(wrapped_result);
         std::lock_guard<std::mutex> lock(goal_handles_mutex_);
         goal_handles_.erase(goal_handle->get_goal_id());
       });
