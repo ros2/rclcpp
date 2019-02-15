@@ -300,6 +300,7 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_subscription ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_subscription_publisher_count_api test/test_subscription_publisher_count_api.cpp)
   if(TARGET test_subscription_publisher_count_api)
     target_include_directories(test_subscription_publisher_count_api PUBLIC
       ${rcl_interfaces_INCLUDE_DIRS}

@@ -24,43 +24,36 @@
 
 using rcl_interfaces::msg::IntraProcessMessage;
 
-void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+class TestSubscriptionPublisherCount : public ::testing::TestWithParam<rclcpp::NodeOptions>
 {
-  (void)msg;
-}
-
-class TestSubscriptionPublisherCount : public ::testing::Test
-{
-protected:
+public:
   static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
   }
 
-  void SetUp()
-  {
-    node = std::make_shared<rclcpp::Node>(
-      "my_node",
-      "/ns");
-    subscription = node->create_subscription<IntraProcessMessage>("/topic", &OnMessage);
-  }
-
-  void TearDown()
-  {
-    node.reset();
-  }
-
-  void test_common(rclcpp::NodeOptions options, const uint64_t intraprocess_count_results[2]);
-
-  rclcpp::Node::SharedPtr node;
-  std::shared_ptr<rclcpp::SubscriptionBase> subscription;
+protected:
+  void SetUp() {}
+  void TearDown() {}
   static std::chrono::milliseconds offset;
 };
 
 std::chrono::milliseconds TestSubscriptionPublisherCount::offset = std::chrono::milliseconds(2000);
 
-void TestSubscriptionPublisherCount::test_common(rclcpp::NodeOptions options)
+void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
 {
+  (void)msg;
+}
+
+TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
+{
+  rclcpp::NodeOptions node_options = GetParam();
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>(
+    "my_node",
+    "/ns",
+    node_options);
+  auto subscription = node->create_subscription<IntraProcessMessage>("/topic", &OnMessage);
+
   EXPECT_EQ(subscription->get_publisher_count(), 0u);
   {
     auto pub = node->create_publisher<IntraProcessMessage>("/topic");
@@ -70,7 +63,7 @@ void TestSubscriptionPublisherCount::test_common(rclcpp::NodeOptions options)
       rclcpp::Node::SharedPtr another_node = std::make_shared<rclcpp::Node>(
         "another_node",
         "/ns",
-        options);
+        node_options);
       auto another_pub =
         another_node->create_publisher<IntraProcessMessage>("/topic");
 
@@ -84,22 +77,28 @@ void TestSubscriptionPublisherCount::test_common(rclcpp::NodeOptions options)
   EXPECT_EQ(subscription->get_publisher_count(), 0u);
 }
 
-/*
-   Testing subscription publisher count api.
-   One context.
- */
-TEST_F(TestSubscriptionPublisherCount, test_one_context) {
-  test_common(rclcpp::NodeOptions());
-}
-
-/*
-   Testing subscription publisher count api.
-   Two contexts.
- */
-TEST_F(TestSubscriptionPublisherCount, test_two_contexts) {
+auto get_new_context()
+{
   auto context = rclcpp::Context::make_shared();
   context->init(0, nullptr);
-  test_common(
-    rclcpp::NodeOptions().context(context),
-    results);
+  return context;
 }
+
+rclcpp::NodeOptions parameters[] = {
+  /*
+     Testing subscription publisher count api.
+     One context.
+   */
+  rclcpp::NodeOptions(),
+  /*
+     Testing subscription publisher count api.
+     Two contexts.
+   */
+  rclcpp::NodeOptions().context(get_new_context())
+};
+
+// NOTE(ivanpauno): The extra comma is for avoiding a compiler warning, from GTEST.
+INSTANTIATE_TEST_CASE_P(
+  TestWithDifferentNodeOptions,
+  TestSubscriptionPublisherCount,
+  ::testing::ValuesIn(parameters), );

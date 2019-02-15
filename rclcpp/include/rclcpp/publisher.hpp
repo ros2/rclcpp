@@ -47,6 +47,10 @@ class NodeTopicsInterface;
 
 namespace intra_process_manager
 {
+/**
+ * NOTE(ivanpauno): IntraProcessManager is forward declared here, avoiding a circular inclusion between intra_process_manager.hpp and publisher.hpp.
+ * SharedPtr and WeakPtr of the IntraProcessManager are defined again here, to avoid a warning for accessing a member of a forward declared class.
+ */
 class IntraProcessManager;
 }
 
@@ -165,6 +169,7 @@ protected:
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
   StoreMessageCallbackT store_intra_process_message_;

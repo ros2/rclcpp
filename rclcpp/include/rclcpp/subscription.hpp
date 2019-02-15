@@ -48,6 +48,10 @@ class NodeTopicsInterface;
 
 namespace intra_process_manager
 {
+/**
+ * NOTE(ivanpauno): IntraProcessManager is forward declared here, avoiding a circular inclusion between intra_process_manager.hpp and publisher.hpp.
+ * SharedPtr and WeakPtr of the IntraProcessManager are defined again here, to avoid a warning for accessing a member of a forward declared class.
+ */
 class IntraProcessManager;
 }
 
@@ -289,7 +293,7 @@ public:
 
   /// Implemenation detail.
   // TODO(ivanpauno): This can be moved to the base class. No reason to be here.
-  //  Also get_intra_process_message_callback_ and matches_any_intra_process_publishers_
+  // Also get_intra_process_message_callback_ and matches_any_intra_process_publishers_.
   void setup_intra_process(
     uint64_t intra_process_subscription_id,
     GetMessageCallbackType get_message_callback,
