@@ -20,7 +20,7 @@
 namespace rclcpp_action
 {
 std::string
-to_string(const GoalID & goal_id)
+to_string(const GoalUUID & goal_id)
 {
   std::stringstream stream;
   stream << std::hex;
@@ -31,7 +31,7 @@ to_string(const GoalID & goal_id)
 }
 
 void
-convert(const GoalID & goal_id, rcl_action_goal_info_t * info)
+convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 {
   for (size_t i = 0; i < 16; ++i) {
     info->goal_id.uuid[i] = goal_id[i];
@@ -39,7 +39,7 @@ convert(const GoalID & goal_id, rcl_action_goal_info_t * info)
 }
 
 void
-convert(const rcl_action_goal_info_t & info, GoalID * goal_id)
+convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id)
 {
   for (size_t i = 0; i < 16; ++i) {
     (*goal_id)[i] = info.goal_id.uuid[i];

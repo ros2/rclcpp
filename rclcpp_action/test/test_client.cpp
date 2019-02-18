@@ -91,7 +91,7 @@ protected:
         response->stamp = clock.now();
         response->accepted = (request->goal.order >= 0);
         if (response->accepted) {
-          goals[request->goal_id] = {request, response};
+          goals[request->goal_id.uuid] = {request, response};
         }
       });
     ASSERT_TRUE(goal_service != nullptr);
@@ -107,19 +107,19 @@ protected:
         const ActionGoalResultRequest::SharedPtr request,
         ActionGoalResultResponse::SharedPtr response)
       {
-        if (goals.count(request->goal_id) == 1) {
-          auto goal_request = goals[request->goal_id].first;
-          auto goal_response = goals[request->goal_id].second;
+        if (goals.count(request->goal_id.uuid) == 1) {
+          auto goal_request = goals[request->goal_id.uuid].first;
+          auto goal_response = goals[request->goal_id.uuid].second;
           ActionStatusMessage status_message;
           rclcpp_action::GoalStatus goal_status;
-          goal_status.goal_info.goal_id.uuid = goal_request->goal_id;
+          goal_status.goal_info.goal_id.uuid = goal_request->goal_id.uuid;
           goal_status.goal_info.stamp = goal_response->stamp;
           goal_status.status = rclcpp_action::GoalStatus::STATUS_EXECUTING;
           status_message.status_list.push_back(goal_status);
           status_publisher->publish(status_message);
           client_executor.spin_once();
           ActionFeedbackMessage feedback_message;
-          feedback_message.goal_id = goal_request->goal_id;
+          feedback_message.goal_id.uuid = goal_request->goal_id.uuid;
           feedback_message.feedback.sequence.push_back(0);
           feedback_publisher->publish(feedback_message);
           client_executor.spin_once();
@@ -141,7 +141,7 @@ protected:
           client_executor.spin_once();
           response->result.sequence = feedback_message.feedback.sequence;
           response->status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
-          goals.erase(request->goal_id);
+          goals.erase(request->goal_id.uuid);
         } else {
           response->status = rclcpp_action::GoalStatus::STATUS_UNKNOWN;
         }
@@ -159,7 +159,7 @@ protected:
         const ActionCancelGoalRequest::SharedPtr request,
         ActionCancelGoalResponse::SharedPtr response)
       {
-        rclcpp_action::GoalID zero_uuid;
+        rclcpp_action::GoalUUID zero_uuid;
         std::fill(zero_uuid.begin(), zero_uuid.end(), 0u);
         const rclcpp::Time cancel_stamp = request->goal_info.stamp;
         bool cancel_all = (
@@ -172,11 +172,11 @@ protected:
           auto goal_response = it->second.second;
           const rclcpp::Time goal_stamp = goal_response->stamp;
           bool cancel_this = (
-            request->goal_info.goal_id.uuid == goal_request->goal_id ||
+            request->goal_info.goal_id.uuid == goal_request->goal_id.uuid ||
             cancel_stamp > goal_stamp);
           if (cancel_all || cancel_this) {
             rclcpp_action::GoalStatus goal_status;
-            goal_status.goal_info.goal_id.uuid = goal_request->goal_id;
+            goal_status.goal_info.goal_id.uuid = goal_request->goal_id.uuid;
             goal_status.goal_info.stamp = goal_response->stamp;
             goal_status.status = rclcpp_action::GoalStatus::STATUS_CANCELED;
             status_message.status_list.push_back(goal_status);
@@ -252,7 +252,7 @@ protected:
   const char * const action_name{"fibonacci_test"};
 
   std::map<
-    rclcpp_action::GoalID,
+    rclcpp_action::GoalUUID,
     std::pair<
       typename ActionGoalRequest::SharedPtr,
       typename ActionGoalResponse::SharedPtr>> goals;

@@ -147,7 +147,7 @@ public:
   void
   publish_feedback(std::shared_ptr<typename ActionT::Impl::FeedbackMessage> feedback_msg)
   {
-    feedback_msg->goal_id = uuid_;
+    feedback_msg->goal_id.uuid = uuid_;
     publish_feedback_(feedback_msg);
   }
 
@@ -223,7 +223,7 @@ public:
   }
 
   /// Get the unique identifier of the goal
-  const GoalID &
+  const GoalUUID &
   get_goal_id() const
   {
     return uuid_;
@@ -243,10 +243,10 @@ protected:
   /// \internal
   ServerGoalHandle(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
-    GoalID uuid,
+    GoalUUID uuid,
     std::shared_ptr<const typename ActionT::Goal> goal,
-    std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state,
-    std::function<void(const GoalID &)> on_executing,
+    std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state,
+    std::function<void(const GoalUUID &)> on_executing,
     std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback
   )
   : ServerGoalHandleBase(rcl_handle), goal_(goal), uuid_(uuid),
@@ -259,12 +259,12 @@ protected:
   const std::shared_ptr<const typename ActionT::Goal> goal_;
 
   /// A unique id for the goal request.
-  const GoalID uuid_;
+  const GoalUUID uuid_;
 
   friend Server<ActionT>;
 
-  std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state_;
-  std::function<void(const GoalID &)> on_executing_;
+  std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state_;
+  std::function<void(const GoalUUID &)> on_executing_;
   std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback_;
 };
 }  // namespace rclcpp_action

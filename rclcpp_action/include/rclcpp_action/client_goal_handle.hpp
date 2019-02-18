@@ -55,7 +55,7 @@ public:
   typedef struct WrappedResult
   {
     /// The unique identifier of the goal
-    GoalID goal_id;
+    GoalUUID goal_id;
     /// A status to indicate if the goal was canceled, aborted, or suceeded
     ResultCode code;
     /// User defined fields sent back with an action
@@ -70,7 +70,7 @@ public:
 
   virtual ~ClientGoalHandle();
 
-  const GoalID &
+  const GoalUUID &
   get_goal_id() const;
 
   rclcpp::Time

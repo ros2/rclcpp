@@ -39,7 +39,7 @@ ClientGoalHandle<ActionT>::~ClientGoalHandle()
 }
 
 template<typename ActionT>
-const GoalID &
+const GoalUUID &
 ClientGoalHandle<ActionT>::get_goal_id() const
 {
   // return info_.goal_id;

@@ -148,7 +148,7 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  GoalID
+  GoalUUID
   generate_goal_id();
 
   /// \internal
@@ -288,7 +288,7 @@ public:
     std::shared_future<typename GoalHandle::SharedPtr> future(promise->get_future());
     using GoalRequest = typename ActionT::Impl::SendGoalService::Request;
     auto goal_request = std::make_shared<GoalRequest>();
-    goal_request->goal_id = this->generate_goal_id();
+    goal_request->goal_id.uuid = this->generate_goal_id();
     goal_request->goal = goal;
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
@@ -302,8 +302,7 @@ public:
           return;
         }
         GoalInfo goal_info;
-        // goal_info.goal_id = goal_request->goal_id;
-        goal_info.goal_id.uuid = goal_request->goal_id;
+        goal_info.goal_id.uuid = goal_request->goal_id.uuid;
         goal_info.stamp = goal_response->stamp;
         // Do not use std::make_shared as friendship cannot be forwarded.
         std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
@@ -439,7 +438,7 @@ private:
     using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
     typename FeedbackMessage::SharedPtr feedback_message =
       std::static_pointer_cast<FeedbackMessage>(message);
-    const GoalID & goal_id = feedback_message->goal_id;
+    const GoalUUID & goal_id = feedback_message->goal_id.uuid;
     if (goal_handles_.count(goal_id) == 0) {
       RCLCPP_DEBUG(
         this->get_logger(),
@@ -468,8 +467,8 @@ private:
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
-      // const GoalID & goal_id = status.goal_info.goal_id;
-      const GoalID & goal_id = status.goal_info.goal_id.uuid;
+      // const GoalUUID & goal_id = status.goal_info.goal_id;
+      const GoalUUID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
         RCLCPP_DEBUG(
           this->get_logger(),
@@ -496,7 +495,7 @@ private:
     using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
     // goal_result_request.goal_id = goal_handle->get_goal_id();
-    goal_result_request->goal_id = goal_handle->get_goal_id();
+    goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
       [goal_handle, this](std::shared_ptr<void> response) mutable
@@ -533,7 +532,7 @@ private:
     return future;
   }
 
-  std::map<GoalID, typename GoalHandle::SharedPtr> goal_handles_;
+  std::map<GoalUUID, typename GoalHandle::SharedPtr> goal_handles_;
   std::mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
