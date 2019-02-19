@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <iostream>
 #include <string>
 #include <memory>
 
@@ -34,7 +35,14 @@ struct TestParameters
 {
   rclcpp::NodeOptions node_options[2];
   uint64_t intraprocess_count_results[2];
+  std::string description;
 };
+
+std::ostream & operator<<(std::ostream & out, const TestParameters & params)
+{
+  out << params.description;
+  return out;
+}
 
 class TestPublisherSubscriptionCount : public ::testing::TestWithParam<TestParameters>
 {
@@ -116,14 +124,15 @@ auto get_new_context()
 TestParameters parameters[] = {
   /*
      Testing publisher subscription count api and internal process subscription count.
-     Two subscriptions in same using intra-process comm.
+     Two subscriptions in the same topic, both using intraprocess comm.
    */
   {
     {
       rclcpp::NodeOptions().use_intra_process_comms(true),
       rclcpp::NodeOptions().use_intra_process_comms(true)
     },
-    {1u, 2u}
+    {1u, 2u},
+    "two_subscriptions_intraprocess_comm"
   },
   /*
      Testing publisher subscription count api and internal process subscription count.
@@ -134,7 +143,8 @@ TestParameters parameters[] = {
       rclcpp::NodeOptions().use_intra_process_comms(true),
       rclcpp::NodeOptions().use_intra_process_comms(false)
     },
-    {1u, 1u}
+    {1u, 1u},
+    "two_subscriptions_one_intraprocess_one_not"
   },
   /*
      Testing publisher subscription count api and internal process subscription count.
@@ -145,7 +155,8 @@ TestParameters parameters[] = {
       rclcpp::NodeOptions().use_intra_process_comms(true),
       rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(true)
     },
-    {1u, 1u}
+    {1u, 1u},
+    "two_subscriptions_in_two_contexts_with_intraprocess_comm"
   },
   /*
      Testing publisher subscription count api and internal process subscription count.
@@ -156,12 +167,12 @@ TestParameters parameters[] = {
       rclcpp::NodeOptions().use_intra_process_comms(false),
       rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(false)
     },
-    {0u, 0u}
+    {0u, 0u},
+    "two_subscriptions_in_two_contexts_without_intraprocess_comm"
   }
 };
 
-// NOTE(ivanpauno): The extra comma is for avoiding a compiler warning, from GTEST.
 INSTANTIATE_TEST_CASE_P(
-  TestWithDifferentNodeOptions,
-  TestPublisherSubscriptionCount,
-  ::testing::ValuesIn(parameters), );
+  TestWithDifferentNodeOptions, TestPublisherSubscriptionCount,
+  ::testing::ValuesIn(parameters),
+  ::testing::PrintToStringParamName());

@@ -36,7 +36,9 @@ SubscriptionBase::SubscriptionBase(
   bool is_serialized)
 : node_handle_(node_handle),
   type_support_(type_support_handle),
-  is_serialized_(is_serialized)
+  is_serialized_(is_serialized),
+  use_intra_process_(false),
+  intra_process_subscription_id_(0)
 {
   auto custom_deletor = [node_handle](rcl_subscription_t * rcl_subs)
     {
@@ -81,9 +83,15 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
+  if (!use_intra_process_) {
+    return;
+  }
   auto ipm = weak_ipm_.lock();
   if (!ipm) {
     // TODO(ivanpauno): should this raise an error?
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Intra process manager died before than a subscription.");
     return;
   }
   ipm->remove_subscription(intra_process_subscription_id_);

@@ -145,14 +145,15 @@ public:
   get_publisher_count() const;
 
 protected:
-  using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
-  IntraProcessManagerWeakPtr weak_ipm_;
-  uint64_t intra_process_subscription_id_;
-
   std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
   std::shared_ptr<rcl_node_t> node_handle_;
+
+  using IntraProcessManagerWeakPtr =
+    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  bool use_intra_process_;
+  IntraProcessManagerWeakPtr weak_ipm_;
+  uint64_t intra_process_subscription_id_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)
@@ -326,6 +327,7 @@ public:
     get_intra_process_message_callback_ = get_message_callback;
     matches_any_intra_process_publishers_ = matches_any_publisher_callback;
     weak_ipm_ = weak_ipm;
+    use_intra_process_ = true;
   }
 
   /// Implemenation detail.

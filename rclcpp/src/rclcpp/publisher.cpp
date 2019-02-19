@@ -98,8 +98,15 @@ PublisherBase::~PublisherBase()
   }
 
   auto ipm = weak_ipm_.lock();
+
+  if (!use_intra_process_) {
+    return;
+  }
   if (!ipm) {
     // TODO(ivanpauno): should this raise an error?
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Intra process manager died before than a publisher.");
     return;
   }
   ipm->remove_publisher(intra_process_publisher_id_);

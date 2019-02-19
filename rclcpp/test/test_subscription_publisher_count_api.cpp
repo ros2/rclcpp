@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <iostream>
 #include <string>
 #include <memory>
 
@@ -24,7 +25,19 @@
 
 using rcl_interfaces::msg::IntraProcessMessage;
 
-class TestSubscriptionPublisherCount : public ::testing::TestWithParam<rclcpp::NodeOptions>
+struct TestParameters
+{
+  rclcpp::NodeOptions node_options;
+  std::string description;
+};
+
+std::ostream & operator<<(std::ostream & out, const TestParameters & params)
+{
+  out << params.description;
+  return out;
+}
+
+class TestSubscriptionPublisherCount : public ::testing::TestWithParam<TestParameters>
 {
 public:
   static void SetUpTestCase()
@@ -47,7 +60,7 @@ void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
 
 TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
 {
-  rclcpp::NodeOptions node_options = GetParam();
+  rclcpp::NodeOptions node_options = GetParam().node_options;
   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>(
     "my_node",
     "/ns",
@@ -84,21 +97,27 @@ auto get_new_context()
   return context;
 }
 
-rclcpp::NodeOptions parameters[] = {
+TestParameters parameters[] = {
   /*
      Testing subscription publisher count api.
      One context.
    */
-  rclcpp::NodeOptions(),
+  {
+    rclcpp::NodeOptions(),
+    "one_context_test"
+  },
   /*
      Testing subscription publisher count api.
      Two contexts.
    */
-  rclcpp::NodeOptions().context(get_new_context())
+  {
+    rclcpp::NodeOptions().context(get_new_context()),
+    "two_contexts_test"
+  }
 };
 
-// NOTE(ivanpauno): The extra comma is for avoiding a compiler warning, from GTEST.
 INSTANTIATE_TEST_CASE_P(
   TestWithDifferentNodeOptions,
   TestSubscriptionPublisherCount,
-  ::testing::ValuesIn(parameters), );
+  testing::ValuesIn(parameters),
+  testing::PrintToStringParamName());
