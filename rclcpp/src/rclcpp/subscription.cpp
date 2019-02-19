@@ -35,10 +35,10 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   bool is_serialized)
 : node_handle_(node_handle),
-  type_support_(type_support_handle),
-  is_serialized_(is_serialized),
   use_intra_process_(false),
-  intra_process_subscription_id_(0)
+  intra_process_subscription_id_(0),
+  type_support_(type_support_handle),
+  is_serialized_(is_serialized)
 {
   auto custom_deletor = [node_handle](rcl_subscription_t * rcl_subs)
     {
