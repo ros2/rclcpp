@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+
+# Copyright 2019 Open Source Robotics Foundation, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+Posprocess communication_performance logging.
+
+Calculates latency between publish and subscribe, and actual
+publishers and subscriptions rates.
+"""
+
+import argparse
+
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+
+import numpy as np
+
+
+def main():
+    """Do stuff."""
+    parser = argparse.ArgumentParser(description='Process logged data.')
+    parser.add_argument('-d', '--dir', nargs='?', default='./logs', const='./logs')
+
+    args = parser.parse_args()
+
+    path = Path(args.dir)
+    publishers = path.glob('publisher_*')
+    subscriptions = path.glob('subscription_*')
+    publishers_data = dict({})
+    for publisher in publishers:
+        publisher_id = int(str(publisher).partition('publisher_')[2])
+        csv_data = np.genfromtxt(
+            str(publisher),
+            dtype=(int, float),
+            delimiter=',')
+        publishers_data[publisher_id] = {row[0]: row[1] for row in csv_data}
+    subscription_data = dict({})
+    for subscription in subscriptions:
+        subscription_id = int(str(subscription).partition('subscription_')[2])
+        csv_data = np.genfromtxt(
+            str(subscription),
+            dtype=(int, int, float),
+            delimiter=',')
+        subscription_data[subscription_id] = dict({})
+        for row in csv_data:
+            try:
+                subscription_data[subscription_id][row[0]].update({row[1]: row[2]})
+            except:
+                subscription_data[subscription_id][row[0]] = {row[1]: row[2]}
+    plot_publishers_average_rate(publishers_data)
+    plot_subscriptions_average_rate(subscription_data)
+    plot_latencys(subscription_data, publishers_data)
+    plt.show()
+
+
+def plot_publishers_average_rate(data):
+    pub_rates = dict({})
+    for pub_id in sorted(data):
+        timestamps = np.array(list(data[pub_id].values()))
+        period = np.array([timestamps[i+1] - timestamps[i]
+                           for i in range(timestamps.size-1)])
+        pub_rates[pub_id] = np.average(period) / 1000
+    fig, ax = plt.subplots()
+    ax.plot(
+        np.array(list(pub_rates.keys())),
+        np.array(list(pub_rates.values())),
+        'ro',
+        marker='o')
+    fig.suptitle('Publishers average period')
+    fig.canvas.set_window_title('Publishers average period')
+
+
+def plot_subscriptions_average_rate(data):
+    sub_rates = dict({})
+    for sub_id in sorted(data):
+        for pub_id in sorted(data[sub_id]):
+            timestamps = np.array(list(data[sub_id][pub_id].values()))
+            period = np.array([timestamps[i+1] - timestamps[i]
+                               for i in range(timestamps.size-1)])
+            sub_rates[(sub_id, pub_id)] = np.average(period) / 1000
+    fig, ax = plt.subplots()
+    x = np.linspace(0, len(sub_rates)-1, len(sub_rates))
+    y = np.array(list(sub_rates.values()))
+    ax.plot(
+        x,
+        y,
+        'ro',
+        marker='o')
+    fig.suptitle('Subscriptions average period')
+    fig.canvas.set_window_title('Subscriptions average period')
+
+
+def plot_latencys(sub_data, pub_data):
+    av_latencys = dict({})
+    for sub_id in sorted(sub_data):
+        for pub_id in sorted(sub_data[sub_id]):
+            latencys = np.array([
+                sub_data[sub_id][pub_id][m_id] -
+                pub_data[pub_id][m_id]
+                for m_id in sub_data[sub_id][pub_id]]
+            )
+            av_latencys[(sub_id, pub_id)] = np.average(latencys) / 1000
+    fig, ax = plt.subplots()
+    x = np.linspace(0, len(av_latencys)-1, len(av_latencys))
+    y = np.array(list(av_latencys.values()))
+    ax.plot(x, y, marker='o')
+    fig.suptitle('Average latencys, between publish and subscribe')
+    fig.canvas.set_window_title('Average latencys, between publish and subscribe')
+
+
+if __name__ == '__main__':
+    main()
