@@ -248,6 +248,16 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_publisher ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_publisher_subscription_count_api test/test_publisher_subscription_count_api.cpp)
+  if(TARGET test_publisher_subscription_count_api)
+    target_include_directories(test_publisher_subscription_count_api PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_publisher_subscription_count_api ${PROJECT_NAME})
+  endif()
   ament_add_gtest(test_rate test/test_rate.cpp)
   if(TARGET test_rate)
     target_include_directories(test_rate PUBLIC
@@ -289,6 +299,16 @@ if(BUILD_TESTING)
       ${rosidl_typesupport_cpp_INCLUDE_DIRS}
     )
     target_link_libraries(test_subscription ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_subscription_publisher_count_api test/test_subscription_publisher_count_api.cpp)
+  if(TARGET test_subscription_publisher_count_api)
+    target_include_directories(test_subscription_publisher_count_api PUBLIC
+      ${rcl_interfaces_INCLUDE_DIRS}
+      ${rmw_INCLUDE_DIRS}
+      ${rosidl_generator_cpp_INCLUDE_DIRS}
+      ${rosidl_typesupport_cpp_INCLUDE_DIRS}
+    )
+    target_link_libraries(test_subscription_publisher_count_api ${PROJECT_NAME})
   endif()
   find_package(test_msgs REQUIRED)
   ament_add_gtest(test_subscription_traits test/test_subscription_traits.cpp)

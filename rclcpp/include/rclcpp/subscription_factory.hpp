@@ -166,6 +166,7 @@ create_subscription_factory(
         intra_process_subscription_id,
         take_intra_process_message_func,
         matches_any_publisher_func,
+        weak_ipm,
         intra_process_options
       );
     };

@@ -54,6 +54,7 @@ NodeTopics::create_publisher(
     publisher->setup_intra_process(
       intra_process_publisher_id,
       shared_publish_callback,
+      ipm,
       publisher_options);
   }
 

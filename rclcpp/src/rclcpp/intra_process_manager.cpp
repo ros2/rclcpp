@@ -56,6 +56,12 @@ IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
   return impl_->matches_any_publishers(id);
 }
 
+size_t
+IntraProcessManager::get_subscription_count(uint64_t intra_process_publisher_id) const
+{
+  return impl_->get_subscription_count(intra_process_publisher_id);
+}
+
 uint64_t
 IntraProcessManager::get_next_unique_id()
 {

@@ -20,6 +20,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
+#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 
 #include "rmw/error_handling.h"
@@ -34,6 +35,8 @@ SubscriptionBase::SubscriptionBase(
   const rcl_subscription_options_t & subscription_options,
   bool is_serialized)
 : node_handle_(node_handle),
+  use_intra_process_(false),
+  intra_process_subscription_id_(0),
   type_support_(type_support_handle),
   is_serialized_(is_serialized)
 {
@@ -80,6 +83,18 @@ SubscriptionBase::SubscriptionBase(
 
 SubscriptionBase::~SubscriptionBase()
 {
+  if (!use_intra_process_) {
+    return;
+  }
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    // TODO(ivanpauno): should this raise an error?
+    RCLCPP_WARN(
+      rclcpp::get_logger("rclcpp"),
+      "Intra process manager died before than a subscription.");
+    return;
+  }
+  ipm->remove_subscription(intra_process_subscription_id_);
 }
 
 const char *
@@ -116,4 +131,19 @@ bool
 SubscriptionBase::is_serialized() const
 {
   return is_serialized_;
+}
+
+size_t
+SubscriptionBase::get_publisher_count() const
+{
+  size_t inter_process_publisher_count = 0;
+
+  rmw_ret_t status = rcl_subscription_get_publisher_count(
+    subscription_handle_.get(),
+    &inter_process_publisher_count);
+
+  if (RCL_RET_OK != status) {
+    rclcpp::exceptions::throw_from_rcl_error(status, "failed to get get publisher count");
+  }
+  return inter_process_publisher_count;
 }

@@ -346,6 +346,11 @@ public:
   bool
   matches_any_publishers(const rmw_gid_t * id) const;
 
+  /// Return the number of intraprocess subscriptions to a topic, given the publisher id.
+  RCLCPP_PUBLIC
+  size_t
+  get_subscription_count(uint64_t intra_process_publisher_id) const;
+
 private:
   RCLCPP_PUBLIC
   static uint64_t
