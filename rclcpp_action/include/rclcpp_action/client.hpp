@@ -467,7 +467,6 @@ private:
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
-      // const GoalUUID & goal_id = status.goal_info.goal_id;
       const GoalUUID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
         RCLCPP_DEBUG(
@@ -494,7 +493,6 @@ private:
   {
     using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
-    // goal_result_request.goal_id = goal_handle->get_goal_id();
     goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
