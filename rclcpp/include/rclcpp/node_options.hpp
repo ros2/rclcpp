@@ -131,7 +131,7 @@ public:
 
   /// Return a reference to the use_global_arguments flag.
   RCLCPP_PUBLIC
-  const bool &
+  bool
   use_global_arguments() const;
 
   /// Set the use_global_arguments flag, return this for parameter idiom.
@@ -144,11 +144,11 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  use_global_arguments(const bool & use_global_arguments);
+  use_global_arguments(bool use_global_arguments);
 
   /// Return a reference to the use_intra_process_comms flag
   RCLCPP_PUBLIC
-  const bool &
+  bool
   use_intra_process_comms() const;
 
   /// Set the use_intra_process_comms flag, return this for parameter idiom.
@@ -163,11 +163,11 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  use_intra_process_comms(const bool & use_intra_process_comms);
+  use_intra_process_comms(bool use_intra_process_comms);
 
   /// Return a reference to the start_parameter_services flag
   RCLCPP_PUBLIC
-  const bool &
+  bool
   start_parameter_services() const;
 
   /// Set the start_parameter_services flag, return this for parameter idiom.
@@ -182,11 +182,11 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  start_parameter_services(const bool & start_parameter_services);
+  start_parameter_services(bool start_parameter_services);
 
   /// Return a reference to the start_parameter_event_publisher flag.
   RCLCPP_PUBLIC
-  const bool &
+  bool
   start_parameter_event_publisher() const;
 
   /// Set the start_parameter_event_publisher flag, return this for parameter idiom.
@@ -198,7 +198,7 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  start_parameter_event_publisher(const bool & start_parameter_event_publisher);
+  start_parameter_event_publisher(bool start_parameter_event_publisher);
 
   /// Return a reference to the parameter_event_qos_profile QoS.
   RCLCPP_PUBLIC
@@ -215,7 +215,7 @@ public:
 
   /// Return a reference to the allow_undeclared_parameters flag.
   RCLCPP_PUBLIC
-  const bool &
+  bool
   allow_undeclared_parameters() const;
 
   /// Set the allow_undeclared_parameters, return this for parameter idiom.
@@ -226,7 +226,7 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  allow_undeclared_parameters(const bool & allow_undeclared_parameters);
+  allow_undeclared_parameters(bool allow_undeclared_parameters);
 
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
