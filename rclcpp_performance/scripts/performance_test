@@ -1,0 +1,154 @@
+#!/bin/bash
+
+TEST_FOLDERS=(
+    "test_intra_shared_10ms_n100_m10000_l100000"
+    "test_inter_shared_10ms_n100_m10000_l100000"
+    "test_intra_unique_10ms_n100_m10000_l100000"
+    "test_inter_unique_10ms_n100_m10000_l100000"
+
+    "test_intra_shared_10ms_n10_m10000_l1000000"
+    "test_inter_shared_10ms_n10_m10000_l1000000"
+    "test_intra_unique_10ms_n10_m10000_l1000000"
+    "test_inter_unique_10ms_n10_m10000_l1000000"
+
+    "test_intra_shared_10ms_n1_m10000_l10000000"
+    "test_inter_shared_10ms_n1_m10000_l10000000"
+    "test_intra_unique_10ms_n1_m10000_l10000000"
+    "test_inter_unique_10ms_n1_m10000_l10000000"
+
+    # These tests below suffers of starvation
+    # "test_intra_shared_10ms_n5_m100_l10000000"
+    # "test_inter_shared_10ms_n5_m100_l10000000"
+)
+
+COMMAND_ARGUMENTS=(
+    "-p 10 -n 100 -m 10000 -l 100000 -intra"
+    "-p 10 -n 100 -m 10000 -l 100000"
+    "-p 10 -n 100 -m 10000 -l 100000 -intra -unique"
+    "-p 10 -n 100 -m 10000 -l 100000 -unique"
+
+    "-p 10 -n 10 -m 10000 -l 1000000 -intra"
+    "-p 10 -n 10 -m 10000 -l 1000000"
+    "-p 10 -n 10 -m 10000 -l 1000000 -intra -unique"
+    "-p 10 -n 10 -m 10000 -l 1000000 -unique"
+
+    "-p 10 -n 1 -m 10000 -l 10000000 -intra"
+    "-p 10 -n 1 -m 10000 -l 10000000"
+    "-p 10 -n 1 -m 10000 -l 10000000 -intra -unique"
+    "-p 10 -n 1 -m 10000 -l 10000000 -unique"
+
+    # "-p 10 -n 5 -m 10000 -l 10000000 -intra"
+    # "-p 10 -n 5 -m 10000 -l 10000000"
+)
+
+
+DESCRIPTION=(
+    "Intraprocess, shared publish, 100 pubs/subs, 10000 messages, 100000 bytes length, 10ms period."
+    "Interprocess, shared publish, 100 pubs/subs, 10000 messages, 100000 bytes length, 10ms period."
+    "Intraprocess, unique publish, 100 pubs/subs, 10000 messages, 100000 bytes length, 10ms period."
+    "Interprocess, unique publish, 100 pubs/subs, 10000 messages, 100000 bytes length, 10ms period."
+
+    "Intraprocess, shared publish, 10 pubs/subs, 10000 messages, 1000000 bytes length, 10ms period."
+    "Interprocess, shared publish, 10 pubs/subs, 10000 messages, 1000000 bytes length, 10ms period."
+    "Intraprocess, unique publish, 10 pubs/subs, 10000 messages, 1000000 bytes length, 10ms period."
+    "Interprocess, unique publish, 10 pubs/subs, 10000 messages, 1000000 bytes length, 10ms period."
+
+    "Intraprocess, shared publish, 1 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
+    "Interprocess, shared publish, 1 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
+    "Intraprocess, unique publish, 1 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
+    "Interprocess, unique publish, 1 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
+
+    # "Intraprocess, shared publish, 5 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
+    # "Interprocess, shared publish, 5 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
+)
+
+main()
+{
+    set -e
+    parse_arguments "$@"
+    if [[ $skip -eq 0 ]]; then
+        run_tests
+    fi
+    show_results
+}
+
+parse_arguments()
+{
+    set -e
+    out_dir="logs"
+    skip=0
+
+    while [[ $# > 0 ]]
+    do
+        key="$1"
+        case $key in
+            -d|--dir)
+                out_dir="$2"
+                shift # past argument
+            ;;
+            -s|--skip)
+                skip=1
+            ;;
+            -h|--help)
+                print_help
+            ;;
+            *)
+                print_help
+            ;;
+        esac
+        shift # past argument or value
+    done
+}
+
+print_help()
+{
+    echo "Usage: $0 -d OUTPUT_DIR [--skip]"
+    echo "The logs file will be generated inside OUTPUT_DIR"
+    echo "Options:"
+    echo -e "\t\t-s|--skip: Only posprocess and show results, skip running tests."
+    exit 0
+}
+
+run_tests()
+{
+    set -e
+    mkdir -p $out_dir
+    pushd $out_dir > /dev/null
+
+    i=0
+    for folder in "${TEST_FOLDERS[@]}"
+    do
+        echo -e "\e[34mRunning performance test with the following configuration:\e[39m"
+        echo -e "\e[34m\t\t${COMMAND_ARGUMENTS[i]}\e[39m"
+        mkdir -p $folder
+        ros2 run rclcpp_performance communication_performance -d $folder ${COMMAND_ARGUMENTS[i]}
+        i=$i+1
+        echo
+    done
+
+    popd
+}
+
+show_results()
+{
+    set -e
+    pushd $out_dir > /dev/null
+
+    echo -e "\e[34mThe generated data will be posprocessed an showed.\e[39m"
+    echo
+
+    i=0
+    for folder in "${TEST_FOLDERS[@]}"
+    do
+        echo "Next configuration to be posprocessed:"
+        echo -e "\t\t${COMMAND_ARGUMENTS[i]}"
+        read -p "Press enter to posprocess and plot the results."
+        echo
+        ros2 run rclcpp_performance posprocess_logging -d $folder
+        i=$i+1
+    done
+
+    popd
+}
+
+main "$@"

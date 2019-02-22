@@ -36,6 +36,7 @@ public:
     uint64_t publisher_id,
     std::string base_dir,
     uint64_t number_of_messages_to_send,
+    uint64_t message_length,
     PeriodT period,
     bool use_unique_message,
     rmw_qos_profile_t qos_profile = rmw_qos_profile_default) :
@@ -44,6 +45,7 @@ public:
     // Note(ivanpauno): msg type could be changed, to try the different publish methods.
     shared_msg_ = std::make_shared<rclcpp_performance::msg::MatchingPublisher>();
     shared_msg_->publisher_id = publisher_id;
+    shared_msg_->data.resize(message_length);
     shared_msg_->message_id = 0;
 
     std::stringstream ss;
@@ -76,7 +78,7 @@ public:
         };
       timer_ = node->create_wall_timer(period, callback);
     } else {
-      auto callback = [this]() -> void
+      auto callback = [this, message_length]() -> void
         {
           if (this->number_of_messages_to_send_) {
             // First create a shared message and copy the data.
@@ -85,6 +87,7 @@ public:
               std::make_unique<rclcpp_performance::msg::MatchingPublisher>();
             unique_msg->publisher_id = this->shared_msg_->publisher_id;
             unique_msg->message_id = this->shared_msg_->message_id;
+            unique_msg->data.resize(message_length);
             this->logging_file_ << unique_msg->message_id << ", "
             << std::chrono::duration_cast<TimestampT>(
                 std::chrono::system_clock::now().time_since_epoch()).count()
@@ -194,6 +197,7 @@ public:
     std::string base_dir,
     uint64_t number_of_pub_sub,
     uint64_t number_of_messages,
+    uint64_t message_length,
     PeriodT publish_period,
     bool use_unique_message) :
   Node(node_name, node_options)
@@ -216,6 +220,7 @@ public:
           i,
           base_dir,
           number_of_messages,
+          message_length,
           publish_period,
           use_unique_message);
       publishers_.push_back(pub);
@@ -234,6 +239,7 @@ int main(int argc, char ** argv)
   PeriodT period = PeriodT(100);
   uint64_t number_of_messages = 1000;
   uint64_t number_of_publishers = 100;
+  uint64_t message_length = 100;
   rclcpp::NodeOptions node_options;
   bool use_unique_message = false;
 
@@ -265,6 +271,12 @@ int main(int argc, char ** argv)
     iss >> number_of_publishers;
   }
 
+  cli_option = rcutils_cli_get_option(argv, argv + argc, "-l");
+  if (nullptr != cli_option) {
+    std::istringstream iss(cli_option);
+    iss >> message_length;
+  }
+
   bool option = rcutils_cli_option_exist(argv, argv + argc, "-intra");
   if (option) {
     node_options.use_intra_process_comms(true);
@@ -283,6 +295,7 @@ int main(int argc, char ** argv)
     base_dir,
     number_of_publishers, //number of publishers/subscriptions
     number_of_messages, // number of messages to be send
+    message_length, // message length in bytes
     period, // Publish period
     use_unique_message); //use unique message or shared
 

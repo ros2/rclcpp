@@ -39,7 +39,7 @@ ament_export_dependencies(rosidl_default_runtime)
 ament_package()
 
 install(
-  PROGRAMS scripts/posprocess_logging
+  PROGRAMS scripts/posprocess_logging scripts/performance_test
   DESTINATION lib/${PROJECT_NAME}
 )
 
