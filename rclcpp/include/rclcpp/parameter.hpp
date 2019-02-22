@@ -191,7 +191,7 @@ inline
 auto
 get_value_helper<rclcpp::Parameter>(const rclcpp::Parameter * parameter)
 {
-  // Use this labmda to ensure it's a const reference being returned (and not a copy).
+  // Use this lambda to ensure it's a const reference being returned (and not a copy).
   auto type_enforcing_lambda =
     [&parameter]() -> const rclcpp::Parameter & {
       return *parameter;
