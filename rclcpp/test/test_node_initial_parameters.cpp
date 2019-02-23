@@ -73,8 +73,7 @@ TEST_F(TestNodeWithInitialValues, multiple_declared_initial_values) {
 
   auto options = rclcpp::NodeOptions()
     .initial_parameters(initial_values)
-    .use_global_arguments(false)
-    .use_intra_process_comms(false);
+    .use_global_arguments(false);
   auto node = rclcpp::Node::make_shared("node_name", options);
 
   node->declare_parameter("foo");
@@ -91,20 +90,17 @@ TEST_F(TestNodeWithInitialValues, multiple_declared_initial_values) {
 }
 
 TEST_F(TestNodeWithInitialValues, multiple_undeclared_initial_values_allowed) {
-  auto context = rclcpp::contexts::default_context::get_global_default_context();
-  const std::vector<std::string> arguments = {};
   const std::vector<rclcpp::Parameter> initial_values = {
     rclcpp::Parameter("foo", true),
     rclcpp::Parameter("bar", "hello world"),
     rclcpp::Parameter("baz", std::vector<double>{3.14, 2.718})
   };
-  const bool use_global_arguments = false;
-  const bool use_intra_process = false;
-  const bool start_param_services = true;
-  const bool allow_undeclared_params = true;
-  auto node = rclcpp::Node::make_shared(
-    "node_name", "", context, arguments, initial_values, use_global_arguments, use_intra_process,
-    start_param_services, allow_undeclared_params);
+
+  auto options = rclcpp::NodeOptions()
+    .initial_parameters(initial_values)
+    .use_global_arguments(false)
+    .allow_undeclared_parameters(true);
+  auto node = rclcpp::Node::make_shared("node_name", options);
 
   auto list_params_result = node->list_parameters({}, 0);
   EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());
