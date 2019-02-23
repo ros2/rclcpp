@@ -152,54 +152,54 @@ NodeOptions::initial_parameters(const std::vector<rclcpp::Parameter> & initial_p
   return *this;
 }
 
-const bool &
+bool
 NodeOptions::use_global_arguments() const
 {
   return this->node_options_->use_global_arguments;
 }
 
 NodeOptions &
-NodeOptions::use_global_arguments(const bool & use_global_arguments)
+NodeOptions::use_global_arguments(bool use_global_arguments)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->use_global_arguments_ = use_global_arguments;
   return *this;
 }
 
-const bool &
+bool
 NodeOptions::use_intra_process_comms() const
 {
   return this->use_intra_process_comms_;
 }
 
 NodeOptions &
-NodeOptions::use_intra_process_comms(const bool & use_intra_process_comms)
+NodeOptions::use_intra_process_comms(bool use_intra_process_comms)
 {
   this->use_intra_process_comms_ = use_intra_process_comms;
   return *this;
 }
 
-const bool &
+bool
 NodeOptions::start_parameter_services() const
 {
   return this->start_parameter_services_;
 }
 
 NodeOptions &
-NodeOptions::start_parameter_services(const bool & start_parameter_services)
+NodeOptions::start_parameter_services(bool start_parameter_services)
 {
   this->start_parameter_services_ = start_parameter_services;
   return *this;
 }
 
-const bool &
+bool
 NodeOptions::start_parameter_event_publisher() const
 {
   return this->start_parameter_event_publisher_;
 }
 
 NodeOptions &
-NodeOptions::start_parameter_event_publisher(const bool & start_parameter_event_publisher)
+NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publisher)
 {
   this->start_parameter_event_publisher_ = start_parameter_event_publisher;
   return *this;
@@ -218,14 +218,14 @@ NodeOptions::parameter_event_qos_profile(const rmw_qos_profile_t & parameter_eve
   return *this;
 }
 
-const bool &
+bool
 NodeOptions::allow_undeclared_parameters() const
 {
   return this->allow_undeclared_parameters_;
 }
 
 NodeOptions &
-NodeOptions::allow_undeclared_parameters(const bool & allow_undeclared_parameters)
+NodeOptions::allow_undeclared_parameters(bool allow_undeclared_parameters)
 {
   this->allow_undeclared_parameters_ = allow_undeclared_parameters;
   return *this;
