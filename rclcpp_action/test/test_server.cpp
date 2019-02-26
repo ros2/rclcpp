@@ -474,7 +474,7 @@ TEST_F(TestServer, publish_status_aborted)
     });
 
   send_goal_request(node, uuid);
-  received_handle->set_aborted(std::make_shared<Fibonacci::Impl::GetResultService::Response>());
+  received_handle->set_aborted(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
