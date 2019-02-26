@@ -145,10 +145,12 @@ public:
    * \param[in] feedback_msg the message to publish to clients.
    */
   void
-  publish_feedback(std::shared_ptr<typename ActionT::Impl::FeedbackMessage> feedback_msg)
+  publish_feedback(std::shared_ptr<typename ActionT::Feedback> feedback_msg)
   {
-    feedback_msg->goal_id.uuid = uuid_;
-    publish_feedback_(feedback_msg);
+    auto feedback_message = std::make_shared<typename ActionT::Impl::FeedbackMessage>();
+    feedback_message->goal_id.uuid = uuid_;
+    feedback_message->feedback = *feedback_msg;
+    publish_feedback_(feedback_message);
   }
 
   // TODO(sloretz) which exception is raised?
