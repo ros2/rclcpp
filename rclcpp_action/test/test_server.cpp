@@ -531,8 +531,8 @@ TEST_F(TestServer, publish_feedback)
 
   send_goal_request(node, uuid);
 
-  auto sent_message = std::make_shared<FeedbackT>();
-  sent_message->feedback.sequence = {1, 1, 2, 3, 5};
+  auto sent_message = std::make_shared<Fibonacci::Feedback>();
+  sent_message->sequence = {1, 1, 2, 3, 5};
   received_handle->publish_feedback(sent_message);
 
   // 10 seconds
@@ -544,7 +544,7 @@ TEST_F(TestServer, publish_feedback)
 
   ASSERT_EQ(1u, received_msgs.size());
   auto & msg = received_msgs.back();
-  ASSERT_EQ(sent_message->feedback.sequence, msg->feedback.sequence);
+  ASSERT_EQ(sent_message->sequence, msg->feedback.sequence);
 }
 
 TEST_F(TestServer, get_result)
