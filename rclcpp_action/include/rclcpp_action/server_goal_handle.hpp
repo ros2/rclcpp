@@ -162,11 +162,13 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_aborted(typename ActionT::Impl::GetResultService::Response::SharedPtr result_msg)
+  set_aborted(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_aborted();
-    result_msg->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
-    on_terminal_state_(uuid_, result_msg);
+    auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    response->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
+    response->result = *result_msg;
+    on_terminal_state_(uuid_, response);
   }
 
   /// Indicate that a goal has been reached.
