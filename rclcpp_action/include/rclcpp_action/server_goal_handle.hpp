@@ -179,11 +179,13 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_succeeded(typename ActionT::Impl::GetResultService::Response::SharedPtr result_msg)
+  set_succeeded(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_succeeded();
-    result_msg->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
-    on_terminal_state_(uuid_, result_msg);
+    auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    response->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
+    response->result = *result_msg;
+    on_terminal_state_(uuid_, response);
   }
 
   /// Indicate that a goal has been canceled.
@@ -196,11 +198,13 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_canceled(typename ActionT::Impl::GetResultService::Response::SharedPtr result_msg)
+  set_canceled(typename ActionT::Result::SharedPtr result_msg)
   {
     _set_canceled();
-    result_msg->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
-    on_terminal_state_(uuid_, result_msg);
+    auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    response->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+    response->result = *result_msg;
+    on_terminal_state_(uuid_, response);
   }
 
   /// Indicate that the server is starting to execute a goal.

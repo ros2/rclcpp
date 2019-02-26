@@ -364,7 +364,7 @@ TEST_F(TestServer, publish_status_canceled)
   send_goal_request(node, uuid);
   send_cancel_request(node, uuid);
 
-  received_handle->set_canceled(std::make_shared<Fibonacci::Impl::GetResultService::Response>());
+  received_handle->set_canceled(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -419,7 +419,7 @@ TEST_F(TestServer, publish_status_succeeded)
     });
 
   send_goal_request(node, uuid);
-  received_handle->set_succeeded(std::make_shared<Fibonacci::Impl::GetResultService::Response>());
+  received_handle->set_succeeded(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -590,8 +590,8 @@ TEST_F(TestServer, get_result)
   auto future = result_client->async_send_request(request);
 
   // Send a result
-  auto result = std::make_shared<Fibonacci::Impl::GetResultService::Response>();
-  result->result.sequence = {5, 8, 13, 21};
+  auto result = std::make_shared<Fibonacci::Result>();
+  result->sequence = {5, 8, 13, 21};
   received_handle->set_succeeded(result);
 
   // Wait for the result request to be received
@@ -600,7 +600,7 @@ TEST_F(TestServer, get_result)
 
   auto response = future.get();
   EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_SUCCEEDED, response->status);
-  EXPECT_EQ(result->result.sequence, response->result.sequence);
+  EXPECT_EQ(result->sequence, response->result.sequence);
 }
 
 TEST_F(TestServer, deferred_execution)
