@@ -54,7 +54,7 @@ class ClientBaseImpl;
  *
  * Internally, this class is responsible for interfacing with the `rcl_action` API.
  */
-class ClientBase : public rclcpp::Waitable
+class RCLCPP_ACTION_PUBLIC ClientBase : public rclcpp::Waitable
 {
 public:
   RCLCPP_ACTION_PUBLIC

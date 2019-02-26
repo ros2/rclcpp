@@ -23,7 +23,7 @@
 namespace rclcpp
 {
 
-class Waitable
+class RCLCPP_PUBLIC Waitable
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Waitable)

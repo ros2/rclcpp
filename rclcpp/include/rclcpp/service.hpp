@@ -37,7 +37,7 @@
 namespace rclcpp
 {
 
-class ServiceBase
+class RCLCPP_PUBLIC ServiceBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)

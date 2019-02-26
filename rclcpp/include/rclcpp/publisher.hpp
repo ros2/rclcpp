@@ -54,7 +54,7 @@ namespace intra_process_manager
 class IntraProcessManager;
 }
 
-class PublisherBase
+class RCLCPP_PUBLIC PublisherBase
 {
   friend ::rclcpp::node_interfaces::NodeTopicsInterface;
 

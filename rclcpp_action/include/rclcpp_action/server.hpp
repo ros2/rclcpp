@@ -67,7 +67,7 @@ enum class CancelResponse : int8_t
  *
  * Internally, this class is responsible for interfacing with the `rcl_action` API.
  */
-class ServerBase : public rclcpp::Waitable
+class RCLCPP_ACTION_PUBLIC ServerBase : public rclcpp::Waitable
 {
 public:
   RCLCPP_ACTION_PUBLIC

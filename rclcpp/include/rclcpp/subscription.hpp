@@ -57,7 +57,7 @@ class IntraProcessManager;
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
-class SubscriptionBase
+class RCLCPP_PUBLIC SubscriptionBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)

@@ -92,7 +92,7 @@ static inline ExecutorArgs create_default_executor_arguments()
  * model.
  * See SingleThreadedExecutor and MultiThreadedExecutor for examples of execution paradigms.
  */
-class Executor
+class RCLCPP_PUBLIC Executor
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Executor)

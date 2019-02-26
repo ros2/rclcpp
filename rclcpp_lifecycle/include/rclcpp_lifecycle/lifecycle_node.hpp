@@ -66,7 +66,7 @@ namespace rclcpp_lifecycle
 /**
  * has lifecycle nodeinterface for configuring this node.
  */
-class LifecycleNode : public node_interfaces::LifecycleNodeInterface,
+class RCLCPP_LIFECYCLE_PUBLIC LifecycleNode : public node_interfaces::LifecycleNodeInterface,
   public std::enable_shared_from_this<LifecycleNode>
 {
 public:

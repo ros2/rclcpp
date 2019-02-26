@@ -49,7 +49,7 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
-class ClientBase
+class RCLCPP_PUBLIC ClientBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase)

@@ -39,7 +39,7 @@ namespace rclcpp_action
  *
  * Internally, this class is responsible for interfacing with the `rcl_action` API.
  */
-class ServerGoalHandleBase
+class RCLCPP_ACTION_PUBLIC ServerGoalHandleBase
 {
 public:
   /// Indicate if client has requested this goal be cancelled.
