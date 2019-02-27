@@ -34,7 +34,6 @@ public:
    * This should be overridden if the Waitable contains one or more subscriptions.
    * \return The number of subscriptions associated with the Waitable.
    */
-  RCLCPP_PUBLIC
   virtual
   size_t
   get_number_of_ready_subscriptions();
@@ -45,7 +44,6 @@ public:
    * This should be overridden if the Waitable contains one or more timers.
    * \return The number of timers associated with the Waitable.
    */
-  RCLCPP_PUBLIC
   virtual
   size_t
   get_number_of_ready_timers();
@@ -56,7 +54,6 @@ public:
    * This should be overridden if the Waitable contains one or more clients.
    * \return The number of clients associated with the Waitable.
    */
-  RCLCPP_PUBLIC
   virtual
   size_t
   get_number_of_ready_clients();
@@ -67,7 +64,6 @@ public:
    * This should be overridden if the Waitable contains one or more services.
    * \return The number of services associated with the Waitable.
    */
-  RCLCPP_PUBLIC
   virtual
   size_t
   get_number_of_ready_services();
@@ -78,7 +74,6 @@ public:
    * This should be overridden if the Waitable contains one or more guard_conditions.
    * \return The number of guard_conditions associated with the Waitable.
    */
-  RCLCPP_PUBLIC
   virtual
   size_t
   get_number_of_ready_guard_conditions();
@@ -89,7 +84,6 @@ public:
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
    * \return `true` if the Waitable is added successfully, `false` otherwise.
    */
-  RCLCPP_PUBLIC
   virtual
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
@@ -104,7 +98,6 @@ public:
    *   and that has been waited on.
    * \return `true` if the Waitable is ready, `false` otherwise.
    */
-  RCLCPP_PUBLIC
   virtual
   bool
   is_ready(rcl_wait_set_t *) = 0;
@@ -130,7 +123,6 @@ public:
    * waitable.execute();
    * ```
    */
-  RCLCPP_PUBLIC
   virtual
   void
   execute() = 0;

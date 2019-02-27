@@ -25,5 +25,6 @@ macro(_rclcpp_register_package_hook)
   endif()
 endmacro()
 
+include("${rclcpp_DIR}/configure_rclcpp.cmake")
 include("${rclcpp_DIR}/rclcpp_create_node_main.cmake")
 include("${rclcpp_DIR}/rclcpp_register_node_plugins.cmake")

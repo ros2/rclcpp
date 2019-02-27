@@ -78,7 +78,6 @@ public:
    * \param[in] namespace_ Namespace of the node.
    * \param[in] options Additional options to control creation of the node.
    */
-  RCLCPP_LIFECYCLE_PUBLIC
   explicit LifecycleNode(
     const std::string & node_name,
     const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
@@ -90,40 +89,33 @@ public:
    * \param[in] context The context for the node (usually represents the state of a process).
    * \param[in] options Additional options to control creation of the node.
    */
-  RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNode(
     const std::string & node_name,
     const std::string & namespace_,
     const rclcpp::NodeOptions & options);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   virtual ~LifecycleNode();
 
   /// Get the name of the node.
   // \return The name of the node.
-  RCLCPP_LIFECYCLE_PUBLIC
   const char *
   get_name() const;
 
   /// Get the namespace of the node.
   // \return The namespace of the node.
-  RCLCPP_LIFECYCLE_PUBLIC
   const char *
   get_namespace() const;
 
   /// Get the logger of the node.
   /** \return The logger of the node. */
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Logger
   get_logger() const;
 
   /// Create and return a callback group.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 
   /// Return the list of callback groups in the node.
-  RCLCPP_LIFECYCLE_PUBLIC
   const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
@@ -246,23 +238,18 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Parameter
   get_parameter(const std::string & name) const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   get_parameter(
     const std::string & name,
@@ -272,15 +259,12 @@ public:
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::vector<uint8_t>
   get_parameter_types(const std::vector<std::string> & names) const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
@@ -293,23 +277,18 @@ public:
   void
   register_param_change_callback(CallbackT && callback);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::vector<std::string>
   get_node_names() const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types(bool no_demangle = false) const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   size_t
   count_publishers(const std::string & topic_name) const;
 
-  RCLCPP_LIFECYCLE_PUBLIC
   size_t
   count_subscribers(const std::string & topic_name) const;
 
@@ -318,7 +297,6 @@ public:
    * The Event object is scoped and therefore to return the load just let it go
    * out of scope.
    */
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Event::SharedPtr
   get_graph_event();
 
@@ -329,72 +307,58 @@ public:
    * \throws EventNotRegisteredError if the given event was not acquired with
    *   get_graph_event().
    */
-  RCLCPP_LIFECYCLE_PUBLIC
   void
   wait_for_graph_change(
     rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Clock::SharedPtr
   get_clock();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Time
   now();
 
   /// Return the Node's internal NodeBaseInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_base_interface();
 
   /// Return the Node's internal NodeClockInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr
   get_node_clock_interface();
 
   /// Return the Node's internal NodeGraphInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
 
   /// Return the Node's internal NodeTimersInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
   get_node_timers_interface();
 
   /// Return the Node's internal NodeTopicsInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
   get_node_topics_interface();
 
   /// Return the Node's internal NodeServicesInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
   get_node_services_interface();
 
   /// Return the Node's internal NodeParametersInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
   get_node_parameters_interface();
 
   /// Return the Node's internal NodeWaitablesInterface implementation.
-  RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
   get_node_waitables_interface();
 
   //
   // LIFECYCLE COMPONENTS
   //
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   get_current_state();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::vector<State>
   get_available_states();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   std::vector<Transition>
   get_available_transitions();
 
@@ -402,101 +366,78 @@ public:
   /*
    * return the new state after this transition
    */
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   trigger_transition(const Transition & transition);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   trigger_transition(
     const Transition & transition, LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   trigger_transition(uint8_t transition_id);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   trigger_transition(
     uint8_t transition_id, LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   configure();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   configure(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   cleanup();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   cleanup(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   activate();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   activate(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   deactivate();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   deactivate(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   shutdown();
 
-  RCLCPP_LIFECYCLE_PUBLIC
   const State &
   shutdown(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_configure(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_cleanup(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_shutdown(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_activate(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_deactivate(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   register_on_error(std::function<LifecycleNodeInterface::CallbackReturn(const State &)> fcn);
 
 protected:
-  RCLCPP_LIFECYCLE_PUBLIC
   void
   add_publisher_handle(std::shared_ptr<rclcpp_lifecycle::LifecyclePublisherInterface> pub);
 
-  RCLCPP_LIFECYCLE_PUBLIC
   void
   add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer);
 
 private:
   RCLCPP_DISABLE_COPY(LifecycleNode)
 
-  RCLCPP_LIFECYCLE_PUBLIC
   bool
   group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group);
 

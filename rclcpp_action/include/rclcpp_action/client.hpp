@@ -57,11 +57,9 @@ class ClientBaseImpl;
 class RCLCPP_ACTION_PUBLIC ClientBase : public rclcpp::Waitable
 {
 public:
-  RCLCPP_ACTION_PUBLIC
   virtual ~ClientBase();
 
   /// Return true if there is an action server that is ready to take goal requests.
-  RCLCPP_ACTION_PUBLIC
   bool
   action_server_is_ready() const;
 
@@ -80,42 +78,34 @@ public:
   // Waitables API
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_subscriptions() override;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_timers() override;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_clients() override;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_services() override;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_guard_conditions() override;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   bool
   is_ready(rcl_wait_set_t * wait_set) override;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   execute() override;
 
@@ -123,7 +113,6 @@ public:
   // -----------------
 
 protected:
-  RCLCPP_ACTION_PUBLIC
   ClientBase(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
@@ -133,7 +122,6 @@ protected:
     const rcl_action_client_options_t & options);
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
-  RCLCPP_ACTION_PUBLIC
   bool
   wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout);
 
@@ -142,17 +130,14 @@ protected:
   using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   rclcpp::Logger get_logger();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   GoalID
   generate_goal_id();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   void
   send_goal_request(
@@ -160,7 +145,6 @@ protected:
     ResponseCallback callback);
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   void
   send_result_request(
@@ -168,7 +152,6 @@ protected:
     ResponseCallback callback);
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   void
   send_cancel_request(
@@ -181,7 +164,6 @@ protected:
   create_goal_response() const = 0;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   void
   handle_goal_response(
@@ -194,7 +176,6 @@ protected:
   create_result_response() const = 0;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   void
   handle_result_response(
@@ -207,7 +188,6 @@ protected:
   create_cancel_response() const = 0;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   void
   handle_cancel_response(

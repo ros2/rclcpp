@@ -35,7 +35,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "rosidl_generator_c"
   "rosidl_generator_cpp")
 
-configure_rcl(${PROJECT_NAME})
+configure_rclcpp(${PROJECT_NAME})
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME}

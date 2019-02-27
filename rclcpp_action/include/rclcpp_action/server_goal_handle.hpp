@@ -44,23 +44,19 @@ class RCLCPP_ACTION_PUBLIC ServerGoalHandleBase
 public:
   /// Indicate if client has requested this goal be cancelled.
   /// \return true if a cancelation request has been accepted for this goal.
-  RCLCPP_ACTION_PUBLIC
   bool
   is_canceling() const;
 
   /// Indicate if goal is pending or executing.
   /// \return false if goal has reached a terminal state.
-  RCLCPP_ACTION_PUBLIC
   bool
   is_active() const;
 
   /// Indicate if goal is executing.
   /// \return true only if the goal is in an executing state.
-  RCLCPP_ACTION_PUBLIC
   bool
   is_executing() const;
 
-  RCLCPP_ACTION_PUBLIC
   virtual
   ~ServerGoalHandleBase();
 
@@ -69,7 +65,6 @@ protected:
   // API for communication between ServerGoalHandleBase and ServerGoalHandle<>
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   ServerGoalHandleBase(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle
   )
@@ -78,33 +73,27 @@ protected:
   }
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   _set_aborted();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   _set_succeeded();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   _set_canceling();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   _set_canceled();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   _set_executing();
 
   /// Transition the goal to canceled state if it never reached a terminal state.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   bool
   try_canceling() noexcept;
 

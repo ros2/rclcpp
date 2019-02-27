@@ -70,7 +70,6 @@ public:
    * \param[in] subscription_options options for the subscription.
    * \param[in] is_serialized is true if the message will be delivered still serialized
    */
-  RCLCPP_PUBLIC
   SubscriptionBase(
     std::shared_ptr<rcl_node_t> node_handle,
     const rosidl_message_type_support_t & type_support_handle,
@@ -79,23 +78,18 @@ public:
     bool is_serialized = false);
 
   /// Default destructor.
-  RCLCPP_PUBLIC
   virtual ~SubscriptionBase();
 
   /// Get the topic that this subscription is subscribed on.
-  RCLCPP_PUBLIC
   const char *
   get_topic_name() const;
 
-  RCLCPP_PUBLIC
   std::shared_ptr<rcl_subscription_t>
   get_subscription_handle();
 
-  RCLCPP_PUBLIC
   const std::shared_ptr<rcl_subscription_t>
   get_subscription_handle() const;
 
-  RCLCPP_PUBLIC
   virtual const std::shared_ptr<rcl_subscription_t>
   get_intra_process_subscription_handle() const;
 
@@ -140,7 +134,6 @@ public:
 
   /// Get matching publisher count
   /** \return The number of publishers on this topic. */
-  RCLCPP_PUBLIC
   size_t
   get_publisher_count() const;
 

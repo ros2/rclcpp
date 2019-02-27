@@ -70,7 +70,6 @@ enum class CancelResponse : int8_t
 class RCLCPP_ACTION_PUBLIC ServerBase : public rclcpp::Waitable
 {
 public:
-  RCLCPP_ACTION_PUBLIC
   virtual ~ServerBase();
 
   // -------------
@@ -78,49 +77,41 @@ public:
 
   /// Return the number of subscriptions used to implement an action server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_subscriptions() override;
 
   /// Return the number of timers used to implement an action server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_timers() override;
 
   /// Return the number of service clients used to implement an action server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_clients() override;
 
   /// Return the number of service servers used to implement an action server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_services() override;
 
   /// Return the number of guard conditions used to implement an action server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   size_t
   get_number_of_ready_guard_conditions() override;
 
   /// Add all entities to a wait set.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// Return true if any entity belonging to the action server is ready to be executed.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   bool
   is_ready(rcl_wait_set_t *) override;
 
   /// Act on entities in the wait set which are ready to be acted upon.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   execute() override;
 
@@ -128,7 +119,6 @@ public:
   // -----------------
 
 protected:
-  RCLCPP_ACTION_PUBLIC
   ServerBase(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
@@ -143,7 +133,6 @@ protected:
   // ServerBase will call this function when a goal request is received.
   // The subclass should convert to the real type and call a user's callback.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   std::pair<GoalResponse, std::shared_ptr<void>>
   call_handle_goal_callback(GoalID &, std::shared_ptr<void> request) = 0;
@@ -152,28 +141,24 @@ protected:
   // each goal id.
   // The subclass should look up a goal handle and call the user's callback.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   CancelResponse
   call_handle_cancel_callback(const GoalID & uuid) = 0;
 
   /// Given a goal request message, return the UUID contained within.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   GoalID
   get_goal_id_from_goal_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   std::shared_ptr<void>
   create_goal_request() = 0;
 
   /// Call user callback to inform them a goal has been accepted.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   void
   call_goal_accepted_callback(
@@ -182,42 +167,35 @@ protected:
 
   /// Given a result request message, return the UUID contained within.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   GoalID
   get_goal_id_from_result_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   std::shared_ptr<void>
   create_result_request() = 0;
 
   /// Create an empty goal result message so it can be sent as a reply in a lower layer
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   virtual
   std::shared_ptr<void>
   create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) = 0;
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   publish_status();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   notify_goal_terminal_state();
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   publish_result(const GoalID & uuid, std::shared_ptr<void> result_msg);
 
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   publish_feedback(std::shared_ptr<void> feedback_msg);
 
@@ -227,25 +205,21 @@ protected:
 private:
   /// Handle a request to add a new goal to the server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   execute_goal_request_received();
 
   /// Handle a request to cancel goals on the server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   execute_cancel_request_received();
 
   /// Handle a request to get the result of an action
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   execute_result_request_received();
 
   /// Handle a timeout indicating a completed goal should be forgotten by the server
   /// \internal
-  RCLCPP_ACTION_PUBLIC
   void
   execute_check_expired_goals();
 

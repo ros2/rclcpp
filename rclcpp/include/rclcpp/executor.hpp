@@ -99,11 +99,9 @@ public:
 
   /// Default constructor.
   // \param[in] ms The memory strategy to be used with this executor.
-  RCLCPP_PUBLIC
   explicit Executor(const ExecutorArgs & args = ExecutorArgs());
 
   /// Default destructor.
-  RCLCPP_PUBLIC
   virtual ~Executor();
 
   /// Do work periodically as it becomes available to us. Blocking call, may block indefinitely.
@@ -119,12 +117,10 @@ public:
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
    * node was added, it will wake up.
    */
-  RCLCPP_PUBLIC
   virtual void
   add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
-  RCLCPP_PUBLIC
   virtual void
   add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
 
@@ -135,12 +131,10 @@ public:
    * This is useful if the last node was removed from the executor while the executor was blocked
    * waiting for work in another thread, because otherwise the executor would never be notified.
    */
-  RCLCPP_PUBLIC
   virtual void
   remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
-  RCLCPP_PUBLIC
   virtual void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
 
@@ -180,12 +174,10 @@ public:
   /**
    * \param[in] node Shared pointer to the node to add.
    */
-  RCLCPP_PUBLIC
   void
   spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
-  RCLCPP_PUBLIC
   void
   spin_node_some(std::shared_ptr<rclcpp::Node> node);
 
@@ -200,11 +192,9 @@ public:
    * Note that spin_some() may take longer than this time as it only returns once max_duration has
    * been exceeded.
    */
-  RCLCPP_PUBLIC
   virtual void
   spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0));
 
-  RCLCPP_PUBLIC
   virtual void
   spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
@@ -269,7 +259,6 @@ public:
 
   /// Cancel any running spin* function, causing it to return.
   /* This function can be called asynchonously from any thread. */
-  RCLCPP_PUBLIC
   void
   cancel();
 
@@ -279,12 +268,10 @@ public:
    * unintended consequences.
    * \param[in] memory_strategy Shared pointer to the memory strategy to set.
    */
-  RCLCPP_PUBLIC
   void
   set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
 protected:
-  RCLCPP_PUBLIC
   void
   spin_node_once_nanoseconds(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
@@ -294,53 +281,41 @@ protected:
   /** \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
    * service, client).
    */
-  RCLCPP_PUBLIC
   void
   execute_any_executable(AnyExecutable & any_exec);
 
-  RCLCPP_PUBLIC
   static void
   execute_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription);
 
-  RCLCPP_PUBLIC
   static void
   execute_intra_process_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription);
 
-  RCLCPP_PUBLIC
   static void
   execute_timer(rclcpp::TimerBase::SharedPtr timer);
 
-  RCLCPP_PUBLIC
   static void
   execute_service(rclcpp::ServiceBase::SharedPtr service);
 
-  RCLCPP_PUBLIC
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
-  RCLCPP_PUBLIC
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
-  RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
-  RCLCPP_PUBLIC
   rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
 
-  RCLCPP_PUBLIC
   void
   get_next_timer(AnyExecutable & any_exec);
 
-  RCLCPP_PUBLIC
   bool
   get_next_ready_executable(AnyExecutable & any_executable);
 
-  RCLCPP_PUBLIC
   bool
   get_next_executable(
     AnyExecutable & any_executable,

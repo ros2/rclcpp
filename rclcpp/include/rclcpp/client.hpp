@@ -54,27 +54,21 @@ class RCLCPP_PUBLIC ClientBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase)
 
-  RCLCPP_PUBLIC
   ClientBase(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph);
 
-  RCLCPP_PUBLIC
   virtual ~ClientBase();
 
-  RCLCPP_PUBLIC
   const char *
   get_service_name() const;
 
-  RCLCPP_PUBLIC
   std::shared_ptr<rcl_client_t>
   get_client_handle();
 
-  RCLCPP_PUBLIC
   std::shared_ptr<const rcl_client_t>
   get_client_handle() const;
 
-  RCLCPP_PUBLIC
   bool
   service_is_ready() const;
 
@@ -96,15 +90,12 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
 
-  RCLCPP_PUBLIC
   bool
   wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
 
-  RCLCPP_PUBLIC
   rcl_node_t *
   get_rcl_node_handle();
 
-  RCLCPP_PUBLIC
   const rcl_node_t *
   get_rcl_node_handle() const;
 

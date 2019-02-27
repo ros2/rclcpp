@@ -42,22 +42,17 @@ class RCLCPP_PUBLIC ServiceBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
 
-  RCLCPP_PUBLIC
   explicit ServiceBase(
     std::shared_ptr<rcl_node_t> node_handle);
 
-  RCLCPP_PUBLIC
   virtual ~ServiceBase();
 
-  RCLCPP_PUBLIC
   const char *
   get_service_name();
 
-  RCLCPP_PUBLIC
   std::shared_ptr<rcl_service_t>
   get_service_handle();
 
-  RCLCPP_PUBLIC
   std::shared_ptr<const rcl_service_t>
   get_service_handle() const;
 
@@ -70,11 +65,9 @@ public:
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
-  RCLCPP_PUBLIC
   rcl_node_t *
   get_rcl_node_handle();
 
-  RCLCPP_PUBLIC
   const rcl_node_t *
   get_rcl_node_handle() const;
 
