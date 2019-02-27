@@ -430,6 +430,15 @@ public:
     return number_of_services;
   }
 
+  size_t number_of_ready_events() const
+  {
+    size_t number_of_events = event_handles_.size();
+    for (auto waitable : waitable_handles_) {
+      number_of_events += waitable->get_number_of_ready_events();
+    }
+    return number_of_events;
+  }
+
   size_t number_of_ready_clients() const
   {
     size_t number_of_clients = client_handles_.size();

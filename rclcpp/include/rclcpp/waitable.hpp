@@ -61,6 +61,17 @@ public:
   size_t
   get_number_of_ready_clients();
 
+  /// Get the number of ready events
+  /**
+   * Returns a value of 0 by default.
+   * This should be overridden if the Waitable contains one or more events.
+   * \return The number of events associated with the Waitable.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  get_number_of_ready_events();
+
   /// Get the number of ready services
   /**
    * Returns a value of 0 by default.
