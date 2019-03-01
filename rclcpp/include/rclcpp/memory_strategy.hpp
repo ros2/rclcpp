@@ -51,6 +51,7 @@ public:
   virtual size_t number_of_ready_subscriptions() const = 0;
   virtual size_t number_of_ready_services() const = 0;
   virtual size_t number_of_ready_clients() const = 0;
+  virtual size_t number_of_ready_events() const = 0;
   virtual size_t number_of_ready_timers() const = 0;
   virtual size_t number_of_guard_conditions() const = 0;
   virtual size_t number_of_waitables() const = 0;
@@ -62,21 +63,6 @@ public:
   virtual void add_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
   virtual void remove_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
-
-  virtual void
-  get_next_subscription(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeVector & weak_nodes) = 0;
-
-  virtual void
-  get_next_service(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeVector & weak_nodes) = 0;
-
-  virtual void
-  get_next_client(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeVector & weak_nodes) = 0;
 
   virtual void
   get_next_waitable(

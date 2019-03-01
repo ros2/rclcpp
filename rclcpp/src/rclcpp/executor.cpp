@@ -1,5 +1,5 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.,
-// memory_strategy_->number_of_ready_events())//
+// Copyright 2015 Open Source Robotics Foundation, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -266,21 +266,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   if (!spinning.load()) {
     return;
   }
-  if (any_exec.timer) {
-    execute_timer(any_exec.timer);
-  }
-  if (any_exec.subscription) {
-    execute_subscription(any_exec.subscription);
-  }
-  if (any_exec.subscription_intra_process) {
-    execute_intra_process_subscription(any_exec.subscription_intra_process);
-  }
-  if (any_exec.service) {
-    execute_service(any_exec.service);
-  }
-  if (any_exec.client) {
-    execute_client(any_exec.client);
-  }
+
   if (any_exec.waitable) {
     any_exec.waitable->execute();
   }
@@ -521,7 +507,7 @@ Executor::get_next_timer(AnyExecutable & any_exec)
       for (auto & timer_ref : group->get_timer_ptrs()) {
         auto timer = timer_ref.lock();
         if (timer && timer->is_ready()) {
-          any_exec.timer = timer;
+          any_exec.waitable = timer;
           any_exec.callback_group = group;
           node = get_node_by_group(group);
           return;
@@ -534,32 +520,12 @@ Executor::get_next_timer(AnyExecutable & any_exec)
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
-  // Check the timers to see if there are any that are ready, if so return
-  get_next_timer(any_executable);
-  if (any_executable.timer) {
-    return true;
-  }
-  // Check the subscriptions to see if there are any that are ready
-  memory_strategy_->get_next_subscription(any_executable, weak_nodes_);
-  if (any_executable.subscription || any_executable.subscription_intra_process) {
-    return true;
-  }
-  // Check the services to see if there are any that are ready
-  memory_strategy_->get_next_service(any_executable, weak_nodes_);
-  if (any_executable.service) {
-    return true;
-  }
-  // Check the clients to see if there are any that are ready
-  memory_strategy_->get_next_client(any_executable, weak_nodes_);
-  if (any_executable.client) {
-    return true;
-  }
   // Check the waitables to see if there are any that are ready
   memory_strategy_->get_next_waitable(any_executable, weak_nodes_);
   if (any_executable.waitable) {
     return true;
   }
-  // If there is no ready executable, return a null ptr
+  // If there is no ready executable, return false
   return false;
 }
 

@@ -24,6 +24,7 @@
 #include "rcl/error_handling.h"
 #include "rcl/service.h"
 
+#include "rclcpp/waitable.hpp"
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
@@ -37,7 +38,7 @@
 namespace rclcpp
 {
 
-class ServiceBase
+class ServiceBase : public Waitable
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
@@ -61,6 +62,34 @@ public:
   std::shared_ptr<const rcl_service_t>
   get_service_handle() const;
 
+  RCLCPP_PUBLIC
+  std::shared_ptr<rcl_event_t>
+  get_event_handle();
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<const rcl_event_t>
+  get_event_handle() const;
+
+  RCLCPP_PUBLIC
+  size_t
+  get_number_of_ready_services() override;
+
+  RCLCPP_PUBLIC
+  size_t
+  get_number_of_ready_events() override;
+
+  RCLCPP_PUBLIC
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  bool
+  is_ready(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  void
+  execute() override;
+
   virtual std::shared_ptr<void> create_request() = 0;
   virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
   virtual void handle_request(
@@ -81,7 +110,13 @@ protected:
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::shared_ptr<rcl_service_t> service_handle_;
-  bool owns_rcl_handle_ = true;
+  std::shared_ptr<rcl_event_t> event_handle_;
+
+  size_t wait_set_service_index_;
+  size_t wait_set_event_index_;
+
+  bool service_ready_;
+  bool event_ready_;
 };
 
 template<typename ServiceT>

@@ -29,6 +29,7 @@
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "rclcpp/waitable.hpp"
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -57,7 +58,7 @@ class IntraProcessManager;
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
-class SubscriptionBase
+class SubscriptionBase : public Waitable
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)
@@ -92,12 +93,40 @@ public:
   get_subscription_handle();
 
   RCLCPP_PUBLIC
-  const std::shared_ptr<rcl_subscription_t>
+  std::shared_ptr<const rcl_subscription_t>
   get_subscription_handle() const;
 
   RCLCPP_PUBLIC
-  virtual const std::shared_ptr<rcl_subscription_t>
+  virtual std::shared_ptr<const rcl_subscription_t>
   get_intra_process_subscription_handle() const;
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<rcl_event_t>
+  get_event_handle();
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<const rcl_event_t>
+  get_event_handle() const;
+
+  RCLCPP_PUBLIC
+  size_t
+  get_number_of_ready_subscriptions() override;
+
+  RCLCPP_PUBLIC
+  size_t
+  get_number_of_ready_events() override;
+
+  RCLCPP_PUBLIC
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  bool
+  is_ready(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  void
+  execute() override;
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
@@ -145,9 +174,19 @@ public:
   get_publisher_count() const;
 
 protected:
-  std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
-  std::shared_ptr<rcl_subscription_t> subscription_handle_;
   std::shared_ptr<rcl_node_t> node_handle_;
+
+  std::shared_ptr<rcl_subscription_t> subscription_handle_;
+  std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
+  std::shared_ptr<rcl_event_t> event_handle_;
+
+  size_t wait_set_subscription_index_;
+  size_t wait_set_intra_process_subscription_index_;
+  size_t wait_set_event_index_;
+
+  bool subscription_ready_;
+  bool intra_process_subscription_ready_;
+  bool event_ready_;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
@@ -331,7 +370,7 @@ public:
   }
 
   /// Implemenation detail.
-  const std::shared_ptr<rcl_subscription_t>
+  std::shared_ptr<const rcl_subscription_t>
   get_intra_process_subscription_handle() const
   {
     if (!get_intra_process_message_callback_) {

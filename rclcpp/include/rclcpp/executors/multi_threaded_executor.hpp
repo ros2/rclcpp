@@ -79,7 +79,7 @@ private:
   bool yield_before_execute_;
 
   std::mutex scheduled_timers_mutex_;
-  std::set<TimerBase::SharedPtr> scheduled_timers_;
+  std::set<Waitable::SharedPtr> scheduled_timers_;
 };
 
 }  // namespace executors

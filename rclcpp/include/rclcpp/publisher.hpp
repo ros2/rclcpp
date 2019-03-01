@@ -27,13 +27,14 @@
 #include "rcl/error_handling.h"
 #include "rcl/publisher.h"
 
+#include "rosidl_typesupport_cpp/message_type_support.hpp"
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "rclcpp/exceptions.hpp"
+#include "rclcpp/waitable.hpp"
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -42,6 +43,7 @@ namespace rclcpp
 // Forward declaration is used for friend statement.
 namespace node_interfaces
 {
+class NodeBaseInterface;
 class NodeTopicsInterface;
 }
 
@@ -54,7 +56,7 @@ namespace intra_process_manager
 class IntraProcessManager;
 }
 
-class PublisherBase
+class PublisherBase : public Waitable
 {
   friend ::rclcpp::node_interfaces::NodeTopicsInterface;
 
@@ -116,6 +118,30 @@ public:
   const rcl_publisher_t *
   get_publisher_handle() const;
 
+  RCLCPP_PUBLIC
+  std::shared_ptr<rcl_event_t>
+  get_event_handle();
+
+  RCLCPP_PUBLIC
+  std::shared_ptr<const rcl_event_t>
+  get_event_handle() const;
+
+  RCLCPP_PUBLIC
+  size_t
+  get_number_of_ready_events() override;
+
+  RCLCPP_PUBLIC
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  bool
+  is_ready(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  void
+  execute() override;
+
   /// Get subscription count
   /** \return The number of subscriptions. */
   RCLCPP_PUBLIC
@@ -166,6 +192,9 @@ protected:
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
   rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
+  std::shared_ptr<rcl_event_t> event_handle_;
+
+  size_t wait_set_event_index_;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;

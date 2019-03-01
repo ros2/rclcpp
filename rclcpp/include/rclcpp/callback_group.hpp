@@ -22,6 +22,7 @@
 
 #include "rclcpp/client.hpp"
 #include "rclcpp/service.hpp"
+#include "rclcpp/publisher.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -62,6 +63,10 @@ public:
   explicit CallbackGroup(CallbackGroupType group_type);
 
   RCLCPP_PUBLIC
+  const std::vector<rclcpp::PublisherBase::WeakPtr> &
+  get_publisher_ptrs() const;
+
+  RCLCPP_PUBLIC
   const std::vector<rclcpp::SubscriptionBase::WeakPtr> &
   get_subscription_ptrs() const;
 
@@ -94,6 +99,10 @@ protected:
 
   RCLCPP_PUBLIC
   void
+  add_publisher(const rclcpp::PublisherBase::SharedPtr publisher_ptr);
+
+  RCLCPP_PUBLIC
+  void
   add_subscription(const rclcpp::SubscriptionBase::SharedPtr subscription_ptr);
 
   RCLCPP_PUBLIC
@@ -119,6 +128,7 @@ protected:
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.
   mutable std::mutex mutex_;
+  std::vector<rclcpp::PublisherBase::WeakPtr> publisher_ptrs_;
   std::vector<rclcpp::SubscriptionBase::WeakPtr> subscription_ptrs_;
   std::vector<rclcpp::TimerBase::WeakPtr> timer_ptrs_;
   std::vector<rclcpp::ServiceBase::WeakPtr> service_ptrs_;

@@ -16,16 +16,6 @@
 
 using rclcpp::executor::AnyExecutable;
 
-AnyExecutable::AnyExecutable()
-: subscription(nullptr),
-  subscription_intra_process(nullptr),
-  timer(nullptr),
-  service(nullptr),
-  client(nullptr),
-  callback_group(nullptr),
-  node_base(nullptr)
-{}
-
 AnyExecutable::~AnyExecutable()
 {
   // Make sure that discarded (taken but not executed) AnyExecutable's have
@@ -34,4 +24,10 @@ AnyExecutable::~AnyExecutable()
   if (callback_group) {
     callback_group->can_be_taken_from().store(true);
   }
+}
+
+bool
+AnyExecutable::has_timer() const
+{
+  return (waitable->get_number_of_ready_timers() > 0);
 }

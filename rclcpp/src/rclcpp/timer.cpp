@@ -112,3 +112,34 @@ TimerBase::get_timer_handle()
 {
   return timer_handle_;
 }
+
+size_t
+TimerBase::get_number_of_ready_timers()
+{
+  return 1;
+}
+
+bool
+TimerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+{
+  if (rcl_wait_set_add_timer(wait_set, timer_handle_.get(), &wait_set_timer_index_) != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Couldn't add timer to wait set: %s", rcl_get_error_string().str);
+    return false;
+  }
+
+  return true;
+}
+
+bool
+TimerBase::is_ready(rcl_wait_set_t * wait_set)
+{
+  return (wait_set->timers[wait_set_timer_index_] == timer_handle_.get());
+}
+
+void
+TimerBase::execute()
+{
+  execute_callback();
+}

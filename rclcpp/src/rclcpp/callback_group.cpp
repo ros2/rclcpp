@@ -23,6 +23,13 @@ CallbackGroup::CallbackGroup(CallbackGroupType group_type)
 : type_(group_type), can_be_taken_from_(true)
 {}
 
+const std::vector<rclcpp::PublisherBase::WeakPtr> &
+CallbackGroup::get_publisher_ptrs() const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  return publisher_ptrs_;
+}
+
 const std::vector<rclcpp::SubscriptionBase::WeakPtr> &
 CallbackGroup::get_subscription_ptrs() const
 {
@@ -68,6 +75,14 @@ const CallbackGroupType &
 CallbackGroup::type() const
 {
   return type_;
+}
+
+void
+CallbackGroup::add_publisher(
+  const rclcpp::PublisherBase::SharedPtr publisher_ptr)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  publisher_ptrs_.push_back(publisher_ptr);
 }
 
 void

@@ -79,6 +79,7 @@ GraphListener::start_if_not_started()
       0,  // number_of_timers
       0,  // number_of_clients
       0,  // number_of_services
+      0,  // number_of_events
       this->parent_context_->get_rcl_context().get(),
       rcl_get_default_allocator());
     if (RCL_RET_OK != ret) {
@@ -145,7 +146,7 @@ GraphListener::run_loop()
     const size_t node_graph_interfaces_size = node_graph_interfaces_.size();
     // Add 2 for the interrupt and shutdown guard conditions
     if (wait_set_.size_of_guard_conditions < (node_graph_interfaces_size + 2)) {
-      ret = rcl_wait_set_resize(&wait_set_, 0, node_graph_interfaces_size + 2, 0, 0, 0);
+      ret = rcl_wait_set_resize(&wait_set_, 0, node_graph_interfaces_size + 2, 0, 0, 0, 0);
       if (RCL_RET_OK != ret) {
         throw_from_rcl_error(ret, "failed to resize wait set");
       }

@@ -109,16 +109,153 @@ SubscriptionBase::get_subscription_handle()
   return subscription_handle_;
 }
 
-const std::shared_ptr<rcl_subscription_t>
+std::shared_ptr<const rcl_subscription_t>
 SubscriptionBase::get_subscription_handle() const
 {
   return subscription_handle_;
 }
 
-const std::shared_ptr<rcl_subscription_t>
+std::shared_ptr<const rcl_subscription_t>
 SubscriptionBase::get_intra_process_subscription_handle() const
 {
   return intra_process_subscription_handle_;
+}
+
+std::shared_ptr<rcl_event_t>
+SubscriptionBase::get_event_handle()
+{
+  return event_handle_;
+}
+
+std::shared_ptr<const rcl_event_t>
+SubscriptionBase::get_event_handle() const
+{
+  return event_handle_;
+}
+
+size_t
+SubscriptionBase::get_number_of_ready_subscriptions()
+{
+  if (use_intra_process_) {
+    return 2;
+  } else {
+    return 1;
+  }
+}
+
+size_t
+SubscriptionBase::get_number_of_ready_events()
+{
+  return 1;
+}
+
+bool
+SubscriptionBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+{
+  if (rcl_wait_set_add_subscription(wait_set, subscription_handle_.get(),
+        &wait_set_subscription_index_) != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Couldn't add subscription to wait set: %s", rcl_get_error_string().str);
+    return false;
+  }
+
+  if (use_intra_process_) {
+    if (rcl_wait_set_add_subscription(wait_set, intra_process_subscription_handle_.get(),
+          &wait_set_intra_process_subscription_index_) != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Couldn't add intra process subscription to wait set: %s", rcl_get_error_string().str);
+      return false;
+    }
+  }
+
+  if (rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Couldn't add subscription event to wait set: %s", rcl_get_error_string().str);
+    return false;
+  }
+
+  return true;
+}
+
+bool
+SubscriptionBase::is_ready(rcl_wait_set_t * wait_set)
+{
+  subscription_ready_ =
+    (wait_set->subscriptions[wait_set_subscription_index_] == subscription_handle_.get());
+  intra_process_subscription_ready_ = use_intra_process_ &&
+    (wait_set->subscriptions[wait_set_intra_process_subscription_index_] ==
+      intra_process_subscription_handle_.get());
+  event_ready_ = (wait_set->events[wait_set_event_index_] == event_handle_.get());
+  return subscription_ready_ || intra_process_subscription_ready_ || event_ready_;
+}
+
+void
+SubscriptionBase::execute()
+{
+  if (subscription_ready_) {
+    rmw_message_info_t message_info;
+    message_info.from_intra_process = false;
+
+    if (is_serialized()) {
+      auto serialized_msg = create_serialized_message();
+      auto ret = rcl_take_serialized_message(
+        get_subscription_handle().get(),
+        serialized_msg.get(), &message_info);
+      if (RCL_RET_OK == ret) {
+        auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
+        handle_message(void_serialized_msg, message_info);
+      } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "take_serialized failed for subscription on topic '%s': %s",
+          get_topic_name(), rcl_get_error_string().str);
+        rcl_reset_error();
+      }
+      return_serialized_message(serialized_msg);
+    } else {
+      std::shared_ptr<void> message = create_message();
+      auto ret = rcl_take(
+        get_subscription_handle().get(),
+        message.get(), &message_info);
+      if (RCL_RET_OK == ret) {
+        handle_message(message, message_info);
+      } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "could not deserialize serialized message on topic '%s': %s",
+          get_topic_name(), rcl_get_error_string().str);
+        rcl_reset_error();
+      }
+      return_message(message);
+    }
+  }
+
+  if (intra_process_subscription_ready_) {
+    rcl_interfaces::msg::IntraProcessMessage ipm;
+    rmw_message_info_t message_info;
+    rcl_ret_t status = rcl_take(
+      get_intra_process_subscription_handle().get(),
+      &ipm,
+      &message_info);
+
+    if (status == RCL_RET_OK) {
+      message_info.from_intra_process = true;
+      handle_intra_process_message(ipm, message_info);
+    } else if (status != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "take failed for intra process subscription on topic '%s': %s",
+        get_topic_name(), rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+  }
+
+  if (event_ready_) {
+    // rcl_take_event();
+  }
 }
 
 const rosidl_message_type_support_t &

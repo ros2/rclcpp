@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "rclcpp/clock.hpp"
+#include "rclcpp/waitable.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
@@ -40,7 +41,7 @@
 namespace rclcpp
 {
 
-class TimerBase
+class TimerBase : public Waitable
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase)
@@ -70,6 +71,22 @@ public:
   std::shared_ptr<const rcl_timer_t>
   get_timer_handle();
 
+  RCLCPP_PUBLIC
+  size_t
+  get_number_of_ready_timers() override;
+
+  RCLCPP_PUBLIC
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  bool
+  is_ready(rcl_wait_set_t * wait_set) override;
+
+  RCLCPP_PUBLIC
+  void
+  execute() override;
+
   /// Check how long the timer has until its next scheduled callback.
   /** \return A std::chrono::duration representing the relative time until the next callback. */
   RCLCPP_PUBLIC
@@ -91,7 +108,10 @@ public:
 
 protected:
   Clock::SharedPtr clock_;
+
   std::shared_ptr<rcl_timer_t> timer_handle_;
+  size_t wait_set_timer_index_;
+  bool timer_expired_;
 };
 
 
