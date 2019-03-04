@@ -130,8 +130,13 @@ Clock::create_jump_callback(
       rclcpp::Clock::on_time_jump, handler);
   if (RCL_RET_OK != ret) {
     delete handler;
-    handler = NULL;
+    handler = nullptr;
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+  }
+
+  if (nullptr == handler) {
+    // imposible to reach here; added to make cppcheck happy
+    return nullptr;
   }
 
   // *INDENT-OFF*
