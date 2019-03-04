@@ -43,6 +43,7 @@
 #include "rclcpp/node_interfaces/node_logging_interface.hpp"
 #include "rclcpp/node_interfaces/node_parameters_interface.hpp"
 #include "rclcpp/node_interfaces/node_services_interface.hpp"
+#include "rclcpp/node_interfaces/node_time_source_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
@@ -383,6 +384,11 @@ public:
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
   get_node_parameters_interface();
 
+  /// Return the Node's internal NodeParametersInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
+  get_node_time_source_interface();
+
   /// Return the Node's internal NodeWaitablesInterface implementation.
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
@@ -513,6 +519,7 @@ private:
   rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_;
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_;
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_;
+  rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
   bool use_intra_process_comms_;
