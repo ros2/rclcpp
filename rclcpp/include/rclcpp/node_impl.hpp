@@ -51,10 +51,13 @@
 namespace rclcpp
 {
 
-template<typename MessageT, typename Alloc, typename PublisherT>
+template<typename MessageT, typename EventCallbackT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
-  const std::string & topic_name, size_t qos_history_depth,
+  const std::string & topic_name,
+  size_t qos_history_depth,
+  EventCallbackT && event_callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
   std::shared_ptr<Alloc> allocator)
 {
   if (!allocator) {
@@ -62,7 +65,8 @@ Node::create_publisher(
   }
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos, allocator);
+  return this->create_publisher<MessageT, EventCallbackT, Alloc, PublisherT>(
+    topic_name, qos, std::forward<EventCallbackT>(event_callback), group, allocator);
 }
 
 RCLCPP_LOCAL
@@ -77,20 +81,25 @@ extend_name_with_sub_namespace(const std::string & name, const std::string & sub
   return name_with_sub_namespace;
 }
 
-template<typename MessageT, typename Alloc, typename PublisherT>
+template<typename MessageT, typename EventCallbackT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
-  const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
+  const std::string & topic_name,
+  const rmw_qos_profile_t & qos_profile,
+  EventCallbackT && event_callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
   std::shared_ptr<Alloc> allocator)
 {
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
 
-  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
+  return rclcpp::create_publisher<MessageT, EventCallbackT, Alloc, PublisherT>(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos_profile,
+    std::forward<EventCallbackT>(event_callback),
+    group,
     this->get_node_options().use_intra_process_comms(),
     allocator);
 }
@@ -98,6 +107,7 @@ Node::create_publisher(
 template<
   typename MessageT,
   typename CallbackT,
+  typename EventCallbackT,
   typename Alloc,
   typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
@@ -105,6 +115,7 @@ Node::create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
+  EventCallbackT && event_callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
@@ -123,21 +134,24 @@ Node::create_subscription(
     msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
   }
 
-  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
-    this->node_topics_.get(),
-    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-    std::forward<CallbackT>(callback),
-    qos_profile,
-    group,
-    ignore_local_publications,
-    this->get_node_options().use_intra_process_comms(),
-    msg_mem_strat,
-    allocator);
+  return rclcpp::create_subscription<MessageT, CallbackT, EventCallbackT, Alloc, CallbackMessageT,
+    SubscriptionT>(
+      this->node_topics_.get(),
+      extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+      std::forward<CallbackT>(callback),
+      qos_profile,
+      std::forward<EventCallbackT>(event_callback),
+      group,
+      ignore_local_publications,
+      this->get_node_options().use_intra_process_comms(),
+      msg_mem_strat,
+      allocator);
 }
 
 template<
   typename MessageT,
   typename CallbackT,
+  typename EventCallbackT,
   typename Alloc,
   typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
@@ -145,6 +159,7 @@ Node::create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
   size_t qos_history_depth,
+  EventCallbackT && event_callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
@@ -159,6 +174,7 @@ Node::create_subscription(
     topic_name,
     std::forward<CallbackT>(callback),
     qos,
+    std::forward<EventCallbackT>(event_callback),
     group,
     ignore_local_publications,
     msg_mem_strat,
@@ -180,11 +196,12 @@ Node::create_wall_timer(
   return timer;
 }
 
-template<typename ServiceT>
+template<typename ServiceT, typename EventCallbackT>
 typename Client<ServiceT>::SharedPtr
 Node::create_client(
   const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
+  EventCallbackT && event_callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   rcl_client_options_t options = rcl_client_get_default_options();
@@ -197,27 +214,31 @@ Node::create_client(
     node_base_.get(),
     node_graph_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
-    options);
+    options,
+    event_callback);
 
   auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
   node_services_->add_client(cli_base_ptr, group);
+
   return cli;
 }
 
-template<typename ServiceT, typename CallbackT>
+template<typename ServiceT, typename CallbackT, typename EventCallbackT>
 typename rclcpp::Service<ServiceT>::SharedPtr
 Node::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
+  EventCallbackT && event_callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  return rclcpp::create_service<ServiceT, CallbackT>(
+  return rclcpp::create_service<ServiceT, CallbackT, EventCallbackT>(
     node_base_,
     node_services_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
     std::forward<CallbackT>(callback),
     qos_profile,
+    std::forward<EventCallbackT>(event_callback),
     group);
 }
 

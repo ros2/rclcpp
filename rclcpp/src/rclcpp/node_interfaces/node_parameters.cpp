@@ -55,10 +55,13 @@ NodeParameters::NodeParameters(
   }
 
   if (start_parameter_event_publisher) {
-    events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+    events_publisher_ = rclcpp::create_publisher<MessageT, ResourceStatusEventCallbackType,
+      AllocatorT, PublisherT>(
       node_topics.get(),
       "parameter_events",
       parameter_event_qos_profile,
+      {},
+      nullptr,
       use_intra_process,
       allocator);
   }

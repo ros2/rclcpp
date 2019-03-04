@@ -122,6 +122,9 @@ public:
   virtual void handle_response(
     std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
+  virtual void
+  handle_event(ResourceStatusEvent event) const = 0;
+
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
 
@@ -176,12 +179,15 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name,
-    rcl_client_options_t & client_options)
-  : ClientBase(node_base, node_graph)
+    rcl_client_options_t & client_options,
+    ResourceStatusEventCallbackType event_callback)
+  : ClientBase(node_base, node_graph),
+    event_callback_(event_callback)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
+
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
       this->get_rcl_node_handle(),
@@ -200,6 +206,11 @@ public:
           true);
       }
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create client");
+    }
+
+    ret = rcl_client_event_init(get_event_handle().get(), get_client_handle().get());
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "could not create client event");
     }
   }
 
@@ -246,6 +257,12 @@ public:
 
     call_promise->set_value(typed_response);
     callback(future);
+  }
+
+  void
+  handle_event(ResourceStatusEvent event) const
+  {
+    event_callback_(event);
   }
 
   SharedFuture
@@ -311,6 +328,8 @@ private:
 
   std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
   std::mutex pending_requests_mutex_;
+
+  ResourceStatusEventCallbackType event_callback_;
 };
 
 }  // namespace rclcpp

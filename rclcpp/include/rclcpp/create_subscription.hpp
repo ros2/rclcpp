@@ -29,6 +29,7 @@ namespace rclcpp
 template<
   typename MessageT,
   typename CallbackT,
+  typename EventCallbackT,
   typename AllocatorT,
   typename CallbackMessageT,
   typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>>
@@ -38,6 +39,7 @@ create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
+  EventCallbackT && event_callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   bool use_intra_process_comms,
@@ -51,8 +53,9 @@ create_subscription(
   subscription_options.ignore_local_publications = ignore_local_publications;
 
   auto factory = rclcpp::create_subscription_factory
-    <MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
-    std::forward<CallbackT>(callback), msg_mem_strat, allocator);
+    <MessageT, CallbackT, EventCallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
+    std::forward<CallbackT>(callback), std::forward<EventCallbackT>(event_callback),
+    msg_mem_strat, allocator);
 
   auto sub = node_topics->create_subscription(
     topic_name,

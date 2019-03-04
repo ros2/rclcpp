@@ -30,8 +30,9 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/waitable.hpp"
+#include "rclcpp/event.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/macros.hpp"
@@ -187,6 +188,9 @@ public:
     IntraProcessManagerSharedPtr ipm,
     const rcl_publisher_options_t & intra_process_options);
 
+  virtual void
+  handle_event(ResourceStatusEvent event) const = 0;
+
 protected:
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
@@ -223,13 +227,15 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
+    ResourceStatusEventCallbackType event_callback,
     const std::shared_ptr<MessageAlloc> & allocator)
   : PublisherBase(
       node_base,
       topic,
       *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
       publisher_options),
-    message_allocator_(allocator)
+    message_allocator_(allocator),
+    event_callback_(event_callback)
   {
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
   }
@@ -362,6 +368,11 @@ public:
     return this->publish(serialized_msg.get());
   }
 
+  void handle_event(ResourceStatusEvent event) const
+  {
+    event_callback_(event);
+  }
+
   std::shared_ptr<MessageAlloc> get_allocator() const
   {
     return message_allocator_;
@@ -388,8 +399,9 @@ protected:
   }
 
   std::shared_ptr<MessageAlloc> message_allocator_;
-
   MessageDeleter message_deleter_;
+
+  ResourceStatusEventCallbackType event_callback_;
 };
 
 }  // namespace rclcpp

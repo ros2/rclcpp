@@ -299,28 +299,6 @@ protected:
   execute_any_executable(AnyExecutable & any_exec);
 
   RCLCPP_PUBLIC
-  static void
-  execute_subscription(
-    rclcpp::SubscriptionBase::SharedPtr subscription);
-
-  RCLCPP_PUBLIC
-  static void
-  execute_intra_process_subscription(
-    rclcpp::SubscriptionBase::SharedPtr subscription);
-
-  RCLCPP_PUBLIC
-  static void
-  execute_timer(rclcpp::TimerBase::SharedPtr timer);
-
-  RCLCPP_PUBLIC
-  static void
-  execute_service(rclcpp::ServiceBase::SharedPtr service);
-
-  RCLCPP_PUBLIC
-  static void
-  execute_client(rclcpp::ClientBase::SharedPtr client);
-
-  RCLCPP_PUBLIC
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 

@@ -52,13 +52,24 @@ SubscriptionBase::SubscriptionBase(
       delete rcl_subs;
     };
 
+  auto custom_event_deleter = [](rcl_event_t * event)
+    {
+      if (rcl_event_fini(event) != RCL_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
+        rcl_reset_error();
+      }
+      delete event;
+    };
+
+
   subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
     new rcl_subscription_t, custom_deletor);
   *subscription_handle_.get() = rcl_get_zero_initialized_subscription();
 
-  intra_process_subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
-    new rcl_subscription_t, custom_deletor);
-  *intra_process_subscription_handle_.get() = rcl_get_zero_initialized_subscription();
+  event_handle_ = std::shared_ptr<rcl_event_t>(new rcl_event_t, custom_event_deleter);
+  *event_handle_.get() = rcl_get_zero_initialized_event();
 
   rcl_ret_t ret = rcl_subscription_init(
     subscription_handle_.get(),
@@ -79,6 +90,19 @@ SubscriptionBase::SubscriptionBase(
 
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription");
   }
+
+  ret = rcl_subscription_event_init(get_event_handle().get(), get_subscription_handle().get());
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription event");
+  }
+
+
+  intra_process_subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
+    new rcl_subscription_t, custom_deletor);
+  *intra_process_subscription_handle_.get() = rcl_get_zero_initialized_subscription();
+
+  intra_process_event_handle_ = std::shared_ptr<rcl_event_t>(new rcl_event_t, custom_event_deleter);
+  *intra_process_event_handle_.get() = rcl_get_zero_initialized_event();
 }
 
 SubscriptionBase::~SubscriptionBase()
@@ -146,7 +170,11 @@ SubscriptionBase::get_number_of_ready_subscriptions()
 size_t
 SubscriptionBase::get_number_of_ready_events()
 {
-  return 1;
+  if (use_intra_process_) {
+    return 2;
+  } else {
+    return 1;
+  }
 }
 
 bool
@@ -160,6 +188,13 @@ SubscriptionBase::add_to_wait_set(rcl_wait_set_t * wait_set)
     return false;
   }
 
+  if (rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Couldn't add subscription event to wait set: %s", rcl_get_error_string().str);
+    return false;
+  }
+
   if (use_intra_process_) {
     if (rcl_wait_set_add_subscription(wait_set, intra_process_subscription_handle_.get(),
           &wait_set_intra_process_subscription_index_) != RCL_RET_OK) {
@@ -168,13 +203,14 @@ SubscriptionBase::add_to_wait_set(rcl_wait_set_t * wait_set)
         "Couldn't add intra process subscription to wait set: %s", rcl_get_error_string().str);
       return false;
     }
-  }
 
-  if (rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Couldn't add subscription event to wait set: %s", rcl_get_error_string().str);
-    return false;
+    if (rcl_wait_set_add_event(wait_set, intra_process_event_handle_.get(),
+          &wait_set_intra_process_event_index_) != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Couldn't add intra process subscription event to wait set: %s", rcl_get_error_string().str);
+      return false;
+    }
   }
 
   return true;
@@ -189,7 +225,10 @@ SubscriptionBase::is_ready(rcl_wait_set_t * wait_set)
     (wait_set->subscriptions[wait_set_intra_process_subscription_index_] ==
       intra_process_subscription_handle_.get());
   event_ready_ = (wait_set->events[wait_set_event_index_] == event_handle_.get());
-  return subscription_ready_ || intra_process_subscription_ready_ || event_ready_;
+  intra_process_event_ready_ =
+    (wait_set->events[wait_set_intra_process_event_index_] == intra_process_event_handle_.get());
+  return subscription_ready_ || intra_process_subscription_ready_ ||
+    event_ready_ || intra_process_event_ready_;
 }
 
 void
@@ -255,6 +294,14 @@ SubscriptionBase::execute()
 
   if (event_ready_) {
     // rcl_take_event();
+    auto example_event = ResourceStatusEvent::LIVELINESS_CHANGED;
+    handle_event(example_event);
+  }
+
+  if (intra_process_event_ready_) {
+    // rcl_take_event();
+    auto example_event = ResourceStatusEvent::LIVELINESS_CHANGED;
+    handle_event(example_event);
   }
 }
 

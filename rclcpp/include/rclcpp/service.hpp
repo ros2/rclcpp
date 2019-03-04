@@ -26,6 +26,7 @@
 
 #include "rclcpp/waitable.hpp"
 #include "rclcpp/any_service_callback.hpp"
+#include "rclcpp/event.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -96,6 +97,9 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) = 0;
 
+  virtual void
+  handle_event(ResourceStatusEvent event) const = 0;
+
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
@@ -138,9 +142,10 @@ public:
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name,
+    rcl_service_options_t & service_options,
     AnyServiceCallback<ServiceT> any_callback,
-    rcl_service_options_t & service_options)
-  : ServiceBase(node_handle), any_callback_(any_callback)
+    ResourceStatusEventCallbackType event_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback), event_callback_(event_callback)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
@@ -188,6 +193,24 @@ public:
       }
 
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service");
+    }
+
+    event_handle_ = std::shared_ptr<rcl_event_t>(new rcl_event_t,
+      [](rcl_event_t * event)
+      {
+        if (rcl_event_fini(event) != RCL_RET_OK) {
+          RCUTILS_LOG_ERROR_NAMED(
+            "rclcpp",
+            "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
+          rcl_reset_error();
+        }
+        delete event;
+      });
+    *event_handle_.get() = rcl_get_zero_initialized_event();
+
+    ret = rcl_service_event_init(get_event_handle().get(), get_service_handle().get());
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service event");
     }
   }
 
@@ -268,10 +291,18 @@ public:
     }
   }
 
+  void
+  handle_event(ResourceStatusEvent event) const
+  {
+    event_callback_(event);
+  }
+
 private:
   RCLCPP_DISABLE_COPY(Service)
 
   AnyServiceCallback<ServiceT> any_callback_;
+
+  ResourceStatusEventCallbackType event_callback_;
 };
 
 }  // namespace rclcpp

@@ -103,7 +103,7 @@ private:
   // Parameter Client pointer
   std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
 
-  // Parameter Event subscription
+  // ParameterEvent subscription
   using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
   using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
   std::shared_ptr<ParamSubscriptionT> parameter_subscription_;

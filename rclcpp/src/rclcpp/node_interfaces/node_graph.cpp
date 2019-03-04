@@ -273,7 +273,7 @@ NodeGraph::notify_graph_change()
         std::remove_if(
           graph_events_.begin(),
           graph_events_.end(),
-          [](const rclcpp::Event::WeakPtr & wptr) {
+          [](const rclcpp::GraphEvent::WeakPtr & wptr) {
             return wptr.expired();
           }),
         graph_events_.end());
@@ -298,10 +298,10 @@ NodeGraph::notify_shutdown()
   graph_cv_.notify_all();
 }
 
-rclcpp::Event::SharedPtr
+rclcpp::GraphEvent::SharedPtr
 NodeGraph::get_graph_event()
 {
-  auto event = rclcpp::Event::make_shared();
+  auto event = rclcpp::GraphEvent::make_shared();
   std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
   graph_events_.push_back(event);
   graph_users_count_++;
@@ -315,7 +315,7 @@ NodeGraph::get_graph_event()
 
 void
 NodeGraph::wait_for_graph_change(
-  rclcpp::Event::SharedPtr event,
+  rclcpp::GraphEvent::SharedPtr event,
   std::chrono::nanoseconds timeout)
 {
   using rclcpp::exceptions::InvalidEventError;

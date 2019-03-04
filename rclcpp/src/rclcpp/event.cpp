@@ -17,23 +17,23 @@
 namespace rclcpp
 {
 
-Event::Event()
+GraphEvent::GraphEvent()
 : state_(false) {}
 
 bool
-Event::set()
+GraphEvent::set()
 {
   return state_.exchange(true);
 }
 
 bool
-Event::check()
+GraphEvent::check()
 {
   return state_.load();
 }
 
 bool
-Event::check_and_clear()
+GraphEvent::check_and_clear()
 {
   return state_.exchange(false);
 }

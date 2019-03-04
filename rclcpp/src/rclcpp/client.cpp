@@ -41,6 +41,7 @@ ClientBase::ClientBase(
   context_(node_base->get_context())
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
+
   rcl_client_t * new_rcl_client = new rcl_client_t;
   *new_rcl_client = rcl_get_zero_initialized_client();
   client_handle_.reset(
@@ -62,6 +63,19 @@ ClientBase::ClientBase(
       }
       delete client;
     });
+
+  event_handle_ = std::shared_ptr<rcl_event_t>(new rcl_event_t,
+    [](rcl_event_t * event)
+    {
+      if (rcl_event_fini(event) != RCL_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
+        rcl_reset_error();
+      }
+      delete event;
+    });
+  *event_handle_.get() = rcl_get_zero_initialized_event();
 }
 
 ClientBase::~ClientBase()
@@ -163,6 +177,8 @@ ClientBase::execute()
 
   if (event_ready_) {
     // rcl_take_event();
+    auto example_event = ResourceStatusEvent::LIVELINESS_CHANGED;
+    handle_event(example_event);
   }
 }
 

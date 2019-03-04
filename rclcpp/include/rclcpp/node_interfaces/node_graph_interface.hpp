@@ -99,7 +99,7 @@ public:
   /**
    * Affects threads waiting on the notify guard condition, see:
    * get_notify_guard_condition(), as well as the threads waiting on graph
-   * changes using a graph Event, see: wait_for_graph_change().
+   * changes using a graph GraphEvent, see: wait_for_graph_change().
    *
    * This is typically only used by the rclcpp::graph_listener::GraphListener.
    *
@@ -118,18 +118,18 @@ public:
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /**
-   * The graph Event object is a loan which must be returned.
-   * The Event object is scoped and therefore to return the load just let it go
+   * The graph GraphEvent object is a loan which must be returned.
+   * The GraphEvent object is scoped and therefore to return the load just let it go
    * out of scope.
    */
   RCLCPP_PUBLIC
   virtual
-  rclcpp::Event::SharedPtr
+  rclcpp::GraphEvent::SharedPtr
   get_graph_event() = 0;
 
-  /// Wait for a graph event to occur by waiting on an Event to become set.
+  /// Wait for a graph event to occur by waiting on an GraphEvent to become set.
   /**
-   * The given Event must be acquire through the get_graph_event() method.
+   * The given GraphEvent must be acquire through the get_graph_event() method.
    *
    * \throws InvalidEventError if the given event is nullptr
    * \throws EventNotRegisteredError if the given event was not acquired with
@@ -139,7 +139,7 @@ public:
   virtual
   void
   wait_for_graph_change(
-    rclcpp::Event::SharedPtr event,
+    rclcpp::GraphEvent::SharedPtr event,
     std::chrono::nanoseconds timeout) = 0;
 
   /// Return the number of on loan graph events, see get_graph_event().

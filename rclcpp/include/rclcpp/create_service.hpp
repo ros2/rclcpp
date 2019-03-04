@@ -29,7 +29,7 @@ namespace rclcpp
 
 /// Create a service with a given type.
 /// \internal
-template<typename ServiceT, typename CallbackT>
+template<typename ServiceT, typename CallbackT, typename EventCallbackT>
 typename rclcpp::Service<ServiceT>::SharedPtr
 create_service(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
@@ -37,6 +37,7 @@ create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
+  EventCallbackT && event_callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   rclcpp::AnyServiceCallback<ServiceT> any_service_callback;
@@ -47,9 +48,10 @@ create_service(
 
   auto serv = Service<ServiceT>::make_shared(
     node_base->get_shared_rcl_node_handle(),
-    service_name, any_service_callback, service_options);
+    service_name, service_options, any_service_callback, event_callback);
   auto serv_base_ptr = std::dynamic_pointer_cast<ServiceBase>(serv);
   node_services->add_service(serv_base_ptr, group);
+
   return serv;
 }
 

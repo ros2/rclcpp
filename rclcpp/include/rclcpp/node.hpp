@@ -139,11 +139,16 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
+    typename MessageT,
+    typename EventCallbackT = ResourceStatusEventCallbackType,
+    typename Alloc = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
   std::shared_ptr<PublisherT>
   create_publisher(
-    const std::string & topic_name, size_t qos_history_depth,
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    EventCallbackT && event_callback = {},
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Publisher.
@@ -154,12 +159,16 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
+    typename MessageT,
+    typename EventCallbackT = ResourceStatusEventCallbackType,
+    typename Alloc = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
+    EventCallbackT && event_callback = {},
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
@@ -180,6 +189,7 @@ public:
   template<
     typename MessageT,
     typename CallbackT,
+    typename EventCallbackT = ResourceStatusEventCallbackType,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
@@ -188,6 +198,7 @@ public:
     const std::string & topic_name,
     CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
+    EventCallbackT && event_callback = {},
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
@@ -213,6 +224,7 @@ public:
   template<
     typename MessageT,
     typename CallbackT,
+    typename EventCallbackT = ResourceStatusEventCallbackType,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
@@ -221,6 +233,7 @@ public:
     const std::string & topic_name,
     CallbackT && callback,
     size_t qos_history_depth,
+    EventCallbackT && event_callback = {},
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
@@ -242,20 +255,25 @@ public:
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Client. */
-  template<typename ServiceT>
+  template<typename ServiceT, typename EventCallbackT = ResourceStatusEventCallbackType>
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
+    EventCallbackT && event_callback = {},
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template<typename ServiceT, typename CallbackT>
+  template<
+    typename ServiceT,
+    typename CallbackT,
+    typename EventCallbackT = ResourceStatusEventCallbackType>
   typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
     CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
+    EventCallbackT && event_callback = {},
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   RCLCPP_PUBLIC
@@ -409,17 +427,17 @@ public:
   count_subscribers(const std::string & topic_name) const;
 
   /// Return a graph event, which will be set anytime a graph change occurs.
-  /* The graph Event object is a loan which must be returned.
-   * The Event object is scoped and therefore to return the loan just let it go
+  /* The graph GraphEvent object is a loan which must be returned.
+   * The GraphEvent object is scoped and therefore to return the loan just let it go
    * out of scope.
    */
   RCLCPP_PUBLIC
-  rclcpp::Event::SharedPtr
+  rclcpp::GraphEvent::SharedPtr
   get_graph_event();
 
-  /// Wait for a graph event to occur by waiting on an Event to become set.
+  /// Wait for a graph event to occur by waiting on an GraphEvent to become set.
   /**
-   * The given Event must be acquire through the get_graph_event() method.
+   * The given GraphEvent must be acquire through the get_graph_event() method.
    *
    * \throws InvalidEventError if the given event is nullptr
    * \throws EventNotRegisteredError if the given event was not acquired with
@@ -428,7 +446,7 @@ public:
   RCLCPP_PUBLIC
   void
   wait_for_graph_change(
-    rclcpp::Event::SharedPtr event,
+    rclcpp::GraphEvent::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC

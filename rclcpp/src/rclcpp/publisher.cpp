@@ -62,9 +62,27 @@ PublisherBase::PublisherBase(
         rcl_node_get_name(rcl_node_handle),
         rcl_node_get_namespace(rcl_node_handle));
     }
-
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create publisher");
   }
+
+  event_handle_ = std::shared_ptr<rcl_event_t>(new rcl_event_t,
+    [](rcl_event_t * event)
+    {
+      if (rcl_event_fini(event) != RCL_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rclcpp",
+          "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
+        rcl_reset_error();
+      }
+      delete event;
+    });
+  *event_handle_.get() = rcl_get_zero_initialized_event();
+
+  ret = rcl_publisher_event_init(get_event_handle().get(), &publisher_handle_);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create publisher event");
+  }
+
   // Life time of this object is tied to the publisher handle.
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
   if (!publisher_rmw_handle) {
@@ -195,6 +213,8 @@ void
 PublisherBase::execute()
 {
   // rcl_take_event();
+  auto example_event = ResourceStatusEvent::LIVELINESS_CHANGED;
+  handle_event(example_event);
 }
 
 size_t

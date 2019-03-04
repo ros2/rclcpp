@@ -127,6 +127,8 @@ ServiceBase::execute()
 
   if (event_ready_) {
     // rcl_take_event();
+    auto example_event = ResourceStatusEvent::LIVELINESS_CHANGED;
+    handle_event(example_event);
   }
 }
 
