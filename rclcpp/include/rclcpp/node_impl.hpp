@@ -165,10 +165,10 @@ Node::create_subscription(
     allocator);
 }
 
-template<typename DurationT, typename CallbackT>
+template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
-  std::chrono::duration<int64_t, DurationT> period,
+  std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {

@@ -66,10 +66,10 @@ public:
   action_server_is_ready() const;
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
-  template<typename RatioT = std::milli>
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   bool
   wait_for_action_server(
-    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
     return wait_for_action_server_nanoseconds(
       std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
