@@ -358,6 +358,11 @@ public:
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
   get_node_graph_interface();
 
+  /// Return the Node's internal NodeLoggingInterface implementation.
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr
+  get_node_logging_interface();
+
   /// Return the Node's internal NodeTimersInterface implementation.
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
