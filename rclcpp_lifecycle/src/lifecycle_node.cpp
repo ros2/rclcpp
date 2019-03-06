@@ -268,6 +268,12 @@ LifecycleNode::get_node_graph_interface()
   return node_graph_;
 }
 
+rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr
+LifecycleNode::get_node_logging_interface()
+{
+  return node_logging_;
+}
+
 rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
 LifecycleNode::get_node_timers_interface()
 {
