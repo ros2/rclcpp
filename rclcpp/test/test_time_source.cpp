@@ -56,10 +56,10 @@ protected:
 };
 
 void spin_until_time(
-    rclcpp::Clock::SharedPtr clock,
-    rclcpp::Node::SharedPtr node,
-    std::chrono::nanoseconds end_time,
-    bool expect_time_update)
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Node::SharedPtr node,
+  std::chrono::nanoseconds end_time,
+  bool expect_time_update)
 {
   // Call spin_once on the node until either:
   // 1) We see the ros_clock's simulated time change to the expected end_time
@@ -72,8 +72,7 @@ void spin_until_time(
   executor.add_node(node);
 
   auto start = std::chrono::system_clock::now();
-  while (std::chrono::system_clock::now() < (start + 1s))
-  {
+  while (std::chrono::system_clock::now() < (start + 1s)) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
@@ -81,7 +80,7 @@ void spin_until_time(
     executor.spin_once(10ms);
 
     if (clock->now().nanoseconds() == end_time.count()) {
-        return;
+      return;
     }
   }
 
@@ -93,9 +92,9 @@ void spin_until_time(
 }
 
 void spin_until_ros_time_updated(
-    rclcpp::Clock::SharedPtr clock,
-    rclcpp::Node::SharedPtr node,
-    rclcpp::ParameterValue value)
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Node::SharedPtr node,
+  rclcpp::ParameterValue value)
 {
   // Similar to above:  Call spin_once until we see the clock's ros_time_is_active method
   // match the ParameterValue
@@ -107,8 +106,7 @@ void spin_until_ros_time_updated(
   executor.add_node(node);
 
   auto start = std::chrono::system_clock::now();
-  while (std::chrono::system_clock::now() < (start + 1s))
-  {
+  while (std::chrono::system_clock::now() < (start + 1s)) {
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
@@ -129,7 +127,7 @@ void spin_until_ros_time_updated(
 void trigger_clock_changes(
   rclcpp::Node::SharedPtr node,
   std::shared_ptr<rclcpp::Clock> clock,
-  bool expect_time_update=true)
+  bool expect_time_update = true)
 {
   auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
       rmw_qos_profile_default);
@@ -155,7 +153,10 @@ void trigger_clock_changes(
   }
 }
 
-void set_use_sim_time_parameter(rclcpp::Node::SharedPtr node, rclcpp::ParameterValue value, rclcpp::Clock::SharedPtr clock)
+void set_use_sim_time_parameter(
+  rclcpp::Node::SharedPtr node,
+  rclcpp::ParameterValue value,
+  rclcpp::Clock::SharedPtr clock)
 {
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
 
@@ -168,9 +169,10 @@ void set_use_sim_time_parameter(rclcpp::Node::SharedPtr node, rclcpp::ParameterV
     EXPECT_TRUE(result.successful);
   }
 
-  // Same as above - workaround for a little bit of asynchronus behavior.  The sim_time paramater is set
-  // synchronously, but the way the ros clock gets notified involves a pub/sub that happens AFTER the synchronous
-  // notification that the parameter was set.  This may also get fixed upstream
+  // Same as above - workaround for a little bit of asynchronus behavior.  The sim_time paramater
+  // is set synchronously, but the way the ros clock gets notified involves a pub/sub that happens
+  // AFTER the synchronous notification that the parameter was set.  This may also get fixed
+  // upstream
   spin_until_ros_time_updated(clock, node, value);
 }
 
