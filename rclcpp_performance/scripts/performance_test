@@ -16,7 +16,6 @@ TEST_FOLDERS=(
     "test_intra_unique_10ms_n1_m10000_l10000000"
     "test_inter_unique_10ms_n1_m10000_l10000000"
 
-    # These tests below suffers of starvation
     # "test_intra_shared_10ms_n5_m100_l10000000"
     # "test_inter_shared_10ms_n5_m100_l10000000"
 )

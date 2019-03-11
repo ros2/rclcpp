@@ -40,7 +40,9 @@ public:
     PeriodT period,
     bool use_unique_message,
     rmw_qos_profile_t qos_profile = rmw_qos_profile_default) :
-  number_of_messages_to_send_(number_of_messages_to_send)
+  number_of_messages_to_send_(number_of_messages_to_send),
+  period_(period),
+  message_length_(message_length)
   {
     // Note(ivanpauno): msg type could be changed, to try the different publish methods.
     shared_msg_ = std::make_shared<rclcpp_performance::msg::MatchingPublisher>();
@@ -58,71 +60,103 @@ public:
         topic_name,
         qos_profile);
 
-    // Use a timer to schedule periodic message publishing.
-    // The callback is different depending on the message type.
     if (!use_unique_message) {
-      auto callback = [this]() -> void
-        {
-          if (this->number_of_messages_to_send_) {
-            this->logging_file_ << this->shared_msg_->message_id << ", "
-            << std::chrono::duration_cast<TimestampT>(
-                std::chrono::system_clock::now().time_since_epoch()).count()
-              << std::endl;
-            this->pub_->publish(this->shared_msg_);
-            this->shared_msg_->message_id++;
-          } else {
-            this->timer_->cancel();
-            this->st_number_of_publishers_--;
-          }
-          this->number_of_messages_to_send_--;
-        };
-      timer_ = node->create_wall_timer(period, callback);
+      thread_ = std::thread(std::bind(&PublisherConstantRate::publishing_loop_shared_msg, this));
     } else {
-      auto callback = [this, message_length]() -> void
-        {
-          if (this->number_of_messages_to_send_) {
-            // First create a shared message and copy the data.
-            // Then log and publish.
-            rclcpp_performance::msg::MatchingPublisher::UniquePtr unique_msg =
-              std::make_unique<rclcpp_performance::msg::MatchingPublisher>();
-            unique_msg->publisher_id = this->shared_msg_->publisher_id;
-            unique_msg->message_id = this->shared_msg_->message_id;
-            unique_msg->data.resize(message_length);
-            this->logging_file_ << unique_msg->message_id << ", "
-            << std::chrono::duration_cast<TimestampT>(
-                std::chrono::system_clock::now().time_since_epoch()).count()
-              << std::endl;
-            this->pub_->publish(unique_msg);
-            this->shared_msg_->message_id++;
-          } else {
-            this->timer_->cancel();
-            this->st_number_of_publishers_--;
-          }
-          this->number_of_messages_to_send_--;
-        };
-      timer_ = node->create_wall_timer(period, callback);
+      thread_ = std::thread(std::bind(&PublisherConstantRate::publishing_loop_unique_msg, this));
     }
 
     // Increment static counting
     PublisherConstantRate::st_number_of_publishers_++;
   }
 
-  static uint64_t get_number_of_publishers() {
+  ~PublisherConstantRate()
+  {
+    // Make sure to join the thread on shutdown.
+    if (thread_.joinable()) {
+      thread_.join();
+    }
+  }
+
+  void publishing_loop_shared_msg()
+  {
+    // start all the publishers synchronously
+    while (!st_start_) {
+      std::this_thread::sleep_for(period_);
+    }
+
+    while (this->number_of_messages_to_send_) {
+      auto t_now = std::chrono::system_clock::now();
+      this->logging_file_ << this->shared_msg_->message_id << ", "
+      << std::chrono::duration_cast<TimestampT>(
+          t_now.time_since_epoch()).count()
+        << std::endl;
+      this->pub_->publish(this->shared_msg_);
+      this->shared_msg_->message_id++;
+      this->number_of_messages_to_send_--;
+
+      // constant rate publishing
+      std::this_thread::sleep_until(t_now + period_);
+    }
+    this->st_number_of_publishers_--;
+  }
+
+  void publishing_loop_unique_msg()
+  {
+    // start all the publishers synchronously
+    while (!st_start_) {
+      std::this_thread::sleep_for(period_);
+    }
+
+    while (this->number_of_messages_to_send_) {
+      auto unique_msg =
+        std::make_unique<rclcpp_performance::msg::MatchingPublisher>();
+      unique_msg->publisher_id = this->shared_msg_->publisher_id;
+      unique_msg->message_id = this->shared_msg_->message_id;
+      unique_msg->data.resize(message_length_);
+      auto t_now = std::chrono::system_clock::now();
+      this->logging_file_ << unique_msg->message_id << ", "
+      << std::chrono::duration_cast<TimestampT>(
+          t_now.time_since_epoch()).count()
+        << std::endl;
+      this->pub_->publish(unique_msg);
+      this->shared_msg_->message_id++;
+      this->number_of_messages_to_send_--;
+
+      // constant rate publishing
+      std::this_thread::sleep_until(t_now + period_);
+    }
+    this->st_number_of_publishers_--;
+  }
+
+  static uint64_t get_number_of_publishers()
+  {
     return st_number_of_publishers_;
+  }
+
+  static void start()
+  {
+    st_start_ = true;
   }
 
 private:
   rclcpp_performance::msg::MatchingPublisher::SharedPtr shared_msg_;
   rclcpp::Publisher<rclcpp_performance::msg::MatchingPublisher>::SharedPtr pub_;
-  rclcpp::TimerBase::SharedPtr timer_;
+  // rclcpp::TimerBase::SharedPtr timer_;
 
   std::ofstream logging_file_;
   uint64_t number_of_messages_to_send_;
+  PeriodT period_;
+  uint64_t message_length_;
 
+  std::thread thread_;
+
+  static bool st_start_;
   static uint64_t st_number_of_publishers_;
 };
 
 uint64_t PublisherConstantRate::st_number_of_publishers_ = 0;
+bool PublisherConstantRate::st_start_ = false;
 
 class SubscriptionLogger
 {
@@ -226,6 +260,7 @@ public:
       publishers_.push_back(pub);
     }
     shutdown_hook_ = std::make_shared<ShutdownHook>(this);
+    PublisherConstantRate::start();
   }
 private:
   std::vector<std::shared_ptr<PublisherConstantRate>> publishers_;
