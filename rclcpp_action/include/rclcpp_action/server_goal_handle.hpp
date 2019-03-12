@@ -123,10 +123,10 @@ class Server;
 /// Class to interact with goals on a server.
 /**
  * Use this class to check the status of a goal as well as set the result.
+ *
  * This class is not meant to be created by a user, instead it is created when a goal has been
  * accepted.
- * The class `rclcpp_action::Server<>` will create an instance and give it to the user in their
- * `handle_accepted` callback.
+ * A `Server` will create an instance and give it to the user in their `handle_accepted` callback.
  *
  * Internally, this class is responsible for coverting between the C++ action type and generic
  * types for `rclcpp_action::ServerGoalHandleBase`.
@@ -138,9 +138,10 @@ public:
   /// Send an update about the progress of a goal.
   /**
    * This must only be called when the goal is executing.
-   * If execution of a goal is deferred then `ServerGoalHandle<>::set_executing()` must be called
+   * If execution of a goal is deferred then `ServerGoalHandle::set_executing()` must be called
    * first.
-   * `std::runtime_error` is raised if the goal is in any state besides executing.
+   *
+   * \throws std::runtime_error If the goal is in any state besides executing.
    *
    * \param[in] feedback_msg the message to publish to clients.
    */
@@ -153,13 +154,13 @@ public:
     publish_feedback_(feedback_message);
   }
 
-  // TODO(sloretz) which exception is raised?
   /// Indicate that a goal could not be reached and has been aborted.
   /**
    * Only call this if the goal was executing but cannot be completed.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
-   * An exception is raised if the goal is in any state besides executing.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    *
    * \param[in] result_msg the final result to send to clients.
    */
@@ -173,12 +174,13 @@ public:
     on_terminal_state_(uuid_, response);
   }
 
-  /// Indicate that a goal has been reached.
+  /// Indicate that a goal has succeeded.
   /**
    * Only call this if the goal is executing and has reached the desired final state.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
-   * An exception is raised if the goal is in any state besides executing.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    *
    * \param[in] result_msg the final result to send to clients.
    */
@@ -197,7 +199,8 @@ public:
    * Only call this if the goal is executing or pending, but has been canceled.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
-   * An exception is raised if the goal is in any state besides executing or pending.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    *
    * \param[in] result_msg the final result to send to clients.
    */
@@ -214,7 +217,8 @@ public:
   /// Indicate that the server is starting to execute a goal.
   /**
    * Only call this if the goal is pending.
-   * An exception is raised if the goal is in any state besides pending.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    */
   void
   set_executing()
