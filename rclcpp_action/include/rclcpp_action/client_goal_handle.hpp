@@ -45,6 +45,15 @@ enum class ResultCode : int8_t
 template<typename ActionT>
 class Client;
 
+/// Class for interacting with goals sent from action clients.
+/**
+ * Use this class to check the status of a goal as well as get the result.
+ *
+ * This class is not meant to be created by a user, instead it is created when a goal has been
+ * accepted.
+ * A `Client` will create an instance and return it to the user (via a future) after calling
+ * `Client::async_send_goal`.
+ */
 template<typename ActionT>
 class ClientGoalHandle
 {
@@ -70,21 +79,36 @@ public:
 
   virtual ~ClientGoalHandle();
 
+  /// Get the unique ID for the goal.
   const GoalUUID &
   get_goal_id() const;
 
+  /// Get the time when the goal was accepted.
   rclcpp::Time
   get_goal_stamp() const;
 
+  /// Get a future to the goal result.
+  /**
+   * This method should not be called if the `ignore_result` flag was set when
+   * sending the original goal request (see Client::async_send_goal).
+   *
+   * `is_result_aware()` can be used to check if it is safe to call this method.
+   *
+   * \throws exceptions::UnawareGoalHandleError If the the goal handle is unaware of the result.
+   * \return A future to the result.
+   */
   std::shared_future<WrappedResult>
   async_result();
 
+  /// Get the goal status code.
   int8_t
   get_status();
 
+  /// Check if an action client has subscribed to feedback for the goal.
   bool
   is_feedback_aware();
 
+  /// Check if an action client has requested the result for the goal.
   bool
   is_result_aware();
 

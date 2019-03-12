@@ -31,6 +31,23 @@
 
 namespace rclcpp_action
 {
+/// Create an action server.
+/**
+ * All provided callback functions must be non-blocking.
+ *
+ * \sa Server::Server() for more information.
+ *
+ * \param node[in] The action server will be added to this node.
+ * \param name[in] The action name.
+ * \param[in] handle_goal A callback that decides if a goal should be accepted or rejected.
+ * \param[in] handle_cancel A callback that decides if a goal should be attempted to be canceled.
+ *  The return from this callback only indicates if the server will try to cancel a goal.
+ *  It does not indicate if the goal was actually canceled.
+ * \param[in] handle_accepted A callback that is called to give the user a handle to the goal.
+ * \param[in] options options to pass to the underlying `rcl_action_server_t`.
+ * \param group[in] The action server will be added to this callback group.
+ *   If `nullptr`, then the action server is added to the default callback group.
+ */
 template<typename ActionT>
 typename Server<ActionT>::SharedPtr
 create_server(

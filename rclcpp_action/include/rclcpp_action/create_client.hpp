@@ -25,6 +25,13 @@
 
 namespace rclcpp_action
 {
+/// Create an action client.
+/**
+ * \param[in] node The action client will be added to this node.
+ * \param[in] name The action name.
+ * \param[in] group The action client will be added to this callback group.
+ *   If `nullptr`, then the action client is added to the default callback group.
+ */
 template<typename ActionT>
 typename Client<ActionT>::SharedPtr
 create_client(

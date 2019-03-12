@@ -245,7 +245,7 @@ private:
 /**
  * This class creates an action client.
  *
- * Create an instance of this server using `rclcpp_action::create_client()`.
+ * To create an instance of an action client use `rclcpp_action::create_client()`.
  *
  * Internally, this class is responsible for:
  *  - coverting between the C++ action type and generic types for `rclcpp_action::ClientBase`, and
@@ -265,6 +265,18 @@ public:
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
 
+  /// Construct an action client.
+  /**
+   * This constructs an action client, but it will not work until it has been added to a node.
+   * Use `rclcpp_action::create_client()` to both construct and add to a node.
+   *
+   * \param[in] node_base A pointer to the base interface of a node.
+   * \param[in] node_graph A pointer to an interface that allows getting graph information about
+   *   a node.
+   * \param[in] node_logging A pointer to an interface that allows getting a node's logger.
+   * \param[in] action_name The action name.
+   * \param[in] client_options Options to pass to the underlying `rcl_action::rcl_action_client_t`.
+   */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
@@ -279,6 +291,20 @@ public:
   {
   }
 
+  /// Send an action goal and asynchronously get the result.
+  /**
+   * If the goal is accepted by an action server, the returned future is set to a `ClientGoalHandle`.
+   * If the goal is rejected by an action server, then the future is set to a `nullptr`.
+   *
+   * The goal handle is used to monitor the status of the goal and get the final result.
+   *
+   * \param[in] goal The goal request.
+   * \param[in] callback Optional user callback for feedback associated with the goal.
+   * \param[in] ignore_result If `true`, then the result for the goal will not be requested and
+   *   therefore inaccessible from the goal handle.
+   * \return A future that completes when the goal has been accepted or rejected.
+   *   If the goal is rejected, then the result will be a `nullptr`.
+   */
   std::shared_future<typename GoalHandle::SharedPtr>
   async_send_goal(
     const Goal & goal, FeedbackCallback callback = nullptr, bool ignore_result = false)
@@ -321,6 +347,13 @@ public:
     return future;
   }
 
+  /// Asynchronously get the result for an active goal.
+  /**
+   * \throws exceptions::UnknownGoalHandleError If the goal unknown or already reached a terminal
+   *   state.
+   * \param[in] goal_handle The goal handle for which to get the result.
+   * \return A future that is set to the goal result when the goal is finished.
+   */
   std::shared_future<WrappedResult>
   async_get_result(typename GoalHandle::SharedPtr goal_handle)
   {
@@ -335,6 +368,13 @@ public:
     return goal_handle->async_result();
   }
 
+  /// Asynchronously request a goal be canceled.
+  /**
+   * \throws exceptions::UnknownGoalHandleError If the goal is unknown or already reached a
+   *   terminal state.
+   * \param[in] goal_handle The goal handle requesting to be canceled.
+   * \return A future whose result indicates whether or not the cancel request was accepted.
+   */
   std::shared_future<bool>
   async_cancel_goal(typename GoalHandle::SharedPtr goal_handle)
   {
@@ -364,6 +404,14 @@ public:
     return future;
   }
 
+  /// Asynchronously request for all goals to be canceled.
+  /**
+   * \return A future to a CancelResponse message that is set when the request has been
+   * acknowledged by an action server.
+   * See
+   * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
+   * action_msgs/CancelGoal.srv</a>.
+   */
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_all_goals()
   {
@@ -375,6 +423,15 @@ public:
     return async_cancel(cancel_request);
   }
 
+  /// Asynchronously request all goals at or before a specified time be canceled.
+  /**
+   * \param[in] stamp The timestamp for the cancel goal request.
+   * \return A future to a CancelResponse message that is set when the request has been
+   * acknowledged by an action server.
+   * See
+   * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
+   * action_msgs/CancelGoal.srv</a>.
+   */
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_goals_before(const rclcpp::Time & stamp)
   {

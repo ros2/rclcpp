@@ -63,7 +63,7 @@ enum class CancelResponse : int8_t
 /// \internal
 /**
  * This class should not be used directly by users writing an action server.
- * Instead users should use `rclcpp_action::Server<>`.
+ * Instead users should use `rclcpp_action::Server`.
  *
  * Internally, this class is responsible for interfacing with the `rcl_action` API.
  */
@@ -288,7 +288,7 @@ public:
    *  - one to accept or reject requests to cancel a goal,
    *  - one to receive a goal handle after a goal has been accepted.
    * All callbacks must be non-blocking.
-   * The result of a goal should be set using methods on `rclcpp_action::ServerGoalHandle<>`.
+   * The result of a goal should be set using methods on `rclcpp_action::ServerGoalHandle`.
    *
    * \param[in] node_base a pointer to the base interface of a node.
    * \param[in] node_clock a pointer to an interface that allows getting a node's clock.
