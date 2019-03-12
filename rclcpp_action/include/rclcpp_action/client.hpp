@@ -148,7 +148,7 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  GoalID
+  GoalUUID
   generate_goal_id();
 
   /// \internal
@@ -260,10 +260,10 @@ public:
   using Goal = typename ActionT::Goal;
   using Feedback = typename ActionT::Feedback;
   using GoalHandle = ClientGoalHandle<ActionT>;
-  using Result = typename GoalHandle::Result;
+  using WrappedResult = typename GoalHandle::WrappedResult;
   using FeedbackCallback = typename ClientGoalHandle<ActionT>::FeedbackCallback;
-  using CancelRequest = typename ActionT::CancelGoalService::Request;
-  using CancelResponse = typename ActionT::CancelGoalService::Response;
+  using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
+  using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
 
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
@@ -286,26 +286,23 @@ public:
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>();
     std::shared_future<typename GoalHandle::SharedPtr> future(promise->get_future());
-    using GoalRequest = typename ActionT::GoalRequestService::Request;
-    // auto goal_request = std::make_shared<GoalRequest>();
-    // goal_request->goal_id = this->generate_goal_id();
-    // goal_request->goal = goal;
-    auto goal_request = std::make_shared<GoalRequest>(goal);
-    goal_request->action_goal_id.uuid = this->generate_goal_id();
+    using GoalRequest = typename ActionT::Impl::SendGoalService::Request;
+    auto goal_request = std::make_shared<GoalRequest>();
+    goal_request->goal_id.uuid = this->generate_goal_id();
+    goal_request->goal = goal;
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
       [this, goal_request, callback, ignore_result, promise](
         std::shared_ptr<void> response) mutable
       {
-        using GoalResponse = typename ActionT::GoalRequestService::Response;
+        using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
           return;
         }
         GoalInfo goal_info;
-        // goal_info.goal_id = goal_request->goal_id;
-        goal_info.goal_id.uuid = goal_request->action_goal_id.uuid;
+        goal_info.goal_id.uuid = goal_request->goal_id.uuid;
         goal_info.stamp = goal_response->stamp;
         // Do not use std::make_shared as friendship cannot be forwarded.
         std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
@@ -324,7 +321,7 @@ public:
     return future;
   }
 
-  std::shared_future<Result>
+  std::shared_future<WrappedResult>
   async_get_result(typename GoalHandle::SharedPtr goal_handle)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
@@ -406,7 +403,7 @@ private:
   std::shared_ptr<void>
   create_goal_response() const override
   {
-    using GoalResponse = typename ActionT::GoalRequestService::Response;
+    using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
     return std::shared_ptr<void>(new GoalResponse());
   }
 
@@ -414,7 +411,7 @@ private:
   std::shared_ptr<void>
   create_result_response() const override
   {
-    using GoalResultResponse = typename ActionT::GoalResultService::Response;
+    using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
     return std::shared_ptr<void>(new GoalResultResponse());
   }
 
@@ -429,9 +426,8 @@ private:
   std::shared_ptr<void>
   create_feedback_message() const override
   {
-    // using FeedbackMessage = typename ActionT::FeedbackMessage;
-    // return std::shared_ptr<void>(new FeedbackMessage());
-    return std::shared_ptr<void>(new Feedback());
+    using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
+    return std::shared_ptr<void>(new FeedbackMessage());
   }
 
   /// \internal
@@ -439,13 +435,10 @@ private:
   handle_feedback_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    // using FeedbackMessage = typename ActionT::FeedbackMessage;
-    // typename FeedbackMessage::SharedPtr feedback_message =
-    //   std::static_pointer_cast<FeedbackMessage>(message);
-    typename Feedback::SharedPtr feedback_message =
-      std::static_pointer_cast<Feedback>(message);
-    // const GoalID & goal_id = feedback_message->goal_id;
-    const GoalID & goal_id = feedback_message->action_goal_id.uuid;
+    using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
+    typename FeedbackMessage::SharedPtr feedback_message =
+      std::static_pointer_cast<FeedbackMessage>(message);
+    const GoalUUID & goal_id = feedback_message->goal_id.uuid;
     if (goal_handles_.count(goal_id) == 0) {
       RCLCPP_DEBUG(
         this->get_logger(),
@@ -453,15 +446,16 @@ private:
       return;
     }
     typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id];
-    // goal_handle->call_feedback_callback(goal_handle, feedback_message->feedback);
-    goal_handle->call_feedback_callback(goal_handle, feedback_message);
+    auto feedback = std::make_shared<Feedback>();
+    *feedback = feedback_message->feedback;
+    goal_handle->call_feedback_callback(goal_handle, feedback);
   }
 
   /// \internal
   std::shared_ptr<void>
   create_status_message() const override
   {
-    using GoalStatusMessage = typename ActionT::GoalStatusMessage;
+    using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     return std::shared_ptr<void>(new GoalStatusMessage());
   }
 
@@ -470,11 +464,10 @@ private:
   handle_status_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    using GoalStatusMessage = typename ActionT::GoalStatusMessage;
+    using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
-      // const GoalID & goal_id = status.goal_info.goal_id;
-      const GoalID & goal_id = status.goal_info.goal_id.uuid;
+      const GoalUUID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
         RCLCPP_DEBUG(
           this->get_logger(),
@@ -498,21 +491,22 @@ private:
   void
   make_result_aware(typename GoalHandle::SharedPtr goal_handle)
   {
-    using GoalResultRequest = typename ActionT::GoalResultService::Request;
+    using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
-    // goal_result_request.goal_id = goal_handle->get_goal_id();
-    goal_result_request->action_goal_id.uuid = goal_handle->get_goal_id();
+    goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
       [goal_handle, this](std::shared_ptr<void> response) mutable
       {
         // Wrap the response in a struct with the fields a user cares about
-        Result result;
-        using GoalResultResponse = typename ActionT::GoalResultService::Response;
-        result.response = std::static_pointer_cast<GoalResultResponse>(response);
-        result.goal_id = goal_handle->get_goal_id();
-        result.code = static_cast<ResultCode>(result.response->action_status);
-        goal_handle->set_result(result);
+        WrappedResult wrapped_result;
+        using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
+        auto result_response = std::static_pointer_cast<GoalResultResponse>(response);
+        wrapped_result.result = std::make_shared<typename ActionT::Result>();
+        *wrapped_result.result = result_response->result;
+        wrapped_result.goal_id = goal_handle->get_goal_id();
+        wrapped_result.code = static_cast<ResultCode>(result_response->status);
+        goal_handle->set_result(wrapped_result);
         std::lock_guard<std::mutex> lock(goal_handles_mutex_);
         goal_handles_.erase(goal_handle->get_goal_id());
       });
@@ -536,7 +530,7 @@ private:
     return future;
   }
 
-  std::map<GoalID, typename GoalHandle::SharedPtr> goal_handles_;
+  std::map<GoalUUID, typename GoalHandle::SharedPtr> goal_handles_;
   std::mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action

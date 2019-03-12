@@ -146,7 +146,7 @@ protected:
   RCLCPP_ACTION_PUBLIC
   virtual
   std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(GoalID &, std::shared_ptr<void> request) = 0;
+  call_handle_goal_callback(GoalUUID &, std::shared_ptr<void> request) = 0;
 
   // ServerBase will determine which goal ids are being cancelled, and then call this function for
   // each goal id.
@@ -155,13 +155,13 @@ protected:
   RCLCPP_ACTION_PUBLIC
   virtual
   CancelResponse
-  call_handle_cancel_callback(const GoalID & uuid) = 0;
+  call_handle_cancel_callback(const GoalUUID & uuid) = 0;
 
   /// Given a goal request message, return the UUID contained within.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  GoalID
+  GoalUUID
   get_goal_id_from_goal_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
@@ -178,13 +178,13 @@ protected:
   void
   call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    GoalID uuid, std::shared_ptr<void> goal_request_message) = 0;
+    GoalUUID uuid, std::shared_ptr<void> goal_request_message) = 0;
 
   /// Given a result request message, return the UUID contained within.
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  GoalID
+  GoalUUID
   get_goal_id_from_result_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
@@ -214,7 +214,7 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  publish_result(const GoalID & uuid, std::shared_ptr<void> result_msg);
+  publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_msg);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
@@ -272,7 +272,7 @@ public:
 
   /// Signature of a callback that accepts or rejects goal requests.
   using GoalCallback = std::function<GoalResponse(
-        const GoalID &, std::shared_ptr<const typename ActionT::Goal>)>;
+        const GoalUUID &, std::shared_ptr<const typename ActionT::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ActionT>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
@@ -335,16 +335,14 @@ protected:
 
   /// \internal
   std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(GoalID & uuid, std::shared_ptr<void> message) override
+  call_handle_goal_callback(GoalUUID & uuid, std::shared_ptr<void> message) override
   {
-    // TODO(sloretz) update and remove assert when IDL pipeline allows nesting user's type
-    static_assert(
-      std::is_same<typename ActionT::Goal, typename ActionT::GoalRequestService::Request>::value,
-      "Assuming user fields were merged with goal request fields");
-    GoalResponse user_response = handle_goal_(
-      uuid, std::static_pointer_cast<typename ActionT::Goal>(message));
+    auto request = std::static_pointer_cast<
+      typename ActionT::Impl::SendGoalService::Request>(message);
+    auto goal = std::shared_ptr<typename ActionT::Goal>(request, &request->goal);
+    GoalResponse user_response = handle_goal_(uuid, goal);
 
-    auto ros_response = std::make_shared<typename ActionT::GoalRequestService::Response>();
+    auto ros_response = std::make_shared<typename ActionT::Impl::SendGoalService::Response>();
     ros_response->accepted = GoalResponse::ACCEPT_AND_EXECUTE == user_response ||
       GoalResponse::ACCEPT_AND_DEFER == user_response;
     return std::make_pair(user_response, ros_response);
@@ -352,7 +350,7 @@ protected:
 
   /// \internal
   CancelResponse
-  call_handle_cancel_callback(const GoalID & uuid) override
+  call_handle_cancel_callback(const GoalUUID & uuid) override
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     CancelResponse resp = CancelResponse::REJECT;
@@ -373,13 +371,13 @@ protected:
   void
   call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    GoalID uuid, std::shared_ptr<void> goal_request_message) override
+    GoalUUID uuid, std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;
     std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();
 
-    std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state =
-      [weak_this](const GoalID & uuid, std::shared_ptr<void> result_message)
+    std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state =
+      [weak_this](const GoalUUID & uuid, std::shared_ptr<void> result_message)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
@@ -396,8 +394,8 @@ protected:
         shared_this->goal_handles_.erase(uuid);
       };
 
-    std::function<void(const GoalID &)> on_executing =
-      [weak_this](const GoalID & uuid)
+    std::function<void(const GoalUUID &)> on_executing =
+      [weak_this](const GoalUUID & uuid)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
@@ -408,8 +406,8 @@ protected:
         shared_this->publish_status();
       };
 
-    std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback =
-      [weak_this](std::shared_ptr<typename ActionT::Feedback> feedback_msg)
+    std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback =
+      [weak_this](std::shared_ptr<typename ActionT::Impl::FeedbackMessage> feedback_msg)
       {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
@@ -418,11 +416,12 @@ protected:
         shared_this->publish_feedback(std::static_pointer_cast<void>(feedback_msg));
       };
 
+    auto request = std::static_pointer_cast<
+      const typename ActionT::Impl::SendGoalService::Request>(goal_request_message);
+    auto goal = std::shared_ptr<const typename ActionT::Goal>(request, &request->goal);
     goal_handle.reset(
       new ServerGoalHandle<ActionT>(
-        rcl_goal_handle, uuid,
-        std::static_pointer_cast<const typename ActionT::Goal>(goal_request_message),
-        on_terminal_state, on_executing, publish_feedback));
+        rcl_goal_handle, uuid, goal, on_terminal_state, on_executing, publish_feedback));
     {
       std::lock_guard<std::mutex> lock(goal_handles_mutex_);
       goal_handles_[uuid] = goal_handle;
@@ -431,41 +430,41 @@ protected:
   }
 
   /// \internal
-  GoalID
+  GoalUUID
   get_goal_id_from_goal_request(void * message) override
   {
     return
-      static_cast<typename ActionT::GoalRequestService::Request *>(message)->action_goal_id.uuid;
+      static_cast<typename ActionT::Impl::SendGoalService::Request *>(message)->goal_id.uuid;
   }
 
   /// \internal
   std::shared_ptr<void>
   create_goal_request() override
   {
-    return std::shared_ptr<void>(new typename ActionT::GoalRequestService::Request());
+    return std::shared_ptr<void>(new typename ActionT::Impl::SendGoalService::Request());
   }
 
   /// \internal
-  GoalID
+  GoalUUID
   get_goal_id_from_result_request(void * message) override
   {
     return
-      static_cast<typename ActionT::GoalResultService::Request *>(message)->action_goal_id.uuid;
+      static_cast<typename ActionT::Impl::GetResultService::Request *>(message)->goal_id.uuid;
   }
 
   /// \internal
   std::shared_ptr<void>
   create_result_request() override
   {
-    return std::shared_ptr<void>(new typename ActionT::GoalResultService::Request());
+    return std::shared_ptr<void>(new typename ActionT::Impl::GetResultService::Request());
   }
 
   /// \internal
   std::shared_ptr<void>
   create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) override
   {
-    auto result = std::make_shared<typename ActionT::GoalResultService::Response>();
-    result->action_status = status;
+    auto result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    result->status = status;
     return std::static_pointer_cast<void>(result);
   }
 
@@ -480,7 +479,7 @@ private:
   using GoalHandleWeakPtr = std::weak_ptr<ServerGoalHandle<ActionT>>;
   /// A map of goal id to goal handle weak pointers.
   /// This is used to provide a goal handle to handle_cancel.
-  std::unordered_map<GoalID, GoalHandleWeakPtr> goal_handles_;
+  std::unordered_map<GoalUUID, GoalHandleWeakPtr> goal_handles_;
   std::mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action
