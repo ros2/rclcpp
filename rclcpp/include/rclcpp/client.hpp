@@ -122,9 +122,6 @@ public:
   virtual void handle_response(
     std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
-  virtual void
-  handle_event(ResourceStatusEvent event) const = 0;
-
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
 
@@ -179,10 +176,8 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     const std::string & service_name,
-    rcl_client_options_t & client_options,
-    ResourceStatusEventCallbackType event_callback)
-  : ClientBase(node_base, node_graph),
-    event_callback_(event_callback)
+    rcl_client_options_t & client_options)
+  : ClientBase(node_base, node_graph)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle =
@@ -259,12 +254,6 @@ public:
     callback(future);
   }
 
-  void
-  handle_event(ResourceStatusEvent event) const
-  {
-    event_callback_(event);
-  }
-
   SharedFuture
   async_send_request(SharedRequest request)
   {
@@ -328,8 +317,6 @@ private:
 
   std::map<int64_t, std::tuple<SharedPromise, CallbackType, SharedFuture>> pending_requests_;
   std::mutex pending_requests_mutex_;
-
-  ResourceStatusEventCallbackType event_callback_;
 };
 
 }  // namespace rclcpp

@@ -30,13 +30,15 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "rclcpp/publisher_options.hpp"
 #include "rclcpp/waitable.hpp"
-#include "rclcpp/event.hpp"
+#include "rclcpp/qos_event.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
+
 
 namespace rclcpp
 {
@@ -57,7 +59,7 @@ namespace intra_process_manager
 class IntraProcessManager;
 }
 
-class PublisherBase : public Waitable
+class PublisherBase
 {
   friend ::rclcpp::node_interfaces::NodeTopicsInterface;
 
@@ -119,29 +121,20 @@ public:
   const rcl_publisher_t *
   get_publisher_handle() const;
 
-  RCLCPP_PUBLIC
-  std::shared_ptr<rcl_event_t>
-  get_event_handle();
+  // RCLCPP_PUBLIC
+  template<typename EventCallbackT, typename EventTypeEnum> void
+  add_event_handle(const EventCallbackT & callback, const EventTypeEnum event_type)
+  {
+    event_handles_.emplace_back(std::make_shared<QOSEvent<EventCallbackT>>(
+      callback,
+      rcl_publisher_event_init,
+      &publisher_handle_,
+      event_type));
+  }
 
   RCLCPP_PUBLIC
-  std::shared_ptr<const rcl_event_t>
-  get_event_handle() const;
-
-  RCLCPP_PUBLIC
-  size_t
-  get_number_of_ready_events() override;
-
-  RCLCPP_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
-
-  RCLCPP_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override;
-
-  RCLCPP_PUBLIC
-  void
-  execute() override;
+  const std::vector<std::shared_ptr<QOSEventBase>> &
+  get_event_handles() const;
 
   /// Get subscription count
   /** \return The number of subscriptions. */
@@ -188,21 +181,18 @@ public:
     IntraProcessManagerSharedPtr ipm,
     const rcl_publisher_options_t & intra_process_options);
 
-  virtual void
-  handle_event(ResourceStatusEvent event) const = 0;
-
 protected:
+  using IntraProcessManagerWeakPtr =
+    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
-  rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
-  std::shared_ptr<rcl_event_t> event_handle_;
 
-  size_t wait_set_event_index_;
+  std::vector<std::shared_ptr<QOSEventBase>> event_handles_;
 
-  using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
   bool use_intra_process_;
+  rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
   StoreMessageCallbackT store_intra_process_message_;
@@ -227,17 +217,26 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
-    ResourceStatusEventCallbackType event_callback,
+    const PublisherEventCallbacks & event_callbacks,
     const std::shared_ptr<MessageAlloc> & allocator)
   : PublisherBase(
       node_base,
       topic,
       *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
       publisher_options),
-    message_allocator_(allocator),
-    event_callback_(event_callback)
+    message_allocator_(allocator)
   {
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
+
+    if (event_callbacks.deadline_callback_) {
+      this->add_event_handle(event_callbacks.deadline_callback_, RCL_PUBLISHER_DEADLINE);
+    }
+    if (event_callbacks.liveliness_callback_) {
+      this->add_event_handle(event_callbacks.liveliness_callback_, RCL_PUBLISHER_LIVELINESS);
+    }
+    // if (event_callbacks.lifespan_callback_) {
+    //   this->add_event_handle(event_callbacks.lifespan_callback_);
+    // }
   }
 
   virtual ~Publisher()
@@ -368,11 +367,6 @@ public:
     return this->publish(serialized_msg.get());
   }
 
-  void handle_event(ResourceStatusEvent event) const
-  {
-    event_callback_(event);
-  }
-
   std::shared_ptr<MessageAlloc> get_allocator() const
   {
     return message_allocator_;
@@ -400,8 +394,6 @@ protected:
 
   std::shared_ptr<MessageAlloc> message_allocator_;
   MessageDeleter message_deleter_;
-
-  ResourceStatusEventCallbackType event_callback_;
 };
 
 }  // namespace rclcpp

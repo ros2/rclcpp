@@ -29,9 +29,10 @@
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/waitable.hpp"
 #include "rclcpp/any_subscription_callback.hpp"
-#include "rclcpp/event.hpp"
+#include "rclcpp/qos_event.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/macros.hpp"
@@ -39,6 +40,7 @@
 #include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
+
 
 namespace rclcpp
 {
@@ -101,21 +103,24 @@ public:
   virtual std::shared_ptr<const rcl_subscription_t>
   get_intra_process_subscription_handle() const;
 
-  RCLCPP_PUBLIC
-  std::shared_ptr<rcl_event_t>
-  get_event_handle();
+  // RCLCPP_PUBLIC
+  template<typename EventCallbackT, typename EventTypeEnum> void
+  add_event_handle(const EventCallbackT & callback, const EventTypeEnum event_type)
+  {
+    event_handles_.emplace_back(std::make_shared<QOSEvent<EventCallbackT>>(
+      callback,
+      rcl_subscription_event_init,
+      get_subscription_handle().get(),
+      event_type));
+  }
 
   RCLCPP_PUBLIC
-  std::shared_ptr<const rcl_event_t>
-  get_event_handle() const;
+  const std::vector<std::shared_ptr<QOSEventBase>> &
+  get_event_handles() const;
 
   RCLCPP_PUBLIC
   size_t
   get_number_of_ready_subscriptions() override;
-
-  RCLCPP_PUBLIC
-  size_t
-  get_number_of_ready_events() override;
 
   RCLCPP_PUBLIC
   bool
@@ -162,9 +167,6 @@ public:
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
 
-  virtual void
-  handle_event(ResourceStatusEvent event) const = 0;
-
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
@@ -178,26 +180,21 @@ public:
   get_publisher_count() const;
 
 protected:
+  using IntraProcessManagerWeakPtr =
+    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+
   std::shared_ptr<rcl_node_t> node_handle_;
 
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
-  std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
-  std::shared_ptr<rcl_event_t> event_handle_;
-  std::shared_ptr<rcl_event_t> intra_process_event_handle_;
-
   size_t wait_set_subscription_index_;
-  size_t wait_set_intra_process_subscription_index_;
-  size_t wait_set_event_index_;
-  size_t wait_set_intra_process_event_index_;
-
   bool subscription_ready_;
-  bool intra_process_subscription_ready_;
-  bool event_ready_;
-  bool intra_process_event_ready_;
 
-  using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  std::vector<std::shared_ptr<QOSEventBase>> event_handles_;
+
   bool use_intra_process_;
+  std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
+  size_t wait_set_intra_process_subscription_index_;
+  bool intra_process_subscription_ready_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_subscription_id_;
 
@@ -241,7 +238,7 @@ public:
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
-    ResourceStatusEventCallbackType event_callback,
+    const SubscriptionEventCallbacks & event_callbacks,
     typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
     memory_strategy = message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
     Alloc>::create_default())
@@ -254,9 +251,18 @@ public:
     any_callback_(callback),
     message_memory_strategy_(memory_strategy),
     get_intra_process_message_callback_(nullptr),
-    matches_any_intra_process_publishers_(nullptr),
-    event_callback_(event_callback)
-  {}
+    matches_any_intra_process_publishers_(nullptr)
+  {
+    if (event_callbacks.deadline_callback_) {
+      this->add_event_handle(event_callbacks.deadline_callback_, RCL_SUBSCRIPTION_DEADLINE);
+    }
+    if (event_callbacks.liveliness_callback_) {
+      this->add_event_handle(event_callbacks.liveliness_callback_, RCL_SUBSCRIPTION_LIVELINESS);
+    }
+    // if (event_callbacks.lifespan_callback_) {
+    //   this->add_event_handle(event_callbacks.lifespan_callback_);
+    // }
+  }
 
   /// Support dynamically setting the message memory strategy.
   /**
@@ -336,11 +342,6 @@ public:
     any_callback_.dispatch_intra_process(msg, message_info);
   }
 
-  void handle_event(ResourceStatusEvent event) const
-  {
-    event_callback_(event);
-  }
-
   using GetMessageCallbackType =
     std::function<void (uint64_t, uint64_t, uint64_t, MessageUniquePtr &)>;
   using MatchesAnyPublishersCallbackType = std::function<bool (const rmw_gid_t *)>;
@@ -377,12 +378,6 @@ public:
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create intra process subscription");
     }
 
-    ret = rcl_subscription_event_init(get_event_handle().get(),
-      get_intra_process_subscription_handle().get());
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "could not create subscription event");
-    }
-
     intra_process_subscription_id_ = intra_process_subscription_id;
     get_intra_process_message_callback_ = get_message_callback;
     matches_any_intra_process_publishers_ = matches_any_publisher_callback;
@@ -409,8 +404,6 @@ private:
 
   GetMessageCallbackType get_intra_process_message_callback_;
   MatchesAnyPublishersCallbackType matches_any_intra_process_publishers_;
-
-  ResourceStatusEventCallbackType event_callback_;
 };
 
 }  // namespace rclcpp

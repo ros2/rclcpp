@@ -25,13 +25,13 @@
 namespace rclcpp
 {
 
-template<typename MessageT, typename EventCallbackT, typename AllocatorT, typename PublisherT>
+template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT>
 create_publisher(
   rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
-  EventCallbackT && event_callback,
+  const PublisherEventCallbacks & callbacks,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool use_intra_process_comms,
   std::shared_ptr<AllocatorT> allocator)
@@ -41,8 +41,7 @@ create_publisher(
 
   auto pub = node_topics->create_publisher(
     topic_name,
-    rclcpp::create_publisher_factory<MessageT, EventCallbackT, AllocatorT, PublisherT>(
-      std::forward<EventCallbackT>(event_callback), allocator),
+    rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(callbacks, allocator),
     publisher_options,
     use_intra_process_comms);
 

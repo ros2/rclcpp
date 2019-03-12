@@ -37,6 +37,7 @@
 
 using rclcpp::PublisherBase;
 
+
 PublisherBase::PublisherBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
   const std::string & topic,
@@ -63,24 +64,6 @@ PublisherBase::PublisherBase(
         rcl_node_get_namespace(rcl_node_handle));
     }
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create publisher");
-  }
-
-  event_handle_ = std::shared_ptr<rcl_event_t>(new rcl_event_t,
-    [](rcl_event_t * event)
-    {
-      if (rcl_event_fini(event) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
-        rcl_reset_error();
-      }
-      delete event;
-    });
-  *event_handle_.get() = rcl_get_zero_initialized_event();
-
-  ret = rcl_publisher_event_init(get_event_handle().get(), &publisher_handle_);
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create publisher event");
   }
 
   // Life time of this object is tied to the publisher handle.
@@ -172,49 +155,10 @@ PublisherBase::get_publisher_handle() const
   return &publisher_handle_;
 }
 
-std::shared_ptr<rcl_event_t>
-PublisherBase::get_event_handle()
+const std::vector<std::shared_ptr<rclcpp::QOSEventBase>> &
+PublisherBase::get_event_handles() const
 {
-  return event_handle_;
-}
-
-std::shared_ptr<const rcl_event_t>
-PublisherBase::get_event_handle() const
-{
-  return event_handle_;
-}
-
-size_t
-PublisherBase::get_number_of_ready_events()
-{
-  return 1;
-}
-
-bool
-PublisherBase::add_to_wait_set(rcl_wait_set_t * wait_set)
-{
-  if (rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Couldn't add publisher event to wait set: %s", rcl_get_error_string().str);
-    return false;
-  }
-
-  return true;
-}
-
-bool
-PublisherBase::is_ready(rcl_wait_set_t * wait_set)
-{
-  return (wait_set->events[wait_set_event_index_] == event_handle_.get());
-}
-
-void
-PublisherBase::execute()
-{
-  // rcl_take_event();
-  auto example_event = ResourceStatusEvent::LIVELINESS_CHANGED;
-  handle_event(example_event);
+  return event_handles_;
 }
 
 size_t

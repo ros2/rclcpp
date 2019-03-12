@@ -12,30 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#ifndef RCLCPP__GRAPH_EVENT_HPP_
+#define RCLCPP__GRAPH_EVENT_HPP_
+
 #include "rclcpp/event.hpp"
+
 
 namespace rclcpp
 {
 
-Event::Event()
-: state_(false) {}
-
-bool
-Event::set()
-{
-  return state_.exchange(true);
-}
-
-bool
-Event::check()
-{
-  return state_.load();
-}
-
-bool
-Event::check_and_clear()
-{
-  return state_.exchange(false);
-}
+class GraphEvent : public Event {};
 
 }  // namespace rclcpp
+
+#endif  // RCLCPP__GRAPH_EVENT_HPP_

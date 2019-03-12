@@ -58,8 +58,7 @@ protected:
 void trigger_clock_changes(
   rclcpp::Node::SharedPtr node)
 {
-  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
-      rmw_qos_profile_default);
+  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock");
 
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(node);

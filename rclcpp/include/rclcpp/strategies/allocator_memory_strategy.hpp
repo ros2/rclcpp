@@ -121,13 +121,18 @@ public:
         for (auto & weak_publisher : group->get_publisher_ptrs()) {
           auto publisher = weak_publisher.lock();
           if (publisher) {
-            waitable_handles_.push_back(publisher);
+            for (auto & publisher_event : publisher->get_event_handles()) {
+              waitable_handles_.push_back(publisher_event);
+            }
           }
         }
         for (auto & weak_subscription : group->get_subscription_ptrs()) {
           auto subscription = weak_subscription.lock();
           if (subscription) {
             waitable_handles_.push_back(subscription);
+            for (auto & subscription_event : subscription->get_event_handles()) {
+              waitable_handles_.push_back(subscription_event);
+            }
           }
         }
         for (auto & weak_service : group->get_service_ptrs()) {

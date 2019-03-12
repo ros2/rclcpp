@@ -32,7 +32,7 @@
 #include "rclcpp/client.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
-#include "rclcpp/event.hpp"
+#include "rclcpp/graph_event.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"

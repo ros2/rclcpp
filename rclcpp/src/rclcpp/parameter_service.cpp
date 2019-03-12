@@ -47,7 +47,7 @@ ParameterService::ParameterService(
         response->values.push_back(param.get_value_message());
       }
     },
-    qos_profile, ResourceStatusEventCallbackType{}, nullptr);
+    qos_profile, nullptr);
 
   get_parameter_types_service_ = create_service<rcl_interfaces::srv::GetParameterTypes>(
     node_base, node_services,
@@ -63,7 +63,7 @@ ParameterService::ParameterService(
         return static_cast<rclcpp::ParameterType>(type);
       });
     },
-    qos_profile, ResourceStatusEventCallbackType{}, nullptr);
+    qos_profile, nullptr);
 
   set_parameters_service_ = create_service<rcl_interfaces::srv::SetParameters>(
     node_base, node_services,
@@ -80,7 +80,7 @@ ParameterService::ParameterService(
       auto results = node_params->set_parameters(pvariants);
       response->results = results;
     },
-    qos_profile, ResourceStatusEventCallbackType{}, nullptr);
+    qos_profile, nullptr);
 
   set_parameters_atomically_service_ = create_service<rcl_interfaces::srv::SetParametersAtomically>(
     node_base, node_services,
@@ -99,7 +99,7 @@ ParameterService::ParameterService(
       auto result = node_params->set_parameters_atomically(pvariants);
       response->result = result;
     },
-    qos_profile, ResourceStatusEventCallbackType{}, nullptr);
+    qos_profile, nullptr);
 
   describe_parameters_service_ = create_service<rcl_interfaces::srv::DescribeParameters>(
     node_base, node_services,
@@ -112,7 +112,7 @@ ParameterService::ParameterService(
       auto descriptors = node_params->describe_parameters(request->names);
       response->descriptors = descriptors;
     },
-    qos_profile, ResourceStatusEventCallbackType{}, nullptr);
+    qos_profile, nullptr);
 
   list_parameters_service_ = create_service<rcl_interfaces::srv::ListParameters>(
     node_base, node_services,
@@ -125,5 +125,5 @@ ParameterService::ParameterService(
       auto result = node_params->list_parameters(request->prefixes, request->depth);
       response->result = result;
     },
-    qos_profile, ResourceStatusEventCallbackType{}, nullptr);
+    qos_profile, nullptr);
 }

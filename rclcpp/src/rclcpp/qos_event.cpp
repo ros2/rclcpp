@@ -12,30 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/event.hpp"
+#include "rclcpp/qos_event.hpp"
+
 
 namespace rclcpp
 {
 
-Event::Event()
-: state_(false) {}
-
-bool
-Event::set()
+/// Get the number of ready events
+size_t
+QOSEventBase::get_number_of_ready_events()
 {
-  return state_.exchange(true);
+  return 1;
 }
 
+/// Add the Waitable to a wait set.
 bool
-Event::check()
+QOSEventBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  return state_.load();
+  if (rcl_wait_set_add_event(wait_set, &event_handle_, &wait_set_event_index_) != RCL_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rclcpp",
+      "Couldn't add event to wait set: %s", rcl_get_error_string().str);
+    return false;
+  }
+
+  return true;
 }
 
+/// Check if the Waitable is ready.
 bool
-Event::check_and_clear()
+QOSEventBase::is_ready(rcl_wait_set_t * wait_set)
 {
-  return state_.exchange(false);
+  return (wait_set->events[wait_set_event_index_] == &event_handle_);
 }
 
 }  // namespace rclcpp

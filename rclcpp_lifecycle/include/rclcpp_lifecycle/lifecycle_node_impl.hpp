@@ -60,12 +60,11 @@ LifecycleNode::create_publisher(
   using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>;
 
   // create regular publisher in rclcpp::Node
-  return rclcpp::create_publisher<MessageT, rclcpp::ResourceStatusEventCallbackType, Alloc,
-    PublisherT>(
+  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
     this->node_topics_.get(),
     topic_name,
     qos_profile,
-    {},
+    rclcpp::PublisherEventCallbacks(),
     nullptr,
     use_intra_process_comms_,
     allocator);
@@ -96,13 +95,12 @@ LifecycleNode::create_subscription(
     msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
   }
 
-  return rclcpp::create_subscription<MessageT, CallbackT, rclcpp::ResourceStatusEventCallbackType,
-    Alloc, CallbackMessageT, SubscriptionT>(
+  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
     topic_name,
     std::forward<CallbackT>(callback),
     qos_profile,
-    {},
+    rclcpp::SubscriptionEventCallbacks(),
     group,
     ignore_local_publications,
     use_intra_process_comms_,
@@ -184,9 +182,8 @@ LifecycleNode::create_service(
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  return rclcpp::create_service<ServiceT, CallbackT, rclcpp::ResourceStatusEventCallbackType>(
-    node_base_, node_services_, service_name, std::forward<CallbackT>(callback), qos_profile, {},
-    group);
+  return rclcpp::create_service<ServiceT, CallbackT>(
+    node_base_, node_services_, service_name, std::forward<CallbackT>(callback), qos_profile, group);
 }
 
 template<typename ParameterT>

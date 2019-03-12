@@ -17,7 +17,6 @@
 
 #include <atomic>
 #include <memory>
-#include <functional>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -25,23 +24,13 @@
 namespace rclcpp
 {
 
-enum class ResourceStatusEvent
-{
-  DEADLINE_MISSED,
-  LIVELINESS_CHANGED,
-  LIFESPAN_EXPIRED
-};
-
-using ResourceStatusEventCallbackType = std::function<void(ResourceStatusEvent)>;
-
-
-class GraphEvent
+class Event
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(GraphEvent)
+  RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Event)
 
   RCLCPP_PUBLIC
-  GraphEvent();
+  Event();
 
   RCLCPP_PUBLIC
   bool
@@ -56,7 +45,7 @@ public:
   check_and_clear();
 
 private:
-  RCLCPP_DISABLE_COPY(GraphEvent)
+  RCLCPP_DISABLE_COPY(Event)
 
   std::atomic_bool state_;
 };

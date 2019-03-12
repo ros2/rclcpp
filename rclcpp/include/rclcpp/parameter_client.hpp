@@ -122,12 +122,12 @@ public:
 
     using rcl_interfaces::msg::ParameterEvent;
     return rclcpp::create_subscription<
-      ParameterEvent, CallbackT, ResourceStatusEventCallbackType, Alloc, ParameterEvent, SubscriptionT>(
+      ParameterEvent, CallbackT, Alloc, ParameterEvent, SubscriptionT>(
       this->node_topics_interface_.get(),
       "parameter_events",
       std::forward<CallbackT>(callback),
       rmw_qos_profile_default,
-      {},
+      SubscriptionEventCallbacks(),
       nullptr,  // group,
       false,  // ignore_local_publications,
       false,  // use_intra_process_comms_,

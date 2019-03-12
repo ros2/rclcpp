@@ -23,7 +23,7 @@
 
 #include "rcl/guard_condition.h"
 
-#include "rclcpp/event.hpp"
+#include "rclcpp/graph_event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 

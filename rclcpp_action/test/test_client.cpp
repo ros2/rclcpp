@@ -205,7 +205,8 @@ protected:
       action_name, allocator, &status_topic_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     status_publisher = server_node->create_publisher<ActionStatusMessage>(
-      status_topic_name, rcl_action_qos_profile_status_default);
+      status_topic_name, nullptr, rclcpp::PublisherOptions<>().publisher_qos_profile(
+        rcl_action_qos_profile_status_default));
     ASSERT_TRUE(status_publisher != nullptr);
     allocator.deallocate(status_topic_name, allocator.state);
     server_executor.add_node(server_node);

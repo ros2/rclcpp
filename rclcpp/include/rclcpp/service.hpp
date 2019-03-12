@@ -97,9 +97,6 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) = 0;
 
-  virtual void
-  handle_event(ResourceStatusEvent event) const = 0;
-
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
@@ -143,9 +140,8 @@ public:
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name,
     rcl_service_options_t & service_options,
-    AnyServiceCallback<ServiceT> any_callback,
-    ResourceStatusEventCallbackType event_callback)
-  : ServiceBase(node_handle), any_callback_(any_callback), event_callback_(event_callback)
+    AnyServiceCallback<ServiceT> any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
@@ -291,18 +287,10 @@ public:
     }
   }
 
-  void
-  handle_event(ResourceStatusEvent event) const
-  {
-    event_callback_(event);
-  }
-
 private:
   RCLCPP_DISABLE_COPY(Service)
 
   AnyServiceCallback<ServiceT> any_callback_;
-
-  ResourceStatusEventCallbackType event_callback_;
 };
 
 }  // namespace rclcpp

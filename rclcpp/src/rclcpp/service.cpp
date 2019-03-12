@@ -86,12 +86,14 @@ ServiceBase::add_to_wait_set(rcl_wait_set_t * wait_set)
     return false;
   }
 
-  if (rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Couldn't add service event to wait set: %s", rcl_get_error_string().str);
-    return false;
-  }
+  // TODO(mm318): enable QOS event callbacks for clients (currently only for publishers and subscriptions)
+  wait_set_event_index_ = 0;
+  // if (rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK) {
+  //   RCUTILS_LOG_ERROR_NAMED(
+  //     "rclcpp",
+  //     "Couldn't add service event to wait set: %s", rcl_get_error_string().str);
+  //   return false;
+  // }
 
   return true;
 }
@@ -127,8 +129,7 @@ ServiceBase::execute()
 
   if (event_ready_) {
     // rcl_take_event();
-    auto example_event = ResourceStatusEvent::LIVELINESS_CHANGED;
-    handle_event(example_event);
+    // handle_event(example_event);
   }
 }
 
