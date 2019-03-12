@@ -17,9 +17,14 @@
  * `rclcpp_action` provides the canonical C++ API for interacting with ROS Actions.
  * It consists of these main components:
  *
- * - TODO(jacobperron): Finish docs
  * - Action Client
+ *   - rclcpp_action/client.hpp
+ *   - rclcpp_action/create_client.hpp
+ *   - rclcpp_action/client_goal_handle.hpp
  * - Action Server
+ *   - rclcpp_action/server.hpp
+ *   - rclcpp_action/create_server.hpp
+ *   - rclcpp_action/server_goal_handle.hpp
  */
 
 #ifndef RCLCPP_ACTION__RCLCPP_ACTION_HPP_
