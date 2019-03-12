@@ -139,10 +139,10 @@ public:
   bool
   service_is_ready() const;
 
-  template<typename RatioT = std::milli>
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   bool
   wait_for_service(
-    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
     return wait_for_service_nanoseconds(
       std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
@@ -282,10 +282,10 @@ public:
     return async_parameters_client_->service_is_ready();
   }
 
-  template<typename RatioT = std::milli>
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   bool
   wait_for_service(
-    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
     return async_parameters_client_->wait_for_service(timeout);
   }

@@ -151,11 +151,11 @@ public:
    * spin_node_once to block indefinitely (the default behavior). A timeout of 0 causes this
    * function to be non-blocking.
    */
-  template<typename T = std::milli>
+  template<typename RepT = int64_t, typename T = std::milli>
   void
   spin_node_once(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
-    std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
+    std::chrono::duration<RepT, T> timeout = std::chrono::duration<RepT, T>(-1))
   {
     return spin_node_once_nanoseconds(
       node,
@@ -164,11 +164,11 @@ public:
   }
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
-  template<typename NodeT = rclcpp::Node, typename T = std::milli>
+  template<typename NodeT = rclcpp::Node, typename RepT = int64_t, typename T = std::milli>
   void
   spin_node_once(
     std::shared_ptr<NodeT> node,
-    std::chrono::duration<int64_t, T> timeout = std::chrono::duration<int64_t, T>(-1))
+    std::chrono::duration<RepT, T> timeout = std::chrono::duration<RepT, T>(-1))
   {
     return spin_node_once_nanoseconds(
       node->get_node_base_interface(),
@@ -218,11 +218,11 @@ public:
    *   code.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
    */
-  template<typename ResponseT, typename TimeT = std::milli>
+  template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   FutureReturnCode
   spin_until_future_complete(
     std::shared_future<ResponseT> & future,
-    std::chrono::duration<int64_t, TimeT> timeout = std::chrono::duration<int64_t, TimeT>(-1))
+    std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
     // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
     // inside a callback executed by an executor.
