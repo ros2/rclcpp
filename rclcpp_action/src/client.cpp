@@ -366,10 +366,10 @@ ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback 
   pimpl_->pending_cancel_responses[sequence_number] = callback;
 }
 
-GoalID
+GoalUUID
 ClientBase::generate_goal_id()
 {
-  GoalID goal_id;
+  GoalUUID goal_id;
   // TODO(hidmic): Do something better than this for UUID generation.
   // std::generate(
   //   goal_id.uuid.begin(), goal_id.uuid.end(),
