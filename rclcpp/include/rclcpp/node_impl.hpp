@@ -78,7 +78,7 @@ Node::create_publisher(
   return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-    options.publisher_qos_profile(),
+    options.qos_profile(),
     options.event_callbacks(),
     group,
     this->get_node_options().use_intra_process_comms(),
@@ -112,7 +112,7 @@ Node::create_subscription(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     std::forward<CallbackT>(callback),
-    options.subscription_qos_profile(),
+    options.qos_profile(),
     options.event_callbacks(),
     group,
     options.ignore_local_publications(),

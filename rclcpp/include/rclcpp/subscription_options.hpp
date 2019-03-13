@@ -51,7 +51,11 @@ public:
    * \param[in] allocator allocator to use in construction of SubscriptionOptions.
    */
   RCLCPP_PUBLIC
-  explicit SubscriptionOptions() = default;
+  SubscriptionOptions() = default;
+
+  RCLCPP_PUBLIC
+  SubscriptionOptions(const rmw_qos_profile_t & qos_profile) :
+    subscription_qos_profile_(qos_profile) {}
 
   /// Destructor.
   RCLCPP_PUBLIC
@@ -71,7 +75,14 @@ public:
   /// Return a reference to the subscription_qos_profile QoS.
   RCLCPP_PUBLIC
   const rmw_qos_profile_t &
-  subscription_qos_profile() const
+  qos_profile() const
+  {
+    return subscription_qos_profile_;
+  }
+
+  RCLCPP_PUBLIC
+  rmw_qos_profile_t &
+  qos_profile()
   {
     return subscription_qos_profile_;
   }
@@ -82,15 +93,15 @@ public:
    */
   RCLCPP_PUBLIC
   SubscriptionOptions &
-  subscription_qos_profile(const rmw_qos_profile_t & subscription_qos_profile)
+  qos_profile(const rmw_qos_profile_t & subscription_qos_profile)
   {
     subscription_qos_profile_ = subscription_qos_profile;
     return *this;
   }
 
   RCLCPP_PUBLIC
-  size_t
-  qos_history_depth() const
+  size_t &
+  qos_history_depth()
   {
     return subscription_qos_profile_.depth;
   }

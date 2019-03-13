@@ -54,7 +54,11 @@ public:
    * \param[in] allocator allocator to use in construction of PublisherOptions.
    */
   RCLCPP_PUBLIC
-  explicit PublisherOptions() = default;
+  PublisherOptions() = default;
+
+  RCLCPP_PUBLIC
+  PublisherOptions(const rmw_qos_profile_t & qos_profile) :
+    publisher_qos_profile_(qos_profile) {}
 
   /// Destructor.
   RCLCPP_PUBLIC
@@ -74,7 +78,14 @@ public:
   /// Return a reference to the publisher_qos_profile QoS.
   RCLCPP_PUBLIC
   const rmw_qos_profile_t &
-  publisher_qos_profile() const
+  qos_profile() const
+  {
+    return publisher_qos_profile_;
+  }
+
+  RCLCPP_PUBLIC
+  rmw_qos_profile_t &
+  qos_profile()
   {
     return publisher_qos_profile_;
   }
@@ -92,8 +103,8 @@ public:
   }
 
   RCLCPP_PUBLIC
-  size_t
-  qos_history_depth() const
+  size_t &
+  qos_history_depth()
   {
     return publisher_qos_profile_.depth;
   }

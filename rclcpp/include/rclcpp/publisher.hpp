@@ -122,8 +122,8 @@ public:
   get_publisher_handle() const;
 
   // RCLCPP_PUBLIC
-  template<typename EventCallbackT, typename EventTypeEnum> void
-  add_event_handle(const EventCallbackT & callback, const EventTypeEnum event_type)
+  template<typename EventCallbackT> void
+  add_event_handle(const EventCallbackT & callback, const rcl_publisher_event_type_t event_type)
   {
     event_handles_.emplace_back(std::make_shared<QOSEvent<EventCallbackT>>(
       callback,
