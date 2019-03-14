@@ -189,9 +189,57 @@ LifecycleNode::get_parameter(const std::string & name, ParameterT & parameter) c
 {
   rclcpp::Parameter param(name, parameter);
   bool result = get_parameter(name, param);
-  parameter = param.get_value<ParameterT>();
+  if (result) {
+    parameter = param.get_value<ParameterT>();
+  }
+  return result;
+}
+
+template<typename MapValueT>
+bool
+LifecycleNode::get_parameters(
+  const std::string & name,
+  std::map<std::string, MapValueT> & values) const
+{
+  std::map<std::string, rclcpp::Parameter> params;
+  bool result = node_parameters_->get_parameters_by_prefix(name, params);
+  if (result) {
+    for (const auto & param : params) {
+      values[param.first] = param.second.get_value<MapValueT>();
+    }
+  }
 
   return result;
+}
+
+template<typename ParameterT>
+bool
+LifecycleNode::get_parameter_or(
+  const std::string & name,
+  ParameterT & value,
+  const ParameterT & alternative_value) const
+{
+  bool got_parameter = get_parameter(name, value);
+  if (!got_parameter) {
+    value = alternative_value;
+  }
+  return got_parameter;
+}
+
+template<typename ParameterT>
+void
+LifecycleNode::get_parameter_or_set(
+  const std::string & name,
+  ParameterT & value,
+  const ParameterT & alternative_value)
+{
+  bool got_parameter = get_parameter(name, value);
+  if (!got_parameter) {
+    this->set_parameters({
+        rclcpp::Parameter(name, alternative_value),
+      });
+    value = alternative_value;
+  }
 }
 
 template<typename CallbackT>
@@ -199,6 +247,39 @@ void
 LifecycleNode::register_param_change_callback(CallbackT && callback)
 {
   this->node_parameters_->register_param_change_callback(std::forward<CallbackT>(callback));
+}
+
+template<typename ParameterT>
+void
+LifecycleNode::set_parameter_if_not_set(
+  const std::string & name,
+  const ParameterT & value)
+{
+  rclcpp::Parameter parameter;
+  if (!this->get_parameter(name, parameter)) {
+    this->set_parameters({
+        rclcpp::Parameter(name, value),
+      });
+  }
+}
+
+template<typename MapValueT>
+void
+LifecycleNode::set_parameters_if_not_set(
+  const std::string & name,
+  const std::map<std::string, MapValueT> & values)
+{
+  std::vector<rclcpp::Parameter> params;
+
+  for (const auto & val : values) {
+    std::string param_name = name + "." + val.first;
+    rclcpp::Parameter parameter;
+    if (!this->get_parameter(param_name, parameter)) {
+      params.push_back(rclcpp::Parameter(param_name, val.second));
+    }
+  }
+
+  this->set_parameters(params);
 }
 
 }  // namespace rclcpp_lifecycle

@@ -254,6 +254,18 @@ public:
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
+  template<typename ParameterT>
+  void
+  set_parameter_if_not_set(
+    const std::string & name,
+    const ParameterT & value);
+
+  template<typename MapValueT>
+  void
+  set_parameters_if_not_set(
+    const std::string & name,
+    const std::map<std::string, MapValueT> & values);
+
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
@@ -271,6 +283,26 @@ public:
   template<typename ParameterT>
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
+
+  template<typename MapValueT>
+  bool
+  get_parameters(
+    const std::string & name,
+    std::map<std::string, MapValueT> & values) const;
+
+  template<typename ParameterT>
+  bool
+  get_parameter_or(
+    const std::string & name,
+    ParameterT & value,
+    const ParameterT & alternative_value) const;
+
+  template<typename ParameterT>
+  void
+  get_parameter_or_set(
+    const std::string & name,
+    ParameterT & value,
+    const ParameterT & alternative_value);
 
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
