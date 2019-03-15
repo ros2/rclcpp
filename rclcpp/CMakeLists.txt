@@ -145,7 +145,7 @@ if(BUILD_TESTING)
   if(TARGET test_client)
     ament_target_dependencies(test_client
       "rcl_interfaces"
-      "rmw_INCLUDE_DIRS"
+      "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
     )
@@ -313,8 +313,8 @@ if(BUILD_TESTING)
   ament_add_gtest(test_subscription_traits test/test_subscription_traits.cpp)
   if(TARGET test_subscription_traits)
     ament_target_dependencies(test_subscription_traits
-      "test_msgs"
       "rcl"
+      "test_msgs"
     )
   endif()
   ament_add_gtest(test_find_weak_nodes test/test_find_weak_nodes.cpp)
