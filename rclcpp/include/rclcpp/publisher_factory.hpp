@@ -75,7 +75,9 @@ struct PublisherFactory
 /// Return a PublisherFactory with functions setup for creating a PublisherT<MessageT, Alloc>.
 template<typename MessageT, typename Alloc, typename PublisherT>
 PublisherFactory
-create_publisher_factory(const PublisherEventCallbacks & event_callbacks, std::shared_ptr<Alloc> allocator)
+create_publisher_factory(
+  const PublisherEventCallbacks & event_callbacks,
+  std::shared_ptr<Alloc> allocator)
 {
   PublisherFactory factory;
 

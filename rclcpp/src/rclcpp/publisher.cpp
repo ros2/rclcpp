@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <vector>
 #include <sstream>
 #include <string>
 

@@ -129,16 +129,21 @@ ClientBase::get_number_of_ready_events()
 bool
 ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  if (rcl_wait_set_add_client(wait_set, client_handle_.get(), &wait_set_client_index_) != RCL_RET_OK) {
+  if (
+    rcl_wait_set_add_client(wait_set, client_handle_.get(), &wait_set_client_index_) != RCL_RET_OK)
+  {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "Couldn't add client to wait set: %s", rcl_get_error_string().str);
     return false;
   }
 
-  // TODO(mm318): enable QOS event callbacks for clients (currently only for publishers and subscriptions)
+  // TODO(mm318): enable QOS event callbacks for clients
+  // (currently only for publishers and subscriptions)
   wait_set_event_index_ = 0;
-  // if (rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK) {
+  // if (
+  //   rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK)
+  // {
   //   RCUTILS_LOG_ERROR_NAMED(
   //     "rclcpp",
   //     "Couldn't add client event to wait set: %s", rcl_get_error_string().str);

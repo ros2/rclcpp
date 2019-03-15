@@ -30,7 +30,7 @@ struct PublisherEventCallbacks
 {
   QOSDeadlineEventCallbackType deadline_callback_;
   QOSLivelinessEventCallbackType liveliness_callback_;
-  QOSLifespanEventCallbackType lifespan_callback_;  
+  QOSLifespanEventCallbackType lifespan_callback_;
 };
 
 template<typename Alloc = std::allocator<void>>
@@ -57,7 +57,7 @@ public:
   PublisherOptions() = default;
 
   RCLCPP_PUBLIC
-  PublisherOptions(const rmw_qos_profile_t & qos_profile) :
+  explicit PublisherOptions(const rmw_qos_profile_t & qos_profile) :
     publisher_qos_profile_(qos_profile) {}
 
   /// Destructor.
@@ -179,7 +179,7 @@ public:
     return allocator_;
   }
 
-  /// Set the rcl_allocator_t to be used, may cause deallocation of existing rcl_publisher_options_t.
+  /// Set the rcl_allocator_t to be used, may cause deallocation of existing rcl_publisher_options_t
   /**
    * This will cause the internal rcl_publisher_options_t struct to be invalidated.
    */

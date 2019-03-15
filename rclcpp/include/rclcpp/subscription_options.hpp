@@ -54,7 +54,7 @@ public:
   SubscriptionOptions() = default;
 
   RCLCPP_PUBLIC
-  SubscriptionOptions(const rmw_qos_profile_t & qos_profile) :
+  explicit SubscriptionOptions(const rmw_qos_profile_t & qos_profile) :
     subscription_qos_profile_(qos_profile) {}
 
   /// Destructor.

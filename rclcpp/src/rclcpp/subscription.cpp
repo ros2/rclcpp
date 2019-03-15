@@ -16,6 +16,7 @@
 
 #include <cstdio>
 #include <memory>
+#include <vector>
 #include <string>
 
 #include "rclcpp/exceptions.hpp"
