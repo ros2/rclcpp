@@ -105,14 +105,15 @@ public:
   get_intra_process_subscription_handle() const;
 
   // RCLCPP_PUBLIC
-  template<typename EventCallbackT> void
+  template<typename EventCallbackT>
+  void
   add_event_handle(const EventCallbackT & callback, const rcl_subscription_event_type_t event_type)
   {
     event_handles_.emplace_back(std::make_shared<QOSEvent<EventCallbackT>>(
-      callback,
-      rcl_subscription_event_init,
-      get_subscription_handle().get(),
-      event_type));
+        callback,
+        rcl_subscription_event_init,
+        get_subscription_handle().get(),
+        event_type));
   }
 
   RCLCPP_PUBLIC

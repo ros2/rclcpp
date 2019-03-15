@@ -144,7 +144,8 @@ bool
 SubscriptionBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   if (rcl_wait_set_add_subscription(wait_set, subscription_handle_.get(),
-        &wait_set_subscription_index_) != RCL_RET_OK) {
+    &wait_set_subscription_index_) != RCL_RET_OK)
+  {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "Couldn't add subscription to wait set: %s", rcl_get_error_string().str);
@@ -153,7 +154,8 @@ SubscriptionBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 
   if (use_intra_process_) {
     if (rcl_wait_set_add_subscription(wait_set, intra_process_subscription_handle_.get(),
-          &wait_set_intra_process_subscription_index_) != RCL_RET_OK) {
+      &wait_set_intra_process_subscription_index_) != RCL_RET_OK)
+    {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "Couldn't add intra process subscription to wait set: %s", rcl_get_error_string().str);
@@ -171,7 +173,7 @@ SubscriptionBase::is_ready(rcl_wait_set_t * wait_set)
     (wait_set->subscriptions[wait_set_subscription_index_] == subscription_handle_.get());
   intra_process_subscription_ready_ = use_intra_process_ &&
     (wait_set->subscriptions[wait_set_intra_process_subscription_index_] ==
-      intra_process_subscription_handle_.get());
+    intra_process_subscription_handle_.get());
   return subscription_ready_ || intra_process_subscription_ready_;
 }
 

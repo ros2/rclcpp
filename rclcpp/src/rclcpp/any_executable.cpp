@@ -29,5 +29,5 @@ AnyExecutable::~AnyExecutable()
 bool
 AnyExecutable::has_timer() const
 {
-  return (waitable->get_number_of_ready_timers() > 0);
+  return waitable->get_number_of_ready_timers() > 0;
 }

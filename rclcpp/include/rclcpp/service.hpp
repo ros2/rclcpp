@@ -192,16 +192,16 @@ public:
     }
 
     event_handle_ = std::shared_ptr<rcl_event_t>(new rcl_event_t,
-      [](rcl_event_t * event)
-      {
-        if (rcl_event_fini(event) != RCL_RET_OK) {
-          RCUTILS_LOG_ERROR_NAMED(
-            "rclcpp",
-            "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
-          rcl_reset_error();
-        }
-        delete event;
-      });
+        [](rcl_event_t * event)
+        {
+          if (rcl_event_fini(event) != RCL_RET_OK) {
+            RCUTILS_LOG_ERROR_NAMED(
+              "rclcpp",
+              "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
+            rcl_reset_error();
+          }
+          delete event;
+        });
     *event_handle_.get() = rcl_get_zero_initialized_event();
 
     ret = rcl_service_event_init(get_event_handle().get(), get_service_handle().get());

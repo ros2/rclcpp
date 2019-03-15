@@ -175,7 +175,7 @@ public:
     const SubscriptionOptions<Alloc> & options = SubscriptionOptions<Alloc>(),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-      msg_mem_strat = nullptr);
+    msg_mem_strat = nullptr);
 
   /// Create a timer.
   /**

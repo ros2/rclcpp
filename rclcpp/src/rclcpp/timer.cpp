@@ -135,7 +135,7 @@ TimerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 TimerBase::is_ready(rcl_wait_set_t * wait_set)
 {
-  return (wait_set->timers[wait_set_timer_index_] == timer_handle_.get());
+  return wait_set->timers[wait_set_timer_index_] == timer_handle_.get();
 }
 
 void

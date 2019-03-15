@@ -43,7 +43,7 @@ QOSEventBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool
 QOSEventBase::is_ready(rcl_wait_set_t * wait_set)
 {
-  return (wait_set->events[wait_set_event_index_] == &event_handle_);
+  return wait_set->events[wait_set_event_index_] == &event_handle_;
 }
 
 }  // namespace rclcpp

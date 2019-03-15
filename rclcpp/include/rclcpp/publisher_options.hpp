@@ -57,8 +57,8 @@ public:
   PublisherOptions() = default;
 
   RCLCPP_PUBLIC
-  explicit PublisherOptions(const rmw_qos_profile_t & qos_profile) :
-    publisher_qos_profile_(qos_profile) {}
+  explicit PublisherOptions(const rmw_qos_profile_t & qos_profile)
+  : publisher_qos_profile_(qos_profile) {}
 
   /// Destructor.
   RCLCPP_PUBLIC

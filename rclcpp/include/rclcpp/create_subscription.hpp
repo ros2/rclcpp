@@ -43,7 +43,7 @@ create_subscription(
   bool ignore_local_publications,
   bool use_intra_process_comms,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
-    AllocatorT>::SharedPtr msg_mem_strat,
+  AllocatorT>::SharedPtr msg_mem_strat,
   typename std::shared_ptr<AllocatorT> allocator)
 {
   auto subscription_options = rcl_subscription_get_default_options();
@@ -51,7 +51,7 @@ create_subscription(
   subscription_options.ignore_local_publications = ignore_local_publications;
 
   auto factory = rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT,
-    CallbackMessageT, SubscriptionT>(
+      CallbackMessageT, SubscriptionT>(
     std::forward<CallbackT>(callback),
     callbacks,
     msg_mem_strat,

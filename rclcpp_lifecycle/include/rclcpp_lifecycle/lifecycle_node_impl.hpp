@@ -183,7 +183,7 @@ LifecycleNode::create_service(
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_service<ServiceT, CallbackT>(node_base_, node_services_, service_name,
-    std::forward<CallbackT>(callback), qos_profile, group);
+           std::forward<CallbackT>(callback), qos_profile, group);
 }
 
 template<typename ParameterT>

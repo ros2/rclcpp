@@ -31,7 +31,8 @@ namespace rclcpp
 
 struct QOSDeadlineEventInfo
 {
-  enum DeadlineEventType {
+  enum DeadlineEventType
+  {
     DEADLINE_MISSED
   };
 
@@ -41,7 +42,8 @@ struct QOSDeadlineEventInfo
 
 struct QOSLivelinessEventInfo
 {
-  enum LivelinessEventType {
+  enum LivelinessEventType
+  {
     LIVELINESS_CHANGED
   };
 
@@ -51,7 +53,8 @@ struct QOSLivelinessEventInfo
 
 struct QOSLifespanEventInfo
 {
-  enum LifespanEventType {
+  enum LifespanEventType
+  {
     LIFESPAN_EXPIRED
   };
 
@@ -60,9 +63,9 @@ struct QOSLifespanEventInfo
 };
 
 
-using QOSDeadlineEventCallbackType = std::function<void(QOSDeadlineEventInfo&)>;
-using QOSLivelinessEventCallbackType = std::function<void(QOSLivelinessEventInfo&)>;
-using QOSLifespanEventCallbackType = std::function<void(QOSLifespanEventInfo&)>;
+using QOSDeadlineEventCallbackType = std::function<void (QOSDeadlineEventInfo &)>;
+using QOSLivelinessEventCallbackType = std::function<void (QOSLivelinessEventInfo &)>;
+using QOSLifespanEventCallbackType = std::function<void (QOSLifespanEventInfo &)>;
 
 
 // struct QOSDeadlineEventConfig {
@@ -108,7 +111,7 @@ class QOSEvent : public QOSEventBase
 public:
   template<typename InitFuncT, typename HandleT, typename EventTypeEnum>
   QOSEvent(const EventCallbackT & callback, InitFuncT init_func, HandleT handle, EventTypeEnum type)
-    : event_callback_(callback)
+  : event_callback_(callback)
   {
     event_handle_ = rcl_get_zero_initialized_event();
     rcl_ret_t ret = init_func(&event_handle_, handle, type);
@@ -146,7 +149,7 @@ public:
 
 private:
   using EventCallbackInfoT = typename std::remove_reference<typename
-    rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
+      rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
 
   EventCallbackT event_callback_;
 };

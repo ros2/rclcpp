@@ -94,7 +94,7 @@ Node::create_subscription(
   const SubscriptionOptions<Alloc> & options,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-    msg_mem_strat)
+  msg_mem_strat)
 {
   using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
 
