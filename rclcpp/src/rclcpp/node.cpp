@@ -190,6 +190,12 @@ Node::get_namespace() const
   return node_base_->get_namespace();
 }
 
+const char *
+Node::get_fully_qualified_name() const
+{
+  return node_base_->get_fully_qualified_name();
+}
+
 rclcpp::Logger
 Node::get_logger() const
 {
