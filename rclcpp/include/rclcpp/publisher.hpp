@@ -228,7 +228,9 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
-    this->do_inter_process_publish(msg.get());
+    if (!use_intra_process_ || get_subscription_count() > get_intra_process_subscription_count()) {
+      this->do_inter_process_publish(msg.get());
+    }
     if (store_intra_process_message_) {
       // Take the pointer from the unique_msg, release it and pass as a void *
       // to the ipm. The ipm should then capture it again as a unique_ptr of
