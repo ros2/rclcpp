@@ -64,6 +64,7 @@ public:
   using ElemAlloc = typename ElemAllocTraits::allocator_type;
   using ElemDeleter = allocator::Deleter<ElemAlloc, T>;
 
+  using ElemSharedPtr = std::shared_ptr<T>;
   using ElemUniquePtr = std::unique_ptr<T, ElemDeleter>;
 
   /// Constructor.
@@ -101,32 +102,27 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_copy_at_key(uint64_t key, ElemUniquePtr & value)
+  get(uint64_t key, ElemUniquePtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
-      ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
-      value = ElemUniquePtr(ptr);
+      if (it->value) {
+        // TODO(ivanpauno): Transfer deleter
+        auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
+        ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
+        value = ElemUniquePtr(ptr);
+      }
     }
   }
 
-  /// Return ownership of the value stored in the ring buffer, leaving a copy.
+  /// Return a shared_ptr of the value stored in the ring buffer at the given key.
   /**
-   * The key is matched if an element in the ring bufer has a matching key.
-   * This method will allocate in order to store a copy.
+   * The key is matched if an element in the ring buffer has a matching key.
+   * This method will allocate in order to return a copy.
    *
    * The key is not guaranteed to be unique, see the class docs for more.
-   *
-   * The ownership of the currently stored object is returned, but a copy is
-   * made and stored in its place.
-   * This means that multiple calls to this function for a particular element
-   * will result in returning the copied and stored object not the original.
-   * This also means that later calls to pop_at_key will not return the
-   * originally stored object, since it was returned by the first call to this
-   * method.
    *
    * The contents of value before the method is called are discarded.
    *
@@ -134,20 +130,43 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get_ownership_at_key(uint64_t key, ElemUniquePtr & value)
+  get(uint64_t key, ElemSharedPtr & value)
   {
+    std::lock_guard<std::mutex> lock(data_mutex_);
+    auto it = get_iterator_of_key(key);
+    value.reset();
+    if (it != elements_.end() && it->in_use) {
+      value = it->value;
+    }
+  }
+
+  /// Return a copy of the stored element and reset the stored shared_ptr.
+  /**
+   * The key is matched if an element in the ring buffer has a matching key.
+   *
+   * The key is not guaranteed to be unique, see the class docs for more.
+   *
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
+   */
+  void
+  pop(uint64_t key, ElemUniquePtr & value)
+  {
+    // TODO:
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      // Make a copy.
-      auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
-      ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
-      auto copy = ElemUniquePtr(ptr);
-      // Return the original.
-      value.swap(it->value);
-      // Store the copy.
-      it->value.swap(copy);
+      if (it->value) {
+        // TODO(ivanpauno): Transfer deleter
+        auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
+        ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
+        value = ElemUniquePtr(ptr);
+        it->value.reset();
+      }
+      it->in_use = false;
     }
   }
 
@@ -163,11 +182,11 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  pop_at_key(uint64_t key, ElemUniquePtr & value)
+  pop(uint64_t key, ElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
-    value = nullptr;
+    value.reset();
     if (it != elements_.end() && it->in_use) {
       value.swap(it->value);
       it->in_use = false;
@@ -180,28 +199,29 @@ public:
    * It is up to the user to ensure the key is unique.
    * This method should not allocate memory.
    *
-   * After insertion, if a pair was replaced, then value will contain ownership
-   * of that displaced value. Otherwise it will be a nullptr.
+   * After insertion the value will be a nullptr.
+   * If a pair was replaced, its smart pointer was reseted.
    *
    * \param key the key associated with the value to be stored
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, ElemUniquePtr & value)
+  push_and_replace(uint64_t key, ElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
     elements_[head_].key = key;
-    elements_[head_].value.swap(value);
+    elements_[head_].value.reset();
+    elements_[head_].value = value;
     elements_[head_].in_use = true;
     head_ = (head_ + 1) % elements_.size();
     return did_replace;
   }
 
   bool
-  push_and_replace(uint64_t key, ElemUniquePtr && value)
+  push_and_replace(uint64_t key, ElemSharedPtr && value)
   {
-    ElemUniquePtr temp = std::move(value);
+    ElemSharedPtr temp = std::move(value);
     return push_and_replace(key, temp);
   }
 
@@ -219,7 +239,7 @@ private:
   struct element
   {
     uint64_t key;
-    ElemUniquePtr value;
+    ElemSharedPtr value;
     bool in_use;
   };
 
