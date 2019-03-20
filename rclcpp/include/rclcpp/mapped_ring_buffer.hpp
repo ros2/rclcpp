@@ -112,7 +112,12 @@ public:
         // TODO(ivanpauno): Transfer deleter
         auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
         ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
-        value = ElemUniquePtr(ptr);
+        auto deleter = std::get_deleter<ElemDeleter, T>(it->value);
+        if (deleter) {
+          value = ElemUniquePtr(ptr, *deleter);
+        } else {
+          value = ElemUniquePtr(ptr);
+        }
       }
     }
   }
@@ -163,7 +168,12 @@ public:
         // TODO(ivanpauno): Transfer deleter
         auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
         ElemAllocTraits::construct(*allocator_.get(), ptr, *it->value);
-        value = ElemUniquePtr(ptr);
+        auto deleter = std::get_deleter<ElemDeleter, T>(it->value);
+        if (deleter) {
+          value = ElemUniquePtr(ptr, *deleter);
+        } else {
+          value = ElemUniquePtr(ptr);
+        }
         it->value.reset();
       }
       it->in_use = false;

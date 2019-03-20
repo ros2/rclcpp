@@ -247,7 +247,7 @@ public:
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::unique_ptr<MessageT, Deleter> & message)
+    std::shared_ptr<MessageT> & message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
@@ -334,10 +334,81 @@ public:
     // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
     if (target_subs_size) {
       // There are more subscriptions to serve, return a copy.
-      typed_buffer->get_copy_at_key(message_sequence_number, message);
+      typed_buffer->get(message_sequence_number, message);
     } else {
       // This is the last one to be returned, transfer ownership.
-      typed_buffer->pop_at_key(message_sequence_number, message);
+      typed_buffer->pop(message_sequence_number, message);
+    }
+  }
+
+  /// Take an intra process message.
+  /**
+   * The intra_process_publisher_id and message_sequence_number parameters
+   * uniquely identify a message instance, which should be taken.
+   *
+   * The requesting_subscriptions_intra_process_id parameter is used to make
+   * sure the requesting subscription was intended to receive this message
+   * instance.
+   * This check is made because it could happen that the requester
+   * comes up after the publish event, so it still receives the notification of
+   * a new intra process message, but it wasn't registered with the manager at
+   * the time of publishing, causing it to take when it wasn't intended.
+   * This should be avioded unless latching-like behavior is involved.
+   *
+   * The message parameter is used to store the taken message.
+   * On the last expected call to this method, the ownership is transfered out
+   * of internal storage and into the message parameter.
+   * On all previous calls a copy of the internally stored message is made and
+   * the ownership of the copy is transfered to the message parameter.
+   * TODO(wjwwood): update this documentation when latching is supported.
+   *
+   * The message parameter can be set to nullptr if:
+   *
+   * - The publisher id is not found.
+   * - The message sequence is not found for the given publisher id.
+   * - The requesting subscription's id is not in the list of intended takers.
+   * - The requesting subscription's id has been used before with this message.
+   *
+   * This method may allocate memory to copy the stored message.
+   *
+   * \param intra_process_publisher_id the id of the message's publisher.
+   * \param message_sequence_number the sequence number of the message.
+   * \param requesting_subscriptions_intra_process_id the subscription's id.
+   * \param message the message typed shared_ptr used to return the message.
+   */
+  template<
+    typename MessageT, typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
+  void
+  take_intra_process_message(
+    uint64_t intra_process_publisher_id,
+    uint64_t message_sequence_number,
+    uint64_t requesting_subscriptions_intra_process_id,
+    std::shared_ptr<MessageT> & message)
+  {
+    using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
+    using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+    message = nullptr;
+
+    size_t target_subs_size = 0;
+    std::lock_guard<std::mutex> lock(take_mutex_);
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->take_intra_process_message(
+      intra_process_publisher_id,
+      message_sequence_number,
+      requesting_subscriptions_intra_process_id,
+      target_subs_size
+    );
+    typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
+    if (!typed_buffer) {
+      return;
+    }
+    // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
+    if (target_subs_size) {
+      // There are more subscriptions to serve, return a copy.
+      typed_buffer->get(message_sequence_number, message);
+    } else {
+      // This is the last one to be returned, transfer ownership.
+      typed_buffer->pop(message_sequence_number, message);
     }
   }
 
