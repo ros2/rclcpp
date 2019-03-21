@@ -247,7 +247,7 @@ public:
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::shared_ptr<MessageT> & message)
+    std::shared_ptr<const MessageT> & message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
@@ -378,7 +378,7 @@ public:
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    std::shared_ptr<MessageT> & message)
+    std::shared_ptr<const MessageT> & message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;

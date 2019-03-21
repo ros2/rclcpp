@@ -64,7 +64,7 @@ public:
   using ElemAlloc = typename ElemAllocTraits::allocator_type;
   using ElemDeleter = allocator::Deleter<ElemAlloc, T>;
 
-  using ElemSharedPtr = std::shared_ptr<T>;
+  using ElemSharedPtr = std::shared_ptr<const T>;
   using ElemUniquePtr = std::unique_ptr<T, ElemDeleter>;
 
   /// Constructor.
@@ -114,8 +114,8 @@ public:
         raw_ptr = it->unique_value.get();
         deleter = &it->unique_value.get_deleter();
       } else {
-        raw_ptr = it->shared_value.get();
-        deleter = std::get_deleter<ElemDeleter, T>(it->shared_value);
+        raw_ptr = const_cast<T *>(it->shared_value.get());
+        deleter = std::get_deleter<ElemDeleter, const T>(it->shared_value);
       }
       if (raw_ptr) {
         auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
@@ -178,7 +178,7 @@ public:
       } else if (it->shared_value) {
         auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
         ElemAllocTraits::construct(*allocator_.get(), ptr, *it->shared_value);
-        auto deleter = std::get_deleter<ElemDeleter, T>(it->shared_value);
+        auto deleter = std::get_deleter<ElemDeleter, const T>(it->shared_value);
         if (deleter) {
           value = ElemUniquePtr(ptr, *deleter);
         } else {

@@ -35,7 +35,7 @@ TEST(TestMappedRingBuffer, empty) {
   mrb.pop(1, unique);
   EXPECT_EQ(nullptr, unique);
 
-  std::shared_ptr<char> shared;
+  std::shared_ptr<const char> shared;
   mrb.get(1, shared);
   EXPECT_EQ(nullptr, shared);
 
@@ -50,9 +50,9 @@ TEST(TestMappedRingBuffer, empty) {
 TEST(TestMappedRingBuffer, temporary_l_value_with_shared_get_pop) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   // Pass in value with temporary object
-  mrb.push_and_replace(1, std::shared_ptr<char>(new char('a')));
+  mrb.push_and_replace(1, std::shared_ptr<const char>(new char('a')));
 
-  std::shared_ptr<char> actual;
+  std::shared_ptr<const char> actual;
   mrb.get(1, actual);
   EXPECT_EQ('a', *actual);
 
@@ -70,7 +70,7 @@ TEST(TestMappedRingBuffer, temporary_l_value_with_shared_get_pop) {
 TEST(TestMappedRingBuffer, temporary_l_value_with_unique_get_pop) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   // Pass in value with temporary object
-  mrb.push_and_replace(1, std::shared_ptr<char>(new char('a')));
+  mrb.push_and_replace(1, std::shared_ptr<const char>(new char('a')));
 
   std::unique_ptr<char> actual;
   mrb.get(1, actual);
@@ -89,12 +89,12 @@ TEST(TestMappedRingBuffer, temporary_l_value_with_unique_get_pop) {
  */
 TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_shared) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
-  std::shared_ptr<char> expected(new char('a'));
+  std::shared_ptr<const char> expected(new char('a'));
 
   EXPECT_FALSE(mrb.push_and_replace(1, expected));
   EXPECT_EQ(2, expected.use_count());
 
-  std::shared_ptr<char> actual;
+  std::shared_ptr<const char> actual;
   mrb.get(1, actual);
   EXPECT_NE(nullptr, actual);
   if (actual) {
@@ -145,8 +145,8 @@ TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_shared) {
  */
 TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_unique) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
-  std::shared_ptr<char> expected(new char('a'));
-  char * expected_orig = expected.get();
+  std::shared_ptr<const char> expected(new char('a'));
+  const char * expected_orig = expected.get();
 
   EXPECT_FALSE(mrb.push_and_replace(1, expected));
   EXPECT_EQ(2, expected.use_count());
@@ -208,7 +208,7 @@ TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_unique) {
 TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_unique) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   std::unique_ptr<char> expected(new char('a'));
-  char * expected_orig = expected.get();
+  const char * expected_orig = expected.get();
 
   EXPECT_FALSE(mrb.push_and_replace(1, expected));
 
@@ -259,11 +259,11 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_unique) {
 TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_shared) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   std::unique_ptr<char> expected(new char('a'));
-  char * expected_orig = expected.get();
+  const char * expected_orig = expected.get();
 
   EXPECT_FALSE(mrb.push_and_replace(1, expected));
 
-  std::shared_ptr<char> actual;
+  std::shared_ptr<const char> actual;
   mrb.get(1, actual);
   EXPECT_NE(nullptr, actual);
   if (actual) {
@@ -309,7 +309,7 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_shared) {
 TEST(TestMappedRingBuffer, non_unique_keys) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
 
-  std::shared_ptr<char> input(new char('a'));
+  std::shared_ptr<const char> input(new char('a'));
   mrb.push_and_replace(1, input);
   input.reset(new char('b'));
 
