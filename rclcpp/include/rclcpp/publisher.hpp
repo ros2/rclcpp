@@ -183,7 +183,7 @@ protected:
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
-  bool use_intra_process_;
+  bool intra_process_is_enabled_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
   StoreMessageCallbackT store_intra_process_message_;
@@ -230,7 +230,9 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
-    if (!use_intra_process_ || get_subscription_count() > get_intra_process_subscription_count()) {
+    bool inter_process_subscriptions_exist =
+      get_subscription_count() > get_intra_process_subscription_count();
+    if (!intra_process_is_enabled_ || inter_process_subscriptions_exist) {
       this->do_inter_process_publish(msg.get());
     }
     if (store_intra_process_message_) {
