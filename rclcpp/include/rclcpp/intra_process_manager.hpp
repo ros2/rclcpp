@@ -32,7 +32,7 @@
 #include "rclcpp/intra_process_manager_impl.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_base.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -185,21 +185,11 @@ public:
    * \param buffer_size if 0 (default) a size is calculated based on the QoS.
    * \return an unsigned 64-bit integer which is the publisher's unique id.
    */
-  template<typename MessageT, typename Alloc>
+  RCLCPP_PUBLIC
   uint64_t
   add_publisher(
-    typename Publisher<MessageT, Alloc>::SharedPtr publisher,
-    size_t buffer_size = 0)
-  {
-    auto id = IntraProcessManager::get_next_unique_id();
-    size_t size = buffer_size > 0 ? buffer_size : publisher->get_queue_size();
-    auto mrb = mapped_ring_buffer::MappedRingBuffer<
-      MessageT,
-      typename Publisher<MessageT, Alloc>::MessageAlloc
-      >::make_shared(size, publisher->get_allocator());
-    impl_->add_publisher(id, publisher, mrb, size);
-    return id;
-  }
+    rclcpp::PublisherBase::SharedPtr publisher,
+    size_t buffer_size = 0);
 
   /// Unregister a publisher using the publisher's unique id.
   /**
@@ -247,7 +237,7 @@ public:
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::shared_ptr<const MessageT> & message)
+    const std::shared_ptr<const MessageT> & message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;

@@ -43,8 +43,7 @@ PublisherBase::PublisherBase(
   const rosidl_message_type_support_t & type_support,
   const rcl_publisher_options_t & publisher_options)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
-  intra_process_is_enabled_(false), intra_process_publisher_id_(0),
-  store_intra_process_message_(nullptr)
+  intra_process_is_enabled_(false), intra_process_publisher_id_(0)
 {
   rcl_ret_t ret = rcl_publisher_init(
     &publisher_handle_,
@@ -106,7 +105,7 @@ PublisherBase::~PublisherBase()
     // TODO(ivanpauno): should this raise an error?
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),
-      "Intra process manager died before than a publisher.");
+      "Intra process manager died before than the publisher.");
     return;
   }
   ipm->remove_publisher(intra_process_publisher_id_);
@@ -235,10 +234,16 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
   return result;
 }
 
+rclcpp::mapped_ring_buffer::MappedRingBufferBase::SharedPtr
+PublisherBase::make_mapped_ring_buffer(size_t size) const
+{
+  (void)size;
+  return nullptr;
+}
+
 void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
-  StoreMessageCallbackT store_callback,
   IntraProcessManagerSharedPtr ipm,
   const rcl_publisher_options_t & intra_process_options)
 {
@@ -275,7 +280,6 @@ PublisherBase::setup_intra_process(
   }
 
   intra_process_publisher_id_ = intra_process_publisher_id;
-  store_intra_process_message_ = store_callback;
   weak_ipm_ = ipm;
   intra_process_is_enabled_ = true;
 

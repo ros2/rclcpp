@@ -229,7 +229,7 @@ public:
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, ElemSharedPtr & value)
+  push_and_replace(uint64_t key, const ElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;

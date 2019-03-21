@@ -30,6 +30,21 @@ IntraProcessManager::~IntraProcessManager()
 {}
 
 uint64_t
+IntraProcessManager::add_publisher(
+  rclcpp::PublisherBase::SharedPtr publisher,
+  size_t buffer_size)
+{
+  auto id = IntraProcessManager::get_next_unique_id();
+  size_t size = buffer_size > 0 ? buffer_size : publisher->get_queue_size();
+  auto mrb = publisher->make_mapped_ring_buffer(size);
+  impl_->add_publisher(id, publisher, mrb, size);
+  if (!mrb) {
+    throw std::runtime_error("failed to create a mapped ring buffer");
+  }
+  return id;
+}
+
+uint64_t
 IntraProcessManager::add_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription)
 {
