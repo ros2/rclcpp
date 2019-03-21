@@ -38,7 +38,7 @@ public:
   using UnloadNode = composition_interfaces::srv::UnloadNode;
   using ListNodes = composition_interfaces::srv::ListNodes;
 
-  ComponentManager(rclcpp::executor::Executor * executor);
+  ComponentManager(std::weak_ptr<rclcpp::executor::Executor> executor);
 
 private:
   void OnLoadNode(
@@ -57,9 +57,9 @@ private:
     std::shared_ptr<ListNodes::Response> response);
 
 private:
-  rclcpp::executor::Executor * executor_;
+  std::weak_ptr<rclcpp::executor::Executor> executor_;
 
-  std::map<uint64_t, rclcpp::node_interfaces::NodeBaseInterface::SharedPtr> nodes_;
+  std::map<uint64_t, rclcpp_components::NodeInstanceWrapper> node_wrappers_;
   std::map<std::string, class_loader::ClassLoader *> loaders_;
 
   uint64_t unique_id {1};

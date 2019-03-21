@@ -21,7 +21,7 @@ using namespace std::placeholders;
 namespace rclcpp_components
 {
 
-ComponentManager::ComponentManager(rclcpp::executor::Executor * executor)
+ComponentManager::ComponentManager(std::weak_ptr<rclcpp::executor::Executor> executor)
 : Node("ComponentManager"),
   executor_(executor)
 {
@@ -115,18 +115,19 @@ ComponentManager::OnLoadNode(
 
         auto node_id = unique_id++;
 
-        auto node_wrapper = node_factory->create_node_instance(
+        node_wrappers_[node_id] = node_factory->create_node_instance(
             request->node_name,
             request->node_namespace,
             options);
 
-        auto node = node_wrapper.get_node_base_interface();
-        nodes_[node_id] = node;
-
+        auto node = node_wrappers_[node_id].get_node_base_interface();
+        if (auto exec = executor_.lock())
+        {
+          exec->add_node(node, true);
+        }
         response->full_node_name = node->get_fully_qualified_name();
         response->unique_id = node_id;
         response->success = true;
-        executor_->add_node(nodes_[node_id], true);
         return;
       }
     }
@@ -155,9 +156,9 @@ ComponentManager::OnUnloadNode(
 {
   (void) request_header;
 
-  auto node = nodes_.find(request->unique_id);
+  auto wrapper = node_wrappers_.find(request->unique_id);
 
-  if(node == nodes_.end())
+  if(wrapper == node_wrappers_.end())
   {
     response->success = false;
     std::stringstream ss;
@@ -167,8 +168,11 @@ ComponentManager::OnUnloadNode(
   }
   else
   {
-    executor_->remove_node(node->second);
-    nodes_.erase(node);
+    if (auto exec = executor_.lock())
+    {
+      exec->remove_node(wrapper->second.get_node_base_interface());
+    }
+    node_wrappers_.erase(wrapper);
     response->success = true;
   }
 }
@@ -182,10 +186,11 @@ ComponentManager::OnListNodes(
   (void) request_header;
   (void) request;
 
-  for(const auto& node: nodes_)
+  for(auto& wrapper: node_wrappers_)
   {
-    response->unique_ids.push_back(node.first);
-    response->full_node_names.push_back(node.second->get_fully_qualified_name());
+    response->unique_ids.push_back(wrapper.first);
+    response->full_node_names.push_back(
+        wrapper.second.get_node_base_interface()->get_fully_qualified_name());
   }
 }
 

@@ -21,10 +21,8 @@
 int main(int argc, char * argv[])
 {
   rclcpp::init(argc, argv);
-  rclcpp::executors::SingleThreadedExecutor exec;
-
-  auto node = std::make_shared<rclcpp_components::ComponentManager>(&exec);
-  exec.add_node(node);
-
-  exec.spin();
+  auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+  auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  exec->add_node(node);
+  exec->spin();
 }

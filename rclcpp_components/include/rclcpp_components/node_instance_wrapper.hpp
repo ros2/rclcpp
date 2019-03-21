@@ -28,6 +28,10 @@ public:
   using NodeBaseInterfaceGetter = std::function<
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr(const std::shared_ptr<void> &)>;
 
+  NodeInstanceWrapper():
+    node_instance_(nullptr)
+  {}
+
   NodeInstanceWrapper(
     std::shared_ptr<void> node_instance,
     NodeBaseInterfaceGetter node_base_interface_getter)

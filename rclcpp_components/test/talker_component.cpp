@@ -31,7 +31,6 @@ public:
   {
     auto msg = std::make_shared<std_msgs::msg::String>();
     msg->data = message_ + std::to_string(++count_);
-    std::cerr << "Publishing" << std::endl;
     RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", msg->data.c_str());
     std::flush(std::cout);
 
@@ -50,4 +49,4 @@ private:
 
 #include "rclcpp_components/register_node_macro.hpp"
 
-RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::Talker);
+RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::Talker)
