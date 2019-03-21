@@ -109,12 +109,17 @@ template<typename EventCallbackT>
 class QOSEvent : public QOSEventBase
 {
 public:
-  template<typename InitFuncT, typename HandleT, typename EventTypeEnum>
-  QOSEvent(const EventCallbackT & callback, InitFuncT init_func, HandleT handle, EventTypeEnum type)
+  template<typename InitFuncT, typename HandleT, typename OptionsT, typename EventTypeEnum>
+  QOSEvent(
+    const EventCallbackT & callback,
+    InitFuncT init_func,
+    HandleT handle,
+    OptionsT options,
+    EventTypeEnum type)
   : event_callback_(callback)
   {
     event_handle_ = rcl_get_zero_initialized_event();
-    rcl_ret_t ret = init_func(&event_handle_, handle, type);
+    rcl_ret_t ret = init_func(&event_handle_, handle, options, type);
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create event");
     }

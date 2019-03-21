@@ -204,7 +204,8 @@ public:
         });
     *event_handle_.get() = rcl_get_zero_initialized_event();
 
-    ret = rcl_service_event_init(get_event_handle().get(), get_service_handle().get());
+    ret = rcl_service_event_init(get_event_handle().get(), get_service_handle().get(),
+      &service_options, RCL_SERVICE_EVENT_UNIMPLEMENTED);
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service event");
     }

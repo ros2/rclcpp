@@ -107,12 +107,16 @@ public:
   // RCLCPP_PUBLIC
   template<typename EventCallbackT>
   void
-  add_event_handle(const EventCallbackT & callback, const rcl_subscription_event_type_t event_type)
+  add_event_handle(
+    const EventCallbackT & callback,
+    const rcl_subscription_options_t & subscription_options,
+    const rcl_subscription_event_type_t event_type)
   {
     event_handles_.emplace_back(std::make_shared<QOSEvent<EventCallbackT>>(
         callback,
         rcl_subscription_event_init,
         get_subscription_handle().get(),
+        &subscription_options,
         event_type));
   }
 
@@ -256,10 +260,12 @@ public:
     matches_any_intra_process_publishers_(nullptr)
   {
     if (event_callbacks.deadline_callback_) {
-      this->add_event_handle(event_callbacks.deadline_callback_, RCL_SUBSCRIPTION_DEADLINE);
+      this->add_event_handle(event_callbacks.deadline_callback_,
+        subscription_options, RCL_SUBSCRIPTION_DEADLINE);
     }
     if (event_callbacks.liveliness_callback_) {
-      this->add_event_handle(event_callbacks.liveliness_callback_, RCL_SUBSCRIPTION_LIVELINESS);
+      this->add_event_handle(event_callbacks.liveliness_callback_,
+        subscription_options, RCL_SUBSCRIPTION_LIVELINESS);
     }
     // if (event_callbacks.lifespan_callback_) {
     //   this->add_event_handle(event_callbacks.lifespan_callback_);

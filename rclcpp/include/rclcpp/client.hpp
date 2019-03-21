@@ -203,7 +203,8 @@ public:
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create client");
     }
 
-    ret = rcl_client_event_init(get_event_handle().get(), get_client_handle().get());
+    ret = rcl_client_event_init(get_event_handle().get(), get_client_handle().get(),
+      &client_options, RCL_CLIENT_EVENT_UNIMPLEMENTED);
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create client event");
     }
