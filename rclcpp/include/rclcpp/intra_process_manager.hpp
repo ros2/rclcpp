@@ -25,6 +25,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <utility>
 #include <set>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
@@ -242,8 +243,7 @@ public:
    * \return the message sequence number.
    */
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
-    typename Deleter = std::default_delete<MessageT>>
+    typename MessageT, typename Alloc = std::allocator<void>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
@@ -265,6 +265,35 @@ public:
     (void)did_replace;  // Avoid unused variable warning.
 
     impl_->store_intra_process_message(intra_process_publisher_id, message_seq);
+
+    // Return the message sequence which is sent to the subscription.
+    return message_seq;
+  }
+
+  template<
+    typename MessageT, typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
+  uint64_t
+  store_intra_process_message(
+    uint64_t intra_process_publisher_id,
+    std::unique_ptr<MessageT, Deleter> & message)
+  {
+    using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
+    using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+    uint64_t message_seq = 0;
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->get_publisher_info_for_id(
+      intra_process_publisher_id, message_seq);
+    typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
+    if (!typed_buffer) {
+      throw std::runtime_error("Typecast failed due to incorrect message type");
+    }
+
+    // Insert the message into the ring buffer using the message_seq to identify it.
+    bool did_replace = typed_buffer->push_and_replace(message_seq, message);
+    // TODO(wjwwood): do something when a message was displaced. log debug?
+    (void)did_replace;  // Avoid unused variable warning.
+
+    impl_->store_intra_process_message(intra_process_publisher_id, std::move(message_seq));
 
     // Return the message sequence which is sent to the subscription.
     return message_seq;
@@ -341,41 +370,6 @@ public:
     }
   }
 
-  /// Take an intra process message.
-  /**
-   * The intra_process_publisher_id and message_sequence_number parameters
-   * uniquely identify a message instance, which should be taken.
-   *
-   * The requesting_subscriptions_intra_process_id parameter is used to make
-   * sure the requesting subscription was intended to receive this message
-   * instance.
-   * This check is made because it could happen that the requester
-   * comes up after the publish event, so it still receives the notification of
-   * a new intra process message, but it wasn't registered with the manager at
-   * the time of publishing, causing it to take when it wasn't intended.
-   * This should be avioded unless latching-like behavior is involved.
-   *
-   * The message parameter is used to store the taken message.
-   * On the last expected call to this method, the ownership is transfered out
-   * of internal storage and into the message parameter.
-   * On all previous calls a copy of the internally stored message is made and
-   * the ownership of the copy is transfered to the message parameter.
-   * TODO(wjwwood): update this documentation when latching is supported.
-   *
-   * The message parameter can be set to nullptr if:
-   *
-   * - The publisher id is not found.
-   * - The message sequence is not found for the given publisher id.
-   * - The requesting subscription's id is not in the list of intended takers.
-   * - The requesting subscription's id has been used before with this message.
-   *
-   * This method may allocate memory to copy the stored message.
-   *
-   * \param intra_process_publisher_id the id of the message's publisher.
-   * \param message_sequence_number the sequence number of the message.
-   * \param requesting_subscriptions_intra_process_id the subscription's id.
-   * \param message the message typed shared_ptr used to return the message.
-   */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename Deleter = std::default_delete<MessageT>>

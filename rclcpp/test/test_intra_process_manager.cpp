@@ -213,11 +213,7 @@ TEST(TestIntraProcessManager, nominal) {
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
   ipm.store_intra_process_message(p1_id, unique_msg);
-  ASSERT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(44ul, unique_msg->message_sequence);
-    EXPECT_EQ(44ul, unique_msg->publisher_id);
-  }
+  ASSERT_EQ(nullptr, unique_msg);
 }
 
 /*
@@ -703,7 +699,6 @@ TEST(TestIntraProcessManager, ring_buffer_displacement) {
     new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
   );
 
-  auto original_message_pointer1 = unique_msg.get();
   auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
   ASSERT_EQ(nullptr, unique_msg);
 
@@ -729,13 +724,7 @@ TEST(TestIntraProcessManager, ring_buffer_displacement) {
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
   ipm.store_intra_process_message(p1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);  // Should return the thing in the ring buffer it displaced.
-  if (unique_msg) {
-    // This should have been the first published message.
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer1, unique_msg.get());
-  }
+  EXPECT_EQ(nullptr, unique_msg);
   unique_msg.reset();
 
   // Since it just got displaced it should no longer be there to take.

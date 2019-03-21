@@ -84,9 +84,10 @@ TEST(TestMappedRingBuffer, temporary_l_value_with_unique_get_pop) {
 }
 
 /*
-   Tests normal usage of the mrb, with shared get and pop methods.
+   Tests normal usage of the mrb.
+   Using shared push_and_replace, get and pop methods.
  */
-TEST(TestMappedRingBuffer, nominal_with_shared) {
+TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_shared) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   std::shared_ptr<char> expected(new char('a'));
 
@@ -139,9 +140,10 @@ TEST(TestMappedRingBuffer, nominal_with_shared) {
 }
 
 /*
-   Tests normal usage of the mrb, with unique get and pop methods.
+   Tests normal usage of the mrb.
+   Using shared push_and_replace, unique get and pop methods.
  */
-TEST(TestMappedRingBuffer, nominal_with_unique) {
+TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_unique) {
   rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
   std::shared_ptr<char> expected(new char('a'));
   char * expected_orig = expected.get();
@@ -171,6 +173,108 @@ TEST(TestMappedRingBuffer, nominal_with_unique) {
   if (actual) {
     EXPECT_EQ('a', *actual);
   }
+  mrb.get(1, actual);
+  EXPECT_EQ(nullptr, actual);
+
+  expected.reset(new char('a'));
+  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+
+  expected.reset(new char('b'));
+  EXPECT_FALSE(mrb.push_and_replace(2, expected));
+
+  expected.reset(new char('c'));
+  EXPECT_TRUE(mrb.push_and_replace(3, expected));
+
+  mrb.get(1, actual);
+  EXPECT_EQ(nullptr, actual);
+
+  mrb.get(2, actual);
+  EXPECT_NE(nullptr, actual);
+  if (actual) {
+    EXPECT_EQ('b', *actual);
+  }
+
+  mrb.get(3, actual);
+  EXPECT_NE(nullptr, actual);
+  if (actual) {
+    EXPECT_EQ('c', *actual);
+  }
+}
+
+/*
+   Tests normal usage of the mrb.
+   Using unique push_and_replace, get and pop methods.
+ */
+TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_unique) {
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  std::unique_ptr<char> expected(new char('a'));
+  char * expected_orig = expected.get();
+
+  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+
+  std::unique_ptr<char> actual;
+  mrb.get(1, actual);
+  EXPECT_NE(nullptr, actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
+  EXPECT_NE(expected_orig, actual.get());
+  mrb.pop(1, actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
+  EXPECT_EQ(expected_orig, actual.get());
+  mrb.get(1, actual);
+  EXPECT_EQ(nullptr, actual);
+
+  expected.reset(new char('a'));
+  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+
+  expected.reset(new char('b'));
+  EXPECT_FALSE(mrb.push_and_replace(2, expected));
+
+  expected.reset(new char('c'));
+  EXPECT_TRUE(mrb.push_and_replace(3, expected));
+
+  mrb.get(1, actual);
+  EXPECT_EQ(nullptr, actual);
+
+  mrb.get(2, actual);
+  EXPECT_NE(nullptr, actual);
+  if (actual) {
+    EXPECT_EQ('b', *actual);
+  }
+
+  mrb.get(3, actual);
+  EXPECT_NE(nullptr, actual);
+  if (actual) {
+    EXPECT_EQ('c', *actual);
+  }
+}
+
+/*
+   Tests normal usage of the mrb.
+   Using unique push_and_replace, shared get and pop methods.
+ */
+TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_shared) {
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  std::unique_ptr<char> expected(new char('a'));
+  char * expected_orig = expected.get();
+
+  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+
+  std::shared_ptr<char> actual;
+  mrb.get(1, actual);
+  EXPECT_NE(nullptr, actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
+  EXPECT_EQ(expected_orig, actual.get());
+  mrb.pop(1, actual);
+  if (actual) {
+    EXPECT_EQ('a', *actual);
+  }
+  EXPECT_EQ(expected_orig, actual.get());
   mrb.get(1, actual);
   EXPECT_EQ(nullptr, actual);
 
