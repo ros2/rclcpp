@@ -96,7 +96,7 @@ public:
    */
   RCLCPP_PUBLIC
   PublisherOptions &
-  publisher_qos_profile(const rmw_qos_profile_t & publisher_qos_profile)
+  qos_profile(const rmw_qos_profile_t & publisher_qos_profile)
   {
     publisher_qos_profile_ = publisher_qos_profile;
     return *this;
@@ -188,6 +188,7 @@ public:
   allocator(std::shared_ptr<Alloc> allocator)
   {
     allocator_ = allocator;
+    return *this;
   }
 
 private:

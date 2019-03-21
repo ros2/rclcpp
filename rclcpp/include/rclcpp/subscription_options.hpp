@@ -160,6 +160,7 @@ public:
     return *this;
   }
 
+
   RCLCPP_PUBLIC
   const SubscriptionEventCallbacks &
   event_callbacks() const
@@ -196,6 +197,7 @@ public:
   allocator(std::shared_ptr<Alloc> allocator)
   {
     allocator_ = allocator;
+    return *this;
   }
 
 private:
