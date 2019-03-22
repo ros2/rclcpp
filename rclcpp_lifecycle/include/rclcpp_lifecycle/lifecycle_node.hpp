@@ -32,7 +32,7 @@
 #include "rclcpp/client.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
-#include "rclcpp/graph_event.hpp"
+#include "rclcpp/event.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
@@ -314,16 +314,16 @@ public:
   count_subscribers(const std::string & topic_name) const;
 
   /// Return a graph event, which will be set anytime a graph change occurs.
-  /* The graph GraphEvent object is a loan which must be returned.
-   * The GraphEvent object is scoped and therefore to return the load just let it go
+  /* The graph Event object is a loan which must be returned.
+   * The Event object is scoped and therefore to return the load just let it go
    * out of scope.
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  rclcpp::GraphEvent::SharedPtr
+  rclcpp::Event::SharedPtr
   get_graph_event();
 
-  /// Wait for a graph event to occur by waiting on an GraphEvent to become set.
-  /* The given GraphEvent must be acquire through the get_graph_event() method.
+  /// Wait for a graph event to occur by waiting on an Event to become set.
+  /* The given Event must be acquire through the get_graph_event() method.
    *
    * \throws InvalidEventError if the given event is nullptr
    * \throws EventNotRegisteredError if the given event was not acquired with
@@ -332,7 +332,7 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   void
   wait_for_graph_change(
-    rclcpp::GraphEvent::SharedPtr event,
+    rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_LIFECYCLE_PUBLIC

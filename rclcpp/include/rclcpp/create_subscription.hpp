@@ -42,18 +42,19 @@ create_subscription(
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
   bool use_intra_process_comms,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
-  AllocatorT>::SharedPtr msg_mem_strat,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    CallbackMessageT, AllocatorT>::SharedPtr
+  msg_mem_strat,
   typename std::shared_ptr<AllocatorT> allocator)
 {
   auto subscription_options = rcl_subscription_get_default_options();
   subscription_options.qos = qos_profile;
   subscription_options.ignore_local_publications = ignore_local_publications;
 
-  auto factory = rclcpp::create_subscription_factory<MessageT, CallbackT, AllocatorT,
-      CallbackMessageT, SubscriptionT>(
+  auto factory = rclcpp::create_subscription_factory
+    <MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
     std::forward<CallbackT>(callback),
-    callbacks,
+    callbacks, 
     msg_mem_strat,
     allocator);
 
@@ -63,7 +64,6 @@ create_subscription(
     subscription_options,
     use_intra_process_comms);
   node_topics->add_subscription(sub, group);
-
   return std::dynamic_pointer_cast<SubscriptionT>(sub);
 }
 

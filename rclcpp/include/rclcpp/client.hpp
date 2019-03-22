@@ -27,7 +27,6 @@
 #include "rcl/error_handling.h"
 #include "rcl/wait.h"
 
-#include "rclcpp/waitable.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
@@ -50,7 +49,7 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
-class ClientBase : public Waitable
+class ClientBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ClientBase)
@@ -82,26 +81,6 @@ public:
   RCLCPP_PUBLIC
   std::shared_ptr<const rcl_event_t>
   get_event_handle() const;
-
-  RCLCPP_PUBLIC
-  size_t
-  get_number_of_ready_clients() override;
-
-  RCLCPP_PUBLIC
-  size_t
-  get_number_of_ready_events() override;
-
-  RCLCPP_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
-
-  RCLCPP_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override;
-
-  RCLCPP_PUBLIC
-  void
-  execute() override;
 
   RCLCPP_PUBLIC
   bool
@@ -182,7 +161,6 @@ public:
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle =
       get_service_type_support_handle<ServiceT>();
-
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
       this->get_rcl_node_handle(),

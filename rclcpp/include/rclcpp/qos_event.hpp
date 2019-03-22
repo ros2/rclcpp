@@ -48,7 +48,7 @@ struct QOSLivelinessEventInfo
   };
 
   LivelinessEventType event_type;
-  void * other_info;
+  rmw_liveliness_lost_t * other_info;
 };
 
 struct QOSLifespanEventInfo
@@ -141,7 +141,8 @@ public:
   {
     EventCallbackInfoT callback_info;
 
-    rcl_ret_t ret = rcl_take_event(&event_handle_, callback_info.other_info);
+    rcl_ret_t ret = RCL_RET_ERROR;
+    // rcl_ret_t ret = rcl_take_event(&event_handle_, callback_info.other_info);
     if (ret != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",

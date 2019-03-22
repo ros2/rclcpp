@@ -80,13 +80,13 @@ MultiThreadedExecutor::run(size_t)
       if (!get_next_executable(any_exec)) {
         continue;
       }
-      if (any_exec.has_timer()) {
+      if (any_exec.timer) {
         // Guard against multiple threads getting the same timer.
         std::lock_guard<std::mutex> lock(scheduled_timers_mutex_);
-        if (scheduled_timers_.count(any_exec.waitable) != 0) {
+        if (scheduled_timers_.count(any_exec.timer) != 0) {
           continue;
         }
-        scheduled_timers_.insert(any_exec.waitable);
+        scheduled_timers_.insert(any_exec.timer);
       }
     }
     if (yield_before_execute_) {
@@ -95,9 +95,9 @@ MultiThreadedExecutor::run(size_t)
 
     execute_any_executable(any_exec);
 
-    if (any_exec.has_timer()) {
+    if (any_exec.timer) {
       std::lock_guard<std::mutex> lock(scheduled_timers_mutex_);
-      auto it = scheduled_timers_.find(any_exec.waitable);
+      auto it = scheduled_timers_.find(any_exec.timer);
       if (it != scheduled_timers_.end()) {
         scheduled_timers_.erase(it);
       }

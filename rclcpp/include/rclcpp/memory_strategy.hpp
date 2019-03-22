@@ -65,6 +65,21 @@ public:
   virtual void remove_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
   virtual void
+  get_next_subscription(
+    rclcpp::executor::AnyExecutable & any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
+  virtual void
+  get_next_service(
+    rclcpp::executor::AnyExecutable & any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
+  virtual void
+  get_next_client(
+    rclcpp::executor::AnyExecutable & any_exec,
+    const WeakNodeVector & weak_nodes) = 0;
+
+  virtual void
   get_next_waitable(
     rclcpp::executor::AnyExecutable & any_exec,
     const WeakNodeVector & weak_nodes) = 0;

@@ -85,7 +85,11 @@ Node::create_publisher(
     allocator);
 }
 
-template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename Alloc,
+  typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
@@ -157,7 +161,6 @@ Node::create_client(
 
   auto cli_base_ptr = std::dynamic_pointer_cast<ClientBase>(cli);
   node_services_->add_client(cli_base_ptr, group);
-
   return cli;
 }
 

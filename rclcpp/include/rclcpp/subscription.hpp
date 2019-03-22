@@ -42,7 +42,6 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-
 namespace rclcpp
 {
 
@@ -62,7 +61,7 @@ class IntraProcessManager;
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
-class SubscriptionBase : public Waitable
+class SubscriptionBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)
@@ -97,11 +96,11 @@ public:
   get_subscription_handle();
 
   RCLCPP_PUBLIC
-  std::shared_ptr<const rcl_subscription_t>
+  const std::shared_ptr<rcl_subscription_t>
   get_subscription_handle() const;
 
   RCLCPP_PUBLIC
-  virtual std::shared_ptr<const rcl_subscription_t>
+  virtual const std::shared_ptr<rcl_subscription_t>
   get_intra_process_subscription_handle() const;
 
   // RCLCPP_PUBLIC
@@ -123,22 +122,6 @@ public:
   RCLCPP_PUBLIC
   const std::vector<std::shared_ptr<QOSEventBase>> &
   get_event_handles() const;
-
-  RCLCPP_PUBLIC
-  size_t
-  get_number_of_ready_subscriptions() override;
-
-  RCLCPP_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
-
-  RCLCPP_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override;
-
-  RCLCPP_PUBLIC
-  void
-  execute() override;
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
@@ -365,7 +348,6 @@ public:
     const rcl_subscription_options_t & intra_process_options)
   {
     std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";
-
     rcl_ret_t ret = rcl_subscription_init(
       intra_process_subscription_handle_.get(),
       node_handle_.get(),
@@ -394,7 +376,7 @@ public:
   }
 
   /// Implemenation detail.
-  std::shared_ptr<const rcl_subscription_t>
+  const std::shared_ptr<rcl_subscription_t>
   get_intra_process_subscription_handle() const
   {
     if (!get_intra_process_message_callback_) {

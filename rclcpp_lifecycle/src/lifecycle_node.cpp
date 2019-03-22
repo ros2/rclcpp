@@ -224,7 +224,7 @@ LifecycleNode::get_callback_groups() const
   return node_base_->get_callback_groups();
 }
 
-rclcpp::GraphEvent::SharedPtr
+rclcpp::Event::SharedPtr
 LifecycleNode::get_graph_event()
 {
   return node_graph_->get_graph_event();
@@ -232,7 +232,7 @@ LifecycleNode::get_graph_event()
 
 void
 LifecycleNode::wait_for_graph_change(
-  rclcpp::GraphEvent::SharedPtr event,
+  rclcpp::Event::SharedPtr event,
   std::chrono::nanoseconds timeout)
 {
   node_graph_->wait_for_graph_change(event, timeout);

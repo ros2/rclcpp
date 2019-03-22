@@ -88,7 +88,7 @@
  * - Graph Events (a waitable event object that wakes up when the graph changes):
  *   - rclcpp::Node::get_graph_event()
  *   - rclcpp::Node::wait_for_graph_change()
- *   - rclcpp::GraphEvent
+ *   - rclcpp::Event
  * - List topic names and types:
  *   - rclcpp::Node::get_topic_names_and_types()
  * - Get the number of publishers or subscribers on a topic:

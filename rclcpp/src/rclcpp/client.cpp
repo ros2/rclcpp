@@ -41,7 +41,6 @@ ClientBase::ClientBase(
   context_(node_base->get_context())
 {
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
-
   rcl_client_t * new_rcl_client = new rcl_client_t;
   *new_rcl_client = rcl_get_zero_initialized_client();
   client_handle_.reset(
@@ -112,80 +111,6 @@ std::shared_ptr<const rcl_event_t>
 ClientBase::get_event_handle() const
 {
   return event_handle_;
-}
-
-size_t
-ClientBase::get_number_of_ready_clients()
-{
-  return 1;
-}
-
-size_t
-ClientBase::get_number_of_ready_events()
-{
-  return 1;
-}
-
-bool
-ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
-{
-  if (
-    rcl_wait_set_add_client(wait_set, client_handle_.get(), &wait_set_client_index_) != RCL_RET_OK)
-  {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Couldn't add client to wait set: %s", rcl_get_error_string().str);
-    return false;
-  }
-
-  // TODO(mm318): enable QOS event callbacks for clients
-  // (currently only for publishers and subscriptions)
-  wait_set_event_index_ = 0;
-  // if (
-  //   rcl_wait_set_add_event(wait_set, event_handle_.get(), &wait_set_event_index_) != RCL_RET_OK)
-  // {
-  //   RCUTILS_LOG_ERROR_NAMED(
-  //     "rclcpp",
-  //     "Couldn't add client event to wait set: %s", rcl_get_error_string().str);
-  //   return false;
-  // }
-
-  return true;
-}
-
-bool
-ClientBase::is_ready(rcl_wait_set_t * wait_set)
-{
-  client_ready_ = (wait_set->clients[wait_set_client_index_] == client_handle_.get());
-  event_ready_ = (wait_set->events[wait_set_event_index_] == event_handle_.get());
-  return client_ready_ || event_ready_;
-}
-
-void
-ClientBase::execute()
-{
-  if (client_ready_) {
-    auto request_header = create_request_header();
-    std::shared_ptr<void> response = create_response();
-    rcl_ret_t status = rcl_take_response(
-      get_client_handle().get(),
-      request_header.get(),
-      response.get());
-    if (status == RCL_RET_OK) {
-      handle_response(request_header, response);
-    } else if (status != RCL_RET_CLIENT_TAKE_FAILED) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "take response failed for client of service '%s': %s",
-        get_service_name(), rcl_get_error_string().str);
-      rcl_reset_error();
-    }
-  }
-
-  if (event_ready_) {
-    // rcl_take_event();
-    // handle_event(example_event);
-  }
 }
 
 bool

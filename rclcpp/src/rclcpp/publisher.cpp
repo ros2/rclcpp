@@ -38,7 +38,6 @@
 
 using rclcpp::PublisherBase;
 
-
 PublisherBase::PublisherBase(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
   const std::string & topic,
@@ -64,9 +63,9 @@ PublisherBase::PublisherBase(
         rcl_node_get_name(rcl_node_handle),
         rcl_node_get_namespace(rcl_node_handle));
     }
+
     rclcpp::exceptions::throw_from_rcl_error(ret, "could not create publisher");
   }
-
   // Life time of this object is tied to the publisher handle.
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(&publisher_handle_);
   if (!publisher_rmw_handle) {

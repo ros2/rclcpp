@@ -207,8 +207,9 @@ void TimeSource::create_clock_sub()
   auto allocator = std::make_shared<Alloc>();
   auto cb = std::bind(&TimeSource::clock_cb, this, std::placeholders::_1);
 
-  clock_subscription_ = rclcpp::create_subscription<MessageT, decltype(cb), Alloc, MessageT,
-      SubscriptionT>(
+  clock_subscription_ = rclcpp::create_subscription<
+    MessageT, decltype(cb), Alloc, MessageT, SubscriptionT
+    >(
     node_topics_.get(),
     topic_name,
     std::move(cb),

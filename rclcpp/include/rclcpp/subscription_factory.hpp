@@ -113,7 +113,6 @@ create_subscription_factory(
         event_callbacks,
         msg_mem_strat);
       auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
-
       return sub_base_ptr;
     };
 

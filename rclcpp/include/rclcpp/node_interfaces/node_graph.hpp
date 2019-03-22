@@ -25,7 +25,7 @@
 
 #include "rcl/guard_condition.h"
 
-#include "rclcpp/graph_event.hpp"
+#include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
@@ -102,14 +102,14 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  rclcpp::GraphEvent::SharedPtr
+  rclcpp::Event::SharedPtr
   get_graph_event();
 
   RCLCPP_PUBLIC
   virtual
   void
   wait_for_graph_change(
-    rclcpp::GraphEvent::SharedPtr event,
+    rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
@@ -133,7 +133,7 @@ private:
   /// For notifying waiting threads (wait_for_graph_change()) on changes (notify_graph_change()).
   std::condition_variable graph_cv_;
   /// Weak references to graph events out on loan.
-  std::vector<rclcpp::GraphEvent::WeakPtr> graph_events_;
+  std::vector<rclcpp::Event::WeakPtr> graph_events_;
   /// Number of graph events out on loan, used to determine if the graph should be monitored.
   /** graph_users_count_ is atomic so that it can be accessed without acquiring the graph_mutex_ */
   std::atomic_size_t graph_users_count_;

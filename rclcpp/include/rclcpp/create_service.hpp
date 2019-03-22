@@ -46,11 +46,10 @@ create_service(
   service_options.qos = qos_profile;
 
   auto serv = Service<ServiceT>::make_shared(
-    node_base->get_shared_rcl_node_handle(), service_name, service_options, any_service_callback);
+    node_base->get_shared_rcl_node_handle(),
+    service_name, any_service_callback, service_options);
   auto serv_base_ptr = std::dynamic_pointer_cast<ServiceBase>(serv);
-
   node_services->add_service(serv_base_ptr, group);
-
   return serv;
 }
 

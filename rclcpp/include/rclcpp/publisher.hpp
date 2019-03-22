@@ -40,7 +40,6 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-
 namespace rclcpp
 {
 
@@ -188,17 +187,16 @@ public:
     const rcl_publisher_options_t & intra_process_options);
 
 protected:
-  using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
-
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
-
-  std::vector<std::shared_ptr<QOSEventBase>> event_handles_;
-
-  bool use_intra_process_;
   rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
+  
+std::vector<std::shared_ptr<QOSEventBase>> event_handles_;
+
+  using IntraProcessManagerWeakPtr =
+    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
   StoreMessageCallbackT store_intra_process_message_;
@@ -401,6 +399,7 @@ protected:
   }
 
   std::shared_ptr<MessageAlloc> message_allocator_;
+
   MessageDeleter message_deleter_;
 };
 
