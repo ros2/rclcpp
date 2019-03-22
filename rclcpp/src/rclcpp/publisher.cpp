@@ -254,7 +254,7 @@ PublisherBase::setup_intra_process(
   if (intra_process_options.qos.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
     RCLCPP_WARN(
       rclcpp::get_logger("rclcpp"),
-      "Enabled intraprocess communication with incompatible QoS policy.");
+      "Skipping intraprocess communication with incompatible QoS policy.");
     return;
   }
   const char * topic_name = this->get_topic_name();
