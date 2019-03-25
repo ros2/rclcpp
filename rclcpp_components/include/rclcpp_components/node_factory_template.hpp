@@ -29,11 +29,9 @@ public:
 
   virtual
   NodeInstanceWrapper
-  create_node_instance(std::string node_name,
-                       std::string node_namespace,
-                       rclcpp::NodeOptions options)
+  create_node_instance(rclcpp::NodeOptions options)
   {
-    auto node = std::make_shared<NodeT>(node_name, node_namespace, options);
+    auto node = std::make_shared<NodeT>(options);
 
     return NodeInstanceWrapper(node,
              std::bind(&NodeT::get_node_base_interface, node));

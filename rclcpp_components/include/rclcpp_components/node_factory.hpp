@@ -28,9 +28,7 @@ public:
 
   virtual
   NodeInstanceWrapper
-  create_node_instance(std::string node_name,
-                       std::string node_namespace,
-                       rclcpp::NodeOptions options) = 0;
+  create_node_instance(rclcpp::NodeOptions options) = 0;
 };
 }  // namespace rclcpp_components
 

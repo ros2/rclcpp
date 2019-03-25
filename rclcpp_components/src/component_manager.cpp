@@ -109,16 +109,25 @@ ComponentManager::OnLoadNode(
           parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
         }
 
+        std::vector<std::string> remap_rules { request->remap_rules };
+
+        if (request->node_name.length())
+        {
+          remap_rules.push_back("__node:=" + request->node_name);
+        }
+
+        if (request->node_namespace.length())
+        {
+          remap_rules.push_back("__ns:=" + request->node_namespace);
+        }
+
         auto options = rclcpp::NodeOptions()
           .initial_parameters(parameters)
-          .arguments(request->remap_rules);
+          .arguments(remap_rules);
 
         auto node_id = unique_id++;
 
-        node_wrappers_[node_id] = node_factory->create_node_instance(
-            request->node_name,
-            request->node_namespace,
-            options);
+        node_wrappers_[node_id] = node_factory->create_node_instance(options);
 
         auto node = node_wrappers_[node_id].get_node_base_interface();
         if (auto exec = executor_.lock())

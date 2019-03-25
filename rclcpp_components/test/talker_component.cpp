@@ -11,8 +11,8 @@ namespace test_rclcpp_components
 class Talker : public rclcpp::Node
 {
 public:
-  Talker(std::string node_name, std::string node_namespace, rclcpp::NodeOptions options)
-  : Node(node_name, node_namespace, options),
+  Talker(rclcpp::NodeOptions options)
+  : Node("talker", options),
     count_(0)
   {
     // Create a publisher of "std_mgs/String" messages on the "chatter" topic.
