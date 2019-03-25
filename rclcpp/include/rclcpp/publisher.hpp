@@ -128,6 +128,12 @@ public:
   size_t
   get_intra_process_subscription_count() const;
 
+  /// Get actual qos settings
+  /** \return The number of subscriptions. */
+  RCLCPP_PUBLIC
+  std::shared_ptr<rmw_qos_profile_t>
+  get_actual_qos() const;
+
   /// Compare this publisher to a gid.
   /**
    * Note that this function calls the next function.
