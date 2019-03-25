@@ -159,7 +159,7 @@ PublisherBase::get_subscription_count() const
 {
   size_t inter_process_subscription_count = 0;
 
-  rmw_ret_t status = rcl_publisher_get_subscription_count(
+  rcl_ret_t status = rcl_publisher_get_subscription_count(
     &publisher_handle_,
     &inter_process_subscription_count);
 
@@ -195,6 +195,30 @@ PublisherBase::get_intra_process_subscription_count() const
             "destruction of intra process manager");
   }
   return ipm->get_subscription_count(intra_process_publisher_id_);
+}
+
+std::shared_ptr<rmw_qos_profile_t>
+PublisherBase::get_actual_qos() const
+{
+  auto qos = std::make_shared<rmw_qos_profile_t>();
+
+  rcl_ret_t status = rcl_publisher_get_actual_qos(
+    &publisher_handle_,
+    qos.get());
+  if (RCL_RET_PUBLISHER_INVALID == status) {
+    rcl_reset_error();  /* next call will reset error message if not context */
+    if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
+      rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
+      if (nullptr != context && !rcl_context_is_valid(context)) {
+        /* publisher is invalid due to context being shutdown */
+        return 0;
+      }
+    }
+  }
+  if (RCL_RET_OK != status) {
+    rclcpp::exceptions::throw_from_rcl_error(status, "failed to get qos settings");
+  }
+  return qos;
 }
 
 bool
