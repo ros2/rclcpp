@@ -25,11 +25,11 @@ ComponentManager::ComponentManager(std::weak_ptr<rclcpp::executor::Executor> exe
 : Node("ComponentManager"),
   executor_(executor)
 {
-  loadNode_srv_ = create_service<LoadNode>("_container/load_node",
+  loadNode_srv_ = create_service<LoadNode>("~/_container/load_node",
       std::bind(&ComponentManager::OnLoadNode, this, _1, _2, _3));
-  unloadNode_srv_ = create_service<UnloadNode>("_container/unload_node",
+  unloadNode_srv_ = create_service<UnloadNode>("~/_container/unload_node",
       std::bind(&ComponentManager::OnUnloadNode, this, _1, _2, _3));
-  listNodes_srv_ = create_service<ListNodes>("_container/list_nodes",
+  listNodes_srv_ = create_service<ListNodes>("~/_container/list_nodes",
       std::bind(&ComponentManager::OnListNodes, this, _1, _2, _3));
 }
 
