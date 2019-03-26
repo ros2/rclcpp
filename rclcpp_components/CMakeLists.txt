@@ -38,29 +38,6 @@ endif()
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
-
-  find_package(std_msgs REQUIRED)
-
-  set(node_plugins "")
-
-  add_library(
-    test_components
-    SHARED
-    test/talker_component.cpp
-  )
-  ament_target_dependencies(
-    test_components
-    "class_loader"
-    "rclcpp"
-    "std_msgs"
-  )
-  set(node_plugins "${node_plugins}test_rclcpp_components::Talker;$<TARGET_FILE:test_components>\n")
-
-  file(GENERATE
-    OUTPUT
-    "${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>/share/ament_index/resource_index/rclcpp_components/${PROJECT_NAME}"
-    CONTENT "${node_plugins}")
-
 endif()
 
 # Install executables

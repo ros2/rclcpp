@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_COMPONENTS__COMPONENT_MANAGER_HPP__
-#define RCLCPP_COMPONENTS__COMPONENT_MANAGER_HPP__
+#ifndef COMPONENT_MANAGER_HPP__
+#define COMPONENT_MANAGER_HPP__
+
+#include <map>
+#include <memory>
+#include <string>
 
 #include "ament_index_cpp/get_resource.hpp"
 #include "class_loader/class_loader.hpp"
@@ -38,7 +42,7 @@ public:
   using UnloadNode = composition_interfaces::srv::UnloadNode;
   using ListNodes = composition_interfaces::srv::ListNodes;
 
-  ComponentManager(std::weak_ptr<rclcpp::executor::Executor> executor);
+  explicit ComponentManager(std::weak_ptr<rclcpp::executor::Executor> executor);
 
 private:
   void OnLoadNode(
@@ -71,4 +75,4 @@ private:
 
 }  // namespace rclcpp_components
 
-#endif  // RCLCPP_COMPONENTS__COMPONENT_MANAGER_HPP__
+#endif  // COMPONENT_MANAGER_HPP__

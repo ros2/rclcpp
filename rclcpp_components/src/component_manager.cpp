@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "component_manager.hpp"
 #include "filesystem_helper.hpp"
 #include "split.hpp"
@@ -104,20 +108,17 @@ ComponentManager::OnLoadNode(
         auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
 
         std::vector<rclcpp::Parameter> parameters;
-        for (auto & p: request->parameters)
-        {
+        for (auto & p : request->parameters) {
           parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
         }
 
-        std::vector<std::string> remap_rules { request->remap_rules };
+        std::vector<std::string> remap_rules {request->remap_rules};
 
-        if (request->node_name.length())
-        {
+        if (request->node_name.length()) {
           remap_rules.push_back("__node:=" + request->node_name);
         }
 
-        if (request->node_namespace.length())
-        {
+        if (request->node_namespace.length()) {
           remap_rules.push_back("__ns:=" + request->node_namespace);
         }
 
@@ -130,8 +131,7 @@ ComponentManager::OnLoadNode(
         node_wrappers_[node_id] = node_factory->create_node_instance(options);
 
         auto node = node_wrappers_[node_id].get_node_base_interface();
-        if (auto exec = executor_.lock())
-        {
+        if (auto exec = executor_.lock()) {
           exec->add_node(node, true);
         }
         response->full_node_name = node->get_fully_qualified_name();
@@ -167,18 +167,14 @@ ComponentManager::OnUnloadNode(
 
   auto wrapper = node_wrappers_.find(request->unique_id);
 
-  if(wrapper == node_wrappers_.end())
-  {
+  if (wrapper == node_wrappers_.end()) {
     response->success = false;
     std::stringstream ss;
     ss << "No node found with unique_id: " << request->unique_id;
     response->error_message = ss.str();
     RCLCPP_WARN(get_logger(), ss.str());
-  }
-  else
-  {
-    if (auto exec = executor_.lock())
-    {
+  } else {
+    if (auto exec = executor_.lock()) {
       exec->remove_node(wrapper->second.get_node_base_interface());
     }
     node_wrappers_.erase(wrapper);
@@ -195,11 +191,10 @@ ComponentManager::OnListNodes(
   (void) request_header;
   (void) request;
 
-  for(auto& wrapper: node_wrappers_)
-  {
+  for (auto & wrapper : node_wrappers_) {
     response->unique_ids.push_back(wrapper.first);
     response->full_node_names.push_back(
-        wrapper.second.get_node_base_interface()->get_fully_qualified_name());
+      wrapper.second.get_node_base_interface()->get_fully_qualified_name());
   }
 }
 

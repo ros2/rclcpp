@@ -15,6 +15,8 @@
 #ifndef RCLCPP_COMPONENTS__NODE_FACTORY_TEMPLATE_HPP__
 #define RCLCPP_COMPONENTS__NODE_FACTORY_TEMPLATE_HPP__
 
+#include <memory>
+
 #include "rclcpp_components/node_factory.hpp"
 
 namespace rclcpp_components
