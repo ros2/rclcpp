@@ -71,6 +71,18 @@ public:
   std::vector<std::string>
   get_node_names() const = 0;
 
+  /// Return a vector of existing node namespaces (string).
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::string>
+  get_node_namespaces() const = 0;
+
+  /// Return a vector of formatted node names and namespaces (string).
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::string>
+  get_node_names_namespaces_formatted(const char & separator) const = 0;
+
   /// Return a vector of existing node names and namespaces (pair of string).
   RCLCPP_PUBLIC
   virtual
