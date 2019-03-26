@@ -23,6 +23,7 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/event.hpp"
 #include "rclcpp/graph_listener.hpp"
+#include "rcutils/types.h"
 
 using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -48,7 +49,7 @@ NodeGraph::~NodeGraph()
   }
 }
 
-std::map<std::string, std::vector<std::string>>
+std::map<std::string, std::vector<std::vector<std::string>>>
 NodeGraph::get_topic_names_and_types(bool no_demangle) const
 {
   rcl_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_names_and_types();
@@ -59,22 +60,55 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
     &allocator,
     no_demangle,
     &topic_names_and_types);
+
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get topic names and types: ") +
       rcl_get_error_string().str;
     rcl_reset_error();
-    if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
-      error_msg += std::string(", failed also to cleanup topic names and types, leaking memory: ") +
-        rcl_get_error_string().str;
-    }
-    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+    throw std::runtime_error(error_msg);
   }
 
-  std::map<std::string, std::vector<std::string>> topics_and_types;
+  auto fail_cleanup = [&topic_names_and_types](std::string error_msg) {
+      if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
+        error_msg +=
+          std::string(", failed also to cleanup topic names and types, leaking memory: ") +
+          rcl_get_error_string().str;
+      }
+      rcl_reset_error();
+      throw std::runtime_error(error_msg);
+    };
+
+  std::map<std::string, std::vector<std::vector<std::string>>> topics_and_types;
   for (size_t i = 0; i < topic_names_and_types.names.size; ++i) {
     std::string topic_name = topic_names_and_types.names.data[i];
-    for (size_t j = 0; j < topic_names_and_types.types[i].size; ++j) {
-      topics_and_types[topic_name].emplace_back(topic_names_and_types.types[i].data[j]);
+
+    size_t types_size = 0u;
+    rcutils_ret_t rcutils_ret = rcutils_array_list_get_size(
+      &topic_names_and_types.types[i], &types_size);
+    if (RCUTILS_RET_OK != rcutils_ret) {
+      auto error_msg = std::string("failed to get topic types size: ") +
+        rcutils_get_error_string().str;
+      rcutils_reset_error();
+      fail_cleanup(error_msg);  // throws
+    }
+
+    for (size_t j = 0; j < types_size; ++j) {
+      rcutils_string_array_t type_name;
+      rcutils_ret_t rcutils_ret = rcutils_array_list_get(
+        &topic_names_and_types.types[i], j, &type_name);
+      if (RCUTILS_RET_OK != rcutils_ret) {
+        auto error_msg = std::string("failed to get topic type name: ") +
+          rcutils_get_error_string().str;
+        rcutils_reset_error();
+        fail_cleanup(error_msg);  // throws
+      }
+
+      std::vector<std::string> type_parts(type_name.size);
+      for (size_t k = 0; k < type_name.size; ++k) {
+        type_parts[k] = std::string(type_name.data[k]);
+      }
+
+      topics_and_types[topic_name].emplace_back(type_parts);
     }
   }
 
@@ -89,7 +123,7 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
   return topics_and_types;
 }
 
-std::map<std::string, std::vector<std::string>>
+std::map<std::string, std::vector<std::vector<std::string>>>
 NodeGraph::get_service_names_and_types() const
 {
   rcl_names_and_types_t service_names_and_types = rcl_get_zero_initialized_names_and_types();
@@ -103,19 +137,50 @@ NodeGraph::get_service_names_and_types() const
     auto error_msg = std::string("failed to get service names and types: ") +
       rcl_get_error_string().str;
     rcl_reset_error();
-    if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
-      error_msg +=
-        std::string(", failed also to cleanup service names and types, leaking memory: ") +
-        rcl_get_error_string().str;
-    }
-    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+    throw std::runtime_error(error_msg);
   }
 
-  std::map<std::string, std::vector<std::string>> services_and_types;
+  auto fail_cleanup = [&service_names_and_types](std::string error_msg) {
+      if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+        error_msg +=
+          std::string(", failed also to cleanup service names and types, leaking memory: ") +
+          rcl_get_error_string().str;
+      }
+      rcl_reset_error();
+      throw std::runtime_error(error_msg);
+    };
+
+  std::map<std::string, std::vector<std::vector<std::string>>> services_and_types;
   for (size_t i = 0; i < service_names_and_types.names.size; ++i) {
     std::string service_name = service_names_and_types.names.data[i];
-    for (size_t j = 0; j < service_names_and_types.types[i].size; ++j) {
-      services_and_types[service_name].emplace_back(service_names_and_types.types[i].data[j]);
+
+    size_t types_size = 0u;
+    rcutils_ret_t rcutils_ret = rcutils_array_list_get_size(
+      &service_names_and_types.types[i], &types_size);
+    if (RCUTILS_RET_OK != rcutils_ret) {
+      auto error_msg = std::string("failed to get service types size: ") +
+        rcutils_get_error_string().str;
+      rcutils_reset_error();
+      fail_cleanup(error_msg);  // throws
+    }
+
+    for (size_t j = 0; j < types_size; ++j) {
+      rcutils_string_array_t type_name;
+      rcutils_ret_t rcutils_ret = rcutils_array_list_get(
+        &service_names_and_types.types[i], j, &type_name);
+      if (RCUTILS_RET_OK != rcutils_ret) {
+        auto error_msg = std::string("failed to get service type name: ") +
+          rcutils_get_error_string().str;
+        rcutils_reset_error();
+        fail_cleanup(error_msg);  // throws
+      }
+
+      std::vector<std::string> type_parts(type_name.size);
+      for (size_t k = 0; k < type_name.size; ++k) {
+        type_parts[k] = std::string(type_name.data[k]);
+      }
+
+      services_and_types[service_name].emplace_back(type_parts);
     }
   }
 

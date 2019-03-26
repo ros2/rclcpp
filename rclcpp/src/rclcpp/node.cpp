@@ -276,13 +276,13 @@ Node::get_node_names() const
   return node_graph_->get_node_names();
 }
 
-std::map<std::string, std::vector<std::string>>
+std::map<std::string, std::vector<std::vector<std::string>>>
 Node::get_topic_names_and_types() const
 {
   return node_graph_->get_topic_names_and_types();
 }
 
-std::map<std::string, std::vector<std::string>>
+std::map<std::string, std::vector<std::vector<std::string>>>
 Node::get_service_names_and_types() const
 {
   return node_graph_->get_service_names_and_types();
