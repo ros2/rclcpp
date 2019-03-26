@@ -68,6 +68,16 @@ public:
   RCLCPP_PUBLIC
   virtual
   std::vector<std::string>
+  get_node_names_namespaces_formatted(const char & separator) const;
+
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::string>
+  get_node_namespaces() const;
+
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<std::string>
   get_node_names() const;
 
   RCLCPP_PUBLIC
