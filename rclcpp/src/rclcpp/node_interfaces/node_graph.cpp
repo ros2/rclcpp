@@ -132,38 +132,14 @@ NodeGraph::get_service_names_and_types() const
 }
 
 std::vector<std::string>
-NodeGraph::get_node_names_namespaces_formatted(const char & separator = ',') const
-{
-  std::vector<std::string> nodes;
-  auto names_and_namespaces = get_node_names_and_namespaces();
-
-  // Create list of strings in the format of "Name<separator>Namespace"
-  std::transform(names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(nodes),
-    [&](std::pair<std::string, std::string> nns){return nns.first + separator + nns.second;});
-  return nodes;
-}
-
-std::vector<std::string>
-NodeGraph::get_node_namespaces() const
-{
-  std::vector<std::string> nodes;
-  auto names_and_namespaces = get_node_names_and_namespaces();
-
-  // Create list of strings containing only namespaces
-  std::transform(names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(nodes),
-    [](std::pair<std::string, std::string> nns){return nns.second;});
-  return nodes;
-}
-
-std::vector<std::string>
 NodeGraph::get_node_names() const
 {
   std::vector<std::string> nodes;
   auto names_and_namespaces = get_node_names_and_namespaces();
 
-  for (const auto & it : names_and_namespaces) {
-    nodes.push_back(it.first);
-  }
+  std::transform(names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(
+      nodes),
+    [&](std::pair<std::string, std::string> nns) {return nns.second + "/" + nns.first;});
   return nodes;
 }
 

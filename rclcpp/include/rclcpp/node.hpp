@@ -921,14 +921,6 @@ public:
   get_node_names() const;
 
   RCLCPP_PUBLIC
-  std::vector<std::string>
-  get_node_namespaces() const;
-
-  RCLCPP_PUBLIC
-  std::vector<std::string>
-  get_node_names_namespaces_formatted(const char & separator) const;
-
-  RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types() const;
 
