@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "ament_index_cpp/get_resource.hpp"
 
 #include "component_manager.hpp"
 #include "filesystem_helper.hpp"
@@ -57,7 +60,7 @@ ComponentManager::OnLoadNode(
   }
 
   std::vector<std::string> lines = split(content, '\n', true);
-  for (auto line : lines) {
+  for (const auto &  line : lines) {
     std::vector<std::string> parts = split(line, ';');
     if (parts.size() != 2) {
       RCLCPP_ERROR(get_logger(), "Invalid resource entry");
@@ -81,7 +84,7 @@ ComponentManager::OnLoadNode(
     class_loader::ClassLoader * loader;
 
     if (loaders_.find(library_path) != loaders_.end()) {
-      loader = loaders_[library_path];
+      loader = loaders_[library_path].get();
     } else {
       RCLCPP_INFO(get_logger(), "Load library %s", library_path.c_str());
       try {
@@ -99,26 +102,27 @@ ComponentManager::OnLoadNode(
       }
     }
     auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
-    for (auto clazz : classes) {
+    for (const auto & clazz : classes) {
       RCLCPP_INFO(get_logger(), "Found class %s", class_name.c_str());
       if (clazz == class_name || clazz == fq_class_name) {
         RCLCPP_INFO(get_logger(), "Instantiate class %s", class_name.c_str());
+
         loaders_[library_path] = loader;
 
         auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
 
         std::vector<rclcpp::Parameter> parameters;
-        for (auto & p : request->parameters) {
+        for (const auto & p : request->parameters) {
           parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
         }
 
         std::vector<std::string> remap_rules {request->remap_rules};
 
-        if (request->node_name.length()) {
+        if (!request->node_name.empty()) {
           remap_rules.push_back("__node:=" + request->node_name);
         }
 
-        if (request->node_namespace.length()) {
+        if (!request->node_namespace.empty()) {
           remap_rules.push_back("__ns:=" + request->node_namespace);
         }
 

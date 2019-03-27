@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 
-#include "ament_index_cpp/get_resource.hpp"
 #include "class_loader/class_loader.hpp"
 
 #include "rclcpp/executor.hpp"

@@ -14,7 +14,7 @@
 
 # copied from rclcpp_components/rclcpp_components-extras.cmake
 
-# register ament_package() hook for node plugins once
+# register ament_package() hook for node plugins once.
 macro(_rclcpp_components_register_package_hook)
   if(NOT DEFINED _RCLCPP_COMPONENTS_PACKAGE_HOOK_REGISTERED)
     set(_RCLCPP_COMPONENTS_PACKAGE_HOOK_REGISTERED TRUE)

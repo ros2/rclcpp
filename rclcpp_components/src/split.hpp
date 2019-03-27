@@ -64,7 +64,7 @@ std::vector<std::string> split(
   ss.str(s);
   std::string item;
   while (std::getline(ss, item, delim)) {
-    if (skip_empty && item == "") {
+    if (skip_empty && item.empty() ) {
       continue;
     }
     result.push_back(item);
