@@ -244,18 +244,12 @@ PublisherBase::setup_intra_process(
   IntraProcessManagerSharedPtr ipm,
   const rcl_publisher_options_t & intra_process_options)
 {
-  // Skip intraprocess configuration if the "durability" qos policy is not "volatile".
-  // TODO(ivanpauno):
-  //    RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT is for FastRTPS and Connext also
-  //    equal to "volatile". It would be good to add a
-  //    is_durability_policy_volatile(rcl_publisher_options_t options)
-  //    method to rcl, and corresponging methods in rmw and the rmw vendor
-  //    implementations, which will also checks if "system_default" is "volatile" or not.
-  if (intra_process_options.qos.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
-    RCLCPP_WARN(
-      rclcpp::get_logger("rclcpp"),
-      "Skipping intraprocess communication with incompatible QoS policy.");
-    return;
+  // Intraprocess configuration is only available with "volatile"
+  // durability qos policy.
+  if (this->get_actual_qos().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+    throw std::runtime_error(
+            "Intraprocess communication is not allowed"
+            " with any qos policy different than volatile.");
   }
   const char * topic_name = this->get_topic_name();
   if (!topic_name) {
