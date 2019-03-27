@@ -270,18 +270,6 @@ Node::get_node_names() const
   return node_graph_->get_node_names();
 }
 
-std::vector<std::string>
-Node::get_node_namespaces() const
-{
-  return node_graph_->get_node_namespaces();
-}
-
-std::vector<std::string>
-Node::get_node_names_namespaces_formatted(const char &separator) const
-{
-  return node_graph_->get_node_names_namespaces_formatted(separator);
-}
-
 std::map<std::string, std::vector<std::string>>
 Node::get_topic_names_and_types() const
 {
