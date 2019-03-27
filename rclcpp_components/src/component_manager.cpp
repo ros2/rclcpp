@@ -28,7 +28,8 @@ using namespace std::placeholders;
 namespace rclcpp_components
 {
 
-ComponentManager::ComponentManager(std::weak_ptr<rclcpp::executor::Executor> executor)
+ComponentManager::ComponentManager(
+  std::weak_ptr<rclcpp::executor::Executor> executor)
 : Node("ComponentManager"),
   executor_(executor)
 {
@@ -60,7 +61,7 @@ ComponentManager::OnLoadNode(
   }
 
   std::vector<std::string> lines = split(content, '\n', true);
-  for (const auto &  line : lines) {
+  for (const auto & line : lines) {
     std::vector<std::string> parts = split(line, ';');
     if (parts.size() != 2) {
       RCLCPP_ERROR(get_logger(), "Invalid resource entry");
@@ -88,7 +89,8 @@ ComponentManager::OnLoadNode(
     } else {
       RCLCPP_INFO(get_logger(), "Load library %s", library_path.c_str());
       try {
-        loader = new class_loader::ClassLoader(library_path);
+        loaders_[library_path] = std::make_unique<class_loader::ClassLoader>(library_path);
+        loader = loaders_[library_path].get();
       } catch (const std::exception & ex) {
         RCLCPP_ERROR(get_logger(), "Failed to load library: %s", ex.what());
         response->error_message = "Failed to load library";
@@ -106,9 +108,6 @@ ComponentManager::OnLoadNode(
       RCLCPP_INFO(get_logger(), "Found class %s", class_name.c_str());
       if (clazz == class_name || clazz == fq_class_name) {
         RCLCPP_INFO(get_logger(), "Instantiate class %s", class_name.c_str());
-
-        loaders_[library_path] = loader;
-
         auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
 
         std::vector<rclcpp::Parameter> parameters;
@@ -146,7 +145,6 @@ ComponentManager::OnLoadNode(
     }
 
     // no matching class found in loader
-    delete loader;
     RCLCPP_ERROR(
       get_logger(), "Failed to find class with the requested plugin name '%s' in "
       "the loaded library",

@@ -41,7 +41,8 @@ public:
   using UnloadNode = composition_interfaces::srv::UnloadNode;
   using ListNodes = composition_interfaces::srv::ListNodes;
 
-  explicit ComponentManager(std::weak_ptr<rclcpp::executor::Executor> executor);
+  ComponentManager(
+    std::weak_ptr<rclcpp::executor::Executor> executor);
 
 private:
   void OnLoadNode(
@@ -62,10 +63,9 @@ private:
 private:
   std::weak_ptr<rclcpp::executor::Executor> executor_;
 
-  std::map<uint64_t, rclcpp_components::NodeInstanceWrapper> node_wrappers_;
-  std::map<std::string, class_loader::ClassLoader *> loaders_;
-
   uint64_t unique_id {1};
+  std::map<uint64_t, rclcpp_components::NodeInstanceWrapper> node_wrappers_;
+  std::map<std::string, std::unique_ptr<class_loader::ClassLoader>> loaders_;
 
   rclcpp::Service<LoadNode>::SharedPtr loadNode_srv_;
   rclcpp::Service<UnloadNode>::SharedPtr unloadNode_srv_;
