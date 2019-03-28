@@ -259,6 +259,7 @@ public:
   set_parameter_if_not_set(
     const std::string & name,
     const ParameterT & value);
+
   /// Set a map of parameters with the same prefix.
   /**
    * For each key in the map, a parameter with a name of "name.key" will be set
