@@ -255,6 +255,26 @@ public:
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
+  template<typename ParameterT>
+  void
+  set_parameter_if_not_set(
+    const std::string & name,
+    const ParameterT & value);
+
+  /// Set a map of parameters with the same prefix.
+  /**
+   * For each key in the map, a parameter with a name of "name.key" will be set
+   * to the value in the map.
+   *
+   * \param[in] name The prefix of the parameters to set.
+   * \param[in] values The parameters to set in the given prefix.
+   */
+  template<typename MapValueT>
+  void
+  set_parameters_if_not_set(
+    const std::string & name,
+    const std::map<std::string, MapValueT> & values);
+
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
@@ -272,6 +292,49 @@ public:
   template<typename ParameterT>
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
+
+  /// Assign the value of the map parameter if set into the values argument.
+  /**
+   * Parameter names that are part of a map are of the form "name.member".
+   * This API gets all parameters that begin with "name", storing them into the
+   * map with the name of the parameter and their value.
+   * If there are no members in the named map, then the "values" argument is not changed.
+   *
+   * \param[in] name The prefix of the parameters to get.
+   * \param[out] values The map of output values, with one std::string,MapValueT
+   *                    per parameter.
+   * \returns true if values was changed, false otherwise
+   */
+  template<typename MapValueT>
+  bool
+  get_parameters(
+    const std::string & name,
+    std::map<std::string, MapValueT> & values) const;
+
+  template<typename ParameterT>
+  bool
+  get_parameter_or(
+    const std::string & name,
+    ParameterT & value,
+    const ParameterT & alternative_value) const;
+
+  /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
+  /**
+   * If the parameter is set, then the "value" argument is assigned the value
+   * in the parameter.
+   * If the parameter is not set, then the "value" argument is assigned the "alternative_value",
+   * and the parameter is set to the "alternative_value" on the node.
+   *
+   * \param[in] name The name of the parameter to get.
+   * \param[out] value The output where the value of the parameter should be assigned.
+   * \param[in] alternative_value Value to be stored in output and parameter if the parameter was not set.
+   */
+  template<typename ParameterT>
+  void
+  get_parameter_or_set(
+    const std::string & name,
+    ParameterT & value,
+    const ParameterT & alternative_value);
 
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
