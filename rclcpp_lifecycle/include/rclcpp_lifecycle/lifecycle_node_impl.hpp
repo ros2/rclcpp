@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/intra_process_manager.hpp"
