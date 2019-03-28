@@ -285,18 +285,10 @@ private:
     std::hash<uint64_t>, std::equal_to<uint64_t>,
     RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
 
-  struct strcmp_wrapper
-  {
-    bool
-    operator()(const char * lhs, const char * rhs) const
-    {
-      return std::strcmp(lhs, rhs) < 0;
-    }
-  };
   using IDTopicMap = std::map<
-    const char *,
+    std::string,
     AllocSet,
-    strcmp_wrapper,
+    std::less<std::string>,
     RebindAlloc<std::pair<const char * const, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
