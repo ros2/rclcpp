@@ -200,15 +200,13 @@ PublisherBase::get_intra_process_subscription_count() const
 rmw_qos_profile_t
 PublisherBase::get_actual_qos() const
 {
-  rmw_qos_profile_t qos;
-
-  rcl_ret_t status = rcl_publisher_get_actual_qos(
-    &publisher_handle_,
-    &qos);
-  if (RCL_RET_OK != status) {
-    rclcpp::exceptions::throw_from_rcl_error(status, "failed to get qos settings");
+  const rmw_qos_profile_t * qos = rcl_publisher_get_actual_qos(&publisher_handle_);
+  if (!qos) {
+    auto msg = std::string("failed to get qos settings: ") + rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
   }
-  return qos;
+  return *qos;
 }
 
 bool
