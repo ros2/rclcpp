@@ -328,7 +328,6 @@ public:
    * \param[out] value The output where the value of the parameter should be assigned.
    * \param[in] alternative_value Value to be stored in output and parameter if the parameter was not set.
    */
-
   template<typename ParameterT>
   void
   get_parameter_or_set(
