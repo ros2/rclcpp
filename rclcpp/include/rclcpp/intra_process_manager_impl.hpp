@@ -289,7 +289,7 @@ private:
     std::string,
     AllocSet,
     std::less<std::string>,
-    RebindAlloc<std::pair<const char * const, AllocSet>>>;
+    RebindAlloc<std::pair<const std::string, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
