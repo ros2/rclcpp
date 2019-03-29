@@ -186,7 +186,7 @@ public:
    * \param[in] msg A shared pointer to the message to send.
    */
   virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     this->do_inter_process_publish(msg.get());
     if (store_intra_process_message_) {
@@ -218,48 +218,7 @@ public:
       if (RCL_RET_OK != status) {
         rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
       }
-    } else {
-      // Always destroy the message, even if we don't consume it, for consistency.
-      msg.reset();
     }
-  }
-
-  virtual void
-  publish(const std::shared_ptr<MessageT> & msg)
-  {
-    // Avoid allocating when not using intra process.
-    if (!store_intra_process_message_) {
-      // In this case we're not using intra process.
-      return this->do_inter_process_publish(msg.get());
-    }
-    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    // TODO(wjwwood):
-    //   The intra process manager should probably also be able to store
-    //   shared_ptr's and do the "smart" thing based on other intra process
-    //   subscriptions. For now call the other publish().
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg.get());
-    MessageUniquePtr unique_msg(ptr, message_deleter_);
-    return this->publish(unique_msg);
-  }
-
-  virtual void
-  publish(std::shared_ptr<const MessageT> msg)
-  {
-    // Avoid allocating when not using intra process.
-    if (!store_intra_process_message_) {
-      // In this case we're not using intra process.
-      return this->do_inter_process_publish(msg.get());
-    }
-    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    // TODO(wjwwood):
-    //   The intra process manager should probably also be able to store
-    //   shared_ptr's and do the "smart" thing based on other intra process
-    //   subscriptions. For now call the other publish().
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg.get());
-    MessageUniquePtr unique_msg(ptr, message_deleter_);
-    return this->publish(unique_msg);
   }
 
   virtual void
@@ -274,16 +233,7 @@ public:
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
     MessageUniquePtr unique_msg(ptr, message_deleter_);
-    return this->publish(unique_msg);
-  }
-
-  virtual void
-  publish(const MessageT * msg)
-  {
-    if (!msg) {
-      throw std::runtime_error("msg argument is nullptr");
-    }
-    return this->publish(*msg);
+    return this->publish(std::move(unique_msg));
   }
 
   void
