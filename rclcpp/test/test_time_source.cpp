@@ -72,7 +72,7 @@ void trigger_clock_changes(
     auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
     msg->clock.sec = i;
     msg->clock.nanosec = 1000;
-    clock_pub->publish(msg);
+    clock_pub->publish(*msg);
     executor.spin_once(1000000ns);
     loop_rate.sleep();
   }
