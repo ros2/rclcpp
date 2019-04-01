@@ -73,6 +73,40 @@ throw_from_rcl_error(
   }
 }
 
+  std::exception_ptr
+  from_rcl_error(
+    rcl_ret_t ret,
+    const std::string & prefix,
+    const rcl_error_state_t * error_state,
+    void (* reset_error)())
+  {
+    if (RCL_RET_OK == ret) {
+      return std::make_exception_ptr(std::invalid_argument("ret is RCL_RET_OK"));
+    }
+    if (!error_state) {
+      error_state = rcl_get_error_state();
+    }
+    if (!error_state) {
+      return std::make_exception_ptr(std::runtime_error("rcl error state is not set"));
+    }
+    std::string formated_prefix = prefix;
+    if (!prefix.empty()) {
+      formated_prefix += ": ";
+    }
+    RCLErrorBase base_exc(ret, error_state);
+    if (reset_error) {
+      reset_error();
+    }
+    switch (ret) {
+      case RCL_RET_BAD_ALLOC:
+        return std::make_exception_ptr(RCLBadAlloc(base_exc));
+      case RCL_RET_INVALID_ARGUMENT:
+        return std::make_exception_ptr(RCLInvalidArgument(base_exc, formated_prefix));
+      default:
+        return std::make_exception_ptr(RCLError(base_exc, formated_prefix));
+    }
+  }
+
 RCLErrorBase::RCLErrorBase(rcl_ret_t ret, const rcl_error_state_t * error_state)
 : ret(ret), message(error_state->message), file(error_state->file), line(error_state->line_number),
   formatted_message(rcl_get_error_string().str)
