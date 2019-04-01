@@ -139,7 +139,7 @@ NodeGraph::get_node_names() const
 
   std::transform(names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(
       nodes),
-    [&](std::pair<std::string, std::string> nns) {return nns.second + "/" + nns.first;});
+    [](std::pair<std::string, std::string> nns) {return nns.second + "/" + nns.first;});
   return nodes;
 }
 
