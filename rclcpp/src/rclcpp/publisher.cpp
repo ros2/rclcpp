@@ -159,7 +159,7 @@ PublisherBase::get_subscription_count() const
 {
   size_t inter_process_subscription_count = 0;
 
-  rmw_ret_t status = rcl_publisher_get_subscription_count(
+  rcl_ret_t status = rcl_publisher_get_subscription_count(
     &publisher_handle_,
     &inter_process_subscription_count);
 
@@ -195,6 +195,18 @@ PublisherBase::get_intra_process_subscription_count() const
             "destruction of intra process manager");
   }
   return ipm->get_subscription_count(intra_process_publisher_id_);
+}
+
+rmw_qos_profile_t
+PublisherBase::get_actual_qos() const
+{
+  const rmw_qos_profile_t * qos = rcl_publisher_get_actual_qos(&publisher_handle_);
+  if (!qos) {
+    auto msg = std::string("failed to get qos settings: ") + rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+  return *qos;
 }
 
 bool
