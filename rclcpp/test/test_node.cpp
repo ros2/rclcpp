@@ -99,6 +99,17 @@ TEST_F(TestNode, get_name_and_namespace) {
     EXPECT_STREQ("/my/ns", node->get_namespace());
     EXPECT_STREQ("/my/ns/my_node", node->get_fully_qualified_name());
   }
+  {
+    auto node1 = std::make_shared<rclcpp::Node>("my_node1", "my/ns");
+    auto node2 = std::make_shared<rclcpp::Node>("my_node2", "my/ns");
+    auto node3 = std::make_shared<rclcpp::Node>("my_node3", "/ns2");
+    auto node4 = std::make_shared<rclcpp::Node>("my_node4", "my/ns3");
+    auto names_and_namespaces = node1->get_node_names();
+    EXPECT_EQ("/my/ns/my_node1", names_and_namespaces[0]);
+    EXPECT_EQ("/my/ns/my_node2", names_and_namespaces[1]);
+    EXPECT_EQ("/ns2/my_node3", names_and_namespaces[2]);
+    EXPECT_EQ("/my/ns3/my_node4", names_and_namespaces[3]);
+  }
 }
 
 TEST_F(TestNode, subnode_get_name_and_namespace) {
