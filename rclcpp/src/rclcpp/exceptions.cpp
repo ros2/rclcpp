@@ -89,9 +89,9 @@ throw_from_rcl_error(
     if (!error_state) {
       return std::make_exception_ptr(std::runtime_error("rcl error state is not set"));
     }
-    std::string formated_prefix = prefix;
+    std::string formatted_prefix = prefix;
     if (!prefix.empty()) {
-      formated_prefix += ": ";
+      formatted_prefix += ": ";
     }
     RCLErrorBase base_exc(ret, error_state);
     if (reset_error) {
@@ -101,9 +101,9 @@ throw_from_rcl_error(
       case RCL_RET_BAD_ALLOC:
         return std::make_exception_ptr(RCLBadAlloc(base_exc));
       case RCL_RET_INVALID_ARGUMENT:
-        return std::make_exception_ptr(RCLInvalidArgument(base_exc, formated_prefix));
+        return std::make_exception_ptr(RCLInvalidArgument(base_exc, formatted_prefix));
       default:
-        return std::make_exception_ptr(RCLError(base_exc, formated_prefix));
+        return std::make_exception_ptr(RCLError(base_exc, formatted_prefix));
     }
   }
 
