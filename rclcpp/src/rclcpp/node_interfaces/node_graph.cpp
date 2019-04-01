@@ -137,8 +137,7 @@ NodeGraph::get_node_names() const
   std::vector<std::string> nodes;
   auto names_and_namespaces = get_node_names_and_namespaces();
 
-  std::transform(names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(
-      nodes),
+  std::transform(names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(nodes),
     [](std::pair<std::string, std::string> nns) {return nns.second + "/" + nns.first;});
   return nodes;
 }
@@ -174,10 +173,12 @@ NodeGraph::get_node_names_and_namespaces() const
     throw std::runtime_error(error_msg);
   }
 
-  std::vector<std::pair<std::string, std::string>> node_names(node_names_c.size);
+  // TODO(jhdcs): If ranges are ever added to ROS2, replace following with range-based filter-transform
+  std::vector<std::pair<std::string, std::string>> node_names;
+  node_names.reserve(node_names_c.size);
   for (size_t i = 0; i < node_names_c.size; ++i) {
     if (node_names_c.data[i] && node_namespaces_c.data[i]) {
-      node_names.push_back(std::make_pair(node_names_c.data[i], node_namespaces_c.data[i]));
+      node_names.emplace_back(node_names_c.data[i], node_namespaces_c.data[i]);
     }
   }
 
