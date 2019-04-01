@@ -135,7 +135,9 @@ public:
    * depends on the underlying rmw implementation.
    * If the underlying setting in use can't be represented in ROS terms,
    * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
-   * \return The actual qos settings. */
+   * May throw runtime_error when an unexpected error occurs.
+   * \return The actual qos settings.
+   */
   RCLCPP_PUBLIC
   rmw_qos_profile_t
   get_actual_qos() const;
