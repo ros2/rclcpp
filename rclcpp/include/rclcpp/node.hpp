@@ -65,14 +65,14 @@ namespace rclcpp
 {
 
 /// Used as argument in create_publisher and create_subscriber.
-enum class IntraprocessSetting
+enum class IntraProcessSetting
 {
   /// Explicitly enable intraprocess comm at publisher/subscription level.
-  ENABLE,
+  Enable,
   /// Explicitly disable intraprocess comm at publisher/subscription level.
-  DISABLE,
+  Disable,
   /// Take intraprocess configuration from the node.
-  DEFAULT_FROM_NODE
+  NodeDefault
 };
 
 /// Node is the single point of entry for creating publishers and subscribers.
@@ -164,7 +164,7 @@ public:
   create_publisher(
     const std::string & topic_name, size_t qos_history_depth,
     std::shared_ptr<Alloc> allocator = nullptr,
-    IntraprocessSetting use_intra_process_comm = IntraprocessSetting::DEFAULT_FROM_NODE);
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create and return a Publisher.
   /**
@@ -181,7 +181,7 @@ public:
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     std::shared_ptr<Alloc> allocator = nullptr,
-    IntraprocessSetting use_intra_process_comm = IntraprocessSetting::DEFAULT_FROM_NODE);
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create and return a Subscription.
   /**
@@ -215,7 +215,7 @@ public:
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr,
-    IntraprocessSetting use_intra_process_comm = IntraprocessSetting::DEFAULT_FROM_NODE);
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create and return a Subscription.
   /**
@@ -249,7 +249,7 @@ public:
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr,
-    IntraprocessSetting use_intra_process_comm = IntraprocessSetting::DEFAULT_FROM_NODE);
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create a timer.
   /**

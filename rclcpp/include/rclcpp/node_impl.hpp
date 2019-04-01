@@ -56,7 +56,7 @@ std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name, size_t qos_history_depth,
   std::shared_ptr<Alloc> allocator,
-  IntraprocessSetting use_intra_process_comm)
+  IntraProcessSetting use_intra_process_comm)
 {
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
@@ -83,7 +83,7 @@ template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
-  std::shared_ptr<Alloc> allocator, IntraprocessSetting use_intra_process_comm)
+  std::shared_ptr<Alloc> allocator, IntraProcessSetting use_intra_process_comm)
 {
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
@@ -91,14 +91,17 @@ Node::create_publisher(
 
   bool use_intra_process;
   switch (use_intra_process_comm) {
-    case IntraprocessSetting::ENABLE:
+    case IntraProcessSetting::Enable:
       use_intra_process = true;
       break;
-    case IntraprocessSetting::DISABLE:
+    case IntraProcessSetting::Disable:
       use_intra_process = false;
       break;
-    default:  // IntraprocessSetting::DEFAULT_FROM_NODE
+    case IntraProcessSetting::NodeDefault:
       use_intra_process = this->get_node_options().use_intra_process_comms();
+      break;
+    default:
+      throw std::runtime_error("Unrecognized IntraProcessSetting value");
       break;
   }
 
@@ -126,7 +129,7 @@ Node::create_subscription(
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator,
-  IntraprocessSetting use_intra_process_comm)
+  IntraProcessSetting use_intra_process_comm)
 {
   using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
 
@@ -141,14 +144,17 @@ Node::create_subscription(
 
   bool use_intra_process;
   switch (use_intra_process_comm) {
-    case IntraprocessSetting::ENABLE:
+    case IntraProcessSetting::Enable:
       use_intra_process = true;
       break;
-    case IntraprocessSetting::DISABLE:
+    case IntraProcessSetting::Disable:
       use_intra_process = false;
       break;
-    default:  // IntraprocessSetting::DEFAULT_FROM_NODE
+    case IntraProcessSetting::NodeDefault:
       use_intra_process = this->get_node_options().use_intra_process_comms();
+      break;
+    default:
+      throw std::runtime_error("Unrecognized IntraProcessSetting value");
       break;
   }
 
@@ -180,7 +186,7 @@ Node::create_subscription(
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator,
-  IntraprocessSetting use_intra_process_comm)
+  IntraProcessSetting use_intra_process_comm)
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
