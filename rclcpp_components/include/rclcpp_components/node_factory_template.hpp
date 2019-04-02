@@ -32,7 +32,7 @@ public:
 
   virtual
   NodeInstanceWrapper
-  create_node_instance(rclcpp::NodeOptions options)
+  create_node_instance(const rclcpp::NodeOptions & options)
   {
     auto node = std::make_shared<NodeT>(options);
 

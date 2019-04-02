@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "component_manager.hpp"
+
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "ament_index_cpp/get_resource.hpp"
-
-#include "component_manager.hpp"
-#include "filesystem_helper.hpp"
-#include "split.hpp"
+#include "rcpputils/filesystem_helper.hpp"
+#include "rcpputils/split.hpp"
 
 using namespace std::placeholders;
 
@@ -60,9 +60,9 @@ ComponentManager::OnLoadNode(
     return;
   }
 
-  std::vector<std::string> lines = split(content, '\n', true);
+  std::vector<std::string> lines = rcpputils::split(content, '\n', true);
   for (const auto & line : lines) {
-    std::vector<std::string> parts = split(line, ';');
+    std::vector<std::string> parts = rcpputils::split(line, ';');
     if (parts.size() != 2) {
       RCLCPP_ERROR(get_logger(), "Invalid resource entry");
       response->error_message = "Invalid resource entry";
@@ -79,7 +79,7 @@ ComponentManager::OnLoadNode(
 
     // load node plugin
     std::string library_path = parts[1];
-    if (!fs::path(library_path).is_absolute()) {
+    if (!rcpputils::fs::path(library_path).is_absolute()) {
       library_path = base_path + "/" + library_path;
     }
     class_loader::ClassLoader * loader;

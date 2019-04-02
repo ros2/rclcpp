@@ -12,24 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP_COMPONENTS__NODE_FACTORY_HPP__
-#define RCLCPP_COMPONENTS__NODE_FACTORY_HPP__
+#include <memory>
 
-#include "rclcpp_components/node_instance_wrapper.hpp"
+#include "rclcpp/rclcpp.hpp"
 
-namespace rclcpp_components
+#include "component_manager.hpp"
+
+int main(int argc, char * argv[])
 {
-class NodeFactory
-{
-public:
-  NodeFactory() = default;
-
-  virtual ~NodeFactory() = default;
-
-  virtual
-  NodeInstanceWrapper
-  create_node_instance(const rclcpp::NodeOptions & options) = 0;
-};
-}  // namespace rclcpp_components
-
-#endif  // RCLCPP_COMPONENTS__NODE_FACTORY_HPP__
+  rclcpp::init(argc, argv);
+  auto exec = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+  auto node = std::make_shared<rclcpp_components::ComponentManager>(exec);
+  exec->add_node(node);
+  exec->spin();
+}
