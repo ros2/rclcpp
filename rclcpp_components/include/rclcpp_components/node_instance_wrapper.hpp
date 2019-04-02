@@ -22,6 +22,7 @@
 
 namespace rclcpp_components
 {
+/// The NodeInstanceWrapper encapsulates the node instance.
 class NodeInstanceWrapper
 {
 public:
@@ -38,12 +39,22 @@ public:
   : node_instance_(node_instance), node_base_interface_getter_(node_base_interface_getter)
   {}
 
+  /// Get a type-erased pointer to the original Node instance
+  /**
+   * This is only for debugging and special cases.
+   * For most cases `get_node_base_interface` will be sufficient
+   * \return Shared pointer to the encapsulated Node instance.
+   */
   const std::shared_ptr<void>
   get_node_instance() const
   {
     return node_instance_;
   }
 
+  /// Get NodeBaseInterface pointer for the encapsulated Node Instance.
+  /**
+   * \return Shared NodeBaseInterface pointer of the encapsulated Node instance.
+   */
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_base_interface()
   {

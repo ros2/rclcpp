@@ -13,9 +13,9 @@
 # limitations under the License.
 
 #
-# Register an rclcpp_component with the ament resource index.
+# Register an rclcpp component with the ament resource index.
 #
-# The passed library can contain multiple nodes
+# The passed library can contain multiple nodes each registered via macro.
 #
 # :param target: the shared library target
 # :type target: string

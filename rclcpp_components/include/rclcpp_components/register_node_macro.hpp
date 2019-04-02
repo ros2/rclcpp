@@ -18,6 +18,18 @@
 #include "class_loader/class_loader.hpp"
 #include "rclcpp_components/node_factory_template.hpp"
 
+/// Register a component that can be dynamically loaded at runtime.
+/**
+ * The registration macro should appear once per component per library.
+ * The macro should appear in a single translation unit.
+ *
+ * Valid arguments for NodeClass shall:
+ *  * Have a constructor that takes a single argument that is a `rclcpp::NodeOptions` instance.
+ *  * Have a method of of the signature:
+ *      `rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface`
+ *
+ * Note: NodeClass does not need to inherit from `rclcpp::Node`, but it is the easiest way.
+ */
 #define RCLCPP_COMPONENTS_REGISTER_NODE(NodeClass) \
   CLASS_LOADER_REGISTER_CLASS(rclcpp_components::NodeFactoryTemplate<NodeClass>, \
     rclcpp_components::NodeFactory)

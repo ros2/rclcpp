@@ -23,6 +23,11 @@
 namespace rclcpp_components
 {
 
+/// NodeFactoryTemplate is a convenience class for instantiating components.
+/**
+ * The NodeFactoryTemplate class can be used to easily proved the NodeFactory interface for
+ * components that implement a single-argument constructor and `get_node_base_interface`.
+ */
 template<typename NodeT>
 class NodeFactoryTemplate : public NodeFactory
 {
@@ -30,14 +35,18 @@ public:
   NodeFactoryTemplate() = default;
   virtual ~NodeFactoryTemplate() = default;
 
+  /// Create an instance of a component
+  /**
+   * \param[in] options Additional options used in the construction of the component.
+   */
   virtual
   NodeInstanceWrapper
   create_node_instance(const rclcpp::NodeOptions & options)
   {
     auto node = std::make_shared<NodeT>(options);
 
-    return NodeInstanceWrapper(node,
-             std::bind(&NodeT::get_node_base_interface, node));
+    return NodeInstanceWrapper(
+      node, std::bind(&NodeT::get_node_base_interface, node));
   }
 };
 }  // namespace rclcpp_components

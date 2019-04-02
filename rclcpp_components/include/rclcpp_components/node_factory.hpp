@@ -19,6 +19,13 @@
 
 namespace rclcpp_components
 {
+
+/// The NodeFactory interface is used by the class loader to instantiate components.
+/**
+ * The NodeFactory interface serves two purposes:
+ *  * It allows for classes not derived from `rclcpp::Node` to be used as components.
+ *  * It derived constructors to be called when components are loaded.
+ */
 class NodeFactory
 {
 public:
@@ -26,6 +33,10 @@ public:
 
   virtual ~NodeFactory() = default;
 
+  /// Create an instance of a component
+  /**
+   * \param[in] options Additional options used in the construction of the component.
+   */
   virtual
   NodeInstanceWrapper
   create_node_instance(const rclcpp::NodeOptions & options) = 0;
