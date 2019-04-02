@@ -14,11 +14,12 @@
 
 #include "rclcpp/node_interfaces/node_graph.hpp"
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
-#include <algorithm>
+
 
 #include "rcl/graph.h"
 #include "rclcpp/exceptions.hpp"
