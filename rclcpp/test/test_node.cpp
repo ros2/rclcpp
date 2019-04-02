@@ -105,10 +105,14 @@ TEST_F(TestNode, get_name_and_namespace) {
     auto node3 = std::make_shared<rclcpp::Node>("my_node3", "/ns2");
     auto node4 = std::make_shared<rclcpp::Node>("my_node4", "my/ns3");
     auto names_and_namespaces = node1->get_node_names();
-    EXPECT_EQ("/my/ns/my_node1", names_and_namespaces[0]);
-    EXPECT_EQ("/my/ns/my_node2", names_and_namespaces[1]);
-    EXPECT_EQ("/ns2/my_node3", names_and_namespaces[2]);
-    EXPECT_EQ("/my/ns3/my_node4", names_and_namespaces[3]);
+    auto name_namespace_set = std::set<std::string>(names_and_namespaces.begin(),
+      names_and_namespaces.end());
+    std::function<bool (std::string)> Set_Contains = [&](std::string string_key)
+      {return (name_namespace_set.find(string_key) != name_namespace_set.end());};
+    EXPECT_TRUE(Set_Contains("/my/ns/my_node1"));
+    EXPECT_TRUE(Set_Contains("/my/ns/my_node2"));
+    EXPECT_TRUE(Set_Contains("/ns2/my_node3"));
+    EXPECT_TRUE(Set_Contains("/my/ns3/my_node4"));
   }
 }
 
