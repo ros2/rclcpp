@@ -20,7 +20,6 @@
 #include <utility>
 #include <vector>
 
-
 #include "rcl/graph.h"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/event.hpp"
