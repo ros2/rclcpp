@@ -14,6 +14,9 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <string>
+
 #include "composition_interfaces/srv/load_node.hpp"
 #include "composition_interfaces/srv/unload_node.hpp"
 #include "composition_interfaces/srv/list_nodes.hpp"

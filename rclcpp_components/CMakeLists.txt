@@ -83,7 +83,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_component_manager test/test_component_manager.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
-  if (TARGET test_component_manager)
+  if(TARGET test_component_manager)
     target_link_libraries(test_component_manager component_manager)
     target_include_directories(test_component_manager PRIVATE src)
   endif()
@@ -91,7 +91,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_component_manager_api test/test_component_manager_api.cpp
     APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
-  if (TARGET test_component_manager_api)
+  if(TARGET test_component_manager_api)
     target_link_libraries(test_component_manager_api component_manager)
     target_include_directories(test_component_manager_api PRIVATE src)
   endif()

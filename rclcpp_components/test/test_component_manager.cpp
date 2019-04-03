@@ -14,17 +14,19 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 #include "component_manager.hpp"
 
 #include "rcpputils/filesystem_helper.hpp"
 
 class TestComponentManager : public ::testing::Test
 {
-  protected:
-    static void SetUpTestCase()
-    {
-      rclcpp::init(0, nullptr);
-    }
+protected:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 };
 
 TEST_F(TestComponentManager, get_component_resources_invalid)
@@ -33,7 +35,7 @@ TEST_F(TestComponentManager, get_component_resources_invalid)
   auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
 
   EXPECT_THROW(manager->get_component_resources("invalid_package"),
-      rclcpp_components::ComponentManagerException);
+    rclcpp_components::ComponentManagerException);
 }
 
 TEST_F(TestComponentManager, get_component_resources_valid)
@@ -65,8 +67,7 @@ TEST_F(TestComponentManager, create_component_factory_valid)
   EXPECT_NO_THROW(auto factory = manager->create_component_factory(resources[0]););
   EXPECT_NO_THROW(auto factory = manager->create_component_factory(resources[0]););
 
-  for (const auto & resource: resources)
-  {
+  for (const auto & resource : resources) {
     auto factory = manager->create_component_factory(resource);
     EXPECT_NE(nullptr, factory);
   }
@@ -79,12 +80,10 @@ TEST_F(TestComponentManager, create_component_factory_invalid)
 
   // Test invalid library
   EXPECT_THROW(manager->create_component_factory({"foo_class", "invalid_library.so"}),
-      rclcpp_components::ComponentManagerException);
+    rclcpp_components::ComponentManagerException);
 
   // Test valid library with invalid class
   auto resources = manager->get_component_resources("rclcpp_components");
   auto factory = manager->create_component_factory({"foo_class", resources[0].second});
   EXPECT_EQ(nullptr, factory);
 }
-
-

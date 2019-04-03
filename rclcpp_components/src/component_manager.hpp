@@ -18,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "class_loader/class_loader.hpp"
@@ -35,7 +36,7 @@
 namespace rclcpp_components
 {
 
-class ComponentManagerException: public std::runtime_error
+class ComponentManagerException : public std::runtime_error
 {
 public:
   explicit ComponentManagerException(const std::string & error_desc)

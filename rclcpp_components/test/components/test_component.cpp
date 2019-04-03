@@ -1,4 +1,4 @@
-// Copyright 2016 Open Source Robotics Foundation, Inc.
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ namespace test_rclcpp_components
 class TestComponentFoo : public rclcpp::Node
 {
 public:
-  TestComponentFoo(rclcpp::NodeOptions options)
-    : rclcpp::Node("test_component_foo", options)
+  explicit TestComponentFoo(rclcpp::NodeOptions options)
+  : rclcpp::Node("test_component_foo", options)
   {
   }
 };
@@ -30,8 +30,8 @@ public:
 class TestComponentBar : public rclcpp::Node
 {
 public:
-  TestComponentBar(rclcpp::NodeOptions options)
-    : rclcpp::Node("test_component_bar", options)
+  explicit TestComponentBar(rclcpp::NodeOptions options)
+  : rclcpp::Node("test_component_bar", options)
   {
   }
 };
@@ -40,8 +40,8 @@ public:
 class TestComponentNoNode
 {
 public:
-  TestComponentNoNode(rclcpp::NodeOptions options):
-    node_("test_component_no_node", options)
+  explicit TestComponentNoNode(rclcpp::NodeOptions options)
+  : node_("test_component_no_node", options)
   {
   }
 
@@ -66,4 +66,3 @@ private:
 RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::TestComponentFoo)
 RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::TestComponentBar)
 RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::TestComponentNoNode)
-

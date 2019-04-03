@@ -43,12 +43,10 @@ ComponentManager::ComponentManager(
 
 ComponentManager::~ComponentManager()
 {
-  if (node_wrappers_.size())
-  {
+  if (node_wrappers_.size()) {
     RCLCPP_DEBUG(get_logger(), "Removing components from executor");
     if (auto exec = executor_.lock()) {
-      for (auto & wrapper: node_wrappers_)
-      {
+      for (auto & wrapper : node_wrappers_) {
         exec->remove_node(wrapper.second.get_node_base_interface());
       }
     }
@@ -125,7 +123,7 @@ ComponentManager::OnLoadNode(
   try {
     auto resources = get_component_resources(request->package_name);
 
-    for (const auto & resource: resources) {
+    for (const auto & resource : resources) {
       if (resource.first != request->plugin_name) {
         continue;
       }
@@ -180,7 +178,6 @@ ComponentManager::OnLoadNode(
     response->error_message = ex.what();
     response->success = false;
   }
-  return;
 }
 
 void
