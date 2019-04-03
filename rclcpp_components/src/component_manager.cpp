@@ -166,16 +166,14 @@ ComponentManager::OnLoadNode(
       }
 
       try {
-        auto node_instance = factory->create_node_instance(options);
+        node_wrappers_[node_id] = factory->create_node_instance(options);
       } catch (...) {
         // In the case that the component constructor throws an exception,
         // rethrow into the following catch block.
         throw ComponentManagerException("Component constructor threw an exception");
       }
 
-      node_wrappers_[node_id] = node_instance;
-
-      auto node = node_instance.get_node_base_interface();
+      auto node = node_wrappers_[node_id].get_node_base_interface();
       if (auto exec = executor_.lock()) {
         exec->add_node(node, true);
       }

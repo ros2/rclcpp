@@ -42,7 +42,8 @@ public:
   /// Get a type-erased pointer to the original Node instance
   /**
    * This is only for debugging and special cases.
-   * For most cases `get_node_base_interface` will be sufficient
+   * For most cases `get_node_base_interface` will be sufficient.
+   *
    * \return Shared pointer to the encapsulated Node instance.
    */
   const std::shared_ptr<void>
