@@ -16,8 +16,28 @@
 
 #include <memory>
 
-rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr
+using rclcpp::intra_process_manager::FixedSizeString;
+using rclcpp::intra_process_manager::IntraProcessManagerImplBase;
+
+IntraProcessManagerImplBase::SharedPtr
 rclcpp::intra_process_manager::create_default_impl()
 {
   return std::make_shared<IntraProcessManagerImpl<>>();
+}
+
+FixedSizeString::FixedSizeString(const char * str)
+{
+  std::strncpy(str_, str, RMW_TOPIC_MAX_NAME_LENGTH + 1);
+}
+
+const char * FixedSizeString::c_str() const
+{
+  return str_;
+}
+
+bool rclcpp::intra_process_manager::operator<(
+  const FixedSizeString & lhs,
+  const FixedSizeString & rhs)
+{
+  return std::strcmp(lhs.c_str(), rhs.c_str());
 }

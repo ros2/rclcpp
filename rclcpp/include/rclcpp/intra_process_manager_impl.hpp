@@ -15,6 +15,8 @@
 #ifndef RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
 #define RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
 
+#include <rmw/validate_full_topic_name.h>
+
 #include <algorithm>
 #include <atomic>
 #include <cstring>
@@ -87,6 +89,17 @@ private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase)
 };
 
+class FixedSizeString
+{
+public:
+  explicit FixedSizeString(const char * str);
+  const char * c_str() const;
+
+private:
+  char str_[RMW_TOPIC_MAX_NAME_LENGTH + 1];
+};
+bool operator<(const FixedSizeString & lhs, const FixedSizeString & rhs);
+
 template<typename Allocator = std::allocator<void>>
 class IntraProcessManagerImpl : public IntraProcessManagerImplBase
 {
@@ -98,9 +111,7 @@ public:
   add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription)
   {
     subscriptions_[id] = subscription;
-    // subscription->get_topic_name() -> const char * can be used as the key,
-    // since subscriptions_ shares the ownership of subscription
-    subscription_ids_by_topic_[subscription->get_topic_name()].insert(id);
+    subscription_ids_by_topic_[FixedSizeString(subscription->get_topic_name())].insert(id);
   }
 
   void
@@ -175,7 +186,8 @@ public:
     }
 
     // Figure out what subscriptions should receive the message.
-    auto & destined_subscriptions = subscription_ids_by_topic_[publisher->get_topic_name()];
+    auto & destined_subscriptions =
+      subscription_ids_by_topic_[FixedSizeString(publisher->get_topic_name())];
     // Store the list for later comparison.
     if (info.target_subscriptions_by_message_sequence.count(message_seq) == 0) {
       info.target_subscriptions_by_message_sequence.emplace(
@@ -263,7 +275,7 @@ public:
     if (!publisher) {
       throw std::runtime_error("publisher has unexpectedly gone out of scope");
     }
-    auto sub_map_it = subscription_ids_by_topic_.find(publisher->get_topic_name());
+    auto sub_map_it = subscription_ids_by_topic_.find(FixedSizeString(publisher->get_topic_name()));
     if (sub_map_it == subscription_ids_by_topic_.end()) {
       // No intraprocess subscribers
       return 0;
@@ -286,10 +298,10 @@ private:
     RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
 
   using IDTopicMap = std::map<
-    std::string,
+    FixedSizeString,
     AllocSet,
-    std::less<std::string>,
-    RebindAlloc<std::pair<const std::string, AllocSet>>>;
+    std::less<FixedSizeString>,
+    RebindAlloc<std::pair<const FixedSizeString, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
