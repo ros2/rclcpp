@@ -71,6 +71,9 @@ def is_supported_feature_combination(feature_combination):
 #else
 @[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
 @{suffix = get_suffix_from_features(feature_combination)}@
+// The RCLCPP_@(severity)@(suffix) macro is surrounded by do { .. } while (0)
+// to implement the standard C macro idiom to make the macro safe in all
+// contexts; see http://c-faq.com/cpp/multistmt.html for more information.
 /**
  * \def RCLCPP_@(severity)@(suffix)
  * Log a message with severity @(severity)@
@@ -90,18 +93,20 @@ def is_supported_feature_combination(feature_combination):
  * It also accepts a single argument of type std::string.
  */
 #define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
-  static_assert( \
-    ::std::is_same<typename std::remove_reference<decltype(logger)>::type, \
-    typename ::rclcpp::Logger>::value, \
-    "First argument to logging macros must be an rclcpp::Logger"); \
-  RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
+  do { \
+    static_assert( \
+      ::std::is_same<typename std::remove_reference<decltype(logger)>::type, \
+      typename ::rclcpp::Logger>::value, \
+      "First argument to logging macros must be an rclcpp::Logger"); \
+    RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = get_macro_parameters(feature_combination).keys()}@
 @[ if params]@
-@(''.join(['    ' + p + ', \\\n' for p in params]))@
+@(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
-    logger.get_name(), \
-    rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
-      RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,""))
+      logger.get_name(), \
+      rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
+        RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,"")); \
+  } while (0)
 
 @[ end for]@
 #endif
