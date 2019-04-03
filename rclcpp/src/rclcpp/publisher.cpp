@@ -43,7 +43,7 @@ PublisherBase::PublisherBase(
   const rosidl_message_type_support_t & type_support,
   const rcl_publisher_options_t & publisher_options)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
-  use_intra_process_(false), intra_process_publisher_id_(0),
+  intra_process_is_enabled_(false), intra_process_publisher_id_(0),
   store_intra_process_message_(nullptr)
 {
   rcl_ret_t ret = rcl_publisher_init(
@@ -99,7 +99,7 @@ PublisherBase::~PublisherBase()
 
   auto ipm = weak_ipm_.lock();
 
-  if (!use_intra_process_) {
+  if (!intra_process_is_enabled_) {
     return;
   }
   if (!ipm) {
@@ -183,13 +183,12 @@ size_t
 PublisherBase::get_intra_process_subscription_count() const
 {
   auto ipm = weak_ipm_.lock();
-  if (!use_intra_process_) {
+  if (!intra_process_is_enabled_) {
     return 0;
   }
   if (!ipm) {
     // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
     //                  Same as wjwwood comment in publisher_factory create_shared_publish_callback.
-    //                  If we don't raise an error here, use_intra_process_ flag is unnecessary.
     throw std::runtime_error(
             "intra process subscriber count called after "
             "destruction of intra process manager");
@@ -243,6 +242,11 @@ PublisherBase::setup_intra_process(
   IntraProcessManagerSharedPtr ipm,
   const rcl_publisher_options_t & intra_process_options)
 {
+  // Intraprocess configuration is not allowed with "durability" qos policy non "volatile".
+  if (this->get_actual_qos().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+    throw exceptions::InvalidParametersException(
+            "intraprocess communication is not allowed with durability qos policy non-volatile");
+  }
   const char * topic_name = this->get_topic_name();
   if (!topic_name) {
     throw std::runtime_error("failed to get topic name");
@@ -273,7 +277,7 @@ PublisherBase::setup_intra_process(
   intra_process_publisher_id_ = intra_process_publisher_id;
   store_intra_process_message_ = store_callback;
   weak_ipm_ = ipm;
-  use_intra_process_ = true;
+  intra_process_is_enabled_ = true;
 
   // Life time of this object is tied to the publisher handle.
   rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(

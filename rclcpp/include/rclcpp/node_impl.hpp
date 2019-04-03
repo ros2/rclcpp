@@ -55,14 +55,16 @@ template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name, size_t qos_history_depth,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator,
+  IntraProcessSetting use_intra_process_comm)
 {
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
   }
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
-  return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos, allocator);
+  return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos,
+           allocator, use_intra_process_comm);
 }
 
 RCLCPP_LOCAL
@@ -81,17 +83,33 @@ template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator, IntraProcessSetting use_intra_process_comm)
 {
   if (!allocator) {
     allocator = std::make_shared<Alloc>();
+  }
+
+  bool use_intra_process;
+  switch (use_intra_process_comm) {
+    case IntraProcessSetting::Enable:
+      use_intra_process = true;
+      break;
+    case IntraProcessSetting::Disable:
+      use_intra_process = false;
+      break;
+    case IntraProcessSetting::NodeDefault:
+      use_intra_process = this->get_node_options().use_intra_process_comms();
+      break;
+    default:
+      throw std::runtime_error("Unrecognized IntraProcessSetting value");
+      break;
   }
 
   return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos_profile,
-    this->get_node_options().use_intra_process_comms(),
+    use_intra_process,
     allocator);
 }
 
@@ -110,7 +128,8 @@ Node::create_subscription(
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator,
+  IntraProcessSetting use_intra_process_comm)
 {
   using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
 
@@ -123,6 +142,22 @@ Node::create_subscription(
     msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
   }
 
+  bool use_intra_process;
+  switch (use_intra_process_comm) {
+    case IntraProcessSetting::Enable:
+      use_intra_process = true;
+      break;
+    case IntraProcessSetting::Disable:
+      use_intra_process = false;
+      break;
+    case IntraProcessSetting::NodeDefault:
+      use_intra_process = this->get_node_options().use_intra_process_comms();
+      break;
+    default:
+      throw std::runtime_error("Unrecognized IntraProcessSetting value");
+      break;
+  }
+
   return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
@@ -130,7 +165,7 @@ Node::create_subscription(
     qos_profile,
     group,
     ignore_local_publications,
-    this->get_node_options().use_intra_process_comms(),
+    use_intra_process,
     msg_mem_strat,
     allocator);
 }
@@ -150,7 +185,8 @@ Node::create_subscription(
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator,
+  IntraProcessSetting use_intra_process_comm)
 {
   rmw_qos_profile_t qos = rmw_qos_profile_default;
   qos.depth = qos_history_depth;
@@ -162,7 +198,8 @@ Node::create_subscription(
     group,
     ignore_local_publications,
     msg_mem_strat,
-    allocator);
+    allocator,
+    use_intra_process_comm);
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

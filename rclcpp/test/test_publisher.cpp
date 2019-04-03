@@ -30,9 +30,9 @@ protected:
     rclcpp::init(0, nullptr);
   }
 
-  void SetUp()
+  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
   {
-    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
   }
 
   void TearDown()
@@ -69,6 +69,7 @@ protected:
    Testing publisher construction and destruction.
  */
 TEST_F(TestPublisher, construction_and_destruction) {
+  initialize();
   using rcl_interfaces::msg::IntraProcessMessage;
   {
     auto publisher = node->create_publisher<IntraProcessMessage>("topic");
@@ -78,6 +79,26 @@ TEST_F(TestPublisher, construction_and_destruction) {
     ASSERT_THROW({
       auto publisher = node->create_publisher<IntraProcessMessage>("invalid_topic?");
     }, rclcpp::exceptions::InvalidTopicNameError);
+  }
+}
+
+/*
+   Testing publisher with intraprocess enabled and invalid QoS
+ */
+TEST_F(TestPublisher, intraprocess_with_invalid_qos) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+  rmw_qos_profile_t qos = {
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    1,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+    false
+  };
+  using rcl_interfaces::msg::IntraProcessMessage;
+  {
+    ASSERT_THROW(
+      {auto publisher = node->create_publisher<IntraProcessMessage>("topic", qos);},
+      rclcpp::exceptions::InvalidParametersException);
   }
 }
 
