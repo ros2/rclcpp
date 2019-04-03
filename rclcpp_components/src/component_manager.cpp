@@ -154,7 +154,24 @@ ComponentManager::OnLoadNode(
 
       auto node_id = unique_id++;
 
-      auto node_instance = factory->create_node_instance(options);
+      if (0 == node_id) {
+        // This puts a technical limit on the number of times you can add a component.
+        // But even if you could add (and remove) them at 1 kHz (very optimistic rate)
+        // it would still be a very long time before you could exhaust the pool of id's:
+        //   2^64 / 1000 times per sec / 60 sec / 60 min / 24 hours / 365 days = 584,942,417 years
+        // So around 585 million years. Even at 1 GHz, it would take 585 years.
+        // I think it's safe to avoid trying to handle overflow.
+        // If we roll over then it's most likely a bug.
+        throw std::overflow_error("exhausted the unique ids for components in this process");
+      }
+
+      try {
+        auto node_instance = factory->create_node_instance(options);
+      } catch (...) {
+        // In the case that the component constructor throws an exception,
+        // rethrow into the following catch block.
+        throw ComponentManagerException("Component constructor threw an exception");
+      }
 
       node_wrappers_[node_id] = node_instance;
 

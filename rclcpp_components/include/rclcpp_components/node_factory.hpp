@@ -24,7 +24,7 @@ namespace rclcpp_components
 /**
  * The NodeFactory interface serves two purposes:
  *  * It allows for classes not derived from `rclcpp::Node` to be used as components.
- *  * It derived constructors to be called when components are loaded.
+ *  * It allows derived constructors to be called when components are loaded.
  */
 class NodeFactory
 {
