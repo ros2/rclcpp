@@ -54,8 +54,10 @@
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_options.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
@@ -63,17 +65,6 @@
 
 namespace rclcpp
 {
-
-/// Used as argument in create_publisher and create_subscriber.
-enum class IntraProcessSetting
-{
-  /// Explicitly enable intraprocess comm at publisher/subscription level.
-  Enable,
-  /// Explicitly disable intraprocess comm at publisher/subscription level.
-  Disable,
-  /// Take intraprocess configuration from the node.
-  NodeDefault
-};
 
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node : public std::enable_shared_from_this<Node>
@@ -154,12 +145,30 @@ public:
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \param[in] options Additional options for the created Publisher.
+   * \return Shared pointer to the created publisher.
+   */
+  template<
+    typename MessageT,
+    typename Alloc = std::allocator<void>,
+    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
+  std::shared_ptr<PublisherT>
+  create_publisher(
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    const PublisherOptions<Alloc> & options = PublisherOptions<Alloc>());
+
+  /// Create and return a Publisher.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos_history_depth The depth of the publisher message queue.
    * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created publisher.
    */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
+  [[deprecated]]
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name, size_t qos_history_depth,
@@ -176,12 +185,42 @@ public:
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
+  [[deprecated]]
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     std::shared_ptr<Alloc> allocator = nullptr,
     IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
+
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] callback The user-defined callback function to receive a message
+   * \param[in] qos_history_depth The depth of the subscription's incoming message queue.
+   * \param[in] options Additional options for the creation of the Subscription.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    CallbackT && callback,
+    size_t qos_history_depth,
+    const SubscriptionOptions<Alloc> & options = SubscriptionOptions<Alloc>(),
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
+    msg_mem_strat = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -204,6 +243,7 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+  [[deprecated]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -238,6 +278,7 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+  [[deprecated]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
