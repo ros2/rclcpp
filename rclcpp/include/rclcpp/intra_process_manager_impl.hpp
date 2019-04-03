@@ -15,8 +15,6 @@
 #ifndef RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
 #define RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
 
-#include <rmw/validate_full_topic_name.h>
-
 #include <algorithm>
 #include <atomic>
 #include <cstring>
@@ -29,6 +27,8 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+#include "rmw/validate_full_topic_name.h"
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
@@ -89,20 +89,6 @@ private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase)
 };
 
-class FixedSizeString
-{
-public:
-  explicit FixedSizeString(const char * str);
-  const char * c_str() const;
-
-private:
-  char str_[RMW_TOPIC_MAX_NAME_LENGTH + 1];
-};
-
-RCLCPP_PUBLIC
-bool
-operator<(const FixedSizeString & lhs, const FixedSizeString & rhs);
-
 template<typename Allocator = std::allocator<void>>
 class IntraProcessManagerImpl : public IntraProcessManagerImplBase
 {
@@ -114,7 +100,7 @@ public:
   add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription)
   {
     subscriptions_[id] = subscription;
-    subscription_ids_by_topic_[FixedSizeString(subscription->get_topic_name())].insert(id);
+    subscription_ids_by_topic_[fixed_size_string(subscription->get_topic_name())].insert(id);
   }
 
   void
@@ -190,7 +176,7 @@ public:
 
     // Figure out what subscriptions should receive the message.
     auto & destined_subscriptions =
-      subscription_ids_by_topic_[FixedSizeString(publisher->get_topic_name())];
+      subscription_ids_by_topic_[fixed_size_string(publisher->get_topic_name())];
     // Store the list for later comparison.
     if (info.target_subscriptions_by_message_sequence.count(message_seq) == 0) {
       info.target_subscriptions_by_message_sequence.emplace(
@@ -278,7 +264,8 @@ public:
     if (!publisher) {
       throw std::runtime_error("publisher has unexpectedly gone out of scope");
     }
-    auto sub_map_it = subscription_ids_by_topic_.find(FixedSizeString(publisher->get_topic_name()));
+    auto sub_map_it =
+      subscription_ids_by_topic_.find(fixed_size_string(publisher->get_topic_name()));
     if (sub_map_it == subscription_ids_by_topic_.end()) {
       // No intraprocess subscribers
       return 0;
@@ -288,6 +275,16 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImpl)
+
+  using FixedSizeString = std::array<char, RMW_TOPIC_MAX_NAME_LENGTH + 1>;
+
+  FixedSizeString
+  fixed_size_string(const char * str) const
+  {
+    FixedSizeString ret = {0};
+    std::strncpy(ret.begin(), str, ret.size());
+    return ret;
+  }
 
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
