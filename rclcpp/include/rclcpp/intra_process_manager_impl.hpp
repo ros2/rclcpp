@@ -98,7 +98,10 @@ public:
 private:
   char str_[RMW_TOPIC_MAX_NAME_LENGTH + 1];
 };
-bool operator<(const FixedSizeString & lhs, const FixedSizeString & rhs);
+
+RCLCPP_PUBLIC
+bool
+operator<(const FixedSizeString & lhs, const FixedSizeString & rhs);
 
 template<typename Allocator = std::allocator<void>>
 class IntraProcessManagerImpl : public IntraProcessManagerImplBase
