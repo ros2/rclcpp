@@ -18,6 +18,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "class_loader/class_loader.hpp"
 
@@ -34,6 +35,13 @@
 namespace rclcpp_components
 {
 
+class ComponentManagerException: public std::runtime_error
+{
+public:
+  explicit ComponentManagerException(const std::string & error_desc)
+  : std::runtime_error(error_desc) {}
+};
+
 class ComponentManager : public rclcpp::Node
 {
 public:
@@ -41,21 +49,39 @@ public:
   using UnloadNode = composition_interfaces::srv::UnloadNode;
   using ListNodes = composition_interfaces::srv::ListNodes;
 
+  /// Represents a component resource.
+  /**
+   * Is a pair of class name (for class loader) and library path (absolute)
+   */
+  using ComponentResource = std::pair<std::string, std::string>;
+
   ComponentManager(
     std::weak_ptr<rclcpp::executor::Executor> executor);
 
+  ~ComponentManager();
+
+  /// Return a list of valid loadable components in a given package.
+  std::vector<ComponentResource>
+  get_component_resources(const std::string & package_name) const;
+
+  std::shared_ptr<rclcpp_components::NodeFactory>
+  create_component_factory(const ComponentResource & resource);
+
 private:
-  void OnLoadNode(
+  void
+  OnLoadNode(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<LoadNode::Request> request,
     std::shared_ptr<LoadNode::Response> response);
 
-  void OnUnloadNode(
+  void
+  OnUnloadNode(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<UnloadNode::Request> request,
     std::shared_ptr<UnloadNode::Response> response);
 
-  void OnListNodes(
+  void
+  OnListNodes(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<ListNodes::Request> request,
     std::shared_ptr<ListNodes::Response> response);
@@ -64,8 +90,8 @@ private:
   std::weak_ptr<rclcpp::executor::Executor> executor_;
 
   uint64_t unique_id {1};
-  std::map<uint64_t, rclcpp_components::NodeInstanceWrapper> node_wrappers_;
   std::map<std::string, std::unique_ptr<class_loader::ClassLoader>> loaders_;
+  std::map<uint64_t, rclcpp_components::NodeInstanceWrapper> node_wrappers_;
 
   rclcpp::Service<LoadNode>::SharedPtr loadNode_srv_;
   rclcpp::Service<UnloadNode>::SharedPtr unloadNode_srv_;

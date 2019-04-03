@@ -19,32 +19,35 @@ find_package(rcpputils REQUIRED)
 
 include_directories(include)
 
-add_executable(
-  component_container
-  src/component_container.cpp
+add_library(
+  component_manager
+  STATIC
   src/component_manager.cpp
 )
-
-ament_target_dependencies(component_container
+ament_target_dependencies(component_manager
   "ament_index_cpp"
   "class_loader"
   "composition_interfaces"
   "rclcpp"
   "rcpputils"
+)
+
+add_executable(
+  component_container
+  src/component_container.cpp
+)
+target_link_libraries(component_container component_manager)
+ament_target_dependencies(component_container
+  "rclcpp"
 )
 
 add_executable(
   component_container_mt
   src/component_container_mt.cpp
-  src/component_manager.cpp
 )
-
+target_link_libraries(component_container_mt component_manager)
 ament_target_dependencies(component_container_mt
-  "ament_index_cpp"
-  "class_loader"
-  "composition_interfaces"
   "rclcpp"
-  "rcpputils"
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -55,6 +58,43 @@ endif()
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  set(components "")
+  add_library(test_component SHARED test/components/test_component.cpp)
+  ament_target_dependencies(test_component
+    "class_loader"
+    "rclcpp"
+    "rclcpp_components")
+  #rclcpp_components_register_nodes(test_component "test_rclcpp_components::TestComponent")
+  set(components "${components}test_rclcpp_components::TestComponentFoo;$<TARGET_FILE:test_component>\n")
+  set(components "${components}test_rclcpp_components::TestComponentBar;$<TARGET_FILE:test_component>\n")
+  set(components "${components}test_rclcpp_components::TestComponentNoNode;$<TARGET_FILE:test_component>\n")
+
+  file(GENERATE
+    OUTPUT
+    "${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>/share/ament_index/resource_index/rclcpp_components/${PROJECT_NAME}"
+    CONTENT "${components}")
+
+  set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
+  if(WIN32)
+    set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
+  endif()
+
+  ament_add_gtest(test_component_manager test/test_component_manager.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if (TARGET test_component_manager)
+    target_link_libraries(test_component_manager component_manager)
+    target_include_directories(test_component_manager PRIVATE src)
+  endif()
+
+  ament_add_gtest(test_component_manager_api test/test_component_manager_api.cpp
+    APPEND_ENV AMENT_PREFIX_PATH=${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if (TARGET test_component_manager_api)
+    target_link_libraries(test_component_manager_api component_manager)
+    target_include_directories(test_component_manager_api PRIVATE src)
+  endif()
 endif()
 
 # Install executables

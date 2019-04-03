@@ -41,6 +41,79 @@ ComponentManager::ComponentManager(
       std::bind(&ComponentManager::OnListNodes, this, _1, _2, _3));
 }
 
+ComponentManager::~ComponentManager()
+{
+  if (node_wrappers_.size())
+  {
+    RCLCPP_DEBUG(get_logger(), "Removing components from executor");
+    if (auto exec = executor_.lock()) {
+      for (auto & wrapper: node_wrappers_)
+      {
+        exec->remove_node(wrapper.second.get_node_base_interface());
+      }
+    }
+  }
+}
+
+std::vector<ComponentManager::ComponentResource>
+ComponentManager::get_component_resources(const std::string & package_name) const
+{
+  std::string content;
+  std::string base_path;
+  if (!ament_index_cpp::get_resource(
+      "rclcpp_components", package_name, content, &base_path))
+  {
+    throw ComponentManagerException("Could not find requested resource in ament index");
+  }
+
+  std::vector<ComponentResource> resources;
+  std::vector<std::string> lines = rcpputils::split(content, '\n', true);
+  for (const auto & line : lines) {
+    std::vector<std::string> parts = rcpputils::split(line, ';');
+    if (parts.size() != 2) {
+      throw ComponentManagerException("Invalid resource entry");
+    }
+
+    std::string library_path = parts[1];
+    if (!rcpputils::fs::path(library_path).is_absolute()) {
+      library_path = base_path + "/" + library_path;
+    }
+    resources.push_back({parts[0], library_path});
+  }
+  return resources;
+}
+
+std::shared_ptr<rclcpp_components::NodeFactory>
+ComponentManager::create_component_factory(const ComponentResource & resource)
+{
+  std::string library_path = resource.second;
+  std::string class_name = resource.first;
+  std::string fq_class_name = "rclcpp_components::NodeFactoryTemplate<" + class_name + ">";
+
+  class_loader::ClassLoader * loader;
+  if (loaders_.find(library_path) == loaders_.end()) {
+    RCLCPP_INFO(get_logger(), "Load Library: %s", library_path.c_str());
+    try {
+      loaders_[library_path] = std::make_unique<class_loader::ClassLoader>(library_path);
+    } catch (const std::exception & ex) {
+      throw ComponentManagerException("Failed to load library: " + std::string(ex.what()));
+    } catch (...) {
+      throw ComponentManagerException("Failed to load library");
+    }
+  }
+  loader = loaders_[library_path].get();
+
+  auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
+  for (const auto & clazz : classes) {
+    RCLCPP_INFO(get_logger(), "Found class: %s", clazz.c_str());
+    if (clazz == class_name || clazz == fq_class_name) {
+      RCLCPP_INFO(get_logger(), "Instantiate class: %s", clazz.c_str());
+      return loader->createInstance<rclcpp_components::NodeFactory>(clazz);
+    }
+  }
+  return {};
+}
+
 void
 ComponentManager::OnLoadNode(
   const std::shared_ptr<rmw_request_id_t> request_header,
@@ -49,114 +122,65 @@ ComponentManager::OnLoadNode(
 {
   (void) request_header;
 
-  std::string content;
-  std::string base_path;
-  if (!ament_index_cpp::get_resource(
-      "rclcpp_components", request->package_name, content, &base_path))
-  {
-    RCLCPP_ERROR(get_logger(), "Could not find requested resource in ament index");
-    response->error_message = "Could not find requested resource in ament index";
-    response->success = false;
-    return;
-  }
+  try {
+    auto resources = get_component_resources(request->package_name);
 
-  std::vector<std::string> lines = rcpputils::split(content, '\n', true);
-  for (const auto & line : lines) {
-    std::vector<std::string> parts = rcpputils::split(line, ';');
-    if (parts.size() != 2) {
-      RCLCPP_ERROR(get_logger(), "Invalid resource entry");
-      response->error_message = "Invalid resource entry";
-      response->success = false;
+    for (const auto & resource: resources) {
+      if (resource.first != request->plugin_name) {
+        continue;
+      }
+      auto factory = create_component_factory(resource);
+
+      if (factory == nullptr) {
+        continue;
+      }
+
+      std::vector<rclcpp::Parameter> parameters;
+      for (const auto & p : request->parameters) {
+        parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
+      }
+
+      std::vector<std::string> remap_rules {request->remap_rules};
+
+      if (!request->node_name.empty()) {
+        remap_rules.push_back("__node:=" + request->node_name);
+      }
+
+      if (!request->node_namespace.empty()) {
+        remap_rules.push_back("__ns:=" + request->node_namespace);
+      }
+
+      auto options = rclcpp::NodeOptions()
+        .initial_parameters(parameters)
+        .arguments(remap_rules);
+
+      auto node_id = unique_id++;
+
+      auto node_instance = factory->create_node_instance(options);
+
+      node_wrappers_[node_id] = node_instance;
+
+      auto node = node_instance.get_node_base_interface();
+      if (auto exec = executor_.lock()) {
+        exec->add_node(node, true);
+      }
+      response->full_node_name = node->get_fully_qualified_name();
+      response->unique_id = node_id;
+      response->success = true;
       return;
     }
-    // match plugin name with the same rmw suffix as this executable
-    if (parts[0] != request->plugin_name) {
-      continue;
-    }
-
-    std::string class_name = parts[0];
-    std::string fq_class_name = "rclcpp_components::NodeFactoryTemplate<" + class_name + ">";
-
-    // load node plugin
-    std::string library_path = parts[1];
-    if (!rcpputils::fs::path(library_path).is_absolute()) {
-      library_path = base_path + "/" + library_path;
-    }
-    class_loader::ClassLoader * loader;
-
-    if (loaders_.find(library_path) != loaders_.end()) {
-      loader = loaders_[library_path].get();
-    } else {
-      RCLCPP_INFO(get_logger(), "Load library %s", library_path.c_str());
-      try {
-        loaders_[library_path] = std::make_unique<class_loader::ClassLoader>(library_path);
-        loader = loaders_[library_path].get();
-      } catch (const std::exception & ex) {
-        RCLCPP_ERROR(get_logger(), "Failed to load library: %s", ex.what());
-        response->error_message = "Failed to load library";
-        response->success = false;
-        return;
-      } catch (...) {
-        RCLCPP_ERROR(get_logger(), "Failed to load library");
-        response->error_message = "Failed to load library";
-        response->success = false;
-        return;
-      }
-    }
-    auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
-    for (const auto & clazz : classes) {
-      RCLCPP_INFO(get_logger(), "Found class %s", class_name.c_str());
-      if (clazz == class_name || clazz == fq_class_name) {
-        RCLCPP_INFO(get_logger(), "Instantiate class %s", class_name.c_str());
-        auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
-
-        std::vector<rclcpp::Parameter> parameters;
-        for (const auto & p : request->parameters) {
-          parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
-        }
-
-        std::vector<std::string> remap_rules {request->remap_rules};
-
-        if (!request->node_name.empty()) {
-          remap_rules.push_back("__node:=" + request->node_name);
-        }
-
-        if (!request->node_namespace.empty()) {
-          remap_rules.push_back("__ns:=" + request->node_namespace);
-        }
-
-        auto options = rclcpp::NodeOptions()
-          .initial_parameters(parameters)
-          .arguments(remap_rules);
-
-        auto node_id = unique_id++;
-
-        node_wrappers_[node_id] = node_factory->create_node_instance(options);
-
-        auto node = node_wrappers_[node_id].get_node_base_interface();
-        if (auto exec = executor_.lock()) {
-          exec->add_node(node, true);
-        }
-        response->full_node_name = node->get_fully_qualified_name();
-        response->unique_id = node_id;
-        response->success = true;
-        return;
-      }
-    }
-
-    // no matching class found in loader
     RCLCPP_ERROR(
       get_logger(), "Failed to find class with the requested plugin name '%s' in "
       "the loaded library",
       request->plugin_name.c_str());
+    response->error_message = "Failed to find class with the requested plugin name.";
     response->success = false;
-    return;
+  } catch (const ComponentManagerException & ex) {
+    RCLCPP_ERROR(get_logger(), ex.what());
+    response->error_message = ex.what();
+    response->success = false;
   }
-
-  RCLCPP_ERROR(
-    get_logger(), "Failed to find plugin name '%s' in prefix '%s'",
-    request->plugin_name.c_str(), base_path.c_str());
-  response->success = false;
+  return;
 }
 
 void
