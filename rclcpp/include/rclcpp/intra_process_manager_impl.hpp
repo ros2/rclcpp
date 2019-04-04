@@ -281,8 +281,8 @@ private:
   FixedSizeString
   fixed_size_string(const char * str) const
   {
-    FixedSizeString ret = {0};
-    std::strncpy(ret.begin(), str, ret.size());
+    FixedSizeString ret;
+    std::strncpy(ret.data(), str, ret.size());
     return ret;
   }
 
