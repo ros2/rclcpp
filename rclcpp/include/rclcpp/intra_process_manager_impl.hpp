@@ -16,6 +16,7 @@
 #define RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstring>
 #include <functional>
