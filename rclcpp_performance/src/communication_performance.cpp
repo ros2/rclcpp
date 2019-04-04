@@ -26,6 +26,7 @@
 
 using PeriodT = std::chrono::milliseconds;
 using TimestampT = std::chrono::microseconds;
+using IntraProcessSetting = rclcpp::IntraProcessSetting;
 
 class  PublisherConstantRate
 {
@@ -42,14 +43,10 @@ public:
     rmw_qos_profile_t qos_profile = rmw_qos_profile_default) :
   number_of_messages_to_send_(number_of_messages_to_send),
   period_(period),
-  message_length_(message_length)
+  message_id_(0),
+  message_length_(message_length),
+  publisher_id_(publisher_id)
   {
-    // Note(ivanpauno): msg type could be changed, to try the different publish methods.
-    shared_msg_ = std::make_shared<rclcpp_performance::msg::MatchingPublisher>();
-    shared_msg_->publisher_id = publisher_id;
-    shared_msg_->data.resize(message_length);
-    shared_msg_->message_id = 0;
-
     std::stringstream ss;
 
     ss << base_dir << "/publisher_" << publisher_id << std::ends;
@@ -85,20 +82,26 @@ public:
       std::this_thread::sleep_for(period_);
     }
 
-    while (this->number_of_messages_to_send_) {
+    while (number_of_messages_to_send_) {
+      auto shared_msg =
+        std::make_shared<rclcpp_performance::msg::MatchingPublisher>();
+      shared_msg->publisher_id = publisher_id_;
+      shared_msg->data.resize(message_length_);
+      shared_msg->message_id = message_id_;
       auto t_now = std::chrono::system_clock::now();
-      this->logging_file_ << this->shared_msg_->message_id << ", "
+      logging_file_ << shared_msg->message_id << ", "
       << std::chrono::duration_cast<TimestampT>(
           t_now.time_since_epoch()).count()
         << std::endl;
-      this->pub_->publish(this->shared_msg_);
-      this->shared_msg_->message_id++;
-      this->number_of_messages_to_send_--;
+      pub_->publish(std::move(std::const_pointer_cast<
+        const rclcpp_performance::msg::MatchingPublisher>(shared_msg)));
+      message_id_++;
+      number_of_messages_to_send_--;
 
       // constant rate publishing
       std::this_thread::sleep_until(t_now + period_);
     }
-    this->st_number_of_publishers_--;
+    st_number_of_publishers_--;
   }
 
   void publishing_loop_unique_msg()
@@ -108,25 +111,25 @@ public:
       std::this_thread::sleep_for(period_);
     }
 
-    while (this->number_of_messages_to_send_) {
+    while (number_of_messages_to_send_) {
       auto unique_msg =
         std::make_unique<rclcpp_performance::msg::MatchingPublisher>();
-      unique_msg->publisher_id = this->shared_msg_->publisher_id;
-      unique_msg->message_id = this->shared_msg_->message_id;
+      unique_msg->publisher_id = publisher_id_;
+      unique_msg->message_id = message_id_;
       unique_msg->data.resize(message_length_);
       auto t_now = std::chrono::system_clock::now();
-      this->logging_file_ << unique_msg->message_id << ", "
+      logging_file_ << unique_msg->message_id << ", "
       << std::chrono::duration_cast<TimestampT>(
           t_now.time_since_epoch()).count()
         << std::endl;
-      this->pub_->publish(unique_msg);
-      this->shared_msg_->message_id++;
-      this->number_of_messages_to_send_--;
+      pub_->publish(unique_msg);
+      message_id_++;
+      number_of_messages_to_send_--;
 
       // constant rate publishing
       std::this_thread::sleep_until(t_now + period_);
     }
-    this->st_number_of_publishers_--;
+    st_number_of_publishers_--;
   }
 
   static uint64_t get_number_of_publishers()
@@ -140,14 +143,14 @@ public:
   }
 
 private:
-  rclcpp_performance::msg::MatchingPublisher::SharedPtr shared_msg_;
   rclcpp::Publisher<rclcpp_performance::msg::MatchingPublisher>::SharedPtr pub_;
-  // rclcpp::TimerBase::SharedPtr timer_;
 
   std::ofstream logging_file_;
   uint64_t number_of_messages_to_send_;
   PeriodT period_;
+  uint64_t message_id_;
   uint64_t message_length_;
+  uint64_t publisher_id_;
 
   std::thread thread_;
 
@@ -166,6 +169,8 @@ public:
     const std::string & topic_name,
     uint64_t subscription_id,
     std::string base_dir,
+    bool use_unique_message,
+    bool force_disable_intra_process = false,
     rmw_qos_profile_t qos_profile = rmw_qos_profile_default
     )
   {
@@ -175,19 +180,38 @@ public:
     logging_file_.open(ss.str(), std::ios_base::trunc);
     logging_file_.exceptions(std::ofstream::failbit | std::ofstream::badbit);
 
-    auto callback = [this](const rclcpp_performance::msg::MatchingPublisher::SharedPtr msg) -> void
-      { 
+    auto const_shared_callback = [this](const rclcpp_performance::msg::MatchingPublisher::ConstSharedPtr msg) -> void
+      {
         this->logging_file_ << msg->publisher_id << ", "
           << msg->message_id << ", "
           << std::chrono::duration_cast<TimestampT>(
             std::chrono::system_clock::now().time_since_epoch()).count()
           << std::endl;
       };
+    auto unique_callback = [this](const rclcpp_performance::msg::MatchingPublisher::UniquePtr msg) -> void
+      {
+        this->logging_file_ << msg->publisher_id << ", "
+          << msg->message_id << ", "
+          << std::chrono::duration_cast<TimestampT>(
+            std::chrono::system_clock::now().time_since_epoch()).count()
+          << std::endl;
+      };
+    IntraProcessSetting intra_settings = IntraProcessSetting::NodeDefault;
+    if (force_disable_intra_process) {
+      intra_settings = IntraProcessSetting::Disable;
+    }
 
-    sub_ = node->create_subscription<rclcpp_performance::msg::MatchingPublisher>(
-      topic_name,
-      callback,
-      qos_profile);
+    if (use_unique_message) {
+      sub_ = node->create_subscription<rclcpp_performance::msg::MatchingPublisher>(
+        topic_name,
+        unique_callback,
+        qos_profile);
+    } else {
+      sub_ = node->create_subscription<rclcpp_performance::msg::MatchingPublisher>(
+        topic_name,
+        const_shared_callback,
+        qos_profile);
+    }
   }
 
 private:
@@ -233,7 +257,8 @@ public:
     uint64_t number_of_messages,
     uint64_t message_length,
     PeriodT publish_period,
-    bool use_unique_message) :
+    bool use_unique_message,
+    bool second_forced_interprocess_subscription) :
   Node(node_name, node_options)
   {
     // Create Publishers and Subscriptions, and match one to the other.
@@ -245,8 +270,20 @@ public:
           this,
           ss.str(),
           i,
-          base_dir);
+          base_dir,
+          use_unique_message);
       subscriptions_.push_back(sub);
+      if (second_forced_interprocess_subscription) {
+        std::shared_ptr<SubscriptionLogger> sub =
+          std::make_shared<SubscriptionLogger>(
+            this,
+            ss.str(),
+            i,
+            base_dir,
+            use_unique_message,
+            true);
+        subscriptions_.push_back(sub);
+      }
       std::shared_ptr<PublisherConstantRate> pub =
         std::make_shared<PublisherConstantRate>(
           this,
@@ -332,7 +369,8 @@ int main(int argc, char ** argv)
     number_of_messages, // number of messages to be send
     message_length, // message length in bytes
     period, // Publish period
-    use_unique_message); //use unique message or shared
+    use_unique_message, //use unique message or shared
+    false); // force a second interprocess subscription
 
   rclcpp::spin(node);
   // Shutdown is called internally by the node,
