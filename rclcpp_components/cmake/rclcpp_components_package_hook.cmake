@@ -1,4 +1,4 @@
-# Copyright 2016 Open Source Robotics Foundation, Inc.
+# Copyright 2019 Open Source Robotics Foundation, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,4 +14,5 @@
 
 # register node plugins
 ament_index_register_resource(
-  "node_plugin" CONTENT "${_RCLCPP__NODE_PLUGINS}")
+  "rclcpp_components" CONTENT "${_RCLCPP_COMPONENTS__NODES}")
+

@@ -432,14 +432,7 @@ if(BUILD_TESTING)
   endif()
 endif()
 
-ament_package(
-  CONFIG_EXTRAS rclcpp-extras.cmake
-)
-
-install(
-  DIRECTORY cmake
-  DESTINATION share/${PROJECT_NAME}
-)
+ament_package()
 
 install(
   DIRECTORY include/ ${CMAKE_CURRENT_BINARY_DIR}/include/
