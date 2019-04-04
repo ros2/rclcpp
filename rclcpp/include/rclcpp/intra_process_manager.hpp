@@ -33,7 +33,7 @@
 #include "rclcpp/mapped_ring_buffer.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/publisher_base.hpp"
-#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_base.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -361,8 +361,7 @@ public:
   }
 
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
-    typename Deleter = std::default_delete<MessageT>>
+    typename MessageT, typename Alloc = std::allocator<void>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,

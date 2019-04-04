@@ -28,7 +28,6 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -38,6 +37,7 @@ namespace rclcpp
 // Forward declaration is used for friend statement.
 namespace node_interfaces
 {
+class NodeBaseInterface;
 class NodeTopicsInterface;
 }
 
@@ -161,7 +161,7 @@ public:
   using IntraProcessManagerSharedPtr =
     std::shared_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
 
-  /// Implementation utility function used to setup a mapped ring buffer for the intra process manager.
+  /// Implementation utility function that creates a typed mapped ring buffer.
   RCLCPP_PUBLIC
   mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   virtual make_mapped_ring_buffer(size_t size) const;

@@ -78,7 +78,7 @@ public:
     return mapped_ring_buffer::MappedRingBuffer<
       MessageT,
       typename Publisher<MessageT, Alloc>::MessageAlloc
-      >::make_shared(size, this->get_allocator());
+    >::make_shared(size, this->get_allocator());
   }
 
   /// Send a message to the topic for this publisher.
@@ -241,13 +241,13 @@ protected:
     if (!ipm) {
       // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
       throw std::runtime_error(
-        "intra process publish called after destruction of intra process manager");
+              "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->store_intra_process_message(publisher_id, msg);
+      ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
     return message_seq;
   }
 
@@ -260,13 +260,13 @@ protected:
     if (!ipm) {
       // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
       throw std::runtime_error(
-        "intra process publish called after destruction of intra process manager");
+              "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->store_intra_process_message(publisher_id, msg);
+      ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
     return message_seq;
   }
 

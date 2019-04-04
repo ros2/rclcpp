@@ -89,10 +89,11 @@ NodeTopics::create_subscription(
   // Setup intra process publishing if requested.
   if (use_intra_process) {
     auto context = node_base_->get_context();
-    auto intra_process_manager =
+    auto ipm =
       context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    subscription_factory.setup_intra_process(
-      intra_process_manager, subscription, subscription_options);
+    uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
+    subscription_options.ignore_local_publications = false;
+    subscription->setup_intra_process(intra_process_subscription_id, ipm, subscription_options);
   }
 
   // Return the completed subscription.
