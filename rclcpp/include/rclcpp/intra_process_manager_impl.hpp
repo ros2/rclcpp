@@ -16,6 +16,7 @@
 #define RCLCPP__INTRA_PROCESS_MANAGER_IMPL_HPP_
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cstring>
 #include <functional>
@@ -27,6 +28,8 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
+
+#include "rmw/validate_full_topic_name.h"
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
@@ -98,9 +101,7 @@ public:
   add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription)
   {
     subscriptions_[id] = subscription;
-    // subscription->get_topic_name() -> const char * can be used as the key,
-    // since subscriptions_ shares the ownership of subscription
-    subscription_ids_by_topic_[subscription->get_topic_name()].insert(id);
+    subscription_ids_by_topic_[fixed_size_string(subscription->get_topic_name())].insert(id);
   }
 
   void
@@ -175,7 +176,8 @@ public:
     }
 
     // Figure out what subscriptions should receive the message.
-    auto & destined_subscriptions = subscription_ids_by_topic_[publisher->get_topic_name()];
+    auto & destined_subscriptions =
+      subscription_ids_by_topic_[fixed_size_string(publisher->get_topic_name())];
     // Store the list for later comparison.
     if (info.target_subscriptions_by_message_sequence.count(message_seq) == 0) {
       info.target_subscriptions_by_message_sequence.emplace(
@@ -263,7 +265,8 @@ public:
     if (!publisher) {
       throw std::runtime_error("publisher has unexpectedly gone out of scope");
     }
-    auto sub_map_it = subscription_ids_by_topic_.find(publisher->get_topic_name());
+    auto sub_map_it =
+      subscription_ids_by_topic_.find(fixed_size_string(publisher->get_topic_name()));
     if (sub_map_it == subscription_ids_by_topic_.end()) {
       // No intraprocess subscribers
       return 0;
@@ -273,6 +276,16 @@ public:
 
 private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImpl)
+
+  using FixedSizeString = std::array<char, RMW_TOPIC_MAX_NAME_LENGTH + 1>;
+
+  FixedSizeString
+  fixed_size_string(const char * str) const
+  {
+    FixedSizeString ret;
+    std::strncpy(ret.data(), str, ret.size());
+    return ret;
+  }
 
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
@@ -285,19 +298,11 @@ private:
     std::hash<uint64_t>, std::equal_to<uint64_t>,
     RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
 
-  struct strcmp_wrapper
-  {
-    bool
-    operator()(const char * lhs, const char * rhs) const
-    {
-      return std::strcmp(lhs, rhs) < 0;
-    }
-  };
   using IDTopicMap = std::map<
-    const char *,
+    FixedSizeString,
     AllocSet,
-    strcmp_wrapper,
-    RebindAlloc<std::pair<const char * const, AllocSet>>>;
+    std::less<FixedSizeString>,
+    RebindAlloc<std::pair<const FixedSizeString, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
 
