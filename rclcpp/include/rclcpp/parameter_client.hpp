@@ -129,6 +129,34 @@ public:
       options);
   }
 
+  template<
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT =
+    rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent, Alloc>>
+  static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  on_parameter_event(
+    CallbackT && callback,
+    rclcpp::node_interfaces::NodeTopicsInterface * node_topics)
+  {
+    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
+    auto msg_mem_strat =
+      MessageMemoryStrategy<rcl_interfaces::msg::ParameterEvent, Alloc>::create_default();
+
+    using rcl_interfaces::msg::ParameterEvent;
+    return rclcpp::create_subscription<
+      ParameterEvent, CallbackT, Alloc, ParameterEvent, SubscriptionT>(
+      node_topics,
+      "parameter_events",
+      std::forward<CallbackT>(callback),
+      rmw_qos_profile_default,
+      nullptr,  // group,
+      false,  // ignore_local_publications,
+      false,  // use_intra_process_comms_,
+      msg_mem_strat,
+      std::make_shared<Alloc>());
+  }
+
   RCLCPP_PUBLIC
   bool
   service_is_ready() const;
@@ -267,6 +295,15 @@ public:
   on_parameter_event(CallbackT && callback)
   {
     return async_parameters_client_->on_parameter_event(std::forward<CallbackT>(callback));
+  }
+
+  template<typename CallbackT>
+  static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  on_parameter_event(
+    CallbackT && callback,
+    rclcpp::node_interfaces::NodeTopicsInterface * node_topics)
+  {
+    return AsyncParametersClient::on_parameter_event(std::forward<CallbackT>(callback), node_topics);
   }
 
   RCLCPP_PUBLIC
