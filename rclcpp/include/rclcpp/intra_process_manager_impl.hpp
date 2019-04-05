@@ -30,8 +30,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include "rcutils/snprintf.h"
-
 #include "rmw/validate_full_topic_name.h"
 
 #include "rclcpp/macros.hpp"
@@ -286,9 +284,11 @@ private:
   fixed_size_string(const char * str) const
   {
     FixedSizeString ret;
-    if (rcutils_snprintf(ret.data(), ret.size(), "%s", str) < 0) {
+    size_t size = std::strlen(str) + 1;
+    if (size > ret.size()) {
       throw std::runtime_error("failed to copy topic name");
     }
+    std::memcpy(ret.data(), str, size);
     return ret;
   }
   struct strcmp_wrapper
