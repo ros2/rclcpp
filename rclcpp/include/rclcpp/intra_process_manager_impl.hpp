@@ -283,7 +283,7 @@ private:
   fixed_size_string(const char * str) const
   {
     FixedSizeString ret;
-    std::strncpy(ret.data(), str, ret.size());
+    std::memcpy(ret.data(), str, ret.size());
     return ret;
   }
 
