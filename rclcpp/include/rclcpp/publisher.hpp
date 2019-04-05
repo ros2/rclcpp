@@ -95,19 +95,15 @@ public:
       return;
     }
     std::unique_ptr<MessageT, MessageDeleter> msg_copy;
-    // If interprocess subscriptors exists, then copy the message.
+    // If interprocess subscriptors exists, then promote to shared and publish.
     if (get_subscription_count() > get_intra_process_subscription_count()) {
-      auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-      MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg);
-      msg_copy = MessageUniquePtr(ptr, message_deleter_);
+      MessageSharedPtr shared_msg =
+        MessageSharedPtr(std::move(msg));
+      return this->publish(shared_msg);
     }
     uint64_t message_seq =
       store_intra_process_message(intra_process_publisher_id_, msg);
     this->do_intra_process_publish(message_seq);
-    // Do interprocess publish, if it was needed.
-    if (msg_copy) {
-      this->do_inter_process_publish(msg_copy.get());
-    }
   }
 
   virtual void
@@ -121,22 +117,31 @@ public:
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     // NOTE(ivanpauno): As the message is not const, a copy should be made.
     // unique_ptr<MessageT> or shared_ptr<const MessageT> siganture could
-    // be used here. I decided to use the second.
+    // be used here. I decided to use the first one.
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg);
-    MessageSharedPtr shared_msg = MessageSharedPtr(ptr, message_deleter_);
-    this->publish(shared_msg);
+    MessageUniquePtr unique_msg = MessageUniquePtr(ptr, message_deleter_);
+    this->publish(unique_msg);
   }
 
   virtual void
-  publish(const std::shared_ptr<const MessageT> msg)
+  publish(const std::shared_ptr<MessageT> && msg)
+  {
+    // Cast to std::shared_ptr<const MessageT> and publish.
+    this->publish(std::const_pointer_cast<const MessageT>(msg));
+  }
+
+  virtual void
+  publish(const std::shared_ptr<const MessageT> & msg)
   {
     if (intra_process_is_enabled_) {
       uint64_t message_seq =
         store_intra_process_message(intra_process_publisher_id_, msg);
       this->do_intra_process_publish(message_seq);
     }
-    this->do_inter_process_publish(msg.get());
+    if (get_subscription_count() > get_intra_process_subscription_count()) {
+      this->do_inter_process_publish(msg.get());
+    }
   }
 
   virtual void
@@ -150,11 +155,11 @@ public:
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     // NOTE(ivanpauno): As the message is not const, a copy should be made.
     // unique_ptr<MessageT> or shared_ptr<const MessageT> siganture could
-    // be used here. I decided to use the second.
+    // be used here. I decided to use the first one.
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
-    MessageSharedPtr shared_msg(ptr, message_deleter_);
-    this->publish(shared_msg);
+    MessageUniquePtr unique_msg = MessageUniquePtr(ptr, message_deleter_);
+    this->publish(unique_msg);
   }
 
   virtual void

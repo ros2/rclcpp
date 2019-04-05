@@ -182,9 +182,9 @@ public:
   {
     (void)message_info;
     if (const_shared_ptr_callback_) {
-      const_shared_ptr_callback_(message);
+      const_shared_ptr_callback_(std::move(message));
     } else if (const_shared_ptr_with_info_callback_) {
-      const_shared_ptr_with_info_callback_(message, message_info);
+      const_shared_ptr_with_info_callback_(std::move(message), message_info);
     } else {
       if (unique_ptr_callback_ || unique_ptr_with_info_callback_ ||
         shared_ptr_callback_ || shared_ptr_with_info_callback_)
