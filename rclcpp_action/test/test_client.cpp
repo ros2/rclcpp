@@ -273,6 +273,8 @@ TEST_F(TestClient, async_send_goal_but_ignore_feedback_and_result)
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
+  ASSERT_TRUE(action_client->wait_for_action_server(std::chrono::seconds(10)));
+
   ActionGoal bad_goal;
   bad_goal.order = -5;
   auto future_goal_handle = action_client->async_send_goal(bad_goal, nullptr, true);
@@ -295,6 +297,8 @@ TEST_F(TestClient, async_send_goal_and_ignore_feedback_but_wait_for_result)
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
+  ASSERT_TRUE(action_client->wait_for_action_server(std::chrono::seconds(10)));
+
   ActionGoal goal;
   goal.order = 5;
   auto future_goal_handle = action_client->async_send_goal(goal);
@@ -316,6 +320,8 @@ TEST_F(TestClient, async_send_goal_with_feedback_and_result)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ASSERT_TRUE(action_client->wait_for_action_server(std::chrono::seconds(10)));
 
   ActionGoal goal;
   goal.order = 4;
@@ -349,6 +355,8 @@ TEST_F(TestClient, async_cancel_one_goal)
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
+  ASSERT_TRUE(action_client->wait_for_action_server(std::chrono::seconds(10)));
+
   ActionGoal goal;
   goal.order = 5;
   auto future_goal_handle = action_client->async_send_goal(goal, nullptr, true);
@@ -366,6 +374,8 @@ TEST_F(TestClient, async_cancel_all_goals)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ASSERT_TRUE(action_client->wait_for_action_server(std::chrono::seconds(10)));
 
   ActionGoal goal;
   goal.order = 6;
@@ -401,6 +411,8 @@ TEST_F(TestClient, async_cancel_some_goals)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ASSERT_TRUE(action_client->wait_for_action_server(std::chrono::seconds(10)));
 
   ActionGoal goal;
   goal.order = 6;
