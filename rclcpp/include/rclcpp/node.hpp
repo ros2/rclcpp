@@ -388,6 +388,12 @@ public:
   void
   register_param_change_callback(CallbackT && callback);
 
+
+  /// Get the fully-qualified names of all available nodes.
+  /**
+   * The fully-qualified name includes the local namespace and name of the node.
+   * \return A vector of fully-qualified names of nodes.
+   */
   RCLCPP_PUBLIC
   std::vector<std::string>
   get_node_names() const;
