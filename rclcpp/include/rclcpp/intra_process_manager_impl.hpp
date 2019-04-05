@@ -25,6 +25,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -283,9 +284,21 @@ private:
   fixed_size_string(const char * str) const
   {
     FixedSizeString ret;
-    std::strncpy(ret.data(), str, ret.size());
+    size_t size = std::strlen(str) + 1;
+    if (size > ret.size()) {
+      throw std::runtime_error("failed to copy topic name");
+    }
+    std::memcpy(ret.data(), str, size);
     return ret;
   }
+  struct strcmp_wrapper
+  {
+    bool
+    operator()(const FixedSizeString lhs, const FixedSizeString rhs) const
+    {
+      return std::strcmp(lhs.data(), rhs.data()) < 0;
+    }
+  };
 
   template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
@@ -301,7 +314,7 @@ private:
   using IDTopicMap = std::map<
     FixedSizeString,
     AllocSet,
-    std::less<FixedSizeString>,
+    strcmp_wrapper,
     RebindAlloc<std::pair<const FixedSizeString, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
