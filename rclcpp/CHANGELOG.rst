@@ -2,6 +2,9 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.4 (2019-04-06)
+------------------
+
 0.6.3 (2019-02-08)
 ------------------
 * Added the ability to get parameters in a map. (`#575 <https://github.com/ros2/rclcpp/issues/575>`_)
