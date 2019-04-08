@@ -61,13 +61,13 @@ def main():
                 subscription_data[subscription_id][row[0]].update({row[1]: row[2]})
             except:
                 subscription_data[subscription_id][row[0]] = {row[1]: row[2]}
-    plot_publishers_average_rate(publishers_data)
-    plot_subscriptions_average_rate(subscription_data)
+    plot_publishers_average_period(publishers_data)
+    plot_subscriptions_average_period(subscription_data)
     plot_latencys(subscription_data, publishers_data)
     plt.show()
 
 
-def plot_publishers_average_rate(data):
+def plot_publishers_average_period(data):
     pub_rates = dict({})
     for pub_id in sorted(data):
         timestamps = np.array(list(data[pub_id].values()))
@@ -75,6 +75,9 @@ def plot_publishers_average_rate(data):
                            for i in range(timestamps.size-1)])
         pub_rates[pub_id] = np.average(period) / 1000
     fig, ax = plt.subplots()
+    ax.ticklabel_format(useOffset=False)
+    ax.set_xlabel('publisherº')
+    ax.set_ylabel('ms')
     ax.plot(
         np.array(list(pub_rates.keys())),
         np.array(list(pub_rates.values())),
@@ -84,17 +87,20 @@ def plot_publishers_average_rate(data):
     fig.canvas.set_window_title('Publishers average period')
 
 
-def plot_subscriptions_average_rate(data):
-    sub_rates = dict({})
+def plot_subscriptions_average_period(data):
+    sub_periods = dict({})
     for sub_id in sorted(data):
         for pub_id in sorted(data[sub_id]):
             timestamps = np.array(list(data[sub_id][pub_id].values()))
             period = np.array([timestamps[i+1] - timestamps[i]
                                for i in range(timestamps.size-1)])
-            sub_rates[(sub_id, pub_id)] = np.average(period) / 1000
+            sub_periods[(sub_id, pub_id)] = np.average(period) / 1000
     fig, ax = plt.subplots()
-    x = np.linspace(0, len(sub_rates)-1, len(sub_rates))
-    y = np.array(list(sub_rates.values()))
+    x = np.linspace(0, len(sub_periods)-1, len(sub_periods))
+    y = np.array(list(sub_periods.values()))
+    ax.ticklabel_format(useOffset=False)
+    ax.set_xlabel('subscriptionº')
+    ax.set_ylabel('ms')
     ax.plot(
         x,
         y,
@@ -117,6 +123,9 @@ def plot_latencys(sub_data, pub_data):
     fig, ax = plt.subplots()
     x = np.linspace(0, len(av_latencys)-1, len(av_latencys))
     y = np.array(list(av_latencys.values()))
+    ax.ticklabel_format(useOffset=False)
+    ax.set_xlabel('pub/sub pairº')
+    ax.set_ylabel('ms')
     ax.plot(x, y, marker='o')
     fig.suptitle('Average latencys, between publish and subscribe')
     fig.canvas.set_window_title('Average latencys, between publish and subscribe')
