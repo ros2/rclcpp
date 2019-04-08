@@ -23,6 +23,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include "rcl/error_handling.h"
 #include "rcl/publisher.h"
