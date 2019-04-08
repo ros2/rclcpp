@@ -81,7 +81,6 @@ public:
     while (!st_start_) {
       std::this_thread::sleep_for(period_);
     }
-
     while (number_of_messages_to_send_) {
       auto shared_msg =
         std::make_shared<rclcpp_performance::msg::MatchingPublisher>();
@@ -170,31 +169,37 @@ public:
     uint64_t subscription_id,
     std::string base_dir,
     bool use_unique_message,
+    bool log = true,
     bool force_disable_intra_process = false,
     rmw_qos_profile_t qos_profile = rmw_qos_profile_default
-    )
+    ) : log_(log)
   {
     std::stringstream ss;
     ss << base_dir << "/subscription_" << subscription_id << std::ends;
 
-    logging_file_.open(ss.str(), std::ios_base::trunc);
-    logging_file_.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-
+    if (log_) {
+      logging_file_.open(ss.str(), std::ios_base::trunc);
+      logging_file_.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+    }
     auto const_shared_callback = [this](const rclcpp_performance::msg::MatchingPublisher::ConstSharedPtr msg) -> void
       {
-        this->logging_file_ << msg->publisher_id << ", "
-          << msg->message_id << ", "
-          << std::chrono::duration_cast<TimestampT>(
-            std::chrono::system_clock::now().time_since_epoch()).count()
-          << std::endl;
+        if (log_) {
+          this->logging_file_ << msg->publisher_id << ", "
+            << msg->message_id << ", "
+            << std::chrono::duration_cast<TimestampT>(
+              std::chrono::system_clock::now().time_since_epoch()).count()
+            << std::endl;
+        }
       };
     auto unique_callback = [this](const rclcpp_performance::msg::MatchingPublisher::UniquePtr msg) -> void
       {
-        this->logging_file_ << msg->publisher_id << ", "
-          << msg->message_id << ", "
-          << std::chrono::duration_cast<TimestampT>(
-            std::chrono::system_clock::now().time_since_epoch()).count()
-          << std::endl;
+        if (log_) {
+          this->logging_file_ << msg->publisher_id << ", "
+            << msg->message_id << ", "
+            << std::chrono::duration_cast<TimestampT>(
+              std::chrono::system_clock::now().time_since_epoch()).count()
+            << std::endl;
+        }
       };
     IntraProcessSetting intra_settings = IntraProcessSetting::NodeDefault;
     if (force_disable_intra_process) {
@@ -217,6 +222,7 @@ public:
 private:
   rclcpp::Subscription<rclcpp_performance::msg::MatchingPublisher>::SharedPtr sub_;
   std::ofstream logging_file_;
+  bool log_;
 };
 
 class ShutdownHook
@@ -253,16 +259,17 @@ public:
     std::string node_name,
     rclcpp::NodeOptions node_options,
     std::string base_dir,
-    uint64_t number_of_pub_sub,
+    uint64_t number_of_pub,
     uint64_t number_of_messages,
     uint64_t message_length,
     PeriodT publish_period,
     bool use_unique_message,
+    uint64_t number_of_subs_per_pub,
     bool second_forced_interprocess_subscription) :
   Node(node_name, node_options)
   {
     // Create Publishers and Subscriptions, and match one to the other.
-    for (uint64_t i = 0; i < number_of_pub_sub; i++) {
+    for (uint64_t i = 0; i < number_of_pub; i++) {
       std::stringstream ss;
       ss << "topic_" << i << std::ends;
       std::shared_ptr<SubscriptionLogger> sub =
@@ -273,7 +280,7 @@ public:
           base_dir,
           use_unique_message);
       subscriptions_.push_back(sub);
-      if (second_forced_interprocess_subscription) {
+      for (size_t j = 0; j < (number_of_subs_per_pub - 1); j++) {
         std::shared_ptr<SubscriptionLogger> sub =
           std::make_shared<SubscriptionLogger>(
             this,
@@ -281,7 +288,7 @@ public:
             i,
             base_dir,
             use_unique_message,
-            true);
+            false);
         subscriptions_.push_back(sub);
       }
       std::shared_ptr<PublisherConstantRate> pub =
@@ -311,6 +318,7 @@ int main(int argc, char ** argv)
   PeriodT period = PeriodT(100);
   uint64_t number_of_messages = 1000;
   uint64_t number_of_publishers = 100;
+  uint64_t number_of_subscritions_per_publisher = 1;
   uint64_t message_length = 100;
   rclcpp::NodeOptions node_options;
   bool use_unique_message = false;
@@ -343,6 +351,12 @@ int main(int argc, char ** argv)
     iss >> number_of_publishers;
   }
 
+  cli_option = rcutils_cli_get_option(argv, argv + argc, "-s");
+  if (nullptr != cli_option) {
+    std::istringstream iss(cli_option);
+    iss >> number_of_subscritions_per_publisher;
+  }
+
   cli_option = rcutils_cli_get_option(argv, argv + argc, "-l");
   if (nullptr != cli_option) {
     std::istringstream iss(cli_option);
@@ -370,6 +384,7 @@ int main(int argc, char ** argv)
     message_length, // message length in bytes
     period, // Publish period
     use_unique_message, //use unique message or shared
+    number_of_subscritions_per_publisher,
     false); // force a second interprocess subscription
 
   rclcpp::spin(node);

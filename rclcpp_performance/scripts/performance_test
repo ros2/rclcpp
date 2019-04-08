@@ -1,23 +1,23 @@
 #!/bin/bash
 
 TEST_FOLDERS=(
-    "test_intra_shared_10ms_n100_m10000_l100000"
-    "test_inter_shared_10ms_n100_m10000_l100000"
-    "test_intra_unique_10ms_n100_m10000_l100000"
-    "test_inter_unique_10ms_n100_m10000_l100000"
+    "test_intra_shared_10ms_n100_s1_m10000_l100000"
+    "test_inter_shared_10ms_n100_s1_m10000_l100000"
+    "test_intra_unique_10ms_n100_s1_m10000_l100000"
+    "test_inter_unique_10ms_n100_s1_m10000_l100000"
 
-    "test_intra_shared_10ms_n10_m10000_l1000000"
-    "test_inter_shared_10ms_n10_m10000_l1000000"
-    "test_intra_unique_10ms_n10_m10000_l1000000"
-    "test_inter_unique_10ms_n10_m10000_l1000000"
+    "test_intra_shared_10ms_n10_s1_m10000_l1000000"
+    "test_inter_shared_10ms_n10_s1_m10000_l1000000"
+    "test_intra_unique_10ms_n10_s1_m10000_l1000000"
+    "test_inter_unique_10ms_n10_s1_m10000_l1000000"
 
-    "test_intra_shared_10ms_n1_m10000_l10000000"
-    "test_inter_shared_10ms_n1_m10000_l10000000"
-    "test_intra_unique_10ms_n1_m10000_l10000000"
-    "test_inter_unique_10ms_n1_m10000_l10000000"
+    "test_intra_shared_10ms_n1_s1_m10000_l10000000"
+    "test_inter_shared_10ms_n1_s1_m10000_l10000000"
+    "test_intra_unique_10ms_n1_s1_m10000_l10000000"
+    "test_inter_unique_10ms_n1_s1_m10000_l10000000"
 
-    # "test_intra_shared_10ms_n5_m100_l10000000"
-    # "test_inter_shared_10ms_n5_m100_l10000000"
+    "test_intra_shared_10ms_n1_s50_m10000_l10000000"
+    "test_intra_unique_10ms_n1_s50_m10000_l10000000"
 )
 
 COMMAND_ARGUMENTS=(
@@ -36,8 +36,8 @@ COMMAND_ARGUMENTS=(
     "-p 10 -n 1 -m 10000 -l 10000000 -intra -unique"
     "-p 10 -n 1 -m 10000 -l 10000000 -unique"
 
-    # "-p 10 -n 5 -m 10000 -l 10000000 -intra"
-    # "-p 10 -n 5 -m 10000 -l 10000000"
+    "-p 10 -n 1 -s 50 -m 10000 -l 10000000 -intra"
+    "-p 10 -n 1 -s 50 -m 10000 -l 10000000 -intra -unique"
 )
 
 
@@ -57,8 +57,8 @@ DESCRIPTION=(
     "Intraprocess, unique publish, 1 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
     "Interprocess, unique publish, 1 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
 
-    # "Intraprocess, shared publish, 5 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
-    # "Interprocess, shared publish, 5 pubs/subs, 10000 messages, 10000000 bytes length, 10ms period."
+    "Intraprocess, shared publish, 1 pubs, 50 subs per pub, 10000 messages, 10000000 bytes length, 10ms period."
+    "Intraprocess, unique publish, 1 pubs, 50 subs per pub, 10000 messages, 10000000 bytes length, 10ms period."
 )
 
 main()
