@@ -115,7 +115,6 @@ Node::create_publisher(
     topic_name, qos_history_depth, pub_options);
 }
 
-
 template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
@@ -216,7 +215,6 @@ Node::create_subscription(
   return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
     topic_name, std::forward<CallbackT>(callback), qos_profile.depth, sub_options, msg_mem_strat);
 }
-
 
 template<
   typename MessageT,

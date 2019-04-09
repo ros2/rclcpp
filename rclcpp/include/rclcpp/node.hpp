@@ -171,8 +171,9 @@ public:
   [[deprecated]]
   std::shared_ptr<PublisherT>
   create_publisher(
-    const std::string & topic_name, size_t qos_history_depth,
-    std::shared_ptr<Alloc> allocator = nullptr,
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    std::shared_ptr<Alloc> allocator,
     IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create and return a Publisher.
@@ -284,7 +285,7 @@ public:
     const std::string & topic_name,
     CallbackT && callback,
     size_t qos_history_depth,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr

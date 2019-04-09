@@ -20,7 +20,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "test_msgs/msg/empty.hpp"
 
-class TestPublisher : public ::testing::Test
+class TestPubSubOptionAPI : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -41,17 +41,30 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-/*
-   Testing construction and destruction.
- */
-TEST_F(TestPublisher, construction_and_destruction) {
+TEST_F(TestPubSubOptionAPI, check_for_ambiguous) {
   rclcpp::PublisherOptions<> pub_options;
-  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 5, pub_options);
-
   rclcpp::SubscriptionOptions<> sub_options;
-  auto subscription = node->create_subscription<test_msgs::msg::Empty>(
-    "topic",
+
+  auto topic_only_pub = node->create_publisher<test_msgs::msg::Empty>(
+    "topic_only");
+  auto topic_depth_pub = node->create_publisher<test_msgs::msg::Empty>(
+    "topic_depth",
+    10);
+  auto all_options_pub = node->create_publisher<test_msgs::msg::Empty>(
+    "topic_options",
+    10,
+    pub_options);
+
+  auto topic_only_sub = node->create_subscription<test_msgs::msg::Empty>(
+    "topic_only",
+    [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;});
+  auto topic_depth_sub = node->create_subscription<test_msgs::msg::Empty>(
+    "topic_depth",
     [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;},
-    5,
+    10);
+  auto all_options_sub = node->create_subscription<test_msgs::msg::Empty>(
+    "topic_options",
+    [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;},
+    10,
     sub_options);
 }
