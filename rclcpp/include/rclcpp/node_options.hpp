@@ -44,6 +44,7 @@ public:
    *   - start_parameter_services = true
    *   - start_parameter_event_publisher = true
    *   - parameter_event_qos_profile = rmw_qos_profile_parameter_events
+   *   - allow_undeclared_parameters = false
    *   - allocator = rcl_get_default_allocator()
    *
    * \param[in] allocator allocator to use in construction of NodeOptions.

@@ -154,7 +154,7 @@ TEST_F(TestTimeSource, ROS_time_valid_sim_time) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  node->set_parameter_if_not_set("use_sim_time", true);
+  node->declare_parameter("use_sim_time", true);
   ts.attachNode(node);
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 

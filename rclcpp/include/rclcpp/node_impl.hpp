@@ -221,21 +221,58 @@ Node::create_service(
     group);
 }
 
-template<typename CallbackT>
-void
-Node::register_param_change_callback(CallbackT && callback)
-{
-  this->node_parameters_->register_param_change_callback(std::forward<CallbackT>(callback));
-}
-
 template<typename ParameterT>
-void
+ParameterT
 Node::declare_parameter(
   const std::string & name,
   const ParameterT & default_value,
-  bool read_only)
+  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor)
 {
-  this->declare_parameter(name, rclcpp::ParameterValue(default_value), read_only);
+  return this->declare_parameter(
+    name,
+    rclcpp::ParameterValue(default_value),
+    parameter_descriptor
+  ).get<ParameterT>();
+}
+
+template<typename ParameterT>
+std::vector<ParameterT>
+Node::declare_parameters(
+  const std::string & namespace_,
+  const std::map<std::string, ParameterT> & parameters)
+{
+  std::vector<ParameterT> result;
+  std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
+  std::transform(
+    parameters.begin(), parameters.end(), std::back_inserter(result),
+    [this, &normalized_namespace](auto element) {
+      return this->declare_parameter(normalized_namespace + element.first, element.second);
+    }
+  );
+  return result;
+}
+
+template<typename ParameterT>
+std::vector<ParameterT>
+Node::declare_parameters(
+  const std::string & namespace_,
+  const std::map<
+    std::string,
+    std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
+  > & parameters)
+{
+  std::vector<ParameterT> result;
+  std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
+  std::transform(
+    parameters.begin(), parameters.end(), std::back_inserter(result),
+    [this, &normalized_namespace](auto element) {
+      return this->declare_parameter(
+        normalized_namespace + element.first,
+        element.second.first,
+        element.second.second);
+    }
+  );
+  return result;
 }
 
 template<typename ParameterT>
@@ -244,70 +281,44 @@ Node::set_parameter_if_not_set(
   const std::string & name,
   const ParameterT & value)
 {
-  std::string parameter_name_with_sub_namespace =
-    extend_name_with_sub_namespace(name, this->get_sub_namespace());
-
-  rclcpp::Parameter parameter;
-  if (!this->get_parameter(parameter_name_with_sub_namespace, parameter)) {
-    this->set_parameters({
-        rclcpp::Parameter(parameter_name_with_sub_namespace, value),
-      });
+  if (!this->has_parameter(name)) {
+    this->set_parameter(rclcpp::Parameter(name, value));
   }
 }
 
 // this is a partially-specialized version of set_parameter_if_not_set above,
 // where our concrete type for ParameterT is std::map, but the to-be-determined
 // type is the value in the map.
-template<typename MapValueT>
+template<typename ParameterT>
 void
 Node::set_parameters_if_not_set(
   const std::string & name,
-  const std::map<std::string, MapValueT> & values)
+  const std::map<std::string, ParameterT> & values)
 {
   std::vector<rclcpp::Parameter> params;
 
   for (const auto & val : values) {
-    std::string param_name = name + "." + val.first;
-    rclcpp::Parameter parameter;
-    if (!this->get_parameter(param_name, parameter)) {
-      params.push_back(rclcpp::Parameter(param_name, val.second));
+    std::string parameter_name = name + "." + val.first;
+    if (!this->has_parameter(parameter_name)) {
+      params.push_back(rclcpp::Parameter(parameter_name, val.second));
     }
   }
 
   this->set_parameters(params);
 }
 
+
 template<typename ParameterT>
 bool
-Node::get_parameter(const std::string & name, ParameterT & value) const
+Node::get_parameter(const std::string & name, ParameterT & parameter) const
 {
   std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
 
-  rclcpp::Parameter parameter;
+  rclcpp::Parameter parameter_variant;
 
-  bool result = get_parameter(sub_name, parameter);
+  bool result = get_parameter(sub_name, parameter_variant);
   if (result) {
-    value = parameter.get_value<ParameterT>();
-  }
-
-  return result;
-}
-
-// this is a partially-specialized version of get_parameter above,
-// where our concrete type for ParameterT is std::map, but the to-be-determined
-// type is the value in the map.
-template<typename MapValueT>
-bool
-Node::get_parameters(
-  const std::string & name,
-  std::map<std::string, MapValueT> & values) const
-{
-  std::map<std::string, rclcpp::Parameter> params;
-  bool result = node_parameters_->get_parameters_by_prefix(name, params);
-  if (result) {
-    for (const auto & param : params) {
-      values[param.first] = param.second.get_value<MapValueT>();
-    }
+    parameter = parameter_variant.get_value<ParameterT>();
   }
 
   return result;
@@ -317,16 +328,36 @@ template<typename ParameterT>
 bool
 Node::get_parameter_or(
   const std::string & name,
-  ParameterT & value,
+  ParameterT & parameter,
   const ParameterT & alternative_value) const
 {
   std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
 
-  bool got_parameter = get_parameter(sub_name, value);
+  bool got_parameter = get_parameter(sub_name, parameter);
   if (!got_parameter) {
-    value = alternative_value;
+    parameter = alternative_value;
   }
   return got_parameter;
+}
+
+// this is a partially-specialized version of get_parameter above,
+// where our concrete type for ParameterT is std::map, but the to-be-determined
+// type is the value in the map.
+template<typename ParameterT>
+bool
+Node::get_parameters(
+  const std::string & prefix,
+  std::map<std::string, ParameterT> & values) const
+{
+  std::map<std::string, rclcpp::Parameter> params;
+  bool result = node_parameters_->get_parameters_by_prefix(prefix, params);
+  if (result) {
+    for (const auto & param : params) {
+      values[param.first] = param.second.get_value<ParameterT>();
+    }
+  }
+
+  return result;
 }
 
 template<typename ParameterT>
@@ -345,6 +376,13 @@ Node::get_parameter_or_set(
       });
     value = alternative_value;
   }
+}
+
+template<typename CallbackT>
+void
+Node::register_param_change_callback(CallbackT && callback)
+{
+  this->node_parameters_->register_param_change_callback(std::forward<CallbackT>(callback));
 }
 
 }  // namespace rclcpp

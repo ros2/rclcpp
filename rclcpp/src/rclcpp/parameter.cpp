@@ -30,6 +30,11 @@ Parameter::Parameter()
 {
 }
 
+Parameter::Parameter(const std::string & name)
+: name_(name), value_()
+{
+}
+
 Parameter::Parameter(const std::string & name, const rclcpp::ParameterValue & value)
 : name_(name), value_(value)
 {

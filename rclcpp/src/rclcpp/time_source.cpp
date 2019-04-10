@@ -78,20 +78,23 @@ void TimeSource::attachNode(
 
   logger_ = node_logging_->get_logger();
 
-  rclcpp::Parameter use_sim_time_param;
-  if (node_parameters_->get_parameter("use_sim_time", use_sim_time_param)) {
-    if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL) {
-      if (use_sim_time_param.get_value<bool>() == true) {
-        parameter_state_ = SET_TRUE;
-        enable_ros_time();
-        create_clock_sub();
-      }
-    } else {
-      RCLCPP_ERROR(logger_, "Invalid type for parameter 'use_sim_time' %s should be bool",
-        use_sim_time_param.get_type_name().c_str());
+  // Though this defaults to fale, it can be overridden by initial parameter values for the node,
+  // which may be given by the user at the node's construction or even by command-line arguments.
+  auto use_sim_time_param = node_parameters_->declare_parameter(
+    "use_sim_time",
+    rclcpp::ParameterValue(false),
+    rcl_interfaces::msg::ParameterDescriptor());
+  if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL) {
+    if (use_sim_time_param.get<bool>()) {
+      parameter_state_ = SET_TRUE;
+      enable_ros_time();
+      create_clock_sub();
     }
   } else {
-    RCLCPP_DEBUG(logger_, "'use_sim_time' parameter not set, using wall time by default.");
+    // TODO(wjwwood): use set_on_parameters_set_callback to catch the type mismatch,
+    //   before the use_sim_time parameter can ever be set to an invalid value
+    RCLCPP_ERROR(logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
+      rclcpp::to_string(use_sim_time_param.get_type()).c_str());
   }
 
   // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609

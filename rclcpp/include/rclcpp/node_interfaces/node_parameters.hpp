@@ -43,9 +43,6 @@ namespace node_interfaces
 // Internal struct for holding useful info about parameters
 struct ParameterInfo
 {
-  /// True if a user called declare_parameter()
-  bool is_declared = false;
-
   /// Current value of the parameter.
   rclcpp::ParameterValue value;
 
@@ -62,6 +59,7 @@ public:
   RCLCPP_PUBLIC
   NodeParameters(
     const node_interfaces::NodeBaseInterface::SharedPtr node_base,
+    const node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     const node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const node_interfaces::NodeClockInterface::SharedPtr node_clock,
@@ -77,11 +75,19 @@ public:
   ~NodeParameters();
 
   RCLCPP_PUBLIC
-  void
+  const rclcpp::ParameterValue &
   declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value,
-    bool read_only) override;
+    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor) override;
+
+  RCLCPP_PUBLIC
+  void
+  undeclare_parameter(const std::string & name) override;
+
+  RCLCPP_PUBLIC
+  bool
+  has_parameter(const std::string & name) const override;
 
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
@@ -126,15 +132,20 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const override;
 
   RCLCPP_PUBLIC
+  OnParametersSetCallbackType
+  set_on_parameters_set_callback(OnParametersSetCallbackType callback) override;
+
+  [[deprecated("use set_on_parameters_set_callback() instead")]]
+  RCLCPP_PUBLIC
   void
-  register_param_change_callback(ParametersCallbackFunction callback) override;
+  register_param_change_callback(OnParametersSetCallbackType callback) override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
   mutable std::mutex mutex_;
 
-  ParametersCallbackFunction parameters_callback_ = nullptr;
+  OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
   std::map<std::string, ParameterInfo> parameters_;
 
@@ -148,6 +159,7 @@ private:
 
   std::string combined_name_;
 
+  node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
   node_interfaces::NodeClockInterface::SharedPtr node_clock_;
 };
 

@@ -38,35 +38,53 @@ class NodeParametersInterface
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeParametersInterface)
 
-  /// Declare and initialize a parameter.
-  /* This method is used to declare that a parameter exists on this node.
-   * If a run-time user has provided an an initial value then it will be set in this method,
-   * otherwise the default_value will be set.
-   * \param[in] name the name of the parameter
-   * \param[in] default_value An initial value to be used if a run-time user did not override it.
-   * \param[in] read_only if True then this parameter may not be changed after initialization.
-   * \throws std::runtime_error if parameter has already been declared.
-   * \throws std::runtime_error if a parameter name is invalid.
-   * \throws rclcpp::exceptions::InvalidParameterValueException if initial value fails to be set.
-   */
-  RCLCPP_PUBLIC
-  virtual
-  void
-  declare_parameter(
-    const std::string & name,
-    const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
-    bool read_only = false) = 0;
-
   RCLCPP_PUBLIC
   virtual
   ~NodeParametersInterface() = default;
 
+  /// Declare and initialize a parameter.
+  /**
+   * \sa rclcpp::Node::declare_parameter
+   */
+  RCLCPP_PUBLIC
+  virtual
+  const rclcpp::ParameterValue &
+  declare_parameter(
+    const std::string & name,
+    const rclcpp::ParameterValue & default_value,
+    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor) = 0;
+
+  /// Undeclare a parameter.
+  /**
+   * \sa rclcpp::Node::undeclare_parameter
+   */
+  RCLCPP_PUBLIC
+  virtual
+  void
+  undeclare_parameter(const std::string & name) = 0;
+
+  /// Return true if the parameter has been declared, otherwise false.
+  /**
+   * \sa rclcpp::Node::has_parameter
+   */
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  has_parameter(const std::string & name) const = 0;
+
+  /// Set one or more parameters, one at a time.
+  /**
+   * \sa rclcpp::Node::set_parameters
+   */
   RCLCPP_PUBLIC
   virtual
   std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(
-    const std::vector<rclcpp::Parameter> & parameters) = 0;
+  set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
+  /// Declare and initialize a parameter, all at once.
+  /**
+   * \sa rclcpp::Node::set_parameters_atomically
+   */
   RCLCPP_PUBLIC
   virtual
   rcl_interfaces::msg::SetParametersResult
@@ -138,14 +156,28 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
-  using ParametersCallbackFunction = std::function<
-    rcl_interfaces::msg::SetParametersResult(
-      const std::vector<rclcpp::Parameter> &)>;
+  using OnParametersSetCallbackType =
+    std::function<
+      rcl_interfaces::msg::SetParametersResult (const std::vector<rclcpp::Parameter> &)
+    >;
 
+  using ParametersCallbackFunction [[deprecated("use OnParametersSetCallbackType instead")]] =
+    OnParametersSetCallbackType;
+
+  /// Register a callback for when parameters are being set, return an existing one.
+  /**
+   * \sa rclcpp::Node::set_on_parameters_set_callback
+   */
+  RCLCPP_PUBLIC
+  virtual
+  OnParametersSetCallbackType
+  set_on_parameters_set_callback(OnParametersSetCallbackType callback) = 0;
+
+  [[deprecated("use set_on_parameters_set_callback() instead")]]
   RCLCPP_PUBLIC
   virtual
   void
-  register_param_change_callback(ParametersCallbackFunction callback) = 0;
+  register_param_change_callback(OnParametersSetCallbackType callback) = 0;
 };
 
 }  // namespace node_interfaces

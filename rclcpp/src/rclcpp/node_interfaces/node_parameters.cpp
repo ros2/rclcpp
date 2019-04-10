@@ -34,6 +34,7 @@ using rclcpp::node_interfaces::NodeParameters;
 
 NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
+  const node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
   const rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
@@ -43,9 +44,9 @@ NodeParameters::NodeParameters(
   bool start_parameter_event_publisher,
   const rmw_qos_profile_t & parameter_event_qos_profile,
   bool allow_undeclared_parameters)
-:
-  allow_undeclared_(allow_undeclared_parameters),
+: allow_undeclared_(allow_undeclared_parameters),
   events_publisher_(nullptr),
+  node_logging_(node_logging),
   node_clock_(node_clock)
 {
   using MessageT = rcl_interfaces::msg::ParameterEvent;
@@ -168,62 +169,157 @@ NodeParameters::NodeParameters(
 NodeParameters::~NodeParameters()
 {}
 
-void
-NodeParameters::declare_parameter(
-  const std::string & name,
-  const rclcpp::ParameterValue & default_value,
-  bool read_only)
+RCLCPP_LOCAL
+bool
+__lockless_has_parameter(
+  const std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters,
+  const std::string & name)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
-  // TODO(sloretz) parameter name validation
-  if (name.empty()) {
-    throw std::runtime_error("parameter name must not be empty");
+  return parameters.find(name) != parameters.end();
+}
+
+using OnParametersSetCallbackType =
+  rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+__set_parameters_atomically_common(
+  const std::vector<rclcpp::Parameter> & parameters,
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
+  OnParametersSetCallbackType on_set_parameters_callback)
+{
+  // Call the user callback to see if the new value(s) are allowed.
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  if (on_set_parameters_callback) {
+    result = on_set_parameters_callback(parameters);
   }
 
-  // Error if this parameter has already been declared and is different
-  auto param_iter = parameters_.find(name);
-  if (param_iter != parameters_.end() && param_iter->second.is_declared) {
-    if (
-      param_iter->second.descriptor.type != default_value.get_type() ||
-      param_iter->second.descriptor.read_only != read_only)
-    {
-      throw std::runtime_error("parameter '" + name + "' exists with conflicting description");
+  // If accepted, actually set the values.
+  if (result.successful) {
+    for (size_t i = 0; i < parameters.size(); ++i) {
+      const std::string & name = parameters[i].get_name();
+      parameter_infos[name].descriptor.name = parameters[i].get_name();
+      parameter_infos[name].descriptor.type = parameters[i].get_type();
+      parameter_infos[name].value = parameters[i].get_parameter_value();
     }
   }
 
-  // Check if run-time user passed an initial value, else use the default.
-  rclcpp::ParameterValue initial_value = default_value;
-  auto value_iter = initial_parameter_values_.find(name);
-  if (value_iter != initial_parameter_values_.end()) {
-    initial_value = value_iter->second;
+  // Either way, return the result.
+  return result;
+}
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+__declare_parameter_common(
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
+  const std::map<std::string, rclcpp::ParameterValue> & initial_values,
+  OnParametersSetCallbackType on_set_parameters_callback,
+  rcl_interfaces::msg::ParameterEvent * parameter_event_out)
+{
+  using rclcpp::node_interfaces::ParameterInfo;
+  std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
+  parameter_infos.at(name).descriptor = parameter_descriptor;
+
+  // Use the value from the initial_values if available, otherwise use the default.
+  const rclcpp::ParameterValue * initial_value = &default_value;
+  auto initial_value_it = initial_values.find(name);
+  if (initial_value_it != initial_values.end()) {
+    initial_value = &initial_value_it->second;
   }
 
-  // Save a description of the parameter
-  rcl_interfaces::msg::ParameterDescriptor desc;
-  desc.name = name;
-  desc.type = initial_value.get_type();
-  desc.read_only = read_only;
+  // Check with the user's callback to see if the initial value can be set.
+  std::vector<rclcpp::Parameter> parameter_wrappers {rclcpp::Parameter(name, *initial_value)};
+  // This function also takes care of default vs initial value.
+  auto result = __set_parameters_atomically_common(
+    parameter_wrappers,
+    parameter_infos,
+    on_set_parameters_callback);
 
-  rclcpp::node_interfaces::ParameterInfo pinfo;
-  pinfo.is_declared = true;
-  pinfo.value = initial_value;
-  pinfo.descriptor = desc;
+  // Add declared parameters to storage.
+  parameters_out[name] = parameter_infos.at(name);
 
-  // Add declared parameters to storage, even when they're not set.
-  parameters_[name] = pinfo;
-
-  // If it has an actual value then add it to 'new_parameters' event
-  if (rclcpp::ParameterType::PARAMETER_NOT_SET != initial_value.get_type()) {
-    auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
-    parameter_event->new_parameters.push_back(
-      rclcpp::Parameter(name, initial_value).to_parameter_msg());
-    events_publisher_->publish(parameter_event);
+  // Extend the given parameter event, if valid.
+  if (parameter_event_out) {
+    parameter_event_out->new_parameters.push_back(parameter_wrappers[0].to_parameter_msg());
   }
+
+  return result;
+}
+
+const rclcpp::ParameterValue &
+NodeParameters::declare_parameter(
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  // TODO(sloretz) parameter name validation
+  if (name.empty()) {
+    throw rclcpp::exceptions::InvalidParametersException("parameter name must not be empty");
+  }
+
+  // Error if this parameter has already been declared and is different
+  if (__lockless_has_parameter(parameters_, name)) {
+    throw rclcpp::exceptions::ParameterAlreadyDeclaredException(
+      "parameter '" + name + "' has already been declared");
+  }
+
+  rcl_interfaces::msg::ParameterEvent parameter_event;
+  auto result = __declare_parameter_common(
+    name,
+    default_value,
+    parameter_descriptor,
+    parameters_,
+    initial_parameter_values_,
+    on_parameters_set_callback_,
+    &parameter_event);
+
+  // If it failed to be set, then throw an exception.
+  if (!result.successful) {
+    throw rclcpp::exceptions::InvalidParameterValueException(
+      "parameter '" + name + "' could not be set: " + result.reason);
+  }
+
+  // Publish the event.
+  events_publisher_->publish(parameter_event);
+
+  return parameters_.at(name).value;
+}
+
+void
+NodeParameters::undeclare_parameter(const std::string & name)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  auto parameter_info = parameters_.find(name);
+  if (parameter_info == parameters_.end()) {
+    throw rclcpp::exceptions::ParameterNotDeclaredException(
+      "cannot undeclare parameter '" + name + "' which has not yet been declared");
+  }
+
+  if (parameter_info->second.descriptor.read_only) {
+    throw rclcpp::exceptions::ParameterImmutableException(
+      "cannot undeclare parameter '" + name + "' because it is read-only");
+  }
+
+  parameters_.erase(parameter_info);
+}
+
+bool
+NodeParameters::has_parameter(const std::string & name) const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  return __lockless_has_parameter(parameters_, name);
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
-NodeParameters::set_parameters(
-  const std::vector<rclcpp::Parameter> & parameters)
+NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
   for (const auto & p : parameters) {
@@ -233,109 +329,186 @@ NodeParameters::set_parameters(
   return results;
 }
 
+template<typename ParameterVectorType>
+auto
+__find_parameter_by_name(
+  ParameterVectorType & parameters,
+  const std::string & name)
+{
+  return std::find_if(
+    parameters.begin(),
+    parameters.end(),
+    [&](auto parameter) {return parameter.get_name() == name;});
+}
+
 rcl_interfaces::msg::SetParametersResult
-NodeParameters::set_parameters_atomically(
-  const std::vector<rclcpp::Parameter> & parameters)
+NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> tmp_map;
-  auto parameter_event = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
 
-  parameter_event->node = combined_name_;
-
-  // TODO(jacquelinekay): handle parameter constraints
   rcl_interfaces::msg::SetParametersResult result;
-  if (parameters_callback_) {
-    result = parameters_callback_(parameters);
-  } else {
-    result.successful = true;
+
+  // Check if any of the parameters are read-only, or if any parameters are not
+  // declared.
+  // If not declared, keep track of them in order to declare them later, when
+  // undeclared parameters are allowed, and if they're not allowed, fail.
+  std::vector<const rclcpp::Parameter *> parameters_to_be_declared;
+  for (const auto & parameter : parameters) {
+    const std::string & name = parameter.get_name();
+
+    // Check to make sure the parameter name is valid.
+    if (name.empty()) {
+      throw rclcpp::exceptions::InvalidParametersException("parameter name must not be empty");
+    }
+
+    // Check to see if it is declared.
+    auto parameter_info = parameters_.find(name);
+    if (parameter_info == parameters_.end()) {
+      // If not check to see if undeclared paramaters are allowed, ...
+      if (allow_undeclared_) {
+        // If so, mark the parameter to be declared for the user implicitly.
+        parameters_to_be_declared.push_back(&parameter);
+        // continue as it cannot be read-only, and because the declare will
+        // implicitly set the parameter and parameter_infos is for setting only.
+        continue;
+      } else {
+        // If not, then throw the exception as documented.
+        throw rclcpp::exceptions::ParameterNotDeclaredException(
+          "parameter '" + name + "' cannot be set because it was not declared");
+      }
+    }
+
+    // Check to see if it is read-only.
+    if (parameter_info->second.descriptor.read_only) {
+      result.successful = false;
+      result.reason = "parameter '" + name + "' cannot be set because it is read-only";
+      return result;
+    }
   }
 
+  // Declare parameters into a temporary "staging area", incase one of the declares fail.
+  // We will use the staged changes as input to the "set atomically" action.
+  // We explicitly avoid calling the user callback here, so that it may be called once, with
+  // all the other parameters to be set (already declared parameters).
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> staged_parameter_changes;
+  rcl_interfaces::msg::ParameterEvent parameter_event_msg;
+  parameter_event_msg.node = combined_name_;
+  for (auto parameter_to_be_declared : parameters_to_be_declared) {
+    // This should not throw, because we validated the name and checked that
+    // the parameter was not already declared.
+    result = __declare_parameter_common(
+      parameter_to_be_declared->get_name(),
+      parameter_to_be_declared->get_parameter_value(),
+      rcl_interfaces::msg::ParameterDescriptor(),  // Implicit decalre uses default descriptor.
+      staged_parameter_changes,
+      initial_parameter_values_,
+      nullptr,  // callback is explicitly null, so that it is called only once, when setting below.
+      &parameter_event_msg);
+    if (!result.successful) {
+      // Declare failed, return knowing that nothing was changed because the
+      // staged changes were not applied.
+      return result;
+    }
+  }
+
+  // If there were implicitly declared parameters, then we may need to copy the input parameters
+  // and then assign the value that was selected after the declare (could be affected by the
+  // initial parameter values).
+  const std::vector<rclcpp::Parameter> * parameters_to_be_set = &parameters;
+  std::vector<rclcpp::Parameter> parameters_copy;
+  if (0 != staged_parameter_changes.size()) {  // If there were any implicitly declared parameters.
+    bool any_initial_values_used = false;
+    for (const auto & staged_parameter_change : staged_parameter_changes) {
+      auto it = __find_parameter_by_name(parameters, staged_parameter_change.first);
+      if (it->get_parameter_value() != staged_parameter_change.second.value) {
+        // In this case, the value of the staged parameter differs from the
+        // input from the user, and therefore we need to update things before setting.
+        any_initial_values_used = true;
+      }
+    }
+    if (any_initial_values_used) {
+      parameters_copy = parameters;
+      for (const auto & staged_parameter_change : staged_parameter_changes) {
+        auto it = __find_parameter_by_name(parameters_copy, staged_parameter_change.first);
+        *it = Parameter(staged_parameter_change.first, staged_parameter_change.second.value);
+      }
+      parameters_to_be_set = &parameters_copy;
+    }
+  }
+
+  // Collect parameters who will have had their type changed to
+  // rclcpp::PARAMETER_NOT_SET so they can later be implicitly undeclared.
+  std::vector<const rclcpp::Parameter *> parameters_to_be_undeclared;
+  for (const auto & parameter : *parameters_to_be_set) {
+    if (rclcpp::PARAMETER_NOT_SET == parameter.get_type()) {
+      auto it = parameters_.find(parameter.get_name());
+      if (it != parameters_.end() && rclcpp::PARAMETER_NOT_SET != it->second.value.get_type()) {
+        parameters_to_be_undeclared.push_back(&parameter);
+      }
+    }
+  }
+
+  // Set the all of the parameters including the ones declared implicitly above.
+  result = __set_parameters_atomically_common(
+    // either the original parameters given by the user, or ones updated with initial values
+    *parameters_to_be_set,
+    // they are actually set on the official parameter storage
+    parameters_,
+    // this will get called once, with all the parameters to be set
+    on_parameters_set_callback_);
+
+  // If not successful, then stop here.
   if (!result.successful) {
     return result;
   }
 
-  std::vector<std::string> to_delete;
+  // If successful, then update the parameter infos from the implicitly declared parameter's.
+  for (const auto & kv_pair : staged_parameter_changes) {
+    // assumption: the parameter is already present in parameters_ due to the above "set"
+    assert(__lockless_has_parameter(parameters_, kv_pair.first));
+    // assumption: the value in parameters_ is the same as the value resulting from the declare
+    assert(parameters_[kv_pair.first].value == kv_pair.second.value);
+    // This assignment should not change the name, type, or value, but may
+    // change other things from the ParameterInfo.
+    parameters_[kv_pair.first] = kv_pair.second;
+  }
 
-  for (const auto & p : parameters) {
-    auto param_iter = parameters_.find(p.get_name());
-    bool exists = parameters_.end() != param_iter;
-    bool want_to_delete = p.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET;
-
-    if (exists) {
-      if (param_iter->second.descriptor.read_only) {
-        result.successful = false;
-        result.reason = "read_only parameter: '" + p.get_name() + "'";
-        return result;
-      }
-      if (want_to_delete) {
-        parameter_event->deleted_parameters.push_back(p.to_parameter_msg());
-        if (param_iter->second.is_declared) {
-          // clear declared parameter value, but don't delete it
-          rclcpp::node_interfaces::ParameterInfo cleared_param_info = param_iter->second;
-          cleared_param_info.value = rclcpp::ParameterValue();
-          tmp_map[p.get_name()] = cleared_param_info;
-        } else {
-          // Truly delete an undeclared parameter
-          to_delete.push_back(p.get_name());
-        }
-      } else {
-        if (param_iter->second.value.get_type() == rclcpp::ParameterType::PARAMETER_NOT_SET) {
-          // case: setting a value on a declared parameter that currently is unset
-          parameter_event->new_parameters.push_back(p.to_parameter_msg());
-        } else {
-          // case: changing a parameter value
-          parameter_event->changed_parameters.push_back(p.to_parameter_msg());
-        }
-        rclcpp::node_interfaces::ParameterInfo changed_param_info = param_iter->second;
-        // TODO(sloretz) Add accessor for ParameterValue on Parameter class
-        changed_param_info.value = rclcpp::ParameterValue(p.get_value_message());
-        tmp_map[p.get_name()] = changed_param_info;
-      }
-    } else {
-      // case: parameter does not exist already
-      if (!allow_undeclared_) {
-        result.successful = false;
-        result.reason = "undeclared parameter: '" + p.get_name() + "'";
-        return result;
-      } else if (want_to_delete) {
-        result.successful = false;
-        result.reason = "deleting parameter: '" + p.get_name() + "' that does not exist";
-        return result;
-      } else {
-        // Create new undeclared parameter
-        parameter_event->new_parameters.push_back(p.to_parameter_msg());
-
-        rcl_interfaces::msg::ParameterDescriptor desc;
-        desc.name = p.get_name();
-        desc.type = p.get_type();
-        desc.read_only = false;
-
-        rclcpp::node_interfaces::ParameterInfo new_param_info;
-        new_param_info.is_declared = false;
-        // TODO(sloretz) Add accessor for ParameterValue on Parameter class
-        new_param_info.value = rclcpp::ParameterValue(p.get_value_message());
-        new_param_info.descriptor = desc;
-
-        tmp_map[p.get_name()] = new_param_info;
-      }
+  // Undeclare parameters that need to be.
+  for (auto parameter_to_undeclare : parameters_to_be_undeclared) {
+    auto it = parameters_.find(parameter_to_undeclare->get_name());
+    // assumption: the parameter to be undeclared should be in the parameter infos map
+    assert(it != parameters_.end());
+    if (it != parameters_.end()) {
+      // Remove it and update the parameter event message.
+      parameters_.erase(it);
+      parameter_event_msg.deleted_parameters.push_back(
+        rclcpp::Parameter(it->first, it->second.value).to_parameter_msg());
     }
   }
-  // std::map::insert will not overwrite elements, so we'll keep the new
-  // ones and add only those that already exist in the Node's internal map
-  tmp_map.insert(parameters_.begin(), parameters_.end());
 
-  // remove truly deleted parameters
-  for (const std::string & param_name : to_delete) {
-    tmp_map.erase(param_name);
+  // Update the parameter event message for any parameters which were only set,
+  // and not either declared or undeclared.
+  for (const auto & parameter : *parameters_to_be_set) {
+    if (staged_parameter_changes.find(parameter.get_name()) != staged_parameter_changes.end()) {
+      // This parameter was declared.
+      continue;
+    }
+    auto it = std::find_if(
+      parameters_to_be_undeclared.begin(),
+      parameters_to_be_undeclared.end(),
+      [&parameter](const auto & p) {return p->get_name() == parameter.get_name();});
+    if (it != parameters_to_be_undeclared.end()) {
+      // This parameter was undeclared (deleted).
+      continue;
+    }
+    // This parameter was neither declared nor undeclared.
+    parameter_event_msg.changed_parameters.push_back(parameter.to_parameter_msg());
   }
 
-  std::swap(tmp_map, parameters_);
-
-  // events_publisher_ may be nullptr if it was disabled in constructor
+  // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
   if (nullptr != events_publisher_) {
-    parameter_event->stamp = node_clock_->get_clock()->now();
-    events_publisher_->publish(parameter_event);
+    parameter_event_msg.stamp = node_clock_->get_clock()->now();
+    events_publisher_->publish(parameter_event_msg);
   }
 
   return result;
@@ -487,12 +660,24 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
   return result;
 }
 
+NodeParameters::OnParametersSetCallbackType
+NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callback)
+{
+  auto existing_callback = on_parameters_set_callback_;
+  on_parameters_set_callback_ = callback;
+  return existing_callback;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void
 NodeParameters::register_param_change_callback(ParametersCallbackFunction callback)
 {
-  if (parameters_callback_) {
-    RCUTILS_LOG_WARN("param_change_callback already registered, "
-      "overwriting previous callback");
+  if (on_parameters_set_callback_) {
+    RCLCPP_WARN(
+      node_logging_->get_logger(),
+      "on_parameters_set_callback already registered, overwriting previous callback");
   }
-  parameters_callback_ = callback;
+  on_parameters_set_callback_ = callback;
 }
+#pragma GCC diagnostic pop

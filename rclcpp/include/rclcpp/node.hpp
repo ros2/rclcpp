@@ -258,116 +258,355 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  /// Declare and initialize a parameter.
+  /// Declare and initialize a parameter, return the effective value.
   /**
    * This method is used to declare that a parameter exists on this node.
-   * If a run-time user has provided an an initial value then it will be set in this method,
-   * otherwise the default_value will be set.
+   * If, at run-time, the user has provided an initial value then it will be
+   * set in this method, otherwise the given default_value will be set.
+   * In either case, the resulting value is returned, whether or not it is
+   * based on the default value or the user provided initial value.
+   *
+   * If no parameter_descriptor is given, then the default values from the
+   * message definition will be used, e.g. read_only will be false.
+   *
+   * The name and type in the given rcl_interfaces::msg::ParameterDescriptor
+   * are ignored, and should be specified using the name argument to this
+   * function and the default value's type instead.
+   *
+   * This method, if successful, will result in any callback registered with
+   * set_on_parameters_set_callback to be called.
+   * If that callback prevents the initial value for the parameter from being
+   * set then rclcpp::exceptions::InvalidParameterValueException is thrown.
+   *
    * \param[in] name the name of the parameter
-   * \param[in] default_value An initial value to be used if a run-time user did not override it.
-   * \param[in] read_only if True then this parameter may not be changed after initialization.
-   * \throws std::runtime_error if parameter has already been declared.
-   * \throws std::runtime_error if a parameter name is invalid.
-   * \throws rclcpp::exceptions::InvalidParameterValueException if initial value fails to be set.
+   * \param[in] default_value An initial value to be used if at run-time user
+   *   did not override it.
+   * \param[in] parameter_descriptor optionally set a custom description for
+   *   the parameter.
+   * \return a const reference to the value of the parameter
+   * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
+   *   has already been declared.
+   * \throws rclcpp::exceptions::InvalidParametersException if a parameter
+   *   name is invalid.
+   * \throws rclcpp::exceptions::InvalidParameterValueException if initial
+   *   value fails to be set.
    */
   RCLCPP_PUBLIC
-  void
+  const rclcpp::ParameterValue &
   declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
-    bool read_only = false);
+    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+      rcl_interfaces::msg::ParameterDescriptor());
 
   /// Declare and initialize a parameter with a type.
   /**
    * See the non-templated declare_parameter() on this class for details.
+   *
+   * If the type of the default value, and therefore also the type of return
+   * value, differs from the initial value provided in the node options, then
+   * a rclcpp::ParameterTypeException may be thrown.
+   * To avoid this, use the declare_parameter() method which returns an
+   * rclcpp::ParameterValue instead.
+   *
+   * Note, this method cannot return a const reference, because extending the
+   * lifetime of a temporary only works recursively with member initializers,
+   * and cannot be extended to members of a class returned.
+   * The return value of this class is a copy of the member of a ParameterValue
+   * which is returned by the other version of declare_parameter().
+   * See also:
+   *
+   *   - https://en.cppreference.com/w/cpp/language/lifetime
+   *   - https://herbsutter.com/2008/01/01/gotw-88-a-candidate-for-the-most-important-const/
+   *   - https://www.youtube.com/watch?v=uQyT-5iWUow (cppnow 2018 presentation)
    */
   template<typename ParameterT>
-  void
+  ParameterT
   declare_parameter(
     const std::string & name,
     const ParameterT & default_value,
-    bool read_only = false);
+    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+      rcl_interfaces::msg::ParameterDescriptor());
 
+  /// Declare and initialize several parameters with the same namespace and type.
+  /**
+   * For each key in the map, a parameter with a name of "namespace.key"
+   * will be set to the value in the map.
+   * The resulting value for each declared parameter will be returned.
+   *
+   * The name expansion is naive, so if you set the namespace to be "foo.",
+   * then the resulting parameter names will be like "foo..key".
+   * However, if the namespace is an empty string, then no leading '.' will be
+   * placed before each key, which would have been the case when naively
+   * expanding "namespace.key".
+   * This allows you to declare several parameters at once without a namespace.
+   *
+   * The map may either contain default values for parameters, or a std::pair
+   * where the first element is a default value and the second is a
+   * parameter descriptor.
+   * This function only takes the default value, but there is another overload
+   * which takes the std::pair with the default value and descriptor.
+   *
+   * This method, if successful, will result in any callback registered with
+   * set_on_parameters_set_callback to be called, once for each parameter.
+   * If that callback prevents the initial value for any parameter from being
+   * set then rclcpp::exceptions::InvalidParameterValueException is thrown.
+   *
+   * \param[in] namespace_ The prefix of the parameters to set.
+   * \param[in] parameters The parameters to set in the given prefix.
+   * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
+   *   has already been declared.
+   * \throws rclcpp::exceptions::InvalidParametersException if a parameter
+   *   name is invalid.
+   * \throws rclcpp::exceptions::InvalidParameterValueException if initial
+   *   value fails to be set.
+   */
+  template<typename ParameterT>
+  std::vector<ParameterT>
+  declare_parameters(
+    const std::string & namespace_,
+    const std::map<std::string, ParameterT> & parameters);
+
+  /// Declare and initialize several parameters with the same prefix and type.
+  /**
+   * This version will take a map where the value is a pair, with the default
+   * parameter value as the first item and a parameter descriptor as the second.
+   *
+   * See the simpler declare_parameters() on this class for more details.
+   */
+  template<typename ParameterT>
+  std::vector<ParameterT>
+  declare_parameters(
+    const std::string & namespace_,
+    const std::map<
+      std::string,
+      std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
+    > & parameters);
+
+  /// Undeclare a previously declared parameter.
+  /**
+   * This method will not cause a callback registered with
+   * set_on_parameters_set_callback to be called.
+   *
+   * \param[in] name of the parameter to be undeclared
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
+   *   has not been declared
+   * \throws rclcpp::exceptions::ParameterImmutableException if the parameter
+   *   was create as read_only (immutable).
+   */
+  RCLCPP_PUBLIC
+  void
+  undeclare_parameter(const std::string & name);
+
+  /// Return true if a given parameter is declared.
+  /**
+   * \param[in] name of the parameter to check for being declared
+   * \return true if the parameter name has been declared, otherwise false
+   */
+  RCLCPP_PUBLIC
+  bool
+  has_parameter(const std::string & name) const;
+
+  /// Set a single parameter.
+  /**
+   * Set the given parameter and then return result of the set action.
+   *
+   * If the parameter has not been declared this function may throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception, but only if
+   * the node was not created with the
+   * rclcpp::NodeOptions::allow_undeclared_parameters set to true.
+   * If undeclared parameters are allowed, then the parameter is implicitly
+   * declared with the default parameter meta data before being set.
+   *
+   * This method will result in any callback registered with
+   * set_on_parameters_set_callback to be called.
+   * If the callback prevents the parameter from being set, then it will be
+   * reflected in the SetParametersResult which is returned, but no exception
+   * will be thrown.
+   *
+   * If the value type of the parameter is rclcpp::PARAMETER_NOT_SET, and the
+   * existing parameter type is something else, then the parameter will be
+   * implicitly undeclared.
+   * This will result in a parameter event indicating that the parameter was
+   * deleted.
+   *
+   * \param[in] parameter parameter to be set
+   * \return result of the set action
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
+   *   has not been declared and undeclared parameters are not allowed.
+   */
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameter(const rclcpp::Parameter & parameter);
+
+  /// Set one or more parameters, one at a time.
+  /**
+   * Set the given parameters, one at a time, and then return result of each
+   * set action.
+   *
+   * Parameters are set in the order they are given within the input vector.
+   *
+   * Like set_parameter, if any of the parameters to be set have not first been
+   * declared, and undeclared parameters are not allowed (the default), then
+   * this method may throw rclcpp::exceptions::ParameterNotDeclaredException.
+   *
+   * If setting a parameter fails due to not being declared, then the
+   * parameters which have already been set will stay set, and no attempt will
+   * be made to set the parameters which come after.
+   *
+   * If a parameter fails to be set due to any other reason, like being
+   * rejected by the user's callback (basically any reason other than not
+   * having been declared beforehand), then that is reflected in the
+   * corresponding SetParametersResult in the vector returned by this function.
+   *
+   * This method will result in any callback registered with
+   * set_on_parameters_set_callback to be called, once for each parameter.
+   * If the callback prevents the parameter from being set, then it will be
+   * reflected in the corresponding SetParametersResult which is returned,
+   * but no exception will be thrown.
+   *
+   * Like set_parameter() this method will implicitly undeclare parameters
+   * with the type rclcpp::PARAMETER_NOT_SET.
+   *
+   * \param[in] parameters vector of parameters to be set
+   * \return result of each set action as a vector
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
+   *   has not been declared and undeclared parameters are not allowed.
+   */
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters);
 
+  /// Set one or more parameters, all at once.
+  /**
+   * Set the given parameters, all at one time, and then aggregate result.
+   *
+   * Behaves like set_parameter, except that it sets multiple parameters,
+   * failing all if just one of the parameters are unsuccessfully set.
+   * Either all of the parameters are set or none of them are set.
+   *
+   * Like set_parameter and set_parameters, this method may throw an
+   * rclcpp::exceptions::ParameterNotDeclaredException exception if any of the
+   * parameters to be set have not first been declared.
+   * If the exception is thrown then none of the parameters will have been set.
+   *
+   * This method will result in any callback registered with
+   * set_on_parameters_set_callback to be called, just one time.
+   * If the callback prevents the parameters from being set, then it will be
+   * reflected in the SetParametersResult which is returned, but no exception
+   * will be thrown.
+   *
+   * If you pass multiple rclcpp::Parameter instances with the same name, then
+   * only the last one in the vector (forward iteration) will be set.
+   *
+   * Like set_parameter() this method will implicitly undeclare parameters
+   * with the type rclcpp::PARAMETER_NOT_SET.
+   *
+   * \param[in] parameters vector of parameters to be set
+   * \return aggregate result of setting all the parameters
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
+   *   has not been declared and undeclared parameters are not allowed.
+   */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
+  /// Set one parameter, unless that parameter has already been set.
+  /**
+   * Set the given parameter unless already set.
+   *
+   * Deprecated, instead use declare_parameter().
+   *
+   * \param[in] parameters vector of parameters to be set
+   * \return result of each set action as a vector
+   */
   template<typename ParameterT>
+  [[deprecated("use declare_parameter() instead")]]
   void
-  set_parameter_if_not_set(
-    const std::string & name,
-    const ParameterT & value);
+  set_parameter_if_not_set(const std::string & name, const ParameterT & value);
 
   /// Set a map of parameters with the same prefix.
   /**
    * For each key in the map, a parameter with a name of "name.key" will be set
    * to the value in the map.
    *
-   * \param[in] name The prefix of the parameters to set.
-   * \param[in] values The parameters to set in the given prefix.
+   * Deprecated, instead use declare_parameters().
+   *
+   * \param[in] name The prefix of the parameters to set
+   * \param[in] values The parameters to set in the given prefix
    */
-  template<typename MapValueT>
+  template<typename ParameterT>
+  [[deprecated("use declare_parameters() instead")]]
   void
   set_parameters_if_not_set(
     const std::string & name,
-    const std::map<std::string, MapValueT> & values);
+    const std::map<std::string, ParameterT> & values);
 
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & names) const;
-
+  /// Return the parameter by the given name.
+  /**
+   * If the parameter has not been declared, then this method may throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception.
+   *
+   * If undeclared parameters are allowed, see the node option
+   * rclcpp::NodeOptions::allow_undeclared_parameters, then this method will
+   * not throw an exception, and instead return a default initialized
+   * rclcpp::Parameter, which has a type of
+   * rclcpp::ParameterType::PARAMETER_NOT_SET.
+   *
+   * \param[in] name The name of the parameter to get.
+   * \return The requested parameter inside of a rclcpp parameter object.
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
+   *   has not been declared and undeclared parameters are not allowed.
+   */
   RCLCPP_PUBLIC
   rclcpp::Parameter
   get_parameter(const std::string & name) const;
 
-  RCLCPP_PUBLIC
-  bool
-  get_parameter(
-    const std::string & name,
-    rclcpp::Parameter & parameter) const;
-
-  /// Assign the value of the parameter if set into the parameter argument.
+  /// Get the value of a parameter by the given name, and return true if it was set.
   /**
-   * If the parameter was not set, then the "parameter" argument is never assigned a value.
+   * This method will never throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception, but will
+   * instead return false if the parameter has not be previously declared.
+   *
+   * If the parameter was not declared, then the output parameter for this
+   * method which is called "parameter" will not be assigned a value.
+   * If the parameter was declared, and therefore has a value, then it is
+   * assigned into the "parameter" parameter of this method.
    *
    * \param[in] name The name of the parameter to get.
-   * \param[out] parameter The output where the value of the parameter should be assigned.
-   * \returns true if the parameter was set, false otherwise
+   * \param[out] parameter The output storage for the parameter being retrieved.
+   * \return True if the parameter was previously declared, otherwise false.
+   */
+  RCLCPP_PUBLIC
+  bool
+  get_parameter(const std::string & name, rclcpp::Parameter & parameter) const;
+
+  /// Get the value of a parameter by the given name, and return true if it was set.
+  /**
+   * Identical to the non-templated version of this method, except that when
+   * assigning the output "parameter" parameter, this method will attempt to
+   * coerce the parameter value into the type requested by the given
+   * template argument, which may fail and throw an exception.
+   *
+   * \throws rclcpp::ParameterTypeException if the requested type does not
+   *   match the value of the parameter which is stored.
    */
   template<typename ParameterT>
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
 
-  /// Assign the value of the map parameter if set into the values argument.
+  /// Get the parameter value, or the "alternative_value" if not set, and assign it to "parameter".
   /**
-   * Parameter names that are part of a map are of the form "name.member".
-   * This API gets all parameters that begin with "name", storing them into the
-   * map with the name of the parameter and their value.
-   * If there are no members in the named map, then the "values" argument is not changed.
-   *
-   * \param[in] name The prefix of the parameters to get.
-   * \param[out] values The map of output values, with one std::string,MapValueT
-   *                    per parameter.
-   * \returns true if values was changed, false otherwise
-   */
-  template<typename MapValueT>
-  bool
-  get_parameters(
-    const std::string & name,
-    std::map<std::string, MapValueT> & values) const;
-
-  /// Get the parameter value, or the "alternative value" if not set, and assign it to "value".
-  /**
-   * If the parameter was not set, then the "value" argument is assigned
+   * If the parameter was not set, then the "parameter" argument is assigned
    * the "alternative_value".
-   * In all cases, the parameter remains not set after this function is called.
+   *
+   * Like the get_parameter() which returns a bool, this method will never
+   * throw the rclcpp::exceptions::ParameterNotDeclaredException exception.
+   *
+   * In all cases, the parameter is never set or declared.
    *
    * \param[in] name The name of the parameter to get.
-   * \param[out] value The output where the value of the parameter should be assigned.
+   * \param[out] parameter The output where the value of the parameter should be assigned.
    * \param[in] alternative_value Value to be stored in output if the parameter was not set.
    * \returns true if the parameter was set, false otherwise
    */
@@ -375,8 +614,66 @@ public:
   bool
   get_parameter_or(
     const std::string & name,
-    ParameterT & value,
+    ParameterT & parameter,
     const ParameterT & alternative_value) const;
+
+  /// Return the parameters by the given parameter names.
+  /**
+   * Like get_parameters(), this method may throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception if the
+   * requested parameter has not been declared and undeclared parameters are
+   * not allowed.
+   *
+   * Also like get_parameters(), if undeclared parameter are allowed and the
+   * parameter has not been declared, then the corresponding rclcpp::Parameter
+   * will be default initialized and therefore have the type
+   * rclcpp::ParameterType::PARAMETER_NOT_SET.
+   *
+   * \param[in] names The names of the parameters to be retrieved.
+   * \return The parameters that were retrieved.
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if any of the
+   *   parameters have not been declared and undeclared parameters are not
+   *   allowed.
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::Parameter>
+  get_parameters(const std::vector<std::string> & names) const;
+
+  /// Get the parameter values for all parameters which are prefixed with the given prefix.
+  /**
+   * The "prefix" argument is used to list the parameters which are prefixed
+   * with that prefix, see also list_parameters().
+   *
+   * The resulting list of parameter names are used to get the values of the
+   * parameters.
+   *
+   * If not parameters with the prefix are found, then the output parameter
+   * "values" will be unchanged and false will be returned.
+   * Otherwise, the parameter names and values will be stored in the map and
+   * true will be returned to indicate "values" was mutated.
+   *
+   * This method will never throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception because the
+   * action of listing the parameters is done atomically with getting the
+   * values, and therefore they are only listed if already declared and cannot
+   * be undeclared before being retrieved.
+   *
+   * Like the templated get_parameter() variant, this method will attempt to
+   * coerce the parameter value into the type requested by the given
+   * template argument, which may fail and throw an exception.
+   *
+   * \param[in] prefix The prefix of the parameters to get.
+   * \param[out] values The map used to store the parameter names and values,
+   *   respectively, with one entry per parameter matching prefix.
+   * \returns True if output "values" was changed, false otherwise.
+   * \throws rclcpp::ParameterTypeException if the requested type does not
+   *   match the value of the parameter which is stored.
+   */
+  template<typename ParameterT>
+  bool
+  get_parameters(
+    const std::string & prefix,
+    std::map<std::string, ParameterT> & values) const;
 
   /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
   /**
@@ -385,28 +682,141 @@ public:
    * If the parameter is not set, then the "value" argument is assigned the "alternative_value",
    * and the parameter is set to the "alternative_value" on the node.
    *
+   * Deprecated, instead use declare_parameter()'s return value, or use
+   * has_parameter() to ensure it exists before getting it.
+   *
    * \param[in] name The name of the parameter to get.
    * \param[out] value The output where the value of the parameter should be assigned.
-   * \param[in] alternative_value Value to be stored in output and parameter if the parameter was not set.
+   * \param[in] alternative_value Value to be used if the parameter was not set.
    */
   template<typename ParameterT>
+  [[deprecated("use declare_parameter() and it's return value instead")]]
   void
   get_parameter_or_set(
     const std::string & name,
     ParameterT & value,
     const ParameterT & alternative_value);
 
+  /// Return the parameter descriptor for the given parameter name.
+  /**
+   * Like get_parameters(), this method may throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception if the
+   * requested parameter has not been declared and undeclared parameters are
+   * not allowed.
+   *
+   * If undeclared parameters are allowed, then a default initialized
+   * descriptor will be returned.
+   *
+   * \param[in] name The name of the parameter to describe.
+   * \return The descriptor for the given parameter name.
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the
+   *   parameter has not been declared and undeclared parameters are not
+   *   allowed.
+   */
+  RCLCPP_PUBLIC
+  rcl_interfaces::msg::ParameterDescriptor
+  describe_parameter(const std::string & name) const;
+
+  /// Return a vector of parameter descriptors, one for each of the given names.
+  /**
+   * Like get_parameters(), this method may throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception if any of the
+   * requested parameters have not been declared and undeclared parameters are
+   * not allowed.
+   *
+   * If undeclared parameters are allowed, then a default initialized
+   * descriptor will be returned for the undeclared parameter's descriptor.
+   *
+   * If the names vector is empty, then an empty vector will be returned.
+   *
+   * \param[in] names The list of parameter names to describe.
+   * \return A list of parameter descriptors, one for each parameter given.
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if any of the
+   *   parameters have not been declared and undeclared parameters are not
+   *   allowed.
+   */
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
 
+  /// Return a vector of parameter types, one for each of the given names.
+  /**
+   * Like get_parameters(), this method may throw the
+   * rclcpp::exceptions::ParameterNotDeclaredException exception if any of the
+   * requested parameters have not been declared and undeclared parameters are
+   * not allowed.
+   *
+   * If undeclared parameters are allowed, then the default type
+   * rclcpp::ParameterType::PARAMETER_NOT_SET will be returned.
+   *
+   * \param[in] names The list of parameter names to get the types.
+   * \return A list of parameter types, one for each parameter given.
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if any of the
+   *   parameters have not been declared and undeclared parameters are not
+   *   allowed.
+   */
   RCLCPP_PUBLIC
   std::vector<uint8_t>
   get_parameter_types(const std::vector<std::string> & names) const;
 
+  /// Return a list of parameters with any of the given prefixes, up to the given depth.
+  /**
+   * ??? how to list all parameters? what does depth 0 and 1 do?                
+   */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
+
+  using OnParametersSetCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
+
+  /// Register a callback to be called anytime a parameter is about to be changed.
+  /**
+   * The callback signature is designed to allow handling of any of the above
+   * `set_parameter*` methods, and so it takes a const reference to a vector
+   * of parameters to be set, and returns a
+   * rcl_interfaces::msg::SetParametersResult to indicate whether or not the
+   * parameter should be set or not, and if not why.
+   *
+   * For an example callback:
+   *
+   *   rcl_interfaces::msg::SetParametersResult
+   *   my_callback(const std::vector<rclcpp::Parameter> & parameters)
+   *   {
+   *     rcl_interfaces::msg::SetParametersResult result;
+   *     result.successful = true;
+   *     for (const auto & parameter : parameters) {
+   *       if (!some_condition) {
+   *         result.successful = false;
+   *         result.reason = "the reason it could not be allowed";
+   *       }
+   *     }
+   *     return result;
+   *   }
+   *
+   * You can see that the SetParametersResult is a boolean flag for success
+   * and an optional reason that can be used in error reporting when it fails.
+   *
+   * This allows the node developer to control which parameters may be changed.
+   *
+   * Note that the callback is called when declare_parameter() and its variants
+   * are called, and so you cannot assume the parameter has been set before
+   * this callback, so when checking a new value against the existing one, you
+   * must account for the case where the parameter is not yet set.
+   *
+   * Some constraints like read_only are enforced before the callback is called.
+   *
+   * There may only be one callback set at a time, so the previously set
+   * callback is returned when this method is used, or nullptr will be returned
+   * if no callback was previously set.
+   *
+   * \param[in] callback The callback to be called when the value for a
+   *   parameter is about to be set.
+   * \return The previous callback that was registered, if there was one,
+   *   otherwise nullptr.
+   */
+  rclcpp::Node::OnParametersSetCallbackType
+  set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
 
   /// Register the callback for parameter changes
   /**
@@ -415,6 +825,7 @@ public:
    * \note Repeated invocations of this function will overwrite previous callbacks
    */
   template<typename CallbackT>
+  [[deprecated("use set_on_parameters_set_callback() instead")]]
   void
   register_param_change_callback(CallbackT && callback);
 

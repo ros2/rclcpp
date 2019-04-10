@@ -80,6 +80,31 @@ TEST_F(TestNodeWithInitialValues, multiple_declared_initial_values) {
   node->declare_parameter("bar");
   node->declare_parameter("baz");
 
+  node->list_parameters({}, 0);
+  EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());
+  EXPECT_STREQ("hello world", node->get_parameter("bar").get_value<std::string>().c_str());
+  std::vector<double> double_array = node->get_parameter("baz").get_value<std::vector<double>>();
+  ASSERT_EQ(2u, double_array.size());
+  EXPECT_DOUBLE_EQ(3.14, double_array.at(0));
+  EXPECT_DOUBLE_EQ(2.718, double_array.at(1));
+}
+
+TEST_F(TestNodeWithInitialValues, undeclared_initial_values_throw) {
+  const std::vector<rclcpp::Parameter> initial_values = {
+    rclcpp::Parameter("foo", true),
+    rclcpp::Parameter("bar", "hello world"),
+    rclcpp::Parameter("baz", std::vector<double>{3.14, 2.718})
+  };
+
+  auto options = rclcpp::NodeOptions()
+    .initial_parameters(initial_values)
+    .use_global_arguments(false);
+  auto node = rclcpp::Node::make_shared("node_name", options);
+
+  node->declare_parameter("foo");
+  node->declare_parameter("bar");
+  node->declare_parameter("baz");
+
   auto list_params_result = node->list_parameters({}, 0);
   EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());
   EXPECT_STREQ("hello world", node->get_parameter("bar").get_value<std::string>().c_str());
@@ -102,11 +127,8 @@ TEST_F(TestNodeWithInitialValues, multiple_undeclared_initial_values_allowed) {
     .allow_undeclared_parameters(true);
   auto node = rclcpp::Node::make_shared("node_name", options);
 
-  auto list_params_result = node->list_parameters({}, 0);
-  EXPECT_TRUE(node->get_parameter("foo").get_value<bool>());
-  EXPECT_STREQ("hello world", node->get_parameter("bar").get_value<std::string>().c_str());
-  std::vector<double> double_array = node->get_parameter("baz").get_value<std::vector<double>>();
-  ASSERT_EQ(2u, double_array.size());
-  EXPECT_DOUBLE_EQ(3.14, double_array.at(0));
-  EXPECT_DOUBLE_EQ(2.718, double_array.at(1));
+  node->list_parameters({}, 0);
+  EXPECT_THROW({node->get_parameter("foo").get_value<bool>();}, std::out_of_range);
+  EXPECT_THROW({node->get_parameter("bar").get_value<std::string>().c_str();}, std::out_of_range);
+  EXPECT_THROW({node->get_parameter("baz").get_value<std::vector<double>>();}, std::out_of_range);
 }

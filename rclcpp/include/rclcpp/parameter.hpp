@@ -51,17 +51,23 @@ get_value_helper(const rclcpp::Parameter * parameter);
 class Parameter
 {
 public:
+  /// Construct with an empty name and a parameter value of type rclcpp::PARAMETER_NOT_SET.
   RCLCPP_PUBLIC
   Parameter();
 
+  /// Construct with given name and a parameter value of type rclcpp::PARAMETER_NOT_SET.
+  RCLCPP_PUBLIC
+  explicit Parameter(const std::string & name);
+
+  /// Construct with given name and given parameter value.
   RCLCPP_PUBLIC
   Parameter(const std::string & name, const ParameterValue & value);
 
+  /// Construct with given name and given parameter value.
   template<typename ValueTypeT>
-  explicit Parameter(const std::string & name, ValueTypeT value)
+  Parameter(const std::string & name, ValueTypeT value)
   : Parameter(name, ParameterValue(value))
-  {
-  }
+  {}
 
   RCLCPP_PUBLIC
   explicit Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_info);

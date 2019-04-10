@@ -29,7 +29,10 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
       {"x", 0.5},
       {"y", 1.0},
     };
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     node->set_parameters_if_not_set("bar", bar_map);
+#pragma GCC diagnostic pop
     double bar_x_value;
     ASSERT_TRUE(node->get_parameter("bar.x", bar_x_value));
     EXPECT_EQ(bar_x_value, 0.5);
@@ -51,8 +54,11 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
 
   {
     // set parameters for a map with different types, then try to get them back as a map
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     node->set_parameter_if_not_set("baz.x", 1.0);
     node->set_parameter_if_not_set("baz.y", "hello");
+#pragma GCC diagnostic pop
     std::map<std::string, double> baz_map;
     EXPECT_THROW(node->get_parameters("baz", baz_map), rclcpp::ParameterTypeException);
   }

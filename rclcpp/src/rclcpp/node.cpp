@@ -114,6 +114,7 @@ Node::Node(
     )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_base_,
+      node_logging_,
       node_topics_,
       node_services_,
       node_clock_,
@@ -210,27 +211,55 @@ Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
   return node_base_->callback_group_in_node(group);
 }
 
-void
+const rclcpp::ParameterValue &
 Node::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  bool read_only)
+  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor)
 {
-  return this->node_parameters_->declare_parameter(name, default_value, read_only);
+  return this->node_parameters_->declare_parameter(name, default_value, parameter_descriptor);
+}
+
+void
+Node::undeclare_parameter(const std::string & name)
+{
+  this->node_parameters_->undeclare_parameter(name);
+}
+
+bool
+Node::has_parameter(const std::string & name) const
+{
+  return this->node_parameters_->has_parameter(name);
+}
+
+rcl_interfaces::msg::SetParametersResult
+Node::set_parameter(const rclcpp::Parameter & parameter)
+{
+  return this->set_parameters_atomically({parameter});
 }
 
 std::vector<rcl_interfaces::msg::SetParametersResult>
-Node::set_parameters(
-  const std::vector<rclcpp::Parameter> & parameters)
+Node::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
   return node_parameters_->set_parameters(parameters);
 }
 
 rcl_interfaces::msg::SetParametersResult
-Node::set_parameters_atomically(
-  const std::vector<rclcpp::Parameter> & parameters)
+Node::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
   return node_parameters_->set_parameters_atomically(parameters);
+}
+
+rclcpp::Parameter
+Node::get_parameter(const std::string & name) const
+{
+  return node_parameters_->get_parameter(name);
+}
+
+bool
+Node::get_parameter(const std::string & name, rclcpp::Parameter & parameter) const
+{
+  return node_parameters_->get_parameter(name, parameter);
 }
 
 std::vector<rclcpp::Parameter>
@@ -240,38 +269,41 @@ Node::get_parameters(
   return node_parameters_->get_parameters(names);
 }
 
-rclcpp::Parameter
-Node::get_parameter(const std::string & name) const
+rcl_interfaces::msg::ParameterDescriptor
+Node::describe_parameter(const std::string & name) const
 {
-  return node_parameters_->get_parameter(name);
-}
-
-bool Node::get_parameter(
-  const std::string & name,
-  rclcpp::Parameter & parameter) const
-{
-  return node_parameters_->get_parameter(name, parameter);
+  auto result = node_parameters_->describe_parameters({name});
+  if (0 == result.size()) {
+    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
+  }
+  if (result.size() > 1) {
+    throw std::runtime_error("number of described parameters unexpectedly more than one");
+  }
+  return result.front();
 }
 
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
-Node::describe_parameters(
-  const std::vector<std::string> & names) const
+Node::describe_parameters(const std::vector<std::string> & names) const
 {
   return node_parameters_->describe_parameters(names);
 }
 
 std::vector<uint8_t>
-Node::get_parameter_types(
-  const std::vector<std::string> & names) const
+Node::get_parameter_types(const std::vector<std::string> & names) const
 {
   return node_parameters_->get_parameter_types(names);
 }
 
 rcl_interfaces::msg::ListParametersResult
-Node::list_parameters(
-  const std::vector<std::string> & prefixes, uint64_t depth) const
+Node::list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const
 {
   return node_parameters_->list_parameters(prefixes, depth);
+}
+
+rclcpp::Node::OnParametersSetCallbackType
+Node::set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback)
+{
+  return node_parameters_->set_on_parameters_set_callback(callback);
 }
 
 std::vector<std::string>
