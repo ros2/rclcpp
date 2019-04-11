@@ -360,7 +360,7 @@ protected:
       if (goal_handle) {
         resp = handle_cancel_(goal_handle);
         if (CancelResponse::ACCEPT == resp) {
-          goal_handle->_request_cancel();
+          goal_handle->_cancel_goal();
         }
       }
     }

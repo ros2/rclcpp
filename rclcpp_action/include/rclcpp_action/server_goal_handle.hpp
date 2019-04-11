@@ -90,12 +90,12 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _request_cancel();
+  _cancel_goal();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _cancel();
+  _canceled();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
@@ -205,9 +205,9 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  cancel(typename ActionT::Result::SharedPtr result_msg)
+  canceled(typename ActionT::Result::SharedPtr result_msg)
   {
-    _cancel();
+    _canceled();
     auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
     response->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
     response->result = *result_msg;

@@ -78,20 +78,20 @@ ServerGoalHandleBase::_succeed()
 }
 
 void
-ServerGoalHandleBase::_request_cancel()
+ServerGoalHandleBase::_cancel_goal()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
-  rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_REQUEST_CANCEL);
+  rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCEL_GOAL);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
 
 void
-ServerGoalHandleBase::_cancel()
+ServerGoalHandleBase::_canceled()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
-  rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCEL);
+  rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCELED);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
@@ -116,7 +116,7 @@ ServerGoalHandleBase::try_canceling() noexcept
   const bool is_cancelable = rcl_action_goal_handle_is_cancelable(rcl_handle_.get());
   if (is_cancelable) {
     // Transition to CANCELING
-    ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_REQUEST_CANCEL);
+    ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCEL_GOAL);
     if (RCL_RET_OK != ret) {
       return false;
     }
@@ -131,7 +131,7 @@ ServerGoalHandleBase::try_canceling() noexcept
 
   // If it's canceling, cancel it
   if (GOAL_STATE_CANCELING == state) {
-    ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCEL);
+    ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCELED);
     return RCL_RET_OK == ret;
   }
 

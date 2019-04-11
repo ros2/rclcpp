@@ -364,7 +364,7 @@ TEST_F(TestServer, publish_status_canceled)
   send_goal_request(node, uuid);
   send_cancel_request(node, uuid);
 
-  received_handle->cancel(std::make_shared<Fibonacci::Result>());
+  received_handle->canceled(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
