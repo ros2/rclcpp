@@ -72,6 +72,16 @@ public:
   RCLCPP_PUBLIC
   explicit Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_info);
 
+  /// Equal operator.
+  RCLCPP_PUBLIC
+  bool
+  operator==(const Parameter & rhs) const;
+
+  /// Not equal operator.
+  RCLCPP_PUBLIC
+  bool
+  operator!=(const Parameter & rhs) const;
+
   RCLCPP_PUBLIC
   ParameterType
   get_type() const;

@@ -568,10 +568,10 @@ public:
    * rclcpp::exceptions::ParameterNotDeclaredException exception, but will
    * instead return false if the parameter has not be previously declared.
    *
-   * If the parameter was not declared, then the output parameter for this
+   * If the parameter was not declared, then the output argument for this
    * method which is called "parameter" will not be assigned a value.
    * If the parameter was declared, and therefore has a value, then it is
-   * assigned into the "parameter" parameter of this method.
+   * assigned into the "parameter" argument of this method.
    *
    * \param[in] name The name of the parameter to get.
    * \param[out] parameter The output storage for the parameter being retrieved.
@@ -584,9 +584,12 @@ public:
   /// Get the value of a parameter by the given name, and return true if it was set.
   /**
    * Identical to the non-templated version of this method, except that when
-   * assigning the output "parameter" parameter, this method will attempt to
-   * coerce the parameter value into the type requested by the given
+   * assigning the output argument called "parameter", this method will attempt
+   * to coerce the parameter value into the type requested by the given
    * template argument, which may fail and throw an exception.
+   *
+   * If the parameter has not been declared, it will not attempt to coerce the
+   * value into the requested type, as it is known that the type is not set.
    *
    * \throws rclcpp::ParameterTypeException if the requested type does not
    *   match the value of the parameter which is stored.
@@ -603,7 +606,7 @@ public:
    * Like the get_parameter() which returns a bool, this method will never
    * throw the rclcpp::exceptions::ParameterNotDeclaredException exception.
    *
-   * In all cases, the parameter is never set or declared.
+   * In all cases, the parameter is never set or declared within the node.
    *
    * \param[in] name The name of the parameter to get.
    * \param[out] parameter The output where the value of the parameter should be assigned.
@@ -647,7 +650,14 @@ public:
    * The resulting list of parameter names are used to get the values of the
    * parameters.
    *
-   * If not parameters with the prefix are found, then the output parameter
+   * The names which are used as keys in the values map have the prefix removed.
+   * For example, if you use the prefix "foo" and the parameters "foo.ping" and
+   * "foo.pong" exist, then the returned map will have the keys "ping" and
+   * "pong".
+   *
+   * An empty string for the prefix will match all parameters.
+   *
+   * If no parameters with the prefix are found, then the output parameter
    * "values" will be unchanged and false will be returned.
    * Otherwise, the parameter names and values will be stored in the map and
    * true will be returned to indicate "values" was mutated.
@@ -659,7 +669,7 @@ public:
    * be undeclared before being retrieved.
    *
    * Like the templated get_parameter() variant, this method will attempt to
-   * coerce the parameter value into the type requested by the given
+   * coerce the parameter values into the type requested by the given
    * template argument, which may fail and throw an exception.
    *
    * \param[in] prefix The prefix of the parameters to get.

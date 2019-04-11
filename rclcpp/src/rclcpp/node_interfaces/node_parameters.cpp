@@ -521,12 +521,16 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
   std::vector<rclcpp::Parameter> results;
 
   for (auto & name : names) {
-    if (std::any_of(parameters_.cbegin(), parameters_.cend(),
-      [&name](const std::pair<std::string, rclcpp::node_interfaces::ParameterInfo> & kv) {
-        return name == kv.first;
-      }))
-    {
-      results.emplace_back(name, parameters_.at(name).value);
+    auto found_parameter = parameters_.find(name);
+    if (found_parameter != parameters_.cend()) {
+      // found
+      results.emplace_back(name, found_parameter->second.value);
+    } else if (this->allow_undeclared_) {
+      // not found, but undeclared allowed
+      results.emplace_back(name, rclcpp::ParameterValue());
+    } else {
+      // not found, and undeclared are not allowed
+      throw rclcpp::exceptions::ParameterNotDeclaredException(name);
     }
   }
   return results;
@@ -539,8 +543,10 @@ NodeParameters::get_parameter(const std::string & name) const
 
   if (get_parameter(name, parameter)) {
     return parameter;
+  } else if (this->allow_undeclared_) {
+    return parameter;
   } else {
-    throw std::out_of_range("Parameter '" + name + "' not set");
+    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
   }
 }
 

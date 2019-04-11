@@ -307,7 +307,6 @@ Node::set_parameters_if_not_set(
   this->set_parameters(params);
 }
 
-
 template<typename ParameterT>
 bool
 Node::get_parameter(const std::string & name, ParameterT & parameter) const

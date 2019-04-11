@@ -45,6 +45,18 @@ Parameter::Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_in
 {
 }
 
+bool
+Parameter::operator==(const Parameter & rhs) const
+{
+  return this->name_ == rhs.name_ && this->value_ == rhs.value_;
+}
+
+bool
+Parameter::operator!=(const Parameter & rhs) const
+{
+  return !(*this == rhs);
+}
+
 ParameterType
 Parameter::get_type() const
 {

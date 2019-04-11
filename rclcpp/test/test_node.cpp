@@ -799,3 +799,587 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     EXPECT_FALSE(node->has_parameter(name));
   }
 }
+
+// test set_parameters with undeclared allowed
+TEST_F(TestNode, set_parameters_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_set_parameters_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use (declare first) still works with this true
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    EXPECT_FALSE(node->has_parameter(name1));
+    EXPECT_FALSE(node->has_parameter(name2));
+
+    node->declare_parameter(name1, 42);
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
+    node->declare_parameter<std::string>(name2, "test");
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_EQ(node->get_parameter(name2).get_value<std::string>(), "test");
+
+    auto rets = node->set_parameters({
+      rclcpp::Parameter(name1, 43),
+      rclcpp::Parameter(name2, "other"),
+    });
+    EXPECT_TRUE(std::all_of(rets.begin(), rets.end(), [](auto & r) {return r.successful;}));
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 43);
+    EXPECT_EQ(node->get_parameter(name2).get_value<std::string>(), "other");
+  }
+  {
+    // setting a parameter that is not declared implicitly declares it
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    EXPECT_FALSE(node->has_parameter(name1));
+    EXPECT_FALSE(node->has_parameter(name2));
+
+    auto rets = node->set_parameters({
+      rclcpp::Parameter(name1, 42),
+      rclcpp::Parameter(name2, "test"),
+    });
+    EXPECT_TRUE(std::all_of(rets.begin(), rets.end(), [](auto & r) {return r.successful;}));
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
+    EXPECT_EQ(node->get_parameter(name2).get_value<std::string>(), "test");
+  }
+}
+
+TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_set_parameters_atomically_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(false));
+  {
+    // normal use
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    node->declare_parameter(name1, 1);
+    node->declare_parameter(name2, true);
+    node->declare_parameter<std::string>(name3, "blue");
+
+    auto ret = node->set_parameters_atomically({
+      {name1, 2},
+      {name2, false},
+      {name3, "red"},
+    });
+    EXPECT_TRUE(ret.successful);
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+  }
+  {
+    // overwrite and order of setting
+    auto name = "parameter"_unq;
+    node->declare_parameter(name, 1);
+
+    auto ret = node->set_parameters_atomically({
+      {name, 42},
+      {name, 2},
+    });
+    EXPECT_TRUE(ret.successful);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 2);
+  }
+  {
+    // undeclared parameter throws,
+    // and no parameters were changed
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    node->declare_parameter(name1, 1);
+    node->declare_parameter(name3, 100);
+
+    EXPECT_THROW(
+      {
+        node->set_parameters_atomically({
+          {name1, 2},
+          {name2, "not declared :("},
+          {name3, 101},
+        });
+      },
+      rclcpp::exceptions::ParameterNotDeclaredException);
+
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_FALSE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+    // both have old values
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 1);
+    EXPECT_EQ(node->get_parameter(name3).get_value<int>(), 100);
+  }
+  {
+    // rejecting parameter does not throw, but fails
+    // and no parameters are changed
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+    node->declare_parameter(name1, 1);
+    node->declare_parameter(name2, true);
+    node->declare_parameter<std::string>(name3, "blue");
+
+    RCLCPP_SCOPE_EXIT({ node->set_on_parameters_set_callback(nullptr); });  // always reset
+    auto on_set_parameters =
+      [&name2](const std::vector<rclcpp::Parameter> & ps) {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+        if (std::any_of(ps.begin(), ps.end(), [&](auto & p) {return p.get_name() == name2;})) {
+          result.successful = false;
+          result.reason = "parameter '" + name2 + "' may not be set right now";
+        }
+        return result;
+      };
+    node->set_on_parameters_set_callback(on_set_parameters);
+
+    auto ret = node->set_parameters_atomically({
+      {name1, 2},
+      {name2, false},  // should fail to be set, failing the whole operation
+      {name3, "red"},
+    });
+    EXPECT_FALSE(ret.successful);
+    // all have old values
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(),1);
+    EXPECT_EQ(node->get_parameter(name2).get_value<bool>(), true);
+    EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "blue");
+  }
+  {
+    // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
+    auto name = "parameter"_unq;
+    auto value = node->declare_parameter(name);
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
+
+    EXPECT_TRUE(node->set_parameters_atomically({rclcpp::Parameter(name)}).successful);
+
+    EXPECT_TRUE(node->has_parameter(name));
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_NOT_SET);
+  }
+  {
+    // setting type of rclcpp::PARAMETER_NOT_SET, when already to another type, will undeclare
+    auto name = "parameter"_unq;
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+
+    EXPECT_TRUE(node->set_parameters_atomically({rclcpp::Parameter(name)}).successful);
+
+    EXPECT_FALSE(node->has_parameter(name));
+  }
+}
+
+// test set_parameters with undeclared allowed
+TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_set_parameters_atomically_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use (declare first) still works with this true
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    EXPECT_FALSE(node->has_parameter(name1));
+    EXPECT_FALSE(node->has_parameter(name2));
+
+    node->declare_parameter(name1, 42);
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
+    node->declare_parameter<std::string>(name2, "test");
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_EQ(node->get_parameter(name2).get_value<std::string>(), "test");
+
+    auto ret = node->set_parameters_atomically({
+      rclcpp::Parameter(name1, 43),
+      rclcpp::Parameter(name2, "other"),
+    });
+    EXPECT_TRUE(ret.successful);
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 43);
+    EXPECT_EQ(node->get_parameter(name2).get_value<std::string>(), "other");
+  }
+  {
+    // setting a parameter that is not declared implicitly declares it
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    EXPECT_FALSE(node->has_parameter(name1));
+    EXPECT_FALSE(node->has_parameter(name2));
+
+    auto ret = node->set_parameters_atomically({
+      rclcpp::Parameter(name1, 42),
+      rclcpp::Parameter(name2, "test"),
+    });
+    EXPECT_TRUE(ret.successful);
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
+    EXPECT_EQ(node->get_parameter(name2).get_value<std::string>(), "test");
+  }
+  {
+    // if an undeclared parameter is implicitly declared, but a later parameter set fails,
+    // then the implicitly "to be" declared parameter remains undeclared
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+    auto name3 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
+    node->declare_parameter<std::string>(name3, "test");
+    EXPECT_TRUE(node->has_parameter(name3));
+    EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "test");
+
+    RCLCPP_SCOPE_EXIT({ node->set_on_parameters_set_callback(nullptr); });  // always reset
+    auto on_set_parameters =
+      [&name3](const std::vector<rclcpp::Parameter> & ps) {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+        if (std::any_of(ps.begin(), ps.end(), [&](auto & p) {return p.get_name() == name3;})) {
+          result.successful = false;
+          result.reason = "parameter '" + name3 + "' may not be set right now";
+        }
+        return result;
+      };
+    node->set_on_parameters_set_callback(on_set_parameters);
+
+    auto ret = node->set_parameters_atomically({
+      rclcpp::Parameter(name1, 43),
+      rclcpp::Parameter(name2, true),  // this would cause implicit declaration
+      rclcpp::Parameter(name3, "other"),  // this set should fail, and fail the whole operation
+    });
+    EXPECT_FALSE(ret.successful);
+    // name1 and name2 remain with the old values
+    EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
+    EXPECT_FALSE(node->has_parameter(name2));  // important! name2 remains undeclared
+    EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "test");
+  }
+}
+
+// test get_parameter with undeclared not allowed
+TEST_F(TestNode, get_parameter_undeclared_parameters_not_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(false));
+  {
+    // normal use
+    auto name = "parameter"_unq;
+
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+
+    // version that throws on undeclared
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
+    // version that returns bool and never throws, and stores in rclcpp::Parameter
+    {
+      rclcpp::Parameter parameter;
+      EXPECT_TRUE(node->get_parameter(name, parameter));
+      EXPECT_EQ(parameter.get_value<int>(), 42);
+    }
+    // version that returns bool and never throws, but is templated to store in a primitive type
+    {
+      int value;
+      EXPECT_TRUE(node->get_parameter(name, value));
+      EXPECT_EQ(value, 42);
+    }
+  }
+  {
+    // getting an undeclared parameter throws
+    auto name = "parameter"_unq;
+    EXPECT_FALSE(node->has_parameter(name));
+
+    EXPECT_THROW({node->get_parameter(name);}, rclcpp::exceptions::ParameterNotDeclaredException);
+    {
+      rclcpp::Parameter parameter;
+      EXPECT_FALSE(node->get_parameter(name, parameter));
+    }
+    {
+      int value;
+      EXPECT_FALSE(node->get_parameter(name, value));
+    }
+  }
+  {
+    // for templated version, throws if the parameter type doesn't match the requested type
+    auto name = "parameter"_unq;
+
+    node->declare_parameter<std::string>(name, "not an int");
+
+    EXPECT_THROW(
+      {
+        int value;
+        node->get_parameter(name, value);
+      },
+      rclcpp::ParameterTypeException);
+  }
+}
+
+// test get_parameter with undeclared allowed
+TEST_F(TestNode, get_parameter_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use (declare first) still works
+    auto name = "parameter"_unq;
+
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+
+    // version that throws on undeclared
+    EXPECT_EQ(node->get_parameter(name).get_value<int>(), 42);
+    // version that returns bool and never throws, and stores in rclcpp::Parameter
+    {
+      rclcpp::Parameter parameter;
+      EXPECT_TRUE(node->get_parameter(name, parameter));
+      EXPECT_EQ(parameter.get_value<int>(), 42);
+    }
+    // version that returns bool and never throws, but is templated to store in a primitive type
+    {
+      int value;
+      EXPECT_TRUE(node->get_parameter(name, value));
+      EXPECT_EQ(value, 42);
+    }
+  }
+  {
+    // getting an undeclared parameter returns default constructed rclcpp::Parameter or false
+    auto name = "parameter"_unq;
+    EXPECT_FALSE(node->has_parameter(name));
+
+    EXPECT_EQ(node->get_parameter(name).get_type(), rclcpp::PARAMETER_NOT_SET);
+    {
+      rclcpp::Parameter parameter;
+      EXPECT_FALSE(node->get_parameter(name, parameter));
+    }
+    {
+      int value;
+      EXPECT_FALSE(node->get_parameter(name, value));
+    }
+  }
+  {
+    // for templated version, return false if the parameter not declared
+    auto name = "parameter"_unq;
+
+    EXPECT_EQ(node->get_parameter(name).get_type(), rclcpp::PARAMETER_NOT_SET);
+    int value = 42;
+    EXPECT_FALSE(node->get_parameter<int>(name, value));
+    EXPECT_EQ(value, 42);
+  }
+}
+
+// test get_parameter_or with undeclared not allowed
+TEST_F(TestNode, get_parameter_or_undeclared_parameters_not_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_or_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(false));
+  {
+    // normal use (declare first) still works
+    auto name = "parameter"_unq;
+
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+
+    {
+      int value;
+      EXPECT_TRUE(node->get_parameter_or(name, value, 43));
+      EXPECT_EQ(value, 42);
+    }
+  }
+  {
+    // normal use, no declare first
+    auto name = "parameter"_unq;
+
+    {
+      int value;
+      EXPECT_FALSE(node->get_parameter_or(name, value, 43));
+      EXPECT_EQ(value, 43);
+    }
+  }
+}
+
+// test get_parameter_or with undeclared allowed
+TEST_F(TestNode, get_parameter_or_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use (declare first) still works
+    auto name = "parameter"_unq;
+
+    node->declare_parameter(name, 42);
+    EXPECT_TRUE(node->has_parameter(name));
+
+    {
+      int value;
+      EXPECT_TRUE(node->get_parameter_or(name, value, 43));
+      EXPECT_EQ(value, 42);
+    }
+  }
+  {
+    // normal use, no declare first
+    auto name = "parameter"_unq;
+
+    {
+      int value;
+      EXPECT_FALSE(node->get_parameter_or(name, value, 43));
+      EXPECT_EQ(value, 43);
+    }
+  }
+}
+
+// test get_parameters with undeclared not allowed
+TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameters_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(false));
+  {
+    // normal use
+    auto base_name1 = "parameter"_unq;
+    auto name1 = "ints." + base_name1;
+    auto base_name2 = "parameter"_unq;
+    auto name2 = "strings." + base_name2;
+    auto base_name3 = "parameter"_unq;
+    auto name3 = "ints." + base_name3;
+
+    node->declare_parameter(name1, 42);
+    node->declare_parameter<std::string>(name2, "test");
+    node->declare_parameter(name3, 100);
+    EXPECT_TRUE(node->has_parameter(name1));
+    EXPECT_TRUE(node->has_parameter(name2));
+    EXPECT_TRUE(node->has_parameter(name3));
+
+    // non-templated version, get all
+    {
+      std::vector<rclcpp::Parameter> expected = {
+        {name1, 42},
+        {name2, "test"},
+        {name3, 100},
+      };
+      EXPECT_EQ(node->get_parameters({name1, name2, name3}), expected);
+    }
+    // non-templated version, get some
+    {
+      std::vector<rclcpp::Parameter> expected = {
+        {name1, 42},
+        {name3, 100},
+      };
+      EXPECT_EQ(node->get_parameters({name1, name3}), expected);
+    }
+    // non-templated version, get some, different types
+    {
+      std::vector<rclcpp::Parameter> expected = {
+        {name1, 42},
+        {name2, "test"},
+      };
+      EXPECT_EQ(node->get_parameters({name1, name2}), expected);
+    }
+    // non-templated version, get some, wrong order (request order preserved)
+    {
+      std::vector<rclcpp::Parameter> expected = {
+        {name3, 100},
+        {name1, 42},
+      };
+      EXPECT_EQ(node->get_parameters({name3, name1}), expected);
+    }
+    // templated version, get all int's
+    {
+      std::map<std::string, int> expected = {
+        {base_name1, 42},
+        {base_name3, 100},
+      };
+      std::map<std::string, int> actual;
+      EXPECT_TRUE(node->get_parameters("ints", actual));
+      EXPECT_EQ(actual, expected);
+    }
+    // templated version, get the one string
+    {
+      std::map<std::string, std::string> expected = {
+        {base_name2, "test"},
+      };
+      std::map<std::string, std::string> actual;
+      EXPECT_TRUE(node->get_parameters("strings", actual));
+      EXPECT_EQ(actual, expected);
+    }
+  }
+  {
+    // getting an undeclared parameter throws, or in the alternative signature returns false
+    auto name = "prefix.parameter"_unq;
+    EXPECT_FALSE(node->has_parameter(name));
+
+    EXPECT_THROW(
+      {node->get_parameters({name});},
+      rclcpp::exceptions::ParameterNotDeclaredException);
+    {
+      std::map<std::string, int> values;
+      EXPECT_TRUE(values.empty());
+      EXPECT_FALSE(node->get_parameters("prefix", values));
+      EXPECT_TRUE(values.empty());
+    }
+  }
+  {
+    // templated version with empty prefix will get all parameters
+    auto node_local = std::make_shared<rclcpp::Node>("test_get_parameters_node"_unq);
+    auto name1 = "prefix1.parameter"_unq;
+    auto name2 = "prefix2.parameter"_unq;
+
+    node_local->declare_parameter(name1, 42);
+    node_local->declare_parameter(name2, 100);
+
+    {
+      std::map<std::string, int> actual;
+      EXPECT_TRUE(node_local->get_parameters("", actual));
+      EXPECT_NE(actual.find(name1), actual.end());
+      EXPECT_NE(actual.find(name2), actual.end());
+    }
+
+    // will throw if set of parameters is non-homogeneous
+    auto name3 = "prefix2.parameter"_unq;
+    node_local->declare_parameter<std::string>(name3, "not an int");
+
+    {
+      std::map<std::string, int> actual;
+      EXPECT_THROW(
+        {
+          node_local->get_parameters("", actual);
+        },
+        rclcpp::exceptions::InvalidParameterValueException);
+    }
+  }
+}
+
+// test get_parameters with undeclared allowed
+TEST_F(TestNode, get_parameters_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameters_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use
+    auto base_name1 = "parameter"_unq;
+    auto name1 = "ints." + base_name1;
+    auto base_name2 = "parameter"_unq;
+    auto name2 = "strings." + base_name2;
+    auto base_name3 = "parameter"_unq;
+    auto name3 = "ints." + base_name3;
+
+    EXPECT_FALSE(node->has_parameter(name1));
+    EXPECT_FALSE(node->has_parameter(name2));
+    EXPECT_FALSE(node->has_parameter(name3));
+
+    // non-templated version, get all, none set, no throw
+    {
+      std::vector<rclcpp::Parameter> expected = {
+        {name1, {}},
+        {name2, {}},
+        {name3, {}},
+      };
+      EXPECT_EQ(node->get_parameters({name1, name2, name3}), expected);
+    }
+    // templated version, get all int's, none set, no throw
+    {
+      std::map<std::string, int> actual;
+      EXPECT_FALSE(node->get_parameters("ints", actual));
+      EXPECT_TRUE(actual.empty());
+    }
+    // templated version, get the one string, none set, no throw
+    {
+      std::map<std::string, std::string> actual;
+      EXPECT_FALSE(node->get_parameters("strings", actual));
+      EXPECT_TRUE(actual.empty());
+    }
+  }
+}
