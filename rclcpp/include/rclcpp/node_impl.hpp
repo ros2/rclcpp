@@ -63,16 +63,16 @@ extend_name_with_sub_namespace(const std::string & name, const std::string & sub
   return name_with_sub_namespace;
 }
 
-template<typename MessageT, typename Alloc, typename PublisherT>
+template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name,
   size_t qos_history_depth,
-  const PublisherOptions<Alloc> & options)
+  const PublisherOptionsWithAllocator<AllocatorT> & options)
 {
-  std::shared_ptr<Alloc> allocator = options.allocator;
+  std::shared_ptr<AllocatorT> allocator = options.allocator;
   if (!allocator) {
-    allocator = std::make_shared<Alloc>();
+    allocator = std::make_shared<AllocatorT>();
   }
   rmw_qos_profile_t qos_profile = options.qos_profile;
   qos_profile.depth = qos_history_depth;
@@ -93,7 +93,7 @@ Node::create_publisher(
       break;
   }
 
-  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
+  return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos_profile,
@@ -108,7 +108,7 @@ Node::create_publisher(
   std::shared_ptr<Alloc> allocator,
   IntraProcessSetting use_intra_process_comm)
 {
-  PublisherOptions<Alloc> pub_options;
+  PublisherOptionsWithAllocator<Alloc> pub_options;
   pub_options.allocator = allocator;
   pub_options.use_intra_process_comm = use_intra_process_comm;
   return this->create_publisher<MessageT, Alloc, PublisherT>(
@@ -121,7 +121,7 @@ Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
   std::shared_ptr<Alloc> allocator, IntraProcessSetting use_intra_process_comm)
 {
-  PublisherOptions<Alloc> pub_options;
+  PublisherOptionsWithAllocator<Alloc> pub_options;
   pub_options.qos_profile = qos_profile;
   pub_options.allocator = allocator;
   pub_options.use_intra_process_comm = use_intra_process_comm;
@@ -132,23 +132,23 @@ Node::create_publisher(
 template<
   typename MessageT,
   typename CallbackT,
-  typename Alloc,
+  typename AllocatorT,
   typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
   CallbackT && callback,
   size_t qos_history_depth,
-  const SubscriptionOptions<Alloc> & options,
+  const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>::SharedPtr
   msg_mem_strat)
 {
   using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
 
-  std::shared_ptr<Alloc> allocator = options.allocator;
+  std::shared_ptr<AllocatorT> allocator = options.allocator;
   if (!allocator) {
-    allocator = std::make_shared<Alloc>();
+    allocator = std::make_shared<AllocatorT>();
   }
 
   rmw_qos_profile_t qos_profile = options.qos_profile;
@@ -156,7 +156,7 @@ Node::create_subscription(
 
   if (!msg_mem_strat) {
     using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-    msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
+    msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, AllocatorT>::create_default();
   }
 
   bool use_intra_process;
@@ -175,7 +175,8 @@ Node::create_subscription(
       break;
   }
 
-  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
+  return rclcpp::create_subscription<
+    MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     std::forward<CallbackT>(callback),
@@ -205,7 +206,7 @@ Node::create_subscription(
   std::shared_ptr<Alloc> allocator,
   IntraProcessSetting use_intra_process_comm)
 {
-  SubscriptionOptions<Alloc> sub_options;
+  SubscriptionOptionsWithAllocator<Alloc> sub_options;
   sub_options.qos_profile = qos_profile;
   sub_options.callback_group = group;
   sub_options.ignore_local_publications = ignore_local_publications;
@@ -234,7 +235,7 @@ Node::create_subscription(
   std::shared_ptr<Alloc> allocator,
   IntraProcessSetting use_intra_process_comm)
 {
-  SubscriptionOptions<Alloc> sub_options;
+  SubscriptionOptionsWithAllocator<Alloc> sub_options;
   sub_options.callback_group = group;
   sub_options.ignore_local_publications = ignore_local_publications;
   sub_options.allocator = allocator;

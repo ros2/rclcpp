@@ -150,13 +150,14 @@ public:
    */
   template<
     typename MessageT,
-    typename Alloc = std::allocator<void>,
-    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
+    typename AllocatorT = std::allocator<void>,
+    typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
     size_t qos_history_depth,
-    const PublisherOptions<Alloc> & options = PublisherOptions<Alloc>());
+    const PublisherOptionsWithAllocator<AllocatorT> &
+    options = PublisherOptionsWithAllocator<AllocatorT>());
 
   /// Create and return a Publisher.
   /**
@@ -211,17 +212,19 @@ public:
   template<
     typename MessageT,
     typename CallbackT,
-    typename Alloc = std::allocator<void>,
+    typename AllocatorT = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
     CallbackT && callback,
     size_t qos_history_depth,
-    const SubscriptionOptions<Alloc> & options = SubscriptionOptions<Alloc>(),
+    const SubscriptionOptionsWithAllocator<AllocatorT> &
+    options = SubscriptionOptionsWithAllocator<AllocatorT>(),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
+    >::SharedPtr
     msg_mem_strat = nullptr);
 
   /// Create and return a Subscription.

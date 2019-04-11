@@ -42,8 +42,8 @@ protected:
 };
 
 TEST_F(TestPubSubOptionAPI, check_for_ambiguous) {
-  rclcpp::PublisherOptions<> pub_options;
-  rclcpp::SubscriptionOptions<> sub_options;
+  rclcpp::PublisherOptions pub_options;
+  rclcpp::SubscriptionOptions sub_options;
 
   auto topic_only_pub = node->create_publisher<test_msgs::msg::Empty>(
     "topic_only");

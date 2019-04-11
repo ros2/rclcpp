@@ -26,16 +26,18 @@ namespace rclcpp
 {
 
 /// Structure containing optional configuration for Publishers.
-template<typename Alloc = std::allocator<void>>
-struct PublisherOptions
+template<typename Allocator>
+struct PublisherOptionsWithAllocator
 {
   /// The quality of service profile to pass on to the rmw implementation.
   rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
   /// Optional custom allocator.
-  std::shared_ptr<Alloc> allocator = nullptr;
+  std::shared_ptr<Allocator> allocator = nullptr;
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
 };
+
+using PublisherOptions = PublisherOptionsWithAllocator<std::allocator<void>>;
 
 }  // namespace rclcpp
 
