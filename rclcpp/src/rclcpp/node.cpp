@@ -276,6 +276,12 @@ Node::get_node_names() const
   return node_graph_->get_node_names();
 }
 
+std::vector<std::string>
+Node::get_qualified_node_names() const
+{
+  return node_graph_->get_qualified_node_names();
+}
+
 std::map<std::string, std::vector<std::string>>
 Node::get_topic_names_and_types() const
 {

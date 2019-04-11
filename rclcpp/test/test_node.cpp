@@ -103,7 +103,7 @@ TEST_F(TestNode, get_name_and_namespace) {
     auto node2 = std::make_shared<rclcpp::Node>("my_node2", "my/ns");
     auto node3 = std::make_shared<rclcpp::Node>("my_node3", "/ns2");
     auto node4 = std::make_shared<rclcpp::Node>("my_node4", "my/ns3");
-    auto names_and_namespaces = node1->get_node_names();
+    auto names_and_namespaces = node1->get_qualified_node_names();
     auto name_namespace_set = std::unordered_set<std::string>(names_and_namespaces.begin(),
         names_and_namespaces.end());
     std::function<bool(std::string)> Set_Contains = [&](std::string string_key)
