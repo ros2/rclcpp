@@ -72,11 +72,6 @@ public:
 
   RCLCPP_PUBLIC
   virtual
-  std::vector<std::string>
-  get_qualified_node_names() const;
-
-  RCLCPP_PUBLIC
-  virtual
   std::vector<std::pair<std::string, std::string>>
   get_node_names_and_namespaces() const;
 

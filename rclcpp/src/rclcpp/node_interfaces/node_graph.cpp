@@ -137,18 +137,6 @@ NodeGraph::get_node_names() const
   std::vector<std::string> nodes;
   auto names_and_namespaces = get_node_names_and_namespaces();
 
-  for (const auto & it : names_and_namespaces) {
-    nodes.push_back(it.first);
-  }
-  return nodes;
-}
-
-std::vector<std::string>
-NodeGraph::get_qualified_node_names() const
-{
-  std::vector<std::string> nodes;
-  auto names_and_namespaces = get_node_names_and_namespaces();
-
   std::transform(names_and_namespaces.begin(),
     names_and_namespaces.end(),
     std::back_inserter(nodes),

@@ -411,9 +411,6 @@ public:
   void
   register_param_change_callback(CallbackT && callback);
 
-  RCLCPP_PUBLIC
-  std::vector<std::string>
-  get_node_names() const;
 
   /// Get the fully-qualified names of all available nodes.
   /**
@@ -422,7 +419,7 @@ public:
    */
   RCLCPP_PUBLIC
   std::vector<std::string>
-  get_qualified_node_names() const;
+  get_node_names() const;
 
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>

@@ -71,12 +71,6 @@ public:
   std::vector<std::string>
   get_node_names() const = 0;
 
-  /// Return a vector of fully-qualified existing node names (string)
-  RCLCPP_PUBLIC
-  virtual
-  std::vector<std::string>
-  get_qualified_node_names() const = 0;
-
   /// Return a vector of existing node names and namespaces (pair of string).
   RCLCPP_PUBLIC
   virtual
