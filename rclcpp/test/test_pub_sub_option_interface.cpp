@@ -57,14 +57,14 @@ TEST_F(TestPubSubOptionAPI, check_for_ambiguous) {
 
   auto topic_only_sub = node->create_subscription<test_msgs::msg::Empty>(
     "topic_only",
-    [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;});
+    [](std::shared_ptr<test_msgs::msg::Empty>) {});
   auto topic_depth_sub = node->create_subscription<test_msgs::msg::Empty>(
     "topic_depth",
-    [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;},
+    [](std::shared_ptr<test_msgs::msg::Empty>) {},
     10);
   auto all_options_sub = node->create_subscription<test_msgs::msg::Empty>(
     "topic_options",
-    [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;},
+    [](std::shared_ptr<test_msgs::msg::Empty>) {},
     10,
     sub_options);
 }

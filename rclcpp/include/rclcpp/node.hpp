@@ -168,7 +168,9 @@ public:
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
-  [[deprecated]]
+  [[deprecated(
+    "use the create_publisher(const std::string &, size_t, const PublisherOptions<Alloc> & = "
+    "PublisherOptions<Alloc>()) signature instead")]]
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
@@ -186,7 +188,6 @@ public:
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
-  [[deprecated]]
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
@@ -244,7 +245,6 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
-  [[deprecated]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -279,7 +279,9 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
-  [[deprecated]]
+  [[deprecated(
+    "use the create_subscription(const std::string &, CallbackT &&, size_t, "
+    "const SubscriptionOptions<Alloc> & = SubscriptionOptions<Alloc>(), ...) signature instead")]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
