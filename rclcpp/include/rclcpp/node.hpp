@@ -278,12 +278,12 @@ public:
    * If that callback prevents the initial value for the parameter from being
    * set then rclcpp::exceptions::InvalidParameterValueException is thrown.
    *
-   * \param[in] name the name of the parameter
+   * \param[in] name The name of the parameter.
    * \param[in] default_value An initial value to be used if at run-time user
    *   did not override it.
-   * \param[in] parameter_descriptor optionally set a custom description for
+   * \param[in] parameter_descriptor An optional, custom description for
    *   the parameter.
-   * \return a const reference to the value of the parameter
+   * \return A const reference to the value of the parameter.
    * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
    *   has already been declared.
    * \throws rclcpp::exceptions::InvalidParametersException if a parameter
@@ -352,8 +352,8 @@ public:
    * If that callback prevents the initial value for any parameter from being
    * set then rclcpp::exceptions::InvalidParameterValueException is thrown.
    *
-   * \param[in] namespace_ The prefix of the parameters to set.
-   * \param[in] parameters The parameters to set in the given prefix.
+   * \param[in] namespace_ The namespace in which to declare the parameters.
+   * \param[in] parameters The parameters to set in the given namespace.
    * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
    *   has already been declared.
    * \throws rclcpp::exceptions::InvalidParametersException if a parameter
@@ -367,7 +367,7 @@ public:
     const std::string & namespace_,
     const std::map<std::string, ParameterT> & parameters);
 
-  /// Declare and initialize several parameters with the same prefix and type.
+  /// Declare and initialize several parameters with the same namespace and type.
   /**
    * This version will take a map where the value is a pair, with the default
    * parameter value as the first item and a parameter descriptor as the second.
@@ -388,9 +388,9 @@ public:
    * This method will not cause a callback registered with
    * set_on_parameters_set_callback to be called.
    *
-   * \param[in] name of the parameter to be undeclared
+   * \param[in] name The name of the parameter to be undeclared.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
-   *   has not been declared
+   *   has not been declared.
    * \throws rclcpp::exceptions::ParameterImmutableException if the parameter
    *   was create as read_only (immutable).
    */
@@ -400,8 +400,8 @@ public:
 
   /// Return true if a given parameter is declared.
   /**
-   * \param[in] name of the parameter to check for being declared
-   * \return true if the parameter name has been declared, otherwise false
+   * \param[in] name The name of the parameter to check for being declared.
+   * \return true if the parameter name has been declared, otherwise false.
    */
   RCLCPP_PUBLIC
   bool
@@ -421,7 +421,7 @@ public:
    * This method will result in any callback registered with
    * set_on_parameters_set_callback to be called.
    * If the callback prevents the parameter from being set, then it will be
-   * reflected in the SetParametersResult which is returned, but no exception
+   * reflected in the SetParametersResult that is returned, but no exception
    * will be thrown.
    *
    * If the value type of the parameter is rclcpp::PARAMETER_NOT_SET, and the
@@ -430,8 +430,8 @@ public:
    * This will result in a parameter event indicating that the parameter was
    * deleted.
    *
-   * \param[in] parameter parameter to be set
-   * \return result of the set action
+   * \param[in] parameter The parameter to be set.
+   * \return The result of the set action.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
    *   has not been declared and undeclared parameters are not allowed.
    */
@@ -448,7 +448,7 @@ public:
    *
    * Like set_parameter, if any of the parameters to be set have not first been
    * declared, and undeclared parameters are not allowed (the default), then
-   * this method may throw rclcpp::exceptions::ParameterNotDeclaredException.
+   * this method will throw rclcpp::exceptions::ParameterNotDeclaredException.
    *
    * If setting a parameter fails due to not being declared, then the
    * parameters which have already been set will stay set, and no attempt will
@@ -461,16 +461,16 @@ public:
    *
    * This method will result in any callback registered with
    * set_on_parameters_set_callback to be called, once for each parameter.
-   * If the callback prevents the parameter from being set, then it will be
-   * reflected in the corresponding SetParametersResult which is returned,
-   * but no exception will be thrown.
+   * If the callback prevents the parameter from being set, then, as mentioned
+   * before, it will be reflected in the corresponding SetParametersResult
+   * that is returned, but no exception will be thrown.
    *
    * Like set_parameter() this method will implicitly undeclare parameters
    * with the type rclcpp::PARAMETER_NOT_SET.
    *
-   * \param[in] parameters vector of parameters to be set
-   * \return result of each set action as a vector
-   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
+   * \param[in] parameters The vector of parameters to be set.
+   * \return The results for each set action as a vector.
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if any parameter
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
@@ -502,9 +502,9 @@ public:
    * Like set_parameter() this method will implicitly undeclare parameters
    * with the type rclcpp::PARAMETER_NOT_SET.
    *
-   * \param[in] parameters vector of parameters to be set
-   * \return aggregate result of setting all the parameters
-   * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
+   * \param[in] parameters The vector of parameters to be set.
+   * \return The aggregate result of setting all the parameters atomically.
+   * \throws rclcpp::exceptions::ParameterNotDeclaredException if any parameter
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
@@ -517,8 +517,8 @@ public:
    *
    * Deprecated, instead use declare_parameter().
    *
-   * \param[in] parameters vector of parameters to be set
-   * \return result of each set action as a vector
+   * \param[in] parameters The vector of parameters to be set.
+   * \return The result of each set action as a vector.
    */
   template<typename ParameterT>
   [[deprecated("use declare_parameter() instead")]]
@@ -532,8 +532,8 @@ public:
    *
    * Deprecated, instead use declare_parameters().
    *
-   * \param[in] name The prefix of the parameters to set
-   * \param[in] values The parameters to set in the given prefix
+   * \param[in] name The prefix of the parameters to set.
+   * \param[in] values The parameters to set in the given prefix.
    */
   template<typename ParameterT>
   [[deprecated("use declare_parameters() instead")]]
@@ -575,7 +575,7 @@ public:
    *
    * \param[in] name The name of the parameter to get.
    * \param[out] parameter The output storage for the parameter being retrieved.
-   * \return True if the parameter was previously declared, otherwise false.
+   * \return true if the parameter was previously declared, otherwise false.
    */
   RCLCPP_PUBLIC
   bool
@@ -603,15 +603,15 @@ public:
    * If the parameter was not set, then the "parameter" argument is assigned
    * the "alternative_value".
    *
-   * Like the get_parameter() which returns a bool, this method will never
-   * throw the rclcpp::exceptions::ParameterNotDeclaredException exception.
+   * Like the version of get_parameter() which returns a bool, this method will
+   * not throw the rclcpp::exceptions::ParameterNotDeclaredException exception.
    *
    * In all cases, the parameter is never set or declared within the node.
    *
    * \param[in] name The name of the parameter to get.
    * \param[out] parameter The output where the value of the parameter should be assigned.
    * \param[in] alternative_value Value to be stored in output if the parameter was not set.
-   * \returns true if the parameter was set, false otherwise
+   * \returns true if the parameter was set, false otherwise.
    */
   template<typename ParameterT>
   bool
@@ -627,7 +627,7 @@ public:
    * requested parameter has not been declared and undeclared parameters are
    * not allowed.
    *
-   * Also like get_parameters(), if undeclared parameter are allowed and the
+   * Also like get_parameters(), if undeclared parameters are allowed and the
    * parameter has not been declared, then the corresponding rclcpp::Parameter
    * will be default initialized and therefore have the type
    * rclcpp::ParameterType::PARAMETER_NOT_SET.
@@ -642,7 +642,7 @@ public:
   std::vector<rclcpp::Parameter>
   get_parameters(const std::vector<std::string> & names) const;
 
-  /// Get the parameter values for all parameters which are prefixed with the given prefix.
+  /// Get the parameter values for all parameters that have a given prefix.
   /**
    * The "prefix" argument is used to list the parameters which are prefixed
    * with that prefix, see also list_parameters().
@@ -675,7 +675,7 @@ public:
    * \param[in] prefix The prefix of the parameters to get.
    * \param[out] values The map used to store the parameter names and values,
    *   respectively, with one entry per parameter matching prefix.
-   * \returns True if output "values" was changed, false otherwise.
+   * \returns true if output "values" was changed, false otherwise.
    * \throws rclcpp::ParameterTypeException if the requested type does not
    *   match the value of the parameter which is stored.
    */
@@ -783,8 +783,8 @@ public:
   /// Register a callback to be called anytime a parameter is about to be changed.
   /**
    * The callback signature is designed to allow handling of any of the above
-   * `set_parameter*` methods, and so it takes a const reference to a vector
-   * of parameters to be set, and returns a
+   * `set_parameter*` or `declare_parameter*` methods, and so it takes a const
+   * reference to a vector of parameters to be set, and returns an instance of
    * rcl_interfaces::msg::SetParametersResult to indicate whether or not the
    * parameter should be set or not, and if not why.
    *
@@ -832,7 +832,7 @@ public:
   /**
    * \param[in] callback User defined callback function.
    *   It is expected to atomically set parameters.
-   * \note Repeated invocations of this function will overwrite previous callbacks
+   * \note Repeated invocations of this function will overwrite previous callbacks.
    */
   template<typename CallbackT>
   [[deprecated("use set_on_parameters_set_callback() instead")]]

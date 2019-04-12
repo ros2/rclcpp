@@ -81,7 +81,7 @@ public:
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
 
-  /// Declare and initialize a parameter, all at once.
+  /// Set and initialize a parameter, all at once.
   /**
    * \sa rclcpp::Node::set_parameters_atomically
    */
