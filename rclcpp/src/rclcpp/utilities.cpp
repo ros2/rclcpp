@@ -84,7 +84,7 @@ remove_ros_arguments(int argc, char const * const argv[])
     &nonros_argc,
     &nonros_argv);
 
-  if (RCL_RET_OK != ret) {
+  if (RCL_RET_OK != ret || nonros_argc < 0) {
     // Not using throw_from_rcl_error, because we may need to append deallocation failures.
     exceptions::RCLErrorBase base_exc(ret, rcl_get_error_state());
     rcl_reset_error();
