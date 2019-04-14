@@ -14,16 +14,13 @@
 
 #include "rclcpp/timer.hpp"
 
-#include <chrono>
-#include <string>
-#include <memory>
-
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 
 #include "rcutils/logging_macros.h"
 
-using rclcpp::TimerBase;
+
+#include "rcl/error_handling.h"
 
 TimerBase::TimerBase(
   rclcpp::Clock::SharedPtr clock,

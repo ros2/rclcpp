@@ -18,24 +18,21 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <sstream>
-#include <thread>
 #include <type_traits>
+#include <stdexcept>
 #include <utility>
 
 #include "rclcpp/clock.hpp"
 #include "rclcpp/context.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/rate.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rcl/error_handling.h"
 #include "rcl/timer.h"
 
-#include "rmw/error_handling.h"
-#include "rmw/rmw.h"
+#include "rcutils/logging_macros.h"
 
 namespace rclcpp
 {
