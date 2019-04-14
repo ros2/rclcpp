@@ -38,7 +38,7 @@ TimerBase::TimerBase(
   auto rcl_context = context->get_rcl_context();
 
   timer_handle_ = std::shared_ptr<rcl_timer_t>(
-    new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
+    new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable noexcept
     {
       if (rcl_timer_fini(timer) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
