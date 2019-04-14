@@ -51,6 +51,7 @@ public:
   RCLCPP_PUBLIC
   ~TimerBase();
 
+  /// \throws anything rclcpp::exceptions::throw_from_rcl_error can throw
   RCLCPP_PUBLIC
   void
   cancel();
@@ -65,6 +66,7 @@ public:
   bool
   is_canceled();
 
+  /// \throws anything rclcpp::exceptions::throw_from_rcl_error can throw
   RCLCPP_PUBLIC
   void
   reset();
@@ -77,8 +79,11 @@ public:
   std::shared_ptr<const rcl_timer_t>
   get_timer_handle();
 
-  /// Check how long the timer has until its next scheduled callback.
-  /** \return A std::chrono::duration representing the relative time until the next callback. */
+  /**
+   * \brief Check how long the timer has until its next scheduled callback
+   * \return A std::chrono::duration representing the relative time until the next callback.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw
+   */
   RCLCPP_PUBLIC
   std::chrono::nanoseconds
   time_until_trigger();
@@ -92,6 +97,7 @@ public:
    * This function expects its caller to immediately trigger the callback after this function,
    * since it maintains the last time the callback was triggered.
    * \return True if the timer needs to trigger.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw
    */
   RCLCPP_PUBLIC
   bool is_ready();
