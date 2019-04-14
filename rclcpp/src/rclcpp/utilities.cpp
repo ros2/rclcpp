@@ -14,9 +14,6 @@
 
 #include "rclcpp/utilities.hpp"
 
-#include <string>
-#include <vector>
-
 #include "./signal_handler.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"

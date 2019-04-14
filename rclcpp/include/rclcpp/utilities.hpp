@@ -18,17 +18,14 @@
 #include <chrono>
 #include <functional>
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "rclcpp/context.hpp"
 #include "rclcpp/init_options.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rmw/macros.h"
-#include "rmw/rmw.h"
-
 #ifdef ANDROID
-#include <string>
 #include <sstream>
 
 namespace std
