@@ -38,19 +38,13 @@ Duration::Duration(int32_t seconds, uint32_t nanoseconds)
 }
 
 Duration::Duration(int64_t nanoseconds)
-{
-  rcl_duration_.nanoseconds = nanoseconds;
-}
+: rcl_duration_{nanoseconds}{}
 
 Duration::Duration(std::chrono::nanoseconds nanoseconds)
-{
-  rcl_duration_.nanoseconds = nanoseconds.count();
-}
+: rcl_duration_{nanoseconds.count()} {}
 
 Duration::Duration(const Duration & rhs)
-{
-  rcl_duration_.nanoseconds = rhs.rcl_duration_.nanoseconds;
-}
+: rcl_duration_(rhs.rcl_duration_){ }
 
 Duration::Duration(
   const builtin_interfaces::msg::Duration & duration_msg)
@@ -60,10 +54,7 @@ Duration::Duration(
 }
 
 Duration::Duration(const rcl_duration_t & duration)
-: rcl_duration_(duration)
-{
-  // noop
-}
+: rcl_duration_(duration) {}
 
 Duration::~Duration()
 {
