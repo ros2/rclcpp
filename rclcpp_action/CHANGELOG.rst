@@ -2,6 +2,15 @@
 Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.0 (2019-04-14)
+------------------
+* Fixed hard-coded duration type representation so int64_t isn't assumed. (`#648 <https://github.com/ros2/rclcpp/issues/648>`_)
+* Added documentation to rclcpp_action. (`#650 <https://github.com/ros2/rclcpp/pull/650>`_)
+* Updated to use separated action types. (`#601 <https://github.com/ros2/rclcpp/issues/601>`_)
+* Updated to wait for action server before sending goal. (`#637 <https://github.com/ros2/rclcpp/issues/637>`_)
+* Refactored server goal handle's try_canceling() function. (`#603 <https://github.com/ros2/rclcpp/issues/603>`_)
+* Contributors: Emerson Knapp, Jacob Perron, Michel Hidalgo, Shane Loretz
+
 0.6.2 (2018-12-13)
 ------------------
 
