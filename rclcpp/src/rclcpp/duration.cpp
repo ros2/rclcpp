@@ -49,7 +49,7 @@ Duration::Duration(const Duration & rhs)
 Duration::Duration(
   const builtin_interfaces::msg::Duration & duration_msg)
 {
-  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(duration_msg.sec));
+  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(duration_msg.sec));
   rcl_duration_.nanoseconds += duration_msg.nanosec;
 }
 
