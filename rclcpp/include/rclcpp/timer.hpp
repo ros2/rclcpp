@@ -153,12 +153,13 @@ public:
   void
   execute_callback() override
   {
-    rcl_ret_t ret = rcl_timer_call(timer_handle_.get());
+    const auto ret = rcl_timer_call(timer_handle_.get());
     if (ret == RCL_RET_TIMER_CANCELED) {
       return;
     }
     if (ret != RCL_RET_OK) {
-      throw std::runtime_error("Failed to notify timer that callback occurred");
+      exceptions::throw_from_rcl_error(ret,
+        "Failed to notify timer that callback occurred");
     }
     execute_callback_delegate<>();
   }
