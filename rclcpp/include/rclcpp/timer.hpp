@@ -49,7 +49,8 @@ public:
     rclcpp::Context::SharedPtr context);
 
   RCLCPP_PUBLIC
-  ~TimerBase();
+  virtual
+  ~TimerBase() = default;
 
   /// \throws anything rclcpp::exceptions::throw_from_rcl_error can throw
   RCLCPP_PUBLIC
@@ -139,10 +140,14 @@ public:
   }
 
   /// Default destructor.
-  virtual ~GenericTimer()
+  ~GenericTimer() override
   {
-    // Stop the timer from running.
-    cancel();
+    try {
+      // Stop the timer from running.
+      cancel();
+    } catch (std::exception & ex) {
+      RCUTILS_LOG_ERROR_NAMED("rclcpp", "Failed to cancel timer: %s", ex.what());
+    }
   }
 
   void

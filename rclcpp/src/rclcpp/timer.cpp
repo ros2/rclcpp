@@ -63,9 +63,6 @@ TimerBase::TimerBase(
   }
 }
 
-TimerBase::~TimerBase()
-{}
-
 void
 TimerBase::cancel()
 {
