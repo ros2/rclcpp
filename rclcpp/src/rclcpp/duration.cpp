@@ -17,16 +17,9 @@
 #include <limits>
 #include <utility>
 
-#include "rclcpp/clock.hpp"
-#include "rclcpp/time.hpp"
-
-#include "builtin_interfaces/msg/duration.hpp"
-
-#include "rcl/time.h"
+#include "rclcpp/duration.hpp"
 
 #include "rclcpp/exceptions.hpp"
-
-#include "rcutils/logging_macros.h"
 
 namespace rclcpp
 {
