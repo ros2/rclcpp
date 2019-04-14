@@ -18,6 +18,7 @@
 #include <chrono>
 #include <functional>
 #include <limits>
+#include <stdexcept>
 #include <vector>
 
 #include "rclcpp/context.hpp"
@@ -221,13 +222,14 @@ sleep_for(
  *
  * \param[in] x is the first addend.
  * \param[in] y is the second addend.
- * \tparam T is type of the operands.
+ * \tparam T is type of the operands. Must be arithmetic.
  * \return True if the x + y sum is greater than T::max value.
  */
 template<typename T>
 bool
 add_will_overflow(const T x, const T y)
 {
+  static_assert(std::is_arithmetic<T>::value, "must be arithmetic");
   return (y > 0) && (x > (std::numeric_limits<T>::max() - y));
 }
 
@@ -238,14 +240,43 @@ add_will_overflow(const T x, const T y)
  *
  * \param[in] x is the first addend.
  * \param[in] y is the second addend.
- * \tparam T is type of the operands.
+ * \tparam T is type of the operands. Must be arithmetic.
  * \return True if the x + y sum is less than T::min value.
  */
 template<typename T>
 bool
 add_will_underflow(const T x, const T y)
 {
+  static_assert(std::is_arithmetic<T>::value, "must be arithmetic");
   return (y < 0) && (x < (std::numeric_limits<T>::min() - y));
+}
+
+/// Wrapper which will check for over and underflow of additions
+/**
+ * Function will check, if
+ * x + y
+ * is permissible. If not, it will throw an according exception
+ *
+ * \tparam T must be arithmetic
+ * \param x lhs of the addition
+ * \param y rhs of the addition
+ * \throws std::underflow_error if addition underflows
+ * \throws std::overflow_error if addition overflows
+ */
+template<typename T>
+void
+check_add(const T x, const T y)
+{
+  if (add_will_overflow(x, y)) {
+    const auto error_message = std::string("addition leads to overflow of ") +
+      std::string(typeid(x).name());
+    throw std::overflow_error(error_message);
+  }
+  if (add_will_underflow(x, y)) {
+    const auto error_message = std::string("addition leads to underflow of ") +
+      std::string(typeid(x).name());
+    throw std::underflow_error(error_message);
+  }
 }
 
 /// Safely check if subtraction will overflow.
@@ -255,13 +286,14 @@ add_will_underflow(const T x, const T y)
  *
  * \param[in] x is the minuend.
  * \param[in] y is the subtrahend.
- * \tparam T is type of the operands.
+ * \tparam T is type of the operands. Must be arithmetic.
  * \return True if the difference `x - y` sum is grater than T::max value.
  */
 template<typename T>
 bool
 sub_will_overflow(const T x, const T y)
 {
+  static_assert(std::is_arithmetic<T>::value, "must be arithmetic");
   return (y < 0) && (x > (std::numeric_limits<T>::max() + y));
 }
 
@@ -272,14 +304,43 @@ sub_will_overflow(const T x, const T y)
  *
  * \param[in] x is the minuend.
  * \param[in] y is the subtrahend.
- * \tparam T is type of the operands.
+ * \tparam T is type of the operands. Must be arithmetic.
  * \return True if the difference `x - y` sum is less than T::min value.
  */
 template<typename T>
 bool
 sub_will_underflow(const T x, const T y)
 {
+  static_assert(std::is_arithmetic<T>::value, "must be arithmetic");
   return (y > 0) && (x < (std::numeric_limits<T>::min() + y));
+}
+
+/// Wrapper which will check for over and underflow of subtractions
+/**
+ * Function will check, if
+ * x - y
+ * is permissible. If not, it will throw an according exception
+ *
+ * \tparam T must be arithmetic
+ * \param x lhs of the subtraction
+ * \param y rhs of the subtraction
+ * \throws std::underflow_error if subtraction underflows
+ * \throws std::overflow_error if subtraction overflows
+ */
+template<typename T>
+void
+check_sub(const T x, const T y)
+{
+  if (sub_will_overflow(x, y)) {
+    const auto error_message = std::string("subtraction leads to overflow of ") +
+      std::string(typeid(x).name());
+    throw std::overflow_error(error_message);
+  }
+  if (sub_will_underflow(x, y)) {
+    const auto error_message = std::string("subtraction leads to underflow of ") +
+      std::string(typeid(x).name());
+    throw std::underflow_error(error_message);
+  }
 }
 
 /// Return the given string.
