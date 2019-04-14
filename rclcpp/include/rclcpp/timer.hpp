@@ -46,7 +46,7 @@ public:
   explicit TimerBase(
     Clock::SharedPtr clock,
     std::chrono::nanoseconds period,
-    rclcpp::Context::SharedPtr context);
+    Context::SharedPtr context);
 
   RCLCPP_PUBLIC
   virtual
@@ -133,8 +133,7 @@ public:
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
-    rclcpp::Context::SharedPtr context
-  )
+    Context::SharedPtr context)
   : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback))
   {
   }
@@ -216,7 +215,7 @@ public:
   WallTimer(
     std::chrono::nanoseconds period,
     FunctorT && callback,
-    rclcpp::Context::SharedPtr context)
+    Context::SharedPtr context)
   : GenericTimer<FunctorT>(
       std::make_shared<Clock>(RCL_STEADY_TIME), period, std::move(callback), context)
   {}

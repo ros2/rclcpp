@@ -22,14 +22,17 @@
 
 #include "rcl/error_handling.h"
 
+namespace rclcpp
+{
+
 TimerBase::TimerBase(
-  rclcpp::Clock::SharedPtr clock,
+  Clock::SharedPtr clock,
   std::chrono::nanoseconds period,
-  rclcpp::Context::SharedPtr context)
+  Context::SharedPtr context)
 : clock_(clock), timer_handle_(nullptr)
 {
   if (nullptr == context) {
-    context = rclcpp::contexts::default_context::get_global_default_context();
+    context = contexts::default_context::get_global_default_context();
   }
 
   auto rcl_context = context->get_rcl_context();
@@ -108,10 +111,10 @@ TimerBase::time_until_trigger()
 {
   int64_t time_until_next_call = 0;
   const auto res = rcl_timer_get_time_until_next_call(timer_handle_.get(),
-                                                      &time_until_next_call);
+      &time_until_next_call);
   if (RCL_RET_OK != res) {
     exceptions::throw_from_rcl_error(res,
-            "Timer could not get time until next call");
+      "Timer could not get time until next call");
   }
   return std::chrono::nanoseconds(time_until_next_call);
 }
@@ -121,3 +124,5 @@ TimerBase::get_timer_handle()
 {
   return timer_handle_;
 }
+
+}  // namespace rclcpp
