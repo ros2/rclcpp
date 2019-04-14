@@ -81,10 +81,14 @@ public:
   bool
   operator>(const rclcpp::Duration & rhs) const;
 
+  /// \throws std::overflow_error if addition would overflow
+  /// \throws std::underflow_error if addition would underflow
   RCLCPP_PUBLIC
   Duration
   operator+(const rclcpp::Duration & rhs) const;
 
+  /// \throws std::overflow_error if subtraction would overflow
+  /// \throws std::underflow_error if subtraction would underflow
   RCLCPP_PUBLIC
   Duration
   operator-(const rclcpp::Duration & rhs) const;
@@ -93,6 +97,8 @@ public:
   static Duration
   max();
 
+  /// \throws std::overflow_error if multiplication would overflow
+  /// \throws std::underflow_error if multiplication would underflow
   RCLCPP_PUBLIC
   Duration
   operator*(double scale) const;
