@@ -46,31 +46,11 @@ throw_from_rcl_error(
   const rcl_error_state_t * error_state,
   void (* reset_error)())
 {
-  if (RCL_RET_OK == ret) {
-    throw std::invalid_argument("ret is RCL_RET_OK");
-  }
-  if (!error_state) {
-    error_state = rcl_get_error_state();
-  }
-  if (!error_state) {
-    throw std::runtime_error("rcl error state is not set");
-  }
-  std::string formated_prefix = prefix;
-  if (!prefix.empty()) {
-    formated_prefix += ": ";
-  }
-  RCLErrorBase base_exc(ret, error_state);
-  if (reset_error) {
-    reset_error();
-  }
-  switch (ret) {
-    case RCL_RET_BAD_ALLOC:
-      throw RCLBadAlloc(base_exc);
-    case RCL_RET_INVALID_ARGUMENT:
-      throw RCLInvalidArgument(base_exc, formated_prefix);
-    default:
-      throw RCLError(base_exc, formated_prefix);
-  }
+  // We expect this to either throw a standard error,
+  // or to generate an error pointer (which is caught
+  // in err, and immediately thrown)
+  auto err = from_rcl_error(rt, prefix, error_state, reset_error);
+  std::rethrow_exception(err);
 }
 
 std::exception_ptr
