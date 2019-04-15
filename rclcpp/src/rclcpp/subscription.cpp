@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
@@ -119,6 +120,12 @@ const std::shared_ptr<rcl_subscription_t>
 SubscriptionBase::get_intra_process_subscription_handle() const
 {
   return intra_process_subscription_handle_;
+}
+
+const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+SubscriptionBase::get_event_handlers() const
+{
+  return event_handlers_;
 }
 
 const rosidl_message_type_support_t &

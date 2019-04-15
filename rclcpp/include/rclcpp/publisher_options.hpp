@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "rclcpp/qos_event.hpp"
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -29,10 +31,12 @@ namespace rclcpp
 template<typename Allocator>
 struct PublisherOptionsWithAllocator
 {
+  PublisherEventCallbacks event_callbacks;
   /// The quality of service profile to pass on to the rmw implementation.
   rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
+  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
   /// Optional custom allocator.
-  std::shared_ptr<Allocator> allocator = nullptr;
+  std::shared_ptr<Allocator> allocator;
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
 };

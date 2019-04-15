@@ -22,6 +22,7 @@
 
 #include "rclcpp/client.hpp"
 #include "rclcpp/service.hpp"
+#include "rclcpp/publisher.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -91,6 +92,10 @@ public:
 
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)
+
+  RCLCPP_PUBLIC
+  void
+  add_publisher(const rclcpp::PublisherBase::SharedPtr publisher_ptr);
 
   RCLCPP_PUBLIC
   void

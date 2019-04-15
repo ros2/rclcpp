@@ -35,6 +35,12 @@ Waitable::get_number_of_ready_clients()
 }
 
 size_t
+Waitable::get_number_of_ready_events()
+{
+  return 0u;
+}
+
+size_t
 Waitable::get_number_of_ready_services()
 {
   return 0u;

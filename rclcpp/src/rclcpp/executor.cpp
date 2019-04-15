@@ -60,7 +60,8 @@ Executor::Executor(const ExecutorArgs & args)
   // Store the context for later use.
   context_ = args.context;
 
-  ret = rcl_wait_set_init(&wait_set_, 0, 2, 0, 0, 0, context_->get_rcl_context().get(), allocator);
+  ret = rcl_wait_set_init(&wait_set_, 0, 2, 0, 0, 0, 0,
+      context_->get_rcl_context().get(), allocator);
   if (RCL_RET_OK != ret) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
@@ -434,7 +435,8 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   rcl_ret_t ret = rcl_wait_set_resize(
     &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
     memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
-    memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services());
+    memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services(),
+    memory_strategy_->number_of_ready_events());
   if (RCL_RET_OK != ret) {
     throw std::runtime_error(
             std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);

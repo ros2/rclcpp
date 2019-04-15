@@ -75,6 +75,8 @@ NodeParameters::NodeParameters(
       node_topics.get(),
       "parameter_events",
       parameter_event_qos_profile,
+      PublisherEventCallbacks(),
+      nullptr,
       use_intra_process,
       allocator);
   }
