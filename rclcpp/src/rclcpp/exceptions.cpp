@@ -39,20 +39,6 @@ NameValidationError::format_error(
   return msg;
 }
 
-void
-throw_from_rcl_error(
-  rcl_ret_t ret,
-  const std::string & prefix,
-  const rcl_error_state_t * error_state,
-  void (* reset_error)())
-{
-  // We expect this to either throw a standard error,
-  // or to generate an error pointer (which is caught
-  // in err, and immediately thrown)
-  auto err = from_rcl_error(rt, prefix, error_state, reset_error);
-  std::rethrow_exception(err);
-}
-
 std::exception_ptr
 from_rcl_error(
   rcl_ret_t ret,
@@ -85,6 +71,20 @@ from_rcl_error(
     default:
       return std::make_exception_ptr(RCLError(base_exc, formatted_prefix));
   }
+}
+
+void
+throw_from_rcl_error(
+  rcl_ret_t ret,
+  const std::string & prefix,
+  const rcl_error_state_t * error_state,
+  void (* reset_error)())
+{
+  // We expect this to either throw a standard error,
+  // or to generate an error pointer (which is caught
+  // in err, and immediately thrown)
+  auto err = from_rcl_error(ret, prefix, error_state, reset_error);
+  std::rethrow_exception(err);
 }
 
 RCLErrorBase::RCLErrorBase(rcl_ret_t ret, const rcl_error_state_t * error_state)
