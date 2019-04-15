@@ -30,25 +30,32 @@ class Clock;
 class Time
 {
 public:
+  /// \throws std::invalid_argument if the seconds are smaller then 0
   RCLCPP_PUBLIC
-  Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
+  Time(
+    int32_t seconds,
+    uint32_t nanoseconds,
+    rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
-  explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
+  explicit Time(
+    int64_t nanoseconds = 0,
+    rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   Time(const Time & rhs);
 
+  /// \throws std::invalid_argument if the time_msg.sec are smaller then 0
   RCLCPP_PUBLIC
   Time(
     const builtin_interfaces::msg::Time & time_msg,
-    rcl_clock_type_t ros_time = RCL_ROS_TIME);
+    rcl_clock_type_t clock_type = RCL_ROS_TIME);
 
   RCLCPP_PUBLIC
   explicit Time(const rcl_time_point_t & time_point);
 
   RCLCPP_PUBLIC
-  virtual ~Time();
+  virtual ~Time() = default;
 
   RCLCPP_PUBLIC
   operator builtin_interfaces::msg::Time() const;
@@ -57,42 +64,56 @@ public:
   Time &
   operator=(const Time & rhs);
 
+  /// \throws std::invalid_argument if the time_msg.sec are smaller then 0
   RCLCPP_PUBLIC
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
 
+  /// \throws std::invalid_argument if rhs uses a different time source
   RCLCPP_PUBLIC
   bool
   operator==(const rclcpp::Time & rhs) const;
 
+  /// \throws std::invalid_argument if rhs uses a different time source
   RCLCPP_PUBLIC
   bool
   operator!=(const rclcpp::Time & rhs) const;
 
+  /// \throws std::invalid_argument if rhs uses a different time source
   RCLCPP_PUBLIC
   bool
   operator<(const rclcpp::Time & rhs) const;
 
+  /// \throws std::invalid_argument if rhs uses a different time source
   RCLCPP_PUBLIC
   bool
   operator<=(const rclcpp::Time & rhs) const;
 
+  /// \throws std::invalid_argument if rhs uses a different time source
   RCLCPP_PUBLIC
   bool
   operator>=(const rclcpp::Time & rhs) const;
 
+  /// \throws std::invalid_argument if rhs uses a different time source
   RCLCPP_PUBLIC
   bool
   operator>(const rclcpp::Time & rhs) const;
 
+  /// \throws std::overflow_error at int64_t overflow
+  /// \throws std::underflow_error at int64_t underflow
   RCLCPP_PUBLIC
   Time
   operator+(const rclcpp::Duration & rhs) const;
 
+  /// \throws std::invalid_argument if rhs uses a different time source
+  /// \throws std::overflow_error at int64_t overflow
+  /// \throws std::underflow_error at int64_t underflow
   RCLCPP_PUBLIC
   Duration
   operator-(const rclcpp::Time & rhs) const;
 
+  /// \throws std::overflow_error at int64_t overflow
+  /// \throws std::underflow_error at int64_t underflow
   RCLCPP_PUBLIC
   Time
   operator-(const rclcpp::Duration & rhs) const;
