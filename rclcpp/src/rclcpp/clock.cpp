@@ -78,7 +78,7 @@ Clock::ros_time_is_active()
     return false;
   }
 
-  bool is_enabled;
+  bool is_enabled = false;
   auto ret = rcl_is_enabled_ros_time_override(&rcl_clock_, &is_enabled);
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
