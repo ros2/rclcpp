@@ -1385,3 +1385,316 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_allowed) {
     }
   }
 }
+
+// test describe parameter with undeclared not allowed
+TEST_F(TestNode, describe_parameter_undeclared_parameters_not_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(false));
+  {
+    // normal use
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    {
+      auto result = node->describe_parameter(name1);
+      EXPECT_EQ(result.name, name1);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+      EXPECT_FALSE(result.read_only);
+    }
+    {
+      auto result = node->describe_parameter(name2);
+      EXPECT_EQ(result.name, name2);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+      EXPECT_TRUE(result.read_only);
+    }
+  }
+  {
+    // non-existent parameter throws
+    auto name = "parameter"_unq;
+
+    {
+      EXPECT_THROW({
+        node->describe_parameter(name);
+      }, rclcpp::exceptions::ParameterNotDeclaredException);
+    }
+  }
+}
+
+// test describe parameter with undeclared allowed
+TEST_F(TestNode, describe_parameter_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use still works
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    {
+      auto result = node->describe_parameter(name1);
+      EXPECT_EQ(result.name, name1);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+      EXPECT_FALSE(result.read_only);
+    }
+    {
+      auto result = node->describe_parameter(name2);
+      EXPECT_EQ(result.name, name2);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+      EXPECT_TRUE(result.read_only);
+    }
+  }
+  {
+    // non-existent parameter does not throw, but returns default constructed one
+    auto name = "parameter"_unq;
+
+    {
+      auto result = node->describe_parameter(name);
+      rcl_interfaces::msg::ParameterDescriptor expected;
+      expected.name = name;
+      EXPECT_EQ(result, expected);
+    }
+  }
+}
+
+// test describe parameters with undeclared not allowed
+TEST_F(TestNode, describe_parameters_undeclared_parameters_not_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameters_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(false));
+  {
+    // normal use
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    auto results = node->describe_parameters({name1, name2});
+
+    EXPECT_EQ(results.size(), 2u);
+
+    EXPECT_EQ(results[0].name, name1);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_FALSE(results[0].read_only);
+
+    EXPECT_EQ(results[1].name, name2);
+    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_TRUE(results[1].read_only);
+  }
+  {
+    // non-existent parameter throws
+    auto name = "parameter"_unq;
+
+    {
+      EXPECT_THROW({
+        node->describe_parameters({name});
+      }, rclcpp::exceptions::ParameterNotDeclaredException);
+    }
+  }
+  {
+    // check that repeated names in input work, and that output is stable (same order as input)
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    auto results = node->describe_parameters({name2, name1, name2});
+
+    EXPECT_EQ(results.size(), 3u);
+
+    EXPECT_EQ(results[0].name, name2);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_TRUE(results[0].read_only);
+
+    EXPECT_EQ(results[1].name, name1);
+    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_FALSE(results[1].read_only);
+
+    EXPECT_EQ(results[2].name, name2);
+    EXPECT_EQ(results[2].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_TRUE(results[2].read_only);
+  }
+}
+
+// test describe parameters with undeclared allowed
+TEST_F(TestNode, describe_parameters_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameters_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use still works (declare first)
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    auto results = node->describe_parameters({name1, name2});
+
+    EXPECT_EQ(results.size(), 2u);
+
+    EXPECT_EQ(results[0].name, name1);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_FALSE(results[0].read_only);
+
+    EXPECT_EQ(results[1].name, name2);
+    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_TRUE(results[1].read_only);
+  }
+  {
+    // non-existent parameter does not throw
+    auto name = "parameter"_unq;
+
+    auto results = node->describe_parameters({name});
+
+    EXPECT_EQ(results.size(), 1u);
+
+    EXPECT_EQ(results[0].name, name);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+    EXPECT_FALSE(results[0].read_only);
+  }
+  {
+    // check that repeated names in input work, and that output is stable (same order as input)
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    auto results = node->describe_parameters({name2, name1, name2});
+
+    EXPECT_EQ(results.size(), 3u);
+
+    EXPECT_EQ(results[0].name, name2);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+    EXPECT_FALSE(results[0].read_only);
+
+    EXPECT_EQ(results[1].name, name1);
+    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+    EXPECT_FALSE(results[1].read_only);
+
+    EXPECT_EQ(results[2].name, name2);
+    EXPECT_EQ(results[2].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+    EXPECT_FALSE(results[2].read_only);
+  }
+}
+
+// test get parameter types with undeclared not allowed
+TEST_F(TestNode, get_parameter_types_undeclared_parameters_not_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_types_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(false));
+  {
+    // normal use
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    auto results = node->get_parameter_types({name1, name2});
+
+    EXPECT_EQ(results.size(), 2u);
+
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+  }
+  {
+    // non-existent parameter throws
+    auto name = "parameter"_unq;
+
+    {
+      EXPECT_THROW({
+        node->get_parameter_types({name});
+      }, rclcpp::exceptions::ParameterNotDeclaredException);
+    }
+  }
+  {
+    // check that repeated names in input work, and that output is stable (same order as input)
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    auto results = node->get_parameter_types({name2, name1, name2});
+
+    EXPECT_EQ(results.size(), 3u);
+
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+
+    EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+  }
+}
+
+// test get parameter types with undeclared allowed
+TEST_F(TestNode, get_parameter_types_undeclared_parameters_allowed) {
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_types_node"_unq,
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
+  {
+    // normal use still works (declare first)
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.read_only = true;
+    node->declare_parameter<std::string>(name2, "test", descriptor);
+
+    auto results = node->get_parameter_types({name1, name2});
+
+    EXPECT_EQ(results.size(), 2u);
+
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+  }
+  {
+    // non-existent parameter does not throw
+    auto name = "parameter"_unq;
+
+    auto results = node->get_parameter_types({name});
+
+    EXPECT_EQ(results.size(), 1u);
+
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+  }
+  {
+    // check that repeated names in input work, and that output is stable (same order as input)
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    auto results = node->get_parameter_types({name2, name1, name2});
+
+    EXPECT_EQ(results.size(), 3u);
+
+    EXPECT_EQ(results[0], rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+
+    EXPECT_EQ(results[1], rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+
+    EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+  }
+}

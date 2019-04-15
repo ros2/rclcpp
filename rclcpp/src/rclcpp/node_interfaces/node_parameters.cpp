@@ -595,14 +595,25 @@ NodeParameters::describe_parameters(const std::vector<std::string> & names) cons
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::msg::ParameterDescriptor> results;
-  for (auto & kv : parameters_) {
-    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
-        return name == kv.first;
-      }))
-    {
-      results.push_back(kv.second.descriptor);
+
+  for (const auto & name : names) {
+    auto it = parameters_.find(name);
+    if (it != parameters_.cend()) {
+      results.push_back(it->second.descriptor);
+    } else if (allow_undeclared_) {
+      // parameter not found, but undeclared allowed, so return emtpy
+      rcl_interfaces::msg::ParameterDescriptor default_description;
+      default_description.name = name;
+      results.push_back(default_description);
+    } else {
+      throw rclcpp::exceptions::ParameterNotDeclaredException(name);
     }
   }
+
+  if (results.size() != names.size()) {
+    throw std::runtime_error("results and size unexpectedly different sizes");
+  }
+
   return results;
 }
 
@@ -611,16 +622,23 @@ NodeParameters::get_parameter_types(const std::vector<std::string> & names) cons
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<uint8_t> results;
-  for (auto & kv : parameters_) {
-    if (std::any_of(names.cbegin(), names.cend(), [&kv](const std::string & name) {
-        return name == kv.first;
-      }))
-    {
-      results.push_back(kv.second.value.get_type());
-    } else {
+
+  for (const auto & name : names) {
+    auto it = parameters_.find(name);
+    if (it != parameters_.cend()) {
+      results.push_back(it->second.value.get_type());
+    } else if (allow_undeclared_) {
+      // parameter not found, but undeclared allowed, so return not set
       results.push_back(rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
+    } else {
+      throw rclcpp::exceptions::ParameterNotDeclaredException(name);
     }
   }
+
+  if (results.size() != names.size()) {
+    throw std::runtime_error("results and size unexpectedly different sizes");
+  }
+
   return results;
 }
 
