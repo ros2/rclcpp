@@ -15,17 +15,10 @@
 #include <limits>
 #include <utility>
 
-#include "rclcpp/clock.hpp"
-#include "rclcpp/duration.hpp"
-
-#include "builtin_interfaces/msg/time.hpp"
-
-#include "rcl/time.h"
+#include "rclcpp/time.hpp"
 
 #include "rclcpp/exceptions.hpp"
-
-#include "rcutils/logging_macros.h"
-
+#include "rclcpp/time_utils.hpp"
 #include "rclcpp/utilities.hpp"
 
 namespace

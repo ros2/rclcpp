@@ -15,13 +15,12 @@
 #ifndef RCLCPP__TIME_HPP_
 #define RCLCPP__TIME_HPP_
 
-#include "builtin_interfaces/msg/time.hpp"
-
+#include "rclcpp/duration.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcl/time.h"
 
-#include "rclcpp/duration.hpp"
+#include "builtin_interfaces/msg/time.hpp"
 
 namespace rclcpp
 {
