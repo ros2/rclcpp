@@ -75,6 +75,17 @@ TimerBase::cancel()
   }
 }
 
+bool
+TimerBase::is_cancelled()
+{
+  bool is_canceled = false;
+  if (rcl_timer_is_canceled(timer_handle_.get(), &is_canceled) != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't get timer cancelled state: ") +
+            rcl_get_error_string().str);
+  }
+  return is_canceled;
+}
+
 void
 TimerBase::reset()
 {

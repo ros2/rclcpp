@@ -58,6 +58,11 @@ public:
   void
   cancel();
 
+  /// Return the timer cancellation state.
+  RCLCPP_PUBLIC
+  bool
+  is_cancelled();
+
   RCLCPP_PUBLIC
   void
   reset();
