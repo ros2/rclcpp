@@ -1319,6 +1319,8 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
 
     node_local->declare_parameter(name1, 42);
     node_local->declare_parameter(name2, 100);
+    // undeclare so that it doesn't interfere with the test
+    node_local->undeclare_parameter("use_sim_time");
 
     {
       std::map<std::string, int> actual;
@@ -1337,7 +1339,7 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
         {
           node_local->get_parameters("", actual);
         },
-        rclcpp::exceptions::InvalidParameterValueException);
+        rclcpp::ParameterTypeException);
     }
   }
 }
@@ -1360,8 +1362,8 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_allowed) {
     EXPECT_FALSE(node->has_parameter(name2));
     EXPECT_FALSE(node->has_parameter(name3));
 
-    // non-templated version, get all, none set, no throw
     {
+      // non-templated version, get all, none set, no throw
       std::vector<rclcpp::Parameter> expected = {
         {name1, {}},
         {name2, {}},
@@ -1369,14 +1371,14 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_allowed) {
       };
       EXPECT_EQ(node->get_parameters({name1, name2, name3}), expected);
     }
-    // templated version, get all int's, none set, no throw
     {
+      // templated version, get all int's, none set, no throw
       std::map<std::string, int> actual;
       EXPECT_FALSE(node->get_parameters("ints", actual));
       EXPECT_TRUE(actual.empty());
     }
-    // templated version, get the one string, none set, no throw
     {
+      // templated version, get the one string, none set, no throw
       std::map<std::string, std::string> actual;
       EXPECT_FALSE(node->get_parameters("strings", actual));
       EXPECT_TRUE(actual.empty());

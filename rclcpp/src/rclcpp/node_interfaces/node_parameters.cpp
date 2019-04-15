@@ -574,10 +574,10 @@ NodeParameters::get_parameters_by_prefix(
   const std::string & prefix,
   std::map<std::string, rclcpp::Parameter> & parameters) const
 {
-  std::string prefix_with_dot = prefix + ".";
-  bool ret = false;
-
   std::lock_guard<std::mutex> lock(mutex_);
+
+  std::string prefix_with_dot = prefix.empty() ? prefix : prefix + ".";
+  bool ret = false;
 
   for (const auto & param : parameters_) {
     if (param.first.find(prefix_with_dot) == 0 && param.first.length() > prefix_with_dot.length()) {
