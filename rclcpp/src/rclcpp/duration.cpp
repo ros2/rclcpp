@@ -121,10 +121,8 @@ Duration::operator*(double scale) const
   if (!std::isfinite(scale)) {
     throw std::runtime_error("abnormal scale in rclcpp::Duration");
   }
-  bounds_check_duration_scale(
-    this->rcl_duration_.nanoseconds,
-    scale,
-    std::numeric_limits<rcl_duration_value_t>::max());
+  // will throw if multiplication over/underflows
+  check_mult(rcl_duration_.nanoseconds, scale);
   return Duration(static_cast<rcl_duration_value_t>(rcl_duration_.nanoseconds * scale));
 }
 

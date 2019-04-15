@@ -343,6 +343,86 @@ check_sub(const T x, const T y)
   }
 }
 
+/// Checks if a multiplication will lead to an overflow
+/**
+ * Function checks if
+ * res = x * y
+ * will lead to an overflow res, where res has the data type of x
+ *
+ * \tparam X data type of the left hand side. Must be arithmetic.
+ * \tparam Y data type of the right hand side. Must be arithmetic.
+ * \param x value of the left hand side
+ * \param y value of the right hand side
+ * \return true, if multiplication overflows
+ */
+template<typename X, typename Y>
+bool
+mult_will_overflow(X x, Y y) noexcept
+{
+  static_assert(std::is_arithmetic<X>::value, "X must be arithmetic");
+  static_assert(std::is_arithmetic<Y>::value, "Y must be arithmetic");
+
+  if (x < 0) {
+    return (y < 0) && (x < std::numeric_limits<X>::max() / y);
+  } else {
+    return (y > 0) && (x > std::numeric_limits<X>::max() / y);
+  }
+}
+
+/// Checks if a multiplication will lead to an underflow
+/**
+ * Function checks if
+ * res = x * y
+ * will lead to an underflow of res, where res has the data type of x
+ *
+ * \tparam X data type of the left hand side. Must be arithmetic.
+ * \tparam Y data type of the right hand side. Must be arithmetic.
+ * \param x value of the left hand side
+ * \param y value of the right hand side
+ * \return true, if multiplication underflows
+ */
+template<typename X, typename Y>
+bool
+mult_will_underflow(X x, Y y) noexcept
+{
+  static_assert(std::is_arithmetic<X>::value, "X must be arithmetic");
+  static_assert(std::is_arithmetic<Y>::value, "Y must be arithmetic");
+
+  if (x < 0) {
+    return (y > 0) && (x < std::numeric_limits<X>::min() / y);
+  } else {
+    return (y < 0) && (x > std::numeric_limits<X>::min() / y);
+  }
+}
+
+/// Wrapper throws if a multiplication either over or underflows
+/**
+ * Function checks if
+ * res = x * y
+ * will lead to an over or underflow of res, where res has the data type of x
+ *
+ * \tparam X data type of the left hand side, must be arithmetic
+ * \tparam Y data type of the right hand side, must be arithmetic
+ * \param x value of the left hand side
+ * \param y value of the right hand side
+ * \throws std::overflow_error if multiplication overflows
+ * \throws std::underflow_error is multiplication underflows
+ */
+template<typename X, typename Y>
+void check_mult(X x, Y y)
+{
+  if (mult_will_overflow(x, y)) {
+    const auto error_message = std::string("multiplication leads to overflow of ") +
+      std::string(typeid(x).name());
+    throw std::overflow_error(error_message);
+  }
+  if (mult_will_underflow(x, y)) {
+    const auto error_message = std::string("multiplication leads to underflow of ") +
+      std::string(typeid(x).name());
+    throw std::underflow_error(error_message);
+  }
+}
+
 /// Return the given string.
 /**
  * This function is overloaded to transform any string to C-style string.
