@@ -273,12 +273,14 @@ TEST_F(TestClient, async_send_goal_no_callbacks)
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
+  printf("Testing Bad Goal...\n");
   ActionGoal bad_goal;
   bad_goal.order = -5;
   auto future_goal_handle = action_client->async_send_goal(bad_goal);
   dual_spin_until_future_complete(future_goal_handle);
   EXPECT_EQ(nullptr, future_goal_handle.get().get());
 
+  printf("Testing Good Goal...\n");
   ActionGoal good_goal;
   good_goal.order = 5;
   future_goal_handle = action_client->async_send_goal(good_goal);

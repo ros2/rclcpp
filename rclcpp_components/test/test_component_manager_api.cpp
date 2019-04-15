@@ -117,10 +117,10 @@ TEST_F(TestComponentManager, load_components)
       return std::find(node_names.begin(), node_names.end(), name) != node_names.end();
     };
 
-  EXPECT_TRUE(find_in_nodes("test_component_foo"));
-  EXPECT_TRUE(find_in_nodes("test_component_bar"));
-  EXPECT_TRUE(find_in_nodes("test_component_baz"));
-  EXPECT_TRUE(find_in_nodes("test_component_bing"));
+  EXPECT_TRUE(find_in_nodes("//test_component_foo"));
+  EXPECT_TRUE(find_in_nodes("//test_component_bar"));
+  EXPECT_TRUE(find_in_nodes("//test_component_baz"));
+  EXPECT_TRUE(find_in_nodes("/ns/test_component_bing"));
 }
 
 TEST_F(TestComponentManager, load_invalid_components)
@@ -263,7 +263,7 @@ TEST_F(TestComponentManager, unload_component)
   auto find_in_nodes = [node_names](std::string name) {
       return std::find(node_names.begin(), node_names.end(), name) != node_names.end();
     };
-  EXPECT_TRUE(find_in_nodes("test_component_foo"));
+  EXPECT_TRUE(find_in_nodes("//test_component_foo"));
 
   {
     auto client = node->create_client<composition_interfaces::srv::UnloadNode>(
