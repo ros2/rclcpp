@@ -14,16 +14,12 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <chrono>
 #include <limits>
-#include <string>
 
-#include "rcl/error_handling.h"
 #include "rcl/time.h"
-#include "rclcpp/clock.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/duration.hpp"
+#include "builtin_interfaces/msg/duration.hpp"
 
 
 using namespace std::chrono_literals;
@@ -32,9 +28,78 @@ class TestDuration : public ::testing::Test
 {
 };
 
-// TEST(TestDuration, conversions) {
-// TODO(tfoote) Implement conversion methods
-// }
+TEST(TestDuration, conversions) {
+  // pull up the message type
+  using msg_t = builtin_interfaces::msg::Duration;
+  using sec_t = typename msg_t::_sec_type;
+  using nano_t = typename msg_t::_nanosec_type;
+  using full_t = rcl_duration_value_t;
+
+  {
+    SCOPED_TRACE("test from builtin_interface");
+    // setup a ill-formed message
+    msg_t ill_formed;
+    ill_formed.sec = std::numeric_limits<sec_t>::max();
+    ill_formed.nanosec = std::numeric_limits<nano_t>::max();
+
+    // create a rclcpp::Duration, convert it twice - first round from an ill
+    // defined input and second from properly controller input.
+    rclcpp::Duration duration1 = ill_formed;
+    msg_t msg1 = duration1;
+    rclcpp::Duration duration2 = msg1;
+    msg_t msg2 = duration2;
+
+    // check that the conversion bears no side effects
+    EXPECT_EQ(duration1, duration2);
+    EXPECT_EQ(msg1, msg2);
+
+    // check that the conversion is correct
+    const auto raw_nano = RCL_S_TO_NS(static_cast<full_t>(msg1.sec)) +
+      static_cast<full_t>(msg1.nanosec);
+    EXPECT_EQ(raw_nano, duration1.nanoseconds());
+  }
+
+  {
+    SCOPED_TRACE("test from rclcpp::Duration");
+
+    // setup a rclcpp::Duration, which receives ill input (too much nano)
+    // and convert it back to message and back to rclcpp::Duration;
+    // The conversion shall have no side effects
+    rclcpp::Duration duration1(std::numeric_limits<sec_t>::max(),
+      std::numeric_limits<nano_t>::max());
+    msg_t msg1 = duration1;
+    rclcpp::Duration duration2 = msg1;
+    msg_t msg2 = duration2;
+
+    // check that the conversion bears no side effects
+    EXPECT_EQ(duration1, duration2);
+    EXPECT_EQ(msg1, msg2);
+
+    // check that the conversion is correct
+    const auto raw_nano = RCL_S_TO_NS(static_cast<full_t>(msg1.sec)) +
+      static_cast<full_t>(msg1.nanosec);
+    EXPECT_EQ(raw_nano, duration1.nanoseconds());
+  }
+
+  {
+    SCOPED_TRACE("test with negative numbers");
+    // setup a ill-formed message
+    msg_t ill_formed;
+    ill_formed.sec = std::numeric_limits<sec_t>::min();
+    ill_formed.nanosec = std::numeric_limits<nano_t>::max();
+
+    // create a rclcpp::Duration, convert it twice - first round from an ill
+    // defined input and second from properly controller input.
+    rclcpp::Duration duration1 = ill_formed;
+    msg_t msg1 = duration1;
+    rclcpp::Duration duration2 = msg1;
+    msg_t msg2 = duration2;
+
+    // check that the conversion bears no side effects
+    EXPECT_EQ(duration1, duration2);
+    EXPECT_EQ(msg1, msg2);
+  }
+}
 
 TEST(TestDuration, operators) {
   rclcpp::Duration old(1, 0);
@@ -78,22 +143,24 @@ TEST(TestDuration, chrono_overloads) {
 }
 
 TEST(TestDuration, overflows) {
-  rclcpp::Duration max(std::numeric_limits<rcl_duration_value_t>::max());
-  rclcpp::Duration min(std::numeric_limits<rcl_duration_value_t>::min());
+  rclcpp::Duration max_(std::numeric_limits<rcl_duration_value_t>::max());
+  rclcpp::Duration min_(std::numeric_limits<rcl_duration_value_t>::min());
 
   rclcpp::Duration one(1);
   rclcpp::Duration negative_one(-1);
 
-  EXPECT_THROW(max + one, std::overflow_error);
-  EXPECT_THROW(min - one, std::underflow_error);
-  EXPECT_THROW(negative_one + min, std::underflow_error);
-  EXPECT_THROW(negative_one - max, std::underflow_error);
+  EXPECT_THROW(max_ + one, std::overflow_error);
+  EXPECT_THROW(min_ - one, std::underflow_error);
+  EXPECT_THROW(negative_one + min_, std::underflow_error);
+  // the min is defined as -max - 1, hence the expression -1 -max is not
+  // sufficient to provoke and underflow
+  EXPECT_THROW((negative_one + negative_one) - max_, std::underflow_error);
 
-  rclcpp::Duration base_d = max * 0.3;
+  rclcpp::Duration base_d = max_ * 0.3;
   EXPECT_THROW(base_d * 4, std::overflow_error);
   EXPECT_THROW(base_d * (-4), std::underflow_error);
 
-  rclcpp::Duration base_d_neg = max * (-0.3);
+  rclcpp::Duration base_d_neg = max_ * (-0.3);
   EXPECT_THROW(base_d_neg * (-4), std::overflow_error);
   EXPECT_THROW(base_d_neg * 4, std::underflow_error);
 }
@@ -115,7 +182,7 @@ TEST(TestDuration, negative_duration) {
 
     assignable_duration = duration_msg;
     // avoid windows converting a literal number less than -INT_MAX to unsigned int C4146
-    int64_t expected_value = -3750;
+    int64_t expected_value = -4250;
     expected_value *= 1000 * 1000;
     EXPECT_EQ(expected_value, assignable_duration.nanoseconds());
   }
@@ -123,7 +190,7 @@ TEST(TestDuration, negative_duration) {
 
 TEST(TestDuration, maximum_duration) {
   rclcpp::Duration max_duration = rclcpp::Duration::max();
-  rclcpp::Duration max(std::numeric_limits<int32_t>::max(), 999999999);
+  rclcpp::Duration max_(std::numeric_limits<int32_t>::max(), 999999999);
 
-  EXPECT_EQ(max_duration, max);
+  EXPECT_EQ(max_duration, max_);
 }

@@ -20,31 +20,26 @@
 #include "rclcpp/duration.hpp"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/time_utils.hpp"
+#include "rclcpp/utilities.hpp"
 
 namespace rclcpp
 {
 
 Duration::Duration(int32_t seconds, uint32_t nanoseconds)
-{
-  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(seconds));
-  rcl_duration_.nanoseconds += nanoseconds;
-}
+: rcl_duration_{join_to_nano(seconds, nanoseconds)} {}
 
 Duration::Duration(int64_t nanoseconds)
-: rcl_duration_{nanoseconds}{}
+: rcl_duration_{nanoseconds} {}
 
 Duration::Duration(std::chrono::nanoseconds nanoseconds)
 : rcl_duration_{nanoseconds.count()} {}
 
 Duration::Duration(const Duration & rhs)
-: rcl_duration_(rhs.rcl_duration_){ }
+: rcl_duration_(rhs.rcl_duration_) {}
 
-Duration::Duration(
-  const builtin_interfaces::msg::Duration & duration_msg)
-{
-  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(duration_msg.sec));
-  rcl_duration_.nanoseconds += duration_msg.nanosec;
-}
+Duration::Duration(const builtin_interfaces::msg::Duration & duration_msg)
+: rcl_duration_{join_to_nano(duration_msg.sec, duration_msg.nanosec)} {}
 
 Duration::Duration(const rcl_duration_t & duration)
 : rcl_duration_(duration) {}
@@ -56,9 +51,7 @@ Duration::~Duration()
 Duration::operator builtin_interfaces::msg::Duration() const
 {
   builtin_interfaces::msg::Duration msg_duration;
-  msg_duration.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_duration_.nanoseconds));
-  msg_duration.nanosec =
-    static_cast<std::uint32_t>(rcl_duration_.nanoseconds % (1000 * 1000 * 1000));
+  split_from_nano(rcl_duration_.nanoseconds, msg_duration.sec, msg_duration.nanosec);
   return msg_duration;
 }
 
@@ -72,8 +65,7 @@ Duration::operator=(const Duration & rhs)
 Duration &
 Duration::operator=(const builtin_interfaces::msg::Duration & duration_msg)
 {
-  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(duration_msg.sec));
-  rcl_duration_.nanoseconds += duration_msg.nanosec;
+  rcl_duration_.nanoseconds = join_to_nano(duration_msg.sec, duration_msg.nanosec);
   return *this;
 }
 
@@ -107,76 +99,20 @@ Duration::operator>(const rclcpp::Duration & rhs) const
   return rcl_duration_.nanoseconds > rhs.rcl_duration_.nanoseconds;
 }
 
-void
-bounds_check_duration_sum(int64_t lhsns, int64_t rhsns, uint64_t max)
-{
-  auto abs_lhs = (uint64_t)std::abs(lhsns);
-  auto abs_rhs = (uint64_t)std::abs(rhsns);
-
-  if (lhsns > 0 && rhsns > 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
-      throw std::overflow_error("addition leads to int64_t overflow");
-    }
-  } else if (lhsns < 0 && rhsns < 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
-      throw std::underflow_error("addition leads to int64_t underflow");
-    }
-  }
-}
-
 Duration
 Duration::operator+(const rclcpp::Duration & rhs) const
 {
-  bounds_check_duration_sum(
-    this->rcl_duration_.nanoseconds,
-    rhs.rcl_duration_.nanoseconds,
-    std::numeric_limits<rcl_duration_value_t>::max());
-  return Duration(
-    rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds);
-}
-
-void
-bounds_check_duration_difference(int64_t lhsns, int64_t rhsns, uint64_t max)
-{
-  auto abs_lhs = (uint64_t)std::abs(lhsns);
-  auto abs_rhs = (uint64_t)std::abs(rhsns);
-
-  if (lhsns > 0 && rhsns < 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
-      throw std::overflow_error("duration subtraction leads to int64_t overflow");
-    }
-  } else if (lhsns < 0 && rhsns > 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
-      throw std::underflow_error("duration subtraction leads to int64_t underflow");
-    }
-  }
+  // will throw if addition over/under_flows
+  check_add(rcl_duration_.nanoseconds, rhs.nanoseconds());
+  return Duration(rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds);
 }
 
 Duration
 Duration::operator-(const rclcpp::Duration & rhs) const
 {
-  bounds_check_duration_difference(
-    this->rcl_duration_.nanoseconds,
-    rhs.rcl_duration_.nanoseconds,
-    std::numeric_limits<rcl_duration_value_t>::max());
-
-  return Duration(
-    rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
-}
-
-void
-bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
-{
-  auto abs_dns = static_cast<uint64_t>(std::abs(dns));
-  auto abs_scale = std::abs(scale);
-
-  if (abs_scale > 1.0 && abs_dns > static_cast<uint64_t>(max / abs_scale)) {
-    if ((dns > 0 && scale > 0) || (dns < 0 && scale < 0)) {
-      throw std::overflow_error("duration scaling leads to int64_t overflow");
-    } else {
-      throw std::underflow_error("duration scaling leads to int64_t underflow");
-    }
-  }
+  // will throw if subtraction over/under_flows
+  check_sub(rcl_duration_.nanoseconds, rhs.nanoseconds());
+  return Duration(rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
 }
 
 Duration
