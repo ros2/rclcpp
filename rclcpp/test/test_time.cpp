@@ -14,16 +14,13 @@
 
 #include <gtest/gtest.h>
 
-#include <algorithm>
 #include <limits>
-#include <string>
 
-#include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
+#include "builtin_interfaces/msg/time.hpp"
 
 namespace
 {
@@ -248,5 +245,7 @@ TEST(TestTime, overflows) {
 TEST(TestTime, seconds) {
   EXPECT_DOUBLE_EQ(0.0, rclcpp::Time(0, 0).seconds());
   EXPECT_DOUBLE_EQ(4.5, rclcpp::Time(4, 500000000).seconds());
-  EXPECT_DOUBLE_EQ(2.5, rclcpp::Time(0, 2500000000).seconds());
+  // nano-seconds will populate only upto seconds to allow side-effect free
+  // conversions
+  EXPECT_DOUBLE_EQ(0.5, rclcpp::Time(0, 2500000000).seconds());
 }

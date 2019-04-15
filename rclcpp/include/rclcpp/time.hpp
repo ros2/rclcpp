@@ -25,6 +25,43 @@
 namespace rclcpp
 {
 
+/** \defgroup time_checks Group containing common time checks
+ *
+ *  Group contains common time checks. These functions can be used to verify
+ *  that time/duration operations are permissible.
+ *  @{
+ */
+
+/// rclcpp::Time shall be always positive
+/**
+ * \tparam T integral data type
+ * \param time_point suggested value for a time point (sec)
+ * \throws std::invalid_argument if the time_point is negative
+ */
+template<typename T>
+void __positive_timepoint(T time_point)
+{
+  static_assert(std::is_integral<T>::value, "must be integral");
+  if (time_point < 0) {
+    throw std::invalid_argument("cannot store a negative time point in rclcpp::Time");
+  }
+}
+
+/// rclcpp::Times can only share operations if their clock_types are identical
+/**
+ * \param lhs left hand side of an operation between two rclcpp::Time instances
+ * \param rhs right hand side of an operation between two rclcpp::Time instances
+ * \throws std::invalid_argument if lhs and rhs have different clock_types
+ */
+inline void __comparable(rcl_clock_type_t lhs, rcl_clock_type_t rhs)
+{
+  if (lhs != rhs) {
+    throw std::invalid_argument("cannot compare times with different time sources");
+  }
+}
+
+/** @} */  // end of time_checks
+
 class Clock;
 
 class Time
