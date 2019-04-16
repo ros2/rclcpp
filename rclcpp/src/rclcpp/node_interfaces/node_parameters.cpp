@@ -399,7 +399,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     result = __declare_parameter_common(
       parameter_to_be_declared->get_name(),
       parameter_to_be_declared->get_parameter_value(),
-      rcl_interfaces::msg::ParameterDescriptor(),  // Implicit decalre uses default descriptor.
+      rcl_interfaces::msg::ParameterDescriptor(),  // Implicit declare uses default descriptor.
       staged_parameter_changes,
       initial_parameter_values_,
       nullptr,  // callback is explicitly null, so that it is called only once, when setting below.
@@ -424,6 +424,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
         // In this case, the value of the staged parameter differs from the
         // input from the user, and therefore we need to update things before setting.
         any_initial_values_used = true;
+        // No need to search further since at least one initial value needs to be used.
+        break;
       }
     }
     if (any_initial_values_used) {

@@ -78,7 +78,7 @@ void TimeSource::attachNode(
 
   logger_ = node_logging_->get_logger();
 
-  // Though this defaults to fale, it can be overridden by initial parameter values for the node,
+  // Though this defaults to false, it can be overridden by initial parameter values for the node,
   // which may be given by the user at the node's construction or even by command-line arguments.
   auto use_sim_time_param = node_parameters_->declare_parameter(
     "use_sim_time",
