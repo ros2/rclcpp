@@ -112,8 +112,7 @@ Clock::create_jump_callback(
   // Allocate a new jump handler
   JumpHandler::UniquePtr handler(new JumpHandler(pre_callback, post_callback, threshold));
   if (nullptr == handler) {
-    exceptions::throw_from_rcl_error(RCL_RET_BAD_ALLOC,
-      "Failed to allocate jump handler");
+    throw std::bad_alloc{};
   }
 
   // Try to add the jump callback to the clock

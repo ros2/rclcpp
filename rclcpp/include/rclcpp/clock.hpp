@@ -106,6 +106,7 @@ public:
    * \param threshold. Callbacks will be triggered if the time jump is greater
    * then the threshold.
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   * \throws std::bad_alloc if the allocation of the JumpHandler fails.
    */
   RCLCPP_PUBLIC
   JumpHandler::SharedPtr
