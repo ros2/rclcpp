@@ -16,9 +16,6 @@
 #define RCLCPP__CLOCK_HPP_
 
 #include <functional>
-#include <memory>
-#include <mutex>
-#include <vector>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"

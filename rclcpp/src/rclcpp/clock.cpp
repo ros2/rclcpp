@@ -14,14 +14,6 @@
 
 #include "rclcpp/clock.hpp"
 
-#include <memory>
-#include <utility>
-#include <vector>
-
-#include "builtin_interfaces/msg/time.hpp"
-
-#include "rcl/time.h"
-
 #include "rclcpp/exceptions.hpp"
 
 #include "rcutils/logging_macros.h"
