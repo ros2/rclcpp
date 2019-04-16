@@ -112,28 +112,23 @@ Clock::create_jump_callback(
   const rcl_jump_threshold_t & threshold)
 {
   // Allocate a new jump handler
-  auto handler = new rclcpp::JumpHandler(pre_callback, post_callback, threshold);
+  JumpHandler::UniquePtr handler(new JumpHandler(pre_callback, post_callback, threshold));
   if (nullptr == handler) {
-    rclcpp::exceptions::throw_from_rcl_error(RCL_RET_BAD_ALLOC, "Failed to allocate jump handler");
+    rclcpp::exceptions::throw_from_rcl_error(RCL_RET_BAD_ALLOC,
+      "Failed to allocate jump handler");
   }
 
   // Try to add the jump callback to the clock
   rcl_ret_t ret = rcl_clock_add_jump_callback(&rcl_clock_, threshold,
-      rclcpp::Clock::on_time_jump, handler);
+      rclcpp::Clock::on_time_jump, handler.get());
   if (RCL_RET_OK != ret) {
-    delete handler;
-    handler = nullptr;
-    rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
-  }
-
-  if (nullptr == handler) {
-    // imposible to reach here; added to make cppcheck happy
-    return nullptr;
+    rclcpp::exceptions::throw_from_rcl_error(ret,
+      "Failed to add time jump callback");
   }
 
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
-  return rclcpp::JumpHandler::SharedPtr(handler, [this](rclcpp::JumpHandler * handler) noexcept {
+  return rclcpp::JumpHandler::SharedPtr(handler.release(), [this](rclcpp::JumpHandler * handler) noexcept {
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, rclcpp::Clock::on_time_jump,
         handler);
     delete handler;
