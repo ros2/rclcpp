@@ -296,7 +296,7 @@ public:
   declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
-    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
       rcl_interfaces::msg::ParameterDescriptor());
 
   /// Declare and initialize a parameter with a type.
@@ -325,7 +325,7 @@ public:
   declare_parameter(
     const std::string & name,
     const ParameterT & default_value,
-    rcl_interfaces::msg::ParameterDescriptor parameter_descriptor =
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
       rcl_interfaces::msg::ParameterDescriptor());
 
   /// Declare and initialize several parameters with the same namespace and type.

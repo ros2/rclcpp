@@ -214,7 +214,7 @@ rcl_interfaces::msg::SetParametersResult
 __declare_parameter_common(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
   const std::map<std::string, rclcpp::ParameterValue> & initial_values,
   OnParametersSetCallbackType on_set_parameters_callback,
@@ -254,7 +254,7 @@ const rclcpp::ParameterValue &
 NodeParameters::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor)
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 

@@ -226,7 +226,7 @@ ParameterT
 Node::declare_parameter(
   const std::string & name,
   const ParameterT & default_value,
-  rcl_interfaces::msg::ParameterDescriptor parameter_descriptor)
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
 {
   return this->declare_parameter(
     name,
