@@ -16,11 +16,13 @@
 
 #include <limits>
 
-#include "rcl/time.h"
+#include "builtin_interfaces/msg/time.hpp"
+
 #include "rclcpp/clock.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
-#include "builtin_interfaces/msg/time.hpp"
+
+#include "rcl/time.h"
 
 namespace
 {
