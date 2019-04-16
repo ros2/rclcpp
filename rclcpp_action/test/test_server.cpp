@@ -364,7 +364,7 @@ TEST_F(TestServer, publish_status_canceled)
   send_goal_request(node, uuid);
   send_cancel_request(node, uuid);
 
-  received_handle->set_canceled(std::make_shared<Fibonacci::Result>());
+  received_handle->canceled(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -419,7 +419,7 @@ TEST_F(TestServer, publish_status_succeeded)
     });
 
   send_goal_request(node, uuid);
-  received_handle->set_succeeded(std::make_shared<Fibonacci::Result>());
+  received_handle->succeed(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -474,7 +474,7 @@ TEST_F(TestServer, publish_status_aborted)
     });
 
   send_goal_request(node, uuid);
-  received_handle->set_aborted(std::make_shared<Fibonacci::Result>());
+  received_handle->abort(std::make_shared<Fibonacci::Result>());
 
   // 10 seconds
   const size_t max_tries = 10 * 1000 / 100;
@@ -592,7 +592,7 @@ TEST_F(TestServer, get_result)
   // Send a result
   auto result = std::make_shared<Fibonacci::Result>();
   result->sequence = {5, 8, 13, 21};
-  received_handle->set_succeeded(result);
+  received_handle->succeed(result);
 
   // Wait for the result request to be received
   ASSERT_EQ(rclcpp::executor::FutureReturnCode::SUCCESS,
@@ -637,6 +637,6 @@ TEST_F(TestServer, deferred_execution)
 
   EXPECT_TRUE(received_handle->is_active());
   EXPECT_FALSE(received_handle->is_executing());
-  received_handle->set_executing();
+  received_handle->execute();
   EXPECT_TRUE(received_handle->is_executing());
 }

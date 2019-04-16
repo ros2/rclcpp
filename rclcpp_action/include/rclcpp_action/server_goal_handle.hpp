@@ -80,27 +80,27 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_aborted();
+  _abort();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_succeeded();
+  _succeed();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_canceling();
+  _cancel_goal();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_canceled();
+  _canceled();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_executing();
+  _execute();
 
   /// Transition the goal to canceled state if it never reached a terminal state.
   /// \internal
@@ -165,9 +165,9 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_aborted(typename ActionT::Result::SharedPtr result_msg)
+  abort(typename ActionT::Result::SharedPtr result_msg)
   {
-    _set_aborted();
+    _abort();
     auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
     response->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
     response->result = *result_msg;
@@ -185,9 +185,9 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_succeeded(typename ActionT::Result::SharedPtr result_msg)
+  succeed(typename ActionT::Result::SharedPtr result_msg)
   {
-    _set_succeeded();
+    _succeed();
     auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
     response->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
     response->result = *result_msg;
@@ -205,9 +205,9 @@ public:
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_canceled(typename ActionT::Result::SharedPtr result_msg)
+  canceled(typename ActionT::Result::SharedPtr result_msg)
   {
-    _set_canceled();
+    _canceled();
     auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
     response->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
     response->result = *result_msg;
@@ -221,9 +221,9 @@ public:
    * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    */
   void
-  set_executing()
+  execute()
   {
-    _set_executing();
+    _execute();
     on_executing_(uuid_);
   }
 
