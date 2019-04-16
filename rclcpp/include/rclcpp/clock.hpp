@@ -83,11 +83,11 @@ public:
 
   RCLCPP_PUBLIC
   rcl_clock_t *
-  get_clock_handle();
+  get_clock_handle() noexcept;
 
   RCLCPP_PUBLIC
   rcl_clock_type_t
-  get_clock_type();
+  get_clock_type() const noexcept;
 
   // Add a callback to invoke if the jump threshold is exceeded.
   /**
