@@ -35,8 +35,7 @@ Clock::Clock(rcl_clock_type_t clock_type)
   allocator_ = rcl_get_default_allocator();
   auto ret = rcl_clock_init(clock_type, &rcl_clock_, &allocator_);
   if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not get current time stamp");
+    exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
   }
 }
 
@@ -55,8 +54,7 @@ Clock::now()
 
   auto ret = rcl_clock_get_now(&rcl_clock_, &now.rcl_time_.nanoseconds);
   if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "could not get current time stamp");
+    exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
   }
 
   return now;
@@ -73,7 +71,7 @@ Clock::ros_time_is_active()
   bool is_enabled = false;
   auto ret = rcl_is_enabled_ros_time_override(&rcl_clock_, &is_enabled);
   if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
+    exceptions::throw_from_rcl_error(
       ret, "Failed to check ros_time_override_status");
   }
   return is_enabled;
@@ -97,7 +95,7 @@ Clock::on_time_jump(
   bool before_jump,
   void * user_data)
 {
-  rclcpp::JumpHandler * handler = static_cast<rclcpp::JumpHandler *>(user_data);
+  JumpHandler * handler = static_cast<JumpHandler *>(user_data);
   if (before_jump && handler->pre_callback) {
     handler->pre_callback();
   } else if (!before_jump && handler->post_callback) {
@@ -105,7 +103,7 @@ Clock::on_time_jump(
   }
 }
 
-rclcpp::JumpHandler::SharedPtr
+JumpHandler::SharedPtr
 Clock::create_jump_callback(
   std::function<void()> pre_callback,
   std::function<void(const rcl_time_jump_t &)> post_callback,
@@ -114,22 +112,21 @@ Clock::create_jump_callback(
   // Allocate a new jump handler
   JumpHandler::UniquePtr handler(new JumpHandler(pre_callback, post_callback, threshold));
   if (nullptr == handler) {
-    rclcpp::exceptions::throw_from_rcl_error(RCL_RET_BAD_ALLOC,
+    exceptions::throw_from_rcl_error(RCL_RET_BAD_ALLOC,
       "Failed to allocate jump handler");
   }
 
   // Try to add the jump callback to the clock
   rcl_ret_t ret = rcl_clock_add_jump_callback(&rcl_clock_, threshold,
-      rclcpp::Clock::on_time_jump, handler.get());
+      Clock::on_time_jump, handler.get());
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret,
-      "Failed to add time jump callback");
+    exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
   }
 
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
-  return rclcpp::JumpHandler::SharedPtr(handler.release(), [this](rclcpp::JumpHandler * handler) noexcept {
-    rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, rclcpp::Clock::on_time_jump,
+  return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
+    rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
         handler);
     delete handler;
     handler = NULL;
