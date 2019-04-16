@@ -65,6 +65,14 @@ protected:
   rclcpp::Node::SharedPtr subnode;
 };
 
+static constexpr rmw_qos_profile_t invalid_qos_profile()
+{
+  rmw_qos_profile_t profile = rmw_qos_profile_default;
+  profile.depth = 1;
+  profile.durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+  return profile;
+}
+
 /*
    Testing publisher construction and destruction.
  */
@@ -87,13 +95,7 @@ TEST_F(TestPublisher, construction_and_destruction) {
  */
 TEST_F(TestPublisher, intraprocess_with_invalid_qos) {
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
-  rmw_qos_profile_t qos = {
-    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
-    1,
-    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
-    RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
-    false
-  };
+  rmw_qos_profile_t qos = invalid_qos_profile();
   using rcl_interfaces::msg::IntraProcessMessage;
   {
     ASSERT_THROW(
