@@ -95,7 +95,10 @@ Clock::on_time_jump(
   bool before_jump,
   void * user_data)
 {
-  JumpHandler * handler = static_cast<JumpHandler *>(user_data);
+  const auto * handler = static_cast<JumpHandler *>(user_data);
+  if (!handler) {
+    return;
+  }
   if (before_jump && handler->pre_callback) {
     handler->pre_callback();
   } else if (!before_jump && handler->post_callback) {
