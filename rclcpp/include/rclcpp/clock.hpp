@@ -111,6 +111,11 @@ public:
    * then the threshold.
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    * \throws std::bad_alloc if the allocation of the JumpHandler fails.
+   * \warning the instance of the clock must remain valid as long as any created
+   * JumpHandler.
+   *
+   * Rationale: otherwise the custom deleter function would access
+   * an invalid memory of rcl_clock_ (clock.cpp:131).
    */
   RCLCPP_PUBLIC
   JumpHandler::SharedPtr
