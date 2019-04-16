@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
 #include <exception>
 #include <memory>
@@ -29,7 +30,7 @@ using namespace std::chrono_literals;
 class TestTimer : public ::testing::Test
 {
 protected:
-  void SetUp()
+  void SetUp() override
   {
     rclcpp::init(0, nullptr);
     executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
@@ -56,7 +57,7 @@ protected:
     // don't start spinning, let the test dictate when
   }
 
-  void TearDown()
+  void TearDown() override
   {
     timer.reset();
     test_node.reset();
