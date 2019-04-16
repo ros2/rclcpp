@@ -21,7 +21,9 @@
 #include "rclcpp/rclcpp.hpp"
 
 TEST(test_local_parameters, set_parameter_if_not_set) {
-  auto node = rclcpp::Node::make_shared("test_local_parameters_set_parameter_if_not_set");
+  auto node = rclcpp::Node::make_shared(
+    "test_local_parameters_set_parameter_if_not_set",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
 
   {
     // try to set a map of parameters
