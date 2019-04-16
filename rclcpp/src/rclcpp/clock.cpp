@@ -96,7 +96,7 @@ Clock::on_time_jump(
   void * user_data)
 {
   const auto * handler = static_cast<JumpHandler *>(user_data);
-  if (!handler) {
+  if (nullptr == handler) {
     return;
   }
   if (before_jump && handler->pre_callback) {
@@ -127,7 +127,7 @@ Clock::create_jump_callback(
 
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
-  // TODO(dorezyuk) UB, if the clock leafs scope before the JumpHandler
+  // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
         handler);

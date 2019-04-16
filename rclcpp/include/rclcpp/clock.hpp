@@ -33,8 +33,8 @@ class JumpHandler
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(JumpHandler)
 
-  using pre_callback_t = std::function<void()>;
-  using post_callback_t = std::function<void(const rcl_time_jump_t &)>;
+  using pre_callback_t = std::function<void ()>;
+  using post_callback_t = std::function<void (const rcl_time_jump_t &)>;
 
   JumpHandler(
     pre_callback_t pre_callback,
