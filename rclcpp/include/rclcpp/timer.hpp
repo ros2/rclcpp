@@ -59,6 +59,10 @@ public:
   cancel();
 
   /// Return the timer cancellation state.
+  /**
+   * @return true if the timer has been cancelled, false otherwise
+   * @throw std::runtime_error if the state could not be read
+   */
   RCLCPP_PUBLIC
   bool
   is_cancelled();
