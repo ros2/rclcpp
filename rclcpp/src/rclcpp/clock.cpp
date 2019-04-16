@@ -22,8 +22,8 @@ namespace rclcpp
 {
 
 JumpHandler::JumpHandler(
-  std::function<void()> pre_callback,
-  std::function<void(const rcl_time_jump_t &)> post_callback,
+  pre_callback_t pre_callback,
+  post_callback_t post_callback,
   const rcl_jump_threshold_t & threshold)
 : pre_callback(pre_callback),
   post_callback(post_callback),
@@ -108,8 +108,8 @@ Clock::on_time_jump(
 
 JumpHandler::SharedPtr
 Clock::create_jump_callback(
-  std::function<void()> pre_callback,
-  std::function<void(const rcl_time_jump_t &)> post_callback,
+  typename JumpHandler::pre_callback_t pre_callback,
+  typename JumpHandler::post_callback_t post_callback,
   const rcl_jump_threshold_t & threshold)
 {
   // Allocate a new jump handler

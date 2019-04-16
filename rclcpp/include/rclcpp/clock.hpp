@@ -32,13 +32,17 @@ class JumpHandler
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(JumpHandler)
+
+  using pre_callback_t = std::function<void()>;
+  using post_callback_t = std::function<void(const rcl_time_jump_t &)>;
+
   JumpHandler(
-    std::function<void()> pre_callback,
-    std::function<void(const rcl_time_jump_t &)> post_callback,
+    pre_callback_t pre_callback,
+    post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
-  std::function<void()> pre_callback;
-  std::function<void(const rcl_time_jump_t &)> post_callback;
+  pre_callback_t pre_callback;
+  post_callback_t post_callback;
   rcl_jump_threshold_t notice_threshold;
 };
 
@@ -111,8 +115,8 @@ public:
   RCLCPP_PUBLIC
   JumpHandler::SharedPtr
   create_jump_callback(
-    std::function<void()> pre_callback,
-    std::function<void(const rcl_time_jump_t &)> post_callback,
+    typename JumpHandler::pre_callback_t pre_callback,
+    typename JumpHandler::post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
 private:
