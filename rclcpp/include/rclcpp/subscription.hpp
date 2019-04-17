@@ -210,7 +210,7 @@ private:
       throw std::runtime_error(
               "intra process take called after destruction of intra process manager");
     }
-    ipm->take_intra_process_message<CallbackMessageT, Alloc>(
+    ipm->template take_intra_process_message<CallbackMessageT, Alloc>(
       publisher_id, message_sequence, subscription_id, message);
   }
 
@@ -226,7 +226,7 @@ private:
       throw std::runtime_error(
               "intra process take called after destruction of intra process manager");
     }
-    ipm->take_intra_process_message<CallbackMessageT, Alloc>(
+    ipm->template take_intra_process_message<CallbackMessageT, Alloc>(
       publisher_id, message_sequence, subscription_id, message);
   }
 

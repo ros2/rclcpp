@@ -253,7 +253,7 @@ protected:
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
+      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
     return message_seq;
   }
 
@@ -272,7 +272,7 @@ protected:
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
+      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
     return message_seq;
   }
 
