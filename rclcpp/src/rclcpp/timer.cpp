@@ -14,6 +14,8 @@
 
 #include "rclcpp/timer.hpp"
 
+#include <memory>
+
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 
