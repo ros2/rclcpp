@@ -1505,6 +1505,19 @@ TEST_F(TestNode, describe_parameters_undeclared_parameters_not_allowed) {
     }
   }
   {
+    // non-existent parameter throws, even with existing parameters in the list requested
+    auto name1 = "parameter"_unq;
+    auto name2 = "parameter"_unq;
+
+    node->declare_parameter(name1, 42);
+
+    {
+      EXPECT_THROW({
+        node->describe_parameters({name1, name2});
+      }, rclcpp::exceptions::ParameterNotDeclaredException);
+    }
+  }
+  {
     // check that repeated names in input work, and that output is stable (same order as input)
     auto name1 = "parameter"_unq;
     auto name2 = "parameter"_unq;

@@ -278,6 +278,9 @@ public:
    * If that callback prevents the initial value for the parameter from being
    * set then rclcpp::exceptions::InvalidParameterValueException is thrown.
    *
+   * The returned reference will remain valid until the parameter is
+   * undeclared.
+   *
    * \param[in] name The name of the parameter.
    * \param[in] default_value An initial value to be used if at run-time user
    *   did not override it.

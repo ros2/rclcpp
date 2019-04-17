@@ -130,7 +130,7 @@ public:
     return *this;
   }
 
-  /// Return a reference to the use_global_arguments flag.
+  /// Return the use_global_arguments flag.
   RCLCPP_PUBLIC
   bool
   use_global_arguments() const;
@@ -147,7 +147,7 @@ public:
   NodeOptions &
   use_global_arguments(bool use_global_arguments);
 
-  /// Return a reference to the use_intra_process_comms flag
+  /// Return the use_intra_process_comms flag.
   RCLCPP_PUBLIC
   bool
   use_intra_process_comms() const;
@@ -166,7 +166,7 @@ public:
   NodeOptions &
   use_intra_process_comms(bool use_intra_process_comms);
 
-  /// Return a reference to the start_parameter_services flag
+  /// Return the start_parameter_services flag.
   RCLCPP_PUBLIC
   bool
   start_parameter_services() const;
@@ -185,7 +185,7 @@ public:
   NodeOptions &
   start_parameter_services(bool start_parameter_services);
 
-  /// Return a reference to the start_parameter_event_publisher flag.
+  /// Return the start_parameter_event_publisher flag.
   RCLCPP_PUBLIC
   bool
   start_parameter_event_publisher() const;
@@ -214,7 +214,7 @@ public:
   NodeOptions &
   parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile);
 
-  /// Return a reference to the allow_undeclared_parameters flag.
+  /// Return the allow_undeclared_parameters flag.
   RCLCPP_PUBLIC
   bool
   allow_undeclared_parameters() const;

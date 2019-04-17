@@ -322,10 +322,13 @@ std::vector<rcl_interfaces::msg::SetParametersResult>
 NodeParameters::set_parameters(const std::vector<rclcpp::Parameter> & parameters)
 {
   std::vector<rcl_interfaces::msg::SetParametersResult> results;
+  results.reserve(parameters.size());
+
   for (const auto & p : parameters) {
     auto result = set_parameters_atomically({{p}});
     results.push_back(result);
   }
+
   return results;
 }
 
@@ -521,6 +524,7 @@ NodeParameters::get_parameters(const std::vector<std::string> & names) const
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rclcpp::Parameter> results;
+  results.reserve(names.size());
 
   for (auto & name : names) {
     auto found_parameter = parameters_.find(name);
@@ -597,13 +601,14 @@ NodeParameters::describe_parameters(const std::vector<std::string> & names) cons
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<rcl_interfaces::msg::ParameterDescriptor> results;
+  results.reserve(names.size());
 
   for (const auto & name : names) {
     auto it = parameters_.find(name);
     if (it != parameters_.cend()) {
       results.push_back(it->second.descriptor);
     } else if (allow_undeclared_) {
-      // parameter not found, but undeclared allowed, so return emtpy
+      // parameter not found, but undeclared allowed, so return empty
       rcl_interfaces::msg::ParameterDescriptor default_description;
       default_description.name = name;
       results.push_back(default_description);
@@ -613,7 +618,7 @@ NodeParameters::describe_parameters(const std::vector<std::string> & names) cons
   }
 
   if (results.size() != names.size()) {
-    throw std::runtime_error("results and size unexpectedly different sizes");
+    throw std::runtime_error("results and names unexpectedly different sizes");
   }
 
   return results;
@@ -624,6 +629,7 @@ NodeParameters::get_parameter_types(const std::vector<std::string> & names) cons
 {
   std::lock_guard<std::mutex> lock(mutex_);
   std::vector<uint8_t> results;
+  results.reserve(names.size());
 
   for (const auto & name : names) {
     auto it = parameters_.find(name);
@@ -638,7 +644,7 @@ NodeParameters::get_parameter_types(const std::vector<std::string> & names) cons
   }
 
   if (results.size() != names.size()) {
-    throw std::runtime_error("results and size unexpectedly different sizes");
+    throw std::runtime_error("results and names unexpectedly different sizes");
   }
 
   return results;
