@@ -38,7 +38,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBufferBase)
 };
 
-/// Ring buffer container of unique_ptr's of T, which can be accessed by a key.
+/// Ring buffer container of shared_ptr's or unique_ptr's of T, which can be accessed by a key.
 /**
  * T must be a CopyConstructable and CopyAssignable.
  * This class can be used in a container by using the base class MappedRingBufferBase.
@@ -64,7 +64,7 @@ public:
   using ElemAlloc = typename ElemAllocTraits::allocator_type;
   using ElemDeleter = allocator::Deleter<ElemAlloc, T>;
 
-  using ElemSharedPtr = std::shared_ptr<const T>;
+  using ConstElemSharedPtr = std::shared_ptr<const T>;
   using ElemUniquePtr = std::unique_ptr<T, ElemDeleter>;
 
   /// Constructor.
@@ -129,10 +129,9 @@ public:
     }
   }
 
-  /// Return a shared_ptr of the value stored in the ring buffer at the given key.
+  /// Share ownership of the value stored in the ring buffer at the given key.
   /**
    * The key is matched if an element in the ring buffer has a matching key.
-   * This method will allocate in order to return a copy.
    *
    * The key is not guaranteed to be unique, see the class docs for more.
    *
@@ -142,7 +141,7 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  get(uint64_t key, ElemSharedPtr & value)
+  get(uint64_t key, ConstElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
@@ -155,9 +154,13 @@ public:
     }
   }
 
-  /// Return a copy of the stored element and reset the stored shared_ptr.
+  /// Give the ownership of the stored value to the caller if possible, or copy and release.
   /**
    * The key is matched if an element in the ring buffer has a matching key.
+   * This method may allocate in order to return a copy.
+   *
+   * If the stored value is a shared_ptr, it is not possible to downgrade it to a unique_ptr.
+   * In that case, a copy is returned and the stored value is released.
    *
    * The key is not guaranteed to be unique, see the class docs for more.
    *
@@ -190,7 +193,7 @@ public:
     }
   }
 
-  /// Return ownership of the value stored in the ring buffer at the given key.
+  /// Give the ownership of the stored value to the caller, at the given key.
   /**
    * The key is matched if an element in the ring buffer has a matching key.
    *
@@ -202,7 +205,7 @@ public:
    * \param value if the key is found, the value is stored in this parameter
    */
   void
-  pop(uint64_t key, ElemSharedPtr & value)
+  pop(uint64_t key, ConstElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
@@ -229,7 +232,7 @@ public:
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, const ElemSharedPtr & value)
+  push_and_replace(uint64_t key, const ConstElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
@@ -243,7 +246,7 @@ public:
   }
 
   bool
-  push_and_replace(uint64_t key, ElemSharedPtr && value)
+  push_and_replace(uint64_t key, ConstElemSharedPtr && value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
@@ -285,7 +288,7 @@ private:
   {
     uint64_t key;
     ElemUniquePtr unique_value;
-    ElemSharedPtr shared_value;
+    ConstElemSharedPtr shared_value;
     bool in_use;
   };
 
