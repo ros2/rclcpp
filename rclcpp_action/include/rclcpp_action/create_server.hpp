@@ -31,7 +31,6 @@
 
 namespace rclcpp_action
 {
-
 /// Create an action server.
 /**
  * All provided callback functions must be non-blocking.
