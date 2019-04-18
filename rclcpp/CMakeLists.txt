@@ -439,6 +439,8 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_local_parameters ${PROJECT_NAME})
   endif()
+
+  ament_add_gtest(test_overflow test/test_overflow.cpp)
 endif()
 
 ament_package()

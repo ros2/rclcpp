@@ -18,8 +18,8 @@
 #include "rclcpp/time.hpp"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/overflow.hpp"
 #include "rclcpp/time_utils.hpp"
-#include "rclcpp/utilities.hpp"
 
 namespace rclcpp
 {
@@ -119,9 +119,10 @@ Time::operator>(const rclcpp::Time & rhs) const
 Time
 Time::operator+(const rclcpp::Duration & rhs) const
 {
+  rcl_time_point_value_t res = 0;
   // will throw if addition over/underflows
-  check_add(rcl_time_.nanoseconds, rhs.nanoseconds());
-  return Time(this->nanoseconds() + rhs.nanoseconds(), this->get_clock_type());
+  check_add_overflow(rcl_time_.nanoseconds, rhs.nanoseconds(), &res);
+  return Time(res, this->get_clock_type());
 }
 
 Duration
@@ -129,17 +130,19 @@ Time::operator-(const rclcpp::Time & rhs) const
 {
   // will throw if not comparable
   __comparable(rcl_time_.clock_type, rhs.rcl_time_.clock_type);
+  rcl_time_point_value_t res = 0;
   // will throw if subtraction over/underflows
-  check_sub(rcl_time_.nanoseconds, rhs.nanoseconds());
-  return Duration(rcl_time_.nanoseconds - rhs.rcl_time_.nanoseconds);
+  check_sub_overflow(rcl_time_.nanoseconds, rhs.nanoseconds(), &res);
+  return Duration(res);
 }
 
 Time
 Time::operator-(const rclcpp::Duration & rhs) const
 {
+  rcl_time_point_value_t res = 0;
   // will throw if subtraction over/underflows
-  check_sub(rcl_time_.nanoseconds, rhs.nanoseconds());
-  return Time(rcl_time_.nanoseconds - rhs.nanoseconds(), rcl_time_.clock_type);
+  check_sub_overflow(rcl_time_.nanoseconds, rhs.nanoseconds(), &res);
+  return Time(res, rcl_time_.clock_type);
 }
 
 int64_t
@@ -163,9 +166,10 @@ Time::get_clock_type() const
 Time
 operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
 {
+  rcl_time_point_value_t res = 0;
   // will throw if addition over/underflows
-  check_add(lhs.nanoseconds(), rhs.nanoseconds());
-  return Time(lhs.nanoseconds() + rhs.nanoseconds(), rhs.get_clock_type());
+  check_add_overflow(lhs.nanoseconds(), rhs.nanoseconds(), &res);
+  return Time(res, rhs.get_clock_type());
 }
 
 Time

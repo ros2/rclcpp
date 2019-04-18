@@ -24,17 +24,6 @@
 
 #include "rcl/time.h"
 
-namespace
-{
-
-bool logical_eq(const bool a, const bool b)
-{
-  return (a && b) || ((!a) && !(b));
-}
-
-}  // namespace
-
-
 class TestTime : public ::testing::Test
 {
 protected:
@@ -159,63 +148,6 @@ TEST(TestTime, operators) {
   }
 }
 
-TEST(TestTime, overflow_detectors) {
-  /////////////////////////////////////////////////////////////////////////////
-  // Test logical_eq call first:
-  EXPECT_TRUE(logical_eq(false, false));
-  EXPECT_FALSE(logical_eq(false, true));
-  EXPECT_FALSE(logical_eq(true, false));
-  EXPECT_TRUE(logical_eq(true, true));
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Exhaustive test of all int8_t values
-  using test_type_t = int8_t;
-  // big_type_t encompasses test_type_t:
-  //  big_type_t::min < test_type_t::min
-  //  big_type_t::max > test_type_t::max
-  using big_type_t = int16_t;
-  const big_type_t min_val = std::numeric_limits<test_type_t>::min();
-  const big_type_t max_val = std::numeric_limits<test_type_t>::max();
-  // 256 * 256 = 64K total loops, should be pretty fast on everything
-  for (big_type_t y = min_val; y <= max_val; ++y) {
-    for (big_type_t x = min_val; x <= max_val; ++x) {
-      const big_type_t sum = x + y;
-      const big_type_t diff = x - y;
-
-      const bool add_will_overflow =
-        rclcpp::add_will_overflow(test_type_t(x), test_type_t(y));
-      const bool add_did_overflow = sum > max_val;
-      EXPECT_TRUE(logical_eq(add_will_overflow, add_did_overflow));
-
-      const bool add_will_underflow =
-        rclcpp::add_will_underflow(test_type_t(x), test_type_t(y));
-      const bool add_did_underflow = sum < min_val;
-      EXPECT_TRUE(logical_eq(add_will_underflow, add_did_underflow));
-
-      const bool sub_will_overflow =
-        rclcpp::sub_will_overflow(test_type_t(x), test_type_t(y));
-      const bool sub_did_overflow = diff > max_val;
-      EXPECT_TRUE(logical_eq(sub_will_overflow, sub_did_overflow));
-
-      const bool sub_will_underflow =
-        rclcpp::sub_will_underflow(test_type_t(x), test_type_t(y));
-      const bool sub_did_underflow = diff < min_val;
-      EXPECT_TRUE(logical_eq(sub_will_underflow, sub_did_underflow));
-    }
-  }
-
-  // Few selected tests for int64_t
-  EXPECT_TRUE(rclcpp::add_will_overflow<int64_t>(INT64_MAX, 1));
-  EXPECT_FALSE(rclcpp::add_will_overflow<int64_t>(INT64_MAX, -1));
-  EXPECT_TRUE(rclcpp::add_will_underflow<int64_t>(INT64_MIN, -1));
-  EXPECT_FALSE(rclcpp::add_will_underflow<int64_t>(INT64_MIN, 1));
-
-  EXPECT_FALSE(rclcpp::sub_will_overflow<int64_t>(INT64_MAX, 1));
-  EXPECT_TRUE(rclcpp::sub_will_overflow<int64_t>(INT64_MAX, -1));
-  EXPECT_FALSE(rclcpp::sub_will_underflow<int64_t>(INT64_MIN, -1));
-  EXPECT_TRUE(rclcpp::sub_will_underflow<int64_t>(INT64_MIN, 1));
-}
-
 TEST(TestTime, overflows) {
   rclcpp::Time max_time(std::numeric_limits<rcl_time_point_value_t>::max());
   rclcpp::Time min_time(std::numeric_limits<rcl_time_point_value_t>::min());
@@ -224,9 +156,9 @@ TEST(TestTime, overflows) {
 
   // Cross min/max
   EXPECT_THROW(max_time + one, std::overflow_error);
-  EXPECT_THROW(min_time - one, std::underflow_error);
+  EXPECT_THROW(min_time - one, std::overflow_error);
   EXPECT_THROW(max_time - min_time, std::overflow_error);
-  EXPECT_THROW(min_time - max_time, std::underflow_error);
+  EXPECT_THROW(min_time - max_time, std::overflow_error);
   EXPECT_NO_THROW(max_time - max_time);
   EXPECT_NO_THROW(min_time - min_time);
 

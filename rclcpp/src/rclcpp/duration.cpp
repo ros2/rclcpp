@@ -20,8 +20,8 @@
 #include "rclcpp/duration.hpp"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/overflow.hpp"
 #include "rclcpp/time_utils.hpp"
-#include "rclcpp/utilities.hpp"
 
 namespace rclcpp
 {
@@ -102,17 +102,19 @@ Duration::operator>(const rclcpp::Duration & rhs) const
 Duration
 Duration::operator+(const rclcpp::Duration & rhs) const
 {
+  rcl_duration_value_t res = 0;
   // will throw if addition over/under_flows
-  check_add(rcl_duration_.nanoseconds, rhs.nanoseconds());
-  return Duration(rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds);
+  check_add_overflow(rcl_duration_.nanoseconds, rhs.nanoseconds(), &res);
+  return Duration(res);
 }
 
 Duration
 Duration::operator-(const rclcpp::Duration & rhs) const
 {
+  rcl_duration_value_t res = 0;
   // will throw if subtraction over/under_flows
-  check_sub(rcl_duration_.nanoseconds, rhs.nanoseconds());
-  return Duration(rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
+  check_sub_overflow(rcl_duration_.nanoseconds, rhs.nanoseconds(), &res);
+  return Duration(res);
 }
 
 Duration
@@ -121,8 +123,25 @@ Duration::operator*(double scale) const
   if (!std::isfinite(scale)) {
     throw std::runtime_error("abnormal scale in rclcpp::Duration");
   }
-  // will throw if multiplication over/underflows
-  check_mult(rcl_duration_.nanoseconds, scale);
+  rcl_duration_value_t res = 0;
+  rcl_duration_value_t upper_scale = 0;
+  // convert the scale to the rcl_duration_value_t to enable mult-overflow
+  // checks. Since we want to be conservative about the result, we take the
+  // ceil value of the scale for the checks.
+  if (scale > 0) {
+    if (scale + 1 > std::numeric_limits<rcl_duration_value_t>::max()) {
+      throw std::invalid_argument("scale cannot be converted to int");
+    }
+    upper_scale = static_cast<rcl_duration_value_t>(scale + 1);
+  } else {
+    if (scale - 1 < std::numeric_limits<rcl_duration_value_t>::min()) {
+      throw std::invalid_argument("scale cannot be converted to int");
+    }
+    upper_scale = static_cast<rcl_duration_value_t>(scale - 1);
+  }
+  // will throw if multiplication over/underflows. Here we apply a conservative
+  // approach, and check for valid product with the ceil of scale
+  check_mul_overflow(rcl_duration_.nanoseconds, upper_scale, &res);
   return Duration(static_cast<rcl_duration_value_t>(rcl_duration_.nanoseconds * scale));
 }
 

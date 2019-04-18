@@ -24,6 +24,12 @@
 
 using namespace std::chrono_literals;
 
+using testing::ValuesIn;
+using testing::Combine;
+using testing::TestWithParam;
+using testing::tuple;
+using testing::get;
+
 class TestDuration : public ::testing::Test
 {
 };
@@ -99,36 +105,69 @@ TEST(TestDuration, conversions) {
     EXPECT_EQ(duration1, duration2);
     EXPECT_EQ(msg1, msg2);
   }
+
+  {
+    SCOPED_TRACE("test of copy and assignment");
+
+    rclcpp::Duration time = rclcpp::Duration(0, 0);
+    rclcpp::Duration copy_constructor_duration(time);
+    rclcpp::Duration assignment_op_duration = rclcpp::Duration(1, 0);
+    assignment_op_duration = time;
+
+    EXPECT_TRUE(time == copy_constructor_duration);
+    EXPECT_TRUE(time == assignment_op_duration);
+  }
 }
 
-TEST(TestDuration, operators) {
-  rclcpp::Duration old(1, 0);
-  rclcpp::Duration young(2, 0);
+/// Fixture for running parameterized tests on the duration operators
+struct OperatorsFixture :
+public TestWithParam<tuple<rclcpp::Duration, rclcpp::Duration>>{
+  OperatorsFixture() : left(get<0>(GetParam())), right(get<1>(GetParam())){}
+  rclcpp::Duration left, right;
+};
 
-  EXPECT_TRUE(old < young);
-  EXPECT_TRUE(young > old);
-  EXPECT_TRUE(old <= young);
-  EXPECT_TRUE(young >= old);
-  EXPECT_FALSE(young == old);
+/// Test pararametes for the OperationsFixture.
+/// These values are not expected to overflow
+const rclcpp::Duration parameters[] = {
+        {-10, 987654321},
+        {-10, 123456789},
+        {-1, 987654321},
+        {-1, 123456789},
+        {1, 123456789},
+        {1, 987654321},
+        {10, 123456789},
+        {10, 987654321}
+};
 
-  rclcpp::Duration add = old + young;
-  EXPECT_EQ(add.nanoseconds(), (rcl_duration_value_t)(old.nanoseconds() + young.nanoseconds()));
-  EXPECT_EQ(add, old + young);
+INSTANTIATE_TEST_CASE_P(/**/, OperatorsFixture,
+                              Combine(ValuesIn(parameters), ValuesIn(parameters)),);
 
-  rclcpp::Duration sub = young - old;
-  EXPECT_EQ(sub.nanoseconds(), (rcl_duration_value_t)(young.nanoseconds() - old.nanoseconds()));
-  EXPECT_EQ(sub, young - old);
+TEST_P(OperatorsFixture, operators) {
 
-  rclcpp::Duration scale = old * 3;
-  EXPECT_EQ(scale.nanoseconds(), (rcl_duration_value_t)(old.nanoseconds() * 3));
+  {
+    SCOPED_TRACE("failed add operation");
+    rclcpp::Duration add = left + right;
+    const auto expected = left.nanoseconds() + right.nanoseconds();
+    EXPECT_EQ(add.nanoseconds(), expected);
+    EXPECT_EQ(add, left + right);
+  }
 
-  rclcpp::Duration time = rclcpp::Duration(0, 0);
-  rclcpp::Duration copy_constructor_duration(time);
-  rclcpp::Duration assignment_op_duration = rclcpp::Duration(1, 0);
-  assignment_op_duration = time;
+  {
+    SCOPED_TRACE("failed sub operation");
+    rclcpp::Duration sub = left - right;
+    const auto expected = left.nanoseconds() - right.nanoseconds();
+    EXPECT_EQ(sub.nanoseconds(), expected);
+    EXPECT_EQ(sub, left - right);
+  }
 
-  EXPECT_TRUE(time == copy_constructor_duration);
-  EXPECT_TRUE(time == assignment_op_duration);
+  {
+    SCOPED_TRACE("failed mul operation");
+    rclcpp::Duration mul_left = left * 2;
+    rclcpp::Duration add_left = left + left;
+    const auto expected = left.nanoseconds() * 2;
+    EXPECT_EQ(mul_left.nanoseconds(), expected);
+    EXPECT_EQ(mul_left, add_left);
+  }
 }
 
 TEST(TestDuration, chrono_overloads) {
@@ -150,19 +189,19 @@ TEST(TestDuration, overflows) {
   rclcpp::Duration negative_one(-1);
 
   EXPECT_THROW(max_ + one, std::overflow_error);
-  EXPECT_THROW(min_ - one, std::underflow_error);
-  EXPECT_THROW(negative_one + min_, std::underflow_error);
+  EXPECT_THROW(min_ - one, std::overflow_error);
+  EXPECT_THROW(negative_one + min_, std::overflow_error);
   // the min is defined as -max - 1, hence the expression -1 -max is not
   // sufficient to provoke and underflow
-  EXPECT_THROW((negative_one + negative_one) - max_, std::underflow_error);
+  EXPECT_THROW((negative_one + negative_one) - max_, std::overflow_error);
 
   rclcpp::Duration base_d = max_ * 0.3;
   EXPECT_THROW(base_d * 4, std::overflow_error);
-  EXPECT_THROW(base_d * (-4), std::underflow_error);
+  EXPECT_THROW(base_d * (-4), std::overflow_error);
 
   rclcpp::Duration base_d_neg = max_ * (-0.3);
   EXPECT_THROW(base_d_neg * (-4), std::overflow_error);
-  EXPECT_THROW(base_d_neg * 4, std::underflow_error);
+  EXPECT_THROW(base_d_neg * 4, std::overflow_error);
 }
 
 TEST(TestDuration, negative_duration) {
