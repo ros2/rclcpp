@@ -80,7 +80,7 @@ void test_initial_conditions(
   std::shared_ptr<rclcpp::TimerBase> & timer,
   std::atomic<bool> & has_timer_run)
 {
-  ASSERT_FALSE(timer->is_cancelled());
+  ASSERT_FALSE(timer->is_canceled());
   ASSERT_FALSE(has_timer_run.load());
 }
 
@@ -92,30 +92,30 @@ TEST_F(TestTimer, test_simple_cancel)
 
   // cancel
   timer->cancel();
-  EXPECT_TRUE(timer->is_cancelled());
+  EXPECT_TRUE(timer->is_canceled());
 
   EXPECT_FALSE(has_timer_run.load());
 }
 
 /// Test state when using reset
-TEST_F(TestTimer, test_is_cancelled_reset)
+TEST_F(TestTimer, test_is_canceled_reset)
 {
   // expect clean state, don't run otherwise
   test_initial_conditions(timer, has_timer_run);
 
   // reset shouldn't affect state (not canceled yet)
   timer->reset();
-  EXPECT_FALSE(timer->is_cancelled());
+  EXPECT_FALSE(timer->is_canceled());
 
   // cancel after reset
   timer->cancel();
-  EXPECT_TRUE(timer->is_cancelled());
+  EXPECT_TRUE(timer->is_canceled());
 
   // reset and cancel
   timer->reset();
-  EXPECT_FALSE(timer->is_cancelled());
+  EXPECT_FALSE(timer->is_canceled());
   timer->cancel();
-  EXPECT_TRUE(timer->is_cancelled());
+  EXPECT_TRUE(timer->is_canceled());
 
   EXPECT_FALSE(has_timer_run.load());
 }
@@ -132,9 +132,9 @@ TEST_F(TestTimer, test_run_cancel_executor)
   EXPECT_TRUE(has_timer_run.load());
 
   // force a timer cancel
-  EXPECT_FALSE(timer->is_cancelled());
+  EXPECT_FALSE(timer->is_canceled());
   timer->cancel();
-  EXPECT_TRUE(timer->is_cancelled());
+  EXPECT_TRUE(timer->is_canceled());
 }
 
 /// Run and check state, cancel the timer
@@ -148,5 +148,5 @@ TEST_F(TestTimer, test_run_cancel_timer)
   // run the timer (once, this forces an executor cancel so spin won't block)
   executor->spin();
   EXPECT_TRUE(has_timer_run.load());
-  EXPECT_TRUE(timer->is_cancelled());
+  EXPECT_TRUE(timer->is_canceled());
 }

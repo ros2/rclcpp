@@ -60,12 +60,13 @@ public:
 
   /// Return the timer cancellation state.
   /**
-   * @return true if the timer has been cancelled, false otherwise
-   * @throw std::runtime_error if the state could not be read
+   * \return true if the timer has been cancelled, false otherwise
+   * \throws std::runtime_error if the rcl_get_error_state returns 0
+   * \throws RCLErrorBase some child class exception based on ret
    */
   RCLCPP_PUBLIC
   bool
-  is_cancelled();
+  is_canceled();
 
   RCLCPP_PUBLIC
   void
