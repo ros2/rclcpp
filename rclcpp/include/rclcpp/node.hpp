@@ -23,6 +23,7 @@
 #include <mutex>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include "rcl/error_handling.h"
@@ -300,7 +301,7 @@ public:
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-      rcl_interfaces::msg::ParameterDescriptor());
+    rcl_interfaces::msg::ParameterDescriptor());
 
   /// Declare and initialize a parameter with a type.
   /**
@@ -329,7 +330,7 @@ public:
     const std::string & name,
     const ParameterT & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-      rcl_interfaces::msg::ParameterDescriptor());
+    rcl_interfaces::msg::ParameterDescriptor());
 
   /// Declare and initialize several parameters with the same namespace and type.
   /**
@@ -524,6 +525,7 @@ public:
    * \return The result of each set action as a vector.
    */
   template<typename ParameterT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use declare_parameter() instead")]]
   void
   set_parameter_if_not_set(const std::string & name, const ParameterT & value);
@@ -774,7 +776,7 @@ public:
 
   /// Return a list of parameters with any of the given prefixes, up to the given depth.
   /**
-   * ??? how to list all parameters? what does depth 0 and 1 do?                
+   * \todo: properly document and test this method.
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ListParametersResult
