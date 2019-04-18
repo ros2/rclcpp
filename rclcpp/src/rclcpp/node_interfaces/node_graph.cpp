@@ -140,7 +140,20 @@ NodeGraph::get_node_names() const
   std::transform(names_and_namespaces.begin(),
     names_and_namespaces.end(),
     std::back_inserter(nodes),
-    [](std::pair<std::string, std::string> nns) {return nns.second + "/" + nns.first;}
+    [](std::pair<std::string, std::string> nns) {
+      std::string return_string;
+      if ((nns.second.back() == '/') || (nns.first.front() == '/')) {
+        return_string = nns.second + nns.first;
+      } else {
+        return_string = nns.second + '/' + nns.first;
+      }
+      // Quick check to make sure that we start with a slash
+      // Since fully-qualified strings need to
+      if (return_string.front() != '/') {
+        return_string = "/" + return_string;
+      }
+      return return_string;
+    }
   );
   return nodes;
 }
