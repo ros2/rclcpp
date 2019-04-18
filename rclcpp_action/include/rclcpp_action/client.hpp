@@ -261,9 +261,43 @@ public:
   using Feedback = typename ActionT::Feedback;
   using GoalHandle = ClientGoalHandle<ActionT>;
   using WrappedResult = typename GoalHandle::WrappedResult;
+  using GoalResponseCallback =
+    std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
   using FeedbackCallback = typename ClientGoalHandle<ActionT>::FeedbackCallback;
+  using ResultCallback = typename ClientGoalHandle<ActionT>::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
+
+  /// Options for sending a goal.
+  /**
+   * This struct is used to pass parameters to the function `async_send_goal`.
+   */
+  struct SendGoalOptions
+  {
+    SendGoalOptions()
+    : goal_response_callback(nullptr),
+      feedback_callback(nullptr),
+      result_callback(nullptr)
+    {
+    }
+
+    /// Function called when the goal is accepted or rejected.
+    /**
+     * Takes a single argument that is a future to a goal handle shared pointer.
+     * If the goal is accepted, then the pointer points to a valid goal handle.
+     * If the goal is rejected, then pointer has the value `nullptr`.
+     * If an error occurs while waiting for the goal response an exception will be thrown
+     * when calling `future::get()`.
+     * Possible exceptions include `rclcpp::RCLError` and `rclcpp::RCLBadAlloc`.
+     */
+    GoalResponseCallback goal_response_callback;
+
+    /// Function called whenever feedback is received for the goal.
+    FeedbackCallback feedback_callback;
+
+    /// Function called when the result for the goal is received.
+    ResultCallback result_callback;
+  };
 
   /// Construct an action client.
   /**
@@ -299,15 +333,13 @@ public:
    * The goal handle is used to monitor the status of the goal and get the final result.
    *
    * \param[in] goal The goal request.
-   * \param[in] callback Optional user callback for feedback associated with the goal.
-   * \param[in] ignore_result If `true`, then the result for the goal will not be requested and
-   *   therefore inaccessible from the goal handle.
+   * \param[in] options Options for sending the goal request. Contains references to callbacks for
+   *   the goal response (accepted/rejected), feedback, and the final result.
    * \return A future that completes when the goal has been accepted or rejected.
    *   If the goal is rejected, then the result will be a `nullptr`.
    */
   std::shared_future<typename GoalHandle::SharedPtr>
-  async_send_goal(
-    const Goal & goal, FeedbackCallback callback = nullptr, bool ignore_result = false)
+  async_send_goal(const Goal & goal, const SendGoalOptions & options = SendGoalOptions())
   {
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>();
@@ -318,31 +350,38 @@ public:
     goal_request->goal = goal;
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
-      [this, goal_request, callback, ignore_result, promise](
-        std::shared_ptr<void> response) mutable
+      [this, goal_request, options, promise, future](std::shared_ptr<void> response) mutable
       {
         using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
+          if (options.goal_response_callback) {
+            options.goal_response_callback(future);
+          }
           return;
         }
         GoalInfo goal_info;
         goal_info.goal_id.uuid = goal_request->goal_id.uuid;
         goal_info.stamp = goal_response->stamp;
         // Do not use std::make_shared as friendship cannot be forwarded.
-        std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
-        if (!ignore_result) {
+        std::shared_ptr<GoalHandle> goal_handle(
+          new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
+        if (options.result_callback) {
           try {
             this->make_result_aware(goal_handle);
           } catch (...) {
             promise->set_exception(std::current_exception());
+            options.goal_response_callback(future);
             return;
           }
         }
         std::lock_guard<std::mutex> guard(goal_handles_mutex_);
         goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         promise->set_value(goal_handle);
+        if (options.goal_response_callback) {
+          options.goal_response_callback(future);
+        }
       });
     return future;
   }

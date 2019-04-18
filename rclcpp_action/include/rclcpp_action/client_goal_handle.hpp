@@ -72,10 +72,12 @@ public:
   } WrappedResult;
 
   using Feedback = typename ActionT::Feedback;
+  using Result = typename ActionT::Result;
   using FeedbackCallback =
     std::function<void (
         typename ClientGoalHandle<ActionT>::SharedPtr,
         const std::shared_ptr<const Feedback>)>;
+  using ResultCallback = std::function<void (const WrappedResult & result)>;
 
   virtual ~ClientGoalHandle();
 
@@ -116,7 +118,10 @@ private:
   // The templated Client creates goal handles
   friend Client<ActionT>;
 
-  ClientGoalHandle(const GoalInfo & info, FeedbackCallback callback);
+  ClientGoalHandle(
+    const GoalInfo & info,
+    FeedbackCallback feedback_callback,
+    ResultCallback result_callback);
 
   void
   set_feedback_callback(FeedbackCallback callback);
@@ -145,6 +150,7 @@ private:
   std::shared_future<WrappedResult> result_future_;
 
   FeedbackCallback feedback_callback_{nullptr};
+  ResultCallback result_callback_{nullptr};
   int8_t status_{GoalStatus::STATUS_ACCEPTED};
 
   std::mutex handle_mutex_;
