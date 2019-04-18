@@ -397,6 +397,14 @@ if(BUILD_TESTING)
     target_link_libraries(test_time ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_timer test/test_timer.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_timer)
+    ament_target_dependencies(test_timer
+      "rcl")
+    target_link_libraries(test_timer ${PROJECT_NAME})
+  endif()
+
   ament_add_gtest(test_time_source test/test_time_source.cpp
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_time_source)
