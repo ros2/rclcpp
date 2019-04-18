@@ -80,10 +80,16 @@ void TimeSource::attachNode(
 
   // Though this defaults to false, it can be overridden by initial parameter values for the node,
   // which may be given by the user at the node's construction or even by command-line arguments.
-  auto use_sim_time_param = node_parameters_->declare_parameter(
-    "use_sim_time",
-    rclcpp::ParameterValue(false),
-    rcl_interfaces::msg::ParameterDescriptor());
+  rclcpp::ParameterValue use_sim_time_param;
+  const char * use_sim_time_name = "use_sim_time";
+  if (!node_parameters_->has_parameter(use_sim_time_name)) {
+    use_sim_time_param = node_parameters_->declare_parameter(
+      use_sim_time_name,
+      rclcpp::ParameterValue(false),
+      rcl_interfaces::msg::ParameterDescriptor());
+  } else {
+    use_sim_time_param = node_parameters_->get_parameter(use_sim_time_name).get_parameter_value();
+  }
   if (use_sim_time_param.get_type() == rclcpp::PARAMETER_BOOL) {
     if (use_sim_time_param.get<bool>()) {
       parameter_state_ = SET_TRUE;

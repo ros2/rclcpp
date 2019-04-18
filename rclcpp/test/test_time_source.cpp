@@ -55,45 +55,82 @@ protected:
   rclcpp::Node::SharedPtr node;
 };
 
-void trigger_clock_changes(
-  rclcpp::Node::SharedPtr node)
+static const std::shared_future<void> g_no_future = {};
+static constexpr bool g_do_not_wait_for_matched = false;
+static constexpr int g_number_of_clock_messages = 5;
+void
+trigger_clock_changes(
+  rclcpp::Node::SharedPtr node,
+  std::shared_future<void> post_future,
+  bool wait_for_matched = true)
 {
-  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
-      rmw_qos_profile_default);
+  auto clock_pub =
+    node->create_publisher<rosgraph_msgs::msg::Clock>("clock", rmw_qos_profile_default);
 
-  rclcpp::executors::SingleThreadedExecutor executor;
-  executor.add_node(node);
+  // wait for matching subscription
+  if (wait_for_matched) {
+    auto start = std::chrono::steady_clock::now();
+    do {
+      if (clock_pub->get_subscription_count() > 0u) {
+        break;
+      }
+      std::this_thread::sleep_for(10ms);  // just to avoid full busy wait
+    } while (std::chrono::steady_clock::now() - start <= 10s);
+    EXPECT_NE(0u, clock_pub->get_subscription_count());
+  }
 
-  rclcpp::WallRate loop_rate(50);
-  for (int i = 0; i < 5; ++i) {
-    if (!rclcpp::ok()) {
-      break;  // Break for ctrl-c
+  {
+    rclcpp::executors::SingleThreadedExecutor executor;
+    executor.add_node(node);
+
+    rclcpp::WallRate loop_rate(50);
+    for (int i = 0; i < g_number_of_clock_messages; ++i) {
+      if (!rclcpp::ok()) {
+        break;  // Break for ctrl-c
+      }
+      auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
+      msg->clock.sec = i;
+      msg->clock.nanosec = 1000;
+      clock_pub->publish(msg);
+      executor.spin_once(1ms);
+      loop_rate.sleep();
     }
-    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
-    msg->clock.sec = i;
-    msg->clock.nanosec = 1000;
-    clock_pub->publish(msg);
-    executor.spin_once(1000000ns);
-    loop_rate.sleep();
+  }
+
+  if (post_future.valid()) {
+    // wait for at least one post callback, or 10s to pass
+    EXPECT_EQ(
+      rclcpp::spin_until_future_complete(node, post_future, 10s),
+      rclcpp::executor::FutureReturnCode::SUCCESS);
   }
 }
 
-void set_use_sim_time_parameter(rclcpp::Node::SharedPtr node, rclcpp::ParameterValue value)
+void
+set_and_check_use_sim_time_parameter(
+  rclcpp::Node::SharedPtr node,
+  rclcpp::ParameterValue value,
+  const bool expected)
 {
-  auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
-
-  using namespace std::chrono_literals;
-  EXPECT_TRUE(parameters_client->wait_for_service(2s));
-  auto set_parameters_results = parameters_client->set_parameters({
-    rclcpp::Parameter("use_sim_time", value)
-  });
-  for (auto & result : set_parameters_results) {
-    EXPECT_TRUE(result.successful);
-  }
-  // SyncParametersClient returns when parameters have been set on the node_parameters interface,
-  // but it doesn't mean the on_parameter_event subscription in TimeSource has been called.
-  // Spin some to handle that subscription.
-  rclcpp::spin_some(node);
+  // set the parameter
+  node->set_parameter({"use_sim_time", value});
+  // then spin until it has been updated or some time has passed
+  rclcpp::Parameter use_sim_time;
+  auto timeout = 10s;
+  auto wait_period = 100ms;
+  auto start = std::chrono::steady_clock::now();
+  rclcpp::executors::SingleThreadedExecutor executor;
+  do {
+    if (
+      node->get_parameter("use_sim_time", use_sim_time) &&
+      use_sim_time.get_parameter_value() == value &&
+      expected == node->get_clock()->ros_time_is_active())
+    {
+      break;
+    }
+    executor.spin_node_once(node, wait_period);
+  } while (std::chrono::steady_clock::now() <= start + timeout);
+  EXPECT_EQ(use_sim_time.get_parameter_value(), value);
+  EXPECT_EQ(node->get_clock()->ros_time_is_active(), expected);
 }
 
 TEST_F(TestTimeSource, detachUnattached) {
@@ -118,7 +155,7 @@ TEST_F(TestTimeSource, ROS_time_valid_attach_detach) {
 
   EXPECT_FALSE(ros_clock->ros_time_is_active());
   ts.attachClock(ros_clock);
-  auto now = ros_clock->now();
+  ros_clock->now();
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   ts.attachNode(node);
@@ -154,7 +191,7 @@ TEST_F(TestTimeSource, ROS_time_valid_sim_time) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  node->declare_parameter("use_sim_time", true);
+  node->set_parameter({"use_sim_time", true});
   ts.attachNode(node);
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 
@@ -169,23 +206,41 @@ TEST_F(TestTimeSource, clock) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, g_no_future, g_do_not_wait_for_matched);
 
   // Even now that we've recieved a message, ROS time should still not be active since the
   // parameter has not been explicitly set.
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
   // Activate ROS time.
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
-  EXPECT_TRUE(ros_clock->ros_time_is_active());
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(true), true);
 
-  trigger_clock_changes(node);
-
-  auto t_out = ros_clock->now();
-
-  // Time from clock should now reflect what was published on the /clock topic.
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
+
+  trigger_clock_changes(node, g_no_future);
+  // Time from clock should now (eventually) reflect what was published on the /clock topic.
+  auto t_out = ros_clock->now();
+  // If the clock has not been updated yet, then manually wait for this
+  // condition to become true for a while.
+  // We have to poll like this since we don't have the post jump callback in
+  // which we can set a future and know for sure that a clock msg has been
+  // received and therefore the time has been updated.
+  {
+    auto start = std::chrono::steady_clock::now();
+    rclcpp::executors::SingleThreadedExecutor executor;
+    do {
+      if (0L < t_out.nanoseconds()) {
+        break;
+      }
+      if (std::chrono::steady_clock::now() - start >= 5s) {
+        // after 5s, try sending the data again...
+        trigger_clock_changes(node, g_no_future);
+      }
+      executor.spin_node_once(node, 10ms);  // spin to let clock messages get processed
+      t_out = ros_clock->now();  // check the time again
+    } while (rclcpp::ok() && std::chrono::steady_clock::now() - start <= 10s);
+  }
   EXPECT_NE(0L, t_out.nanoseconds());
   EXPECT_LT(t_low.nanoseconds(), t_out.nanoseconds());
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
@@ -194,9 +249,22 @@ TEST_F(TestTimeSource, clock) {
 class CallbackObject
 {
 public:
+  std::shared_future<void>
+  get_new_post_shared_future(
+    int number_of_post_calls_before_completing_future = g_number_of_clock_messages)
+  {
+    std::lock_guard<std::mutex> lock(promise_mutex_);
+    post_promise_has_been_set_ = false;
+    number_of_post_calls_before_completing_future_ = number_of_post_calls_before_completing_future;
+    post_promise_ = {};
+    return post_promise_.get_future();
+  }
+
   int pre_callback_calls_ = 0;
   int last_precallback_id_ = 0;
-  void pre_callback(int id)
+
+  void
+  pre_callback(int id)
   {
     last_precallback_id_ = id;
     ++pre_callback_calls_;
@@ -205,11 +273,28 @@ public:
   int post_callback_calls_ = 0;
   int last_postcallback_id_ = 0;
   rcl_time_jump_t last_timejump_;
-  void post_callback(const rcl_time_jump_t & jump, int id)
+
+  void
+  post_callback(const rcl_time_jump_t & jump, int id)
   {
-    last_postcallback_id_ = id; last_timejump_ = jump;
+    std::lock_guard<std::mutex> lock(promise_mutex_);
+    last_postcallback_id_ = id;
+    last_timejump_ = jump;
     ++post_callback_calls_;
+    if (
+      !post_promise_has_been_set_ &&
+      post_callback_calls_ >= number_of_post_calls_before_completing_future_)
+    {
+      post_promise_.set_value();
+      post_promise_has_been_set_ = true;
+    }
   }
+
+private:
+  std::mutex promise_mutex_;
+  bool post_promise_has_been_set_ = false;
+  int number_of_post_calls_before_completing_future_ = 1;
+  std::promise<void> post_promise_;
 };
 
 TEST_F(TestTimeSource, callbacks) {
@@ -227,6 +312,7 @@ TEST_F(TestTimeSource, callbacks) {
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
     jump_threshold);
+  (void)callback_handler;  // silence cppcheck about unread variable (weird because it's RAII)
 
   EXPECT_EQ(0, cbo.last_precallback_id_);
   EXPECT_EQ(0, cbo.last_postcallback_id_);
@@ -236,7 +322,7 @@ TEST_F(TestTimeSource, callbacks) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, g_no_future, g_do_not_wait_for_matched);
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
 
@@ -245,10 +331,9 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_EQ(0, cbo.last_postcallback_id_);
 
   // Activate ROS time.
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
-  EXPECT_TRUE(ros_clock->ros_time_is_active());
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(true), true);
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, cbo.get_new_post_shared_future());
 
   auto t_out = ros_clock->now();
 
@@ -265,8 +350,9 @@ TEST_F(TestTimeSource, callbacks) {
     std::bind(&CallbackObject::pre_callback, &cbo, 2),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
     jump_threshold);
+  (void)callback_handler2;  // silence cppcheck about unread variable (weird because it's RAII)
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, cbo.get_new_post_shared_future());
 
   EXPECT_EQ(2, cbo.last_precallback_id_);
   EXPECT_EQ(2, cbo.last_postcallback_id_);
@@ -284,8 +370,9 @@ TEST_F(TestTimeSource, callbacks) {
     std::bind(&CallbackObject::pre_callback, &cbo, 3),
     std::function<void(rcl_time_jump_t)>(),
     jump_threshold);
+  (void)callback_handler3;  // silence cppcheck about unread variable (weird because it's RAII)
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, cbo.get_new_post_shared_future());
   EXPECT_EQ(3, cbo.last_precallback_id_);
   EXPECT_EQ(2, cbo.last_postcallback_id_);
 
@@ -294,8 +381,9 @@ TEST_F(TestTimeSource, callbacks) {
     std::function<void()>(),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 4),
     jump_threshold);
+  (void)callback_handler4;  // silence cppcheck about unread variable (weird because it's RAII)
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, cbo.get_new_post_shared_future());
   EXPECT_EQ(3, cbo.last_precallback_id_);
   EXPECT_EQ(4, cbo.last_postcallback_id_);
 }
@@ -318,6 +406,7 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
     jump_threshold);
+  (void)callback_handler;  // silence cppcheck about unread variable (weird because it's RAII)
 
   // Second callback handler
   rclcpp::JumpHandler::SharedPtr callback_handler2 = ros_clock->create_jump_callback(
@@ -330,10 +419,9 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
   EXPECT_EQ(0, cbo.last_postcallback_id_);
 
   // Activate ROS time.
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
-  EXPECT_TRUE(ros_clock->ros_time_is_active());
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(true), true);
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, cbo.get_new_post_shared_future());
 
   auto t_low = rclcpp::Time(1, 0, RCL_ROS_TIME);
   auto t_high = rclcpp::Time(10, 100000, RCL_ROS_TIME);
@@ -341,6 +429,7 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
   // Callbacks will now have been triggered since ROS time is active.
   EXPECT_EQ(1, cbo.last_precallback_id_);
   EXPECT_EQ(1, cbo.last_postcallback_id_);
+  EXPECT_TRUE(ros_clock->ros_time_is_active());
 
   auto t_out = ros_clock->now();
 
@@ -353,11 +442,12 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
     std::bind(&CallbackObject::pre_callback, &cbo, 2),
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
     jump_threshold);
+  (void)callback_handler;  // silence cppcheck about unread variable (weird because it's RAII)
 
   // Remove the last callback in the vector
   callback_handler2.reset();
 
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, cbo.get_new_post_shared_future());
 
   EXPECT_EQ(2, cbo.last_precallback_id_);
   EXPECT_EQ(2, cbo.last_postcallback_id_);
@@ -380,28 +470,16 @@ TEST_F(TestTimeSource, parameter_activation) {
   ts.attachClock(ros_clock);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
-  EXPECT_TRUE(ros_clock->ros_time_is_active());
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(true), true);
 
-  set_use_sim_time_parameter(
-    node, rclcpp::ParameterValue());
-  EXPECT_TRUE(ros_clock->ros_time_is_active());
-
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(false));
-  EXPECT_FALSE(ros_clock->ros_time_is_active());
-
-  set_use_sim_time_parameter(
-    node, rclcpp::ParameterValue());
-  EXPECT_FALSE(ros_clock->ros_time_is_active());
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(false), false);
 
   // If the use_sim_time parameter is not explicitly set to True, this clock's use of sim time
   // should not be affected by the presence of a clock publisher.
-  trigger_clock_changes(node);
+  trigger_clock_changes(node, g_no_future, g_do_not_wait_for_matched);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(false));
-  EXPECT_FALSE(ros_clock->ros_time_is_active());
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
-  EXPECT_TRUE(ros_clock->ros_time_is_active());
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(false), false);
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(true), true);
 }
 
 TEST_F(TestTimeSource, no_pre_jump_callback) {
@@ -419,17 +497,21 @@ TEST_F(TestTimeSource, no_pre_jump_callback) {
     nullptr,
     std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
     jump_threshold);
+  (void)callback_handler;  // silence cppcheck about unread variable (weird because it's RAII)
 
   ASSERT_EQ(0, cbo.last_precallback_id_);
   ASSERT_EQ(0, cbo.last_postcallback_id_);
   ts.attachClock(ros_clock);
 
   // Activate ROS time
-  set_use_sim_time_parameter(node, rclcpp::ParameterValue(true));
-  ASSERT_TRUE(ros_clock->ros_time_is_active());
+  set_and_check_use_sim_time_parameter(node, rclcpp::ParameterValue(true), true);
 
   EXPECT_EQ(0, cbo.last_precallback_id_);
   EXPECT_EQ(0, cbo.pre_callback_calls_);
+  auto future = cbo.get_new_post_shared_future(1);
+  EXPECT_EQ(
+    rclcpp::spin_until_future_complete(node, future, 10s),
+    rclcpp::executor::FutureReturnCode::SUCCESS);
   EXPECT_EQ(1, cbo.last_postcallback_id_);
   EXPECT_EQ(1, cbo.post_callback_calls_);
 }
