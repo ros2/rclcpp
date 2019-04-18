@@ -31,10 +31,35 @@
 
 namespace rclcpp_action
 {
+/// Create an action server.
+/**
+ * All provided callback functions must be non-blocking.
+ * This function is equivalent to \sa create_server()` however is using the individual
+ * node interfaces to create the server.
+ *
+ * \sa Server::Server() for more information.
+ *
+ * \param node_base_interface[in] The node base interface of the corresponding node.
+ * \param node_clock_interface[in] The node clock interface of the corresponding node.
+ * \param node_logging_interface[in] The node logging interface of the corresponding node.
+ * \param node_waitables_interface[in] The node waitables interface of the corresponding node.
+ * \param name[in] The action name.
+ * \param[in] handle_goal A callback that decides if a goal should be accepted or rejected.
+ * \param[in] handle_cancel A callback that decides if a goal should be attempted to be canceled.
+ *  The return from this callback only indicates if the server will try to cancel a goal.
+ *  It does not indicate if the goal was actually canceled.
+ * \param[in] handle_accepted A callback that is called to give the user a handle to the goal.
+ * \param[in] options options to pass to the underlying `rcl_action_server_t`.
+ * \param group[in] The action server will be added to this callback group.
+ *   If `nullptr`, then the action server is added to the default callback group.
+ */
 template<typename ActionT>
 typename Server<ActionT>::SharedPtr
 create_server(
-  rclcpp::Node::SharedPtr node,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
+  rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
   const std::string & name,
   typename Server<ActionT>::GoalCallback handle_goal,
   typename Server<ActionT>::CancelCallback handle_cancel,
@@ -43,7 +68,7 @@ create_server(
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
-    node->get_node_waitables_interface();
+    node_waitables_interface;
   std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
   bool group_is_null = (nullptr == group.get());
 
@@ -73,17 +98,58 @@ create_server(
     };
 
   std::shared_ptr<Server<ActionT>> action_server(new Server<ActionT>(
-      node->get_node_base_interface(),
-      node->get_node_clock_interface(),
-      node->get_node_logging_interface(),
+      node_base_interface,
+      node_clock_interface,
+      node_logging_interface,
       name,
       options,
       handle_goal,
       handle_cancel,
       handle_accepted), deleter);
 
-  node->get_node_waitables_interface()->add_waitable(action_server, group);
+  node_waitables_interface->add_waitable(action_server, group);
   return action_server;
+}
+
+/// Create an action server.
+/**
+ * All provided callback functions must be non-blocking.
+ *
+ * \sa Server::Server() for more information.
+ *
+ * \param node[in] The action server will be added to this node.
+ * \param name[in] The action name.
+ * \param[in] handle_goal A callback that decides if a goal should be accepted or rejected.
+ * \param[in] handle_cancel A callback that decides if a goal should be attempted to be canceled.
+ *  The return from this callback only indicates if the server will try to cancel a goal.
+ *  It does not indicate if the goal was actually canceled.
+ * \param[in] handle_accepted A callback that is called to give the user a handle to the goal.
+ * \param[in] options options to pass to the underlying `rcl_action_server_t`.
+ * \param group[in] The action server will be added to this callback group.
+ *   If `nullptr`, then the action server is added to the default callback group.
+ */
+template<typename ActionT>
+typename Server<ActionT>::SharedPtr
+create_server(
+  rclcpp::Node::SharedPtr node,
+  const std::string & name,
+  typename Server<ActionT>::GoalCallback handle_goal,
+  typename Server<ActionT>::CancelCallback handle_cancel,
+  typename Server<ActionT>::AcceptedCallback handle_accepted,
+  const rcl_action_server_options_t & options = rcl_action_server_get_default_options(),
+  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+{
+  return create_server<ActionT>(
+    node->get_node_base_interface(),
+    node->get_node_clock_interface(),
+    node->get_node_logging_interface(),
+    node->get_node_waitables_interface(),
+    name,
+    handle_goal,
+    handle_cancel,
+    handle_accepted,
+    options,
+    group);
 }
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__CREATE_SERVER_HPP_

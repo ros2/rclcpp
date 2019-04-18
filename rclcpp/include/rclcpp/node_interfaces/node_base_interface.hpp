@@ -56,6 +56,13 @@ public:
   const char *
   get_namespace() const = 0;
 
+  /// Return the fully qualified name of the node.
+  /** \return The fully qualified name of the node. */
+  RCLCPP_PUBLIC
+  virtual
+  const char *
+  get_fully_qualified_name() const = 0;
+
   /// Return the context of the node.
   /** \return SharedPtr to the node's context. */
   RCLCPP_PUBLIC

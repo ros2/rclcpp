@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/exceptions.hpp"
+
 #include "rcutils/logging_macros.h"
 
 using rclcpp::TimerBase;
@@ -73,6 +75,17 @@ TimerBase::cancel()
   if (rcl_timer_cancel(timer_handle_.get()) != RCL_RET_OK) {
     throw std::runtime_error(std::string("Couldn't cancel timer: ") + rcl_get_error_string().str);
   }
+}
+
+bool
+TimerBase::is_canceled()
+{
+  bool is_canceled = false;
+  rcl_ret_t ret = rcl_timer_is_canceled(timer_handle_.get(), &is_canceled);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Couldn't get timer cancelled state");
+  }
+  return is_canceled;
 }
 
 void

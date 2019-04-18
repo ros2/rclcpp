@@ -33,6 +33,7 @@
 #include "rclcpp/node_interfaces/node_logging.hpp"
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 #include "rclcpp/node_interfaces/node_services.hpp"
+#include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
 #include "rclcpp/node_interfaces/node_topics.hpp"
 #include "rclcpp/node_interfaces/node_waitables.hpp"
@@ -81,6 +82,15 @@ LifecycleNode::LifecycleNode(
       options.start_parameter_event_publisher(),
       options.parameter_event_qos_profile(),
       options.allow_undeclared_parameters()
+    )),
+  node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
+      node_base_,
+      node_topics_,
+      node_graph_,
+      node_services_,
+      node_logging_,
+      node_clock_,
+      node_parameters_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   use_intra_process_comms_(options.use_intra_process_comms()),
@@ -267,6 +277,18 @@ rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
 LifecycleNode::get_node_graph_interface()
 {
   return node_graph_;
+}
+
+rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr
+LifecycleNode::get_node_logging_interface()
+{
+  return node_logging_;
+}
+
+rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
+LifecycleNode::get_node_time_source_interface()
+{
+  return node_time_source_;
 }
 
 rclcpp::node_interfaces::NodeTimersInterface::SharedPtr

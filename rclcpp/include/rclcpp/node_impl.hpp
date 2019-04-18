@@ -51,20 +51,6 @@
 namespace rclcpp
 {
 
-template<typename MessageT, typename Alloc, typename PublisherT>
-std::shared_ptr<PublisherT>
-Node::create_publisher(
-  const std::string & topic_name, size_t qos_history_depth,
-  std::shared_ptr<Alloc> allocator)
-{
-  if (!allocator) {
-    allocator = std::make_shared<Alloc>();
-  }
-  rmw_qos_profile_t qos = rmw_qos_profile_default;
-  qos.depth = qos_history_depth;
-  return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos, allocator);
-}
-
 RCLCPP_LOCAL
 inline
 std::string
@@ -77,21 +63,128 @@ extend_name_with_sub_namespace(const std::string & name, const std::string & sub
   return name_with_sub_namespace;
 }
 
+template<typename MessageT, typename AllocatorT, typename PublisherT>
+std::shared_ptr<PublisherT>
+Node::create_publisher(
+  const std::string & topic_name,
+  size_t qos_history_depth,
+  const PublisherOptionsWithAllocator<AllocatorT> & options)
+{
+  std::shared_ptr<AllocatorT> allocator = options.allocator;
+  if (!allocator) {
+    allocator = std::make_shared<AllocatorT>();
+  }
+  rmw_qos_profile_t qos_profile = options.qos_profile;
+  qos_profile.depth = qos_history_depth;
+
+  bool use_intra_process;
+  switch (options.use_intra_process_comm) {
+    case IntraProcessSetting::Enable:
+      use_intra_process = true;
+      break;
+    case IntraProcessSetting::Disable:
+      use_intra_process = false;
+      break;
+    case IntraProcessSetting::NodeDefault:
+      use_intra_process = this->get_node_options().use_intra_process_comms();
+      break;
+    default:
+      throw std::runtime_error("Unrecognized IntraProcessSetting value");
+      break;
+  }
+
+  return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+    this->node_topics_.get(),
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    qos_profile,
+    use_intra_process,
+    allocator);
+}
+
+template<typename MessageT, typename Alloc, typename PublisherT>
+std::shared_ptr<PublisherT>
+Node::create_publisher(
+  const std::string & topic_name, size_t qos_history_depth,
+  std::shared_ptr<Alloc> allocator,
+  IntraProcessSetting use_intra_process_comm)
+{
+  PublisherOptionsWithAllocator<Alloc> pub_options;
+  pub_options.allocator = allocator;
+  pub_options.use_intra_process_comm = use_intra_process_comm;
+  return this->create_publisher<MessageT, Alloc, PublisherT>(
+    topic_name, qos_history_depth, pub_options);
+}
+
 template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator, IntraProcessSetting use_intra_process_comm)
 {
+  PublisherOptionsWithAllocator<Alloc> pub_options;
+  pub_options.qos_profile = qos_profile;
+  pub_options.allocator = allocator;
+  pub_options.use_intra_process_comm = use_intra_process_comm;
+  return this->create_publisher<MessageT, Alloc, PublisherT>(
+    topic_name, qos_profile.depth, pub_options);
+}
+
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename SubscriptionT>
+std::shared_ptr<SubscriptionT>
+Node::create_subscription(
+  const std::string & topic_name,
+  CallbackT && callback,
+  size_t qos_history_depth,
+  const SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>::SharedPtr
+  msg_mem_strat)
+{
+  using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
+
+  std::shared_ptr<AllocatorT> allocator = options.allocator;
   if (!allocator) {
-    allocator = std::make_shared<Alloc>();
+    allocator = std::make_shared<AllocatorT>();
   }
 
-  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
+  rmw_qos_profile_t qos_profile = options.qos_profile;
+  qos_profile.depth = qos_history_depth;
+
+  if (!msg_mem_strat) {
+    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
+    msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, AllocatorT>::create_default();
+  }
+
+  bool use_intra_process;
+  switch (options.use_intra_process_comm) {
+    case IntraProcessSetting::Enable:
+      use_intra_process = true;
+      break;
+    case IntraProcessSetting::Disable:
+      use_intra_process = false;
+      break;
+    case IntraProcessSetting::NodeDefault:
+      use_intra_process = this->get_node_options().use_intra_process_comms();
+      break;
+    default:
+      throw std::runtime_error("Unrecognized IntraProcessSetting value");
+      break;
+  }
+
+  return rclcpp::create_subscription<
+    MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    std::forward<CallbackT>(callback),
     qos_profile,
-    this->get_node_options().use_intra_process_comms(),
+    options.callback_group,
+    options.ignore_local_publications,
+    use_intra_process,
+    msg_mem_strat,
     allocator);
 }
 
@@ -110,29 +203,18 @@ Node::create_subscription(
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator,
+  IntraProcessSetting use_intra_process_comm)
 {
-  using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
+  SubscriptionOptionsWithAllocator<Alloc> sub_options;
+  sub_options.qos_profile = qos_profile;
+  sub_options.callback_group = group;
+  sub_options.ignore_local_publications = ignore_local_publications;
+  sub_options.allocator = allocator;
+  sub_options.use_intra_process_comm = use_intra_process_comm;
 
-  if (!allocator) {
-    allocator = std::make_shared<Alloc>();
-  }
-
-  if (!msg_mem_strat) {
-    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-    msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
-  }
-
-  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
-    this->node_topics_.get(),
-    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-    std::forward<CallbackT>(callback),
-    qos_profile,
-    group,
-    ignore_local_publications,
-    this->get_node_options().use_intra_process_comms(),
-    msg_mem_strat,
-    allocator);
+  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
+    topic_name, std::forward<CallbackT>(callback), qos_profile.depth, sub_options, msg_mem_strat);
 }
 
 template<
@@ -150,25 +232,23 @@ Node::create_subscription(
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<Alloc> allocator,
+  IntraProcessSetting use_intra_process_comm)
 {
-  rmw_qos_profile_t qos = rmw_qos_profile_default;
-  qos.depth = qos_history_depth;
+  SubscriptionOptionsWithAllocator<Alloc> sub_options;
+  sub_options.callback_group = group;
+  sub_options.ignore_local_publications = ignore_local_publications;
+  sub_options.allocator = allocator;
+  sub_options.use_intra_process_comm = use_intra_process_comm;
 
-  return this->create_subscription<MessageT>(
-    topic_name,
-    std::forward<CallbackT>(callback),
-    qos,
-    group,
-    ignore_local_publications,
-    msg_mem_strat,
-    allocator);
+  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
+    topic_name, std::forward<CallbackT>(callback), qos_history_depth, sub_options, msg_mem_strat);
 }
 
-template<typename DurationT, typename CallbackT>
+template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr
 Node::create_wall_timer(
-  std::chrono::duration<int64_t, DurationT> period,
+  std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {

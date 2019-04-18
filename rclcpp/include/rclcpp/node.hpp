@@ -55,8 +55,10 @@
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_options.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
@@ -116,6 +118,14 @@ public:
   const char *
   get_namespace() const;
 
+  /// Get the fully-qualified name of the node.
+  /**
+   * The fully-qualified name includes the local namespace and name of the node.
+   */
+  RCLCPP_PUBLIC
+  const char *
+  get_fully_qualified_name() const;
+
   /// Get the logger of the node.
   /** \return The logger of the node. */
   RCLCPP_PUBLIC
@@ -136,16 +146,40 @@ public:
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \param[in] options Additional options for the created Publisher.
+   * \return Shared pointer to the created publisher.
+   */
+  template<
+    typename MessageT,
+    typename AllocatorT = std::allocator<void>,
+    typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
+  std::shared_ptr<PublisherT>
+  create_publisher(
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    const PublisherOptionsWithAllocator<AllocatorT> &
+    options = PublisherOptionsWithAllocator<AllocatorT>());
+
+  /// Create and return a Publisher.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos_history_depth The depth of the publisher message queue.
    * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created publisher.
    */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated(
+    "use the create_publisher(const std::string &, size_t, const PublisherOptions<Alloc> & = "
+    "PublisherOptions<Alloc>()) signature instead")]]
   std::shared_ptr<PublisherT>
   create_publisher(
-    const std::string & topic_name, size_t qos_history_depth,
-    std::shared_ptr<Alloc> allocator = nullptr);
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    std::shared_ptr<Alloc> allocator,
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create and return a Publisher.
   /**
@@ -161,7 +195,39 @@ public:
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
-    std::shared_ptr<Alloc> allocator = nullptr);
+    std::shared_ptr<Alloc> allocator = nullptr,
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
+
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] callback The user-defined callback function to receive a message
+   * \param[in] qos_history_depth The depth of the subscription's incoming message queue.
+   * \param[in] options Additional options for the creation of the Subscription.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>>
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    CallbackT && callback,
+    size_t qos_history_depth,
+    const SubscriptionOptionsWithAllocator<AllocatorT> &
+    options = SubscriptionOptionsWithAllocator<AllocatorT>(),
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
+    >::SharedPtr
+    msg_mem_strat = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -194,7 +260,8 @@ public:
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
-    std::shared_ptr<Alloc> allocator = nullptr);
+    std::shared_ptr<Alloc> allocator = nullptr,
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create and return a Subscription.
   /**
@@ -217,17 +284,21 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+  [[deprecated(
+    "use the create_subscription(const std::string &, CallbackT &&, size_t, "
+    "const SubscriptionOptions<Alloc> & = SubscriptionOptions<Alloc>(), ...) signature instead")]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
     CallbackT && callback,
     size_t qos_history_depth,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
-    std::shared_ptr<Alloc> allocator = nullptr);
+    std::shared_ptr<Alloc> allocator = nullptr,
+    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
 
   /// Create a timer.
   /**
@@ -235,10 +306,10 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
-  template<typename DurationT = std::milli, typename CallbackT>
+  template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr
   create_wall_timer(
-    std::chrono::duration<int64_t, DurationT> period,
+    std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 

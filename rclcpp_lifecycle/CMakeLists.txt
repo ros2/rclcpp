@@ -49,49 +49,49 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_lifecycle_node test/test_lifecycle_node.cpp)
   if(TARGET test_lifecycle_node)
-    target_include_directories(test_lifecycle_node PUBLIC
-      ${rcl_lifecycle_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
+    ament_target_dependencies(test_lifecycle_node
+      "rcl_lifecycle"
+      "rclcpp"
     )
     target_link_libraries(test_lifecycle_node ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_state_machine_info test/test_state_machine_info.cpp)
   if(TARGET test_state_machine_info)
-    target_include_directories(test_state_machine_info PUBLIC
-      ${rcl_lifecycle_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
+    ament_target_dependencies(test_state_machine_info
+      "rcl_lifecycle"
+      "rclcpp"
     )
     target_link_libraries(test_state_machine_info ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_register_custom_callbacks test/test_register_custom_callbacks.cpp)
   if(TARGET test_register_custom_callbacks)
-    target_include_directories(test_register_custom_callbacks PUBLIC
-      ${rcl_lifecycle_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
+    ament_target_dependencies(test_register_custom_callbacks
+      "rcl_lifecycle"
+      "rclcpp"
     )
     target_link_libraries(test_register_custom_callbacks ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_callback_exceptions test/test_callback_exceptions.cpp)
   if(TARGET test_callback_exceptions)
-    target_include_directories(test_callback_exceptions PUBLIC
-      ${rcl_lifecycle_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
+    ament_target_dependencies(test_callback_exceptions
+      "rcl_lifecycle"
+      "rclcpp"
     )
     target_link_libraries(test_callback_exceptions ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_state_wrapper test/test_state_wrapper.cpp)
   if(TARGET test_state_wrapper)
-    target_include_directories(test_state_wrapper PUBLIC
-      ${rcl_lifecycle_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
+    ament_target_dependencies(test_state_wrapper
+      "rcl_lifecycle"
+      "rclcpp"
     )
     target_link_libraries(test_state_wrapper ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_transition_wrapper test/test_transition_wrapper.cpp)
   if(TARGET test_transition_wrapper)
-    target_include_directories(test_transition_wrapper PUBLIC
-      ${rcl_lifecycle_INCLUDE_DIRS}
-      ${rclcpp_INCLUDE_DIRS}
+    ament_target_dependencies(test_transition_wrapper
+      "rcl_lifecycle"
+      "rclcpp"
     )
     target_link_libraries(test_transition_wrapper ${PROJECT_NAME})
   endif()

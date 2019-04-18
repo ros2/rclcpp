@@ -66,10 +66,10 @@ public:
   action_server_is_ready() const;
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
-  template<typename RatioT = std::milli>
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   bool
   wait_for_action_server(
-    std::chrono::duration<int64_t, RatioT> timeout = std::chrono::duration<int64_t, RatioT>(-1))
+    std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
     return wait_for_action_server_nanoseconds(
       std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
@@ -148,7 +148,7 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual
-  GoalID
+  GoalUUID
   generate_goal_id();
 
   /// \internal
@@ -245,7 +245,7 @@ private:
 /**
  * This class creates an action client.
  *
- * Create an instance of this server using `rclcpp_action::create_client()`.
+ * To create an instance of an action client use `rclcpp_action::create_client()`.
  *
  * Internally, this class is responsible for:
  *  - coverting between the C++ action type and generic types for `rclcpp_action::ClientBase`, and
@@ -260,11 +260,23 @@ public:
   using Goal = typename ActionT::Goal;
   using Feedback = typename ActionT::Feedback;
   using GoalHandle = ClientGoalHandle<ActionT>;
-  using Result = typename GoalHandle::Result;
+  using WrappedResult = typename GoalHandle::WrappedResult;
   using FeedbackCallback = typename ClientGoalHandle<ActionT>::FeedbackCallback;
-  using CancelRequest = typename ActionT::CancelGoalService::Request;
-  using CancelResponse = typename ActionT::CancelGoalService::Response;
+  using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
+  using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
 
+  /// Construct an action client.
+  /**
+   * This constructs an action client, but it will not work until it has been added to a node.
+   * Use `rclcpp_action::create_client()` to both construct and add to a node.
+   *
+   * \param[in] node_base A pointer to the base interface of a node.
+   * \param[in] node_graph A pointer to an interface that allows getting graph information about
+   *   a node.
+   * \param[in] node_logging A pointer to an interface that allows getting a node's logger.
+   * \param[in] action_name The action name.
+   * \param[in] client_options Options to pass to the underlying `rcl_action::rcl_action_client_t`.
+   */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
@@ -279,6 +291,20 @@ public:
   {
   }
 
+  /// Send an action goal and asynchronously get the result.
+  /**
+   * If the goal is accepted by an action server, the returned future is set to a `ClientGoalHandle`.
+   * If the goal is rejected by an action server, then the future is set to a `nullptr`.
+   *
+   * The goal handle is used to monitor the status of the goal and get the final result.
+   *
+   * \param[in] goal The goal request.
+   * \param[in] callback Optional user callback for feedback associated with the goal.
+   * \param[in] ignore_result If `true`, then the result for the goal will not be requested and
+   *   therefore inaccessible from the goal handle.
+   * \return A future that completes when the goal has been accepted or rejected.
+   *   If the goal is rejected, then the result will be a `nullptr`.
+   */
   std::shared_future<typename GoalHandle::SharedPtr>
   async_send_goal(
     const Goal & goal, FeedbackCallback callback = nullptr, bool ignore_result = false)
@@ -286,26 +312,23 @@ public:
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>();
     std::shared_future<typename GoalHandle::SharedPtr> future(promise->get_future());
-    using GoalRequest = typename ActionT::GoalRequestService::Request;
-    // auto goal_request = std::make_shared<GoalRequest>();
-    // goal_request->goal_id = this->generate_goal_id();
-    // goal_request->goal = goal;
-    auto goal_request = std::make_shared<GoalRequest>(goal);
-    goal_request->action_goal_id.uuid = this->generate_goal_id();
+    using GoalRequest = typename ActionT::Impl::SendGoalService::Request;
+    auto goal_request = std::make_shared<GoalRequest>();
+    goal_request->goal_id.uuid = this->generate_goal_id();
+    goal_request->goal = goal;
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
       [this, goal_request, callback, ignore_result, promise](
         std::shared_ptr<void> response) mutable
       {
-        using GoalResponse = typename ActionT::GoalRequestService::Response;
+        using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
           return;
         }
         GoalInfo goal_info;
-        // goal_info.goal_id = goal_request->goal_id;
-        goal_info.goal_id.uuid = goal_request->action_goal_id.uuid;
+        goal_info.goal_id.uuid = goal_request->goal_id.uuid;
         goal_info.stamp = goal_response->stamp;
         // Do not use std::make_shared as friendship cannot be forwarded.
         std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
@@ -324,7 +347,14 @@ public:
     return future;
   }
 
-  std::shared_future<Result>
+  /// Asynchronously get the result for an active goal.
+  /**
+   * \throws exceptions::UnknownGoalHandleError If the goal unknown or already reached a terminal
+   *   state.
+   * \param[in] goal_handle The goal handle for which to get the result.
+   * \return A future that is set to the goal result when the goal is finished.
+   */
+  std::shared_future<WrappedResult>
   async_get_result(typename GoalHandle::SharedPtr goal_handle)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
@@ -338,6 +368,13 @@ public:
     return goal_handle->async_result();
   }
 
+  /// Asynchronously request a goal be canceled.
+  /**
+   * \throws exceptions::UnknownGoalHandleError If the goal is unknown or already reached a
+   *   terminal state.
+   * \param[in] goal_handle The goal handle requesting to be canceled.
+   * \return A future whose result indicates whether or not the cancel request was accepted.
+   */
   std::shared_future<bool>
   async_cancel_goal(typename GoalHandle::SharedPtr goal_handle)
   {
@@ -367,6 +404,14 @@ public:
     return future;
   }
 
+  /// Asynchronously request for all goals to be canceled.
+  /**
+   * \return A future to a CancelResponse message that is set when the request has been
+   * acknowledged by an action server.
+   * See
+   * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
+   * action_msgs/CancelGoal.srv</a>.
+   */
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_all_goals()
   {
@@ -378,6 +423,15 @@ public:
     return async_cancel(cancel_request);
   }
 
+  /// Asynchronously request all goals at or before a specified time be canceled.
+  /**
+   * \param[in] stamp The timestamp for the cancel goal request.
+   * \return A future to a CancelResponse message that is set when the request has been
+   * acknowledged by an action server.
+   * See
+   * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
+   * action_msgs/CancelGoal.srv</a>.
+   */
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_goals_before(const rclcpp::Time & stamp)
   {
@@ -406,7 +460,7 @@ private:
   std::shared_ptr<void>
   create_goal_response() const override
   {
-    using GoalResponse = typename ActionT::GoalRequestService::Response;
+    using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
     return std::shared_ptr<void>(new GoalResponse());
   }
 
@@ -414,7 +468,7 @@ private:
   std::shared_ptr<void>
   create_result_response() const override
   {
-    using GoalResultResponse = typename ActionT::GoalResultService::Response;
+    using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
     return std::shared_ptr<void>(new GoalResultResponse());
   }
 
@@ -429,9 +483,8 @@ private:
   std::shared_ptr<void>
   create_feedback_message() const override
   {
-    // using FeedbackMessage = typename ActionT::FeedbackMessage;
-    // return std::shared_ptr<void>(new FeedbackMessage());
-    return std::shared_ptr<void>(new Feedback());
+    using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
+    return std::shared_ptr<void>(new FeedbackMessage());
   }
 
   /// \internal
@@ -439,13 +492,10 @@ private:
   handle_feedback_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    // using FeedbackMessage = typename ActionT::FeedbackMessage;
-    // typename FeedbackMessage::SharedPtr feedback_message =
-    //   std::static_pointer_cast<FeedbackMessage>(message);
-    typename Feedback::SharedPtr feedback_message =
-      std::static_pointer_cast<Feedback>(message);
-    // const GoalID & goal_id = feedback_message->goal_id;
-    const GoalID & goal_id = feedback_message->action_goal_id.uuid;
+    using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
+    typename FeedbackMessage::SharedPtr feedback_message =
+      std::static_pointer_cast<FeedbackMessage>(message);
+    const GoalUUID & goal_id = feedback_message->goal_id.uuid;
     if (goal_handles_.count(goal_id) == 0) {
       RCLCPP_DEBUG(
         this->get_logger(),
@@ -453,15 +503,16 @@ private:
       return;
     }
     typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id];
-    // goal_handle->call_feedback_callback(goal_handle, feedback_message->feedback);
-    goal_handle->call_feedback_callback(goal_handle, feedback_message);
+    auto feedback = std::make_shared<Feedback>();
+    *feedback = feedback_message->feedback;
+    goal_handle->call_feedback_callback(goal_handle, feedback);
   }
 
   /// \internal
   std::shared_ptr<void>
   create_status_message() const override
   {
-    using GoalStatusMessage = typename ActionT::GoalStatusMessage;
+    using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     return std::shared_ptr<void>(new GoalStatusMessage());
   }
 
@@ -470,11 +521,10 @@ private:
   handle_status_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-    using GoalStatusMessage = typename ActionT::GoalStatusMessage;
+    using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
     for (const GoalStatus & status : status_message->status_list) {
-      // const GoalID & goal_id = status.goal_info.goal_id;
-      const GoalID & goal_id = status.goal_info.goal_id.uuid;
+      const GoalUUID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
         RCLCPP_DEBUG(
           this->get_logger(),
@@ -498,21 +548,22 @@ private:
   void
   make_result_aware(typename GoalHandle::SharedPtr goal_handle)
   {
-    using GoalResultRequest = typename ActionT::GoalResultService::Request;
+    using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
-    // goal_result_request.goal_id = goal_handle->get_goal_id();
-    goal_result_request->action_goal_id.uuid = goal_handle->get_goal_id();
+    goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
       [goal_handle, this](std::shared_ptr<void> response) mutable
       {
         // Wrap the response in a struct with the fields a user cares about
-        Result result;
-        using GoalResultResponse = typename ActionT::GoalResultService::Response;
-        result.response = std::static_pointer_cast<GoalResultResponse>(response);
-        result.goal_id = goal_handle->get_goal_id();
-        result.code = static_cast<ResultCode>(result.response->action_status);
-        goal_handle->set_result(result);
+        WrappedResult wrapped_result;
+        using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
+        auto result_response = std::static_pointer_cast<GoalResultResponse>(response);
+        wrapped_result.result = std::make_shared<typename ActionT::Result>();
+        *wrapped_result.result = result_response->result;
+        wrapped_result.goal_id = goal_handle->get_goal_id();
+        wrapped_result.code = static_cast<ResultCode>(result_response->status);
+        goal_handle->set_result(wrapped_result);
         std::lock_guard<std::mutex> lock(goal_handles_mutex_);
         goal_handles_.erase(goal_handle->get_goal_id());
       });
@@ -536,7 +587,7 @@ private:
     return future;
   }
 
-  std::map<GoalID, typename GoalHandle::SharedPtr> goal_handles_;
+  std::map<GoalUUID, typename GoalHandle::SharedPtr> goal_handles_;
   std::mutex goal_handles_mutex_;
 };
 }  // namespace rclcpp_action

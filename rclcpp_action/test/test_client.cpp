@@ -24,7 +24,6 @@
 #include <rclcpp/clock.hpp>
 #include <rclcpp/exceptions.hpp>
 #include <rclcpp/executors.hpp>
-#include <rclcpp/executors/multi_threaded_executor.hpp>
 #include <rclcpp/node.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -47,23 +46,25 @@
 
 using namespace std::chrono_literals;
 
+const auto WAIT_FOR_SERVER_TIMEOUT = 10s;
+
 class TestClient : public ::testing::Test
 {
 protected:
   using ActionType = test_msgs::action::Fibonacci;
   using ActionGoal = ActionType::Goal;
   using ActionGoalHandle = rclcpp_action::ClientGoalHandle<ActionType>;
-  using ActionGoalRequestService = ActionType::GoalRequestService;
+  using ActionGoalRequestService = ActionType::Impl::SendGoalService;
   using ActionGoalRequest = ActionGoalRequestService::Request;
   using ActionGoalResponse = ActionGoalRequestService::Response;
-  using ActionGoalResultService = ActionType::GoalResultService;
+  using ActionGoalResultService = ActionType::Impl::GetResultService;
   using ActionGoalResultRequest = ActionGoalResultService::Request;
   using ActionGoalResultResponse = ActionGoalResultService::Response;
-  using ActionCancelGoalService = ActionType::CancelGoalService;
-  using ActionCancelGoalRequest = ActionType::CancelGoalService::Request;
-  using ActionCancelGoalResponse = ActionType::CancelGoalService::Response;
-  using ActionStatusMessage = ActionType::GoalStatusMessage;
-  using ActionFeedbackMessage = ActionType::Feedback;
+  using ActionCancelGoalService = ActionType::Impl::CancelGoalService;
+  using ActionCancelGoalRequest = ActionType::Impl::CancelGoalService::Request;
+  using ActionCancelGoalResponse = ActionType::Impl::CancelGoalService::Response;
+  using ActionStatusMessage = ActionType::Impl::GoalStatusMessage;
+  using ActionFeedbackMessage = ActionType::Impl::FeedbackMessage;
   using ActionFeedback = ActionType::Feedback;
 
   static void SetUpTestCase()
@@ -88,9 +89,9 @@ protected:
         ActionGoalResponse::SharedPtr response)
       {
         response->stamp = clock.now();
-        response->accepted = (request->order >= 0);
+        response->accepted = (request->goal.order >= 0);
         if (response->accepted) {
-          goals[request->action_goal_id.uuid] = {request, response};
+          goals[request->goal_id.uuid] = {request, response};
         }
       });
     ASSERT_TRUE(goal_service != nullptr);
@@ -106,29 +107,30 @@ protected:
         const ActionGoalResultRequest::SharedPtr request,
         ActionGoalResultResponse::SharedPtr response)
       {
-        if (goals.count(request->action_goal_id.uuid) == 1) {
-          auto goal_request = goals[request->action_goal_id.uuid].first;
-          auto goal_response = goals[request->action_goal_id.uuid].second;
+        if (goals.count(request->goal_id.uuid) == 1) {
+          auto goal_request = goals[request->goal_id.uuid].first;
+          auto goal_response = goals[request->goal_id.uuid].second;
           ActionStatusMessage status_message;
           rclcpp_action::GoalStatus goal_status;
-          goal_status.goal_info.goal_id.uuid = goal_request->action_goal_id.uuid;
+          goal_status.goal_info.goal_id.uuid = goal_request->goal_id.uuid;
           goal_status.goal_info.stamp = goal_response->stamp;
           goal_status.status = rclcpp_action::GoalStatus::STATUS_EXECUTING;
           status_message.status_list.push_back(goal_status);
           status_publisher->publish(status_message);
           client_executor.spin_once();
           ActionFeedbackMessage feedback_message;
-          feedback_message.action_goal_id.uuid = goal_request->action_goal_id.uuid;
-          feedback_message.sequence.push_back(0);
+          feedback_message.goal_id.uuid = goal_request->goal_id.uuid;
+          feedback_message.feedback.sequence.push_back(0);
           feedback_publisher->publish(feedback_message);
           client_executor.spin_once();
-          if (goal_request->order > 0) {
-            feedback_message.sequence.push_back(1);
+          if (goal_request->goal.order > 0) {
+            feedback_message.feedback.sequence.push_back(1);
             feedback_publisher->publish(feedback_message);
             client_executor.spin_once();
-            for (int i = 1; i < goal_request->order; ++i) {
-              feedback_message.sequence.push_back(
-                feedback_message.sequence[i] + feedback_message.sequence[i - 1]);
+            for (int i = 1; i < goal_request->goal.order; ++i) {
+              feedback_message.feedback.sequence.push_back(
+                feedback_message.feedback.sequence[i] +
+                feedback_message.feedback.sequence[i - 1]);
               feedback_publisher->publish(feedback_message);
               client_executor.spin_once();
             }
@@ -137,11 +139,11 @@ protected:
           status_message.status_list[0] = goal_status;
           status_publisher->publish(status_message);
           client_executor.spin_once();
-          response->sequence = feedback_message.sequence;
-          response->action_status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
-          goals.erase(request->action_goal_id.uuid);
+          response->result.sequence = feedback_message.feedback.sequence;
+          response->status = rclcpp_action::GoalStatus::STATUS_SUCCEEDED;
+          goals.erase(request->goal_id.uuid);
         } else {
-          response->action_status = rclcpp_action::GoalStatus::STATUS_UNKNOWN;
+          response->status = rclcpp_action::GoalStatus::STATUS_UNKNOWN;
         }
       });
     ASSERT_TRUE(result_service != nullptr);
@@ -157,7 +159,7 @@ protected:
         const ActionCancelGoalRequest::SharedPtr request,
         ActionCancelGoalResponse::SharedPtr response)
       {
-        rclcpp_action::GoalID zero_uuid;
+        rclcpp_action::GoalUUID zero_uuid;
         std::fill(zero_uuid.begin(), zero_uuid.end(), 0u);
         const rclcpp::Time cancel_stamp = request->goal_info.stamp;
         bool cancel_all = (
@@ -170,11 +172,11 @@ protected:
           auto goal_response = it->second.second;
           const rclcpp::Time goal_stamp = goal_response->stamp;
           bool cancel_this = (
-            request->goal_info.goal_id.uuid == goal_request->action_goal_id.uuid ||
+            request->goal_info.goal_id.uuid == goal_request->goal_id.uuid ||
             cancel_stamp > goal_stamp);
           if (cancel_all || cancel_this) {
             rclcpp_action::GoalStatus goal_status;
-            goal_status.goal_info.goal_id.uuid = goal_request->action_goal_id.uuid;
+            goal_status.goal_info.goal_id.uuid = goal_request->goal_id.uuid;
             goal_status.goal_info.stamp = goal_response->stamp;
             goal_status.status = rclcpp_action::GoalStatus::STATUS_CANCELED;
             status_message.status_list.push_back(goal_status);
@@ -250,7 +252,7 @@ protected:
   const char * const action_name{"fibonacci_test"};
 
   std::map<
-    rclcpp_action::GoalID,
+    rclcpp_action::GoalUUID,
     std::pair<
       typename ActionGoalRequest::SharedPtr,
       typename ActionGoalResponse::SharedPtr>> goals;
@@ -269,6 +271,7 @@ TEST_F(TestClient, construction_and_destruction)
 TEST_F(TestClient, async_send_goal_but_ignore_feedback_and_result)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
   ActionGoal bad_goal;
   bad_goal.order = -5;
@@ -290,6 +293,7 @@ TEST_F(TestClient, async_send_goal_but_ignore_feedback_and_result)
 TEST_F(TestClient, async_send_goal_and_ignore_feedback_but_wait_for_result)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
   ActionGoal goal;
   goal.order = 5;
@@ -301,16 +305,17 @@ TEST_F(TestClient, async_send_goal_and_ignore_feedback_but_wait_for_result)
   EXPECT_TRUE(goal_handle->is_result_aware());
   auto future_result = goal_handle->async_result();
   dual_spin_until_future_complete(future_result);
-  auto result = future_result.get();
-  ASSERT_EQ(6ul, result.response->sequence.size());
-  EXPECT_EQ(0, result.response->sequence[0]);
-  EXPECT_EQ(1, result.response->sequence[1]);
-  EXPECT_EQ(5, result.response->sequence[5]);
+  auto wrapped_result = future_result.get();
+  ASSERT_EQ(6ul, wrapped_result.result->sequence.size());
+  EXPECT_EQ(0, wrapped_result.result->sequence[0]);
+  EXPECT_EQ(1, wrapped_result.result->sequence[1]);
+  EXPECT_EQ(5, wrapped_result.result->sequence[5]);
 }
 
 TEST_F(TestClient, async_send_goal_with_feedback_and_result)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
   ActionGoal goal;
   goal.order = 4;
@@ -332,16 +337,17 @@ TEST_F(TestClient, async_send_goal_with_feedback_and_result)
   EXPECT_TRUE(goal_handle->is_result_aware());
   auto future_result = goal_handle->async_result();
   dual_spin_until_future_complete(future_result);
-  auto result = future_result.get();
+  auto wrapped_result = future_result.get();
 
-  ASSERT_EQ(5u, result.response->sequence.size());
-  EXPECT_EQ(3, result.response->sequence.back());
+  ASSERT_EQ(5u, wrapped_result.result->sequence.size());
+  EXPECT_EQ(3, wrapped_result.result->sequence.back());
   EXPECT_EQ(5, feedback_count);
 }
 
 TEST_F(TestClient, async_cancel_one_goal)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
   ActionGoal goal;
   goal.order = 5;
@@ -359,6 +365,7 @@ TEST_F(TestClient, async_cancel_one_goal)
 TEST_F(TestClient, async_cancel_all_goals)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
   ActionGoal goal;
   goal.order = 6;
@@ -393,6 +400,7 @@ TEST_F(TestClient, async_cancel_all_goals)
 TEST_F(TestClient, async_cancel_some_goals)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 
   ActionGoal goal;
   goal.order = 6;

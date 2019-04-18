@@ -80,27 +80,27 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_aborted();
+  _abort();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_succeeded();
+  _succeed();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_canceling();
+  _cancel_goal();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_canceled();
+  _canceled();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
-  _set_executing();
+  _execute();
 
   /// Transition the goal to canceled state if it never reached a terminal state.
   /// \internal
@@ -123,10 +123,10 @@ class Server;
 /// Class to interact with goals on a server.
 /**
  * Use this class to check the status of a goal as well as set the result.
+ *
  * This class is not meant to be created by a user, instead it is created when a goal has been
  * accepted.
- * The class `rclcpp_action::Server<>` will create an instance and give it to the user in their
- * `handle_accepted` callback.
+ * A `Server` will create an instance and give it to the user in their `handle_accepted` callback.
  *
  * Internally, this class is responsible for coverting between the C++ action type and generic
  * types for `rclcpp_action::ServerGoalHandleBase`.
@@ -138,52 +138,60 @@ public:
   /// Send an update about the progress of a goal.
   /**
    * This must only be called when the goal is executing.
-   * If execution of a goal is deferred then `ServerGoalHandle<>::set_executing()` must be called
+   * If execution of a goal is deferred then `ServerGoalHandle::set_executing()` must be called
    * first.
-   * `std::runtime_error` is raised if the goal is in any state besides executing.
+   *
+   * \throws std::runtime_error If the goal is in any state besides executing.
    *
    * \param[in] feedback_msg the message to publish to clients.
    */
   void
   publish_feedback(std::shared_ptr<typename ActionT::Feedback> feedback_msg)
   {
-    feedback_msg->action_goal_id.uuid = uuid_;
-    publish_feedback_(feedback_msg);
+    auto feedback_message = std::make_shared<typename ActionT::Impl::FeedbackMessage>();
+    feedback_message->goal_id.uuid = uuid_;
+    feedback_message->feedback = *feedback_msg;
+    publish_feedback_(feedback_message);
   }
 
-  // TODO(sloretz) which exception is raised?
   /// Indicate that a goal could not be reached and has been aborted.
   /**
    * Only call this if the goal was executing but cannot be completed.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
-   * An exception is raised if the goal is in any state besides executing.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    *
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_aborted(typename ActionT::Result::SharedPtr result_msg)
+  abort(typename ActionT::Result::SharedPtr result_msg)
   {
-    _set_aborted();
-    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
-    on_terminal_state_(uuid_, result_msg);
+    _abort();
+    auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    response->status = action_msgs::msg::GoalStatus::STATUS_ABORTED;
+    response->result = *result_msg;
+    on_terminal_state_(uuid_, response);
   }
 
-  /// Indicate that a goal has been reached.
+  /// Indicate that a goal has succeeded.
   /**
    * Only call this if the goal is executing and has reached the desired final state.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
-   * An exception is raised if the goal is in any state besides executing.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    *
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_succeeded(typename ActionT::Result::SharedPtr result_msg)
+  succeed(typename ActionT::Result::SharedPtr result_msg)
   {
-    _set_succeeded();
-    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
-    on_terminal_state_(uuid_, result_msg);
+    _succeed();
+    auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    response->status = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED;
+    response->result = *result_msg;
+    on_terminal_state_(uuid_, response);
   }
 
   /// Indicate that a goal has been canceled.
@@ -191,31 +199,35 @@ public:
    * Only call this if the goal is executing or pending, but has been canceled.
    * This is a terminal state, no more methods should be called on a goal handle after this is
    * called.
-   * An exception is raised if the goal is in any state besides executing or pending.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    *
    * \param[in] result_msg the final result to send to clients.
    */
   void
-  set_canceled(typename ActionT::Result::SharedPtr result_msg)
+  canceled(typename ActionT::Result::SharedPtr result_msg)
   {
-    _set_canceled();
-    result_msg->action_status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
-    on_terminal_state_(uuid_, result_msg);
+    _canceled();
+    auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    response->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+    response->result = *result_msg;
+    on_terminal_state_(uuid_, response);
   }
 
   /// Indicate that the server is starting to execute a goal.
   /**
    * Only call this if the goal is pending.
-   * An exception is raised if the goal is in any state besides pending.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
    */
   void
-  set_executing()
+  execute()
   {
-    _set_executing();
+    _execute();
     on_executing_(uuid_);
   }
 
-  /// Get the original request message describing the goal.
+  /// Get the user provided message describing the goal.
   const std::shared_ptr<const typename ActionT::Goal>
   get_goal() const
   {
@@ -223,7 +235,7 @@ public:
   }
 
   /// Get the unique identifier of the goal
-  const GoalID &
+  const GoalUUID &
   get_goal_id() const
   {
     return uuid_;
@@ -233,8 +245,8 @@ public:
   {
     // Cancel goal if handle was allowed to destruct without reaching a terminal state
     if (try_canceling()) {
-      auto null_result = std::make_shared<typename ActionT::Result>();
-      null_result->action_status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
+      auto null_result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+      null_result->status = action_msgs::msg::GoalStatus::STATUS_CANCELED;
       on_terminal_state_(uuid_, null_result);
     }
   }
@@ -243,11 +255,11 @@ protected:
   /// \internal
   ServerGoalHandle(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
-    GoalID uuid,
+    GoalUUID uuid,
     std::shared_ptr<const typename ActionT::Goal> goal,
-    std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state,
-    std::function<void(const GoalID &)> on_executing,
-    std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback
+    std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state,
+    std::function<void(const GoalUUID &)> on_executing,
+    std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback
   )
   : ServerGoalHandleBase(rcl_handle), goal_(goal), uuid_(uuid),
     on_terminal_state_(on_terminal_state), on_executing_(on_executing),
@@ -255,17 +267,17 @@ protected:
   {
   }
 
-  /// The original request message describing the goal.
+  /// The user provided message describing the goal.
   const std::shared_ptr<const typename ActionT::Goal> goal_;
 
   /// A unique id for the goal request.
-  const GoalID uuid_;
+  const GoalUUID uuid_;
 
   friend Server<ActionT>;
 
-  std::function<void(const GoalID &, std::shared_ptr<void>)> on_terminal_state_;
-  std::function<void(const GoalID &)> on_executing_;
-  std::function<void(std::shared_ptr<typename ActionT::Feedback>)> publish_feedback_;
+  std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state_;
+  std::function<void(const GoalUUID &)> on_executing_;
+  std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback_;
 };
 }  // namespace rclcpp_action
 

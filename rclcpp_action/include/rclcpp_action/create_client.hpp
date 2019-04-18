@@ -25,15 +25,31 @@
 
 namespace rclcpp_action
 {
+/// Create an action client.
+/**
+ * This function is equivalent to \sa create_client()` however is using the individual
+ * node interfaces to create the client.
+ *
+ * \param node_base_interface[in] The node base interface of the corresponding node.
+ * \param node_graph_interface[in] The node graph interface of the corresponding node.
+ * \param node_logging_interface[in] The node logging interface of the corresponding node.
+ * \param node_waitables_interface[in] The node waitables interface of the corresponding node.
+ * \param[in] name The action name.
+ * \param[in] group The action client will be added to this callback group.
+ *   If `nullptr`, then the action client is added to the default callback group.
+ */
 template<typename ActionT>
 typename Client<ActionT>::SharedPtr
 create_client(
-  rclcpp::Node::SharedPtr node,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
+  rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
   const std::string & name,
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
-    node->get_node_waitables_interface();
+    node_waitables_interface;
   std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
   bool group_is_null = (nullptr == group.get());
 
@@ -64,14 +80,37 @@ create_client(
 
   std::shared_ptr<Client<ActionT>> action_client(
     new Client<ActionT>(
-      node->get_node_base_interface(),
-      node->get_node_graph_interface(),
-      node->get_node_logging_interface(),
+      node_base_interface,
+      node_graph_interface,
+      node_logging_interface,
       name),
     deleter);
 
-  node->get_node_waitables_interface()->add_waitable(action_client, group);
+  node_waitables_interface->add_waitable(action_client, group);
   return action_client;
+}
+
+/// Create an action client.
+/**
+ * \param[in] node The action client will be added to this node.
+ * \param[in] name The action name.
+ * \param[in] group The action client will be added to this callback group.
+ *   If `nullptr`, then the action client is added to the default callback group.
+ */
+template<typename ActionT>
+typename Client<ActionT>::SharedPtr
+create_client(
+  rclcpp::Node::SharedPtr node,
+  const std::string & name,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+{
+  return create_client<ActionT>(
+    node->get_node_base_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_logging_interface(),
+    node->get_node_waitables_interface(),
+    name,
+    group);
 }
 }  // namespace rclcpp_action
 
