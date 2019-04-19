@@ -700,8 +700,13 @@ NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callb
   return existing_callback;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
 void
 NodeParameters::register_param_change_callback(ParametersCallbackFunction callback)
 {
@@ -712,4 +717,8 @@ NodeParameters::register_param_change_callback(ParametersCallbackFunction callba
   }
   on_parameters_set_callback_ = callback;
 }
-#pragma GCC diagnostic pop
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
