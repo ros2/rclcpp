@@ -442,11 +442,13 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
   auto node = std::make_shared<rclcpp::Node>("test_declare_parameters_node"_unq);
   {
     // with namespace, defaults, no custom descriptors, no initial
-    auto values = node->declare_parameters<int>("namespace1", {
+    int64_t bigger_than_int = INT64_MAX - 42;
+    auto values = node->declare_parameters<int64_t>("namespace1", {
       {"parameter_a", 42},
       {"parameter_b", 256},
+      {"parameter_b", bigger_than_int},
     });
-    std::vector<int> expected = {42, 256};
+    std::vector<int64_t> expected = {42, 256, bigger_than_int};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("namespace1.parameter_a"));
     EXPECT_TRUE(node->has_parameter("namespace1.parameter_b"));
