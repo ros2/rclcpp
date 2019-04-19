@@ -31,7 +31,17 @@
 #include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_logging.hpp"
+// When compiling this file, Windows produces a deprecation warning for the
+// deprecated function prototype of NodeParameters::register_param_change_callback().
+// Other compilers do not.
+#if defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
+#if defined(_WIN32)
+# pragma warning(pop)
+#endif
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"

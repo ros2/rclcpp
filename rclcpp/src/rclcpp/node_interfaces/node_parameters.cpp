@@ -12,7 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// When compiling this file, Windows produces a deprecation warning for the
+// deprecated function prototype of NodeParameters::register_param_change_callback().
+// Other compilers do not.
+#if defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
+#if defined(_WIN32)
+# pragma warning(pop)
+#endif
 
 #include <rcl_yaml_param_parser/parser.h>
 
