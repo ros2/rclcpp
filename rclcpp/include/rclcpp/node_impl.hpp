@@ -346,10 +346,12 @@ Node::declare_parameters(
   std::transform(
     parameters.begin(), parameters.end(), std::back_inserter(result),
     [this, &normalized_namespace](auto element) {
-      return this->declare_parameter(
-        normalized_namespace + element.first,
-        element.second.first,
-        element.second.second);
+      return static_cast<ParameterT>(
+        this->declare_parameter(
+          normalized_namespace + element.first,
+          element.second.first,
+          element.second.second)
+      );
     }
   );
   return result;
