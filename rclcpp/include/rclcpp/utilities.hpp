@@ -18,17 +18,14 @@
 #include <chrono>
 #include <functional>
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "rclcpp/context.hpp"
 #include "rclcpp/init_options.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rmw/macros.h"
-#include "rmw/rmw.h"
-
 #ifdef ANDROID
-#include <string>
 #include <sstream>
 
 namespace std
@@ -104,6 +101,7 @@ uninstall_signal_handlers();
  *
  * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
  * \returns Members of the argument vector that are not ROS arguments.
+ * \throws anything remove_ros_arguments can throw
  */
 RCLCPP_PUBLIC
 std::vector<std::string>
@@ -122,6 +120,8 @@ init_and_remove_ros_arguments(
  * \param[in] argc Number of arguments.
  * \param[in] argv Argument vector.
  * \returns Members of the argument vector that are not ROS arguments.
+ * \throws anything throw_from_rcl_error can throw
+ * \throws rclcpp::exceptions::RCLErrorBase if the parsing fails
  */
 RCLCPP_PUBLIC
 std::vector<std::string>
