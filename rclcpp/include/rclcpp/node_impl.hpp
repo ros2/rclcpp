@@ -302,7 +302,7 @@ Node::create_service(
 }
 
 template<typename ParameterT>
-ParameterT
+auto
 Node::declare_parameter(
   const std::string & name,
   const ParameterT & default_value,
@@ -403,7 +403,7 @@ Node::get_parameter(const std::string & name, ParameterT & parameter) const
 
   bool result = get_parameter(sub_name, parameter_variant);
   if (result) {
-    parameter = parameter_variant.get_value<ParameterT>();
+    parameter = static_cast<ParameterT>(parameter_variant.get_value<ParameterT>());
   }
 
   return result;
@@ -438,7 +438,7 @@ Node::get_parameters(
   bool result = node_parameters_->get_parameters_by_prefix(prefix, params);
   if (result) {
     for (const auto & param : params) {
-      values[param.first] = param.second.get_value<ParameterT>();
+      values[param.first] = static_cast<ParameterT>(param.second.get_value<ParameterT>());
     }
   }
 

@@ -396,7 +396,7 @@ public:
    *   - https://www.youtube.com/watch?v=uQyT-5iWUow (cppnow 2018 presentation)
    */
   template<typename ParameterT>
-  ParameterT
+  auto
   declare_parameter(
     const std::string & name,
     const ParameterT & default_value,
@@ -901,6 +901,7 @@ public:
    * \return The previous callback that was registered, if there was one,
    *   otherwise nullptr.
    */
+  RCLCPP_PUBLIC
   rclcpp::Node::OnParametersSetCallbackType
   set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
 
