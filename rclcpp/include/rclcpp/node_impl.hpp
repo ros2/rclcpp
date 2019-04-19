@@ -361,7 +361,10 @@ Node::set_parameter_if_not_set(
   const std::string & name,
   const ParameterT & value)
 {
-  if (!this->has_parameter(name)) {
+  if (
+    !this->has_parameter(name) ||
+    this->describe_parameter(name).type == PARAMETER_NOT_SET)
+  {
     this->set_parameter(rclcpp::Parameter(name, value));
   }
 }
@@ -379,7 +382,10 @@ Node::set_parameters_if_not_set(
 
   for (const auto & val : values) {
     std::string parameter_name = name + "." + val.first;
-    if (!this->has_parameter(parameter_name)) {
+    if (
+      !this->has_parameter(parameter_name) ||
+      this->describe_parameter(parameter_name).type == PARAMETER_NOT_SET)
+    {
       params.push_back(rclcpp::Parameter(parameter_name, val.second));
     }
   }
