@@ -73,6 +73,7 @@ LifecycleNode::LifecycleNode(
     )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_base_,
+      node_logging_,
       node_topics_,
       node_services_,
       node_clock_,
