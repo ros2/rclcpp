@@ -456,11 +456,11 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
   }
   {
     // without namespace, defaults, no custom descriptors, no initial
-    auto values = node->declare_parameters<int>("", {
+    auto values = node->declare_parameters<int64_t>("", {
       {"parameter_without_ns_a", 42},
       {"parameter_without_ns_b", 256},
     });
-    std::vector<int> expected = {42, 256};
+    std::vector<int64_t> expected = {42, 256};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("parameter_without_ns_a"));
     EXPECT_TRUE(node->has_parameter("parameter_without_ns_b"));
@@ -469,11 +469,11 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
     // with namespace, defaults, custom descriptors, no initial
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.read_only = true;
-    auto values = node->declare_parameters<int>("namespace2", {
+    auto values = node->declare_parameters<int64_t>("namespace2", {
       {"parameter_a", {42, descriptor}},
       {"parameter_b", {256, descriptor}},
     });
-    std::vector<int> expected = {42, 256};
+    std::vector<int64_t> expected = {42, 256};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("namespace2.parameter_a"));
     EXPECT_TRUE(node->has_parameter("namespace2.parameter_b"));
@@ -483,19 +483,19 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
     // without namespace, defaults, custom descriptors, no initial
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.read_only = true;
-    auto values = node->declare_parameters<int>("", {
+    auto values = node->declare_parameters<int64_t>("", {
       {"parameter_without_ns_c", {42, descriptor}},
       {"parameter_without_ns_d", {256, descriptor}},
     });
-    std::vector<int> expected = {42, 256};
+    std::vector<int64_t> expected = {42, 256};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("parameter_without_ns_c"));
     EXPECT_TRUE(node->has_parameter("parameter_without_ns_d"));
   }
   {
     // empty parameters
-    auto values = node->declare_parameters<int>("", {});
-    std::vector<int> expected {};
+    auto values = node->declare_parameters<int64_t>("", {});
+    std::vector<int64_t> expected {};
     EXPECT_EQ(values, expected);
   }
   {
@@ -503,13 +503,13 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
     auto name = "parameter"_unq;
     node->declare_parameter(name);
     EXPECT_THROW(
-      {node->declare_parameters<int>("", {{name, 42}});},
+      {node->declare_parameters<int64_t>("", {{name, 42}});},
       rclcpp::exceptions::ParameterAlreadyDeclaredException);
   }
   {
     // parameter name invalid throws
     EXPECT_THROW(
-      {node->declare_parameters<int>("", {{"", 42}});},
+      {node->declare_parameters<int64_t>("", {{"", 42}});},
       rclcpp::exceptions::InvalidParametersException);
   }
   {
@@ -1306,11 +1306,11 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
     }
     // templated version, get all int's
     {
-      std::map<std::string, int> expected = {
+      std::map<std::string, int64_t> expected = {
         {base_name1, 42},
         {base_name3, 100},
       };
-      std::map<std::string, int> actual;
+      std::map<std::string, int64_t> actual;
       EXPECT_TRUE(node->get_parameters("ints", actual));
       EXPECT_EQ(actual, expected);
     }
@@ -1333,7 +1333,7 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
       {node->get_parameters({name});},
       rclcpp::exceptions::ParameterNotDeclaredException);
     {
-      std::map<std::string, int> values;
+      std::map<std::string, int64_t> values;
       EXPECT_TRUE(values.empty());
       EXPECT_FALSE(node->get_parameters("prefix", values));
       EXPECT_TRUE(values.empty());
@@ -1351,7 +1351,7 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
     node_local->undeclare_parameter("use_sim_time");
 
     {
-      std::map<std::string, int> actual;
+      std::map<std::string, int64_t> actual;
       EXPECT_TRUE(node_local->get_parameters("", actual));
       EXPECT_NE(actual.find(name1), actual.end());
       EXPECT_NE(actual.find(name2), actual.end());
@@ -1362,7 +1362,7 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
     node_local->declare_parameter<std::string>(name3, "not an int");
 
     {
-      std::map<std::string, int> actual;
+      std::map<std::string, int64_t> actual;
       EXPECT_THROW(
       {
         node_local->get_parameters("", actual);
@@ -1401,7 +1401,7 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_allowed) {
     }
     {
       // templated version, get all int's, none set, no throw
-      std::map<std::string, int> actual;
+      std::map<std::string, int64_t> actual;
       EXPECT_FALSE(node->get_parameters("ints", actual));
       EXPECT_TRUE(actual.empty());
     }
