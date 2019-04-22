@@ -15,6 +15,7 @@
 #include <memory>
 #include <string>
 
+#define RCLCPP_BUILDING_LIBRARY 1
 #include "gtest/gtest.h"
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/macros.hpp"
@@ -130,7 +131,6 @@ public:
 // Prevent rclcpp/publisher_base.hpp and rclcpp/subscription.hpp from being imported.
 #define RCLCPP__PUBLISHER_BASE_HPP_
 #define RCLCPP__SUBSCRIPTION_BASE_HPP_
-#define RCLCPP_BUILDING_LIBRARY 1
 // Force ipm to use our mock publisher class.
 #define Publisher mock::Publisher
 #define PublisherBase mock::PublisherBase
