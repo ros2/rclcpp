@@ -446,7 +446,7 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
     auto values = node->declare_parameters<int64_t>("namespace1", {
       {"parameter_a", 42},
       {"parameter_b", 256},
-      {"parameter_b", bigger_than_int},
+      {"parameter_c", bigger_than_int},
     });
     std::vector<int64_t> expected = {42, 256, bigger_than_int};
     EXPECT_EQ(values, expected);
