@@ -101,5 +101,8 @@ MultiThreadedExecutor::run(size_t)
         scheduled_timers_.erase(it);
       }
     }
+    // Clear the callback_group to prevent the AnyExecutable destructor from
+    // resetting the callback group `can_be_taken_from`
+    any_exec.callback_group.reset();
   }
 }
