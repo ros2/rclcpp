@@ -35,7 +35,7 @@ namespace executor
 struct AnyExecutable
 {
   RCLCPP_PUBLIC
-  AnyExecutable();
+  AnyExecutable(bool auto_reset_group = true);
 
   RCLCPP_PUBLIC
   virtual ~AnyExecutable();
@@ -50,6 +50,9 @@ struct AnyExecutable
   // These are used to keep the scope on the containing items
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base;
+
+  // Automatically reset the callback_group `can_be_taken_from` on destruction of this object
+  bool auto_reset_group;
 };
 
 }  // namespace executor

@@ -71,7 +71,7 @@ void
 MultiThreadedExecutor::run(size_t)
 {
   while (rclcpp::ok(this->context_) && spinning.load()) {
-    executor::AnyExecutable any_exec;
+    executor::AnyExecutable any_exec(false);
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       if (!rclcpp::ok(this->context_) || !spinning.load()) {
@@ -101,8 +101,5 @@ MultiThreadedExecutor::run(size_t)
         scheduled_timers_.erase(it);
       }
     }
-    // Clear the callback_group to prevent the AnyExecutable destructor from
-    // resetting the callback group `can_be_taken_from`
-    any_exec.callback_group.reset();
   }
 }
