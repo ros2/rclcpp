@@ -142,15 +142,7 @@ NodeGraph::get_node_names() const
     std::back_inserter(nodes),
     [](std::pair<std::string, std::string> nns) {
       std::string return_string;
-      if ((nns.second.back() == '/') && (nns.first.back() == '/')){
-        auto first_non_slash = nns.first.find_first_not_of("/");
-	if (first_non_slash == std::string::npos){
-	  nns.first = ""; // All characters were '/', invalid name
-	} else {
-	  nns.first.erase(nns.first.begin(), nns.first.begin() + first_non_slash);
-	}
-        return_string = nns.second + nns.first;
-      } else if ((nns.second.back() == '/') ^ (nns.first.front() == '/')) {
+      if (nns.second.back() == '/') {
         return_string = nns.second + nns.first;
       } else {
         return_string = nns.second + '/' + nns.first;
