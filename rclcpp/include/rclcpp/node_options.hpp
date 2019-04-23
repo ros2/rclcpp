@@ -45,6 +45,7 @@ public:
    *   - start_parameter_event_publisher = true
    *   - parameter_event_qos_profile = rmw_qos_profile_parameter_events
    *   - allow_undeclared_parameters = false
+   *   - automatically_declare_initial_parameters = false
    *   - allocator = rcl_get_default_allocator()
    *
    * \param[in] allocator allocator to use in construction of NodeOptions.
@@ -229,6 +230,25 @@ public:
   NodeOptions &
   allow_undeclared_parameters(bool allow_undeclared_parameters);
 
+  /// Return the automatically_declare_initial_parameters flag.
+  RCLCPP_PUBLIC
+  bool
+  automatically_declare_initial_parameters() const;
+
+  /// Set the automatically_declare_initial_parameters, return this.
+  /**
+   * If true, automatically iterate through the node's initial parameters and
+   * implicitly declare any that have not already been declared.
+   * Otherwise, parameters passed to the node's initial_parameters, and/or the
+   * global initial parameter values, which are not explicitly declared will
+   * not appear on the node at all.
+   * Already declared parameters will not be re-declared, and parameters
+   * declared in this way will use the default constructed ParameterDescriptor.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  automatically_declare_initial_parameters(bool automatically_declare_initial_parameters);
+
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
   const rcl_allocator_t &
@@ -273,6 +293,8 @@ private:
   rmw_qos_profile_t parameter_event_qos_profile_ {rmw_qos_profile_parameter_events};
 
   bool allow_undeclared_parameters_ {false};
+
+  bool automatically_declare_initial_parameters_ {false};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
 };

@@ -178,6 +178,12 @@ public:
   virtual
   void
   register_param_change_callback(OnParametersSetCallbackType callback) = 0;
+
+  /// Return the initial parameter values used by the NodeParameters to override default values.
+  RCLCPP_PUBLIC
+  virtual
+  const std::map<std::string, rclcpp::ParameterValue> &
+  get_initial_parameter_values() const = 0;
 };
 
 }  // namespace node_interfaces

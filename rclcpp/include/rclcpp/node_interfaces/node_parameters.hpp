@@ -68,7 +68,8 @@ public:
     bool start_parameter_services,
     bool start_parameter_event_publisher,
     const rmw_qos_profile_t & parameter_event_qos_profile,
-    bool allow_undeclared_parameters);
+    bool allow_undeclared_parameters,
+    bool automatically_declare_initial_parameters);
 
   RCLCPP_PUBLIC
   virtual
@@ -139,6 +140,10 @@ public:
   RCLCPP_PUBLIC
   void
   register_param_change_callback(OnParametersSetCallbackType callback) override;
+
+  RCLCPP_PUBLIC
+  const std::map<std::string, rclcpp::ParameterValue> &
+  get_initial_parameter_values() const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)

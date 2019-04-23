@@ -231,6 +231,20 @@ NodeOptions::allow_undeclared_parameters(bool allow_undeclared_parameters)
   return *this;
 }
 
+bool
+NodeOptions::automatically_declare_initial_parameters() const
+{
+  return this->automatically_declare_initial_parameters_;
+}
+
+NodeOptions &
+NodeOptions::automatically_declare_initial_parameters(
+  bool automatically_declare_initial_parameters)
+{
+  this->automatically_declare_initial_parameters_ = automatically_declare_initial_parameters;
+  return *this;
+}
+
 const rcl_allocator_t &
 NodeOptions::allocator() const
 {

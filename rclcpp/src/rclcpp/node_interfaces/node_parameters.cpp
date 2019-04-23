@@ -53,7 +53,8 @@ NodeParameters::NodeParameters(
   bool start_parameter_services,
   bool start_parameter_event_publisher,
   const rmw_qos_profile_t & parameter_event_qos_profile,
-  bool allow_undeclared_parameters)
+  bool allow_undeclared_parameters,
+  bool automatically_declare_initial_parameters)
 : allow_undeclared_(allow_undeclared_parameters),
   events_publisher_(nullptr),
   node_logging_(node_logging),
@@ -168,10 +169,16 @@ NodeParameters::NodeParameters(
       rclcpp::ParameterValue(param.get_value_message());
   }
 
-  if (!initial_parameters.empty() && allow_undeclared_) {
-    rcl_interfaces::msg::SetParametersResult result = set_parameters_atomically(initial_parameters);
-    if (!result.successful) {
-      throw std::runtime_error("Failed to set initial parameters");
+  // If asked, initialize any parameters that ended up in the initial parameter values,
+  // but did not get declared explcitily by this point.
+  if (automatically_declare_initial_parameters && !this->get_initial_parameter_values().empty()) {
+    for (const auto & pair : this->get_initial_parameter_values()) {
+      if (!this->has_parameter(pair.first)) {
+        this->declare_parameter(
+          pair.first,
+          pair.second,
+          rcl_interfaces::msg::ParameterDescriptor());
+      }
     }
   }
 }
@@ -732,3 +739,9 @@ NodeParameters::register_param_change_callback(ParametersCallbackFunction callba
 #else  // !defined(_WIN32)
 # pragma warning(pop)
 #endif
+
+const std::map<std::string, rclcpp::ParameterValue> &
+NodeParameters::get_initial_parameter_values() const
+{
+  return initial_parameter_values_;
+}

@@ -92,7 +92,8 @@ LifecycleNode::LifecycleNode(
       options.start_parameter_services(),
       options.start_parameter_event_publisher(),
       options.parameter_event_qos_profile(),
-      options.allow_undeclared_parameters()
+      options.allow_undeclared_parameters(),
+      options.automatically_declare_initial_parameters()
     )),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
       node_base_,
