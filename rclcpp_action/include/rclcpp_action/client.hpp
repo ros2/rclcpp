@@ -263,8 +263,8 @@ public:
   using WrappedResult = typename GoalHandle::WrappedResult;
   using GoalResponseCallback =
     std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
-  using FeedbackCallback = typename ClientGoalHandle<ActionT>::FeedbackCallback;
-  using ResultCallback = typename ClientGoalHandle<ActionT>::ResultCallback;
+  using FeedbackCallback = typename GoalHandle::FeedbackCallback;
+  using ResultCallback = typename GoalHandle::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
 
@@ -391,14 +391,21 @@ public:
    * \throws exceptions::UnknownGoalHandleError If the goal unknown or already reached a terminal
    *   state.
    * \param[in] goal_handle The goal handle for which to get the result.
+   * \param[in] result_callback Optional callback that is called when the result is received.
    * \return A future that is set to the goal result when the goal is finished.
    */
   std::shared_future<WrappedResult>
-  async_get_result(typename GoalHandle::SharedPtr goal_handle)
+  async_get_result(
+    typename GoalHandle::SharedPtr goal_handle,
+    ResultCallback result_callback = nullptr)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
+    }
+    if (result_callback) {
+      // This will override any previously registered callback
+      goal_handle->set_result_callback(result_callback);
     }
     // If the user chose to ignore the result before, then ask the server for the result now.
     if (!goal_handle->is_result_aware()) {

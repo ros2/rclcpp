@@ -87,6 +87,14 @@ ClientGoalHandle<ActionT>::set_feedback_callback(FeedbackCallback callback)
 }
 
 template<typename ActionT>
+void
+ClientGoalHandle<ActionT>::set_result_callback(ResultCallback callback)
+{
+  std::lock_guard<std::mutex> guard(handle_mutex_);
+  result_callback_ = callback;
+}
+
+template<typename ActionT>
 int8_t
 ClientGoalHandle<ActionT>::get_status()
 {
