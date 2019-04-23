@@ -171,7 +171,7 @@ NodeParameters::NodeParameters(
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
-  if (automatically_declare_initial_parameters && !this->get_initial_parameter_values().empty()) {
+  if (automatically_declare_initial_parameters) {
     for (const auto & pair : this->get_initial_parameter_values()) {
       if (!this->has_parameter(pair.first)) {
         this->declare_parameter(
