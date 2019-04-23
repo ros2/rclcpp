@@ -21,7 +21,9 @@
 #include "rclcpp/rclcpp.hpp"
 
 TEST(test_local_parameters, set_parameter_if_not_set) {
-  auto node = rclcpp::Node::make_shared("test_local_parameters_set_parameter_if_not_set");
+  auto node = rclcpp::Node::make_shared(
+    "test_local_parameters_set_parameter_if_not_set",
+    rclcpp::NodeOptions().allow_undeclared_parameters(true));
 
   {
     // try to set a map of parameters
@@ -29,7 +31,19 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
       {"x", 0.5},
       {"y", 1.0},
     };
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
     node->set_parameters_if_not_set("bar", bar_map);
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
     double bar_x_value;
     ASSERT_TRUE(node->get_parameter("bar.x", bar_x_value));
     EXPECT_EQ(bar_x_value, 0.5);
@@ -51,8 +65,20 @@ TEST(test_local_parameters, set_parameter_if_not_set) {
 
   {
     // set parameters for a map with different types, then try to get them back as a map
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
     node->set_parameter_if_not_set("baz.x", 1.0);
     node->set_parameter_if_not_set("baz.y", "hello");
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
     std::map<std::string, double> baz_map;
     EXPECT_THROW(node->get_parameters("baz", baz_map), rclcpp::ParameterTypeException);
   }

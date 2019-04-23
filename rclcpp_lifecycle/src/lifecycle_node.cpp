@@ -31,7 +31,17 @@
 #include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_logging.hpp"
+// When compiling this file, Windows produces a deprecation warning for the
+// deprecated function prototype of NodeParameters::register_param_change_callback().
+// Other compilers do not.
+#if defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
+#if defined(_WIN32)
+# pragma warning(pop)
+#endif
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
@@ -73,6 +83,7 @@ LifecycleNode::LifecycleNode(
     )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
       node_base_,
+      node_logging_,
       node_topics_,
       node_services_,
       node_clock_,
@@ -80,7 +91,9 @@ LifecycleNode::LifecycleNode(
       options.use_intra_process_comms(),
       options.start_parameter_services(),
       options.start_parameter_event_publisher(),
-      options.parameter_event_qos_profile()
+      options.parameter_event_qos_profile(),
+      options.allow_undeclared_parameters(),
+      options.automatically_declare_initial_parameters()
     )),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
       node_base_,
