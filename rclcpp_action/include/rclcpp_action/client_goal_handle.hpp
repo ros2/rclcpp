@@ -127,6 +127,9 @@ private:
   set_feedback_callback(FeedbackCallback callback);
 
   void
+  set_result_callback(ResultCallback callback);
+
+  void
   call_feedback_callback(
     typename ClientGoalHandle<ActionT>::SharedPtr shared_this,
     typename std::shared_ptr<const Feedback> feedback_message);

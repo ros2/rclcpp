@@ -415,6 +415,41 @@ TEST_F(TestClient, async_send_goal_with_result_callback_wait_for_result)
   EXPECT_EQ(3, wrapped_result.result->sequence.back());
 }
 
+TEST_F(TestClient, async_get_result_with_callback)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal goal;
+  goal.order = 4;
+  auto future_goal_handle = action_client->async_send_goal(goal);
+  dual_spin_until_future_complete(future_goal_handle);
+  auto goal_handle = future_goal_handle.get();
+  EXPECT_NE(goal_handle, nullptr);
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+  EXPECT_FALSE(goal_handle->is_feedback_aware());
+  EXPECT_FALSE(goal_handle->is_result_aware());
+  bool result_callback_received = false;
+  auto future_result = action_client->async_get_result(
+    goal_handle,
+    [&result_callback_received](
+      const typename ActionGoalHandle::WrappedResult & result) mutable
+    {
+      if (
+        rclcpp_action::ResultCode::SUCCEEDED == result.code &&
+        result.result->sequence.size() == 5u)
+      {
+        result_callback_received = true;
+      }
+    });
+  dual_spin_until_future_complete(future_result);
+  auto wrapped_result = future_result.get();
+
+  EXPECT_TRUE(result_callback_received);
+  ASSERT_EQ(5u, wrapped_result.result->sequence.size());
+  EXPECT_EQ(3, wrapped_result.result->sequence.back());
+}
+
 TEST_F(TestClient, async_cancel_one_goal)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
