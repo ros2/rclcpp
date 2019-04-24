@@ -468,6 +468,37 @@ TEST_F(TestClient, async_cancel_one_goal)
   EXPECT_TRUE(goal_canceled);
 }
 
+TEST_F(TestClient, async_cancel_one_goal_with_callback)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal goal;
+  goal.order = 5;
+  auto future_goal_handle = action_client->async_send_goal(goal);
+  dual_spin_until_future_complete(future_goal_handle);
+  auto goal_handle = future_goal_handle.get();
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
+
+  bool cancel_response_received = false;
+  auto future_cancel = action_client->async_cancel_goal(
+    goal_handle,
+    [&cancel_response_received, goal_handle](
+      typename ActionGoalHandle::SharedPtr goal_handle_canceled, bool cancel_accepted) mutable
+    {
+      if (
+        goal_handle_canceled->get_goal_id() == goal_handle->get_goal_id() &&
+        cancel_accepted)
+      {
+        cancel_response_received = true;
+      }
+    });
+  dual_spin_until_future_complete(future_cancel);
+  bool goal_canceled = future_cancel.get();
+  EXPECT_TRUE(goal_canceled);
+  EXPECT_TRUE(cancel_response_received);
+}
+
 TEST_F(TestClient, async_cancel_all_goals)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
@@ -503,6 +534,55 @@ TEST_F(TestClient, async_cancel_all_goals)
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle1->get_status());
 }
 
+TEST_F(TestClient, async_cancel_all_goals_with_callback)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal goal;
+  goal.order = 6;
+  auto future_goal_handle0 = action_client->async_send_goal(goal);
+  dual_spin_until_future_complete(future_goal_handle0);
+  auto goal_handle0 = future_goal_handle0.get();
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(2)));
+
+  goal.order = 8;
+  auto future_goal_handle1 = action_client->async_send_goal(goal);
+  dual_spin_until_future_complete(future_goal_handle1);
+  auto goal_handle1 = future_goal_handle1.get();
+
+  if (goal_handle1->get_goal_id() < goal_handle0->get_goal_id()) {
+    goal_handle0.swap(goal_handle1);
+  }
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(3)));
+
+  bool cancel_callback_received = false;
+  auto future_cancel_all = action_client->async_cancel_all_goals(
+    [&cancel_callback_received, goal_handle0, goal_handle1](
+      ActionCancelGoalResponse::SharedPtr response)
+    {
+      if (
+        response &&
+        2ul == response->goals_canceling.size() &&
+        goal_handle0->get_goal_id() == response->goals_canceling[0].goal_id.uuid &&
+        goal_handle1->get_goal_id() == response->goals_canceling[1].goal_id.uuid)
+      {
+        cancel_callback_received = true;
+      }
+    });
+  dual_spin_until_future_complete(future_cancel_all);
+  auto cancel_response = future_cancel_all.get();
+
+  EXPECT_TRUE(cancel_callback_received);
+  ASSERT_EQ(2ul, cancel_response->goals_canceling.size());
+  EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
+  EXPECT_EQ(goal_handle1->get_goal_id(), cancel_response->goals_canceling[1].goal_id.uuid);
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle1->get_status());
+}
+
 TEST_F(TestClient, async_cancel_some_goals)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
@@ -528,6 +608,48 @@ TEST_F(TestClient, async_cancel_some_goals)
   dual_spin_until_future_complete(future_cancel_some);
   auto cancel_response = future_cancel_some.get();
 
+  ASSERT_EQ(1ul, cancel_response->goals_canceling.size());
+  EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
+  EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
+}
+
+TEST_F(TestClient, async_cancel_some_goals_with_callback)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  ActionGoal goal;
+  goal.order = 6;
+  auto future_goal_handle0 = action_client->async_send_goal(goal);
+  dual_spin_until_future_complete(future_goal_handle0);
+  auto goal_handle0 = future_goal_handle0.get();
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(2)));
+
+  goal.order = 8;
+  auto future_goal_handle1 = action_client->async_send_goal(goal);
+  dual_spin_until_future_complete(future_goal_handle1);
+  auto goal_handle1 = future_goal_handle1.get();
+
+  ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(3)));
+
+  bool cancel_callback_received = false;
+  auto future_cancel_some = action_client->async_cancel_goals_before(
+    goal_handle1->get_goal_stamp(),
+    [&cancel_callback_received, goal_handle0](ActionCancelGoalResponse::SharedPtr response)
+    {
+      if (
+        response &&
+        1ul == response->goals_canceling.size() &&
+        goal_handle0->get_goal_id() == response->goals_canceling[0].goal_id.uuid)
+      {
+        cancel_callback_received = true;
+      }
+    });
+  dual_spin_until_future_complete(future_cancel_some);
+  auto cancel_response = future_cancel_some.get();
+
+  EXPECT_TRUE(cancel_callback_received);
   ASSERT_EQ(1ul, cancel_response->goals_canceling.size());
   EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
