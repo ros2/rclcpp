@@ -108,8 +108,8 @@ Clock::on_time_jump(
 
 JumpHandler::SharedPtr
 Clock::create_jump_callback(
-  typename JumpHandler::pre_callback_t pre_callback,
-  typename JumpHandler::post_callback_t post_callback,
+  JumpHandler::pre_callback_t pre_callback,
+  JumpHandler::post_callback_t post_callback,
   const rcl_jump_threshold_t & threshold)
 {
   // Allocate a new jump handler
