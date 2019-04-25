@@ -33,6 +33,7 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/subscription_base.hpp"
@@ -166,7 +167,8 @@ public:
       if (!msg) {
         // This either occurred because the publisher no longer exists or the
         // message requested is no longer being stored.
-        // TODO(wjwwood): should we notify someone of this? log error, log warning?
+        RCLCPP_WARN(get_logger("rclcpp"),
+          "Intra process message not longer being stored when trying to handle it");
         return;
       }
       any_callback_.dispatch_intra_process(msg, message_info);
@@ -180,7 +182,8 @@ public:
       if (!msg) {
         // This either occurred because the publisher no longer exists or the
         // message requested is no longer being stored.
-        // TODO(wjwwood): should we notify someone of this? log error, log warning?
+        RCLCPP_WARN(get_logger("rclcpp"),
+          "Intra process message not longer being stored when trying to handle it");
         return;
       }
       any_callback_.dispatch_intra_process(msg, message_info);

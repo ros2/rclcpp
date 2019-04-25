@@ -96,7 +96,12 @@ public:
       return;
     }
     std::unique_ptr<MessageT, MessageDeleter> msg_copy;
-    // If interprocess subscriptors exists, then promote to shared and publish.
+    // If an interprocess subscription exist, then the unique_ptr is promoted
+    // to a shared_ptr and published.
+    // This allows doing the intraprocess publish first and then doing the
+    // interprocess publish, resulting in lower publish-to-subscribe latency.
+    // It's not possible to do that with an unique_ptr,
+    // as do_intra_process_publish takes the ownership of the message.
     if (get_subscription_count() > get_intra_process_subscription_count()) {
       MessageSharedPtr shared_msg =
         MessageSharedPtr(std::move(msg));
@@ -116,20 +121,12 @@ public:
       return this->do_inter_process_publish(msg.get());
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    // NOTE(ivanpauno): As the message is not const, a copy should be made.
-    // unique_ptr<MessageT> or shared_ptr<const MessageT> siganture could
-    // be used here. I decided to use the first one.
+    // As the message is not const, a copy should be made.
+    // A shared_ptr<const MessageT> could also be constructed here.
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg);
     MessageUniquePtr unique_msg = MessageUniquePtr(ptr, message_deleter_);
     this->publish(unique_msg);
-  }
-
-  virtual void
-  publish(const std::shared_ptr<MessageT> && msg)
-  {
-    // Cast to std::shared_ptr<const MessageT> and publish.
-    this->publish(std::const_pointer_cast<const MessageT>(msg));
   }
 
   virtual void
@@ -154,12 +151,11 @@ public:
       return this->do_inter_process_publish(&msg);
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    // NOTE(ivanpauno): As the message is not const, a copy should be made.
-    // unique_ptr<MessageT> or shared_ptr<const MessageT> siganture could
-    // be used here. I decided to use the first one.
+    // As the message is not const, a copy should be made.
+    // A shared_ptr<const MessageT> could also be constructed here.
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
-    MessageUniquePtr unique_msg = MessageUniquePtr(ptr, message_deleter_);
+    MessageUniquePtr unique_msg(ptr, message_deleter_);
     this->publish(unique_msg);
   }
 
@@ -245,7 +241,6 @@ protected:
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
-      // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
       throw std::runtime_error(
               "intra process publish called after destruction of intra process manager");
     }
@@ -264,7 +259,6 @@ protected:
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
-      // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
       throw std::runtime_error(
               "intra process publish called after destruction of intra process manager");
     }

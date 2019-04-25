@@ -40,8 +40,8 @@ class NodeTopicsInterface;
 namespace intra_process_manager
 {
 /**
- * NOTE(ivanpauno): IntraProcessManager is forward declared here, avoiding a circular inclusion between intra_process_manager.hpp and publisher.hpp.
- * SharedPtr and WeakPtr of the IntraProcessManager are defined again here, to avoid a warning for accessing a member of a forward declared class.
+ * IntraProcessManager is forward declared here, avoiding a circular inclusion between
+ * `intra_process_manager.hpp` and `subscription_base.hpp`.
  */
 class IntraProcessManager;
 }

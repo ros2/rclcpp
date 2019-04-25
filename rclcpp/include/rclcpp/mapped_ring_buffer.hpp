@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -108,24 +109,25 @@ public:
     auto it = get_iterator_of_key(key);
     value = nullptr;
     if (it != elements_.end() && it->in_use) {
-      T * raw_ptr;
-      ElemDeleter * deleter;
       if (it->unique_value) {
-        raw_ptr = it->unique_value.get();
-        deleter = &it->unique_value.get_deleter();
-      } else {
-        raw_ptr = const_cast<T *>(it->shared_value.get());
-        deleter = std::get_deleter<ElemDeleter, const T>(it->shared_value);
-      }
-      if (raw_ptr) {
+        ElemDeleter deleter = it->unique_value.get_deleter();
         auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
-        ElemAllocTraits::construct(*allocator_.get(), ptr, *raw_ptr);
+        ElemAllocTraits::construct(*allocator_.get(), ptr, *it->unique_value);
+        value = ElemUniquePtr(ptr, deleter);
+        return;
+      }
+      if (it->shared_value) {
+        ElemDeleter * deleter = std::get_deleter<ElemDeleter, const T>(it->shared_value);
+        auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
+        ElemAllocTraits::construct(*allocator_.get(), ptr, *it->shared_value);
         if (deleter) {
           value = ElemUniquePtr(ptr, *deleter);
         } else {
           value = ElemUniquePtr(ptr);
         }
+        return;
       }
+      throw std::runtime_error("Unexpected empty MappedRingBuffer element.");
     }
   }
 
@@ -148,6 +150,12 @@ public:
     value.reset();
     if (it != elements_.end() && it->in_use) {
       if (!it->shared_value) {
+        // The stored unique_ptr is upgraded to a shared_ptr here.
+        // All the remaining get and pop calls done with unique_ptr
+        // signature will receive a copy.
+        if (!it->unique_value) {
+          throw std::runtime_error("Unexpected empty MappedRingBuffer element.");
+        }
         it->shared_value = std::move(it->unique_value);
       }
       value = it->shared_value;
@@ -188,6 +196,8 @@ public:
           value = ElemUniquePtr(ptr);
         }
         it->shared_value.reset();
+      } else {
+        throw std::runtime_error("Unexpected empty MappedRingBuffer element.");
       }
       it->in_use = false;
     }
@@ -212,8 +222,10 @@ public:
     if (it != elements_.end() && it->in_use) {
       if (it->shared_value) {
         value = std::move(it->shared_value);
-      } else {
+      } else if (it->unique_value) {
         value = std::move(it->unique_value);
+      } else {
+        throw std::runtime_error("Unexpected empty MappedRingBuffer element.");
       }
       it->in_use = false;
     }
@@ -226,7 +238,7 @@ public:
    * This method should not allocate memory.
    *
    * After insertion the value will be a nullptr.
-   * If a pair were replaced, its smart pointer is reseted.
+   * If a pair were replaced, its smart pointer is reset.
    *
    * \param key the key associated with the value to be stored
    * \param value the value to store, and optionally the value displaced
@@ -236,39 +248,50 @@ public:
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
-    elements_[head_].key = key;
-    elements_[head_].unique_value.reset();
-    elements_[head_].shared_value.reset();
-    elements_[head_].shared_value = value;
-    elements_[head_].in_use = true;
+    Element & element = elements_[head_];
+    element.key = key;
+    element.unique_value.reset();
+    element.shared_value.reset();
+    element.shared_value = value;
+    element.in_use = true;
     head_ = (head_ + 1) % elements_.size();
     return did_replace;
   }
 
+  /// Insert a key-value pair, displacing an existing pair if necessary.
+  /**
+   * See `bool push_and_replace(uint64_t key, const ConstElemSharedPtr & value)`.
+   */
   bool
   push_and_replace(uint64_t key, ConstElemSharedPtr && value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
-    elements_[head_].key = key;
-    elements_[head_].unique_value.reset();
-    elements_[head_].shared_value.reset();
-    elements_[head_].shared_value = std::move(value);
-    elements_[head_].in_use = true;
+    Element & element = elements_[head_];
+    element.key = key;
+    element.unique_value.reset();
+    element.shared_value.reset();
+    element.shared_value = std::move(value);
+    element.in_use = true;
     head_ = (head_ + 1) % elements_.size();
     return did_replace;
   }
 
+  /// Insert a key-value pair, displacing an existing pair if necessary.
+  /**
+   * See `bool push_and_replace(uint64_t key, const ConstElemSharedPtr & value)`.
+   */
   bool
   push_and_replace(uint64_t key, ElemUniquePtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
-    elements_[head_].key = key;
-    elements_[head_].unique_value.reset();
-    elements_[head_].shared_value.reset();
-    elements_[head_].unique_value = std::move(value);
-    elements_[head_].in_use = true;
+    Element & element = elements_[head_];
+    element.key = key;
+    element.unique_value.reset();
+    element.shared_value.reset();
+    element.unique_value = std::move(value);
+    element.in_use = true;
     head_ = (head_ + 1) % elements_.size();
     return did_replace;
   }
@@ -284,7 +307,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(MappedRingBuffer<T, Alloc>)
 
-  struct element
+  struct Element
   {
     uint64_t key;
     ElemUniquePtr unique_value;
@@ -292,20 +315,20 @@ private:
     bool in_use;
   };
 
-  using VectorAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<element>;
+  using VectorAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<Element>;
 
-  typename std::vector<element, VectorAlloc>::iterator
+  typename std::vector<Element, VectorAlloc>::iterator
   get_iterator_of_key(uint64_t key)
   {
     auto it = std::find_if(
       elements_.begin(), elements_.end(),
-      [key](element & e) -> bool {
+      [key](Element & e) -> bool {
         return e.key == key && e.in_use;
       });
     return it;
   }
 
-  std::vector<element, VectorAlloc> elements_;
+  std::vector<Element, VectorAlloc> elements_;
   size_t head_;
   std::shared_ptr<ElemAlloc> allocator_;
   std::mutex data_mutex_;

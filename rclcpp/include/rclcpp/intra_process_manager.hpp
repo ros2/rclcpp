@@ -283,7 +283,7 @@ public:
     // TODO(wjwwood): do something when a message was displaced. log debug?
     (void)did_replace;  // Avoid unused variable warning.
 
-    impl_->store_intra_process_message(intra_process_publisher_id, std::move(message_seq));
+    impl_->store_intra_process_message(intra_process_publisher_id, message_seq);
 
     // Return the message sequence which is sent to the subscription.
     return message_seq;
