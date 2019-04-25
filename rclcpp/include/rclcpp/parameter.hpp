@@ -28,21 +28,59 @@
 namespace rclcpp
 {
 
+class Parameter;
+
+namespace node_interfaces
+{
+struct ParameterInfo;
+}  // namespace node_interfaces
+
+namespace detail
+{
+
+// This helper function is required because you cannot do specialization on a
+// class method, so instead we specialize this template function and call it
+// from the unspecialized, but dependent, class method.
+template<typename T>
+auto
+get_value_helper(const rclcpp::Parameter * parameter);
+
+}  // namespace detail
+
 /// Structure to store an arbitrary parameter with templated get/set methods.
 class Parameter
 {
 public:
+  /// Construct with an empty name and a parameter value of type rclcpp::PARAMETER_NOT_SET.
   RCLCPP_PUBLIC
   Parameter();
 
+  /// Construct with given name and a parameter value of type rclcpp::PARAMETER_NOT_SET.
+  RCLCPP_PUBLIC
+  explicit Parameter(const std::string & name);
+
+  /// Construct with given name and given parameter value.
   RCLCPP_PUBLIC
   Parameter(const std::string & name, const ParameterValue & value);
 
+  /// Construct with given name and given parameter value.
   template<typename ValueTypeT>
-  explicit Parameter(const std::string & name, ValueTypeT value)
+  Parameter(const std::string & name, ValueTypeT value)
   : Parameter(name, ParameterValue(value))
-  {
-  }
+  {}
+
+  RCLCPP_PUBLIC
+  explicit Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_info);
+
+  /// Equal operator.
+  RCLCPP_PUBLIC
+  bool
+  operator==(const Parameter & rhs) const;
+
+  /// Not equal operator.
+  RCLCPP_PUBLIC
+  bool
+  operator!=(const Parameter & rhs) const;
 
   RCLCPP_PUBLIC
   ParameterType
@@ -60,6 +98,11 @@ public:
   rcl_interfaces::msg::ParameterValue
   get_value_message() const;
 
+  /// Get the internal storage for the parameter value.
+  RCLCPP_PUBLIC
+  const rclcpp::ParameterValue &
+  get_parameter_value() const;
+
   /// Get value of parameter using rclcpp::ParameterType as template argument.
   template<ParameterType ParamT>
   decltype(auto)
@@ -71,10 +114,7 @@ public:
   /// Get value of parameter using c++ types as template argument.
   template<typename T>
   decltype(auto)
-  get_value() const
-  {
-    return value_.get<T>();
-  }
+  get_value() const;
 
   RCLCPP_PUBLIC
   bool
@@ -141,6 +181,49 @@ operator<<(std::ostream & os, const rclcpp::Parameter & pv);
 RCLCPP_PUBLIC
 std::ostream &
 operator<<(std::ostream & os, const std::vector<Parameter> & parameters);
+
+namespace detail
+{
+
+template<typename T>
+auto
+get_value_helper(const rclcpp::Parameter * parameter)
+{
+  return parameter->get_parameter_value().get<T>();
+}
+
+// Specialization allowing Parameter::get() to return a const ref to the parameter value object.
+template<>
+inline
+auto
+get_value_helper<rclcpp::ParameterValue>(const rclcpp::Parameter * parameter)
+{
+  return parameter->get_parameter_value();
+}
+
+// Specialization allowing Parameter::get() to return a const ref to the parameter itself.
+template<>
+inline
+auto
+get_value_helper<rclcpp::Parameter>(const rclcpp::Parameter * parameter)
+{
+  // Use this lambda to ensure it's a const reference being returned (and not a copy).
+  auto type_enforcing_lambda =
+    [&parameter]() -> const rclcpp::Parameter & {
+      return *parameter;
+    };
+  return type_enforcing_lambda();
+}
+
+}  // namespace detail
+
+template<typename T>
+decltype(auto)
+Parameter::get_value() const
+{
+  // use the helper to specialize for the ParameterValue and Parameter cases.
+  return detail::get_value_helper<T>(this);
+}
 
 }  // namespace rclcpp
 

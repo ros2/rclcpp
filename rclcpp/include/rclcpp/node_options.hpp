@@ -44,6 +44,8 @@ public:
    *   - start_parameter_services = true
    *   - start_parameter_event_publisher = true
    *   - parameter_event_qos_profile = rmw_qos_profile_parameter_events
+   *   - allow_undeclared_parameters = false
+   *   - automatically_declare_initial_parameters = false
    *   - allocator = rcl_get_default_allocator()
    *
    * \param[in] allocator allocator to use in construction of NodeOptions.
@@ -129,9 +131,9 @@ public:
     return *this;
   }
 
-  /// Return a reference to the use_global_arguments flag.
+  /// Return the use_global_arguments flag.
   RCLCPP_PUBLIC
-  const bool &
+  bool
   use_global_arguments() const;
 
   /// Set the use_global_arguments flag, return this for parameter idiom.
@@ -144,11 +146,11 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  use_global_arguments(const bool & use_global_arguments);
+  use_global_arguments(bool use_global_arguments);
 
-  /// Return a reference to the use_intra_process_comms flag
+  /// Return the use_intra_process_comms flag.
   RCLCPP_PUBLIC
-  const bool &
+  bool
   use_intra_process_comms() const;
 
   /// Set the use_intra_process_comms flag, return this for parameter idiom.
@@ -163,11 +165,11 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  use_intra_process_comms(const bool & use_intra_process_comms);
+  use_intra_process_comms(bool use_intra_process_comms);
 
-  /// Return a reference to the start_parameter_services flag
+  /// Return the start_parameter_services flag.
   RCLCPP_PUBLIC
-  const bool &
+  bool
   start_parameter_services() const;
 
   /// Set the start_parameter_services flag, return this for parameter idiom.
@@ -182,11 +184,11 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  start_parameter_services(const bool & start_parameter_services);
+  start_parameter_services(bool start_parameter_services);
 
-  /// Return a reference to the start_parameter_event_publisher flag.
+  /// Return the start_parameter_event_publisher flag.
   RCLCPP_PUBLIC
-  const bool &
+  bool
   start_parameter_event_publisher() const;
 
   /// Set the start_parameter_event_publisher flag, return this for parameter idiom.
@@ -198,7 +200,7 @@ public:
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  start_parameter_event_publisher(const bool & start_parameter_event_publisher);
+  start_parameter_event_publisher(bool start_parameter_event_publisher);
 
   /// Return a reference to the parameter_event_qos_profile QoS.
   RCLCPP_PUBLIC
@@ -212,6 +214,40 @@ public:
   RCLCPP_PUBLIC
   NodeOptions &
   parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile);
+
+  /// Return the allow_undeclared_parameters flag.
+  RCLCPP_PUBLIC
+  bool
+  allow_undeclared_parameters() const;
+
+  /// Set the allow_undeclared_parameters, return this for parameter idiom.
+  /**
+   * If true, allow any parameter name to be set on the node without first
+   * being declared.
+   * Otherwise, setting an undeclared parameter will raise an exception.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  allow_undeclared_parameters(bool allow_undeclared_parameters);
+
+  /// Return the automatically_declare_initial_parameters flag.
+  RCLCPP_PUBLIC
+  bool
+  automatically_declare_initial_parameters() const;
+
+  /// Set the automatically_declare_initial_parameters, return this.
+  /**
+   * If true, automatically iterate through the node's initial parameters and
+   * implicitly declare any that have not already been declared.
+   * Otherwise, parameters passed to the node's initial_parameters, and/or the
+   * global initial parameter values, which are not explicitly declared will
+   * not appear on the node at all.
+   * Already declared parameters will not be re-declared, and parameters
+   * declared in this way will use the default constructed ParameterDescriptor.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  automatically_declare_initial_parameters(bool automatically_declare_initial_parameters);
 
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
@@ -255,6 +291,10 @@ private:
   bool start_parameter_event_publisher_ {true};
 
   rmw_qos_profile_t parameter_event_qos_profile_ {rmw_qos_profile_parameter_events};
+
+  bool allow_undeclared_parameters_ {false};
+
+  bool automatically_declare_initial_parameters_ {false};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
 };

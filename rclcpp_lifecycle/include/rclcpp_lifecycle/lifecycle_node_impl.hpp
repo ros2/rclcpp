@@ -200,7 +200,7 @@ template<typename CallbackT>
 void
 LifecycleNode::register_param_change_callback(CallbackT && callback)
 {
-  this->node_parameters_->register_param_change_callback(std::forward<CallbackT>(callback));
+  this->node_parameters_->set_on_parameters_set_callback(std::forward<CallbackT>(callback));
 }
 
 template<typename ParameterT>

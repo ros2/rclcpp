@@ -185,14 +185,35 @@ public:
 class InvalidParametersException : public std::runtime_error
 {
 public:
-  // Inherit constructors from runtime_error;
+  // Inherit constructors from runtime_error.
   using std::runtime_error::runtime_error;
 };
 
-/// Throwing if passed parameter value is invalid.
+/// Thrown if passed parameter value is invalid.
 class InvalidParameterValueException : public std::runtime_error
 {
-  // Inherit constructors from runtime_error;
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
+/// Thrown if parameter is already declared.
+class ParameterAlreadyDeclaredException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
+/// Thrown if parameter is not declared, e.g. either set or get was called without first declaring.
+class ParameterNotDeclaredException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
+/// Thrown if parameter is immutable and therefore cannot be undeclared.
+class ParameterImmutableException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
   using std::runtime_error::runtime_error;
 };
 
