@@ -18,8 +18,8 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <type_traits>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 #include "rclcpp/clock.hpp"
