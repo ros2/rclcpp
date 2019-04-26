@@ -60,8 +60,11 @@ Executor::Executor(const ExecutorArgs & args)
   // Store the context for later use.
   context_ = args.context;
 
-  ret = rcl_wait_set_init(&wait_set_, 0, 2, 0, 0, 0, 0,
-    context_->get_rcl_context().get(), allocator);
+  ret = rcl_wait_set_init(
+    &wait_set_,
+    0, 2, 0, 0, 0, 0,
+    context_->get_rcl_context().get(),
+    allocator);
   if (RCL_RET_OK != ret) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
