@@ -237,7 +237,7 @@ public:
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    const std::shared_ptr<const MessageT> & message)
+    std::shared_ptr<const MessageT> message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
@@ -266,7 +266,7 @@ public:
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
-    std::unique_ptr<MessageT, Deleter> & message)
+    std::unique_ptr<MessageT, Deleter> message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
@@ -279,7 +279,7 @@ public:
     }
 
     // Insert the message into the ring buffer using the message_seq to identify it.
-    bool did_replace = typed_buffer->push_and_replace(message_seq, message);
+    bool did_replace = typed_buffer->push_and_replace(message_seq, std::move(message));
     // TODO(wjwwood): do something when a message was displaced. log debug?
     (void)did_replace;  // Avoid unused variable warning.
 

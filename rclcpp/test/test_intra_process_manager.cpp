@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #define RCLCPP_BUILDING_LIBRARY 1
 #include "gtest/gtest.h"
@@ -185,14 +186,14 @@ TEST(TestIntraProcessManager, nominal) {
   );
 
   auto p1_m1_original_address = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm_msg->message_sequence = 43;
   ipm_msg->publisher_id = 43;
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
-  auto p2_m1_id = ipm.store_intra_process_message(p2_id, unique_msg);
+  auto p2_m1_id = ipm.store_intra_process_message(p2_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm.take_intra_process_message(p2_id, p2_m1_id, s1_id, unique_msg);
@@ -214,21 +215,21 @@ TEST(TestIntraProcessManager, nominal) {
   ipm_msg->publisher_id = 44;
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
-  ipm.store_intra_process_message(p1_id, unique_msg);
+  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm_msg->message_sequence = 45;
   ipm_msg->publisher_id = 45;
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
-  ipm.store_intra_process_message(p1_id, unique_msg);
+  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm_msg->message_sequence = 46;
   ipm_msg->publisher_id = 46;
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
-  ipm.store_intra_process_message(p1_id, unique_msg);
+  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 }
 
@@ -262,7 +263,7 @@ TEST(TestIntraProcessManager, remove_publisher_before_trying_to_take) {
     new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
   );
 
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm.remove_publisher(p1_id);
@@ -314,7 +315,7 @@ TEST(TestIntraProcessManager, removed_subscription_affects_take) {
   );
 
   auto original_message_pointer = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
@@ -384,7 +385,7 @@ TEST(TestIntraProcessManager, multiple_subscriptions_one_publisher) {
   );
 
   auto original_message_pointer = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
@@ -460,7 +461,7 @@ TEST(TestIntraProcessManager, multiple_publishers_one_subscription) {
   );
 
   auto original_message_pointer1 = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   // Second publish
@@ -469,7 +470,7 @@ TEST(TestIntraProcessManager, multiple_publishers_one_subscription) {
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
   auto original_message_pointer2 = unique_msg.get();
-  auto p2_m1_id = ipm.store_intra_process_message(p2_id, unique_msg);
+  auto p2_m1_id = ipm.store_intra_process_message(p2_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   // Third publish
@@ -478,7 +479,7 @@ TEST(TestIntraProcessManager, multiple_publishers_one_subscription) {
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
   auto original_message_pointer3 = unique_msg.get();
-  auto p3_m1_id = ipm.store_intra_process_message(p3_id, unique_msg);
+  auto p3_m1_id = ipm.store_intra_process_message(p3_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   // First take
@@ -567,7 +568,7 @@ TEST(TestIntraProcessManager, multiple_publishers_multiple_subscription) {
   );
 
   auto original_message_pointer1 = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   // Second publish
@@ -576,7 +577,7 @@ TEST(TestIntraProcessManager, multiple_publishers_multiple_subscription) {
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
   auto original_message_pointer2 = unique_msg.get();
-  auto p2_m1_id = ipm.store_intra_process_message(p2_id, unique_msg);
+  auto p2_m1_id = ipm.store_intra_process_message(p2_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   // Third publish
@@ -585,7 +586,7 @@ TEST(TestIntraProcessManager, multiple_publishers_multiple_subscription) {
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
   auto original_message_pointer3 = unique_msg.get();
-  auto p3_m1_id = ipm.store_intra_process_message(p3_id, unique_msg);
+  auto p3_m1_id = ipm.store_intra_process_message(p3_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   // First take
@@ -705,7 +706,7 @@ TEST(TestIntraProcessManager, ring_buffer_displacement) {
     new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
   );
 
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm_msg->message_sequence = 43;
@@ -713,7 +714,7 @@ TEST(TestIntraProcessManager, ring_buffer_displacement) {
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
   auto original_message_pointer2 = unique_msg.get();
-  auto p1_m2_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m2_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   ipm.take_intra_process_message(p1_id, p1_m2_id, s1_id, unique_msg);
@@ -729,7 +730,7 @@ TEST(TestIntraProcessManager, ring_buffer_displacement) {
   ipm_msg->publisher_id = 44;
   unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
 
-  ipm.store_intra_process_message(p1_id, unique_msg);
+  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   EXPECT_EQ(nullptr, unique_msg);
   unique_msg.reset();
 
@@ -763,7 +764,7 @@ TEST(TestIntraProcessManager, subscription_creation_race_condition) {
     new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
   );
 
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
   ASSERT_EQ(nullptr, unique_msg);
 
   auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
@@ -811,7 +812,7 @@ TEST(TestIntraProcessManager, publisher_out_of_scope_take) {
       new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
     );
 
-    p1_m1_id = ipm.store_intra_process_message(p1_id, unique_msg);
+    p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
     ASSERT_EQ(nullptr, unique_msg);
 
     // Explicitly remove publisher from ipm (emulate's publisher's destructor).
@@ -851,6 +852,6 @@ TEST(TestIntraProcessManager, publisher_out_of_scope_store) {
     new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
   );
 
-  EXPECT_THROW(ipm.store_intra_process_message(p1_id, unique_msg), std::runtime_error);
+  EXPECT_THROW(ipm.store_intra_process_message(p1_id, std::move(unique_msg)), std::runtime_error);
   ASSERT_EQ(nullptr, unique_msg);
 }

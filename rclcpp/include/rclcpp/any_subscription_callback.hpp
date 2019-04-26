@@ -177,12 +177,12 @@ public:
   }
 
   void dispatch_intra_process(
-    ConstMessageSharedPtr & message, const rmw_message_info_t & message_info)
+    ConstMessageSharedPtr message, const rmw_message_info_t & message_info)
   {
     if (const_shared_ptr_callback_) {
-      const_shared_ptr_callback_(std::move(message));
+      const_shared_ptr_callback_(message);
     } else if (const_shared_ptr_with_info_callback_) {
-      const_shared_ptr_with_info_callback_(std::move(message), message_info);
+      const_shared_ptr_with_info_callback_(message, message_info);
     } else {
       if (unique_ptr_callback_ || unique_ptr_with_info_callback_ ||
         shared_ptr_callback_ || shared_ptr_with_info_callback_)
@@ -196,7 +196,7 @@ public:
   }
 
   void dispatch_intra_process(
-    MessageUniquePtr & message, const rmw_message_info_t & message_info)
+    MessageUniquePtr message, const rmw_message_info_t & message_info)
   {
     if (shared_ptr_callback_) {
       typename std::shared_ptr<MessageT> shared_message = std::move(message);

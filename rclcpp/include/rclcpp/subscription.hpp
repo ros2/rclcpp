@@ -23,6 +23,8 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
+
 
 #include "rcl/error_handling.h"
 #include "rcl/subscription.h"
@@ -186,7 +188,7 @@ public:
           "Intra process message not longer being stored when trying to handle it");
         return;
       }
-      any_callback_.dispatch_intra_process(msg, message_info);
+      any_callback_.dispatch_intra_process(std::move(msg), message_info);
     }
   }
 

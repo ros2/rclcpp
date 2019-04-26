@@ -242,7 +242,7 @@ public:
    * \param value the value to store, and optionally the value displaced
    */
   bool
-  push_and_replace(uint64_t key, const ConstElemSharedPtr & value)
+  push_and_replace(uint64_t key, ConstElemSharedPtr value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
@@ -261,26 +261,7 @@ public:
    * See `bool push_and_replace(uint64_t key, const ConstElemSharedPtr & value)`.
    */
   bool
-  push_and_replace(uint64_t key, ConstElemSharedPtr && value)
-  {
-    std::lock_guard<std::mutex> lock(data_mutex_);
-    bool did_replace = elements_[head_].in_use;
-    Element & element = elements_[head_];
-    element.key = key;
-    element.unique_value.reset();
-    element.shared_value.reset();
-    element.shared_value = std::move(value);
-    element.in_use = true;
-    head_ = (head_ + 1) % elements_.size();
-    return did_replace;
-  }
-
-  /// Insert a key-value pair, displacing an existing pair if necessary.
-  /**
-   * See `bool push_and_replace(uint64_t key, const ConstElemSharedPtr & value)`.
-   */
-  bool
-  push_and_replace(uint64_t key, ElemUniquePtr & value)
+  push_and_replace(uint64_t key, ElemUniquePtr value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;

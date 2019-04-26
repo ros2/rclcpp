@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
+#include <memory>
+#include <utility>
+
+#include "gtest/gtest.h"
 
 #define RCLCPP_BUILDING_LIBRARY 1  // Prevent including unavailable symbols
-#include <rclcpp/mapped_ring_buffer.hpp>
-
-#include <memory>
+#include "rclcpp/mapped_ring_buffer.hpp"
 
 /*
    Tests get_copy and pop on an empty mrb.
@@ -210,7 +211,7 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_unique) {
   std::unique_ptr<char> expected(new char('a'));
   const char * expected_orig = expected.get();
 
-  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+  EXPECT_FALSE(mrb.push_and_replace(1, std::move(expected)));
 
   std::unique_ptr<char> actual;
   mrb.get(1, actual);
@@ -228,13 +229,13 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_unique) {
   EXPECT_EQ(nullptr, actual);
 
   expected.reset(new char('a'));
-  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+  EXPECT_FALSE(mrb.push_and_replace(1, std::move(expected)));
 
   expected.reset(new char('b'));
-  EXPECT_FALSE(mrb.push_and_replace(2, expected));
+  EXPECT_FALSE(mrb.push_and_replace(2, std::move(expected)));
 
   expected.reset(new char('c'));
-  EXPECT_TRUE(mrb.push_and_replace(3, expected));
+  EXPECT_TRUE(mrb.push_and_replace(3, std::move(expected)));
 
   mrb.get(1, actual);
   EXPECT_EQ(nullptr, actual);
@@ -261,7 +262,7 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_shared) {
   std::unique_ptr<char> expected(new char('a'));
   const char * expected_orig = expected.get();
 
-  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+  EXPECT_FALSE(mrb.push_and_replace(1, std::move(expected)));
 
   std::shared_ptr<const char> actual;
   mrb.get(1, actual);
@@ -279,13 +280,13 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_shared) {
   EXPECT_EQ(nullptr, actual);
 
   expected.reset(new char('a'));
-  EXPECT_FALSE(mrb.push_and_replace(1, expected));
+  EXPECT_FALSE(mrb.push_and_replace(1, std::move(expected)));
 
   expected.reset(new char('b'));
-  EXPECT_FALSE(mrb.push_and_replace(2, expected));
+  EXPECT_FALSE(mrb.push_and_replace(2, std::move(expected)));
 
   expected.reset(new char('c'));
-  EXPECT_TRUE(mrb.push_and_replace(3, expected));
+  EXPECT_TRUE(mrb.push_and_replace(3, std::move(expected)));
 
   mrb.get(1, actual);
   EXPECT_EQ(nullptr, actual);

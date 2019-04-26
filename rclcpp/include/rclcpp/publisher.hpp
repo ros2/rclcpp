@@ -88,11 +88,10 @@ public:
    * \param[in] msg A shared pointer to the message to send.
    */
   virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(msg.get());
-      msg.reset();
       return;
     }
     std::unique_ptr<MessageT, MessageDeleter> msg_copy;
@@ -108,29 +107,12 @@ public:
       return this->publish(shared_msg);
     }
     uint64_t message_seq =
-      store_intra_process_message(intra_process_publisher_id_, msg);
+      store_intra_process_message(intra_process_publisher_id_, std::move(msg));
     this->do_intra_process_publish(message_seq);
   }
 
   virtual void
-  publish(const std::shared_ptr<MessageT> & msg)
-  {
-    // Avoid allocating when not using intra process.
-    if (!intra_process_is_enabled_) {
-      // In this case we're not using intra process.
-      return this->do_inter_process_publish(msg.get());
-    }
-    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    // As the message is not const, a copy should be made.
-    // A shared_ptr<const MessageT> could also be constructed here.
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr, *msg);
-    MessageUniquePtr unique_msg = MessageUniquePtr(ptr, message_deleter_);
-    this->publish(unique_msg);
-  }
-
-  virtual void
-  publish(const std::shared_ptr<const MessageT> & msg)
+  publish(std::shared_ptr<const MessageT> msg)
   {
     if (intra_process_is_enabled_) {
       uint64_t message_seq =
@@ -156,7 +138,7 @@ public:
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
     MessageUniquePtr unique_msg(ptr, message_deleter_);
-    this->publish(unique_msg);
+    this->publish(std::move(unique_msg));
   }
 
   virtual void
@@ -237,7 +219,7 @@ protected:
   uint64_t
   store_intra_process_message(
     uint64_t publisher_id,
-    const std::shared_ptr<const MessageT> & msg)
+    std::shared_ptr<const MessageT> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -255,7 +237,7 @@ protected:
   uint64_t
   store_intra_process_message(
     uint64_t publisher_id,
-    std::unique_ptr<MessageT, MessageDeleter> & msg)
+    std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -266,7 +248,7 @@ protected:
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
+      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, std::move(msg));
     return message_seq;
   }
 
