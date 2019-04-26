@@ -92,7 +92,7 @@ create_publisher_factory(
       publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
 
       return std::make_shared<PublisherT>(node_base, topic_name, publisher_options,
-               event_callbacks, message_alloc);
+        event_callbacks, message_alloc);
     };
 
   // function to add a publisher to the intra process manager

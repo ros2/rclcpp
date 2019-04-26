@@ -1,4 +1,4 @@
-// Copyright 2016 Open Source Robotics Foundation, Inc.
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,10 +21,9 @@
 
 #include "rcutils/logging_macros.h"
 
-#include "rclcpp/waitable.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/function_traits.hpp"
-
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -39,14 +38,14 @@ using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInf
 using QOSLivelinessChangedCallbackType = std::function<void (QOSLivelinessChangedInfo &)>;
 using QOSLivelinessLostCallbackType = std::function<void (QOSLivelinessLostInfo &)>;
 
-/// Contains callbacks for various types of events a Publisher can receive from the middleware
+/// Contains callbacks for various types of events a Publisher can receive from the middleware.
 struct PublisherEventCallbacks
 {
   QOSDeadlineOfferedCallbackType deadline_callback;
   QOSLivelinessLostCallbackType liveliness_callback;
 };
 
-/// Contains callbacks for non-message events that a Subscriber can receive from the middleware
+/// Contains callbacks for non-message events that a Subscription can receive from the middleware.
 struct SubscriptionEventCallbacks
 {
   QOSDeadlineRequestedCallbackType deadline_callback;
@@ -78,7 +77,6 @@ protected:
   rcl_event_t event_handle_;
   size_t wait_set_event_index_;
 };
-
 
 template<typename EventCallbackT>
 class QOSEventHandler : public QOSEventHandlerBase

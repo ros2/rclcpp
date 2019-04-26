@@ -1,4 +1,4 @@
-// Copyright 2016 Open Source Robotics Foundation, Inc.
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 
 #include "rclcpp/qos_event.hpp"
 
-
 namespace rclcpp
 {
 
@@ -28,7 +27,7 @@ QOSEventHandlerBase::~QOSEventHandlerBase()
   }
 }
 
-/// Get the number of ready events
+/// Get the number of ready events.
 size_t
 QOSEventHandlerBase::get_number_of_ready_events()
 {

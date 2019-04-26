@@ -20,9 +20,9 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
-#include <vector>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 #include "rcutils/logging_macros.h"
@@ -31,10 +31,10 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/expand_topic_or_service_name.hpp"
 
 using rclcpp::PublisherBase;
 

@@ -21,9 +21,9 @@
 #include <functional>
 #include <iostream>
 #include <memory>
-#include <vector>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/publisher.h"
@@ -43,8 +43,8 @@ namespace rclcpp
 
 namespace node_interfaces
 {
-// NOTE(emersonknapp) Forward declaration avoids including node_base_interface.hpp which causes
-// circular inclusion from callback_group.hpp
+// Forward declaration avoids including node_base_interface.hpp
+// which causes circular inclusion from callback_group.hpp
 class NodeBaseInterface;
 // Forward declaration is used for friend statement.
 class NodeTopicsInterface;
@@ -121,8 +121,10 @@ public:
   const rcl_publisher_t *
   get_publisher_handle() const;
 
+  /// Get all the QoS event handlers associated with this publisher.
+  /** \return The vector of QoS event handlers. */
   RCLCPP_PUBLIC
-  const std::vector<std::shared_ptr<QOSEventHandlerBase>> &
+  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
   get_event_handlers() const;
 
   /// Get subscription count
@@ -137,13 +139,16 @@ public:
   size_t
   get_intra_process_subscription_count() const;
 
-  /// Manually assert that this Publisher is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
+  /// Manually assert that this Publisher is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC).
   /**
    * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC, the creator
    * of this publisher may manually call `assert_liveliness` at some point in time to signal to the
    * rest of the system that this Node is still alive.
+   *
+   * \return `true` if the liveliness was asserted successfully, otherwise `false`
    */
   RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
   bool
   assert_liveliness() const;
 
@@ -214,7 +219,7 @@ protected:
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
   rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
 
-  std::vector<std::shared_ptr<QOSEventHandlerBase>> event_handlers_;
+  std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;

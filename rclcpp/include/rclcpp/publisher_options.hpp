@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
-#include "rclcpp/qos_event.hpp"
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/intra_process_setting.hpp"
+#include "rclcpp/qos_event.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
