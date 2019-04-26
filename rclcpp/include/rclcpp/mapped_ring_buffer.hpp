@@ -114,9 +114,7 @@ public:
         auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
         ElemAllocTraits::construct(*allocator_.get(), ptr, *it->unique_value);
         value = ElemUniquePtr(ptr, deleter);
-        return;
-      }
-      if (it->shared_value) {
+      } else if (it->shared_value) {
         ElemDeleter * deleter = std::get_deleter<ElemDeleter, const T>(it->shared_value);
         auto ptr = ElemAllocTraits::allocate(*allocator_.get(), 1);
         ElemAllocTraits::construct(*allocator_.get(), ptr, *it->shared_value);
@@ -125,9 +123,9 @@ public:
         } else {
           value = ElemUniquePtr(ptr);
         }
-        return;
+      } else {
+        throw std::runtime_error("Unexpected empty MappedRingBuffer element.");
       }
-      throw std::runtime_error("Unexpected empty MappedRingBuffer element.");
     }
   }
 
