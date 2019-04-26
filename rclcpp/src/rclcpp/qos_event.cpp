@@ -38,13 +38,11 @@ QOSEventHandlerBase::get_number_of_ready_events()
 bool
 QOSEventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  if (rcl_wait_set_add_event(wait_set, &event_handle_, &wait_set_event_index_) != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Couldn't add event to wait set: %s", rcl_get_error_string().str);
+  rcl_ret_t ret = rcl_wait_set_add_event(wait_set, &event_handle_, &wait_set_event_index_);
+  if (RCL_RET_OK != ret) {
+    exceptions::throw_from_rcl_error(ret, "Couldn't add event to wait set");
     return false;
   }
-
   return true;
 }
 

@@ -99,6 +99,7 @@ public:
   /**
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
    * \return `true` if the Waitable is added successfully, `false` otherwise.
+   * \throws rclcpp::execptions::RCLError from rcl_wait_set_add_*()
    */
   RCLCPP_PUBLIC
   virtual
