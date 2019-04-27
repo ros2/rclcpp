@@ -111,6 +111,7 @@ public:
  * \throws RCLErrorBase some child class exception based on ret
  */
 RCLCPP_PUBLIC
+[[noreturn]]
 void
 throw_from_rcl_error(
   rcl_ret_t ret,
