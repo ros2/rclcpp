@@ -88,10 +88,11 @@ public:
    * \param[in] msg A shared pointer to the message to send.
    */
   virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
   {
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(msg.get());
+      msg.reset();
       return;
     }
     std::unique_ptr<MessageT, MessageDeleter> msg_copy;
@@ -101,27 +102,21 @@ public:
     // interprocess publish, resulting in lower publish-to-subscribe latency.
     // It's not possible to do that with an unique_ptr,
     // as do_intra_process_publish takes the ownership of the message.
+    uint64_t message_seq;
     if (get_subscription_count() > get_intra_process_subscription_count()) {
-      MessageSharedPtr shared_msg =
-        MessageSharedPtr(std::move(msg));
-      return this->publish(shared_msg);
+      message_seq =
+        store_intra_process_message(intra_process_publisher_id_, MessageSharedPtr(std::move(msg)));
+    } else {
+      message_seq =
+        store_intra_process_message(intra_process_publisher_id_, std::move(msg));
     }
-    uint64_t message_seq =
-      store_intra_process_message(intra_process_publisher_id_, std::move(msg));
     this->do_intra_process_publish(message_seq);
   }
 
   virtual void
-  publish(std::shared_ptr<const MessageT> msg)
+  publish(const std::shared_ptr<const MessageT> & msg)
   {
-    if (intra_process_is_enabled_) {
-      uint64_t message_seq =
-        store_intra_process_message(intra_process_publisher_id_, msg);
-      this->do_intra_process_publish(message_seq);
-    }
-    if (get_subscription_count() > get_intra_process_subscription_count()) {
-      this->do_inter_process_publish(msg.get());
-    }
+    publish(*msg);
   }
 
   virtual void
