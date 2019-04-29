@@ -104,8 +104,10 @@ public:
     // as do_intra_process_publish takes the ownership of the message.
     uint64_t message_seq;
     if (get_subscription_count() > get_intra_process_subscription_count()) {
+      MessageSharedPtr shared_msg(std::move(msg));
       message_seq =
-        store_intra_process_message(intra_process_publisher_id_, MessageSharedPtr(std::move(msg)));
+        store_intra_process_message(intra_process_publisher_id_, shared_msg);
+      this->do_inter_process_publish(msg.get());
     } else {
       message_seq =
         store_intra_process_message(intra_process_publisher_id_, std::move(msg));
