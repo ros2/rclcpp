@@ -103,16 +103,21 @@ public:
     // It's not possible to do that with an unique_ptr,
     // as do_intra_process_publish takes the ownership of the message.
     uint64_t message_seq;
-    if (get_subscription_count() > get_intra_process_subscription_count()) {
-      MessageSharedPtr shared_msg(std::move(msg));
+    bool inter_process_publish_needed =
+      get_subscription_count() > get_intra_process_subscription_count();
+    MessageSharedPtr shared_msg;
+    if (inter_process_publish_needed) {
+      shared_msg = std::move(msg);
       message_seq =
         store_intra_process_message(intra_process_publisher_id_, shared_msg);
-      this->do_inter_process_publish(msg.get());
     } else {
       message_seq =
         store_intra_process_message(intra_process_publisher_id_, std::move(msg));
     }
     this->do_intra_process_publish(message_seq);
+    if (inter_process_publish_needed) {
+      this->do_inter_process_publish(shared_msg.get());
+    }
   }
 
   virtual void
