@@ -154,6 +154,33 @@ LifecycleNode::create_callback_group(
   return node_base_->create_callback_group(group_type);
 }
 
+const rclcpp::ParameterValue &
+LifecycleNode::declare_parameter(
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+{
+  return this->node_parameters_->declare_parameter(name, default_value, parameter_descriptor);
+}
+
+void
+LifecycleNode::undeclare_parameter(const std::string & name)
+{
+  this->node_parameters_->undeclare_parameter(name);
+}
+
+bool
+LifecycleNode::has_parameter(const std::string & name) const
+{
+  return this->node_parameters_->has_parameter(name);
+}
+
+rcl_interfaces::msg::SetParametersResult
+LifecycleNode::set_parameter(const rclcpp::Parameter & parameter)
+{
+  return this->set_parameters_atomically({parameter});
+}
+
 bool
 LifecycleNode::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
