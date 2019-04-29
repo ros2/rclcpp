@@ -325,6 +325,9 @@ ServerBase::execute_cancel_request_received()
     pimpl_->action_server_.get(),
     &cancel_request,
     &cancel_response);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 
   RCLCPP_SCOPE_EXIT({
     ret = rcl_action_cancel_response_fini(&cancel_response);
