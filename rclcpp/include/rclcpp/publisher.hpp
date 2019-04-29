@@ -133,7 +133,7 @@ public:
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
     MessageUniquePtr unique_msg(ptr, message_deleter_);
-    this->publish(std::move(unique_msg));
+    this->publish(unique_msg);
   }
 
   virtual void
