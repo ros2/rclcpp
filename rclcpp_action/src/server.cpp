@@ -357,7 +357,7 @@ ServerBase::execute_cancel_request_received()
 
   // If the user rejects all individual requests to cancel goals,
   // then we consider the top-level cancel request as rejected.
-  if (goals.size > 1u && 0u == response->goals_canceling.size()) {
+  if (goals.size >= 1u && 0u == response->goals_canceling.size()) {
     response->return_code = action_msgs::srv::CancelGoal::Response::ERROR_REJECTED;
   }
 
