@@ -79,7 +79,7 @@ public:
    * to the actual rclcpp Publisher base class
    */
   virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(logger_,
@@ -88,7 +88,7 @@ public:
 
       return;
     }
-    rclcpp::Publisher<MessageT, Alloc>::publish(msg);
+    rclcpp::Publisher<MessageT, Alloc>::publish(std::move(msg));
   }
 
   /// LifecyclePublisher publish function
