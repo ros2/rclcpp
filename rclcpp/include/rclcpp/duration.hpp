@@ -30,12 +30,17 @@ public:
   Duration(int32_t seconds, uint32_t nanoseconds);
 
   RCLCPP_PUBLIC
-  explicit Duration(
-    rcl_duration_value_t nanoseconds);
+  explicit Duration(rcl_duration_value_t nanoseconds);
 
   RCLCPP_PUBLIC
-  explicit Duration(
-    std::chrono::nanoseconds nanoseconds);
+  explicit Duration(std::chrono::nanoseconds nanoseconds);
+
+  // intentionally not using explicit to create a conversion constructor
+  template<class Rep, class Period>
+  // cppcheck-suppress noExplicitConstructor
+  Duration(const std::chrono::duration<Rep, Period> & duration)  // NOLINT(runtime/explicit)
+  : Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(duration))
+  {}
 
   RCLCPP_PUBLIC
   Duration(
@@ -90,7 +95,8 @@ public:
   operator-(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
-  static Duration
+  static
+  Duration
   max();
 
   RCLCPP_PUBLIC
@@ -107,6 +113,13 @@ public:
   RCLCPP_PUBLIC
   double
   seconds() const;
+
+  template<class DurationT>
+  DurationT
+  to_chrono() const
+  {
+    return std::chrono::duration_cast<DurationT>(std::chrono::nanoseconds(this->nanoseconds()));
+  }
 
 private:
   rcl_duration_t rcl_duration_;
