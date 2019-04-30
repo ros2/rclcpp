@@ -480,17 +480,18 @@ TEST_F(TestClient, async_cancel_one_goal_with_callback)
   auto goal_handle = future_goal_handle.get();
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
 
-  bool cancel_callback_received = false;
+  bool cancel_response_received = false;
   auto future_cancel = action_client->async_cancel_goal(
     goal_handle,
-    [&cancel_callback_received, goal_handle](
+    [&cancel_response_received, goal_handle](
       ActionCancelGoalResponse::SharedPtr response) mutable
     {
       if (
         ActionCancelGoalResponse::ERROR_NONE == response->return_code &&
+        1ul == response->goals_canceling.size() &&
         goal_handle->get_goal_id() == response->goals_canceling[0].goal_id.uuid)
       {
-        cancel_callback_received = true;
+        cancel_response_received = true;
       }
     });
   dual_spin_until_future_complete(future_cancel);
@@ -498,7 +499,7 @@ TEST_F(TestClient, async_cancel_one_goal_with_callback)
   EXPECT_EQ(ActionCancelGoalResponse::ERROR_NONE, cancel_response->return_code);
   ASSERT_EQ(1ul, cancel_response->goals_canceling.size());
   EXPECT_EQ(goal_handle->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
-  EXPECT_TRUE(cancel_callback_received);
+  EXPECT_TRUE(cancel_response_received);
 }
 
 TEST_F(TestClient, async_cancel_all_goals)
