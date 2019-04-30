@@ -97,7 +97,7 @@ public:
    * to the actual rclcpp Publisher base class
    */
   virtual void
-  publish(const std::shared_ptr<MessageT> & msg)
+  publish(const std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(logger_,
@@ -106,26 +106,7 @@ public:
 
       return;
     }
-    rclcpp::Publisher<MessageT, Alloc>::publish(msg);
-  }
-
-  /// LifecyclePublisher publish function
-  /**
-   * The publish function checks whether the communication
-   * was enabled or disabled and forwards the message
-   * to the actual rclcpp Publisher base class
-   */
-  virtual void
-  publish(std::shared_ptr<const MessageT> msg)
-  {
-    if (!enabled_) {
-      RCLCPP_WARN(logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
-      return;
-    }
-    rclcpp::Publisher<MessageT, Alloc>::publish(msg);
+    rclcpp::Publisher<MessageT, Alloc>::publish(*msg);
   }
 
   /// LifecyclePublisher publish function
@@ -154,25 +135,6 @@ public:
       throw std::runtime_error("msg argument is nullptr");
     }
     this->publish(*msg);
-  }
-
-  /// LifecyclePublisher publish function
-  /**
-   * The publish function checks whether the communication
-   * was enabled or disabled and forwards the message
-   * to the actual rclcpp Publisher base class
-   */
-  virtual void
-  publish(std::shared_ptr<const MessageT> & msg)
-  {
-    if (!enabled_) {
-      RCLCPP_WARN(logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
-      return;
-    }
-    rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
   virtual void
