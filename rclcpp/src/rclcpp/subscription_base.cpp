@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_base.hpp"
 
 #include <cstdio>
 #include <memory>

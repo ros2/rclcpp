@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_base.hpp"
 
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
