@@ -136,10 +136,10 @@ void trigger_clock_changes(
     if (!rclcpp::ok()) {
       break;  // Break for ctrl-c
     }
-    auto msg = std::make_shared<rosgraph_msgs::msg::Clock>();
-    msg->clock.sec = i;
-    msg->clock.nanosec = 1000;
-    clock_pub->publish(*msg);
+    rosgraph_msgs::msg::Clock msg;
+    msg.clock.sec = i;
+    msg.clock.nanosec = 1000;
+    clock_pub->publish(msg);
 
     // workaround.  Long-term, there can be a more elegant fix where we hook a future up
     // to a clock change callback and spin until future complete, but that's an upstream

@@ -97,6 +97,8 @@ public:
    * was enabled or disabled and forwards the message
    * to the actual rclcpp Publisher base class
    */
+  [[deprecated("publishing an unique_ptr is prefered when using intra process communication."
+               " If using a shared_ptr, use publish(*msg).")]]
   virtual void
   publish(const std::shared_ptr<const MessageT> & msg)
   {
