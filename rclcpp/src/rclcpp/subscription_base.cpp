@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_base.hpp"
 
 #include <cstdio>
 #include <memory>
@@ -146,4 +146,35 @@ SubscriptionBase::get_publisher_count() const
     rclcpp::exceptions::throw_from_rcl_error(status, "failed to get get publisher count");
   }
   return inter_process_publisher_count;
+}
+
+void SubscriptionBase::setup_intra_process(
+  uint64_t intra_process_subscription_id,
+  IntraProcessManagerWeakPtr weak_ipm,
+  const rcl_subscription_options_t & intra_process_options)
+{
+  std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";
+  rcl_ret_t ret = rcl_subscription_init(
+    intra_process_subscription_handle_.get(),
+    node_handle_.get(),
+    rclcpp::type_support::get_intra_process_message_msg_type_support(),
+    intra_process_topic_name.c_str(),
+    &intra_process_options);
+  if (ret != RCL_RET_OK) {
+    if (ret == RCL_RET_TOPIC_NAME_INVALID) {
+      auto rcl_node_handle = node_handle_.get();
+      // this will throw on any validation problem
+      rcl_reset_error();
+      expand_topic_or_service_name(
+        intra_process_topic_name,
+        rcl_node_get_name(rcl_node_handle),
+        rcl_node_get_namespace(rcl_node_handle));
+    }
+
+    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create intra process subscription");
+  }
+
+  intra_process_subscription_id_ = intra_process_subscription_id;
+  weak_ipm_ = weak_ipm;
+  use_intra_process_ = true;
 }

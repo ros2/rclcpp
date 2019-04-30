@@ -52,24 +52,6 @@ struct PublisherFactory
       rcl_publisher_options_t & publisher_options)>;
 
   PublisherFactoryFunction create_typed_publisher;
-
-  // Adds the PublisherBase to the intraprocess manager with the correctly
-  // templated call to IntraProcessManager::store_intra_process_message.
-  using AddPublisherToIntraProcessManagerFunction = std::function<
-    uint64_t(
-      rclcpp::intra_process_manager::IntraProcessManager * ipm,
-      rclcpp::PublisherBase::SharedPtr publisher)>;
-
-  AddPublisherToIntraProcessManagerFunction add_publisher_to_intra_process_manager;
-
-  // Creates the callback function which is called on each
-  // PublisherT::publish() and which handles the intra process transmission of
-  // the message being published.
-  using SharedPublishCallbackFactoryFunction = std::function<
-    rclcpp::PublisherBase::StoreMessageCallbackT(
-      rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm)>;
-
-  SharedPublishCallbackFactoryFunction create_shared_publish_callback;
 };
 
 /// Return a PublisherFactory with functions setup for creating a PublisherT<MessageT, Alloc>.
@@ -90,53 +72,6 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
       publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
 
       return std::make_shared<PublisherT>(node_base, topic_name, publisher_options, message_alloc);
-    };
-
-  // function to add a publisher to the intra process manager
-  factory.add_publisher_to_intra_process_manager =
-    [](
-    rclcpp::intra_process_manager::IntraProcessManager * ipm,
-    rclcpp::PublisherBase::SharedPtr publisher) -> uint64_t
-    {
-      return ipm->add_publisher<MessageT, Alloc>(std::dynamic_pointer_cast<PublisherT>(publisher));
-    };
-
-  // function to create a shared publish callback std::function
-  using StoreMessageCallbackT = rclcpp::PublisherBase::StoreMessageCallbackT;
-  factory.create_shared_publish_callback =
-    [](rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm) -> StoreMessageCallbackT
-    {
-      rclcpp::intra_process_manager::IntraProcessManager::WeakPtr weak_ipm = ipm;
-
-      // this function is called on each call to publish() and handles storing
-      // of the published message in the intra process manager
-      auto shared_publish_callback =
-        [weak_ipm](uint64_t publisher_id, void * msg, const std::type_info & type_info) -> uint64_t
-        {
-          auto ipm = weak_ipm.lock();
-          if (!ipm) {
-            // TODO(wjwwood): should this just return silently? Or maybe return with a warning?
-            throw std::runtime_error(
-                    "intra process publish called after destruction of intra process manager");
-          }
-          if (!msg) {
-            throw std::runtime_error("cannot publisher msg which is a null pointer");
-          }
-          auto & message_type_info = typeid(MessageT);
-          if (message_type_info != type_info) {
-            throw std::runtime_error(
-                    std::string("published type '") + type_info.name() +
-                    "' is incompatible from the publisher type '" + message_type_info.name() + "'");
-          }
-          MessageT * typed_message_ptr = static_cast<MessageT *>(msg);
-          using MessageDeleter = typename Publisher<MessageT, Alloc>::MessageDeleter;
-          std::unique_ptr<MessageT, MessageDeleter> unique_msg(typed_message_ptr);
-          uint64_t message_seq =
-            ipm->store_intra_process_message<MessageT, Alloc>(publisher_id, unique_msg);
-          return message_seq;
-        };
-
-      return shared_publish_callback;
     };
 
   // return the factory now that it is populated
