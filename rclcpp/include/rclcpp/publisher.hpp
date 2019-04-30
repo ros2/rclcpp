@@ -95,7 +95,6 @@ public:
       msg.reset();
       return;
     }
-    std::unique_ptr<MessageT, MessageDeleter> msg_copy;
     // If an interprocess subscription exist, then the unique_ptr is promoted
     // to a shared_ptr and published.
     // This allows doing the intraprocess publish first and then doing the
