@@ -47,13 +47,9 @@ NodeTopics::create_publisher(
     // Get the intra process manager instance for this context.
     auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     // Register the publisher with the intra process manager.
-    uint64_t intra_process_publisher_id =
-      publisher_factory.add_publisher_to_intra_process_manager(ipm.get(), publisher);
-    // Create a function to be called when publisher to do the intra process publish.
-    auto shared_publish_callback = publisher_factory.create_shared_publish_callback(ipm);
+    uint64_t intra_process_publisher_id = ipm->add_publisher(publisher);
     publisher->setup_intra_process(
       intra_process_publisher_id,
-      shared_publish_callback,
       ipm,
       publisher_options);
   }
@@ -104,10 +100,11 @@ NodeTopics::create_subscription(
   // Setup intra process publishing if requested.
   if (use_intra_process) {
     auto context = node_base_->get_context();
-    auto intra_process_manager =
+    auto ipm =
       context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    subscription_factory.setup_intra_process(
-      intra_process_manager, subscription, subscription_options);
+    uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
+    subscription_options.ignore_local_publications = false;
+    subscription->setup_intra_process(intra_process_subscription_id, ipm, subscription_options);
   }
 
   // Return the completed subscription.

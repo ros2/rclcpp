@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.1 (2019-04-26)
+------------------
+
 0.7.0 (2019-04-14)
 ------------------
 * Introduce rclcpp_components to implement composition (`#665 <https://github.com/ros2/rclcpp/issues/665>`_)

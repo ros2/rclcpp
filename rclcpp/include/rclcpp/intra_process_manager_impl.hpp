@@ -34,8 +34,8 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
-#include "rclcpp/publisher.hpp"
-#include "rclcpp/subscription.hpp"
+#include "rclcpp/publisher_base.hpp"
+#include "rclcpp/subscription_base.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

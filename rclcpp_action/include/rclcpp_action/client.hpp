@@ -261,9 +261,45 @@ public:
   using Feedback = typename ActionT::Feedback;
   using GoalHandle = ClientGoalHandle<ActionT>;
   using WrappedResult = typename GoalHandle::WrappedResult;
-  using FeedbackCallback = typename ClientGoalHandle<ActionT>::FeedbackCallback;
+  using GoalResponseCallback =
+    std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
+  using FeedbackCallback = typename GoalHandle::FeedbackCallback;
+  using ResultCallback = typename GoalHandle::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
+  using CancelOneCallback = std::function<void (typename GoalHandle::SharedPtr, bool)>;
+  using CancelMultipleCallback = std::function<void (typename CancelResponse::SharedPtr)>;
+
+  /// Options for sending a goal.
+  /**
+   * This struct is used to pass parameters to the function `async_send_goal`.
+   */
+  struct SendGoalOptions
+  {
+    SendGoalOptions()
+    : goal_response_callback(nullptr),
+      feedback_callback(nullptr),
+      result_callback(nullptr)
+    {
+    }
+
+    /// Function called when the goal is accepted or rejected.
+    /**
+     * Takes a single argument that is a future to a goal handle shared pointer.
+     * If the goal is accepted, then the pointer points to a valid goal handle.
+     * If the goal is rejected, then pointer has the value `nullptr`.
+     * If an error occurs while waiting for the goal response an exception will be thrown
+     * when calling `future::get()`.
+     * Possible exceptions include `rclcpp::RCLError` and `rclcpp::RCLBadAlloc`.
+     */
+    GoalResponseCallback goal_response_callback;
+
+    /// Function called whenever feedback is received for the goal.
+    FeedbackCallback feedback_callback;
+
+    /// Function called when the result for the goal is received.
+    ResultCallback result_callback;
+  };
 
   /// Construct an action client.
   /**
@@ -299,15 +335,13 @@ public:
    * The goal handle is used to monitor the status of the goal and get the final result.
    *
    * \param[in] goal The goal request.
-   * \param[in] callback Optional user callback for feedback associated with the goal.
-   * \param[in] ignore_result If `true`, then the result for the goal will not be requested and
-   *   therefore inaccessible from the goal handle.
+   * \param[in] options Options for sending the goal request. Contains references to callbacks for
+   *   the goal response (accepted/rejected), feedback, and the final result.
    * \return A future that completes when the goal has been accepted or rejected.
    *   If the goal is rejected, then the result will be a `nullptr`.
    */
   std::shared_future<typename GoalHandle::SharedPtr>
-  async_send_goal(
-    const Goal & goal, FeedbackCallback callback = nullptr, bool ignore_result = false)
+  async_send_goal(const Goal & goal, const SendGoalOptions & options = SendGoalOptions())
   {
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>();
@@ -318,31 +352,38 @@ public:
     goal_request->goal = goal;
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
-      [this, goal_request, callback, ignore_result, promise](
-        std::shared_ptr<void> response) mutable
+      [this, goal_request, options, promise, future](std::shared_ptr<void> response) mutable
       {
         using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
+          if (options.goal_response_callback) {
+            options.goal_response_callback(future);
+          }
           return;
         }
         GoalInfo goal_info;
         goal_info.goal_id.uuid = goal_request->goal_id.uuid;
         goal_info.stamp = goal_response->stamp;
         // Do not use std::make_shared as friendship cannot be forwarded.
-        std::shared_ptr<GoalHandle> goal_handle(new GoalHandle(goal_info, callback));
-        if (!ignore_result) {
+        std::shared_ptr<GoalHandle> goal_handle(
+          new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
+        if (options.result_callback) {
           try {
             this->make_result_aware(goal_handle);
           } catch (...) {
             promise->set_exception(std::current_exception());
+            options.goal_response_callback(future);
             return;
           }
         }
         std::lock_guard<std::mutex> guard(goal_handles_mutex_);
         goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         promise->set_value(goal_handle);
+        if (options.goal_response_callback) {
+          options.goal_response_callback(future);
+        }
       });
     return future;
   }
@@ -352,14 +393,21 @@ public:
    * \throws exceptions::UnknownGoalHandleError If the goal unknown or already reached a terminal
    *   state.
    * \param[in] goal_handle The goal handle for which to get the result.
+   * \param[in] result_callback Optional callback that is called when the result is received.
    * \return A future that is set to the goal result when the goal is finished.
    */
   std::shared_future<WrappedResult>
-  async_get_result(typename GoalHandle::SharedPtr goal_handle)
+  async_get_result(
+    typename GoalHandle::SharedPtr goal_handle,
+    ResultCallback result_callback = nullptr)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
+    }
+    if (result_callback) {
+      // This will override any previously registered callback
+      goal_handle->set_result_callback(result_callback);
     }
     // If the user chose to ignore the result before, then ask the server for the result now.
     if (!goal_handle->is_result_aware()) {
@@ -373,10 +421,15 @@ public:
    * \throws exceptions::UnknownGoalHandleError If the goal is unknown or already reached a
    *   terminal state.
    * \param[in] goal_handle The goal handle requesting to be canceled.
+   * \param[in] cancel_callback Optional callback that is called when the response is received.
+   *   The callback function takes two parameters: a shared pointer to the goal handle and a bool
+   *   indicating if the action server accepted the cancel request or not.
    * \return A future whose result indicates whether or not the cancel request was accepted.
    */
   std::shared_future<bool>
-  async_cancel_goal(typename GoalHandle::SharedPtr goal_handle)
+  async_cancel_goal(
+    typename GoalHandle::SharedPtr goal_handle,
+    CancelOneCallback cancel_callback = nullptr)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
@@ -390,7 +443,7 @@ public:
     cancel_request->goal_info.goal_id.uuid = goal_handle->get_goal_id();
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [goal_handle, promise](std::shared_ptr<void> response) mutable
+      [goal_handle, cancel_callback, promise](std::shared_ptr<void> response) mutable
       {
         auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
         bool goal_canceled = false;
@@ -400,12 +453,17 @@ public:
           goal_canceled = (canceled_goal_info.goal_id.uuid == goal_handle->get_goal_id());
         }
         promise->set_value(goal_canceled);
+        if (cancel_callback) {
+          cancel_callback(goal_handle, goal_canceled);
+        }
       });
     return future;
   }
 
   /// Asynchronously request for all goals to be canceled.
   /**
+   * \param[in] cancel_callback Optional callback that is called when the response is received.
+   *   The callback takes one parameter: a shared pointer to the CancelResponse message.
    * \return A future to a CancelResponse message that is set when the request has been
    * acknowledged by an action server.
    * See
@@ -413,19 +471,21 @@ public:
    * action_msgs/CancelGoal.srv</a>.
    */
   std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel_all_goals()
+  async_cancel_all_goals(CancelMultipleCallback cancel_callback = nullptr)
   {
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
     std::fill(
       cancel_request->goal_info.goal_id.uuid.begin(),
       cancel_request->goal_info.goal_id.uuid.end(), 0u);
-    return async_cancel(cancel_request);
+    return async_cancel(cancel_request, cancel_callback);
   }
 
   /// Asynchronously request all goals at or before a specified time be canceled.
   /**
    * \param[in] stamp The timestamp for the cancel goal request.
+   * \param[in] cancel_callback Optional callback that is called when the response is received.
+   *   The callback takes one parameter: a shared pointer to the CancelResponse message.
    * \return A future to a CancelResponse message that is set when the request has been
    * acknowledged by an action server.
    * See
@@ -433,7 +493,9 @@ public:
    * action_msgs/CancelGoal.srv</a>.
    */
   std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel_goals_before(const rclcpp::Time & stamp)
+  async_cancel_goals_before(
+    const rclcpp::Time & stamp,
+    CancelMultipleCallback cancel_callback = nullptr)
   {
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
@@ -441,7 +503,7 @@ public:
       cancel_request->goal_info.goal_id.uuid.begin(),
       cancel_request->goal_info.goal_id.uuid.end(), 0u);
     cancel_request->goal_info.stamp = stamp;
-    return async_cancel(cancel_request);
+    return async_cancel(cancel_request, cancel_callback);
   }
 
   virtual
@@ -572,17 +634,22 @@ private:
 
   /// \internal
   std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel(typename CancelRequest::SharedPtr cancel_request)
+  async_cancel(
+    typename CancelRequest::SharedPtr cancel_request,
+    CancelMultipleCallback cancel_callback = nullptr)
   {
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename CancelResponse::SharedPtr>>();
     std::shared_future<typename CancelResponse::SharedPtr> future(promise->get_future());
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [promise](std::shared_ptr<void> response) mutable
+      [cancel_callback, promise](std::shared_ptr<void> response) mutable
       {
         auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
         promise->set_value(cancel_response);
+        if (cancel_callback) {
+          cancel_callback(cancel_response);
+        }
       });
     return future;
   }

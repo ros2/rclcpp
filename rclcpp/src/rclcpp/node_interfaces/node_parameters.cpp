@@ -123,18 +123,7 @@ NodeParameters::NodeParameters(
   get_yaml_paths(&(options->arguments));
 
   // Get fully qualified node name post-remapping to use to find node's params in yaml files
-  const std::string node_name = node_base->get_name();
-  const std::string node_namespace = node_base->get_namespace();
-  if (0u == node_namespace.size() || 0u == node_name.size()) {
-    // Should never happen
-    throw std::runtime_error("Node name and namespace were not set");
-  }
-
-  if ('/' == node_namespace.at(node_namespace.size() - 1)) {
-    combined_name_ = node_namespace + node_name;
-  } else {
-    combined_name_ = node_namespace + '/' + node_name;
-  }
+  combined_name_ = node_base->get_fully_qualified_name();
 
   // TODO(sloretz) use rcl to parse yaml when circular dependency is solved
   // See https://github.com/ros2/rcl/issues/252

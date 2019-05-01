@@ -36,6 +36,7 @@ class AnySubscriptionCallback
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
   using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
+  using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   using SharedPtrCallback = std::function<void (const std::shared_ptr<MessageT>)>;
@@ -154,7 +155,6 @@ public:
   void dispatch(
     std::shared_ptr<MessageT> message, const rmw_message_info_t & message_info)
   {
-    (void)message_info;
     if (shared_ptr_callback_) {
       shared_ptr_callback_(message);
     } else if (shared_ptr_with_info_callback_) {
@@ -177,28 +177,48 @@ public:
   }
 
   void dispatch_intra_process(
-    MessageUniquePtr & message, const rmw_message_info_t & message_info)
+    ConstMessageSharedPtr message, const rmw_message_info_t & message_info)
   {
-    (void)message_info;
+    if (const_shared_ptr_callback_) {
+      const_shared_ptr_callback_(message);
+    } else if (const_shared_ptr_with_info_callback_) {
+      const_shared_ptr_with_info_callback_(message, message_info);
+    } else {
+      if (unique_ptr_callback_ || unique_ptr_with_info_callback_ ||
+        shared_ptr_callback_ || shared_ptr_with_info_callback_)
+      {
+        throw std::runtime_error("unexpected dispatch_intra_process const shared "
+                "message call with no const shared_ptr callback");
+      } else {
+        throw std::runtime_error("unexpected message without any callback set");
+      }
+    }
+  }
+
+  void dispatch_intra_process(
+    MessageUniquePtr message, const rmw_message_info_t & message_info)
+  {
     if (shared_ptr_callback_) {
       typename std::shared_ptr<MessageT> shared_message = std::move(message);
       shared_ptr_callback_(shared_message);
     } else if (shared_ptr_with_info_callback_) {
       typename std::shared_ptr<MessageT> shared_message = std::move(message);
       shared_ptr_with_info_callback_(shared_message, message_info);
-    } else if (const_shared_ptr_callback_) {
-      typename std::shared_ptr<MessageT const> const_shared_message = std::move(message);
-      const_shared_ptr_callback_(const_shared_message);
-    } else if (const_shared_ptr_with_info_callback_) {
-      typename std::shared_ptr<MessageT const> const_shared_message = std::move(message);
-      const_shared_ptr_with_info_callback_(const_shared_message, message_info);
     } else if (unique_ptr_callback_) {
       unique_ptr_callback_(std::move(message));
     } else if (unique_ptr_with_info_callback_) {
       unique_ptr_with_info_callback_(std::move(message), message_info);
+    } else if (const_shared_ptr_callback_ || const_shared_ptr_with_info_callback_) {
+      throw std::runtime_error("unexpected dispatch_intra_process unique message call"
+              " with const shared_ptr callback");
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
+  }
+
+  bool use_take_shared_method()
+  {
+    return const_shared_ptr_callback_ || const_shared_ptr_with_info_callback_;
   }
 
 private:

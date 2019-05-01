@@ -2,6 +2,14 @@
 Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+0.7.1 (2019-04-26)
+------------------
+* Added optional callbacks to action client for goal, response, and result. (`#701 <https://github.com/ros2/rclcpp/issues/701>`_)
+* Added overload for node interfaces. (`#700 <https://github.com/ros2/rclcpp/issues/700>`_)
+* Renamed action state transitions. (`#677 <https://github.com/ros2/rclcpp/issues/677>`_)
+* Contributors: Jacob Perron, Karsten Knese
+
 0.7.0 (2019-04-14)
 ------------------
 * Fixed hard-coded duration type representation so int64_t isn't assumed. (`#648 <https://github.com/ros2/rclcpp/issues/648>`_)

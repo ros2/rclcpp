@@ -2,6 +2,12 @@
 Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+0.7.1 (2019-04-26)
+------------------
+* Added read only parameters. (`#495 <https://github.com/ros2/rclcpp/issues/495>`_)
+* Contributors: Shane Loretz, William Woodall
+
 0.7.0 (2019-04-14)
 ------------------
 * Fixed linter errors in rclcpp_lifecycle. (`#672 <https://github.com/ros2/rclcpp/issues/672>`_)

@@ -67,6 +67,9 @@ NodeOptions::operator=(const NodeOptions & other)
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->allocator_ = other.allocator_;
+    this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
+    this->automatically_declare_initial_parameters_ =
+      other.automatically_declare_initial_parameters_;
   }
   return *this;
 }
