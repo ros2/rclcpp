@@ -16,9 +16,6 @@
 #define RCLCPP__CLOCK_HPP_
 
 #include <functional>
-#include <memory>
-#include <mutex>
-#include <vector>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
@@ -35,13 +32,17 @@ class JumpHandler
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(JumpHandler)
+
+  using pre_callback_t = std::function<void ()>;
+  using post_callback_t = std::function<void (const rcl_time_jump_t &)>;
+
   JumpHandler(
-    std::function<void()> pre_callback,
-    std::function<void(const rcl_time_jump_t &)> post_callback,
+    pre_callback_t pre_callback,
+    post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
-  std::function<void()> pre_callback;
-  std::function<void(const rcl_time_jump_t &)> post_callback;
+  pre_callback_t pre_callback;
+  post_callback_t post_callback;
   rcl_jump_threshold_t notice_threshold;
 };
 
@@ -50,38 +51,74 @@ class Clock
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(Clock)
 
+  /// Default c'tor
+  /**
+   * Initializes the clock instance with the given clock_type.
+   *
+   * \param clock_type type of the clock.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   */
   RCLCPP_PUBLIC
   explicit Clock(rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
   RCLCPP_PUBLIC
   ~Clock();
 
+  /**
+   * Returns current time from the time source specified by clock_type.
+   *
+   * \return current time.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   */
   RCLCPP_PUBLIC
   Time
   now();
 
+  /**
+   * Returns the clock of the type `RCL_ROS_TIME` is active.
+   *
+   * \return true if the clock is active
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw if
+   * the current clock does not have the clock_type `RCL_ROS_TIME`.
+   */
   RCLCPP_PUBLIC
   bool
   ros_time_is_active();
 
   RCLCPP_PUBLIC
   rcl_clock_t *
-  get_clock_handle();
+  get_clock_handle() noexcept;
 
   RCLCPP_PUBLIC
   rcl_clock_type_t
-  get_clock_type();
+  get_clock_type() const noexcept;
 
   // Add a callback to invoke if the jump threshold is exceeded.
   /**
    * These callback functions must remain valid as long as the
    * returned shared pointer is valid.
+   *
+   * Function will register callbacks to the callback queue. On time jump all
+   * callbacks will be executed whose threshold is greater then the time jump;
+   * The logic will first call selected pre_callbacks and then all selected
+   * post_callbacks.
+   *
+   * Function is only applicable if the clock_type is `RCL_ROS_TIME`
+   *
+   * \param pre_callback. Must be non-throwing
+   * \param post_callback. Must be non-throwing.
+   * \param threshold. Callbacks will be triggered if the time jump is greater
+   * then the threshold.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   * \throws std::bad_alloc if the allocation of the JumpHandler fails.
+   * \warning the instance of the clock must remain valid as long as any created
+   * JumpHandler.
    */
   RCLCPP_PUBLIC
   JumpHandler::SharedPtr
   create_jump_callback(
-    std::function<void()> pre_callback,
-    std::function<void(const rcl_time_jump_t &)> post_callback,
+    JumpHandler::pre_callback_t pre_callback,
+    JumpHandler::post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
 private:
