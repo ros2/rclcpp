@@ -239,10 +239,11 @@ public:
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
+    const rclcpp::QoS & qos,
     CallbackT && callback,
-    size_t qos_history_depth,
-    const SubscriptionOptionsWithAllocator<AllocatorT> &
-    options = SubscriptionOptionsWithAllocator<AllocatorT>(),
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+    ),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
     >::SharedPtr
@@ -269,6 +270,9 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+  [[deprecated(
+    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
+  )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -279,8 +283,7 @@ public:
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
-    std::shared_ptr<Alloc> allocator = nullptr,
-    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -304,20 +307,19 @@ public:
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
   [[deprecated(
-    "use the create_subscription(const std::string &, CallbackT &&, size_t, "
-    "const SubscriptionOptions<Alloc> & = SubscriptionOptions<Alloc>(), ...) signature instead")]]
+    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
+  )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
     CallbackT && callback,
     size_t qos_history_depth,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
-    std::shared_ptr<Alloc> allocator = nullptr,
-    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
+    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create a timer.
   /**

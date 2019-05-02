@@ -21,27 +21,52 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/intra_process_setting.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
 
-/// Structure containing optional configuration for Subscriptions.
-template<typename Allocator>
-struct SubscriptionOptionsWithAllocator
+/// Non-template base class for subscription options.
+struct SubscriptionOptionsBase
 {
+  /// Callbacks for events related to this subscription.
   SubscriptionEventCallbacks event_callbacks;
-  /// The quality of service profile to pass on to the rmw implementation.
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
   /// True to ignore local publications.
   bool ignore_local_publications = false;
   /// The callback group for this subscription. NULL to use the default callback group.
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
-  /// Optional custom allocator.
-  std::shared_ptr<Allocator> allocator;
+  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group = nullptr;
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
+};
+
+/// Structure containing optional configuration for Subscriptions.
+template<typename Allocator>
+struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
+{
+  /// Optional custom allocator.
+  std::shared_ptr<Allocator> allocator = nullptr;
+
+  SubscriptionOptionsWithAllocator<Allocator>() {}
+
+  /// Constructor using base class as input.
+  explicit
+  SubscriptionOptionsWithAllocator(const SubscriptionOptionsBase & subscription_options_base)
+  : SubscriptionOptionsBase(subscription_options_base)
+  {}
+
+  /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
+  rcl_subscription_options_t
+  to_rcl_subscription_options(const rclcpp::QoS & qos) const
+  {
+    rcl_subscription_options_t result;
+    // TODO(wjwwood): convert allocator to C when/if we figure that out, see allocator_common.hpp
+    // result.allocator = get_rcl_allocator(this->allocator);
+    result.ignore_local_publications = this->ignore_local_publications;
+    result.qos = qos.get_rmw_qos_profile();
+    return result;
+  }
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;

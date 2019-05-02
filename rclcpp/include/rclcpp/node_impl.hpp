@@ -114,56 +114,20 @@ template<
 std::shared_ptr<SubscriptionT>
 Node::create_subscription(
   const std::string & topic_name,
+  const rclcpp::QoS & qos,
   CallbackT && callback,
-  size_t qos_history_depth,
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>::SharedPtr
   msg_mem_strat)
 {
-  using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
-
-  std::shared_ptr<AllocatorT> allocator = options.allocator;
-  if (!allocator) {
-    allocator = std::make_shared<AllocatorT>();
-  }
-
-  rmw_qos_profile_t qos_profile = options.qos_profile;
-  qos_profile.depth = qos_history_depth;
-
-  if (!msg_mem_strat) {
-    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-    msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, AllocatorT>::create_default();
-  }
-
-  bool use_intra_process;
-  switch (options.use_intra_process_comm) {
-    case IntraProcessSetting::Enable:
-      use_intra_process = true;
-      break;
-    case IntraProcessSetting::Disable:
-      use_intra_process = false;
-      break;
-    case IntraProcessSetting::NodeDefault:
-      use_intra_process = this->get_node_options().use_intra_process_comms();
-      break;
-    default:
-      throw std::runtime_error("Unrecognized IntraProcessSetting value");
-      break;
-  }
-
-  return rclcpp::create_subscription<
-    MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
-    this->node_topics_.get(),
+  return rclcpp::create_subscription<MessageT>(
+    *this,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    qos,
     std::forward<CallbackT>(callback),
-    qos_profile,
-    options.event_callbacks,
-    options.callback_group,
-    options.ignore_local_publications,
-    use_intra_process,
-    msg_mem_strat,
-    allocator);
+    options,
+    msg_mem_strat);
 }
 
 template<
@@ -181,18 +145,18 @@ Node::create_subscription(
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
-  std::shared_ptr<Alloc> allocator,
-  IntraProcessSetting use_intra_process_comm)
+  std::shared_ptr<Alloc> allocator)
 {
+  rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(qos_profile));
+  qos.get_rmw_qos_profile() = qos_profile;
+
   SubscriptionOptionsWithAllocator<Alloc> sub_options;
-  sub_options.qos_profile = qos_profile;
   sub_options.callback_group = group;
   sub_options.ignore_local_publications = ignore_local_publications;
   sub_options.allocator = allocator;
-  sub_options.use_intra_process_comm = use_intra_process_comm;
 
   return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
-    topic_name, std::forward<CallbackT>(callback), qos_profile.depth, sub_options, msg_mem_strat);
+    topic_name, qos, std::forward<CallbackT>(callback), sub_options, msg_mem_strat);
 }
 
 template<
@@ -210,17 +174,19 @@ Node::create_subscription(
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
-  std::shared_ptr<Alloc> allocator,
-  IntraProcessSetting use_intra_process_comm)
+  std::shared_ptr<Alloc> allocator)
 {
   SubscriptionOptionsWithAllocator<Alloc> sub_options;
   sub_options.callback_group = group;
   sub_options.ignore_local_publications = ignore_local_publications;
   sub_options.allocator = allocator;
-  sub_options.use_intra_process_comm = use_intra_process_comm;
 
   return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
-    topic_name, std::forward<CallbackT>(callback), qos_history_depth, sub_options, msg_mem_strat);
+    topic_name,
+    rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)),
+    std::forward<CallbackT>(callback),
+    sub_options,
+    msg_mem_strat);
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

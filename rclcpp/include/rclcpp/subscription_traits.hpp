@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "rclcpp/function_traits.hpp"
+#include "rcl/types.h"
 
 namespace rclcpp
 {

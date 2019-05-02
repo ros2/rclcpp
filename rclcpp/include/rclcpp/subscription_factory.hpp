@@ -51,7 +51,7 @@ struct SubscriptionFactory
     rclcpp::SubscriptionBase::SharedPtr(
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
-      rcl_subscription_options_t & subscription_options)>;
+      const rcl_subscription_options_t & subscription_options)>;
 
   SubscriptionFactoryFunction create_typed_subscription;
 
@@ -95,10 +95,11 @@ create_subscription_factory(
     [allocator, msg_mem_strat, any_subscription_callback, event_callbacks, message_alloc](
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic_name,
-    rcl_subscription_options_t & subscription_options
+    const rcl_subscription_options_t & subscription_options
     ) -> rclcpp::SubscriptionBase::SharedPtr
     {
-      subscription_options.allocator =
+      auto options_copy = subscription_options;
+      options_copy.allocator =
         rclcpp::allocator::get_rcl_allocator<CallbackMessageT>(*message_alloc.get());
 
       using rclcpp::Subscription;
@@ -108,7 +109,7 @@ create_subscription_factory(
         node_base->get_shared_rcl_node_handle(),
         *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
         topic_name,
-        subscription_options,
+        options_copy,
         any_subscription_callback,
         event_callbacks,
         msg_mem_strat);

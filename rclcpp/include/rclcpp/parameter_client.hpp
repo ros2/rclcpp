@@ -110,29 +110,23 @@ public:
 
   template<
     typename CallbackT,
-    typename Alloc = std::allocator<void>,
-    typename SubscriptionT =
-    rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent, Alloc>>
+    typename AllocatorT = std::allocator<void>>
   typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
-  on_parameter_event(CallbackT && callback)
+  on_parameter_event(
+    CallbackT && callback,
+    const rclcpp::QoS & qos = (
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default))
+    ),
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+    ))
   {
-    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-    auto msg_mem_strat =
-      MessageMemoryStrategy<rcl_interfaces::msg::ParameterEvent, Alloc>::create_default();
-
-    using rcl_interfaces::msg::ParameterEvent;
-    return rclcpp::create_subscription<
-      ParameterEvent, CallbackT, Alloc, ParameterEvent, SubscriptionT>(
-      this->node_topics_interface_.get(),
+    return rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
+      this->node_topics_interface_,
       "parameter_events",
+      qos,
       std::forward<CallbackT>(callback),
-      rmw_qos_profile_default,
-      SubscriptionEventCallbacks(),
-      nullptr,  // group,
-      false,  // ignore_local_publications,
-      false,  // use_intra_process_comms_,
-      msg_mem_strat,
-      std::make_shared<Alloc>());
+      options);
   }
 
   RCLCPP_PUBLIC

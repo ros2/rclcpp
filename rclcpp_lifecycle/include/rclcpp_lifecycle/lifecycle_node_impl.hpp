@@ -89,7 +89,35 @@ LifecycleNode::create_publisher(
 }
 
 // TODO(karsten1987): Create LifecycleSubscriber
-template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename SubscriptionT>
+std::shared_ptr<SubscriptionT>
+LifecycleNode::create_subscription(
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>::SharedPtr
+  msg_mem_strat)
+{
+  return rclcpp::create_subscription<MessageT>(
+    *this,
+    topic_name,
+    qos,
+    std::forward<CallbackT>(callback),
+    options,
+    msg_mem_strat);
+}
+
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename Alloc,
+  typename SubscriptionT>
 std::shared_ptr<SubscriptionT>
 LifecycleNode::create_subscription(
   const std::string & topic_name,
@@ -102,28 +130,16 @@ LifecycleNode::create_subscription(
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
-  using CallbackMessageT = typename rclcpp::subscription_traits::has_message_type<CallbackT>::type;
+  rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(qos_profile));
+  qos.get_rmw_qos_profile() = qos_profile;
 
-  if (!allocator) {
-    allocator = std::make_shared<Alloc>();
-  }
+  rclcpp::SubscriptionOptionsWithAllocator<Alloc> sub_options;
+  sub_options.callback_group = group;
+  sub_options.ignore_local_publications = ignore_local_publications;
+  sub_options.allocator = allocator;
 
-  if (!msg_mem_strat) {
-    using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-    msg_mem_strat = MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default();
-  }
-
-  return rclcpp::create_subscription<MessageT, CallbackT, Alloc, CallbackMessageT, SubscriptionT>(
-    this->node_topics_.get(),
-    topic_name,
-    std::forward<CallbackT>(callback),
-    qos_profile,
-    rclcpp::SubscriptionEventCallbacks(),
-    group,
-    ignore_local_publications,
-    node_options_.use_intra_process_comms(),
-    msg_mem_strat,
-    allocator);
+  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
+    topic_name, std::forward<CallbackT>(callback), qos, sub_options, msg_mem_strat);
 }
 
 template<
@@ -138,21 +154,22 @@ LifecycleNode::create_subscription(
   CallbackT && callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
   bool ignore_local_publications,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
   msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
-  rmw_qos_profile_t qos = rmw_qos_profile_default;
-  qos.depth = qos_history_depth;
-  return this->create_subscription<MessageT, CallbackT, Alloc>(
+  rclcpp::SubscriptionOptionsWithAllocator<Alloc> sub_options;
+  sub_options.callback_group = group;
+  sub_options.ignore_local_publications = ignore_local_publications;
+  sub_options.allocator = allocator;
+
+  return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
     topic_name,
     std::forward<CallbackT>(callback),
-    qos,
-    rclcpp::SubscriptionEventCallbacks(),
-    group,
-    ignore_local_publications,
-    msg_mem_strat,
-    allocator);
+    rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)),
+    sub_options,
+    msg_mem_strat);
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

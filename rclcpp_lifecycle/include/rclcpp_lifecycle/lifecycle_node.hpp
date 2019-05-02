@@ -181,6 +181,37 @@ public:
   /**
    * \param[in] topic_name The topic to subscribe on.
    * \param[in] callback The user-defined callback function.
+   * \param[in] qos The quality of service for this subscription.
+   * \param[in] options The subscription options for this subscription.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>>
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+    ),
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
+    >::SharedPtr
+    msg_mem_strat = nullptr);
+
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] callback The user-defined callback function.
    * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
    * \param[in] group The callback group for this subscription. NULL for no callback group.
    * \param[in] ignore_local_publications True to ignore local publications.
@@ -196,6 +227,9 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  [[deprecated(
+    "use create_subscription(const std::string &, CallbackT, const rclcpp::QoS &, ...) instead"
+  )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -228,6 +262,9 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  [[deprecated(
+    "use create_subscription(const std::string &, CallbackT, const rclcpp::QoS &, ...) instead"
+  )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -235,7 +272,8 @@ public:
     CallbackT && callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
