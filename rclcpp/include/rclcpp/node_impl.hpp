@@ -78,32 +78,32 @@ Node::create_publisher(
     options);
 }
 
-template<typename MessageT, typename Alloc, typename PublisherT>
+template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name,
   size_t qos_history_depth,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<AllocatorT> allocator)
 {
-  PublisherOptionsWithAllocator<Alloc> pub_options;
+  PublisherOptionsWithAllocator<AllocatorT> pub_options;
   pub_options.allocator = allocator;
-  return this->create_publisher<MessageT, Alloc, PublisherT>(
+  return this->create_publisher<MessageT, AllocatorT, PublisherT>(
     topic_name, rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)), pub_options);
 }
 
-template<typename MessageT, typename Alloc, typename PublisherT>
+template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name,
   const rmw_qos_profile_t & qos_profile,
-  std::shared_ptr<Alloc> allocator)
+  std::shared_ptr<AllocatorT> allocator)
 {
   rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(qos_profile));
   qos.get_rmw_qos_profile() = qos_profile;
 
-  PublisherOptionsWithAllocator<Alloc> pub_options;
+  PublisherOptionsWithAllocator<AllocatorT> pub_options;
   pub_options.allocator = allocator;
-  return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos, pub_options);
+  return this->create_publisher<MessageT, AllocatorT, PublisherT>(topic_name, qos, pub_options);
 }
 
 template<

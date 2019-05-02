@@ -134,11 +134,9 @@ TEST_F(TestPublisher, various_creation_signatures) {
 # pragma warning(disable: 4996)
 #endif
   {
-    // auto publisher = node->create_publisher<IntraProcessMessage, std::allocator<void>, rclcpp::Publisher<IntraProcessMessage, std::allocator<void>>>("topic");
     auto publisher = node->create_publisher<IntraProcessMessage>("topic");
     (void)publisher;
   }
-#if 0
   {
     auto publisher = node->create_publisher<IntraProcessMessage>(
       "topic",
@@ -157,7 +155,6 @@ TEST_F(TestPublisher, various_creation_signatures) {
       std::make_shared<std::allocator<IntraProcessMessage>>());
     (void)publisher;
   }
-#endif
 #if !defined(_WIN32)
 # pragma GCC diagnostic pop
 #else  // !defined(_WIN32)
@@ -180,11 +177,9 @@ TEST_F(TestPublisher, intraprocess_with_invalid_qos) {
 # pragma warning(push)
 # pragma warning(disable: 4996)
 #endif
-#if 0
     ASSERT_THROW(
       {auto publisher = node->create_publisher<IntraProcessMessage>("topic", qos);},
       rclcpp::exceptions::InvalidParametersException);
-#endif
 #if !defined(_WIN32)
 # pragma GCC diagnostic pop
 #else  // !defined(_WIN32)
