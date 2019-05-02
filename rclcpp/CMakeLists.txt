@@ -246,15 +246,6 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_publisher ${PROJECT_NAME})
   endif()
-  ament_add_gtest(test_pub_sub_option_interface test/test_pub_sub_option_interface.cpp)
-  if(TARGET test_pub_sub_option_interface)
-    ament_target_dependencies(test_pub_sub_option_interface
-      test_msgs
-    )
-    target_link_libraries(test_pub_sub_option_interface
-      ${PROJECT_NAME}
-    )
-  endif()
   ament_add_gtest(test_publisher_subscription_count_api test/test_publisher_subscription_count_api.cpp)
   if(TARGET test_publisher_subscription_count_api)
     ament_target_dependencies(test_publisher_subscription_count_api

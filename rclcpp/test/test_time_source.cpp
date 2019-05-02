@@ -129,8 +129,7 @@ void trigger_clock_changes(
   std::shared_ptr<rclcpp::Clock> clock,
   bool expect_time_update = true)
 {
-  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock",
-      rmw_qos_profile_default);
+  auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock", 10);
 
   for (int i = 0; i < 5; ++i) {
     if (!rclcpp::ok()) {
