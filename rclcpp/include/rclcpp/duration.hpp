@@ -43,8 +43,8 @@ public:
   {}
 
   RCLCPP_PUBLIC
-  Duration(
-    const builtin_interfaces::msg::Duration & duration_msg);
+  // cppcheck-suppress noExplicitConstructor
+  Duration(const builtin_interfaces::msg::Duration & duration_msg);
 
   RCLCPP_PUBLIC
   explicit Duration(const rcl_duration_t & duration);
@@ -58,6 +58,7 @@ public:
   RCLCPP_PUBLIC
   operator builtin_interfaces::msg::Duration() const;
 
+  // cppcheck-suppress operatorEq // this is a false positive from cppcheck
   RCLCPP_PUBLIC
   Duration &
   operator=(const Duration & rhs);
@@ -120,6 +121,10 @@ public:
   {
     return std::chrono::duration_cast<DurationT>(std::chrono::nanoseconds(this->nanoseconds()));
   }
+
+  RCLCPP_PUBLIC
+  rmw_time_t
+  to_rmw_time() const;
 
 private:
   rcl_duration_t rcl_duration_;
