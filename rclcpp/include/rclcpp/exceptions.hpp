@@ -111,9 +111,8 @@ public:
  * \throws RCLErrorBase some child class exception based on ret
  */
 RCLCPP_PUBLIC
-[[noreturn]]
 void
-throw_from_rcl_error(
+throw_from_rcl_error [[noreturn]] (
   rcl_ret_t ret,
   const std::string & prefix = "",
   const rcl_error_state_t * error_state = nullptr,
