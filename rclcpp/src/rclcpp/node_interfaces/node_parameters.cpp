@@ -291,8 +291,10 @@ NodeParameters::declare_parameter(
             "parameter '" + name + "' could not be set: " + result.reason);
   }
 
-  // Publish the event.
-  events_publisher_->publish(parameter_event);
+  // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
+  if (nullptr != events_publisher_) {
+    events_publisher_->publish(parameter_event);
+  }
 
   return parameters_.at(name).value;
 }
