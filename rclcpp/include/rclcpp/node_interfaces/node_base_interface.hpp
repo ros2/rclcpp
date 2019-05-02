@@ -155,6 +155,12 @@ public:
   virtual
   std::unique_lock<std::recursive_mutex>
   acquire_notify_guard_condition_lock() const = 0;
+
+  /// Return the default preference for using intra process communication.
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  get_use_intra_process_default() const = 0;
 };
 
 }  // namespace node_interfaces

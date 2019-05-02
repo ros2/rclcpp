@@ -19,10 +19,11 @@
 #include <string>
 #include <vector>
 
+#include "rcl/node.h"
 #include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/node_options.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -34,13 +35,15 @@ namespace node_interfaces
 class NodeBase : public NodeBaseInterface
 {
 public:
-  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBaseInterface)
+  RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBase)
 
   RCLCPP_PUBLIC
   NodeBase(
     const std::string & node_name,
     const std::string & namespace_,
-    const NodeOptions & options);
+    rclcpp::Context::SharedPtr context,
+    const rcl_node_options_t & rcl_node_options,
+    bool use_intra_process_default);
 
   RCLCPP_PUBLIC
   virtual
@@ -126,10 +129,16 @@ public:
   std::unique_lock<std::recursive_mutex>
   acquire_notify_guard_condition_lock() const;
 
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  get_use_intra_process_default() const;
+
 private:
   RCLCPP_DISABLE_COPY(NodeBase)
 
   rclcpp::Context::SharedPtr context_;
+  bool use_intra_process_default_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
