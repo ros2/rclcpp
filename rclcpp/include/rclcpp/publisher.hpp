@@ -153,6 +153,8 @@ public:
     this->publish(std::move(unique_msg));
   }
 
+  [[deprecated(
+    "Use publish(*msg). Check against nullptr before calling if necessary.")]]
   virtual void
   publish(const MessageT * msg)
   {
