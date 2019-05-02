@@ -99,7 +99,7 @@ public:
    * to the actual rclcpp Publisher base class
    */
   virtual void
-  publish(std::shared_ptr<const MessageT> msg)
+  publish(const std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(logger_,
