@@ -155,7 +155,7 @@ protected:
   wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
 
 private:
-  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface_;
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface_;
   rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedPtr get_parameters_client_;
   rclcpp::Client<rcl_interfaces::srv::GetParameterTypes>::SharedPtr
     get_parameter_types_client_;

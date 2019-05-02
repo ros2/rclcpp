@@ -66,7 +66,8 @@ public:
     const std::vector<Parameter> & initial_parameters,
     bool start_parameter_services,
     bool start_parameter_event_publisher,
-    const rmw_qos_profile_t & parameter_event_qos_profile,
+    const rclcpp::QoS & parameter_event_qos,
+    const rclcpp::PublisherOptionsBase & parameter_event_publisher_options,
     bool allow_undeclared_parameters,
     bool automatically_declare_initial_parameters);
 

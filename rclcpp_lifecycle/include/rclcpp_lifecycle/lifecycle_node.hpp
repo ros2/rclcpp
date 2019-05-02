@@ -49,8 +49,11 @@
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
 
@@ -131,15 +134,33 @@ public:
   /// Create and return a Publisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos The Quality of Service settings for this publisher.
+   * \param[in] options The publisher options for this publisher.
+   * \return Shared pointer to the created lifecycle publisher.
+   */
+  template<typename MessageT, typename AllocatorT = std::allocator<void>>
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>>
+  create_publisher(
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+    ));
+
+  /// Create and return a Publisher.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_history_depth The depth of the publisher message queue.
    * \param[in] allocator allocator to use during publishing activities.
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
+  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
-    const std::string & topic_name, size_t qos_history_depth,
-    std::shared_ptr<Alloc> allocator = nullptr);
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    std::shared_ptr<Alloc> allocator);
 
   /// Create and return a LifecyclePublisher.
   /**
@@ -149,6 +170,7 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
+  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
     const std::string & topic_name,
@@ -457,6 +479,11 @@ public:
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
   get_node_waitables_interface();
 
+  /// Return the NodeOptions used when creating this node.
+  RCLCPP_PUBLIC
+  const rclcpp::NodeOptions &
+  get_node_options() const;
+
   //
   // LIFECYCLE COMPONENTS
   //
@@ -585,7 +612,7 @@ private:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
-  bool use_intra_process_comms_;
+  const rclcpp::NodeOptions node_options_;
 
   class LifecycleNodeInterfaceImpl;
   std::unique_ptr<LifecycleNodeInterfaceImpl> impl_;

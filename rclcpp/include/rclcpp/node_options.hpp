@@ -23,6 +23,8 @@
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/parameter.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -43,7 +45,9 @@ public:
    *   - use_intra_process_comms = false
    *   - start_parameter_services = true
    *   - start_parameter_event_publisher = true
-   *   - parameter_event_qos_profile = rmw_qos_profile_parameter_events
+   *   - parameter_event_qos = rclcpp::ParameterEventQoS
+   *     - with history setting and depth from rmw_qos_profile_parameter_events
+   *   - parameter_event_publisher_options = rclcpp::PublisherOptionsBase
    *   - allow_undeclared_parameters = false
    *   - automatically_declare_initial_parameters = false
    *   - allocator = rcl_get_default_allocator()
@@ -202,18 +206,36 @@ public:
   NodeOptions &
   start_parameter_event_publisher(bool start_parameter_event_publisher);
 
-  /// Return a reference to the parameter_event_qos_profile QoS.
+  /// Return a reference to the parameter_event_qos QoS.
   RCLCPP_PUBLIC
-  const rmw_qos_profile_t &
-  parameter_event_qos_profile() const;
+  const rclcpp::QoS &
+  parameter_event_qos() const;
 
-  /// Set the parameter_event_qos_profile QoS, return this for parameter idiom.
+  /// Set the parameter_event_qos QoS, return this for parameter idiom.
   /**
    * The QoS settings to be used for the parameter event publisher, if enabled.
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile);
+  parameter_event_qos(const rclcpp::QoS & parameter_event_qos);
+
+  /// Return a reference to the parameter_event_publisher_options.
+  RCLCPP_PUBLIC
+  const rclcpp::PublisherOptionsBase &
+  parameter_event_publisher_options() const;
+
+  /// Set the parameter_event_publisher_options, return this for parameter idiom.
+  /**
+   * The QoS settings to be used for the parameter event publisher, if enabled.
+   *
+   * \todo(wjwwood): make this take/store an instance of
+   *   rclcpp::PublisherOptionsWithAllocator<Allocator>, but to do that requires
+   *   NodeOptions to also be templated based on the Allocator type.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  parameter_event_publisher_options(
+    const rclcpp::PublisherOptionsBase & parameter_event_publisher_options);
 
   /// Return the allow_undeclared_parameters flag.
   RCLCPP_PUBLIC
@@ -290,7 +312,11 @@ private:
 
   bool start_parameter_event_publisher_ {true};
 
-  rmw_qos_profile_t parameter_event_qos_profile_ {rmw_qos_profile_parameter_events};
+  rclcpp::QoS parameter_event_qos_ = rclcpp::ParameterEventsQoS(
+    rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
+  );
+
+  rclcpp::PublisherOptionsBase parameter_event_publisher_options_ = rclcpp::PublisherOptionsBase();
 
   bool allow_undeclared_parameters_ {false};
 

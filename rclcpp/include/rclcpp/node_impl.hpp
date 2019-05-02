@@ -36,11 +36,12 @@
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
 #include "rclcpp/contexts/default_context.hpp"
-#include "rclcpp/intra_process_manager.hpp"
-#include "rclcpp/parameter.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
+#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -67,68 +68,42 @@ template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
   const std::string & topic_name,
-  size_t qos_history_depth,
+  const rclcpp::QoS & qos,
   const PublisherOptionsWithAllocator<AllocatorT> & options)
 {
-  std::shared_ptr<AllocatorT> allocator = options.allocator;
-  if (!allocator) {
-    allocator = std::make_shared<AllocatorT>();
-  }
-  rmw_qos_profile_t qos_profile = options.qos_profile;
-  qos_profile.depth = qos_history_depth;
-
-  bool use_intra_process;
-  switch (options.use_intra_process_comm) {
-    case IntraProcessSetting::Enable:
-      use_intra_process = true;
-      break;
-    case IntraProcessSetting::Disable:
-      use_intra_process = false;
-      break;
-    case IntraProcessSetting::NodeDefault:
-      use_intra_process = this->get_node_options().use_intra_process_comms();
-      break;
-    default:
-      throw std::runtime_error("Unrecognized IntraProcessSetting value");
-      break;
-  }
-
   return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
-    this->node_topics_.get(),
+    *this,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-    qos_profile,
-    options.event_callbacks,
-    options.callback_group,
-    use_intra_process,
-    allocator);
+    qos,
+    options);
 }
 
 template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
-  const std::string & topic_name, size_t qos_history_depth,
-  std::shared_ptr<Alloc> allocator,
-  IntraProcessSetting use_intra_process_comm)
+  const std::string & topic_name,
+  size_t qos_history_depth,
+  std::shared_ptr<Alloc> allocator)
 {
   PublisherOptionsWithAllocator<Alloc> pub_options;
   pub_options.allocator = allocator;
-  pub_options.use_intra_process_comm = use_intra_process_comm;
   return this->create_publisher<MessageT, Alloc, PublisherT>(
-    topic_name, qos_history_depth, pub_options);
+    topic_name, rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)), pub_options);
 }
 
 template<typename MessageT, typename Alloc, typename PublisherT>
 std::shared_ptr<PublisherT>
 Node::create_publisher(
-  const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
-  std::shared_ptr<Alloc> allocator, IntraProcessSetting use_intra_process_comm)
+  const std::string & topic_name,
+  const rmw_qos_profile_t & qos_profile,
+  std::shared_ptr<Alloc> allocator)
 {
+  rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(qos_profile));
+  qos.get_rmw_qos_profile() = qos_profile;
+
   PublisherOptionsWithAllocator<Alloc> pub_options;
-  pub_options.qos_profile = qos_profile;
   pub_options.allocator = allocator;
-  pub_options.use_intra_process_comm = use_intra_process_comm;
-  return this->create_publisher<MessageT, Alloc, PublisherT>(
-    topic_name, qos_profile.depth, pub_options);
+  return this->create_publisher<MessageT, Alloc, PublisherT>(topic_name, qos, pub_options);
 }
 
 template<

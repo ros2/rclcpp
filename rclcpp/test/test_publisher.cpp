@@ -80,14 +80,87 @@ TEST_F(TestPublisher, construction_and_destruction) {
   initialize();
   using rcl_interfaces::msg::IntraProcessMessage;
   {
-    auto publisher = node->create_publisher<IntraProcessMessage>("topic");
+    auto publisher = node->create_publisher<IntraProcessMessage>("topic", 42);
+    (void)publisher;
   }
 
   {
     ASSERT_THROW({
-      auto publisher = node->create_publisher<IntraProcessMessage>("invalid_topic?");
+      auto publisher = node->create_publisher<IntraProcessMessage>("invalid_topic?", 42);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
+}
+
+/*
+   Testing publisher creation signatures.
+ */
+TEST_F(TestPublisher, various_creation_signatures) {
+  initialize();
+  using rcl_interfaces::msg::IntraProcessMessage;
+  {
+    auto publisher = node->create_publisher<IntraProcessMessage>("topic", 42);
+    (void)publisher;
+  }
+  {
+    auto publisher = node->create_publisher<IntraProcessMessage>("topic", rclcpp::QoS(42));
+    (void)publisher;
+  }
+  {
+    auto publisher =
+      node->create_publisher<IntraProcessMessage>("topic", rclcpp::QoS(rclcpp::KeepLast(42)));
+    (void)publisher;
+  }
+  {
+    auto publisher =
+      node->create_publisher<IntraProcessMessage>("topic", rclcpp::QoS(rclcpp::KeepAll()));
+    (void)publisher;
+  }
+  {
+    auto publisher =
+      node->create_publisher<IntraProcessMessage>("topic", 42, rclcpp::PublisherOptions());
+    (void)publisher;
+  }
+  {
+    auto publisher =
+      rclcpp::create_publisher<IntraProcessMessage>(node, "topic", 42, rclcpp::PublisherOptions());
+    (void)publisher;
+  }
+  // Now deprecated functions.
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  {
+    // auto publisher = node->create_publisher<IntraProcessMessage, std::allocator<void>, rclcpp::Publisher<IntraProcessMessage, std::allocator<void>>>("topic");
+    auto publisher = node->create_publisher<IntraProcessMessage>("topic");
+    (void)publisher;
+  }
+  {
+    auto publisher = node->create_publisher<IntraProcessMessage>(
+      "topic",
+      42,
+      std::make_shared<std::allocator<IntraProcessMessage>>());
+    (void)publisher;
+  }
+  {
+    auto publisher = node->create_publisher<IntraProcessMessage>("topic", rmw_qos_profile_default);
+    (void)publisher;
+  }
+  {
+    auto publisher = node->create_publisher<IntraProcessMessage>(
+      "topic",
+      rmw_qos_profile_default,
+      std::make_shared<std::allocator<IntraProcessMessage>>());
+    (void)publisher;
+  }
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 }
 
 /*
@@ -98,9 +171,21 @@ TEST_F(TestPublisher, intraprocess_with_invalid_qos) {
   rmw_qos_profile_t qos = invalid_qos_profile();
   using rcl_interfaces::msg::IntraProcessMessage;
   {
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
     ASSERT_THROW(
       {auto publisher = node->create_publisher<IntraProcessMessage>("topic", qos);},
       rclcpp::exceptions::InvalidParametersException);
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
   }
 }
 
@@ -110,20 +195,20 @@ TEST_F(TestPublisher, intraprocess_with_invalid_qos) {
 TEST_F(TestPublisherSub, construction_and_destruction) {
   using rcl_interfaces::msg::IntraProcessMessage;
   {
-    auto publisher = subnode->create_publisher<IntraProcessMessage>("topic");
+    auto publisher = subnode->create_publisher<IntraProcessMessage>("topic", 42);
 
     EXPECT_STREQ(publisher->get_topic_name(), "/ns/sub_ns/topic");
   }
 
   {
-    auto publisher = subnode->create_publisher<IntraProcessMessage>("/topic");
+    auto publisher = subnode->create_publisher<IntraProcessMessage>("/topic", 42);
 
     EXPECT_STREQ(publisher->get_topic_name(), "/topic");
   }
 
   {
     ASSERT_THROW({
-      auto publisher = subnode->create_publisher<IntraProcessMessage>("invalid_topic?");
+      auto publisher = subnode->create_publisher<IntraProcessMessage>("invalid_topic?", 42);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
 }

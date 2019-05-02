@@ -42,7 +42,6 @@
 #include "rclcpp/logger.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
-#include "rclcpp/node_options.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
@@ -53,9 +52,11 @@
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_options.hpp"
@@ -144,8 +145,27 @@ public:
 
   /// Create and return a Publisher.
   /**
+   * The rclcpp::QoS has several convenient constructors, including a
+   * conversion constructor for size_t, which mimics older API's that
+   * allows just a string and size_t to create a pull request.
+   *
+   * For example, all of these cases will work:
+   *
+   *   pub = node->create_publisher<MsgT>("chatter", 10);  // implicitly KeepLast
+   *   pub = node->create_publisher<MsgT>("chatter", QoS(10));  // implicitly KeepLast
+   *   pub = node->create_publisher<MsgT>("chatter", QoS(KeepLast(10)));
+   *   pub = node->create_publisher<MsgT>("chatter", QoS(KeepAll()));
+   *   pub = node->create_publisher<MsgT>("chatter", QoS(1).best_effort().volatile());
+   *   {
+   *     rclcpp::QoS custom_qos(KeepLast(10), rmw_qos_profile_sensor_data);
+   *     pub = node->create_publisher<MsgT>("chatter", custom_qos);
+   *   }
+   *
+   * The publisher options may optionally be passed as the third argument for
+   * any of the above cases.
+   *
    * \param[in] topic_name The topic for this publisher to publish on.
-   * \param[in] qos_history_depth The depth of the publisher message queue.
+   * \param[in] qos The Quality of Service settings for the publisher.
    * \param[in] options Additional options for the created Publisher.
    * \return Shared pointer to the created publisher.
    */
@@ -156,30 +176,28 @@ public:
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
-    size_t qos_history_depth,
-    const PublisherOptionsWithAllocator<AllocatorT> &
-    options = PublisherOptionsWithAllocator<AllocatorT>());
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+    ));
 
   /// Create and return a Publisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_history_depth The depth of the publisher message queue.
-   * \param[in] allocator Optional custom allocator.
+   * \param[in] allocator Custom allocator.
    * \return Shared pointer to the created publisher.
    */
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
-    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
-  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated(
-    "use the create_publisher(const std::string &, size_t, const PublisherOptions<Alloc> & = "
-    "PublisherOptions<Alloc>()) signature instead")]]
+    typename MessageT,
+    typename AllocatorT = std::allocator<void>,
+    typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
+  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
     size_t qos_history_depth,
-    std::shared_ptr<Alloc> allocator,
-    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
+    std::shared_ptr<AllocatorT> allocator);
 
   /// Create and return a Publisher.
   /**
@@ -189,14 +207,15 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
-    typename PublisherT = ::rclcpp::Publisher<MessageT, Alloc>>
+    typename MessageT,
+    typename AllocatorT = std::allocator<void>,
+    typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
+  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
-    std::shared_ptr<Alloc> allocator = nullptr,
-    IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault);
+    std::shared_ptr<AllocatorT> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -1118,12 +1137,12 @@ public:
    *   with a leading '/'.
    */
   RCLCPP_PUBLIC
-  Node::SharedPtr
+  rclcpp::Node::SharedPtr
   create_sub_node(const std::string & sub_namespace);
 
   /// Return the NodeOptions used when creating this node.
   RCLCPP_PUBLIC
-  const NodeOptions &
+  const rclcpp::NodeOptions &
   get_node_options() const;
 
   /// Manually assert that this Node is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE).
@@ -1170,7 +1189,7 @@ private:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
-  const NodeOptions node_options_;
+  const rclcpp::NodeOptions node_options_;
   const std::string sub_namespace_;
   const std::string effective_namespace_;
 };

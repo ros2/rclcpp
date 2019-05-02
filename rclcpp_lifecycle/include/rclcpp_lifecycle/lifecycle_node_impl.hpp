@@ -39,18 +39,34 @@
 namespace rclcpp_lifecycle
 {
 
+template<typename MessageT, typename AllocatorT>
+std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>>
+LifecycleNode::create_publisher(
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+{
+  using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>;
+  return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
+    *this,
+    topic_name,
+    qos,
+    options);
+}
+
 template<typename MessageT, typename Alloc>
 std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
 LifecycleNode::create_publisher(
-  const std::string & topic_name, size_t qos_history_depth,
+  const std::string & topic_name,
+  size_t qos_history_depth,
   std::shared_ptr<Alloc> allocator)
 {
-  if (!allocator) {
-    allocator = std::make_shared<Alloc>();
-  }
-  rmw_qos_profile_t qos = rmw_qos_profile_default;
-  qos.depth = qos_history_depth;
-  return this->create_publisher<MessageT, Alloc>(topic_name, qos, allocator);
+  rclcpp::PublisherOptionsWithAllocator<Alloc> options;
+  options.allocator = allocator;
+  return this->create_publisher<MessageT, Alloc>(
+    topic_name,
+    rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)),
+    options);
 }
 
 template<typename MessageT, typename Alloc>
@@ -60,17 +76,16 @@ LifecycleNode::create_publisher(
   const rmw_qos_profile_t & qos_profile,
   std::shared_ptr<Alloc> allocator)
 {
-  using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>;
+  rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(qos_profile));
+  qos.get_rmw_qos_profile() = qos_profile;
 
-  // create regular publisher in rclcpp::Node
-  return rclcpp::create_publisher<MessageT, Alloc, PublisherT>(
-    this->node_topics_.get(),
+  rclcpp::PublisherOptionsWithAllocator<Alloc> pub_options;
+  pub_options.allocator = allocator;
+
+  return this->create_publisher<MessageT, Alloc>(
     topic_name,
-    qos_profile,
-    rclcpp::PublisherEventCallbacks(),
-    nullptr,
-    use_intra_process_comms_,
-    allocator);
+    qos,
+    pub_options);
 }
 
 // TODO(karsten1987): Create LifecycleSubscriber
@@ -106,7 +121,7 @@ LifecycleNode::create_subscription(
     rclcpp::SubscriptionEventCallbacks(),
     group,
     ignore_local_publications,
-    use_intra_process_comms_,
+    node_options_.use_intra_process_comms(),
     msg_mem_strat,
     allocator);
 }
