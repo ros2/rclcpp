@@ -177,9 +177,8 @@ public:
   create_publisher(
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
-      rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
-    ));
+    const PublisherOptionsWithAllocator<AllocatorT> & options =
+      PublisherOptionsWithAllocator<AllocatorT>());
 
   /// Create and return a Publisher.
   /**
