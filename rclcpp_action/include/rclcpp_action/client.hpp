@@ -267,8 +267,7 @@ public:
   using ResultCallback = typename GoalHandle::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
-  using CancelOneCallback = std::function<void (typename GoalHandle::SharedPtr, bool)>;
-  using CancelMultipleCallback = std::function<void (typename CancelResponse::SharedPtr)>;
+  using CancelCallback = std::function<void (typename CancelResponse::SharedPtr)>;
 
   /// Options for sending a goal.
   /**
@@ -422,42 +421,26 @@ public:
    *   terminal state.
    * \param[in] goal_handle The goal handle requesting to be canceled.
    * \param[in] cancel_callback Optional callback that is called when the response is received.
-   *   The callback function takes two parameters: a shared pointer to the goal handle and a bool
-   *   indicating if the action server accepted the cancel request or not.
-   * \return A future whose result indicates whether or not the cancel request was accepted.
+   *   The callback takes one parameter: a shared pointer to the CancelResponse message.
+   * \return A future to a CancelResponse message that is set when the request has been
+   * acknowledged by an action server.
+   * See
+   * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
+   * action_msgs/CancelGoal.srv</a>.
    */
-  std::shared_future<bool>
+  std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_goal(
     typename GoalHandle::SharedPtr goal_handle,
-    CancelOneCallback cancel_callback = nullptr)
+    CancelCallback cancel_callback = nullptr)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
       throw exceptions::UnknownGoalHandleError();
     }
-    // Put promise in the heap to move it around.
-    auto promise = std::make_shared<std::promise<bool>>();
-    std::shared_future<bool> future(promise->get_future());
     auto cancel_request = std::make_shared<CancelRequest>();
     // cancel_request->goal_info.goal_id = goal_handle->get_goal_id();
     cancel_request->goal_info.goal_id.uuid = goal_handle->get_goal_id();
-    this->send_cancel_request(
-      std::static_pointer_cast<void>(cancel_request),
-      [goal_handle, cancel_callback, promise](std::shared_ptr<void> response) mutable
-      {
-        auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
-        bool goal_canceled = false;
-        if (!cancel_response->goals_canceling.empty()) {
-          const GoalInfo & canceled_goal_info = cancel_response->goals_canceling[0];
-          // goal_canceled = (canceled_goal_info.goal_id == goal_handle->get_goal_id());
-          goal_canceled = (canceled_goal_info.goal_id.uuid == goal_handle->get_goal_id());
-        }
-        promise->set_value(goal_canceled);
-        if (cancel_callback) {
-          cancel_callback(goal_handle, goal_canceled);
-        }
-      });
-    return future;
+    return async_cancel(cancel_request, cancel_callback);
   }
 
   /// Asynchronously request for all goals to be canceled.
@@ -471,7 +454,7 @@ public:
    * action_msgs/CancelGoal.srv</a>.
    */
   std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel_all_goals(CancelMultipleCallback cancel_callback = nullptr)
+  async_cancel_all_goals(CancelCallback cancel_callback = nullptr)
   {
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
@@ -495,7 +478,7 @@ public:
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel_goals_before(
     const rclcpp::Time & stamp,
-    CancelMultipleCallback cancel_callback = nullptr)
+    CancelCallback cancel_callback = nullptr)
   {
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
@@ -636,7 +619,7 @@ private:
   std::shared_future<typename CancelResponse::SharedPtr>
   async_cancel(
     typename CancelRequest::SharedPtr cancel_request,
-    CancelMultipleCallback cancel_callback = nullptr)
+    CancelCallback cancel_callback = nullptr)
   {
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename CancelResponse::SharedPtr>>();

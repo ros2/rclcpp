@@ -325,6 +325,9 @@ ServerBase::execute_cancel_request_received()
     pimpl_->action_server_.get(),
     &cancel_request,
     &cancel_response);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
 
   RCLCPP_SCOPE_EXIT({
     ret = rcl_action_cancel_response_fini(&cancel_response);
@@ -335,6 +338,7 @@ ServerBase::execute_cancel_request_received()
 
   auto response = std::make_shared<action_msgs::srv::CancelGoal::Response>();
 
+  response->return_code = cancel_response.msg.return_code;
   auto & goals = cancel_response.msg.goals_canceling;
   // For each canceled goal, call cancel callback
   for (size_t i = 0; i < goals.size; ++i) {
@@ -349,6 +353,12 @@ ServerBase::execute_cancel_request_received()
       cpp_info.stamp.nanosec = goal_info.stamp.nanosec;
       response->goals_canceling.push_back(cpp_info);
     }
+  }
+
+  // If the user rejects all individual requests to cancel goals,
+  // then we consider the top-level cancel request as rejected.
+  if (goals.size >= 1u && 0u == response->goals_canceling.size()) {
+    response->return_code = action_msgs::srv::CancelGoal::Response::ERROR_REJECTED;
   }
 
   if (!response->goals_canceling.empty()) {
