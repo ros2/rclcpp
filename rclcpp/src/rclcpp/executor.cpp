@@ -304,7 +304,7 @@ Executor::execute_subscription(
     auto serialized_msg = subscription->create_serialized_message();
     auto ret = rcl_take_serialized_message(
       subscription->get_subscription_handle().get(),
-      serialized_msg.get(), &message_info);
+      serialized_msg.get(), &message_info, nullptr);
     if (RCL_RET_OK == ret) {
       auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
       subscription->handle_message(void_serialized_msg, message_info);
@@ -320,7 +320,7 @@ Executor::execute_subscription(
     std::shared_ptr<void> message = subscription->create_message();
     auto ret = rcl_take(
       subscription->get_subscription_handle().get(),
-      message.get(), &message_info);
+      message.get(), &message_info, nullptr);
     if (RCL_RET_OK == ret) {
       subscription->handle_message(message, message_info);
     } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
@@ -343,7 +343,8 @@ Executor::execute_intra_process_subscription(
   rcl_ret_t status = rcl_take(
     subscription->get_intra_process_subscription_handle().get(),
     &ipm,
-    &message_info);
+    &message_info,
+    nullptr);
 
   if (status == RCL_RET_OK) {
     message_info.from_intra_process = true;

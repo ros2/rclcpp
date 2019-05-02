@@ -158,7 +158,7 @@ public:
       // TODO(Karsten1987): support serialized message passed by intraprocess
       throw std::runtime_error("storing serialized messages in intra process is not supported yet");
     }
-    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg);
+    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
     if (RCL_RET_OK != status) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
     }
@@ -179,7 +179,7 @@ protected:
   void
   do_inter_process_publish(const MessageT * msg)
   {
-    auto status = rcl_publish(&publisher_handle_, msg);
+    auto status = rcl_publish(&publisher_handle_, msg, nullptr);
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
@@ -201,7 +201,7 @@ protected:
     rcl_interfaces::msg::IntraProcessMessage ipm;
     ipm.publisher_id = intra_process_publisher_id_;
     ipm.message_sequence = message_seq;
-    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm);
+    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr);
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
