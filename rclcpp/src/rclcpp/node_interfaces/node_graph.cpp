@@ -14,6 +14,7 @@
 
 #include "rclcpp/node_interfaces/node_graph.hpp"
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <utility>
@@ -136,9 +137,24 @@ NodeGraph::get_node_names() const
   std::vector<std::string> nodes;
   auto names_and_namespaces = get_node_names_and_namespaces();
 
-  for (const auto & it : names_and_namespaces) {
-    nodes.push_back(it.first);
-  }
+  std::transform(names_and_namespaces.begin(),
+    names_and_namespaces.end(),
+    std::back_inserter(nodes),
+    [](std::pair<std::string, std::string> nns) {
+      std::string return_string;
+      if (nns.second.back() == '/') {
+        return_string = nns.second + nns.first;
+      } else {
+        return_string = nns.second + '/' + nns.first;
+      }
+      // Quick check to make sure that we start with a slash
+      // Since fully-qualified strings need to
+      if (return_string.front() != '/') {
+        return_string = "/" + return_string;
+      }
+      return return_string;
+    }
+  );
   return nodes;
 }
 
@@ -173,10 +189,12 @@ NodeGraph::get_node_names_and_namespaces() const
     throw std::runtime_error(error_msg);
   }
 
-  std::vector<std::pair<std::string, std::string>> node_names(node_names_c.size);
+
+  std::vector<std::pair<std::string, std::string>> node_names;
+  node_names.reserve(node_names_c.size);
   for (size_t i = 0; i < node_names_c.size; ++i) {
     if (node_names_c.data[i] && node_namespaces_c.data[i]) {
-      node_names.push_back(std::make_pair(node_names_c.data[i], node_namespaces_c.data[i]));
+      node_names.emplace_back(node_names_c.data[i], node_namespaces_c.data[i]);
     }
   }
 

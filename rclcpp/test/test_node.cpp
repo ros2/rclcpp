@@ -14,9 +14,10 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <map>
 #include <memory>
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
@@ -98,6 +99,23 @@ TEST_F(TestNode, get_name_and_namespace) {
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/my/ns", node->get_namespace());
     EXPECT_STREQ("/my/ns/my_node", node->get_fully_qualified_name());
+  }
+  {
+    auto node1 = std::make_shared<rclcpp::Node>("my_node1", "my/ns");
+    auto node2 = std::make_shared<rclcpp::Node>("my_node2", "my/ns");
+    auto node3 = std::make_shared<rclcpp::Node>("my_node3", "/ns2");
+    auto node4 = std::make_shared<rclcpp::Node>("my_node4", "my/ns3");
+    auto names_and_namespaces = node1->get_node_names();
+    auto name_namespace_set = std::unordered_set<std::string>(names_and_namespaces.begin(),
+        names_and_namespaces.end());
+    std::function<bool(std::string)> Set_Contains = [&](std::string string_key)
+      {
+        return name_namespace_set.find(string_key) != name_namespace_set.end();
+      };
+    EXPECT_TRUE(Set_Contains("/my/ns/my_node1"));
+    EXPECT_TRUE(Set_Contains("/my/ns/my_node2"));
+    EXPECT_TRUE(Set_Contains("/ns2/my_node3"));
+    EXPECT_TRUE(Set_Contains("/my/ns3/my_node4"));
   }
 }
 
