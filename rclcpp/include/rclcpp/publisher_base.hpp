@@ -23,11 +23,13 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "rcl/publisher.h"
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
+#include "rclcpp/qos_event.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -112,6 +114,12 @@ public:
   const rcl_publisher_t *
   get_publisher_handle() const;
 
+  /// Get all the QoS event handlers associated with this publisher.
+  /** \return The vector of QoS event handlers. */
+  RCLCPP_PUBLIC
+  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+  get_event_handlers() const;
+
   /// Get subscription count
   /** \return The number of subscriptions. */
   RCLCPP_PUBLIC
@@ -123,6 +131,19 @@ public:
   RCLCPP_PUBLIC
   size_t
   get_intra_process_subscription_count() const;
+
+  /// Manually assert that this Publisher is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC).
+  /**
+   * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC, the creator
+   * of this publisher may manually call `assert_liveliness` at some point in time to signal to the
+   * rest of the system that this Node is still alive.
+   *
+   * \return `true` if the liveliness was asserted successfully, otherwise `false`
+   */
+  RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
+  bool
+  assert_liveliness() const;
 
   /// Get the actual QoS settings, after the defaults have been determined.
   /**
@@ -175,10 +196,26 @@ public:
     const rcl_publisher_options_t & intra_process_options);
 
 protected:
+  template<typename EventCallbackT>
+  void
+  add_event_handler(
+    const EventCallbackT & callback,
+    const rcl_publisher_event_type_t event_type)
+  {
+    auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
+      callback,
+      rcl_publisher_event_init,
+      &publisher_handle_,
+      event_type);
+    event_handlers_.emplace_back(handler);
+  }
+
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
   rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
+
+  std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;

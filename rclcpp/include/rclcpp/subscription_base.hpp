@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "rcl/subscription.h"
 
@@ -26,6 +27,7 @@
 
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/qos_event.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -90,6 +92,12 @@ public:
   virtual const std::shared_ptr<rcl_subscription_t>
   get_intra_process_subscription_handle() const;
 
+  /// Get all the QoS event handlers associated with this subscription.
+  /** \return The vector of QoS event handlers. */
+  RCLCPP_PUBLIC
+  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+  get_event_handlers() const;
+
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
   virtual std::shared_ptr<void>
@@ -145,9 +153,25 @@ public:
     const rcl_subscription_options_t & intra_process_options);
 
 protected:
-  std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
-  std::shared_ptr<rcl_subscription_t> subscription_handle_;
+  template<typename EventCallbackT>
+  void
+  add_event_handler(
+    const EventCallbackT & callback,
+    const rcl_subscription_event_type_t event_type)
+  {
+    auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
+      callback,
+      rcl_subscription_event_init,
+      get_subscription_handle().get(),
+      event_type);
+    event_handlers_.emplace_back(handler);
+  }
+
   std::shared_ptr<rcl_node_t> node_handle_;
+  std::shared_ptr<rcl_subscription_t> subscription_handle_;
+  std::shared_ptr<rcl_subscription_t> intra_process_subscription_handle_;
+
+  std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
 
   bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;

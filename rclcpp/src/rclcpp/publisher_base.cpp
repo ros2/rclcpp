@@ -22,6 +22,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 #include "rcutils/logging_macros.h"
@@ -30,10 +31,10 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/expand_topic_or_service_name.hpp"
 
 using rclcpp::PublisherBase;
 
@@ -80,6 +81,9 @@ PublisherBase::PublisherBase(
 
 PublisherBase::~PublisherBase()
 {
+  // must fini the events before fini-ing the publisher
+  event_handlers_.clear();
+
   if (rcl_publisher_fini(&intra_process_publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
@@ -153,6 +157,12 @@ PublisherBase::get_publisher_handle() const
   return &publisher_handle_;
 }
 
+const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
+PublisherBase::get_event_handlers() const
+{
+  return event_handlers_;
+}
+
 size_t
 PublisherBase::get_subscription_count() const
 {
@@ -205,6 +215,12 @@ PublisherBase::get_actual_qos() const
     throw std::runtime_error(msg);
   }
   return *qos;
+}
+
+bool
+PublisherBase::assert_liveliness() const
+{
+  return RCL_RET_OK == rcl_publisher_assert_liveliness(&publisher_handle_);
 }
 
 bool

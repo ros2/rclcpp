@@ -110,13 +110,15 @@ public:
  * \throws std::runtime_error if the rcl_get_error_state returns 0
  * \throws RCLErrorBase some child class exception based on ret
  */
+/* *INDENT-OFF* */  // Uncrustify cannot yet understand [[noreturn]] properly
 RCLCPP_PUBLIC
 void
-throw_from_rcl_error(
+throw_from_rcl_error [[noreturn]] (
   rcl_ret_t ret,
   const std::string & prefix = "",
   const rcl_error_state_t * error_state = nullptr,
   void (* reset_error)() = rcl_reset_error);
+/* *INDENT-ON* */
 
 class RCLErrorBase
 {

@@ -223,6 +223,7 @@ void TimeSource::create_clock_sub()
     topic_name,
     std::move(cb),
     rmw_qos_profile_default,
+    rclcpp::SubscriptionEventCallbacks(),
     group,
     false,
     false,

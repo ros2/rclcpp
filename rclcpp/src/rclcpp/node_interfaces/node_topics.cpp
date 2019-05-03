@@ -60,11 +60,22 @@ NodeTopics::create_publisher(
 
 void
 NodeTopics::add_publisher(
-  rclcpp::PublisherBase::SharedPtr publisher)
+  rclcpp::PublisherBase::SharedPtr publisher,
+  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
 {
-  // The publisher is not added to a callback group or anthing like that for now.
-  // It may be stored within the NodeTopics class or the NodeBase class in the future.
-  (void)publisher;
+  // Assign to a group.
+  if (callback_group) {
+    if (!node_base_->callback_group_in_node(callback_group)) {
+      throw std::runtime_error("Cannot create publisher, callback group not in node.");
+    }
+  } else {
+    callback_group = node_base_->get_default_callback_group();
+  }
+
+  for (auto & publisher_event : publisher->get_event_handlers()) {
+    callback_group->add_waitable(publisher_event);
+  }
+
   // Notify the executor that a new publisher was created using the parent Node.
   {
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
@@ -111,9 +122,13 @@ NodeTopics::add_subscription(
       // TODO(jacquelinekay): use custom exception
       throw std::runtime_error("Cannot create subscription, callback group not in node.");
     }
-    callback_group->add_subscription(subscription);
   } else {
-    node_base_->get_default_callback_group()->add_subscription(subscription);
+    callback_group = node_base_->get_default_callback_group();
+  }
+
+  callback_group->add_subscription(subscription);
+  for (auto & subscription_event : subscription->get_event_handlers()) {
+    callback_group->add_waitable(subscription_event);
   }
 
   // Notify the executor that a new subscription was created using the parent Node.

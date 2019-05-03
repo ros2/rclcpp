@@ -61,6 +61,17 @@ public:
   size_t
   get_number_of_ready_clients();
 
+  /// Get the number of ready events
+  /**
+   * Returns a value of 0 by default.
+   * This should be overridden if the Waitable contains one or more events.
+   * \return The number of events associated with the Waitable.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  size_t
+  get_number_of_ready_events();
+
   /// Get the number of ready services
   /**
    * Returns a value of 0 by default.
@@ -88,6 +99,7 @@ public:
   /**
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
    * \return `true` if the Waitable is added successfully, `false` otherwise.
+   * \throws rclcpp::execptions::RCLError from rcl_wait_set_add_*()
    */
   RCLCPP_PUBLIC
   virtual

@@ -97,6 +97,8 @@ Node::create_publisher(
     this->node_topics_.get(),
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     qos_profile,
+    options.event_callbacks,
+    options.callback_group,
     use_intra_process,
     allocator);
 }
@@ -181,6 +183,7 @@ Node::create_subscription(
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
     std::forward<CallbackT>(callback),
     qos_profile,
+    options.event_callbacks,
     options.callback_group,
     options.ignore_local_publications,
     use_intra_process,

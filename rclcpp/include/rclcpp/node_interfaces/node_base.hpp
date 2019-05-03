@@ -88,6 +88,11 @@ public:
 
   RCLCPP_PUBLIC
   virtual
+  bool
+  assert_liveliness() const;
+
+  RCLCPP_PUBLIC
+  virtual
   rclcpp::callback_group::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
 

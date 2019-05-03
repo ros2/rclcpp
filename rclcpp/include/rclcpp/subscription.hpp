@@ -42,6 +42,7 @@
 #include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -85,6 +86,7 @@ public:
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
+    const SubscriptionEventCallbacks & event_callbacks,
     typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
     memory_strategy = message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
     Alloc>::create_default())
@@ -96,7 +98,16 @@ public:
       rclcpp::subscription_traits::is_serialized_subscription_argument<CallbackMessageT>::value),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy)
-  {}
+  {
+    if (event_callbacks.deadline_callback) {
+      this->add_event_handler(event_callbacks.deadline_callback,
+        RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+    }
+    if (event_callbacks.liveliness_callback) {
+      this->add_event_handler(event_callbacks.liveliness_callback,
+        RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+    }
+  }
 
   /// Support dynamically setting the message memory strategy.
   /**

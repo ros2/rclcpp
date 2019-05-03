@@ -51,6 +51,7 @@ public:
   virtual size_t number_of_ready_subscriptions() const = 0;
   virtual size_t number_of_ready_services() const = 0;
   virtual size_t number_of_ready_clients() const = 0;
+  virtual size_t number_of_ready_events() const = 0;
   virtual size_t number_of_ready_timers() const = 0;
   virtual size_t number_of_guard_conditions() const = 0;
   virtual size_t number_of_waitables() const = 0;

@@ -57,13 +57,15 @@ struct PublisherFactory
 /// Return a PublisherFactory with functions setup for creating a PublisherT<MessageT, Alloc>.
 template<typename MessageT, typename Alloc, typename PublisherT>
 PublisherFactory
-create_publisher_factory(std::shared_ptr<Alloc> allocator)
+create_publisher_factory(
+  const PublisherEventCallbacks & event_callbacks,
+  std::shared_ptr<Alloc> allocator)
 {
   PublisherFactory factory;
 
   // factory function that creates a MessageT specific PublisherT
   factory.create_typed_publisher =
-    [allocator](
+    [event_callbacks, allocator](
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic_name,
     rcl_publisher_options_t & publisher_options) -> std::shared_ptr<PublisherT>
@@ -71,7 +73,12 @@ create_publisher_factory(std::shared_ptr<Alloc> allocator)
       auto message_alloc = std::make_shared<typename PublisherT::MessageAlloc>(*allocator.get());
       publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
 
-      return std::make_shared<PublisherT>(node_base, topic_name, publisher_options, message_alloc);
+      return std::make_shared<PublisherT>(
+        node_base,
+        topic_name,
+        publisher_options,
+        event_callbacks,
+        message_alloc);
     };
 
   // return the factory now that it is populated

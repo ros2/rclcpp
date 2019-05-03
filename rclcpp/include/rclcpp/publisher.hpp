@@ -34,7 +34,6 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -59,6 +58,7 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
+    const PublisherEventCallbacks & event_callbacks,
     const std::shared_ptr<MessageAlloc> & allocator)
   : PublisherBase(
       node_base,
@@ -68,6 +68,15 @@ public:
     message_allocator_(allocator)
   {
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
+
+    if (event_callbacks.deadline_callback) {
+      this->add_event_handler(event_callbacks.deadline_callback,
+        RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
+    }
+    if (event_callbacks.liveliness_callback) {
+      this->add_event_handler(event_callbacks.liveliness_callback,
+        RCL_PUBLISHER_LIVELINESS_LOST);
+    }
   }
 
   virtual ~Publisher()

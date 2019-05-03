@@ -75,6 +75,7 @@ template<
 SubscriptionFactory
 create_subscription_factory(
   CallbackT && callback,
+  const SubscriptionEventCallbacks & event_callbacks,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
     CallbackMessageT, Alloc>::SharedPtr
   msg_mem_strat,
@@ -91,7 +92,7 @@ create_subscription_factory(
 
   // factory function that creates a MessageT specific SubscriptionT
   factory.create_typed_subscription =
-    [allocator, msg_mem_strat, any_subscription_callback, message_alloc](
+    [allocator, msg_mem_strat, any_subscription_callback, event_callbacks, message_alloc](
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic_name,
     rcl_subscription_options_t & subscription_options
@@ -109,6 +110,7 @@ create_subscription_factory(
         topic_name,
         subscription_options,
         any_subscription_callback,
+        event_callbacks,
         msg_mem_strat);
       auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
       return sub_base_ptr;

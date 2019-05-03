@@ -127,6 +127,7 @@ public:
       "parameter_events",
       std::forward<CallbackT>(callback),
       rmw_qos_profile_default,
+      SubscriptionEventCallbacks(),
       nullptr,  // group,
       false,  // ignore_local_publications,
       false,  // use_intra_process_comms_,
