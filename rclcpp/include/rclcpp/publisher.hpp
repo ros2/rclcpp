@@ -127,9 +127,12 @@ public:
     }
   }
 
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
   [[deprecated(
     "publishing an unique_ptr is prefered when using intra process communication."
     " If using a shared_ptr, use publish(*msg).")]]
+#endif
   virtual void
   publish(const std::shared_ptr<const MessageT> & msg)
   {
@@ -153,8 +156,11 @@ public:
     this->publish(std::move(unique_msg));
   }
 
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
   [[deprecated(
     "Use publish(*msg). Check against nullptr before calling if necessary.")]]
+#endif
   virtual void
   publish(const MessageT * msg)
   {
@@ -170,16 +176,22 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
   [[deprecated(
     "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+#endif
   void
   publish(const rcl_serialized_message_t * serialized_msg)
   {
     return this->do_serialized_publish(serialized_msg);
   }
 
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
   [[deprecated(
     "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+#endif
   void
   publish(std::shared_ptr<const rcl_serialized_message_t> serialized_msg)
   {
