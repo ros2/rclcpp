@@ -99,25 +99,6 @@ public:
    * to the actual rclcpp Publisher base class
    */
   virtual void
-  publish(const std::shared_ptr<const MessageT> & msg)
-  {
-    if (!enabled_) {
-      RCLCPP_WARN(logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
-      return;
-    }
-    rclcpp::Publisher<MessageT, Alloc>::publish(*msg);
-  }
-
-  /// LifecyclePublisher publish function
-  /**
-   * The publish function checks whether the communication
-   * was enabled or disabled and forwards the message
-   * to the actual rclcpp Publisher base class
-   */
-  virtual void
   publish(const MessageT & msg)
   {
     if (!enabled_) {
@@ -130,6 +111,40 @@ public:
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+
+// Avoid raising a deprecated warning in template specialization
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
+  /// LifecyclePublisher publish function
+  /**
+   * The publish function checks whether the communication
+   * was enabled or disabled and forwards the message
+   * to the actual rclcpp Publisher base class
+   */
+  [[deprecated(
+    "publishing an unique_ptr is prefered when using intra process communication."
+    " If using a shared_ptr, use publish(*msg).")]]
+  virtual void
+  publish(const std::shared_ptr<const MessageT> & msg)
+  {
+    if (!enabled_) {
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
+      return;
+    }
+    rclcpp::Publisher<MessageT, Alloc>::publish(*msg);
+  }
+
+  [[deprecated(
+    "Use publish(*msg). Check against nullptr before calling if necessary.")]]
   virtual void
   publish(const MessageT * msg)
   {
@@ -138,6 +153,12 @@ public:
     }
     this->publish(*msg);
   }
+
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 
   virtual void
   on_activate()
