@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "rclcpp/publisher.hpp"
 
@@ -79,7 +80,7 @@ public:
    * to the actual rclcpp Publisher base class
    */
   virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(logger_,
@@ -88,26 +89,7 @@ public:
 
       return;
     }
-    rclcpp::Publisher<MessageT, Alloc>::publish(msg);
-  }
-
-  /// LifecyclePublisher publish function
-  /**
-   * The publish function checks whether the communication
-   * was enabled or disabled and forwards the message
-   * to the actual rclcpp Publisher base class
-   */
-  virtual void
-  publish(const std::shared_ptr<const MessageT> & msg)
-  {
-    if (!enabled_) {
-      RCLCPP_WARN(logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
-      return;
-    }
-    rclcpp::Publisher<MessageT, Alloc>::publish(*msg);
+    rclcpp::Publisher<MessageT, Alloc>::publish(std::move(msg));
   }
 
   /// LifecyclePublisher publish function
@@ -129,6 +111,39 @@ public:
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
+  /// LifecyclePublisher publish function
+  /**
+   * The publish function checks whether the communication
+   * was enabled or disabled and forwards the message
+   * to the actual rclcpp Publisher base class
+   */
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+// Avoid raising a deprecated warning in template specialization in linux.
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  [[deprecated(
+    "publishing an unique_ptr is prefered when using intra process communication."
+    " If using a shared_ptr, use publish(*msg).")]]
+#endif
+  virtual void
+  publish(const std::shared_ptr<const MessageT> & msg)
+  {
+    if (!enabled_) {
+      RCLCPP_WARN(logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
+      return;
+    }
+    rclcpp::Publisher<MessageT, Alloc>::publish(*msg);
+  }
+
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+  [[deprecated(
+    "Use publish(*msg). Check against nullptr before calling if necessary.")]]
+#endif
   virtual void
   publish(const MessageT * msg)
   {
@@ -137,6 +152,10 @@ public:
     }
     this->publish(*msg);
   }
+
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#endif
 
   virtual void
   on_activate()

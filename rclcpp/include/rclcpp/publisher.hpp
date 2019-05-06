@@ -97,11 +97,10 @@ public:
    * \param[in] msg A shared pointer to the message to send.
    */
   virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> & msg)
+  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(msg.get());
-      msg.reset();
       return;
     }
     // If an interprocess subscription exist, then the unique_ptr is promoted
@@ -128,6 +127,12 @@ public:
     }
   }
 
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+  [[deprecated(
+    "publishing an unique_ptr is prefered when using intra process communication."
+    " If using a shared_ptr, use publish(*msg).")]]
+#endif
   virtual void
   publish(const std::shared_ptr<const MessageT> & msg)
   {
@@ -148,9 +153,14 @@ public:
     auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
     MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
     MessageUniquePtr unique_msg(ptr, message_deleter_);
-    this->publish(unique_msg);
+    this->publish(std::move(unique_msg));
   }
 
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+  [[deprecated(
+    "Use publish(*msg). Check against nullptr before calling if necessary.")]]
+#endif
   virtual void
   publish(const MessageT * msg)
   {
@@ -161,22 +171,31 @@ public:
   }
 
   void
-  publish(const rcl_serialized_message_t * serialized_msg)
+  publish(const rcl_serialized_message_t & serialized_msg)
   {
-    if (intra_process_is_enabled_) {
-      // TODO(Karsten1987): support serialized message passed by intraprocess
-      throw std::runtime_error("storing serialized messages in intra process is not supported yet");
-    }
-    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
-    if (RCL_RET_OK != status) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
-    }
+    return this->do_serialized_publish(&serialized_msg);
   }
 
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+  [[deprecated(
+    "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+#endif
+  void
+  publish(const rcl_serialized_message_t * serialized_msg)
+  {
+    return this->do_serialized_publish(serialized_msg);
+  }
+
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+  [[deprecated(
+    "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+#endif
   void
   publish(std::shared_ptr<const rcl_serialized_message_t> serialized_msg)
   {
-    return this->publish(serialized_msg.get());
+    return this->do_serialized_publish(serialized_msg.get());
   }
 
   std::shared_ptr<MessageAlloc> get_allocator() const
@@ -201,6 +220,19 @@ protected:
     }
     if (RCL_RET_OK != status) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
+    }
+  }
+
+  void
+  do_serialized_publish(const rcl_serialized_message_t * serialized_msg)
+  {
+    if (intra_process_is_enabled_) {
+      // TODO(Karsten1987): support serialized message passed by intraprocess
+      throw std::runtime_error("storing serialized messages in intra process is not supported yet");
+    }
+    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
     }
   }
 
