@@ -33,6 +33,7 @@ template<
   typename MessageT,
   typename AllocatorT = std::allocator<void>,
   typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
+// cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
 [[deprecated(
   "use the rclcpp::create_publisher<NodeT, MessageT, AllocatorT, PublisherT>("
   "NodeT node,"

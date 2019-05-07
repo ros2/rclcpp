@@ -35,6 +35,7 @@ template<
   typename AllocatorT,
   typename CallbackMessageT,
   typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>>
+// cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
 [[deprecated("use alternative rclcpp::create_subscription() signatures")]]
 typename std::shared_ptr<SubscriptionT>
 create_subscription(
