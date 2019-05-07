@@ -61,8 +61,8 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result;
-    // TODO(wjwwood): convert allocator to C when/if we figure that out, see allocator_common.hpp
-    // result.allocator = get_rcl_allocator(this->allocator);
+    result.allocator =
+      allocator::get_rcl_allocator<typename Allocator::value_type>(*this->allocator);
     result.qos = qos.get_rmw_qos_profile();
     return result;
   }
