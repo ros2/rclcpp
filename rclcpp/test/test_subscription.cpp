@@ -172,7 +172,7 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
  */
 TEST_F(TestSubscription, various_creation_signatures) {
   using rcl_interfaces::msg::IntraProcessMessage;
-  auto cb = [](rcl_interfaces::msg::IntraProcessMessage::SharedPtr){};
+  auto cb = [](rcl_interfaces::msg::IntraProcessMessage::SharedPtr) {};
   {
     auto sub = node->create_subscription<IntraProcessMessage>("topic", 1, cb);
     (void)sub;

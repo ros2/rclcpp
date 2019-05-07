@@ -109,11 +109,11 @@ Node::Node(
   const std::string & namespace_,
   const NodeOptions & options)
 : node_base_(new rclcpp::node_interfaces::NodeBase(
-    node_name,
-    namespace_,
-    options.context(),
-    *(options.get_rcl_node_options()),
-    options.use_intra_process_comms())),
+      node_name,
+      namespace_,
+      options.context(),
+      *(options.get_rcl_node_options()),
+      options.use_intra_process_comms())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),

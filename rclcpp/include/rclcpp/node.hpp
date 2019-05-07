@@ -178,8 +178,8 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos,
     const PublisherOptionsWithAllocator<AllocatorT> & options =
-      PublisherOptionsWithAllocator<AllocatorT>()
-    );
+    PublisherOptionsWithAllocator<AllocatorT>()
+  );
 
   /// Create and return a Publisher.
   /**
@@ -242,7 +242,7 @@ public:
     const rclcpp::QoS & qos,
     CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
-      SubscriptionOptionsWithAllocator<AllocatorT>(),
+    SubscriptionOptionsWithAllocator<AllocatorT>(),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
     >::SharedPtr

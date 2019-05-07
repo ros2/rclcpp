@@ -82,7 +82,7 @@ template<
   typename CallbackT,
   typename AllocatorT = std::allocator<void>,
   typename CallbackMessageT =
-    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+  typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
   typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>,
   typename NodeT>
 typename std::shared_ptr<SubscriptionT>

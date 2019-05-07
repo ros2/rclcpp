@@ -119,7 +119,7 @@ public:
     ),
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
-    ))
+  ))
   {
     return rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       this->node_topics_interface_,

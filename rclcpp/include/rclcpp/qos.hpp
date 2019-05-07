@@ -156,7 +156,7 @@ public:
   SensorDataQoS(
     const QoSInitialization & qos_initialization = (
       QoSInitialization::from_rmw(rmw_qos_profile_sensor_data)
-    ));
+  ));
 };
 
 class ParametersQoS : public QoS
@@ -166,7 +166,7 @@ public:
   ParametersQoS(
     const QoSInitialization & qos_initialization = (
       QoSInitialization::from_rmw(rmw_qos_profile_parameters)
-    ));
+  ));
 };
 
 class ServicesQoS : public QoS
@@ -176,7 +176,7 @@ public:
   ServicesQoS(
     const QoSInitialization & qos_initialization = (
       QoSInitialization::from_rmw(rmw_qos_profile_services_default)
-    ));
+  ));
 };
 
 class ParameterEventsQoS : public QoS
@@ -186,7 +186,7 @@ public:
   ParameterEventsQoS(
     const QoSInitialization & qos_initialization = (
       QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
-    ));
+  ));
 };
 
 class SystemDefaultsQoS : public QoS
@@ -196,7 +196,7 @@ public:
   SystemDefaultsQoS(
     const QoSInitialization & qos_initialization = (
       QoSInitialization::from_rmw(rmw_qos_profile_system_default)
-    ));
+  ));
 };
 
 }  // namespace rclcpp
