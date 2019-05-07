@@ -227,7 +227,7 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   [[deprecated(
-    "use create_subscription(const std::string &, CallbackT, const rclcpp::QoS &, ...) instead"
+    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
   )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
@@ -262,14 +262,14 @@ public:
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   [[deprecated(
-    "use create_subscription(const std::string &, CallbackT, const rclcpp::QoS &, ...) instead"
+    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
   )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
     size_t qos_history_depth,
     CallbackT && callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr

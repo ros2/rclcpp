@@ -218,7 +218,7 @@ TEST_F(TestDefaultStateMachine, lifecycle_subscriber) {
 
   auto cb = [](const std::shared_ptr<lifecycle_msgs::msg::State> msg) {(void) msg;};
   auto lifecycle_sub =
-    test_node->create_subscription<lifecycle_msgs::msg::State>("~/empty", cb, 10);
+    test_node->create_subscription<lifecycle_msgs::msg::State>("~/empty", 10, cb);
 
   SUCCEED();
 }
