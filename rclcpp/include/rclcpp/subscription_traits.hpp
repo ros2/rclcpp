@@ -78,7 +78,7 @@ template<
   // Do not attempt if CallbackT is an integer (mistaken for depth)
   typename = std::enable_if_t<!std::is_integral<CallbackT>::value>,
   // Do not attempt if CallbackT is a QoS (mistaken for qos)
-  typename = std::enable_if_t<!std::is_same<
+  typename = std::enable_if_t<!std::is_base_of<
     rclcpp::QoS,
     std::remove_cv_t<std::remove_reference_t<CallbackT>>>::value>,
   // Do not attempt if CallbackT is a rmw_qos_profile_t (mistaken for qos profile)
