@@ -48,8 +48,7 @@ struct RCLCPP_PUBLIC KeepAll : public rclcpp::QoSInitialization
 /// Use to initialize the QoS with the keep_last history setting and the given depth.
 struct RCLCPP_PUBLIC KeepLast : public rclcpp::QoSInitialization
 {
-  explicit
-  KeepLast(size_t depth);
+  explicit KeepLast(size_t depth);
 };
 
 /// Encapsulation of Quality of Service settings.

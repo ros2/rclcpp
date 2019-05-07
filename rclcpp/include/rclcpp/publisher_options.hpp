@@ -52,8 +52,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   PublisherOptionsWithAllocator<Allocator>() {}
 
   /// Constructor using base class as input.
-  explicit
-  PublisherOptionsWithAllocator(const PublisherOptionsBase & publisher_options_base)
+  explicit PublisherOptionsWithAllocator(const PublisherOptionsBase & publisher_options_base)
   : PublisherOptionsBase(publisher_options_base)
   {}
 

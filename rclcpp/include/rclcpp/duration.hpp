@@ -40,7 +40,7 @@ public:
   {}
 
   // cppcheck-suppress noExplicitConstructor
-  Duration(const builtin_interfaces::msg::Duration & duration_msg);
+  Duration(const builtin_interfaces::msg::Duration & duration_msg);  // NOLINT(runtime/explicit)
 
   explicit Duration(const rcl_duration_t & duration);
 

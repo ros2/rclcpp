@@ -51,8 +51,8 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   SubscriptionOptionsWithAllocator<Allocator>() {}
 
   /// Constructor using base class as input.
-  explicit
-  SubscriptionOptionsWithAllocator(const SubscriptionOptionsBase & subscription_options_base)
+  explicit SubscriptionOptionsWithAllocator(
+    const SubscriptionOptionsBase & subscription_options_base)
   : SubscriptionOptionsBase(subscription_options_base)
   {}
 
