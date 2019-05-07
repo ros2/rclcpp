@@ -23,16 +23,13 @@
 
 namespace rclcpp
 {
-class Duration
+class RCLCPP_PUBLIC Duration
 {
 public:
-  RCLCPP_PUBLIC
   Duration(int32_t seconds, uint32_t nanoseconds);
 
-  RCLCPP_PUBLIC
   explicit Duration(rcl_duration_value_t nanoseconds);
 
-  RCLCPP_PUBLIC
   explicit Duration(std::chrono::nanoseconds nanoseconds);
 
   // intentionally not using explicit to create a conversion constructor
@@ -42,76 +39,58 @@ public:
   : Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(duration))
   {}
 
-  RCLCPP_PUBLIC
   // cppcheck-suppress noExplicitConstructor
   Duration(const builtin_interfaces::msg::Duration & duration_msg);
 
-  RCLCPP_PUBLIC
   explicit Duration(const rcl_duration_t & duration);
 
-  RCLCPP_PUBLIC
   Duration(const Duration & rhs);
 
-  RCLCPP_PUBLIC
-  virtual ~Duration();
+  virtual ~Duration() = default;
 
-  RCLCPP_PUBLIC
   operator builtin_interfaces::msg::Duration() const;
 
   // cppcheck-suppress operatorEq // this is a false positive from cppcheck
-  RCLCPP_PUBLIC
   Duration &
   operator=(const Duration & rhs);
 
-  RCLCPP_PUBLIC
   Duration &
   operator=(const builtin_interfaces::msg::Duration & Duration_msg);
 
-  RCLCPP_PUBLIC
   bool
   operator==(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator<(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator<=(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator>=(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   bool
   operator>(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   Duration
   operator+(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   Duration
   operator-(const rclcpp::Duration & rhs) const;
 
-  RCLCPP_PUBLIC
   static
   Duration
   max();
 
-  RCLCPP_PUBLIC
   Duration
   operator*(double scale) const;
 
-  RCLCPP_PUBLIC
   rcl_duration_value_t
   nanoseconds() const;
 
   /// \return the duration in seconds as a floating point number.
   /// \warning Depending on sizeof(double) there could be significant precision loss.
   /// When an exact time is required use nanoseconds() instead.
-  RCLCPP_PUBLIC
   double
   seconds() const;
 
@@ -122,7 +101,6 @@ public:
     return std::chrono::duration_cast<DurationT>(std::chrono::nanoseconds(this->nanoseconds()));
   }
 
-  RCLCPP_PUBLIC
   rmw_time_t
   to_rmw_time() const;
 

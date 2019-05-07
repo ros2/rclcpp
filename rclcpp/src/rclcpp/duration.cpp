@@ -65,10 +65,6 @@ Duration::Duration(const rcl_duration_t & duration)
   // noop
 }
 
-Duration::~Duration()
-{
-}
-
 Duration::operator builtin_interfaces::msg::Duration() const
 {
   builtin_interfaces::msg::Duration msg_duration;
