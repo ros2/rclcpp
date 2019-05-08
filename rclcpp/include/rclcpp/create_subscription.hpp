@@ -135,7 +135,7 @@ create_subscription(
   auto sub = node_topics->create_subscription(
     topic_name,
     factory,
-    options.to_rcl_subscription_options(qos),
+    options.template to_rcl_subscription_options<MessageT>(qos),
     use_intra_process);
   node_topics->add_subscription(sub, options.callback_group);
   return std::dynamic_pointer_cast<SubscriptionT>(sub);

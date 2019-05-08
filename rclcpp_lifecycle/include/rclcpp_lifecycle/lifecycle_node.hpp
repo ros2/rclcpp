@@ -66,6 +66,15 @@
 namespace rclcpp_lifecycle
 {
 
+// include these here to work around an esoteric Windows error where the namespace
+// cannot be used in the function declaration below without getting an error like:
+//   'rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>':
+//     no appropriate default constructor available
+template<typename AllocatorT>
+using PublisherOptionsWithAllocator = rclcpp::PublisherOptionsWithAllocator<AllocatorT>;
+template<typename AllocatorT>
+using SubscriptionOptionsWithAllocator = rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>;
+
 /// LifecycleNode for creating lifecycle components
 /**
  * has lifecycle nodeinterface for configuring this node.
@@ -143,8 +152,8 @@ public:
   create_publisher(
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options =
-    rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+    const PublisherOptionsWithAllocator<AllocatorT> & options =
+    PublisherOptionsWithAllocator<AllocatorT>()
   );
 
   /// Create and return a Publisher.
@@ -200,8 +209,8 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos,
     CallbackT && callback,
-    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options =
-    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>(),
+    const SubscriptionOptionsWithAllocator<AllocatorT> & options =
+    SubscriptionOptionsWithAllocator<AllocatorT>(),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
     >::SharedPtr
@@ -517,7 +526,7 @@ public:
   get_node_waitables_interface();
 
   /// Return the NodeOptions used when creating this node.
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   const rclcpp::NodeOptions &
   get_node_options() const;
 

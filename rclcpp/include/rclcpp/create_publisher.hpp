@@ -116,7 +116,7 @@ create_publisher(
       options.event_callbacks,
       allocator
     ),
-    options.to_rcl_publisher_options(qos),
+    options.template to_rcl_publisher_options<MessageT>(qos),
     use_intra_process
   );
   node_topics->add_publisher(pub, options.callback_group);

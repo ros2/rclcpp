@@ -17,12 +17,15 @@
 
 #include <rclcpp/qos.hpp>
 
+#include "rclcpp_action/visibility_control.hpp"
+
 namespace rclcpp_action
 {
 
 class DefaultActionStatusQoS : public rclcpp::QoS
 {
 public:
+  RCLCPP_ACTION_PUBLIC
   DefaultActionStatusQoS();
 };
 
