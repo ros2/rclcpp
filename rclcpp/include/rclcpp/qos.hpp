@@ -148,7 +148,7 @@ private:
   rmw_qos_profile_t rmw_qos_profile_;
 };
 
-class SensorDataQoS : public QoS
+class RCLCPP_PUBLIC SensorDataQoS : public QoS
 {
 public:
   explicit
@@ -158,7 +158,7 @@ public:
   ));
 };
 
-class ParametersQoS : public QoS
+class RCLCPP_PUBLIC ParametersQoS : public QoS
 {
 public:
   explicit
@@ -168,7 +168,7 @@ public:
   ));
 };
 
-class ServicesQoS : public QoS
+class RCLCPP_PUBLIC ServicesQoS : public QoS
 {
 public:
   explicit
@@ -178,7 +178,7 @@ public:
   ));
 };
 
-class ParameterEventsQoS : public QoS
+class RCLCPP_PUBLIC ParameterEventsQoS : public QoS
 {
 public:
   explicit
@@ -188,7 +188,7 @@ public:
   ));
 };
 
-class SystemDefaultsQoS : public QoS
+class RCLCPP_PUBLIC SystemDefaultsQoS : public QoS
 {
 public:
   explicit
