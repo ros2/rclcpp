@@ -171,6 +171,7 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
@@ -186,6 +187,7 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
@@ -242,6 +244,7 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated(
     "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
   )]]
@@ -277,6 +280,7 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated(
     "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
   )]]
