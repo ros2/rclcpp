@@ -18,14 +18,23 @@
 #include <memory>
 #include <string>
 
+#include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/publisher_factory.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
 {
 
-template<typename MessageT, typename AllocatorT, typename PublisherT>
+template<
+  typename MessageT,
+  typename AllocatorT = std::allocator<void>,
+  typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
+// cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+[[deprecated("use alternative rclcpp::create_publisher() signatures")]]
 std::shared_ptr<PublisherT>
 create_publisher(
   rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
@@ -47,6 +56,63 @@ create_publisher(
 
   node_topics->add_publisher(pub, group);
 
+  return std::dynamic_pointer_cast<PublisherT>(pub);
+}
+
+/// Create and return a publisher of the given MessageT type.
+/**
+ * The NodeT type only needs to have a method called get_node_topics_interface()
+ * which returns a shared_ptr to a NodeTopicsInterface.
+ */
+template<
+  typename MessageT,
+  typename AllocatorT = std::allocator<void>,
+  typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>,
+  typename NodeT>
+std::shared_ptr<PublisherT>
+create_publisher(
+  NodeT & node,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+))
+{
+  using rclcpp::node_interfaces::get_node_topics_interface;
+  auto node_topics = get_node_topics_interface(node);
+
+  std::shared_ptr<AllocatorT> allocator = options.allocator;
+  if (!allocator) {
+    allocator = std::make_shared<AllocatorT>();
+  }
+
+  bool use_intra_process;
+  switch (options.use_intra_process_comm) {
+    case IntraProcessSetting::Enable:
+      use_intra_process = true;
+      break;
+    case IntraProcessSetting::Disable:
+      use_intra_process = false;
+      break;
+    case IntraProcessSetting::NodeDefault:
+      use_intra_process = node_topics->get_node_base_interface()->get_use_intra_process_default();
+      break;
+    default:
+      throw std::runtime_error("Unrecognized IntraProcessSetting value");
+      break;
+  }
+
+  // TODO(wjwwood): convert all of the interfaces to use QoS and PublisherOptionsBase
+  auto pub = node_topics->create_publisher(
+    topic_name,
+    rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(
+      options.event_callbacks,
+      allocator
+    ),
+    options.template to_rcl_publisher_options<MessageT>(qos),
+    use_intra_process
+  );
+  node_topics->add_publisher(pub, options.callback_group);
   return std::dynamic_pointer_cast<PublisherT>(pub);
 }
 

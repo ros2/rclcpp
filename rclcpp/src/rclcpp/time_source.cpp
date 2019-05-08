@@ -28,7 +28,6 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 
-
 namespace rclcpp
 {
 
@@ -208,27 +207,13 @@ void TimeSource::create_clock_sub()
     // Subscription already created.
     return;
   }
-  const std::string topic_name = "/clock";
 
-  rclcpp::callback_group::CallbackGroup::SharedPtr group;
-  using rclcpp::message_memory_strategy::MessageMemoryStrategy;
-  auto msg_mem_strat = MessageMemoryStrategy<MessageT, Alloc>::create_default();
-  auto allocator = std::make_shared<Alloc>();
-  auto cb = std::bind(&TimeSource::clock_cb, this, std::placeholders::_1);
-
-  clock_subscription_ = rclcpp::create_subscription<
-    MessageT, decltype(cb), Alloc, MessageT, SubscriptionT
-    >(
-    node_topics_.get(),
-    topic_name,
-    std::move(cb),
-    rmw_qos_profile_default,
-    rclcpp::SubscriptionEventCallbacks(),
-    group,
-    false,
-    false,
-    msg_mem_strat,
-    allocator);
+  clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
+    node_topics_,
+    "/clock",
+    rclcpp::QoS(QoSInitialization::from_rmw(rmw_qos_profile_default)),
+    std::bind(&TimeSource::clock_cb, this, std::placeholders::_1)
+  );
 }
 
 void TimeSource::destroy_clock_sub()

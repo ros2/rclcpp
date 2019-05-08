@@ -34,7 +34,7 @@ rclcpp::PublisherBase::SharedPtr
 NodeTopics::create_publisher(
   const std::string & topic_name,
   const rclcpp::PublisherFactory & publisher_factory,
-  rcl_publisher_options_t & publisher_options,
+  const rcl_publisher_options_t & publisher_options,
   bool use_intra_process)
 {
   // Create the MessageT specific Publisher using the factory, but store it as PublisherBase.
@@ -91,7 +91,7 @@ rclcpp::SubscriptionBase::SharedPtr
 NodeTopics::create_subscription(
   const std::string & topic_name,
   const rclcpp::SubscriptionFactory & subscription_factory,
-  rcl_subscription_options_t & subscription_options,
+  const rcl_subscription_options_t & subscription_options,
   bool use_intra_process)
 {
   auto subscription = subscription_factory.create_typed_subscription(
@@ -103,8 +103,9 @@ NodeTopics::create_subscription(
     auto ipm =
       context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
-    subscription_options.ignore_local_publications = false;
-    subscription->setup_intra_process(intra_process_subscription_id, ipm, subscription_options);
+    auto options_copy = subscription_options;
+    options_copy.ignore_local_publications = false;
+    subscription->setup_intra_process(intra_process_subscription_id, ipm, options_copy);
   }
 
   // Return the completed subscription.
@@ -141,4 +142,10 @@ NodeTopics::add_subscription(
       );
     }
   }
+}
+
+rclcpp::node_interfaces::NodeBaseInterface *
+NodeTopics::get_node_base_interface() const
+{
+  return node_base_;
 }

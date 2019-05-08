@@ -95,7 +95,7 @@ public:
     auto callback = std::bind(
       &SubscriptionClassNodeInheritance::OnMessage, this, std::placeholders::_1);
     using rcl_interfaces::msg::IntraProcessMessage;
-    auto sub = this->create_subscription<IntraProcessMessage>("topic", callback);
+    auto sub = this->create_subscription<IntraProcessMessage>("topic", 10, callback);
   }
 };
 
@@ -112,7 +112,7 @@ public:
     auto node = std::make_shared<rclcpp::Node>("test_subscription_member_callback", "/ns");
     auto callback = std::bind(&SubscriptionClass::OnMessage, this, std::placeholders::_1);
     using rcl_interfaces::msg::IntraProcessMessage;
-    auto sub = node->create_subscription<IntraProcessMessage>("topic", callback);
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", 10, callback);
   }
 };
 
@@ -125,12 +125,12 @@ TEST_F(TestSubscription, construction_and_destruction) {
       (void)msg;
     };
   {
-    auto sub = node->create_subscription<IntraProcessMessage>("topic", callback);
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", 10, callback);
   }
 
   {
     ASSERT_THROW({
-      auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", callback);
+      auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 10, callback);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
 }
@@ -144,17 +144,17 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
       (void)msg;
     };
   {
-    auto sub = subnode->create_subscription<IntraProcessMessage>("topic", callback);
+    auto sub = subnode->create_subscription<IntraProcessMessage>("topic", 1, callback);
     EXPECT_STREQ(sub->get_topic_name(), "/ns/sub_ns/topic");
   }
 
   {
-    auto sub = subnode->create_subscription<IntraProcessMessage>("/topic", callback);
+    auto sub = subnode->create_subscription<IntraProcessMessage>("/topic", 1, callback);
     EXPECT_STREQ(sub->get_topic_name(), "/topic");
   }
 
   {
-    auto sub = subnode->create_subscription<IntraProcessMessage>("~/topic", callback);
+    auto sub = subnode->create_subscription<IntraProcessMessage>("~/topic", 1, callback);
     std::string expected_topic_name =
       std::string(node->get_namespace()) + "/" + node->get_name() + "/topic";
     EXPECT_STREQ(sub->get_topic_name(), expected_topic_name.c_str());
@@ -162,9 +162,79 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
 
   {
     ASSERT_THROW({
-      auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", callback);
+      auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 1, callback);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
+}
+
+/*
+   Testing subscription creation signatures.
+ */
+TEST_F(TestSubscription, various_creation_signatures) {
+  using rcl_interfaces::msg::IntraProcessMessage;
+  auto cb = [](rcl_interfaces::msg::IntraProcessMessage::SharedPtr) {};
+  {
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", 1, cb);
+    (void)sub;
+  }
+  {
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", rclcpp::QoS(1), cb);
+    (void)sub;
+  }
+  {
+    auto sub =
+      node->create_subscription<IntraProcessMessage>("topic", rclcpp::QoS(rclcpp::KeepLast(1)), cb);
+    (void)sub;
+  }
+  {
+    auto sub =
+      node->create_subscription<IntraProcessMessage>("topic", rclcpp::QoS(rclcpp::KeepAll()), cb);
+    (void)sub;
+  }
+  {
+    auto sub = node->create_subscription<IntraProcessMessage>(
+      "topic", 42, cb, rclcpp::SubscriptionOptions());
+    (void)sub;
+  }
+  {
+    auto sub = rclcpp::create_subscription<IntraProcessMessage>(
+      node, "topic", 42, cb, rclcpp::SubscriptionOptions());
+    (void)sub;
+  }
+  // Now deprecated functions.
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+  {
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb, 42);
+    (void)sub;
+  }
+  {
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb);
+    (void)sub;
+  }
+  {
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb, rmw_qos_profile_default);
+    (void)sub;
+  }
+  {
+    auto sub =
+      node->create_subscription<IntraProcessMessage>("topic", cb, rmw_qos_profile_default, nullptr);
+    (void)sub;
+  }
+  {
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb, 42, nullptr);
+    (void)sub;
+  }
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 }
 
 /*
@@ -187,6 +257,6 @@ TEST_F(TestSubscription, callback_bind) {
     // Regression test for https://github.com/ros2/rclcpp/issues/479 where the TEST_F GTest macro
     // was interfering with rclcpp's `function_traits`.
     auto callback = std::bind(&TestSubscription::OnMessage, this, std::placeholders::_1);
-    auto sub = node->create_subscription<IntraProcessMessage>("topic", callback);
+    auto sub = node->create_subscription<IntraProcessMessage>("topic", 1, callback);
   }
 }

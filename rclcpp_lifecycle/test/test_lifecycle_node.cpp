@@ -217,7 +217,8 @@ TEST_F(TestDefaultStateMachine, lifecycle_subscriber) {
   auto test_node = std::make_shared<MoodyLifecycleNode<GoodMood>>("testnode");
 
   auto cb = [](const std::shared_ptr<lifecycle_msgs::msg::State> msg) {(void) msg;};
-  auto lifecycle_sub = test_node->create_subscription<lifecycle_msgs::msg::State>("~/empty", cb);
+  auto lifecycle_sub =
+    test_node->create_subscription<lifecycle_msgs::msg::State>("~/empty", 10, cb);
 
   SUCCEED();
 }

@@ -65,6 +65,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/parameter_map.cpp
   src/rclcpp/parameter_service.cpp
   src/rclcpp/publisher_base.cpp
+  src/rclcpp/qos.cpp
   src/rclcpp/qos_event.cpp
   src/rclcpp/service.cpp
   src/rclcpp/signal_handler.cpp
@@ -142,6 +143,8 @@ if(BUILD_TESTING)
 
   find_package(rmw_implementation_cmake REQUIRED)
 
+  include(cmake/rclcpp_add_build_failure_test.cmake)
+
   ament_add_gtest(test_client test/test_client.cpp)
   if(TARGET test_client)
     ament_target_dependencies(test_client
@@ -201,6 +204,34 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_node ${PROJECT_NAME})
   endif()
+
+  ament_add_gtest(test_node_interfaces__get_node_interfaces
+    test/node_interfaces/test_get_node_interfaces.cpp)
+  if(TARGET test_node_interfaces__get_node_interfaces)
+    target_link_libraries(test_node_interfaces__get_node_interfaces ${PROJECT_NAME})
+  endif()
+
+  # TODO(wjwwood): reenable these build failure tests when I can get Jenkins to ignore their output
+  # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ref_rclcpp_node
+  #   test/node_interfaces/test_does_not_compile/get_node_topics_interface_const_ref_rclcpp_node.cpp)
+  # target_link_libraries(build_failure__get_node_topics_interface_const_ref_rclcpp_node
+  #   ${PROJECT_NAME})
+
+  # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ptr_rclcpp_node
+  #   test/node_interfaces/test_does_not_compile/get_node_topics_interface_const_ptr_rclcpp_node.cpp)
+  # target_link_libraries(build_failure__get_node_topics_interface_const_ptr_rclcpp_node
+  #   ${PROJECT_NAME})
+
+  # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ref_wrapped_node
+  #   test/node_interfaces/test_does_not_compile/get_node_topics_interface_const_ref_wrapped_node.cpp)
+  # target_link_libraries(build_failure__get_node_topics_interface_const_ref_rclcpp_node
+  #   ${PROJECT_NAME})
+
+  # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ptr_wrapped_node
+  #   test/node_interfaces/test_does_not_compile/get_node_topics_interface_const_ptr_wrapped_node.cpp)
+  # target_link_libraries(build_failure__get_node_topics_interface_const_ptr_rclcpp_node
+  #   ${PROJECT_NAME})
+
   ament_add_gtest(test_node_global_args test/test_node_global_args.cpp)
   if(TARGET test_node_global_args)
     ament_target_dependencies(test_node_global_args
@@ -244,15 +275,6 @@ if(BUILD_TESTING)
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_publisher ${PROJECT_NAME})
-  endif()
-  ament_add_gtest(test_pub_sub_option_interface test/test_pub_sub_option_interface.cpp)
-  if(TARGET test_pub_sub_option_interface)
-    ament_target_dependencies(test_pub_sub_option_interface
-      test_msgs
-    )
-    target_link_libraries(test_pub_sub_option_interface
-      ${PROJECT_NAME}
-    )
   endif()
   ament_add_gtest(test_publisher_subscription_count_api test/test_publisher_subscription_count_api.cpp)
   if(TARGET test_publisher_subscription_count_api)

@@ -68,7 +68,11 @@ LifecycleNode::LifecycleNode(
   const std::string & namespace_,
   const rclcpp::NodeOptions & options)
 : node_base_(new rclcpp::node_interfaces::NodeBase(
-      node_name, namespace_, options)),
+      node_name,
+      namespace_,
+      options.context(),
+      *(options.get_rcl_node_options()),
+      options.use_intra_process_comms())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
@@ -88,10 +92,10 @@ LifecycleNode::LifecycleNode(
       node_services_,
       node_clock_,
       options.initial_parameters(),
-      options.use_intra_process_comms(),
       options.start_parameter_services(),
       options.start_parameter_event_publisher(),
-      options.parameter_event_qos_profile(),
+      options.parameter_event_qos(),
+      options.parameter_event_publisher_options(),
       options.allow_undeclared_parameters(),
       options.automatically_declare_initial_parameters()
     )),
@@ -105,7 +109,7 @@ LifecycleNode::LifecycleNode(
       node_parameters_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
-  use_intra_process_comms_(options.use_intra_process_comms()),
+  node_options_(options),
   impl_(new LifecycleNodeInterfaceImpl(node_base_, node_services_))
 {
   impl_->init();
@@ -333,6 +337,11 @@ LifecycleNode::get_node_waitables_interface()
   return node_waitables_;
 }
 
+const rclcpp::NodeOptions &
+LifecycleNode::get_node_options() const
+{
+  return node_options_;
+}
 
 ////
 bool

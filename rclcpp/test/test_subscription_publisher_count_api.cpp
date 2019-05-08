@@ -65,11 +65,11 @@ TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
     "my_node",
     "/ns",
     node_options);
-  auto subscription = node->create_subscription<IntraProcessMessage>("/topic", &OnMessage);
+  auto subscription = node->create_subscription<IntraProcessMessage>("/topic", 10, &OnMessage);
 
   EXPECT_EQ(subscription->get_publisher_count(), 0u);
   {
-    auto pub = node->create_publisher<IntraProcessMessage>("/topic");
+    auto pub = node->create_publisher<IntraProcessMessage>("/topic", 10);
     rclcpp::sleep_for(offset);
     EXPECT_EQ(subscription->get_publisher_count(), 1u);
     {
@@ -78,7 +78,7 @@ TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
         "/ns",
         node_options);
       auto another_pub =
-        another_node->create_publisher<IntraProcessMessage>("/topic");
+        another_node->create_publisher<IntraProcessMessage>("/topic", 10);
 
       rclcpp::sleep_for(offset);
       EXPECT_EQ(subscription->get_publisher_count(), 2u);

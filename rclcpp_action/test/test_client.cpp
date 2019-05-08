@@ -42,6 +42,7 @@
 #include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/create_client.hpp"
 #include "rclcpp_action/client.hpp"
+#include "rclcpp_action/qos.hpp"
 #include "rclcpp_action/types.hpp"
 
 using namespace std::chrono_literals;
@@ -196,7 +197,8 @@ protected:
     ret = rcl_action_get_feedback_topic_name(
       action_name, allocator, &feedback_topic_name);
     ASSERT_EQ(RCL_RET_OK, ret);
-    feedback_publisher = server_node->create_publisher<ActionFeedbackMessage>(feedback_topic_name);
+    feedback_publisher =
+      server_node->create_publisher<ActionFeedbackMessage>(feedback_topic_name, 10);
     ASSERT_TRUE(feedback_publisher != nullptr);
     allocator.deallocate(feedback_topic_name, allocator.state);
 
@@ -205,7 +207,7 @@ protected:
       action_name, allocator, &status_topic_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     status_publisher = server_node->create_publisher<ActionStatusMessage>(
-      status_topic_name, rcl_action_qos_profile_status_default);
+      status_topic_name, rclcpp_action::DefaultActionStatusQoS());
     ASSERT_TRUE(status_publisher != nullptr);
     allocator.deallocate(status_topic_name, allocator.state);
     server_executor.add_node(server_node);

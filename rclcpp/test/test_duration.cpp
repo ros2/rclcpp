@@ -60,6 +60,7 @@ TEST(TestDuration, operators) {
   rclcpp::Duration time = rclcpp::Duration(0, 0);
   rclcpp::Duration copy_constructor_duration(time);
   rclcpp::Duration assignment_op_duration = rclcpp::Duration(1, 0);
+  (void)assignment_op_duration;
   assignment_op_duration = time;
 
   EXPECT_TRUE(time == copy_constructor_duration);
@@ -75,6 +76,14 @@ TEST(TestDuration, chrono_overloads) {
   EXPECT_EQ(d1, d2);
   EXPECT_EQ(d1, d3);
   EXPECT_EQ(d2, d3);
+
+  // check non-nanosecond durations
+  std::chrono::milliseconds chrono_ms(100);
+  auto d4 = rclcpp::Duration(chrono_ms);
+  EXPECT_EQ(chrono_ms, d4.to_chrono<std::chrono::nanoseconds>());
+  std::chrono::duration<double, std::chrono::seconds::period> chrono_float_seconds(3.14);
+  auto d5 = rclcpp::Duration(chrono_float_seconds);
+  EXPECT_EQ(chrono_float_seconds, d5.to_chrono<decltype(chrono_float_seconds)>());
 }
 
 TEST(TestDuration, overflows) {

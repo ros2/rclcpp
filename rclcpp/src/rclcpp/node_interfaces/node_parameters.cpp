@@ -45,14 +45,14 @@ using rclcpp::node_interfaces::NodeParameters;
 NodeParameters::NodeParameters(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   const rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-  const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
   const rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
   const std::vector<rclcpp::Parameter> & initial_parameters,
-  bool use_intra_process,
   bool start_parameter_services,
   bool start_parameter_event_publisher,
-  const rmw_qos_profile_t & parameter_event_qos_profile,
+  const rclcpp::QoS & parameter_event_qos,
+  const rclcpp::PublisherOptionsBase & parameter_event_publisher_options,
   bool allow_undeclared_parameters,
   bool automatically_declare_initial_parameters)
 : allow_undeclared_(allow_undeclared_parameters),
@@ -64,7 +64,9 @@ NodeParameters::NodeParameters(
   using PublisherT = rclcpp::Publisher<MessageT>;
   using AllocatorT = std::allocator<void>;
   // TODO(wjwwood): expose this allocator through the Parameter interface.
-  auto allocator = std::make_shared<AllocatorT>();
+  rclcpp::PublisherOptionsWithAllocator<AllocatorT> publisher_options(
+    parameter_event_publisher_options);
+  publisher_options.allocator = std::make_shared<AllocatorT>();
 
   if (start_parameter_services) {
     parameter_service_ = std::make_shared<ParameterService>(node_base, node_services, this);
@@ -72,13 +74,10 @@ NodeParameters::NodeParameters(
 
   if (start_parameter_event_publisher) {
     events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
-      node_topics.get(),
+      node_topics,
       "parameter_events",
-      parameter_event_qos_profile,
-      PublisherEventCallbacks(),
-      nullptr,
-      use_intra_process,
-      allocator);
+      parameter_event_qos,
+      publisher_options);
   }
 
   // Get the node options

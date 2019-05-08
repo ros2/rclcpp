@@ -49,8 +49,11 @@
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/service.hpp"
 #include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_options.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
 
@@ -62,6 +65,29 @@
 
 namespace rclcpp_lifecycle
 {
+
+// include these here to work around an esoteric Windows error where the namespace
+// cannot be used in the function declaration below without getting an error like:
+//   'rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>':
+//     no appropriate default constructor available
+template<typename AllocatorT>
+using PublisherOptionsWithAllocator = rclcpp::PublisherOptionsWithAllocator<AllocatorT>;
+template<typename AllocatorT>
+using SubscriptionOptionsWithAllocator = rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>;
+
+template<typename AllocatorT>
+PublisherOptionsWithAllocator<AllocatorT>
+create_default_publisher_options()
+{
+  return rclcpp::PublisherOptionsWithAllocator<AllocatorT>();
+}
+
+template<typename AllocatorT>
+SubscriptionOptionsWithAllocator<AllocatorT>
+create_default_subscription_options()
+{
+  return rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>();
+}
 
 /// LifecycleNode for creating lifecycle components
 /**
@@ -131,15 +157,34 @@ public:
   /// Create and return a Publisher.
   /**
    * \param[in] topic_name The topic for this publisher to publish on.
+   * \param[in] qos The Quality of Service settings for this publisher.
+   * \param[in] options The publisher options for this publisher.
+   * \return Shared pointer to the created lifecycle publisher.
+   */
+  template<typename MessageT, typename AllocatorT = std::allocator<void>>
+  std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>>
+  create_publisher(
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    const PublisherOptionsWithAllocator<AllocatorT> & options =
+    create_default_publisher_options<AllocatorT>()
+  );
+
+  /// Create and return a Publisher.
+  /**
+   * \param[in] topic_name The topic for this publisher to publish on.
    * \param[in] qos_history_depth The depth of the publisher message queue.
    * \param[in] allocator allocator to use during publishing activities.
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
-    const std::string & topic_name, size_t qos_history_depth,
-    std::shared_ptr<Alloc> allocator = nullptr);
+    const std::string & topic_name,
+    size_t qos_history_depth,
+    std::shared_ptr<Alloc> allocator);
 
   /// Create and return a LifecyclePublisher.
   /**
@@ -149,11 +194,43 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template<typename MessageT, typename Alloc = std::allocator<void>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
   create_publisher(
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     std::shared_ptr<Alloc> allocator = nullptr);
+
+  /// Create and return a Subscription.
+  /**
+   * \param[in] topic_name The topic to subscribe on.
+   * \param[in] callback The user-defined callback function.
+   * \param[in] qos The quality of service for this subscription.
+   * \param[in] options The subscription options for this subscription.
+   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+   * \return Shared pointer to the created subscription.
+   */
+  /* TODO(jacquelinekay):
+     Windows build breaks when static member function passed as default
+     argument to msg_mem_strat, nullptr is a workaround.
+   */
+  template<
+    typename MessageT,
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>>
+  std::shared_ptr<SubscriptionT>
+  create_subscription(
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
+    const SubscriptionOptionsWithAllocator<AllocatorT> & options =
+    create_default_subscription_options<AllocatorT>(),
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
+    >::SharedPtr
+    msg_mem_strat = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -174,6 +251,10 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated(
+    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
+  )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -206,14 +287,19 @@ public:
     typename CallbackT,
     typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated(
+    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
+  )]]
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
     size_t qos_history_depth,
     CallbackT && callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group,
     bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<MessageT, Alloc>::SharedPtr
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
     msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
@@ -457,6 +543,11 @@ public:
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
   get_node_waitables_interface();
 
+  /// Return the NodeOptions used when creating this node.
+  RCLCPP_LIFECYCLE_PUBLIC
+  const rclcpp::NodeOptions &
+  get_node_options() const;
+
   //
   // LIFECYCLE COMPONENTS
   //
@@ -585,7 +676,7 @@ private:
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr node_time_source_;
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_;
 
-  bool use_intra_process_comms_;
+  const rclcpp::NodeOptions node_options_;
 
   class LifecycleNodeInterfaceImpl;
   std::unique_ptr<LifecycleNodeInterfaceImpl> impl_;

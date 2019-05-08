@@ -49,7 +49,7 @@ struct PublisherFactory
     rclcpp::PublisherBase::SharedPtr(
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
-      rcl_publisher_options_t & publisher_options)>;
+      const rcl_publisher_options_t & publisher_options)>;
 
   PublisherFactoryFunction create_typed_publisher;
 };
@@ -68,15 +68,17 @@ create_publisher_factory(
     [event_callbacks, allocator](
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic_name,
-    rcl_publisher_options_t & publisher_options) -> std::shared_ptr<PublisherT>
+    const rcl_publisher_options_t & publisher_options
+    ) -> std::shared_ptr<PublisherT>
     {
+      auto options_copy = publisher_options;
       auto message_alloc = std::make_shared<typename PublisherT::MessageAlloc>(*allocator.get());
-      publisher_options.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
+      options_copy.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
 
       return std::make_shared<PublisherT>(
         node_base,
         topic_name,
-        publisher_options,
+        options_copy,
         event_callbacks,
         message_alloc);
     };

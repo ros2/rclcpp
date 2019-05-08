@@ -21,6 +21,8 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
+#include "rclcpp/publisher_options.hpp"
+#include "rclcpp/qos.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
@@ -208,16 +210,30 @@ NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publishe
   return *this;
 }
 
-const rmw_qos_profile_t &
-NodeOptions::parameter_event_qos_profile() const
+const rclcpp::QoS &
+NodeOptions::parameter_event_qos() const
 {
-  return this->parameter_event_qos_profile_;
+  return this->parameter_event_qos_;
 }
 
 NodeOptions &
-NodeOptions::parameter_event_qos_profile(const rmw_qos_profile_t & parameter_event_qos_profile)
+NodeOptions::parameter_event_qos(const rclcpp::QoS & parameter_event_qos)
 {
-  this->parameter_event_qos_profile_ = parameter_event_qos_profile;
+  this->parameter_event_qos_ = parameter_event_qos;
+  return *this;
+}
+
+const rclcpp::PublisherOptionsBase &
+NodeOptions::parameter_event_publisher_options() const
+{
+  return parameter_event_publisher_options_;
+}
+
+NodeOptions &
+NodeOptions::parameter_event_publisher_options(
+  const rclcpp::PublisherOptionsBase & parameter_event_publisher_options)
+{
+  parameter_event_publisher_options_ = parameter_event_publisher_options;
   return *this;
 }
 
