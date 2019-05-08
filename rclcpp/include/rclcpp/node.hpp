@@ -147,7 +147,7 @@ public:
   /**
    * The rclcpp::QoS has several convenient constructors, including a
    * conversion constructor for size_t, which mimics older API's that
-   * allows just a string and size_t to create a pull request.
+   * allows just a string and size_t to create a publisher.
    *
    * For example, all of these cases will work:
    *

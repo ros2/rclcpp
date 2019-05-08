@@ -17,7 +17,9 @@
 #
 # This will create two targets, one by the given target name and a test target
 # which has the same name prefixed with `test_`.
-# For example, if target is `
+# For example, if target is `should_not_compile__use_const_argument` then there
+# will be an executable target called `should_not_compile__use_const_argument`
+# and a test target called `test_should_not_compile__use_const_argument`.
 #
 # :param target: the name of the target to be created
 # :type target: string

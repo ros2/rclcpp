@@ -34,14 +34,7 @@ template<
   typename AllocatorT = std::allocator<void>,
   typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
 // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-[[deprecated(
-  "use the rclcpp::create_publisher<NodeT, MessageT, AllocatorT, PublisherT>("
-  "NodeT node,"
-  "const std::string & topic_name,"
-  "const rclcpp::QoS & qos,"
-  "const rclcpp::PublisherOptionswithAllocator<AllocatorT> & options) "
-  "signature instead"
-)]]
+[[deprecated("use alternative rclcpp::create_publisher() signatures")]]
 std::shared_ptr<PublisherT>
 create_publisher(
   rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
