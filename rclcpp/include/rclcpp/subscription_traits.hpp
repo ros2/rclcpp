@@ -76,7 +76,8 @@ struct extract_message_type<std::unique_ptr<MessageT, Deleter>>: extract_message
 template<
   typename CallbackT,
   // Do not attempt if CallbackT is an integer (mistaken for depth)
-  typename = std::enable_if_t<!std::is_integral<CallbackT>::value>,
+  typename = std::enable_if_t<!std::is_integral<
+    std::remove_cv_t<std::remove_reference_t<CallbackT>>>::value>,
   // Do not attempt if CallbackT is a QoS (mistaken for qos)
   typename = std::enable_if_t<!std::is_base_of<
     rclcpp::QoS,
