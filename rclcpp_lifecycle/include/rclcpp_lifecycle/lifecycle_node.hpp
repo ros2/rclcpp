@@ -75,6 +75,13 @@ using PublisherOptionsWithAllocator = rclcpp::PublisherOptionsWithAllocator<Allo
 template<typename AllocatorT>
 using SubscriptionOptionsWithAllocator = rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>;
 
+template<typename AllocatorT>
+SubscriptionOptionsWithAllocator<AllocatorT>
+create_default_subscription_options()
+{
+  return rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>();
+}
+
 /// LifecycleNode for creating lifecycle components
 /**
  * has lifecycle nodeinterface for configuring this node.
@@ -210,7 +217,7 @@ public:
     const rclcpp::QoS & qos,
     CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
-    SubscriptionOptionsWithAllocator<AllocatorT>(),
+    create_default_subscription_options<AllocatorT>(),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
     >::SharedPtr
