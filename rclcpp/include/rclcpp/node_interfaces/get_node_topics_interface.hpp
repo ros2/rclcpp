@@ -101,20 +101,6 @@ get_node_topics_interface_from_pointer(NodeType node_pointer)
   return node_pointer->get_node_topics_interface();
 }
 
-// If NodeType has a method called get_node_topics_interface() which returns a const pointer.
-template<
-  typename NodeType,
-  typename std::enable_if<has_get_node_topics_interface<
-    typename std::remove_pointer<NodeType>::type,
-    const rclcpp::node_interfaces::NodeTopicsInterface *
-  >::value, int>::type = 0
->
-rclcpp::node_interfaces::NodeTopicsInterface *
-get_node_topics_interface_from_pointer(NodeType node_pointer)
-{
-  return node_pointer->get_node_topics_interface();
-}
-
 // Forward shared_ptr's to const node pointer signatures.
 template<
   typename NodeType,
@@ -151,7 +137,7 @@ template<
 rclcpp::node_interfaces::NodeTopicsInterface *
 get_node_topics_interface(NodeType && node_reference)
 {
-  // Forward const-references to detail implmentation as a pointer.
+  // Forward references to detail implmentation as a pointer.
   return detail::get_node_topics_interface_from_pointer(&node_reference);
 }
 
