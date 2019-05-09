@@ -85,19 +85,40 @@ configure_file(
   COPYONLY
 )
 # generate header with logging macros
-set(python_code
+set(python_code_logging
   "import em"
   "em.invoke(['-o', 'include/rclcpp/logging.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging.hpp.em'])")
-string(REPLACE ";" "$<SEMICOLON>" python_code "${python_code}")
+string(REPLACE ";" "$<SEMICOLON>" python_code_logging "${python_code_logging}")
 add_custom_command(OUTPUT include/rclcpp/logging.hpp
   COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
-  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code}"
+  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code_logging}"
   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
   COMMENT "Expanding logging.hpp.em"
   VERBATIM
 )
 list(APPEND ${PROJECT_NAME}_SRCS
   include/rclcpp/logging.hpp)
+
+# "watch" template for changes
+configure_file(
+  "resource/interface_traits.hpp.em"
+  "interface_traits.hpp.em.watch"
+  COPYONLY
+)
+set(python_code_interface_traits
+  "import em"
+  "em.invoke(['-o', 'include/rclcpp/node_interfaces/interface_traits.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/interface_traits.hpp.em'])")
+string(REPLACE ";" "$<SEMICOLON>" python_code_interface_traits "${python_code_interface_traits}")
+add_custom_command(OUTPUT include/rclcpp/node_interfaces/interface_traits.hpp
+  COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
+  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code_interface_traits}"
+  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/interface_traits.hpp.em.watch"
+  COMMENT "Expanding interfae_traits.hpp.em"
+  VERBATIM
+)
+list(APPEND ${PROJECT_NAME}_SRCS
+  include/rclcpp/node_interfaces/interface_traits.hpp)
+
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 
 add_library(${PROJECT_NAME}
@@ -446,6 +467,14 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_init
       "rcl")
     target_link_libraries(test_init ${PROJECT_NAME})
+  endif()
+
+  ament_add_gtest(test_interface_traits test/test_interface_traits.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_interface_traits)
+    ament_target_dependencies(test_interface_traits
+      "rcl")
+    target_link_libraries(test_interface_traits ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_multi_threaded_executor test/executors/test_multi_threaded_executor.cpp
