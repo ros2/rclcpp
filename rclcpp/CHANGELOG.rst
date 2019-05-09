@@ -2,6 +2,32 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added new way to specify QoS settings for publishers and subscriptions. (`#713 <https://github.com/ros2/rclcpp/issues/713>`_)
+  * The new way requires that you specify a history depth when creating a publisher or subscription.
+  * In the past it was possible to create one without specifying any history depth, but these signatures have been deprecated.
+* Deprecated ``shared_ptr`` and raw pointer versions of ``Publisher<T>::publish()``. (`#709 <https://github.com/ros2/rclcpp/issues/709>`_)
+* Implemented API to set callbacks for liveliness and deadline QoS events for publishers and subscriptions. (`#695 <https://github.com/ros2/rclcpp/issues/695>`_)
+* Fixed a segmentation fault when publishing a parameter event when they ought to be disabled. (`#714 <https://github.com/ros2/rclcpp/issues/714>`_)
+* Changes required for upcoming pre-allocation API. (`#711 <https://github.com/ros2/rclcpp/issues/711>`_)
+* Changed ``Node::get_node_names()`` to return the full node names rather than just the base name. (`#698 <https://github.com/ros2/rclcpp/issues/698>`_)
+* Remove logic made redundant by the `ros2/rcl#255 <https://github.com/ros2/rcl/issues/255>`_ pull request. (`#712 <https://github.com/ros2/rclcpp/issues/712>`_)
+* Various improvements for ``rclcpp::Clock``. (`#696 <https://github.com/ros2/rclcpp/issues/696>`_)
+  * Fixed uninitialized bool in ``clock.cpp``.
+  * Fixed up includes of ``clock.hpp/cpp``.
+  * Added documentation for exceptions to ``clock.hpp``.
+  * Adjusted function signature of getters of ``clock.hpp/cpp``.
+  * Removed raw pointers to ``Clock::create_jump_callback``.
+  * Removed unnecessary ``rclcpp`` namespace reference from ``clock.cpp``.
+  * Changed exception to ``bad_alloc`` on ``JumpHandler`` allocation failure.
+  * Fixed missing ``nullptr`` check in ``Clock::on_time_jump``.
+  * Added ``JumpHandler::callback`` types.
+  * Added warning for lifetime of Clock and JumpHandler
+* Fixed bug left over from the `pull request #495 <https://github.com/ros2/rclcpp/pull/495>`_. (`#708 <https://github.com/ros2/rclcpp/issues/708>`_)
+* Changed the ``IntraProcessManager`` to be capable of storing ``shared_ptr<const T>`` in addition to ``unique_ptr<T>``. (`#690 <https://github.com/ros2/rclcpp/issues/690>`_)
+* Contributors: Alberto Soragna, Dima Dorezyuk, M. M, Michael Carroll, Michael Jeronimo, Tully Foote, William Woodall, ivanpauno, jhdcs
+
 0.7.1 (2019-04-26)
 ------------------
 * Added read only parameters. (`#495 <https://github.com/ros2/rclcpp/issues/495>`_)

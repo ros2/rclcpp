@@ -3,6 +3,14 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Added new way to specify QoS settings for publishers and subscriptions. (`#713 <https://github.com/ros2/rclcpp/issues/713>`_)
+* Deprecated ``shared_ptr`` and raw pointer versions of ``Publisher<T>::publish()``. (`#709 <https://github.com/ros2/rclcpp/issues/709>`_)
+* Implemented API to set callbacks for liveliness and deadline QoS events for publishers and subscriptions. (`#695 <https://github.com/ros2/rclcpp/issues/695>`_)
+* Changed the ``IntraProcessManager`` to be capable of storing ``shared_ptr<const T>`` in addition to ``unique_ptr<T>``. (`#690 <https://github.com/ros2/rclcpp/issues/690>`_)
+* Contributors: M. M, William Woodall, ivanpauno
+
 0.7.1 (2019-04-26)
 ------------------
 * Added read only parameters. (`#495 <https://github.com/ros2/rclcpp/issues/495>`_)
@@ -31,8 +39,8 @@ Changelog for package rclcpp_lifecycle
 * Add class Waitable (`#589 <https://github.com/ros2/rclcpp/issues/589>`_)
 * Contributors: Dirk Thomas, Jacob Perron, William Woodall, bpwilcox
 
-0.6.0
------------
+0.6.0 (2018-11-19)
+------------------
 * Updated to use new error handling API from rcutils (`#577 <https://github.com/ros2/rclcpp/issues/577>`_)
 * Deleted TRANSITION_SHUTDOWN (`#576 <https://github.com/ros2/rclcpp/issues/576>`_)
 * Added a warning when publishing if publisher is not active (`#574 <https://github.com/ros2/rclcpp/issues/574>`_)
