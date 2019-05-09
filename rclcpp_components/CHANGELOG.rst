@@ -2,8 +2,8 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.2 (2019-05-08)
+------------------
 * Updated to support changes to ``Node::get_node_names()``. (`#698 <https://github.com/ros2/rclcpp/issues/698>`_)
 * Contributors: jhdcs
 

@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.2 (2019-05-08)
+------------------
 * Added new way to specify QoS settings for publishers and subscriptions. (`#713 <https://github.com/ros2/rclcpp/issues/713>`_)
   * The new way requires that you specify a history depth when creating a publisher or subscription.
   * In the past it was possible to create one without specifying any history depth, but these signatures have been deprecated.
