@@ -57,11 +57,15 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Request> request,
       std::shared_ptr<rcl_interfaces::srv::GetParameterTypes::Response> response)
     {
-      auto types = node_params->get_parameter_types(request->names);
-      std::transform(types.cbegin(), types.cend(),
-      std::back_inserter(response->types), [](const uint8_t & type) {
-        return static_cast<rclcpp::ParameterType>(type);
-      });
+      try {
+        auto types = node_params->get_parameter_types(request->names);
+        std::transform(types.cbegin(), types.cend(),
+        std::back_inserter(response->types), [](const uint8_t & type) {
+          return static_cast<rclcpp::ParameterType>(type);
+        });
+      } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+        RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get parameter types: %s", ex.what());
+      }
     },
     qos_profile, nullptr);
 
@@ -73,12 +77,19 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::SetParameters::Request> request,
       std::shared_ptr<rcl_interfaces::srv::SetParameters::Response> response)
     {
-      std::vector<rclcpp::Parameter> pvariants;
+      // Set parameters one-by-one, since there's no way to return a partial result if
+      // set_parameters() fails.
+      auto result = rcl_interfaces::msg::SetParametersResult();
       for (auto & p : request->parameters) {
-        pvariants.push_back(rclcpp::Parameter::from_parameter_msg(p));
+        try {
+          result = node_params->set_parameters({rclcpp::Parameter::from_parameter_msg(p)})[0];
+        } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+          RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
+          result.successful = false;
+          result.reason = ex.what();
+        }
+        response->results.push_back(result);
       }
-      auto results = node_params->set_parameters(pvariants);
-      response->results = results;
     },
     qos_profile, nullptr);
 
@@ -96,8 +107,15 @@ ParameterService::ParameterService(
       [](const rcl_interfaces::msg::Parameter & p) {
         return rclcpp::Parameter::from_parameter_msg(p);
       });
-      auto result = node_params->set_parameters_atomically(pvariants);
-      response->result = result;
+      try {
+        auto result = node_params->set_parameters_atomically(pvariants);
+        response->result = result;
+      } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+        RCLCPP_WARN(
+          rclcpp::get_logger("rclcpp"), "Failed to set parameters atomically: %s", ex.what());
+        response->result.successful = false;
+        response->result.reason = "One or more parameters was not declared before setting";
+      }
     },
     qos_profile, nullptr);
 
@@ -109,8 +127,12 @@ ParameterService::ParameterService(
       const std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Request> request,
       std::shared_ptr<rcl_interfaces::srv::DescribeParameters::Response> response)
     {
-      auto descriptors = node_params->describe_parameters(request->names);
-      response->descriptors = descriptors;
+      try {
+        auto descriptors = node_params->describe_parameters(request->names);
+        response->descriptors = descriptors;
+      } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
+        RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to describe parameters: %s", ex.what());
+      }
     },
     qos_profile, nullptr);
 
