@@ -494,9 +494,9 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     assert(it != parameters_.end());
     if (it != parameters_.end()) {
       // Remove it and update the parameter event message.
+      const rclcpp::Parameter deleted_parameter(it->first, it->second.value);
       parameters_.erase(it);
-      parameter_event_msg.deleted_parameters.push_back(
-        rclcpp::Parameter(it->first, it->second.value).to_parameter_msg());
+      parameter_event_msg.deleted_parameters.push_back(deleted_parameter.to_parameter_msg());
     }
   }
 
