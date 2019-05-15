@@ -425,6 +425,8 @@ public:
    * \sa rclcpp::Node::set_parameter_if_not_set
    */
   template<typename ParameterT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use declare_parameter() instead")]]
   void
   set_parameter_if_not_set(
     const std::string & name,
@@ -435,6 +437,8 @@ public:
    * \sa rclcpp::Node::set_parameters_if_not_set
    */
   template<typename MapValueT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use declare_parameters() instead")]]
   void
   set_parameters_if_not_set(
     const std::string & name,
@@ -500,6 +504,8 @@ public:
    * \sa rclcpp::Node::get_parameter_or_set
    */
   template<typename ParameterT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use declare_parameter() and it's return value instead")]]
   void
   get_parameter_or_set(
     const std::string & name,
@@ -536,6 +542,8 @@ public:
    * \sa rclcpp::Node::register_param_change_callback
    */
   template<typename CallbackT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use set_on_parameters_set_callback() instead")]]
   void
   register_param_change_callback(CallbackT && callback);
 
