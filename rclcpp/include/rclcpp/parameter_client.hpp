@@ -293,16 +293,26 @@ public:
   typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(CallbackT && callback)
   {
-    return async_parameters_client_->on_parameter_event(std::forward<CallbackT>(callback));
+    return async_parameters_client_->on_parameter_event(
+      std::forward<CallbackT>(callback));
   }
 
-  template<typename CallbackT>
+  /**
+   * The NodeT type only needs to have a method called get_node_topics_interface()
+   * which returns a shared_ptr to a NodeTopicsInterface, or be a
+   * NodeTopicsInterface pointer itself.
+   */
+  template<
+    typename CallbackT,
+    typename NodeT>
   static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(
-    CallbackT && callback,
-    rclcpp::node_interfaces::NodeTopicsInterface * node_topics)
+    NodeT && node,
+    CallbackT && callback)
   {
-    return AsyncParametersClient::on_parameter_event(std::forward<CallbackT>(callback), node_topics);
+    return AsyncParametersClient::on_parameter_event(
+      node,
+      std::forward<CallbackT>(callback));
   }
 
   RCLCPP_PUBLIC
