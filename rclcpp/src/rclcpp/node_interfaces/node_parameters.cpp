@@ -493,10 +493,10 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     // assumption: the parameter to be undeclared should be in the parameter infos map
     assert(it != parameters_.end());
     if (it != parameters_.end()) {
-      // Remove it and update the parameter event message.
-      parameters_.erase(it);
+      // Update the parameter event message and remove it.
       parameter_event_msg.deleted_parameters.push_back(
         rclcpp::Parameter(it->first, it->second.value).to_parameter_msg());
+      parameters_.erase(it);
     }
   }
 
