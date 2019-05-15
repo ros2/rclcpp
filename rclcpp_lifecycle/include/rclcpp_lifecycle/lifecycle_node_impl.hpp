@@ -283,11 +283,11 @@ LifecycleNode::set_parameters_if_not_set(
 template<typename MapValueT>
 bool
 LifecycleNode::get_parameters(
-  const std::string & name,
+  const std::string & prefix,
   std::map<std::string, MapValueT> & values) const
 {
   std::map<std::string, rclcpp::Parameter> params;
-  bool result = node_parameters_->get_parameters_by_prefix(name, params);
+  bool result = node_parameters_->get_parameters_by_prefix(prefix, params);
   if (result) {
     for (const auto & param : params) {
       values[param.first] = param.second.get_value<MapValueT>();
