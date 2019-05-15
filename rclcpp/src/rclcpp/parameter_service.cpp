@@ -114,7 +114,7 @@ ParameterService::ParameterService(
         RCLCPP_WARN(
           rclcpp::get_logger("rclcpp"), "Failed to set parameters atomically: %s", ex.what());
         response->result.successful = false;
-        response->result.reason = "One or more parameters was not declared before setting";
+        response->result.reason = "One or more parameters wer not declared before setting";
       }
     },
     qos_profile, nullptr);
