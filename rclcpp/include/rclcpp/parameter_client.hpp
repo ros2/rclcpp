@@ -135,8 +135,8 @@ public:
    */
   template<
     typename CallbackT,
-    typename AllocatorT = std::allocator<void>
-    typename NodeT>
+    typename NodeT,
+    typename AllocatorT = std::allocator<void>>
   static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(
     NodeT && node,
