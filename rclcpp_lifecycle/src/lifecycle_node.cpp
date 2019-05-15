@@ -222,6 +222,19 @@ LifecycleNode::get_parameter(
   return node_parameters_->get_parameter(name, parameter);
 }
 
+rcl_interfaces::msg::ParameterDescriptor
+LifecycleNode::describe_parameter(const std::string & name) const
+{
+  auto result = node_parameters_->describe_parameters({name});
+  if (0 == result.size()) {
+    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
+  }
+  if (result.size() > 1) {
+    throw std::runtime_error("number of described parameters unexpectedly more than one");
+  }
+  return result.front();
+}
+
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
 LifecycleNode::describe_parameters(
   const std::vector<std::string> & names) const
@@ -241,6 +254,12 @@ LifecycleNode::list_parameters(
   const std::vector<std::string> & prefixes, uint64_t depth) const
 {
   return node_parameters_->list_parameters(prefixes, depth);
+}
+
+rclcpp::Node::OnParametersSetCallbackType
+LifecycleNode::set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback)
+{
+  return node_parameters_->set_on_parameters_set_callback(callback);
 }
 
 std::vector<std::string>

@@ -512,6 +512,13 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value);
 
+  /// Return the parameter descriptor for the given parameter name.
+  /**
+   * \sa rclcpp::Node::describe_parameter
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rcl_interfaces::msg::ParameterDescriptor
+  describe_parameter(const std::string & name) const;
 
   /// Return a vector of parameter descriptors, one for each of the given names.
   /**
@@ -536,6 +543,18 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
+
+  using OnParametersSetCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
+
+  /// Register a callback to be called anytime a parameter is about to be changed.
+  /**
+   * \sa rclcpp::Node::set_on_parameters_set_callback
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType
+  set_on_parameters_set_callback(
+    rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback);
 
   /// Register the callback for parameter changes
   /**
