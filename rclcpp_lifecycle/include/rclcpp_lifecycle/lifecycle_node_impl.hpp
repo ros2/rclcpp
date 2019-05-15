@@ -224,6 +224,62 @@ LifecycleNode::create_service(
 }
 
 template<typename ParameterT>
+auto
+LifecycleNode::declare_parameter(
+  const std::string & name,
+  const ParameterT & default_value,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+{
+  return this->declare_parameter(
+    name,
+    rclcpp::ParameterValue(default_value),
+    parameter_descriptor
+  ).get<ParameterT>();
+}
+
+template<typename ParameterT>
+std::vector<ParameterT>
+LifecycleNode::declare_parameters(
+  const std::string & namespace_,
+  const std::map<std::string, ParameterT> & parameters)
+{
+  std::vector<ParameterT> result;
+  std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
+  std::transform(
+    parameters.begin(), parameters.end(), std::back_inserter(result),
+    [this, &normalized_namespace](auto element) {
+      return this->declare_parameter(normalized_namespace + element.first, element.second);
+    }
+  );
+  return result;
+}
+
+template<typename ParameterT>
+std::vector<ParameterT>
+LifecycleNode::declare_parameters(
+  const std::string & namespace_,
+  const std::map<
+    std::string,
+    std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
+  > & parameters)
+{
+  std::vector<ParameterT> result;
+  std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
+  std::transform(
+    parameters.begin(), parameters.end(), std::back_inserter(result),
+    [this, &normalized_namespace](auto element) {
+      return static_cast<ParameterT>(
+        this->declare_parameter(
+          normalized_namespace + element.first,
+          element.second.first,
+          element.second.second)
+      );
+    }
+  );
+  return result;
+}
+
+template<typename ParameterT>
 bool
 LifecycleNode::get_parameter(const std::string & name, ParameterT & parameter) const
 {
