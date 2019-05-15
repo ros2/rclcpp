@@ -44,6 +44,9 @@ rcl_node_options_t_destructor(rcl_node_options_t * node_options)
         "failed to finalize rcl node options: %s", rcl_get_error_string().str);
       rcl_reset_error();
     }
+
+    delete node_options;
+    node_options = nullptr;
   }
 }
 }  // namespace detail
