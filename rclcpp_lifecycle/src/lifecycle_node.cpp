@@ -154,6 +154,33 @@ LifecycleNode::create_callback_group(
   return node_base_->create_callback_group(group_type);
 }
 
+const rclcpp::ParameterValue &
+LifecycleNode::declare_parameter(
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+{
+  return this->node_parameters_->declare_parameter(name, default_value, parameter_descriptor);
+}
+
+void
+LifecycleNode::undeclare_parameter(const std::string & name)
+{
+  this->node_parameters_->undeclare_parameter(name);
+}
+
+bool
+LifecycleNode::has_parameter(const std::string & name) const
+{
+  return this->node_parameters_->has_parameter(name);
+}
+
+rcl_interfaces::msg::SetParametersResult
+LifecycleNode::set_parameter(const rclcpp::Parameter & parameter)
+{
+  return this->set_parameters_atomically({parameter});
+}
+
 bool
 LifecycleNode::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
@@ -187,11 +214,25 @@ LifecycleNode::get_parameter(const std::string & name) const
   return node_parameters_->get_parameter(name);
 }
 
-bool LifecycleNode::get_parameter(
+bool
+LifecycleNode::get_parameter(
   const std::string & name,
   rclcpp::Parameter & parameter) const
 {
   return node_parameters_->get_parameter(name, parameter);
+}
+
+rcl_interfaces::msg::ParameterDescriptor
+LifecycleNode::describe_parameter(const std::string & name) const
+{
+  auto result = node_parameters_->describe_parameters({name});
+  if (0 == result.size()) {
+    throw rclcpp::exceptions::ParameterNotDeclaredException(name);
+  }
+  if (result.size() > 1) {
+    throw std::runtime_error("number of described parameters unexpectedly more than one");
+  }
+  return result.front();
 }
 
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
@@ -213,6 +254,12 @@ LifecycleNode::list_parameters(
   const std::vector<std::string> & prefixes, uint64_t depth) const
 {
   return node_parameters_->list_parameters(prefixes, depth);
+}
+
+rclcpp::Node::OnParametersSetCallbackType
+LifecycleNode::set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback)
+{
+  return node_parameters_->set_on_parameters_set_callback(callback);
 }
 
 std::vector<std::string>
