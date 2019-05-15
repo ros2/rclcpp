@@ -337,7 +337,7 @@ public:
   /**
    * \sa rclcpp::Node::declare_parameter
    */
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   const rclcpp::ParameterValue &
   declare_parameter(
     const std::string & name,
@@ -384,7 +384,7 @@ public:
   /**
    * \sa rclcpp::Node::undeclare_parameter
    */
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   void
   undeclare_parameter(const std::string & name);
 
@@ -392,7 +392,7 @@ public:
   /**
    * \sa rclcpp::Node::has_parameter
    */
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   bool
   has_parameter(const std::string & name) const;
 
@@ -400,7 +400,7 @@ public:
   /**
    * \sa rclcpp::Node::set_parameter
    */
-  RCLCPP_PUBLIC
+  RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameter(const rclcpp::Parameter & parameter);
 
