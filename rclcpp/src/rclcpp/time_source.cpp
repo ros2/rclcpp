@@ -104,8 +104,8 @@ void TimeSource::attachNode(
 
   // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
   parameter_subscription_ =
-    rclcpp::AsyncParametersClient::on_parameter_event(std::bind(&TimeSource::on_parameter_event,
-      this, std::placeholders::_1), node_topics_.get());
+    rclcpp::AsyncParametersClient::on_parameter_event(node_topics_, std::bind(&TimeSource::on_parameter_event,
+      this, std::placeholders::_1));
 }
 
 void TimeSource::detachNode()
