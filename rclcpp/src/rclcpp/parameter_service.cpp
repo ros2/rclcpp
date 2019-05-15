@@ -82,7 +82,8 @@ ParameterService::ParameterService(
       auto result = rcl_interfaces::msg::SetParametersResult();
       for (auto & p : request->parameters) {
         try {
-          result = node_params->set_parameters({rclcpp::Parameter::from_parameter_msg(p)})[0];
+          result = node_params->set_parameters_atomically(
+            {rclcpp::Parameter::from_parameter_msg(p)});
         } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
           RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to set parameter: %s", ex.what());
           result.successful = false;
