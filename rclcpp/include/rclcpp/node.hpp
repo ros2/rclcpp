@@ -940,7 +940,6 @@ public:
   void
   register_param_change_callback(CallbackT && callback);
 
-
   /// Get the fully-qualified names of all available nodes.
   /**
    * The fully-qualified name includes the local namespace and name of the node.

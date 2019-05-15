@@ -15,10 +15,11 @@
 #ifndef RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 #define RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 
-#include <string>
 #include <map>
-#include <vector>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/node.h"
@@ -333,15 +334,100 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
+  /// Declare and initialize a parameter, return the effective value.
+  /**
+   * \sa rclcpp::Node::declare_parameter
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  const rclcpp::ParameterValue &
+  declare_parameter(
+    const std::string & name,
+    const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor());
+
+  /// Declare and initialize a parameter with a type.
+  /**
+   * \sa rclcpp::Node::declare_parameter
+   */
+  template<typename ParameterT>
+  auto
+  declare_parameter(
+    const std::string & name,
+    const ParameterT & default_value,
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
+    rcl_interfaces::msg::ParameterDescriptor());
+
+  /// Declare and initialize several parameters with the same namespace and type.
+  /**
+   * \sa rclcpp::Node::declare_parameters
+   */
+  template<typename ParameterT>
+  std::vector<ParameterT>
+  declare_parameters(
+    const std::string & namespace_,
+    const std::map<std::string, ParameterT> & parameters);
+
+  /// Declare and initialize several parameters with the same namespace and type.
+  /**
+   * \sa rclcpp::Node::declare_parameters
+   */
+  template<typename ParameterT>
+  std::vector<ParameterT>
+  declare_parameters(
+    const std::string & namespace_,
+    const std::map<
+      std::string,
+      std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
+    > & parameters);
+
+  /// Undeclare a previously declared parameter.
+  /**
+   * \sa rclcpp::Node::undeclare_parameter
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  undeclare_parameter(const std::string & name);
+
+  /// Return true if a given parameter is declared.
+  /**
+   * \sa rclcpp::Node::has_parameter
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  bool
+  has_parameter(const std::string & name) const;
+
+  /// Set a single parameter.
+  /**
+   * \sa rclcpp::Node::set_parameter
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rcl_interfaces::msg::SetParametersResult
+  set_parameter(const rclcpp::Parameter & parameter);
+
+  /// Set one or more parameters, one at a time.
+  /**
+   * \sa rclcpp::Node::set_parameters
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rcl_interfaces::msg::SetParametersResult>
   set_parameters(const std::vector<rclcpp::Parameter> & parameters);
 
+  /// Set one or more parameters, all at once.
+  /**
+   * \sa rclcpp::Node::set_parameters_atomically
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
+  /// Set one parameter, unless that parameter has already been set.
+  /**
+   * \sa rclcpp::Node::set_parameter_if_not_set
+   */
   template<typename ParameterT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use declare_parameter() instead")]]
   void
   set_parameter_if_not_set(
     const std::string & name,
@@ -349,54 +435,46 @@ public:
 
   /// Set a map of parameters with the same prefix.
   /**
-   * For each key in the map, a parameter with a name of "name.key" will be set
-   * to the value in the map.
-   *
-   * \param[in] name The prefix of the parameters to set.
-   * \param[in] values The parameters to set in the given prefix.
+   * \sa rclcpp::Node::set_parameters_if_not_set
    */
   template<typename MapValueT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use declare_parameters() instead")]]
   void
   set_parameters_if_not_set(
     const std::string & name,
     const std::map<std::string, MapValueT> & values);
 
-  RCLCPP_LIFECYCLE_PUBLIC
-  std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & names) const;
-
+  /// Return the parameter by the given name.
+  /**
+   * \sa rclcpp::Node::get_parameter
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Parameter
   get_parameter(const std::string & name) const;
 
+  /// Get the value of a parameter by the given name, and return true if it was set.
+  /**
+   * \sa rclcpp::Node::get_parameter
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   bool
   get_parameter(
     const std::string & name,
     rclcpp::Parameter & parameter) const;
 
+  /// Get the value of a parameter by the given name, and return true if it was set.
+  /**
+   * \sa rclcpp::Node::get_parameter
+   */
   template<typename ParameterT>
   bool
   get_parameter(const std::string & name, ParameterT & parameter) const;
 
-  /// Assign the value of the map parameter if set into the values argument.
+  /// Get the parameter value, or the "alternative_value" if not set, and assign it to "parameter".
   /**
-   * Parameter names that are part of a map are of the form "name.member".
-   * This API gets all parameters that begin with "name", storing them into the
-   * map with the name of the parameter and their value.
-   * If there are no members in the named map, then the "values" argument is not changed.
-   *
-   * \param[in] name The prefix of the parameters to get.
-   * \param[out] values The map of output values, with one std::string,MapValueT
-   *                    per parameter.
-   * \returns true if values was changed, false otherwise
+   * \sa rclcpp::Node::get_parameter_or
    */
-  template<typename MapValueT>
-  bool
-  get_parameters(
-    const std::string & name,
-    std::map<std::string, MapValueT> & values) const;
-
   template<typename ParameterT>
   bool
   get_parameter_or(
@@ -404,42 +482,88 @@ public:
     ParameterT & value,
     const ParameterT & alternative_value) const;
 
+  /// Return the parameters by the given parameter names.
+  /**
+   * \sa rclcpp::Node::get_parameters
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::Parameter>
+  get_parameters(const std::vector<std::string> & names) const;
+
+  /// Get the parameter values for all parameters that have a given prefix.
+  /**
+   * \sa rclcpp::Node::get_parameters
+   */
+  template<typename MapValueT>
+  bool
+  get_parameters(
+    const std::string & prefix,
+    std::map<std::string, MapValueT> & values) const;
+
   /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
   /**
-   * If the parameter is set, then the "value" argument is assigned the value
-   * in the parameter.
-   * If the parameter is not set, then the "value" argument is assigned the "alternative_value",
-   * and the parameter is set to the "alternative_value" on the node.
-   *
-   * \param[in] name The name of the parameter to get.
-   * \param[out] value The output where the value of the parameter should be assigned.
-   * \param[in] alternative_value Value to be stored in output and parameter if the parameter was not set.
+   * \sa rclcpp::Node::get_parameter_or_set
    */
   template<typename ParameterT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use declare_parameter() and it's return value instead")]]
   void
   get_parameter_or_set(
     const std::string & name,
     ParameterT & value,
     const ParameterT & alternative_value);
 
+  /// Return the parameter descriptor for the given parameter name.
+  /**
+   * \sa rclcpp::Node::describe_parameter
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rcl_interfaces::msg::ParameterDescriptor
+  describe_parameter(const std::string & name) const;
+
+  /// Return a vector of parameter descriptors, one for each of the given names.
+  /**
+   * \sa rclcpp::Node::describe_parameters
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
   describe_parameters(const std::vector<std::string> & names) const;
 
+  /// Return a vector of parameter types, one for each of the given names.
+  /**
+   * \sa rclcpp::Node::get_parameter_types
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   std::vector<uint8_t>
   get_parameter_types(const std::vector<std::string> & names) const;
 
+  /// Return a list of parameters with any of the given prefixes, up to the given depth.
+  /**
+   * \sa rclcpp::Node::list_parameters
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  using OnParametersSetCallbackType =
+    rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
+
+  /// Register a callback to be called anytime a parameter is about to be changed.
+  /**
+   * \sa rclcpp::Node::set_on_parameters_set_callback
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType
+  set_on_parameters_set_callback(
+    rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback);
+
   /// Register the callback for parameter changes
   /**
-   * \param[in] callback User defined function which is expected to atomically set parameters.
-   * \note Repeated invocations of this function will overwrite previous callbacks
+   * \sa rclcpp::Node::register_param_change_callback
    */
   template<typename CallbackT>
+  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
+  [[deprecated("use set_on_parameters_set_callback() instead")]]
   void
   register_param_change_callback(CallbackT && callback);
 
