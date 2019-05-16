@@ -14,6 +14,9 @@
 
 #include <gtest/gtest.h>
 
+#include <string>
+#include <memory>
+
 #include "rclcpp/rclcpp.hpp"
 
 #include "rcl_interfaces/msg/parameter_event.hpp"
