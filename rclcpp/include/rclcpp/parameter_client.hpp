@@ -121,8 +121,35 @@ public:
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
   ))
   {
-    return rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
+    return this->on_parameter_event(
       this->node_topics_interface_,
+      callback,
+      qos,
+      options);
+  }
+
+  /**
+   * The NodeT type only needs to have a method called get_node_topics_interface()
+   * which returns a shared_ptr to a NodeTopicsInterface, or be a
+   * NodeTopicsInterface pointer itself.
+   */
+  template<
+    typename CallbackT,
+    typename NodeT,
+    typename AllocatorT = std::allocator<void>>
+  static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  on_parameter_event(
+    NodeT && node,
+    CallbackT && callback,
+    const rclcpp::QoS & qos = (
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default))
+    ),
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  ))
+  {
+    return rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
+      node,
       "parameter_events",
       qos,
       std::forward<CallbackT>(callback),
@@ -266,7 +293,26 @@ public:
   typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(CallbackT && callback)
   {
-    return async_parameters_client_->on_parameter_event(std::forward<CallbackT>(callback));
+    return async_parameters_client_->on_parameter_event(
+      std::forward<CallbackT>(callback));
+  }
+
+  /**
+   * The NodeT type only needs to have a method called get_node_topics_interface()
+   * which returns a shared_ptr to a NodeTopicsInterface, or be a
+   * NodeTopicsInterface pointer itself.
+   */
+  template<
+    typename CallbackT,
+    typename NodeT>
+  static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  on_parameter_event(
+    NodeT && node,
+    CallbackT && callback)
+  {
+    return AsyncParametersClient::on_parameter_event(
+      node,
+      std::forward<CallbackT>(callback));
   }
 
   RCLCPP_PUBLIC
