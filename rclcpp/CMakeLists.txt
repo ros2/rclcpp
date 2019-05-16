@@ -242,6 +242,13 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_node_global_args ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_parameter_client test/test_parameter_client.cpp)
+  if(TARGET test_parameter_client)
+    ament_target_dependencies(test_parameter_client
+      "rcl_interfaces"
+    )
+    target_link_libraries(test_parameter_client ${PROJECT_NAME})
+  endif()
   ament_add_gtest(test_parameter_events_filter test/test_parameter_events_filter.cpp)
   if(TARGET test_parameter_events_filter)
     ament_target_dependencies(test_parameter_events_filter
