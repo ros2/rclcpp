@@ -106,7 +106,7 @@ public:
 
   /// Set the durability setting to volatile.
   QoS &
-  volitile();
+  volatile();
 
   /// Set the durability setting to transient local.
   QoS &
