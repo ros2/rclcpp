@@ -37,6 +37,9 @@ public:
   PublisherBase()
   : mock_topic_name(""), mock_queue_size(0) {}
 
+  virtual ~PublisherBase()
+  {}
+
   const char * get_topic_name() const
   {
     return mock_topic_name.c_str();
