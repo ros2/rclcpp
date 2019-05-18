@@ -105,8 +105,11 @@ public:
   durability(rmw_qos_durability_policy_t durability);
 
   /// Set the durability setting to volatile.
+  /**
+    * Note that this cannot be named `volatile` because it is a C++ keyword.
+    */
   QoS &
-  volatile();
+  durability_volatile();
 
   /// Set the durability setting to transient local.
   QoS &

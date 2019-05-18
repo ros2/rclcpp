@@ -120,7 +120,7 @@ QoS::durability(rmw_qos_durability_policy_t durability)
 }
 
 QoS &
-QoS::volatile()
+QoS::durability_volatile()
 {
   return this->durability(RMW_QOS_POLICY_DURABILITY_VOLATILE);
 }
