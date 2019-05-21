@@ -26,6 +26,9 @@
 
 #include <rcl_yaml_param_parser/parser.h>
 
+#include <cmath>
+#include <cstdlib>
+#include <limits>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -185,6 +188,73 @@ __lockless_has_parameter(
   return parameters.find(name) != parameters.end();
 }
 
+#define ULP 10
+
+RCLCPP_LOCAL
+bool
+__are_doubles_equal(double x, double y, int ulp = ULP)
+{
+  return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
+}
+
+RCLCPP_LOCAL
+bool
+__check_parameter_value_in_range(
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor,
+  const rclcpp::ParameterValue & value)
+{
+  if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
+    int64_t v = value.get<int64_t>();
+    auto integer_range = descriptor.integer_range.at(0);
+    if ((v == integer_range.from_value) || (v == integer_range.to_value)) {
+      return true;
+    }
+    if (((v - integer_range.from_value) % integer_range.step) == 0) {
+      return true;
+    }
+    return false;
+  }
+
+  if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE) {
+    double v = value.get<double>();
+    auto fp_range = descriptor.floating_point_range.at(0);
+    if (__are_doubles_equal(v, fp_range.from_value) ||
+      __are_doubles_equal(v, fp_range.to_value))
+    {
+      return true;
+    }
+    if (__are_doubles_equal(std::fmod(v - fp_range.from_value, fp_range.step), 0)) {
+      return true;
+    }
+    return false;
+  }
+  return true;
+}
+
+
+// Return true if parameters type and range conform the descriptors in parameter_infos.
+RCLCPP_LOCAL
+bool
+__check_parameters(
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
+  const std::vector<rclcpp::Parameter> & parameters)
+{
+  bool result = true;
+  for (const rclcpp::Parameter & parameter : parameters) {
+    const rcl_interfaces::msg::ParameterDescriptor & descriptor =
+      parameter_infos[parameter.get_name()].descriptor;
+    result = descriptor.type == parameter.get_type() ||
+      descriptor.type == rclcpp::PARAMETER_NOT_SET;
+    result = result && __check_parameter_value_in_range(
+      descriptor,
+      parameter.get_parameter_value());
+    if (!result) {
+      break;
+    }
+  }
+  return result;
+}
+
 using OnParametersSetCallbackType =
   rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 
@@ -201,13 +271,16 @@ __set_parameters_atomically_common(
   if (on_set_parameters_callback) {
     result = on_set_parameters_callback(parameters);
   }
+  result.successful =
+    result.successful && __check_parameters(parameter_infos, parameters);
 
   // If accepted, actually set the values.
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
       const std::string & name = parameters[i].get_name();
+      // TODO(ivanpauno): Why updating the descriptor name in each set?
+      // Maybe, set the correct name when declare parameter is call, and delete it here.
       parameter_infos[name].descriptor.name = parameters[i].get_name();
-      parameter_infos[name].descriptor.type = parameters[i].get_type();
       parameter_infos[name].value = parameters[i].get_parameter_value();
     }
   }
