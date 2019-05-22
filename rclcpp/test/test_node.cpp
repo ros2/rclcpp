@@ -1450,13 +1450,13 @@ TEST_F(TestNode, describe_parameter_undeclared_parameters_not_allowed) {
     {
       auto result = node->describe_parameter(name1);
       EXPECT_EQ(result.name, name1);
-      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
       EXPECT_FALSE(result.read_only);
     }
     {
       auto result = node->describe_parameter(name2);
       EXPECT_EQ(result.name, name2);
-      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
       EXPECT_TRUE(result.read_only);
     }
   }
@@ -1490,13 +1490,13 @@ TEST_F(TestNode, describe_parameter_undeclared_parameters_allowed) {
     {
       auto result = node->describe_parameter(name1);
       EXPECT_EQ(result.name, name1);
-      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
       EXPECT_FALSE(result.read_only);
     }
     {
       auto result = node->describe_parameter(name2);
       EXPECT_EQ(result.name, name2);
-      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+      EXPECT_EQ(result.type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
       EXPECT_TRUE(result.read_only);
     }
   }
@@ -1533,11 +1533,11 @@ TEST_F(TestNode, describe_parameters_undeclared_parameters_not_allowed) {
     EXPECT_EQ(results.size(), 2u);
 
     EXPECT_EQ(results[0].name, name1);
-    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     EXPECT_FALSE(results[0].read_only);
 
     EXPECT_EQ(results[1].name, name2);
-    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     EXPECT_TRUE(results[1].read_only);
   }
   {
@@ -1578,15 +1578,15 @@ TEST_F(TestNode, describe_parameters_undeclared_parameters_not_allowed) {
     EXPECT_EQ(results.size(), 3u);
 
     EXPECT_EQ(results[0].name, name2);
-    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     EXPECT_TRUE(results[0].read_only);
 
     EXPECT_EQ(results[1].name, name1);
-    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     EXPECT_FALSE(results[1].read_only);
 
     EXPECT_EQ(results[2].name, name2);
-    EXPECT_EQ(results[2].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_EQ(results[2].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     EXPECT_TRUE(results[2].read_only);
   }
 }
@@ -1611,11 +1611,11 @@ TEST_F(TestNode, describe_parameters_undeclared_parameters_allowed) {
     EXPECT_EQ(results.size(), 2u);
 
     EXPECT_EQ(results[0].name, name1);
-    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER);
+    EXPECT_EQ(results[0].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     EXPECT_FALSE(results[0].read_only);
 
     EXPECT_EQ(results[1].name, name2);
-    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_STRING);
+    EXPECT_EQ(results[1].type, rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
     EXPECT_TRUE(results[1].read_only);
   }
   {
