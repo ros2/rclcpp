@@ -265,7 +265,7 @@ PublisherBase::setup_intra_process(
 {
   // Intraprocess configuration is not allowed with "durability" qos policy non "volatile".
   if (this->get_actual_qos().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
-    throw exceptions::InvalidParametersException(
+    throw std::invalid_argument(
             "intraprocess communication is not allowed with durability qos policy non-volatile");
   }
   const char * topic_name = this->get_topic_name();
