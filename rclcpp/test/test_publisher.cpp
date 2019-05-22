@@ -16,6 +16,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -24,12 +25,13 @@
 
 class TestPublisher : public ::testing::Test
 {
-protected:
+public:
   static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
   }
 
+protected:
   void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
   {
     node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
@@ -42,6 +44,25 @@ protected:
 
   rclcpp::Node::SharedPtr node;
 };
+
+struct TestParameters
+{
+  TestParameters(rclcpp::QoS qos, std::string description)
+  : qos(qos), description(description) {}
+  rclcpp::QoS qos;
+  std::string description;
+};
+
+std::ostream & operator<<(std::ostream & out, const TestParameters & params)
+{
+  out << params.description;
+  return out;
+}
+
+class TestPublisherInvalidIntraprocessQos
+  : public TestPublisher,
+  public ::testing::WithParamInterface<TestParameters>
+{};
 
 class TestPublisherSub : public ::testing::Test
 {
@@ -64,14 +85,6 @@ protected:
   rclcpp::Node::SharedPtr node;
   rclcpp::Node::SharedPtr subnode;
 };
-
-static constexpr rmw_qos_profile_t invalid_qos_profile()
-{
-  rmw_qos_profile_t profile = rmw_qos_profile_default;
-  profile.depth = 1;
-  profile.durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
-  return profile;
-}
 
 /*
    Testing publisher construction and destruction.
@@ -165,28 +178,42 @@ TEST_F(TestPublisher, various_creation_signatures) {
 /*
    Testing publisher with intraprocess enabled and invalid QoS
  */
-TEST_F(TestPublisher, intraprocess_with_invalid_qos) {
+TEST_P(TestPublisherInvalidIntraprocessQos, test_publisher_throws) {
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
-  rmw_qos_profile_t qos = invalid_qos_profile();
+  rclcpp::QoS qos = GetParam().qos;
   using rcl_interfaces::msg::IntraProcessMessage;
   {
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
     ASSERT_THROW(
       {auto publisher = node->create_publisher<IntraProcessMessage>("topic", qos);},
-      rclcpp::exceptions::InvalidParametersException);
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
+      std::invalid_argument);
   }
 }
+
+static std::vector<TestParameters> invalid_qos_profiles()
+{
+  std::vector<TestParameters> parameters;
+
+  parameters.reserve(3);
+  parameters.push_back(
+    TestParameters(
+      rclcpp::QoS(rclcpp::KeepLast(10)).transient_local(),
+      "transient_local_qos"));
+  parameters.push_back(
+    TestParameters(
+      rclcpp::QoS(rclcpp::KeepLast(0)),
+      "keep_last_qos_with_zero_history_depth"));
+  parameters.push_back(
+    TestParameters(
+      rclcpp::QoS(rclcpp::KeepAll()),
+      "keep_all_qos"));
+
+  return parameters;
+}
+
+INSTANTIATE_TEST_CASE_P(
+  TestPublisherThrows, TestPublisherInvalidIntraprocessQos,
+  ::testing::ValuesIn(invalid_qos_profiles()),
+  ::testing::PrintToStringParamName());
 
 /*
    Testing publisher construction and destruction for subnodes.
