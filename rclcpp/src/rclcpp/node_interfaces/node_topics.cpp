@@ -48,11 +48,11 @@ NodeTopics::create_publisher(
     auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     // Register the publisher with the intra process manager.
     if (publisher_options.qos.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
-      throw exceptions::InvalidParametersException(
+      throw std::invalid_argument(
               "intraprocess communication is not allowed with keep all history qos policy");
     }
     if (publisher_options.qos.depth == 0) {
-      throw exceptions::InvalidParametersException(
+      throw std::invalid_argument(
               "intraprocess communication is not allowed with a zero qos history depth value");
     }
     uint64_t intra_process_publisher_id = ipm->add_publisher(publisher);
