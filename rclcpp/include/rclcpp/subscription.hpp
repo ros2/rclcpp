@@ -181,7 +181,7 @@ public:
         // This either occurred because the publisher no longer exists or the
         // message requested is no longer being stored.
         RCLCPP_WARN(get_logger("rclcpp"),
-          "Intra process message not longer being stored when trying to handle it");
+          "Intra process message no longer being stored when trying to handle it");
         return;
       }
       any_callback_.dispatch_intra_process(msg, message_info);
@@ -196,7 +196,7 @@ public:
         // This either occurred because the publisher no longer exists or the
         // message requested is no longer being stored.
         RCLCPP_WARN(get_logger("rclcpp"),
-          "Intra process message not longer being stored when trying to handle it");
+          "Intra process message no longer being stored when trying to handle it");
         return;
       }
       any_callback_.dispatch_intra_process(std::move(msg), message_info);
