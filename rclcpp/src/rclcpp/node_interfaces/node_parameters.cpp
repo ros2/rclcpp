@@ -188,8 +188,8 @@ __lockless_has_parameter(
   return parameters.find(name) != parameters.end();
 }
 
-#define ULP 10
-
+// see https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+#define ULP 100
 RCLCPP_LOCAL
 bool
 __are_doubles_equal(double x, double y, int ulp = ULP)
@@ -206,7 +206,13 @@ __check_parameter_value_in_range(
   if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
     int64_t v = value.get<int64_t>();
     auto integer_range = descriptor.integer_range.at(0);
-    if ((v == integer_range.from_value) || (v == integer_range.to_value)) {
+    if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
+      return false;
+    }
+    if (v == integer_range.to_value) {
+      return true;
+    }
+    if (integer_range.step == 0) {
       return true;
     }
     if (((v - integer_range.from_value) % integer_range.step) == 0) {
@@ -223,7 +229,18 @@ __check_parameter_value_in_range(
     {
       return true;
     }
-    if (__are_doubles_equal(std::fmod(v - fp_range.from_value, fp_range.step), 0)) {
+    if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
+      return false;
+    }
+    if (fp_range.step == 0.0) {
+      return true;
+    }
+    int truncated_div = (v - fp_range.from_value) / fp_range.step;
+    if (__are_doubles_equal(v, fp_range.from_value + truncated_div * fp_range.step)) {
+      return true;
+    }
+    // check with truncated_div+1, to avoid numeric errors.
+    if (__are_doubles_equal(v, fp_range.from_value + (++truncated_div) * fp_range.step)) {
       return true;
     }
     return false;
