@@ -149,6 +149,7 @@ ComponentManager::OnLoadNode(
       }
 
       auto options = rclcpp::NodeOptions()
+        .use_global_arguments(false)
         .initial_parameters(parameters)
         .arguments(remap_rules);
 
