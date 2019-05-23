@@ -260,8 +260,6 @@ __check_parameters(
   for (const rclcpp::Parameter & parameter : parameters) {
     const rcl_interfaces::msg::ParameterDescriptor & descriptor =
       parameter_infos[parameter.get_name()].descriptor;
-    result = descriptor.type == parameter.get_type() ||
-      descriptor.type == rclcpp::PARAMETER_NOT_SET;
     result = result && __check_parameter_value_in_range(
       descriptor,
       parameter.get_parameter_value());
@@ -295,8 +293,7 @@ __set_parameters_atomically_common(
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
       const std::string & name = parameters[i].get_name();
-      // TODO(ivanpauno): Why updating the descriptor name in each set?
-      // Maybe, set the correct name when declare parameter is call, and delete it here.
+      parameter_infos[name].descriptor.type = parameters[i].get_type();
       parameter_infos[name].descriptor.name = parameters[i].get_name();
       parameter_infos[name].value = parameters[i].get_parameter_value();
     }

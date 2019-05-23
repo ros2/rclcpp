@@ -699,7 +699,6 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     // setting a parameter with integer range descriptor
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rclcpp::PARAMETER_INTEGER;
     descriptor.integer_range.resize(1);
     auto & integer_range = descriptor.integer_range.at(0);
     integer_range.from_value = 10;
@@ -726,7 +725,6 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     // setting a parameter with integer range descriptor and wrong default value will throw
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rclcpp::PARAMETER_INTEGER;
     descriptor.integer_range.resize(1);
     auto & integer_range = descriptor.integer_range.at(0);
     integer_range.from_value = 10;
@@ -735,10 +733,9 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     ASSERT_THROW(node->declare_parameter(name, 42, descriptor), rclcpp::exceptions::InvalidParameterValueException);
   }
   {
-    // setting a parameter with floatin point range descriptor
+    // setting a parameter with floating point range descriptor
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.type = rclcpp::PARAMETER_DOUBLE;
     descriptor.floating_point_range.resize(1);
     auto & floating_point_range = descriptor.floating_point_range.at(0);
     floating_point_range.from_value = 10.0;
@@ -762,8 +759,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
   }
   {
-    // setting a parameter with a different type will fail if
-    // it has a descriptor specifying a type
+    // setting a parameter with a different type is still possible
+    // when having a descriptor specifying a type (type is a status, not a constraint).
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.type = rclcpp::PARAMETER_INTEGER;
@@ -773,12 +770,11 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get_value<int64_t>(), 42);
 
-    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, "asd")).successful);
-
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, "asd")).successful);
     EXPECT_TRUE(node->has_parameter(name));
     value = node->get_parameter(name);
-    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
-    EXPECT_EQ(value.get_value<int64_t>(), 42);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_STRING);
+    EXPECT_EQ(value.get_value<std::string>(), "asd");
   }
 }
 
