@@ -20,7 +20,7 @@ using rclcpp::memory_strategy::MemoryStrategy;
 rclcpp::SubscriptionBase::SharedPtr
 MemoryStrategy::get_subscription_by_handle(
   std::shared_ptr<const rcl_subscription_t> subscriber_handle,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -51,7 +51,7 @@ MemoryStrategy::get_subscription_by_handle(
 rclcpp::ServiceBase::SharedPtr
 MemoryStrategy::get_service_by_handle(
   std::shared_ptr<const rcl_service_t> service_handle,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -77,7 +77,7 @@ MemoryStrategy::get_service_by_handle(
 rclcpp::ClientBase::SharedPtr
 MemoryStrategy::get_client_by_handle(
   std::shared_ptr<const rcl_client_t> client_handle,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -103,7 +103,7 @@ MemoryStrategy::get_client_by_handle(
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 MemoryStrategy::get_node_by_group(
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   if (!group) {
     return nullptr;
@@ -126,7 +126,7 @@ MemoryStrategy::get_node_by_group(
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -152,7 +152,7 @@ MemoryStrategy::get_group_by_subscription(
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_service(
   rclcpp::ServiceBase::SharedPtr service,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -178,7 +178,7 @@ MemoryStrategy::get_group_by_service(
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_client(
   rclcpp::ClientBase::SharedPtr client,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();
@@ -204,7 +204,7 @@ MemoryStrategy::get_group_by_client(
 rclcpp::callback_group::CallbackGroup::SharedPtr
 MemoryStrategy::get_group_by_waitable(
   rclcpp::Waitable::SharedPtr waitable,
-  const WeakNodeVector & weak_nodes)
+  const WeakNodeList & weak_nodes)
 {
   for (auto & weak_node : weak_nodes) {
     auto node = weak_node.lock();

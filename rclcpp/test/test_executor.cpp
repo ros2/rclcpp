@@ -60,3 +60,10 @@ TEST_F(TestExecutors, detachOnDestruction) {
     EXPECT_NO_THROW(executor.add_node(node));
   }
 }
+
+// Make sure that the executor can automatically remove expired nodes correctly
+TEST_F(TestExecutors, addTemporaryNode) {
+  rclcpp::executors::SingleThreadedExecutor executor;
+  executor.add_node(std::make_shared<rclcpp::Node>("temporary_node"));
+  EXPECT_NO_THROW(executor.spin_some());
+}
