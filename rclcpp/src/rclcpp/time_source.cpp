@@ -112,7 +112,7 @@ void TimeSource::detachNode()
 {
   this->ros_time_active_ = false;
   clock_subscription_.reset();
-  parameter_client_.reset();
+  parameter_subscription_.reset();
   node_base_.reset();
   node_topics_.reset();
   node_graph_.reset();

@@ -100,9 +100,6 @@ private:
   // Destroy the subscription for the clock topic
   void destroy_clock_sub();
 
-  // Parameter Client pointer
-  std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
-
   // Parameter Event subscription
   using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
   using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
