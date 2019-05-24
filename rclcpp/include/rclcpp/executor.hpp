@@ -364,7 +364,8 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(Executor)
 
-  std::vector<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
+  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
+  std::list<const rcl_guard_condition_t *> guard_conditions_;
 };
 
 }  // namespace executor
