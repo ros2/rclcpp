@@ -368,20 +368,22 @@ public:
         // Do not use std::make_shared as friendship cannot be forwarded.
         std::shared_ptr<GoalHandle> goal_handle(
           new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
+        {
+          std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+          goal_handles_[goal_handle->get_goal_id()] = goal_handle;
+        }
+        promise->set_value(goal_handle);
+        if (options.goal_response_callback) {
+          options.goal_response_callback(future);
+        }
+
         if (options.result_callback) {
           try {
             this->make_result_aware(goal_handle);
           } catch (...) {
             promise->set_exception(std::current_exception());
-            options.goal_response_callback(future);
             return;
           }
-        }
-        std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-        goal_handles_[goal_handle->get_goal_id()] = goal_handle;
-        promise->set_value(goal_handle);
-        if (options.goal_response_callback) {
-          options.goal_response_callback(future);
         }
       });
     return future;
