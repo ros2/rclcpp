@@ -559,6 +559,8 @@ NodeParameters::get_parameter(const std::string & name) const
   if (get_parameter(name, parameter)) {
     return parameter;
   } else if (this->allow_undeclared_) {
+    // This case is only reached if the parameter name was found neither
+    // parameters_ nor initial_parameter_values_.
     return parameter;
   } else {
     throw rclcpp::exceptions::ParameterNotDeclaredException(name);
@@ -579,9 +581,16 @@ NodeParameters::get_parameter(
   {
     parameter = {name, param_iter->second.value};
     return true;
-  } else {
-    return false;
+  } else if (this->allow_undeclared_) {
+    // if the parameter has not been declared (not in parameters_), and allow_undeclared_
+    // then look also in the initial_parameter_values_ just as declare parameter does
+    auto initial_param_iter = initial_parameter_values_.find(name);
+    if (initial_parameter_values_.end() != initial_param_iter) {
+      parameter = {name, initial_param_iter->second};
+      return true;
+    }
   }
+  return false;
 }
 
 bool

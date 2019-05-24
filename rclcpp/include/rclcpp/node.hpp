@@ -649,8 +649,11 @@ public:
    *
    * If undeclared parameters are allowed, see the node option
    * rclcpp::NodeOptions::allow_undeclared_parameters, then this method will
-   * not throw an exception, and instead return a default initialized
-   * rclcpp::Parameter, which has a type of
+   * not throw an exception.
+   * It will instead attempt to get a value from the "initial parameter values",
+   * i.e. from rclcpp::NodeOptions::initial_parameters or a YAML file on the
+   * command line, and if it is not found there either, it will return a
+   * default initialized rclcpp::Parameter, which has a type of
    * rclcpp::ParameterType::PARAMETER_NOT_SET.
    *
    * \param[in] name The name of the parameter to get.
@@ -670,6 +673,16 @@ public:
    *
    * If the parameter was not declared, then the output argument for this
    * method which is called "parameter" will not be assigned a value.
+   *
+   * However, if undeclared parameters are allowed, see the node option
+   * rclcpp::NodeOptions::allow_undeclared_parameters, this function will
+   * instead attempt to get a value from the "initial parameter values",
+   * i.e. from rclcpp::NodeOptions::initial_parameters or a YAML file on the
+   * command line.
+   * If a value is found from there, true will returned.
+   * If not found there, it will not assign the "parameter" arugment and then
+   * return false.
+   *
    * If the parameter was declared, and therefore has a value, then it is
    * assigned into the "parameter" argument of this method.
    *

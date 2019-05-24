@@ -1208,6 +1208,38 @@ TEST_F(TestNode, get_parameter_undeclared_parameters_allowed) {
   }
 }
 
+// test get_parameter with undeclared allowed and initial parameter values
+TEST_F(TestNode, get_parameter_undeclared_parameters_allowed_with_initial_values) {
+  rclcpp::NodeOptions options;
+  options
+  .allow_undeclared_parameters(true)
+  .initial_parameters({
+    {"my_string", "str"},
+    {"my_int", 42},
+    {"my_double", 3.14},
+    {"my_bool", true},
+    {"my_unset", rclcpp::ParameterValue()},
+  });
+  auto node = std::make_shared<rclcpp::Node>(
+    "test_get_parameter_node"_unq,
+    options);
+  {
+    // getting an undeclared parameter, which has an initial parameter value, returns that value
+    for (const auto & initial_param : options.initial_parameters()) {
+      const auto & name = initial_param.get_name();
+
+      EXPECT_FALSE(node->has_parameter(name));
+
+      EXPECT_EQ(node->get_parameter(name).get_type(), initial_param.get_type());
+      {
+        rclcpp::Parameter parameter;
+        EXPECT_TRUE(node->get_parameter(name, parameter));
+        EXPECT_EQ(parameter, initial_param);
+      }
+    }
+  }
+}
+
 // test get_parameter_or with undeclared not allowed
 TEST_F(TestNode, get_parameter_or_undeclared_parameters_not_allowed) {
   auto node = std::make_shared<rclcpp::Node>(
