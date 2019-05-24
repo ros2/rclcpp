@@ -91,6 +91,10 @@ Executor::~Executor()
     }
   }
   weak_nodes_.clear();
+  for (auto & guard_condition : guard_conditions_) {
+    memory_strategy_->remove_guard_condition(guard_condition);
+  }
+  guard_conditions_.clear();
 
   // Finalize the wait set.
   if (rcl_wait_set_fini(&wait_set_) != RCL_RET_OK) {
@@ -128,6 +132,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
     }
   }
   weak_nodes_.push_back(node_ptr);
+  guard_conditions_.push_back(node_ptr->get_notify_guard_condition());
   if (notify) {
     // Interrupt waiting to handle new node
     if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
@@ -148,17 +153,21 @@ void
 Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   bool node_removed = false;
-  weak_nodes_.erase(
-    std::remove_if(
-      weak_nodes_.begin(), weak_nodes_.end(),
-      [&](rclcpp::node_interfaces::NodeBaseInterface::WeakPtr & i)
-      {
-        bool matched = (i.lock() == node_ptr);
-        node_removed |= matched;
-        return matched;
+  {
+    auto node_it = weak_nodes_.begin();
+    auto gc_it = guard_conditions_.begin();
+    while (node_it != weak_nodes_.end()) {
+      bool matched = (node_it->lock() == node_ptr);
+      if (matched) {
+        node_it = weak_nodes_.erase(node_it);
+        gc_it = guard_conditions_.erase(gc_it);
+        node_removed = true;
+      } else {
+        ++node_it;
+        ++gc_it;
       }
-    )
-  );
+    }
+  }
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
   if (notify) {
@@ -420,15 +429,18 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
   // Clean up any invalid nodes, if they were detected
   if (has_invalid_weak_nodes) {
-    weak_nodes_.erase(
-      remove_if(
-        weak_nodes_.begin(), weak_nodes_.end(),
-        [](rclcpp::node_interfaces::NodeBaseInterface::WeakPtr i)
-        {
-          return i.expired();
-        }
-      )
-    );
+    auto node_it = weak_nodes_.begin();
+    auto gc_it = guard_conditions_.begin();
+    while (node_it != weak_nodes_.end()) {
+      if (node_it->expired()) {
+        node_it = weak_nodes_.erase(node_it);
+        memory_strategy_->remove_guard_condition(*gc_it);
+        gc_it = guard_conditions_.erase(gc_it);
+      } else {
+        ++node_it;
+        ++gc_it;
+      }
+    }
   }
   // clear wait set
   if (rcl_wait_set_clear(&wait_set_) != RCL_RET_OK) {
