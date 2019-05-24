@@ -36,15 +36,15 @@ TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes) {
     rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
   auto existing_node = rclcpp::Node::make_shared("existing_node");
   auto dead_node = rclcpp::Node::make_shared("dead_node");
-  rclcpp::memory_strategy::MemoryStrategy::WeakNodeVector weak_nodes;
+  rclcpp::memory_strategy::MemoryStrategy::WeakNodeList weak_nodes;
   weak_nodes.push_back(existing_node->get_node_base_interface());
   weak_nodes.push_back(dead_node->get_node_base_interface());
 
   // AND
   // Delete dead_node, creating a dangling pointer in weak_nodes
   dead_node.reset();
-  ASSERT_FALSE(weak_nodes[0].expired());
-  ASSERT_TRUE(weak_nodes[1].expired());
+  ASSERT_FALSE(weak_nodes.front().expired());
+  ASSERT_TRUE(weak_nodes.back().expired());
 
   // WHEN
   bool has_invalid_weak_nodes = memory_strategy->collect_entities(weak_nodes);
@@ -64,11 +64,11 @@ TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
     rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
   auto existing_node1 = rclcpp::Node::make_shared("existing_node1");
   auto existing_node2 = rclcpp::Node::make_shared("existing_node2");
-  rclcpp::memory_strategy::MemoryStrategy::WeakNodeVector weak_nodes;
+  rclcpp::memory_strategy::MemoryStrategy::WeakNodeList weak_nodes;
   weak_nodes.push_back(existing_node1->get_node_base_interface());
   weak_nodes.push_back(existing_node2->get_node_base_interface());
-  ASSERT_FALSE(weak_nodes[0].expired());
-  ASSERT_FALSE(weak_nodes[1].expired());
+  ASSERT_FALSE(weak_nodes.front().expired());
+  ASSERT_FALSE(weak_nodes.back().expired());
 
   // WHEN
   bool has_invalid_weak_nodes = memory_strategy->collect_entities(weak_nodes);
