@@ -730,7 +730,9 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     integer_range.from_value = 10;
     integer_range.to_value = 18;
     integer_range.step = 2;
-    ASSERT_THROW(node->declare_parameter(name, 42, descriptor), rclcpp::exceptions::InvalidParameterValueException);
+    ASSERT_THROW(
+      node->declare_parameter(name, 42, descriptor),
+      rclcpp::exceptions::InvalidParameterValueException);
   }
   {
     // setting a parameter with floating point range descriptor
