@@ -722,6 +722,32 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name).get_value<int64_t>(), 18);
   }
   {
+    // setting a parameter with integer range descriptor, step=0
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.integer_range.resize(1);
+    auto & integer_range = descriptor.integer_range.at(0);
+    integer_range.from_value = 10;
+    integer_range.to_value = 18;
+    integer_range.step = 0;
+    node->declare_parameter(name, 10, descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(value.get_value<int64_t>(), 10);
+
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, 11)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int64_t>(), 11);
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, 15)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int64_t>(), 15);
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, 18)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int64_t>(), 18);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 9)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int64_t>(), 18);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 19)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<int64_t>(), 18);
+  }
+  {
     // setting a parameter with integer range descriptor and wrong default value will throw
     auto name = "parameter"_unq;
     rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -758,6 +784,32 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 12.0)).successful);
     EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
     EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 9.4)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
+  }
+  {
+    // setting a parameter with floating point range descriptor, step=0
+    auto name = "parameter"_unq;
+    rcl_interfaces::msg::ParameterDescriptor descriptor;
+    descriptor.floating_point_range.resize(1);
+    auto & floating_point_range = descriptor.floating_point_range.at(0);
+    floating_point_range.from_value = 10.0;
+    floating_point_range.to_value = 11.0;
+    floating_point_range.step = 0.0;
+    node->declare_parameter(name, 10.0, descriptor);
+    EXPECT_TRUE(node->has_parameter(name));
+    auto value = node->get_parameter(name);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE);
+    EXPECT_EQ(value.get_value<double>(), 10.0);
+
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, 10.0001)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 10.0001);
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, 10.5479051)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 10.5479051);
+    EXPECT_TRUE(node->set_parameter(rclcpp::Parameter(name, 11.0)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 11.001)).successful);
+    EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
+    EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 9.999)).successful);
     EXPECT_EQ(node->get_parameter(name).get_value<double>(), 11.0);
   }
   {
