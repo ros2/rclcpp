@@ -198,13 +198,6 @@ class InvalidParameterValueException : public std::runtime_error
   using std::runtime_error::runtime_error;
 };
 
-/// Thrown if passed parameter description is invalid.
-class InvalidParameterDescriptionException : public std::runtime_error
-{
-  // Inherit constructors from runtime_error.
-  using std::runtime_error::runtime_error;
-};
-
 /// Thrown if parameter is already declared.
 class ParameterAlreadyDeclaredException : public std::runtime_error
 {
