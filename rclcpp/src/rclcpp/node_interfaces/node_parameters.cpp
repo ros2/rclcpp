@@ -197,28 +197,41 @@ __are_doubles_equal(double x, double y, int ulp = ULP)
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
 }
 
+#define FORMAT_REASON(reason, name, range_type) \
+  { \
+    std::ostringstream ss; \
+    ss << "Parameter {" << name << "} doesn't comply with " << range_type << " range."; \
+    reason = ss.str(); \
+  }
+
 RCLCPP_LOCAL
-bool
+rcl_interfaces::msg::SetParametersResult
 __check_parameter_value_in_range(
   const rcl_interfaces::msg::ParameterDescriptor & descriptor,
   const rclcpp::ParameterValue & value)
 {
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
   if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
     int64_t v = value.get<int64_t>();
     auto integer_range = descriptor.integer_range.at(0);
     if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
-      return false;
+      result.successful = false;
+      FORMAT_REASON(result.reason, descriptor.name, "integer")
+      return result;
     }
-    if (v == integer_range.to_value) {
-      return true;
+    if (v == integer_range.from_value || v == integer_range.to_value) {
+      return result;
     }
     if (integer_range.step == 0) {
-      return true;
+      return result;
     }
     if (((v - integer_range.from_value) % integer_range.step) == 0) {
-      return true;
+      return result;
     }
-    return false;
+    result.successful = false;
+    FORMAT_REASON(result.reason, descriptor.name, "integer")
+    return result;
   }
 
   if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE) {
@@ -227,43 +240,44 @@ __check_parameter_value_in_range(
     if (__are_doubles_equal(v, fp_range.from_value) ||
       __are_doubles_equal(v, fp_range.to_value))
     {
-      return true;
+      return result;
     }
     if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
-      return false;
+      result.successful = false;
+      FORMAT_REASON(result.reason, descriptor.name, "floating point")
+      return result;
     }
     if (fp_range.step == 0.0) {
-      return true;
+      return result;
     }
-    int truncated_div = (v - fp_range.from_value) / fp_range.step;
-    if (__are_doubles_equal(v, fp_range.from_value + truncated_div * fp_range.step)) {
-      return true;
+    int rounded_div = std::round((v - fp_range.from_value) / fp_range.step);
+    if (__are_doubles_equal(v, fp_range.from_value + rounded_div * fp_range.step)) {
+      return result;
     }
-    // check with truncated_div+1, to avoid numeric errors.
-    if (__are_doubles_equal(v, fp_range.from_value + (++truncated_div) * fp_range.step)) {
-      return true;
-    }
-    return false;
+    result.successful = false;
+    FORMAT_REASON(result.reason, descriptor.name, "floating point")
+    return result;
   }
-  return true;
+  return result;
 }
 
 
-// Return true if parameters type and range conform the descriptors in parameter_infos.
+// Return true if parameter values comply with the descriptors in parameter_infos.
 RCLCPP_LOCAL
-bool
+rcl_interfaces::msg::SetParametersResult
 __check_parameters(
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
   const std::vector<rclcpp::Parameter> & parameters)
 {
-  bool result = true;
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
   for (const rclcpp::Parameter & parameter : parameters) {
     const rcl_interfaces::msg::ParameterDescriptor & descriptor =
       parameter_infos[parameter.get_name()].descriptor;
-    result = result && __check_parameter_value_in_range(
+    result = __check_parameter_value_in_range(
       descriptor,
       parameter.get_parameter_value());
-    if (!result) {
+    if (!result.successful) {
       break;
     }
   }
@@ -286,9 +300,14 @@ __set_parameters_atomically_common(
   if (on_set_parameters_callback) {
     result = on_set_parameters_callback(parameters);
   }
-  result.successful =
-    result.successful && __check_parameters(parameter_infos, parameters);
-
+  if (!result.successful) {
+    return result;
+  }
+  // Check if the value being set complies with the descriptor.
+  result = __check_parameters(parameter_infos, parameters);
+  if (!result.successful) {
+    return result;
+  }
   // If accepted, actually set the values.
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
