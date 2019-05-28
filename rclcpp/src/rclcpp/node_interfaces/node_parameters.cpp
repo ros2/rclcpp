@@ -217,12 +217,12 @@ __check_parameter_value_in_range(
   if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
     int64_t v = value.get<int64_t>();
     auto integer_range = descriptor.integer_range.at(0);
+    if (v == integer_range.from_value || v == integer_range.to_value) {
+      return result;
+    }
     if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
       result.successful = false;
       format_reason(result.reason, descriptor.name, "integer");
-      return result;
-    }
-    if (v == integer_range.from_value || v == integer_range.to_value) {
       return result;
     }
     if (integer_range.step == 0) {
