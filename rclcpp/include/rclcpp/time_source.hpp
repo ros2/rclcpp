@@ -25,8 +25,6 @@
 #include "rcl_interfaces/msg/parameter_event.hpp"
 
 #include "rclcpp/node.hpp"
-#include "rclcpp/parameter_client.hpp"
-#include "rclcpp/parameter_events_filter.hpp"
 
 
 namespace rclcpp
@@ -99,9 +97,6 @@ private:
 
   // Destroy the subscription for the clock topic
   void destroy_clock_sub();
-
-  // Parameter Client pointer
-  std::shared_ptr<rclcpp::AsyncParametersClient> parameter_client_;
 
   // Parameter Event subscription
   using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
