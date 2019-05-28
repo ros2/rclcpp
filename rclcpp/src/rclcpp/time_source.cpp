@@ -25,6 +25,8 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/parameter_client.hpp"
+#include "rclcpp/parameter_events_filter.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 
@@ -112,7 +114,7 @@ void TimeSource::detachNode()
 {
   this->ros_time_active_ = false;
   clock_subscription_.reset();
-  parameter_client_.reset();
+  parameter_subscription_.reset();
   node_base_.reset();
   node_topics_.reset();
   node_graph_.reset();
