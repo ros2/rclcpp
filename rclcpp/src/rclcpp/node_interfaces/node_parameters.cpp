@@ -263,7 +263,6 @@ __check_parameter_value_in_range(
   return result;
 }
 
-
 // Return true if parameter values comply with the descriptors in parameter_infos.
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
