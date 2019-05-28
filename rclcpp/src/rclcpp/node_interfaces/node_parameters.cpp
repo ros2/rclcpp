@@ -48,7 +48,7 @@ NodeParameters::NodeParameters(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
   const rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-  const std::vector<rclcpp::Parameter> & initial_parameters,
+  const std::vector<rclcpp::Parameter> & parameter_overrides,
   bool start_parameter_services,
   bool start_parameter_event_publisher,
   const rclcpp::QoS & parameter_event_qos,
@@ -153,8 +153,8 @@ NodeParameters::NodeParameters(
     }
   }
 
-  // initial values passed to constructor overwrite yaml file sources
-  for (auto & param : initial_parameters) {
+  // parameter overrides passed to constructor will overwrite overrides from yaml file sources
+  for (auto & param : parameter_overrides) {
     initial_parameter_values_[param.get_name()] =
       rclcpp::ParameterValue(param.get_value_message());
   }

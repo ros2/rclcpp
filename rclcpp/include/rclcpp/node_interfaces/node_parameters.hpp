@@ -63,7 +63,7 @@ public:
     const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     const node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    const std::vector<Parameter> & initial_parameters,
+    const std::vector<Parameter> & parameter_overrides,
     bool start_parameter_services,
     bool start_parameter_event_publisher,
     const rclcpp::QoS & parameter_event_qos,

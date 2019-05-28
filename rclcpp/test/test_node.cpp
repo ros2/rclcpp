@@ -365,7 +365,7 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
 TEST_F(TestNode, declare_parameter_with_initial_values) {
   // test cases with initial values
   rclcpp::NodeOptions no;
-  no.initial_parameters({
+  no.parameter_overrides({
     {"parameter_no_default", 42},
     {"parameter_and_default", 42},
     {"parameter_custom", 42},

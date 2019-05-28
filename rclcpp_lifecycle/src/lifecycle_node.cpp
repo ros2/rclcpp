@@ -91,7 +91,7 @@ LifecycleNode::LifecycleNode(
       node_topics_,
       node_services_,
       node_clock_,
-      options.initial_parameters(),
+      options.parameter_overrides(),
       options.start_parameter_services(),
       options.start_parameter_event_publisher(),
       options.parameter_event_qos(),

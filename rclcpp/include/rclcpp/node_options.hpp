@@ -40,7 +40,7 @@ public:
    *
    *   - context = rclcpp::contexts::default_context::get_global_default_context()
    *   - arguments = {}
-   *   - initial_parameters = {}
+   *   - parameter_overrides = {}
    *   - use_global_arguments = true
    *   - use_intra_process_comms = false
    *   - start_parameter_services = true
@@ -107,31 +107,31 @@ public:
   NodeOptions &
   arguments(const std::vector<std::string> & arguments);
 
-  /// Return a reference to the list of initial parameters.
+  /// Return a reference to the list of parameter overrides.
   RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter> &
-  initial_parameters();
+  parameter_overrides();
 
   RCLCPP_PUBLIC
   const std::vector<rclcpp::Parameter> &
-  initial_parameters() const;
+  parameter_overrides() const;
 
-  /// Set the initial parameters, return this for parameter idiom.
+  /// Set the parameters overrides, return this for parameter idiom.
   /**
-   * These initial parameter values are used to change the initial value
+   * These parameter overrides are used to change the initial value
    * of declared parameters within the node, overriding hard coded default
    * values if necessary.
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  initial_parameters(const std::vector<rclcpp::Parameter> & initial_parameters);
+  parameter_overrides(const std::vector<rclcpp::Parameter> & parameter_overrides);
 
-  /// Append a single initial parameter, parameter idiom style.
+  /// Append a single parameter override, parameter idiom style.
   template<typename ParameterT>
   NodeOptions &
-  append_initial_parameter(const std::string & name, const ParameterT & value)
+  append_parameter_override(const std::string & name, const ParameterT & value)
   {
-    this->initial_parameters().emplace_back(name, rclcpp::ParameterValue(value));
+    this->parameter_overrides().emplace_back(name, rclcpp::ParameterValue(value));
     return *this;
   }
 
@@ -302,7 +302,7 @@ private:
 
   std::vector<std::string> arguments_ {};
 
-  std::vector<rclcpp::Parameter> initial_parameters_ {};
+  std::vector<rclcpp::Parameter> parameter_overrides_ {};
 
   bool use_global_arguments_ {true};
 
