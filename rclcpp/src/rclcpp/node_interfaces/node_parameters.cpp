@@ -313,8 +313,8 @@ __set_parameters_atomically_common(
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
       const std::string & name = parameters[i].get_name();
-      parameter_infos[name].descriptor.type = parameters[i].get_type();
       parameter_infos[name].descriptor.name = parameters[i].get_name();
+      parameter_infos[name].descriptor.type = parameters[i].get_type();
       parameter_infos[name].value = parameters[i].get_parameter_value();
     }
   }
