@@ -197,12 +197,15 @@ __are_doubles_equal(double x, double y, int ulp = ULP)
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
 }
 
-#define FORMAT_REASON(reason, name, range_type) \
-  { \
-    std::ostringstream ss; \
-    ss << "Parameter {" << name << "} doesn't comply with " << range_type << " range."; \
-    reason = ss.str(); \
-  }
+RCLCPP_LOCAL
+inline
+void
+format_reason(std::string & reason, const std::string & name, const char * range_type)
+{
+  std::ostringstream ss;
+  ss << "Parameter {" << name << "} doesn't comply with " << range_type << " range.";
+  reason = ss.str();
+}
 
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
@@ -217,7 +220,7 @@ __check_parameter_value_in_range(
     auto integer_range = descriptor.integer_range.at(0);
     if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
       result.successful = false;
-      FORMAT_REASON(result.reason, descriptor.name, "integer")
+      format_reason(result.reason, descriptor.name, "integer");
       return result;
     }
     if (v == integer_range.from_value || v == integer_range.to_value) {
@@ -230,7 +233,7 @@ __check_parameter_value_in_range(
       return result;
     }
     result.successful = false;
-    FORMAT_REASON(result.reason, descriptor.name, "integer")
+    format_reason(result.reason, descriptor.name, "integer");
     return result;
   }
 
@@ -244,7 +247,7 @@ __check_parameter_value_in_range(
     }
     if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
       result.successful = false;
-      FORMAT_REASON(result.reason, descriptor.name, "floating point")
+      format_reason(result.reason, descriptor.name, "floating point");
       return result;
     }
     if (fp_range.step == 0.0) {
@@ -255,7 +258,7 @@ __check_parameter_value_in_range(
       return result;
     }
     result.successful = false;
-    FORMAT_REASON(result.reason, descriptor.name, "floating point")
+    format_reason(result.reason, descriptor.name, "floating point");
     return result;
   }
   return result;
