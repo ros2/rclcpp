@@ -25,6 +25,8 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/parameter_client.hpp"
+#include "rclcpp/parameter_events_filter.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/time_source.hpp"
 
