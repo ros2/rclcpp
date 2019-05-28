@@ -73,8 +73,8 @@ NodeOptions::operator=(const NodeOptions & other)
     this->start_parameter_services_ = other.start_parameter_services_;
     this->allocator_ = other.allocator_;
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
-    this->automatically_declare_initial_parameters_ =
-      other.automatically_declare_initial_parameters_;
+    this->automatically_declare_parameters_from_overrides_ =
+      other.automatically_declare_parameters_from_overrides_;
   }
   return *this;
 }
@@ -254,16 +254,17 @@ NodeOptions::allow_undeclared_parameters(bool allow_undeclared_parameters)
 }
 
 bool
-NodeOptions::automatically_declare_initial_parameters() const
+NodeOptions::automatically_declare_parameters_from_overrides() const
 {
-  return this->automatically_declare_initial_parameters_;
+  return this->automatically_declare_parameters_from_overrides_;
 }
 
 NodeOptions &
-NodeOptions::automatically_declare_initial_parameters(
-  bool automatically_declare_initial_parameters)
+NodeOptions::automatically_declare_parameters_from_overrides(
+  bool automatically_declare_parameters_from_overrides)
 {
-  this->automatically_declare_initial_parameters_ = automatically_declare_initial_parameters;
+  this->automatically_declare_parameters_from_overrides_ =
+    automatically_declare_parameters_from_overrides;
   return *this;
 }
 

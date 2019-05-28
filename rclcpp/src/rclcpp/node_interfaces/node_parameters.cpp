@@ -54,7 +54,7 @@ NodeParameters::NodeParameters(
   const rclcpp::QoS & parameter_event_qos,
   const rclcpp::PublisherOptionsBase & parameter_event_publisher_options,
   bool allow_undeclared_parameters,
-  bool automatically_declare_initial_parameters)
+  bool automatically_declare_parameters_from_overrides)
 : allow_undeclared_(allow_undeclared_parameters),
   events_publisher_(nullptr),
   node_logging_(node_logging),
@@ -161,7 +161,7 @@ NodeParameters::NodeParameters(
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
-  if (automatically_declare_initial_parameters) {
+  if (automatically_declare_parameters_from_overrides) {
     for (const auto & pair : this->get_initial_parameter_values()) {
       if (!this->has_parameter(pair.first)) {
         this->declare_parameter(

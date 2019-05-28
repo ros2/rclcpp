@@ -49,7 +49,7 @@ public:
    *     - with history setting and depth from rmw_qos_profile_parameter_events
    *   - parameter_event_publisher_options = rclcpp::PublisherOptionsBase
    *   - allow_undeclared_parameters = false
-   *   - automatically_declare_initial_parameters = false
+   *   - automatically_declare_parameters_from_overrides = false
    *   - allocator = rcl_get_default_allocator()
    *
    * \param[in] allocator allocator to use in construction of NodeOptions.
@@ -252,24 +252,25 @@ public:
   NodeOptions &
   allow_undeclared_parameters(bool allow_undeclared_parameters);
 
-  /// Return the automatically_declare_initial_parameters flag.
+  /// Return the automatically_declare_parameters_from_overrides flag.
   RCLCPP_PUBLIC
   bool
-  automatically_declare_initial_parameters() const;
+  automatically_declare_parameters_from_overrides() const;
 
-  /// Set the automatically_declare_initial_parameters, return this.
+  /// Set the automatically_declare_parameters_from_overrides, return this.
   /**
-   * If true, automatically iterate through the node's initial parameters and
+   * If true, automatically iterate through the node's parameter overrides and
    * implicitly declare any that have not already been declared.
-   * Otherwise, parameters passed to the node's initial_parameters, and/or the
-   * global initial parameter values, which are not explicitly declared will
-   * not appear on the node at all.
+   * Otherwise, parameters passed to the node's parameter_overrides, and/or the
+   * global arguments (e.g. parameter overrides from a YAML file), which are
+   * not explicitly declared will not appear on the node at all.
    * Already declared parameters will not be re-declared, and parameters
    * declared in this way will use the default constructed ParameterDescriptor.
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  automatically_declare_initial_parameters(bool automatically_declare_initial_parameters);
+  automatically_declare_parameters_from_overrides(
+    bool automatically_declare_parameters_from_overrides);
 
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
@@ -320,7 +321,7 @@ private:
 
   bool allow_undeclared_parameters_ {false};
 
-  bool automatically_declare_initial_parameters_ {false};
+  bool automatically_declare_parameters_from_overrides_ {false};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
 };
