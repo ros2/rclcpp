@@ -63,13 +63,13 @@ public:
     const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     const node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    const std::vector<Parameter> & initial_parameters,
+    const std::vector<Parameter> & parameter_overrides,
     bool start_parameter_services,
     bool start_parameter_event_publisher,
     const rclcpp::QoS & parameter_event_qos,
     const rclcpp::PublisherOptionsBase & parameter_event_publisher_options,
     bool allow_undeclared_parameters,
-    bool automatically_declare_initial_parameters);
+    bool automatically_declare_parameters_from_overrides);
 
   RCLCPP_PUBLIC
   virtual
@@ -143,7 +143,7 @@ public:
 
   RCLCPP_PUBLIC
   const std::map<std::string, rclcpp::ParameterValue> &
-  get_initial_parameter_values() const override;
+  get_parameter_overrides() const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
@@ -154,7 +154,7 @@ private:
 
   std::map<std::string, ParameterInfo> parameters_;
 
-  std::map<std::string, rclcpp::ParameterValue> initial_parameter_values_;
+  std::map<std::string, rclcpp::ParameterValue> parameter_overrides_;
 
   bool allow_undeclared_ = false;
 

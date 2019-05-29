@@ -183,7 +183,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   const std::map<std::string, rclcpp::ParameterValue> &
-  get_initial_parameter_values() const = 0;
+  get_parameter_overrides() const = 0;
 };
 
 }  // namespace node_interfaces

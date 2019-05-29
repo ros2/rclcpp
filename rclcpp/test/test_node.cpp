@@ -365,8 +365,10 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
 TEST_F(TestNode, declare_parameter_with_initial_values) {
   // test cases with initial values
   rclcpp::NodeOptions no;
-  no.initial_parameters({
+  no.parameter_overrides({
     {"parameter_no_default", 42},
+    {"parameter_no_default_set", 42},
+    {"parameter_no_default_set_cvref", 42},
     {"parameter_and_default", 42},
     {"parameter_custom", 42},
     {"parameter_template", 42},
@@ -380,6 +382,25 @@ TEST_F(TestNode, declare_parameter_with_initial_values) {
     rclcpp::ParameterValue value = node->declare_parameter("parameter_no_default");
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 42);
+  }
+  {
+    // no default, with initial, and set after
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_no_default_set");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(value.get<int>(), 42);
+    // check that the value is changed after a set
+    node->set_parameter({"parameter_no_default_set", 44});
+    EXPECT_EQ(node->get_parameter("parameter_no_default_set").get_value<int>(), 44);
+  }
+  {
+    // no default, with initial
+    const rclcpp::ParameterValue & value =
+      node->declare_parameter("parameter_no_default_set_cvref");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(value.get<int>(), 42);
+    // check that the value is changed after a set
+    node->set_parameter({"parameter_no_default_set_cvref", 44});
+    EXPECT_EQ(value.get<int>(), 44);
   }
   {
     // int default, with initial
