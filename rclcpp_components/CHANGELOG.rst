@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.4 (2019-05-29)
+------------------
+* Rename parameter options (`#745 <https://github.com/ros2/rclcpp/issues/745>`_)
+* don't use global arguments for components loaded into the manager (`#736 <https://github.com/ros2/rclcpp/issues/736>`_)
+* Contributors: Dirk Thomas, William Woodall
+
 0.7.3 (2019-05-20)
 ------------------
 

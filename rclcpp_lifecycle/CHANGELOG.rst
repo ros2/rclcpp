@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.7.4 (2019-05-29)
+------------------
+* Rename parameter options (`#745 <https://github.com/ros2/rclcpp/issues/745>`_)
+* Contributors: William Woodall
+
 0.7.3 (2019-05-20)
 ------------------
 * Added missing template functionality to lifecycle_node. (`#707 <https://github.com/ros2/rclcpp/issues/707>`_)
