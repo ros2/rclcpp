@@ -148,21 +148,21 @@ NodeParameters::NodeParameters(
 
     // Combine parameter yaml files, overwriting values in older ones
     for (auto & param : iter->second) {
-      initial_parameter_values_[param.get_name()] =
+      parameter_overrides_[param.get_name()] =
         rclcpp::ParameterValue(param.get_value_message());
     }
   }
 
   // parameter overrides passed to constructor will overwrite overrides from yaml file sources
   for (auto & param : parameter_overrides) {
-    initial_parameter_values_[param.get_name()] =
+    parameter_overrides_[param.get_name()] =
       rclcpp::ParameterValue(param.get_value_message());
   }
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
   if (automatically_declare_parameters_from_overrides) {
-    for (const auto & pair : this->get_initial_parameter_values()) {
+    for (const auto & pair : this->get_parameter_overrides()) {
       if (!this->has_parameter(pair.first)) {
         this->declare_parameter(
           pair.first,
@@ -282,7 +282,7 @@ NodeParameters::declare_parameter(
     default_value,
     parameter_descriptor,
     parameters_,
-    initial_parameter_values_,
+    parameter_overrides_,
     on_parameters_set_callback_,
     &parameter_event);
 
@@ -413,7 +413,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       parameter_to_be_declared->get_parameter_value(),
       rcl_interfaces::msg::ParameterDescriptor(),  // Implicit declare uses default descriptor.
       staged_parameter_changes,
-      initial_parameter_values_,
+      parameter_overrides_,
       nullptr,  // callback is explicitly null, so that it is called only once, when setting below.
       &parameter_event_msg);
     if (!result.successful) {
@@ -733,7 +733,7 @@ NodeParameters::register_param_change_callback(ParametersCallbackFunction callba
 #endif
 
 const std::map<std::string, rclcpp::ParameterValue> &
-NodeParameters::get_initial_parameter_values() const
+NodeParameters::get_parameter_overrides() const
 {
-  return initial_parameter_values_;
+  return parameter_overrides_;
 }
