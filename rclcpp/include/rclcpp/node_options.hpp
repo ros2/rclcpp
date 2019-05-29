@@ -263,7 +263,8 @@ public:
    * implicitly declare any that have not already been declared.
    * Otherwise, parameters passed to the node's parameter_overrides, and/or the
    * global arguments (e.g. parameter overrides from a YAML file), which are
-   * not explicitly declared will not appear on the node at all.
+   * not explicitly declared will not appear on the node at all, even if
+   * `allow_undeclared_parameters` is true.
    * Already declared parameters will not be re-declared, and parameters
    * declared in this way will use the default constructed ParameterDescriptor.
    */
