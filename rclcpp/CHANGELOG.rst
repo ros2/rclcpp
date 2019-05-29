@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.4 (2019-05-29)
+------------------
+* Rename parameter options (`#745 <https://github.com/ros2/rclcpp/issues/745>`_)
+* Bionic use of strerror_r (`#742 <https://github.com/ros2/rclcpp/issues/742>`_)
+* Enforce parameter ranges (`#735 <https://github.com/ros2/rclcpp/issues/735>`_)
+* removed not used parameter client (`#740 <https://github.com/ros2/rclcpp/issues/740>`_)
+* ensure removal of guard conditions of expired nodes from memory strategy (`#741 <https://github.com/ros2/rclcpp/issues/741>`_)
+* Fix typo in log warning message (`#737 <https://github.com/ros2/rclcpp/issues/737>`_)
+* Throw nice errors when creating a publisher with intraprocess communication and incompatible qos policy (`#729 <https://github.com/ros2/rclcpp/issues/729>`_)
+* Contributors: Alberto Soragna, Dirk Thomas, Jacob Perron, William Woodall, ivanpauno, roderick-koehle
+
 0.7.3 (2019-05-20)
 ------------------
 * Fixed misspelling, volitile -> volatile (`#724 <https://github.com/ros2/rclcpp/issues/724>`_), and then fixed that since it is a C++ keyword to be ``durability_volatile`` (`#725 <https://github.com/ros2/rclcpp/issues/725>`_)
