@@ -252,7 +252,7 @@ __check_parameter_value_in_range(
     if (fp_range.step == 0.0) {
       return result;
     }
-    long rounded_div = std::lround((v - fp_range.from_value) / fp_range.step);
+    double rounded_div = std::round((v - fp_range.from_value) / fp_range.step);
     if (__are_doubles_equal(v, fp_range.from_value + rounded_div * fp_range.step)) {
       return result;
     }
