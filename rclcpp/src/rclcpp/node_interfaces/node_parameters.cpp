@@ -26,6 +26,9 @@
 
 #include <rcl_yaml_param_parser/parser.h>
 
+#include <cmath>
+#include <cstdlib>
+#include <limits>
 #include <map>
 #include <memory>
 #include <sstream>
@@ -185,6 +188,103 @@ __lockless_has_parameter(
   return parameters.find(name) != parameters.end();
 }
 
+// see https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+RCLCPP_LOCAL
+bool
+__are_doubles_equal(double x, double y, size_t ulp = 100)
+{
+  return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
+}
+
+RCLCPP_LOCAL
+inline
+void
+format_reason(std::string & reason, const std::string & name, const char * range_type)
+{
+  std::ostringstream ss;
+  ss << "Parameter {" << name << "} doesn't comply with " << range_type << " range.";
+  reason = ss.str();
+}
+
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+__check_parameter_value_in_range(
+  const rcl_interfaces::msg::ParameterDescriptor & descriptor,
+  const rclcpp::ParameterValue & value)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  if (!descriptor.integer_range.empty() && value.get_type() == rclcpp::PARAMETER_INTEGER) {
+    int64_t v = value.get<int64_t>();
+    auto integer_range = descriptor.integer_range.at(0);
+    if (v == integer_range.from_value || v == integer_range.to_value) {
+      return result;
+    }
+    if ((v < integer_range.from_value) || (v > integer_range.to_value)) {
+      result.successful = false;
+      format_reason(result.reason, descriptor.name, "integer");
+      return result;
+    }
+    if (integer_range.step == 0) {
+      return result;
+    }
+    if (((v - integer_range.from_value) % integer_range.step) == 0) {
+      return result;
+    }
+    result.successful = false;
+    format_reason(result.reason, descriptor.name, "integer");
+    return result;
+  }
+
+  if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE) {
+    double v = value.get<double>();
+    auto fp_range = descriptor.floating_point_range.at(0);
+    if (__are_doubles_equal(v, fp_range.from_value) ||
+      __are_doubles_equal(v, fp_range.to_value))
+    {
+      return result;
+    }
+    if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
+      result.successful = false;
+      format_reason(result.reason, descriptor.name, "floating point");
+      return result;
+    }
+    if (fp_range.step == 0.0) {
+      return result;
+    }
+    double rounded_div = std::round((v - fp_range.from_value) / fp_range.step);
+    if (__are_doubles_equal(v, fp_range.from_value + rounded_div * fp_range.step)) {
+      return result;
+    }
+    result.successful = false;
+    format_reason(result.reason, descriptor.name, "floating point");
+    return result;
+  }
+  return result;
+}
+
+// Return true if parameter values comply with the descriptors in parameter_infos.
+RCLCPP_LOCAL
+rcl_interfaces::msg::SetParametersResult
+__check_parameters(
+  std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
+  const std::vector<rclcpp::Parameter> & parameters)
+{
+  rcl_interfaces::msg::SetParametersResult result;
+  result.successful = true;
+  for (const rclcpp::Parameter & parameter : parameters) {
+    const rcl_interfaces::msg::ParameterDescriptor & descriptor =
+      parameter_infos[parameter.get_name()].descriptor;
+    result = __check_parameter_value_in_range(
+      descriptor,
+      parameter.get_parameter_value());
+    if (!result.successful) {
+      break;
+    }
+  }
+  return result;
+}
+
 using OnParametersSetCallbackType =
   rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 
@@ -201,7 +301,14 @@ __set_parameters_atomically_common(
   if (on_set_parameters_callback) {
     result = on_set_parameters_callback(parameters);
   }
-
+  if (!result.successful) {
+    return result;
+  }
+  // Check if the value being set complies with the descriptor.
+  result = __check_parameters(parameter_infos, parameters);
+  if (!result.successful) {
+    return result;
+  }
   // If accepted, actually set the values.
   if (result.successful) {
     for (size_t i = 0; i < parameters.size(); ++i) {
