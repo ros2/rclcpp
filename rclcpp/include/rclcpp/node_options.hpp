@@ -40,7 +40,7 @@ public:
    *
    *   - context = rclcpp::contexts::default_context::get_global_default_context()
    *   - arguments = {}
-   *   - initial_parameters = {}
+   *   - parameter_overrides = {}
    *   - use_global_arguments = true
    *   - use_intra_process_comms = false
    *   - start_parameter_services = true
@@ -49,7 +49,7 @@ public:
    *     - with history setting and depth from rmw_qos_profile_parameter_events
    *   - parameter_event_publisher_options = rclcpp::PublisherOptionsBase
    *   - allow_undeclared_parameters = false
-   *   - automatically_declare_initial_parameters = false
+   *   - automatically_declare_parameters_from_overrides = false
    *   - allocator = rcl_get_default_allocator()
    *
    * \param[in] allocator allocator to use in construction of NodeOptions.
@@ -107,31 +107,31 @@ public:
   NodeOptions &
   arguments(const std::vector<std::string> & arguments);
 
-  /// Return a reference to the list of initial parameters.
+  /// Return a reference to the list of parameter overrides.
   RCLCPP_PUBLIC
   std::vector<rclcpp::Parameter> &
-  initial_parameters();
+  parameter_overrides();
 
   RCLCPP_PUBLIC
   const std::vector<rclcpp::Parameter> &
-  initial_parameters() const;
+  parameter_overrides() const;
 
-  /// Set the initial parameters, return this for parameter idiom.
+  /// Set the parameters overrides, return this for parameter idiom.
   /**
-   * These initial parameter values are used to change the initial value
+   * These parameter overrides are used to change the initial value
    * of declared parameters within the node, overriding hard coded default
    * values if necessary.
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  initial_parameters(const std::vector<rclcpp::Parameter> & initial_parameters);
+  parameter_overrides(const std::vector<rclcpp::Parameter> & parameter_overrides);
 
-  /// Append a single initial parameter, parameter idiom style.
+  /// Append a single parameter override, parameter idiom style.
   template<typename ParameterT>
   NodeOptions &
-  append_initial_parameter(const std::string & name, const ParameterT & value)
+  append_parameter_override(const std::string & name, const ParameterT & value)
   {
-    this->initial_parameters().emplace_back(name, rclcpp::ParameterValue(value));
+    this->parameter_overrides().emplace_back(name, rclcpp::ParameterValue(value));
     return *this;
   }
 
@@ -247,29 +247,35 @@ public:
    * If true, allow any parameter name to be set on the node without first
    * being declared.
    * Otherwise, setting an undeclared parameter will raise an exception.
+   *
+   * This option being true does not affect parameter_overrides, as the first
+   * set action will implicitly declare the parameter and therefore consider
+   * any parameter overrides.
    */
   RCLCPP_PUBLIC
   NodeOptions &
   allow_undeclared_parameters(bool allow_undeclared_parameters);
 
-  /// Return the automatically_declare_initial_parameters flag.
+  /// Return the automatically_declare_parameters_from_overrides flag.
   RCLCPP_PUBLIC
   bool
-  automatically_declare_initial_parameters() const;
+  automatically_declare_parameters_from_overrides() const;
 
-  /// Set the automatically_declare_initial_parameters, return this.
+  /// Set the automatically_declare_parameters_from_overrides, return this.
   /**
-   * If true, automatically iterate through the node's initial parameters and
+   * If true, automatically iterate through the node's parameter overrides and
    * implicitly declare any that have not already been declared.
-   * Otherwise, parameters passed to the node's initial_parameters, and/or the
-   * global initial parameter values, which are not explicitly declared will
-   * not appear on the node at all.
+   * Otherwise, parameters passed to the node's parameter_overrides, and/or the
+   * global arguments (e.g. parameter overrides from a YAML file), which are
+   * not explicitly declared will not appear on the node at all, even if
+   * `allow_undeclared_parameters` is true.
    * Already declared parameters will not be re-declared, and parameters
    * declared in this way will use the default constructed ParameterDescriptor.
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  automatically_declare_initial_parameters(bool automatically_declare_initial_parameters);
+  automatically_declare_parameters_from_overrides(
+    bool automatically_declare_parameters_from_overrides);
 
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
@@ -302,7 +308,7 @@ private:
 
   std::vector<std::string> arguments_ {};
 
-  std::vector<rclcpp::Parameter> initial_parameters_ {};
+  std::vector<rclcpp::Parameter> parameter_overrides_ {};
 
   bool use_global_arguments_ {true};
 
@@ -320,7 +326,7 @@ private:
 
   bool allow_undeclared_parameters_ {false};
 
-  bool automatically_declare_initial_parameters_ {false};
+  bool automatically_declare_parameters_from_overrides_ {false};
 
   rcl_allocator_t allocator_ {rcl_get_default_allocator()};
 };

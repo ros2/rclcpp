@@ -67,14 +67,14 @@ NodeOptions::operator=(const NodeOptions & other)
   if (this != &other) {
     this->context_ = other.context_;
     this->arguments_ = other.arguments_;
-    this->initial_parameters_ = other.initial_parameters_;
+    this->parameter_overrides_ = other.parameter_overrides_;
     this->use_global_arguments_ = other.use_global_arguments_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->allocator_ = other.allocator_;
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
-    this->automatically_declare_initial_parameters_ =
-      other.automatically_declare_initial_parameters_;
+    this->automatically_declare_parameters_from_overrides_ =
+      other.automatically_declare_parameters_from_overrides_;
   }
   return *this;
 }
@@ -142,21 +142,21 @@ NodeOptions::arguments(const std::vector<std::string> & arguments)
 }
 
 std::vector<rclcpp::Parameter> &
-NodeOptions::initial_parameters()
+NodeOptions::parameter_overrides()
 {
-  return this->initial_parameters_;
+  return this->parameter_overrides_;
 }
 
 const std::vector<rclcpp::Parameter> &
-NodeOptions::initial_parameters() const
+NodeOptions::parameter_overrides() const
 {
-  return this->initial_parameters_;
+  return this->parameter_overrides_;
 }
 
 NodeOptions &
-NodeOptions::initial_parameters(const std::vector<rclcpp::Parameter> & initial_parameters)
+NodeOptions::parameter_overrides(const std::vector<rclcpp::Parameter> & parameter_overrides)
 {
-  this->initial_parameters_ = initial_parameters;
+  this->parameter_overrides_ = parameter_overrides;
   return *this;
 }
 
@@ -254,16 +254,17 @@ NodeOptions::allow_undeclared_parameters(bool allow_undeclared_parameters)
 }
 
 bool
-NodeOptions::automatically_declare_initial_parameters() const
+NodeOptions::automatically_declare_parameters_from_overrides() const
 {
-  return this->automatically_declare_initial_parameters_;
+  return this->automatically_declare_parameters_from_overrides_;
 }
 
 NodeOptions &
-NodeOptions::automatically_declare_initial_parameters(
-  bool automatically_declare_initial_parameters)
+NodeOptions::automatically_declare_parameters_from_overrides(
+  bool automatically_declare_parameters_from_overrides)
 {
-  this->automatically_declare_initial_parameters_ = automatically_declare_initial_parameters;
+  this->automatically_declare_parameters_from_overrides_ =
+    automatically_declare_parameters_from_overrides;
   return *this;
 }
 
