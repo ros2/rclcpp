@@ -247,6 +247,10 @@ public:
    * If true, allow any parameter name to be set on the node without first
    * being declared.
    * Otherwise, setting an undeclared parameter will raise an exception.
+   *
+   * This option being true does not affect parameter_overrides, as the first
+   * set action will implicitly declare the parameter and therefore consider
+   * any parameter overrides.
    */
   RCLCPP_PUBLIC
   NodeOptions &
