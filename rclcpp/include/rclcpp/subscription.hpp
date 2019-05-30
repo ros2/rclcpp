@@ -178,7 +178,7 @@ public:
         intra_process_subscription_id_,
         msg);
       if (!msg) {
-        // This can happen when having two nodes in different process both using intraprocess messages.
+        // This can happen when having two nodes in different process both using intraprocess communication.
         // It could happen too if the publisher no longer exists or the requested message is not longer being stored.
         // TODO(ivanpauno): Print a warn message in the last two cases described above, but not in the first one.
         return;
@@ -192,7 +192,7 @@ public:
         intra_process_subscription_id_,
         msg);
       if (!msg) {
-        // This can happen when having two nodes in different process both using intraprocess messages.
+        // This can happen when having two nodes in different process both using intraprocess communication.
         // It could happen too if the publisher no longer exists or the requested message is not longer being stored.
         // TODO(ivanpauno): Print a warn message in the last two cases described above, but not in the first one.
         return;
