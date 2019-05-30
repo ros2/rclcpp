@@ -251,6 +251,36 @@ operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
   return Time(lhs.nanoseconds() + rhs.nanoseconds(), rhs.get_clock_type());
 }
 
+Time &
+Time::operator+=(const rclcpp::Duration & rhs)
+{
+  if (rclcpp::add_will_overflow(rhs.nanoseconds(), this->nanoseconds())) {
+    throw std::overflow_error("addition leads to int64_t overflow");
+  }
+  if (rclcpp::add_will_underflow(rhs.nanoseconds(), this->nanoseconds())) {
+    throw std::underflow_error("addition leads to int64_t underflow");
+  }
+
+  rcl_time_.nanoseconds += rhs.nanoseconds();
+
+  return *this;
+}
+
+Time &
+Time::operator-=(const rclcpp::Duration & rhs)
+{
+  if (rclcpp::sub_will_overflow(rcl_time_.nanoseconds, rhs.nanoseconds())) {
+    throw std::overflow_error("time subtraction leads to int64_t overflow");
+  }
+  if (rclcpp::sub_will_underflow(rcl_time_.nanoseconds, rhs.nanoseconds())) {
+    throw std::underflow_error("time subtraction leads to int64_t underflow");
+  }
+
+  rcl_time_.nanoseconds -= rhs.nanoseconds();
+
+  return *this;
+}
+
 Time
 Time::max()
 {
