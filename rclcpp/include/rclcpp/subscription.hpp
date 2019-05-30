@@ -178,10 +178,11 @@ public:
         intra_process_subscription_id_,
         msg);
       if (!msg) {
-        // This either occurred because the publisher no longer exists or the
-        // message requested is no longer being stored.
-        RCLCPP_WARN(get_logger("rclcpp"),
-          "Intra process message no longer being stored when trying to handle it");
+        // This can happen when having two nodes in different process both using intraprocess
+        // communication. It could happen too if the publisher no longer exists or the requested
+        // message is not longer being stored.
+        // TODO(ivanpauno): Print a warn message in the last two cases described above,
+        // but not in the first one.
         return;
       }
       any_callback_.dispatch_intra_process(msg, message_info);
@@ -193,10 +194,11 @@ public:
         intra_process_subscription_id_,
         msg);
       if (!msg) {
-        // This either occurred because the publisher no longer exists or the
-        // message requested is no longer being stored.
-        RCLCPP_WARN(get_logger("rclcpp"),
-          "Intra process message no longer being stored when trying to handle it");
+        // This can happen when having two nodes in different process both using intraprocess
+        // communication. It could happen too if the publisher no longer exists or the requested
+        // message is not longer being stored.
+        // TODO(ivanpauno): Print a warn message in the last two cases described above,
+        // but not in the first one.
         return;
       }
       any_callback_.dispatch_intra_process(std::move(msg), message_info);
