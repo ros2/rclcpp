@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.5 (2019-05-30)
+------------------
+
 0.7.4 (2019-05-29)
 ------------------
 * Rename parameter options (`#745 <https://github.com/ros2/rclcpp/issues/745>`_)

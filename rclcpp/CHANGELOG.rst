@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.5 (2019-05-30)
+------------------
+* Avoid 'Intra process message no longer being stored when trying to handle it' warning (`#749 <https://github.com/ros2/rclcpp/issues/749>`_)
+* Contributors: ivanpauno
+
 0.7.4 (2019-05-29)
 ------------------
 * Rename parameter options (`#745 <https://github.com/ros2/rclcpp/issues/745>`_)
