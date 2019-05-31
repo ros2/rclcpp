@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.7.5 (2019-05-30)
+------------------
+
 0.7.4 (2019-05-29)
 ------------------
 * Guard against calling null goal response callback (`#738 <https://github.com/ros2/rclcpp/issues/738>`_)
