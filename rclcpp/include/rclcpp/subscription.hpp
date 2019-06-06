@@ -170,6 +170,13 @@ public:
       // However, this can only really happen if this node has it disabled, but the other doesn't.
       return;
     }
+
+    if (!matches_any_intra_process_publishers(&message_info.publisher_gid)) {
+      // This intra-process message has not been created by a publisher from this context.
+      // we should ignore this copy of the message.
+      return;
+    }
+
     if (any_callback_.use_take_shared_method()) {
       ConstMessageSharedPtr msg;
       take_intra_process_message(
