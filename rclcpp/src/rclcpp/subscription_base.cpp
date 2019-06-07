@@ -128,6 +128,18 @@ SubscriptionBase::get_event_handlers() const
   return event_handlers_;
 }
 
+rmw_qos_profile_t
+SubscriptionBase::get_actual_qos() const
+{
+  const rmw_qos_profile_t * qos = rcl_subscription_get_actual_qos(subscription_handle_.get());
+  if (!qos) {
+    auto msg = std::string("failed to get qos settings: ") + rcl_get_error_string().str;
+    rcl_reset_error();
+    throw std::runtime_error(msg);
+  }
+  return *qos;
+}
+
 const rosidl_message_type_support_t &
 SubscriptionBase::get_message_type_support_handle() const
 {
