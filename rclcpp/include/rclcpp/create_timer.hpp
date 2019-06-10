@@ -42,7 +42,7 @@ create_timer(
   auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
     clock,
     period.to_chrono<std::chrono::nanoseconds>(),
-    std::forward<CallbackT &&>(callback),
+    std::forward<CallbackT>(callback),
     node_base->get_context());
 
   node_timers->add_timer(timer, group);
@@ -64,9 +64,7 @@ create_timer(
     rclcpp::node_interfaces::get_node_timers_interface(node),
     clock,
     period,
-    // *INDENT-OFF*
-    std::forward<CallbackT &&>(callback),
-    // *INDENT-ON*
+    std::forward<CallbackT>(callback),
     group);
 }
 
