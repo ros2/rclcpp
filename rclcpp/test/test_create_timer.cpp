@@ -21,6 +21,7 @@
 #include "rclcpp/create_timer.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/node.hpp"
+#include "node_interfaces/node_wrapper.hpp"
 
 using namespace std::chrono_literals;
 
@@ -44,5 +45,19 @@ TEST(TestCreateTimer, timer_executes)
   rclcpp::spin_some(node);
 
   ASSERT_TRUE(got_callback);
+  rclcpp::shutdown();
+}
+
+TEST(TestCreateTimer, call_with_node_wrapper_compiles)
+{
+  rclcpp::init(0, nullptr);
+  NodeWrapper node("test_create_timer_call_with_node_wrapper_compiles");
+
+  rclcpp::TimerBase::SharedPtr timer;
+  timer = rclcpp::create_timer(
+    node,
+    node.get_node_clock_interface()->get_clock(),
+    rclcpp::Duration(0ms),
+    []() {});
   rclcpp::shutdown();
 }

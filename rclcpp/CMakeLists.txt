@@ -165,6 +165,7 @@ if(BUILD_TESTING)
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_create_timer ${PROJECT_NAME})
+    target_include_directories(test_create_timer PRIVATE test/)
   endif()
   ament_add_gtest(test_expand_topic_or_service_name test/test_expand_topic_or_service_name.cpp)
   if(TARGET test_expand_topic_or_service_name)
