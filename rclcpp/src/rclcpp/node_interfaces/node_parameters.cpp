@@ -330,19 +330,20 @@ __declare_parameter_common(
   const rclcpp::ParameterValue & default_value,
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
-  const std::map<std::string, rclcpp::ParameterValue> & initial_values,
+  const std::map<std::string, rclcpp::ParameterValue> & overrides,
   OnParametersSetCallbackType on_set_parameters_callback,
-  rcl_interfaces::msg::ParameterEvent * parameter_event_out)
+  rcl_interfaces::msg::ParameterEvent * parameter_event_out,
+  bool use_overrides = true)
 {
   using rclcpp::node_interfaces::ParameterInfo;
   std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
   parameter_infos.at(name).descriptor = parameter_descriptor;
 
-  // Use the value from the initial_values if available, otherwise use the default.
+  // Use the value from the overrides if available, otherwise use the default.
   const rclcpp::ParameterValue * initial_value = &default_value;
-  auto initial_value_it = initial_values.find(name);
-  if (initial_value_it != initial_values.end()) {
-    initial_value = &initial_value_it->second;
+  auto overrides_it = overrides.find(name);
+  if (use_overrides && overrides_it != overrides.end()) {
+    initial_value = &overrides_it->second;
   }
 
   // Check with the user's callback to see if the initial value can be set.
@@ -522,7 +523,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       staged_parameter_changes,
       parameter_overrides_,
       nullptr,  // callback is explicitly null, so that it is called only once, when setting below.
-      &parameter_event_msg);
+      &parameter_event_msg,
+      false);
     if (!result.successful) {
       // Declare failed, return knowing that nothing was changed because the
       // staged changes were not applied.
