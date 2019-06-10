@@ -19,19 +19,21 @@
 #include <string>
 #include <utility>
 
+#include "rclcpp/duration.hpp"
+# include "rclcpp/node_interfaces/get_node_base_interface.hpp"
+# include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
-#include "rclcpp/duration.hpp"
-
 
 namespace rclcpp
 {
-/// Create a timer with a given type.
+/// Create a timer with a given clock
+/// \internal
 template<typename CallbackT>
 typename rclcpp::TimerBase::SharedPtr
 create_timer(
-  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
-  std::shared_ptr<node_interfaces::NodeTimersInterface> node_timers,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers,
   rclcpp::Clock::SharedPtr clock,
   rclcpp::Duration period,
   CallbackT && callback,
@@ -45,6 +47,27 @@ create_timer(
 
   node_timers->add_timer(timer, group);
   return timer;
+}
+
+/// Create a timer with a given clock
+template<typename NodeT, typename CallbackT>
+typename rclcpp::TimerBase::SharedPtr
+create_timer(
+  NodeT node,
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Duration period,
+  CallbackT && callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+{
+  return create_timer(
+    rclcpp::node_interfaces::get_node_base_interface(node),
+    rclcpp::node_interfaces::get_node_timers_interface(node),
+    clock,
+    period,
+    // *INDENT-OFF*
+    std::forward<CallbackT &&>(callback),
+    // *INDENT-ON*
+    group);
 }
 
 }  // namespace rclcpp

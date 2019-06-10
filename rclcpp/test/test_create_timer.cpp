@@ -33,8 +33,7 @@ TEST(TestCreateTimer, timer_executes)
 
   rclcpp::TimerBase::SharedPtr timer;
   timer = rclcpp::create_timer(
-    node->get_node_base_interface(),
-    node->get_node_timers_interface(),
+    node,
     node->get_clock(),
     rclcpp::Duration(0ms),
     [&got_callback, &timer]() {
