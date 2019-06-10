@@ -14,6 +14,10 @@
 
 # Create a target which builds a shared library and also creates a target
 # which builds an executable
+# :param target: the executable name
+# :type target: string
+# :param ARGN: the list of source files for executable and shared library
+# :type ARGN: list of strings
 #
 macro(rclcpp_components_add_node target)
   if(${ARGC} GREATER 0)
