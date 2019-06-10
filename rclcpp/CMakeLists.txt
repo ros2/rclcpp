@@ -155,6 +155,17 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_client ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_create_timer test/test_create_timer.cpp)
+  if(TARGET test_create_timer)
+    ament_target_dependencies(test_create_timer
+      "rcl_interfaces"
+      "rmw"
+      "rcl"
+      "rosidl_generator_cpp"
+      "rosidl_typesupport_cpp"
+    )
+    target_link_libraries(test_create_timer ${PROJECT_NAME})
+  endif()
   ament_add_gtest(test_expand_topic_or_service_name test/test_expand_topic_or_service_name.cpp)
   if(TARGET test_expand_topic_or_service_name)
     ament_target_dependencies(test_expand_topic_or_service_name
