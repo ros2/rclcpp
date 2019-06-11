@@ -19,21 +19,29 @@
 # :param ARGN: the list of source files for executable and shared library
 # :type ARGN: list of strings
 #
-macro(rclcpp_components_add_node target)
-  if(${ARGC} GREATER 0)
-    _rclcpp_components_register_package_hook()
-    set(_sources_list)
-    set(SHARED_LIB_NAME "${target}_component")
-    foreach(_arg ${ARGN})
-      if(_arg IN_LIST _sources_list)
-        message(
-          FATAL_ERROR
-          "rclcpp_components_add_node() the sources names "
-          "must be unique (multiple '${_arg}')")
-      endif()
-      list(APPEND _sources_list "${_arg}")
-    endforeach()
-    add_library(${SHARED_LIB_NAME} SHARED ${_sources_list})
-    add_executable(${target} ${_sources_list})
+function(rclcpp_components_add_node target)
+  set(_sources_list)
+  foreach(_arg ${ARGN})
+    list(APPEND _sources_list "${_arg}")
+  endforeach()
+  add_library(${target} SHARED ${_sources_list})
+  set(libs
+    ${target})
+  add_executable(${target}_main ../../rclcpp/rclcpp_components/src/node_main.cpp)
+  set_target_properties(${target}_main PROPERTIES OUPUT_NAME "${target}")
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set(libs
+      "-Wl,--no-as-needed"
+      ${libs}
+      "-Wl,--as-needed")
   endif()
-endmacro()
+  target_link_libraries(${target}_main
+    ${libs})
+  ament_target_dependencies(${target}_main
+    "rclcpp"
+    "class_loader"
+    "rclcpp_components")
+  install(TARGETS
+    ${target}_main
+    DESTINATION lib/${PROJECT_NAME})
+endfunction()
