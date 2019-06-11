@@ -516,6 +516,7 @@ public:
    * rclcpp::NodeOptions::allow_undeclared_parameters set to true.
    * If undeclared parameters are allowed, then the parameter is implicitly
    * declared with the default parameter meta data before being set.
+   * Parameter overrides are ignored by set_parameter.
    *
    * This method will result in any callback registered with
    * set_on_parameters_set_callback to be called.
