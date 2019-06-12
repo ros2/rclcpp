@@ -19,12 +19,28 @@
 # :param ARGN: the list of source files for executable and shared library
 # :type ARGN: list of strings
 #
-function(rclcpp_components_add_node target)
+function(rclcpp_components_add_node)
+
+  cmake_parse_arguments(
+    PARSED_ARGS
+    "EXCLUDE"
+    "TARGET"
+    "SRCS"
+    ${ARGN}
+    )
+
+  set(target ${PARSED_ARGS_TARGET})
+  set(srcs ${PARSED_ARGS_SRCS})
+  set(exclude ${PARSED_ARGS_EXCLUDE})
+
   set(_sources_list)
-  foreach(_arg ${ARGN})
+  foreach(_arg ${srcs})
     list(APPEND _sources_list "${_arg}")
   endforeach()
   add_library(${target} SHARED ${_sources_list})
+
+  set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ${exclude})
+
   set(libs
     ${target})
   add_executable(${target}_main ../../rclcpp/rclcpp_components/src/node_main.cpp)
