@@ -98,6 +98,20 @@ public:
   const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
   get_event_handlers() const;
 
+  /// Get the actual QoS settings, after the defaults have been determined.
+  /**
+   * The actual configuration applied when using RMW_QOS_POLICY_*_SYSTEM_DEFAULT
+   * can only be resolved after the creation of the publisher, and it
+   * depends on the underlying rmw implementation.
+   * If the underlying setting in use can't be represented in ROS terms,
+   * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
+   * May throw runtime_error when an unexpected error occurs.
+   * \return The actual qos settings.
+   */
+  RCLCPP_PUBLIC
+  rmw_qos_profile_t
+  get_actual_qos() const;
+
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
   virtual std::shared_ptr<void>
