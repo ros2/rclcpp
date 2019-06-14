@@ -99,7 +99,7 @@ struct function_traits<
 // std::bind for object const methods
 template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
 #if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
+struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...) const, FArgs ...>>
 #elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
 struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(FArgs ...))(Args ...) const>>
 #elif defined __GLIBCXX__  // glibc++ (GNU C++)
