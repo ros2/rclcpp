@@ -80,6 +80,12 @@ struct ObjectMember
     return 7;
   }
 
+  int callback_one_bool_const(bool a) const
+  {
+    (void)a;
+    return 7;
+  }
+
   int callback_two_bools(bool a, bool b)
   {
     (void)a;
@@ -394,6 +400,16 @@ TEST(TestFunctionTraits, argument_types) {
       rclcpp::function_traits::function_traits<decltype(bind_one_bool)>::template argument_type<0>
     >::value, "Functor accepts a bool as first argument");
 
+  auto bind_one_bool_const = std::bind(
+    &ObjectMember::callback_one_bool_const, &object_member, std::placeholders::_1);
+
+  static_assert(
+    std::is_same<
+      bool,
+      rclcpp::function_traits::function_traits<decltype(bind_one_bool_const)>::template
+      argument_type<0>
+    >::value, "Functor accepts a bool as first argument");
+
   auto bind_two_bools = std::bind(
     &ObjectMember::callback_two_bools, &object_member, std::placeholders::_1,
     std::placeholders::_2);
@@ -560,6 +576,14 @@ TEST(TestFunctionTraits, check_arguments) {
   // Test std::bind functions
   static_assert(
     rclcpp::function_traits::check_arguments<decltype(bind_one_bool), bool>::value,
+    "Functor accepts a single bool as arguments");
+
+  auto bind_one_bool_const = std::bind(
+    &ObjectMember::callback_one_bool_const, &object_member, std::placeholders::_1);
+
+  // Test std::bind functions
+  static_assert(
+    rclcpp::function_traits::check_arguments<decltype(bind_one_bool_const), bool>::value,
     "Functor accepts a single bool as arguments");
 }
 
