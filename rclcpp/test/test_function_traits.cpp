@@ -406,7 +406,8 @@ TEST(TestFunctionTraits, argument_types) {
   static_assert(
     std::is_same<
       bool,
-      rclcpp::function_traits::function_traits<decltype(bind_one_bool_const)>::template argument_type<0>
+      rclcpp::function_traits::function_traits<decltype(bind_one_bool_const)>::template
+      argument_type<0>
     >::value, "Functor accepts a bool as first argument");
 
   auto bind_two_bools = std::bind(
