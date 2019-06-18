@@ -45,12 +45,12 @@ function(rclcpp_components_add_node)
       "-Wl,--as-needed")
   endif()
   target_link_libraries(${target}_main
-	  ${lib})
+    ${lib})
   ament_target_dependencies(${target}_main
     "rclcpp"
     "class_loader"
     "rclcpp_components")
   install(TARGETS
-	  ${target}_main
+    ${target}_main
     DESTINATION lib/${PROJECT_NAME})
 endfunction()
