@@ -14,12 +14,14 @@
 
 # Create a target which builds a shared library and also creates a target
 # which builds an executable
+# usage: rclcpp_components_add_node(<target> [EXCLUDE_FROM_ALL] <source1> [source2 ...])
+
 # :param EXCLUDE_FROM_ALL: exclude the target from default build target 
 # :type EXCLUDE_FROM_ALL: boolean
-# :param ARGS_TARGET: the name of the shared library 
-# :type ARGS_TARGET
-# :param ARG_SRCS: the list of source files for executable and shared library
-# :type ARG_SRCS: list of strings
+# :param target: the name of the shared library target 
+# :type target: string
+# :param sourceN: the list of source files for executable and shared library
+# :type sourceN: list of strings
 #
 function(rclcpp_components_add_node)
   cmake_parse_arguments(
@@ -30,29 +32,29 @@ function(rclcpp_components_add_node)
     ${ARGN}
     )
 
-  list(GET ARGS_UNPARSED_ARGUMENTS 0 ARGS_TARGET)
+  list(GET ARGS_UNPARSED_ARGUMENTS 0 target)
   list(REMOVE_AT ARGS_UNPARSED_ARGUMENTS 0)
-  set(ARG_SRCS ${ARGS_UNPARSED_ARGUMENTS})
+  set(sourceN ${ARGS_UNPARSED_ARGUMENTS})
 
-  add_library(${ARGS_TARGET} SHARED ${ARG_SRCS})
-  set_target_properties(${ARGS_TARGET} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
+  add_library(${target} SHARED ${sourceN})
+  set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
   
-  add_executable(${ARGS_TARGET}_main ../../rclcpp/rclcpp_components/src/node_main.cpp)
-  set_target_properties(${ARGS_TARGET}_main PROPERTIES OUTPUT_NAME ${ARGS_TARGET})
+  add_executable(${target}_main ../../rclcpp/rclcpp_components/src/node_main.cpp)
+  set_target_properties(${target}_main PROPERTIES OUTPUT_NAME ${target})
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(target
+    set(lib
       "-Wl,--no-as-needed"
-      ${ARGS_TARGET}
+      ${target}
       "-Wl,--as-needed")
   endif()
-  target_link_libraries(${ARGS_TARGET}_main
-	  ${target})
-  ament_target_dependencies(${ARGS_TARGET}_main
+  target_link_libraries(${target}_main
+	  ${lib})
+  ament_target_dependencies(${target}_main
     "rclcpp"
     "class_loader"
     "rclcpp_components")
   install(TARGETS
-	  ${ARGS_TARGET}_main
+	  ${target}_main
     DESTINATION lib/${PROJECT_NAME})
 endfunction()
 
