@@ -14,11 +14,12 @@
 
 # Create a target which builds a shared library and also creates a target
 # which builds an executable
-# usage: rclcpp_components_add_node(<target> [EXCLUDE_FROM_ALL] <source1> [source2 ...])
+# usage: rclcpp_components_add_node(
+#              <target> [EXCLUDE_FROM_ALL] <source1> [source2 ...])
 
-# :param EXCLUDE_FROM_ALL: exclude the target from default build target 
+# :param EXCLUDE_FROM_ALL: exclude the target from default build target
 # :type EXCLUDE_FROM_ALL: boolean
-# :param target: the name of the shared library target 
+# :param target: the name of the shared library target
 # :type target: string
 # :param sourceN: the list of source files for executable and shared library
 # :type sourceN: list of strings
@@ -29,16 +30,12 @@ function(rclcpp_components_add_node)
     "EXCLUDE_FROM_ALL"
     ""
     ""
-    ${ARGN}
-    )
-
+    ${ARGN})
   list(GET ARGS_UNPARSED_ARGUMENTS 0 target)
   list(REMOVE_AT ARGS_UNPARSED_ARGUMENTS 0)
   set(sourceN ${ARGS_UNPARSED_ARGUMENTS})
-
   add_library(${target} SHARED ${sourceN})
   set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
-  
   add_executable(${target}_main ../../rclcpp/rclcpp_components/src/node_main.cpp)
   set_target_properties(${target}_main PROPERTIES OUTPUT_NAME ${target})
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -57,4 +54,3 @@ function(rclcpp_components_add_node)
 	  ${target}_main
     DESTINATION lib/${PROJECT_NAME})
 endfunction()
-
