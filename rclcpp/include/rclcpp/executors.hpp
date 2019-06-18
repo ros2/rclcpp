@@ -47,6 +47,23 @@ RCLCPP_PUBLIC
 void
 spin(rclcpp::Node::SharedPtr node_ptr);
 
+/// Pass in an executor and spin the specified node.
+/**
+ * \param[in] node_ptr Shared pointer to the node to spin. 
+ * \param[in] executor The executor which will spin the node. 
+ */
+RCLCPP_PUBLIC
+void
+spin(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  rclcpp::executor::Executor & executor);
+
+RCLCPP_PUBLIC
+void
+spin(
+  rclcpp::Node::SharedPtr node_ptr,
+  rclcpp::executor::Executor & executor);
+
 namespace executors
 {
 
