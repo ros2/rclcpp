@@ -28,10 +28,11 @@ int main(int argc, char * argv[])
   // Force flush of the stdout buffer.
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
-  rclcpp::init(argc, argv);
+  auto args = rclcpp::init_and_remove_ros_arguments(argc, argv);
   rclcpp::Logger logger = rclcpp::get_logger(LINKTIME_COMPOSITION_LOGGER_NAME);
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
+  options.arguments(args);
   std::vector<class_loader::ClassLoader *> loaders;
   std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
 
