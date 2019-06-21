@@ -53,7 +53,8 @@ public:
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor()) = 0;
+    rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false) = 0;
 
   /// Undeclare a parameter.
   /**

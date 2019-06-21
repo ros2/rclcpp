@@ -362,14 +362,15 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   }
 }
 
-TEST_F(TestNode, declare_parameter_with_initial_values) {
-  // test cases with initial values
+TEST_F(TestNode, declare_parameter_with_overrides) {
+  // test cases with overrides
   rclcpp::NodeOptions no;
   no.parameter_overrides({
     {"parameter_no_default", 42},
     {"parameter_no_default_set", 42},
     {"parameter_no_default_set_cvref", 42},
     {"parameter_and_default", 42},
+    {"parameter_and_default_ignore_override", 42},
     {"parameter_custom", 42},
     {"parameter_template", 42},
     {"parameter_already_declared", 42},
@@ -378,13 +379,13 @@ TEST_F(TestNode, declare_parameter_with_initial_values) {
   });
   auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node"_unq, no);
   {
-    // no default, with initial
+    // no default, with override
     rclcpp::ParameterValue value = node->declare_parameter("parameter_no_default");
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 42);
   }
   {
-    // no default, with initial, and set after
+    // no default, with override, and set after
     rclcpp::ParameterValue value = node->declare_parameter("parameter_no_default_set");
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 42);
@@ -393,7 +394,7 @@ TEST_F(TestNode, declare_parameter_with_initial_values) {
     EXPECT_EQ(node->get_parameter("parameter_no_default_set").get_value<int>(), 44);
   }
   {
-    // no default, with initial
+    // no default, with override
     const rclcpp::ParameterValue & value =
       node->declare_parameter("parameter_no_default_set_cvref");
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
@@ -403,11 +404,22 @@ TEST_F(TestNode, declare_parameter_with_initial_values) {
     EXPECT_EQ(value.get<int>(), 44);
   }
   {
-    // int default, with initial
+    // int default, with override
     rclcpp::ParameterValue default_value(43);
     rclcpp::ParameterValue value = node->declare_parameter("parameter_and_default", default_value);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 42);  // and not 43 which is the default value
+  }
+  {
+    // int default, with override and ignoring it
+    rclcpp::ParameterValue default_value(43);
+    rclcpp::ParameterValue value = node->declare_parameter(
+      "parameter_and_default_ignore_override",
+      default_value,
+      rcl_interfaces::msg::ParameterDescriptor(),
+      true);
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(value.get<int>(), 43);  // and not 43 which is the default value
   }
   {
     // int default, with initial, custom parameter descriptor
