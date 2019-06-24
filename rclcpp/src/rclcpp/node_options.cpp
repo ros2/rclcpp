@@ -98,7 +98,7 @@ NodeOptions::get_rcl_node_options() const
       }
     }
 
-    if (this->arguments_.size() > std::numeric_limits<int>::max()) {
+    if (this->arguments_.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
       throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
     }
 
