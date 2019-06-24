@@ -419,7 +419,7 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
       rcl_interfaces::msg::ParameterDescriptor(),
       true);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
-    EXPECT_EQ(value.get<int>(), 43);  // and not 43 which is the default value
+    EXPECT_EQ(value.get<int>(), 43);  // and not 42, the parameter override is ignored.
   }
   {
     // int default, with initial, custom parameter descriptor

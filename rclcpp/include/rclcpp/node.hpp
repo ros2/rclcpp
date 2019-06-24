@@ -369,6 +369,8 @@ public:
    * are ignored, and should be specified using the name argument to this
    * function and the default value's type instead.
    *
+   * If `ignore_override` is `true`, the parameter override will be ignored.
+   *
    * This method, if successful, will result in any callback registered with
    * set_on_parameters_set_callback to be called.
    * If that callback prevents the initial value for the parameter from being
@@ -382,6 +384,8 @@ public:
    *   did not override it.
    * \param[in] parameter_descriptor An optional, custom description for
    *   the parameter.
+   * \param[in] ignore_override When `true`, the parameter override is ignored.
+   *    Default to `false`.
    * \return A const reference to the value of the parameter.
    * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
    *   has already been declared.
@@ -444,8 +448,7 @@ public:
    *
    * The map contains default values for parameters.
    * There is another overload which takes the std::pair with the default value
-   * and descriptor, and another which takes an std::tuple with the same two
-   * parameters and a bool indicating if overriding the parameter default is allowed.
+   * and descriptor.
    *
    * If `ignore_overrides` is `true`, all the overrides of the parameters declared
    * by the function call will be ignored.
@@ -457,6 +460,8 @@ public:
    *
    * \param[in] namespace_ The namespace in which to declare the parameters.
    * \param[in] parameters The parameters to set in the given namespace.
+   * \param[in] ignore_overrides When `true`, the parameters overrides are ignored.
+   *    Default to `false`.
    * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
    *   has already been declared.
    * \throws rclcpp::exceptions::InvalidParametersException if a parameter
