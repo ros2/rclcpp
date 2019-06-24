@@ -144,15 +144,16 @@ NodeParameters::NodeParameters(
 
     rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(yaml_params);
     rcl_yaml_node_struct_fini(yaml_params);
-    auto iter = initial_map.find(combined_name_);
-    if (initial_map.end() == iter) {
-      continue;
-    }
 
-    // Combine parameter yaml files, overwriting values in older ones
-    for (auto & param : iter->second) {
-      parameter_overrides_[param.get_name()] =
-        rclcpp::ParameterValue(param.get_value_message());
+    for (auto iter = initial_map.begin(); initial_map.end() != iter; iter++) {
+      // TODO(cottsay) implement further wildcard matching
+      if (iter->first == "/**" || iter->first == combined_name_) {
+        // Combine parameter yaml files, overwriting values in older ones
+        for (auto & param : iter->second) {
+          parameter_overrides_[param.get_name()] =
+            rclcpp::ParameterValue(param.get_value_message());
+        }
+      }
     }
   }
 
