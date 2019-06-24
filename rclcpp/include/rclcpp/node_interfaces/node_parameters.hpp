@@ -80,7 +80,8 @@ public:
   declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value,
-    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor) override;
+    const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+    bool ignore_override) override;
 
   RCLCPP_PUBLIC
   void

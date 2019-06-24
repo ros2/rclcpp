@@ -250,12 +250,14 @@ auto
 Node::declare_parameter(
   const std::string & name,
   const ParameterT & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
 {
   return this->declare_parameter(
     name,
     rclcpp::ParameterValue(default_value),
-    parameter_descriptor
+    parameter_descriptor,
+    ignore_override
   ).get<ParameterT>();
 }
 
@@ -263,14 +265,19 @@ template<typename ParameterT>
 std::vector<ParameterT>
 Node::declare_parameters(
   const std::string & namespace_,
-  const std::map<std::string, ParameterT> & parameters)
+  const std::map<std::string, ParameterT> & parameters,
+  bool ignore_overrides)
 {
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
     parameters.begin(), parameters.end(), std::back_inserter(result),
-    [this, &normalized_namespace](auto element) {
-      return this->declare_parameter(normalized_namespace + element.first, element.second);
+    [this, &normalized_namespace, ignore_overrides](auto element) {
+      return this->declare_parameter(
+        normalized_namespace + element.first,
+        element.second,
+        rcl_interfaces::msg::ParameterDescriptor(),
+        ignore_overrides);
     }
   );
   return result;
@@ -283,18 +290,20 @@ Node::declare_parameters(
   const std::map<
     std::string,
     std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
-  > & parameters)
+  > & parameters,
+  bool ignore_overrides)
 {
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
     parameters.begin(), parameters.end(), std::back_inserter(result),
-    [this, &normalized_namespace](auto element) {
+    [this, &normalized_namespace, ignore_overrides](auto element) {
       return static_cast<ParameterT>(
         this->declare_parameter(
           normalized_namespace + element.first,
           element.second.first,
-          element.second.second)
+          element.second.second,
+          ignore_overrides)
       );
     }
   );

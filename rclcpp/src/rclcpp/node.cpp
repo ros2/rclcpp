@@ -236,9 +236,14 @@ const rclcpp::ParameterValue &
 Node::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
 {
-  return this->node_parameters_->declare_parameter(name, default_value, parameter_descriptor);
+  return this->node_parameters_->declare_parameter(
+    name,
+    default_value,
+    parameter_descriptor,
+    ignore_override);
 }
 
 void

@@ -369,6 +369,8 @@ public:
    * are ignored, and should be specified using the name argument to this
    * function and the default value's type instead.
    *
+   * If `ignore_override` is `true`, the parameter override will be ignored.
+   *
    * This method, if successful, will result in any callback registered with
    * set_on_parameters_set_callback to be called.
    * If that callback prevents the initial value for the parameter from being
@@ -382,6 +384,8 @@ public:
    *   did not override it.
    * \param[in] parameter_descriptor An optional, custom description for
    *   the parameter.
+   * \param[in] ignore_override When `true`, the parameter override is ignored.
+   *    Default to `false`.
    * \return A const reference to the value of the parameter.
    * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
    *   has already been declared.
@@ -396,7 +400,8 @@ public:
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor());
+    rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false);
 
   /// Declare and initialize a parameter with a type.
   /**
@@ -425,7 +430,8 @@ public:
     const std::string & name,
     const ParameterT & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor());
+    rcl_interfaces::msg::ParameterDescriptor(),
+    bool ignore_override = false);
 
   /// Declare and initialize several parameters with the same namespace and type.
   /**
@@ -440,11 +446,12 @@ public:
    * expanding "namespace.key".
    * This allows you to declare several parameters at once without a namespace.
    *
-   * The map may either contain default values for parameters, or a std::pair
-   * where the first element is a default value and the second is a
-   * parameter descriptor.
-   * This function only takes the default value, but there is another overload
-   * which takes the std::pair with the default value and descriptor.
+   * The map contains default values for parameters.
+   * There is another overload which takes the std::pair with the default value
+   * and descriptor.
+   *
+   * If `ignore_overrides` is `true`, all the overrides of the parameters declared
+   * by the function call will be ignored.
    *
    * This method, if successful, will result in any callback registered with
    * set_on_parameters_set_callback to be called, once for each parameter.
@@ -453,6 +460,8 @@ public:
    *
    * \param[in] namespace_ The namespace in which to declare the parameters.
    * \param[in] parameters The parameters to set in the given namespace.
+   * \param[in] ignore_overrides When `true`, the parameters overrides are ignored.
+   *    Default to `false`.
    * \throws rclcpp::exceptions::ParameterAlreadyDeclaredException if parameter
    *   has already been declared.
    * \throws rclcpp::exceptions::InvalidParametersException if a parameter
@@ -464,7 +473,8 @@ public:
   std::vector<ParameterT>
   declare_parameters(
     const std::string & namespace_,
-    const std::map<std::string, ParameterT> & parameters);
+    const std::map<std::string, ParameterT> & parameters,
+    bool ignore_overrides = false);
 
   /// Declare and initialize several parameters with the same namespace and type.
   /**
@@ -480,7 +490,8 @@ public:
     const std::map<
       std::string,
       std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
-    > & parameters);
+    > & parameters,
+    bool ignore_overrides = false);
 
   /// Undeclare a previously declared parameter.
   /**

@@ -170,7 +170,8 @@ NodeParameters::NodeParameters(
         this->declare_parameter(
           pair.first,
           pair.second,
-          rcl_interfaces::msg::ParameterDescriptor());
+          rcl_interfaces::msg::ParameterDescriptor(),
+          true);
       }
     }
   }
@@ -333,7 +334,7 @@ __declare_parameter_common(
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
   OnParametersSetCallbackType on_set_parameters_callback,
   rcl_interfaces::msg::ParameterEvent * parameter_event_out,
-  bool use_overrides = true)
+  bool ignore_override = false)
 {
   using rclcpp::node_interfaces::ParameterInfo;
   std::map<std::string, ParameterInfo> parameter_infos {{name, ParameterInfo()}};
@@ -342,7 +343,7 @@ __declare_parameter_common(
   // Use the value from the overrides if available, otherwise use the default.
   const rclcpp::ParameterValue * initial_value = &default_value;
   auto overrides_it = overrides.find(name);
-  if (use_overrides && overrides_it != overrides.end()) {
+  if (!ignore_override && overrides_it != overrides.end()) {
     initial_value = &overrides_it->second;
   }
 
@@ -369,7 +370,8 @@ const rclcpp::ParameterValue &
 NodeParameters::declare_parameter(
   const std::string & name,
   const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -392,7 +394,8 @@ NodeParameters::declare_parameter(
     parameters_,
     parameter_overrides_,
     on_parameters_set_callback_,
-    &parameter_event);
+    &parameter_event,
+    ignore_override);
 
   // If it failed to be set, then throw an exception.
   if (!result.successful) {
@@ -524,7 +527,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       parameter_overrides_,
       nullptr,  // callback is explicitly null, so that it is called only once, when setting below.
       &parameter_event_msg,
-      false);
+      true);
     if (!result.successful) {
       // Declare failed, return knowing that nothing was changed because the
       // staged changes were not applied.
