@@ -38,6 +38,7 @@ function(rclcpp_components_add_node)
   set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
   add_executable(${target}_main ../../rclcpp/rclcpp_components/src/node_main.cpp)
   set_target_properties(${target}_main PROPERTIES OUTPUT_NAME ${target})
+  set(lib ${target})
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(lib
       "-Wl,--no-as-needed"
