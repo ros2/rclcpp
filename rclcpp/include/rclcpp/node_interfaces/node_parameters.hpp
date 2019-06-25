@@ -17,6 +17,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -75,7 +76,9 @@ private:
 };
 
 /// Implementation of the NodeParameters part of the Node API.
-class NodeParameters : public NodeParametersInterface
+class NodeParameters
+  : public NodeParametersInterface,
+  public std::enable_shared_from_this<NodeParameters>
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeParameters)
@@ -158,6 +161,14 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const override;
 
   RCLCPP_PUBLIC
+  OnSetParametersCallbackHandle::UniquePtr
+  add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
+
+  RCLCPP_PUBLIC
+  void
+  remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) override;
+
+  RCLCPP_PUBLIC
   OnParametersSetCallbackType
   set_on_parameters_set_callback(OnParametersSetCallbackType callback) override;
 
@@ -170,6 +181,8 @@ public:
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const override;
 
+  using CallbacksContainerType = std::set<OnSetParametersCallbackHandle *>;
+
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
@@ -180,7 +193,9 @@ private:
   // declare_parameter, etc).  In those cases, this will be set to false.
   bool parameter_modification_enabled_{true};
 
-  OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
+  OnParametersSetCallbackType on_parameters_set_callback_;
+
+  CallbacksContainerType on_parameters_set_callback_set_;
 
   std::map<std::string, ParameterInfo> parameters_;
 

@@ -362,6 +362,83 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   }
 }
 
+auto get_fixed_on_parameter_set_callback(const std::string & name, bool successful)
+{
+  return
+    [name, successful](const std::vector<rclcpp::Parameter> & parameters) {
+      (void)parameters;
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = successful;
+      return result;
+    };
+}
+
+TEST_F(TestNode, test_registering_multiple_callbacks_api) {
+  auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node"_unq);
+  {
+    int64_t default_value{42};
+    auto name1 = "parameter"_unq;
+    auto scoped_callback1 = node->add_on_set_parameters_callback(
+      get_fixed_on_parameter_set_callback(name1, true));
+    EXPECT_NE(scoped_callback1, nullptr);
+    int64_t value{node->declare_parameter(name1, default_value)};
+    EXPECT_EQ(value, default_value);
+
+    auto name2 = "parameter"_unq;
+    auto scoped_callback2 = node->add_on_set_parameters_callback(
+      get_fixed_on_parameter_set_callback(name2, false));
+    EXPECT_NE(scoped_callback2, nullptr);
+    EXPECT_THROW(
+      {node->declare_parameter(name2, default_value);},
+      rclcpp::exceptions::InvalidParameterValueException);
+
+    auto name3 = "parameter"_unq;
+    scoped_callback2.reset();
+    value = node->declare_parameter(name3, default_value);
+    EXPECT_EQ(value, default_value);
+  }
+  {
+    int64_t default_value{42};
+    auto name1 = "parameter"_unq;
+    auto scoped_callback1 = node->add_on_set_parameters_callback(
+      get_fixed_on_parameter_set_callback(name1, true));
+    EXPECT_NE(scoped_callback1, nullptr);
+    int64_t value{node->declare_parameter(name1, default_value)};
+    EXPECT_EQ(value, default_value);
+
+    auto name2 = "parameter"_unq;
+    auto scoped_callback2 = node->add_on_set_parameters_callback(
+      get_fixed_on_parameter_set_callback(name2, false));
+    EXPECT_NE(scoped_callback2, nullptr);
+    EXPECT_THROW(
+      {node->declare_parameter(name2, default_value);},
+      rclcpp::exceptions::InvalidParameterValueException);
+
+    auto name3 = "parameter"_unq;
+    node->remove_on_set_parameters_callback(scoped_callback2.get());
+    value = node->declare_parameter(name3, default_value);
+    EXPECT_EQ(value, default_value);
+  }
+  {
+    int64_t default_value{42};
+    auto name1 = "parameter"_unq;
+    rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr scoped_callback(
+      node->add_on_set_parameters_callback(
+        get_fixed_on_parameter_set_callback(name1, false)));
+    rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr scoped_callback_copy(scoped_callback);
+    scoped_callback.reset();
+
+    EXPECT_THROW(
+      {node->declare_parameter("parameter"_unq, default_value);},
+      rclcpp::exceptions::InvalidParameterValueException);
+
+    scoped_callback_copy.reset();
+    // All the shared_ptr has been reset
+    int64_t value = node->declare_parameter("parameter"_unq, default_value);
+    EXPECT_EQ(value, default_value);
+  }
+}
+
 TEST_F(TestNode, declare_parameter_with_overrides) {
   // test cases with overrides
   rclcpp::NodeOptions no;
