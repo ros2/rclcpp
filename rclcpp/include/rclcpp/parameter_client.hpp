@@ -115,7 +115,7 @@ public:
   on_parameter_event(
     CallbackT && callback,
     const rclcpp::QoS & qos = (
-      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default))
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events))
     ),
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
@@ -142,7 +142,7 @@ public:
     NodeT && node,
     CallbackT && callback,
     const rclcpp::QoS & qos = (
-      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_default))
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events))
     ),
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
       rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
