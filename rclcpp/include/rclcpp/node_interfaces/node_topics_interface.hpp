@@ -27,6 +27,7 @@
 #include "rclcpp/publisher_factory.hpp"
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_factory.hpp"
+#include "rclcpp/subscription_intra_process.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -72,7 +73,8 @@ public:
   void
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
+    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group,
+    bool use_intra_process) = 0;
 
   RCLCPP_PUBLIC
   virtual

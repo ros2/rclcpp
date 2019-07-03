@@ -82,7 +82,8 @@ NodeTopics::create_subscription(
 void
 NodeTopics::add_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
+  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group,
+  bool use_intra_process)
 {
   // Assign to a group.
   if (callback_group) {
@@ -97,6 +98,20 @@ NodeTopics::add_subscription(
   callback_group->add_subscription(subscription);
   for (auto & subscription_event : subscription->get_event_handlers()) {
     callback_group->add_waitable(subscription_event);
+  }
+
+  if (use_intra_process) {
+    // Get the intra process manager for this context.
+    auto context = node_base_->get_context();
+    auto ipm =
+      context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+
+    // Use the id to retrieve the subscription intra-process from the intra-process manager.
+    auto subscription_intra_process =
+      ipm->get_subscription_intra_process(subscription->get_intra_process_id());
+
+    // Add to the callback group to be notified about intra-process msgs.
+    callback_group->add_waitable(subscription_intra_process);
   }
 
   // Notify the executor that a new subscription was created using the parent Node.

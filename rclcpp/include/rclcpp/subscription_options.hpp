@@ -21,6 +21,7 @@
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/detail/rmw_implementation_specific_subscription_payload.hpp"
+#include "rclcpp/intra_process_buffer_type.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
@@ -43,6 +44,9 @@ struct SubscriptionOptionsBase
 
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
+
+  /// Setting the data-type stored in the intraprocess buffer
+  IntraProcessBufferType intra_process_buffer_type = IntraProcessBufferType::CallbackDefault;
 
   /// Optional RMW implementation specific payload to be used during creation of the subscription.
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificSubscriptionPayload>

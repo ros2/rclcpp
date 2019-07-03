@@ -26,6 +26,7 @@
 
 #include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_traits.hpp"
+#include "rclcpp/intra_process_buffer_type.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/visibility_control.hpp"

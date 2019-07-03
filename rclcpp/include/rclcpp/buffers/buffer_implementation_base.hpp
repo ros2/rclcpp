@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/intra_process_manager_impl.hpp"
+#ifndef RCLCPP__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
+#define RCLCPP__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
 
-#include <memory>
-
-rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr
-rclcpp::intra_process_manager::create_default_impl()
+namespace rclcpp
 {
-  return std::make_shared<IntraProcessManagerImpl<>>();
-}
+namespace intra_process_buffer
+{
+
+template<typename BufferT>
+class BufferImplementationBase
+{
+public:
+  virtual BufferT dequeue() = 0;
+  virtual void enqueue(BufferT request) = 0;
+
+  virtual void clear() = 0;
+  virtual bool has_data() const = 0;
+};
+
+}  // namespace intra_process_buffer
+}  // namespace rclcpp
+
+#endif  // RCLCPP__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_

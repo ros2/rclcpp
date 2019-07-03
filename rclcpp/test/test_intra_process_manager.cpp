@@ -12,22 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <gmock/gmock.h>
+
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #define RCLCPP_BUILDING_LIBRARY 1
-#include "gtest/gtest.h"
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/macros.hpp"
-#include "rclcpp/mapped_ring_buffer.hpp"
 #include "rmw/types.h"
+#include "rmw/qos_profiles.h"
 
-// Mock up publisher and subscription base to avoid needing an rmw impl.
+// NOLINTNEXTLINE(build/include_order)
+#include <rcl_interfaces/msg/log.hpp>
+
 namespace rclcpp
 {
+// forward declaration
+namespace intra_process_manager
+{
+class IntraProcessManager;
+}
+
 namespace mock
 {
+
+using IntraProcessManagerSharedPtr =
+  std::shared_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+
+using IntraProcessManagerWeakPtr =
+  std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
 
 class PublisherBase
 {
@@ -35,18 +52,36 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
 
   PublisherBase()
-  : mock_topic_name(""), mock_queue_size(0) {}
+  : topic_name("topic")
+  {}
 
   virtual ~PublisherBase()
   {}
 
   const char * get_topic_name() const
   {
-    return mock_topic_name.c_str();
+    return topic_name.c_str();
   }
-  size_t get_queue_size() const
+
+  void set_intra_process_manager(
+    uint64_t intra_process_publisher_id,
+    IntraProcessManagerSharedPtr ipm)
   {
-    return mock_queue_size;
+    intra_process_publisher_id_ = intra_process_publisher_id;
+    weak_ipm_ = ipm;
+  }
+
+  rmw_qos_profile_t
+  get_actual_qos()
+  {
+    return qos_profile;
+  }
+
+  bool
+  operator==(const rmw_gid_t & gid) const
+  {
+    (void)gid;
+    return false;
   }
 
   bool
@@ -56,16 +91,10 @@ public:
     return false;
   }
 
-  virtual
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  make_mapped_ring_buffer(size_t size) const
-  {
-    (void)size;
-    return nullptr;
-  }
-
-  std::string mock_topic_name;
-  size_t mock_queue_size;
+  rmw_qos_profile_t qos_profile;
+  std::string topic_name;
+  uint64_t intra_process_publisher_id_;
+  IntraProcessManagerWeakPtr weak_ipm_;
 };
 
 template<typename T, typename Alloc = std::allocator<void>>
@@ -76,28 +105,23 @@ public:
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
   using MessageDeleter = allocator::Deleter<MessageAlloc, T>;
   using MessageUniquePtr = std::unique_ptr<T, MessageDeleter>;
-  std::shared_ptr<MessageAlloc> allocator_;
+  using MessageSharedPtr = std::shared_ptr<T>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>)
 
   Publisher()
   {
-    allocator_ = std::make_shared<MessageAlloc>();
+    qos_profile = rmw_qos_profile_default;
+    auto allocator = std::make_shared<Alloc>();
+    message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
   }
 
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  make_mapped_ring_buffer(size_t size) const override
-  {
-    return mapped_ring_buffer::MappedRingBuffer<
-      T,
-      typename Publisher<T, Alloc>::MessageAlloc
-    >::make_shared(size, allocator_);
-  }
+  // The following functions use the IntraProcessManager
+  // so they are declared after including it to avoid "invalid use of incomplete type"
+  void publish(MessageUniquePtr msg);
+  void publish(MessageSharedPtr msg);
 
-  std::shared_ptr<MessageAlloc> get_allocator()
-  {
-    return allocator_;
-  }
+  std::shared_ptr<MessageAlloc> message_allocator_;
 };
 
 }  // namespace mock
@@ -105,756 +129,554 @@ public:
 
 namespace rclcpp
 {
+namespace intra_process_buffer
+{
+namespace mock
+{
+template<typename MessageT>
+class IntraProcessBuffer
+{
+public:
+  using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
+  using MessageUniquePtr = std::unique_ptr<MessageT>;
+
+  RCLCPP_SMART_PTR_DEFINITIONS(IntraProcessBuffer)
+
+  IntraProcessBuffer()
+  {}
+
+  void add(ConstMessageSharedPtr msg)
+  {
+    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
+    shared_msg = msg;
+  }
+
+  void add(MessageUniquePtr msg)
+  {
+    message_ptr = reinterpret_cast<std::uintptr_t>(msg.get());
+    unique_msg = std::move(msg);
+  }
+
+  void pop(std::uintptr_t & msg_ptr)
+  {
+    msg_ptr = message_ptr;
+    message_ptr = 0;
+  }
+
+  // need to store the messages somewhere otherwise the memory address will be reused
+  ConstMessageSharedPtr shared_msg;
+  MessageUniquePtr unique_msg;
+
+  std::uintptr_t message_ptr;
+};
+
+}  // namespace mock
+}  // namespace intra_process_buffer
+}  // namespace rclcpp
+
+
+namespace rclcpp
+{
 namespace mock
 {
 
-class SubscriptionBase
+class SubscriptionIntraProcessBase
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionBase)
+  RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
 
-  SubscriptionBase()
-  : mock_topic_name(""), mock_queue_size(0) {}
+  SubscriptionIntraProcessBase()
+  : qos_profile(rmw_qos_profile_default), topic_name("topic")
+  {}
 
-  const char * get_topic_name() const
+  virtual bool
+  use_take_shared_method() const = 0;
+
+  rmw_qos_profile_t
+  get_actual_qos()
   {
-    return mock_topic_name.c_str();
-  }
-  size_t get_queue_size() const
-  {
-    return mock_queue_size;
+    return qos_profile;
   }
 
-  std::string mock_topic_name;
-  size_t mock_queue_size;
+  const char *
+  get_topic_name()
+  {
+    return topic_name;
+  }
+
+  rmw_qos_profile_t qos_profile;
+  const char * topic_name;
+};
+
+template<typename MessageT>
+class SubscriptionIntraProcess : public SubscriptionIntraProcessBase
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionIntraProcess)
+
+  SubscriptionIntraProcess()
+  : take_shared_method(false)
+  {
+    buffer = std::make_unique<intra_process_buffer::mock::IntraProcessBuffer<MessageT>>();
+  }
+
+  void
+  provide_intra_process_message(std::shared_ptr<const MessageT> msg)
+  {
+    buffer->add(msg);
+  }
+
+  void
+  provide_intra_process_message(std::unique_ptr<MessageT> msg)
+  {
+    buffer->add(std::move(msg));
+  }
+
+  std::uintptr_t
+  pop()
+  {
+    std::uintptr_t ptr;
+    buffer->pop(ptr);
+    return ptr;
+  }
+
+  bool
+  use_take_shared_method() const
+  {
+    return take_shared_method;
+  }
+
+  bool take_shared_method;
+
+  typename intra_process_buffer::mock::IntraProcessBuffer<MessageT>::UniquePtr buffer;
 };
 
 }  // namespace mock
 }  // namespace rclcpp
 
-// Prevent rclcpp/publisher_base.hpp and rclcpp/subscription.hpp from being imported.
+// Prevent the header files of the mocked classes to be included
+#define RCLCPP__PUBLISHER_HPP_
 #define RCLCPP__PUBLISHER_BASE_HPP_
-#define RCLCPP__SUBSCRIPTION_BASE_HPP_
+#define RCLCPP__SUBSCRIPTION_INTRA_PROCESS_HPP_
+#define RCLCPP__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 // Force ipm to use our mock publisher class.
 #define Publisher mock::Publisher
 #define PublisherBase mock::PublisherBase
-#define SubscriptionBase mock::SubscriptionBase
+#define IntraProcessBuffer mock::IntraProcessBuffer
+#define SubscriptionIntraProcessBase mock::SubscriptionIntraProcessBase
+#define SubscriptionIntraProcess mock::SubscriptionIntraProcess
 #include "../src/rclcpp/intra_process_manager.cpp"
-#include "../src/rclcpp/intra_process_manager_impl.cpp"
-#undef SubscriptionBase
 #undef Publisher
 #undef PublisherBase
+#undef IntraProcessBuffer
+#undef SubscriptionIntraProcessBase
+#undef SubscriptionIntraProcess
 
-// NOLINTNEXTLINE(build/include_order)
-#include <rcl_interfaces/msg/intra_process_message.hpp>
+using ::testing::_;
+using ::testing::UnorderedElementsAre;
 
-/*
-   This tests the "normal" usage of the class:
-   - Creates two publishers on different topics.
-   - Creates a subscription which matches one of them.
-   - Publishes on each publisher with different message content.
-   - Try's to take the message from the non-matching publish, should fail.
-   - Try's to take the message from the matching publish, should work.
-   - Asserts the message it got back was the one that went in (since there's only one subscription).
-   - Try's to take the message again, should fail.
- */
-TEST(TestIntraProcessManager, nominal) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
+namespace rclcpp
+{
+namespace mock
+{
 
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 2;
-
-  auto p2 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p2->mock_topic_name = "nominal2";
-  p2->mock_queue_size = 10;
-
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
-
-  auto p1_id = ipm.add_publisher(p1);
-  auto p2_id = ipm.add_publisher(p2);
-  auto s1_id = ipm.add_subscription(s1);
-
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
-
-  auto p1_m1_original_address = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  ipm_msg->message_sequence = 43;
-  ipm_msg->publisher_id = 43;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
-
-  auto p2_m1_id = ipm.store_intra_process_message(p2_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  ipm.take_intra_process_message(p2_id, p2_m1_id, s1_id, unique_msg);
-  EXPECT_EQ(nullptr, unique_msg);  // Should fail since p2 and s1 don't have the same topic.
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_EQ(p1_m1_original_address, unique_msg.get());
+template<typename T, typename Alloc>
+void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
+{
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    throw std::runtime_error(
+            "intra process publish called after destruction of intra process manager");
+  }
+  if (!msg) {
+    throw std::runtime_error("cannot publish msg which is a null pointer");
   }
 
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_EQ(nullptr, unique_msg);  // Should fail, since the message was already taken.
+  ipm->template do_intra_process_publish<T, Alloc>(
+    intra_process_publisher_id_,
+    std::move(msg),
+    message_allocator_);
+}
 
-  ipm_msg->message_sequence = 44;
-  ipm_msg->publisher_id = 44;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+// This function is actually deprecated in the real rclcpp::publisher, but
+// here it is used to mimic what happens when publishing both inter and intra-process
+template<typename T, typename Alloc>
+void Publisher<T, Alloc>::publish(MessageSharedPtr msg)
+{
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    throw std::runtime_error(
+            "intra process publish called after destruction of intra process manager");
+  }
+  if (!msg) {
+    throw std::runtime_error("cannot publish msg which is a null pointer");
+  }
 
-  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
+  ipm->template do_intra_process_publish<T, Alloc>(
+    intra_process_publisher_id_,
+    msg,
+    message_allocator_);
+}
 
-  ipm_msg->message_sequence = 45;
-  ipm_msg->publisher_id = 45;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+}  // namespace mock
+}  // namespace rclcpp
 
-  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
+/*
+   This tests how the class connects and disconnects publishers and subscriptions:
+   - Creates 2 publishers on different topics and a subscription to one of them.
+     Add everything to the intra-process manager.
+   - All the entities are expected to have different ids.
+   - Check the subscriptions count for each publisher.
+   - One of the publishers is expected to have 1 subscription, while the other 0.
+   - Check the subscription count for a non existing publisher id, should return 0.
+   - Add a new publisher and a new subscription both with reliable QoS.
+   - The subscriptions count of the previous publisher is expected to remain unchanged,
+     while the new publisher is expected to have 2 subscriptions (it's compatible with both QoS).
+   - Remove the just added subscriptions.
+   - The count for the last publisher is expected to decrease to 1.
+ */
+TEST(TestIntraProcessManager, add_pub_sub) {
+  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using MessageT = rcl_interfaces::msg::Log;
+  using PublisherT = rclcpp::mock::Publisher<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
 
-  ipm_msg->message_sequence = 46;
-  ipm_msg->publisher_id = 46;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
+  auto ipm = std::make_shared<IntraProcessManagerT>();
 
-  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
+  auto p1 = std::make_shared<PublisherT>();
+  p1->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+
+  auto p2 = std::make_shared<PublisherT>();
+  p2->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+  p2->topic_name = "different_topic_name";
+
+  auto s1 = std::make_shared<SubscriptionIntraProcessT>();
+  s1->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+
+  auto p1_id = ipm->add_publisher(p1);
+  auto p2_id = ipm->add_publisher(p2);
+  auto s1_id = ipm->add_subscription(s1);
+
+  bool unique_ids = p1_id != p2_id && p2_id != s1_id;
+  ASSERT_TRUE(unique_ids);
+
+  size_t p1_subs = ipm->get_subscription_count(p1_id);
+  size_t p2_subs = ipm->get_subscription_count(p2_id);
+  size_t non_existing_pub_subs = ipm->get_subscription_count(42);
+  ASSERT_EQ(1u, p1_subs);
+  ASSERT_EQ(0u, p2_subs);
+  ASSERT_EQ(0u, non_existing_pub_subs);
+
+  auto p3 = std::make_shared<PublisherT>();
+  p3->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+
+  auto s2 = std::make_shared<SubscriptionIntraProcessT>();
+  s2->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+
+  auto s2_id = ipm->add_subscription(s2);
+  auto p3_id = ipm->add_publisher(p3);
+
+  p1_subs = ipm->get_subscription_count(p1_id);
+  p2_subs = ipm->get_subscription_count(p2_id);
+  size_t p3_subs = ipm->get_subscription_count(p3_id);
+  ASSERT_EQ(1u, p1_subs);
+  ASSERT_EQ(0u, p2_subs);
+  ASSERT_EQ(2u, p3_subs);
+
+  ipm->remove_subscription(s2_id);
+  p1_subs = ipm->get_subscription_count(p1_id);
+  p2_subs = ipm->get_subscription_count(p2_id);
+  p3_subs = ipm->get_subscription_count(p3_id);
+  ASSERT_EQ(1u, p1_subs);
+  ASSERT_EQ(0u, p2_subs);
+  ASSERT_EQ(1u, p3_subs);
 }
 
 /*
-   Simulates the case where a publisher is removed between publishing and the matching take.
-   - Creates a publisher and subscription on the same topic.
-   - Publishes a message.
-   - Remove the publisher.
-   - Try's to take the message, should fail since the publisher (and its storage) is gone.
+   This tests the minimal usage of the class where there is a single subscription per publisher:
+   - Publishes a unique_ptr message with a subscription requesting ownership.
+   - The received message is expected to be the same.
+   - Remove the first subscription from ipm and add a new one.
+   - Publishes a unique_ptr message with a subscription not requesting ownership.
+   - The received message is expected to be the same, the first subscription do not receive it.
+   - Publishes a shared_ptr message with a subscription not requesting ownership.
+   - The received message is expected to be the same.
  */
-TEST(TestIntraProcessManager, remove_publisher_before_trying_to_take) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
+TEST(TestIntraProcessManager, single_subscription) {
+  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using MessageT = rcl_interfaces::msg::Log;
+  using PublisherT = rclcpp::mock::Publisher<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
 
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 10;
+  auto ipm = std::make_shared<IntraProcessManagerT>();
 
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
+  auto p1 = std::make_shared<PublisherT>();
+  auto p1_id = ipm->add_publisher(p1);
+  p1->set_intra_process_manager(p1_id, ipm);
 
-  auto p1_id = ipm.add_publisher(p1);
-  auto s1_id = ipm.add_subscription(s1);
+  auto s1 = std::make_shared<SubscriptionIntraProcessT>();
+  s1->take_shared_method = false;
+  auto s1_id = ipm->add_subscription(s1);
 
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
+  auto unique_msg = std::make_unique<MessageT>();
+  auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
+  auto received_message_pointer_1 = s1->pop();
+  ASSERT_EQ(original_message_pointer, received_message_pointer_1);
 
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
+  ipm->remove_subscription(s1_id);
+  auto s2 = std::make_shared<SubscriptionIntraProcessT>();
+  s2->take_shared_method = true;
+  auto s2_id = ipm->add_subscription(s2);
+  (void)s2_id;
 
-  ipm.remove_publisher(p1_id);
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
+  received_message_pointer_1 = s1->pop();
+  auto received_message_pointer_2 = s2->pop();
+  ASSERT_EQ(original_message_pointer, received_message_pointer_2);
+  ASSERT_EQ(0u, received_message_pointer_1);
 
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_EQ(nullptr, unique_msg);  // Should fail, since the publisher is gone.
+  auto shared_msg = std::make_shared<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
+  p1->publish(shared_msg);
+  received_message_pointer_2 = s2->pop();
+  ASSERT_EQ(original_message_pointer, received_message_pointer_2);
 }
 
 /*
-   Tests whether or not removed subscriptions affect take behavior.
-   - Creates a publisher and three subscriptions on the same topic.
-   - Publish a message, keep the original point for later comparison.
-   - Take with one subscription, should work.
-   - Remove a different subscription.
-   - Take with the final subscription, should work.
-   - Assert the previous take returned ownership of the original object published.
+   This tests the usage of the class where there are multiple subscriptions of the same type:
+   - Publishes a unique_ptr message with 2 subscriptions requesting ownership.
+   - One is expected to receive the published message, while the other will receive a copy.
+   - Publishes a unique_ptr message with 2 subscriptions not requesting ownership.
+   - Both received messages are expected to be the same as the published one.
+   - Publishes a shared_ptr message with 2 subscriptions requesting ownership.
+   - Both received messages are expected to be a copy of the published one.
+   - Publishes a shared_ptr message with 2 subscriptions not requesting ownership.
+   - Both received messages are expected to be the same as the published one.
  */
-TEST(TestIntraProcessManager, removed_subscription_affects_take) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
+TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
+  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using MessageT = rcl_interfaces::msg::Log;
+  using PublisherT = rclcpp::mock::Publisher<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
 
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 10;
+  auto ipm = std::make_shared<IntraProcessManagerT>();
 
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
+  auto p1 = std::make_shared<PublisherT>();
+  auto p1_id = ipm->add_publisher(p1);
+  p1->set_intra_process_manager(p1_id, ipm);
 
-  auto s2 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s2->mock_topic_name = "nominal1";
-  s2->mock_queue_size = 10;
+  auto s1 = std::make_shared<SubscriptionIntraProcessT>();
+  s1->take_shared_method = false;
+  auto s1_id = ipm->add_subscription(s1);
 
-  auto s3 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s3->mock_topic_name = "nominal1";
-  s3->mock_queue_size = 10;
+  auto s2 = std::make_shared<SubscriptionIntraProcessT>();
+  s2->take_shared_method = false;
+  auto s2_id = ipm->add_subscription(s2);
 
-  auto p1_id = ipm.add_publisher(p1);
-  auto s1_id = ipm.add_subscription(s1);
-  auto s2_id = ipm.add_subscription(s2);
-  auto s3_id = ipm.add_subscription(s3);
+  auto unique_msg = std::make_unique<MessageT>();
+  auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
+  bool received_original_1 = s1->pop() == original_message_pointer;
+  bool received_original_2 = s2->pop() == original_message_pointer;
+  std::vector<bool> received_original_vec =
+  {received_original_1, received_original_2};
+  ASSERT_THAT(received_original_vec, UnorderedElementsAre(true, false));
 
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
+  ipm->remove_subscription(s1_id);
+  ipm->remove_subscription(s2_id);
 
-  auto original_message_pointer = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
+  auto s3 = std::make_shared<SubscriptionIntraProcessT>();
+  s3->take_shared_method = true;
+  auto s3_id = ipm->add_subscription(s3);
 
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer, unique_msg.get());
-  }
-  unique_msg.reset();
+  auto s4 = std::make_shared<SubscriptionIntraProcessT>();
+  s4->take_shared_method = true;
+  auto s4_id = ipm->add_subscription(s4);
 
-  ipm.remove_subscription(s2_id);
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
+  auto received_message_pointer_3 = s3->pop();
+  auto received_message_pointer_4 = s4->pop();
+  ASSERT_EQ(original_message_pointer, received_message_pointer_3);
+  ASSERT_EQ(original_message_pointer, received_message_pointer_4);
 
-  // Take using s3, the remaining subscription.
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s3_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    // Should match the original pointer since s2 was removed first.
-    EXPECT_EQ(original_message_pointer, unique_msg.get());
-  }
+  ipm->remove_subscription(s3_id);
+  ipm->remove_subscription(s4_id);
 
-  // Take using s2, should fail since s2 was removed.
-  unique_msg.reset();
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s2_id, unique_msg);
-  EXPECT_EQ(nullptr, unique_msg);
+  auto s5 = std::make_shared<SubscriptionIntraProcessT>();
+  s5->take_shared_method = false;
+  auto s5_id = ipm->add_subscription(s5);
+
+  auto s6 = std::make_shared<SubscriptionIntraProcessT>();
+  s6->take_shared_method = false;
+  auto s6_id = ipm->add_subscription(s6);
+
+  auto shared_msg = std::make_shared<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
+  p1->publish(shared_msg);
+  auto received_message_pointer_5 = s5->pop();
+  auto received_message_pointer_6 = s6->pop();
+  ASSERT_NE(original_message_pointer, received_message_pointer_5);
+  ASSERT_NE(original_message_pointer, received_message_pointer_6);
+
+  ipm->remove_subscription(s5_id);
+  ipm->remove_subscription(s6_id);
+
+  auto s7 = std::make_shared<SubscriptionIntraProcessT>();
+  s7->take_shared_method = true;
+  auto s7_id = ipm->add_subscription(s7);
+  (void)s7_id;
+
+  auto s8 = std::make_shared<SubscriptionIntraProcessT>();
+  s8->take_shared_method = true;
+  auto s8_id = ipm->add_subscription(s8);
+  (void)s8_id;
+
+  shared_msg = std::make_shared<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
+  p1->publish(shared_msg);
+  auto received_message_pointer_7 = s7->pop();
+  auto received_message_pointer_8 = s8->pop();
+  ASSERT_EQ(original_message_pointer, received_message_pointer_7);
+  ASSERT_EQ(original_message_pointer, received_message_pointer_8);
 }
 
 /*
-   This tests normal operation with multiple subscriptions and one publisher.
-   - Creates a publisher and three subscriptions on the same topic.
-   - Publish a message.
-   - Take with each subscription, checking that the last takes the original back.
+   This tests the usage of the class where there are multiple subscriptions of different types:
+   - Publishes a unique_ptr message with 1 subscription requesting ownership and 1 not.
+   - The one requesting ownership is expected to receive the published message,
+     while the other is expected to receive a copy.
+   - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 1 not.
+   - One of the subscriptions requesting ownership is expected to receive the published message,
+     while both other subscriptions are expected to receive different copies.
+   - Publishes a unique_ptr message with 2 subscriptions requesting ownership and 2 not.
+   - The 2 subscriptions not requesting ownership are expected to both receive the same copy
+     of the message, one of the subscription requesting ownership is expected to receive a
+     different copy, while the last is expected to receive the published message.
+   - Publishes a shared_ptr message with 1 subscription requesting ownership and 1 not.
+   - The subscription requesting ownership is expected to receive a copy of the message, while
+     the other is expected to receive the published message
  */
-TEST(TestIntraProcessManager, multiple_subscriptions_one_publisher) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
-
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 10;
-
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
-
-  auto s2 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s2->mock_topic_name = "nominal1";
-  s2->mock_queue_size = 10;
-
-  auto s3 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s3->mock_topic_name = "nominal1";
-  s3->mock_queue_size = 10;
-
-  auto p1_id = ipm.add_publisher(p1);
-  auto s1_id = ipm.add_subscription(s1);
-  auto s2_id = ipm.add_subscription(s2);
-  auto s3_id = ipm.add_subscription(s3);
-
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
-
-  auto original_message_pointer = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s2_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s3_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    // Should match the original pointer.
-    EXPECT_EQ(original_message_pointer, unique_msg.get());
-  }
-}
-
-/*
-   This tests normal operation with multiple publishers and one subscription.
-   - Creates a publisher and three subscriptions on the same topic.
-   - Publish a message.
-   - Take with each subscription, checking that the last takes the original back.
- */
-TEST(TestIntraProcessManager, multiple_publishers_one_subscription) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
-
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 10;
-
-  auto p2 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p2->mock_topic_name = "nominal1";
-  p2->mock_queue_size = 10;
-
-  auto p3 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p3->mock_topic_name = "nominal1";
-  p3->mock_queue_size = 10;
-
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
-
-  auto p1_id = ipm.add_publisher(p1);
-  auto p2_id = ipm.add_publisher(p2);
-  auto p3_id = ipm.add_publisher(p3);
-  auto s1_id = ipm.add_subscription(s1);
-
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  // First publish
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
-
-  auto original_message_pointer1 = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  // Second publish
-  ipm_msg->message_sequence = 43;
-  ipm_msg->publisher_id = 43;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
-
-  auto original_message_pointer2 = unique_msg.get();
-  auto p2_m1_id = ipm.store_intra_process_message(p2_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  // Third publish
-  ipm_msg->message_sequence = 44;
-  ipm_msg->publisher_id = 44;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
-
-  auto original_message_pointer3 = unique_msg.get();
-  auto p3_m1_id = ipm.store_intra_process_message(p3_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  // First take
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer1, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  // Second take
-  ipm.take_intra_process_message(p2_id, p2_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(43ul, unique_msg->message_sequence);
-    EXPECT_EQ(43ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer2, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  // Third take
-  ipm.take_intra_process_message(p3_id, p3_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(44ul, unique_msg->message_sequence);
-    EXPECT_EQ(44ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer3, unique_msg.get());
-  }
-  unique_msg.reset();
-}
-
-/*
-   This tests normal operation with multiple publishers and subscriptions.
-   - Creates three publishers and three subscriptions on the same topic.
-   - Publish a message on each publisher.
-   - Take from each publisher with each subscription, checking the pointer.
- */
-TEST(TestIntraProcessManager, multiple_publishers_multiple_subscription) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
-
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 10;
-
-  auto p2 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p2->mock_topic_name = "nominal1";
-  p2->mock_queue_size = 10;
-
-  auto p3 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p3->mock_topic_name = "nominal1";
-  p3->mock_queue_size = 10;
-
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
-
-  auto s2 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s2->mock_topic_name = "nominal1";
-  s2->mock_queue_size = 10;
-
-  auto s3 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s3->mock_topic_name = "nominal1";
-  s3->mock_queue_size = 10;
-
-  auto p1_id = ipm.add_publisher(p1);
-  auto p2_id = ipm.add_publisher(p2);
-  auto p3_id = ipm.add_publisher(p3);
-  auto s1_id = ipm.add_subscription(s1);
-  auto s2_id = ipm.add_subscription(s2);
-  auto s3_id = ipm.add_subscription(s3);
-
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  // First publish
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
-
-  auto original_message_pointer1 = unique_msg.get();
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  // Second publish
-  ipm_msg->message_sequence = 43;
-  ipm_msg->publisher_id = 43;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
-
-  auto original_message_pointer2 = unique_msg.get();
-  auto p2_m1_id = ipm.store_intra_process_message(p2_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  // Third publish
-  ipm_msg->message_sequence = 44;
-  ipm_msg->publisher_id = 44;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
-
-  auto original_message_pointer3 = unique_msg.get();
-  auto p3_m1_id = ipm.store_intra_process_message(p3_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  // First take
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer1, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s2_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer1, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s3_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(42ul, unique_msg->message_sequence);
-    EXPECT_EQ(42ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer1, unique_msg.get());  // Final take.
-  }
-  unique_msg.reset();
-
-  // Second take
-  ipm.take_intra_process_message(p2_id, p2_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(43ul, unique_msg->message_sequence);
-    EXPECT_EQ(43ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer2, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p2_id, p2_m1_id, s2_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(43ul, unique_msg->message_sequence);
-    EXPECT_EQ(43ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer2, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p2_id, p2_m1_id, s3_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(43ul, unique_msg->message_sequence);
-    EXPECT_EQ(43ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer2, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  // Third take
-  ipm.take_intra_process_message(p3_id, p3_m1_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(44ul, unique_msg->message_sequence);
-    EXPECT_EQ(44ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer3, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p3_id, p3_m1_id, s2_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(44ul, unique_msg->message_sequence);
-    EXPECT_EQ(44ul, unique_msg->publisher_id);
-    EXPECT_NE(original_message_pointer3, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm.take_intra_process_message(p3_id, p3_m1_id, s3_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(44ul, unique_msg->message_sequence);
-    EXPECT_EQ(44ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer3, unique_msg.get());
-  }
-  unique_msg.reset();
-}
-
-/*
-   Tests displacing a message from the ring buffer before take is called.
-   - Creates a publisher (buffer_size = 2) and a subscription on the same topic.
-   - Publish a message on the publisher.
-   - Publish another message.
-   - Take the second message.
-   - Publish a message.
-   - Try to take the first message, should fail.
- */
-TEST(TestIntraProcessManager, ring_buffer_displacement) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
-
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 2;
-
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
-
-  auto p1_id = ipm.add_publisher(p1);
-  auto s1_id = ipm.add_subscription(s1);
-
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
-
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  ipm_msg->message_sequence = 43;
-  ipm_msg->publisher_id = 43;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
-
-  auto original_message_pointer2 = unique_msg.get();
-  auto p1_m2_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  ipm.take_intra_process_message(p1_id, p1_m2_id, s1_id, unique_msg);
-  EXPECT_NE(nullptr, unique_msg);
-  if (unique_msg) {
-    EXPECT_EQ(43ul, unique_msg->message_sequence);
-    EXPECT_EQ(43ul, unique_msg->publisher_id);
-    EXPECT_EQ(original_message_pointer2, unique_msg.get());
-  }
-  unique_msg.reset();
-
-  ipm_msg->message_sequence = 44;
-  ipm_msg->publisher_id = 44;
-  unique_msg.reset(new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg));
-
-  ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  EXPECT_EQ(nullptr, unique_msg);
-  unique_msg.reset();
-
-  // Since it just got displaced it should no longer be there to take.
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_EQ(nullptr, unique_msg);
-}
-
-/*
-   Simulates race condition where a subscription is created after publish.
-   - Creates a publisher.
-   - Publish a message on the publisher.
-   - Create a subscription on the same topic.
-   - Try to take the message with the newly created subscription, should fail.
- */
-TEST(TestIntraProcessManager, subscription_creation_race_condition) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
-
-  auto p1 = std::make_shared<
-    rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-    >();
-  p1->mock_topic_name = "nominal1";
-  p1->mock_queue_size = 2;
-
-  auto p1_id = ipm.add_publisher(p1);
-
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
-
-  auto p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-  ASSERT_EQ(nullptr, unique_msg);
-
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
-
-  auto s1_id = ipm.add_subscription(s1);
-
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_EQ(nullptr, unique_msg);
-}
-
-/*
-   Simulates race condition where a publisher goes out of scope before take.
-   - Create a subscription.
-   - Creates a publisher on the same topic in a scope.
-   - Publish a message on the publisher in a scope.
-   - Let the scope expire.
-   - Try to take the message with the subscription, should fail.
- */
-TEST(TestIntraProcessManager, publisher_out_of_scope_take) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
-
-  auto s1 = std::make_shared<rclcpp::mock::SubscriptionBase>();
-  s1->mock_topic_name = "nominal1";
-  s1->mock_queue_size = 10;
-
-  auto s1_id = ipm.add_subscription(s1);
-
-  uint64_t p1_id;
-  uint64_t p1_m1_id;
-  {
-    auto p1 = std::make_shared<
-      rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-      >();
-    p1->mock_topic_name = "nominal1";
-    p1->mock_queue_size = 2;
-
-    p1_id = ipm.add_publisher(p1);
-
-    auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-    ipm_msg->message_sequence = 42;
-    ipm_msg->publisher_id = 42;
-    rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-      new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-    );
-
-    p1_m1_id = ipm.store_intra_process_message(p1_id, std::move(unique_msg));
-    ASSERT_EQ(nullptr, unique_msg);
-
-    // Explicitly remove publisher from ipm (emulate's publisher's destructor).
-    ipm.remove_publisher(p1_id);
-  }
-
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(nullptr);
-  // Should fail because the publisher is out of scope.
-  ipm.take_intra_process_message(p1_id, p1_m1_id, s1_id, unique_msg);
-  EXPECT_EQ(nullptr, unique_msg);
-}
-
-/*
-   Simulates race condition where a publisher goes out of scope before store.
-   - Creates a publisher in a scope.
-   - Let the scope expire.
-   - Publish a message on the publisher in a scope, should throw.
- */
-TEST(TestIntraProcessManager, publisher_out_of_scope_store) {
-  rclcpp::intra_process_manager::IntraProcessManager ipm;
-
-  uint64_t p1_id;
-  {
-    auto p1 = std::make_shared<
-      rclcpp::mock::Publisher<rcl_interfaces::msg::IntraProcessMessage>
-      >();
-    p1->mock_topic_name = "nominal1";
-    p1->mock_queue_size = 2;
-
-    p1_id = ipm.add_publisher(p1);
-  }
-
-  auto ipm_msg = std::make_shared<rcl_interfaces::msg::IntraProcessMessage>();
-  ipm_msg->message_sequence = 42;
-  ipm_msg->publisher_id = 42;
-  rcl_interfaces::msg::IntraProcessMessage::UniquePtr unique_msg(
-    new rcl_interfaces::msg::IntraProcessMessage(*ipm_msg)
-  );
-
-  EXPECT_THROW(ipm.store_intra_process_message(p1_id, std::move(unique_msg)), std::runtime_error);
-  ASSERT_EQ(nullptr, unique_msg);
+TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
+  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using MessageT = rcl_interfaces::msg::Log;
+  using PublisherT = rclcpp::mock::Publisher<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
+
+  auto ipm = std::make_shared<IntraProcessManagerT>();
+
+  auto p1 = std::make_shared<PublisherT>();
+  auto p1_id = ipm->add_publisher(p1);
+  p1->set_intra_process_manager(p1_id, ipm);
+
+  auto s1 = std::make_shared<SubscriptionIntraProcessT>();
+  s1->take_shared_method = true;
+  auto s1_id = ipm->add_subscription(s1);
+
+  auto s2 = std::make_shared<SubscriptionIntraProcessT>();
+  s2->take_shared_method = false;
+  auto s2_id = ipm->add_subscription(s2);
+
+  auto unique_msg = std::make_unique<MessageT>();
+  auto original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
+  auto received_message_pointer_1 = s1->pop();
+  auto received_message_pointer_2 = s2->pop();
+  ASSERT_NE(original_message_pointer, received_message_pointer_1);
+  ASSERT_EQ(original_message_pointer, received_message_pointer_2);
+
+  ipm->remove_subscription(s1_id);
+  ipm->remove_subscription(s2_id);
+
+  auto s3 = std::make_shared<SubscriptionIntraProcessT>();
+  s3->take_shared_method = false;
+  auto s3_id = ipm->add_subscription(s3);
+
+  auto s4 = std::make_shared<SubscriptionIntraProcessT>();
+  s4->take_shared_method = false;
+  auto s4_id = ipm->add_subscription(s4);
+
+  auto s5 = std::make_shared<SubscriptionIntraProcessT>();
+  s5->take_shared_method = true;
+  auto s5_id = ipm->add_subscription(s5);
+
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
+  auto received_message_pointer_3 = s3->pop();
+  auto received_message_pointer_4 = s4->pop();
+  auto received_message_pointer_5 = s5->pop();
+  bool received_original_3 = received_message_pointer_3 == original_message_pointer;
+  bool received_original_4 = received_message_pointer_4 == original_message_pointer;
+  bool received_original_5 = received_message_pointer_5 == original_message_pointer;
+  std::vector<bool> received_original_vec =
+  {received_original_3, received_original_4, received_original_5};
+  ASSERT_THAT(received_original_vec, UnorderedElementsAre(true, false, false));
+  ASSERT_NE(received_message_pointer_3, received_message_pointer_4);
+  ASSERT_NE(received_message_pointer_5, received_message_pointer_3);
+  ASSERT_NE(received_message_pointer_5, received_message_pointer_4);
+
+  ipm->remove_subscription(s3_id);
+  ipm->remove_subscription(s4_id);
+  ipm->remove_subscription(s5_id);
+
+  auto s6 = std::make_shared<SubscriptionIntraProcessT>();
+  s6->take_shared_method = true;
+  auto s6_id = ipm->add_subscription(s6);
+
+  auto s7 = std::make_shared<SubscriptionIntraProcessT>();
+  s7->take_shared_method = true;
+  auto s7_id = ipm->add_subscription(s7);
+
+  auto s8 = std::make_shared<SubscriptionIntraProcessT>();
+  s8->take_shared_method = false;
+  auto s8_id = ipm->add_subscription(s8);
+
+  auto s9 = std::make_shared<SubscriptionIntraProcessT>();
+  s9->take_shared_method = false;
+  auto s9_id = ipm->add_subscription(s9);
+
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
+  auto received_message_pointer_6 = s6->pop();
+  auto received_message_pointer_7 = s7->pop();
+  auto received_message_pointer_8 = s8->pop();
+  auto received_message_pointer_9 = s9->pop();
+  bool received_original_8 = received_message_pointer_8 == original_message_pointer;
+  bool received_original_9 = received_message_pointer_9 == original_message_pointer;
+  received_original_vec = {received_original_8, received_original_9};
+  ASSERT_EQ(received_message_pointer_6, received_message_pointer_7);
+  ASSERT_NE(original_message_pointer, received_message_pointer_6);
+  ASSERT_NE(original_message_pointer, received_message_pointer_7);
+  ASSERT_THAT(received_original_vec, UnorderedElementsAre(true, false));
+  ASSERT_NE(received_message_pointer_8, received_message_pointer_6);
+  ASSERT_NE(received_message_pointer_9, received_message_pointer_6);
+
+  ipm->remove_subscription(s6_id);
+  ipm->remove_subscription(s7_id);
+  ipm->remove_subscription(s8_id);
+  ipm->remove_subscription(s9_id);
+
+  auto s10 = std::make_shared<SubscriptionIntraProcessT>();
+  s10->take_shared_method = false;
+  auto s10_id = ipm->add_subscription(s10);
+  (void)s10_id;
+
+  auto s11 = std::make_shared<SubscriptionIntraProcessT>();
+  s11->take_shared_method = true;
+  auto s11_id = ipm->add_subscription(s11);
+  (void)s11_id;
+
+  auto shared_msg = std::make_shared<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
+  p1->publish(shared_msg);
+  auto received_message_pointer_10 = s10->pop();
+  auto received_message_pointer_11 = s11->pop();
+  ASSERT_NE(original_message_pointer, received_message_pointer_10);
+  ASSERT_EQ(original_message_pointer, received_message_pointer_11);
 }

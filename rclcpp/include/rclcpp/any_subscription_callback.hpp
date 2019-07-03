@@ -219,7 +219,7 @@ public:
     }
   }
 
-  bool use_take_shared_method()
+  bool use_take_shared_method() const
   {
     return const_shared_ptr_callback_ || const_shared_ptr_with_info_callback_;
   }

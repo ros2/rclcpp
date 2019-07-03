@@ -58,10 +58,6 @@ SubscriptionBase::SubscriptionBase(
     new rcl_subscription_t, custom_deletor);
   *subscription_handle_.get() = rcl_get_zero_initialized_subscription();
 
-  intra_process_subscription_handle_ = std::shared_ptr<rcl_subscription_t>(
-    new rcl_subscription_t, custom_deletor);
-  *intra_process_subscription_handle_.get() = rcl_get_zero_initialized_subscription();
-
   rcl_ret_t ret = rcl_subscription_init(
     subscription_handle_.get(),
     node_handle_.get(),
@@ -117,12 +113,6 @@ SubscriptionBase::get_subscription_handle() const
   return subscription_handle_;
 }
 
-const std::shared_ptr<rcl_subscription_t>
-SubscriptionBase::get_intra_process_subscription_handle() const
-{
-  return intra_process_subscription_handle_;
-}
-
 const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
 SubscriptionBase::get_event_handlers() const
 {
@@ -172,31 +162,30 @@ SubscriptionBase::get_publisher_count() const
 void
 SubscriptionBase::setup_intra_process(
   uint64_t intra_process_subscription_id,
-  IntraProcessManagerWeakPtr weak_ipm,
-  const rcl_subscription_options_t & intra_process_options)
+  IntraProcessManagerWeakPtr weak_ipm)
 {
-  std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";
-  rcl_ret_t ret = rcl_subscription_init(
-    intra_process_subscription_handle_.get(),
-    node_handle_.get(),
-    rclcpp::type_support::get_intra_process_message_msg_type_support(),
-    intra_process_topic_name.c_str(),
-    &intra_process_options);
-  if (ret != RCL_RET_OK) {
-    if (ret == RCL_RET_TOPIC_NAME_INVALID) {
-      auto rcl_node_handle = node_handle_.get();
-      // this will throw on any validation problem
-      rcl_reset_error();
-      expand_topic_or_service_name(
-        intra_process_topic_name,
-        rcl_node_get_name(rcl_node_handle),
-        rcl_node_get_namespace(rcl_node_handle));
-    }
-
-    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create intra process subscription");
-  }
-
   intra_process_subscription_id_ = intra_process_subscription_id;
   weak_ipm_ = weak_ipm;
   use_intra_process_ = true;
+}
+
+uint64_t
+SubscriptionBase::get_intra_process_id() const
+{
+  return intra_process_subscription_id_;
+}
+
+bool
+SubscriptionBase::matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const
+{
+  if (!use_intra_process_) {
+    return false;
+  }
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    throw std::runtime_error(
+            "intra process publisher check called "
+            "after destruction of intra process manager");
+  }
+  return ipm->matches_any_publishers(sender_gid);
 }
