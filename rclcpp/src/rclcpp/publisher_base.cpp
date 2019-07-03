@@ -84,14 +84,6 @@ PublisherBase::~PublisherBase()
   // must fini the events before fini-ing the publisher
   event_handlers_.clear();
 
-  if (rcl_publisher_fini(&intra_process_publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Error in destruction of intra process rcl publisher handle: %s",
-      rcl_get_error_string().str);
-    rcl_reset_error();
-  }
-
   if (rcl_publisher_fini(&publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
@@ -137,12 +129,6 @@ const rmw_gid_t &
 PublisherBase::get_gid() const
 {
   return rmw_gid_;
-}
-
-const rmw_gid_t &
-PublisherBase::get_intra_process_gid() const
-{
-  return intra_process_rmw_gid_;
 }
 
 rcl_publisher_t *
@@ -246,81 +232,15 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
     rmw_reset_error();
     throw std::runtime_error(msg);
   }
-  if (!result) {
-    ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
-    if (ret != RMW_RET_OK) {
-      auto msg = std::string("failed to compare gids: ") + rmw_get_error_string().str;
-      rmw_reset_error();
-      throw std::runtime_error(msg);
-    }
-  }
   return result;
-}
-
-rclcpp::mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-PublisherBase::make_mapped_ring_buffer(size_t size) const
-{
-  (void)size;
-  return nullptr;
 }
 
 void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
-  IntraProcessManagerSharedPtr ipm,
-  const rcl_publisher_options_t & intra_process_options)
+  IntraProcessManagerSharedPtr ipm)
 {
-  // Intraprocess configuration is not allowed with "durability" qos policy non "volatile".
-  auto actual_durability = this->get_actual_qos().get_rmw_qos_profile().durability;
-  if (actual_durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
-    throw std::invalid_argument(
-            "intraprocess communication is not allowed with durability qos policy non-volatile");
-  }
-  const char * topic_name = this->get_topic_name();
-  if (!topic_name) {
-    throw std::runtime_error("failed to get topic name");
-  }
-
-  auto intra_process_topic_name = std::string(topic_name) + "/_intra";
-
-  rcl_ret_t ret = rcl_publisher_init(
-    &intra_process_publisher_handle_,
-    rcl_node_handle_.get(),
-    rclcpp::type_support::get_intra_process_message_msg_type_support(),
-    intra_process_topic_name.c_str(),
-    &intra_process_options);
-  if (ret != RCL_RET_OK) {
-    if (ret == RCL_RET_TOPIC_NAME_INVALID) {
-      auto rcl_node_handle = rcl_node_handle_.get();
-      // this will throw on any validation problem
-      rcl_reset_error();
-      expand_topic_or_service_name(
-        intra_process_topic_name,
-        rcl_node_get_name(rcl_node_handle),
-        rcl_node_get_namespace(rcl_node_handle));
-    }
-
-    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create intra process publisher");
-  }
-
   intra_process_publisher_id_ = intra_process_publisher_id;
   weak_ipm_ = ipm;
   intra_process_is_enabled_ = true;
-
-  // Life time of this object is tied to the publisher handle.
-  rmw_publisher_t * publisher_rmw_handle = rcl_publisher_get_rmw_handle(
-    &intra_process_publisher_handle_);
-  if (publisher_rmw_handle == nullptr) {
-    auto msg = std::string("Failed to get rmw publisher handle") + rcl_get_error_string().str;
-    rcl_reset_error();
-    throw std::runtime_error(msg);
-  }
-  auto rmw_ret = rmw_get_gid_for_publisher(
-    publisher_rmw_handle, &intra_process_rmw_gid_);
-  if (rmw_ret != RMW_RET_OK) {
-    auto msg =
-      std::string("failed to create intra process publisher gid: ") + rmw_get_error_string().str;
-    rmw_reset_error();
-    throw std::runtime_error(msg);
-  }
 }

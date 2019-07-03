@@ -21,8 +21,6 @@
 
 #include "rcl/subscription.h"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 #include "rmw/rmw.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
@@ -88,10 +86,6 @@ public:
   RCLCPP_PUBLIC
   const std::shared_ptr<rcl_subscription_t>
   get_subscription_handle() const;
-
-  RCLCPP_PUBLIC
-  virtual const std::shared_ptr<rcl_subscription_t>
-  get_intra_process_subscription_handle() const;
 
   /// Get all the QoS event handlers associated with this subscription.
   /** \return The vector of QoS event handlers. */
@@ -159,13 +153,6 @@ public:
   return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  handle_intra_process_message(
-    rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info) = 0;
-
-  RCLCPP_PUBLIC
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
@@ -198,8 +185,11 @@ public:
   void
   setup_intra_process(
     uint64_t intra_process_subscription_id,
-    IntraProcessManagerWeakPtr weak_ipm,
-    const rcl_subscription_options_t & intra_process_options);
+    IntraProcessManagerWeakPtr weak_ipm);
+
+  RCLCPP_PUBLIC
+  uint64_t
+  get_intra_process_id() const;
 
 protected:
   template<typename EventCallbackT>
@@ -215,6 +205,10 @@ protected:
       event_type);
     event_handlers_.emplace_back(handler);
   }
+
+  RCLCPP_PUBLIC
+  bool
+  matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const;
 
   std::shared_ptr<rcl_node_t> node_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
