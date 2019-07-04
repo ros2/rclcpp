@@ -425,7 +425,7 @@ public:
       auto callback = it->second;
       try {
         cb_success = callback(State(previous_state));
-      } catch (const std::exception &) {
+      } catch (const std::exception & e) {
         // TODO(karsten1987): Windows CI doesn't let me print the msg here
         // the todo is to forward the exception to the on_error callback
         RCUTILS_LOG_ERROR("Caught exception in callback for transition %d\n", it->first);
