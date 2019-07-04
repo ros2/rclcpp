@@ -429,7 +429,7 @@ public:
         // TODO(karsten1987): Windows CI doesn't let me print the msg here
         // the todo is to forward the exception to the on_error callback
         RCUTILS_LOG_ERROR("Caught exception in callback for transition %d\n", it->first);
-        // RCUTILS_LOG_ERROR("Original error msg: %s\n", e.what());
+        RCUTILS_LOG_ERROR("Original error msg: %s\n", e.what());
         // maybe directly go for error handling here
         // and pass exception along with it
         cb_success = node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
