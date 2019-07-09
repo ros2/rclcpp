@@ -219,6 +219,13 @@ class ParameterImmutableException : public std::runtime_error
   using std::runtime_error::runtime_error;
 };
 
+/// Thrown if parameter is modified while in a set callback.
+class ParameterModifiedInCallbackException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
 }  // namespace exceptions
 }  // namespace rclcpp
 

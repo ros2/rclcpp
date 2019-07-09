@@ -151,6 +151,11 @@ private:
 
   mutable std::recursive_mutex mutex_;
 
+  // There are times when we don't want to allow modifications to parameters
+  // (particularly when a set_parameter callback tries to call set_parameter,
+  // declare_parameter, etc).  In those cases, this will be set to false.
+  bool parameter_modification_enabled_{true};
+
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
   std::map<std::string, ParameterInfo> parameters_;

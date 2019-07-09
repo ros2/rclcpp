@@ -376,6 +376,11 @@ NodeParameters::declare_parameter(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
+  if (!parameter_modification_enabled_) {
+    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+            "cannot declare a parameter from within set callback");
+  }
+
   // TODO(sloretz) parameter name validation
   if (name.empty()) {
     throw rclcpp::exceptions::InvalidParametersException("parameter name must not be empty");
@@ -388,6 +393,8 @@ NodeParameters::declare_parameter(
   }
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
+  parameter_modification_enabled_ = false;
+  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
   auto result = __declare_parameter_common(
     name,
     default_value,
@@ -397,6 +404,7 @@ NodeParameters::declare_parameter(
     on_parameters_set_callback_,
     &parameter_event,
     ignore_override);
+  parameter_modification_enabled_ = true;
 
   // If it failed to be set, then throw an exception.
   if (!result.successful) {
@@ -416,6 +424,11 @@ void
 NodeParameters::undeclare_parameter(const std::string & name)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if (!parameter_modification_enabled_) {
+    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+            "cannot declare a parameter from within set callback");
+  }
 
   auto parameter_info = parameters_.find(name);
   if (parameter_info == parameters_.end()) {
@@ -470,6 +483,11 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
+  if (!parameter_modification_enabled_) {
+    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+            "cannot modify a parameter from within set callback");
+  }
+
   rcl_interfaces::msg::SetParametersResult result;
 
   // Check if any of the parameters are read-only, or if any parameters are not
@@ -518,6 +536,11 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   rcl_interfaces::msg::ParameterEvent parameter_event_msg;
   parameter_event_msg.node = combined_name_;
   for (auto parameter_to_be_declared : parameters_to_be_declared) {
+    // Since the callback is explicitly nullptr in __declare_parameter_common,
+    // this isn't strictly needed.  We do it anyway because it is cheap and in
+    // case the implementation changes in the future.
+    parameter_modification_enabled_ = false;
+
     // This should not throw, because we validated the name and checked that
     // the parameter was not already declared.
     result = __declare_parameter_common(
@@ -529,6 +552,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       nullptr,  // callback is explicitly null, so that it is called only once, when setting below.
       &parameter_event_msg,
       true);
+    parameter_modification_enabled_ = true;
+
     if (!result.successful) {
       // Declare failed, return knowing that nothing was changed because the
       // staged changes were not applied.
@@ -575,7 +600,9 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     }
   }
 
-  // Set the all of the parameters including the ones declared implicitly above.
+  // Set all of the parameters including the ones declared implicitly above.
+  parameter_modification_enabled_ = false;
+  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
   result = __set_parameters_atomically_common(
     // either the original parameters given by the user, or ones updated with initial values
     *parameters_to_be_set,
@@ -583,6 +610,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     parameters_,
     // this will get called once, with all the parameters to be set
     on_parameters_set_callback_);
+  parameter_modification_enabled_ = true;
 
   // If not successful, then stop here.
   if (!result.successful) {
@@ -817,6 +845,13 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
 NodeParameters::OnParametersSetCallbackType
 NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callback)
 {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if (!parameter_modification_enabled_) {
+    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+            "cannot modify a parameter from within set callback");
+  }
+
   auto existing_callback = on_parameters_set_callback_;
   on_parameters_set_callback_ = callback;
   return existing_callback;
@@ -832,6 +867,13 @@ NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callb
 void
 NodeParameters::register_param_change_callback(ParametersCallbackFunction callback)
 {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if (!parameter_modification_enabled_) {
+    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+            "cannot modify a parameter from within set callback");
+  }
+
   if (on_parameters_set_callback_) {
     RCLCPP_WARN(
       node_logging_->get_logger(),
