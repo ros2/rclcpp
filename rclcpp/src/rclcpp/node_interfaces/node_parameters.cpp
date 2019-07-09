@@ -374,7 +374,7 @@ NodeParameters::declare_parameter(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   // TODO(sloretz) parameter name validation
   if (name.empty()) {
@@ -415,7 +415,7 @@ NodeParameters::declare_parameter(
 void
 NodeParameters::undeclare_parameter(const std::string & name)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   auto parameter_info = parameters_.find(name);
   if (parameter_info == parameters_.end()) {
@@ -434,7 +434,7 @@ NodeParameters::undeclare_parameter(const std::string & name)
 bool
 NodeParameters::has_parameter(const std::string & name) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   return __lockless_has_parameter(parameters_, name);
 }
@@ -468,7 +468,7 @@ __find_parameter_by_name(
 rcl_interfaces::msg::SetParametersResult
 NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters)
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   rcl_interfaces::msg::SetParametersResult result;
 
@@ -644,7 +644,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 std::vector<rclcpp::Parameter>
 NodeParameters::get_parameters(const std::vector<std::string> & names) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<rclcpp::Parameter> results;
   results.reserve(names.size());
 
@@ -683,7 +683,7 @@ NodeParameters::get_parameter(
   const std::string & name,
   rclcpp::Parameter & parameter) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   auto param_iter = parameters_.find(name);
   if (
@@ -702,7 +702,7 @@ NodeParameters::get_parameters_by_prefix(
   const std::string & prefix,
   std::map<std::string, rclcpp::Parameter> & parameters) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   std::string prefix_with_dot = prefix.empty() ? prefix : prefix + ".";
   bool ret = false;
@@ -721,7 +721,7 @@ NodeParameters::get_parameters_by_prefix(
 std::vector<rcl_interfaces::msg::ParameterDescriptor>
 NodeParameters::describe_parameters(const std::vector<std::string> & names) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<rcl_interfaces::msg::ParameterDescriptor> results;
   results.reserve(names.size());
 
@@ -749,7 +749,7 @@ NodeParameters::describe_parameters(const std::vector<std::string> & names) cons
 std::vector<uint8_t>
 NodeParameters::get_parameter_types(const std::vector<std::string> & names) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::vector<uint8_t> results;
   results.reserve(names.size());
 
@@ -775,7 +775,7 @@ NodeParameters::get_parameter_types(const std::vector<std::string> & names) cons
 rcl_interfaces::msg::ListParametersResult
 NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const
 {
-  std::lock_guard<std::mutex> lock(mutex_);
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   rcl_interfaces::msg::ListParametersResult result;
 
   // TODO(mikaelarguedas) define parameter separator different from "/" to avoid ambiguity

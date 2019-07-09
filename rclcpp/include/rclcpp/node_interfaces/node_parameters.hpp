@@ -149,7 +149,7 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
-  mutable std::mutex mutex_;
+  mutable std::recursive_mutex mutex_;
 
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
