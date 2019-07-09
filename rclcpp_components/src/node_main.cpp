@@ -20,8 +20,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_components/node_factory.hpp"
 
-
-#define LINKTIME_COMPOSITION_LOGGER_NAME "node_main"
+#define NODE_MAIN_LOGGER_NAME "node_main"
 
 int main(int argc, char * argv[])
 {
@@ -29,7 +28,7 @@ int main(int argc, char * argv[])
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
 
   auto args = rclcpp::init_and_remove_ros_arguments(argc, argv);
-  rclcpp::Logger logger = rclcpp::get_logger(LINKTIME_COMPOSITION_LOGGER_NAME);
+  rclcpp::Logger logger = rclcpp::get_logger(NODE_MAIN_LOGGER_NAME);
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
   options.arguments(args);
@@ -42,11 +41,11 @@ int main(int argc, char * argv[])
     "",
   };
   for (auto library : libraries) {
-    RCLCPP_INFO(logger, "Load library %s", library.c_str());
+    RCLCPP_DEBUG(logger, "Load library %s", library.c_str());
     auto loader = new class_loader::ClassLoader(library);
     auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
     for (auto clazz : classes) {
-      RCLCPP_INFO(logger, "Instantiate class %s", clazz.c_str());
+      RCLCPP_DEBUG(logger, "Instantiate class %s", clazz.c_str());
       auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
       auto wrapper = node_factory->create_node_instance(options);
       auto node = wrapper.get_node_base_interface();

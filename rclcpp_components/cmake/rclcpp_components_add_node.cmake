@@ -24,15 +24,13 @@
 # :param sourceN: the list of source files for executable and shared library
 # :type sourceN: list of strings
 #
-function(rclcpp_components_add_node)
+function(rclcpp_components_add_node target)
   cmake_parse_arguments(
     ARGS
     "EXCLUDE_FROM_ALL"
     ""
     ""
     ${ARGN})
-  list(GET ARGS_UNPARSED_ARGUMENTS 0 target)
-  list(REMOVE_AT ARGS_UNPARSED_ARGUMENTS 0)
   set(sourceN ${ARGS_UNPARSED_ARGUMENTS})
   add_library(${target} SHARED ${sourceN})
   string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
@@ -41,6 +39,7 @@ function(rclcpp_components_add_node)
   add_executable(${target}_main ../../rclcpp/rclcpp_components/src/node_main.cpp)
   set_target_properties(${target}_main PROPERTIES OUTPUT_NAME ${target})
   set(lib ${target})
+  # Needed so symbols aren't dropped if not usesd
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(lib
       "-Wl,--no-as-needed"
