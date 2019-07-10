@@ -393,18 +393,20 @@ NodeParameters::declare_parameter(
   }
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
-  parameter_modification_enabled_ = false;
-  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
-  auto result = __declare_parameter_common(
-    name,
-    default_value,
-    parameter_descriptor,
-    parameters_,
-    parameter_overrides_,
-    on_parameters_set_callback_,
-    &parameter_event,
-    ignore_override);
-  parameter_modification_enabled_ = true;
+  rcl_interfaces::msg::SetParametersResult result;
+  {
+    parameter_modification_enabled_ = false;
+    RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
+    result = __declare_parameter_common(
+      name,
+      default_value,
+      parameter_descriptor,
+      parameters_,
+      parameter_overrides_,
+      on_parameters_set_callback_,
+      &parameter_event,
+      ignore_override);
+  }
 
   // If it failed to be set, then throw an exception.
   if (!result.successful) {
@@ -427,7 +429,7 @@ NodeParameters::undeclare_parameter(const std::string & name)
 
   if (!parameter_modification_enabled_) {
     throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot declare a parameter from within set callback");
+            "cannot undeclare a parameter from within set callback");
   }
 
   auto parameter_info = parameters_.find(name);
@@ -601,16 +603,17 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   }
 
   // Set all of the parameters including the ones declared implicitly above.
-  parameter_modification_enabled_ = false;
-  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
-  result = __set_parameters_atomically_common(
-    // either the original parameters given by the user, or ones updated with initial values
-    *parameters_to_be_set,
-    // they are actually set on the official parameter storage
-    parameters_,
-    // this will get called once, with all the parameters to be set
-    on_parameters_set_callback_);
-  parameter_modification_enabled_ = true;
+  {
+    parameter_modification_enabled_ = false;
+    RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
+    result = __set_parameters_atomically_common(
+      // either the original parameters given by the user, or ones updated with initial values
+      *parameters_to_be_set,
+      // they are actually set on the official parameter storage
+      parameters_,
+      // this will get called once, with all the parameters to be set
+      on_parameters_set_callback_);
+  }
 
   // If not successful, then stop here.
   if (!result.successful) {
@@ -849,7 +852,7 @@ NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callb
 
   if (!parameter_modification_enabled_) {
     throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot modify a parameter from within set callback");
+            "cannot register a new set callback within a set callback");
   }
 
   auto existing_callback = on_parameters_set_callback_;
@@ -871,7 +874,7 @@ NodeParameters::register_param_change_callback(ParametersCallbackFunction callba
 
   if (!parameter_modification_enabled_) {
     throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot modify a parameter from within set callback");
+            "cannot register a new set callback within a set callback");
   }
 
   if (on_parameters_set_callback_) {
