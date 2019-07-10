@@ -2153,7 +2153,7 @@ TEST_F(TestNode, get_parameter_types_undeclared_parameters_allowed) {
 TEST_F(TestNode, set_on_parameters_set_callback_get_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_set_callback_get_parameter_node"_unq);
 
-  int intval = node->declare_parameter("intparam", 42);
+  int64_t intval = node->declare_parameter("intparam", 42);
   EXPECT_EQ(intval, 42);
   double floatval = node->declare_parameter("floatparam", 5.4);
   EXPECT_EQ(floatval, 5.4);
@@ -2190,7 +2190,7 @@ TEST_F(TestNode, set_on_parameters_set_callback_get_parameter) {
 TEST_F(TestNode, set_on_parameters_set_callback_set_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_set_callback_set_parameter_node"_unq);
 
-  int intval = node->declare_parameter("intparam", 42);
+  int64_t intval = node->declare_parameter("intparam", 42);
   EXPECT_EQ(intval, 42);
   double floatval = node->declare_parameter("floatparam", 5.4);
   EXPECT_EQ(floatval, 5.4);
@@ -2224,7 +2224,7 @@ TEST_F(TestNode, set_on_parameters_set_callback_set_parameter) {
 TEST_F(TestNode, set_on_parameters_set_callback_declare_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_set_callback_declare_parameter_node"_unq);
 
-  int intval = node->declare_parameter("intparam", 42);
+  int64_t intval = node->declare_parameter("intparam", 42);
   EXPECT_EQ(intval, 42);
   double floatval = node->declare_parameter("floatparam", 5.4);
   EXPECT_EQ(floatval, 5.4);
@@ -2258,7 +2258,7 @@ TEST_F(TestNode, set_on_parameters_set_callback_declare_parameter) {
 TEST_F(TestNode, set_on_parameters_set_callback_undeclare_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_set_callback_undeclare_parameter_node"_unq);
 
-  int intval = node->declare_parameter("intparam", 42);
+  int64_t intval = node->declare_parameter("intparam", 42);
   EXPECT_EQ(intval, 42);
   double floatval = node->declare_parameter("floatparam", 5.4);
   EXPECT_EQ(floatval, 5.4);
@@ -2292,7 +2292,7 @@ TEST_F(TestNode, set_on_parameters_set_callback_undeclare_parameter) {
 TEST_F(TestNode, set_on_parameters_set_callback_set_on_parameters_set_callback) {
   auto node = std::make_shared<rclcpp::Node>("test_set_callback_set_callback_node"_unq);
 
-  int intval = node->declare_parameter("intparam", 42);
+  int64_t intval = node->declare_parameter("intparam", 42);
   EXPECT_EQ(intval, 42);
   double floatval = node->declare_parameter("floatparam", 5.4);
   EXPECT_EQ(floatval, 5.4);
