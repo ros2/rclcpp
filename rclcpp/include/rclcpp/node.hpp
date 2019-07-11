@@ -928,6 +928,14 @@ public:
    *
    * Some constraints like read_only are enforced before the callback is called.
    *
+   * The callback may introspect other already set parameters (by calling any
+   * of the {get,list,describe}_parameter() methods), but may *not* modify
+   * other parameters (by calling any of the {set,declare}_parameter() methods)
+   * or modify the registered callback itself (by calling the
+   * set_on_parameters_set_callback() method).  If a callback tries to do any
+   * of the latter things,
+   * rclcpp::exceptions::ParameterModifiedInCallbackException will be thrown.
+   *
    * There may only be one callback set at a time, so the previously set
    * callback is returned when this method is used, or nullptr will be returned
    * if no callback was previously set.

@@ -376,13 +376,7 @@ NodeParameters::declare_parameter(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (!parameter_modification_enabled_) {
-    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot declare a parameter from within set callback");
-  }
-
-  parameter_modification_enabled_ = false;
-  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   // TODO(sloretz) parameter name validation
   if (name.empty()) {
@@ -425,13 +419,7 @@ NodeParameters::undeclare_parameter(const std::string & name)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (!parameter_modification_enabled_) {
-    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot undeclare a parameter from within set callback");
-  }
-
-  parameter_modification_enabled_ = false;
-  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   auto parameter_info = parameters_.find(name);
   if (parameter_info == parameters_.end()) {
@@ -486,13 +474,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (!parameter_modification_enabled_) {
-    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot modify a parameter from within set callback");
-  }
-
-  parameter_modification_enabled_ = false;
-  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   rcl_interfaces::msg::SetParametersResult result;
 
@@ -843,13 +825,7 @@ NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callb
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (!parameter_modification_enabled_) {
-    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot register a new set callback within a set callback");
-  }
-
-  parameter_modification_enabled_ = false;
-  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   auto existing_callback = on_parameters_set_callback_;
   on_parameters_set_callback_ = callback;
@@ -868,13 +844,7 @@ NodeParameters::register_param_change_callback(ParametersCallbackFunction callba
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
-  if (!parameter_modification_enabled_) {
-    throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-            "cannot register a new set callback within a set callback");
-  }
-
-  parameter_modification_enabled_ = false;
-  RCLCPP_SCOPE_EXIT({parameter_modification_enabled_ = true;});
+  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   if (on_parameters_set_callback_) {
     RCLCPP_WARN(

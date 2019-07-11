@@ -50,6 +50,30 @@ struct ParameterInfo
   rcl_interfaces::msg::ParameterDescriptor descriptor;
 };
 
+// Internal RAII-style guard for mutation recursion
+class ParameterMutationRecursionGuard
+{
+public:
+  explicit ParameterMutationRecursionGuard(bool & allow_mod)
+  : allow_modification_(allow_mod)
+  {
+    if (!allow_modification_) {
+      throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+              "cannot set or declare a parameter, or change the callback from within set callback");
+    }
+
+    allow_modification_ = false;
+  }
+
+  ~ParameterMutationRecursionGuard()
+  {
+    allow_modification_ = true;
+  }
+
+private:
+  bool & allow_modification_;
+};
+
 /// Implementation of the NodeParameters part of the Node API.
 class NodeParameters : public NodeParametersInterface
 {
