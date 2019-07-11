@@ -2148,3 +2148,183 @@ TEST_F(TestNode, get_parameter_types_undeclared_parameters_allowed) {
     EXPECT_EQ(results[2], rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET);
   }
 }
+
+// test that it is possible to call get_parameter within the set_callback
+TEST_F(TestNode, set_on_parameters_set_callback_get_parameter) {
+  auto node = std::make_shared<rclcpp::Node>("test_set_callback_get_parameter_node"_unq);
+
+  int64_t intval = node->declare_parameter("intparam", 42);
+  EXPECT_EQ(intval, 42);
+  double floatval = node->declare_parameter("floatparam", 5.4);
+  EXPECT_EQ(floatval, 5.4);
+
+  double floatout;
+  RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
+  auto on_set_parameters =
+    [&node, &floatout](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      if (parameters.size() != 1) {
+        result.successful = false;
+      }
+
+      if (parameters[0].get_value<int>() != 40) {
+        result.successful = false;
+      }
+
+      rclcpp::Parameter floatparam = node->get_parameter("floatparam");
+      if (floatparam.get_value<double>() != 5.4) {
+        result.successful = false;
+      }
+      floatout = floatparam.get_value<double>();
+
+      return result;
+    };
+
+  EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+  ASSERT_NO_THROW(node->set_parameter({"intparam", 40}));
+  ASSERT_EQ(floatout, 5.4);
+}
+
+// test that calling set_parameter inside of a set_callback throws an exception
+TEST_F(TestNode, set_on_parameters_set_callback_set_parameter) {
+  auto node = std::make_shared<rclcpp::Node>("test_set_callback_set_parameter_node"_unq);
+
+  int64_t intval = node->declare_parameter("intparam", 42);
+  EXPECT_EQ(intval, 42);
+  double floatval = node->declare_parameter("floatparam", 5.4);
+  EXPECT_EQ(floatval, 5.4);
+
+  RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
+  auto on_set_parameters =
+    [&node](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      if (parameters.size() != 1) {
+        result.successful = false;
+      }
+
+      if (parameters[0].get_value<int>() != 40) {
+        result.successful = false;
+      }
+
+      // This should throw an exception
+      node->set_parameter({"floatparam", 5.6});
+
+      return result;
+    };
+
+  EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+  EXPECT_THROW({
+    node->set_parameter(rclcpp::Parameter("intparam", 40));
+  }, rclcpp::exceptions::ParameterModifiedInCallbackException);
+}
+
+// test that calling declare_parameter inside of a set_callback throws an exception
+TEST_F(TestNode, set_on_parameters_set_callback_declare_parameter) {
+  auto node = std::make_shared<rclcpp::Node>("test_set_callback_declare_parameter_node"_unq);
+
+  int64_t intval = node->declare_parameter("intparam", 42);
+  EXPECT_EQ(intval, 42);
+  double floatval = node->declare_parameter("floatparam", 5.4);
+  EXPECT_EQ(floatval, 5.4);
+
+  RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
+  auto on_set_parameters =
+    [&node](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      if (parameters.size() != 1) {
+        result.successful = false;
+      }
+
+      if (parameters[0].get_value<int>() != 40) {
+        result.successful = false;
+      }
+
+      // This should throw an exception
+      node->declare_parameter("floatparam2", 5.6);
+
+      return result;
+    };
+
+  EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+  EXPECT_THROW({
+    node->set_parameter(rclcpp::Parameter("intparam", 40));
+  }, rclcpp::exceptions::ParameterModifiedInCallbackException);
+}
+
+// test that calling undeclare_parameter inside a set_callback throws an exception
+TEST_F(TestNode, set_on_parameters_set_callback_undeclare_parameter) {
+  auto node = std::make_shared<rclcpp::Node>("test_set_callback_undeclare_parameter_node"_unq);
+
+  int64_t intval = node->declare_parameter("intparam", 42);
+  EXPECT_EQ(intval, 42);
+  double floatval = node->declare_parameter("floatparam", 5.4);
+  EXPECT_EQ(floatval, 5.4);
+
+  RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
+  auto on_set_parameters =
+    [&node](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      if (parameters.size() != 1) {
+        result.successful = false;
+      }
+
+      if (parameters[0].get_value<int>() != 40) {
+        result.successful = false;
+      }
+
+      // This should throw an exception
+      node->undeclare_parameter("floatparam");
+
+      return result;
+    };
+
+  EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+  EXPECT_THROW({
+    node->set_parameter(rclcpp::Parameter("intparam", 40));
+  }, rclcpp::exceptions::ParameterModifiedInCallbackException);
+}
+
+// test that calling set_on_parameters_set_callback from a set_callback throws an exception
+TEST_F(TestNode, set_on_parameters_set_callback_set_on_parameters_set_callback) {
+  auto node = std::make_shared<rclcpp::Node>("test_set_callback_set_callback_node"_unq);
+
+  int64_t intval = node->declare_parameter("intparam", 42);
+  EXPECT_EQ(intval, 42);
+  double floatval = node->declare_parameter("floatparam", 5.4);
+  EXPECT_EQ(floatval, 5.4);
+
+  RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
+  auto on_set_parameters =
+    [&node](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      if (parameters.size() != 1) {
+        result.successful = false;
+      }
+
+      if (parameters[0].get_value<int>() != 40) {
+        result.successful = false;
+      }
+
+      auto bad_parameters =
+        [](const std::vector<rclcpp::Parameter> & parameters) {
+          (void)parameters;
+          rcl_interfaces::msg::SetParametersResult result;
+          return result;
+        };
+
+      // This should throw an exception
+      node->set_on_parameters_set_callback(bad_parameters);
+
+      return result;
+    };
+
+  EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+  EXPECT_THROW({
+    node->set_parameter(rclcpp::Parameter("intparam", 40));
+  }, rclcpp::exceptions::ParameterModifiedInCallbackException);
+}

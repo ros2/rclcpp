@@ -50,6 +50,30 @@ struct ParameterInfo
   rcl_interfaces::msg::ParameterDescriptor descriptor;
 };
 
+// Internal RAII-style guard for mutation recursion
+class ParameterMutationRecursionGuard
+{
+public:
+  explicit ParameterMutationRecursionGuard(bool & allow_mod)
+  : allow_modification_(allow_mod)
+  {
+    if (!allow_modification_) {
+      throw rclcpp::exceptions::ParameterModifiedInCallbackException(
+              "cannot set or declare a parameter, or change the callback from within set callback");
+    }
+
+    allow_modification_ = false;
+  }
+
+  ~ParameterMutationRecursionGuard()
+  {
+    allow_modification_ = true;
+  }
+
+private:
+  bool & allow_modification_;
+};
+
 /// Implementation of the NodeParameters part of the Node API.
 class NodeParameters : public NodeParametersInterface
 {
@@ -149,7 +173,12 @@ public:
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
-  mutable std::mutex mutex_;
+  mutable std::recursive_mutex mutex_;
+
+  // There are times when we don't want to allow modifications to parameters
+  // (particularly when a set_parameter callback tries to call set_parameter,
+  // declare_parameter, etc).  In those cases, this will be set to false.
+  bool parameter_modification_enabled_{true};
 
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
