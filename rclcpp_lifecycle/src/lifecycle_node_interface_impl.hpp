@@ -426,12 +426,8 @@ public:
       try {
         cb_success = callback(State(previous_state));
       } catch (const std::exception & e) {
-        // TODO(karsten1987): Windows CI doesn't let me print the msg here
-        // the todo is to forward the exception to the on_error callback
         RCUTILS_LOG_ERROR("Caught exception in callback for transition %d", it->first);
-        RCUTILS_LOG_ERROR("Original error msg: %s", e.what());
-        // maybe directly go for error handling here
-        // and pass exception along with it
+        RCUTILS_LOG_ERROR("Original error: %s", e.what());
         cb_success = node_interfaces::LifecycleNodeInterface::CallbackReturn::ERROR;
       }
     }
