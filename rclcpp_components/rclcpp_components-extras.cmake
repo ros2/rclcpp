@@ -27,3 +27,4 @@ endmacro()
 
 include("${rclcpp_components_DIR}/rclcpp_components_register_nodes.cmake")
 include("${rclcpp_components_DIR}/rclcpp_components_add_node.cmake")
+include("${rclcpp_components_DIR}/rclcpp_components_add_multiple_nodes.cmake")

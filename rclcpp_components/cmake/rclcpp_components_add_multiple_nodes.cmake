@@ -24,16 +24,16 @@
 # :param sourceN: the list of source files for executable and shared library
 # :type sourceN: list of strings
 #
-function(rclcpp_components_add_node)
+function(rclcpp_components_add_multiple_nodes)
   cmake_parse_arguments(
     ARGS
     "EXCLUDE_FROM_ALL"
-    "LIB_NAME;EXEC_NAME"
-    ""
+    "LIB_NAME"
+    "NODE_NAMES;SOURCES"
     ${ARGN})
   
-  set(sourceN ${ARGS_UNPARSED_ARGUMENTS})
-  set(executable_name ${ARGS_EXEC_NAME})
+  set(nodes ${ARGS_NODE_NAMES})
+  set(sourceN ${ARGS_SOURCES})  
   set(libraryN ${ARGS_LIB_NAME})
 
   add_library(${libraryN} SHARED ${sourceN})
@@ -41,23 +41,10 @@ function(rclcpp_components_add_node)
   target_compile_definitions(${libraryN} PRIVATE "${PROJECT_NAME_UPPER}_BUILDING_DLL")
   set_target_properties(${libraryN} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
 
-  add_executable(${executable_name} ../../rclcpp/rclcpp_components/src/node_main.cpp)
-  set(lib ${libraryN})
-  # Needed so symbols aren't dropped if not usesd
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(lib
-      "-Wl,--no-as-needed"
-      ${libraryN}
-      "-Wl,--as-needed")
-  endif()
-  target_link_libraries(${executable_name}
-    ${lib})
-  ament_target_dependencies(${executable_name}
-    "rclcpp"
-    "class_loader"
-    "rclcpp_components")
-  install(TARGETS
-    ${executable_name}
-    DESTINATION lib/${PROJECT_NAME})
+  # loop thru excecutables here and change lib name beforehand
+
+
+
+  # ALL executable stuff below
 
 endfunction()

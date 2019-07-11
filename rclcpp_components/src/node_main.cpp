@@ -41,11 +41,11 @@ int main(int argc, char * argv[])
     "",
   };
   for (auto library : libraries) {
-    RCLCPP_DEBUG(logger, "Load library %s", library.c_str());
+    RCLCPP_DEBUG(logger, "Loading stuff in here %s", library.c_str());
     auto loader = new class_loader::ClassLoader(library);
     auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
     for (auto clazz : classes) {
-      RCLCPP_DEBUG(logger, "Instantiate class %s", clazz.c_str());
+      RCLCPP_DEBUG(logger, "Instantiate stuff in here %s", clazz.c_str());
       auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
       auto wrapper = node_factory->create_node_instance(options);
       auto node = wrapper.get_node_base_interface();
