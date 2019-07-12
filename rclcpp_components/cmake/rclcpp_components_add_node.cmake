@@ -24,30 +24,27 @@
 # :param sourceN: the list of source files for executable and shared library
 # :type sourceN: list of strings
 #
-function(rclcpp_components_add_node)
+function(rclcpp_components_add_node target)
   cmake_parse_arguments(
     ARGS
     "EXCLUDE_FROM_ALL"
-    "LIB_NAME;EXEC_NAME"
+    ""
     ""
     ${ARGN})
-  
+  list(GET ARGS_UNPARSED_ARGUMENTS 0 executable_name)
+  list(REMOVE_AT ARGS_UNPARSED_ARGUMENTS 0)
   set(sourceN ${ARGS_UNPARSED_ARGUMENTS})
-  set(executable_name ${ARGS_EXEC_NAME})
-  set(libraryN ${ARGS_LIB_NAME})
-
-  add_library(${libraryN} SHARED ${sourceN})
+  add_library(${target} SHARED ${sourceN})
   string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
-  target_compile_definitions(${libraryN} PRIVATE "${PROJECT_NAME_UPPER}_BUILDING_DLL")
-  set_target_properties(${libraryN} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
-
+  target_compile_definitions(${target} PRIVATE "${PROJECT_NAME_UPPER}_BUILDING_DLL")
+  set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
   add_executable(${executable_name} ../../rclcpp/rclcpp_components/src/node_main.cpp)
-  set(lib ${libraryN})
+  set(lib ${target})
   # Needed so symbols aren't dropped if not usesd
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(lib
       "-Wl,--no-as-needed"
-      ${libraryN}
+      ${target}
       "-Wl,--as-needed")
   endif()
   target_link_libraries(${executable_name}
@@ -59,5 +56,4 @@ function(rclcpp_components_add_node)
   install(TARGETS
     ${executable_name}
     DESTINATION lib/${PROJECT_NAME})
-
 endfunction()

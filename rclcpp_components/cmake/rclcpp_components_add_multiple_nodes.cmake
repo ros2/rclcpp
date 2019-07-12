@@ -24,27 +24,16 @@
 # :param sourceN: the list of source files for executable and shared library
 # :type sourceN: list of strings
 #
-function(rclcpp_components_add_multiple_nodes)
+function(rclcpp_components_add_multiple_nodes target)
   cmake_parse_arguments(
     ARGS
     "EXCLUDE_FROM_ALL"
-    "LIB_NAME"
-    "NODE_NAMES;SOURCES"
+    ""
+    ""
     ${ARGN})
-  
-  set(nodes ${ARGS_NODE_NAMES})
-  set(sourceN ${ARGS_SOURCES})  
-  set(libraryN ${ARGS_LIB_NAME})
-
-  add_library(${libraryN} SHARED ${sourceN})
+  set(sourceN ${ARGS_UNPARSED_ARGUMENTS})
+  add_library(${target} SHARED ${sourceN})
   string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
-  target_compile_definitions(${libraryN} PRIVATE "${PROJECT_NAME_UPPER}_BUILDING_DLL")
-  set_target_properties(${libraryN} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
-
-  # loop thru excecutables here and change lib name beforehand
-
-
-
-  # ALL executable stuff below
-
+  target_compile_definitions(${target} PRIVATE "${PROJECT_NAME_UPPER}_BUILDING_DLL")
+  set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ${ARGS_EXCLUDE_FROM_ALL})
 endfunction()
