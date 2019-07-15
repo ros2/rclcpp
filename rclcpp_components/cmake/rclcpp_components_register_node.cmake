@@ -28,9 +28,14 @@
 # :type node: string
 #
 macro(rclcpp_components_register_node target)
-  set(ARGS ${ARGN})
-  list(GET ARGS 0 component)
-  list(GET ARGS 1 node)
+  cmake_parse_arguments(
+    ARGS
+    ""
+    "PLUGIN;EXECUTABLE"
+    ""
+    ${ARGN})
+  set(component ${ARGS_PLUGIN})
+  set(node ${ARGS_EXECUTABLE})
   _rclcpp_components_register_package_hook()
   if(WIN32)
     set(_path "bin")

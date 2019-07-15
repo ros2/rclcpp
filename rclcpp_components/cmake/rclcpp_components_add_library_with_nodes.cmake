@@ -24,7 +24,7 @@
 # :param sourceN: the list of source files for executable and shared library
 # :type sourceN: list of strings
 #
-function(rclcpp_components_add_multiple_nodes target)
+function(rclcpp_components_add_library_with_nodes target)
   cmake_parse_arguments(
     ARGS
     "EXCLUDE_FROM_ALL"
