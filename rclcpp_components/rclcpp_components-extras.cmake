@@ -26,7 +26,5 @@ macro(_rclcpp_components_register_package_hook)
 endmacro()
 
 include("${rclcpp_components_DIR}/rclcpp_components_register_nodes.cmake")
-include("${rclcpp_components_DIR}/rclcpp_components_add_node.cmake")
-include("${rclcpp_components_DIR}/rclcpp_components_add_multiple_nodes.cmake")
 include("${rclcpp_components_DIR}/rclcpp_components_register_node.cmake")
 include("${rclcpp_components_DIR}/rclcpp_components_add_library_with_nodes.cmake")
