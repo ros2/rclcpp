@@ -41,7 +41,7 @@ int main(int argc, char * argv[])
     "",
   };
   std::string className = "rclcpp_components::NodeFactoryTemplate<@CLASS_NAME@>";
-  for (auto library : libraries) {
+  for (const auto & library : libraries) {
     RCLCPP_DEBUG(logger, "Loading library %s", library.c_str());
     auto loader = new class_loader::ClassLoader(library);
     auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
@@ -65,9 +65,6 @@ int main(int argc, char * argv[])
     exec.remove_node(wrapper.get_node_base_interface());
   }
   node_wrappers.clear();
-
   rclcpp::shutdown();
-
-
   return 0;
 }

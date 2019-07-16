@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # usage: rclcpp_components_register_node(
-#              <target> <component> <node>)
+#              <target> PLUGIN <component> EXECUTABLE <node>)
 #
 # Register an rclcpp component with the ament
 # resource index and create an executable.
