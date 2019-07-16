@@ -981,6 +981,7 @@ public:
    * \throws std::runtime_error if the handler was not created with `add_on_set_parameters_callback`,
    *   or if it has been removed before.
    */
+  RCLCPP_PUBLIC
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
 
