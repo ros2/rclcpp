@@ -111,7 +111,8 @@ public:
     // as do_intra_process_publish takes the ownership of the message.
     uint64_t message_seq;
     bool inter_process_publish_needed =
-      get_subscription_count() > get_intra_process_subscription_count();
+      (get_subscription_count() > get_intra_process_subscription_count()) ||
+      !intra_process_is_enabled_;
     MessageSharedPtr shared_msg;
     if (inter_process_publish_needed) {
       shared_msg = std::move(msg);
