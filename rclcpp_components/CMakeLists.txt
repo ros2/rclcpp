@@ -41,6 +41,11 @@ ament_target_dependencies(component_container
   "rclcpp"
 )
 
+install(FILES 
+  src/node_main.cpp.in
+  DESTINATION ${PROJECT_BINARY_DIR}
+)
+
 add_executable(
   component_container_mt
   src/component_container_mt.cpp

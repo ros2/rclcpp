@@ -45,9 +45,10 @@ macro(rclcpp_components_register_node target)
   set(_RCLCPP_COMPONENTS__NODES
     "${_RCLCPP_COMPONENTS__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
   set(CLASS_NAME ${component})
-  configure_file(../../rclcpp/rclcpp_components/src/node_main.cpp.in
-    ../../rclcpp/rclcpp_components/src/node_main_${node}.cpp @ONLY)
-  add_executable(${node} ../../rclcpp/rclcpp_components/src/node_main_${node}.cpp)
+  set(build_dir ${PROJECT_BINARY_DIR}/../rclcpp_components) 
+  configure_file(${build_dir}/node_main.cpp.in
+    ${build_dir}/node_main_${node}.cpp @ONLY)
+  add_executable(${node} ${build_dir}/node_main_${node}.cpp)
   set(lib ${target})
   # Needed so symbols aren't dropped if not usesd
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
