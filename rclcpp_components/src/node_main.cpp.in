@@ -103,6 +103,7 @@ int main(int argc, char * argv[])
   rclcpp::Logger logger = rclcpp::get_logger(NODE_MAIN_LOGGER_NAME);
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
+  options.arguments(args);
   std::vector<class_loader::ClassLoader *> loaders;
   std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
 
