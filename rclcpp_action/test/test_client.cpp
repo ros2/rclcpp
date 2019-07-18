@@ -219,7 +219,7 @@ protected:
     ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(1)));
   }
 
-  void Teardown()
+  void TearDown()
   {
     status_publisher.reset();
     feedback_publisher.reset();
