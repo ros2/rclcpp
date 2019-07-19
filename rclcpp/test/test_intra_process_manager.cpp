@@ -91,7 +91,10 @@ public:
     return mapped_ring_buffer::MappedRingBuffer<
       T,
       typename Publisher<T, Alloc>::MessageAlloc
-    >::make_shared(size, allocator_);
+    >::make_shared(
+      size,
+      rosidl_typesupport_cpp::get_message_type_support_handle<T>(),
+      allocator_);
   }
 
   std::shared_ptr<MessageAlloc> get_allocator()

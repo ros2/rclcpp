@@ -15,6 +15,7 @@
 #ifndef RCLCPP__INTRA_PROCESS_MANAGER_HPP_
 #define RCLCPP__INTRA_PROCESS_MANAGER_HPP_
 
+#include <rmw/rmw.h>
 #include <rmw/types.h>
 
 #include <algorithm>
@@ -27,6 +28,7 @@
 #include <unordered_map>
 #include <utility>
 #include <set>
+#include <string>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/intra_process_manager_impl.hpp"
@@ -241,10 +243,14 @@ public:
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+    constexpr bool serialized =
+      rclcpp::subscription_traits::is_serialized_subscription_argument<MessageT>::value;
     uint64_t message_seq = 0;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->get_publisher_info_for_id(
-      intra_process_publisher_id, message_seq);
-    typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
+      intra_process_publisher_id,
+      message_seq,
+      serialized);
+    typename TypedMRB::SharedPtr typed_buffer = std::dynamic_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       throw std::runtime_error("Typecast failed due to incorrect message type");
     }
@@ -254,7 +260,7 @@ public:
     // TODO(wjwwood): do something when a message was displaced. log debug?
     (void)did_replace;  // Avoid unused variable warning.
 
-    impl_->store_intra_process_message(intra_process_publisher_id, message_seq);
+    impl_->store_intra_process_message(intra_process_publisher_id, message_seq, serialized);
 
     // Return the message sequence which is sent to the subscription.
     return message_seq;
@@ -262,7 +268,10 @@ public:
 
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
-    typename Deleter = std::default_delete<MessageT>>
+    typename Deleter = std::conditional<
+      rclcpp::subscription_traits::is_serialized_subscription_argument<MessageT>::value,
+      mapped_ring_buffer::deallocate_rmw_serialized_message,
+      std::default_delete<MessageT>>>
   uint64_t
   store_intra_process_message(
     uint64_t intra_process_publisher_id,
@@ -270,10 +279,14 @@ public:
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+    constexpr bool serialized =
+      rclcpp::subscription_traits::is_serialized_subscription_argument<MessageT>::value;
     uint64_t message_seq = 0;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->get_publisher_info_for_id(
-      intra_process_publisher_id, message_seq);
-    typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
+      intra_process_publisher_id,
+      message_seq,
+      serialized);
+    typename TypedMRB::SharedPtr typed_buffer = std::dynamic_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       throw std::runtime_error("Typecast failed due to incorrect message type");
     }
@@ -283,11 +296,148 @@ public:
     // TODO(wjwwood): do something when a message was displaced. log debug?
     (void)did_replace;  // Avoid unused variable warning.
 
-    impl_->store_intra_process_message(intra_process_publisher_id, message_seq);
+    impl_->store_intra_process_message(intra_process_publisher_id, message_seq, serialized);
 
     // Return the message sequence which is sent to the subscription.
     return message_seq;
   }
+
+  /// Helper to deserialize message from rmw_serialized_message_t to some message type
+  template<typename Alloc, typename MessageT>
+  struct Deserializer
+  {
+    using ElemAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+    using ElemAlloc = typename ElemAllocTraits::allocator_type;
+    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+
+    MessageT * deserialize(const rmw_serialized_message_t * serialized_msg)
+    {
+      if (!serialized_msg ||
+        serialized_msg->buffer_capacity == 0 ||
+        serialized_msg->buffer_length == 0 ||
+        serialized_msg->buffer == nullptr)
+      {
+        throw std::runtime_error("failed to deserialize nullptr serialized message");
+      }
+
+      ElemAlloc allocator;
+      auto ptr = MessageAllocTraits::allocate(allocator, 1);
+
+      auto msg_ts =
+        rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
+
+      auto ret = rmw_deserialize(serialized_msg, msg_ts, ptr);
+      if (ret != RMW_RET_OK) {
+        throw std::runtime_error("failed to deserialize serialized message");
+      }
+
+      return ptr;
+    }
+  };
+
+  /// Helper to deserialize message from rmw_serialized_message_t when it should be kept serialized
+  template<typename Alloc>
+  struct Deserializer<Alloc, rmw_serialized_message_t>
+  {
+    rmw_serialized_message_t * deserialize(const rmw_serialized_message_t * serialized_msg)
+    {
+      if (!serialized_msg ||
+        serialized_msg->buffer_capacity == 0 ||
+        serialized_msg->buffer_length == 0 ||
+        serialized_msg->buffer == nullptr)
+      {
+        throw std::runtime_error("failed to deserialize nullptr serialized message b");
+      }
+
+      return new rmw_serialized_message_t(*serialized_msg);
+    }
+  };
+
+  /// Serialize a message if needed. In this case just point to the content (same type).
+  template<typename MessageTIn, typename MessageTOutPtr, typename MessageTOut>
+  struct Serializer
+  {
+    void serialize(
+      MessageTIn & data,
+      MessageTOutPtr & message,
+      const rosidl_message_type_support_t * type_support)
+    {
+      (void)type_support;
+      message = std::move(data);
+    }
+  };
+
+  /// Serialize a message if needed. rmw_serialized_message_t to a message type.
+  template<typename MessageTIn, typename MessageTOutPtr>
+  struct Serializer<MessageTIn, MessageTOutPtr, rmw_serialized_message_t>
+  {
+    void serialize(
+      MessageTIn & data,
+      MessageTOutPtr & message,
+      const rosidl_message_type_support_t * type_support)
+    {
+      message.reset(new rmw_serialized_message_t(serialize(data, type_support)));
+    }
+
+    static rmw_serialized_message_t serialize(
+      const MessageTIn & msg,
+      const rosidl_message_type_support_t * type_support)
+    {
+      rcutils_allocator_t rcutils_allocator_ = rcutils_get_default_allocator();
+
+      auto serialized_message = rmw_get_zero_initialized_serialized_message();
+      auto ret = rmw_serialized_message_init(&serialized_message, 0, &rcutils_allocator_);
+      if (ret != RCUTILS_RET_OK) {
+        throw std::runtime_error(
+                "Error allocating resources for serialized message: " +
+                std::string(rcutils_get_error_string().str));
+      }
+
+      if (!msg) {
+        return serialized_message;
+      }
+
+      auto error = rmw_serialize(
+        msg.get(),
+        type_support,
+        &serialized_message);
+      if (error != RCL_RET_OK) {
+        throw std::runtime_error("Failed to serialize");
+      }
+
+      return serialized_message;
+    }
+  };
+
+  /// Not serializing a message if same type.
+  template<typename MessageTIn, typename MessageTOutPtr, typename MessageTOut>
+  struct TypedSerializer
+  {
+    void serialize(
+      MessageTIn & data,
+      MessageTOutPtr & message,
+      const rosidl_message_type_support_t * type_support)
+    {
+      (void)type_support;
+      (void)message;
+      (void)data;
+      throw std::runtime_error("Serialization case not supported!");
+    }
+  };
+
+  /// Serialize a message if needed. rmw_serialized_message_t to a message type.
+  template<typename MessageTIn, typename MessageTOutPtr>
+  struct TypedSerializer<MessageTIn, MessageTOutPtr, rmw_serialized_message_t>
+  {
+    void serialize(
+      MessageTIn & data,
+      MessageTOutPtr & message,
+      const rosidl_message_type_support_t * type_support)
+    {
+      Serializer<MessageTIn, MessageTOutPtr, rmw_serialized_message_t> s;
+      message.reset(new rmw_serialized_message_t(s.serialize(data, type_support)));
+    }
+  };
 
   /// Take an intra process message.
   /**
@@ -326,7 +476,10 @@ public:
    */
   template<
     typename MessageT, typename Alloc = std::allocator<void>,
-    typename Deleter = std::default_delete<MessageT>>
+    typename Deleter = std::conditional<
+      rclcpp::subscription_traits::is_serialized_subscription_argument<MessageT>::value,
+      mapped_ring_buffer::deallocate_rmw_serialized_message,
+      std::default_delete<MessageT>>>
   void
   take_intra_process_message(
     uint64_t intra_process_publisher_id,
@@ -334,8 +487,6 @@ public:
     uint64_t requesting_subscriptions_intra_process_id,
     std::unique_ptr<MessageT, Deleter> & message)
   {
-    using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
-    using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
     message = nullptr;
 
     size_t target_subs_size = 0;
@@ -346,17 +497,83 @@ public:
       requesting_subscriptions_intra_process_id,
       target_subs_size
     );
-    typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
-    if (!typed_buffer) {
+
+    if (buffer == nullptr) {
       return;
     }
-    // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
-    if (target_subs_size) {
-      // There are more subscriptions to serve, return a copy.
-      typed_buffer->get(message_sequence_number, message);
+
+    if (buffer->is_serialized()) {
+      using MRBMessageAlloc = typename std::allocator_traits
+        <std::allocator<void>>::template rebind_alloc<rmw_serialized_message_t>;
+      using TypedMRB =
+        mapped_ring_buffer::MappedRingBuffer<rmw_serialized_message_t, MRBMessageAlloc>;
+      typename TypedMRB::SharedPtr typed_buffer = std::dynamic_pointer_cast<TypedMRB>(buffer);
+      if (!typed_buffer) {
+        return;
+      }
+
+      typename TypedMRB::ElemUniquePtr serialized_msg;
+
+      // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
+      if (target_subs_size) {
+        // There are more subscriptions to serve, return a copy.
+        typed_buffer->get(message_sequence_number, serialized_msg);
+      } else {
+        // This is the last one to be returned, transfer ownership.
+        typed_buffer->pop(message_sequence_number, serialized_msg);
+      }
+
+      Deserializer<Alloc, MessageT> deserializer;
+      message.reset(deserializer.deserialize(serialized_msg.get()));
+      if (rclcpp::subscription_traits::is_serialized_subscription_argument<MessageT>::value) {
+        serialized_msg.release();
+      }
+    } else if (rclcpp::subscription_traits::is_serialized_subscription_argument<MessageT>::value) {
+      mapped_ring_buffer::MappedRingBufferBase::ConstVoidSharedPtr stored_msg;
+
+      // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
+      if (target_subs_size) {
+        // There are more subscriptions to serve, return a copy.
+        buffer->get(message_sequence_number, stored_msg);
+      } else {
+        // This is the last one to be returned, transfer ownership.
+        buffer->pop(message_sequence_number, stored_msg);
+      }
+      if (!stored_msg) {
+        return;
+      }
+
+      TypedSerializer<
+        mapped_ring_buffer::MappedRingBufferBase::ConstVoidSharedPtr,
+        std::unique_ptr<MessageT, Deleter>,
+        MessageT> serializer;
+      serializer.serialize(stored_msg, message, buffer->get_type_support());
     } else {
-      // This is the last one to be returned, transfer ownership.
-      typed_buffer->pop(message_sequence_number, message);
+      using MRBMessageAlloc =
+        typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
+      using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+      typename TypedMRB::SharedPtr typed_buffer = std::dynamic_pointer_cast<TypedMRB>(buffer);
+      if (!typed_buffer) {
+        return;
+      }
+
+      typename TypedMRB::ElemUniquePtr stored_msg;
+
+      // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
+      if (target_subs_size) {
+        // There are more subscriptions to serve, return a copy.
+        typed_buffer->get(message_sequence_number, stored_msg);
+      } else {
+        // This is the last one to be returned, transfer ownership.
+        typed_buffer->pop(message_sequence_number, stored_msg);
+      }
+      if (!stored_msg) {
+        return;
+      }
+
+      Serializer<typename TypedMRB::ElemUniquePtr, std::unique_ptr<MessageT, Deleter>, MessageT>
+      serializer;
+      serializer.serialize(stored_msg, message, typed_buffer->get_type_support());
     }
   }
 
@@ -369,29 +586,71 @@ public:
     uint64_t requesting_subscriptions_intra_process_id,
     std::shared_ptr<const MessageT> & message)
   {
-    using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
-    using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
     message = nullptr;
 
     size_t target_subs_size = 0;
     std::lock_guard<std::mutex> lock(take_mutex_);
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->take_intra_process_message(
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer =
+      impl_->take_intra_process_message(
       intra_process_publisher_id,
       message_sequence_number,
       requesting_subscriptions_intra_process_id,
       target_subs_size
-    );
-    typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
-    if (!typed_buffer) {
+      );
+
+    if (buffer == nullptr) {
       return;
     }
-    // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
-    if (target_subs_size) {
-      // There are more subscriptions to serve, return a copy.
-      typed_buffer->get(message_sequence_number, message);
+
+    if (buffer->is_serialized()) {
+      using MRBMessageAlloc = typename std::allocator_traits
+        <std::allocator<void>>::template rebind_alloc<rmw_serialized_message_t>;
+      using TypedMRB =
+        mapped_ring_buffer::MappedRingBuffer<rmw_serialized_message_t, MRBMessageAlloc>;
+      typename TypedMRB::SharedPtr typed_buffer = std::dynamic_pointer_cast<TypedMRB>(buffer);
+      if (!typed_buffer) {
+        return;
+      }
+
+      std::shared_ptr<const rmw_serialized_message_t> serialized_msg;
+
+      // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
+      if (target_subs_size) {
+        // There are more subscriptions to serve, return a copy.
+        typed_buffer->get(message_sequence_number, serialized_msg);
+      } else {
+        // This is the last one to be returned, transfer ownership.
+        typed_buffer->pop(message_sequence_number, serialized_msg);
+      }
+
+      Deserializer<Alloc, MessageT> deserializer;
+      message.reset(deserializer.deserialize(serialized_msg.get()));
     } else {
-      // This is the last one to be returned, transfer ownership.
-      typed_buffer->pop(message_sequence_number, message);
+      using MRBMessageAlloc = typename std::allocator_traits
+        <Alloc>::template rebind_alloc<MessageT>;
+      using TypedMRB = mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
+      typename TypedMRB::SharedPtr typed_buffer = std::dynamic_pointer_cast<TypedMRB>(buffer);
+      if (!typed_buffer) {
+        return;
+      }
+
+      std::shared_ptr<const MessageT> stored_msg;
+
+      // Return a copy or the unique_ptr (ownership) depending on how many subscriptions are left.
+      if (target_subs_size) {
+        // There are more subscriptions to serve, return a copy.
+        typed_buffer->get(message_sequence_number, stored_msg);
+      } else {
+        // This is the last one to be returned, transfer ownership.
+        typed_buffer->pop(message_sequence_number, stored_msg);
+      }
+      if (!stored_msg) {
+        return;
+      }
+
+      Serializer<std::shared_ptr<const MessageT>, std::shared_ptr<const MessageT>, MessageT>
+      serializer;
+      serializer.serialize(stored_msg, message, typed_buffer->get_type_support());
     }
   }
 

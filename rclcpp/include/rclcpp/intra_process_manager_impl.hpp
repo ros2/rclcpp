@@ -69,10 +69,14 @@ public:
   virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   get_publisher_info_for_id(
     uint64_t intra_process_publisher_id,
-    uint64_t & message_seq) = 0;
+    uint64_t & message_seq,
+    const bool serialized) = 0;
 
   virtual void
-  store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq) = 0;
+  store_intra_process_message(
+    uint64_t intra_process_publisher_id,
+    uint64_t message_seq,
+    const bool serialized) = 0;
 
   virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   take_intra_process_message(
@@ -116,7 +120,7 @@ public:
     // remove references to this subscription's id.
     for (auto & publisher_pair : publishers_) {
       for (auto & sub_pair : publisher_pair.second.target_subscriptions_by_message_sequence) {
-        sub_pair.second.erase(intra_process_subscription_id);
+        sub_pair.second.first.erase(intra_process_subscription_id);
       }
     }
   }
@@ -135,6 +139,7 @@ public:
     publishers_[id].sequence_number.store(0);
 
     publishers_[id].buffer = mrb;
+    publishers_[id].buffer_serialized = mrb->make_serialized_mapped_ring_buffer();
     publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
   }
 
@@ -148,7 +153,8 @@ public:
   mapped_ring_buffer::MappedRingBufferBase::SharedPtr
   get_publisher_info_for_id(
     uint64_t intra_process_publisher_id,
-    uint64_t & message_seq)
+    uint64_t & message_seq,
+    const bool serialized)
   {
     std::lock_guard<std::mutex> lock(runtime_mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
@@ -159,11 +165,17 @@ public:
     // Calculate the next message sequence number.
     message_seq = info.sequence_number.fetch_add(1);
 
+    if (serialized) {
+      return info.buffer_serialized;
+    }
     return info.buffer;
   }
 
   void
-  store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq)
+  store_intra_process_message(
+    uint64_t intra_process_publisher_id,
+    uint64_t message_seq,
+    const bool serialized)
   {
     std::lock_guard<std::mutex> lock(runtime_mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
@@ -182,17 +194,19 @@ public:
     // Store the list for later comparison.
     if (info.target_subscriptions_by_message_sequence.count(message_seq) == 0) {
       info.target_subscriptions_by_message_sequence.emplace(
-        message_seq, AllocSet(std::less<uint64_t>(), uint64_allocator));
+        message_seq,
+        std::make_pair(AllocSet(std::less<uint64_t>(), uint64_allocator),
+        serialized));
     } else {
-      info.target_subscriptions_by_message_sequence[message_seq].clear();
+      info.target_subscriptions_by_message_sequence[message_seq].first.clear();
     }
     std::copy(
       destined_subscriptions.begin(), destined_subscriptions.end(),
       // Memory allocation occurs in info.target_subscriptions_by_message_sequence[message_seq]
       std::inserter(
-        info.target_subscriptions_by_message_sequence[message_seq],
+        info.target_subscriptions_by_message_sequence[message_seq].first,
         // This ends up only being a hint to std::set, could also be .begin().
-        info.target_subscriptions_by_message_sequence[message_seq].end()
+        info.target_subscriptions_by_message_sequence[message_seq].first.end()
       )
     );
   }
@@ -217,13 +231,15 @@ public:
     }
     // Figure out how many subscriptions are left.
     AllocSet * target_subs;
+    bool serialized = false;
     {
       auto it = info->target_subscriptions_by_message_sequence.find(message_sequence_number);
       if (it == info->target_subscriptions_by_message_sequence.end()) {
         // Message is no longer being stored by this publisher.
         return 0;
       }
-      target_subs = &it->second;
+      target_subs = &it->second.first;
+      serialized = it->second.second;
     }
     {
       auto it = std::find(
@@ -236,6 +252,10 @@ public:
       target_subs->erase(it);
     }
     size = target_subs->size();
+    // did we store a serialized message?
+    if (serialized) {
+      return info->buffer_serialized;
+    }
     return info->buffer;
   }
 
@@ -330,12 +350,14 @@ private:
     PublisherBase::WeakPtr publisher;
     std::atomic<uint64_t> sequence_number;
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer_serialized;
 
     using TargetSubscriptionsMap = std::unordered_map<
-      uint64_t, AllocSet,
+      uint64_t, std::pair<AllocSet, bool>,
       std::hash<uint64_t>, std::equal_to<uint64_t>,
-      RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
+      RebindAlloc<std::pair<const uint64_t, std::pair<AllocSet, bool>>>>;
     TargetSubscriptionsMap target_subscriptions_by_message_sequence;
+    TargetSubscriptionsMap target_subscriptions_by_message_sequence_serialized;
   };
 
   using PublisherMap = std::unordered_map<
