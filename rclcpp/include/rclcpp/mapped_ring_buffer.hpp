@@ -21,11 +21,14 @@
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/subscription_traits.hpp"
+#include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -33,10 +36,64 @@ namespace rclcpp
 namespace mapped_ring_buffer
 {
 
+/// Deleter for serialized messages
+struct deallocate_rmw_serialized_message
+{
+  void operator()(rmw_serialized_message_t * msg) const
+  {
+    if (msg) {
+      int error = rmw_serialized_message_fini(msg);
+      delete msg;
+      if (error != RCUTILS_RET_OK) {
+        throw std::runtime_error("Leaking memory. Error: " +
+                std::string(rcutils_get_error_string().str));
+      }
+    }
+  }
+};
+
 class RCLCPP_PUBLIC MappedRingBufferBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MappedRingBufferBase)
+
+  using ConstVoidSharedPtr = std::shared_ptr<const void>;
+
+  /// Returns true if the content is a serialized message.
+  virtual bool is_serialized() = 0;
+
+  /// Create a mapped ring buffer for serialized messages with same allocator.
+  virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr
+  make_serialized_mapped_ring_buffer() const = 0;
+
+  /// Returns type support of message type. For serialized case return nullptr.
+  virtual const rosidl_message_type_support_t * get_type_support() const = 0;
+
+  /// Give the ownership of the stored value to the caller, at the given key.
+  /**
+   * The key is matched if an element in the ring buffer has a matching key.
+   *
+   * The key is not guaranteed to be unique, see the class docs for more.
+   *
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
+   */
+  virtual void pop(uint64_t key, ConstVoidSharedPtr & value) = 0;
+
+  /// Share ownership of the value stored in the ring buffer at the given key.
+  /**
+   * The key is matched if an element in the ring buffer has a matching key.
+   *
+   * The key is not guaranteed to be unique, see the class docs for more.
+   *
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
+   */
+  virtual void get(uint64_t key, ConstVoidSharedPtr & value) = 0;
 };
 
 /// Ring buffer container of shared_ptr's or unique_ptr's of T, which can be accessed by a key.
@@ -75,8 +132,10 @@ public:
    * \param size size of the ring buffer; must be positive and non-zero.
    * \param allocator optional custom allocator
    */
-  explicit MappedRingBuffer(size_t size, std::shared_ptr<Alloc> allocator = nullptr)
-  : elements_(size), head_(0)
+  explicit MappedRingBuffer(
+    size_t size, const rosidl_message_type_support_t * type_support,
+    std::shared_ptr<Alloc> allocator = nullptr)
+  : elements_(size), head_(0), type_support_(type_support)
   {
     if (size == 0) {
       throw std::invalid_argument("size must be a positive, non-zero value");
@@ -127,6 +186,13 @@ public:
         throw std::runtime_error("Unexpected empty MappedRingBuffer element.");
       }
     }
+  }
+
+  /// Check if content is serialized.
+  bool
+  is_serialized() override
+  {
+    return type_support_ == nullptr;
   }
 
   /// Share ownership of the value stored in the ring buffer at the given key.
@@ -275,12 +341,63 @@ public:
     return did_replace;
   }
 
+  /// Give the ownership of the stored value to the caller, at the given key.
+  /**
+   * The key is matched if an element in the ring buffer has a matching key.
+   *
+   * The key is not guaranteed to be unique, see the class docs for more.
+   *
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
+   */
+  void pop(uint64_t key, ConstVoidSharedPtr & value) override
+  {
+    pop(key, (ConstElemSharedPtr &)value);
+  }
+
+
+  /// Share ownership of the value stored in the ring buffer at the given key.
+  /**
+   * The key is matched if an element in the ring buffer has a matching key.
+   *
+   * The key is not guaranteed to be unique, see the class docs for more.
+   *
+   * The contents of value before the method is called are discarded.
+   *
+   * \param key the key associated with the stored value
+   * \param value if the key is found, the value is stored in this parameter
+   */
+  void get(uint64_t key, ConstVoidSharedPtr & value) override
+  {
+    get(key, (ConstElemSharedPtr &)value);
+  }
+
+
   /// Return true if the key is found in the ring buffer, otherwise false.
   bool
   has_key(uint64_t key)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     return elements_.end() != get_iterator_of_key(key);
+  }
+
+  /// get type support for stored messages
+  const rosidl_message_type_support_t *
+  get_type_support() const override
+  {
+    return type_support_;
+  }
+
+  /// create a corresponding ring buffer for serialized messages of type rmw_serialized_message_t
+  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
+  make_serialized_mapped_ring_buffer() const override
+  {
+    return mapped_ring_buffer::MappedRingBuffer<
+      rmw_serialized_message_t,
+      typename std::allocator_traits<Alloc>::template rebind_alloc<rmw_serialized_message_t>
+    >::make_shared(elements_.size(), nullptr);
   }
 
 private:
@@ -311,6 +428,7 @@ private:
   size_t head_;
   std::shared_ptr<ElemAlloc> allocator_;
   std::mutex data_mutex_;
+  const rosidl_message_type_support_t * type_support_;
 };
 
 }  // namespace mapped_ring_buffer

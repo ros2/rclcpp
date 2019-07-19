@@ -25,9 +25,10 @@
  */
 TEST(TestMappedRingBuffer, empty) {
   // Cannot create a buffer of size zero.
-  EXPECT_THROW(rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(0), std::invalid_argument);
+  EXPECT_THROW(rclcpp::mapped_ring_buffer::MappedRingBuffer<char>
+    mrb(0, nullptr), std::invalid_argument);
   // Getting or popping an empty buffer should result in a nullptr.
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(1);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(1, nullptr);
 
   std::unique_ptr<char> unique;
   mrb.get(1, unique);
@@ -49,7 +50,7 @@ TEST(TestMappedRingBuffer, empty) {
    get and pop methods with shared_ptr signature.
  */
 TEST(TestMappedRingBuffer, temporary_l_value_with_shared_get_pop) {
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2, nullptr);
   // Pass in value with temporary object
   mrb.push_and_replace(1, std::shared_ptr<const char>(new char('a')));
 
@@ -69,7 +70,7 @@ TEST(TestMappedRingBuffer, temporary_l_value_with_shared_get_pop) {
    get and pop methods with unique_ptr signature.
  */
 TEST(TestMappedRingBuffer, temporary_l_value_with_unique_get_pop) {
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2, nullptr);
   // Pass in value with temporary object
   mrb.push_and_replace(1, std::shared_ptr<const char>(new char('a')));
 
@@ -89,7 +90,7 @@ TEST(TestMappedRingBuffer, temporary_l_value_with_unique_get_pop) {
    Using shared push_and_replace, get and pop methods.
  */
 TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_shared) {
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2, nullptr);
   std::shared_ptr<const char> expected(new char('a'));
 
   EXPECT_FALSE(mrb.push_and_replace(1, expected));
@@ -145,7 +146,7 @@ TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_shared) {
    Using shared push_and_replace, unique get and pop methods.
  */
 TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_unique) {
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2, nullptr);
   std::shared_ptr<const char> expected(new char('a'));
   const char * expected_orig = expected.get();
 
@@ -207,7 +208,7 @@ TEST(TestMappedRingBuffer, nominal_push_shared_get_pop_unique) {
    Using unique push_and_replace, get and pop methods.
  */
 TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_unique) {
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2, nullptr);
   std::unique_ptr<char> expected(new char('a'));
   const char * expected_orig = expected.get();
 
@@ -258,7 +259,7 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_unique) {
    Using unique push_and_replace, shared get and pop methods.
  */
 TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_shared) {
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2, nullptr);
   std::unique_ptr<char> expected(new char('a'));
   const char * expected_orig = expected.get();
 
@@ -308,7 +309,7 @@ TEST(TestMappedRingBuffer, nominal_push_unique_get_pop_shared) {
    Tests the affect of reusing keys (non-unique keys) in a mrb.
  */
 TEST(TestMappedRingBuffer, non_unique_keys) {
-  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2);
+  rclcpp::mapped_ring_buffer::MappedRingBuffer<char> mrb(2, nullptr);
 
   std::shared_ptr<const char> input(new char('a'));
   mrb.push_and_replace(1, input);
