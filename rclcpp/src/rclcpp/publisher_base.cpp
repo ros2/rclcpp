@@ -316,3 +316,72 @@ PublisherBase::setup_intra_process(
     throw std::runtime_error(msg);
   }
 }
+
+void
+PublisherBase::publish(const rcl_serialized_message_t & serialized_msg)
+{
+  return this->do_serialized_publish(&serialized_msg);
+}
+
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+[[deprecated(
+  "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+#endif
+void
+PublisherBase::publish(const rcl_serialized_message_t * serialized_msg)
+{
+  return this->do_serialized_publish(serialized_msg);
+}
+
+void
+PublisherBase::do_serialized_publish(const rcl_serialized_message_t * serialized_msg)
+{
+  if (!serialized_msg) {
+    throw std::runtime_error("cannot publisher msg which is a null pointer");
+  }
+
+  bool inter_process_publish_needed =
+    get_subscription_count() > get_intra_process_subscription_count();
+
+  if (intra_process_is_enabled_) {
+    auto ipm = weak_ipm_.lock();
+    if (!ipm) {
+      throw std::runtime_error(
+              "intra process publish called after destruction of intra process manager");
+    }
+    const uint64_t message_seq =
+      ipm->template store_intra_process_message<rmw_serialized_message_t>(
+      intra_process_publisher_id_, std::make_unique<rcl_serialized_message_t>(*serialized_msg));
+    this->do_intra_process_publish(message_seq);
+  }
+
+  if (inter_process_publish_needed) {
+    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
+    }
+  }
+}
+
+void
+PublisherBase::do_intra_process_publish(uint64_t message_seq)
+{
+  rcl_interfaces::msg::IntraProcessMessage ipm;
+  ipm.publisher_id = intra_process_publisher_id_;
+  ipm.message_sequence = message_seq;
+  auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr);
+  if (RCL_RET_PUBLISHER_INVALID == status) {
+    rcl_reset_error();  // next call will reset error message if not context
+    if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
+      rcl_context_t * context = rcl_publisher_get_context(&intra_process_publisher_handle_);
+      if (nullptr != context && !rcl_context_is_valid(context)) {
+        // publisher is invalid due to context being shutdown
+        return;
+      }
+    }
+  }
+  if (RCL_RET_OK != status) {
+    rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
+  }
+}

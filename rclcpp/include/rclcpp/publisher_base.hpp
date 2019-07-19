@@ -195,7 +195,24 @@ public:
     IntraProcessManagerSharedPtr ipm,
     const rcl_publisher_options_t & intra_process_options);
 
+  void
+  publish(const rcl_serialized_message_t & serialized_msg);
+
+// Skip deprecated attribute in windows, as it raise a warning in template specialization.
+#if !defined(_WIN32)
+  [[deprecated(
+    "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+#endif
+  void
+  publish(const rcl_serialized_message_t * serialized_msg);
+
 protected:
+  void
+  do_serialized_publish(const rcl_serialized_message_t * serialized_msg);
+
+  void
+  do_intra_process_publish(uint64_t message_seq);
+
   template<typename EventCallbackT>
   void
   add_event_handler(
