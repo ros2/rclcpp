@@ -49,7 +49,7 @@ macro(rclcpp_components_register_node target)
   set(_RCLCPP_COMPONENTS__NODES
     "${_RCLCPP_COMPONENTS__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
   set(CLASS_NAME ${component})
-  set(build_dir ${PROJECT_BINARY_DIR}/../rclcpp_components) 
+  set(build_dir @install_dir@)
   configure_file(${build_dir}/node_main.cpp.in
     ${build_dir}/node_main_${node}.cpp @ONLY)
   add_executable(${node} ${build_dir}/node_main_${node}.cpp)
@@ -71,3 +71,4 @@ macro(rclcpp_components_register_node target)
     ${node}
     DESTINATION lib/${PROJECT_NAME})
 endmacro()
+

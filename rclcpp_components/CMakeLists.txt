@@ -41,8 +41,12 @@ ament_target_dependencies(component_container
   "rclcpp"
 )
 
+set(install_dir ${PROJECT_BINARY_DIR})
+configure_file(rclcpp_components_template_node.cmake.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/rclcpp_components_register_node.cmake @ONLY)
+
 install(FILES 
-  src/node_main.cpp.in
+  src/node_main.cpp.in 
   DESTINATION ${PROJECT_BINARY_DIR}
 )
 
