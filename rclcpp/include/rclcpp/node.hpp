@@ -942,11 +942,12 @@ public:
    * returned unique pointer is valid.
    * The returned unique pointer can be promoted to a shared version.
    *
-   * Releasing the returned unique pointer unregisters the callback.
+   * Resetting or letting the smart pointer go out of scope unregisters the callback.
    * `remove_on_set_parameters_callback` can also be used.
    *
-   * All the registered callbacks are called when a parameter is set.
-   * The order of the callbacks is not important.
+   * The registered callbacks are called when a parameter is set.
+   * When a callback returns a not successful result, the remaining callbacks aren't called.
+   * The order of the callback execution could be different from the registration order.
    *
    * \param callback The callback to register.
    * \returns A unique pointer. The callback is valid as long as the unique pointer is alive.
@@ -972,10 +973,8 @@ public:
    *
    * Calling `remove_on_set_parameters_callback` more than once with the same handler,
    * or calling it after the shared pointer has been released is an error.
-   * Releasing the smart pointer after calling `remove_on_set_parameters_callback` is not a problem.
-   *
-   * All the registered callbacks are called when a parameter is set.
-   * The order of the callbacks is not important.
+   * Resetting or letting the smart pointer go out of scope after calling
+   * `remove_on_set_parameters_callback` is not a problem.
    *
    * \param handler The callback handler to remove.
    * \throws std::runtime_error if the handler was not created with `add_on_set_parameters_callback`,

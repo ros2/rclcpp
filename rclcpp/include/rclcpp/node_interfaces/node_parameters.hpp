@@ -193,7 +193,7 @@ private:
   // declare_parameter, etc).  In those cases, this will be set to false.
   bool parameter_modification_enabled_{true};
 
-  OnParametersSetCallbackType on_parameters_set_callback_;
+  OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
   CallbacksContainerType on_parameters_set_callback_set_;
 
