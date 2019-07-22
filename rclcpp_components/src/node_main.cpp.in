@@ -30,11 +30,11 @@ int main(int argc, char * argv[])
   rclcpp::executors::SingleThreadedExecutor exec;
   rclcpp::NodeOptions options;
   options.arguments(args);
-  std::vector<class_loader::ClassLoader *> loaders;
+  std::vector<class_loader::ClassLoader * > loaders;
   std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
 
   std::string library_name = "@library_name@";
-  std::string class_name = "rclcpp_components::NodeFactoryTemplate<@class_name@>";
+  std::string class_name = "rclcpp_components::NodeFactoryTemplate<@component@>";
 
   RCLCPP_DEBUG(logger, "Load library %s", library_name.c_str());
   auto loader = new class_loader::ClassLoader(library_name);
