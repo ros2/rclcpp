@@ -41,14 +41,10 @@ ament_target_dependencies(component_container
   "rclcpp"
 )
 
-set(install_dir ${PROJECT_BINARY_DIR})
-configure_file(rclcpp_components_template_node.cmake.in
-  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/rclcpp_components_register_node.cmake @ONLY)
-
-install(FILES 
-  src/node_main.cpp.in 
-  DESTINATION ${PROJECT_BINARY_DIR}
-)
+set(node_main_template_install_dir "share/${PROJECT_NAME}")
+install(FILES
+  src/node_main.cpp.in
+  DESTINATION ${node_main_template_install_dir})
 
 add_executable(
   component_container_mt
@@ -128,4 +124,4 @@ install(
 ament_export_include_directories(include)
 ament_export_dependencies(class_loader)
 ament_export_dependencies(rclcpp)
-ament_package(CONFIG_EXTRAS rclcpp_components-extras.cmake)
+ament_package(CONFIG_EXTRAS rclcpp_components-extras.cmake.in)

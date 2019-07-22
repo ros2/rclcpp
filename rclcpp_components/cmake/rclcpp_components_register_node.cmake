@@ -20,12 +20,10 @@
 #
 # :param target: the shared library target
 # :type target: string
-# :param ARGS: the plugin name and node name for executable
-# :type ARGS: list of strings
-# :param component: the component plugin name
-# :type component: string
-# :param node: the node's executable name
-# :type node: string
+# :param PLUGIN: the plugin name
+# :type PLUGIN: string
+# :type EXECUTABLE: the node's executable name
+# :type EXECUTABLE: string
 #
 macro(rclcpp_components_register_node target)
   cmake_parse_arguments(
@@ -40,19 +38,18 @@ macro(rclcpp_components_register_node target)
   set(_path "lib")
   if(WIN32)
     set(_path "bin")
-    set(LIBRARY_NAME ${target}.dll)
+    set(library_name ${target}.dll)
   elseif(APPLE)
-    set(LIBRARY_NAME lib${target}.dylib)
+    set(library_name lib${target}.dylib)
   else()
-    set(LIBRARY_NAME lib${target}.so)
+    set(library_name lib${target}.so)
   endif()
   set(_RCLCPP_COMPONENTS__NODES
     "${_RCLCPP_COMPONENTS__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
-  set(CLASS_NAME ${component})
-  set(build_dir @install_dir@)
-  configure_file(${build_dir}/node_main.cpp.in
-    ${build_dir}/node_main_${node}.cpp @ONLY)
-  add_executable(${node} ${build_dir}/node_main_${node}.cpp)
+  set(class_name ${component})
+  configure_file(${rclcpp_components_NODE_TEMPLATE}
+    ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp @ONLY)
+  add_executable(${node} ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp)
   set(lib ${target})
   # Needed so symbols aren't dropped if not usesd
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -71,4 +68,3 @@ macro(rclcpp_components_register_node target)
     ${node}
     DESTINATION lib/${PROJECT_NAME})
 endmacro()
-

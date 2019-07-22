@@ -21,12 +21,11 @@
 #include "rclcpp_components/node_factory.hpp"
 #include "rclcpp_components/node_factory_template.hpp"
 
-#define NODE_MAIN_LOGGER_NAME "dlopen_composition"
+#define NODE_MAIN_LOGGER_NAME "@node@"
 
 int main(int argc, char * argv[])
 {
   // Force flush of the stdout buffer.
-  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
   auto args = rclcpp::init_and_remove_ros_arguments(argc, argv);
   rclcpp::Logger logger = rclcpp::get_logger(NODE_MAIN_LOGGER_NAME);
   rclcpp::executors::SingleThreadedExecutor exec;
@@ -35,16 +34,16 @@ int main(int argc, char * argv[])
   std::vector<class_loader::ClassLoader *> loaders;
   std::vector<rclcpp_components::NodeInstanceWrapper> node_wrappers;
 
-  std::string libraryName = "@LIBRARY_NAME@";
-  std::string className = "rclcpp_components::NodeFactoryTemplate<@CLASS_NAME@>";
+  std::string library_name = "@library_name@";
+  std::string class_name = "rclcpp_components::NodeFactoryTemplate<@class_name@>";
 
-  RCLCPP_INFO(logger, "Load library %s", libraryName.c_str());
-  auto loader = new class_loader::ClassLoader(libraryName);
+  RCLCPP_INFO(logger, "Load library %s", library_name.c_str());
+  auto loader = new class_loader::ClassLoader(library_name);
   auto classes = loader->getAvailableClasses<rclcpp_components::NodeFactory>();
   for (auto clazz : classes) {
     std::string name = clazz.c_str();
-    if (!(name.compare(className))) {
-      RCLCPP_INFO(logger, "Instantiate class %s", clazz.c_str());
+    if (!(name.compare(class_name))) {
+      RCLCPP_DEBUG(logger, "Instantiate class %s", clazz.c_str());
       auto node_factory = loader->createInstance<rclcpp_components::NodeFactory>(clazz);
       auto wrapper = node_factory->create_node_instance(options);
       auto node = wrapper.get_node_base_interface();
