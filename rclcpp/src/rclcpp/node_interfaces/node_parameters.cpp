@@ -616,7 +616,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     parameters_,
     // this will get called once, with all the parameters to be set
     on_parameters_set_callback_set_,
-    // this will get called once, with all the parameters to be set
+    // These callbacks are called once. When a callback returns an unsuccessful result,
+    // the remaining aren't called.
     on_parameters_set_callback_);
 
   // If not successful, then stop here.
