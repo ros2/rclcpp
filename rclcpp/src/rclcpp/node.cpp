@@ -326,7 +326,7 @@ Node::list_parameters(const std::vector<std::string> & prefixes, uint64_t depth)
   return node_parameters_->list_parameters(prefixes, depth);
 }
 
-rclcpp::Node::OnSetParametersCallbackHandle::UniquePtr
+rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
 Node::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
 {
   return node_parameters_->add_on_set_parameters_callback(callback);

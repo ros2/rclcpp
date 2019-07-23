@@ -35,10 +35,7 @@ namespace node_interfaces
 
 struct OnSetParametersCallbackHandle
 {
-  using UniquePtr = std::unique_ptr<
-    OnSetParametersCallbackHandle, std::function<void (OnSetParametersCallbackHandle *)>
-  >;
-  using SharedPtr = std::shared_ptr<OnSetParametersCallbackHandle>;
+  RCLCPP_SMART_PTR_DEFINITIONS(OnSetParametersCallbackHandle)
 
   using OnParametersSetCallbackType =
     std::function<
@@ -185,7 +182,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual
-  OnSetParametersCallbackHandle::UniquePtr
+  OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) = 0;
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.

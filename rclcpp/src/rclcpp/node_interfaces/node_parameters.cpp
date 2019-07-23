@@ -28,6 +28,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <functional>
 #include <limits>
 #include <map>
 #include <memory>
@@ -298,15 +299,22 @@ RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult
 __call_on_parameters_set_callbacks(
   const std::vector<rclcpp::Parameter> & parameters,
-  const CallbacksContainerType & callback_set,
+  CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback)
 {
   rcl_interfaces::msg::SetParametersResult result;
   result.successful = true;
-  for (auto & handle : callback_set) {
-    result = handle->callback(parameters);
-    if (!result.successful) {
-      return result;
+  auto it = callback_container.begin();
+  while (it != callback_container.end()) {
+    auto shared_handle = it->lock();
+    if (nullptr != shared_handle) {
+      result = shared_handle->callback(parameters);
+      if (!result.successful) {
+        return result;
+      }
+      it++;
+    } else {
+      it = callback_container.erase(it);
     }
   }
   if (callback) {
@@ -320,12 +328,12 @@ rcl_interfaces::msg::SetParametersResult
 __set_parameters_atomically_common(
   const std::vector<rclcpp::Parameter> & parameters,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
-  const CallbacksContainerType & callback_set,
+  CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback)
 {
   // Call the user callback to see if the new value(s) are allowed.
   rcl_interfaces::msg::SetParametersResult result =
-    __call_on_parameters_set_callbacks(parameters, callback_set, callback);
+    __call_on_parameters_set_callbacks(parameters, callback_container, callback);
   if (!result.successful) {
     return result;
   }
@@ -356,7 +364,7 @@ __declare_parameter_common(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
-  const CallbacksContainerType & callback_set,
+  CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback,
   rcl_interfaces::msg::ParameterEvent * parameter_event_out,
   bool ignore_override = false)
@@ -378,7 +386,7 @@ __declare_parameter_common(
   auto result = __set_parameters_atomically_common(
     parameter_wrappers,
     parameter_infos,
-    callback_set,
+    callback_container,
     callback);
 
   // Add declared parameters to storage.
@@ -421,7 +429,7 @@ NodeParameters::declare_parameter(
     parameter_descriptor,
     parameters_,
     parameter_overrides_,
-    on_parameters_set_callback_set_,
+    on_parameters_set_callback_container_,
     on_parameters_set_callback_,
     &parameter_event,
     ignore_override);
@@ -549,6 +557,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> staged_parameter_changes;
   rcl_interfaces::msg::ParameterEvent parameter_event_msg;
   parameter_event_msg.node = combined_name_;
+  CallbacksContainerType empty_callback_container;
   for (auto parameter_to_be_declared : parameters_to_be_declared) {
     // This should not throw, because we validated the name and checked that
     // the parameter was not already declared.
@@ -558,7 +567,8 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       rcl_interfaces::msg::ParameterDescriptor(),  // Implicit declare uses default descriptor.
       staged_parameter_changes,
       parameter_overrides_,
-      {},  // callback_set is explicitly empty, so that it is called only once below.
+      // Only call callbacks once below
+      empty_callback_container,  // callback_container is explicitly empty
       nullptr,  // callback is explicitly null.
       &parameter_event_msg,
       true);
@@ -615,7 +625,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
     // they are actually set on the official parameter storage
     parameters_,
     // this will get called once, with all the parameters to be set
-    on_parameters_set_callback_set_,
+    on_parameters_set_callback_container_,
     // These callbacks are called once. When a callback returns an unsuccessful result,
     // the remaining aren't called.
     on_parameters_set_callback_);
@@ -850,47 +860,51 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
   return result;
 }
 
+struct HandleCompare
+  : public std::unary_function<OnSetParametersCallbackHandle::WeakPtr, bool>
+{
+  explicit HandleCompare(const OnSetParametersCallbackHandle * const base)
+  : base_(base) {}
+  bool operator()(const OnSetParametersCallbackHandle::WeakPtr & handle)
+  {
+    auto shared_handle = handle.lock();
+    if (base_ == shared_handle.get()) {
+      return true;
+    }
+    return false;
+  }
+  const OnSetParametersCallbackHandle * const base_;
+};
+
 void
 NodeParameters::remove_on_set_parameters_callback(
-  const OnSetParametersCallbackHandle * const handler)
+  const OnSetParametersCallbackHandle * const handle)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
-  if (0 ==
-    on_parameters_set_callback_set_.erase(
-      const_cast<OnSetParametersCallbackHandle *>(handler)))
-  {
+  auto it = std::find_if(
+    on_parameters_set_callback_container_.begin(),
+    on_parameters_set_callback_container_.end(),
+    HandleCompare(handle));
+  if (it != on_parameters_set_callback_container_.end()) {
+    on_parameters_set_callback_container_.erase(it);
+  } else {
     throw std::runtime_error("Callback doesn't exist");
   }
 }
 
-OnSetParametersCallbackHandle::UniquePtr
+OnSetParametersCallbackHandle::SharedPtr
 NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
-  auto handler = std::make_unique<OnSetParametersCallbackHandle>();
-  handler->callback = callback;
-  NodeParameters::WeakPtr node_parameters_weak(shared_from_this());
-
-  // *INDENT-OFF*  // uncrustify false positive
-  OnSetParametersCallbackHandle::UniquePtr scoped_handler(
-    handler.release(),
-    [node_parameters_weak](OnSetParametersCallbackHandle * handler) noexcept {
-      auto node_parameters_shared = node_parameters_weak.lock();
-      if (node_parameters_shared) {
-        try {
-          node_parameters_shared->remove_on_set_parameters_callback(handler);
-        } catch(...) {}  // It could have been manually deleted before, ignore the exception.
-      }
-      delete handler;
-      handler = NULL;
-  });
-  // *INDENT-ON*
-  on_parameters_set_callback_set_.insert(scoped_handler.get());
-  return scoped_handler;
+  auto handle = std::make_shared<OnSetParametersCallbackHandle>();
+  handle->callback = callback;
+  // the last callback registered is executed first.
+  on_parameters_set_callback_container_.emplace_front(handle);
+  return handle;
 }
 
 NodeParameters::OnParametersSetCallbackType

@@ -17,7 +17,7 @@
 
 #include <map>
 #include <memory>
-#include <set>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -76,9 +76,7 @@ private:
 };
 
 /// Implementation of the NodeParameters part of the Node API.
-class NodeParameters
-  : public NodeParametersInterface,
-  public std::enable_shared_from_this<NodeParameters>
+class NodeParameters : public NodeParametersInterface
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeParameters)
@@ -161,7 +159,7 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const override;
 
   RCLCPP_PUBLIC
-  OnSetParametersCallbackHandle::UniquePtr
+  OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
 
   RCLCPP_PUBLIC
@@ -181,7 +179,7 @@ public:
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const override;
 
-  using CallbacksContainerType = std::set<OnSetParametersCallbackHandle *>;
+  using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
 
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
@@ -195,7 +193,7 @@ private:
 
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
 
-  CallbacksContainerType on_parameters_set_callback_set_;
+  CallbacksContainerType on_parameters_set_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 
