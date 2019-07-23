@@ -50,7 +50,7 @@ macro(rclcpp_components_register_node target)
     ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp @ONLY)
   add_executable(${node} ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp)
   set(lib ${target})
-  # Needed so symbols aren't dropped if not usesd
+  # Needed so symbols aren't dropped if not used
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(lib
       "-Wl,--no-as-needed"
