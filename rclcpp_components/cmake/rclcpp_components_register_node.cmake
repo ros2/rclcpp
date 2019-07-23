@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 # usage: rclcpp_components_register_node(
-#              <target> PLUGIN <component> EXECUTABLE <node>)
+#        <target> PLUGIN <component> EXECUTABLE <node>)
 #
 # Register an rclcpp component with the ament
 # resource index and create an executable.
@@ -26,12 +26,7 @@
 # :type EXECUTABLE: string
 #
 macro(rclcpp_components_register_node target)
-  cmake_parse_arguments(
-    ARGS
-    ""
-    "PLUGIN;EXECUTABLE"
-    ""
-    ${ARGN})
+  cmake_parse_arguments(ARGS "" "PLUGIN;EXECUTABLE" "" ${ARGN})
   set(component ${ARGS_PLUGIN})
   set(node ${ARGS_EXECUTABLE})
   _rclcpp_components_register_package_hook()
@@ -49,16 +44,6 @@ macro(rclcpp_components_register_node target)
   configure_file(${rclcpp_components_NODE_TEMPLATE}
     ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp @ONLY)
   add_executable(${node} ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp)
-  set(lib ${target})
-  # Needed so symbols aren't dropped if not used
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(lib
-      "-Wl,--no-as-needed"
-      ${target}
-      "-Wl,--as-needed")
-  endif()
-  target_link_libraries(${node}
-    ${lib})
   ament_target_dependencies(${node}
     "rclcpp"
     "class_loader"
