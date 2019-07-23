@@ -30,19 +30,17 @@ macro(rclcpp_components_register_node target)
   set(component ${ARGS_PLUGIN})
   set(node ${ARGS_EXECUTABLE})
   _rclcpp_components_register_package_hook()
-  set(_path "lib")
+  set(_path "lib")  
+  set(library_name "$<TARGET_FILE_NAME:${target}>")
   if(WIN32)
     set(_path "bin")
-    set(library_name ${target}.dll)
-  elseif(APPLE)
-    set(library_name lib${target}.dylib)
-  else()
-    set(library_name lib${target}.so)
   endif()
   set(_RCLCPP_COMPONENTS__NODES
     "${_RCLCPP_COMPONENTS__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
   configure_file(${rclcpp_components_NODE_TEMPLATE}
-    ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp @ONLY)
+    ${PROJECT_BINARY_DIR}/node_main_configured.cpp.in)
+  file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp
+    INPUT ${PROJECT_BINARY_DIR}/node_main_configured.cpp.in)
   add_executable(${node} ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp)
   ament_target_dependencies(${node}
     "rclcpp"
