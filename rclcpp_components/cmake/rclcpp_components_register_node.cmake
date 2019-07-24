@@ -38,9 +38,9 @@ macro(rclcpp_components_register_node target)
   set(_RCLCPP_COMPONENTS__NODES
     "${_RCLCPP_COMPONENTS__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
   configure_file(${rclcpp_components_NODE_TEMPLATE}
-    ${PROJECT_BINARY_DIR}/node_main_configured.cpp.in)
+    ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_configured_${node}.cpp.in)
   file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp
-    INPUT ${PROJECT_BINARY_DIR}/node_main_configured.cpp.in)
+    INPUT ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_configured_${node}.cpp.in)
   add_executable(${node} ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp)
   ament_target_dependencies(${node}
     "rclcpp"
