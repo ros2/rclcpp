@@ -889,10 +889,12 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  using OnSetParametersCallbackHandle =
+    rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnParametersSetCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 
-  /// Register a callback to be called anytime a parameter is about to be changed.
+  /// Add a callback for when parameters are being set.
   /**
    * The callback signature is designed to allow handling of any of the above
    * `set_parameter*` or `declare_parameter*` methods, and so it takes a const
@@ -936,9 +938,60 @@ public:
    * of the latter things,
    * rclcpp::exceptions::ParameterModifiedInCallbackException will be thrown.
    *
-   * There may only be one callback set at a time, so the previously set
-   * callback is returned when this method is used, or nullptr will be returned
-   * if no callback was previously set.
+   * The callback functions must remain valid as long as the
+   * returned smart pointer is valid.
+   * The returned smart pointer can be promoted to a shared version.
+   *
+   * Resetting or letting the smart pointer go out of scope unregisters the callback.
+   * `remove_on_set_parameters_callback` can also be used.
+   *
+   * The registered callbacks are called when a parameter is set.
+   * When a callback returns a not successful result, the remaining callbacks aren't called.
+   * The order of the callback is the reverse from the registration order.
+   *
+   * \param callback The callback to register.
+   * \returns A shared pointer. The callback is valid as long as the smart pointer is alive.
+   * \throws std::bad_alloc if the allocation of the OnSetParametersCallbackHandle fails.
+   */
+  RCLCPP_PUBLIC
+  OnSetParametersCallbackHandle::SharedPtr
+  add_on_set_parameters_callback(OnParametersSetCallbackType callback);
+
+  /// Remove a callback registered with `add_on_set_parameters_callback`.
+  /**
+   * Delete a handler returned by `add_on_set_parameters_callback`.
+   *
+   * e.g.:
+   *
+   *    `remove_on_set_parameters_callback(scoped_callback.get())`
+   *
+   * As an alternative, the smart pointer can be reset:
+   *
+   *    `scoped_callback.reset()`
+   *
+   * Supposing that `scoped_callback` was the only owner.
+   *
+   * Calling `remove_on_set_parameters_callback` more than once with the same handler,
+   * or calling it after the shared pointer has been reset is an error.
+   * Resetting or letting the smart pointer go out of scope after calling
+   * `remove_on_set_parameters_callback` is not a problem.
+   *
+   * \param handler The callback handler to remove.
+   * \throws std::runtime_error if the handler was not created with `add_on_set_parameters_callback`,
+   *   or if it has been removed before.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
+
+  /// Register a callback to be called anytime a parameter is about to be changed.
+  /**
+   * With this method, only one callback can be set at a time. The callback that was previously
+   * set by this method is returned or `nullptr` if no callback was previously set.
+   *
+   * The callbacks added with `add_on_set_parameters_callback` are stored in a different place.
+   * `remove_on_set_parameters_callback` can't be used with the callbacks registered with this
+   * method. For removing it, use `set_on_parameters_set_callback(nullptr)`.
    *
    * \param[in] callback The callback to be called when the value for a
    *   parameter is about to be set.
@@ -946,7 +999,7 @@ public:
    *   otherwise nullptr.
    */
   RCLCPP_PUBLIC
-  rclcpp::Node::OnParametersSetCallbackType
+  OnParametersSetCallbackType
   set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
 
   /// Register the callback for parameter changes

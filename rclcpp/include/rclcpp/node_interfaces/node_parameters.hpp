@@ -17,6 +17,7 @@
 
 #include <map>
 #include <memory>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -158,6 +159,14 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const override;
 
   RCLCPP_PUBLIC
+  OnSetParametersCallbackHandle::SharedPtr
+  add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
+
+  RCLCPP_PUBLIC
+  void
+  remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) override;
+
+  RCLCPP_PUBLIC
   OnParametersSetCallbackType
   set_on_parameters_set_callback(OnParametersSetCallbackType callback) override;
 
@@ -170,6 +179,8 @@ public:
   const std::map<std::string, rclcpp::ParameterValue> &
   get_parameter_overrides() const override;
 
+  using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
+
 private:
   RCLCPP_DISABLE_COPY(NodeParameters)
 
@@ -181,6 +192,8 @@ private:
   bool parameter_modification_enabled_{true};
 
   OnParametersSetCallbackType on_parameters_set_callback_ = nullptr;
+
+  CallbacksContainerType on_parameters_set_callback_container_;
 
   std::map<std::string, ParameterInfo> parameters_;
 
