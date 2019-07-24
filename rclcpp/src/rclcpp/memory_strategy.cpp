@@ -32,16 +32,14 @@ MemoryStrategy::get_subscription_by_handle(
       if (!group) {
         continue;
       }
-      for (auto & weak_subscription : group->get_subscription_ptrs()) {
-        auto subscription = weak_subscription.lock();
-        if (subscription) {
-          if (subscription->get_subscription_handle() == subscriber_handle) {
-            return subscription;
-          }
-          if (subscription->get_intra_process_subscription_handle() == subscriber_handle) {
-            return subscription;
-          }
-        }
+      auto match_subscription = group->find_subscription_ptrs_if(
+        [&subscriber_handle](const rclcpp::SubscriptionBase::SharedPtr & subscription) -> bool {
+          return
+          (subscription->get_subscription_handle() == subscriber_handle) ||
+          (subscription->get_intra_process_subscription_handle() == subscriber_handle);
+        });
+      if (match_subscription) {
+        return match_subscription;
       }
     }
   }
@@ -63,11 +61,12 @@ MemoryStrategy::get_service_by_handle(
       if (!group) {
         continue;
       }
-      for (auto & weak_service : group->get_service_ptrs()) {
-        auto service = weak_service.lock();
-        if (service && service->get_service_handle() == service_handle) {
-          return service;
-        }
+      auto service_ref = group->find_service_ptrs_if(
+        [&service_handle](const rclcpp::ServiceBase::SharedPtr & service) -> bool {
+          return service->get_service_handle() == service_handle;
+        });
+      if (service_ref) {
+        return service_ref;
       }
     }
   }
@@ -89,11 +88,12 @@ MemoryStrategy::get_client_by_handle(
       if (!group) {
         continue;
       }
-      for (auto & weak_client : group->get_client_ptrs()) {
-        auto client = weak_client.lock();
-        if (client && client->get_client_handle() == client_handle) {
-          return client;
-        }
+      auto client_ref = group->find_client_ptrs_if(
+        [&client_handle](const rclcpp::ClientBase::SharedPtr & client) -> bool {
+          return client->get_client_handle() == client_handle;
+        });
+      if (client_ref) {
+        return client_ref;
       }
     }
   }
@@ -138,11 +138,12 @@ MemoryStrategy::get_group_by_subscription(
       if (!group) {
         continue;
       }
-      for (auto & weak_sub : group->get_subscription_ptrs()) {
-        auto sub = weak_sub.lock();
-        if (sub == subscription) {
-          return group;
-        }
+      auto match_sub = group->find_subscription_ptrs_if(
+        [&subscription](const rclcpp::SubscriptionBase::SharedPtr & sub) -> bool {
+          return sub == subscription;
+        });
+      if (match_sub) {
+        return group;
       }
     }
   }
@@ -164,11 +165,12 @@ MemoryStrategy::get_group_by_service(
       if (!group) {
         continue;
       }
-      for (auto & weak_serv : group->get_service_ptrs()) {
-        auto serv = weak_serv.lock();
-        if (serv && serv == service) {
-          return group;
-        }
+      auto service_ref = group->find_service_ptrs_if(
+        [&service](const rclcpp::ServiceBase::SharedPtr & serv) -> bool {
+          return serv == service;
+        });
+      if (service_ref) {
+        return group;
       }
     }
   }
@@ -190,11 +192,12 @@ MemoryStrategy::get_group_by_client(
       if (!group) {
         continue;
       }
-      for (auto & weak_client : group->get_client_ptrs()) {
-        auto cli = weak_client.lock();
-        if (cli && cli == client) {
-          return group;
-        }
+      auto client_ref = group->find_client_ptrs_if(
+        [&client](const rclcpp::ClientBase::SharedPtr & cli) -> bool {
+          return cli == client;
+        });
+      if (client_ref) {
+        return group;
       }
     }
   }
@@ -216,11 +219,12 @@ MemoryStrategy::get_group_by_waitable(
       if (!group) {
         continue;
       }
-      for (auto & weak_waitable : group->get_waitable_ptrs()) {
-        auto group_waitable = weak_waitable.lock();
-        if (group_waitable && group_waitable == waitable) {
-          return group;
-        }
+      auto waitable_ref = group->find_waitable_ptrs_if(
+        [&waitable](const rclcpp::Waitable::SharedPtr & group_waitable) -> bool {
+          return group_waitable == waitable;
+        });
+      if (waitable_ref) {
+        return group;
       }
     }
   }

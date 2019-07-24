@@ -511,11 +511,12 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
       if (!group) {
         continue;
       }
-      for (auto & weak_timer : group->get_timer_ptrs()) {
-        auto t = weak_timer.lock();
-        if (t == timer) {
-          return group;
-        }
+      auto timer_ref = group->find_timer_ptrs_if(
+        [timer](const rclcpp::TimerBase::SharedPtr & timer_ptr) -> bool {
+          return timer_ptr == timer;
+        });
+      if (timer_ref) {
+        return group;
       }
     }
   }
@@ -535,14 +536,15 @@ Executor::get_next_timer(AnyExecutable & any_exec)
       if (!group || !group->can_be_taken_from().load()) {
         continue;
       }
-      for (auto & timer_ref : group->get_timer_ptrs()) {
-        auto timer = timer_ref.lock();
-        if (timer && timer->is_ready()) {
-          any_exec.timer = timer;
-          any_exec.callback_group = group;
-          any_exec.node_base = node;
-          return;
-        }
+      auto timer_ref = group->find_timer_ptrs_if(
+        [](const rclcpp::TimerBase::SharedPtr & timer) -> bool {
+          return timer->is_ready();
+        });
+      if (timer_ref) {
+        any_exec.timer = timer_ref;
+        any_exec.callback_group = group;
+        any_exec.node_base = node;
+        return;
       }
     }
   }
