@@ -68,8 +68,7 @@ if(BUILD_TESTING)
   add_library(test_component SHARED test/components/test_component.cpp)
   ament_target_dependencies(test_component
     "class_loader"
-    "rclcpp"
-    "rclcpp_components")
+    "rclcpp")
   #rclcpp_components_register_nodes(test_component "test_rclcpp_components::TestComponent")
   set(components "${components}test_rclcpp_components::TestComponentFoo;$<TARGET_FILE:test_component>\n")
   set(components "${components}test_rclcpp_components::TestComponentBar;$<TARGET_FILE:test_component>\n")
