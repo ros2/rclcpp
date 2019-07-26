@@ -115,14 +115,13 @@ public:
   /**
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
-   * \param[in] context The context for the node (usually represents the state of a process).
    * \param[in] options Additional options to control creation of the node.
    */
   RCLCPP_LIFECYCLE_PUBLIC
   LifecycleNode(
     const std::string & node_name,
     const std::string & namespace_,
-    const rclcpp::NodeOptions & options);
+    const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
   RCLCPP_LIFECYCLE_PUBLIC
   virtual ~LifecycleNode();
