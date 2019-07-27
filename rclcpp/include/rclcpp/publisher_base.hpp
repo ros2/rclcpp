@@ -161,6 +161,15 @@ public:
   rclcpp::QoS
   get_actual_qos() const;
 
+  /// Check if publisher instance can loan messages.
+  /**
+   * Depending on the middleware and the message type, this will return true if the middleware
+   * can allocate a ROS message instance.
+   */
+  RCLCPP_PUBLIC
+  bool
+  can_loan_messages() const;
+
   /// Compare this publisher to a gid.
   /**
    * Note that this function calls the next function.

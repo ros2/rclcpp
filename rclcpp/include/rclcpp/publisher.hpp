@@ -201,7 +201,7 @@ protected:
   void
   do_inter_process_publish(const MessageT * msg)
   {
-    auto status = rcl_publish(&publisher_handle_, msg, nullptr);
+    auto status = rcl_publish(&publisher_handle_, msg, nullptr, false);
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
@@ -236,7 +236,7 @@ protected:
     rcl_interfaces::msg::IntraProcessMessage ipm;
     ipm.publisher_id = intra_process_publisher_id_;
     ipm.message_sequence = message_seq;
-    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr);
+    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr, false);
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
