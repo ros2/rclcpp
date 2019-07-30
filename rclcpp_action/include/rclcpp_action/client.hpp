@@ -372,10 +372,6 @@ public:
           std::lock_guard<std::mutex> guard(goal_handles_mutex_);
           goal_handles_[goal_handle->get_goal_id()] = goal_handle;
         }
-        promise->set_value(goal_handle);
-        if (options.goal_response_callback) {
-          options.goal_response_callback(future);
-        }
 
         if (options.result_callback) {
           try {
@@ -384,6 +380,12 @@ public:
             promise->set_exception(std::current_exception());
             return;
           }
+        }
+
+        promise->set_value(goal_handle);
+
+        if (options.goal_response_callback) {
+          options.goal_response_callback(future);
         }
       });
     return future;
