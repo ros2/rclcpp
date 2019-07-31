@@ -4,12 +4,12 @@ Changelog for package rclcpp
 
 Forthcoming
 -----------
-* Use params from node '/**' from parameter YAML file (`#805 <https://github.com/ros2/rclcpp/issues/805>`_)
-* Fix a comparison with a sign mismatch (`#804 <https://github.com/ros2/rclcpp/issues/804>`_)
-* changed on_parameter_event qos profile to rmw_qos_profile_parameter_events (`#798 <https://github.com/ros2/rclcpp/issues/798>`_)
-* Make TimeSource ignore use_sim_time events coming from other nodes. (`#803 <https://github.com/ros2/rclcpp/issues/803>`_)
-* use default parameter descriptor in parameters interface (`#794 <https://github.com/ros2/rclcpp/issues/794>`_)
-* Added support for const member functions (`#763 <https://github.com/ros2/rclcpp/issues/763>`_)
+* Enabled the creation of a parameter YAML file which is applied to each node. (`#805 <https://github.com/ros2/rclcpp/issues/805>`_)
+* Fixed a signed/unsigned integer comparison compiler warning. (`#804 <https://github.com/ros2/rclcpp/issues/804>`_)
+* Changed the QoS profile used when subscribing to parameter events to match the publishing side, i.e. ``rmw_qos_profile_parameter_events``. (`#798 <https://github.com/ros2/rclcpp/issues/798>`_)
+* Changed the logic in TimeSource to ignore use_sim_time parameter events coming from other nodes. (`#803 <https://github.com/ros2/rclcpp/issues/803>`_)
+* Added missing default values in the NodeParametersInterface. (`#794 <https://github.com/ros2/rclcpp/issues/794>`_)
+* Added support for const member callback functions. (`#763 <https://github.com/ros2/rclcpp/issues/763>`_)
 * Contributors: Esteve Fernandez, Gonzo, Karsten Knese, Michel Hidalgo, Scott K Logan
 
 0.7.6 (2019-06-12)
