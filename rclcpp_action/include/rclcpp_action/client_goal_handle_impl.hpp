@@ -127,11 +127,13 @@ ClientGoalHandle<ActionT>::is_result_aware()
 }
 
 template<typename ActionT>
-void
+bool
 ClientGoalHandle<ActionT>::set_result_awareness(bool awareness)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
+  bool previous = is_result_aware_;
   is_result_aware_ = awareness;
+  return previous;
 }
 
 template<typename ActionT>
