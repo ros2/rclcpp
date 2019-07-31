@@ -53,19 +53,22 @@ public:
     const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
     const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
     const std::string & remote_node_name = "",
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   RCLCPP_PUBLIC
   AsyncParametersClient(
     const rclcpp::Node::SharedPtr node,
     const std::string & remote_node_name = "",
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   RCLCPP_PUBLIC
   AsyncParametersClient(
     rclcpp::Node * node,
     const std::string & remote_node_name = "",
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
+    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   RCLCPP_PUBLIC
   std::shared_future<std::vector<rclcpp::Parameter>>
