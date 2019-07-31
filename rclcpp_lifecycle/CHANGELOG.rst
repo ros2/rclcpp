@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Add default value to options in LifecycleNode construnctor. Update API documentation. (`#801 <https://github.com/ros2/rclcpp/issues/801>`_)
+* Contributors: Esteve Fernandez, Dirk Thomas
+
 0.7.6 (2019-06-12)
 ------------------
 

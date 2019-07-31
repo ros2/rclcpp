@@ -2,6 +2,16 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use params from node '/**' from parameter YAML file (`#805 <https://github.com/ros2/rclcpp/issues/805>`_)
+* Fix a comparison with a sign mismatch (`#804 <https://github.com/ros2/rclcpp/issues/804>`_)
+* changed on_parameter_event qos profile to rmw_qos_profile_parameter_events (`#798 <https://github.com/ros2/rclcpp/issues/798>`_)
+* Make TimeSource ignore use_sim_time events coming from other nodes. (`#803 <https://github.com/ros2/rclcpp/issues/803>`_)
+* use default parameter descriptor in parameters interface (`#794 <https://github.com/ros2/rclcpp/issues/794>`_)
+* Added support for const member functions (`#763 <https://github.com/ros2/rclcpp/issues/763>`_)
+* Contributors: Esteve Fernandez, Gonzo, Karsten Knese, Michel Hidalgo, Scott K Logan
+
 0.7.6 (2019-06-12)
 ------------------
 * Ignore parameters overrides in set parameter methods when allowing undeclared parameters (`#756 <https://github.com/ros2/rclcpp/issues/756>`_)
