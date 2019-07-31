@@ -2,8 +2,8 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.7 (2019-07-31)
+------------------
 * Enabled the creation of a parameter YAML file which is applied to each node. (`#805 <https://github.com/ros2/rclcpp/issues/805>`_)
 * Fixed a signed/unsigned integer comparison compiler warning. (`#804 <https://github.com/ros2/rclcpp/issues/804>`_)
 * Changed the QoS profile used when subscribing to parameter events to match the publishing side, i.e. ``rmw_qos_profile_parameter_events``. (`#798 <https://github.com/ros2/rclcpp/issues/798>`_)
