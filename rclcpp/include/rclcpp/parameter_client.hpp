@@ -128,18 +128,12 @@ public:
       options);
   }
 
-  /**
-   * The NodeT type only needs to have a method called get_node_topics_interface()
-   * which returns a shared_ptr to a NodeTopicsInterface, or be a
-   * NodeTopicsInterface pointer itself.
-   */
   template<
     typename CallbackT,
-    typename NodeT,
     typename AllocatorT = std::allocator<void>>
   static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(
-    NodeT && node,
+    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
     CallbackT && callback,
     const rclcpp::QoS & qos = (
       rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events))
@@ -149,10 +143,52 @@ public:
   ))
   {
     return rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
-      node,
+      node_topics_interface,
       "parameter_events",
       qos,
       std::forward<CallbackT>(callback),
+      options);
+  }
+
+  template<
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>>
+  static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  on_parameter_event(
+    rclcpp::Node::SharedPtr node,
+    CallbackT && callback,
+    const rclcpp::QoS & qos = (
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events))
+    ),
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  ))
+  {
+    return AsyncParametersClient::on_parameter_event(
+      node->get_node_topics_interface(),
+      callback,
+      qos,
+      options);
+  }
+
+  template<
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>>
+  static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
+  on_parameter_event(
+    rclcpp::Node * node,
+    CallbackT && callback,
+    const rclcpp::QoS & qos = (
+      rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events))
+    ),
+    const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  ))
+  {
+    return AsyncParametersClient::on_parameter_event(
+      node->get_node_topics_interface(),
+      callback,
+      qos,
       options);
   }
 
