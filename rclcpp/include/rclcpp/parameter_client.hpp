@@ -271,7 +271,7 @@ public:
   {
     return get_parameter_impl(
       parameter_name,
-      std::function<T()>([]() -> T {throw std::runtime_error("Parameter not set");}));
+      std::function<T()>([]() -> T {throw std::runtime_error("Parameter '" + parameter_name + "' is not set");}));
   }
 
   RCLCPP_PUBLIC
