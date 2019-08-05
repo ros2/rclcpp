@@ -62,10 +62,10 @@ std::shared_ptr<rcutils_uint8_array_t> make_serialized_string_msg(
 
   serialized_data->buffer_length = message_size;
 
-  static auto imageTypeSupport =
+  static auto type =
     rosidl_typesupport_cpp::get_message_type_support_handle
     <rcl_interfaces::msg::IntraProcessMessage>();
-  auto error = rmw_serialize(stringMsg.get(), imageTypeSupport, serialized_data.get());
+  auto error = rmw_serialize(stringMsg.get(), type, serialized_data.get());
   if (error != RMW_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED("m4_test", "Something went wrong preparing the serialized message");
   }
