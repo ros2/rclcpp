@@ -183,7 +183,7 @@ PublisherBase::get_subscription_count() const
     }
   }
   if (RCL_RET_OK != status) {
-    rclcpp::exceptions::throw_from_rcl_error(status, "failed to get get subscription count");
+    rclcpp::exceptions::throw_from_rcl_error(status, "Failed to get get subscription count.");
   }
   return inter_process_subscription_count;
 }
@@ -199,8 +199,8 @@ PublisherBase::get_intra_process_subscription_count() const
     // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
     //                  Same as wjwwood comment in publisher_factory create_shared_publish_callback.
     throw std::runtime_error(
-            "intra process subscriber count called after "
-            "destruction of intra process manager");
+            "Intra process subscriber count called after "
+            "destruction of intra process manager.");
   }
   return ipm->get_subscription_count(intra_process_publisher_id_);
 }
@@ -210,7 +210,7 @@ PublisherBase::get_actual_qos() const
 {
   const rmw_qos_profile_t * qos = rcl_publisher_get_actual_qos(&publisher_handle_);
   if (!qos) {
-    auto msg = std::string("failed to get qos settings: ") + rcl_get_error_string().str;
+    auto msg = std::string("Failed to get qos settings: ") + rcl_get_error_string().str;
     rcl_reset_error();
     throw std::runtime_error(msg);
   }
@@ -235,14 +235,14 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
   bool result = false;
   auto ret = rmw_compare_gids_equal(gid, &this->get_gid(), &result);
   if (ret != RMW_RET_OK) {
-    auto msg = std::string("failed to compare gids: ") + rmw_get_error_string().str;
+    auto msg = std::string("Failed to compare gids: ") + rmw_get_error_string().str;
     rmw_reset_error();
     throw std::runtime_error(msg);
   }
   if (!result) {
     ret = rmw_compare_gids_equal(gid, &this->get_intra_process_gid(), &result);
     if (ret != RMW_RET_OK) {
-      auto msg = std::string("failed to compare gids: ") + rmw_get_error_string().str;
+      auto msg = std::string("Failed to compare gids: ") + rmw_get_error_string().str;
       rmw_reset_error();
       throw std::runtime_error(msg);
     }
@@ -266,7 +266,7 @@ PublisherBase::setup_intra_process(
   // Intraprocess configuration is not allowed with "durability" qos policy non "volatile".
   if (this->get_actual_qos().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
     throw std::invalid_argument(
-            "intraprocess communication is not allowed with durability qos policy non-volatile");
+            "Intraprocess communication is not allowed with durability qos policy non-volatile");
   }
   const char * topic_name = this->get_topic_name();
   if (!topic_name) {
@@ -292,7 +292,7 @@ PublisherBase::setup_intra_process(
         rcl_node_get_namespace(rcl_node_handle));
     }
 
-    rclcpp::exceptions::throw_from_rcl_error(ret, "could not create intra process publisher");
+    rclcpp::exceptions::throw_from_rcl_error(ret, "Could not create intra process publisher");
   }
 
   intra_process_publisher_id_ = intra_process_publisher_id;
@@ -311,7 +311,7 @@ PublisherBase::setup_intra_process(
     publisher_rmw_handle, &intra_process_rmw_gid_);
   if (rmw_ret != RMW_RET_OK) {
     auto msg =
-      std::string("failed to create intra process publisher gid: ") + rmw_get_error_string().str;
+      std::string("Failed to create intra process publisher gid: ") + rmw_get_error_string().str;
     rmw_reset_error();
     throw std::runtime_error(msg);
   }
@@ -338,7 +338,7 @@ void
 PublisherBase::do_serialized_publish(const rcl_serialized_message_t * serialized_msg)
 {
   if (!serialized_msg) {
-    throw std::runtime_error("cannot publisher msg which is a null pointer");
+    throw std::runtime_error("Cannot publisher msg which is a null pointer.");
   }
 
   bool inter_process_publish_needed =
@@ -348,7 +348,7 @@ PublisherBase::do_serialized_publish(const rcl_serialized_message_t * serialized
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
+              "Intra process publish called after destruction of intra process manager.");
     }
     const uint64_t message_seq =
       ipm->template store_intra_process_message<rmw_serialized_message_t>(
@@ -359,7 +359,7 @@ PublisherBase::do_serialized_publish(const rcl_serialized_message_t * serialized
   if (inter_process_publish_needed) {
     auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
     if (RCL_RET_OK != status) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
+      rclcpp::exceptions::throw_from_rcl_error(status, "Failed to publish serialized message.");
     }
   }
 }
@@ -382,6 +382,6 @@ PublisherBase::do_intra_process_publish(uint64_t message_seq)
     }
   }
   if (RCL_RET_OK != status) {
-    rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
+    rclcpp::exceptions::throw_from_rcl_error(status, "Failed to publish intra process message.");
   }
 }
