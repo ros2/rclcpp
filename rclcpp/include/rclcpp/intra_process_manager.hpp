@@ -308,7 +308,6 @@ public:
   {
     using ElemAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
     using ElemAlloc = typename ElemAllocTraits::allocator_type;
-    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
 
     MessageT * deserialize(const rmw_serialized_message_t * serialized_msg)
     {
@@ -321,7 +320,7 @@ public:
       }
 
       ElemAlloc allocator;
-      auto ptr = MessageAllocTraits::allocate(allocator, 1);
+      auto ptr = ElemAllocTraits::allocate(allocator, 1);
 
       auto msg_ts =
         rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
