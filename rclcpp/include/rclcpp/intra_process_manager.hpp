@@ -314,9 +314,9 @@ public:
       if (!serialized_msg ||
         serialized_msg->buffer_capacity == 0 ||
         serialized_msg->buffer_length == 0 ||
-        serialized_msg->buffer == nullptr)
+        !serialized_msg->buffer)
       {
-        throw std::runtime_error("failed to deserialize nullptr serialized message");
+        throw std::runtime_error("Failed to deserialize nullptr serialized message.");
       }
 
       ElemAlloc allocator;
@@ -325,9 +325,9 @@ public:
       const auto msg_ts =
         rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
 
-      auto ret = rmw_deserialize(serialized_msg, msg_ts, ptr);
+      const auto ret = rmw_deserialize(serialized_msg, msg_ts, ptr);
       if (ret != RMW_RET_OK) {
-        throw std::runtime_error("failed to deserialize serialized message");
+        throw std::runtime_error("Failed to deserialize serialized message.");
       }
 
       return ptr;
@@ -345,7 +345,7 @@ public:
         serialized_msg->buffer_length == 0 ||
         serialized_msg->buffer == nullptr)
       {
-        throw std::runtime_error("failed to deserialize nullptr serialized message b");
+        throw std::runtime_error("Failed to deserialize nullptr serialized message.");
       }
 
       return new rmw_serialized_message_t(*serialized_msg);
@@ -353,7 +353,8 @@ public:
   };
 
   /// Serialize a message if needed. In this case just point to the content (same type).
-  template<typename MessageTIn, typename MessageTOutPtr, typename MessageTOut>
+  template<typename MessageTIn, typename MessageTOutPtr,
+    typename MessageTOut = typename MessageTOutPtr::element_type>
   struct Serializer
   {
     void serialize(
@@ -401,7 +402,7 @@ public:
         type_support,
         &serialized_message);
       if (error != RCL_RET_OK) {
-        throw std::runtime_error("Failed to serialize");
+        throw std::runtime_error("Failed to serialize.");
       }
 
       return serialized_message;
@@ -409,7 +410,8 @@ public:
   };
 
   /// Not serializing a message if same type.
-  template<typename MessageTIn, typename MessageTOutPtr, typename MessageTOut>
+  template<typename MessageTIn, typename MessageTOutPtr,
+    typename MessageTOut = typename MessageTOutPtr::element_type>
   struct TypedSerializer
   {
     void serialize(
@@ -497,7 +499,7 @@ public:
       target_subs_size
     );
 
-    if (buffer == nullptr) {
+    if (!buffer) {
       return;
     }
 
@@ -544,8 +546,7 @@ public:
 
       TypedSerializer<
         mapped_ring_buffer::MappedRingBufferBase::ConstVoidSharedPtr,
-        std::unique_ptr<MessageT, Deleter>,
-        MessageT> serializer;
+        std::unique_ptr<MessageT, Deleter>> serializer;
       serializer.serialize(stored_msg, message, buffer->get_type_support());
     } else {
       using MRBMessageAlloc =
@@ -570,7 +571,7 @@ public:
         return;
       }
 
-      Serializer<typename TypedMRB::ElemUniquePtr, std::unique_ptr<MessageT, Deleter>, MessageT>
+      Serializer<typename TypedMRB::ElemUniquePtr, std::unique_ptr<MessageT, Deleter>>
       serializer;
       serializer.serialize(stored_msg, message, typed_buffer->get_type_support());
     }
@@ -597,7 +598,7 @@ public:
       target_subs_size
       );
 
-    if (buffer == nullptr) {
+    if (!buffer) {
       return;
     }
 
