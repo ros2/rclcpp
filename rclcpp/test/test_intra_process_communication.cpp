@@ -54,7 +54,7 @@ std::shared_ptr<rcutils_uint8_array_t> make_serialized_string_msg(
       delete msg;
       if (error != RCUTILS_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "m4_test",
+          "test_intra_process_communication",
           "Leaking memory %i",
           error);
       }
@@ -67,7 +67,8 @@ std::shared_ptr<rcutils_uint8_array_t> make_serialized_string_msg(
     <rcl_interfaces::msg::IntraProcessMessage>();
   auto error = rmw_serialize(stringMsg.get(), type, serialized_data.get());
   if (error != RMW_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED("m4_test", "Something went wrong preparing the serialized message");
+    RCUTILS_LOG_ERROR_NAMED("test_intra_process_communication",
+      "Something went wrong preparing the serialized message");
   }
 
   return serialized_data;
