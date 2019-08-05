@@ -28,8 +28,8 @@ class TestNodeWithGlobalArgs : public ::testing::Test
 protected:
   static void SetUpTestCase()
   {
-    const char * const args[] = {"proc", "__node:=global_node_name"};
-    rclcpp::init(2, args);
+    const char * const args[] = {"proc", "--ros-args", "__node:=global_node_name"};
+    rclcpp::init(3, args);
   }
 };
 
