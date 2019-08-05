@@ -101,10 +101,6 @@ public:
   }
 
 protected:
-  void SetUp() {}
-
-  void TearDown() {}
-
   static std::chrono::milliseconds offset;
 };
 
