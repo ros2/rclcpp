@@ -355,7 +355,7 @@ public:
    */
   void pop(uint64_t key, ConstVoidSharedPtr & value) override
   {
-    pop(key, (ConstElemSharedPtr &)value);
+    pop(key, reinterpret_cast<ConstElemSharedPtr &>(value));
   }
 
 
@@ -372,7 +372,7 @@ public:
    */
   void get(uint64_t key, ConstVoidSharedPtr & value) override
   {
-    get(key, (ConstElemSharedPtr &)value);
+    get(key, reinterpret_cast<ConstElemSharedPtr &>(value));
   }
 
 
