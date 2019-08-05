@@ -192,10 +192,23 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized)
         *stringMsg));
     std::unique_ptr<rcutils_uint8_array_t> msg0U(new rcutils_uint8_array_t(*msg0));
 
-    publisher->publish(msg0);
+    // Now deprecated functions.
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+    publisher->publish(*msg0);
     publisher->publish(stringMsg);
-    publisher->publish(std::move(msg0U));
+    publisher->publish(*msg0U);
     publisher->publish(std::move(stringMsgU));
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 
     rclcpp::spin_some(node);
     rclcpp::sleep_for(offset);
