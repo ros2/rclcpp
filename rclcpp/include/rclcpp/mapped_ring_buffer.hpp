@@ -130,6 +130,7 @@ public:
    * The constructor will allocate memory while reserving space.
    *
    * \param size size of the ring buffer; must be positive and non-zero.
+   * \param type_support message type of content; for serialized messages nullptr
    * \param allocator optional custom allocator
    */
   explicit MappedRingBuffer(
