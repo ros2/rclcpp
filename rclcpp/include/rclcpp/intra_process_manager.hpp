@@ -322,7 +322,7 @@ public:
       ElemAlloc allocator;
       auto ptr = ElemAllocTraits::allocate(allocator, 1);
 
-      auto msg_ts =
+      const auto msg_ts =
         rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
 
       auto ret = rmw_deserialize(serialized_msg, msg_ts, ptr);
@@ -382,10 +382,10 @@ public:
       const MessageTIn & msg,
       const rosidl_message_type_support_t * type_support)
     {
-      rcutils_allocator_t rcutils_allocator_ = rcutils_get_default_allocator();
+      auto rcutils_allocator_ = rcutils_get_default_allocator();
 
       auto serialized_message = rmw_get_zero_initialized_serialized_message();
-      auto ret = rmw_serialized_message_init(&serialized_message, 0, &rcutils_allocator_);
+      const auto ret = rmw_serialized_message_init(&serialized_message, 0, &rcutils_allocator_);
       if (ret != RCUTILS_RET_OK) {
         throw std::runtime_error(
                 "Error allocating resources for serialized message: " +
