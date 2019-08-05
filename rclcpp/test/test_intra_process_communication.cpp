@@ -17,9 +17,9 @@
 #include <rcl_interfaces/msg/intra_process_message.hpp>
 
 #include <iostream>
-#include <string>
 #include <memory>
 #include <utility>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/publisher.hpp"
