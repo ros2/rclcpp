@@ -26,7 +26,11 @@
 #include "rclcpp/rclcpp.hpp"
 
 
-static int g_counter = 0;
+int32_t & get_test_allocation_counter()
+{
+  static int32_t counter = 0;
+  return counter;
+}
 
 std::shared_ptr<rcutils_uint8_array_t> make_serialized_string_msg(
   const std::shared_ptr<rcl_interfaces::msg::IntraProcessMessage> & stringMsg)
@@ -41,11 +45,11 @@ std::shared_ptr<rcutils_uint8_array_t> make_serialized_string_msg(
     throw std::runtime_error("Error allocating resources " + std::to_string(ret));
   }
 
-  ++g_counter;
+  ++get_test_allocation_counter();
   auto serialized_data = std::shared_ptr<rcutils_uint8_array_t>(
     msg,
     [](rcutils_uint8_array_t * msg) {
-      --g_counter;
+      --get_test_allocation_counter();
       int error = rcutils_uint8_array_fini(msg);
       delete msg;
       if (error != RCUTILS_RET_OK) {
@@ -202,7 +206,7 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized)
     EXPECT_EQ(counts[1], 12u);
   }
 
-  EXPECT_EQ(g_counter, 0);
+  EXPECT_EQ(get_test_allocation_counter(), 0);
 }
 
 auto get_new_context()
