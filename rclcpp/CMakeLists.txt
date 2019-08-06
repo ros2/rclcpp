@@ -143,6 +143,8 @@ if(BUILD_TESTING)
 
   find_package(rmw_implementation_cmake REQUIRED)
 
+  find_package(test_msgs REQUIRED)
+
   include(cmake/rclcpp_add_build_failure_test.cmake)
 
   ament_add_gtest(test_client test/test_client.cpp)
@@ -356,7 +358,6 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_subscription_publisher_count_api ${PROJECT_NAME})
   endif()
-  find_package(test_msgs REQUIRED)
   ament_add_gtest(test_subscription_traits test/test_subscription_traits.cpp)
   if(TARGET test_subscription_traits)
     ament_target_dependencies(test_subscription_traits
@@ -372,38 +373,17 @@ if(BUILD_TESTING)
     target_link_libraries(test_find_weak_nodes ${PROJECT_NAME})
   endif()
 
-  get_default_rmw_implementation(default_rmw)
-  find_package(${default_rmw} REQUIRED)
-  get_rmw_typesupport(typesupport_impls_cpp "${default_rmw}" LANGUAGE "cpp")
-  get_rmw_typesupport(typesupport_impls_c "${default_rmw}" LANGUAGE "c")
-  set(mock_msg_files
-    "test/mock_msgs/srv/Mock.srv")
-  rosidl_generate_interfaces(mock_msgs
-    ${mock_msg_files}
-    LIBRARY_NAME "rclcpp"
-    SKIP_INSTALL)
-
   set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
   if(WIN32)
     set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
   endif()
 
-  ament_add_gtest(test_externally_defined_services test/test_externally_defined_services.cpp
-    APPEND_LIBRARY_DIRS "${append_library_dirs}")
-  if(TARGET test_externally_defined_services)
-    ament_target_dependencies(test_externally_defined_services
-      "rcl"
-    )
-    target_link_libraries(test_externally_defined_services ${PROJECT_NAME})
-    foreach(typesupport_impl_cpp ${typesupport_impls_cpp})
-      rosidl_target_interfaces(test_externally_defined_services
-        mock_msgs ${typesupport_impl_cpp})
-    endforeach()
-    foreach(typesupport_impl_c ${typesupport_impls_c})
-      rosidl_target_interfaces(test_externally_defined_services
-        mock_msgs ${typesupport_impl_c})
-    endforeach()
-  endif()
+  ament_add_gtest(test_externally_defined_services test/test_externally_defined_services.cpp)
+  ament_target_dependencies(test_externally_defined_services
+    "rcl"
+    "test_msgs"
+  )
+  target_link_libraries(test_externally_defined_services ${PROJECT_NAME})
 
   ament_add_gtest(test_duration test/test_duration.cpp
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
