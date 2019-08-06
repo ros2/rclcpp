@@ -33,16 +33,13 @@ ComponentManager::ComponentManager(
 : Node("ComponentManager"),
   executor_(executor)
 {
-  loadNode_srv_ =
-    create_service<LoadNode>(
+  loadNode_srv_ = create_service<LoadNode>(
     "~/_container/load_node",
     std::bind(&ComponentManager::OnLoadNode, this, _1, _2, _3));
-  unloadNode_srv_ =
-    create_service<UnloadNode>(
+  unloadNode_srv_ = create_service<UnloadNode>(
     "~/_container/unload_node",
     std::bind(&ComponentManager::OnUnloadNode, this, _1, _2, _3));
-  listNodes_srv_ =
-    create_service<ListNodes>(
+  listNodes_srv_ = create_service<ListNodes>(
     "~/_container/list_nodes",
     std::bind(&ComponentManager::OnListNodes, this, _1, _2, _3));
 }

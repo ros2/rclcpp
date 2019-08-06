@@ -849,9 +849,8 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
       if (std::string::npos != last_separator) {
         std::string prefix = kv.first.substr(0, last_separator);
         if (
-          std::find(
-            result.prefixes.cbegin(), result.prefixes.cend(),
-            prefix) == result.prefixes.cend())
+          std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
+          result.prefixes.cend())
         {
           result.prefixes.push_back(prefix);
         }

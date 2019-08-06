@@ -1477,7 +1477,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     auto ret = node->set_parameters_atomically(
     {
       {name1, 2},
-      {name2, false},   // should fail to be set, failing the whole operation
+      {name2, false},  // should fail to be set, failing the whole operation
       {name3, "red"},
     });
     EXPECT_FALSE(ret.successful);
@@ -1588,8 +1588,8 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     auto ret = node->set_parameters_atomically(
     {
       rclcpp::Parameter(name1, 43),
-      rclcpp::Parameter(name2, true),   // this would cause implicit declaration
-      rclcpp::Parameter(name3, "other"),   // this set should fail, and fail the whole operation
+      rclcpp::Parameter(name2, true),  // this would cause implicit declaration
+      rclcpp::Parameter(name3, "other"),  // this set should fail, and fail the whole operation
     });
     EXPECT_FALSE(ret.successful);
     // name1 and name2 remain with the old values
