@@ -97,7 +97,9 @@ NodeOptions::get_rcl_node_options() const
         this->arguments_.cbegin(), this->arguments_.cend(), RCL_ROS_ARGS_FLAG);
 
       c_argc = static_cast<int>(this->arguments_.size());
-      if (it == this->arguments_.cend()) c_argc += 1;
+      if (it == this->arguments_.cend()) {
+        c_argc += 1;
+      }
 
       c_argv.reset(new const char *[c_argc]);
 
