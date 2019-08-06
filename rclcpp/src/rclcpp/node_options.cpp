@@ -93,11 +93,20 @@ NodeOptions::get_rcl_node_options() const
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
     if (!this->arguments_.empty()) {
-      c_argc = static_cast<int>(this->arguments_.size()) + 1;
+      auto it = std::find(
+        this->arguments_.cbegin(), this->arguments_.cend(), RCL_ROS_ARGS_FLAG);
+
+      c_argc = static_cast<int>(this->arguments_.size());
+      if (it == this->arguments_.cend()) c_argc += 1;
+
       c_argv.reset(new const char *[c_argc]);
-      c_argv[0] = RCL_ROS_ARGS_FLAG;
-      for (std::size_t i = 0; i < this->arguments_.size(); ++i) {
-        c_argv[i + 1] = this->arguments_[i].c_str();
+
+      std::size_t i = 0;
+      if (it == this->arguments_.cend()) {
+        c_argv[i++] = RCL_ROS_ARGS_FLAG;
+      }
+      for (std::size_t j = 0; j < this->arguments_.size(); ++i, ++j) {
+        c_argv[i] = this->arguments_[j].c_str();
       }
     }
 
