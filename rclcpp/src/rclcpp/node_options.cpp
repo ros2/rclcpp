@@ -93,7 +93,7 @@ NodeOptions::get_rcl_node_options() const
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
     if (!this->arguments_.empty()) {
-      c_argc = this->arguments_.size() + 1;
+      c_argc = static_cast<int>(this->arguments_.size()) + 1;
       c_argv.reset(new const char *[c_argc]);
       c_argv[0] = RCL_ROS_ARGS_FLAG;
       for (std::size_t i = 0; i < this->arguments_.size(); ++i) {
