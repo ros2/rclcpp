@@ -100,7 +100,8 @@ void TimeSource::attachNode(
   } else {
     // TODO(wjwwood): use set_on_parameters_set_callback to catch the type mismatch,
     //   before the use_sim_time parameter can ever be set to an invalid value
-    RCLCPP_ERROR(logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
+    RCLCPP_ERROR(
+      logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
       rclcpp::to_string(use_sim_time_param.get_type()).c_str());
   }
 
@@ -154,7 +155,8 @@ void TimeSource::detachClock(std::shared_ptr<rclcpp::Clock> clock)
 
 TimeSource::~TimeSource()
 {
-  if (node_base_ || node_topics_ || node_graph_ || node_services_ ||
+  if (
+    node_base_ || node_topics_ || node_graph_ || node_services_ ||
     node_logging_ || node_clock_ || node_parameters_)
   {
     this->detachNode();

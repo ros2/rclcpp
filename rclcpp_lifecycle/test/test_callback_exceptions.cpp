@@ -65,7 +65,8 @@ TEST_F(TestCallbackExceptions, positive_on_error) {
   auto test_node = std::make_shared<PositiveCallbackExceptionNode>("testnode");
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
-  EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
+  EXPECT_EQ(
+    State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
       rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(2u, test_node->number_of_callbacks);
@@ -110,7 +111,8 @@ TEST_F(TestCallbackExceptions, negative_on_error) {
   auto test_node = std::make_shared<NegativeCallbackExceptionNode>("testnode");
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
-  EXPECT_EQ(State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
+  EXPECT_EQ(
+    State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
       rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(2u, test_node->number_of_callbacks);

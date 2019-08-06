@@ -31,7 +31,8 @@
  * Note: NodeClass does not need to inherit from `rclcpp::Node`, but it is the easiest way.
  */
 #define RCLCPP_COMPONENTS_REGISTER_NODE(NodeClass) \
-  CLASS_LOADER_REGISTER_CLASS(rclcpp_components::NodeFactoryTemplate<NodeClass>, \
+  CLASS_LOADER_REGISTER_CLASS( \
+    rclcpp_components::NodeFactoryTemplate<NodeClass>, \
     rclcpp_components::NodeFactory)
 
 #endif  // RCLCPP_COMPONENTS__REGISTER_NODE_MACRO_HPP__

@@ -129,7 +129,8 @@ TEST_F(TestSubscription, construction_and_destruction) {
   }
 
   {
-    ASSERT_THROW({
+    ASSERT_THROW(
+    {
       auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 10, callback);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
@@ -161,7 +162,8 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
   }
 
   {
-    ASSERT_THROW({
+    ASSERT_THROW(
+    {
       auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 1, callback);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }

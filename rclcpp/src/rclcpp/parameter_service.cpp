@@ -59,10 +59,11 @@ ParameterService::ParameterService(
     {
       try {
         auto types = node_params->get_parameter_types(request->names);
-        std::transform(types.cbegin(), types.cend(),
-        std::back_inserter(response->types), [](const uint8_t & type) {
-          return static_cast<rclcpp::ParameterType>(type);
-        });
+        std::transform(
+          types.cbegin(), types.cend(),
+          std::back_inserter(response->types), [](const uint8_t & type) {
+            return static_cast<rclcpp::ParameterType>(type);
+          });
       } catch (const rclcpp::exceptions::ParameterNotDeclaredException & ex) {
         RCLCPP_WARN(rclcpp::get_logger("rclcpp"), "Failed to get parameter types: %s", ex.what());
       }
@@ -103,11 +104,12 @@ ParameterService::ParameterService(
       std::shared_ptr<rcl_interfaces::srv::SetParametersAtomically::Response> response)
     {
       std::vector<rclcpp::Parameter> pvariants;
-      std::transform(request->parameters.cbegin(), request->parameters.cend(),
-      std::back_inserter(pvariants),
-      [](const rcl_interfaces::msg::Parameter & p) {
-        return rclcpp::Parameter::from_parameter_msg(p);
-      });
+      std::transform(
+        request->parameters.cbegin(), request->parameters.cend(),
+        std::back_inserter(pvariants),
+        [](const rcl_interfaces::msg::Parameter & p) {
+          return rclcpp::Parameter::from_parameter_msg(p);
+        });
       try {
         auto result = node_params->set_parameters_atomically(pvariants);
         response->result = result;

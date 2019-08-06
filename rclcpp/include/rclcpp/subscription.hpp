@@ -100,11 +100,13 @@ public:
     message_memory_strategy_(memory_strategy)
   {
     if (event_callbacks.deadline_callback) {
-      this->add_event_handler(event_callbacks.deadline_callback,
+      this->add_event_handler(
+        event_callbacks.deadline_callback,
         RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
     }
     if (event_callbacks.liveliness_callback) {
-      this->add_event_handler(event_callbacks.liveliness_callback,
+      this->add_event_handler(
+        event_callbacks.liveliness_callback,
         RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
     }
   }

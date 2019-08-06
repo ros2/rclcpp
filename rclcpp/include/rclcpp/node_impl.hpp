@@ -404,9 +404,7 @@ Node::get_parameter_or_set(
 
   bool got_parameter = get_parameter(sub_name, value);
   if (!got_parameter) {
-    this->set_parameters({
-        rclcpp::Parameter(sub_name, alternative_value),
-      });
+    this->set_parameters({rclcpp::Parameter(sub_name, alternative_value), });
     value = alternative_value;
   }
 }

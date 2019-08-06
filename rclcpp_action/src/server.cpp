@@ -89,7 +89,8 @@ ServerBase::ServerBase(
         rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
         rcl_ret_t ret = rcl_action_server_fini(ptr, rcl_node);
         (void)ret;
-        RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"),
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("rclcpp_action"),
           "failed to fini rcl_action_server_t in deleter");
       }
       delete ptr;
@@ -254,7 +255,8 @@ ServerBase::execute_goal_request_received()
         if (nullptr != ptr) {
           rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
           (void)fail_ret;
-          RCLCPP_DEBUG(rclcpp::get_logger("rclcpp_action"),
+          RCLCPP_DEBUG(
+            rclcpp::get_logger("rclcpp_action"),
             "failed to fini rcl_action_goal_handle_t in deleter");
           delete ptr;
         }
@@ -329,7 +331,8 @@ ServerBase::execute_cancel_request_received()
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  RCLCPP_SCOPE_EXIT({
+  RCLCPP_SCOPE_EXIT(
+  {
     ret = rcl_action_cancel_response_fini(&cancel_response);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(pimpl_->logger_, "Failed to fini cancel response");
@@ -478,7 +481,8 @@ ServerBase::publish_status()
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  RCLCPP_SCOPE_EXIT({
+  RCLCPP_SCOPE_EXIT(
+  {
     ret = rcl_action_goal_status_array_fini(&c_status_array);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(pimpl_->logger_, "Failed to fini status array message");
