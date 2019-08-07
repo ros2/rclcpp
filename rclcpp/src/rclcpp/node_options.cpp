@@ -90,11 +90,25 @@ NodeOptions::get_rcl_node_options() const
     node_options_->use_global_arguments = this->use_global_arguments_;
     node_options_->domain_id = this->get_domain_id_from_env();
 
-    std::unique_ptr<const char *[]> c_args;
+    int c_argc = 0;
+    std::unique_ptr<const char *[]> c_argv;
     if (!this->arguments_.empty()) {
-      c_args.reset(new const char *[this->arguments_.size()]);
-      for (std::size_t i = 0; i < this->arguments_.size(); ++i) {
-        c_args[i] = this->arguments_[i].c_str();
+      auto it = std::find(
+        this->arguments_.cbegin(), this->arguments_.cend(), RCL_ROS_ARGS_FLAG);
+
+      c_argc = static_cast<int>(this->arguments_.size());
+      if (it == this->arguments_.cend()) {
+        c_argc += 1;
+      }
+
+      c_argv.reset(new const char *[c_argc]);
+
+      std::size_t i = 0;
+      if (it == this->arguments_.cend()) {
+        c_argv[i++] = RCL_ROS_ARGS_FLAG;
+      }
+      for (std::size_t j = 0; j < this->arguments_.size(); ++i, ++j) {
+        c_argv[i] = this->arguments_[j].c_str();
       }
     }
 
@@ -103,8 +117,7 @@ NodeOptions::get_rcl_node_options() const
     }
 
     rmw_ret_t ret = rcl_parse_arguments(
-      static_cast<int>(this->arguments_.size()), c_args.get(), this->allocator_,
-      &(node_options_->arguments));
+      c_argc, c_argv.get(), this->allocator_, &(node_options_->arguments));
 
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to parse arguments");
