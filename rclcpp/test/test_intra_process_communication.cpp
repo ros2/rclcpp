@@ -18,8 +18,8 @@
 
 #include <iostream>
 #include <memory>
-#include <utility>
 #include <string>
+#include <utility>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/publisher.hpp"
