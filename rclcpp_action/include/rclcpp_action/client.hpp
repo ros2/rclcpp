@@ -410,10 +410,7 @@ public:
       // This will override any previously registered callback
       goal_handle->set_result_callback(result_callback);
     }
-    // If the user chose to ignore the result before, then ask the server for the result now.
-    if (!goal_handle->is_result_aware()) {
-      this->make_result_aware(goal_handle);
-    }
+    this->make_result_aware(goal_handle);
     return goal_handle->async_result();
   }
 
@@ -595,6 +592,10 @@ private:
   void
   make_result_aware(typename GoalHandle::SharedPtr goal_handle)
   {
+    // Avoid making more than one request
+    if (goal_handle->set_result_awareness(true)) {
+      return;
+    }
     using GoalResultRequest = typename ActionT::Impl::GetResultService::Request;
     auto goal_result_request = std::make_shared<GoalResultRequest>();
     goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
@@ -614,7 +615,6 @@ private:
         std::lock_guard<std::mutex> lock(goal_handles_mutex_);
         goal_handles_.erase(goal_handle->get_goal_id());
       });
-    goal_handle->set_result_awareness(true);
   }
 
   /// \internal
