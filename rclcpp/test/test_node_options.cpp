@@ -17,9 +17,9 @@
 #include <string>
 #include <vector>
 
-#include <rcl/allocator.h>
-#include <rcl/arguments.h>
-#include <rcl/remap.h>
+#include "rcl/allocator.h"
+#include "rcl/arguments.h"
+#include "rcl/remap.h"
 
 #include "rclcpp/node_options.hpp"
 
@@ -36,14 +36,14 @@ TEST(TestNodeOptions, implicit_ros_args) {
 
   char * node_name = nullptr;
   EXPECT_EQ(RCL_RET_OK, rcl_remap_node_name(
-    &rcl_options->arguments, nullptr, "my_node", allocator, &node_name));
+      &rcl_options->arguments, nullptr, "my_node", allocator, &node_name));
   ASSERT_TRUE(node_name != nullptr);
   EXPECT_STREQ("some_node", node_name);
   allocator.deallocate(node_name, allocator.state);
 
   char * namespace_name = nullptr;
   EXPECT_EQ(RCL_RET_OK, rcl_remap_node_namespace(
-    &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
+      &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
   ASSERT_TRUE(namespace_name != nullptr);
   EXPECT_STREQ("/some_ns", namespace_name);
   allocator.deallocate(namespace_name, allocator.state);
@@ -61,14 +61,14 @@ TEST(TestNodeOptions, explicit_ros_args) {
 
   char * node_name = nullptr;
   EXPECT_EQ(RCL_RET_OK, rcl_remap_node_name(
-    &rcl_options->arguments, nullptr, "my_node", allocator, &node_name));
+      &rcl_options->arguments, nullptr, "my_node", allocator, &node_name));
   ASSERT_TRUE(node_name != nullptr);
   EXPECT_STREQ("some_node", node_name);
   allocator.deallocate(node_name, allocator.state);
 
   char * namespace_name = nullptr;
   EXPECT_EQ(RCL_RET_OK, rcl_remap_node_namespace(
-    &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
+      &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
   ASSERT_TRUE(namespace_name != nullptr);
   EXPECT_STREQ("/some_ns", namespace_name);
   allocator.deallocate(namespace_name, allocator.state);
@@ -87,21 +87,21 @@ TEST(TestNodeOptions, explicit_ros_args_and_non_ros_args) {
 
   char * node_name = nullptr;
   EXPECT_EQ(RCL_RET_OK, rcl_remap_node_name(
-    &rcl_options->arguments, nullptr, "my_node", allocator, &node_name));
+      &rcl_options->arguments, nullptr, "my_node", allocator, &node_name));
   ASSERT_TRUE(node_name != nullptr);
   EXPECT_STREQ("some_node", node_name);
   allocator.deallocate(node_name, allocator.state);
 
   char * namespace_name = nullptr;
   EXPECT_EQ(RCL_RET_OK, rcl_remap_node_namespace(
-    &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
+      &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
   ASSERT_TRUE(namespace_name != nullptr);
   EXPECT_STREQ("/some_ns", namespace_name);
   allocator.deallocate(namespace_name, allocator.state);
 
   int * output_indices = nullptr;
   EXPECT_EQ(RCL_RET_OK, rcl_arguments_get_unparsed(
-    &rcl_options->arguments, allocator, &output_indices));
+      &rcl_options->arguments, allocator, &output_indices));
   ASSERT_TRUE(output_indices != nullptr);
   const std::vector<std::string> & args = options.arguments();
   EXPECT_EQ("--non-ros-flag", args[output_indices[0]]);
