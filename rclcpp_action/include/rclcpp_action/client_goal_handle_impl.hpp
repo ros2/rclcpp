@@ -140,8 +140,7 @@ ClientGoalHandle<ActionT>::invalidate()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   status_ = GoalStatus::STATUS_UNKNOWN;
-  result_promise_.set_exception(std::make_exception_ptr(
-      exceptions::UnawareGoalHandleError()));
+  result_promise_.set_exception(std::make_exception_ptr(exceptions::UnawareGoalHandleError()));
 }
 
 template<typename ActionT>

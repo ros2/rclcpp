@@ -55,7 +55,8 @@ TimerBase::TimerBase(
   *timer_handle_.get() = rcl_get_zero_initialized_timer();
 
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
-  if (rcl_timer_init(
+  if (
+    rcl_timer_init(
       timer_handle_.get(), clock_handle, rcl_context.get(), period.count(), nullptr,
       rcl_get_default_allocator()) != RCL_RET_OK)
   {
@@ -110,12 +111,14 @@ std::chrono::nanoseconds
 TimerBase::time_until_trigger()
 {
   int64_t time_until_next_call = 0;
-  if (rcl_timer_get_time_until_next_call(timer_handle_.get(),
-    &time_until_next_call) != RCL_RET_OK)
+  if (
+    rcl_timer_get_time_until_next_call(
+      timer_handle_.get(),
+      &time_until_next_call) != RCL_RET_OK)
   {
     throw std::runtime_error(
-            std::string("Timer could not get time until next call: ") +
-            rcl_get_error_string().str);
+            std::string(
+              "Timer could not get time until next call: ") + rcl_get_error_string().str);
   }
   return std::chrono::nanoseconds(time_until_next_call);
 }

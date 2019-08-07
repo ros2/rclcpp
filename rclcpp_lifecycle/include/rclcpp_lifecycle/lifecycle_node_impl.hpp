@@ -305,9 +305,7 @@ LifecycleNode::set_parameter_if_not_set(
 {
   rclcpp::Parameter parameter;
   if (!this->get_parameter(name, parameter)) {
-    this->set_parameters({
-        rclcpp::Parameter(name, value),
-      });
+    this->set_parameters({rclcpp::Parameter(name, value), });
   }
 }
 
@@ -376,9 +374,7 @@ LifecycleNode::get_parameter_or_set(
 {
   bool got_parameter = get_parameter(name, value);
   if (!got_parameter) {
-    this->set_parameters({
-        rclcpp::Parameter(name, alternative_value),
-      });
+    this->set_parameters({rclcpp::Parameter(name, alternative_value), });
     value = alternative_value;
   }
 }

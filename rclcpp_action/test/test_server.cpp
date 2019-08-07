@@ -48,7 +48,8 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::SendGoalService::Request>();
     request->goal_id.uuid = uuid;
     auto future = client->async_send_request(request);
-    if (rclcpp::executor::FutureReturnCode::SUCCESS !=
+    if (
+      rclcpp::executor::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
     {
       throw std::runtime_error("send goal future didn't complete succesfully");
@@ -67,7 +68,8 @@ protected:
     auto request = std::make_shared<Fibonacci::Impl::CancelGoalService::Request>();
     request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
-    if (rclcpp::executor::FutureReturnCode::SUCCESS !=
+    if (
+      rclcpp::executor::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
     {
       throw std::runtime_error("cancel goal future didn't complete succesfully");
@@ -81,14 +83,15 @@ TEST_F(TestServer, construction_and_destruction)
   auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
-        return rclcpp_action::GoalResponse::REJECT;
-      },
-      [](std::shared_ptr<GoalHandle>) {
-        return rclcpp_action::CancelResponse::REJECT;
-      },
-      [](std::shared_ptr<GoalHandle>) {});
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+      return rclcpp_action::GoalResponse::REJECT;
+    },
+    [](std::shared_ptr<GoalHandle>) {
+      return rclcpp_action::CancelResponse::REJECT;
+    },
+    [](std::shared_ptr<GoalHandle>) {});
   (void)as;
 }
 
@@ -105,12 +108,13 @@ TEST_F(TestServer, handle_goal_called)
     };
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      [](std::shared_ptr<GoalHandle>) {
-        return rclcpp_action::CancelResponse::REJECT;
-      },
-      [](std::shared_ptr<GoalHandle>) {});
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    [](std::shared_ptr<GoalHandle>) {
+      return rclcpp_action::CancelResponse::REJECT;
+    },
+    [](std::shared_ptr<GoalHandle>) {});
   (void)as;
 
   // Create a client that calls the goal request service
@@ -153,12 +157,13 @@ TEST_F(TestServer, handle_accepted_called)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      [](std::shared_ptr<GoalHandle>) {
-        return rclcpp_action::CancelResponse::REJECT;
-      },
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    [](std::shared_ptr<GoalHandle>) {
+      return rclcpp_action::CancelResponse::REJECT;
+    },
+    handle_accepted);
   (void)as;
 
   auto request = send_goal_request(node, uuid);
@@ -193,10 +198,11 @@ TEST_F(TestServer, handle_cancel_called)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   send_goal_request(node, uuid);
@@ -233,10 +239,11 @@ TEST_F(TestServer, handle_cancel_reject)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   send_goal_request(node, uuid);
@@ -275,10 +282,11 @@ TEST_F(TestServer, handle_cancel_unknown_goal)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   send_goal_request(node, uuid);
@@ -317,10 +325,11 @@ TEST_F(TestServer, handle_cancel_terminated_goal)
       handle->succeed(std::make_shared<Fibonacci::Result>());
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   send_goal_request(node, uuid);
@@ -358,10 +367,11 @@ TEST_F(TestServer, publish_status_accepted)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   // Subscribe to status messages
@@ -420,10 +430,11 @@ TEST_F(TestServer, publish_status_canceling)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   // Subscribe to status messages
@@ -476,10 +487,11 @@ TEST_F(TestServer, publish_status_canceled)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   // Subscribe to status messages
@@ -534,10 +546,11 @@ TEST_F(TestServer, publish_status_succeeded)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   // Subscribe to status messages
@@ -590,10 +603,11 @@ TEST_F(TestServer, publish_status_aborted)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   // Subscribe to status messages
@@ -646,10 +660,11 @@ TEST_F(TestServer, publish_feedback)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   // Subscribe to feedback messages
@@ -703,10 +718,11 @@ TEST_F(TestServer, get_result)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   send_goal_request(node, uuid);
@@ -727,7 +743,8 @@ TEST_F(TestServer, get_result)
   received_handle->succeed(result);
 
   // Wait for the result request to be received
-  ASSERT_EQ(rclcpp::executor::FutureReturnCode::SUCCESS,
+  ASSERT_EQ(
+    rclcpp::executor::FutureReturnCode::SUCCESS,
     rclcpp::spin_until_future_complete(node, future));
 
   auto response = future.get();
@@ -759,10 +776,11 @@ TEST_F(TestServer, deferred_execution)
       received_handle = handle;
     };
 
-  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(node, "fibonacci",
-      handle_goal,
-      handle_cancel,
-      handle_accepted);
+  auto as = rclcpp_action::create_server<test_msgs::action::Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
   (void)as;
 
   send_goal_request(node, uuid);

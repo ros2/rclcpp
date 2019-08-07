@@ -70,12 +70,12 @@ public:
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
 
     if (event_callbacks.deadline_callback) {
-      this->add_event_handler(event_callbacks.deadline_callback,
+      this->add_event_handler(
+        event_callbacks.deadline_callback,
         RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
     }
     if (event_callbacks.liveliness_callback) {
-      this->add_event_handler(event_callbacks.liveliness_callback,
-        RCL_PUBLISHER_LIVELINESS_LOST);
+      this->add_event_handler(event_callbacks.liveliness_callback, RCL_PUBLISHER_LIVELINESS_LOST);
     }
   }
 

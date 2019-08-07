@@ -75,7 +75,8 @@ TEST_F(TestClient, construction_and_destruction) {
   }
 
   {
-    ASSERT_THROW({
+    ASSERT_THROW(
+    {
       auto client = node->create_client<ListParameters>("invalid_service?");
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
@@ -92,7 +93,8 @@ TEST_F(TestClient, construction_with_free_function) {
       nullptr);
   }
   {
-    ASSERT_THROW({
+    ASSERT_THROW(
+    {
       auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
         node->get_node_base_interface(),
         node->get_node_graph_interface(),
@@ -115,7 +117,8 @@ TEST_F(TestClientSub, construction_and_destruction) {
   }
 
   {
-    ASSERT_THROW({
+    ASSERT_THROW(
+    {
       auto client = node->create_client<ListParameters>("invalid_service?");
     }, rclcpp::exceptions::InvalidServiceNameError);
   }

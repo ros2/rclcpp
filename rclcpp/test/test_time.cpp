@@ -97,13 +97,15 @@ TEST(TestTime, conversions) {
   negative_time_msg.sec = -1;
   negative_time_msg.nanosec = 1;
 
-  EXPECT_ANY_THROW({
+  EXPECT_ANY_THROW(
+  {
     rclcpp::Time negative_time = negative_time_msg;
   });
 
   EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
 
-  EXPECT_ANY_THROW({
+  EXPECT_ANY_THROW(
+  {
     rclcpp::Time assignment(1, 2);
     assignment = negative_time_msg;
   });

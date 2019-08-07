@@ -83,7 +83,8 @@ public:
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!enabled_) {
-      RCLCPP_WARN(logger_,
+      RCLCPP_WARN(
+        logger_,
         "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
@@ -102,7 +103,8 @@ public:
   publish(const MessageT & msg)
   {
     if (!enabled_) {
-      RCLCPP_WARN(logger_,
+      RCLCPP_WARN(
+        logger_,
         "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
@@ -130,7 +132,8 @@ public:
   publish(const std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
-      RCLCPP_WARN(logger_,
+      RCLCPP_WARN(
+        logger_,
         "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 

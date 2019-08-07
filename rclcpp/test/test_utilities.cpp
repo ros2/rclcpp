@@ -37,7 +37,8 @@ TEST(TestUtilities, remove_ros_arguments) {
 TEST(TestUtilities, remove_ros_arguments_null) {
   // In the case of a C executable, we would expect to get
   // argc=1 and argv = ["process_name"], so this is an invalid input.
-  ASSERT_THROW({
+  ASSERT_THROW(
+  {
     rclcpp::remove_ros_arguments(0, nullptr);
   }, rclcpp::exceptions::RCLErrorBase);
 }

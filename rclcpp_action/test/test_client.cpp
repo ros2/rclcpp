@@ -396,7 +396,8 @@ TEST_F(TestClient, async_send_goal_with_result_callback_wait_for_result)
     [&result_callback_received](
     const typename ActionGoalHandle::WrappedResult & result) mutable
     {
-      if (rclcpp_action::ResultCode::SUCCEEDED == result.code &&
+      if (
+        rclcpp_action::ResultCode::SUCCEEDED == result.code &&
         result.result->sequence.size() == 5u)
       {
         result_callback_received = true;

@@ -242,9 +242,7 @@ __check_parameter_value_in_range(
   if (!descriptor.floating_point_range.empty() && value.get_type() == rclcpp::PARAMETER_DOUBLE) {
     double v = value.get<double>();
     auto fp_range = descriptor.floating_point_range.at(0);
-    if (__are_doubles_equal(v, fp_range.from_value) ||
-      __are_doubles_equal(v, fp_range.to_value))
-    {
+    if (__are_doubles_equal(v, fp_range.from_value) || __are_doubles_equal(v, fp_range.to_value)) {
       return result;
     }
     if ((v < fp_range.from_value) || (v > fp_range.to_value)) {
@@ -831,25 +829,27 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
     bool get_all = (prefixes.size() == 0) &&
       ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
       (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), *separator)) < depth));
-    bool prefix_matches = std::any_of(prefixes.cbegin(), prefixes.cend(),
-        [&kv, &depth, &separator](const std::string & prefix) {
-          if (kv.first == prefix) {
-            return true;
-          } else if (kv.first.find(prefix + separator) == 0) {
-            size_t length = prefix.length();
-            std::string substr = kv.first.substr(length);
-            // Cast as unsigned integer to avoid warning
-            return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-            (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), *separator)) < depth);
-          }
-          return false;
-        });
+    bool prefix_matches = std::any_of(
+      prefixes.cbegin(), prefixes.cend(),
+      [&kv, &depth, &separator](const std::string & prefix) {
+        if (kv.first == prefix) {
+          return true;
+        } else if (kv.first.find(prefix + separator) == 0) {
+          size_t length = prefix.length();
+          std::string substr = kv.first.substr(length);
+          // Cast as unsigned integer to avoid warning
+          return (depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
+          (static_cast<uint64_t>(std::count(substr.begin(), substr.end(), *separator)) < depth);
+        }
+        return false;
+      });
     if (get_all || prefix_matches) {
       result.names.push_back(kv.first);
       size_t last_separator = kv.first.find_last_of(separator);
       if (std::string::npos != last_separator) {
         std::string prefix = kv.first.substr(0, last_separator);
-        if (std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
+        if (
+          std::find(result.prefixes.cbegin(), result.prefixes.cend(), prefix) ==
           result.prefixes.cend())
         {
           result.prefixes.push_back(prefix);

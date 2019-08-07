@@ -34,7 +34,8 @@ TEST_F(TestComponentManager, get_component_resources_invalid)
   auto exec = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
   auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
 
-  EXPECT_THROW(manager->get_component_resources("invalid_package"),
+  EXPECT_THROW(
+    manager->get_component_resources("invalid_package"),
     rclcpp_components::ComponentManagerException);
 }
 
@@ -79,7 +80,8 @@ TEST_F(TestComponentManager, create_component_factory_invalid)
   auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
 
   // Test invalid library
-  EXPECT_THROW(manager->create_component_factory({"foo_class", "invalid_library.so"}),
+  EXPECT_THROW(
+    manager->create_component_factory({"foo_class", "invalid_library.so"}),
     rclcpp_components::ComponentManagerException);
 
   // Test valid library with invalid class

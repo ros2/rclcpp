@@ -742,8 +742,9 @@ public:
    TEST_F GTest macro.
 */
 TEST_F(TestMember, bind_member_functor) {
-  auto bind_member_functor = std::bind(&TestMember::MemberFunctor, this, std::placeholders::_1,
-      std::placeholders::_2, std::placeholders::_3);
+  auto bind_member_functor = std::bind(
+    &TestMember::MemberFunctor, this, std::placeholders::_1,
+    std::placeholders::_2, std::placeholders::_3);
 
   static_assert(
     rclcpp::function_traits::check_arguments<decltype(bind_member_functor), int, float,

@@ -53,7 +53,8 @@ TEST(TestParameter, not_set_variant) {
   EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_NOT_SET, not_set_param.value.type);
 
   // From parameter message
-  EXPECT_EQ(rclcpp::ParameterType::PARAMETER_NOT_SET,
+  EXPECT_EQ(
+    rclcpp::ParameterType::PARAMETER_NOT_SET,
     rclcpp::Parameter::from_parameter_msg(not_set_param).get_type());
 }
 
@@ -65,7 +66,8 @@ TEST(TestParameter, bool_variant) {
   EXPECT_EQ("bool", bool_variant_true.get_type_name());
   EXPECT_TRUE(bool_variant_true.get_value<rclcpp::ParameterType::PARAMETER_BOOL>());
   EXPECT_TRUE(bool_variant_true.get_value_message().bool_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
     bool_variant_true.get_value_message().type);
   EXPECT_TRUE(bool_variant_true.as_bool());
 
@@ -83,7 +85,8 @@ TEST(TestParameter, bool_variant) {
   rclcpp::Parameter bool_variant_false("bool_param", false);
   EXPECT_FALSE(bool_variant_false.get_value<rclcpp::ParameterType::PARAMETER_BOOL>());
   EXPECT_FALSE(bool_variant_false.get_value_message().bool_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
     bool_variant_false.get_value_message().type);
 
   rcl_interfaces::msg::Parameter bool_param = bool_variant_true.to_parameter_msg();
@@ -99,7 +102,8 @@ TEST(TestParameter, bool_variant) {
   EXPECT_EQ("bool", from_msg_true.get_type_name());
   EXPECT_TRUE(from_msg_true.get_value<rclcpp::ParameterType::PARAMETER_BOOL>());
   EXPECT_TRUE(from_msg_true.get_value_message().bool_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
     bool_variant_false.get_value_message().type);
 
   bool_param.value.bool_value = false;
@@ -107,7 +111,8 @@ TEST(TestParameter, bool_variant) {
     rclcpp::Parameter::from_parameter_msg(bool_param);
   EXPECT_FALSE(from_msg_false.get_value<rclcpp::ParameterType::PARAMETER_BOOL>());
   EXPECT_FALSE(from_msg_false.get_value_message().bool_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BOOL,
     bool_variant_false.get_value_message().type);
 }
 
@@ -119,10 +124,12 @@ TEST(TestParameter, integer_variant) {
   EXPECT_EQ("integer_param", integer_variant.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, integer_variant.get_type());
   EXPECT_EQ("integer", integer_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     integer_variant.get_value<rclcpp::ParameterType::PARAMETER_INTEGER>());
   EXPECT_EQ(TEST_VALUE, integer_variant.get_value_message().integer_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     integer_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, integer_variant.as_int());
 
@@ -148,10 +155,12 @@ TEST(TestParameter, integer_variant) {
   EXPECT_EQ("integer_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, from_msg.get_type());
   EXPECT_EQ("integer", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_INTEGER>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().integer_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     from_msg.get_value_message().type);
 }
 
@@ -163,10 +172,12 @@ TEST(TestParameter, long_integer_variant) {
   EXPECT_EQ("long_integer_param", long_variant.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, long_variant.get_type());
   EXPECT_EQ("integer", long_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     long_variant.get_value<rclcpp::ParameterType::PARAMETER_INTEGER>());
   EXPECT_EQ(TEST_VALUE, long_variant.get_value_message().integer_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     long_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, long_variant.as_int());
 
@@ -192,10 +203,12 @@ TEST(TestParameter, long_integer_variant) {
   EXPECT_EQ("long_integer_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER, from_msg.get_type());
   EXPECT_EQ("integer", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_INTEGER>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().integer_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER,
     from_msg.get_value_message().type);
 }
 
@@ -207,10 +220,12 @@ TEST(TestParameter, float_variant) {
   EXPECT_EQ("float_param", float_variant.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_DOUBLE, float_variant.get_type());
   EXPECT_EQ("double", float_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     float_variant.get_value<rclcpp::ParameterType::PARAMETER_DOUBLE>());
   EXPECT_EQ(TEST_VALUE, float_variant.get_value_message().double_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     float_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, float_variant.as_double());
 
@@ -236,10 +251,12 @@ TEST(TestParameter, float_variant) {
   EXPECT_EQ("float_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_DOUBLE, from_msg.get_type());
   EXPECT_EQ("double", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_DOUBLE>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().double_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     from_msg.get_value_message().type);
 }
 
@@ -251,10 +268,12 @@ TEST(TestParameter, double_variant) {
   EXPECT_EQ("double_param", double_variant.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_DOUBLE, double_variant.get_type());
   EXPECT_EQ("double", double_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     double_variant.get_value<rclcpp::ParameterType::PARAMETER_DOUBLE>());
   EXPECT_EQ(TEST_VALUE, double_variant.get_value_message().double_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     double_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, double_variant.as_double());
 
@@ -280,10 +299,12 @@ TEST(TestParameter, double_variant) {
   EXPECT_EQ("double_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_DOUBLE, from_msg.get_type());
   EXPECT_EQ("double", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_DOUBLE>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().double_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE,
     from_msg.get_value_message().type);
 }
 
@@ -295,10 +316,12 @@ TEST(TestParameter, string_variant) {
   EXPECT_EQ("string_param", string_variant.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_STRING, string_variant.get_type());
   EXPECT_EQ("string", string_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     string_variant.get_value<rclcpp::ParameterType::PARAMETER_STRING>());
   EXPECT_EQ(TEST_VALUE, string_variant.get_value_message().string_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
     string_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, string_variant.as_string());
 
@@ -326,7 +349,8 @@ TEST(TestParameter, string_variant) {
   EXPECT_EQ("string", from_msg.get_type_name());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value<rclcpp::ParameterType::PARAMETER_STRING>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().string_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_STRING,
     from_msg.get_value_message().type);
 }
 
@@ -338,10 +362,12 @@ TEST(TestParameter, byte_array_variant) {
   EXPECT_EQ("byte_array_param", byte_array_variant.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_BYTE_ARRAY, byte_array_variant.get_type());
   EXPECT_EQ("byte_array", byte_array_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     byte_array_variant.get_value<rclcpp::ParameterType::PARAMETER_BYTE_ARRAY>());
   EXPECT_EQ(TEST_VALUE, byte_array_variant.get_value_message().byte_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
     byte_array_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, byte_array_variant.as_byte_array());
 
@@ -367,10 +393,12 @@ TEST(TestParameter, byte_array_variant) {
   EXPECT_EQ("byte_array_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_BYTE_ARRAY, from_msg.get_type());
   EXPECT_EQ("byte_array", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_BYTE_ARRAY>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().byte_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BYTE_ARRAY,
     from_msg.get_value_message().type);
 }
 
@@ -382,10 +410,12 @@ TEST(TestParameter, bool_array_variant) {
   EXPECT_EQ("bool_array_param", bool_array_variant.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_BOOL_ARRAY, bool_array_variant.get_type());
   EXPECT_EQ("bool_array", bool_array_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     bool_array_variant.get_value<rclcpp::ParameterType::PARAMETER_BOOL_ARRAY>());
   EXPECT_EQ(TEST_VALUE, bool_array_variant.get_value_message().bool_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY,
     bool_array_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, bool_array_variant.as_bool_array());
 
@@ -411,10 +441,12 @@ TEST(TestParameter, bool_array_variant) {
   EXPECT_EQ("bool_array_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_BOOL_ARRAY, from_msg.get_type());
   EXPECT_EQ("bool_array", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_BOOL_ARRAY>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().bool_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_BOOL_ARRAY,
     from_msg.get_value_message().type);
 }
 
@@ -426,10 +458,12 @@ TEST(TestParameter, integer_array_variant) {
   rclcpp::Parameter integer_array_variant("integer_array_param", TEST_VALUE);
 
   EXPECT_EQ("integer_array_param", integer_array_variant.get_name());
-  EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY,
+  EXPECT_EQ(
+    rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY,
     integer_array_variant.get_type());
   EXPECT_EQ("integer_array", integer_array_variant.get_type_name());
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
     integer_array_variant.get_value_message().type);
 
   // No direct comparison of vectors of ints and long ints
@@ -464,7 +498,8 @@ TEST(TestParameter, integer_array_variant) {
 
   rcl_interfaces::msg::Parameter integer_array_param = integer_array_variant.to_parameter_msg();
   EXPECT_EQ("integer_array_param", integer_array_param.name);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
     integer_array_param.value.type);
 
   param_value = integer_array_param.value.integer_array_value;
@@ -489,7 +524,8 @@ TEST(TestParameter, integer_array_variant) {
   EXPECT_EQ(TEST_VALUE.end(), mismatches.first);
   EXPECT_EQ(param_value.end(), mismatches.second);
 
-  EXPECT_EQ(from_msg.get_value_message().type,
+  EXPECT_EQ(
+    from_msg.get_value_message().type,
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
 }
 
@@ -499,12 +535,15 @@ TEST(TestParameter, long_integer_array_variant) {
 
   rclcpp::Parameter long_array_variant("long_integer_array_param", TEST_VALUE);
   EXPECT_EQ("long_integer_array_param", long_array_variant.get_name());
-  EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY,
+  EXPECT_EQ(
+    rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY,
     long_array_variant.get_type());
   EXPECT_EQ("integer_array", long_array_variant.get_type_name());
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
     long_array_variant.get_value_message().type);
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     long_array_variant.get_value<rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY>());
   EXPECT_EQ(TEST_VALUE, long_array_variant.get_value_message().integer_array_value);
   EXPECT_EQ(TEST_VALUE, long_array_variant.as_integer_array());
@@ -524,7 +563,8 @@ TEST(TestParameter, long_integer_array_variant) {
 
   rcl_interfaces::msg::Parameter integer_array_param = long_array_variant.to_parameter_msg();
   EXPECT_EQ("long_integer_array_param", integer_array_param.name);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
     integer_array_param.value.type);
   EXPECT_EQ(TEST_VALUE, integer_array_param.value.integer_array_value);
 
@@ -534,10 +574,12 @@ TEST(TestParameter, long_integer_array_variant) {
   EXPECT_EQ("long_integer_array_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY, from_msg.get_type());
   EXPECT_EQ("integer_array", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_INTEGER_ARRAY>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().integer_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY,
     from_msg.get_value_message().type);
 }
 
@@ -549,10 +591,12 @@ TEST(TestParameter, float_array_variant) {
   rclcpp::Parameter float_array_variant("float_array_param", TEST_VALUE);
 
   EXPECT_EQ("float_array_param", float_array_variant.get_name());
-  EXPECT_EQ(rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY,
     float_array_variant.get_type());
   EXPECT_EQ("double_array", float_array_variant.get_type_name());
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     float_array_variant.get_value_message().type);
 
   // No direct comparison of vectors of floats and doubles
@@ -587,7 +631,8 @@ TEST(TestParameter, float_array_variant) {
 
   rcl_interfaces::msg::Parameter float_array_param = float_array_variant.to_parameter_msg();
   EXPECT_EQ("float_array_param", float_array_param.name);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     float_array_param.value.type);
 
   param_value = float_array_param.value.double_array_value;
@@ -612,7 +657,8 @@ TEST(TestParameter, float_array_variant) {
   EXPECT_EQ(TEST_VALUE.end(), mismatches.first);
   EXPECT_EQ(param_value.end(), mismatches.second);
 
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     from_msg.get_value_message().type);
 }
 
@@ -622,12 +668,15 @@ TEST(TestParameter, double_array_variant) {
 
   rclcpp::Parameter double_array_variant("double_array_param", TEST_VALUE);
   EXPECT_EQ("double_array_param", double_array_variant.get_name());
-  EXPECT_EQ(rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY,
     double_array_variant.get_type());
   EXPECT_EQ("double_array", double_array_variant.get_type_name());
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     double_array_variant.get_value_message().type);
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     double_array_variant.get_value<rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY>());
   EXPECT_EQ(TEST_VALUE, double_array_variant.get_value_message().double_array_value);
   EXPECT_EQ(TEST_VALUE, double_array_variant.as_double_array());
@@ -647,7 +696,8 @@ TEST(TestParameter, double_array_variant) {
 
   rcl_interfaces::msg::Parameter double_array_param = double_array_variant.to_parameter_msg();
   EXPECT_EQ("double_array_param", double_array_param.name);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     double_array_param.value.type);
   EXPECT_EQ(TEST_VALUE, double_array_param.value.double_array_value);
 
@@ -657,10 +707,12 @@ TEST(TestParameter, double_array_variant) {
   EXPECT_EQ("double_array_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY, from_msg.get_type());
   EXPECT_EQ("double_array", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_DOUBLE_ARRAY>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().double_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY,
     from_msg.get_value_message().type);
 }
 
@@ -670,13 +722,16 @@ TEST(TestParameter, string_array_variant) {
   // Direct instantiation
   rclcpp::Parameter string_array_variant("string_array_param", TEST_VALUE);
   EXPECT_EQ("string_array_param", string_array_variant.get_name());
-  EXPECT_EQ(rclcpp::ParameterType::PARAMETER_STRING_ARRAY,
+  EXPECT_EQ(
+    rclcpp::ParameterType::PARAMETER_STRING_ARRAY,
     string_array_variant.get_type());
   EXPECT_EQ("string_array", string_array_variant.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     string_array_variant.get_value<rclcpp::ParameterType::PARAMETER_STRING_ARRAY>());
   EXPECT_EQ(TEST_VALUE, string_array_variant.get_value_message().string_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
     string_array_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, string_array_variant.as_string_array());
 
@@ -693,7 +748,8 @@ TEST(TestParameter, string_array_variant) {
 
   rcl_interfaces::msg::Parameter string_array_param = string_array_variant.to_parameter_msg();
   EXPECT_EQ("string_array_param", string_array_param.name);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
     string_array_param.value.type);
   EXPECT_EQ(TEST_VALUE, string_array_param.value.string_array_value);
 
@@ -703,9 +759,11 @@ TEST(TestParameter, string_array_variant) {
   EXPECT_EQ("string_array_param", from_msg.get_name());
   EXPECT_EQ(rclcpp::ParameterType::PARAMETER_STRING_ARRAY, from_msg.get_type());
   EXPECT_EQ("string_array", from_msg.get_type_name());
-  EXPECT_EQ(TEST_VALUE,
+  EXPECT_EQ(
+    TEST_VALUE,
     from_msg.get_value<rclcpp::ParameterType::PARAMETER_STRING_ARRAY>());
   EXPECT_EQ(TEST_VALUE, from_msg.get_value_message().string_array_value);
-  EXPECT_EQ(rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
+  EXPECT_EQ(
+    rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY,
     from_msg.get_value_message().type);
 }
