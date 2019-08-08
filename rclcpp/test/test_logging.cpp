@@ -162,3 +162,28 @@ TEST_F(TestLoggingMacros, test_logging_skipfirst) {
     EXPECT_EQ(i - 1, g_log_calls);
   }
 }
+
+bool log_function(rclcpp::Logger logger)
+{
+  RCLCPP_INFO(logger, "successful log");
+  return true;
+}
+
+bool log_function_const(const rclcpp::Logger logger)
+{
+  RCLCPP_INFO(logger, "successful log");
+  return true;
+}
+
+bool log_function_const_ref(const rclcpp::Logger & logger)
+{
+  RCLCPP_INFO(logger, "successful log");
+  return true;
+}
+
+TEST_F(TestLoggingMacros, test_log_from_node) {
+  auto logger = rclcpp::get_logger("test_logging_logger");
+  EXPECT_TRUE(log_function(logger));
+  EXPECT_TRUE(log_function_const(logger));
+  EXPECT_TRUE(log_function_const_ref(logger));
+}
