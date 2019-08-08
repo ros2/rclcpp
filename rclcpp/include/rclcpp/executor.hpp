@@ -211,8 +211,8 @@ public:
 
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**
-   * \param[in] future The future to wait on. If SUCCESS, the future is safe to access after this
-   *   function.
+   * \param[in] future The future to wait on. If this function returns SUCCESS, the future can be
+   *   accessed without blocking (though it may still throw an exception)
    * \param[in] timeout Optional timeout parameter, which gets passed to Executor::spin_node_once.
    *   `-1` is block forever, `0` is non-blocking.
    *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
