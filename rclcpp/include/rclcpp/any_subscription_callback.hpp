@@ -48,6 +48,9 @@ class AnySubscriptionCallback
   using UniquePtrCallback = std::function<void (MessageUniquePtr)>;
   using UniquePtrWithInfoCallback =
     std::function<void (MessageUniquePtr, const rmw_message_info_t &)>;
+  using ConstRefCallback = std::function<void (const MessageT &)>;
+  using ConstRefWithInfoCallback =
+    std::function<void (const MessageT &, const rmw_message_info_t &)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback_;
@@ -55,6 +58,8 @@ class AnySubscriptionCallback
   ConstSharedPtrWithInfoCallback const_shared_ptr_with_info_callback_;
   UniquePtrCallback unique_ptr_callback_;
   UniquePtrWithInfoCallback unique_ptr_with_info_callback_;
+  ConstRefCallback const_ref_callback_;
+  ConstRefWithInfoCallback const_ref_with_info_callback_;
 
 public:
   explicit AnySubscriptionCallback(std::shared_ptr<Alloc> allocator)
@@ -115,20 +120,6 @@ public:
     typename std::enable_if<
       rclcpp::function_traits::same_arguments<
         CallbackT,
-        ConstSharedPtrWithInfoCallback
-      >::value
-    >::type * = nullptr
-  >
-  void set(CallbackT callback)
-  {
-    const_shared_ptr_with_info_callback_ = callback;
-  }
-
-  template<
-    typename CallbackT,
-    typename std::enable_if<
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
         UniquePtrCallback
       >::value
     >::type * = nullptr
@@ -152,6 +143,34 @@ public:
     unique_ptr_with_info_callback_ = callback;
   }
 
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        ConstRefCallback
+      >::value
+    >::type * = nullptr
+  >
+  void set(CallbackT callback)
+  {
+    const_ref_callback_ = callback;
+  }
+
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<
+        CallbackT,
+        const_ref_with_info_callback_
+      >::value
+    >::type * = nullptr
+  >
+  void set(CallbackT callback)
+  {
+    const_ref_with_info_callback_ = callback;
+  }
+
   void dispatch(
     std::shared_ptr<MessageT> message, const rmw_message_info_t & message_info)
   {
@@ -171,6 +190,10 @@ public:
       auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
       MessageAllocTraits::construct(*message_allocator_.get(), ptr, *message);
       unique_ptr_with_info_callback_(MessageUniquePtr(ptr, message_deleter_), message_info);
+    } else if (const_ref_callback_) {
+      const_ref_callback_(*message);
+    } else if (const_ref_with_info_callback_) {
+      const_ref_with_info_callback_(*message, message_info);
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
@@ -183,6 +206,10 @@ public:
       const_shared_ptr_callback_(message);
     } else if (const_shared_ptr_with_info_callback_) {
       const_shared_ptr_with_info_callback_(message, message_info);
+    } else if (const_ref_callback_) {
+      const_ref_callback_(*message);
+    } else if (const_ref_with_info_callback_) {
+      const_ref_with_info_callback_(*message);
     } else {
       if (
         unique_ptr_callback_ || unique_ptr_with_info_callback_ ||
@@ -210,6 +237,10 @@ public:
       unique_ptr_callback_(std::move(message));
     } else if (unique_ptr_with_info_callback_) {
       unique_ptr_with_info_callback_(std::move(message), message_info);
+    } else if (const_ref_callback_) {
+      const_ref_callback_(*message);
+    } else if (const_ref_with_info_callback_) {
+      const_ref_with_info_callback_(*message, message_info);
     } else if (const_shared_ptr_callback_ || const_shared_ptr_with_info_callback_) {
       throw std::runtime_error(
               "unexpected dispatch_intra_process unique message call"

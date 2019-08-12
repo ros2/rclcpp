@@ -42,9 +42,14 @@ private:
       const std::shared_ptr<typename ServiceT::Request>,
       std::shared_ptr<typename ServiceT::Response>
     )>;
+  using RefCallback = std::function<void (const ServiceT::Request &, ServiceT::Response &)>;
+  using RefWithRequestHeaderCallback = std::function<void (const rmw_request_id_t &,
+      const ServiceT::Request &, ServiceT::Response &)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithRequestHeaderCallback shared_ptr_with_request_header_callback_;
+  RefCallback ref_callback_;
+  RefWithRequestHeaderCallback ref_with_request_header_callback_;
 
 public:
   AnyServiceCallback()
@@ -81,6 +86,30 @@ public:
     shared_ptr_with_request_header_callback_ = callback;
   }
 
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, RefCallback>::value
+    >::type * = nullptr
+  >
+  template<typename CallbackT>
+  void set(CallbackT callback)
+  {
+    ref_callback_ = callback;
+  }
+
+  template<
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, RefWithRequestHeaderCallback>::value
+    >::type * = nullptr
+  >
+  template<typename CallbackT>
+  void set(CallbackT callback)
+  {
+    ref_with_request_header_callback_ = callback;
+  }
+
   void dispatch(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<typename ServiceT::Request> request,
@@ -91,6 +120,10 @@ public:
       shared_ptr_callback_(request, response);
     } else if (shared_ptr_with_request_header_callback_ != nullptr) {
       shared_ptr_with_request_header_callback_(request_header, request, response);
+    } else if (ref_callback_ != nullptr) {
+      ref_callback_(*request, *response);
+    } else if (ref_with_request_header_callback_ != nullptr) {
+      ref_with_request_header_callback_(*request_header, *request, *response);
     } else {
       throw std::runtime_error("unexpected request without any callback set");
     }
