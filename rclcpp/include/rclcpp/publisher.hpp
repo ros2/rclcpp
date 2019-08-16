@@ -34,6 +34,7 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
 #include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/loaned_message.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
@@ -43,6 +44,9 @@
 
 namespace rclcpp
 {
+
+template<typename MessageT, typename Alloc>
+class LoanedMessage;
 
 /// A publisher publishes messages of any type to a topic.
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
@@ -132,6 +136,12 @@ public:
     >::make_shared(size, this->get_allocator());
   }
 
+  std::unique_ptr<rclcpp::LoanedMessage<MessageT, Alloc>>
+  loan_message()
+  {
+    return rclcpp::LoanedMessage<MessageT, Alloc>::get_instance(this);
+  }
+
   /// Send a message to the topic for this publisher.
   /**
    * This function is templated on the input message type, MessageT.
@@ -191,6 +201,15 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
+  void
+  publish(std::unique_ptr<rclcpp::LoanedMessage<MessageT, Alloc>> loaned_msg)
+  {
+    if (!loaned_msg.is_valid()) {
+      throw std::runtime_error("loaned message is not valid");
+    }
+    return this->do_intra_process_publish(loaned_msg, true);
+  }
+
   std::shared_ptr<MessageAllocator>
   get_allocator() const
   {
@@ -231,12 +250,12 @@ protected:
   }
 
   void
-  do_intra_process_publish(uint64_t message_seq)
+  do_intra_process_publish(uint64_t message_seq, bool is_loaned = false)
   {
     rcl_interfaces::msg::IntraProcessMessage ipm;
     ipm.publisher_id = intra_process_publisher_id_;
     ipm.message_sequence = message_seq;
-    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr, false);
+    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr, is_loaned);
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {

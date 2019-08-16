@@ -25,43 +25,46 @@
 namespace rclcpp
 {
 
-template<class MessageT, class AllocatorT = rcl_allocator_t>
+template<typename MessageT, typename Alloc>
+class Publisher;
+
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class LoanedMessage
 {
+  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+
 protected:
-  const rclcpp::Publisher<MessageT> * pub_;
+  const rclcpp::Publisher<MessageT, Alloc> * pub_;
 
   void * message_memory_;
   MessageT * message_;
 
-  AllocatorT allocator_;
+  const std::shared_ptr<MessageAlloc> message_allocator_;
 
   LoanedMessage(
-    const rclcpp::Publisher<MessageT> * pub,
-    AllocatorT allocator = rcl_get_default_allocator())
+    const rclcpp::Publisher<MessageT, Alloc> * pub,
+    const std::shared_ptr<std::allocator<MessageT>> & allocator)
   : pub_(pub),
     message_memory_(nullptr),
     message_(nullptr),
-    allocator_(allocator)
+    message_allocator_(allocator)
   {
-    if (!pub_) {
-      throw std::runtime_error("publisher pointer is null");
-    }
     if (pub_->can_loan_messages()) {
       message_memory_ =
         rcl_allocate_loaned_message(pub_->get_publisher_handle(), nullptr, sizeof(MessageT));
+      message_ = new (message_memory_) MessageT();
     } else {
-      message_memory_ = allocator_.allocate(sizeof(MessageT), allocator_.state);
+      message_ = message_allocator_->allocate(1);
     }
-    if (!message_memory_) {
+    if (!message_) {
       throw std::runtime_error("unable to allocate memory for loaned message");
     }
-    message_ = new (message_memory_) MessageT();
   }
 
-public:
   LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
 
+public:
   virtual ~LoanedMessage()
   {
     if (!pub_) {
@@ -76,14 +79,15 @@ public:
         return;
       }
     } else {
-      allocator_.deallocate(message_memory_, allocator_.state);
+      message_allocator_->deallocate(message_, 1);
     }
     message_memory_ = nullptr;
+    message_ = nullptr;
   }
 
   bool is_valid() const
   {
-    return message_memory_ != nullptr;
+    return message_ != nullptr;
   }
 
   MessageT & get() const
@@ -93,9 +97,13 @@ public:
 
   static
   std::unique_ptr<LoanedMessage<MessageT>>
-  get_instance(const rclcpp::Publisher<MessageT> * pub)
+  get_instance(const rclcpp::Publisher<MessageT, Alloc> * pub)
   {
-    return std::unique_ptr<rclcpp::LoanedMessage<MessageT>>(new LoanedMessage(pub));
+    if (!pub) {
+      throw std::runtime_error("publisher pointer is null");
+    }
+    return std::unique_ptr<rclcpp::LoanedMessage<MessageT, Alloc>>(
+      new LoanedMessage<MessageT, Alloc>(pub, pub->get_allocator()));
   }
 };
 

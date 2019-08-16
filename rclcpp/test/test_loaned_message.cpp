@@ -23,8 +23,21 @@
 using MessageT = test_msgs::msg::BasicTypes;
 using LoanedMessageT = rclcpp::LoanedMessage<MessageT>;
 
-TEST(TestLoanedMessage, initialize) {
-  rclcpp::init(0, nullptr);
+class TestLoanedMessage : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestLoanedMessage, initialize) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
@@ -39,12 +52,10 @@ TEST(TestLoanedMessage, initialize) {
     FAIL() << "something bad happened";
   }
 
-  rclcpp::shutdown();
   SUCCEED();
 }
 
-TEST(TestLoanedMessage, wrong_initialized) {
-  rclcpp::init(0, nullptr);
+TEST_F(TestLoanedMessage, wrong_initialized) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
 
   try {
@@ -54,6 +65,20 @@ TEST(TestLoanedMessage, wrong_initialized) {
   } catch (...) {
     FAIL() << "something bad happened";
   }
+}
 
-  rclcpp::shutdown();
+TEST_F(TestLoanedMessage, loan_from_pub) {
+  auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
+  auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
+
+  try {
+    auto loaned_msg_ptr = pub->loan_message();
+    ASSERT_TRUE(loaned_msg_ptr->is_valid());
+    loaned_msg_ptr->get().float64_value = 42.0f;
+    ASSERT_EQ(42.0f, loaned_msg_ptr->get().float64_value);
+  } catch (const std::runtime_error & e) {
+    FAIL() << e.what();
+  }
+
+  SUCCEED();
 }
