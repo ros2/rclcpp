@@ -540,7 +540,7 @@ Executor::get_next_timer(AnyExecutable & any_exec)
         if (timer && timer->is_ready()) {
           any_exec.timer = timer;
           any_exec.callback_group = group;
-          node = get_node_by_group(group);
+          any_exec.node_base = node;
           return;
         }
       }
