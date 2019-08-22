@@ -12,30 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <memory>
-
 #include "gtest/gtest.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/parameter_events_subscriber.hpp"
 
-// using namespace std::chrono_literals;
-
-// class RclCppFixture
-// {
-// public:
-//   RclCppFixture() {rclcpp::init(0, nullptr);}
-//   ~RclCppFixture() {rclcpp::shutdown();}
-// };
-// RclCppFixture g_rclcppfixture;
-
 class TestParameterEventsSubscriber : public rclcpp::ParameterEventsSubscriber
 {
 public:
-  TestParameterEventsSubscriber(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging)
-  : ParameterEventsSubscriber(node_base, node_topics, node_logging)
+  TestParameterEventsSubscriber(rclcpp::Node::SharedPtr node)
+  : ParameterEventsSubscriber(node)
   {}
 
   void test_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
@@ -63,11 +48,7 @@ protected:
     remote_node_name = "/remote_node";
     diff_ns_name = "/ns/remote_node";
 
-    ParamSubscriber = std::make_shared<TestParameterEventsSubscriber>(
-      node->get_node_base_interface(),
-      node->get_node_topics_interface(),
-      node->get_node_logging_interface()
-    );
+    ParamSubscriber = std::make_shared<TestParameterEventsSubscriber>(node);
 
     same_node_int = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
     same_node_double = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
@@ -160,16 +141,15 @@ TEST_F(TestNode, RegisterParameterUpdate)
   std::string string_param;
 
   // Set individual parameters
-  ParamSubscriber->register_param_update("my_double", double_param); // same node
-  ParamSubscriber->register_param_update("my_int", int_param); // same node
-  ParamSubscriber->register_param_update("my_string", string_param, remote_node_name); // remote node
-  ParamSubscriber->register_param_update("my_bool", bool_param, diff_ns_name); // different namespace
+  ParamSubscriber->register_param_update("my_double", double_param);
+  ParamSubscriber->register_param_update("my_int", int_param);
+  ParamSubscriber->register_param_update("my_string", string_param, remote_node_name);
+  ParamSubscriber->register_param_update("my_bool", bool_param, diff_ns_name);
 
   ParamSubscriber->test_event(same_node_double);
   ParamSubscriber->test_event(same_node_int);
   ParamSubscriber->test_event(remote_node_string);
   ParamSubscriber->test_event(diff_ns_bool);
-
 
   EXPECT_EQ(double_param, 1.0);
   EXPECT_EQ(int_param, 1);

@@ -31,7 +31,6 @@ ParameterEventsSubscriber::ParameterEventsSubscriber(
   last_event_(std::make_shared<rcl_interfaces::msg::ParameterEvent>())
 {}
 
-// Adds a subscription to a namespace parameter events topic
 void ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string & node_namespace)
 {
   if (std::find(node_namespaces_.begin(), node_namespaces_.end(),
@@ -41,8 +40,10 @@ void ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string
     auto topic = join_path(node_namespace, "parameter_events");
     RCLCPP_INFO(node_logging_->get_logger(), "Subscribing to topic: %s", topic.c_str());
 
-    auto event_sub = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(node_topics_,
-        topic, qos_, std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
+    auto event_sub = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
+      node_topics_, topic, qos_,
+      std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
+
     event_subscriptions_.push_back(event_sub);
   }
 }
@@ -56,7 +57,7 @@ void ParameterEventsSubscriber::set_event_callback(
     full_namespace = node_base_->get_namespace();
   }
 
-  full_namespace = resolve_node_path(full_namespace);
+  full_namespace = resolve_path(full_namespace);
   add_namespace_event_subscriber(full_namespace);
   user_callback_ = callback;
 }
@@ -66,7 +67,7 @@ void ParameterEventsSubscriber::register_param_callback(
   std::function<void()> callback,
   const std::string & node_name)
 {
-  auto full_node_name = resolve_node_path(node_name);
+  auto full_node_name = resolve_path(node_name);
   add_namespace_event_subscriber(split_path(full_node_name).first);
   parameter_node_map_[parameter_name] = full_node_name;
   parameter_callbacks_[parameter_name] = callback;
@@ -99,16 +100,16 @@ void ParameterEventsSubscriber::event_callback(
   }
 }
 
-std::string ParameterEventsSubscriber::resolve_node_path(const std::string & node_name)
+std::string ParameterEventsSubscriber::resolve_path(const std::string & path)
 {
   std::string full_path;
 
-  if (node_name == "") {
+  if (path == "") {
     full_path = node_base_->get_fully_qualified_name();
   } else {
-    full_path = node_name;
+    full_path = path;
     if (*full_path.begin() != '/') {
-      full_path = '/' + full_path;
+      full_path = join_path(node_base_->get_namespace(), full_path);
     }
   }
 
@@ -117,8 +118,13 @@ std::string ParameterEventsSubscriber::resolve_node_path(const std::string & nod
 
 std::pair<std::string, std::string> ParameterEventsSubscriber::split_path(const std::string & str)
 {
+  std::string path;
   std::size_t found = str.find_last_of("/\\");
-  std::string path = str.substr(0, found + 1);
+  if (found == 0) {
+    path = str.substr(0, found + 1);
+  } else {
+    path = str.substr(0, found);
+  }
   std::string name = str.substr(found + 1);
   return {path, name};
 }
@@ -129,11 +135,8 @@ std::string ParameterEventsSubscriber::join_path(std::string path, std::string n
   if (*joined_path.rbegin() != '/' && *name.begin() != '/') {
     joined_path = joined_path + "/";
   }
-  if (*joined_path.begin() != '/') {
-    joined_path = "/" + joined_path;
-  }
-  joined_path = joined_path + name;
-  return joined_path;
+
+  return joined_path + name;
 }
 
 }  // namespace rclcpp
