@@ -30,7 +30,8 @@ AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
   const std::string & remote_node_name,
-  const rmw_qos_profile_t & qos_profile)
+  const rmw_qos_profile_t & qos_profile,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 : node_topics_interface_(node_topics_interface)
 {
   if (remote_node_name != "") {
@@ -51,7 +52,7 @@ AsyncParametersClient::AsyncParametersClient(
     remote_node_name_ + "/" + parameter_service_names::get_parameters,
     options);
   auto get_parameters_base = std::dynamic_pointer_cast<ClientBase>(get_parameters_client_);
-  node_services_interface->add_client(get_parameters_base, nullptr);
+  node_services_interface->add_client(get_parameters_base, group);
 
   get_parameter_types_client_ = Client<rcl_interfaces::srv::GetParameterTypes>::make_shared(
     node_base_interface.get(),
@@ -60,7 +61,7 @@ AsyncParametersClient::AsyncParametersClient(
     options);
   auto get_parameter_types_base =
     std::dynamic_pointer_cast<ClientBase>(get_parameter_types_client_);
-  node_services_interface->add_client(get_parameter_types_base, nullptr);
+  node_services_interface->add_client(get_parameter_types_base, group);
 
   set_parameters_client_ = Client<rcl_interfaces::srv::SetParameters>::make_shared(
     node_base_interface.get(),
@@ -68,7 +69,7 @@ AsyncParametersClient::AsyncParametersClient(
     remote_node_name_ + "/" + parameter_service_names::set_parameters,
     options);
   auto set_parameters_base = std::dynamic_pointer_cast<ClientBase>(set_parameters_client_);
-  node_services_interface->add_client(set_parameters_base, nullptr);
+  node_services_interface->add_client(set_parameters_base, group);
 
   set_parameters_atomically_client_ =
     Client<rcl_interfaces::srv::SetParametersAtomically>::make_shared(
@@ -78,7 +79,7 @@ AsyncParametersClient::AsyncParametersClient(
     options);
   auto set_parameters_atomically_base = std::dynamic_pointer_cast<ClientBase>(
     set_parameters_atomically_client_);
-  node_services_interface->add_client(set_parameters_atomically_base, nullptr);
+  node_services_interface->add_client(set_parameters_atomically_base, group);
 
   list_parameters_client_ = Client<rcl_interfaces::srv::ListParameters>::make_shared(
     node_base_interface.get(),
@@ -86,7 +87,7 @@ AsyncParametersClient::AsyncParametersClient(
     remote_node_name_ + "/" + parameter_service_names::list_parameters,
     options);
   auto list_parameters_base = std::dynamic_pointer_cast<ClientBase>(list_parameters_client_);
-  node_services_interface->add_client(list_parameters_base, nullptr);
+  node_services_interface->add_client(list_parameters_base, group);
 
   describe_parameters_client_ = Client<rcl_interfaces::srv::DescribeParameters>::make_shared(
     node_base_interface.get(),
@@ -95,33 +96,37 @@ AsyncParametersClient::AsyncParametersClient(
     options);
   auto describe_parameters_base =
     std::dynamic_pointer_cast<ClientBase>(describe_parameters_client_);
-  node_services_interface->add_client(describe_parameters_base, nullptr);
+  node_services_interface->add_client(describe_parameters_base, group);
 }
 
 AsyncParametersClient::AsyncParametersClient(
   const rclcpp::Node::SharedPtr node,
   const std::string & remote_node_name,
-  const rmw_qos_profile_t & qos_profile)
+  const rmw_qos_profile_t & qos_profile,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 : AsyncParametersClient(
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
     node->get_node_graph_interface(),
     node->get_node_services_interface(),
     remote_node_name,
-    qos_profile)
+    qos_profile,
+    group)
 {}
 
 AsyncParametersClient::AsyncParametersClient(
   rclcpp::Node * node,
   const std::string & remote_node_name,
-  const rmw_qos_profile_t & qos_profile)
+  const rmw_qos_profile_t & qos_profile,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 : AsyncParametersClient(
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
     node->get_node_graph_interface(),
     node->get_node_services_interface(),
     remote_node_name,
-    qos_profile)
+    qos_profile,
+    group)
 {}
 
 std::shared_future<std::vector<rclcpp::Parameter>>
