@@ -111,7 +111,13 @@ public:
       RCLCPP_DEBUG(node_logging_->get_logger(), "Updating parameter: %s", parameter_name.c_str());
       auto param_msg = filter.get_events()[0].second;
       auto param = rclcpp::Parameter::from_parameter_msg(*param_msg);
-      value = param.get_value<ParameterT>();
+      try {
+        value = param.get_value<ParameterT>();
+      } catch (...) {
+        RCLCPP_WARN(node_logging_->get_logger(),
+          "Parameter '%s' has different type (%s), cannot update registered parameter",
+          parameter_name.c_str(), param.get_type_name().c_str());
+      }
     }
   }
 

@@ -59,13 +59,11 @@ protected:
     remote_node_string = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
     diff_ns_bool = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
 
-
     same_node_int->node = node->get_fully_qualified_name();
     same_node_double->node = node->get_fully_qualified_name();
     multiple->node = node->get_fully_qualified_name();
     remote_node_string->node = remote_node_name;
     diff_ns_bool->node = diff_ns_name;
-
 
     rcl_interfaces::msg::Parameter p;
     p.name = "my_int";
