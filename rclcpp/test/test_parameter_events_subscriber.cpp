@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <string>
+
 #include "gtest/gtest.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/parameter_events_subscriber.hpp"
@@ -19,7 +22,7 @@
 class TestParameterEventsSubscriber : public rclcpp::ParameterEventsSubscriber
 {
 public:
-  TestParameterEventsSubscriber(rclcpp::Node::SharedPtr node)
+  explicit TestParameterEventsSubscriber(rclcpp::Node::SharedPtr node)
   : ParameterEventsSubscriber(node)
   {}
 
@@ -111,10 +114,10 @@ TEST_F(TestNode, RegisterParameterCallback)
   bool received;
   auto cb = [&received]() {received = true;};
 
-  ParamSubscriber->register_param_callback("my_double", cb); // same node
-  ParamSubscriber->register_param_callback("my_int", cb); // same node
-  ParamSubscriber->register_param_callback("my_string", cb, remote_node_name); // remote node
-  ParamSubscriber->register_param_callback("my_bool", cb, diff_ns_name); // different namespace
+  ParamSubscriber->register_param_callback("my_double", cb);  // same node
+  ParamSubscriber->register_param_callback("my_int", cb);  // same node
+  ParamSubscriber->register_param_callback("my_string", cb, remote_node_name);  // remote node
+  ParamSubscriber->register_param_callback("my_bool", cb, diff_ns_name);  // different namespace
 
   received = false;
   ParamSubscriber->test_event(same_node_double);

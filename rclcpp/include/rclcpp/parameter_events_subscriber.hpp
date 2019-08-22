@@ -15,7 +15,11 @@
 #ifndef RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 #define RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 
+#include <map>
 #include <string>
+#include <utility>
+#include <vector>
+
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/parameter_events_filter.hpp"
 
@@ -32,7 +36,7 @@ public:
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)));
 
-  template <typename NodeT>
+  template<typename NodeT>
   ParameterEventsSubscriber(
     NodeT node,
     const rclcpp::QoS & qos =
@@ -50,7 +54,7 @@ public:
    * Repeated calls to this function will overwrite the callback
    * If more than one namespace already has a subscription to its parameter events topic, then the
    * provided callback will be applied to all of them
-   * 
+   *
    * \param[in] callback Function callback to be evaluated on event
    * \param[in] Name of namespace for which a subscription will be created
    */
@@ -61,7 +65,7 @@ public:
   /// adds a custom callback for a specified parameter
   /**
    * If a node_name is not provided, defaults to the current node
-   * 
+   *
    * \param[in] parameter_name Name of parameter
    * \param[in] callback Function callback to be evaluated upon parameter event
    * \param[in] node_name Name of node which hosts the parameter
@@ -74,7 +78,7 @@ public:
   /// adds a callback to assign the value of a changed parameter to a reference variable
   /**
    * If a node_name is not provided, defaults to the current node
-   * 
+   *
    * \param[in] parameter_name Name of parameter
    * \param[in] value Reference to variable receiving update
    * \param[in] node_name Name of node which hosts the parameter
