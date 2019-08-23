@@ -151,15 +151,17 @@ public:
    *
    * For example, all of these cases will work:
    *
-   *   pub = node->create_publisher<MsgT>("chatter", 10);  // implicitly KeepLast
-   *   pub = node->create_publisher<MsgT>("chatter", QoS(10));  // implicitly KeepLast
-   *   pub = node->create_publisher<MsgT>("chatter", QoS(KeepLast(10)));
-   *   pub = node->create_publisher<MsgT>("chatter", QoS(KeepAll()));
-   *   pub = node->create_publisher<MsgT>("chatter", QoS(1).best_effort().volatile());
-   *   {
-   *     rclcpp::QoS custom_qos(KeepLast(10), rmw_qos_profile_sensor_data);
-   *     pub = node->create_publisher<MsgT>("chatter", custom_qos);
-   *   }
+   * ```cpp
+   * pub = node->create_publisher<MsgT>("chatter", 10);  // implicitly KeepLast
+   * pub = node->create_publisher<MsgT>("chatter", QoS(10));  // implicitly KeepLast
+   * pub = node->create_publisher<MsgT>("chatter", QoS(KeepLast(10)));
+   * pub = node->create_publisher<MsgT>("chatter", QoS(KeepAll()));
+   * pub = node->create_publisher<MsgT>("chatter", QoS(1).best_effort().volatile());
+   * {
+   *   rclcpp::QoS custom_qos(KeepLast(10), rmw_qos_profile_sensor_data);
+   *   pub = node->create_publisher<MsgT>("chatter", custom_qos);
+   * }
+   * ```
    *
    * The publisher options may optionally be passed as the third argument for
    * any of the above cases.
@@ -904,19 +906,21 @@ public:
    *
    * For an example callback:
    *
-   *   rcl_interfaces::msg::SetParametersResult
-   *   my_callback(const std::vector<rclcpp::Parameter> & parameters)
-   *   {
-   *     rcl_interfaces::msg::SetParametersResult result;
-   *     result.successful = true;
-   *     for (const auto & parameter : parameters) {
-   *       if (!some_condition) {
-   *         result.successful = false;
-   *         result.reason = "the reason it could not be allowed";
-   *       }
+   * ```cpp
+   * rcl_interfaces::msg::SetParametersResult
+   * my_callback(const std::vector<rclcpp::Parameter> & parameters)
+   * {
+   *   rcl_interfaces::msg::SetParametersResult result;
+   *   result.successful = true;
+   *   for (const auto & parameter : parameters) {
+   *     if (!some_condition) {
+   *       result.successful = false;
+   *       result.reason = "the reason it could not be allowed";
    *     }
-   *     return result;
    *   }
+   *   return result;
+   * }
+   * ```
    *
    * You can see that the SetParametersResult is a boolean flag for success
    * and an optional reason that can be used in error reporting when it fails.
@@ -1127,15 +1131,17 @@ public:
    *
    * For example, consider:
    *
-   *   auto node = std::make_shared<rclcpp::Node>("my_node", "my_ns");
-   *   node->get_sub_namespace();  // -> ""
-   *   auto sub_node1 = node->create_sub_node("a");
-   *   sub_node1->get_sub_namespace();  // -> "a"
-   *   auto sub_node2 = sub_node1->create_sub_node("b");
-   *   sub_node2->get_sub_namespace();  // -> "a/b"
-   *   auto sub_node3 = node->create_sub_node("foo");
-   *   sub_node3->get_sub_namespace();  // -> "foo"
-   *   node->get_sub_namespace();  // -> ""
+   * ```cpp
+   * auto node = std::make_shared<rclcpp::Node>("my_node", "my_ns");
+   * node->get_sub_namespace();  // -> ""
+   * auto sub_node1 = node->create_sub_node("a");
+   * sub_node1->get_sub_namespace();  // -> "a"
+   * auto sub_node2 = sub_node1->create_sub_node("b");
+   * sub_node2->get_sub_namespace();  // -> "a/b"
+   * auto sub_node3 = node->create_sub_node("foo");
+   * sub_node3->get_sub_namespace();  // -> "foo"
+   * node->get_sub_namespace();  // -> ""
+   * ```
    *
    * get_namespace() will return the original node namespace, and will not
    * include the sub-namespace if one exists.
@@ -1157,15 +1163,17 @@ public:
    *
    * For example, consider:
    *
-   *   auto node = std::make_shared<rclcpp::Node>("my_node", "my_ns");
-   *   node->get_effective_namespace();  // -> "/my_ns"
-   *   auto sub_node1 = node->create_sub_node("a");
-   *   sub_node1->get_effective_namespace();  // -> "/my_ns/a"
-   *   auto sub_node2 = sub_node1->create_sub_node("b");
-   *   sub_node2->get_effective_namespace();  // -> "/my_ns/a/b"
-   *   auto sub_node3 = node->create_sub_node("foo");
-   *   sub_node3->get_effective_namespace();  // -> "/my_ns/foo"
-   *   node->get_effective_namespace();  // -> "/my_ns"
+   * ```cpp
+   * auto node = std::make_shared<rclcpp::Node>("my_node", "my_ns");
+   * node->get_effective_namespace();  // -> "/my_ns"
+   * auto sub_node1 = node->create_sub_node("a");
+   * sub_node1->get_effective_namespace();  // -> "/my_ns/a"
+   * auto sub_node2 = sub_node1->create_sub_node("b");
+   * sub_node2->get_effective_namespace();  // -> "/my_ns/a/b"
+   * auto sub_node3 = node->create_sub_node("foo");
+   * sub_node3->get_effective_namespace();  // -> "/my_ns/foo"
+   * node->get_effective_namespace();  // -> "/my_ns"
+   * ```
    *
    * \sa get_namespace()
    * \sa get_sub_namespace()

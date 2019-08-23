@@ -128,7 +128,7 @@ public:
    *
    * Example usage:
    *
-   * ```
+   * ```cpp
    * // ... create a wait set and a Waitable
    * // Add the Waitable to the wait set
    * bool add_ret = waitable.add_to_wait_set(wait_set);
