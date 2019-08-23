@@ -70,9 +70,9 @@ public:
    * \param[in] callback Function callback to be evaluated upon parameter event
    * \param[in] node_name Name of node which hosts the parameter
    */
-  void register_param_callback(
+  void register_parameter_callback(
     const std::string & parameter_name,
-    std::function<void()> callback,
+    std::function<void(const rclcpp::Parameter &)> callback,
     const std::string & node_name = "");
 
   /// adds a callback to assign the value of a changed parameter to a reference variable
@@ -84,44 +84,44 @@ public:
    * \param[in] node_name Name of node which hosts the parameter
    */
   template<typename ParameterT>
-  void register_param_update(
+  void register_parameter_update(
     const std::string & parameter_name, ParameterT & value, const std::string & node_name = "")
   {
     auto callback =
-      [parameter_name, &value, this]() {
-        get_param_update<ParameterT>(parameter_name, value);
+      [&value, this](const rclcpp::Parameter & param) {
+        get_parameter_update<ParameterT>(param, value);
       };
 
-    register_param_callback(parameter_name, callback, node_name);
+    register_parameter_callback(parameter_name, callback, node_name);
   }
 
-  /// Gets value of specified parameter from an event
+  bool get_parameter_from_event(
+    const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+    rclcpp::Parameter & parameter,
+    const std::string parameter_name,
+    const std::string node_name = "");
+
+protected:
+  /// Gets value of specified parameter from an a rclcpp::Parameter
   /**
    * If the parameter does not appear in the event, no value will be assigned
    * \param[in] parameter_name Name of parameter
    * \param[in] value Reference to variable receiving updates
    */
   template<typename ParameterT>
-  void get_param_update(const std::string & parameter_name, ParameterT & value)
+  void get_parameter_update(
+    const rclcpp::Parameter & param, ParameterT & value)
   {
-    rclcpp::ParameterEventsFilter filter(last_event_, {parameter_name},
-      {rclcpp::ParameterEventsFilter::EventType::NEW,
-        rclcpp::ParameterEventsFilter::EventType::CHANGED});
-    if (!filter.get_events().empty()) {
-      RCLCPP_DEBUG(node_logging_->get_logger(), "Updating parameter: %s", parameter_name.c_str());
-      auto param_msg = filter.get_events()[0].second;
-      auto param = rclcpp::Parameter::from_parameter_msg(*param_msg);
-      try {
-        value = param.get_value<ParameterT>();
-      } catch (...) {
-        RCLCPP_WARN(node_logging_->get_logger(),
-          "Parameter '%s' has different type (%s), cannot update registered parameter",
-          parameter_name.c_str(), param.get_type_name().c_str());
-      }
+    try {
+      value = param.get_value<ParameterT>();
+      RCLCPP_DEBUG(node_logging_->get_logger(), "Updating parameter: %s", param.get_name().c_str());
+    } catch (...) {
+      RCLCPP_WARN(node_logging_->get_logger(),
+        "Parameter '%s' has different type (%s), cannot update registered parameter",
+        param.get_name().c_str(), param.get_type_name().c_str());
     }
   }
 
-protected:
   /// Adds a subscription (if unique) to a namespace parameter events topic
   void add_namespace_event_subscriber(const std::string & node_namespace);
 
@@ -142,7 +142,7 @@ protected:
 
   // Map containers for registered parameters
   std::map<std::string, std::string> parameter_node_map_;
-  std::map<std::string, std::function<void()>> parameter_callbacks_;
+  std::map<std::string, std::function<void(const rclcpp::Parameter &)>> parameter_callbacks_;
 
   // Vector of unique namespaces added
   std::vector<std::string> node_namespaces_;
@@ -152,9 +152,6 @@ protected:
     <rcl_interfaces::msg::ParameterEvent>::SharedPtr> event_subscriptions_;
 
   std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> user_callback_;
-
-  // Pointer to latest event message
-  rcl_interfaces::msg::ParameterEvent::SharedPtr last_event_;
 };
 
 }  // namespace rclcpp

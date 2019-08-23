@@ -30,8 +30,7 @@ ParameterEventsSubscriber::ParameterEventsSubscriber(
 : node_base_(node_base),
   node_topics_(node_topics),
   node_logging_(node_logging),
-  qos_(qos),
-  last_event_(std::make_shared<rcl_interfaces::msg::ParameterEvent>())
+  qos_(qos)
 {}
 
 void ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string & node_namespace)
@@ -41,7 +40,7 @@ void ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string
   {
     node_namespaces_.push_back(node_namespace);
     auto topic = join_path(node_namespace, "parameter_events");
-    RCLCPP_INFO(node_logging_->get_logger(), "Subscribing to topic: %s", topic.c_str());
+    RCLCPP_DEBUG(node_logging_->get_logger(), "Subscribing to topic: %s", topic.c_str());
 
     auto event_sub = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
       node_topics_, topic, qos_,
@@ -65,15 +64,34 @@ void ParameterEventsSubscriber::set_event_callback(
   user_callback_ = callback;
 }
 
-void ParameterEventsSubscriber::register_param_callback(
+void ParameterEventsSubscriber::register_parameter_callback(
   const std::string & parameter_name,
-  std::function<void()> callback,
+  std::function<void(const rclcpp::Parameter &)> callback,
   const std::string & node_name)
 {
   auto full_node_name = resolve_path(node_name);
   add_namespace_event_subscriber(split_path(full_node_name).first);
   parameter_node_map_[parameter_name] = full_node_name;
   parameter_callbacks_[parameter_name] = callback;
+}
+
+bool ParameterEventsSubscriber::get_parameter_from_event(
+  const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+  rclcpp::Parameter & parameter,
+  const std::string parameter_name,
+  const std::string node_name)
+{
+  if (event->node == resolve_path(node_name)) {
+    rclcpp::ParameterEventsFilter filter(event, {parameter_name},
+      {rclcpp::ParameterEventsFilter::EventType::NEW,
+        rclcpp::ParameterEventsFilter::EventType::CHANGED});
+    if (!filter.get_events().empty()) {
+      auto param_msg = filter.get_events()[0].second;
+      parameter = rclcpp::Parameter::from_parameter_msg(*param_msg);
+      return true;
+    }
+  }
+  return false;
 }
 
 void ParameterEventsSubscriber::event_callback(
@@ -83,18 +101,12 @@ void ParameterEventsSubscriber::event_callback(
   RCLCPP_DEBUG(node_logging_->get_logger(), "Parameter event received for node: %s",
     node_name.c_str());
 
-  last_event_ = event;
-
   for (std::map<std::string, std::string>::iterator it = parameter_node_map_.begin();
     it != parameter_node_map_.end(); ++it)
   {
-    if (node_name == it->second) {
-      rclcpp::ParameterEventsFilter filter(event, {it->first},
-        {rclcpp::ParameterEventsFilter::EventType::NEW,
-          rclcpp::ParameterEventsFilter::EventType::CHANGED});
-      if (!filter.get_events().empty()) {
-        parameter_callbacks_[it->first]();
-      }
+    rclcpp::Parameter p;
+    if (get_parameter_from_event(event, p, it->first, it->second)) {
+      parameter_callbacks_[it->first](p);
     }
   }
 

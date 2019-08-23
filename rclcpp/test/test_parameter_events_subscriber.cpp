@@ -110,12 +110,12 @@ protected:
 TEST_F(TestNode, RegisterParameterCallback)
 {
   bool received;
-  auto cb = [&received]() {received = true;};
+  auto cb = [&received](const rclcpp::Parameter &) {received = true;};
 
-  ParamSubscriber->register_param_callback("my_double", cb);  // same node
-  ParamSubscriber->register_param_callback("my_int", cb);  // same node
-  ParamSubscriber->register_param_callback("my_string", cb, remote_node_name);  // remote node
-  ParamSubscriber->register_param_callback("my_bool", cb, diff_ns_name);  // different namespace
+  ParamSubscriber->register_parameter_callback("my_double", cb);  // same node
+  ParamSubscriber->register_parameter_callback("my_int", cb);  // same node
+  ParamSubscriber->register_parameter_callback("my_string", cb, remote_node_name);  // remote node
+  ParamSubscriber->register_parameter_callback("my_bool", cb, diff_ns_name);  // different namespace
 
   received = false;
   ParamSubscriber->test_event(same_node_double);
@@ -142,10 +142,10 @@ TEST_F(TestNode, RegisterParameterUpdate)
   std::string string_param;
 
   // Set individual parameters
-  ParamSubscriber->register_param_update("my_double", double_param);
-  ParamSubscriber->register_param_update("my_int", int_param);
-  ParamSubscriber->register_param_update("my_string", string_param, remote_node_name);
-  ParamSubscriber->register_param_update("my_bool", bool_param, diff_ns_name);
+  ParamSubscriber->register_parameter_update("my_double", double_param);
+  ParamSubscriber->register_parameter_update("my_int", int_param);
+  ParamSubscriber->register_parameter_update("my_string", string_param, remote_node_name);
+  ParamSubscriber->register_parameter_update("my_bool", bool_param, diff_ns_name);
 
   ParamSubscriber->test_event(same_node_double);
   ParamSubscriber->test_event(same_node_int);
@@ -177,10 +177,19 @@ TEST_F(TestNode, UserCallback)
     [&int_param, &double_param, &product, &received,
       this](const rcl_interfaces::msg::ParameterEvent::SharedPtr & event)
     {
-      if (event->node == node->get_fully_qualified_name()) {
+      auto node_name = node->get_fully_qualified_name();
+
+      if (event->node == node_name) {
         received = true;
-        ParamSubscriber->get_param_update("my_int", int_param);
-        ParamSubscriber->get_param_update("my_double", double_param);
+      }
+
+      rclcpp::Parameter p;
+      if (ParamSubscriber->get_parameter_from_event(event, p, "my_int")) {
+        int_param = p.get_value<int>();
+      }
+
+      if (ParamSubscriber->get_parameter_from_event(event, p, "my_double")) {
+        double_param = p.get_value<double>();
       }
 
       product = int_param * double_param;
