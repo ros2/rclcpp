@@ -142,13 +142,20 @@ ComponentManager::OnLoadNode(
         parameters.push_back(rclcpp::Parameter::from_parameter_msg(p));
       }
 
-      std::vector<std::string> remap_rules {request->remap_rules};
+      std::vector<std::string> remap_rules;
+      remap_rules.reserve(request->remap_rules.size() * 2);
+      for (const std::string & rule : request->remap_rules) {
+        remap_rules.push_back("-r");
+        remap_rules.push_back(rule);
+      }
 
       if (!request->node_name.empty()) {
+        remap_rules.push_back("-r");
         remap_rules.push_back("__node:=" + request->node_name);
       }
 
       if (!request->node_namespace.empty()) {
+        remap_rules.push_back("-r");
         remap_rules.push_back("__ns:=" + request->node_namespace);
       }
 
