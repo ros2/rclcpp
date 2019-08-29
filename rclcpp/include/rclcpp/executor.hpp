@@ -22,6 +22,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -354,6 +355,9 @@ protected:
 
   /// Wait set for managing entities that the rmw layer waits on.
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
+
+  // Mutex to protect the subsequent memory_strategy_.
+  std::mutex memory_strategy_mutex_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
