@@ -83,6 +83,11 @@ MultiThreadedExecutor::run(size_t)
       if (any_exec.timer) {
         // Guard against multiple threads getting the same timer.
         if (scheduled_timers_.count(any_exec.timer) != 0) {
+          // Make sure that any_exec's callback group is reset before
+          // the lock is released.
+          if (any_exec.callback_group) {
+            any_exec.callback_group->can_be_taken_from().store(true);
+          }
           continue;
         }
         scheduled_timers_.insert(any_exec.timer);
