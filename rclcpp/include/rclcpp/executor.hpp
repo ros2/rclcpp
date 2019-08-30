@@ -334,10 +334,6 @@ protected:
   get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
-  void
-  get_next_timer(AnyExecutable & any_exec);
-
-  RCLCPP_PUBLIC
   bool
   get_next_ready_executable(AnyExecutable & any_executable);
 

@@ -80,6 +80,11 @@ public:
     const WeakNodeList & weak_nodes) = 0;
 
   virtual void
+  get_next_timer(
+    rclcpp::executor::AnyExecutable & any_exec,
+    const WeakNodeList & weak_nodes) = 0;
+
+  virtual void
   get_next_waitable(
     rclcpp::executor::AnyExecutable & any_exec,
     const WeakNodeList & weak_nodes) = 0;
@@ -102,6 +107,11 @@ public:
     std::shared_ptr<const rcl_client_t> client_handle,
     const WeakNodeList & weak_nodes);
 
+  static rclcpp::TimerBase::SharedPtr
+  get_timer_by_handle(
+    std::shared_ptr<const rcl_timer_t> timer_handle,
+    const WeakNodeList & weak_nodes);
+
   static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(
     rclcpp::callback_group::CallbackGroup::SharedPtr group,
@@ -120,6 +130,11 @@ public:
   static rclcpp::callback_group::CallbackGroup::SharedPtr
   get_group_by_client(
     rclcpp::ClientBase::SharedPtr client,
+    const WeakNodeList & weak_nodes);
+
+  static rclcpp::callback_group::CallbackGroup::SharedPtr
+  get_group_by_timer(
+    rclcpp::TimerBase::SharedPtr timer,
     const WeakNodeList & weak_nodes);
 
   static rclcpp::callback_group::CallbackGroup::SharedPtr
