@@ -164,40 +164,31 @@ public:
         if (!group || !group->can_be_taken_from().load()) {
           continue;
         }
-        for (auto & weak_subscription : group->get_subscription_ptrs()) {
-          auto subscription = weak_subscription.lock();
-          if (subscription) {
+        group->find_subscription_ptrs_if(
+          [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
             subscription_handles_.push_back(subscription->get_subscription_handle());
             if (subscription->get_intra_process_subscription_handle()) {
               subscription_handles_.push_back(
                 subscription->get_intra_process_subscription_handle());
             }
-          }
-        }
-        for (auto & weak_service : group->get_service_ptrs()) {
-          auto service = weak_service.lock();
-          if (service) {
+            return false;
+          });
+        group->find_service_ptrs_if([this](const rclcpp::ServiceBase::SharedPtr & service) {
             service_handles_.push_back(service->get_service_handle());
-          }
-        }
-        for (auto & weak_client : group->get_client_ptrs()) {
-          auto client = weak_client.lock();
-          if (client) {
+            return false;
+          });
+        group->find_client_ptrs_if([this](const rclcpp::ClientBase::SharedPtr & client) {
             client_handles_.push_back(client->get_client_handle());
-          }
-        }
-        for (auto & weak_timer : group->get_timer_ptrs()) {
-          auto timer = weak_timer.lock();
-          if (timer) {
+            return false;
+          });
+        group->find_timer_ptrs_if([this](const rclcpp::TimerBase::SharedPtr & timer) {
             timer_handles_.push_back(timer->get_timer_handle());
-          }
-        }
-        for (auto & weak_waitable : group->get_waitable_ptrs()) {
-          auto waitable = weak_waitable.lock();
-          if (waitable) {
+            return false;
+          });
+        group->find_waitable_ptrs_if([this](const rclcpp::Waitable::SharedPtr & waitable) {
             waitable_handles_.push_back(waitable);
-          }
-        }
+            return false;
+          });
       }
     }
     return has_invalid_weak_nodes;
