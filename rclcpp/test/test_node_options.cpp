@@ -83,3 +83,18 @@ TEST(TestNodeOptions, ros_args_and_non_ros_args) {
   EXPECT_EQ("non-ros-arg", args[output_indices[1]]);
   allocator.deallocate(output_indices, allocator.state);
 }
+
+TEST(TestNodeOptions, bad_ros_args) {
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  auto options = rclcpp::NodeOptions(allocator)
+    .arguments({"--ros-args", "-r", "foo:="});
+
+  EXPECT_THROW(
+    options.get_rcl_node_options(),
+    rclcpp::exceptions::RCLInvalidROSArgsError);
+
+  options.arguments({"--ros-args", "-r", "foo:=bar", "not-a-ros-arg"});
+  EXPECT_THROW(
+    options.get_rcl_node_options(),
+    rclcpp::exceptions::UnknownROSArgsError);
+}
