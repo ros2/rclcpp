@@ -366,6 +366,41 @@ public:
   }
 
   virtual void
+  get_next_timer(
+    executor::AnyExecutable & any_exec,
+    const WeakNodeList & weak_nodes)
+  {
+    auto it = timer_handles_.begin();
+    while (it != timer_handles_.end()) {
+      auto timer = get_timer_by_handle(*it, weak_nodes);
+      if (timer) {
+        // Find the group for this handle and see if it can be serviced
+        auto group = get_group_by_timer(timer, weak_nodes);
+        if (!group) {
+          // Group was not found, meaning the timer is not valid...
+          // Remove it from the ready list and continue looking
+          it = timer_handles_.erase(it);
+          continue;
+        }
+        if (!group->can_be_taken_from().load()) {
+          // Group is mutually exclusive and is being used, so skip it for now
+          // Leave it to be checked next time, but continue searching
+          ++it;
+          continue;
+        }
+        // Otherwise it is safe to set and return the any_exec
+        any_exec.timer = timer;
+        any_exec.callback_group = group;
+        any_exec.node_base = get_node_by_group(group, weak_nodes);
+        timer_handles_.erase(it);
+        return;
+      }
+      // Else, the service is no longer valid, remove it and continue
+      it = timer_handles_.erase(it);
+    }
+  }
+
+  virtual void
   get_next_waitable(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = waitable_handles_.begin();
