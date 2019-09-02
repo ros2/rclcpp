@@ -100,6 +100,33 @@ MemoryStrategy::get_client_by_handle(
   return nullptr;
 }
 
+rclcpp::TimerBase::SharedPtr
+MemoryStrategy::get_timer_by_handle(
+  std::shared_ptr<const rcl_timer_t> timer_handle,
+  const WeakNodeList & weak_nodes)
+{
+  for (auto & weak_node : weak_nodes) {
+    auto node = weak_node.lock();
+    if (!node) {
+      continue;
+    }
+    for (auto & weak_group : node->get_callback_groups()) {
+      auto group = weak_group.lock();
+      if (!group) {
+        continue;
+      }
+      auto timer_ref = group->find_timer_ptrs_if(
+        [&timer_handle](const rclcpp::TimerBase::SharedPtr & timer) -> bool {
+          return timer->get_timer_handle() == timer_handle;
+        });
+      if (timer_ref) {
+        return timer_ref;
+      }
+    }
+  }
+  return nullptr;
+}
+
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
 MemoryStrategy::get_node_by_group(
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
@@ -197,6 +224,33 @@ MemoryStrategy::get_group_by_client(
           return cli == client;
         });
       if (client_ref) {
+        return group;
+      }
+    }
+  }
+  return nullptr;
+}
+
+rclcpp::callback_group::CallbackGroup::SharedPtr
+MemoryStrategy::get_group_by_timer(
+  rclcpp::TimerBase::SharedPtr timer,
+  const WeakNodeList & weak_nodes)
+{
+  for (auto & weak_node : weak_nodes) {
+    auto node = weak_node.lock();
+    if (!node) {
+      continue;
+    }
+    for (auto & weak_group : node->get_callback_groups()) {
+      auto group = weak_group.lock();
+      if (!group) {
+        continue;
+      }
+      auto timer_ref = group->find_timer_ptrs_if(
+        [&timer](const rclcpp::TimerBase::SharedPtr & time) -> bool {
+          return time == timer;
+        });
+      if (timer_ref) {
         return group;
       }
     }
