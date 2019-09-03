@@ -27,7 +27,7 @@
 TEST(TestNodeOptions, implicit_ros_args) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   auto options = rclcpp::NodeOptions(allocator)
-    .arguments({"__node:=some_node", "__ns:=/some_ns"});
+    .arguments({"-r", "__node:=some_node", "-r", "__ns:=/some_ns"});
 
   const rcl_node_options_t * rcl_options = options.get_rcl_node_options();
   ASSERT_TRUE(rcl_options != nullptr);
@@ -52,7 +52,7 @@ TEST(TestNodeOptions, implicit_ros_args) {
 TEST(TestNodeOptions, explicit_ros_args) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   auto options = rclcpp::NodeOptions(allocator)
-    .arguments({"--ros-args", "__node:=some_node", "__ns:=/some_ns"});
+    .arguments({"--ros-args", "-r", "__node:=some_node", "-r", "__ns:=/some_ns"});
 
   const rcl_node_options_t * rcl_options = options.get_rcl_node_options();
   ASSERT_TRUE(rcl_options != nullptr);
@@ -77,8 +77,8 @@ TEST(TestNodeOptions, explicit_ros_args) {
 TEST(TestNodeOptions, explicit_ros_args_and_non_ros_args) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   auto options = rclcpp::NodeOptions(allocator).arguments({
-    "--non-ros-flag", "--ros-args", "__node:=some_node",
-    "__ns:=/some_ns", "--", "non-ros-arg"});
+    "--non-ros-flag", "--ros-args", "-r", "__node:=some_node",
+    "-r", "__ns:=/some_ns", "--", "non-ros-arg"});
 
   const rcl_node_options_t * rcl_options = options.get_rcl_node_options();
   ASSERT_TRUE(rcl_options != nullptr);

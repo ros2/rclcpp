@@ -66,7 +66,7 @@ TEST_F(TestNode, get_name_and_namespace) {
   }
   {
     auto options = rclcpp::NodeOptions()
-      .arguments({"__ns:=/another_ns"});
+      .arguments({"-r", "__ns:=/another_ns"});
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", options);
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/another_ns", node->get_namespace());
