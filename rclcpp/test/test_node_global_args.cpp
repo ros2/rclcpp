@@ -36,7 +36,7 @@ protected:
 
 TEST_F(TestNodeWithGlobalArgs, local_arguments_before_global) {
   auto options = rclcpp::NodeOptions()
-    .arguments({"-r", "__node:=local_arguments_test"});
+    .arguments({"--ros-args", "-r", "__node:=local_arguments_test"});
 
   auto node = rclcpp::Node::make_shared("orig_name", options);
   EXPECT_STREQ("local_arguments_test", node->get_name());
