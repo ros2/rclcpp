@@ -143,7 +143,8 @@ ComponentManager::OnLoadNode(
       }
 
       std::vector<std::string> remap_rules;
-      remap_rules.reserve(request->remap_rules.size() * 2);
+      remap_rules.reserve(request->remap_rules.size() * 2 + 1);
+      remap_rules.push_back("--ros-args");
       for (const std::string & rule : request->remap_rules) {
         remap_rules.push_back("-r");
         remap_rules.push_back(rule);
