@@ -15,7 +15,6 @@
 #ifndef RCLCPP__UTILITIES_HPP_
 #define RCLCPP__UTILITIES_HPP_
 
-
 #include <chrono>
 #include <functional>
 #include <limits>
@@ -27,7 +26,7 @@
 #include "rclcpp/visibility_control.hpp"
 
 #ifdef ANDROID
-
+#include <sstream>
 namespace std
 {
 template<typename T>
