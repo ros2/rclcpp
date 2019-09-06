@@ -27,6 +27,7 @@
 
 #ifdef ANDROID
 #include <sstream>
+
 namespace std
 {
 template<typename T>
