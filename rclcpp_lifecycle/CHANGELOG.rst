@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+0.7.8 (2019-09-06)
+------------------
 * Fixed error messages which were not printing to console. (`#777 <https://github.com/ros2/rclcpp/issues/777>`_) (`#847 <https://github.com/ros2/rclcpp/issues/847>`_)
 * Contributors: Jacob Perron
 
