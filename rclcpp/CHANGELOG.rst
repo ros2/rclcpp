@@ -2,6 +2,9 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.7 (2019-07-31)
 ------------------
 * Enabled the creation of a parameter YAML file which is applied to each node. (`#805 <https://github.com/ros2/rclcpp/issues/805>`_)

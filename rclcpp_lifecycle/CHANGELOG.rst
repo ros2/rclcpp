@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Fixed error messages which were not printing to console. (`#777 <https://github.com/ros2/rclcpp/issues/777>`_) (`#847 <https://github.com/ros2/rclcpp/issues/847>`_)
+* Contributors: Jacob Perron
+
 0.7.7 (2019-07-31)
 ------------------
 * Added a default value to node options in LifecycleNode constructor to match node constructor. Updated API documentation. (`#801 <https://github.com/ros2/rclcpp/issues/801>`_)
