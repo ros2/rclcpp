@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
@@ -105,11 +106,32 @@ NodeOptions::get_rcl_node_options() const
       }
     }
 
-    rmw_ret_t ret = rcl_parse_arguments(
+    rcl_ret_t ret = rcl_parse_arguments(
       c_argc, c_argv.get(), this->allocator_, &(node_options_->arguments));
 
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to parse arguments");
+    }
+
+    int unparsed_ros_args_count =
+      rcl_arguments_get_count_unparsed_ros(&(node_options_->arguments));
+    if (unparsed_ros_args_count > 0) {
+      int * unparsed_ros_args_indices = nullptr;
+      ret = rcl_arguments_get_unparsed_ros(
+        &(node_options_->arguments), this->allocator_, &unparsed_ros_args_indices);
+      if (RCL_RET_OK != ret) {
+        throw_from_rcl_error(ret, "failed to get unparsed ROS arguments");
+      }
+      try {
+        std::vector<std::string> unparsed_ros_args;
+        for (int i = 0; i < unparsed_ros_args_count; ++i) {
+          unparsed_ros_args.push_back(c_argv[unparsed_ros_args_indices[i]]);
+        }
+        throw exceptions::UnknownROSArgsError(std::move(unparsed_ros_args));
+      } catch (...) {
+        this->allocator_.deallocate(unparsed_ros_args_indices, this->allocator_.state);
+        throw;
+      }
     }
   }
 
