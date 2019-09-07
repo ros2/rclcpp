@@ -25,7 +25,6 @@
 
 namespace rclcpp
 {
-
 class Clock;
 
 class Time
@@ -41,9 +40,7 @@ public:
   Time(const Time & rhs);
 
   RCLCPP_PUBLIC
-  Time(
-    const builtin_interfaces::msg::Time & time_msg,
-    rcl_clock_type_t ros_time = RCL_ROS_TIME);
+  Time(const builtin_interfaces::msg::Time & time_msg, rcl_clock_type_t ros_time = RCL_ROS_TIME);
 
   RCLCPP_PUBLIC
   explicit Time(const rcl_time_point_t & time_point);
@@ -55,75 +52,59 @@ public:
   operator builtin_interfaces::msg::Time() const;
 
   RCLCPP_PUBLIC
-  Time &
-  operator=(const Time & rhs);
+  Time & operator=(const Time & rhs);
 
   RCLCPP_PUBLIC
-  Time &
-  operator=(const builtin_interfaces::msg::Time & time_msg);
+  Time & operator=(const builtin_interfaces::msg::Time & time_msg);
 
   RCLCPP_PUBLIC
-  bool
-  operator==(const rclcpp::Time & rhs) const;
+  bool operator==(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  bool
-  operator!=(const rclcpp::Time & rhs) const;
+  bool operator!=(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  bool
-  operator<(const rclcpp::Time & rhs) const;
+  bool operator<(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  bool
-  operator<=(const rclcpp::Time & rhs) const;
+  bool operator<=(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  bool
-  operator>=(const rclcpp::Time & rhs) const;
+  bool operator>=(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  bool
-  operator>(const rclcpp::Time & rhs) const;
+  bool operator>(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  Time
-  operator+(const rclcpp::Duration & rhs) const;
+  Time operator+(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
-  Duration
-  operator-(const rclcpp::Time & rhs) const;
+  Duration operator-(const rclcpp::Time & rhs) const;
 
   RCLCPP_PUBLIC
-  Time
-  operator-(const rclcpp::Duration & rhs) const;
+  Time operator-(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
-  rcl_time_point_value_t
-  nanoseconds() const;
+  rcl_time_point_value_t nanoseconds() const;
 
   RCLCPP_PUBLIC
-  static Time
-  max();
+  static Time max();
 
   /// \return the seconds since epoch as a floating point number.
   /// \warning Depending on sizeof(double) there could be significant precision loss.
   /// When an exact time is required use nanoseconds() instead.
   RCLCPP_PUBLIC
-  double
-  seconds() const;
+  double seconds() const;
 
   RCLCPP_PUBLIC
-  rcl_clock_type_t
-  get_clock_type() const;
+  rcl_clock_type_t get_clock_type() const;
 
 private:
   rcl_time_point_t rcl_time_;
   friend Clock;  // Allow clock to manipulate internal data
 };
 
-Time
-operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
+Time operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs);
 
 }  // namespace rclcpp
 

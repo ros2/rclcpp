@@ -45,8 +45,7 @@ public:
   {
   }
 
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_base_interface()
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface()
   {
     return node_.get_node_base_interface();
   }
@@ -54,7 +53,6 @@ public:
 private:
   rclcpp::Node node_;
 };
-
 
 }  // namespace test_rclcpp_components
 

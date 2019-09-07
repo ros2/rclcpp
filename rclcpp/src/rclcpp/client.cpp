@@ -24,10 +24,10 @@
 #include "rcl/node.h"
 #include "rcl/wait.h"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/utilities.hpp"
-#include "rclcpp/logging.hpp"
 
 using rclcpp::ClientBase;
 using rclcpp::exceptions::InvalidNodeError;
@@ -43,25 +43,23 @@ ClientBase::ClientBase(
   std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
   rcl_client_t * new_rcl_client = new rcl_client_t;
   *new_rcl_client = rcl_get_zero_initialized_client();
-  client_handle_.reset(
-    new_rcl_client, [weak_node_handle](rcl_client_t * client)
-    {
-      auto handle = weak_node_handle.lock();
-      if (handle) {
-        if (rcl_client_fini(client, handle.get()) != RCL_RET_OK) {
-          RCLCPP_ERROR(
-            rclcpp::get_node_logger(handle.get()).get_child("rclcpp"),
-            "Error in destruction of rcl client handle: %s", rcl_get_error_string().str);
-          rcl_reset_error();
-        }
-      } else {
+  client_handle_.reset(new_rcl_client, [weak_node_handle](rcl_client_t * client) {
+    auto handle = weak_node_handle.lock();
+    if (handle) {
+      if (rcl_client_fini(client, handle.get()) != RCL_RET_OK) {
         RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"),
-          "Error in destruction of rcl client handle: "
-          "the Node Handle was destructed too early. You will leak memory");
+          rclcpp::get_node_logger(handle.get()).get_child("rclcpp"),
+          "Error in destruction of rcl client handle: %s", rcl_get_error_string().str);
+        rcl_reset_error();
       }
-      delete client;
-    });
+    } else {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "Error in destruction of rcl client handle: "
+        "the Node Handle was destructed too early. You will leak memory");
+    }
+    delete client;
+  });
 }
 
 ClientBase::~ClientBase()
@@ -70,32 +68,20 @@ ClientBase::~ClientBase()
   client_handle_.reset();
 }
 
-const char *
-ClientBase::get_service_name() const
+const char * ClientBase::get_service_name() const
 {
   return rcl_client_get_service_name(this->get_client_handle().get());
 }
 
-std::shared_ptr<rcl_client_t>
-ClientBase::get_client_handle()
-{
-  return client_handle_;
-}
+std::shared_ptr<rcl_client_t> ClientBase::get_client_handle() { return client_handle_; }
 
-std::shared_ptr<const rcl_client_t>
-ClientBase::get_client_handle() const
-{
-  return client_handle_;
-}
+std::shared_ptr<const rcl_client_t> ClientBase::get_client_handle() const { return client_handle_; }
 
-bool
-ClientBase::service_is_ready() const
+bool ClientBase::service_is_ready() const
 {
   bool is_ready;
   rcl_ret_t ret = rcl_service_server_is_available(
-    this->get_rcl_node_handle(),
-    this->get_client_handle().get(),
-    &is_ready);
+    this->get_rcl_node_handle(), this->get_client_handle().get(), &is_ready);
   if (RCL_RET_NODE_INVALID == ret) {
     const rcl_node_t * node_handle = this->get_rcl_node_handle();
     if (node_handle && !rcl_context_is_valid(node_handle->context)) {
@@ -109,8 +95,7 @@ ClientBase::service_is_ready() const
   return is_ready;
 }
 
-bool
-ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
+bool ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
 {
   auto start = std::chrono::steady_clock::now();
   // make an event to reuse, rather than create a new one each time
@@ -129,10 +114,9 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   auto event = node_ptr->get_graph_event();
   // update the time even on the first loop to account for time spent in the first call
   // to this->server_is_ready()
-  std::chrono::nanoseconds time_to_wait =
-    timeout > std::chrono::nanoseconds(0) ?
-    timeout - (std::chrono::steady_clock::now() - start) :
-    std::chrono::nanoseconds::max();
+  std::chrono::nanoseconds time_to_wait = timeout > std::chrono::nanoseconds(0)
+                                            ? timeout - (std::chrono::steady_clock::now() - start)
+                                            : std::chrono::nanoseconds::max();
   if (time_to_wait < std::chrono::nanoseconds(0)) {
     // Do not allow the time_to_wait to become negative when timeout was originally positive.
     // Setting time_to_wait to 0 will allow one non-blocking wait because of the do-while.
@@ -166,14 +150,6 @@ ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   return false;  // timeout exceeded while waiting for the server to be ready
 }
 
-rcl_node_t *
-ClientBase::get_rcl_node_handle()
-{
-  return node_handle_.get();
-}
+rcl_node_t * ClientBase::get_rcl_node_handle() { return node_handle_.get(); }
 
-const rcl_node_t *
-ClientBase::get_rcl_node_handle() const
-{
-  return node_handle_.get();
-}
+const rcl_node_t * ClientBase::get_rcl_node_handle() const { return node_handle_.get(); }

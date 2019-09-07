@@ -19,17 +19,18 @@
 using rclcpp::executors::SingleThreadedExecutor;
 
 SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
-: executor::Executor(args) {}
+: executor::Executor(args)
+{
+}
 
 SingleThreadedExecutor::~SingleThreadedExecutor() {}
 
-void
-SingleThreadedExecutor::spin()
+void SingleThreadedExecutor::spin()
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
   while (rclcpp::ok(this->context_) && spinning.load()) {
     rclcpp::executor::AnyExecutable any_executable;
     if (get_next_executable(any_executable)) {

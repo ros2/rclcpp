@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -24,26 +24,14 @@
 class TestParameterClient : public ::testing::Test
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
-  {
-    (void)event;
-  }
+  void OnMessage(const rcl_interfaces::msg::ParameterEvent::SharedPtr event) { (void)event; }
 
 protected:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
-  void SetUp()
-  {
-    node = std::make_shared<rclcpp::Node>("test_parameter_client", "/ns");
-  }
+  void SetUp() { node = std::make_shared<rclcpp::Node>("test_parameter_client", "/ns"); }
 
-  void TearDown()
-  {
-    node.reset();
-  }
+  void TearDown() { node.reset(); }
 
   rclcpp::Node::SharedPtr node;
 };
@@ -51,7 +39,8 @@ protected:
 /*
    Testing async parameter client construction and destruction.
  */
-TEST_F(TestParameterClient, async_construction_and_destruction) {
+TEST_F(TestParameterClient, async_construction_and_destruction)
+{
   {
     auto asynchronous_client = std::make_shared<rclcpp::AsyncParametersClient>(node);
     (void)asynchronous_client;
@@ -59,25 +48,23 @@ TEST_F(TestParameterClient, async_construction_and_destruction) {
 
   {
     auto asynchronous_client = std::make_shared<rclcpp::AsyncParametersClient>(
-      node->get_node_base_interface(),
-      node->get_node_topics_interface(),
-      node->get_node_graph_interface(),
-      node->get_node_services_interface());
+      node->get_node_base_interface(), node->get_node_topics_interface(),
+      node->get_node_graph_interface(), node->get_node_services_interface());
     (void)asynchronous_client;
   }
 
   {
     ASSERT_THROW(
-    {
-      std::make_shared<rclcpp::AsyncParametersClient>(node, "invalid_remote_node?");
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      { std::make_shared<rclcpp::AsyncParametersClient>(node, "invalid_remote_node?"); },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }
 
 /*
    Testing sync parameter client construction and destruction.
  */
-TEST_F(TestParameterClient, sync_construction_and_destruction) {
+TEST_F(TestParameterClient, sync_construction_and_destruction)
+{
   {
     auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
     (void)synchronous_client;
@@ -85,33 +72,30 @@ TEST_F(TestParameterClient, sync_construction_and_destruction) {
 
   {
     auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(
-      std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
-      node);
+      std::make_shared<rclcpp::executors::SingleThreadedExecutor>(), node);
     (void)synchronous_client;
   }
 
   {
     auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(
       std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
-      node->get_node_base_interface(),
-      node->get_node_topics_interface(),
-      node->get_node_graph_interface(),
-      node->get_node_services_interface());
+      node->get_node_base_interface(), node->get_node_topics_interface(),
+      node->get_node_graph_interface(), node->get_node_services_interface());
     (void)synchronous_client;
   }
 
   {
     ASSERT_THROW(
-    {
-      std::make_shared<rclcpp::SyncParametersClient>(node, "invalid_remote_node?");
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      { std::make_shared<rclcpp::SyncParametersClient>(node, "invalid_remote_node?"); },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }
 
 /*
    Testing different methods for parameter event subscription from asynchronous clients.
  */
-TEST_F(TestParameterClient, async_parameter_event_subscription) {
+TEST_F(TestParameterClient, async_parameter_event_subscription)
+{
   auto callback = std::bind(&TestParameterClient::OnMessage, this, std::placeholders::_1);
   {
     auto asynchronous_client = std::make_shared<rclcpp::AsyncParametersClient>(node);
@@ -126,8 +110,7 @@ TEST_F(TestParameterClient, async_parameter_event_subscription) {
 
   {
     auto event_sub = rclcpp::AsyncParametersClient::on_parameter_event(
-      node->get_node_topics_interface(),
-      callback);
+      node->get_node_topics_interface(), callback);
     (void)event_sub;
   }
 }
@@ -135,7 +118,8 @@ TEST_F(TestParameterClient, async_parameter_event_subscription) {
 /*
    Testing different methods for parameter event subscription from synchronous clients.
  */
-TEST_F(TestParameterClient, sync_parameter_event_subscription) {
+TEST_F(TestParameterClient, sync_parameter_event_subscription)
+{
   auto callback = std::bind(&TestParameterClient::OnMessage, this, std::placeholders::_1);
   {
     auto synchronous_client = std::make_shared<rclcpp::SyncParametersClient>(node);
@@ -149,9 +133,8 @@ TEST_F(TestParameterClient, sync_parameter_event_subscription) {
   }
 
   {
-    auto event_sub = rclcpp::SyncParametersClient::on_parameter_event(
-      node->get_node_topics_interface(),
-      callback);
+    auto event_sub =
+      rclcpp::SyncParametersClient::on_parameter_event(node->get_node_topics_interface(), callback);
     (void)event_sub;
   }
 }

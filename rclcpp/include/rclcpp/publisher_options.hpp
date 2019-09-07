@@ -19,16 +19,15 @@
 #include <string>
 #include <vector>
 
+#include "rcl/publisher.h"
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rcl/publisher.h"
 
 namespace rclcpp
 {
-
 /// Non-templated part of PublisherOptionsWithAllocator<Allocator>.
 struct PublisherOptionsBase
 {
@@ -43,7 +42,7 @@ struct PublisherOptionsBase
 };
 
 /// Structure containing optional configuration for Publishers.
-template<typename Allocator>
+template <typename Allocator>
 struct PublisherOptionsWithAllocator : public PublisherOptionsBase
 {
   /// Optional custom allocator.
@@ -54,12 +53,12 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   /// Constructor using base class as input.
   explicit PublisherOptionsWithAllocator(const PublisherOptionsBase & publisher_options_base)
   : PublisherOptionsBase(publisher_options_base)
-  {}
+  {
+  }
 
   /// Convert this class, and a rclcpp::QoS, into an rcl_publisher_options_t.
-  template<typename MessageT>
-  rcl_publisher_options_t
-  to_rcl_publisher_options(const rclcpp::QoS & qos) const
+  template <typename MessageT>
+  rcl_publisher_options_t to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result;
     using AllocatorTraits = std::allocator_traits<Allocator>;

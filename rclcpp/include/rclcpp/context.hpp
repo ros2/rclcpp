@@ -35,13 +35,11 @@
 
 namespace rclcpp
 {
-
 /// Thrown when init is called on an already initialized context.
 class ContextAlreadyInitialized : public std::runtime_error
 {
 public:
-  ContextAlreadyInitialized()
-  : std::runtime_error("context is already initialized") {}
+  ContextAlreadyInitialized() : std::runtime_error("context is already initialized") {}
 };
 
 /// Context which encapsulates shared state between nodes and other similar entities.
@@ -66,8 +64,7 @@ public:
   Context();
 
   RCLCPP_PUBLIC
-  virtual
-  ~Context();
+  virtual ~Context();
 
   /// Initialize the context, and the underlying elements like the rcl context.
   /**
@@ -102,11 +99,8 @@ public:
    * \throw ContextAlreadyInitialized if called if init is called more than once
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  init(
-    int argc,
-    char const * const argv[],
+  virtual void init(
+    int argc, char const * const argv[],
     const rclcpp::InitOptions & init_options = rclcpp::InitOptions());
 
   /// Return true if the context is valid, otherwise false.
@@ -120,26 +114,22 @@ public:
    * \return true if valid, otherwise false
    */
   RCLCPP_PUBLIC
-  bool
-  is_valid() const;
+  bool is_valid() const;
 
   /// Return the init options used during init.
   RCLCPP_PUBLIC
-  const rclcpp::InitOptions &
-  get_init_options() const;
+  const rclcpp::InitOptions & get_init_options() const;
 
   /// Return a copy of the init options used during init.
   RCLCPP_PUBLIC
-  rclcpp::InitOptions
-  get_init_options();
+  rclcpp::InitOptions get_init_options();
 
   /// Return the shutdown reason, or empty string if not shutdown.
   /**
    * This function is thread-safe.
    */
   RCLCPP_PUBLIC
-  std::string
-  shutdown_reason();
+  std::string shutdown_reason();
 
   /// Shutdown the context, making it uninitialized and therefore invalid for derived entities.
   /**
@@ -162,11 +152,9 @@ public:
    * \throw various exceptions derived from RCLErrorBase, if rcl_shutdown fails
    */
   RCLCPP_PUBLIC
-  virtual
-  bool
-  shutdown(const std::string & reason);
+  virtual bool shutdown(const std::string & reason);
 
-  using OnShutdownCallback = std::function<void ()>;
+  using OnShutdownCallback = std::function<void()>;
 
   /// Add a on_shutdown callback to be called when shutdown is called for this context.
   /**
@@ -188,9 +176,7 @@ public:
    * \return the callback passed, for convenience when storing a passed lambda
    */
   RCLCPP_PUBLIC
-  virtual
-  OnShutdownCallback
-  on_shutdown(OnShutdownCallback callback);
+  virtual OnShutdownCallback on_shutdown(OnShutdownCallback callback);
 
   /// Return the shutdown callbacks as const.
   /**
@@ -198,8 +184,7 @@ public:
    * the list of "on shutdown" callbacks, i.e. on_shutdown().
    */
   RCLCPP_PUBLIC
-  const std::vector<OnShutdownCallback> &
-  get_on_shutdown_callbacks() const;
+  const std::vector<OnShutdownCallback> & get_on_shutdown_callbacks() const;
 
   /// Return the shutdown callbacks.
   /**
@@ -207,13 +192,11 @@ public:
    * the list of "on shutdown" callbacks, i.e. on_shutdown().
    */
   RCLCPP_PUBLIC
-  std::vector<OnShutdownCallback> &
-  get_on_shutdown_callbacks();
+  std::vector<OnShutdownCallback> & get_on_shutdown_callbacks();
 
   /// Return the internal rcl context.
   RCLCPP_PUBLIC
-  std::shared_ptr<rcl_context_t>
-  get_rcl_context();
+  std::shared_ptr<rcl_context_t> get_rcl_context();
 
   /// Sleep for a given period of time or until shutdown() is called.
   /**
@@ -228,14 +211,11 @@ public:
    * \return true if the condition variable did not timeout, i.e. you were interrupted.
    */
   RCLCPP_PUBLIC
-  bool
-  sleep_for(const std::chrono::nanoseconds & nanoseconds);
+  bool sleep_for(const std::chrono::nanoseconds & nanoseconds);
 
   /// Interrupt any blocking sleep_for calls, causing them to return immediately and return true.
   RCLCPP_PUBLIC
-  virtual
-  void
-  interrupt_all_sleep_for();
+  virtual void interrupt_all_sleep_for();
 
   /// Get a handle to the guard condition which is triggered when interrupted.
   /**
@@ -262,8 +242,7 @@ public:
    * \return Pointer to the guard condition.
    */
   RCLCPP_PUBLIC
-  rcl_guard_condition_t *
-  get_interrupt_guard_condition(rcl_wait_set_t * wait_set);
+  rcl_guard_condition_t * get_interrupt_guard_condition(rcl_wait_set_t * wait_set);
 
   /// Release the previously allocated guard condition which is triggered when interrupted.
   /**
@@ -281,24 +260,20 @@ public:
    *   resulting guard condition.
    */
   RCLCPP_PUBLIC
-  void
-  release_interrupt_guard_condition(rcl_wait_set_t * wait_set);
+  void release_interrupt_guard_condition(rcl_wait_set_t * wait_set);
 
   /// Nothrow version of release_interrupt_guard_condition(), logs to RCLCPP_ERROR instead.
   RCLCPP_PUBLIC
-  void
-  release_interrupt_guard_condition(rcl_wait_set_t * wait_set, const std::nothrow_t &) noexcept;
+  void release_interrupt_guard_condition(
+    rcl_wait_set_t * wait_set, const std::nothrow_t &) noexcept;
 
   /// Interrupt any blocking executors, or wait sets associated with this context.
   RCLCPP_PUBLIC
-  virtual
-  void
-  interrupt_all_wait_sets();
+  virtual void interrupt_all_wait_sets();
 
   /// Return a singleton instance for the SubContext type, constructing one if necessary.
-  template<typename SubContext, typename ... Args>
-  std::shared_ptr<SubContext>
-  get_sub_context(Args && ... args)
+  template <typename SubContext, typename... Args>
+  std::shared_ptr<SubContext> get_sub_context(Args &&... args)
   {
     std::lock_guard<std::recursive_mutex> lock(sub_contexts_mutex_);
 
@@ -308,10 +283,8 @@ public:
     if (it == sub_contexts_.end()) {
       // It doesn't exist yet, make it
       sub_context = std::shared_ptr<SubContext>(
-        new SubContext(std::forward<Args>(args) ...),
-        [](SubContext * sub_context_ptr) {
-          delete sub_context_ptr;
-        });
+        new SubContext(std::forward<Args>(args)...),
+        [](SubContext * sub_context_ptr) { delete sub_context_ptr; });
       sub_contexts_[type_i] = sub_context;
     } else {
       // It exists, get it out and cast it.
@@ -324,9 +297,7 @@ protected:
   // Called by constructor and destructor to clean up by finalizing the
   // shutdown rcl context and preparing for a new init cycle.
   RCLCPP_PUBLIC
-  virtual
-  void
-  clean_up();
+  virtual void clean_up();
 
 private:
   RCLCPP_DISABLE_COPY(Context)
@@ -362,8 +333,7 @@ private:
  * This function is thread-safe.
  */
 RCLCPP_PUBLIC
-std::vector<Context::SharedPtr>
-get_contexts();
+std::vector<Context::SharedPtr> get_contexts();
 
 }  // namespace rclcpp
 

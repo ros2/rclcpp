@@ -30,7 +30,6 @@ namespace rclcpp
 {
 namespace node_interfaces
 {
-
 /// Implementation of the NodeTimeSource part of the Node API.
 class NodeTimeSource : public NodeTimeSourceInterface
 {
@@ -45,12 +44,10 @@ public:
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters
-  );
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters);
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeTimeSource();
+  virtual ~NodeTimeSource();
 
 private:
   RCLCPP_DISABLE_COPY(NodeTimeSource)

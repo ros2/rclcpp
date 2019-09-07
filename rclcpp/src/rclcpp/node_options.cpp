@@ -17,8 +17,8 @@
 #include <limits>
 #include <memory>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
@@ -29,20 +29,17 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 namespace rclcpp
 {
-
 namespace detail
 {
-static
-void
-rcl_node_options_t_destructor(rcl_node_options_t * node_options)
+static void rcl_node_options_t_destructor(rcl_node_options_t * node_options)
 {
   if (node_options) {
     rcl_ret_t ret = rcl_node_options_fini(node_options);
     if (RCL_RET_OK != ret) {
       // Cannot throw here, as it may be called in the destructor.
       RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"),
-        "failed to finalize rcl node options: %s", rcl_get_error_string().str);
+        rclcpp::get_logger("rclcpp"), "failed to finalize rcl node options: %s",
+        rcl_get_error_string().str);
       rcl_reset_error();
     }
 
@@ -54,7 +51,8 @@ rcl_node_options_t_destructor(rcl_node_options_t * node_options)
 
 NodeOptions::NodeOptions(rcl_allocator_t allocator)
 : node_options_(nullptr, detail::rcl_node_options_t_destructor), allocator_(allocator)
-{}
+{
+}
 
 NodeOptions::NodeOptions(const NodeOptions & other)
 : node_options_(nullptr, detail::rcl_node_options_t_destructor)
@@ -62,8 +60,7 @@ NodeOptions::NodeOptions(const NodeOptions & other)
   *this = other;
 }
 
-NodeOptions &
-NodeOptions::operator=(const NodeOptions & other)
+NodeOptions & NodeOptions::operator=(const NodeOptions & other)
 {
   if (this != &other) {
     this->context_ = other.context_;
@@ -80,8 +77,7 @@ NodeOptions::operator=(const NodeOptions & other)
   return *this;
 }
 
-const rcl_node_options_t *
-NodeOptions::get_rcl_node_options() const
+const rcl_node_options_t * NodeOptions::get_rcl_node_options() const
 {
   // If it is nullptr, create it on demand.
   if (!node_options_) {
@@ -92,7 +88,7 @@ NodeOptions::get_rcl_node_options() const
     node_options_->domain_id = this->get_domain_id_from_env();
 
     int c_argc = 0;
-    std::unique_ptr<const char *[]> c_argv;
+    std::unique_ptr<const char * []> c_argv;
     if (!this->arguments_.empty()) {
       if (this->arguments_.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
         throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
@@ -106,15 +102,14 @@ NodeOptions::get_rcl_node_options() const
       }
     }
 
-    rcl_ret_t ret = rcl_parse_arguments(
-      c_argc, c_argv.get(), this->allocator_, &(node_options_->arguments));
+    rcl_ret_t ret =
+      rcl_parse_arguments(c_argc, c_argv.get(), this->allocator_, &(node_options_->arguments));
 
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to parse arguments");
     }
 
-    int unparsed_ros_args_count =
-      rcl_arguments_get_count_unparsed_ros(&(node_options_->arguments));
+    int unparsed_ros_args_count = rcl_arguments_get_count_unparsed_ros(&(node_options_->arguments));
     if (unparsed_ros_args_count > 0) {
       int * unparsed_ros_args_indices = nullptr;
       ret = rcl_arguments_get_unparsed_ros(
@@ -138,153 +133,110 @@ NodeOptions::get_rcl_node_options() const
   return node_options_.get();
 }
 
-rclcpp::Context::SharedPtr
-NodeOptions::context() const
-{
-  return this->context_;
-}
+rclcpp::Context::SharedPtr NodeOptions::context() const { return this->context_; }
 
-NodeOptions &
-NodeOptions::context(rclcpp::Context::SharedPtr context)
+NodeOptions & NodeOptions::context(rclcpp::Context::SharedPtr context)
 {
   this->context_ = context;
   return *this;
 }
 
-const std::vector<std::string> &
-NodeOptions::arguments() const
-{
-  return this->arguments_;
-}
+const std::vector<std::string> & NodeOptions::arguments() const { return this->arguments_; }
 
-NodeOptions &
-NodeOptions::arguments(const std::vector<std::string> & arguments)
+NodeOptions & NodeOptions::arguments(const std::vector<std::string> & arguments)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->arguments_ = arguments;
   return *this;
 }
 
-std::vector<rclcpp::Parameter> &
-NodeOptions::parameter_overrides()
+std::vector<rclcpp::Parameter> & NodeOptions::parameter_overrides()
 {
   return this->parameter_overrides_;
 }
 
-const std::vector<rclcpp::Parameter> &
-NodeOptions::parameter_overrides() const
+const std::vector<rclcpp::Parameter> & NodeOptions::parameter_overrides() const
 {
   return this->parameter_overrides_;
 }
 
-NodeOptions &
-NodeOptions::parameter_overrides(const std::vector<rclcpp::Parameter> & parameter_overrides)
+NodeOptions & NodeOptions::parameter_overrides(
+  const std::vector<rclcpp::Parameter> & parameter_overrides)
 {
   this->parameter_overrides_ = parameter_overrides;
   return *this;
 }
 
-bool
-NodeOptions::use_global_arguments() const
-{
-  return this->node_options_->use_global_arguments;
-}
+bool NodeOptions::use_global_arguments() const { return this->node_options_->use_global_arguments; }
 
-NodeOptions &
-NodeOptions::use_global_arguments(bool use_global_arguments)
+NodeOptions & NodeOptions::use_global_arguments(bool use_global_arguments)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->use_global_arguments_ = use_global_arguments;
   return *this;
 }
 
-bool
-NodeOptions::use_intra_process_comms() const
-{
-  return this->use_intra_process_comms_;
-}
+bool NodeOptions::use_intra_process_comms() const { return this->use_intra_process_comms_; }
 
-NodeOptions &
-NodeOptions::use_intra_process_comms(bool use_intra_process_comms)
+NodeOptions & NodeOptions::use_intra_process_comms(bool use_intra_process_comms)
 {
   this->use_intra_process_comms_ = use_intra_process_comms;
   return *this;
 }
 
-bool
-NodeOptions::start_parameter_services() const
-{
-  return this->start_parameter_services_;
-}
+bool NodeOptions::start_parameter_services() const { return this->start_parameter_services_; }
 
-NodeOptions &
-NodeOptions::start_parameter_services(bool start_parameter_services)
+NodeOptions & NodeOptions::start_parameter_services(bool start_parameter_services)
 {
   this->start_parameter_services_ = start_parameter_services;
   return *this;
 }
 
-bool
-NodeOptions::start_parameter_event_publisher() const
+bool NodeOptions::start_parameter_event_publisher() const
 {
   return this->start_parameter_event_publisher_;
 }
 
-NodeOptions &
-NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publisher)
+NodeOptions & NodeOptions::start_parameter_event_publisher(bool start_parameter_event_publisher)
 {
   this->start_parameter_event_publisher_ = start_parameter_event_publisher;
   return *this;
 }
 
-const rclcpp::QoS &
-NodeOptions::parameter_event_qos() const
-{
-  return this->parameter_event_qos_;
-}
+const rclcpp::QoS & NodeOptions::parameter_event_qos() const { return this->parameter_event_qos_; }
 
-NodeOptions &
-NodeOptions::parameter_event_qos(const rclcpp::QoS & parameter_event_qos)
+NodeOptions & NodeOptions::parameter_event_qos(const rclcpp::QoS & parameter_event_qos)
 {
   this->parameter_event_qos_ = parameter_event_qos;
   return *this;
 }
 
-const rclcpp::PublisherOptionsBase &
-NodeOptions::parameter_event_publisher_options() const
+const rclcpp::PublisherOptionsBase & NodeOptions::parameter_event_publisher_options() const
 {
   return parameter_event_publisher_options_;
 }
 
-NodeOptions &
-NodeOptions::parameter_event_publisher_options(
+NodeOptions & NodeOptions::parameter_event_publisher_options(
   const rclcpp::PublisherOptionsBase & parameter_event_publisher_options)
 {
   parameter_event_publisher_options_ = parameter_event_publisher_options;
   return *this;
 }
 
-bool
-NodeOptions::allow_undeclared_parameters() const
-{
-  return this->allow_undeclared_parameters_;
-}
+bool NodeOptions::allow_undeclared_parameters() const { return this->allow_undeclared_parameters_; }
 
-NodeOptions &
-NodeOptions::allow_undeclared_parameters(bool allow_undeclared_parameters)
+NodeOptions & NodeOptions::allow_undeclared_parameters(bool allow_undeclared_parameters)
 {
   this->allow_undeclared_parameters_ = allow_undeclared_parameters;
   return *this;
 }
 
-bool
-NodeOptions::automatically_declare_parameters_from_overrides() const
+bool NodeOptions::automatically_declare_parameters_from_overrides() const
 {
   return this->automatically_declare_parameters_from_overrides_;
 }
 
-NodeOptions &
-NodeOptions::automatically_declare_parameters_from_overrides(
+NodeOptions & NodeOptions::automatically_declare_parameters_from_overrides(
   bool automatically_declare_parameters_from_overrides)
 {
   this->automatically_declare_parameters_from_overrides_ =
@@ -292,14 +244,9 @@ NodeOptions::automatically_declare_parameters_from_overrides(
   return *this;
 }
 
-const rcl_allocator_t &
-NodeOptions::allocator() const
-{
-  return this->allocator_;
-}
+const rcl_allocator_t & NodeOptions::allocator() const { return this->allocator_; }
 
-NodeOptions &
-NodeOptions::allocator(rcl_allocator_t allocator)
+NodeOptions & NodeOptions::allocator(rcl_allocator_t allocator)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->allocator_ = allocator;
@@ -308,8 +255,7 @@ NodeOptions::allocator(rcl_allocator_t allocator)
 
 // TODO(wjwwood): reuse rcutils_get_env() to avoid code duplication.
 //   See also: https://github.com/ros2/rcl/issues/119
-size_t
-NodeOptions::get_domain_id_from_env() const
+size_t NodeOptions::get_domain_id_from_env() const
 {
   // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
   size_t domain_id = std::numeric_limits<size_t>::max();

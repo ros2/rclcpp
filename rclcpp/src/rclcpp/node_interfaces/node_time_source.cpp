@@ -36,15 +36,9 @@ NodeTimeSource::NodeTimeSource(
   node_parameters_(node_parameters)
 {
   time_source_.attachNode(
-    node_base_,
-    node_topics_,
-    node_graph_,
-    node_services_,
-    node_logging_,
-    node_clock_,
+    node_base_, node_topics_, node_graph_, node_services_, node_logging_, node_clock_,
     node_parameters_);
   time_source_.attachClock(node_clock_->get_clock());
 }
 
-NodeTimeSource::~NodeTimeSource()
-{}
+NodeTimeSource::~NodeTimeSource() {}

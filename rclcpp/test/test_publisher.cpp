@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
@@ -26,10 +26,7 @@
 class TestPublisher : public ::testing::Test
 {
 public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
 protected:
   void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
@@ -37,18 +34,14 @@ protected:
     node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
   }
 
-  void TearDown()
-  {
-    node.reset();
-  }
+  void TearDown() { node.reset(); }
 
   rclcpp::Node::SharedPtr node;
 };
 
 struct TestParameters
 {
-  TestParameters(rclcpp::QoS qos, std::string description)
-  : qos(qos), description(description) {}
+  TestParameters(rclcpp::QoS qos, std::string description) : qos(qos), description(description) {}
   rclcpp::QoS qos;
   std::string description;
 };
@@ -59,17 +52,15 @@ std::ostream & operator<<(std::ostream & out, const TestParameters & params)
   return out;
 }
 
-class TestPublisherInvalidIntraprocessQos
-  : public TestPublisher,
-  public ::testing::WithParamInterface<TestParameters>
-{};
+class TestPublisherInvalidIntraprocessQos : public TestPublisher,
+                                            public ::testing::WithParamInterface<TestParameters>
+{
+};
 
 class TestPublisherSub : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-  }
+  static void SetUpTestCase() {}
 
   void SetUp()
   {
@@ -77,10 +68,7 @@ protected:
     subnode = node->create_sub_node("sub_ns");
   }
 
-  void TearDown()
-  {
-    node.reset();
-  }
+  void TearDown() { node.reset(); }
 
   rclcpp::Node::SharedPtr node;
   rclcpp::Node::SharedPtr subnode;
@@ -89,7 +77,8 @@ protected:
 /*
    Testing publisher construction and destruction.
  */
-TEST_F(TestPublisher, construction_and_destruction) {
+TEST_F(TestPublisher, construction_and_destruction)
+{
   initialize();
   using rcl_interfaces::msg::IntraProcessMessage;
   {
@@ -99,16 +88,16 @@ TEST_F(TestPublisher, construction_and_destruction) {
 
   {
     ASSERT_THROW(
-    {
-      auto publisher = node->create_publisher<IntraProcessMessage>("invalid_topic?", 42);
-    }, rclcpp::exceptions::InvalidTopicNameError);
+      { auto publisher = node->create_publisher<IntraProcessMessage>("invalid_topic?", 42); },
+      rclcpp::exceptions::InvalidTopicNameError);
   }
 }
 
 /*
    Testing publisher creation signatures.
  */
-TEST_F(TestPublisher, various_creation_signatures) {
+TEST_F(TestPublisher, various_creation_signatures)
+{
   initialize();
   using rcl_interfaces::msg::IntraProcessMessage;
   {
@@ -141,11 +130,11 @@ TEST_F(TestPublisher, various_creation_signatures) {
   }
   // Now deprecated functions.
 #if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #endif
   {
     auto publisher = node->create_publisher<IntraProcessMessage>("topic");
@@ -153,9 +142,7 @@ TEST_F(TestPublisher, various_creation_signatures) {
   }
   {
     auto publisher = node->create_publisher<IntraProcessMessage>(
-      "topic",
-      42,
-      std::make_shared<std::allocator<IntraProcessMessage>>());
+      "topic", 42, std::make_shared<std::allocator<IntraProcessMessage>>());
     (void)publisher;
   }
   {
@@ -164,28 +151,27 @@ TEST_F(TestPublisher, various_creation_signatures) {
   }
   {
     auto publisher = node->create_publisher<IntraProcessMessage>(
-      "topic",
-      rmw_qos_profile_default,
-      std::make_shared<std::allocator<IntraProcessMessage>>());
+      "topic", rmw_qos_profile_default, std::make_shared<std::allocator<IntraProcessMessage>>());
     (void)publisher;
   }
 #if !defined(_WIN32)
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #else  // !defined(_WIN32)
-# pragma warning(pop)
+#pragma warning(pop)
 #endif
 }
 
 /*
    Testing publisher with intraprocess enabled and invalid QoS
  */
-TEST_P(TestPublisherInvalidIntraprocessQos, test_publisher_throws) {
+TEST_P(TestPublisherInvalidIntraprocessQos, test_publisher_throws)
+{
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
   rclcpp::QoS qos = GetParam().qos;
   using rcl_interfaces::msg::IntraProcessMessage;
   {
     ASSERT_THROW(
-      {auto publisher = node->create_publisher<IntraProcessMessage>("topic", qos);},
+      { auto publisher = node->create_publisher<IntraProcessMessage>("topic", qos); },
       std::invalid_argument);
   }
 }
@@ -196,30 +182,23 @@ static std::vector<TestParameters> invalid_qos_profiles()
 
   parameters.reserve(3);
   parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepLast(10)).transient_local(),
-      "transient_local_qos"));
+    TestParameters(rclcpp::QoS(rclcpp::KeepLast(10)).transient_local(), "transient_local_qos"));
   parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepLast(0)),
-      "keep_last_qos_with_zero_history_depth"));
-  parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepAll()),
-      "keep_all_qos"));
+    TestParameters(rclcpp::QoS(rclcpp::KeepLast(0)), "keep_last_qos_with_zero_history_depth"));
+  parameters.push_back(TestParameters(rclcpp::QoS(rclcpp::KeepAll()), "keep_all_qos"));
 
   return parameters;
 }
 
 INSTANTIATE_TEST_CASE_P(
   TestPublisherThrows, TestPublisherInvalidIntraprocessQos,
-  ::testing::ValuesIn(invalid_qos_profiles()),
-  ::testing::PrintToStringParamName());
+  ::testing::ValuesIn(invalid_qos_profiles()), ::testing::PrintToStringParamName());
 
 /*
    Testing publisher construction and destruction for subnodes.
  */
-TEST_F(TestPublisherSub, construction_and_destruction) {
+TEST_F(TestPublisherSub, construction_and_destruction)
+{
   using rcl_interfaces::msg::IntraProcessMessage;
   {
     auto publisher = subnode->create_publisher<IntraProcessMessage>("topic", 42);
@@ -235,8 +214,7 @@ TEST_F(TestPublisherSub, construction_and_destruction) {
 
   {
     ASSERT_THROW(
-    {
-      auto publisher = subnode->create_publisher<IntraProcessMessage>("invalid_topic?", 42);
-    }, rclcpp::exceptions::InvalidTopicNameError);
+      { auto publisher = subnode->create_publisher<IntraProcessMessage>("invalid_topic?", 42); },
+      rclcpp::exceptions::InvalidTopicNameError);
   }
 }

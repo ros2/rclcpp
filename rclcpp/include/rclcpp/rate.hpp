@@ -25,7 +25,6 @@
 
 namespace rclcpp
 {
-
 class RateBase
 {
 public:
@@ -40,22 +39,22 @@ using std::chrono::duration;
 using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
 
-template<class Clock = std::chrono::high_resolution_clock>
+template <class Clock = std::chrono::high_resolution_clock>
 class GenericRate : public RateBase
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
 
   explicit GenericRate(double rate)
-  : GenericRate<Clock>(
-      duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
-  {}
+  : GenericRate<Clock>(duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
+  {
+  }
   explicit GenericRate(std::chrono::nanoseconds period)
   : period_(period), last_interval_(Clock::now())
-  {}
+  {
+  }
 
-  virtual bool
-  sleep()
+  virtual bool sleep()
   {
     // Time coming into sleep
     auto now = Clock::now();
@@ -86,22 +85,11 @@ public:
     return true;
   }
 
-  virtual bool
-  is_steady() const
-  {
-    return Clock::is_steady;
-  }
+  virtual bool is_steady() const { return Clock::is_steady; }
 
-  virtual void
-  reset()
-  {
-    last_interval_ = Clock::now();
-  }
+  virtual void reset() { last_interval_ = Clock::now(); }
 
-  std::chrono::nanoseconds period() const
-  {
-    return period_;
-  }
+  std::chrono::nanoseconds period() const { return period_; }
 
 private:
   RCLCPP_DISABLE_COPY(GenericRate)

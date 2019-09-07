@@ -25,7 +25,6 @@
 
 namespace rclcpp
 {
-
 class TimeSource;
 
 class JumpHandler
@@ -33,12 +32,11 @@ class JumpHandler
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(JumpHandler)
 
-  using pre_callback_t = std::function<void ()>;
-  using post_callback_t = std::function<void (const rcl_time_jump_t &)>;
+  using pre_callback_t = std::function<void()>;
+  using post_callback_t = std::function<void(const rcl_time_jump_t &)>;
 
   JumpHandler(
-    pre_callback_t pre_callback,
-    post_callback_t post_callback,
+    pre_callback_t pre_callback, post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
   pre_callback_t pre_callback;
@@ -71,8 +69,7 @@ public:
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   RCLCPP_PUBLIC
-  Time
-  now();
+  Time now();
 
   /**
    * Returns the clock of the type `RCL_ROS_TIME` is active.
@@ -82,16 +79,13 @@ public:
    * the current clock does not have the clock_type `RCL_ROS_TIME`.
    */
   RCLCPP_PUBLIC
-  bool
-  ros_time_is_active();
+  bool ros_time_is_active();
 
   RCLCPP_PUBLIC
-  rcl_clock_t *
-  get_clock_handle() noexcept;
+  rcl_clock_t * get_clock_handle() noexcept;
 
   RCLCPP_PUBLIC
-  rcl_clock_type_t
-  get_clock_type() const noexcept;
+  rcl_clock_type_t get_clock_type() const noexcept;
 
   // Add a callback to invoke if the jump threshold is exceeded.
   /**
@@ -115,20 +109,15 @@ public:
    * JumpHandler.
    */
   RCLCPP_PUBLIC
-  JumpHandler::SharedPtr
-  create_jump_callback(
-    JumpHandler::pre_callback_t pre_callback,
-    JumpHandler::post_callback_t post_callback,
+  JumpHandler::SharedPtr create_jump_callback(
+    JumpHandler::pre_callback_t pre_callback, JumpHandler::post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
 private:
   // Invoke time jump callback
   RCLCPP_PUBLIC
-  static void
-  on_time_jump(
-    const struct rcl_time_jump_t * time_jump,
-    bool before_jump,
-    void * user_data);
+  static void on_time_jump(
+    const struct rcl_time_jump_t * time_jump, bool before_jump, void * user_data);
 
   /// Internal storage backed by rcl
   rcl_clock_t rcl_clock_;

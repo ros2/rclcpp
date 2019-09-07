@@ -20,39 +20,32 @@ namespace rclcpp_lifecycle
 {
 namespace node_interfaces
 {
-
-LifecycleNodeInterface::CallbackReturn
-LifecycleNodeInterface::on_configure(const State &)
+LifecycleNodeInterface::CallbackReturn LifecycleNodeInterface::on_configure(const State &)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-LifecycleNodeInterface::CallbackReturn
-LifecycleNodeInterface::on_cleanup(const State &)
+LifecycleNodeInterface::CallbackReturn LifecycleNodeInterface::on_cleanup(const State &)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-LifecycleNodeInterface::CallbackReturn
-LifecycleNodeInterface::on_shutdown(const State &)
+LifecycleNodeInterface::CallbackReturn LifecycleNodeInterface::on_shutdown(const State &)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-LifecycleNodeInterface::CallbackReturn
-LifecycleNodeInterface::on_activate(const State &)
+LifecycleNodeInterface::CallbackReturn LifecycleNodeInterface::on_activate(const State &)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-LifecycleNodeInterface::CallbackReturn
-LifecycleNodeInterface::on_deactivate(const State &)
+LifecycleNodeInterface::CallbackReturn LifecycleNodeInterface::on_deactivate(const State &)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-LifecycleNodeInterface::CallbackReturn
-LifecycleNodeInterface::on_error(const State &)
+LifecycleNodeInterface::CallbackReturn LifecycleNodeInterface::on_error(const State &)
 {
   return LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }

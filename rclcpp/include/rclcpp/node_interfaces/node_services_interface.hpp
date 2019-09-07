@@ -25,7 +25,6 @@ namespace rclcpp
 {
 namespace node_interfaces
 {
-
 /// Pure virtual interface class for the NodeServices part of the Node API.
 class NodeServicesInterface
 {
@@ -33,20 +32,15 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeServicesInterface)
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeServicesInterface() = default;
+  virtual ~NodeServicesInterface() = default;
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_client(
+  virtual void add_client(
     rclcpp::ClientBase::SharedPtr client_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_service(
+  virtual void add_service(
     rclcpp::ServiceBase::SharedPtr service_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
 };

@@ -26,9 +26,7 @@
 
 namespace rclcpp
 {
-
-void
-init(int argc, char const * const argv[], const InitOptions & init_options)
+void init(int argc, char const * const argv[], const InitOptions & init_options)
 {
   using contexts::default_context::get_global_default_context;
   get_global_default_context()->init(argc, argv, init_options);
@@ -36,36 +34,23 @@ init(int argc, char const * const argv[], const InitOptions & init_options)
   install_signal_handlers();
 }
 
-bool
-install_signal_handlers()
-{
-  return SignalHandler::get_global_signal_handler().install();
-}
+bool install_signal_handlers() { return SignalHandler::get_global_signal_handler().install(); }
 
-bool
-signal_handlers_installed()
+bool signal_handlers_installed()
 {
   return SignalHandler::get_global_signal_handler().is_installed();
 }
 
-bool
-uninstall_signal_handlers()
-{
-  return SignalHandler::get_global_signal_handler().uninstall();
-}
+bool uninstall_signal_handlers() { return SignalHandler::get_global_signal_handler().uninstall(); }
 
-std::vector<std::string>
-init_and_remove_ros_arguments(
-  int argc,
-  char const * const argv[],
-  const InitOptions & init_options)
+std::vector<std::string> init_and_remove_ros_arguments(
+  int argc, char const * const argv[], const InitOptions & init_options)
 {
   init(argc, argv, init_options);
   return remove_ros_arguments(argc, argv);
 }
 
-std::vector<std::string>
-remove_ros_arguments(int argc, char const * const argv[])
+std::vector<std::string> remove_ros_arguments(int argc, char const * const argv[])
 {
   rcl_allocator_t alloc = rcl_get_default_allocator();
   rcl_arguments_t parsed_args = rcl_get_zero_initialized_arguments();
@@ -80,12 +65,7 @@ remove_ros_arguments(int argc, char const * const argv[])
   int nonros_argc = 0;
   const char ** nonros_argv = NULL;
 
-  ret = rcl_remove_ros_arguments(
-    argv,
-    &parsed_args,
-    alloc,
-    &nonros_argc,
-    &nonros_argv);
+  ret = rcl_remove_ros_arguments(argv, &parsed_args, alloc, &nonros_argc, &nonros_argv);
 
   if (RCL_RET_OK != ret || nonros_argc < 0) {
     // Not using throw_from_rcl_error, because we may need to append deallocation failures.
@@ -95,8 +75,8 @@ remove_ros_arguments(int argc, char const * const argv[])
       alloc.deallocate(nonros_argv, alloc.state);
     }
     if (RCL_RET_OK != rcl_arguments_fini(&parsed_args)) {
-      base_exc.formatted_message += std::string(
-        ", failed also to cleanup parsed arguments, leaking memory: ") +
+      base_exc.formatted_message +=
+        std::string(", failed also to cleanup parsed arguments, leaking memory: ") +
         rcl_get_error_string().str;
       rcl_reset_error();
     }
@@ -115,15 +95,13 @@ remove_ros_arguments(int argc, char const * const argv[])
 
   ret = rcl_arguments_fini(&parsed_args);
   if (RCL_RET_OK != ret) {
-    exceptions::throw_from_rcl_error(
-      ret, "failed to cleanup parsed arguments, leaking memory");
+    exceptions::throw_from_rcl_error(ret, "failed to cleanup parsed arguments, leaking memory");
   }
 
   return return_arguments;
 }
 
-bool
-ok(Context::SharedPtr context)
+bool ok(Context::SharedPtr context)
 {
   using contexts::default_context::get_global_default_context;
   if (nullptr == context) {
@@ -132,14 +110,9 @@ ok(Context::SharedPtr context)
   return context->is_valid();
 }
 
-bool
-is_initialized(Context::SharedPtr context)
-{
-  return ok(context);
-}
+bool is_initialized(Context::SharedPtr context) { return ok(context); }
 
-bool
-shutdown(Context::SharedPtr context, const std::string & reason)
+bool shutdown(Context::SharedPtr context, const std::string & reason)
 {
   using contexts::default_context::get_global_default_context;
   auto default_context = get_global_default_context();
@@ -153,8 +126,7 @@ shutdown(Context::SharedPtr context, const std::string & reason)
   return ret;
 }
 
-void
-on_shutdown(std::function<void()> callback, Context::SharedPtr context)
+void on_shutdown(std::function<void()> callback, Context::SharedPtr context)
 {
   using contexts::default_context::get_global_default_context;
   if (nullptr == context) {
@@ -163,8 +135,7 @@ on_shutdown(std::function<void()> callback, Context::SharedPtr context)
   context->on_shutdown(callback);
 }
 
-bool
-sleep_for(const std::chrono::nanoseconds & nanoseconds, Context::SharedPtr context)
+bool sleep_for(const std::chrono::nanoseconds & nanoseconds, Context::SharedPtr context)
 {
   using contexts::default_context::get_global_default_context;
   if (nullptr == context) {
@@ -173,16 +144,8 @@ sleep_for(const std::chrono::nanoseconds & nanoseconds, Context::SharedPtr conte
   return context->sleep_for(nanoseconds);
 }
 
-const char *
-get_c_string(const char * string_in)
-{
-  return string_in;
-}
+const char * get_c_string(const char * string_in) { return string_in; }
 
-const char *
-get_c_string(const std::string & string_in)
-{
-  return string_in.c_str();
-}
+const char * get_c_string(const std::string & string_in) { return string_in.c_str(); }
 
 }  // namespace rclcpp

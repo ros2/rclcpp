@@ -67,7 +67,6 @@
 
 namespace rclcpp
 {
-
 /// Node is the single point of entry for creating publishers and subscribers.
 class Node : public std::enable_shared_from_this<Node>
 {
@@ -80,9 +79,7 @@ public:
    * \param[in] options Additional options to control creation of the node.
    */
   RCLCPP_PUBLIC
-  explicit Node(
-    const std::string & node_name,
-    const NodeOptions & options = NodeOptions());
+  explicit Node(const std::string & node_name, const NodeOptions & options = NodeOptions());
 
   /// Create a new node with the specified name.
   /**
@@ -92,8 +89,7 @@ public:
    */
   RCLCPP_PUBLIC
   explicit Node(
-    const std::string & node_name,
-    const std::string & namespace_,
+    const std::string & node_name, const std::string & namespace_,
     const NodeOptions & options = NodeOptions());
 
   RCLCPP_PUBLIC
@@ -102,8 +98,7 @@ public:
   /// Get the name of the node.
   /** \return The name of the node. */
   RCLCPP_PUBLIC
-  const char *
-  get_name() const;
+  const char * get_name() const;
 
   /// Get the namespace of the node.
   /**
@@ -116,32 +111,28 @@ public:
    * \return The namespace of the node.
    */
   RCLCPP_PUBLIC
-  const char *
-  get_namespace() const;
+  const char * get_namespace() const;
 
   /// Get the fully-qualified name of the node.
   /**
    * The fully-qualified name includes the local namespace and name of the node.
    */
   RCLCPP_PUBLIC
-  const char *
-  get_fully_qualified_name() const;
+  const char * get_fully_qualified_name() const;
 
   /// Get the logger of the node.
   /** \return The logger of the node. */
   RCLCPP_PUBLIC
-  rclcpp::Logger
-  get_logger() const;
+  rclcpp::Logger get_logger() const;
 
   /// Create and return a callback group.
   RCLCPP_PUBLIC
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
+  rclcpp::callback_group::CallbackGroup::SharedPtr create_callback_group(
+    rclcpp::callback_group::CallbackGroupType group_type);
 
   /// Return the list of callback groups in the node.
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
-  get_callback_groups() const;
+  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> & get_callback_groups() const;
 
   /// Create and return a Publisher.
   /**
@@ -171,17 +162,13 @@ public:
    * \param[in] options Additional options for the created Publisher.
    * \return Shared pointer to the created publisher.
    */
-  template<
-    typename MessageT,
-    typename AllocatorT = std::allocator<void>,
+  template <
+    typename MessageT, typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
-  std::shared_ptr<PublisherT>
-  create_publisher(
-    const std::string & topic_name,
-    const rclcpp::QoS & qos,
+  std::shared_ptr<PublisherT> create_publisher(
+    const std::string & topic_name, const rclcpp::QoS & qos,
     const PublisherOptionsWithAllocator<AllocatorT> & options =
-    PublisherOptionsWithAllocator<AllocatorT>()
-  );
+      PublisherOptionsWithAllocator<AllocatorT>());
 
   /// Create and return a Publisher.
   /**
@@ -190,17 +177,16 @@ public:
    * \param[in] allocator Custom allocator.
    * \return Shared pointer to the created publisher.
    */
-  template<
-    typename MessageT,
-    typename AllocatorT = std::allocator<void>,
+  template <
+    typename MessageT, typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
-  std::shared_ptr<PublisherT>
-  create_publisher(
-    const std::string & topic_name,
-    size_t qos_history_depth,
-    std::shared_ptr<AllocatorT> allocator);
+  [[deprecated(
+    "use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]] std::
+    shared_ptr<PublisherT>
+    create_publisher(
+      const std::string & topic_name, size_t qos_history_depth,
+      std::shared_ptr<AllocatorT> allocator);
 
   /// Create and return a Publisher.
   /**
@@ -209,17 +195,17 @@ public:
    * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created publisher.
    */
-  template<
-    typename MessageT,
-    typename AllocatorT = std::allocator<void>,
+  template <
+    typename MessageT, typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
-  std::shared_ptr<PublisherT>
-  create_publisher(
-    const std::string & topic_name,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
-    std::shared_ptr<AllocatorT> allocator = nullptr);
+  [[deprecated(
+    "use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]] std::
+    shared_ptr<PublisherT>
+    create_publisher(
+      const std::string & topic_name,
+      const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
+      std::shared_ptr<AllocatorT> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -234,23 +220,17 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<
-    typename MessageT,
-    typename CallbackT,
-    typename AllocatorT = std::allocator<void>,
+  template <
+    typename MessageT, typename CallbackT, typename AllocatorT = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>>
-  std::shared_ptr<SubscriptionT>
-  create_subscription(
-    const std::string & topic_name,
-    const rclcpp::QoS & qos,
-    CallbackT && callback,
+  std::shared_ptr<SubscriptionT> create_subscription(
+    const std::string & topic_name, const rclcpp::QoS & qos, CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
-    SubscriptionOptionsWithAllocator<AllocatorT>(),
+      SubscriptionOptionsWithAllocator<AllocatorT>(),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
-    >::SharedPtr
-    msg_mem_strat = nullptr);
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+      AllocatorT>::SharedPtr msg_mem_strat = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -267,26 +247,22 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<
-    typename MessageT,
-    typename CallbackT,
-    typename Alloc = std::allocator<void>,
+  template <
+    typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated(
-    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
-  )]]
-  std::shared_ptr<SubscriptionT>
+  [
+    [deprecated("use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) "
+                "instead")]] std::shared_ptr<SubscriptionT>
   create_subscription(
-    const std::string & topic_name,
-    CallbackT && callback,
+    const std::string & topic_name, CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-    msg_mem_strat = nullptr,
+      msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
@@ -304,26 +280,21 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template<
-    typename MessageT,
-    typename CallbackT,
-    typename Alloc = std::allocator<void>,
+  template <
+    typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated(
-    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
-  )]]
-  std::shared_ptr<SubscriptionT>
+  [
+    [deprecated("use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) "
+                "instead")]] std::shared_ptr<SubscriptionT>
   create_subscription(
-    const std::string & topic_name,
-    CallbackT && callback,
-    size_t qos_history_depth,
+    const std::string & topic_name, CallbackT && callback, size_t qos_history_depth,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-    msg_mem_strat = nullptr,
+      msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create a timer.
@@ -332,27 +303,22 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
-  template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
-  typename rclcpp::WallTimer<CallbackT>::SharedPtr
-  create_wall_timer(
-    std::chrono::duration<DurationRepT, DurationT> period,
-    CallbackT callback,
+  template <typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
+  typename rclcpp::WallTimer<CallbackT>::SharedPtr create_wall_timer(
+    std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Client. */
-  template<typename ServiceT>
-  typename rclcpp::Client<ServiceT>::SharedPtr
-  create_client(
+  template <typename ServiceT>
+  typename rclcpp::Client<ServiceT>::SharedPtr create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template<typename ServiceT, typename CallbackT>
-  typename rclcpp::Service<ServiceT>::SharedPtr
-  create_service(
-    const std::string & service_name,
-    CallbackT && callback,
+  template <typename ServiceT, typename CallbackT>
+  typename rclcpp::Service<ServiceT>::SharedPtr create_service(
+    const std::string & service_name, CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
@@ -397,12 +363,11 @@ public:
    *   value fails to be set.
    */
   RCLCPP_PUBLIC
-  const rclcpp::ParameterValue &
-  declare_parameter(
+  const rclcpp::ParameterValue & declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor(),
+      rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false);
 
   /// Declare and initialize a parameter with a type.
@@ -426,13 +391,11 @@ public:
    *   - https://herbsutter.com/2008/01/01/gotw-88-a-candidate-for-the-most-important-const/
    *   - https://www.youtube.com/watch?v=uQyT-5iWUow (cppnow 2018 presentation)
    */
-  template<typename ParameterT>
-  auto
-  declare_parameter(
-    const std::string & name,
-    const ParameterT & default_value,
+  template <typename ParameterT>
+  auto declare_parameter(
+    const std::string & name, const ParameterT & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor(),
+      rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false);
 
   /// Declare and initialize several parameters with the same namespace and type.
@@ -471,11 +434,9 @@ public:
    * \throws rclcpp::exceptions::InvalidParameterValueException if initial
    *   value fails to be set.
    */
-  template<typename ParameterT>
-  std::vector<ParameterT>
-  declare_parameters(
-    const std::string & namespace_,
-    const std::map<std::string, ParameterT> & parameters,
+  template <typename ParameterT>
+  std::vector<ParameterT> declare_parameters(
+    const std::string & namespace_, const std::map<std::string, ParameterT> & parameters,
     bool ignore_overrides = false);
 
   /// Declare and initialize several parameters with the same namespace and type.
@@ -485,14 +446,11 @@ public:
    *
    * See the simpler declare_parameters() on this class for more details.
    */
-  template<typename ParameterT>
-  std::vector<ParameterT>
-  declare_parameters(
+  template <typename ParameterT>
+  std::vector<ParameterT> declare_parameters(
     const std::string & namespace_,
-    const std::map<
-      std::string,
-      std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
-    > & parameters,
+    const std::map<std::string, std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>> &
+      parameters,
     bool ignore_overrides = false);
 
   /// Undeclare a previously declared parameter.
@@ -507,8 +465,7 @@ public:
    *   was create as read_only (immutable).
    */
   RCLCPP_PUBLIC
-  void
-  undeclare_parameter(const std::string & name);
+  void undeclare_parameter(const std::string & name);
 
   /// Return true if a given parameter is declared.
   /**
@@ -516,8 +473,7 @@ public:
    * \return true if the parameter name has been declared, otherwise false.
    */
   RCLCPP_PUBLIC
-  bool
-  has_parameter(const std::string & name) const;
+  bool has_parameter(const std::string & name) const;
 
   /// Set a single parameter.
   /**
@@ -549,8 +505,7 @@ public:
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::SetParametersResult
-  set_parameter(const rclcpp::Parameter & parameter);
+  rcl_interfaces::msg::SetParametersResult set_parameter(const rclcpp::Parameter & parameter);
 
   /// Set one or more parameters, one at a time.
   /**
@@ -587,8 +542,8 @@ public:
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
-  std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::Parameter> & parameters);
+  std::vector<rcl_interfaces::msg::SetParametersResult> set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters);
 
   /// Set one or more parameters, all at once.
   /**
@@ -621,8 +576,8 @@ public:
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
+  rcl_interfaces::msg::SetParametersResult set_parameters_atomically(
+    const std::vector<rclcpp::Parameter> & parameters);
 
   /// Set one parameter, unless that parameter has already been set.
   /**
@@ -633,11 +588,10 @@ public:
    * \param[in] parameters The vector of parameters to be set.
    * \return The result of each set action as a vector.
    */
-  template<typename ParameterT>
+  template <typename ParameterT>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated("use declare_parameter() instead")]]
-  void
-  set_parameter_if_not_set(const std::string & name, const ParameterT & value);
+  [[deprecated("use declare_parameter() instead")]] void set_parameter_if_not_set(
+    const std::string & name, const ParameterT & value);
 
   /// Set a map of parameters with the same prefix.
   /**
@@ -649,12 +603,9 @@ public:
    * \param[in] name The prefix of the parameters to set.
    * \param[in] values The parameters to set in the given prefix.
    */
-  template<typename ParameterT>
-  [[deprecated("use declare_parameters() instead")]]
-  void
-  set_parameters_if_not_set(
-    const std::string & name,
-    const std::map<std::string, ParameterT> & values);
+  template <typename ParameterT>
+  [[deprecated("use declare_parameters() instead")]] void set_parameters_if_not_set(
+    const std::string & name, const std::map<std::string, ParameterT> & values);
 
   /// Return the parameter by the given name.
   /**
@@ -673,8 +624,7 @@ public:
    *   has not been declared and undeclared parameters are not allowed.
    */
   RCLCPP_PUBLIC
-  rclcpp::Parameter
-  get_parameter(const std::string & name) const;
+  rclcpp::Parameter get_parameter(const std::string & name) const;
 
   /// Get the value of a parameter by the given name, and return true if it was set.
   /**
@@ -692,8 +642,7 @@ public:
    * \return true if the parameter was previously declared, otherwise false.
    */
   RCLCPP_PUBLIC
-  bool
-  get_parameter(const std::string & name, rclcpp::Parameter & parameter) const;
+  bool get_parameter(const std::string & name, rclcpp::Parameter & parameter) const;
 
   /// Get the value of a parameter by the given name, and return true if it was set.
   /**
@@ -708,9 +657,8 @@ public:
    * \throws rclcpp::ParameterTypeException if the requested type does not
    *   match the value of the parameter which is stored.
    */
-  template<typename ParameterT>
-  bool
-  get_parameter(const std::string & name, ParameterT & parameter) const;
+  template <typename ParameterT>
+  bool get_parameter(const std::string & name, ParameterT & parameter) const;
 
   /// Get the parameter value, or the "alternative_value" if not set, and assign it to "parameter".
   /**
@@ -727,12 +675,9 @@ public:
    * \param[in] alternative_value Value to be stored in output if the parameter was not set.
    * \returns true if the parameter was set, false otherwise.
    */
-  template<typename ParameterT>
-  bool
-  get_parameter_or(
-    const std::string & name,
-    ParameterT & parameter,
-    const ParameterT & alternative_value) const;
+  template <typename ParameterT>
+  bool get_parameter_or(
+    const std::string & name, ParameterT & parameter, const ParameterT & alternative_value) const;
 
   /// Return the parameters by the given parameter names.
   /**
@@ -753,8 +698,7 @@ public:
    *   allowed.
    */
   RCLCPP_PUBLIC
-  std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & names) const;
+  std::vector<rclcpp::Parameter> get_parameters(const std::vector<std::string> & names) const;
 
   /// Get the parameter values for all parameters that have a given prefix.
   /**
@@ -793,11 +737,8 @@ public:
    * \throws rclcpp::ParameterTypeException if the requested type does not
    *   match the value of the parameter which is stored.
    */
-  template<typename ParameterT>
-  bool
-  get_parameters(
-    const std::string & prefix,
-    std::map<std::string, ParameterT> & values) const;
+  template <typename ParameterT>
+  bool get_parameters(const std::string & prefix, std::map<std::string, ParameterT> & values) const;
 
   /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
   /**
@@ -813,13 +754,9 @@ public:
    * \param[out] value The output where the value of the parameter should be assigned.
    * \param[in] alternative_value Value to be used if the parameter was not set.
    */
-  template<typename ParameterT>
-  [[deprecated("use declare_parameter() and it's return value instead")]]
-  void
-  get_parameter_or_set(
-    const std::string & name,
-    ParameterT & value,
-    const ParameterT & alternative_value);
+  template <typename ParameterT>
+  [[deprecated("use declare_parameter() and it's return value instead")]] void get_parameter_or_set(
+    const std::string & name, ParameterT & value, const ParameterT & alternative_value);
 
   /// Return the parameter descriptor for the given parameter name.
   /**
@@ -838,8 +775,7 @@ public:
    *   allowed.
    */
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::ParameterDescriptor
-  describe_parameter(const std::string & name) const;
+  rcl_interfaces::msg::ParameterDescriptor describe_parameter(const std::string & name) const;
 
   /// Return a vector of parameter descriptors, one for each of the given names.
   /**
@@ -860,8 +796,8 @@ public:
    *   allowed.
    */
   RCLCPP_PUBLIC
-  std::vector<rcl_interfaces::msg::ParameterDescriptor>
-  describe_parameters(const std::vector<std::string> & names) const;
+  std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
+    const std::vector<std::string> & names) const;
 
   /// Return a vector of parameter types, one for each of the given names.
   /**
@@ -880,19 +816,17 @@ public:
    *   allowed.
    */
   RCLCPP_PUBLIC
-  std::vector<uint8_t>
-  get_parameter_types(const std::vector<std::string> & names) const;
+  std::vector<uint8_t> get_parameter_types(const std::vector<std::string> & names) const;
 
   /// Return a list of parameters with any of the given prefixes, up to the given depth.
   /**
    * \todo: properly document and test this method.
    */
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::ListParametersResult
-  list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
+  rcl_interfaces::msg::ListParametersResult list_parameters(
+    const std::vector<std::string> & prefixes, uint64_t depth) const;
 
-  using OnSetParametersCallbackHandle =
-    rclcpp::node_interfaces::OnSetParametersCallbackHandle;
+  using OnSetParametersCallbackHandle = rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnParametersSetCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 
@@ -958,8 +892,8 @@ public:
    * \throws std::bad_alloc if the allocation of the OnSetParametersCallbackHandle fails.
    */
   RCLCPP_PUBLIC
-  OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback);
+  OnSetParametersCallbackHandle::SharedPtr add_on_set_parameters_callback(
+    OnParametersSetCallbackType callback);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
@@ -985,8 +919,7 @@ public:
    *   or if it has been removed before.
    */
   RCLCPP_PUBLIC
-  void
-  remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
+  void remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
 
   /// Register a callback to be called anytime a parameter is about to be changed.
   /**
@@ -1003,8 +936,8 @@ public:
    *   otherwise nullptr.
    */
   RCLCPP_PUBLIC
-  OnParametersSetCallbackType
-  set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
+  OnParametersSetCallbackType set_on_parameters_set_callback(
+    rclcpp::Node::OnParametersSetCallbackType callback);
 
   /// Register the callback for parameter changes
   /**
@@ -1012,9 +945,8 @@ public:
    *   It is expected to atomically set parameters.
    * \note Repeated invocations of this function will overwrite previous callbacks.
    */
-  template<typename CallbackT>
-  [[deprecated("use set_on_parameters_set_callback() instead")]]
-  void
+  template <typename CallbackT>
+  [[deprecated("use set_on_parameters_set_callback() instead")]] void
   register_param_change_callback(CallbackT && callback);
 
   /// Get the fully-qualified names of all available nodes.
@@ -1023,24 +955,19 @@ public:
    * \return A vector of fully-qualified names of nodes.
    */
   RCLCPP_PUBLIC
-  std::vector<std::string>
-  get_node_names() const;
+  std::vector<std::string> get_node_names() const;
 
   RCLCPP_PUBLIC
-  std::map<std::string, std::vector<std::string>>
-  get_topic_names_and_types() const;
+  std::map<std::string, std::vector<std::string>> get_topic_names_and_types() const;
 
   RCLCPP_PUBLIC
-  std::map<std::string, std::vector<std::string>>
-  get_service_names_and_types() const;
+  std::map<std::string, std::vector<std::string>> get_service_names_and_types() const;
 
   RCLCPP_PUBLIC
-  size_t
-  count_publishers(const std::string & topic_name) const;
+  size_t count_publishers(const std::string & topic_name) const;
 
   RCLCPP_PUBLIC
-  size_t
-  count_subscribers(const std::string & topic_name) const;
+  size_t count_subscribers(const std::string & topic_name) const;
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
@@ -1048,8 +975,7 @@ public:
    * out of scope.
    */
   RCLCPP_PUBLIC
-  rclcpp::Event::SharedPtr
-  get_graph_event();
+  rclcpp::Event::SharedPtr get_graph_event();
 
   /// Wait for a graph event to occur by waiting on an Event to become set.
   /**
@@ -1060,68 +986,53 @@ public:
    *   get_graph_event().
    */
   RCLCPP_PUBLIC
-  void
-  wait_for_graph_change(
-    rclcpp::Event::SharedPtr event,
-    std::chrono::nanoseconds timeout);
+  void wait_for_graph_change(rclcpp::Event::SharedPtr event, std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
-  rclcpp::Clock::SharedPtr
-  get_clock();
+  rclcpp::Clock::SharedPtr get_clock();
 
   RCLCPP_PUBLIC
-  Time
-  now();
+  Time now();
 
   /// Return the Node's internal NodeBaseInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_base_interface();
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface();
 
   /// Return the Node's internal NodeClockInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeClockInterface::SharedPtr
-  get_node_clock_interface();
+  rclcpp::node_interfaces::NodeClockInterface::SharedPtr get_node_clock_interface();
 
   /// Return the Node's internal NodeGraphInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr
-  get_node_graph_interface();
+  rclcpp::node_interfaces::NodeGraphInterface::SharedPtr get_node_graph_interface();
 
   /// Return the Node's internal NodeLoggingInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr
-  get_node_logging_interface();
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr get_node_logging_interface();
 
   /// Return the Node's internal NodeTimersInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr
-  get_node_timers_interface();
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr get_node_timers_interface();
 
   /// Return the Node's internal NodeTopicsInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr
-  get_node_topics_interface();
+  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr get_node_topics_interface();
 
   /// Return the Node's internal NodeServicesInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr
-  get_node_services_interface();
+  rclcpp::node_interfaces::NodeServicesInterface::SharedPtr get_node_services_interface();
 
   /// Return the Node's internal NodeWaitablesInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr
-  get_node_waitables_interface();
+  rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr get_node_waitables_interface();
 
   /// Return the Node's internal NodeParametersInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
-  get_node_parameters_interface();
+  rclcpp::node_interfaces::NodeParametersInterface::SharedPtr get_node_parameters_interface();
 
   /// Return the Node's internal NodeParametersInterface implementation.
   RCLCPP_PUBLIC
-  rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
-  get_node_time_source_interface();
+  rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr get_node_time_source_interface();
 
   /// Return the sub-namespace, if this is a sub-node, otherwise an empty string.
   /**
@@ -1152,8 +1063,7 @@ public:
    * \return the sub-namespace string, not including the node's original namespace
    */
   RCLCPP_PUBLIC
-  const std::string &
-  get_sub_namespace() const;
+  const std::string & get_sub_namespace() const;
 
   /// Return the effective namespace that is used when creating entities.
   /**
@@ -1180,8 +1090,7 @@ public:
    * \return the sub-namespace string, not including the node's original namespace
    */
   RCLCPP_PUBLIC
-  const std::string &
-  get_effective_namespace() const;
+  const std::string & get_effective_namespace() const;
 
   /// Create a sub-node, which will extend the namespace of all entities created with it.
   /**
@@ -1222,13 +1131,11 @@ public:
    *   with a leading '/'.
    */
   RCLCPP_PUBLIC
-  rclcpp::Node::SharedPtr
-  create_sub_node(const std::string & sub_namespace);
+  rclcpp::Node::SharedPtr create_sub_node(const std::string & sub_namespace);
 
   /// Return the NodeOptions used when creating this node.
   RCLCPP_PUBLIC
-  const rclcpp::NodeOptions &
-  get_node_options() const;
+  const rclcpp::NodeOptions & get_node_options() const;
 
   /// Manually assert that this Node is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE).
   /**
@@ -1240,8 +1147,7 @@ public:
    */
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
-  bool
-  assert_liveliness() const;
+  bool assert_liveliness() const;
 
 protected:
   /// Construct a sub-node, which will extend the namespace of all entities created with it.
@@ -1252,16 +1158,13 @@ protected:
    * \param[in] sub_namespace The sub-namespace of the sub-node.
    */
   RCLCPP_PUBLIC
-  Node(
-    const Node & other,
-    const std::string & sub_namespace);
+  Node(const Node & other, const std::string & sub_namespace);
 
 private:
   RCLCPP_DISABLE_COPY(Node)
 
   RCLCPP_PUBLIC
-  bool
-  group_in_node(callback_group::CallbackGroup::SharedPtr group);
+  bool group_in_node(callback_group::CallbackGroup::SharedPtr group);
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;

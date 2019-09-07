@@ -31,26 +31,18 @@ using namespace std::chrono_literals;
 class TestExecutors : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
-  void SetUp()
-  {
-    node = std::make_shared<rclcpp::Node>("my_node");
-  }
+  void SetUp() { node = std::make_shared<rclcpp::Node>("my_node"); }
 
-  void TearDown()
-  {
-    node.reset();
-  }
+  void TearDown() { node.reset(); }
 
   rclcpp::Node::SharedPtr node;
 };
 
 // Make sure that executors detach from nodes when destructing
-TEST_F(TestExecutors, detachOnDestruction) {
+TEST_F(TestExecutors, detachOnDestruction)
+{
   {
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
@@ -62,7 +54,8 @@ TEST_F(TestExecutors, detachOnDestruction) {
 }
 
 // Make sure that the executor can automatically remove expired nodes correctly
-TEST_F(TestExecutors, addTemporaryNode) {
+TEST_F(TestExecutors, addTemporaryNode)
+{
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(std::make_shared<rclcpp::Node>("temporary_node"));
   EXPECT_NO_THROW(executor.spin_some());

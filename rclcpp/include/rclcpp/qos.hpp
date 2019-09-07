@@ -23,7 +23,6 @@
 
 namespace rclcpp
 {
-
 /// QoS initialization values, cannot be created directly, use KeepAll or KeepLast instead.
 struct RCLCPP_PUBLIC QoSInitialization
 {
@@ -34,9 +33,7 @@ struct RCLCPP_PUBLIC QoSInitialization
   QoSInitialization(rmw_qos_history_policy_t history_policy_arg, size_t depth_arg);
 
   /// Create a QoSInitialization from an existing rmw_qos_profile_t, using its history and depth.
-  static
-  QoSInitialization
-  from_rmw(const rmw_qos_profile_t & rmw_qos);
+  static QoSInitialization from_rmw(const rmw_qos_profile_t & rmw_qos);
 };
 
 /// Use to initialize the QoS with the keep_all history setting.
@@ -56,8 +53,7 @@ class RCLCPP_PUBLIC QoS
 {
 public:
   /// Constructor which allows you to construct a QoS by giving the only required settings.
-  explicit
-  QoS(
+  explicit QoS(
     const QoSInitialization & qos_initialization,
     const rmw_qos_profile_t & initial_profile = rmw_qos_profile_default);
 
@@ -69,83 +65,64 @@ public:
   QoS(size_t history_depth);  // NOLINT(runtime/explicit): conversion constructor
 
   /// Return the rmw qos profile.
-  rmw_qos_profile_t &
-  get_rmw_qos_profile();
+  rmw_qos_profile_t & get_rmw_qos_profile();
 
   /// Return the rmw qos profile.
-  const rmw_qos_profile_t &
-  get_rmw_qos_profile() const;
+  const rmw_qos_profile_t & get_rmw_qos_profile() const;
 
   /// Set the history policy.
-  QoS &
-  history(rmw_qos_history_policy_t history);
+  QoS & history(rmw_qos_history_policy_t history);
 
   /// Set the history to keep last.
-  QoS &
-  keep_last(size_t depth);
+  QoS & keep_last(size_t depth);
 
   /// Set the history to keep all.
-  QoS &
-  keep_all();
+  QoS & keep_all();
 
   /// Set the reliability setting.
-  QoS &
-  reliability(rmw_qos_reliability_policy_t reliability);
+  QoS & reliability(rmw_qos_reliability_policy_t reliability);
 
   /// Set the reliability setting to reliable.
-  QoS &
-  reliable();
+  QoS & reliable();
 
   /// Set the reliability setting to best effort.
-  QoS &
-  best_effort();
+  QoS & best_effort();
 
   /// Set the durability setting.
-  QoS &
-  durability(rmw_qos_durability_policy_t durability);
+  QoS & durability(rmw_qos_durability_policy_t durability);
 
   /// Set the durability setting to volatile.
   /**
     * Note that this cannot be named `volatile` because it is a C++ keyword.
     */
-  QoS &
-  durability_volatile();
+  QoS & durability_volatile();
 
   /// Set the durability setting to transient local.
-  QoS &
-  transient_local();
+  QoS & transient_local();
 
   /// Set the deadline setting.
-  QoS &
-  deadline(rmw_time_t deadline);
+  QoS & deadline(rmw_time_t deadline);
 
   /// Set the deadline setting, rclcpp::Duration.
-  QoS &
-  deadline(const rclcpp::Duration & deadline);
+  QoS & deadline(const rclcpp::Duration & deadline);
 
   /// Set the lifespan setting.
-  QoS &
-  lifespan(rmw_time_t lifespan);
+  QoS & lifespan(rmw_time_t lifespan);
 
   /// Set the lifespan setting, rclcpp::Duration.
-  QoS &
-  lifespan(const rclcpp::Duration & lifespan);
+  QoS & lifespan(const rclcpp::Duration & lifespan);
 
   /// Set the liveliness setting.
-  QoS &
-  liveliness(rmw_qos_liveliness_policy_t liveliness);
+  QoS & liveliness(rmw_qos_liveliness_policy_t liveliness);
 
   /// Set the liveliness_lease_duration setting.
-  QoS &
-  liveliness_lease_duration(rmw_time_t liveliness_lease_duration);
+  QoS & liveliness_lease_duration(rmw_time_t liveliness_lease_duration);
 
   /// Set the liveliness_lease_duration setting, rclcpp::Duration.
-  QoS &
-  liveliness_lease_duration(const rclcpp::Duration & liveliness_lease_duration);
+  QoS & liveliness_lease_duration(const rclcpp::Duration & liveliness_lease_duration);
 
   /// Set the avoid_ros_namespace_conventions setting.
-  QoS &
-  avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions);
+  QoS & avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions);
 
 private:
   rmw_qos_profile_t rmw_qos_profile_;
@@ -154,51 +131,41 @@ private:
 class RCLCPP_PUBLIC SensorDataQoS : public QoS
 {
 public:
-  explicit
-  SensorDataQoS(
-    const QoSInitialization & qos_initialization = (
-      QoSInitialization::from_rmw(rmw_qos_profile_sensor_data)
-  ));
+  explicit SensorDataQoS(
+    const QoSInitialization & qos_initialization =
+      (QoSInitialization::from_rmw(rmw_qos_profile_sensor_data)));
 };
 
 class RCLCPP_PUBLIC ParametersQoS : public QoS
 {
 public:
-  explicit
-  ParametersQoS(
-    const QoSInitialization & qos_initialization = (
-      QoSInitialization::from_rmw(rmw_qos_profile_parameters)
-  ));
+  explicit ParametersQoS(
+    const QoSInitialization & qos_initialization =
+      (QoSInitialization::from_rmw(rmw_qos_profile_parameters)));
 };
 
 class RCLCPP_PUBLIC ServicesQoS : public QoS
 {
 public:
-  explicit
-  ServicesQoS(
-    const QoSInitialization & qos_initialization = (
-      QoSInitialization::from_rmw(rmw_qos_profile_services_default)
-  ));
+  explicit ServicesQoS(
+    const QoSInitialization & qos_initialization =
+      (QoSInitialization::from_rmw(rmw_qos_profile_services_default)));
 };
 
 class RCLCPP_PUBLIC ParameterEventsQoS : public QoS
 {
 public:
-  explicit
-  ParameterEventsQoS(
-    const QoSInitialization & qos_initialization = (
-      QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
-  ));
+  explicit ParameterEventsQoS(
+    const QoSInitialization & qos_initialization =
+      (QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)));
 };
 
 class RCLCPP_PUBLIC SystemDefaultsQoS : public QoS
 {
 public:
-  explicit
-  SystemDefaultsQoS(
-    const QoSInitialization & qos_initialization = (
-      QoSInitialization::from_rmw(rmw_qos_profile_system_default)
-  ));
+  explicit SystemDefaultsQoS(
+    const QoSInitialization & qos_initialization =
+      (QoSInitialization::from_rmw(rmw_qos_profile_system_default)));
 };
 
 }  // namespace rclcpp

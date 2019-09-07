@@ -23,7 +23,6 @@
 
 namespace rclcpp
 {
-
 class Event
 {
 public:
@@ -33,16 +32,13 @@ public:
   Event();
 
   RCLCPP_PUBLIC
-  bool
-  set();
+  bool set();
 
   RCLCPP_PUBLIC
-  bool
-  check();
+  bool check();
 
   RCLCPP_PUBLIC
-  bool
-  check_and_clear();
+  bool check_and_clear();
 
 private:
   RCLCPP_DISABLE_COPY(Event)

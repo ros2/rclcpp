@@ -31,7 +31,6 @@ namespace rclcpp
 {
 namespace executor
 {
-
 struct AnyExecutable
 {
   RCLCPP_PUBLIC

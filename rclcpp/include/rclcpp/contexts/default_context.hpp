@@ -24,7 +24,6 @@ namespace contexts
 {
 namespace default_context
 {
-
 class DefaultContext : public rclcpp::Context
 {
 public:
@@ -35,8 +34,7 @@ public:
 };
 
 RCLCPP_PUBLIC
-DefaultContext::SharedPtr
-get_global_default_context();
+DefaultContext::SharedPtr get_global_default_context();
 
 }  // namespace default_context
 }  // namespace contexts

@@ -21,22 +21,22 @@
 #include <vector>
 
 #include "rcl/graph.h"
-#include "rclcpp/exceptions.hpp"
 #include "rclcpp/event.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
 
-using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::graph_listener::GraphListener;
+using rclcpp::node_interfaces::NodeGraph;
 
 NodeGraph::NodeGraph(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base),
   graph_listener_(
-    node_base->get_context()->get_sub_context<GraphListener>(node_base->get_context())
-  ),
+    node_base->get_context()->get_sub_context<GraphListener>(node_base->get_context())),
   should_add_to_graph_listener_(true),
   graph_users_count_(0)
-{}
+{
+}
 
 NodeGraph::~NodeGraph()
 {
@@ -49,24 +49,21 @@ NodeGraph::~NodeGraph()
   }
 }
 
-std::map<std::string, std::vector<std::string>>
-NodeGraph::get_topic_names_and_types(bool no_demangle) const
+std::map<std::string, std::vector<std::string>> NodeGraph::get_topic_names_and_types(
+  bool no_demangle) const
 {
   rcl_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_names_and_types();
 
   rcl_allocator_t allocator = rcl_get_default_allocator();
   auto ret = rcl_get_topic_names_and_types(
-    node_base_->get_rcl_node_handle(),
-    &allocator,
-    no_demangle,
-    &topic_names_and_types);
+    node_base_->get_rcl_node_handle(), &allocator, no_demangle, &topic_names_and_types);
   if (ret != RCL_RET_OK) {
-    auto error_msg = std::string("failed to get topic names and types: ") +
-      rcl_get_error_string().str;
+    auto error_msg =
+      std::string("failed to get topic names and types: ") + rcl_get_error_string().str;
     rcl_reset_error();
     if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
       error_msg += std::string(", failed also to cleanup topic names and types, leaking memory: ") +
-        rcl_get_error_string().str;
+                   rcl_get_error_string().str;
     }
     throw std::runtime_error(error_msg + rcl_get_error_string().str);
   }
@@ -90,19 +87,16 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
   return topics_and_types;
 }
 
-std::map<std::string, std::vector<std::string>>
-NodeGraph::get_service_names_and_types() const
+std::map<std::string, std::vector<std::string>> NodeGraph::get_service_names_and_types() const
 {
   rcl_names_and_types_t service_names_and_types = rcl_get_zero_initialized_names_and_types();
 
   rcl_allocator_t allocator = rcl_get_default_allocator();
   auto ret = rcl_get_service_names_and_types(
-    node_base_->get_rcl_node_handle(),
-    &allocator,
-    &service_names_and_types);
+    node_base_->get_rcl_node_handle(), &allocator, &service_names_and_types);
   if (ret != RCL_RET_OK) {
-    auto error_msg = std::string("failed to get service names and types: ") +
-      rcl_get_error_string().str;
+    auto error_msg =
+      std::string("failed to get service names and types: ") + rcl_get_error_string().str;
     rcl_reset_error();
     if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
       error_msg +=
@@ -131,16 +125,13 @@ NodeGraph::get_service_names_and_types() const
   return services_and_types;
 }
 
-std::vector<std::string>
-NodeGraph::get_node_names() const
+std::vector<std::string> NodeGraph::get_node_names() const
 {
   std::vector<std::string> nodes;
   auto names_and_namespaces = get_node_names_and_namespaces();
 
   std::transform(
-    names_and_namespaces.begin(),
-    names_and_namespaces.end(),
-    std::back_inserter(nodes),
+    names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(nodes),
     [](std::pair<std::string, std::string> nns) {
       std::string return_string;
       if (nns.second.back() == '/') {
@@ -154,42 +145,34 @@ NodeGraph::get_node_names() const
         return_string = "/" + return_string;
       }
       return return_string;
-    }
-  );
+    });
   return nodes;
 }
 
-std::vector<std::pair<std::string, std::string>>
-NodeGraph::get_node_names_and_namespaces() const
+std::vector<std::pair<std::string, std::string>> NodeGraph::get_node_names_and_namespaces() const
 {
-  rcutils_string_array_t node_names_c =
-    rcutils_get_zero_initialized_string_array();
-  rcutils_string_array_t node_namespaces_c =
-    rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t node_names_c = rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t node_namespaces_c = rcutils_get_zero_initialized_string_array();
 
   auto allocator = rcl_get_default_allocator();
   auto ret = rcl_get_node_names(
-    node_base_->get_rcl_node_handle(),
-    allocator,
-    &node_names_c,
-    &node_namespaces_c);
+    node_base_->get_rcl_node_handle(), allocator, &node_names_c, &node_namespaces_c);
   if (ret != RCL_RET_OK) {
     auto error_msg = std::string("failed to get node names: ") + rcl_get_error_string().str;
     rcl_reset_error();
     if (rcutils_string_array_fini(&node_names_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node names, leaking memory: ") +
-        rcl_get_error_string().str;
+                   rcl_get_error_string().str;
       rcl_reset_error();
     }
     if (rcutils_string_array_fini(&node_namespaces_c) != RCUTILS_RET_OK) {
       error_msg += std::string(", failed also to cleanup node namespaces, leaking memory: ") +
-        rcl_get_error_string().str;
+                   rcl_get_error_string().str;
       rcl_reset_error();
     }
     // TODO(karsten1987): Append rcutils_error_message once it's in master
     throw std::runtime_error(error_msg);
   }
-
 
   std::vector<std::pair<std::string, std::string>> node_names;
   node_names.reserve(node_names_c.size);
@@ -222,16 +205,13 @@ NodeGraph::get_node_names_and_namespaces() const
   return node_names;
 }
 
-size_t
-NodeGraph::count_publishers(const std::string & topic_name) const
+size_t NodeGraph::count_publishers(const std::string & topic_name) const
 {
   auto rcl_node_handle = node_base_->get_rcl_node_handle();
 
   auto fqdn = rclcpp::expand_topic_or_service_name(
-    topic_name,
-    rcl_node_get_name(rcl_node_handle),
-    rcl_node_get_namespace(rcl_node_handle),
-    false);    // false = not a service
+    topic_name, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle),
+    false);  // false = not a service
 
   size_t count;
   auto ret = rcl_count_publishers(rcl_node_handle, fqdn.c_str(), &count);
@@ -244,16 +224,13 @@ NodeGraph::count_publishers(const std::string & topic_name) const
   return count;
 }
 
-size_t
-NodeGraph::count_subscribers(const std::string & topic_name) const
+size_t NodeGraph::count_subscribers(const std::string & topic_name) const
 {
   auto rcl_node_handle = node_base_->get_rcl_node_handle();
 
   auto fqdn = rclcpp::expand_topic_or_service_name(
-    topic_name,
-    rcl_node_get_name(rcl_node_handle),
-    rcl_node_get_namespace(rcl_node_handle),
-    false);    // false = not a service
+    topic_name, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle),
+    false);  // false = not a service
 
   size_t count;
   auto ret = rcl_count_subscribers(rcl_node_handle, fqdn.c_str(), &count);
@@ -266,14 +243,12 @@ NodeGraph::count_subscribers(const std::string & topic_name) const
   return count;
 }
 
-const rcl_guard_condition_t *
-NodeGraph::get_graph_guard_condition() const
+const rcl_guard_condition_t * NodeGraph::get_graph_guard_condition() const
 {
   return rcl_node_get_graph_guard_condition(node_base_->get_rcl_node_handle());
 }
 
-void
-NodeGraph::notify_graph_change()
+void NodeGraph::notify_graph_change()
 {
   {
     std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
@@ -290,11 +265,8 @@ NodeGraph::notify_graph_change()
       // remove invalid pointers with the erase-remove idiom
       graph_events_.erase(
         std::remove_if(
-          graph_events_.begin(),
-          graph_events_.end(),
-          [](const rclcpp::Event::WeakPtr & wptr) {
-            return wptr.expired();
-          }),
+          graph_events_.begin(), graph_events_.end(),
+          [](const rclcpp::Event::WeakPtr & wptr) { return wptr.expired(); }),
         graph_events_.end());
       // update graph_users_count_
       graph_users_count_.store(graph_events_.size());
@@ -310,15 +282,13 @@ NodeGraph::notify_graph_change()
   }
 }
 
-void
-NodeGraph::notify_shutdown()
+void NodeGraph::notify_shutdown()
 {
   // notify here anything that will not be woken up by ctrl-c or rclcpp::shutdown().
   graph_cv_.notify_all();
 }
 
-rclcpp::Event::SharedPtr
-NodeGraph::get_graph_event()
+rclcpp::Event::SharedPtr NodeGraph::get_graph_event()
 {
   auto event = rclcpp::Event::make_shared();
   std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
@@ -332,13 +302,11 @@ NodeGraph::get_graph_event()
   return event;
 }
 
-void
-NodeGraph::wait_for_graph_change(
-  rclcpp::Event::SharedPtr event,
-  std::chrono::nanoseconds timeout)
+void NodeGraph::wait_for_graph_change(
+  rclcpp::Event::SharedPtr event, std::chrono::nanoseconds timeout)
 {
-  using rclcpp::exceptions::InvalidEventError;
   using rclcpp::exceptions::EventNotRegisteredError;
+  using rclcpp::exceptions::InvalidEventError;
   if (!event) {
     throw InvalidEventError();
   }
@@ -356,16 +324,12 @@ NodeGraph::wait_for_graph_change(
     }
   }
   auto pred = [&event, context = node_base_->get_context()]() {
-      return event->check() || !rclcpp::ok(context);
-    };
+    return event->check() || !rclcpp::ok(context);
+  };
   std::unique_lock<std::mutex> graph_lock(graph_mutex_);
   if (!pred()) {
     graph_cv_.wait_for(graph_lock, timeout, pred);
   }
 }
 
-size_t
-NodeGraph::count_graph_users()
-{
-  return graph_users_count_.load();
-}
+size_t NodeGraph::count_graph_users() { return graph_users_count_.load(); }

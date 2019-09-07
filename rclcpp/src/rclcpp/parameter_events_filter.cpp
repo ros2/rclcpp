@@ -22,39 +22,31 @@ using EventType = rclcpp::ParameterEventsFilter::EventType;
 using EventPair = rclcpp::ParameterEventsFilter::EventPair;
 
 ParameterEventsFilter::ParameterEventsFilter(
-  rcl_interfaces::msg::ParameterEvent::SharedPtr event,
-  const std::vector<std::string> & names,
+  rcl_interfaces::msg::ParameterEvent::SharedPtr event, const std::vector<std::string> & names,
   const std::vector<EventType> & types)
 : event_(event)
 {
   if (std::find(types.begin(), types.end(), EventType::NEW) != types.end()) {
     for (auto & new_parameter : event->new_parameters) {
       if (std::find(names.begin(), names.end(), new_parameter.name) != names.end()) {
-        result_.push_back(
-          EventPair(EventType::NEW, &new_parameter));
+        result_.push_back(EventPair(EventType::NEW, &new_parameter));
       }
     }
   }
   if (std::find(types.begin(), types.end(), EventType::CHANGED) != types.end()) {
     for (auto & changed_parameter : event->changed_parameters) {
       if (std::find(names.begin(), names.end(), changed_parameter.name) != names.end()) {
-        result_.push_back(
-          EventPair(EventType::CHANGED, &changed_parameter));
+        result_.push_back(EventPair(EventType::CHANGED, &changed_parameter));
       }
     }
   }
   if (std::find(types.begin(), types.end(), EventType::DELETED) != types.end()) {
     for (auto & deleted_parameter : event->deleted_parameters) {
       if (std::find(names.begin(), names.end(), deleted_parameter.name) != names.end()) {
-        result_.push_back(
-          EventPair(EventType::DELETED, &deleted_parameter));
+        result_.push_back(EventPair(EventType::DELETED, &deleted_parameter));
       }
     }
   }
 }
 
-const std::vector<EventPair> &
-ParameterEventsFilter::get_events() const
-{
-  return result_;
-}
+const std::vector<EventPair> & ParameterEventsFilter::get_events() const { return result_; }

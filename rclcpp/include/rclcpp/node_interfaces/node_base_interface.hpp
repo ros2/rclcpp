@@ -31,7 +31,6 @@ namespace rclcpp
 {
 namespace node_interfaces
 {
-
 /// Pure virtual interface class for the NodeBase part of the Node API.
 class NodeBaseInterface
 {
@@ -39,48 +38,35 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeBaseInterface)
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeBaseInterface() = default;
+  virtual ~NodeBaseInterface() = default;
 
   /// Return the name of the node.
   /** \return The name of the node. */
   RCLCPP_PUBLIC
-  virtual
-  const char *
-  get_name() const = 0;
+  virtual const char * get_name() const = 0;
 
   /// Return the namespace of the node.
   /** \return The namespace of the node. */
   RCLCPP_PUBLIC
-  virtual
-  const char *
-  get_namespace() const = 0;
+  virtual const char * get_namespace() const = 0;
 
   /// Return the fully qualified name of the node.
   /** \return The fully qualified name of the node. */
   RCLCPP_PUBLIC
-  virtual
-  const char *
-  get_fully_qualified_name() const = 0;
+  virtual const char * get_fully_qualified_name() const = 0;
 
   /// Return the context of the node.
   /** \return SharedPtr to the node's context. */
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::Context::SharedPtr
-  get_context() = 0;
+  virtual rclcpp::Context::SharedPtr get_context() = 0;
 
   /// Return the rcl_node_t node handle (non-const version).
   RCLCPP_PUBLIC
-  virtual
-  rcl_node_t *
-  get_rcl_node_handle() = 0;
+  virtual rcl_node_t * get_rcl_node_handle() = 0;
 
   /// Return the rcl_node_t node handle (const version).
   RCLCPP_PUBLIC
-  virtual
-  const rcl_node_t *
-  get_rcl_node_handle() const = 0;
+  virtual const rcl_node_t * get_rcl_node_handle() const = 0;
 
   /// Return the rcl_node_t node handle in a std::shared_ptr.
   /**
@@ -88,9 +74,7 @@ public:
    * The actual rcl node is not finalized until it is out of scope everywhere.
    */
   RCLCPP_PUBLIC
-  virtual
-  std::shared_ptr<rcl_node_t>
-  get_shared_rcl_node_handle() = 0;
+  virtual std::shared_ptr<rcl_node_t> get_shared_rcl_node_handle() = 0;
 
   /// Return the rcl_node_t node handle in a std::shared_ptr.
   /**
@@ -98,45 +82,33 @@ public:
    * The actual rcl node is not finalized until it is out of scope everywhere.
    */
   RCLCPP_PUBLIC
-  virtual
-  std::shared_ptr<const rcl_node_t>
-  get_shared_rcl_node_handle() const = 0;
+  virtual std::shared_ptr<const rcl_node_t> get_shared_rcl_node_handle() const = 0;
 
   /// Manually assert that this Node is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE).
   RCLCPP_PUBLIC
-  virtual
-  bool
-  assert_liveliness() const = 0;
+  virtual bool assert_liveliness() const = 0;
 
   /// Create and return a callback group.
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type) = 0;
+  virtual rclcpp::callback_group::CallbackGroup::SharedPtr create_callback_group(
+    rclcpp::callback_group::CallbackGroupType group_type) = 0;
 
   /// Return the default callback group.
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_default_callback_group() = 0;
+  virtual rclcpp::callback_group::CallbackGroup::SharedPtr get_default_callback_group() = 0;
 
   /// Return true if the given callback group is associated with this node.
   RCLCPP_PUBLIC
-  virtual
-  bool
-  callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
+  virtual bool callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
 
   /// Return list of callback groups associated with this node.
   RCLCPP_PUBLIC
-  virtual
-  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
-  get_callback_groups() const = 0;
+  virtual const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> & get_callback_groups()
+    const = 0;
 
   /// Return the atomic bool which is used to ensure only one executor is used.
   RCLCPP_PUBLIC
-  virtual
-  std::atomic_bool &
-  get_associated_with_executor_atomic() = 0;
+  virtual std::atomic_bool & get_associated_with_executor_atomic() = 0;
 
   /// Return guard condition that should be notified when the internal node state changes.
   /**
@@ -145,22 +117,16 @@ public:
    * \return the rcl_guard_condition_t if it is valid, else nullptr
    */
   RCLCPP_PUBLIC
-  virtual
-  rcl_guard_condition_t *
-  get_notify_guard_condition() = 0;
+  virtual rcl_guard_condition_t * get_notify_guard_condition() = 0;
 
   /// Acquire and return a scoped lock that protects the notify guard condition.
   /** This should be used when triggering the notify guard condition. */
   RCLCPP_PUBLIC
-  virtual
-  std::unique_lock<std::recursive_mutex>
-  acquire_notify_guard_condition_lock() const = 0;
+  virtual std::unique_lock<std::recursive_mutex> acquire_notify_guard_condition_lock() const = 0;
 
   /// Return the default preference for using intra process communication.
   RCLCPP_PUBLIC
-  virtual
-  bool
-  get_use_intra_process_default() const = 0;
+  virtual bool get_use_intra_process_default() const = 0;
 };
 
 }  // namespace node_interfaces

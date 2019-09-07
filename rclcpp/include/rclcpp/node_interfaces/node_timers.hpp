@@ -26,7 +26,6 @@ namespace rclcpp
 {
 namespace node_interfaces
 {
-
 /// Implementation of the NodeTimers part of the Node API.
 class NodeTimers : public NodeTimersInterface
 {
@@ -37,14 +36,11 @@ public:
   explicit NodeTimers(rclcpp::node_interfaces::NodeBaseInterface * node_base);
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeTimers();
+  virtual ~NodeTimers();
 
   /// Add a timer to the node.
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_timer(
+  virtual void add_timer(
     rclcpp::TimerBase::SharedPtr timer,
     rclcpp::callback_group::CallbackGroup::SharedPtr callback_group);
 

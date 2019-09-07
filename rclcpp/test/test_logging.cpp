@@ -49,20 +49,19 @@ public:
     ASSERT_EQ(RCUTILS_RET_OK, rcutils_logging_initialize());
     rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_DEBUG);
 
-    auto rcutils_logging_console_output_handler = [](
-      const rcutils_log_location_t * location,
-      int level, const char * name, rcutils_time_point_value_t timestamp,
-      const char * format, va_list * args) -> void
-      {
-        g_log_calls += 1;
-        g_last_log_event.location = location;
-        g_last_log_event.level = level;
-        g_last_log_event.name = name ? name : "";
-        g_last_log_event.timestamp = timestamp;
-        char buffer[1024];
-        vsnprintf(buffer, sizeof(buffer), format, *args);
-        g_last_log_event.message = buffer;
-      };
+    auto rcutils_logging_console_output_handler =
+      [](
+        const rcutils_log_location_t * location, int level, const char * name,
+        rcutils_time_point_value_t timestamp, const char * format, va_list * args) -> void {
+      g_log_calls += 1;
+      g_last_log_event.location = location;
+      g_last_log_event.level = level;
+      g_last_log_event.name = name ? name : "";
+      g_last_log_event.timestamp = timestamp;
+      char buffer[1024];
+      vsnprintf(buffer, sizeof(buffer), format, *args);
+      g_last_log_event.message = buffer;
+    };
 
     this->previous_output_handler = rcutils_logging_get_output_handler();
     rcutils_logging_set_output_handler(rcutils_logging_console_output_handler);
@@ -76,7 +75,8 @@ public:
   }
 };
 
-TEST_F(TestLoggingMacros, test_logging_named) {
+TEST_F(TestLoggingMacros, test_logging_named)
+{
   for (int i : {1, 2, 3}) {
     RCLCPP_DEBUG(g_logger, "message %d", i);
   }
@@ -92,17 +92,23 @@ TEST_F(TestLoggingMacros, test_logging_named) {
   EXPECT_EQ("message 3", g_last_log_event.message);
 }
 
-TEST_F(TestLoggingMacros, test_logging_string) {
+TEST_F(TestLoggingMacros, test_logging_string)
+{
   for (std::string i : {"one", "two", "three"}) {
     RCLCPP_DEBUG(g_logger, "message " + i);
   }
   EXPECT_EQ(3u, g_log_calls);
   EXPECT_EQ("message three", g_last_log_event.message);
 
-  RCLCPP_DEBUG(g_logger, "message " "four");
+  RCLCPP_DEBUG(
+    g_logger,
+    "message "
+    "four");
   EXPECT_EQ("message four", g_last_log_event.message);
 
-  RCLCPP_DEBUG(g_logger, std::string("message " "five"));
+  RCLCPP_DEBUG(
+    g_logger, std::string("message "
+                          "five"));
   EXPECT_EQ("message five", g_last_log_event.message);
 
   RCLCPP_DEBUG(g_logger, std::string("message %s"), "six");
@@ -112,7 +118,8 @@ TEST_F(TestLoggingMacros, test_logging_string) {
   EXPECT_EQ("message seven", g_last_log_event.message);
 }
 
-TEST_F(TestLoggingMacros, test_logging_once) {
+TEST_F(TestLoggingMacros, test_logging_once)
+{
   for (int i : {1, 2, 3}) {
     RCLCPP_INFO_ONCE(g_logger, "message %d", i);
   }
@@ -132,7 +139,8 @@ TEST_F(TestLoggingMacros, test_logging_once) {
   EXPECT_EQ("second message 1", g_last_log_event.message);
 }
 
-TEST_F(TestLoggingMacros, test_logging_expression) {
+TEST_F(TestLoggingMacros, test_logging_expression)
+{
   for (int i : {1, 2, 3, 4, 5, 6}) {
     RCLCPP_INFO_EXPRESSION(g_logger, i % 3, "message %d", i);
   }
@@ -142,12 +150,10 @@ TEST_F(TestLoggingMacros, test_logging_expression) {
 
 int g_counter = 0;
 
-bool mod3()
-{
-  return (g_counter % 3) != 0;
-}
+bool mod3() { return (g_counter % 3) != 0; }
 
-TEST_F(TestLoggingMacros, test_logging_function) {
+TEST_F(TestLoggingMacros, test_logging_function)
+{
   for (int i : {1, 2, 3, 4, 5, 6}) {
     g_counter = i;
     RCLCPP_INFO_FUNCTION(g_logger, &mod3, "message %d", i);
@@ -156,7 +162,8 @@ TEST_F(TestLoggingMacros, test_logging_function) {
   EXPECT_EQ("message 5", g_last_log_event.message);
 }
 
-TEST_F(TestLoggingMacros, test_logging_skipfirst) {
+TEST_F(TestLoggingMacros, test_logging_skipfirst)
+{
   for (uint32_t i : {1, 2, 3, 4, 5}) {
     RCLCPP_WARN_SKIPFIRST(g_logger, "message %u", i);
     EXPECT_EQ(i - 1, g_log_calls);
@@ -181,7 +188,8 @@ bool log_function_const_ref(const rclcpp::Logger & logger)
   return true;
 }
 
-TEST_F(TestLoggingMacros, test_log_from_node) {
+TEST_F(TestLoggingMacros, test_log_from_node)
+{
   auto logger = rclcpp::get_logger("test_logging_logger");
   EXPECT_TRUE(log_function(logger));
   EXPECT_TRUE(log_function_const(logger));

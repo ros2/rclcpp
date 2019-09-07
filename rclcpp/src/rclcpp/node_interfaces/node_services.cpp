@@ -20,13 +20,12 @@ using rclcpp::node_interfaces::NodeServices;
 
 NodeServices::NodeServices(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
-{}
+{
+}
 
-NodeServices::~NodeServices()
-{}
+NodeServices::~NodeServices() {}
 
-void
-NodeServices::add_service(
+void NodeServices::add_service(
   rclcpp::ServiceBase::SharedPtr service_base_ptr,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
@@ -45,15 +44,13 @@ NodeServices::add_service(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Failed to notify wait set on service creation: ") +
-              rmw_get_error_string().str
-      );
+        std::string("Failed to notify wait set on service creation: ") +
+        rmw_get_error_string().str);
     }
   }
 }
 
-void
-NodeServices::add_client(
+void NodeServices::add_client(
   rclcpp::ClientBase::SharedPtr client_base_ptr,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
@@ -72,9 +69,7 @@ NodeServices::add_client(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Failed to notify wait set on client creation: ") +
-              rmw_get_error_string().str
-      );
+        std::string("Failed to notify wait set on client creation: ") + rmw_get_error_string().str);
     }
   }
 }

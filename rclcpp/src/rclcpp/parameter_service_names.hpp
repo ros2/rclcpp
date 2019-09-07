@@ -19,7 +19,6 @@ namespace rclcpp
 {
 namespace parameter_service_names
 {
-
 static constexpr const char * get_parameters = "get_parameters";
 static constexpr const char * get_parameter_types = "get_parameter_types";
 static constexpr const char * set_parameters = "set_parameters";

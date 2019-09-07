@@ -46,9 +46,9 @@ public:
  * Overrides all publisher functions to check for
  * enabled/disabled state.
  */
-template<typename MessageT, typename Alloc = std::allocator<void>>
+template <typename MessageT, typename Alloc = std::allocator<void>>
 class LifecyclePublisher : public LifecyclePublisherInterface,
-  public rclcpp::Publisher<MessageT, Alloc>
+                           public rclcpp::Publisher<MessageT, Alloc>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(LifecyclePublisher)
@@ -59,11 +59,9 @@ public:
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   LifecyclePublisher(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    const std::string & topic,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
-    const rclcpp::PublisherEventCallbacks event_callbacks,
-    std::shared_ptr<MessageAlloc> allocator)
+    const rclcpp::PublisherEventCallbacks event_callbacks, std::shared_ptr<MessageAlloc> allocator)
   : rclcpp::Publisher<MessageT, Alloc>(
       node_base, topic, publisher_options, event_callbacks, allocator),
     enabled_(false),
@@ -79,13 +77,11 @@ public:
    * was enabled or disabled and forwards the message
    * to the actual rclcpp Publisher base class
    */
-  virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  virtual void publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(
-        logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        logger_, "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -99,13 +95,11 @@ public:
    * was enabled or disabled and forwards the message
    * to the actual rclcpp Publisher base class
    */
-  virtual void
-  publish(const MessageT & msg)
+  virtual void publish(const MessageT & msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(
-        logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        logger_, "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -122,19 +116,18 @@ public:
 // Skip deprecated attribute in windows, as it raise a warning in template specialization.
 #if !defined(_WIN32)
 // Avoid raising a deprecated warning in template specialization in linux.
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  [[deprecated(
-    "publishing an unique_ptr is prefered when using intra process communication."
-    " If using a shared_ptr, use publish(*msg).")]]
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  [
+    [deprecated("publishing an unique_ptr is prefered when using intra process communication."
+                " If using a shared_ptr, use publish(*msg).")]]
 #endif
-  virtual void
-  publish(const std::shared_ptr<const MessageT> & msg)
+    virtual void
+    publish(const std::shared_ptr<const MessageT> & msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(
-        logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        logger_, "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -144,11 +137,10 @@ public:
 
 // Skip deprecated attribute in windows, as it raise a warning in template specialization.
 #if !defined(_WIN32)
-  [[deprecated(
-    "Use publish(*msg). Check against nullptr before calling if necessary.")]]
+  [[deprecated("Use publish(*msg). Check against nullptr before calling if necessary.")]]
 #endif
-  virtual void
-  publish(const MessageT * msg)
+    virtual void
+    publish(const MessageT * msg)
   {
     if (!msg) {
       throw std::runtime_error("msg argument is nullptr");
@@ -157,26 +149,14 @@ public:
   }
 
 #if !defined(_WIN32)
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif
 
-  virtual void
-  on_activate()
-  {
-    enabled_ = true;
-  }
+  virtual void on_activate() { enabled_ = true; }
 
-  virtual void
-  on_deactivate()
-  {
-    enabled_ = false;
-  }
+  virtual void on_deactivate() { enabled_ = false; }
 
-  virtual bool
-  is_activated()
-  {
-    return enabled_;
-  }
+  virtual bool is_activated() { return enabled_; }
 
 private:
   bool enabled_ = false;

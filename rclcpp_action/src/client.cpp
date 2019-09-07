@@ -28,7 +28,6 @@
 
 namespace rclcpp_action
 {
-
 class ClientBaseImpl
 {
 public:
@@ -36,18 +35,16 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name,
-    const rosidl_action_type_support_t * type_support,
+    const std::string & action_name, const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
   : node_graph_(node_graph),
     node_handle(node_base->get_shared_rcl_node_handle()),
     logger(node_logging->get_logger().get_child("rclcpp_acton")),
-    random_bytes_generator(std::random_device{} ())
+    random_bytes_generator(std::random_device{}())
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
     client_handle = std::shared_ptr<rcl_action_client_t>(
-      new rcl_action_client_t, [weak_node_handle](rcl_action_client_t * client)
-      {
+      new rcl_action_client_t, [weak_node_handle](rcl_action_client_t * client) {
         auto handle = weak_node_handle.lock();
         if (handle) {
           if (RCL_RET_OK != rcl_action_client_fini(client, handle.get())) {
@@ -66,23 +63,16 @@ public:
       });
     *client_handle = rcl_action_get_zero_initialized_client();
     rcl_ret_t ret = rcl_action_client_init(
-      client_handle.get(), node_handle.get(), type_support,
-      action_name.c_str(), &client_options);
+      client_handle.get(), node_handle.get(), type_support, action_name.c_str(), &client_options);
     if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "could not initialize rcl action client");
+      rclcpp::exceptions::throw_from_rcl_error(ret, "could not initialize rcl action client");
     }
 
     ret = rcl_action_client_wait_set_get_num_entities(
-      client_handle.get(),
-      &num_subscriptions,
-      &num_guard_conditions,
-      &num_timers,
-      &num_clients,
+      client_handle.get(), &num_subscriptions, &num_guard_conditions, &num_timers, &num_clients,
       &num_services);
     if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(
-        ret, "could not retrieve rcl action client details");
+      rclcpp::exceptions::throw_from_rcl_error(ret, "could not retrieve rcl action client details");
     }
   }
 
@@ -104,7 +94,7 @@ public:
   std::shared_ptr<rcl_node_t> node_handle{nullptr};
   rclcpp::Logger logger;
 
-  using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
+  using ResponseCallback = std::function<void(std::shared_ptr<void> response)>;
 
   std::map<int64_t, ResponseCallback> pending_goal_responses;
   std::mutex goal_requests_mutex;
@@ -115,34 +105,27 @@ public:
   std::map<int64_t, ResponseCallback> pending_cancel_responses;
   std::mutex cancel_requests_mutex;
 
-  std::independent_bits_engine<
-    std::default_random_engine, 8, unsigned int> random_bytes_generator;
+  std::independent_bits_engine<std::default_random_engine, 8, unsigned int> random_bytes_generator;
 };
 
 ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-  const std::string & action_name,
-  const rosidl_action_type_support_t * type_support,
+  const std::string & action_name, const rosidl_action_type_support_t * type_support,
   const rcl_action_client_options_t & client_options)
 : pimpl_(new ClientBaseImpl(
-      node_base, node_graph, node_logging, action_name, type_support, client_options))
+    node_base, node_graph, node_logging, action_name, type_support, client_options))
 {
 }
 
-ClientBase::~ClientBase()
-{
-}
+ClientBase::~ClientBase() {}
 
-bool
-ClientBase::action_server_is_ready() const
+bool ClientBase::action_server_is_ready() const
 {
   bool is_ready;
   rcl_ret_t ret = rcl_action_server_is_available(
-    this->pimpl_->node_handle.get(),
-    this->pimpl_->client_handle.get(),
-    &is_ready);
+    this->pimpl_->node_handle.get(), this->pimpl_->client_handle.get(), &is_ready);
   if (RCL_RET_NODE_INVALID == ret) {
     const rcl_node_t * node_handle = this->pimpl_->node_handle.get();
     if (node_handle && !rcl_context_is_valid(node_handle->context)) {
@@ -156,8 +139,7 @@ ClientBase::action_server_is_ready() const
   return is_ready;
 }
 
-bool
-ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
+bool ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
 {
   auto start = std::chrono::steady_clock::now();
   // make an event to reuse, rather than create a new one each time
@@ -176,10 +158,9 @@ ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
   }
   // update the time even on the first loop to account for time spent in the first call
   // to this->server_is_ready()
-  std::chrono::nanoseconds time_to_wait =
-    timeout > std::chrono::nanoseconds(0) ?
-    timeout - (std::chrono::steady_clock::now() - start) :
-    std::chrono::nanoseconds::max();
+  std::chrono::nanoseconds time_to_wait = timeout > std::chrono::nanoseconds(0)
+                                            ? timeout - (std::chrono::steady_clock::now() - start)
+                                            : std::chrono::nanoseconds::max();
   if (time_to_wait < std::chrono::nanoseconds(0)) {
     // Do not allow the time_to_wait to become negative when timeout was originally positive.
     // Setting time_to_wait to 0 will allow one non-blocking wait because of the do-while.
@@ -213,76 +194,40 @@ ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
   return false;  // timeout exceeded while waiting for the server to be ready
 }
 
-rclcpp::Logger
-ClientBase::get_logger()
-{
-  return pimpl_->logger;
-}
+rclcpp::Logger ClientBase::get_logger() { return pimpl_->logger; }
 
-size_t
-ClientBase::get_number_of_ready_subscriptions()
-{
-  return pimpl_->num_subscriptions;
-}
+size_t ClientBase::get_number_of_ready_subscriptions() { return pimpl_->num_subscriptions; }
 
-size_t
-ClientBase::get_number_of_ready_guard_conditions()
-{
-  return pimpl_->num_guard_conditions;
-}
+size_t ClientBase::get_number_of_ready_guard_conditions() { return pimpl_->num_guard_conditions; }
 
-size_t
-ClientBase::get_number_of_ready_timers()
-{
-  return pimpl_->num_timers;
-}
+size_t ClientBase::get_number_of_ready_timers() { return pimpl_->num_timers; }
 
-size_t
-ClientBase::get_number_of_ready_clients()
-{
-  return pimpl_->num_clients;
-}
+size_t ClientBase::get_number_of_ready_clients() { return pimpl_->num_clients; }
 
-size_t
-ClientBase::get_number_of_ready_services()
-{
-  return pimpl_->num_services;
-}
+size_t ClientBase::get_number_of_ready_services() { return pimpl_->num_services; }
 
-bool
-ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+bool ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
-  rcl_ret_t ret = rcl_action_wait_set_add_action_client(
-    wait_set, pimpl_->client_handle.get(), nullptr, nullptr);
+  rcl_ret_t ret =
+    rcl_action_wait_set_add_action_client(wait_set, pimpl_->client_handle.get(), nullptr, nullptr);
   return RCL_RET_OK == ret;
 }
 
-bool
-ClientBase::is_ready(rcl_wait_set_t * wait_set)
+bool ClientBase::is_ready(rcl_wait_set_t * wait_set)
 {
   rcl_ret_t ret = rcl_action_client_wait_set_get_entities_ready(
-    wait_set, pimpl_->client_handle.get(),
-    &pimpl_->is_feedback_ready,
-    &pimpl_->is_status_ready,
-    &pimpl_->is_goal_response_ready,
-    &pimpl_->is_cancel_response_ready,
+    wait_set, pimpl_->client_handle.get(), &pimpl_->is_feedback_ready, &pimpl_->is_status_ready,
+    &pimpl_->is_goal_response_ready, &pimpl_->is_cancel_response_ready,
     &pimpl_->is_result_response_ready);
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "failed to check for any ready entities");
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to check for any ready entities");
   }
-  return
-    pimpl_->is_feedback_ready ||
-    pimpl_->is_status_ready ||
-    pimpl_->is_goal_response_ready ||
-    pimpl_->is_cancel_response_ready ||
-    pimpl_->is_result_response_ready;
+  return pimpl_->is_feedback_ready || pimpl_->is_status_ready || pimpl_->is_goal_response_ready ||
+         pimpl_->is_cancel_response_ready || pimpl_->is_result_response_ready;
 }
 
-void
-ClientBase::handle_goal_response(
-  const rmw_request_id_t & response_header,
-  std::shared_ptr<void> response)
+void ClientBase::handle_goal_response(
+  const rmw_request_id_t & response_header, std::shared_ptr<void> response)
 {
   std::lock_guard<std::mutex> guard(pimpl_->goal_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
@@ -294,13 +239,12 @@ ClientBase::handle_goal_response(
   pimpl_->pending_goal_responses.erase(sequence_number);
 }
 
-void
-ClientBase::send_goal_request(std::shared_ptr<void> request, ResponseCallback callback)
+void ClientBase::send_goal_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
   std::unique_lock<std::mutex> guard(pimpl_->goal_requests_mutex);
   int64_t sequence_number;
-  rcl_ret_t ret = rcl_action_send_goal_request(
-    pimpl_->client_handle.get(), request.get(), &sequence_number);
+  rcl_ret_t ret =
+    rcl_action_send_goal_request(pimpl_->client_handle.get(), request.get(), &sequence_number);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send goal request");
   }
@@ -308,10 +252,8 @@ ClientBase::send_goal_request(std::shared_ptr<void> request, ResponseCallback ca
   pimpl_->pending_goal_responses[sequence_number] = callback;
 }
 
-void
-ClientBase::handle_result_response(
-  const rmw_request_id_t & response_header,
-  std::shared_ptr<void> response)
+void ClientBase::handle_result_response(
+  const rmw_request_id_t & response_header, std::shared_ptr<void> response)
 {
   std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
@@ -323,13 +265,12 @@ ClientBase::handle_result_response(
   pimpl_->pending_result_responses.erase(sequence_number);
 }
 
-void
-ClientBase::send_result_request(std::shared_ptr<void> request, ResponseCallback callback)
+void ClientBase::send_result_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
   std::lock_guard<std::mutex> guard(pimpl_->result_requests_mutex);
   int64_t sequence_number;
-  rcl_ret_t ret = rcl_action_send_result_request(
-    pimpl_->client_handle.get(), request.get(), &sequence_number);
+  rcl_ret_t ret =
+    rcl_action_send_result_request(pimpl_->client_handle.get(), request.get(), &sequence_number);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send result request");
   }
@@ -337,10 +278,8 @@ ClientBase::send_result_request(std::shared_ptr<void> request, ResponseCallback 
   pimpl_->pending_result_responses[sequence_number] = callback;
 }
 
-void
-ClientBase::handle_cancel_response(
-  const rmw_request_id_t & response_header,
-  std::shared_ptr<void> response)
+void ClientBase::handle_cancel_response(
+  const rmw_request_id_t & response_header, std::shared_ptr<void> response)
 {
   std::lock_guard<std::mutex> guard(pimpl_->cancel_requests_mutex);
   const int64_t & sequence_number = response_header.sequence_number;
@@ -352,13 +291,12 @@ ClientBase::handle_cancel_response(
   pimpl_->pending_cancel_responses.erase(sequence_number);
 }
 
-void
-ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback callback)
+void ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback callback)
 {
   std::lock_guard<std::mutex> guard(pimpl_->cancel_requests_mutex);
   int64_t sequence_number;
-  rcl_ret_t ret = rcl_action_send_cancel_request(
-    pimpl_->client_handle.get(), request.get(), &sequence_number);
+  rcl_ret_t ret =
+    rcl_action_send_cancel_request(pimpl_->client_handle.get(), request.get(), &sequence_number);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send cancel request");
   }
@@ -366,27 +304,22 @@ ClientBase::send_cancel_request(std::shared_ptr<void> request, ResponseCallback 
   pimpl_->pending_cancel_responses[sequence_number] = callback;
 }
 
-GoalUUID
-ClientBase::generate_goal_id()
+GoalUUID ClientBase::generate_goal_id()
 {
   GoalUUID goal_id;
   // TODO(hidmic): Do something better than this for UUID generation.
   // std::generate(
   //   goal_id.uuid.begin(), goal_id.uuid.end(),
   //   std::ref(pimpl_->random_bytes_generator));
-  std::generate(
-    goal_id.begin(), goal_id.end(),
-    std::ref(pimpl_->random_bytes_generator));
+  std::generate(goal_id.begin(), goal_id.end(), std::ref(pimpl_->random_bytes_generator));
   return goal_id;
 }
 
-void
-ClientBase::execute()
+void ClientBase::execute()
 {
   if (pimpl_->is_feedback_ready) {
     std::shared_ptr<void> feedback_message = this->create_feedback_message();
-    rcl_ret_t ret = rcl_action_take_feedback(
-      pimpl_->client_handle.get(), feedback_message.get());
+    rcl_ret_t ret = rcl_action_take_feedback(pimpl_->client_handle.get(), feedback_message.get());
     pimpl_->is_feedback_ready = false;
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "error taking feedback");
@@ -395,8 +328,7 @@ ClientBase::execute()
     }
   } else if (pimpl_->is_status_ready) {
     std::shared_ptr<void> status_message = this->create_status_message();
-    rcl_ret_t ret = rcl_action_take_status(
-      pimpl_->client_handle.get(), status_message.get());
+    rcl_ret_t ret = rcl_action_take_status(pimpl_->client_handle.get(), status_message.get());
     pimpl_->is_status_ready = false;
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "error taking status");

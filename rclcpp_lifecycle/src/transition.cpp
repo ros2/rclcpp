@@ -26,14 +26,8 @@
 
 namespace rclcpp_lifecycle
 {
-
-Transition::Transition(
-  uint8_t id,
-  const std::string & label,
-  rcutils_allocator_t allocator)
-: allocator_(allocator),
-  owns_rcl_transition_handle_(true),
-  transition_handle_(nullptr)
+Transition::Transition(uint8_t id, const std::string & label, rcutils_allocator_t allocator)
+: allocator_(allocator), owns_rcl_transition_handle_(true), transition_handle_(nullptr)
 {
   transition_handle_ = static_cast<rcl_lifecycle_transition_t *>(
     allocator_.allocate(sizeof(rcl_lifecycle_transition_t), allocator_.state));
@@ -55,8 +49,7 @@ Transition::Transition(
 }
 
 Transition::Transition(
-  uint8_t id, const std::string & label,
-  State && start, State && goal,
+  uint8_t id, const std::string & label, State && start, State && goal,
   rcutils_allocator_t allocator)
 : Transition(id, label, allocator)
 {
@@ -96,11 +89,8 @@ Transition::Transition(
 }
 
 Transition::Transition(
-  const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle,
-  rcutils_allocator_t allocator)
-: allocator_(allocator),
-  owns_rcl_transition_handle_(false),
-  transition_handle_(nullptr)
+  const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle, rcutils_allocator_t allocator)
+: allocator_(allocator), owns_rcl_transition_handle_(false), transition_handle_(nullptr)
 {
   if (!rcl_lifecycle_transition_handle) {
     throw std::runtime_error("rcl_lifecycle_transition_handle is null");
@@ -109,20 +99,14 @@ Transition::Transition(
 }
 
 Transition::Transition(const Transition & rhs)
-: allocator_(rhs.allocator_),
-  owns_rcl_transition_handle_(false),
-  transition_handle_(nullptr)
+: allocator_(rhs.allocator_), owns_rcl_transition_handle_(false), transition_handle_(nullptr)
 {
   *this = rhs;
 }
 
-Transition::~Transition()
-{
-  reset();
-}
+Transition::~Transition() { reset(); }
 
-Transition &
-Transition::operator=(const Transition & rhs)
+Transition & Transition::operator=(const Transition & rhs)
 {
   if (this == &rhs) {
     return *this;
@@ -172,9 +156,7 @@ Transition::operator=(const Transition & rhs)
     transition_handle_->start->label = nullptr;
 
     ret = rcl_lifecycle_state_init(
-      transition_handle_->start,
-      rhs.start_state().id(),
-      rhs.start_state().label().c_str(),
+      transition_handle_->start, rhs.start_state().id(), rhs.start_state().label().c_str(),
       &allocator_);
     if (ret != RCL_RET_OK) {
       reset();
@@ -195,9 +177,7 @@ Transition::operator=(const Transition & rhs)
     transition_handle_->goal->label = nullptr;
 
     ret = rcl_lifecycle_state_init(
-      transition_handle_->goal,
-      rhs.goal_state().id(),
-      rhs.goal_state().label().c_str(),
+      transition_handle_->goal, rhs.goal_state().id(), rhs.goal_state().label().c_str(),
       &allocator_);
     if (ret != RCL_RET_OK) {
       reset();
@@ -207,8 +187,7 @@ Transition::operator=(const Transition & rhs)
   return *this;
 }
 
-uint8_t
-Transition::id() const
+uint8_t Transition::id() const
 {
   if (!transition_handle_) {
     throw std::runtime_error("internal transition_handle is null");
@@ -216,8 +195,7 @@ Transition::id() const
   return transition_handle_->id;
 }
 
-std::string
-Transition::label() const
+std::string Transition::label() const
 {
   if (!transition_handle_) {
     throw std::runtime_error("internal transition_handle is null");
@@ -225,8 +203,7 @@ Transition::label() const
   return transition_handle_->label;
 }
 
-State
-Transition::start_state() const
+State Transition::start_state() const
 {
   if (!transition_handle_) {
     throw std::runtime_error("internal transition_handle is null");
@@ -235,8 +212,7 @@ Transition::start_state() const
   return State(transition_handle_->start, allocator_);
 }
 
-State
-Transition::goal_state() const
+State Transition::goal_state() const
 {
   if (!transition_handle_) {
     throw std::runtime_error("internal transition_handle is null");
@@ -245,8 +221,7 @@ Transition::goal_state() const
   return State(transition_handle_->goal, allocator_);
 }
 
-void
-Transition::reset()
+void Transition::reset()
 {
   // can't free anything which is not owned
   if (!owns_rcl_transition_handle_) {

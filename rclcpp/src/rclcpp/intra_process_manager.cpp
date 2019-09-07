@@ -18,21 +18,18 @@ namespace rclcpp
 {
 namespace intra_process_manager
 {
-
-static std::atomic<uint64_t> _next_unique_id {1};
+static std::atomic<uint64_t> _next_unique_id{1};
 
 IntraProcessManager::IntraProcessManager(
   rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr impl)
 : impl_(impl)
-{}
+{
+}
 
-IntraProcessManager::~IntraProcessManager()
-{}
+IntraProcessManager::~IntraProcessManager() {}
 
-uint64_t
-IntraProcessManager::add_publisher(
-  rclcpp::PublisherBase::SharedPtr publisher,
-  size_t buffer_size)
+uint64_t IntraProcessManager::add_publisher(
+  rclcpp::PublisherBase::SharedPtr publisher, size_t buffer_size)
 {
   auto id = IntraProcessManager::get_next_unique_id();
   size_t size = buffer_size > 0 ? buffer_size : publisher->get_queue_size();
@@ -44,41 +41,34 @@ IntraProcessManager::add_publisher(
   return id;
 }
 
-uint64_t
-IntraProcessManager::add_subscription(
-  rclcpp::SubscriptionBase::SharedPtr subscription)
+uint64_t IntraProcessManager::add_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   auto id = IntraProcessManager::get_next_unique_id();
   impl_->add_subscription(id, subscription);
   return id;
 }
 
-void
-IntraProcessManager::remove_subscription(uint64_t intra_process_subscription_id)
+void IntraProcessManager::remove_subscription(uint64_t intra_process_subscription_id)
 {
   impl_->remove_subscription(intra_process_subscription_id);
 }
 
-void
-IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
+void IntraProcessManager::remove_publisher(uint64_t intra_process_publisher_id)
 {
   impl_->remove_publisher(intra_process_publisher_id);
 }
 
-bool
-IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
+bool IntraProcessManager::matches_any_publishers(const rmw_gid_t * id) const
 {
   return impl_->matches_any_publishers(id);
 }
 
-size_t
-IntraProcessManager::get_subscription_count(uint64_t intra_process_publisher_id) const
+size_t IntraProcessManager::get_subscription_count(uint64_t intra_process_publisher_id) const
 {
   return impl_->get_subscription_count(intra_process_publisher_id);
 }
 
-uint64_t
-IntraProcessManager::get_next_unique_id()
+uint64_t IntraProcessManager::get_next_unique_id()
 {
   auto next_id = _next_unique_id.fetch_add(1, std::memory_order_relaxed);
   // Check for rollover (we started at 1).

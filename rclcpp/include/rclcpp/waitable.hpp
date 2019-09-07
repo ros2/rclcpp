@@ -22,7 +22,6 @@
 
 namespace rclcpp
 {
-
 class Waitable
 {
 public:
@@ -35,9 +34,7 @@ public:
    * \return The number of subscriptions associated with the Waitable.
    */
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  get_number_of_ready_subscriptions();
+  virtual size_t get_number_of_ready_subscriptions();
 
   /// Get the number of ready timers
   /**
@@ -46,9 +43,7 @@ public:
    * \return The number of timers associated with the Waitable.
    */
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  get_number_of_ready_timers();
+  virtual size_t get_number_of_ready_timers();
 
   /// Get the number of ready clients
   /**
@@ -57,9 +52,7 @@ public:
    * \return The number of clients associated with the Waitable.
    */
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  get_number_of_ready_clients();
+  virtual size_t get_number_of_ready_clients();
 
   /// Get the number of ready events
   /**
@@ -68,9 +61,7 @@ public:
    * \return The number of events associated with the Waitable.
    */
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  get_number_of_ready_events();
+  virtual size_t get_number_of_ready_events();
 
   /// Get the number of ready services
   /**
@@ -79,9 +70,7 @@ public:
    * \return The number of services associated with the Waitable.
    */
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  get_number_of_ready_services();
+  virtual size_t get_number_of_ready_services();
 
   /// Get the number of ready guard_conditions
   /**
@@ -90,9 +79,7 @@ public:
    * \return The number of guard_conditions associated with the Waitable.
    */
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  get_number_of_ready_guard_conditions();
+  virtual size_t get_number_of_ready_guard_conditions();
 
   // TODO(jacobperron): smart pointer?
   /// Add the Waitable to a wait set.
@@ -102,9 +89,7 @@ public:
    * \throws rclcpp::execptions::RCLError from rcl_wait_set_add_*()
    */
   RCLCPP_PUBLIC
-  virtual
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
+  virtual bool add_to_wait_set(rcl_wait_set_t * wait_set) = 0;
 
   /// Check if the Waitable is ready.
   /**
@@ -117,9 +102,7 @@ public:
    * \return `true` if the Waitable is ready, `false` otherwise.
    */
   RCLCPP_PUBLIC
-  virtual
-  bool
-  is_ready(rcl_wait_set_t *) = 0;
+  virtual bool is_ready(rcl_wait_set_t *) = 0;
 
   /// Execute any entities of the Waitable that are ready.
   /**
@@ -143,9 +126,7 @@ public:
    * ```
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  execute() = 0;
+  virtual void execute() = 0;
 };  // class Waitable
 
 }  // namespace rclcpp

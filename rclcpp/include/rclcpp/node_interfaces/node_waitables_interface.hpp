@@ -24,7 +24,6 @@ namespace rclcpp
 {
 namespace node_interfaces
 {
-
 /// Pure virtual interface class for the NodeWaitables part of the Node API.
 class NodeWaitablesInterface
 {
@@ -32,21 +31,16 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeWaitablesInterface)
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeWaitablesInterface() = default;
+  virtual ~NodeWaitablesInterface() = default;
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_waitable(
+  virtual void add_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
 
   /// \note this function should not throw because it may be called in destructors
   RCLCPP_PUBLIC
-  virtual
-  void
-  remove_waitable(
+  virtual void remove_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept = 0;
 };

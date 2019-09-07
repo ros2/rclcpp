@@ -26,18 +26,17 @@ namespace rclcpp_components
 class NodeInstanceWrapper
 {
 public:
-  using NodeBaseInterfaceGetter = std::function<
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr(const std::shared_ptr<void> &)>;
+  using NodeBaseInterfaceGetter =
+    std::function<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr(
+      const std::shared_ptr<void> &)>;
 
-  NodeInstanceWrapper()
-  : node_instance_(nullptr)
-  {}
+  NodeInstanceWrapper() : node_instance_(nullptr) {}
 
   NodeInstanceWrapper(
-    std::shared_ptr<void> node_instance,
-    NodeBaseInterfaceGetter node_base_interface_getter)
+    std::shared_ptr<void> node_instance, NodeBaseInterfaceGetter node_base_interface_getter)
   : node_instance_(node_instance), node_base_interface_getter_(node_base_interface_getter)
-  {}
+  {
+  }
 
   /// Get a type-erased pointer to the original Node instance
   /**
@@ -46,18 +45,13 @@ public:
    *
    * \return Shared pointer to the encapsulated Node instance.
    */
-  const std::shared_ptr<void>
-  get_node_instance() const
-  {
-    return node_instance_;
-  }
+  const std::shared_ptr<void> get_node_instance() const { return node_instance_; }
 
   /// Get NodeBaseInterface pointer for the encapsulated Node Instance.
   /**
    * \return Shared NodeBaseInterface pointer of the encapsulated Node instance.
    */
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_base_interface()
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface()
   {
     return node_base_interface_getter_(node_instance_);
   }

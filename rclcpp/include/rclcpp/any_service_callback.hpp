@@ -26,22 +26,16 @@
 
 namespace rclcpp
 {
-
-template<typename ServiceT>
+template <typename ServiceT>
 class AnyServiceCallback
 {
 private:
-  using SharedPtrCallback = std::function<
-    void (
-      const std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>
-    )>;
-  using SharedPtrWithRequestHeaderCallback = std::function<
-    void (
-      const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>
-    )>;
+  using SharedPtrCallback = std::function<void(
+    const std::shared_ptr<typename ServiceT::Request>,
+    std::shared_ptr<typename ServiceT::Response>)>;
+  using SharedPtrWithRequestHeaderCallback = std::function<void(
+    const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<typename ServiceT::Request>,
+    std::shared_ptr<typename ServiceT::Response>)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithRequestHeaderCallback shared_ptr_with_request_header_callback_;
@@ -49,33 +43,22 @@ private:
 public:
   AnyServiceCallback()
   : shared_ptr_callback_(nullptr), shared_ptr_with_request_header_callback_(nullptr)
-  {}
+  {
+  }
 
   AnyServiceCallback(const AnyServiceCallback &) = default;
 
-  template<
-    typename CallbackT,
-    typename std::enable_if<
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrCallback
-      >::value
-    >::type * = nullptr
-  >
+  template <
+    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
+                          CallbackT, SharedPtrCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
   {
     shared_ptr_callback_ = callback;
   }
 
-  template<
-    typename CallbackT,
-    typename std::enable_if<
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        SharedPtrWithRequestHeaderCallback
-      >::value
-    >::type * = nullptr
-  >
+  template <
+    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
+                          CallbackT, SharedPtrWithRequestHeaderCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
   {
     shared_ptr_with_request_header_callback_ = callback;

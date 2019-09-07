@@ -38,7 +38,6 @@
 
 namespace rclcpp
 {
-
 /// Responsible for manaaging the SIGINT signal handling.
 /**
  * This class is responsible for:
@@ -55,33 +54,26 @@ class SignalHandler final
 {
 public:
   /// Return the global singleton of this class.
-  static
-  SignalHandler &
-  get_global_signal_handler();
+  static SignalHandler & get_global_signal_handler();
 
   /// Return a global singleton logger to avoid needing to create it everywhere.
-  static
-  rclcpp::Logger &
-  get_logger();
+  static rclcpp::Logger & get_logger();
 
   /// Install the signal handler for SIGINT and start the dedicated signal handling thread.
   /**
    * Also stores the current signal handler to be called on SIGINT and to
    * restore when uninstalling this signal handler.
    */
-  bool
-  install();
+  bool install();
 
   /// Uninstall the signal handler for SIGINT and join the dedicated singal handling thread.
   /**
    * Also restores the previous signal handler.
    */
-  bool
-  uninstall();
+  bool uninstall();
 
   /// Return true if installed, false otherwise.
-  bool
-  is_installed();
+  bool is_installed();
 
 private:
   SignalHandler() = default;
@@ -97,39 +89,29 @@ private:
   static SignalHandler::signal_handler_type old_signal_handler_;
 
   /// Set the signal handler function.
-  static
-  SignalHandler::signal_handler_type
-  set_signal_handler(int signal_value, const SignalHandler::signal_handler_type & signal_handler);
+  static SignalHandler::signal_handler_type set_signal_handler(
+    int signal_value, const SignalHandler::signal_handler_type & signal_handler);
 
   /// Common signal handler code between sigaction and non-sigaction versions.
-  static
-  void
-  signal_handler_common();
+  static void signal_handler_common();
 
 #if defined(RCLCPP_HAS_SIGACTION)
   /// Signal handler function.
-  static
-  void
-  signal_handler(int signal_value, siginfo_t * siginfo, void * context);
+  static void signal_handler(int signal_value, siginfo_t * siginfo, void * context);
 #else
   /// Signal handler function.
-  static
-  void
-  signal_handler(int signal_value);
+  static void signal_handler(int signal_value);
 #endif
 
   /// Target of the dedicated signal handling thread.
-  void
-  deferred_signal_handler();
+  void deferred_signal_handler();
 
   /// Setup anything that is necessary for wait_for_signal() or notify_signal_handler().
   /**
    * This must be called before wait_for_signal() or notify_signal_handler().
    * This is not thread-safe.
    */
-  static
-  void
-  setup_wait_for_signal();
+  static void setup_wait_for_signal();
 
   /// Undo all setup done in setup_wait_for_signal().
   /**
@@ -137,9 +119,7 @@ private:
    *
    * This is not thread-safe.
    */
-  static
-  void
-  teardown_wait_for_signal() noexcept;
+  static void teardown_wait_for_signal() noexcept;
 
   /// Wait for a notification from notify_signal_handler() in a signal safe way.
   /**
@@ -147,9 +127,7 @@ private:
    *
    * This is not thread-safe.
    */
-  static
-  void
-  wait_for_signal();
+  static void wait_for_signal();
 
   /// Notify blocking wait_for_signal() calls in a signal safe way.
   /**
@@ -158,9 +136,7 @@ private:
    *
    * This is thread-safe.
    */
-  static
-  void
-  notify_signal_handler() noexcept;
+  static void notify_signal_handler() noexcept;
 
   // Whether or not a signal has been received.
   static std::atomic_bool signal_received_;

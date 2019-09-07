@@ -21,7 +21,6 @@
 
 namespace rclcpp_action
 {
-
 class DefaultActionStatusQoS : public rclcpp::QoS
 {
 public:

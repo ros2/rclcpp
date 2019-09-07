@@ -18,10 +18,10 @@
 #include <chrono>
 #include <memory>
 
+#include "node_interfaces/node_wrapper.hpp"
 #include "rclcpp/create_timer.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/node.hpp"
-#include "node_interfaces/node_wrapper.hpp"
 
 using namespace std::chrono_literals;
 
@@ -33,11 +33,8 @@ TEST(TestCreateTimer, timer_executes)
   std::atomic<bool> got_callback{false};
 
   rclcpp::TimerBase::SharedPtr timer;
-  timer = rclcpp::create_timer(
-    node,
-    node->get_clock(),
-    rclcpp::Duration(0ms),
-    [&got_callback, &timer]() {
+  timer =
+    rclcpp::create_timer(node, node->get_clock(), rclcpp::Duration(0ms), [&got_callback, &timer]() {
       got_callback = true;
       timer->cancel();
     });
@@ -55,9 +52,6 @@ TEST(TestCreateTimer, call_with_node_wrapper_compiles)
 
   rclcpp::TimerBase::SharedPtr timer;
   timer = rclcpp::create_timer(
-    node,
-    node.get_node_clock_interface()->get_clock(),
-    rclcpp::Duration(0ms),
-    []() {});
+    node, node.get_node_clock_interface()->get_clock(), rclcpp::Duration(0ms), []() {});
   rclcpp::shutdown();
 }

@@ -46,8 +46,7 @@ protected:
   LifecycleNodeInterface() {}
 
 public:
-  enum class CallbackReturn : uint8_t
-  {
+  enum class CallbackReturn : uint8_t {
     SUCCESS = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_SUCCESS,
     FAILURE = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE,
     ERROR = lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_ERROR
@@ -58,48 +57,42 @@ public:
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual CallbackReturn
-  on_configure(const State & previous_state);
+  virtual CallbackReturn on_configure(const State & previous_state);
 
   /// Callback function for cleanup transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual CallbackReturn
-  on_cleanup(const State & previous_state);
+  virtual CallbackReturn on_cleanup(const State & previous_state);
 
   /// Callback function for shutdown transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual CallbackReturn
-  on_shutdown(const State & previous_state);
+  virtual CallbackReturn on_shutdown(const State & previous_state);
 
   /// Callback function for activate transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual CallbackReturn
-  on_activate(const State & previous_state);
+  virtual CallbackReturn on_activate(const State & previous_state);
 
   /// Callback function for deactivate transition
   /*
    * \return true by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual CallbackReturn
-  on_deactivate(const State & previous_state);
+  virtual CallbackReturn on_deactivate(const State & previous_state);
 
   /// Callback function for errorneous transition
   /*
    * \return false by default
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  virtual CallbackReturn
-  on_error(const State & previous_state);
+  virtual CallbackReturn on_error(const State & previous_state);
 };
 
 }  // namespace node_interfaces

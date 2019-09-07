@@ -15,8 +15,8 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -40,10 +40,7 @@ std::ostream & operator<<(std::ostream & out, const TestParameters & params)
 class TestSubscriptionPublisherCount : public ::testing::TestWithParam<TestParameters>
 {
 public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
 protected:
   void SetUp() {}
@@ -53,18 +50,12 @@ protected:
 
 std::chrono::milliseconds TestSubscriptionPublisherCount::offset = std::chrono::milliseconds(2000);
 
-void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
-{
-  (void)msg;
-}
+void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
 
 TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
 {
   rclcpp::NodeOptions node_options = GetParam().node_options;
-  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>(
-    "my_node",
-    "/ns",
-    node_options);
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
   auto subscription = node->create_subscription<IntraProcessMessage>("/topic", 10, &OnMessage);
 
   EXPECT_EQ(subscription->get_publisher_count(), 0u);
@@ -73,12 +64,9 @@ TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
     rclcpp::sleep_for(offset);
     EXPECT_EQ(subscription->get_publisher_count(), 1u);
     {
-      rclcpp::Node::SharedPtr another_node = std::make_shared<rclcpp::Node>(
-        "another_node",
-        "/ns",
-        node_options);
-      auto another_pub =
-        another_node->create_publisher<IntraProcessMessage>("/topic", 10);
+      rclcpp::Node::SharedPtr another_node =
+        std::make_shared<rclcpp::Node>("another_node", "/ns", node_options);
+      auto another_pub = another_node->create_publisher<IntraProcessMessage>("/topic", 10);
 
       rclcpp::sleep_for(offset);
       EXPECT_EQ(subscription->get_publisher_count(), 2u);
@@ -102,22 +90,13 @@ TestParameters parameters[] = {
      Testing subscription publisher count api.
      One context.
    */
-  {
-    rclcpp::NodeOptions(),
-    "one_context_test"
-  },
+  {rclcpp::NodeOptions(), "one_context_test"},
   /*
      Testing subscription publisher count api.
      Two contexts.
    */
-  {
-    rclcpp::NodeOptions().context(get_new_context()),
-    "two_contexts_test"
-  }
-};
+  {rclcpp::NodeOptions().context(get_new_context()), "two_contexts_test"}};
 
 INSTANTIATE_TEST_CASE_P(
-  TestWithDifferentNodeOptions,
-  TestSubscriptionPublisherCount,
-  testing::ValuesIn(parameters),
+  TestWithDifferentNodeOptions, TestSubscriptionPublisherCount, testing::ValuesIn(parameters),
   testing::PrintToStringParamName());

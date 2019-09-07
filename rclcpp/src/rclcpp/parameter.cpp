@@ -23,27 +23,21 @@
 // deprecated function prototype of NodeParameters::register_param_change_callback().
 // Other compilers do not.
 #if defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
 #if defined(_WIN32)
-# pragma warning(pop)
+#pragma warning(pop)
 #endif
 #include "rclcpp/utilities.hpp"
 
-using rclcpp::ParameterType;
 using rclcpp::Parameter;
+using rclcpp::ParameterType;
 
-Parameter::Parameter()
-: name_("")
-{
-}
+Parameter::Parameter() : name_("") {}
 
-Parameter::Parameter(const std::string & name)
-: name_(name), value_()
-{
-}
+Parameter::Parameter(const std::string & name) : name_(name), value_() {}
 
 Parameter::Parameter(const std::string & name, const rclcpp::ParameterValue & value)
 : name_(name), value_(value)
@@ -55,110 +49,68 @@ Parameter::Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_in
 {
 }
 
-bool
-Parameter::operator==(const Parameter & rhs) const
+bool Parameter::operator==(const Parameter & rhs) const
 {
   return this->name_ == rhs.name_ && this->value_ == rhs.value_;
 }
 
-bool
-Parameter::operator!=(const Parameter & rhs) const
-{
-  return !(*this == rhs);
-}
+bool Parameter::operator!=(const Parameter & rhs) const { return !(*this == rhs); }
 
-ParameterType
-Parameter::get_type() const
-{
-  return value_.get_type();
-}
+ParameterType Parameter::get_type() const { return value_.get_type(); }
 
-std::string
-Parameter::get_type_name() const
-{
-  return rclcpp::to_string(get_type());
-}
+std::string Parameter::get_type_name() const { return rclcpp::to_string(get_type()); }
 
-const std::string &
-Parameter::get_name() const
-{
-  return name_;
-}
+const std::string & Parameter::get_name() const { return name_; }
 
-rcl_interfaces::msg::ParameterValue
-Parameter::get_value_message() const
+rcl_interfaces::msg::ParameterValue Parameter::get_value_message() const
 {
   return value_.to_value_msg();
 }
 
-const rclcpp::ParameterValue &
-Parameter::get_parameter_value() const
-{
-  return value_;
-}
+const rclcpp::ParameterValue & Parameter::get_parameter_value() const { return value_; }
 
-bool
-Parameter::as_bool() const
-{
-  return get_value<ParameterType::PARAMETER_BOOL>();
-}
+bool Parameter::as_bool() const { return get_value<ParameterType::PARAMETER_BOOL>(); }
 
-int64_t
-Parameter::as_int() const
-{
-  return get_value<ParameterType::PARAMETER_INTEGER>();
-}
+int64_t Parameter::as_int() const { return get_value<ParameterType::PARAMETER_INTEGER>(); }
 
-double
-Parameter::as_double() const
-{
-  return get_value<ParameterType::PARAMETER_DOUBLE>();
-}
+double Parameter::as_double() const { return get_value<ParameterType::PARAMETER_DOUBLE>(); }
 
-const std::string &
-Parameter::as_string() const
+const std::string & Parameter::as_string() const
 {
   return get_value<ParameterType::PARAMETER_STRING>();
 }
 
-const std::vector<uint8_t> &
-Parameter::as_byte_array() const
+const std::vector<uint8_t> & Parameter::as_byte_array() const
 {
   return get_value<ParameterType::PARAMETER_BYTE_ARRAY>();
 }
 
-const std::vector<bool> &
-Parameter::as_bool_array() const
+const std::vector<bool> & Parameter::as_bool_array() const
 {
   return get_value<ParameterType::PARAMETER_BOOL_ARRAY>();
 }
 
-const std::vector<int64_t> &
-Parameter::as_integer_array() const
+const std::vector<int64_t> & Parameter::as_integer_array() const
 {
   return get_value<ParameterType::PARAMETER_INTEGER_ARRAY>();
 }
 
-const std::vector<double> &
-Parameter::as_double_array() const
+const std::vector<double> & Parameter::as_double_array() const
 {
   return get_value<ParameterType::PARAMETER_DOUBLE_ARRAY>();
 }
 
-const std::vector<std::string> &
-Parameter::as_string_array() const
+const std::vector<std::string> & Parameter::as_string_array() const
 {
   return get_value<ParameterType::PARAMETER_STRING_ARRAY>();
 }
 
-Parameter
-Parameter::from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter)
+Parameter Parameter::from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter)
 {
   return Parameter(parameter.name, parameter.value);
 }
 
-rcl_interfaces::msg::Parameter
-Parameter::to_parameter_msg() const
+rcl_interfaces::msg::Parameter Parameter::to_parameter_msg() const
 {
   rcl_interfaces::msg::Parameter parameter;
   parameter.name = name_;
@@ -166,14 +118,9 @@ Parameter::to_parameter_msg() const
   return parameter;
 }
 
-std::string
-Parameter::value_to_string() const
-{
-  return rclcpp::to_string(value_);
-}
+std::string Parameter::value_to_string() const { return rclcpp::to_string(value_); }
 
-std::string
-rclcpp::_to_json_dict_entry(const Parameter & param)
+std::string rclcpp::_to_json_dict_entry(const Parameter & param)
 {
   std::stringstream ss;
   ss << "\"" << param.get_name() << "\": ";
@@ -182,22 +129,19 @@ rclcpp::_to_json_dict_entry(const Parameter & param)
   return ss.str();
 }
 
-std::ostream &
-rclcpp::operator<<(std::ostream & os, const rclcpp::Parameter & pv)
+std::ostream & rclcpp::operator<<(std::ostream & os, const rclcpp::Parameter & pv)
 {
   os << std::to_string(pv);
   return os;
 }
 
-std::ostream &
-rclcpp::operator<<(std::ostream & os, const std::vector<Parameter> & parameters)
+std::ostream & rclcpp::operator<<(std::ostream & os, const std::vector<Parameter> & parameters)
 {
   os << std::to_string(parameters);
   return os;
 }
 
-std::string
-std::to_string(const rclcpp::Parameter & param)
+std::string std::to_string(const rclcpp::Parameter & param)
 {
   std::stringstream ss;
   ss << "{\"name\": \"" << param.get_name() << "\", ";
@@ -206,8 +150,7 @@ std::to_string(const rclcpp::Parameter & param)
   return ss.str();
 }
 
-std::string
-std::to_string(const std::vector<rclcpp::Parameter> & parameters)
+std::string std::to_string(const std::vector<rclcpp::Parameter> & parameters)
 {
   std::stringstream ss;
   ss << "{";

@@ -18,7 +18,6 @@
 
 namespace rclcpp_action
 {
-
 DefaultActionStatusQoS::DefaultActionStatusQoS()
 : rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rcl_action_qos_profile_status_default))
 {

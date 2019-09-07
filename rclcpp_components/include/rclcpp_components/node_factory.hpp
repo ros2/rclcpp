@@ -19,7 +19,6 @@
 
 namespace rclcpp_components
 {
-
 /// The NodeFactory interface is used by the class loader to instantiate components.
 /**
  * The NodeFactory interface serves two purposes:
@@ -37,9 +36,7 @@ public:
   /**
    * \param[in] options Additional options used in the construction of the component.
    */
-  virtual
-  NodeInstanceWrapper
-  create_node_instance(const rclcpp::NodeOptions & options) = 0;
+  virtual NodeInstanceWrapper create_node_instance(const rclcpp::NodeOptions & options) = 0;
 };
 }  // namespace rclcpp_components
 

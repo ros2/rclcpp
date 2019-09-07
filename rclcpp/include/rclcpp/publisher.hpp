@@ -40,9 +40,8 @@
 
 namespace rclcpp
 {
-
 /// A publisher publishes messages of any type to a topic.
-template<typename MessageT, typename Alloc = std::allocator<void>>
+template <typename MessageT, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:
@@ -55,15 +54,12 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>)
 
   Publisher(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    const std::string & topic,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
     const PublisherEventCallbacks & event_callbacks,
     const std::shared_ptr<MessageAlloc> & allocator)
   : PublisherBase(
-      node_base,
-      topic,
-      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      node_base, topic, *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
       publisher_options),
     message_allocator_(allocator)
   {
@@ -71,24 +67,21 @@ public:
 
     if (event_callbacks.deadline_callback) {
       this->add_event_handler(
-        event_callbacks.deadline_callback,
-        RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
+        event_callbacks.deadline_callback, RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
     }
     if (event_callbacks.liveliness_callback) {
       this->add_event_handler(event_callbacks.liveliness_callback, RCL_PUBLISHER_LIVELINESS_LOST);
     }
   }
 
-  virtual ~Publisher()
-  {}
+  virtual ~Publisher() {}
 
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  make_mapped_ring_buffer(size_t size) const override
+  mapped_ring_buffer::MappedRingBufferBase::SharedPtr make_mapped_ring_buffer(
+    size_t size) const override
   {
-    return mapped_ring_buffer::MappedRingBuffer<
-      MessageT,
-      typename Publisher<MessageT, Alloc>::MessageAlloc
-    >::make_shared(size, this->get_allocator());
+    return mapped_ring_buffer::
+      MappedRingBuffer<MessageT, typename Publisher<MessageT, Alloc>::MessageAlloc>::make_shared(
+        size, this->get_allocator());
   }
 
   /// Send a message to the topic for this publisher.
@@ -96,8 +89,7 @@ public:
    * This function is templated on the input message type, MessageT.
    * \param[in] msg A shared pointer to the message to send.
    */
-  virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  virtual void publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(msg.get());
@@ -115,11 +107,9 @@ public:
     MessageSharedPtr shared_msg;
     if (inter_process_publish_needed) {
       shared_msg = std::move(msg);
-      message_seq =
-        store_intra_process_message(intra_process_publisher_id_, shared_msg);
+      message_seq = store_intra_process_message(intra_process_publisher_id_, shared_msg);
     } else {
-      message_seq =
-        store_intra_process_message(intra_process_publisher_id_, std::move(msg));
+      message_seq = store_intra_process_message(intra_process_publisher_id_, std::move(msg));
     }
     this->do_intra_process_publish(message_seq);
     if (inter_process_publish_needed) {
@@ -129,18 +119,17 @@ public:
 
 // Skip deprecated attribute in windows, as it raise a warning in template specialization.
 #if !defined(_WIN32)
-  [[deprecated(
-    "publishing an unique_ptr is prefered when using intra process communication."
-    " If using a shared_ptr, use publish(*msg).")]]
+  [
+    [deprecated("publishing an unique_ptr is prefered when using intra process communication."
+                " If using a shared_ptr, use publish(*msg).")]]
 #endif
-  virtual void
-  publish(const std::shared_ptr<const MessageT> & msg)
+    virtual void
+    publish(const std::shared_ptr<const MessageT> & msg)
   {
     publish(*msg);
   }
 
-  virtual void
-  publish(const MessageT & msg)
+  virtual void publish(const MessageT & msg)
   {
     // Avoid allocating when not using intra process.
     if (!intra_process_is_enabled_) {
@@ -158,11 +147,10 @@ public:
 
 // Skip deprecated attribute in windows, as it raise a warning in template specialization.
 #if !defined(_WIN32)
-  [[deprecated(
-    "Use publish(*msg). Check against nullptr before calling if necessary.")]]
+  [[deprecated("Use publish(*msg). Check against nullptr before calling if necessary.")]]
 #endif
-  virtual void
-  publish(const MessageT * msg)
+    virtual void
+    publish(const MessageT * msg)
   {
     if (!msg) {
       throw std::runtime_error("msg argument is nullptr");
@@ -170,42 +158,34 @@ public:
     return this->publish(*msg);
   }
 
-  void
-  publish(const rcl_serialized_message_t & serialized_msg)
+  void publish(const rcl_serialized_message_t & serialized_msg)
   {
     return this->do_serialized_publish(&serialized_msg);
   }
 
 // Skip deprecated attribute in windows, as it raise a warning in template specialization.
 #if !defined(_WIN32)
-  [[deprecated(
-    "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+  [[deprecated("Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
 #endif
-  void
-  publish(const rcl_serialized_message_t * serialized_msg)
-  {
-    return this->do_serialized_publish(serialized_msg);
-  }
+    void
+    publish(const rcl_serialized_message_t * serialized_msg) {
+      return this->do_serialized_publish(serialized_msg);
+    }
 
 // Skip deprecated attribute in windows, as it raise a warning in template specialization.
 #if !defined(_WIN32)
-  [[deprecated(
-    "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
+      [[deprecated(
+        "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
 #endif
-  void
-  publish(std::shared_ptr<const rcl_serialized_message_t> serialized_msg)
+    void publish(std::shared_ptr<const rcl_serialized_message_t> serialized_msg)
   {
     return this->do_serialized_publish(serialized_msg.get());
   }
 
-  std::shared_ptr<MessageAlloc> get_allocator() const
-  {
-    return message_allocator_;
-  }
+  std::shared_ptr<MessageAlloc> get_allocator() const { return message_allocator_; }
 
 protected:
-  void
-  do_inter_process_publish(const MessageT * msg)
+  void do_inter_process_publish(const MessageT * msg)
   {
     auto status = rcl_publish(&publisher_handle_, msg, nullptr);
     if (RCL_RET_PUBLISHER_INVALID == status) {
@@ -223,8 +203,7 @@ protected:
     }
   }
 
-  void
-  do_serialized_publish(const rcl_serialized_message_t * serialized_msg)
+  void do_serialized_publish(const rcl_serialized_message_t * serialized_msg)
   {
     if (intra_process_is_enabled_) {
       // TODO(Karsten1987): support serialized message passed by intraprocess
@@ -236,8 +215,7 @@ protected:
     }
   }
 
-  void
-  do_intra_process_publish(uint64_t message_seq)
+  void do_intra_process_publish(uint64_t message_seq)
   {
     rcl_interfaces::msg::IntraProcessMessage ipm;
     ipm.publisher_id = intra_process_publisher_id_;
@@ -258,15 +236,12 @@ protected:
     }
   }
 
-  uint64_t
-  store_intra_process_message(
-    uint64_t publisher_id,
-    std::shared_ptr<const MessageT> msg)
+  uint64_t store_intra_process_message(uint64_t publisher_id, std::shared_ptr<const MessageT> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
+        "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
       throw std::runtime_error("cannot publisher msg which is a null pointer");
@@ -276,15 +251,13 @@ protected:
     return message_seq;
   }
 
-  uint64_t
-  store_intra_process_message(
-    uint64_t publisher_id,
-    std::unique_ptr<MessageT, MessageDeleter> msg)
+  uint64_t store_intra_process_message(
+    uint64_t publisher_id, std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
+        "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
       throw std::runtime_error("cannot publisher msg which is a null pointer");

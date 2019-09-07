@@ -15,8 +15,8 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/publisher.hpp"
@@ -47,10 +47,7 @@ std::ostream & operator<<(std::ostream & out, const TestParameters & params)
 class TestPublisherSubscriptionCount : public ::testing::TestWithParam<TestParameters>
 {
 public:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
 protected:
   void SetUp() {}
@@ -62,18 +59,13 @@ protected:
 
 std::chrono::milliseconds TestPublisherSubscriptionCount::offset = std::chrono::milliseconds(2000);
 
-void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
-{
-  (void)msg;
-}
+void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
 
 TEST_P(TestPublisherSubscriptionCount, increasing_and_decreasing_counts)
 {
   TestParameters parameters = GetParam();
-  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>(
-    "my_node",
-    "/ns",
-    parameters.node_options[0]);
+  rclcpp::Node::SharedPtr node =
+    std::make_shared<rclcpp::Node>("my_node", "/ns", parameters.node_options[0]);
   auto publisher = node->create_publisher<IntraProcessMessage>("/topic", 10);
 
   EXPECT_EQ(publisher->get_subscription_count(), 0u);
@@ -83,13 +75,10 @@ TEST_P(TestPublisherSubscriptionCount, increasing_and_decreasing_counts)
     rclcpp::sleep_for(offset);
     EXPECT_EQ(publisher->get_subscription_count(), 1u);
     EXPECT_EQ(
-      publisher->get_intra_process_subscription_count(),
-      parameters.intraprocess_count_results[0]);
+      publisher->get_intra_process_subscription_count(), parameters.intraprocess_count_results[0]);
     {
-      rclcpp::Node::SharedPtr another_node = std::make_shared<rclcpp::Node>(
-        "another_node",
-        "/ns",
-        parameters.node_options[1]);
+      rclcpp::Node::SharedPtr another_node =
+        std::make_shared<rclcpp::Node>("another_node", "/ns", parameters.node_options[1]);
       auto another_sub =
         another_node->create_subscription<IntraProcessMessage>("/topic", 10, &OnMessage);
 
@@ -102,8 +91,7 @@ TEST_P(TestPublisherSubscriptionCount, increasing_and_decreasing_counts)
     rclcpp::sleep_for(offset);
     EXPECT_EQ(publisher->get_subscription_count(), 1u);
     EXPECT_EQ(
-      publisher->get_intra_process_subscription_count(),
-      parameters.intraprocess_count_results[0]);
+      publisher->get_intra_process_subscription_count(), parameters.intraprocess_count_results[0]);
   }
   /**
     * Counts should be zero here, as all are subscriptions are out of scope.
@@ -126,53 +114,35 @@ TestParameters parameters[] = {
      Testing publisher subscription count api and internal process subscription count.
      Two subscriptions in the same topic, both using intraprocess comm.
    */
-  {
-    {
-      rclcpp::NodeOptions().use_intra_process_comms(true),
-      rclcpp::NodeOptions().use_intra_process_comms(true)
-    },
-    {1u, 2u},
-    "two_subscriptions_intraprocess_comm"
-  },
+  {{rclcpp::NodeOptions().use_intra_process_comms(true),
+    rclcpp::NodeOptions().use_intra_process_comms(true)},
+   {1u, 2u},
+   "two_subscriptions_intraprocess_comm"},
   /*
      Testing publisher subscription count api and internal process subscription count.
      Two subscriptions, one using intra-process comm and the other not using it.
    */
-  {
-    {
-      rclcpp::NodeOptions().use_intra_process_comms(true),
-      rclcpp::NodeOptions().use_intra_process_comms(false)
-    },
-    {1u, 1u},
-    "two_subscriptions_one_intraprocess_one_not"
-  },
+  {{rclcpp::NodeOptions().use_intra_process_comms(true),
+    rclcpp::NodeOptions().use_intra_process_comms(false)},
+   {1u, 1u},
+   "two_subscriptions_one_intraprocess_one_not"},
   /*
      Testing publisher subscription count api and internal process subscription count.
      Two contexts, both using intra-process.
    */
-  {
-    {
-      rclcpp::NodeOptions().use_intra_process_comms(true),
-      rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(true)
-    },
-    {1u, 1u},
-    "two_subscriptions_in_two_contexts_with_intraprocess_comm"
-  },
+  {{rclcpp::NodeOptions().use_intra_process_comms(true),
+    rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(true)},
+   {1u, 1u},
+   "two_subscriptions_in_two_contexts_with_intraprocess_comm"},
   /*
      Testing publisher subscription count api and internal process subscription count.
      Two contexts, both of them not using intra-process comm.
    */
-  {
-    {
-      rclcpp::NodeOptions().use_intra_process_comms(false),
-      rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(false)
-    },
-    {0u, 0u},
-    "two_subscriptions_in_two_contexts_without_intraprocess_comm"
-  }
-};
+  {{rclcpp::NodeOptions().use_intra_process_comms(false),
+    rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(false)},
+   {0u, 0u},
+   "two_subscriptions_in_two_contexts_without_intraprocess_comm"}};
 
 INSTANTIATE_TEST_CASE_P(
-  TestWithDifferentNodeOptions, TestPublisherSubscriptionCount,
-  ::testing::ValuesIn(parameters),
+  TestWithDifferentNodeOptions, TestPublisherSubscriptionCount, ::testing::ValuesIn(parameters),
   ::testing::PrintToStringParamName());

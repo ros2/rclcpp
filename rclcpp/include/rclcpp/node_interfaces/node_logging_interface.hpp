@@ -26,7 +26,6 @@ namespace rclcpp
 {
 namespace node_interfaces
 {
-
 /// Pure virtual interface class for the NodeLogging part of the Node API.
 class NodeLoggingInterface
 {
@@ -34,22 +33,17 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeLoggingInterface)
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeLoggingInterface() = default;
+  virtual ~NodeLoggingInterface() = default;
 
   /// Return the logger of the node.
   /** \return The logger of the node. */
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::Logger
-  get_logger() const = 0;
+  virtual rclcpp::Logger get_logger() const = 0;
 
   /// Return the logger name associated with the node.
   /** \return The logger name associated with the node. */
   RCLCPP_PUBLIC
-  virtual
-  const char *
-  get_logger_name() const = 0;
+  virtual const char * get_logger_name() const = 0;
 };
 
 }  // namespace node_interfaces

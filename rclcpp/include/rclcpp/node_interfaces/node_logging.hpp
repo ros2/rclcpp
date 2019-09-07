@@ -27,7 +27,6 @@ namespace rclcpp
 {
 namespace node_interfaces
 {
-
 /// Implementation of the NodeLogging part of the Node API.
 class NodeLogging : public NodeLoggingInterface
 {
@@ -38,18 +37,13 @@ public:
   explicit NodeLogging(rclcpp::node_interfaces::NodeBaseInterface * node_base);
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeLogging();
+  virtual ~NodeLogging();
 
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::Logger
-  get_logger() const;
+  virtual rclcpp::Logger get_logger() const;
 
   RCLCPP_PUBLIC
-  virtual
-  const char *
-  get_logger_name() const;
+  virtual const char * get_logger_name() const;
 
 private:
   RCLCPP_DISABLE_COPY(NodeLogging)
