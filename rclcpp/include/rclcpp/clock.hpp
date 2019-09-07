@@ -36,7 +36,8 @@ public:
   using post_callback_t = std::function<void(const rcl_time_jump_t &)>;
 
   JumpHandler(
-    pre_callback_t pre_callback, post_callback_t post_callback,
+    pre_callback_t pre_callback,
+    post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
   pre_callback_t pre_callback;
@@ -110,7 +111,8 @@ public:
    */
   RCLCPP_PUBLIC
   JumpHandler::SharedPtr create_jump_callback(
-    JumpHandler::pre_callback_t pre_callback, JumpHandler::post_callback_t post_callback,
+    JumpHandler::pre_callback_t pre_callback,
+    JumpHandler::post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
 private:

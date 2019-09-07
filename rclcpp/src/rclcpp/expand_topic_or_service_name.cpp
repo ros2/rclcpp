@@ -30,7 +30,9 @@
 using rclcpp::exceptions::throw_from_rcl_error;
 
 std::string rclcpp::expand_topic_or_service_name(
-  const std::string & name, const std::string & node_name, const std::string & namespace_,
+  const std::string & name,
+  const std::string & node_name,
+  const std::string & namespace_,
   bool is_service)
 {
   char * expanded_topic = nullptr;

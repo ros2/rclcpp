@@ -161,9 +161,9 @@ struct check_arguments
 };
 
 template <typename FunctorAT, typename FunctorBT>
-struct same_arguments
-: std::is_same<
-    typename function_traits<FunctorAT>::arguments, typename function_traits<FunctorBT>::arguments>
+struct same_arguments : std::is_same<
+                          typename function_traits<FunctorAT>::arguments,
+                          typename function_traits<FunctorBT>::arguments>
 {
 };
 

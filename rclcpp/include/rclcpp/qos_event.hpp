@@ -80,7 +80,9 @@ class QOSEventHandler : public QOSEventHandlerBase
 public:
   template <typename InitFuncT, typename ParentHandleT, typename EventTypeEnum>
   QOSEventHandler(
-    const EventCallbackT & callback, InitFuncT init_func, ParentHandleT parent_handle,
+    const EventCallbackT & callback,
+    InitFuncT init_func,
+    ParentHandleT parent_handle,
     EventTypeEnum event_type)
   : event_callback_(callback)
   {

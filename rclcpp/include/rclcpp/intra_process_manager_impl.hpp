@@ -55,8 +55,10 @@ public:
   virtual void remove_subscription(uint64_t intra_process_subscription_id) = 0;
 
   virtual void add_publisher(
-    uint64_t id, PublisherBase::WeakPtr publisher,
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb, size_t size) = 0;
+    uint64_t id,
+    PublisherBase::WeakPtr publisher,
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
+    size_t size) = 0;
 
   virtual void remove_publisher(uint64_t intra_process_publisher_id) = 0;
 
@@ -67,8 +69,10 @@ public:
     uint64_t intra_process_publisher_id, uint64_t message_seq) = 0;
 
   virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr take_intra_process_message(
-    uint64_t intra_process_publisher_id, uint64_t message_sequence_number,
-    uint64_t requesting_subscriptions_intra_process_id, size_t & size) = 0;
+    uint64_t intra_process_publisher_id,
+    uint64_t message_sequence_number,
+    uint64_t requesting_subscriptions_intra_process_id,
+    size_t & size) = 0;
 
   virtual bool matches_any_publishers(const rmw_gid_t * id) const = 0;
 
@@ -107,8 +111,10 @@ public:
   }
 
   void add_publisher(
-    uint64_t id, PublisherBase::WeakPtr publisher,
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb, size_t size)
+    uint64_t id,
+    PublisherBase::WeakPtr publisher,
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
+    size_t size)
   {
     publishers_[id].publisher = publisher;
     // As long as the size of the ring buffer is less than the max sequence number, we're safe.
@@ -175,8 +181,10 @@ public:
   }
 
   mapped_ring_buffer::MappedRingBufferBase::SharedPtr take_intra_process_message(
-    uint64_t intra_process_publisher_id, uint64_t message_sequence_number,
-    uint64_t requesting_subscriptions_intra_process_id, size_t & size)
+    uint64_t intra_process_publisher_id,
+    uint64_t message_sequence_number,
+    uint64_t requesting_subscriptions_intra_process_id,
+    size_t & size)
   {
     std::lock_guard<std::mutex> lock(runtime_mutex_);
     PublisherInfo * info;
@@ -275,11 +283,16 @@ private:
 
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
   using SubscriptionMap = std::unordered_map<
-    uint64_t, SubscriptionBase::WeakPtr, std::hash<uint64_t>, std::equal_to<uint64_t>,
+    uint64_t,
+    SubscriptionBase::WeakPtr,
+    std::hash<uint64_t>,
+    std::equal_to<uint64_t>,
     RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
 
   using IDTopicMap = std::map<
-    FixedSizeString, AllocSet, strcmp_wrapper,
+    FixedSizeString,
+    AllocSet,
+    strcmp_wrapper,
     RebindAlloc<std::pair<const FixedSizeString, AllocSet>>>;
 
   SubscriptionMap subscriptions_;
@@ -297,13 +310,19 @@ private:
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
 
     using TargetSubscriptionsMap = std::unordered_map<
-      uint64_t, AllocSet, std::hash<uint64_t>, std::equal_to<uint64_t>,
+      uint64_t,
+      AllocSet,
+      std::hash<uint64_t>,
+      std::equal_to<uint64_t>,
       RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
     TargetSubscriptionsMap target_subscriptions_by_message_sequence;
   };
 
   using PublisherMap = std::unordered_map<
-    uint64_t, PublisherInfo, std::hash<uint64_t>, std::equal_to<uint64_t>,
+    uint64_t,
+    PublisherInfo,
+    std::hash<uint64_t>,
+    std::equal_to<uint64_t>,
     RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
 
   PublisherMap publishers_;

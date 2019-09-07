@@ -191,8 +191,10 @@ static std::vector<TestParameters> invalid_qos_profiles()
 }
 
 INSTANTIATE_TEST_CASE_P(
-  TestPublisherThrows, TestPublisherInvalidIntraprocessQos,
-  ::testing::ValuesIn(invalid_qos_profiles()), ::testing::PrintToStringParamName());
+  TestPublisherThrows,
+  TestPublisherInvalidIntraprocessQos,
+  ::testing::ValuesIn(invalid_qos_profiles()),
+  ::testing::PrintToStringParamName());
 
 /*
    Testing publisher construction and destruction for subnodes.

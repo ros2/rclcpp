@@ -47,7 +47,8 @@ struct SubscriptionFactory
 {
   // Creates a Subscription<MessageT> object and returns it as a SubscriptionBase.
   using SubscriptionFactoryFunction = std::function<rclcpp::SubscriptionBase::SharedPtr(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic_name,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options)>;
 
   SubscriptionFactoryFunction create_typed_subscription;
@@ -63,12 +64,16 @@ struct SubscriptionFactory
 
 /// Return a SubscriptionFactory with functions for creating a SubscriptionT<MessageT, Alloc>.
 template <
-  typename MessageT, typename CallbackT, typename Alloc, typename CallbackMessageT,
+  typename MessageT,
+  typename CallbackT,
+  typename Alloc,
+  typename CallbackMessageT,
   typename SubscriptionT>
 SubscriptionFactory create_subscription_factory(
-  CallbackT && callback, const SubscriptionEventCallbacks & event_callbacks,
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    CallbackMessageT, Alloc>::SharedPtr msg_mem_strat,
+  CallbackT && callback,
+  const SubscriptionEventCallbacks & event_callbacks,
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::
+    SharedPtr msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
   SubscriptionFactory factory;

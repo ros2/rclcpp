@@ -66,11 +66,12 @@ inline rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface_from
 
 // If NodeType has a method called get_node_base_interface() which returns a shared pointer.
 template <
-  typename NodeType, typename std::enable_if<
-                       has_get_node_base_interface<
-                         typename std::remove_pointer<NodeType>::type,
-                         std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> >::value,
-                       int>::type = 0>
+  typename NodeType,
+  typename std::enable_if<
+    has_get_node_base_interface<
+      typename std::remove_pointer<NodeType>::type,
+      std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> >::value,
+    int>::type = 0>
 rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface_from_pointer(
   NodeType node_pointer)
 {
@@ -79,11 +80,12 @@ rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface_from_pointe
 
 // If NodeType has a method called get_node_base_interface() which returns a pointer.
 template <
-  typename NodeType, typename std::enable_if<
-                       has_get_node_base_interface<
-                         typename std::remove_pointer<NodeType>::type,
-                         rclcpp::node_interfaces::NodeBaseInterface *>::value,
-                       int>::type = 0>
+  typename NodeType,
+  typename std::enable_if<
+    has_get_node_base_interface<
+      typename std::remove_pointer<NodeType>::type,
+      rclcpp::node_interfaces::NodeBaseInterface *>::value,
+    int>::type = 0>
 rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface_from_pointer(
   NodeType node_pointer)
 {
@@ -92,11 +94,13 @@ rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface_from_pointe
 
 // Forward shared_ptr's to const node pointer signatures.
 template <
-  typename NodeType, typename std::enable_if<
-                       std::is_same<
-                         NodeType, typename std::shared_ptr<typename std::remove_pointer<
-                                     NodeType>::type::element_type> *>::value,
-                       int>::type = 0>
+  typename NodeType,
+  typename std::enable_if<
+    std::is_same<
+      NodeType,
+      typename std::shared_ptr<typename std::remove_pointer<NodeType>::type::element_type> *>::
+      value,
+    int>::type = 0>
 rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface_from_pointer(
   NodeType node_shared_pointer)
 {
@@ -107,7 +111,8 @@ rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface_from_pointe
 
 /// Get the NodeBaseInterface as a pointer from a pointer to a "Node like" object.
 template <
-  typename NodeType, typename std::enable_if<std::is_pointer<NodeType>::value, int>::type = 0>
+  typename NodeType,
+  typename std::enable_if<std::is_pointer<NodeType>::value, int>::type = 0>
 rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface(NodeType node_pointer)
 {
   // Forward pointers to detail implmentation directly.
@@ -118,7 +123,8 @@ rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface(NodeType no
 template <
   typename NodeType,
   typename std::enable_if<
-    !std::is_pointer<typename std::remove_reference<NodeType>::type>::value, int>::type = 0>
+    !std::is_pointer<typename std::remove_reference<NodeType>::type>::value,
+    int>::type = 0>
 rclcpp::node_interfaces::NodeBaseInterface * get_node_base_interface(NodeType && node_reference)
 {
   // Forward references to detail implmentation as a pointer.

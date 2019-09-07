@@ -83,17 +83,21 @@ public:
     const node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     const node_interfaces::NodeServicesInterface::SharedPtr node_services,
     const node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    const std::vector<Parameter> & parameter_overrides, bool start_parameter_services,
-    bool start_parameter_event_publisher, const rclcpp::QoS & parameter_event_qos,
+    const std::vector<Parameter> & parameter_overrides,
+    bool start_parameter_services,
+    bool start_parameter_event_publisher,
+    const rclcpp::QoS & parameter_event_qos,
     const rclcpp::PublisherOptionsBase & parameter_event_publisher_options,
-    bool allow_undeclared_parameters, bool automatically_declare_parameters_from_overrides);
+    bool allow_undeclared_parameters,
+    bool automatically_declare_parameters_from_overrides);
 
   RCLCPP_PUBLIC
   virtual ~NodeParameters();
 
   RCLCPP_PUBLIC
   const rclcpp::ParameterValue & declare_parameter(
-    const std::string & name, const rclcpp::ParameterValue & default_value,
+    const std::string & name,
+    const rclcpp::ParameterValue & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
     bool ignore_override) override;
 

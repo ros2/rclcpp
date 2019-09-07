@@ -52,10 +52,13 @@ NodeParameters::NodeParameters(
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services,
   const rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-  const std::vector<rclcpp::Parameter> & parameter_overrides, bool start_parameter_services,
-  bool start_parameter_event_publisher, const rclcpp::QoS & parameter_event_qos,
+  const std::vector<rclcpp::Parameter> & parameter_overrides,
+  bool start_parameter_services,
+  bool start_parameter_event_publisher,
+  const rclcpp::QoS & parameter_event_qos,
   const rclcpp::PublisherOptionsBase & parameter_event_publisher_options,
-  bool allow_undeclared_parameters, bool automatically_declare_parameters_from_overrides)
+  bool allow_undeclared_parameters,
+  bool automatically_declare_parameters_from_overrides)
 : allow_undeclared_(allow_undeclared_parameters),
   events_publisher_(nullptr),
   node_logging_(node_logging),
@@ -272,7 +275,8 @@ using OnSetParametersCallbackHandle = rclcpp::node_interfaces::OnSetParametersCa
 
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult __call_on_parameters_set_callbacks(
-  const std::vector<rclcpp::Parameter> & parameters, CallbacksContainerType & callback_container,
+  const std::vector<rclcpp::Parameter> & parameters,
+  CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback)
 {
   rcl_interfaces::msg::SetParametersResult result;
@@ -300,7 +304,8 @@ RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult __set_parameters_atomically_common(
   const std::vector<rclcpp::Parameter> & parameters,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameter_infos,
-  CallbacksContainerType & callback_container, const OnParametersSetCallbackType & callback)
+  CallbacksContainerType & callback_container,
+  const OnParametersSetCallbackType & callback)
 {
   // Call the user callback to see if the new value(s) are allowed.
   rcl_interfaces::msg::SetParametersResult result =
@@ -329,12 +334,15 @@ rcl_interfaces::msg::SetParametersResult __set_parameters_atomically_common(
 
 RCLCPP_LOCAL
 rcl_interfaces::msg::SetParametersResult __declare_parameter_common(
-  const std::string & name, const rclcpp::ParameterValue & default_value,
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
   const std::map<std::string, rclcpp::ParameterValue> & overrides,
-  CallbacksContainerType & callback_container, const OnParametersSetCallbackType & callback,
-  rcl_interfaces::msg::ParameterEvent * parameter_event_out, bool ignore_override = false)
+  CallbacksContainerType & callback_container,
+  const OnParametersSetCallbackType & callback,
+  rcl_interfaces::msg::ParameterEvent * parameter_event_out,
+  bool ignore_override = false)
 {
   using rclcpp::node_interfaces::ParameterInfo;
   std::map<std::string, ParameterInfo> parameter_infos{{name, ParameterInfo()}};
@@ -365,8 +373,10 @@ rcl_interfaces::msg::SetParametersResult __declare_parameter_common(
 }
 
 const rclcpp::ParameterValue & NodeParameters::declare_parameter(
-  const std::string & name, const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor, bool ignore_override)
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 

@@ -49,7 +49,10 @@ Transition::Transition(uint8_t id, const std::string & label, rcutils_allocator_
 }
 
 Transition::Transition(
-  uint8_t id, const std::string & label, State && start, State && goal,
+  uint8_t id,
+  const std::string & label,
+  State && start,
+  State && goal,
   rcutils_allocator_t allocator)
 : Transition(id, label, allocator)
 {

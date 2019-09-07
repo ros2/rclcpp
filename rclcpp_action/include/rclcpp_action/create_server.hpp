@@ -59,7 +59,8 @@ typename Server<ActionT>::SharedPtr create_server(
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
-  const std::string & name, typename Server<ActionT>::GoalCallback handle_goal,
+  const std::string & name,
+  typename Server<ActionT>::GoalCallback handle_goal,
   typename Server<ActionT>::CancelCallback handle_cancel,
   typename Server<ActionT>::AcceptedCallback handle_accepted,
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options(),
@@ -123,7 +124,8 @@ typename Server<ActionT>::SharedPtr create_server(
  */
 template <typename ActionT>
 typename Server<ActionT>::SharedPtr create_server(
-  rclcpp::Node::SharedPtr node, const std::string & name,
+  rclcpp::Node::SharedPtr node,
+  const std::string & name,
   typename Server<ActionT>::GoalCallback handle_goal,
   typename Server<ActionT>::CancelCallback handle_cancel,
   typename Server<ActionT>::AcceptedCallback handle_accepted,

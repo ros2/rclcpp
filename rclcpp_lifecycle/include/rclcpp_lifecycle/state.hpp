@@ -34,7 +34,8 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   State(
-    uint8_t id, const std::string & label,
+    uint8_t id,
+    const std::string & label,
     rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC

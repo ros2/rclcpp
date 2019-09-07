@@ -31,8 +31,10 @@ NodeTopics::NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 NodeTopics::~NodeTopics() {}
 
 rclcpp::PublisherBase::SharedPtr NodeTopics::create_publisher(
-  const std::string & topic_name, const rclcpp::PublisherFactory & publisher_factory,
-  const rcl_publisher_options_t & publisher_options, bool use_intra_process)
+  const std::string & topic_name,
+  const rclcpp::PublisherFactory & publisher_factory,
+  const rcl_publisher_options_t & publisher_options,
+  bool use_intra_process)
 {
   // Create the MessageT specific Publisher using the factory, but store it as PublisherBase.
   auto publisher =
@@ -89,8 +91,10 @@ void NodeTopics::add_publisher(
 }
 
 rclcpp::SubscriptionBase::SharedPtr NodeTopics::create_subscription(
-  const std::string & topic_name, const rclcpp::SubscriptionFactory & subscription_factory,
-  const rcl_subscription_options_t & subscription_options, bool use_intra_process)
+  const std::string & topic_name,
+  const rclcpp::SubscriptionFactory & subscription_factory,
+  const rcl_subscription_options_t & subscription_options,
+  bool use_intra_process)
 {
   auto subscription =
     subscription_factory.create_typed_subscription(node_base_, topic_name, subscription_options);

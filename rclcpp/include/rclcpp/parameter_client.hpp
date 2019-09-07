@@ -57,13 +57,15 @@ public:
 
   RCLCPP_PUBLIC
   AsyncParametersClient(
-    const rclcpp::Node::SharedPtr node, const std::string & remote_node_name = "",
+    const rclcpp::Node::SharedPtr node,
+    const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   RCLCPP_PUBLIC
   AsyncParametersClient(
-    rclcpp::Node * node, const std::string & remote_node_name = "",
+    rclcpp::Node * node,
+    const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
@@ -91,7 +93,8 @@ public:
 
   RCLCPP_PUBLIC
   std::shared_future<rcl_interfaces::msg::ListParametersResult> list_parameters(
-    const std::vector<std::string> & prefixes, uint64_t depth,
+    const std::vector<std::string> & prefixes,
+    uint64_t depth,
     std::function<void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)> callback =
       nullptr);
 
@@ -114,7 +117,8 @@ public:
   template <typename CallbackT, typename NodeT, typename AllocatorT = std::allocator<void>>
   static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(
-    NodeT && node, CallbackT && callback,
+    NodeT && node,
+    CallbackT && callback,
     const rclcpp::QoS & qos =
       (rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events))),
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options =
@@ -158,23 +162,27 @@ public:
 
   RCLCPP_PUBLIC
   explicit SyncParametersClient(
-    rclcpp::Node::SharedPtr node, const std::string & remote_node_name = "",
+    rclcpp::Node::SharedPtr node,
+    const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
   SyncParametersClient(
-    rclcpp::executor::Executor::SharedPtr executor, rclcpp::Node::SharedPtr node,
+    rclcpp::executor::Executor::SharedPtr executor,
+    rclcpp::Node::SharedPtr node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
   explicit SyncParametersClient(
-    rclcpp::Node * node, const std::string & remote_node_name = "",
+    rclcpp::Node * node,
+    const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
   RCLCPP_PUBLIC
   SyncParametersClient(
-    rclcpp::executor::Executor::SharedPtr executor, rclcpp::Node * node,
+    rclcpp::executor::Executor::SharedPtr executor,
+    rclcpp::Node * node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 

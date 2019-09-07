@@ -29,7 +29,8 @@ AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
   const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
-  const std::string & remote_node_name, const rmw_qos_profile_t & qos_profile,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 : node_topics_interface_(node_topics_interface)
 {
@@ -87,22 +88,34 @@ AsyncParametersClient::AsyncParametersClient(
 }
 
 AsyncParametersClient::AsyncParametersClient(
-  const rclcpp::Node::SharedPtr node, const std::string & remote_node_name,
-  const rmw_qos_profile_t & qos_profile, rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  const rclcpp::Node::SharedPtr node,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 : AsyncParametersClient(
-    node->get_node_base_interface(), node->get_node_topics_interface(),
-    node->get_node_graph_interface(), node->get_node_services_interface(), remote_node_name,
-    qos_profile, group)
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
+    qos_profile,
+    group)
 {
 }
 
 AsyncParametersClient::AsyncParametersClient(
-  rclcpp::Node * node, const std::string & remote_node_name, const rmw_qos_profile_t & qos_profile,
+  rclcpp::Node * node,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 : AsyncParametersClient(
-    node->get_node_base_interface(), node->get_node_topics_interface(),
-    node->get_node_graph_interface(), node->get_node_services_interface(), remote_node_name,
-    qos_profile, group)
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
+    qos_profile,
+    group)
 {
 }
 
@@ -222,7 +235,8 @@ AsyncParametersClient::set_parameters_atomically(
 
 std::shared_future<rcl_interfaces::msg::ListParametersResult>
 AsyncParametersClient::list_parameters(
-  const std::vector<std::string> & prefixes, uint64_t depth,
+  const std::vector<std::string> & prefixes,
+  uint64_t depth,
   std::function<void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)> callback)
 {
   auto promise_result = std::make_shared<std::promise<rcl_interfaces::msg::ListParametersResult>>();
@@ -275,20 +289,29 @@ bool AsyncParametersClient::wait_for_service_nanoseconds(std::chrono::nanosecond
 }
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::Node::SharedPtr node, const std::string & remote_node_name,
+  rclcpp::Node::SharedPtr node,
+  const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
 : SyncParametersClient(
-    std::make_shared<rclcpp::executors::SingleThreadedExecutor>(), node, remote_node_name,
+    std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
+    node,
+    remote_node_name,
     qos_profile)
 {
 }
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::executor::Executor::SharedPtr executor, rclcpp::Node::SharedPtr node,
-  const std::string & remote_node_name, const rmw_qos_profile_t & qos_profile)
+  rclcpp::executor::Executor::SharedPtr executor,
+  rclcpp::Node::SharedPtr node,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile)
 : SyncParametersClient(
-    executor, node->get_node_base_interface(), node->get_node_topics_interface(),
-    node->get_node_graph_interface(), node->get_node_services_interface(), remote_node_name,
+    executor,
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
     qos_profile)
 {
 }
@@ -296,17 +319,25 @@ SyncParametersClient::SyncParametersClient(
 SyncParametersClient::SyncParametersClient(
   rclcpp::Node * node, const std::string & remote_node_name, const rmw_qos_profile_t & qos_profile)
 : SyncParametersClient(
-    std::make_shared<rclcpp::executors::SingleThreadedExecutor>(), node, remote_node_name,
+    std::make_shared<rclcpp::executors::SingleThreadedExecutor>(),
+    node,
+    remote_node_name,
     qos_profile)
 {
 }
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::executor::Executor::SharedPtr executor, rclcpp::Node * node,
-  const std::string & remote_node_name, const rmw_qos_profile_t & qos_profile)
+  rclcpp::executor::Executor::SharedPtr executor,
+  rclcpp::Node * node,
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile)
 : SyncParametersClient(
-    executor, node->get_node_base_interface(), node->get_node_topics_interface(),
-    node->get_node_graph_interface(), node->get_node_services_interface(), remote_node_name,
+    executor,
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    remote_node_name,
     qos_profile)
 {
 }
@@ -317,7 +348,8 @@ SyncParametersClient::SyncParametersClient(
   const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
   const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
-  const std::string & remote_node_name, const rmw_qos_profile_t & qos_profile)
+  const std::string & remote_node_name,
+  const rmw_qos_profile_t & qos_profile)
 : executor_(executor), node_base_interface_(node_base_interface)
 {
   async_parameters_client_ = std::make_shared<AsyncParametersClient>(

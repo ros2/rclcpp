@@ -59,9 +59,11 @@ public:
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
 
   LifecyclePublisher(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
-    const rclcpp::PublisherEventCallbacks event_callbacks, std::shared_ptr<MessageAlloc> allocator)
+    const rclcpp::PublisherEventCallbacks event_callbacks,
+    std::shared_ptr<MessageAlloc> allocator)
   : rclcpp::Publisher<MessageT, Alloc>(
       node_base, topic, publisher_options, event_callbacks, allocator),
     enabled_(false),

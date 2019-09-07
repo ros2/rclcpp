@@ -51,7 +51,8 @@ public:
    */
   RCLCPP_PUBLIC
   MultiThreadedExecutor(
-    const executor::ExecutorArgs & args = executor::ExecutorArgs(), size_t number_of_threads = 0,
+    const executor::ExecutorArgs & args = executor::ExecutorArgs(),
+    size_t number_of_threads = 0,
     bool yield_before_execute = false,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 

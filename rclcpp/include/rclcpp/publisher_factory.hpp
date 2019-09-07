@@ -45,7 +45,8 @@ struct PublisherFactory
 {
   // Creates a PublisherT<MessageT, ...> publisher object and returns it as a PublisherBase.
   using PublisherFactoryFunction = std::function<rclcpp::PublisherBase::SharedPtr(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic_name,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic_name,
     const rcl_publisher_options_t & publisher_options)>;
 
   PublisherFactoryFunction create_typed_publisher;

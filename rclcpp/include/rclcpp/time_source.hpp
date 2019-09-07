@@ -118,7 +118,8 @@ private:
   static void enable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void disable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void set_clock(
-    const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
+    const builtin_interfaces::msg::Time::SharedPtr msg,
+    bool set_ros_time_enabled,
     rclcpp::Clock::SharedPtr clock);
 
   // Local storage of validity of ROS time

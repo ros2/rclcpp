@@ -72,8 +72,10 @@ public:
 ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging, const std::string & name,
-  const rosidl_action_type_support_t * type_support, const rcl_action_server_options_t & options)
+  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+  const std::string & name,
+  const rosidl_action_type_support_t * type_support,
+  const rcl_action_server_options_t & options)
 : pimpl_(new ServerBaseImpl(
     node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
 {

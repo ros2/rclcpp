@@ -115,7 +115,9 @@ public:
 /* *INDENT-OFF* */  // Uncrustify cannot yet understand [[noreturn]] properly
 RCLCPP_PUBLIC
 void throw_from_rcl_error[[noreturn]](
-  rcl_ret_t ret, const std::string & prefix = "", const rcl_error_state_t * error_state = nullptr,
+  rcl_ret_t ret,
+  const std::string & prefix = "",
+  const rcl_error_state_t * error_state = nullptr,
   void (*reset_error)() = rcl_reset_error);
 /* *INDENT-ON* */
 

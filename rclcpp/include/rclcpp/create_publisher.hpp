@@ -29,14 +29,18 @@
 namespace rclcpp
 {
 template <
-  typename MessageT, typename AllocatorT = std::allocator<void>,
+  typename MessageT,
+  typename AllocatorT = std::allocator<void>,
   typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
 // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
 [[deprecated("use alternative rclcpp::create_publisher() signatures")]] std::shared_ptr<PublisherT>
 create_publisher(
-  rclcpp::node_interfaces::NodeTopicsInterface * node_topics, const std::string & topic_name,
-  const rmw_qos_profile_t & qos_profile, const PublisherEventCallbacks & event_callbacks,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group, bool use_intra_process_comms,
+  rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
+  const std::string & topic_name,
+  const rmw_qos_profile_t & qos_profile,
+  const PublisherEventCallbacks & event_callbacks,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool use_intra_process_comms,
   std::shared_ptr<AllocatorT> allocator) {
   auto publisher_options = rcl_publisher_get_default_options();
   publisher_options.qos = qos_profile;
@@ -57,10 +61,14 @@ create_publisher(
  * which returns a shared_ptr to a NodeTopicsInterface.
  */
 template <
-  typename MessageT, typename AllocatorT = std::allocator<void>,
-  typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>, typename NodeT>
+  typename MessageT,
+  typename AllocatorT = std::allocator<void>,
+  typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>,
+  typename NodeT>
 std::shared_ptr<PublisherT> create_publisher(
-  NodeT & node, const std::string & topic_name, const rclcpp::QoS & qos,
+  NodeT & node,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options =
     (rclcpp::PublisherOptionsWithAllocator<AllocatorT>()))
 {

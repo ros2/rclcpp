@@ -116,7 +116,8 @@ protected:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name, const rosidl_action_type_support_t * type_support,
+    const std::string & action_name,
+    const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & options);
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
@@ -266,8 +267,12 @@ public:
     const std::string & action_name,
     const rcl_action_client_options_t client_options = rcl_action_client_get_default_options())
   : ClientBase(
-      node_base, node_graph, node_logging, action_name,
-      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(), client_options)
+      node_base,
+      node_graph,
+      node_logging,
+      action_name,
+      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
+      client_options)
   {
   }
 

@@ -44,8 +44,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual rclcpp::PublisherBase::SharedPtr create_publisher(
-    const std::string & topic_name, const rclcpp::PublisherFactory & publisher_factory,
-    const rcl_publisher_options_t & publisher_options, bool use_intra_process) = 0;
+    const std::string & topic_name,
+    const rclcpp::PublisherFactory & publisher_factory,
+    const rcl_publisher_options_t & publisher_options,
+    bool use_intra_process) = 0;
 
   RCLCPP_PUBLIC
   virtual void add_publisher(
@@ -54,8 +56,10 @@ public:
 
   RCLCPP_PUBLIC
   virtual rclcpp::SubscriptionBase::SharedPtr create_subscription(
-    const std::string & topic_name, const rclcpp::SubscriptionFactory & subscription_factory,
-    const rcl_subscription_options_t & subscription_options, bool use_intra_process) = 0;
+    const std::string & topic_name,
+    const rclcpp::SubscriptionFactory & subscription_factory,
+    const rcl_subscription_options_t & subscription_options,
+    bool use_intra_process) = 0;
 
   RCLCPP_PUBLIC
   virtual void add_subscription(

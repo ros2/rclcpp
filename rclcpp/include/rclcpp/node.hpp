@@ -89,7 +89,8 @@ public:
    */
   RCLCPP_PUBLIC
   explicit Node(
-    const std::string & node_name, const std::string & namespace_,
+    const std::string & node_name,
+    const std::string & namespace_,
     const NodeOptions & options = NodeOptions());
 
   RCLCPP_PUBLIC
@@ -163,10 +164,12 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template <
-    typename MessageT, typename AllocatorT = std::allocator<void>,
+    typename MessageT,
+    typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   std::shared_ptr<PublisherT> create_publisher(
-    const std::string & topic_name, const rclcpp::QoS & qos,
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
     const PublisherOptionsWithAllocator<AllocatorT> & options =
       PublisherOptionsWithAllocator<AllocatorT>());
 
@@ -178,14 +181,16 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template <
-    typename MessageT, typename AllocatorT = std::allocator<void>,
+    typename MessageT,
+    typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated(
     "use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]] std::
     shared_ptr<PublisherT>
     create_publisher(
-      const std::string & topic_name, size_t qos_history_depth,
+      const std::string & topic_name,
+      size_t qos_history_depth,
       std::shared_ptr<AllocatorT> allocator);
 
   /// Create and return a Publisher.
@@ -196,7 +201,8 @@ public:
    * \return Shared pointer to the created publisher.
    */
   template <
-    typename MessageT, typename AllocatorT = std::allocator<void>,
+    typename MessageT,
+    typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated(
@@ -221,11 +227,16 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template <
-    typename MessageT, typename CallbackT, typename AllocatorT = std::allocator<void>,
+    typename MessageT,
+    typename CallbackT,
+    typename AllocatorT = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>>
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+      AllocatorT>>
   std::shared_ptr<SubscriptionT> create_subscription(
-    const std::string & topic_name, const rclcpp::QoS & qos, CallbackT && callback,
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
       SubscriptionOptionsWithAllocator<AllocatorT>(),
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
@@ -248,21 +259,24 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template <
-    typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::
+      Subscription<typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [
     [deprecated("use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) "
                 "instead")]] std::shared_ptr<SubscriptionT>
   create_subscription(
-    const std::string & topic_name, CallbackT && callback,
+    const std::string & topic_name,
+    CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-      msg_mem_strat = nullptr,
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+      Alloc>::SharedPtr msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create and return a Subscription.
@@ -281,20 +295,24 @@ public:
      argument to msg_mem_strat, nullptr is a workaround.
    */
   template <
-    typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
+    typename MessageT,
+    typename CallbackT,
+    typename Alloc = std::allocator<void>,
+    typename SubscriptionT = rclcpp::
+      Subscription<typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [
     [deprecated("use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) "
                 "instead")]] std::shared_ptr<SubscriptionT>
   create_subscription(
-    const std::string & topic_name, CallbackT && callback, size_t qos_history_depth,
+    const std::string & topic_name,
+    CallbackT && callback,
+    size_t qos_history_depth,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
     bool ignore_local_publications = false,
     typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-      msg_mem_strat = nullptr,
+      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+      Alloc>::SharedPtr msg_mem_strat = nullptr,
     std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create a timer.
@@ -305,7 +323,8 @@ public:
    */
   template <typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr create_wall_timer(
-    std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
+    std::chrono::duration<DurationRepT, DurationT> period,
+    CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Client. */
@@ -318,7 +337,8 @@ public:
   /* Create and return a Service. */
   template <typename ServiceT, typename CallbackT>
   typename rclcpp::Service<ServiceT>::SharedPtr create_service(
-    const std::string & service_name, CallbackT && callback,
+    const std::string & service_name,
+    CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
@@ -393,7 +413,8 @@ public:
    */
   template <typename ParameterT>
   auto declare_parameter(
-    const std::string & name, const ParameterT & default_value,
+    const std::string & name,
+    const ParameterT & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
       rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false);
@@ -436,7 +457,8 @@ public:
    */
   template <typename ParameterT>
   std::vector<ParameterT> declare_parameters(
-    const std::string & namespace_, const std::map<std::string, ParameterT> & parameters,
+    const std::string & namespace_,
+    const std::map<std::string, ParameterT> & parameters,
     bool ignore_overrides = false);
 
   /// Declare and initialize several parameters with the same namespace and type.

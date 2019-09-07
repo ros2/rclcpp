@@ -32,8 +32,10 @@ namespace rclcpp
 template <typename CallbackT>
 typename rclcpp::TimerBase::SharedPtr create_timer(
   node_interfaces::NodeBaseInterface * node_base,
-  node_interfaces::NodeTimersInterface * node_timers, rclcpp::Clock::SharedPtr clock,
-  rclcpp::Duration period, CallbackT && callback,
+  node_interfaces::NodeTimersInterface * node_timers,
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Duration period,
+  CallbackT && callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
@@ -47,7 +49,10 @@ typename rclcpp::TimerBase::SharedPtr create_timer(
 /// Create a timer with a given clock
 template <typename NodeT, typename CallbackT>
 typename rclcpp::TimerBase::SharedPtr create_timer(
-  NodeT node, rclcpp::Clock::SharedPtr clock, rclcpp::Duration period, CallbackT && callback,
+  NodeT node,
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Duration period,
+  CallbackT && callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_timer(

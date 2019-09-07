@@ -35,7 +35,8 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name, const rosidl_action_type_support_t * type_support,
+    const std::string & action_name,
+    const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & client_options)
   : node_graph_(node_graph),
     node_handle(node_base->get_shared_rcl_node_handle()),
@@ -112,7 +113,8 @@ ClientBase::ClientBase(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-  const std::string & action_name, const rosidl_action_type_support_t * type_support,
+  const std::string & action_name,
+  const rosidl_action_type_support_t * type_support,
   const rcl_action_client_options_t & client_options)
 : pimpl_(new ClientBaseImpl(
     node_base, node_graph, node_logging, action_name, type_support, client_options))

@@ -38,8 +38,10 @@ public:
 
   RCLCPP_PUBLIC
   NodeBase(
-    const std::string & node_name, const std::string & namespace_,
-    rclcpp::Context::SharedPtr context, const rcl_node_options_t & rcl_node_options,
+    const std::string & node_name,
+    const std::string & namespace_,
+    rclcpp::Context::SharedPtr context,
+    const rcl_node_options_t & rcl_node_options,
     bool use_intra_process_default);
 
   RCLCPP_PUBLIC

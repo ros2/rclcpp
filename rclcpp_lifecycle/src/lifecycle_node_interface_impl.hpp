@@ -218,7 +218,8 @@ public:
   }
 
   void on_get_state(
-    const std::shared_ptr<rmw_request_id_t> header, const std::shared_ptr<GetStateSrv::Request> req,
+    const std::shared_ptr<rmw_request_id_t> header,
+    const std::shared_ptr<GetStateSrv::Request> req,
     std::shared_ptr<GetStateSrv::Response> resp)
   {
     (void)header;

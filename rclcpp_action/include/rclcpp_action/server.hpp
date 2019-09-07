@@ -122,8 +122,10 @@ protected:
   ServerBase(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging, const std::string & name,
-    const rosidl_action_type_support_t * type_support, const rcl_action_server_options_t & options);
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    const std::string & name,
+    const rosidl_action_type_support_t * type_support,
+    const rcl_action_server_options_t & options);
 
   // -----------------------------------------------------
   // API for communication between ServerBase and Server<>
@@ -156,7 +158,8 @@ protected:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   virtual void call_goal_accepted_callback(
-    std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle, GoalUUID uuid,
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
+    GoalUUID uuid,
     std::shared_ptr<void> goal_request_message) = 0;
 
   /// Given a result request message, return the UUID contained within.
@@ -273,12 +276,19 @@ public:
   Server(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging, const std::string & name,
-    const rcl_action_server_options_t & options, GoalCallback handle_goal,
-    CancelCallback handle_cancel, AcceptedCallback handle_accepted)
+    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
+    const std::string & name,
+    const rcl_action_server_options_t & options,
+    GoalCallback handle_goal,
+    CancelCallback handle_cancel,
+    AcceptedCallback handle_accepted)
   : ServerBase(
-      node_base, node_clock, node_logging, name,
-      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(), options),
+      node_base,
+      node_clock,
+      node_logging,
+      name,
+      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
+      options),
     handle_goal_(handle_goal),
     handle_cancel_(handle_cancel),
     handle_accepted_(handle_accepted)
@@ -326,7 +336,8 @@ protected:
 
   /// \internal
   void call_goal_accepted_callback(
-    std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle, GoalUUID uuid,
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
+    GoalUUID uuid,
     std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;

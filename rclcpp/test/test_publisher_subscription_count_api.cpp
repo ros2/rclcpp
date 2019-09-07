@@ -144,5 +144,7 @@ TestParameters parameters[] = {
    "two_subscriptions_in_two_contexts_without_intraprocess_comm"}};
 
 INSTANTIATE_TEST_CASE_P(
-  TestWithDifferentNodeOptions, TestPublisherSubscriptionCount, ::testing::ValuesIn(parameters),
+  TestWithDifferentNodeOptions,
+  TestPublisherSubscriptionCount,
+  ::testing::ValuesIn(parameters),
   ::testing::PrintToStringParamName());

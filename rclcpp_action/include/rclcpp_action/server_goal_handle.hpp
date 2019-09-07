@@ -228,7 +228,8 @@ public:
 protected:
   /// \internal
   ServerGoalHandle(
-    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle, GoalUUID uuid,
+    std::shared_ptr<rcl_action_goal_handle_t> rcl_handle,
+    GoalUUID uuid,
     std::shared_ptr<const typename ActionT::Goal> goal,
     std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state,
     std::function<void(const GoalUUID &)> on_executing,

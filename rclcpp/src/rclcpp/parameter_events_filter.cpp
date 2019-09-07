@@ -22,7 +22,8 @@ using EventType = rclcpp::ParameterEventsFilter::EventType;
 using EventPair = rclcpp::ParameterEventsFilter::EventPair;
 
 ParameterEventsFilter::ParameterEventsFilter(
-  rcl_interfaces::msg::ParameterEvent::SharedPtr event, const std::vector<std::string> & names,
+  rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+  const std::vector<std::string> & names,
   const std::vector<EventType> & types)
 : event_(event)
 {

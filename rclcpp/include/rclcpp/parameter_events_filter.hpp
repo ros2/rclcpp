@@ -59,7 +59,8 @@ public:
    */
   RCLCPP_PUBLIC
   ParameterEventsFilter(
-    rcl_interfaces::msg::ParameterEvent::SharedPtr event, const std::vector<std::string> & names,
+    rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+    const std::vector<std::string> & names,
     const std::vector<EventType> & types);
 
   /// Get the result of the filter

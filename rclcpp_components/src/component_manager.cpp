@@ -109,7 +109,8 @@ std::shared_ptr<rclcpp_components::NodeFactory> ComponentManager::create_compone
 
 void ComponentManager::OnLoadNode(
   const std::shared_ptr<rmw_request_id_t> request_header,
-  const std::shared_ptr<LoadNode::Request> request, std::shared_ptr<LoadNode::Response> response)
+  const std::shared_ptr<LoadNode::Request> request,
+  std::shared_ptr<LoadNode::Response> response)
 {
   (void)request_header;
 
@@ -224,7 +225,8 @@ void ComponentManager::OnUnloadNode(
 
 void ComponentManager::OnListNodes(
   const std::shared_ptr<rmw_request_id_t> request_header,
-  const std::shared_ptr<ListNodes::Request> request, std::shared_ptr<ListNodes::Response> response)
+  const std::shared_ptr<ListNodes::Request> request,
+  std::shared_ptr<ListNodes::Response> response)
 {
   (void)request_header;
   (void)request;

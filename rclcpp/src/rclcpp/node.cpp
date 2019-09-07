@@ -102,7 +102,10 @@ Node::Node(const std::string & node_name, const NodeOptions & options)
 Node::Node(
   const std::string & node_name, const std::string & namespace_, const NodeOptions & options)
 : node_base_(new rclcpp::node_interfaces::NodeBase(
-    node_name, namespace_, options.context(), *(options.get_rcl_node_options()),
+    node_name,
+    namespace_,
+    options.context(),
+    *(options.get_rcl_node_options()),
     options.use_intra_process_comms())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
@@ -112,13 +115,25 @@ Node::Node(
   node_clock_(new rclcpp::node_interfaces::NodeClock(
     node_base_, node_topics_, node_graph_, node_services_, node_logging_)),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
-    node_base_, node_logging_, node_topics_, node_services_, node_clock_,
-    options.parameter_overrides(), options.start_parameter_services(),
-    options.start_parameter_event_publisher(), options.parameter_event_qos(),
-    options.parameter_event_publisher_options(), options.allow_undeclared_parameters(),
+    node_base_,
+    node_logging_,
+    node_topics_,
+    node_services_,
+    node_clock_,
+    options.parameter_overrides(),
+    options.start_parameter_services(),
+    options.start_parameter_event_publisher(),
+    options.parameter_event_qos(),
+    options.parameter_event_publisher_options(),
+    options.allow_undeclared_parameters(),
     options.automatically_declare_parameters_from_overrides())),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
-    node_base_, node_topics_, node_graph_, node_services_, node_logging_, node_clock_,
+    node_base_,
+    node_topics_,
+    node_graph_,
+    node_services_,
+    node_logging_,
+    node_clock_,
     node_parameters_)),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
@@ -185,8 +200,10 @@ bool Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
 }
 
 const rclcpp::ParameterValue & Node::declare_parameter(
-  const std::string & name, const rclcpp::ParameterValue & default_value,
-  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor, bool ignore_override)
+  const std::string & name,
+  const rclcpp::ParameterValue & default_value,
+  const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
+  bool ignore_override)
 {
   return this->node_parameters_->declare_parameter(
     name, default_value, parameter_descriptor, ignore_override);

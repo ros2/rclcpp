@@ -32,7 +32,9 @@ template <typename ServiceT, typename CallbackT>
 typename rclcpp::Service<ServiceT>::SharedPtr create_service(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  const std::string & service_name, CallbackT && callback, const rmw_qos_profile_t & qos_profile,
+  const std::string & service_name,
+  CallbackT && callback,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   rclcpp::AnyServiceCallback<ServiceT> any_service_callback;

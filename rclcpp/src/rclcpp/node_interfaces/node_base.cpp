@@ -30,8 +30,11 @@ using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::node_interfaces::NodeBase;
 
 NodeBase::NodeBase(
-  const std::string & node_name, const std::string & namespace_, rclcpp::Context::SharedPtr context,
-  const rcl_node_options_t & rcl_node_options, bool use_intra_process_default)
+  const std::string & node_name,
+  const std::string & namespace_,
+  rclcpp::Context::SharedPtr context,
+  const rcl_node_options_t & rcl_node_options,
+  bool use_intra_process_default)
 : context_(context),
   use_intra_process_default_(use_intra_process_default),
   node_handle_(nullptr),

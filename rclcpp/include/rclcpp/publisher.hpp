@@ -54,12 +54,15 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>)
 
   Publisher(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
     const rcl_publisher_options_t & publisher_options,
     const PublisherEventCallbacks & event_callbacks,
     const std::shared_ptr<MessageAlloc> & allocator)
   : PublisherBase(
-      node_base, topic, *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      node_base,
+      topic,
+      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
       publisher_options),
     message_allocator_(allocator)
   {

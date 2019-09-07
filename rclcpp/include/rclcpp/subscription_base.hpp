@@ -65,8 +65,10 @@ public:
   RCLCPP_PUBLIC
   SubscriptionBase(
     std::shared_ptr<rcl_node_t> node_handle,
-    const rosidl_message_type_support_t & type_support_handle, const std::string & topic_name,
-    const rcl_subscription_options_t & subscription_options, bool is_serialized = false);
+    const rosidl_message_type_support_t & type_support_handle,
+    const std::string & topic_name,
+    const rcl_subscription_options_t & subscription_options,
+    bool is_serialized = false);
 
   /// Default destructor.
   RCLCPP_PUBLIC
@@ -144,7 +146,8 @@ public:
 
   /// Implemenation detail.
   void setup_intra_process(
-    uint64_t intra_process_subscription_id, IntraProcessManagerWeakPtr weak_ipm,
+    uint64_t intra_process_subscription_id,
+    IntraProcessManagerWeakPtr weak_ipm,
     const rcl_subscription_options_t & intra_process_options);
 
 protected:

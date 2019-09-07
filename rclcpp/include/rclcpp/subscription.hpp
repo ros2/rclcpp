@@ -78,7 +78,8 @@ public:
    */
   Subscription(
     std::shared_ptr<rcl_node_t> node_handle,
-    const rosidl_message_type_support_t & type_support_handle, const std::string & topic_name,
+    const rosidl_message_type_support_t & type_support_handle,
+    const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
     const SubscriptionEventCallbacks & event_callbacks,
@@ -86,7 +87,10 @@ public:
       memory_strategy =
         message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default())
   : SubscriptionBase(
-      node_handle, type_support_handle, topic_name, subscription_options,
+      node_handle,
+      type_support_handle,
+      topic_name,
+      subscription_options,
       rclcpp::subscription_traits::is_serialized_subscription_argument<CallbackMessageT>::value),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy)
@@ -208,7 +212,9 @@ public:
 
 private:
   void take_intra_process_message(
-    uint64_t publisher_id, uint64_t message_sequence, uint64_t subscription_id,
+    uint64_t publisher_id,
+    uint64_t message_sequence,
+    uint64_t subscription_id,
     MessageUniquePtr & message)
   {
     auto ipm = weak_ipm_.lock();
@@ -221,7 +227,9 @@ private:
   }
 
   void take_intra_process_message(
-    uint64_t publisher_id, uint64_t message_sequence, uint64_t subscription_id,
+    uint64_t publisher_id,
+    uint64_t message_sequence,
+    uint64_t subscription_id,
     ConstMessageSharedPtr & message)
   {
     auto ipm = weak_ipm_.lock();

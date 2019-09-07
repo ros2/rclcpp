@@ -26,7 +26,8 @@
 using rclcpp::TimerBase;
 
 TimerBase::TimerBase(
-  rclcpp::Clock::SharedPtr clock, std::chrono::nanoseconds period,
+  rclcpp::Clock::SharedPtr clock,
+  std::chrono::nanoseconds period,
   rclcpp::Context::SharedPtr context)
 : clock_(clock), timer_handle_(nullptr)
 {

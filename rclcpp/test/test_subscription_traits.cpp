@@ -38,8 +38,7 @@ void not_serialized_shared_ptr_callback(std::shared_ptr<char> unused) { (void)un
 
 void not_serialized_unique_ptr_callback(
   test_msgs::msg::Empty::UniquePtrWithDeleter<
-    rclcpp::allocator::Deleter<std::allocator<void>, test_msgs::msg::Empty>>
-    unused)
+    rclcpp::allocator::Deleter<std::allocator<void>, test_msgs::msg::Empty>> unused)
 {
   (void)unused;
 }

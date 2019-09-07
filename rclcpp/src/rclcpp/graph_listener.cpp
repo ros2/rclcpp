@@ -212,7 +212,8 @@ static void interrupt_(rcl_guard_condition_t * interrupt_guard_condition)
 }
 
 static void acquire_nodes_lock_(
-  std::mutex * node_graph_interfaces_barrier_mutex, std::mutex * node_graph_interfaces_mutex,
+  std::mutex * node_graph_interfaces_barrier_mutex,
+  std::mutex * node_graph_interfaces_mutex,
   rcl_guard_condition_t * interrupt_guard_condition)
 {
   {

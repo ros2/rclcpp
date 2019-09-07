@@ -31,8 +31,10 @@ using rclcpp::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
   std::shared_ptr<rcl_node_t> node_handle,
-  const rosidl_message_type_support_t & type_support_handle, const std::string & topic_name,
-  const rcl_subscription_options_t & subscription_options, bool is_serialized)
+  const rosidl_message_type_support_t & type_support_handle,
+  const std::string & topic_name,
+  const rcl_subscription_options_t & subscription_options,
+  bool is_serialized)
 : node_handle_(node_handle),
   use_intra_process_(false),
   intra_process_subscription_id_(0),
@@ -147,7 +149,8 @@ size_t SubscriptionBase::get_publisher_count() const
 }
 
 void SubscriptionBase::setup_intra_process(
-  uint64_t intra_process_subscription_id, IntraProcessManagerWeakPtr weak_ipm,
+  uint64_t intra_process_subscription_id,
+  IntraProcessManagerWeakPtr weak_ipm,
   const rcl_subscription_options_t & intra_process_options)
 {
   std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";

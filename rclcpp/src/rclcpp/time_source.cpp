@@ -150,7 +150,8 @@ TimeSource::~TimeSource()
 }
 
 void TimeSource::set_clock(
-  const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
+  const builtin_interfaces::msg::Time::SharedPtr msg,
+  bool set_ros_time_enabled,
   std::shared_ptr<rclcpp::Clock> clock)
 {
   // Do change

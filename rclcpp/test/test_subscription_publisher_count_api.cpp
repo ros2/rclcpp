@@ -98,5 +98,7 @@ TestParameters parameters[] = {
   {rclcpp::NodeOptions().context(get_new_context()), "two_contexts_test"}};
 
 INSTANTIATE_TEST_CASE_P(
-  TestWithDifferentNodeOptions, TestSubscriptionPublisherCount, testing::ValuesIn(parameters),
+  TestWithDifferentNodeOptions,
+  TestSubscriptionPublisherCount,
+  testing::ValuesIn(parameters),
   testing::PrintToStringParamName());

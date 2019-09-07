@@ -69,7 +69,8 @@ public:
    */
   RCLCPP_PUBLIC
   PublisherBase(
-    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
     const rosidl_message_type_support_t & type_support,
     const rcl_publisher_options_t & publisher_options);
 
@@ -175,7 +176,8 @@ public:
   /// Implementation utility function used to setup intra process publishing after creation.
   RCLCPP_PUBLIC
   void setup_intra_process(
-    uint64_t intra_process_publisher_id, IntraProcessManagerSharedPtr ipm,
+    uint64_t intra_process_publisher_id,
+    IntraProcessManagerSharedPtr ipm,
     const rcl_publisher_options_t & intra_process_options);
 
 protected:

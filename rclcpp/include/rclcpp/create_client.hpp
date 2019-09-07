@@ -31,7 +31,8 @@ typename rclcpp::Client<ServiceT>::SharedPtr create_client(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,
   std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,
-  const std::string & service_name, const rmw_qos_profile_t & qos_profile,
+  const std::string & service_name,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   rcl_client_options_t options = rcl_client_get_default_options();

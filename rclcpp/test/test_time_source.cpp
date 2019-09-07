@@ -44,7 +44,9 @@ protected:
 };
 
 void spin_until_time(
-  rclcpp::Clock::SharedPtr clock, rclcpp::Node::SharedPtr node, std::chrono::nanoseconds end_time,
+  rclcpp::Clock::SharedPtr clock,
+  rclcpp::Node::SharedPtr node,
+  std::chrono::nanoseconds end_time,
   bool expect_time_update)
 {
   // Call spin_once on the node until either:
@@ -109,7 +111,8 @@ void spin_until_ros_time_updated(
 }
 
 void trigger_clock_changes(
-  rclcpp::Node::SharedPtr node, std::shared_ptr<rclcpp::Clock> clock,
+  rclcpp::Node::SharedPtr node,
+  std::shared_ptr<rclcpp::Clock> clock,
   bool expect_time_update = true)
 {
   auto clock_pub = node->create_publisher<rosgraph_msgs::msg::Clock>("clock", 10);

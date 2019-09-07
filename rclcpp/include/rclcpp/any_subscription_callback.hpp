@@ -71,48 +71,60 @@ public:
   AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
 
   template <
-    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                          CallbackT, SharedPtrCallback>::value>::type * = nullptr>
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, SharedPtrCallback>::value>::type * =
+      nullptr>
   void set(CallbackT callback)
   {
     shared_ptr_callback_ = callback;
   }
 
   template <
-    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                          CallbackT, SharedPtrWithInfoCallback>::value>::type * = nullptr>
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, SharedPtrWithInfoCallback>::value>::
+      type * = nullptr>
   void set(CallbackT callback)
   {
     shared_ptr_with_info_callback_ = callback;
   }
 
   template <
-    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                          CallbackT, ConstSharedPtrCallback>::value>::type * = nullptr>
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, ConstSharedPtrCallback>::value>::type * =
+      nullptr>
   void set(CallbackT callback)
   {
     const_shared_ptr_callback_ = callback;
   }
 
   template <
-    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                          CallbackT, ConstSharedPtrWithInfoCallback>::value>::type * = nullptr>
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, ConstSharedPtrWithInfoCallback>::value>::
+      type * = nullptr>
   void set(CallbackT callback)
   {
     const_shared_ptr_with_info_callback_ = callback;
   }
 
   template <
-    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                          CallbackT, UniquePtrCallback>::value>::type * = nullptr>
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, UniquePtrCallback>::value>::type * =
+      nullptr>
   void set(CallbackT callback)
   {
     unique_ptr_callback_ = callback;
   }
 
   template <
-    typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                          CallbackT, UniquePtrWithInfoCallback>::value>::type * = nullptr>
+    typename CallbackT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, UniquePtrWithInfoCallback>::value>::
+      type * = nullptr>
   void set(CallbackT callback)
   {
     unique_ptr_with_info_callback_ = callback;

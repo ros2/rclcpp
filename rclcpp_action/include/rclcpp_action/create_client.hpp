@@ -44,7 +44,8 @@ typename Client<ActionT>::SharedPtr create_client(
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
-  const std::string & name, rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  const std::string & name,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
     node_waitables_interface;
@@ -92,7 +93,8 @@ typename Client<ActionT>::SharedPtr create_client(
  */
 template <typename ActionT>
 typename Client<ActionT>::SharedPtr create_client(
-  rclcpp::Node::SharedPtr node, const std::string & name,
+  rclcpp::Node::SharedPtr node,
+  const std::string & name,
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_client<ActionT>(

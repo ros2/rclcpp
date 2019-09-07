@@ -41,7 +41,8 @@ namespace rclcpp_lifecycle
 template <typename MessageT, typename AllocatorT>
 std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>>
 LifecycleNode::create_publisher(
-  const std::string & topic_name, const rclcpp::QoS & qos,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
 {
   using PublisherT = rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>;
@@ -63,7 +64,8 @@ LifecycleNode::create_publisher(
 template <typename MessageT, typename Alloc>
 std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, Alloc>>
 LifecycleNode::create_publisher(
-  const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
+  const std::string & topic_name,
+  const rmw_qos_profile_t & qos_profile,
   std::shared_ptr<Alloc> allocator)
 {
   rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(qos_profile));
@@ -78,11 +80,13 @@ LifecycleNode::create_publisher(
 // TODO(karsten1987): Create LifecycleSubscriber
 template <typename MessageT, typename CallbackT, typename AllocatorT, typename SubscriptionT>
 std::shared_ptr<SubscriptionT> LifecycleNode::create_subscription(
-  const std::string & topic_name, const rclcpp::QoS & qos, CallbackT && callback,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>::SharedPtr
-    msg_mem_strat)
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+    AllocatorT>::SharedPtr msg_mem_strat)
 {
   return rclcpp::create_subscription<MessageT>(
     *this, topic_name, qos, std::forward<CallbackT>(callback), options, msg_mem_strat);
@@ -90,11 +94,14 @@ std::shared_ptr<SubscriptionT> LifecycleNode::create_subscription(
 
 template <typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
 std::shared_ptr<SubscriptionT> LifecycleNode::create_subscription(
-  const std::string & topic_name, CallbackT && callback, const rmw_qos_profile_t & qos_profile,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group, bool ignore_local_publications,
+  const std::string & topic_name,
+  CallbackT && callback,
+  const rmw_qos_profile_t & qos_profile,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-    msg_mem_strat,
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+    Alloc>::SharedPtr msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
   rclcpp::QoS qos(rclcpp::QoSInitialization::from_rmw(qos_profile));
@@ -111,11 +118,14 @@ std::shared_ptr<SubscriptionT> LifecycleNode::create_subscription(
 
 template <typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
 std::shared_ptr<SubscriptionT> LifecycleNode::create_subscription(
-  const std::string & topic_name, size_t qos_history_depth, CallbackT && callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group, bool ignore_local_publications,
+  const std::string & topic_name,
+  size_t qos_history_depth,
+  CallbackT && callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  bool ignore_local_publications,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-    msg_mem_strat,
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+    Alloc>::SharedPtr msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
   rclcpp::SubscriptionOptionsWithAllocator<Alloc> sub_options;
@@ -130,7 +140,8 @@ std::shared_ptr<SubscriptionT> LifecycleNode::create_subscription(
 
 template <typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr LifecycleNode::create_wall_timer(
-  std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
@@ -142,7 +153,8 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr LifecycleNode::create_wall_time
 
 template <typename ServiceT>
 typename rclcpp::Client<ServiceT>::SharedPtr LifecycleNode::create_client(
-  const std::string & service_name, const rmw_qos_profile_t & qos_profile,
+  const std::string & service_name,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   rcl_client_options_t options = rcl_client_get_default_options();
@@ -160,7 +172,9 @@ typename rclcpp::Client<ServiceT>::SharedPtr LifecycleNode::create_client(
 
 template <typename ServiceT, typename CallbackT>
 typename rclcpp::Service<ServiceT>::SharedPtr LifecycleNode::create_service(
-  const std::string & service_name, CallbackT && callback, const rmw_qos_profile_t & qos_profile,
+  const std::string & service_name,
+  CallbackT && callback,
+  const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_service<ServiceT, CallbackT>(
@@ -170,7 +184,8 @@ typename rclcpp::Service<ServiceT>::SharedPtr LifecycleNode::create_service(
 
 template <typename ParameterT>
 auto LifecycleNode::declare_parameter(
-  const std::string & name, const ParameterT & default_value,
+  const std::string & name,
+  const ParameterT & default_value,
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor)
 {
   return this->declare_parameter(name, rclcpp::ParameterValue(default_value), parameter_descriptor)

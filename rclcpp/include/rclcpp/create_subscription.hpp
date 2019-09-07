@@ -29,19 +29,25 @@
 namespace rclcpp
 {
 template <
-  typename MessageT, typename CallbackT, typename AllocatorT, typename CallbackMessageT,
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename CallbackMessageT,
   typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>>
 // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
 [[deprecated("use alternative rclcpp::create_subscription() signatures")]]
   typename std::shared_ptr<SubscriptionT>
   create_subscription(
-    rclcpp::node_interfaces::NodeTopicsInterface * node_topics, const std::string & topic_name,
-    CallbackT && callback, const rmw_qos_profile_t & qos_profile,
+    rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
+    const std::string & topic_name,
+    CallbackT && callback,
+    const rmw_qos_profile_t & qos_profile,
     const SubscriptionEventCallbacks & event_callbacks,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group, bool ignore_local_publications,
+    rclcpp::callback_group::CallbackGroup::SharedPtr group,
+    bool ignore_local_publications,
     bool use_intra_process_comms,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      CallbackMessageT, AllocatorT>::SharedPtr msg_mem_strat,
+    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::
+      SharedPtr msg_mem_strat,
     typename std::shared_ptr<AllocatorT> allocator)
 {
   auto subscription_options = rcl_subscription_get_default_options();
@@ -65,16 +71,22 @@ template <
  * NodeTopicsInterface pointer itself.
  */
 template <
-  typename MessageT, typename CallbackT, typename AllocatorT = std::allocator<void>,
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT = std::allocator<void>,
   typename CallbackMessageT =
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
-  typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>, typename NodeT>
+  typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>,
+  typename NodeT>
 typename std::shared_ptr<SubscriptionT> create_subscription(
-  NodeT && node, const std::string & topic_name, const rclcpp::QoS & qos, CallbackT && callback,
+  NodeT && node,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options =
     (rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()),
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    CallbackMessageT, AllocatorT>::SharedPtr msg_mem_strat = nullptr)
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::
+    SharedPtr msg_mem_strat = nullptr)
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));

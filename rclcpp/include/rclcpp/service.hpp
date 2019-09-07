@@ -85,13 +85,16 @@ public:
     std::shared_ptr<typename ServiceT::Response>)>;
 
   using CallbackWithHeaderType = std::function<void(
-    const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<typename ServiceT::Request>,
+    const std::shared_ptr<rmw_request_id_t>,
+    const std::shared_ptr<typename ServiceT::Request>,
     std::shared_ptr<typename ServiceT::Response>)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Service)
 
   Service(
-    std::shared_ptr<rcl_node_t> node_handle, const std::string & service_name,
-    AnyServiceCallback<ServiceT> any_callback, rcl_service_options_t & service_options)
+    std::shared_ptr<rcl_node_t> node_handle,
+    const std::string & service_name,
+    AnyServiceCallback<ServiceT> any_callback,
+    rcl_service_options_t & service_options)
   : ServiceBase(node_handle), any_callback_(any_callback)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
@@ -137,7 +140,8 @@ public:
   }
 
   Service(
-    std::shared_ptr<rcl_node_t> node_handle, std::shared_ptr<rcl_service_t> service_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    std::shared_ptr<rcl_service_t> service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback)
   {
@@ -153,7 +157,8 @@ public:
   }
 
   Service(
-    std::shared_ptr<rcl_node_t> node_handle, rcl_service_t * service_handle,
+    std::shared_ptr<rcl_node_t> node_handle,
+    rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
   : ServiceBase(node_handle), any_callback_(any_callback)
   {

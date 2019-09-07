@@ -25,7 +25,9 @@
 using rclcpp::executors::MultiThreadedExecutor;
 
 MultiThreadedExecutor::MultiThreadedExecutor(
-  const rclcpp::executor::ExecutorArgs & args, size_t number_of_threads, bool yield_before_execute,
+  const rclcpp::executor::ExecutorArgs & args,
+  size_t number_of_threads,
+  bool yield_before_execute,
   std::chrono::nanoseconds next_exec_timeout)
 : executor::Executor(args),
   yield_before_execute_(yield_before_execute),

@@ -116,7 +116,9 @@ public:
    * \param[in] callback User-specified callback function.
    */
   explicit GenericTimer(
-    Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,
+    Clock::SharedPtr clock,
+    std::chrono::nanoseconds period,
+    FunctorT && callback,
     rclcpp::Context::SharedPtr context)
   : TimerBase(clock, period, context), callback_(std::forward<FunctorT>(callback))
   {
@@ -143,16 +145,20 @@ public:
 
   // void specialization
   template <
-    typename CallbackT = FunctorT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                                     CallbackT, VoidCallbackType>::value>::type * = nullptr>
+    typename CallbackT = FunctorT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, VoidCallbackType>::value>::type * =
+      nullptr>
   void execute_callback_delegate()
   {
     callback_();
   }
 
   template <
-    typename CallbackT = FunctorT, typename std::enable_if<rclcpp::function_traits::same_arguments<
-                                     CallbackT, TimerCallbackType>::value>::type * = nullptr>
+    typename CallbackT = FunctorT,
+    typename std::enable_if<
+      rclcpp::function_traits::same_arguments<CallbackT, TimerCallbackType>::value>::type * =
+      nullptr>
   void execute_callback_delegate()
   {
     callback_(*this);
