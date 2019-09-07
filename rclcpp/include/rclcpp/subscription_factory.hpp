@@ -24,10 +24,10 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-#include "rclcpp/subscription.hpp"
-#include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -47,38 +47,29 @@ namespace rclcpp
 struct SubscriptionFactory
 {
   // Creates a Subscription<MessageT> object and returns it as a SubscriptionBase.
-  using SubscriptionFactoryFunction = std::function<
-    rclcpp::SubscriptionBase::SharedPtr(
-      rclcpp::node_interfaces::NodeBaseInterface * node_base,
-      const std::string & topic_name,
-      const rcl_subscription_options_t & subscription_options)>;
+  using SubscriptionFactoryFunction = std::function<rclcpp::SubscriptionBase::SharedPtr(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic_name,
+    const rcl_subscription_options_t & subscription_options)>;
 
   SubscriptionFactoryFunction create_typed_subscription;
 
   // Function that takes a MessageT from the intra process manager
-  using SetupIntraProcessFunction = std::function<
-    void (
-      rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
-      rclcpp::SubscriptionBase::SharedPtr subscription,
-      const rcl_subscription_options_t & subscription_options)>;
+  using SetupIntraProcessFunction = std::function<void(
+    rclcpp::intra_process_manager::IntraProcessManager::SharedPtr ipm,
+    rclcpp::SubscriptionBase::SharedPtr subscription,
+    const rcl_subscription_options_t & subscription_options)>;
 
   SetupIntraProcessFunction setup_intra_process;
 };
 
 /// Return a SubscriptionFactory with functions for creating a SubscriptionT<MessageT, Alloc>.
-template<
-  typename MessageT,
-  typename CallbackT,
-  typename Alloc,
-  typename CallbackMessageT,
+template <
+  typename MessageT, typename CallbackT, typename Alloc, typename CallbackMessageT,
   typename SubscriptionT>
-SubscriptionFactory
-create_subscription_factory(
-  CallbackT && callback,
-  const SubscriptionEventCallbacks & event_callbacks,
+SubscriptionFactory create_subscription_factory(
+  CallbackT && callback, const SubscriptionEventCallbacks & event_callbacks,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    CallbackMessageT, Alloc>::SharedPtr
-  msg_mem_strat,
+    CallbackMessageT, Alloc>::SharedPtr msg_mem_strat,
   std::shared_ptr<Alloc> allocator)
 {
   SubscriptionFactory factory;
@@ -93,29 +84,23 @@ create_subscription_factory(
   // factory function that creates a MessageT specific SubscriptionT
   factory.create_typed_subscription =
     [allocator, msg_mem_strat, any_subscription_callback, event_callbacks, message_alloc](
-    rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    const std::string & topic_name,
-    const rcl_subscription_options_t & subscription_options
-    ) -> rclcpp::SubscriptionBase::SharedPtr
-    {
-      auto options_copy = subscription_options;
-      options_copy.allocator =
-        rclcpp::allocator::get_rcl_allocator<CallbackMessageT>(*message_alloc.get());
+      rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic_name,
+      const rcl_subscription_options_t & subscription_options)
+    -> rclcpp::SubscriptionBase::SharedPtr {
+    auto options_copy = subscription_options;
+    options_copy.allocator =
+      rclcpp::allocator::get_rcl_allocator<CallbackMessageT>(*message_alloc.get());
 
-      using rclcpp::Subscription;
-      using rclcpp::SubscriptionBase;
+    using rclcpp::Subscription;
+    using rclcpp::SubscriptionBase;
 
-      auto sub = Subscription<CallbackMessageT, Alloc>::make_shared(
-        node_base->get_shared_rcl_node_handle(),
-        *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
-        topic_name,
-        options_copy,
-        any_subscription_callback,
-        event_callbacks,
-        msg_mem_strat);
-      auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
-      return sub_base_ptr;
-    };
+    auto sub = Subscription<CallbackMessageT, Alloc>::make_shared(
+      node_base->get_shared_rcl_node_handle(),
+      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(), topic_name,
+      options_copy, any_subscription_callback, event_callbacks, msg_mem_strat);
+    auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
+    return sub_base_ptr;
+  };
 
   // return the factory now that it is populated
   return factory;

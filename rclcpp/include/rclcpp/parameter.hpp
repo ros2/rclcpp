@@ -41,9 +41,8 @@ namespace detail
 // This helper function is required because you cannot do specialization on a
 // class method, so instead we specialize this template function and call it
 // from the unspecialized, but dependent, class method.
-template<typename T>
-auto
-get_value_helper(const rclcpp::Parameter * parameter);
+template <typename T>
+auto get_value_helper(const rclcpp::Parameter * parameter);
 
 }  // namespace detail
 
@@ -64,105 +63,84 @@ public:
   Parameter(const std::string & name, const ParameterValue & value);
 
   /// Construct with given name and given parameter value.
-  template<typename ValueTypeT>
-  Parameter(const std::string & name, ValueTypeT value)
-  : Parameter(name, ParameterValue(value))
-  {}
+  template <typename ValueTypeT>
+  Parameter(const std::string & name, ValueTypeT value) : Parameter(name, ParameterValue(value))
+  {
+  }
 
   RCLCPP_PUBLIC
   explicit Parameter(const rclcpp::node_interfaces::ParameterInfo & parameter_info);
 
   /// Equal operator.
   RCLCPP_PUBLIC
-  bool
-  operator==(const Parameter & rhs) const;
+  bool operator==(const Parameter & rhs) const;
 
   /// Not equal operator.
   RCLCPP_PUBLIC
-  bool
-  operator!=(const Parameter & rhs) const;
+  bool operator!=(const Parameter & rhs) const;
 
   RCLCPP_PUBLIC
-  ParameterType
-  get_type() const;
+  ParameterType get_type() const;
 
   RCLCPP_PUBLIC
-  std::string
-  get_type_name() const;
+  std::string get_type_name() const;
 
   RCLCPP_PUBLIC
-  const std::string &
-  get_name() const;
+  const std::string & get_name() const;
 
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::ParameterValue
-  get_value_message() const;
+  rcl_interfaces::msg::ParameterValue get_value_message() const;
 
   /// Get the internal storage for the parameter value.
   RCLCPP_PUBLIC
-  const rclcpp::ParameterValue &
-  get_parameter_value() const;
+  const rclcpp::ParameterValue & get_parameter_value() const;
 
   /// Get value of parameter using rclcpp::ParameterType as template argument.
-  template<ParameterType ParamT>
-  decltype(auto)
-  get_value() const
+  template <ParameterType ParamT>
+  decltype(auto) get_value() const
   {
     return value_.get<ParamT>();
   }
 
   /// Get value of parameter using c++ types as template argument.
-  template<typename T>
-  decltype(auto)
-  get_value() const;
+  template <typename T>
+  decltype(auto) get_value() const;
 
   RCLCPP_PUBLIC
-  bool
-  as_bool() const;
+  bool as_bool() const;
 
   RCLCPP_PUBLIC
-  int64_t
-  as_int() const;
+  int64_t as_int() const;
 
   RCLCPP_PUBLIC
-  double
-  as_double() const;
+  double as_double() const;
 
   RCLCPP_PUBLIC
-  const std::string &
-  as_string() const;
+  const std::string & as_string() const;
 
   RCLCPP_PUBLIC
-  const std::vector<uint8_t> &
-  as_byte_array() const;
+  const std::vector<uint8_t> & as_byte_array() const;
 
   RCLCPP_PUBLIC
-  const std::vector<bool> &
-  as_bool_array() const;
+  const std::vector<bool> & as_bool_array() const;
 
   RCLCPP_PUBLIC
-  const std::vector<int64_t> &
-  as_integer_array() const;
+  const std::vector<int64_t> & as_integer_array() const;
 
   RCLCPP_PUBLIC
-  const std::vector<double> &
-  as_double_array() const;
+  const std::vector<double> & as_double_array() const;
 
   RCLCPP_PUBLIC
-  const std::vector<std::string> &
-  as_string_array() const;
+  const std::vector<std::string> & as_string_array() const;
 
   RCLCPP_PUBLIC
-  static Parameter
-  from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter);
+  static Parameter from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter);
 
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::Parameter
-  to_parameter_msg() const;
+  rcl_interfaces::msg::Parameter to_parameter_msg() const;
 
   RCLCPP_PUBLIC
-  std::string
-  value_to_string() const;
+  std::string value_to_string() const;
 
 private:
   std::string name_;
@@ -171,55 +149,43 @@ private:
 
 /// Return a json encoded version of the parameter intended for a dict.
 RCLCPP_PUBLIC
-std::string
-_to_json_dict_entry(const Parameter & param);
+std::string _to_json_dict_entry(const Parameter & param);
 
 RCLCPP_PUBLIC
-std::ostream &
-operator<<(std::ostream & os, const rclcpp::Parameter & pv);
+std::ostream & operator<<(std::ostream & os, const rclcpp::Parameter & pv);
 
 RCLCPP_PUBLIC
-std::ostream &
-operator<<(std::ostream & os, const std::vector<Parameter> & parameters);
+std::ostream & operator<<(std::ostream & os, const std::vector<Parameter> & parameters);
 
 namespace detail
 {
 
-template<typename T>
-auto
-get_value_helper(const rclcpp::Parameter * parameter)
+template <typename T>
+auto get_value_helper(const rclcpp::Parameter * parameter)
 {
   return parameter->get_parameter_value().get<T>();
 }
 
 // Specialization allowing Parameter::get() to return a const ref to the parameter value object.
-template<>
-inline
-auto
-get_value_helper<rclcpp::ParameterValue>(const rclcpp::Parameter * parameter)
+template <>
+inline auto get_value_helper<rclcpp::ParameterValue>(const rclcpp::Parameter * parameter)
 {
   return parameter->get_parameter_value();
 }
 
 // Specialization allowing Parameter::get() to return a const ref to the parameter itself.
-template<>
-inline
-auto
-get_value_helper<rclcpp::Parameter>(const rclcpp::Parameter * parameter)
+template <>
+inline auto get_value_helper<rclcpp::Parameter>(const rclcpp::Parameter * parameter)
 {
   // Use this lambda to ensure it's a const reference being returned (and not a copy).
-  auto type_enforcing_lambda =
-    [&parameter]() -> const rclcpp::Parameter & {
-      return *parameter;
-    };
+  auto type_enforcing_lambda = [&parameter]() -> const rclcpp::Parameter & { return *parameter; };
   return type_enforcing_lambda();
 }
 
 }  // namespace detail
 
-template<typename T>
-decltype(auto)
-Parameter::get_value() const
+template <typename T>
+decltype(auto) Parameter::get_value() const
 {
   // use the helper to specialize for the ParameterValue and Parameter cases.
   return detail::get_value_helper<T>(this);
@@ -232,13 +198,11 @@ namespace std
 
 /// Return a json encoded version of the parameter intended for a list.
 RCLCPP_PUBLIC
-std::string
-to_string(const rclcpp::Parameter & param);
+std::string to_string(const rclcpp::Parameter & param);
 
 /// Return a json encoded version of a vector of parameters, as a string.
 RCLCPP_PUBLIC
-std::string
-to_string(const std::vector<rclcpp::Parameter> & parameters);
+std::string to_string(const std::vector<rclcpp::Parameter> & parameters);
 
 }  // namespace std
 

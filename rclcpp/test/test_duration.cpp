@@ -22,9 +22,8 @@
 #include "rcl/error_handling.h"
 #include "rcl/time.h"
 #include "rclcpp/clock.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/duration.hpp"
-
+#include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
 
@@ -36,7 +35,8 @@ class TestDuration : public ::testing::Test
 // TODO(tfoote) Implement conversion methods
 // }
 
-TEST(TestDuration, operators) {
+TEST(TestDuration, operators)
+{
   rclcpp::Duration old(1, 0);
   rclcpp::Duration young(2, 0);
 
@@ -67,7 +67,8 @@ TEST(TestDuration, operators) {
   EXPECT_TRUE(time == assignment_op_duration);
 }
 
-TEST(TestDuration, chrono_overloads) {
+TEST(TestDuration, chrono_overloads)
+{
   int64_t ns = 123456789l;
   auto chrono_ns = std::chrono::nanoseconds(ns);
   auto d1 = rclcpp::Duration(ns);
@@ -86,7 +87,8 @@ TEST(TestDuration, chrono_overloads) {
   EXPECT_EQ(chrono_float_seconds, d5.to_chrono<decltype(chrono_float_seconds)>());
 }
 
-TEST(TestDuration, overflows) {
+TEST(TestDuration, overflows)
+{
   rclcpp::Duration max(std::numeric_limits<rcl_duration_value_t>::max());
   rclcpp::Duration min(std::numeric_limits<rcl_duration_value_t>::min());
 
@@ -107,7 +109,8 @@ TEST(TestDuration, overflows) {
   EXPECT_THROW(base_d_neg * 4, std::underflow_error);
 }
 
-TEST(TestDuration, negative_duration) {
+TEST(TestDuration, negative_duration)
+{
   rclcpp::Duration assignable_duration = rclcpp::Duration(0) - rclcpp::Duration(5, 0);
 
   {
@@ -130,7 +133,8 @@ TEST(TestDuration, negative_duration) {
   }
 }
 
-TEST(TestDuration, maximum_duration) {
+TEST(TestDuration, maximum_duration)
+{
   rclcpp::Duration max_duration = rclcpp::Duration::max();
   rclcpp::Duration max(std::numeric_limits<int32_t>::max(), 999999999);
 
@@ -140,14 +144,16 @@ TEST(TestDuration, maximum_duration) {
 static const int64_t HALF_SEC_IN_NS = 500 * 1000 * 1000;
 static const int64_t ONE_AND_HALF_SEC_IN_NS = 3 * HALF_SEC_IN_NS;
 
-TEST(TestDuration, from_seconds) {
+TEST(TestDuration, from_seconds)
+{
   EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration::from_seconds(0.0));
   EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration::from_seconds(0));
   EXPECT_EQ(rclcpp::Duration(1, HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(1.5));
   EXPECT_EQ(rclcpp::Duration(-ONE_AND_HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(-1.5));
 }
 
-TEST(TestDuration, std_chrono_constructors) {
+TEST(TestDuration, std_chrono_constructors)
+{
   EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration(0.0s));
   EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration(0s));
   EXPECT_EQ(rclcpp::Duration(1, HALF_SEC_IN_NS), rclcpp::Duration(1.5s));

@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -25,26 +25,14 @@
 class TestSubscription : public ::testing::Test
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
-  {
-    (void)msg;
-  }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
 
 protected:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 
-  void SetUp()
-  {
-    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns");
-  }
+  void SetUp() { node = std::make_shared<rclcpp::Node>("test_subscription", "/ns"); }
 
-  void TearDown()
-  {
-    node.reset();
-  }
+  void TearDown() { node.reset(); }
 
   rclcpp::Node::SharedPtr node;
 };
@@ -52,15 +40,10 @@ protected:
 class TestSubscriptionSub : public ::testing::Test
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
-  {
-    (void)msg;
-  }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
 
 protected:
-  static void SetUpTestCase()
-  {
-  }
+  static void SetUpTestCase() {}
 
   void SetUp()
   {
@@ -68,10 +51,7 @@ protected:
     subnode = node->create_sub_node("sub_ns");
   }
 
-  void TearDown()
-  {
-    node.reset();
-  }
+  void TearDown() { node.reset(); }
 
   rclcpp::Node::SharedPtr node;
   rclcpp::Node::SharedPtr subnode;
@@ -80,20 +60,14 @@ protected:
 class SubscriptionClassNodeInheritance : public rclcpp::Node
 {
 public:
-  SubscriptionClassNodeInheritance()
-  : Node("subscription_class_node_inheritance")
-  {
-  }
+  SubscriptionClassNodeInheritance() : Node("subscription_class_node_inheritance") {}
 
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
-  {
-    (void)msg;
-  }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
 
   void CreateSubscription()
   {
-    auto callback = std::bind(
-      &SubscriptionClassNodeInheritance::OnMessage, this, std::placeholders::_1);
+    auto callback =
+      std::bind(&SubscriptionClassNodeInheritance::OnMessage, this, std::placeholders::_1);
     using rcl_interfaces::msg::IntraProcessMessage;
     auto sub = this->create_subscription<IntraProcessMessage>("topic", 10, callback);
   }
@@ -102,10 +76,7 @@ public:
 class SubscriptionClass
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
-  {
-    (void)msg;
-  }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
 
   void CreateSubscription()
   {
@@ -119,31 +90,30 @@ public:
 /*
    Testing subscription construction and destruction.
  */
-TEST_F(TestSubscription, construction_and_destruction) {
+TEST_F(TestSubscription, construction_and_destruction)
+{
   using rcl_interfaces::msg::IntraProcessMessage;
-  auto callback = [](const IntraProcessMessage::SharedPtr msg) {
-      (void)msg;
-    };
+  auto callback = [](const IntraProcessMessage::SharedPtr msg) { (void)msg; };
   {
     auto sub = node->create_subscription<IntraProcessMessage>("topic", 10, callback);
   }
 
   {
     ASSERT_THROW(
-    {
-      auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 10, callback);
-    }, rclcpp::exceptions::InvalidTopicNameError);
+      {
+        auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 10, callback);
+      },
+      rclcpp::exceptions::InvalidTopicNameError);
   }
 }
 
 /*
    Testing subscription construction and destruction for subnodes.
  */
-TEST_F(TestSubscriptionSub, construction_and_destruction) {
+TEST_F(TestSubscriptionSub, construction_and_destruction)
+{
   using rcl_interfaces::msg::IntraProcessMessage;
-  auto callback = [](const IntraProcessMessage::SharedPtr msg) {
-      (void)msg;
-    };
+  auto callback = [](const IntraProcessMessage::SharedPtr msg) { (void)msg; };
   {
     auto sub = subnode->create_subscription<IntraProcessMessage>("topic", 1, callback);
     EXPECT_STREQ(sub->get_topic_name(), "/ns/sub_ns/topic");
@@ -163,16 +133,16 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
 
   {
     ASSERT_THROW(
-    {
-      auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 1, callback);
-    }, rclcpp::exceptions::InvalidTopicNameError);
+      { auto sub = node->create_subscription<IntraProcessMessage>("invalid_topic?", 1, callback); },
+      rclcpp::exceptions::InvalidTopicNameError);
   }
 }
 
 /*
    Testing subscription creation signatures.
  */
-TEST_F(TestSubscription, various_creation_signatures) {
+TEST_F(TestSubscription, various_creation_signatures)
+{
   using rcl_interfaces::msg::IntraProcessMessage;
   auto cb = [](rcl_interfaces::msg::IntraProcessMessage::SharedPtr) {};
   {
@@ -205,11 +175,11 @@ TEST_F(TestSubscription, various_creation_signatures) {
   }
   // Now deprecated functions.
 #if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
+#pragma warning(push)
+#pragma warning(disable : 4996)
 #endif
   {
     auto sub = node->create_subscription<IntraProcessMessage>("topic", cb, 42);
@@ -233,16 +203,17 @@ TEST_F(TestSubscription, various_creation_signatures) {
     (void)sub;
   }
 #if !defined(_WIN32)
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #else  // !defined(_WIN32)
-# pragma warning(pop)
+#pragma warning(pop)
 #endif
 }
 
 /*
    Testing subscriptions using std::bind.
  */
-TEST_F(TestSubscription, callback_bind) {
+TEST_F(TestSubscription, callback_bind)
+{
   using rcl_interfaces::msg::IntraProcessMessage;
   {
     // Member callback for plain class

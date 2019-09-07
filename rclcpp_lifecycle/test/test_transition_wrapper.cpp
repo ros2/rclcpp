@@ -23,17 +23,17 @@
 class TestTransitionWrapper : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-  }
+  static void SetUpTestCase() {}
 };
 
-TEST_F(TestTransitionWrapper, empty_transition) {
+TEST_F(TestTransitionWrapper, empty_transition)
+{
   auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "my_transition");
   EXPECT_NO_THROW(a.reset());
 }
 
-TEST_F(TestTransitionWrapper, wrapper) {
+TEST_F(TestTransitionWrapper, wrapper)
+{
   {
     rclcpp_lifecycle::Transition t(12, "no_states_set");
     EXPECT_EQ(12, t.id());
@@ -53,10 +53,7 @@ TEST_F(TestTransitionWrapper, wrapper) {
     rclcpp_lifecycle::State goal_state(2, "goal_state");
 
     rclcpp_lifecycle::Transition t(
-      12,
-      "from_start_to_goal",
-      std::move(start_state),
-      std::move(goal_state));
+      12, "from_start_to_goal", std::move(start_state), std::move(goal_state));
 
     EXPECT_EQ(12, t.id());
     EXPECT_FALSE(t.label().empty());
@@ -64,7 +61,8 @@ TEST_F(TestTransitionWrapper, wrapper) {
   }
 }
 
-TEST_F(TestTransitionWrapper, copy_constructor) {
+TEST_F(TestTransitionWrapper, copy_constructor)
+{
   auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "my_transition");
   rclcpp_lifecycle::Transition b(*a);
 
@@ -74,7 +72,8 @@ TEST_F(TestTransitionWrapper, copy_constructor) {
   EXPECT_STREQ("my_transition", b.label().c_str());
 }
 
-TEST_F(TestTransitionWrapper, assignment_operator) {
+TEST_F(TestTransitionWrapper, assignment_operator)
+{
   auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "one");
   auto b = std::make_shared<rclcpp_lifecycle::Transition>(2, "two");
   *b = *a;

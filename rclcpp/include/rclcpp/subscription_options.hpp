@@ -42,7 +42,7 @@ struct SubscriptionOptionsBase
 };
 
 /// Structure containing optional configuration for Subscriptions.
-template<typename Allocator>
+template <typename Allocator>
 struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 {
   /// Optional custom allocator.
@@ -54,12 +54,12 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   explicit SubscriptionOptionsWithAllocator(
     const SubscriptionOptionsBase & subscription_options_base)
   : SubscriptionOptionsBase(subscription_options_base)
-  {}
+  {
+  }
 
   /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
-  template<typename MessageT>
-  rcl_subscription_options_t
-  to_rcl_subscription_options(const rclcpp::QoS & qos) const
+  template <typename MessageT>
+  rcl_subscription_options_t to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result;
     using AllocatorTraits = std::allocator_traits<Allocator>;

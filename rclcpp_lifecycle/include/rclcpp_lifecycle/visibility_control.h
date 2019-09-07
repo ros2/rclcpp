@@ -26,31 +26,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define RCLCPP_LIFECYCLE_EXPORT __attribute__ ((dllexport))
-    #define RCLCPP_LIFECYCLE_IMPORT __attribute__ ((dllimport))
-  #else
-    #define RCLCPP_LIFECYCLE_EXPORT __declspec(dllexport)
-    #define RCLCPP_LIFECYCLE_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef RCLCPP_LIFECYCLE_BUILDING_DLL
-    #define RCLCPP_LIFECYCLE_PUBLIC RCLCPP_LIFECYCLE_EXPORT
-  #else
-    #define RCLCPP_LIFECYCLE_PUBLIC RCLCPP_LIFECYCLE_IMPORT
-  #endif
-  #define RCLCPP_LIFECYCLE_PUBLIC_TYPE RCLCPP_LIFECYCLE_PUBLIC
-  #define RCLCPP_LIFECYCLE_LOCAL
+#ifdef __GNUC__
+#define RCLCPP_LIFECYCLE_EXPORT __attribute__((dllexport))
+#define RCLCPP_LIFECYCLE_IMPORT __attribute__((dllimport))
 #else
-  #define RCLCPP_LIFECYCLE_EXPORT __attribute__ ((visibility("default")))
-  #define RCLCPP_LIFECYCLE_IMPORT
-  #if __GNUC__ >= 4
-    #define RCLCPP_LIFECYCLE_PUBLIC __attribute__ ((visibility("default")))
-    #define RCLCPP_LIFECYCLE_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define RCLCPP_LIFECYCLE_PUBLIC
-    #define RCLCPP_LIFECYCLE_LOCAL
-  #endif
-  #define RCLCPP_LIFECYCLE_PUBLIC_TYPE
+#define RCLCPP_LIFECYCLE_EXPORT __declspec(dllexport)
+#define RCLCPP_LIFECYCLE_IMPORT __declspec(dllimport)
+#endif
+#ifdef RCLCPP_LIFECYCLE_BUILDING_DLL
+#define RCLCPP_LIFECYCLE_PUBLIC RCLCPP_LIFECYCLE_EXPORT
+#else
+#define RCLCPP_LIFECYCLE_PUBLIC RCLCPP_LIFECYCLE_IMPORT
+#endif
+#define RCLCPP_LIFECYCLE_PUBLIC_TYPE RCLCPP_LIFECYCLE_PUBLIC
+#define RCLCPP_LIFECYCLE_LOCAL
+#else
+#define RCLCPP_LIFECYCLE_EXPORT __attribute__((visibility("default")))
+#define RCLCPP_LIFECYCLE_IMPORT
+#if __GNUC__ >= 4
+#define RCLCPP_LIFECYCLE_PUBLIC __attribute__((visibility("default")))
+#define RCLCPP_LIFECYCLE_LOCAL __attribute__((visibility("hidden")))
+#else
+#define RCLCPP_LIFECYCLE_PUBLIC
+#define RCLCPP_LIFECYCLE_LOCAL
+#endif
+#define RCLCPP_LIFECYCLE_PUBLIC_TYPE
 #endif
 
 #endif  // RCLCPP_LIFECYCLE__VISIBILITY_CONTROL_H_

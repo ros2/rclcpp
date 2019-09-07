@@ -30,14 +30,14 @@
 
 namespace std
 {
-template<typename T>
+template <typename T>
 std::string to_string(T value)
 {
   std::ostringstream os;
   os << value;
   return os.str();
 }
-}
+}  // namespace std
 #endif
 
 namespace rclcpp
@@ -52,8 +52,7 @@ namespace rclcpp
  * \sa rclcpp::Context::init() for more details on arguments and possible exceptions
  */
 RCLCPP_PUBLIC
-void
-init(int argc, char const * const argv[], const InitOptions & init_options = InitOptions());
+void init(int argc, char const * const argv[], const InitOptions & init_options = InitOptions());
 
 /// Install the global signal handler for rclcpp.
 /**
@@ -70,13 +69,11 @@ init(int argc, char const * const argv[], const InitOptions & init_options = Ini
  * \return true if signal handler was installed by this function, false if already installed.
  */
 RCLCPP_PUBLIC
-bool
-install_signal_handlers();
+bool install_signal_handlers();
 
 /// Return true if the signal handlers are installed, otherwise false.
 RCLCPP_PUBLIC
-bool
-signal_handlers_installed();
+bool signal_handlers_installed();
 
 /// Uninstall the global signal handler for rclcpp.
 /**
@@ -92,8 +89,7 @@ signal_handlers_installed();
  * \return true if signal handler was uninstalled by this function, false if was not installed.
  */
 RCLCPP_PUBLIC
-bool
-uninstall_signal_handlers();
+bool uninstall_signal_handlers();
 
 /// Initialize communications via the rmw implementation and set up a global signal handler.
 /**
@@ -104,11 +100,8 @@ uninstall_signal_handlers();
  * \throws anything remove_ros_arguments can throw
  */
 RCLCPP_PUBLIC
-std::vector<std::string>
-init_and_remove_ros_arguments(
-  int argc,
-  char const * const argv[],
-  const InitOptions & init_options = InitOptions());
+std::vector<std::string> init_and_remove_ros_arguments(
+  int argc, char const * const argv[], const InitOptions & init_options = InitOptions());
 
 /// Remove ROS-specific arguments from argument vector.
 /**
@@ -124,8 +117,7 @@ init_and_remove_ros_arguments(
  * \throws rclcpp::exceptions::RCLErrorBase if the parsing fails
  */
 RCLCPP_PUBLIC
-std::vector<std::string>
-remove_ros_arguments(int argc, char const * const argv[]);
+std::vector<std::string> remove_ros_arguments(int argc, char const * const argv[]);
 
 /// Check rclcpp's status.
 /**
@@ -140,8 +132,7 @@ remove_ros_arguments(int argc, char const * const argv[]);
  * \return true if shutdown has been called, false otherwise
  */
 RCLCPP_PUBLIC
-bool
-ok(rclcpp::Context::SharedPtr context = nullptr);
+bool ok(rclcpp::Context::SharedPtr context = nullptr);
 
 /// Return true if init() has already been called for the given context.
 /**
@@ -154,8 +145,7 @@ ok(rclcpp::Context::SharedPtr context = nullptr);
  * \return true if the context is initialized, and false otherwise
  */
 RCLCPP_PUBLIC
-bool
-is_initialized(rclcpp::Context::SharedPtr context = nullptr);
+bool is_initialized(rclcpp::Context::SharedPtr context = nullptr);
 
 /// Shutdown rclcpp context, invalidating it for derived entities.
 /**
@@ -171,8 +161,7 @@ is_initialized(rclcpp::Context::SharedPtr context = nullptr);
  * \return true if shutdown was successful, false if context was already shutdown
  */
 RCLCPP_PUBLIC
-bool
-shutdown(
+bool shutdown(
   rclcpp::Context::SharedPtr context = nullptr,
   const std::string & reason = "user called rclcpp::shutdown()");
 
@@ -192,8 +181,7 @@ shutdown(
  * \param[in] context with which to associate the context
  */
 RCLCPP_PUBLIC
-void
-on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context = nullptr);
+void on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context = nullptr);
 
 /// Use the global condition variable to block for the specified amount of time.
 /**
@@ -209,10 +197,8 @@ on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context =
  * \return true if the condition variable did not timeout.
  */
 RCLCPP_PUBLIC
-bool
-sleep_for(
-  const std::chrono::nanoseconds & nanoseconds,
-  rclcpp::Context::SharedPtr context = nullptr);
+bool sleep_for(
+  const std::chrono::nanoseconds & nanoseconds, rclcpp::Context::SharedPtr context = nullptr);
 
 /// Safely check if addition will overflow.
 /**
@@ -224,9 +210,8 @@ sleep_for(
  * \tparam T is type of the operands.
  * \return True if the x + y sum is greater than T::max value.
  */
-template<typename T>
-bool
-add_will_overflow(const T x, const T y)
+template <typename T>
+bool add_will_overflow(const T x, const T y)
 {
   return (y > 0) && (x > (std::numeric_limits<T>::max() - y));
 }
@@ -241,9 +226,8 @@ add_will_overflow(const T x, const T y)
  * \tparam T is type of the operands.
  * \return True if the x + y sum is less than T::min value.
  */
-template<typename T>
-bool
-add_will_underflow(const T x, const T y)
+template <typename T>
+bool add_will_underflow(const T x, const T y)
 {
   return (y < 0) && (x < (std::numeric_limits<T>::min() - y));
 }
@@ -258,9 +242,8 @@ add_will_underflow(const T x, const T y)
  * \tparam T is type of the operands.
  * \return True if the difference `x - y` sum is grater than T::max value.
  */
-template<typename T>
-bool
-sub_will_overflow(const T x, const T y)
+template <typename T>
+bool sub_will_overflow(const T x, const T y)
 {
   return (y < 0) && (x > (std::numeric_limits<T>::max() + y));
 }
@@ -275,9 +258,8 @@ sub_will_overflow(const T x, const T y)
  * \tparam T is type of the operands.
  * \return True if the difference `x - y` sum is less than T::min value.
  */
-template<typename T>
-bool
-sub_will_underflow(const T x, const T y)
+template <typename T>
+bool sub_will_underflow(const T x, const T y)
 {
   return (y > 0) && (x < (std::numeric_limits<T>::min() + y));
 }
@@ -290,8 +272,7 @@ sub_will_underflow(const T x, const T y)
  * \return the given string
  */
 RCLCPP_PUBLIC
-const char *
-get_c_string(const char * string_in);
+const char * get_c_string(const char * string_in);
 
 /// Return the C string from the given std::string.
 /**
@@ -299,8 +280,7 @@ get_c_string(const char * string_in);
  * \return the C string from the std::string
  */
 RCLCPP_PUBLIC
-const char *
-get_c_string(const std::string & string_in);
+const char * get_c_string(const std::string & string_in);
 
 }  // namespace rclcpp
 

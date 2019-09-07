@@ -20,15 +20,13 @@ using rclcpp::node_interfaces::NodeWaitables;
 
 NodeWaitables::NodeWaitables(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
-{}
+{
+}
 
-NodeWaitables::~NodeWaitables()
-{}
+NodeWaitables::~NodeWaitables() {}
 
-void
-NodeWaitables::add_waitable(
-  rclcpp::Waitable::SharedPtr waitable_ptr,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+void NodeWaitables::add_waitable(
+  rclcpp::Waitable::SharedPtr waitable_ptr, rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   if (group) {
     if (!node_base_->callback_group_in_node(group)) {
@@ -45,15 +43,13 @@ NodeWaitables::add_waitable(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Failed to notify wait set on waitable creation: ") +
-              rmw_get_error_string().str
-      );
+        std::string("Failed to notify wait set on waitable creation: ") +
+        rmw_get_error_string().str);
     }
   }
 }
 
-void
-NodeWaitables::remove_waitable(
+void NodeWaitables::remove_waitable(
   rclcpp::Waitable::SharedPtr waitable_ptr,
   rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept
 {

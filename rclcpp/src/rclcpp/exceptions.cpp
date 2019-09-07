@@ -26,12 +26,8 @@ namespace rclcpp
 namespace exceptions
 {
 
-std::string
-NameValidationError::format_error(
-  const char * name_type,
-  const char * name,
-  const char * error_msg,
-  size_t invalid_index)
+std::string NameValidationError::format_error(
+  const char * name_type, const char * name, const char * error_msg, size_t invalid_index)
 {
   std::string msg = "";
   msg += "Invalid "s + name_type + ": " + error_msg + ":\n";
@@ -40,12 +36,9 @@ NameValidationError::format_error(
   return msg;
 }
 
-std::exception_ptr
-from_rcl_error(
-  rcl_ret_t ret,
-  const std::string & prefix,
-  const rcl_error_state_t * error_state,
-  void (* reset_error)())
+std::exception_ptr from_rcl_error(
+  rcl_ret_t ret, const std::string & prefix, const rcl_error_state_t * error_state,
+  void (*reset_error)())
 {
   if (RCL_RET_OK == ret) {
     throw std::invalid_argument("ret is RCL_RET_OK");
@@ -76,12 +69,9 @@ from_rcl_error(
   }
 }
 
-void
-throw_from_rcl_error(
-  rcl_ret_t ret,
-  const std::string & prefix,
-  const rcl_error_state_t * error_state,
-  void (* reset_error)())
+void throw_from_rcl_error(
+  rcl_ret_t ret, const std::string & prefix, const rcl_error_state_t * error_state,
+  void (*reset_error)())
 {
   // We expect this to either throw a standard error,
   // or to generate an error pointer (which is caught
@@ -91,56 +81,55 @@ throw_from_rcl_error(
 }
 
 RCLErrorBase::RCLErrorBase(rcl_ret_t ret, const rcl_error_state_t * error_state)
-: ret(ret), message(error_state->message), file(error_state->file), line(error_state->line_number),
+: ret(ret),
+  message(error_state->message),
+  file(error_state->file),
+  line(error_state->line_number),
   formatted_message(rcl_get_error_string().str)
-{}
+{
+}
 
-RCLError::RCLError(
-  rcl_ret_t ret,
-  const rcl_error_state_t * error_state,
-  const std::string & prefix)
+RCLError::RCLError(rcl_ret_t ret, const rcl_error_state_t * error_state, const std::string & prefix)
 : RCLError(RCLErrorBase(ret, error_state), prefix)
-{}
+{
+}
 
-RCLError::RCLError(
-  const RCLErrorBase & base_exc,
-  const std::string & prefix)
+RCLError::RCLError(const RCLErrorBase & base_exc, const std::string & prefix)
 : RCLErrorBase(base_exc), std::runtime_error(prefix + base_exc.formatted_message)
-{}
+{
+}
 
 RCLBadAlloc::RCLBadAlloc(rcl_ret_t ret, const rcl_error_state_t * error_state)
 : RCLBadAlloc(RCLErrorBase(ret, error_state))
-{}
+{
+}
 
-RCLBadAlloc::RCLBadAlloc(const RCLErrorBase & base_exc)
-: RCLErrorBase(base_exc), std::bad_alloc()
-{}
+RCLBadAlloc::RCLBadAlloc(const RCLErrorBase & base_exc) : RCLErrorBase(base_exc), std::bad_alloc()
+{
+}
 
 RCLInvalidArgument::RCLInvalidArgument(
-  rcl_ret_t ret,
-  const rcl_error_state_t * error_state,
-  const std::string & prefix)
+  rcl_ret_t ret, const rcl_error_state_t * error_state, const std::string & prefix)
 : RCLInvalidArgument(RCLErrorBase(ret, error_state), prefix)
-{}
+{
+}
 
-RCLInvalidArgument::RCLInvalidArgument(
-  const RCLErrorBase & base_exc,
-  const std::string & prefix)
+RCLInvalidArgument::RCLInvalidArgument(const RCLErrorBase & base_exc, const std::string & prefix)
 : RCLErrorBase(base_exc), std::invalid_argument(prefix + base_exc.formatted_message)
-{}
+{
+}
 
 RCLInvalidROSArgsError::RCLInvalidROSArgsError(
-  rcl_ret_t ret,
-  const rcl_error_state_t * error_state,
-  const std::string & prefix)
+  rcl_ret_t ret, const rcl_error_state_t * error_state, const std::string & prefix)
 : RCLInvalidROSArgsError(RCLErrorBase(ret, error_state), prefix)
-{}
+{
+}
 
 RCLInvalidROSArgsError::RCLInvalidROSArgsError(
-  const RCLErrorBase & base_exc,
-  const std::string & prefix)
+  const RCLErrorBase & base_exc, const std::string & prefix)
 : RCLErrorBase(base_exc), std::runtime_error(prefix + base_exc.formatted_message)
-{}
+{
+}
 
 }  // namespace exceptions
 }  // namespace rclcpp

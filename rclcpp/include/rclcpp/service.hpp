@@ -26,11 +26,11 @@
 
 #include "rclcpp/any_service_callback.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
+#include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/type_support_decl.hpp"
-#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rclcpp/logging.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -43,40 +43,33 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
 
   RCLCPP_PUBLIC
-  explicit ServiceBase(
-    std::shared_ptr<rcl_node_t> node_handle);
+  explicit ServiceBase(std::shared_ptr<rcl_node_t> node_handle);
 
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
 
   RCLCPP_PUBLIC
-  const char *
-  get_service_name();
+  const char * get_service_name();
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rcl_service_t>
-  get_service_handle();
+  std::shared_ptr<rcl_service_t> get_service_handle();
 
   RCLCPP_PUBLIC
-  std::shared_ptr<const rcl_service_t>
-  get_service_handle() const;
+  std::shared_ptr<const rcl_service_t> get_service_handle() const;
 
   virtual std::shared_ptr<void> create_request() = 0;
   virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
   virtual void handle_request(
-    std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> request) = 0;
+    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> request) = 0;
 
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
   RCLCPP_PUBLIC
-  rcl_node_t *
-  get_rcl_node_handle();
+  rcl_node_t * get_rcl_node_handle();
 
   RCLCPP_PUBLIC
-  const rcl_node_t *
-  get_rcl_node_handle() const;
+  const rcl_node_t * get_rcl_node_handle() const;
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
@@ -84,27 +77,22 @@ protected:
   bool owns_rcl_handle_ = true;
 };
 
-template<typename ServiceT>
+template <typename ServiceT>
 class Service : public ServiceBase
 {
 public:
-  using CallbackType = std::function<
-    void (
-      const std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>)>;
+  using CallbackType = std::function<void(
+    const std::shared_ptr<typename ServiceT::Request>,
+    std::shared_ptr<typename ServiceT::Response>)>;
 
-  using CallbackWithHeaderType = std::function<
-    void (
-      const std::shared_ptr<rmw_request_id_t>,
-      const std::shared_ptr<typename ServiceT::Request>,
-      std::shared_ptr<typename ServiceT::Response>)>;
+  using CallbackWithHeaderType = std::function<void(
+    const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<typename ServiceT::Request>,
+    std::shared_ptr<typename ServiceT::Response>)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Service)
 
   Service(
-    std::shared_ptr<rcl_node_t> node_handle,
-    const std::string & service_name,
-    AnyServiceCallback<ServiceT> any_callback,
-    rcl_service_options_t & service_options)
+    std::shared_ptr<rcl_node_t> node_handle, const std::string & service_name,
+    AnyServiceCallback<ServiceT> any_callback, rcl_service_options_t & service_options)
   : ServiceBase(node_handle), any_callback_(any_callback)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
@@ -113,15 +101,13 @@ public:
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle_);
     // rcl does the static memory allocation here
     service_handle_ = std::shared_ptr<rcl_service_t>(
-      new rcl_service_t, [weak_node_handle](rcl_service_t * service)
-      {
+      new rcl_service_t, [weak_node_handle](rcl_service_t * service) {
         auto handle = weak_node_handle.lock();
         if (handle) {
           if (rcl_service_fini(service, handle.get()) != RCL_RET_OK) {
             RCLCPP_ERROR(
               rclcpp::get_node_logger(handle.get()).get_child("rclcpp"),
-              "Error in destruction of rcl service handle: %s",
-              rcl_get_error_string().str);
+              "Error in destruction of rcl service handle: %s", rcl_get_error_string().str);
             rcl_reset_error();
           }
         } else {
@@ -135,10 +121,7 @@ public:
     *service_handle_.get() = rcl_get_zero_initialized_service();
 
     rcl_ret_t ret = rcl_service_init(
-      service_handle_.get(),
-      node_handle.get(),
-      service_type_support_handle,
-      service_name.c_str(),
+      service_handle_.get(), node_handle.get(), service_type_support_handle, service_name.c_str(),
       &service_options);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_SERVICE_NAME_INVALID) {
@@ -146,9 +129,7 @@ public:
         // this will throw on any validation problem
         rcl_reset_error();
         expand_topic_or_service_name(
-          service_name,
-          rcl_node_get_name(rcl_node_handle),
-          rcl_node_get_namespace(rcl_node_handle),
+          service_name, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle),
           true);
       }
 
@@ -157,11 +138,9 @@ public:
   }
 
   Service(
-    std::shared_ptr<rcl_node_t> node_handle,
-    std::shared_ptr<rcl_service_t> service_handle,
+    std::shared_ptr<rcl_node_t> node_handle, std::shared_ptr<rcl_service_t> service_handle,
     AnyServiceCallback<ServiceT> any_callback)
-  : ServiceBase(node_handle),
-    any_callback_(any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback)
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle.get())) {
@@ -175,11 +154,9 @@ public:
   }
 
   Service(
-    std::shared_ptr<rcl_node_t> node_handle,
-    rcl_service_t * service_handle,
+    std::shared_ptr<rcl_node_t> node_handle, rcl_service_t * service_handle,
     AnyServiceCallback<ServiceT> any_callback)
-  : ServiceBase(node_handle),
-    any_callback_(any_callback)
+  : ServiceBase(node_handle), any_callback_(any_callback)
   {
     // check if service handle was initialized
     if (!rcl_service_is_valid(service_handle)) {
@@ -196,9 +173,7 @@ public:
 
   Service() = delete;
 
-  virtual ~Service()
-  {
-  }
+  virtual ~Service() {}
 
   std::shared_ptr<void> create_request()
   {
@@ -213,8 +188,7 @@ public:
   }
 
   void handle_request(
-    std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> request)
+    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> request)
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
@@ -223,8 +197,7 @@ public:
   }
 
   void send_response(
-    std::shared_ptr<rmw_request_id_t> req_id,
-    std::shared_ptr<typename ServiceT::Response> response)
+    std::shared_ptr<rmw_request_id_t> req_id, std::shared_ptr<typename ServiceT::Response> response)
   {
     rcl_ret_t status = rcl_send_response(get_service_handle().get(), req_id.get(), response.get());
 

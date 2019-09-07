@@ -25,7 +25,6 @@
 #include <string>
 #include <utility>
 
-
 #include "rcl/error_handling.h"
 #include "rcl/subscription.h"
 
@@ -53,9 +52,7 @@ class NodeTopicsInterface;
 }  // namespace node_interfaces
 
 /// Subscription implementation, templated on the type of message this subscription receives.
-template<
-  typename CallbackMessageT,
-  typename Alloc = std::allocator<void>>
+template <typename CallbackMessageT, typename Alloc = std::allocator<void>>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node_interfaces::NodeTopicsInterface;
@@ -82,32 +79,26 @@ public:
    */
   Subscription(
     std::shared_ptr<rcl_node_t> node_handle,
-    const rosidl_message_type_support_t & type_support_handle,
-    const std::string & topic_name,
+    const rosidl_message_type_support_t & type_support_handle, const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
     const SubscriptionEventCallbacks & event_callbacks,
     typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
-    memory_strategy = message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
-    Alloc>::create_default())
+      memory_strategy =
+        message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::create_default())
   : SubscriptionBase(
-      node_handle,
-      type_support_handle,
-      topic_name,
-      subscription_options,
+      node_handle, type_support_handle, topic_name, subscription_options,
       rclcpp::subscription_traits::is_serialized_subscription_argument<CallbackMessageT>::value),
     any_callback_(callback),
     message_memory_strategy_(memory_strategy)
   {
     if (event_callbacks.deadline_callback) {
       this->add_event_handler(
-        event_callbacks.deadline_callback,
-        RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
+        event_callbacks.deadline_callback, RCL_SUBSCRIPTION_REQUESTED_DEADLINE_MISSED);
     }
     if (event_callbacks.liveliness_callback) {
       this->add_event_handler(
-        event_callbacks.liveliness_callback,
-        RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
+        event_callbacks.liveliness_callback, RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
     }
   }
 
@@ -117,8 +108,8 @@ public:
    * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
    */
   void set_message_memory_strategy(
-    typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
-    Alloc>::SharedPtr message_memory_strategy)
+    typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, Alloc>::SharedPtr
+      message_memory_strategy)
   {
     message_memory_strategy_ = message_memory_strategy;
   }
@@ -162,8 +153,7 @@ public:
   }
 
   void handle_intra_process_message(
-    rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info)
+    rcl_interfaces::msg::IntraProcessMessage & ipm, const rmw_message_info_t & message_info)
   {
     if (!use_intra_process_) {
       // throw std::runtime_error(
@@ -182,10 +172,7 @@ public:
     if (any_callback_.use_take_shared_method()) {
       ConstMessageSharedPtr msg;
       take_intra_process_message(
-        ipm.publisher_id,
-        ipm.message_sequence,
-        intra_process_subscription_id_,
-        msg);
+        ipm.publisher_id, ipm.message_sequence, intra_process_subscription_id_, msg);
       if (!msg) {
         // This can happen when having two nodes in different process both using intraprocess
         // communication. It could happen too if the publisher no longer exists or the requested
@@ -198,10 +185,7 @@ public:
     } else {
       MessageUniquePtr msg;
       take_intra_process_message(
-        ipm.publisher_id,
-        ipm.message_sequence,
-        intra_process_subscription_id_,
-        msg);
+        ipm.publisher_id, ipm.message_sequence, intra_process_subscription_id_, msg);
       if (!msg) {
         // This can happen when having two nodes in different process both using intraprocess
         // communication. It could happen too if the publisher no longer exists or the requested
@@ -215,8 +199,7 @@ public:
   }
 
   /// Implemenation detail.
-  const std::shared_ptr<rcl_subscription_t>
-  get_intra_process_subscription_handle() const
+  const std::shared_ptr<rcl_subscription_t> get_intra_process_subscription_handle() const
   {
     if (!use_intra_process_) {
       return nullptr;
@@ -225,40 +208,33 @@ public:
   }
 
 private:
-  void
-  take_intra_process_message(
-    uint64_t publisher_id,
-    uint64_t message_sequence,
-    uint64_t subscription_id,
+  void take_intra_process_message(
+    uint64_t publisher_id, uint64_t message_sequence, uint64_t subscription_id,
     MessageUniquePtr & message)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process take called after destruction of intra process manager");
+        "intra process take called after destruction of intra process manager");
     }
     ipm->template take_intra_process_message<CallbackMessageT, Alloc>(
       publisher_id, message_sequence, subscription_id, message);
   }
 
-  void
-  take_intra_process_message(
-    uint64_t publisher_id,
-    uint64_t message_sequence,
-    uint64_t subscription_id,
+  void take_intra_process_message(
+    uint64_t publisher_id, uint64_t message_sequence, uint64_t subscription_id,
     ConstMessageSharedPtr & message)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process take called after destruction of intra process manager");
+        "intra process take called after destruction of intra process manager");
     }
     ipm->template take_intra_process_message<CallbackMessageT, Alloc>(
       publisher_id, message_sequence, subscription_id, message);
   }
 
-  bool
-  matches_any_intra_process_publishers(const rmw_gid_t * sender_gid)
+  bool matches_any_intra_process_publishers(const rmw_gid_t * sender_gid)
   {
     if (!use_intra_process_) {
       return false;
@@ -266,8 +242,8 @@ private:
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process publisher check called "
-              "after destruction of intra process manager");
+        "intra process publisher check called "
+        "after destruction of intra process manager");
     }
     return ipm->matches_any_publishers(sender_gid);
   }

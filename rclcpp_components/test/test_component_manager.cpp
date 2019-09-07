@@ -23,10 +23,7 @@
 class TestComponentManager : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 };
 
 TEST_F(TestComponentManager, get_component_resources_invalid)

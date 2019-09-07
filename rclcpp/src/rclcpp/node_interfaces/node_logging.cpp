@@ -22,18 +22,11 @@ NodeLogging::NodeLogging(rclcpp::node_interfaces::NodeBaseInterface * node_base)
   logger_ = rclcpp::get_logger(this->get_logger_name());
 }
 
-NodeLogging::~NodeLogging()
-{
-}
+NodeLogging::~NodeLogging() {}
 
-rclcpp::Logger
-NodeLogging::get_logger() const
-{
-  return logger_;
-}
+rclcpp::Logger NodeLogging::get_logger() const { return logger_; }
 
-const char *
-NodeLogging::get_logger_name() const
+const char * NodeLogging::get_logger_name() const
 {
   return rcl_node_get_logger_name(node_base_->get_rcl_node_handle());
 }

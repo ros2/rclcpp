@@ -40,19 +40,15 @@ protected:
 
     test_node = std::make_shared<rclcpp::Node>("test_timer_node");
 
-    timer = test_node->create_wall_timer(
-      100ms,
-      [this]() -> void
-      {
-        this->has_timer_run.store(true);
+    timer = test_node->create_wall_timer(100ms, [this]() -> void {
+      this->has_timer_run.store(true);
 
-        if (this->cancel_timer.load()) {
-          this->timer->cancel();
-        }
-        // prevent any tests running timer from blocking
-        this->executor->cancel();
+      if (this->cancel_timer.load()) {
+        this->timer->cancel();
       }
-    );
+      // prevent any tests running timer from blocking
+      this->executor->cancel();
+    });
 
     executor->add_node(test_node);
     // don't start spinning, let the test dictate when
@@ -78,8 +74,7 @@ protected:
 
 /// check if initial states are set as expected
 void test_initial_conditions(
-  std::shared_ptr<rclcpp::TimerBase> & timer,
-  std::atomic<bool> & has_timer_run)
+  std::shared_ptr<rclcpp::TimerBase> & timer, std::atomic<bool> & has_timer_run)
 {
   ASSERT_FALSE(timer->is_canceled());
   ASSERT_FALSE(has_timer_run.load());

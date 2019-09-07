@@ -35,22 +35,17 @@ namespace message_pool_memory_strategy
  * The size of the message pool should be at least the largest number of concurrent accesses to
  * the subscription (usually the number of threads).
  */
-template<
-  typename MessageT,
-  size_t Size,
-  typename std::enable_if<
-    rosidl_generator_traits::has_fixed_size<MessageT>::value
-  >::type * = nullptr
->
-class MessagePoolMemoryStrategy
-  : public message_memory_strategy::MessageMemoryStrategy<MessageT>
+template <
+  typename MessageT, size_t Size,
+  typename std::enable_if<rosidl_generator_traits::has_fixed_size<MessageT>::value>::type * =
+    nullptr>
+class MessagePoolMemoryStrategy : public message_memory_strategy::MessageMemoryStrategy<MessageT>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MessagePoolMemoryStrategy)
 
   /// Default constructor
-  MessagePoolMemoryStrategy()
-  : next_array_index_(0)
+  MessagePoolMemoryStrategy() : next_array_index_(0)
   {
     for (size_t i = 0; i < Size; ++i) {
       pool_[i].msg_ptr_ = std::make_shared<MessageT>();
@@ -72,7 +67,7 @@ public:
       throw std::runtime_error("Tried to access message that was still in use! Abort.");
     }
     pool_[current_index].msg_ptr_->~MessageT();
-    new (pool_[current_index].msg_ptr_.get())MessageT;
+    new (pool_[current_index].msg_ptr_.get()) MessageT;
 
     pool_[current_index].used = true;
     return pool_[current_index].msg_ptr_;

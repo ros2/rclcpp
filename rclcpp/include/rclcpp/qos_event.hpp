@@ -33,10 +33,10 @@ using QOSDeadlineOfferedInfo = rmw_offered_deadline_missed_status_t;
 using QOSLivelinessChangedInfo = rmw_liveliness_changed_status_t;
 using QOSLivelinessLostInfo = rmw_liveliness_lost_status_t;
 
-using QOSDeadlineRequestedCallbackType = std::function<void (QOSDeadlineRequestedInfo &)>;
-using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInfo &)>;
-using QOSLivelinessChangedCallbackType = std::function<void (QOSLivelinessChangedInfo &)>;
-using QOSLivelinessLostCallbackType = std::function<void (QOSLivelinessLostInfo &)>;
+using QOSDeadlineRequestedCallbackType = std::function<void(QOSDeadlineRequestedInfo &)>;
+using QOSDeadlineOfferedCallbackType = std::function<void(QOSDeadlineOfferedInfo &)>;
+using QOSLivelinessChangedCallbackType = std::function<void(QOSLivelinessChangedInfo &)>;
+using QOSLivelinessLostCallbackType = std::function<void(QOSLivelinessLostInfo &)>;
 
 /// Contains callbacks for various types of events a Publisher can receive from the middleware.
 struct PublisherEventCallbacks
@@ -60,33 +60,28 @@ public:
 
   /// Get the number of ready events
   RCLCPP_PUBLIC
-  size_t
-  get_number_of_ready_events() override;
+  size_t get_number_of_ready_events() override;
 
   /// Add the Waitable to a wait set.
   RCLCPP_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+  bool add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// Check if the Waitable is ready.
   RCLCPP_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override;
+  bool is_ready(rcl_wait_set_t * wait_set) override;
 
 protected:
   rcl_event_t event_handle_;
   size_t wait_set_event_index_;
 };
 
-template<typename EventCallbackT>
+template <typename EventCallbackT>
 class QOSEventHandler : public QOSEventHandlerBase
 {
 public:
-  template<typename InitFuncT, typename ParentHandleT, typename EventTypeEnum>
+  template <typename InitFuncT, typename ParentHandleT, typename EventTypeEnum>
   QOSEventHandler(
-    const EventCallbackT & callback,
-    InitFuncT init_func,
-    ParentHandleT parent_handle,
+    const EventCallbackT & callback, InitFuncT init_func, ParentHandleT parent_handle,
     EventTypeEnum event_type)
   : event_callback_(callback)
   {
@@ -98,16 +93,13 @@ public:
   }
 
   /// Execute any entities of the Waitable that are ready.
-  void
-  execute() override
+  void execute() override
   {
     EventCallbackInfoT callback_info;
 
     rcl_ret_t ret = rcl_take_event(&event_handle_, &callback_info);
     if (ret != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "Couldn't take event info: %s", rcl_get_error_string().str);
+      RCUTILS_LOG_ERROR_NAMED("rclcpp", "Couldn't take event info: %s", rcl_get_error_string().str);
       return;
     }
 
@@ -115,8 +107,9 @@ public:
   }
 
 private:
-  using EventCallbackInfoT = typename std::remove_reference<typename
-      rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
+  using EventCallbackInfoT =
+    typename std::remove_reference<typename rclcpp::function_traits::function_traits<
+      EventCallbackT>::template argument_type<0>>::type;
 
   EventCallbackT event_callback_;
 };

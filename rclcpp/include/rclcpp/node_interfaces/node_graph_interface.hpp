@@ -39,8 +39,7 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeGraphInterface)
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeGraphInterface() = default;
+  virtual ~NodeGraphInterface() = default;
 
   /// Return a map of existing topic names to list of topic types.
   /**
@@ -50,9 +49,8 @@ public:
    * \param[in] no_demangle if true, topic names and types are not demangled
    */
   RCLCPP_PUBLIC
-  virtual
-  std::map<std::string, std::vector<std::string>>
-  get_topic_names_and_types(bool no_demangle = false) const = 0;
+  virtual std::map<std::string, std::vector<std::string>> get_topic_names_and_types(
+    bool no_demangle = false) const = 0;
 
   /// Return a map of existing service names to list of service types.
   /**
@@ -61,39 +59,28 @@ public:
    * process.
    */
   RCLCPP_PUBLIC
-  virtual
-  std::map<std::string, std::vector<std::string>>
-  get_service_names_and_types() const = 0;
+  virtual std::map<std::string, std::vector<std::string>> get_service_names_and_types() const = 0;
 
   /// Return a vector of existing node names (string).
   RCLCPP_PUBLIC
-  virtual
-  std::vector<std::string>
-  get_node_names() const = 0;
+  virtual std::vector<std::string> get_node_names() const = 0;
 
   /// Return a vector of existing node names and namespaces (pair of string).
   RCLCPP_PUBLIC
-  virtual
-  std::vector<std::pair<std::string, std::string>>
-  get_node_names_and_namespaces() const = 0;
+  virtual std::vector<std::pair<std::string, std::string>> get_node_names_and_namespaces()
+    const = 0;
 
   /// Return the number of publishers that are advertised on a given topic.
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  count_publishers(const std::string & topic_name) const = 0;
+  virtual size_t count_publishers(const std::string & topic_name) const = 0;
 
   /// Return the number of subscribers who have created a subscription for a given topic.
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  count_subscribers(const std::string & topic_name) const = 0;
+  virtual size_t count_subscribers(const std::string & topic_name) const = 0;
 
   /// Return the rcl guard condition which is triggered when the ROS graph changes.
   RCLCPP_PUBLIC
-  virtual
-  const rcl_guard_condition_t *
-  get_graph_guard_condition() const = 0;
+  virtual const rcl_guard_condition_t * get_graph_guard_condition() const = 0;
 
   /// Notify threads waiting on graph changes.
   /**
@@ -106,15 +93,11 @@ public:
    * \throws RCLBaseError (a child of that exception) when an rcl error occurs
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  notify_graph_change() = 0;
+  virtual void notify_graph_change() = 0;
 
   /// Notify any and all blocking node actions that shutdown has occurred.
   RCLCPP_PUBLIC
-  virtual
-  void
-  notify_shutdown() = 0;
+  virtual void notify_shutdown() = 0;
 
   /// Return a graph event, which will be set anytime a graph change occurs.
   /**
@@ -123,9 +106,7 @@ public:
    * out of scope.
    */
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::Event::SharedPtr
-  get_graph_event() = 0;
+  virtual rclcpp::Event::SharedPtr get_graph_event() = 0;
 
   /// Wait for a graph event to occur by waiting on an Event to become set.
   /**
@@ -136,20 +117,15 @@ public:
    *   get_graph_event().
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  wait_for_graph_change(
-    rclcpp::Event::SharedPtr event,
-    std::chrono::nanoseconds timeout) = 0;
+  virtual void wait_for_graph_change(
+    rclcpp::Event::SharedPtr event, std::chrono::nanoseconds timeout) = 0;
 
   /// Return the number of on loan graph events, see get_graph_event().
   /**
    * This is typically only used by the rclcpp::graph_listener::GraphListener.
    */
   RCLCPP_PUBLIC
-  virtual
-  size_t
-  count_graph_users() = 0;
+  virtual size_t count_graph_users() = 0;
 };
 
 }  // namespace node_interfaces

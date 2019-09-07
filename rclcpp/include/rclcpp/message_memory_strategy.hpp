@@ -36,7 +36,7 @@ namespace message_memory_strategy
 
 /// Default allocation strategy for messages received by subscriptions.
 /** A message memory strategy must be templated on the type of the subscription it belongs to. */
-template<typename MessageT, typename Alloc = std::allocator<void>>
+template <typename MessageT, typename Alloc = std::allocator<void>>
 class MessageMemoryStrategy
 {
 public:
@@ -95,15 +95,13 @@ public:
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
 
-    auto serialized_msg = std::shared_ptr<rcl_serialized_message_t>(
-      msg,
-      [](rmw_serialized_message_t * msg) {
+    auto serialized_msg =
+      std::shared_ptr<rcl_serialized_message_t>(msg, [](rmw_serialized_message_t * msg) {
         auto ret = rmw_serialized_message_fini(msg);
         delete msg;
         if (ret != RCL_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
-            "rclcpp",
-            "failed to destroy serialized message: %s", rcl_get_error_string().str);
+            "rclcpp", "failed to destroy serialized message: %s", rcl_get_error_string().str);
         }
       });
 
@@ -115,17 +113,11 @@ public:
     return borrow_serialized_message(default_buffer_capacity_);
   }
 
-  virtual void set_default_buffer_capacity(size_t capacity)
-  {
-    default_buffer_capacity_ = capacity;
-  }
+  virtual void set_default_buffer_capacity(size_t capacity) { default_buffer_capacity_ = capacity; }
 
   /// Release ownership of the message, which will deallocate it if it has no more owners.
   /** \param[in] msg Shared pointer to the message we are returning. */
-  virtual void return_message(std::shared_ptr<MessageT> & msg)
-  {
-    msg.reset();
-  }
+  virtual void return_message(std::shared_ptr<MessageT> & msg) { msg.reset(); }
 
   virtual void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & serialized_msg)
   {

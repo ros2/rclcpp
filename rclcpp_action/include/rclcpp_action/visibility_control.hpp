@@ -26,31 +26,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define RCLCPP_ACTION_EXPORT __attribute__ ((dllexport))
-    #define RCLCPP_ACTION_IMPORT __attribute__ ((dllimport))
-  #else
-    #define RCLCPP_ACTION_EXPORT __declspec(dllexport)
-    #define RCLCPP_ACTION_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef RCLCPP_ACTION_BUILDING_LIBRARY
-    #define RCLCPP_ACTION_PUBLIC RCLCPP_ACTION_EXPORT
-  #else
-    #define RCLCPP_ACTION_PUBLIC RCLCPP_ACTION_IMPORT
-  #endif
-  #define RCLCPP_ACTION_PUBLIC_TYPE RCLCPP_ACTION_PUBLIC
-  #define RCLCPP_ACTION_LOCAL
+#ifdef __GNUC__
+#define RCLCPP_ACTION_EXPORT __attribute__((dllexport))
+#define RCLCPP_ACTION_IMPORT __attribute__((dllimport))
 #else
-  #define RCLCPP_ACTION_EXPORT __attribute__ ((visibility("default")))
-  #define RCLCPP_ACTION_IMPORT
-  #if __GNUC__ >= 4
-    #define RCLCPP_ACTION_PUBLIC __attribute__ ((visibility("default")))
-    #define RCLCPP_ACTION_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define RCLCPP_ACTION_PUBLIC
-    #define RCLCPP_ACTION_LOCAL
-  #endif
-  #define RCLCPP_ACTION_PUBLIC_TYPE
+#define RCLCPP_ACTION_EXPORT __declspec(dllexport)
+#define RCLCPP_ACTION_IMPORT __declspec(dllimport)
+#endif
+#ifdef RCLCPP_ACTION_BUILDING_LIBRARY
+#define RCLCPP_ACTION_PUBLIC RCLCPP_ACTION_EXPORT
+#else
+#define RCLCPP_ACTION_PUBLIC RCLCPP_ACTION_IMPORT
+#endif
+#define RCLCPP_ACTION_PUBLIC_TYPE RCLCPP_ACTION_PUBLIC
+#define RCLCPP_ACTION_LOCAL
+#else
+#define RCLCPP_ACTION_EXPORT __attribute__((visibility("default")))
+#define RCLCPP_ACTION_IMPORT
+#if __GNUC__ >= 4
+#define RCLCPP_ACTION_PUBLIC __attribute__((visibility("default")))
+#define RCLCPP_ACTION_LOCAL __attribute__((visibility("hidden")))
+#else
+#define RCLCPP_ACTION_PUBLIC
+#define RCLCPP_ACTION_LOCAL
+#endif
+#define RCLCPP_ACTION_PUBLIC_TYPE
 #endif
 
 #endif  // RCLCPP_ACTION__VISIBILITY_CONTROL_HPP_

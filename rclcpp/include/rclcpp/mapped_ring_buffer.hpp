@@ -56,7 +56,7 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template<typename T, typename Alloc = std::allocator<void>>
+template <typename T, typename Alloc = std::allocator<void>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:
@@ -102,8 +102,7 @@ public:
    * \param key the key associated with the stored value
    * \param value if the key is found, the value is stored in this parameter
    */
-  void
-  get(uint64_t key, ElemUniquePtr & value)
+  void get(uint64_t key, ElemUniquePtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
@@ -140,8 +139,7 @@ public:
    * \param key the key associated with the stored value
    * \param value if the key is found, the value is stored in this parameter
    */
-  void
-  get(uint64_t key, ConstElemSharedPtr & value)
+  void get(uint64_t key, ConstElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
@@ -175,8 +173,7 @@ public:
    * \param key the key associated with the stored value
    * \param value if the key is found, the value is stored in this parameter
    */
-  void
-  pop(uint64_t key, ElemUniquePtr & value)
+  void pop(uint64_t key, ElemUniquePtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
@@ -212,8 +209,7 @@ public:
    * \param key the key associated with the stored value
    * \param value if the key is found, the value is stored in this parameter
    */
-  void
-  pop(uint64_t key, ConstElemSharedPtr & value)
+  void pop(uint64_t key, ConstElemSharedPtr & value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     auto it = get_iterator_of_key(key);
@@ -241,8 +237,7 @@ public:
    * \param key the key associated with the value to be stored
    * \param value the value to store, and optionally the value displaced
    */
-  bool
-  push_and_replace(uint64_t key, ConstElemSharedPtr value)
+  bool push_and_replace(uint64_t key, ConstElemSharedPtr value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
@@ -260,8 +255,7 @@ public:
   /**
    * See `bool push_and_replace(uint64_t key, const ConstElemSharedPtr & value)`.
    */
-  bool
-  push_and_replace(uint64_t key, ElemUniquePtr value)
+  bool push_and_replace(uint64_t key, ElemUniquePtr value)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     bool did_replace = elements_[head_].in_use;
@@ -276,8 +270,7 @@ public:
   }
 
   /// Return true if the key is found in the ring buffer, otherwise false.
-  bool
-  has_key(uint64_t key)
+  bool has_key(uint64_t key)
   {
     std::lock_guard<std::mutex> lock(data_mutex_);
     return elements_.end() != get_iterator_of_key(key);
@@ -296,14 +289,11 @@ private:
 
   using VectorAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<Element>;
 
-  typename std::vector<Element, VectorAlloc>::iterator
-  get_iterator_of_key(uint64_t key)
+  typename std::vector<Element, VectorAlloc>::iterator get_iterator_of_key(uint64_t key)
   {
-    auto it = std::find_if(
-      elements_.begin(), elements_.end(),
-      [key](Element & e) -> bool {
-        return e.key == key && e.in_use;
-      });
+    auto it = std::find_if(elements_.begin(), elements_.end(), [key](Element & e) -> bool {
+      return e.key == key && e.in_use;
+    });
     return it;
   }
 

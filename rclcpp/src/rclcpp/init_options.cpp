@@ -20,8 +20,7 @@
 namespace rclcpp
 {
 
-InitOptions::InitOptions(rcl_allocator_t allocator)
-: init_options_(new rcl_init_options_t)
+InitOptions::InitOptions(rcl_allocator_t allocator) : init_options_(new rcl_init_options_t)
 {
   *init_options_ = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_init(init_options_.get(), allocator);
@@ -40,12 +39,9 @@ InitOptions::InitOptions(const rcl_init_options_t & init_options)
   }
 }
 
-InitOptions::InitOptions(const InitOptions & other)
-: InitOptions(*other.get_rcl_init_options())
-{}
+InitOptions::InitOptions(const InitOptions & other) : InitOptions(*other.get_rcl_init_options()) {}
 
-InitOptions &
-InitOptions::operator=(const InitOptions & other)
+InitOptions & InitOptions::operator=(const InitOptions & other)
 {
   if (this != &other) {
     this->finalize_init_options();
@@ -57,30 +53,22 @@ InitOptions::operator=(const InitOptions & other)
   return *this;
 }
 
-InitOptions::~InitOptions()
-{
-  this->finalize_init_options();
-}
+InitOptions::~InitOptions() { this->finalize_init_options(); }
 
-void
-InitOptions::finalize_init_options()
+void InitOptions::finalize_init_options()
 {
   if (init_options_) {
     rcl_ret_t ret = rcl_init_options_fini(init_options_.get());
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"),
-        "failed to finalize rcl init options: %s", rcl_get_error_string().str);
+        rclcpp::get_logger("rclcpp"), "failed to finalize rcl init options: %s",
+        rcl_get_error_string().str);
       rcl_reset_error();
     }
     *init_options_ = rcl_get_zero_initialized_init_options();
   }
 }
 
-const rcl_init_options_t *
-InitOptions::get_rcl_init_options() const
-{
-  return init_options_.get();
-}
+const rcl_init_options_t * InitOptions::get_rcl_init_options() const { return init_options_.get(); }
 
 }  // namespace rclcpp

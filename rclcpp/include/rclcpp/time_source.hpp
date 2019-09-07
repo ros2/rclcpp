@@ -21,11 +21,10 @@
 #include "rcl/time.h"
 
 #include "builtin_interfaces/msg/time.hpp"
-#include "rosgraph_msgs/msg/clock.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
+#include "rosgraph_msgs/msg/clock.hpp"
 
 #include "rclcpp/node.hpp"
-
 
 namespace rclcpp
 {
@@ -107,7 +106,7 @@ private:
   void on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
 
   // An enum to hold the parameter state
-  enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
+  enum UseSimTimeParameterState { UNSET, SET_TRUE, SET_FALSE };
   UseSimTimeParameterState parameter_state_;
 
   // An internal method to use in the clock callback that iterates and enables all clocks
@@ -119,8 +118,7 @@ private:
   static void enable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void disable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void set_clock(
-    const builtin_interfaces::msg::Time::SharedPtr msg,
-    bool set_ros_time_enabled,
+    const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
     rclcpp::Clock::SharedPtr clock);
 
   // Local storage of validity of ROS time

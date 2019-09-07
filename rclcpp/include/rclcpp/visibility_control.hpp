@@ -26,31 +26,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define RCLCPP_EXPORT __attribute__ ((dllexport))
-    #define RCLCPP_IMPORT __attribute__ ((dllimport))
-  #else
-    #define RCLCPP_EXPORT __declspec(dllexport)
-    #define RCLCPP_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef RCLCPP_BUILDING_LIBRARY
-    #define RCLCPP_PUBLIC RCLCPP_EXPORT
-  #else
-    #define RCLCPP_PUBLIC RCLCPP_IMPORT
-  #endif
-  #define RCLCPP_PUBLIC_TYPE RCLCPP_PUBLIC
-  #define RCLCPP_LOCAL
+#ifdef __GNUC__
+#define RCLCPP_EXPORT __attribute__((dllexport))
+#define RCLCPP_IMPORT __attribute__((dllimport))
 #else
-  #define RCLCPP_EXPORT __attribute__ ((visibility("default")))
-  #define RCLCPP_IMPORT
-  #if __GNUC__ >= 4
-    #define RCLCPP_PUBLIC __attribute__ ((visibility("default")))
-    #define RCLCPP_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define RCLCPP_PUBLIC
-    #define RCLCPP_LOCAL
-  #endif
-  #define RCLCPP_PUBLIC_TYPE
+#define RCLCPP_EXPORT __declspec(dllexport)
+#define RCLCPP_IMPORT __declspec(dllimport)
+#endif
+#ifdef RCLCPP_BUILDING_LIBRARY
+#define RCLCPP_PUBLIC RCLCPP_EXPORT
+#else
+#define RCLCPP_PUBLIC RCLCPP_IMPORT
+#endif
+#define RCLCPP_PUBLIC_TYPE RCLCPP_PUBLIC
+#define RCLCPP_LOCAL
+#else
+#define RCLCPP_EXPORT __attribute__((visibility("default")))
+#define RCLCPP_IMPORT
+#if __GNUC__ >= 4
+#define RCLCPP_PUBLIC __attribute__((visibility("default")))
+#define RCLCPP_LOCAL __attribute__((visibility("hidden")))
+#else
+#define RCLCPP_PUBLIC
+#define RCLCPP_LOCAL
+#endif
+#define RCLCPP_PUBLIC_TYPE
 #endif
 
 #endif  // RCLCPP__VISIBILITY_CONTROL_HPP_

@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -23,7 +23,8 @@
 
 #include "test_msgs/msg/empty.hpp"
 
-TEST(TestSerializedMessageAllocator, default_allocator) {
+TEST(TestSerializedMessageAllocator, default_allocator)
+{
   using DummyMessageT = float;
   auto mem_strategy =
     rclcpp::message_memory_strategy::MessageMemoryStrategy<DummyMessageT>::create_default();
@@ -51,14 +52,13 @@ TEST(TestSerializedMessageAllocator, default_allocator) {
   mem_strategy->return_serialized_message(msg1000);
 }
 
-TEST(TestSerializedMessageAllocator, borrow_from_subscription) {
+TEST(TestSerializedMessageAllocator, borrow_from_subscription)
+{
   rclcpp::init(0, NULL);
 
   auto node = std::make_shared<rclcpp::Node>("test_serialized_message_allocator_node");
-  std::shared_ptr<rclcpp::SubscriptionBase> sub =
-    node->create_subscription<test_msgs::msg::Empty>(
-    "~/dummy_topic", 10,
-    [](std::shared_ptr<test_msgs::msg::Empty> test_msg) {(void) test_msg;});
+  std::shared_ptr<rclcpp::SubscriptionBase> sub = node->create_subscription<test_msgs::msg::Empty>(
+    "~/dummy_topic", 10, [](std::shared_ptr<test_msgs::msg::Empty> test_msg) { (void)test_msg; });
 
   auto msg0 = sub->create_serialized_message();
   EXPECT_EQ(0u, msg0->buffer_capacity);

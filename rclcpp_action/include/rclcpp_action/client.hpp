@@ -15,11 +15,11 @@
 #ifndef RCLCPP_ACTION__CLIENT_HPP_
 #define RCLCPP_ACTION__CLIENT_HPP_
 
+#include <rclcpp/logger.hpp>
 #include <rclcpp/macros.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
-#include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/node_interfaces/node_graph_interface.hpp>
-#include <rclcpp/logger.hpp>
+#include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/time.hpp>
 #include <rclcpp/waitable.hpp>
 
@@ -39,7 +39,6 @@
 #include "rclcpp_action/client_goal_handle.hpp"
 #include "rclcpp_action/types.hpp"
 #include "rclcpp_action/visibility_control.hpp"
-
 
 namespace rclcpp_action
 {
@@ -62,18 +61,15 @@ public:
 
   /// Return true if there is an action server that is ready to take goal requests.
   RCLCPP_ACTION_PUBLIC
-  bool
-  action_server_is_ready() const;
+  bool action_server_is_ready() const;
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
-  template<typename RepT = int64_t, typename RatioT = std::milli>
-  bool
-  wait_for_action_server(
+  template <typename RepT = int64_t, typename RatioT = std::milli>
+  bool wait_for_action_server(
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
     return wait_for_action_server_nanoseconds(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
-    );
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout));
   }
 
   // -------------
@@ -81,43 +77,35 @@ public:
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_subscriptions() override;
+  size_t get_number_of_ready_subscriptions() override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_timers() override;
+  size_t get_number_of_ready_timers() override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_clients() override;
+  size_t get_number_of_ready_clients() override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_services() override;
+  size_t get_number_of_ready_services() override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_guard_conditions() override;
+  size_t get_number_of_ready_guard_conditions() override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+  bool add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t * wait_set) override;
+  bool is_ready(rcl_wait_set_t * wait_set) override;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  execute() override;
+  void execute() override;
 
   // End Waitables API
   // -----------------
@@ -128,18 +116,16 @@ protected:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const std::string & action_name,
-    const rosidl_action_type_support_t * type_support,
+    const std::string & action_name, const rosidl_action_type_support_t * type_support,
     const rcl_action_client_options_t & options);
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
   RCLCPP_ACTION_PUBLIC
-  bool
-  wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout);
+  bool wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout);
 
   // -----------------------------------------------------
   // API for communication between ClientBase and Client<>
-  using ResponseCallback = std::function<void (std::shared_ptr<void> response)>;
+  using ResponseCallback = std::function<void(std::shared_ptr<void> response)>;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
@@ -147,92 +133,55 @@ protected:
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  GoalUUID
-  generate_goal_id();
+  virtual GoalUUID generate_goal_id();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  send_goal_request(
-    std::shared_ptr<void> request,
-    ResponseCallback callback);
+  virtual void send_goal_request(std::shared_ptr<void> request, ResponseCallback callback);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  send_result_request(
-    std::shared_ptr<void> request,
-    ResponseCallback callback);
+  virtual void send_result_request(std::shared_ptr<void> request, ResponseCallback callback);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  send_cancel_request(
-    std::shared_ptr<void> request,
-    ResponseCallback callback);
+  virtual void send_cancel_request(std::shared_ptr<void> request, ResponseCallback callback);
 
   /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_goal_response() const = 0;
+  virtual std::shared_ptr<void> create_goal_response() const = 0;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  handle_goal_response(
-    const rmw_request_id_t & response_header,
-    std::shared_ptr<void> goal_response);
+  virtual void handle_goal_response(
+    const rmw_request_id_t & response_header, std::shared_ptr<void> goal_response);
 
   /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_result_response() const = 0;
+  virtual std::shared_ptr<void> create_result_response() const = 0;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  handle_result_response(
-    const rmw_request_id_t & response_header,
-    std::shared_ptr<void> result_response);
+  virtual void handle_result_response(
+    const rmw_request_id_t & response_header, std::shared_ptr<void> result_response);
 
   /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_cancel_response() const = 0;
+  virtual std::shared_ptr<void> create_cancel_response() const = 0;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  handle_cancel_response(
-    const rmw_request_id_t & response_header,
-    std::shared_ptr<void> cancel_response);
+  virtual void handle_cancel_response(
+    const rmw_request_id_t & response_header, std::shared_ptr<void> cancel_response);
 
   /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_feedback_message() const = 0;
+  virtual std::shared_ptr<void> create_feedback_message() const = 0;
 
   /// \internal
-  virtual
-  void
-  handle_feedback_message(std::shared_ptr<void> message) = 0;
+  virtual void handle_feedback_message(std::shared_ptr<void> message) = 0;
 
   /// \internal
-  virtual
-  std::shared_ptr<void>
-  create_status_message() const = 0;
+  virtual std::shared_ptr<void> create_status_message() const = 0;
 
   /// \internal
-  virtual
-  void
-  handle_status_message(std::shared_ptr<void> message) = 0;
+  virtual void handle_status_message(std::shared_ptr<void> message) = 0;
 
   // End API for communication between ClientBase and Client<>
   // ---------------------------------------------------------
@@ -251,7 +200,7 @@ private:
  *  - coverting between the C++ action type and generic types for `rclcpp_action::ClientBase`, and
  *  - calling user callbacks.
  */
-template<typename ActionT>
+template <typename ActionT>
 class Client : public ClientBase
 {
 public:
@@ -262,12 +211,12 @@ public:
   using GoalHandle = ClientGoalHandle<ActionT>;
   using WrappedResult = typename GoalHandle::WrappedResult;
   using GoalResponseCallback =
-    std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
+    std::function<void(std::shared_future<typename GoalHandle::SharedPtr>)>;
   using FeedbackCallback = typename GoalHandle::FeedbackCallback;
   using ResultCallback = typename GoalHandle::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
   using CancelResponse = typename ActionT::Impl::CancelGoalService::Response;
-  using CancelCallback = std::function<void (typename CancelResponse::SharedPtr)>;
+  using CancelCallback = std::function<void(typename CancelResponse::SharedPtr)>;
 
   /// Options for sending a goal.
   /**
@@ -276,9 +225,7 @@ public:
   struct SendGoalOptions
   {
     SendGoalOptions()
-    : goal_response_callback(nullptr),
-      feedback_callback(nullptr),
-      result_callback(nullptr)
+    : goal_response_callback(nullptr), feedback_callback(nullptr), result_callback(nullptr)
     {
     }
 
@@ -317,12 +264,10 @@ public:
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
-    const rcl_action_client_options_t client_options = rcl_action_client_get_default_options()
-  )
+    const rcl_action_client_options_t client_options = rcl_action_client_get_default_options())
   : ClientBase(
       node_base, node_graph, node_logging, action_name,
-      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(),
-      client_options)
+      rosidl_typesupport_cpp::get_action_type_support_handle<ActionT>(), client_options)
   {
   }
 
@@ -339,8 +284,8 @@ public:
    * \return A future that completes when the goal has been accepted or rejected.
    *   If the goal is rejected, then the result will be a `nullptr`.
    */
-  std::shared_future<typename GoalHandle::SharedPtr>
-  async_send_goal(const Goal & goal, const SendGoalOptions & options = SendGoalOptions())
+  std::shared_future<typename GoalHandle::SharedPtr> async_send_goal(
+    const Goal & goal, const SendGoalOptions & options = SendGoalOptions())
   {
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>();
@@ -351,8 +296,7 @@ public:
     goal_request->goal = goal;
     this->send_goal_request(
       std::static_pointer_cast<void>(goal_request),
-      [this, goal_request, options, promise, future](std::shared_ptr<void> response) mutable
-      {
+      [this, goal_request, options, promise, future](std::shared_ptr<void> response) mutable {
         using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
         auto goal_response = std::static_pointer_cast<GoalResponse>(response);
         if (!goal_response->accepted) {
@@ -397,10 +341,8 @@ public:
    * \param[in] result_callback Optional callback that is called when the result is received.
    * \return A future that is set to the goal result when the goal is finished.
    */
-  std::shared_future<WrappedResult>
-  async_get_result(
-    typename GoalHandle::SharedPtr goal_handle,
-    ResultCallback result_callback = nullptr)
+  std::shared_future<WrappedResult> async_get_result(
+    typename GoalHandle::SharedPtr goal_handle, ResultCallback result_callback = nullptr)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
@@ -427,10 +369,8 @@ public:
    * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
    * action_msgs/CancelGoal.srv</a>.
    */
-  std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel_goal(
-    typename GoalHandle::SharedPtr goal_handle,
-    CancelCallback cancel_callback = nullptr)
+  std::shared_future<typename CancelResponse::SharedPtr> async_cancel_goal(
+    typename GoalHandle::SharedPtr goal_handle, CancelCallback cancel_callback = nullptr)
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     if (goal_handles_.count(goal_handle->get_goal_id()) == 0) {
@@ -452,14 +392,14 @@ public:
    * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
    * action_msgs/CancelGoal.srv</a>.
    */
-  std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel_all_goals(CancelCallback cancel_callback = nullptr)
+  std::shared_future<typename CancelResponse::SharedPtr> async_cancel_all_goals(
+    CancelCallback cancel_callback = nullptr)
   {
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
     std::fill(
-      cancel_request->goal_info.goal_id.uuid.begin(),
-      cancel_request->goal_info.goal_id.uuid.end(), 0u);
+      cancel_request->goal_info.goal_id.uuid.begin(), cancel_request->goal_info.goal_id.uuid.end(),
+      0u);
     return async_cancel(cancel_request, cancel_callback);
   }
 
@@ -474,22 +414,19 @@ public:
    * <a href="https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/srv/CancelGoal.srv">
    * action_msgs/CancelGoal.srv</a>.
    */
-  std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel_goals_before(
-    const rclcpp::Time & stamp,
-    CancelCallback cancel_callback = nullptr)
+  std::shared_future<typename CancelResponse::SharedPtr> async_cancel_goals_before(
+    const rclcpp::Time & stamp, CancelCallback cancel_callback = nullptr)
   {
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
     std::fill(
-      cancel_request->goal_info.goal_id.uuid.begin(),
-      cancel_request->goal_info.goal_id.uuid.end(), 0u);
+      cancel_request->goal_info.goal_id.uuid.begin(), cancel_request->goal_info.goal_id.uuid.end(),
+      0u);
     cancel_request->goal_info.stamp = stamp;
     return async_cancel(cancel_request, cancel_callback);
   }
 
-  virtual
-  ~Client()
+  virtual ~Client()
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     auto it = goal_handles_.begin();
@@ -501,39 +438,34 @@ public:
 
 private:
   /// \internal
-  std::shared_ptr<void>
-  create_goal_response() const override
+  std::shared_ptr<void> create_goal_response() const override
   {
     using GoalResponse = typename ActionT::Impl::SendGoalService::Response;
     return std::shared_ptr<void>(new GoalResponse());
   }
 
   /// \internal
-  std::shared_ptr<void>
-  create_result_response() const override
+  std::shared_ptr<void> create_result_response() const override
   {
     using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
     return std::shared_ptr<void>(new GoalResultResponse());
   }
 
   /// \internal
-  std::shared_ptr<void>
-  create_cancel_response() const override
+  std::shared_ptr<void> create_cancel_response() const override
   {
     return std::shared_ptr<void>(new CancelResponse());
   }
 
   /// \internal
-  std::shared_ptr<void>
-  create_feedback_message() const override
+  std::shared_ptr<void> create_feedback_message() const override
   {
     using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
     return std::shared_ptr<void>(new FeedbackMessage());
   }
 
   /// \internal
-  void
-  handle_feedback_message(std::shared_ptr<void> message) override
+  void handle_feedback_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     using FeedbackMessage = typename ActionT::Impl::FeedbackMessage;
@@ -541,9 +473,7 @@ private:
       std::static_pointer_cast<FeedbackMessage>(message);
     const GoalUUID & goal_id = feedback_message->goal_id.uuid;
     if (goal_handles_.count(goal_id) == 0) {
-      RCLCPP_DEBUG(
-        this->get_logger(),
-        "Received feedback for unknown goal. Ignoring...");
+      RCLCPP_DEBUG(this->get_logger(), "Received feedback for unknown goal. Ignoring...");
       return;
     }
     typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id];
@@ -553,16 +483,14 @@ private:
   }
 
   /// \internal
-  std::shared_ptr<void>
-  create_status_message() const override
+  std::shared_ptr<void> create_status_message() const override
   {
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     return std::shared_ptr<void>(new GoalStatusMessage());
   }
 
   /// \internal
-  void
-  handle_status_message(std::shared_ptr<void> message) override
+  void handle_status_message(std::shared_ptr<void> message) override
   {
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
@@ -570,27 +498,22 @@ private:
     for (const GoalStatus & status : status_message->status_list) {
       const GoalUUID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
-        RCLCPP_DEBUG(
-          this->get_logger(),
-          "Received status for unknown goal. Ignoring...");
+        RCLCPP_DEBUG(this->get_logger(), "Received status for unknown goal. Ignoring...");
         continue;
       }
       typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id];
       goal_handle->set_status(status.status);
       const int8_t goal_status = goal_handle->get_status();
       if (
-        goal_status == GoalStatus::STATUS_SUCCEEDED ||
-        goal_status == GoalStatus::STATUS_CANCELED ||
-        goal_status == GoalStatus::STATUS_ABORTED)
-      {
+        goal_status == GoalStatus::STATUS_SUCCEEDED || goal_status == GoalStatus::STATUS_CANCELED ||
+        goal_status == GoalStatus::STATUS_ABORTED) {
         goal_handles_.erase(goal_id);
       }
     }
   }
 
   /// \internal
-  void
-  make_result_aware(typename GoalHandle::SharedPtr goal_handle)
+  void make_result_aware(typename GoalHandle::SharedPtr goal_handle)
   {
     // Avoid making more than one request
     if (goal_handle->set_result_awareness(true)) {
@@ -601,8 +524,7 @@ private:
     goal_result_request->goal_id.uuid = goal_handle->get_goal_id();
     this->send_result_request(
       std::static_pointer_cast<void>(goal_result_request),
-      [goal_handle, this](std::shared_ptr<void> response) mutable
-      {
+      [goal_handle, this](std::shared_ptr<void> response) mutable {
         // Wrap the response in a struct with the fields a user cares about
         WrappedResult wrapped_result;
         using GoalResultResponse = typename ActionT::Impl::GetResultService::Response;
@@ -618,18 +540,15 @@ private:
   }
 
   /// \internal
-  std::shared_future<typename CancelResponse::SharedPtr>
-  async_cancel(
-    typename CancelRequest::SharedPtr cancel_request,
-    CancelCallback cancel_callback = nullptr)
+  std::shared_future<typename CancelResponse::SharedPtr> async_cancel(
+    typename CancelRequest::SharedPtr cancel_request, CancelCallback cancel_callback = nullptr)
   {
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename CancelResponse::SharedPtr>>();
     std::shared_future<typename CancelResponse::SharedPtr> future(promise->get_future());
     this->send_cancel_request(
       std::static_pointer_cast<void>(cancel_request),
-      [cancel_callback, promise](std::shared_ptr<void> response) mutable
-      {
+      [cancel_callback, promise](std::shared_ptr<void> response) mutable {
         auto cancel_response = std::static_pointer_cast<CancelResponse>(response);
         promise->set_value(cancel_response);
         if (cancel_callback) {

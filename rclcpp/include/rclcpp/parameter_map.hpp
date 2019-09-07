@@ -37,16 +37,14 @@ using ParameterMap = std::unordered_map<std::string, std::vector<Parameter>>;
 /// \returns a map where the keys are fully qualified node names and values a list of parameters.
 /// \throws InvalidParametersException if the `rcl_params_t` is inconsistent or invalid.
 RCLCPP_PUBLIC
-ParameterMap
-parameter_map_from(const rcl_params_t * const c_params);
+ParameterMap parameter_map_from(const rcl_params_t * const c_params);
 
 /// Convert parameter value from rcl_yaml_param_parser into a C++ class instance.
 /// \param[in] c_value C structure containing a value of a parameter.
 /// \returns an instance of a parameter value
 /// \throws InvalidParameterValueException if the `rcl_variant_t` is inconsistent or invalid.
 RCLCPP_PUBLIC
-ParameterValue
-parameter_value_from(const rcl_variant_t * const c_value);
+ParameterValue parameter_value_from(const rcl_variant_t * const c_value);
 
 }  // namespace rclcpp
 

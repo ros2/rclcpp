@@ -45,14 +45,11 @@ public:
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging);
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeClock();
+  virtual ~NodeClock();
 
   /// Get a clock which will be kept up to date by the node.
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::Clock::SharedPtr
-  get_clock();
+  virtual rclcpp::Clock::SharedPtr get_clock();
 
 private:
   RCLCPP_DISABLE_COPY(NodeClock)

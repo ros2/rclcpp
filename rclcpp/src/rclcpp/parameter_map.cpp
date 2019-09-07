@@ -17,13 +17,12 @@
 
 #include "rclcpp/parameter_map.hpp"
 
-using rclcpp::exceptions::InvalidParametersException;
-using rclcpp::exceptions::InvalidParameterValueException;
 using rclcpp::ParameterMap;
 using rclcpp::ParameterValue;
+using rclcpp::exceptions::InvalidParametersException;
+using rclcpp::exceptions::InvalidParameterValueException;
 
-ParameterMap
-rclcpp::parameter_map_from(const rcl_params_t * const c_params)
+ParameterMap rclcpp::parameter_map_from(const rcl_params_t * const c_params)
 {
   if (NULL == c_params) {
     throw InvalidParametersException("parameters struct is NULL");
@@ -68,8 +67,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
   return parameters;
 }
 
-ParameterValue
-rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
+ParameterValue rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
 {
   if (NULL == c_param_value) {
     throw InvalidParameterValueException("Passed argument is NULL");

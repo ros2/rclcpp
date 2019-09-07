@@ -21,7 +21,8 @@
 /*
    Basic tests for the Rate and WallRate classes.
  */
-TEST(TestRate, rate_basics) {
+TEST(TestRate, rate_basics)
+{
   auto period = std::chrono::milliseconds(100);
   auto offset = std::chrono::milliseconds(50);
   auto epsilon = std::chrono::milliseconds(1);
@@ -60,7 +61,8 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(epsilon > delta);
 }
 
-TEST(TestRate, wall_rate_basics) {
+TEST(TestRate, wall_rate_basics)
+{
   auto period = std::chrono::milliseconds(100);
   auto offset = std::chrono::milliseconds(50);
   auto epsilon = std::chrono::milliseconds(1);

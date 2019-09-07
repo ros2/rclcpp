@@ -28,24 +28,18 @@
 namespace
 {
 
-bool logical_eq(const bool a, const bool b)
-{
-  return (a && b) || ((!a) && !(b));
-}
+bool logical_eq(const bool a, const bool b) { return (a && b) || ((!a) && !(b)); }
 
 }  // namespace
-
 
 class TestTime : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase()
-  {
-    rclcpp::init(0, nullptr);
-  }
+  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
 };
 
-TEST(TestTime, clock_type_access) {
+TEST(TestTime, clock_type_access)
+{
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
   EXPECT_EQ(RCL_ROS_TIME, ros_clock.get_clock_type());
 
@@ -56,7 +50,8 @@ TEST(TestTime, clock_type_access) {
   EXPECT_EQ(RCL_STEADY_TIME, steady_clock.get_clock_type());
 }
 
-TEST(TestTime, time_sources) {
+TEST(TestTime, time_sources)
+{
   using builtin_interfaces::msg::Time;
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
   Time ros_now = ros_clock.now();
@@ -74,7 +69,8 @@ TEST(TestTime, time_sources) {
   EXPECT_NE(0u, steady_now.nanosec);
 }
 
-TEST(TestTime, conversions) {
+TEST(TestTime, conversions)
+{
   rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
 
   rclcpp::Time now = system_clock.now();
@@ -97,21 +93,18 @@ TEST(TestTime, conversions) {
   negative_time_msg.sec = -1;
   negative_time_msg.nanosec = 1;
 
-  EXPECT_ANY_THROW(
-  {
-    rclcpp::Time negative_time = negative_time_msg;
-  });
+  EXPECT_ANY_THROW({ rclcpp::Time negative_time = negative_time_msg; });
 
   EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
 
-  EXPECT_ANY_THROW(
-  {
+  EXPECT_ANY_THROW({
     rclcpp::Time assignment(1, 2);
     assignment = negative_time_msg;
   });
 }
 
-TEST(TestTime, operators) {
+TEST(TestTime, operators)
+{
   rclcpp::Time old(1, 0);
   rclcpp::Time young(2, 0);
 
@@ -162,7 +155,8 @@ TEST(TestTime, operators) {
   }
 }
 
-TEST(TestTime, overflow_detectors) {
+TEST(TestTime, overflow_detectors)
+{
   /////////////////////////////////////////////////////////////////////////////
   // Test logical_eq call first:
   EXPECT_TRUE(logical_eq(false, false));
@@ -185,23 +179,19 @@ TEST(TestTime, overflow_detectors) {
       const big_type_t sum = x + y;
       const big_type_t diff = x - y;
 
-      const bool add_will_overflow =
-        rclcpp::add_will_overflow(test_type_t(x), test_type_t(y));
+      const bool add_will_overflow = rclcpp::add_will_overflow(test_type_t(x), test_type_t(y));
       const bool add_did_overflow = sum > max_val;
       EXPECT_TRUE(logical_eq(add_will_overflow, add_did_overflow));
 
-      const bool add_will_underflow =
-        rclcpp::add_will_underflow(test_type_t(x), test_type_t(y));
+      const bool add_will_underflow = rclcpp::add_will_underflow(test_type_t(x), test_type_t(y));
       const bool add_did_underflow = sum < min_val;
       EXPECT_TRUE(logical_eq(add_will_underflow, add_did_underflow));
 
-      const bool sub_will_overflow =
-        rclcpp::sub_will_overflow(test_type_t(x), test_type_t(y));
+      const bool sub_will_overflow = rclcpp::sub_will_overflow(test_type_t(x), test_type_t(y));
       const bool sub_did_overflow = diff > max_val;
       EXPECT_TRUE(logical_eq(sub_will_overflow, sub_did_overflow));
 
-      const bool sub_will_underflow =
-        rclcpp::sub_will_underflow(test_type_t(x), test_type_t(y));
+      const bool sub_will_underflow = rclcpp::sub_will_underflow(test_type_t(x), test_type_t(y));
       const bool sub_did_underflow = diff < min_val;
       EXPECT_TRUE(logical_eq(sub_will_underflow, sub_did_underflow));
     }
@@ -219,7 +209,8 @@ TEST(TestTime, overflow_detectors) {
   EXPECT_TRUE(rclcpp::sub_will_underflow<int64_t>(INT64_MIN, 1));
 }
 
-TEST(TestTime, overflows) {
+TEST(TestTime, overflows)
+{
   rclcpp::Time max_time(std::numeric_limits<rcl_time_point_value_t>::max());
   rclcpp::Time min_time(std::numeric_limits<rcl_time_point_value_t>::min());
   rclcpp::Duration one(1);
@@ -247,7 +238,8 @@ TEST(TestTime, overflows) {
   EXPECT_NO_THROW(one_time - two_time);
 }
 
-TEST(TestTime, seconds) {
+TEST(TestTime, seconds)
+{
   EXPECT_DOUBLE_EQ(0.0, rclcpp::Time(0, 0).seconds());
   EXPECT_DOUBLE_EQ(4.5, rclcpp::Time(4, 500000000).seconds());
   EXPECT_DOUBLE_EQ(2.5, rclcpp::Time(0, 2500000000).seconds());

@@ -20,7 +20,8 @@
 /*
    Testing expand_topic_or_service_name.
  */
-TEST(TestExpandTopicOrServiceName, normal) {
+TEST(TestExpandTopicOrServiceName, normal)
+{
   using rclcpp::expand_topic_or_service_name;
   {
     ASSERT_EQ("/ns/chatter", expand_topic_or_service_name("chatter", "node", "/ns"));
@@ -30,51 +31,52 @@ TEST(TestExpandTopicOrServiceName, normal) {
 /*
    Testing exceptions of expand_topic_or_service_name.
  */
-TEST(TestExpandTopicOrServiceName, exceptions) {
+TEST(TestExpandTopicOrServiceName, exceptions)
+{
   using rclcpp::expand_topic_or_service_name;
   {
     ASSERT_THROW(
-    {
-      expand_topic_or_service_name("chatter", "invalid_node?", "/ns");
-    }, rclcpp::exceptions::InvalidNodeNameError);
+      { expand_topic_or_service_name("chatter", "invalid_node?", "/ns"); },
+      rclcpp::exceptions::InvalidNodeNameError);
   }
 
   {
     ASSERT_THROW(
-    {
-      expand_topic_or_service_name("chatter", "node", "/invalid_ns?");
-    }, rclcpp::exceptions::InvalidNamespaceError);
+      { expand_topic_or_service_name("chatter", "node", "/invalid_ns?"); },
+      rclcpp::exceptions::InvalidNamespaceError);
   }
 
   {
     ASSERT_THROW(
-    {
-      expand_topic_or_service_name("chatter/42invalid", "node", "/ns");
-    }, rclcpp::exceptions::InvalidTopicNameError);
+      { expand_topic_or_service_name("chatter/42invalid", "node", "/ns"); },
+      rclcpp::exceptions::InvalidTopicNameError);
   }
 
   {
     ASSERT_THROW(
-    {
-      // this one will only fail on the "full" topic name validation check
-      expand_topic_or_service_name("chatter/{ns}/invalid", "node", "/ns");
-    }, rclcpp::exceptions::InvalidTopicNameError);
+      {
+        // this one will only fail on the "full" topic name validation check
+        expand_topic_or_service_name("chatter/{ns}/invalid", "node", "/ns");
+      },
+      rclcpp::exceptions::InvalidTopicNameError);
   }
 
   {
     ASSERT_THROW(
-    {
-      // is_service = true
-      expand_topic_or_service_name("chatter/42invalid", "node", "/ns", true);
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      {
+        // is_service = true
+        expand_topic_or_service_name("chatter/42invalid", "node", "/ns", true);
+      },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 
   {
     ASSERT_THROW(
-    {
-      // is_service = true
-      // this one will only fail on the "full" topic name validation check
-      expand_topic_or_service_name("chatter/{ns}/invalid", "node", "/ns", true);
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      {
+        // is_service = true
+        // this one will only fail on the "full" topic name validation check
+        expand_topic_or_service_name("chatter/{ns}/invalid", "node", "/ns", true);
+      },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }

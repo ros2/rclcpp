@@ -23,9 +23,9 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-#include "rclcpp/publisher.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/publisher.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -45,43 +45,32 @@ namespace rclcpp
 struct PublisherFactory
 {
   // Creates a PublisherT<MessageT, ...> publisher object and returns it as a PublisherBase.
-  using PublisherFactoryFunction = std::function<
-    rclcpp::PublisherBase::SharedPtr(
-      rclcpp::node_interfaces::NodeBaseInterface * node_base,
-      const std::string & topic_name,
-      const rcl_publisher_options_t & publisher_options)>;
+  using PublisherFactoryFunction = std::function<rclcpp::PublisherBase::SharedPtr(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic_name,
+    const rcl_publisher_options_t & publisher_options)>;
 
   PublisherFactoryFunction create_typed_publisher;
 };
 
 /// Return a PublisherFactory with functions setup for creating a PublisherT<MessageT, Alloc>.
-template<typename MessageT, typename Alloc, typename PublisherT>
-PublisherFactory
-create_publisher_factory(
-  const PublisherEventCallbacks & event_callbacks,
-  std::shared_ptr<Alloc> allocator)
+template <typename MessageT, typename Alloc, typename PublisherT>
+PublisherFactory create_publisher_factory(
+  const PublisherEventCallbacks & event_callbacks, std::shared_ptr<Alloc> allocator)
 {
   PublisherFactory factory;
 
   // factory function that creates a MessageT specific PublisherT
   factory.create_typed_publisher =
     [event_callbacks, allocator](
-    rclcpp::node_interfaces::NodeBaseInterface * node_base,
-    const std::string & topic_name,
-    const rcl_publisher_options_t & publisher_options
-    ) -> std::shared_ptr<PublisherT>
-    {
-      auto options_copy = publisher_options;
-      auto message_alloc = std::make_shared<typename PublisherT::MessageAlloc>(*allocator.get());
-      options_copy.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
+      rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic_name,
+      const rcl_publisher_options_t & publisher_options) -> std::shared_ptr<PublisherT> {
+    auto options_copy = publisher_options;
+    auto message_alloc = std::make_shared<typename PublisherT::MessageAlloc>(*allocator.get());
+    options_copy.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc.get());
 
-      return std::make_shared<PublisherT>(
-        node_base,
-        topic_name,
-        options_copy,
-        event_callbacks,
-        message_alloc);
-    };
+    return std::make_shared<PublisherT>(
+      node_base, topic_name, options_copy, event_callbacks, message_alloc);
+  };
 
   // return the factory now that it is populated
   return factory;

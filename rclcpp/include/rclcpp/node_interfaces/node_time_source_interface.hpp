@@ -32,8 +32,7 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTimeSourceInterface)
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeTimeSourceInterface() = default;
+  virtual ~NodeTimeSourceInterface() = default;
 };
 
 }  // namespace node_interfaces

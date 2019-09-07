@@ -38,20 +38,15 @@ public:
   explicit NodeServices(rclcpp::node_interfaces::NodeBaseInterface * node_base);
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeServices();
+  virtual ~NodeServices();
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_client(
+  virtual void add_client(
     rclcpp::ClientBase::SharedPtr client_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_service(
+  virtual void add_service(
     rclcpp::ServiceBase::SharedPtr service_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 

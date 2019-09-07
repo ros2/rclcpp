@@ -26,10 +26,10 @@ namespace rclcpp
 namespace allocator
 {
 
-template<typename T, typename Alloc>
+template <typename T, typename Alloc>
 using AllocRebind = typename std::allocator_traits<Alloc>::template rebind_traits<T>;
 
-template<typename Alloc>
+template <typename Alloc>
 void * retyped_allocate(size_t size, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
@@ -39,7 +39,7 @@ void * retyped_allocate(size_t size, void * untyped_allocator)
   return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
 }
 
-template<typename T, typename Alloc>
+template <typename T, typename Alloc>
 void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
@@ -50,7 +50,7 @@ void retyped_deallocate(void * untyped_pointer, void * untyped_allocator)
   std::allocator_traits<Alloc>::deallocate(*typed_allocator, typed_ptr, 1);
 }
 
-template<typename T, typename Alloc>
+template <typename T, typename Alloc>
 void * retyped_reallocate(void * untyped_pointer, size_t size, void * untyped_allocator)
 {
   auto typed_allocator = static_cast<Alloc *>(untyped_allocator);
@@ -62,11 +62,9 @@ void * retyped_reallocate(void * untyped_pointer, size_t size, void * untyped_al
   return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
 }
 
-
 // Convert a std::allocator_traits-formatted Allocator into an rcl allocator
-template<
-  typename T,
-  typename Alloc,
+template <
+  typename T, typename Alloc,
   typename std::enable_if<!std::is_same<Alloc, std::allocator<void>>::value>::type * = nullptr>
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {
@@ -83,9 +81,8 @@ rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 }
 
 // TODO(jacquelinekay) Workaround for an incomplete implementation of std::allocator<void>
-template<
-  typename T,
-  typename Alloc,
+template <
+  typename T, typename Alloc,
   typename std::enable_if<std::is_same<Alloc, std::allocator<void>>::value>::type * = nullptr>
 rcl_allocator_t get_rcl_allocator(Alloc & allocator)
 {

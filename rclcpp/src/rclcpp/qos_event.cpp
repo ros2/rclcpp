@@ -21,22 +21,16 @@ QOSEventHandlerBase::~QOSEventHandlerBase()
 {
   if (rcl_event_fini(&event_handle_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
+      "rclcpp", "Error in destruction of rcl event handle: %s", rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
 
 /// Get the number of ready events.
-size_t
-QOSEventHandlerBase::get_number_of_ready_events()
-{
-  return 1;
-}
+size_t QOSEventHandlerBase::get_number_of_ready_events() { return 1; }
 
 /// Add the Waitable to a wait set.
-bool
-QOSEventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+bool QOSEventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   rcl_ret_t ret = rcl_wait_set_add_event(wait_set, &event_handle_, &wait_set_event_index_);
   if (RCL_RET_OK != ret) {
@@ -46,8 +40,7 @@ QOSEventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 }
 
 /// Check if the Waitable is ready.
-bool
-QOSEventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
+bool QOSEventHandlerBase::is_ready(rcl_wait_set_t * wait_set)
 {
   return wait_set->events[wait_set_event_index_] == &event_handle_;
 }
