@@ -95,9 +95,10 @@ protected:
     ret = rcl_action_get_result_service_name(action_name, allocator, &result_service_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     result_service = server_node->create_service<ActionGoalResultService>(
-      result_service_name, [this](
-                             const ActionGoalResultRequest::SharedPtr request,
-                             ActionGoalResultResponse::SharedPtr response) {
+      result_service_name,
+      [this](
+        const ActionGoalResultRequest::SharedPtr request,
+        ActionGoalResultResponse::SharedPtr response) {
         if (goals.count(request->goal_id.uuid) == 1) {
           auto goal_request = goals[request->goal_id.uuid].first;
           auto goal_response = goals[request->goal_id.uuid].second;
@@ -143,9 +144,10 @@ protected:
     ret = rcl_action_get_cancel_service_name(action_name, allocator, &cancel_service_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     cancel_service = server_node->create_service<ActionCancelGoalService>(
-      cancel_service_name, [this](
-                             const ActionCancelGoalRequest::SharedPtr request,
-                             ActionCancelGoalResponse::SharedPtr response) {
+      cancel_service_name,
+      [this](
+        const ActionCancelGoalRequest::SharedPtr request,
+        ActionCancelGoalResponse::SharedPtr response) {
         rclcpp_action::GoalUUID zero_uuid;
         std::fill(zero_uuid.begin(), zero_uuid.end(), 0u);
         const rclcpp::Time cancel_stamp = request->goal_info.stamp;
@@ -339,14 +341,14 @@ TEST_F(TestClient, async_send_goal_with_feedback_callback_wait_for_result)
   goal.order = 4;
   int feedback_count = 0;
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
-  send_goal_ops.feedback_callback =
-    [&feedback_count](
-      typename ActionGoalHandle::SharedPtr goal_handle,
-      const std::shared_ptr<const ActionFeedback> feedback) mutable {
-      (void)goal_handle;
-      (void)feedback;
-      feedback_count++;
-    };
+  send_goal_ops.feedback_callback = [&feedback_count](
+                                      typename ActionGoalHandle::SharedPtr goal_handle,
+                                      const std::shared_ptr<const ActionFeedback>
+                                        feedback) mutable {
+    (void)goal_handle;
+    (void)feedback;
+    feedback_count++;
+  };
   auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
   dual_spin_until_future_complete(future_goal_handle);
   auto goal_handle = future_goal_handle.get();

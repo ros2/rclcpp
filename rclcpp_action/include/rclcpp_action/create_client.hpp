@@ -96,8 +96,12 @@ typename Client<ActionT>::SharedPtr create_client(
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_client<ActionT>(
-    node->get_node_base_interface(), node->get_node_graph_interface(),
-    node->get_node_logging_interface(), node->get_node_waitables_interface(), name, group);
+    node->get_node_base_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_logging_interface(),
+    node->get_node_waitables_interface(),
+    name,
+    group);
 }
 }  // namespace rclcpp_action
 

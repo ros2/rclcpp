@@ -44,7 +44,8 @@ create_publisher(
   auto pub = node_topics->create_publisher(
     topic_name,
     rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(event_callbacks, allocator),
-    publisher_options, use_intra_process_comms);
+    publisher_options,
+    use_intra_process_comms);
 
   node_topics->add_publisher(pub, group);
 
@@ -93,7 +94,8 @@ std::shared_ptr<PublisherT> create_publisher(
     topic_name,
     rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(
       options.event_callbacks, allocator),
-    options.template to_rcl_publisher_options<MessageT>(qos), use_intra_process);
+    options.template to_rcl_publisher_options<MessageT>(qos),
+    use_intra_process);
   node_topics->add_publisher(pub, options.callback_group);
   return std::dynamic_pointer_cast<PublisherT>(pub);
 }

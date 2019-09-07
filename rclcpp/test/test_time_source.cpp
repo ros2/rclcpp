@@ -288,7 +288,8 @@ TEST_F(TestTimeSource, callbacks)
   // Register a callback for time jumps
   rclcpp::JumpHandler::SharedPtr callback_handler = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
-    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1), jump_threshold);
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
+    jump_threshold);
 
   EXPECT_EQ(0, cbo.last_precallback_id_);
   EXPECT_EQ(0, cbo.last_postcallback_id_);
@@ -328,7 +329,8 @@ TEST_F(TestTimeSource, callbacks)
   // Change callbacks
   rclcpp::JumpHandler::SharedPtr callback_handler2 = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 2),
-    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2), jump_threshold);
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
+    jump_threshold);
 
   trigger_clock_changes(node, ros_clock);
 
@@ -345,7 +347,8 @@ TEST_F(TestTimeSource, callbacks)
 
   // Register a callback handler with only pre_callback
   rclcpp::JumpHandler::SharedPtr callback_handler3 = ros_clock->create_jump_callback(
-    std::bind(&CallbackObject::pre_callback, &cbo, 3), std::function<void(rcl_time_jump_t)>(),
+    std::bind(&CallbackObject::pre_callback, &cbo, 3),
+    std::function<void(rcl_time_jump_t)>(),
     jump_threshold);
 
   trigger_clock_changes(node, ros_clock);
@@ -355,7 +358,8 @@ TEST_F(TestTimeSource, callbacks)
   // Register a callback handler with only post_callback
   rclcpp::JumpHandler::SharedPtr callback_handler4 = ros_clock->create_jump_callback(
     std::function<void()>(),
-    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 4), jump_threshold);
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 4),
+    jump_threshold);
 
   trigger_clock_changes(node, ros_clock);
   EXPECT_EQ(3, cbo.last_precallback_id_);
@@ -378,12 +382,14 @@ TEST_F(TestTimeSource, callback_handler_erasure)
   // Register a callback for time jumps
   rclcpp::JumpHandler::SharedPtr callback_handler = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
-    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1), jump_threshold);
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
+    jump_threshold);
 
   // Second callback handler
   rclcpp::JumpHandler::SharedPtr callback_handler2 = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 1),
-    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1), jump_threshold);
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
+    jump_threshold);
 
   // Callbacks will not be triggered since ROS time is not active.
   EXPECT_EQ(0, cbo.last_precallback_id_);
@@ -411,7 +417,8 @@ TEST_F(TestTimeSource, callback_handler_erasure)
   // Requeue a pointer in a new position
   callback_handler = ros_clock->create_jump_callback(
     std::bind(&CallbackObject::pre_callback, &cbo, 2),
-    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2), jump_threshold);
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 2),
+    jump_threshold);
 
   // Remove the last callback in the vector
   callback_handler2.reset();
@@ -468,7 +475,8 @@ TEST_F(TestTimeSource, no_pre_jump_callback)
 
   // Register a callback for time jumps
   rclcpp::JumpHandler::SharedPtr callback_handler = ros_clock->create_jump_callback(
-    nullptr, std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
+    nullptr,
+    std::bind(&CallbackObject::post_callback, &cbo, std::placeholders::_1, 1),
     jump_threshold);
 
   ASSERT_EQ(0, cbo.last_precallback_id_);

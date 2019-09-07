@@ -80,7 +80,8 @@ PublisherBase::~PublisherBase()
 
   if (rcl_publisher_fini(&intra_process_publisher_handle_, rcl_node_handle_.get()) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp", "Error in destruction of intra process rcl publisher handle: %s",
+      "rclcpp",
+      "Error in destruction of intra process rcl publisher handle: %s",
       rcl_get_error_string().str);
     rcl_reset_error();
   }
@@ -236,16 +237,19 @@ void PublisherBase::setup_intra_process(
   auto intra_process_topic_name = std::string(topic_name) + "/_intra";
 
   rcl_ret_t ret = rcl_publisher_init(
-    &intra_process_publisher_handle_, rcl_node_handle_.get(),
+    &intra_process_publisher_handle_,
+    rcl_node_handle_.get(),
     rclcpp::type_support::get_intra_process_message_msg_type_support(),
-    intra_process_topic_name.c_str(), &intra_process_options);
+    intra_process_topic_name.c_str(),
+    &intra_process_options);
   if (ret != RCL_RET_OK) {
     if (ret == RCL_RET_TOPIC_NAME_INVALID) {
       auto rcl_node_handle = rcl_node_handle_.get();
       // this will throw on any validation problem
       rcl_reset_error();
       expand_topic_or_service_name(
-        intra_process_topic_name, rcl_node_get_name(rcl_node_handle),
+        intra_process_topic_name,
+        rcl_node_get_name(rcl_node_handle),
         rcl_node_get_namespace(rcl_node_handle));
     }
 

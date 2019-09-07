@@ -84,8 +84,11 @@ TEST_F(TestExternallyDefinedServices, extern_defined_initialized)
   const rosidl_service_type_support_t * ts =
     rosidl_typesupport_cpp::get_service_type_support_handle<test_msgs::srv::Empty>();
   rcl_ret_t ret = rcl_service_init(
-    &service_handle, node_handle->get_node_base_interface()->get_rcl_node_handle(), ts,
-    "base_node_service", &service_options);
+    &service_handle,
+    node_handle->get_node_base_interface()->get_rcl_node_handle(),
+    ts,
+    "base_node_service",
+    &service_options);
   if (ret != RCL_RET_OK) {
     FAIL();
     return;
@@ -122,8 +125,11 @@ TEST_F(TestExternallyDefinedServices, extern_defined_destructor)
   const rosidl_service_type_support_t * ts =
     rosidl_typesupport_cpp::get_service_type_support_handle<test_msgs::srv::Empty>();
   rcl_ret_t ret = rcl_service_init(
-    &service_handle, node_handle->get_node_base_interface()->get_rcl_node_handle(), ts,
-    "base_node_service", &service_options);
+    &service_handle,
+    node_handle->get_node_base_interface()->get_rcl_node_handle(),
+    ts,
+    "base_node_service",
+    &service_options);
   if (ret != RCL_RET_OK) {
     FAIL();
     return;

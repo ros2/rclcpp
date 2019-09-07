@@ -102,8 +102,12 @@ ServerBase::ServerBase(
   }
 
   ret = rcl_action_server_wait_set_get_num_entities(
-    pimpl_->action_server_.get(), &pimpl_->num_subscriptions_, &pimpl_->num_guard_conditions_,
-    &pimpl_->num_timers_, &pimpl_->num_clients_, &pimpl_->num_services_);
+    pimpl_->action_server_.get(),
+    &pimpl_->num_subscriptions_,
+    &pimpl_->num_guard_conditions_,
+    &pimpl_->num_timers_,
+    &pimpl_->num_clients_,
+    &pimpl_->num_services_);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -134,8 +138,12 @@ bool ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
   rcl_ret_t ret = rcl_action_server_wait_set_get_entities_ready(
-    wait_set, pimpl_->action_server_.get(), &pimpl_->goal_request_ready_,
-    &pimpl_->cancel_request_ready_, &pimpl_->result_request_ready_, &pimpl_->goal_expired_);
+    wait_set,
+    pimpl_->action_server_.get(),
+    &pimpl_->goal_request_ready_,
+    &pimpl_->cancel_request_ready_,
+    &pimpl_->result_request_ready_,
+    &pimpl_->goal_expired_);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);

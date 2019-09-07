@@ -48,9 +48,9 @@ template <
   subscription_options.qos = qos_profile;
   subscription_options.ignore_local_publications = ignore_local_publications;
 
-  auto factory = rclcpp::create_subscription_factory<
-    MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
-    std::forward<CallbackT>(callback), event_callbacks, msg_mem_strat, allocator);
+  auto factory = rclcpp::
+    create_subscription_factory<MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
+      std::forward<CallbackT>(callback), event_callbacks, msg_mem_strat, allocator);
 
   auto sub = node_topics->create_subscription(
     topic_name, factory, subscription_options, use_intra_process_comms);
@@ -88,9 +88,9 @@ typename std::shared_ptr<SubscriptionT> create_subscription(
   if (!allocator) {
     allocator = std::make_shared<AllocatorT>();
   }
-  auto factory = rclcpp::create_subscription_factory<
-    MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
-    std::forward<CallbackT>(callback), options.event_callbacks, msg_mem_strat, allocator);
+  auto factory = rclcpp::
+    create_subscription_factory<MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
+      std::forward<CallbackT>(callback), options.event_callbacks, msg_mem_strat, allocator);
 
   bool use_intra_process;
   switch (options.use_intra_process_comm) {
@@ -110,7 +110,9 @@ typename std::shared_ptr<SubscriptionT> create_subscription(
 
   // TODO(wjwwood): convert all of the interfaces to use QoS and SubscriptionOptionsBase
   auto sub = node_topics->create_subscription(
-    topic_name, factory, options.template to_rcl_subscription_options<MessageT>(qos),
+    topic_name,
+    factory,
+    options.template to_rcl_subscription_options<MessageT>(qos),
     use_intra_process);
   node_topics->add_subscription(sub, options.callback_group);
   return std::dynamic_pointer_cast<SubscriptionT>(sub);

@@ -158,10 +158,11 @@ TEST_F(TestDefaultStateMachine, trigger_transition)
     test_node->trigger_transition(rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP))
       .id());
   ASSERT_EQ(
-    State::PRIMARY_STATE_FINALIZED, test_node
-                                      ->trigger_transition(rclcpp_lifecycle::Transition(
-                                        Transition::TRANSITION_UNCONFIGURED_SHUTDOWN))
-                                      .id());
+    State::PRIMARY_STATE_FINALIZED,
+    test_node
+      ->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN))
+      .id());
 }
 
 TEST_F(TestDefaultStateMachine, trigger_transition_with_error_code)
@@ -215,10 +216,11 @@ TEST_F(TestDefaultStateMachine, good_mood)
     test_node->trigger_transition(rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP))
       .id());
   EXPECT_EQ(
-    State::PRIMARY_STATE_FINALIZED, test_node
-                                      ->trigger_transition(rclcpp_lifecycle::Transition(
-                                        Transition::TRANSITION_UNCONFIGURED_SHUTDOWN))
-                                      .id());
+    State::PRIMARY_STATE_FINALIZED,
+    test_node
+      ->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN))
+      .id());
 
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(5u, test_node->number_of_callbacks);

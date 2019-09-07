@@ -44,8 +44,9 @@ TEST(TestNodeOptions, ros_args_only)
 
   char * namespace_name = nullptr;
   EXPECT_EQ(
-    RCL_RET_OK, rcl_remap_node_namespace(
-                  &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
+    RCL_RET_OK,
+    rcl_remap_node_namespace(
+      &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
   ASSERT_TRUE(namespace_name != nullptr);
   EXPECT_STREQ("/some_ns", namespace_name);
   allocator.deallocate(namespace_name, allocator.state);
@@ -54,9 +55,14 @@ TEST(TestNodeOptions, ros_args_only)
 TEST(TestNodeOptions, ros_args_and_non_ros_args)
 {
   rcl_allocator_t allocator = rcl_get_default_allocator();
-  auto options = rclcpp::NodeOptions(allocator).arguments({"--non-ros-flag", "--ros-args", "-r",
-                                                           "__node:=some_node", "-r",
-                                                           "__ns:=/some_ns", "--", "non-ros-arg"});
+  auto options = rclcpp::NodeOptions(allocator).arguments({"--non-ros-flag",
+                                                           "--ros-args",
+                                                           "-r",
+                                                           "__node:=some_node",
+                                                           "-r",
+                                                           "__ns:=/some_ns",
+                                                           "--",
+                                                           "non-ros-arg"});
 
   const rcl_node_options_t * rcl_options = options.get_rcl_node_options();
   ASSERT_TRUE(rcl_options != nullptr);
@@ -73,8 +79,9 @@ TEST(TestNodeOptions, ros_args_and_non_ros_args)
 
   char * namespace_name = nullptr;
   EXPECT_EQ(
-    RCL_RET_OK, rcl_remap_node_namespace(
-                  &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
+    RCL_RET_OK,
+    rcl_remap_node_namespace(
+      &rcl_options->arguments, nullptr, "my_ns", allocator, &namespace_name));
   ASSERT_TRUE(namespace_name != nullptr);
   EXPECT_STREQ("/some_ns", namespace_name);
   allocator.deallocate(namespace_name, allocator.state);

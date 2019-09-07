@@ -398,7 +398,8 @@ public:
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
     std::fill(
-      cancel_request->goal_info.goal_id.uuid.begin(), cancel_request->goal_info.goal_id.uuid.end(),
+      cancel_request->goal_info.goal_id.uuid.begin(),
+      cancel_request->goal_info.goal_id.uuid.end(),
       0u);
     return async_cancel(cancel_request, cancel_callback);
   }
@@ -420,7 +421,8 @@ public:
     auto cancel_request = std::make_shared<CancelRequest>();
     // std::fill(cancel_request->goal_info.goal_id.uuid, 0u);
     std::fill(
-      cancel_request->goal_info.goal_id.uuid.begin(), cancel_request->goal_info.goal_id.uuid.end(),
+      cancel_request->goal_info.goal_id.uuid.begin(),
+      cancel_request->goal_info.goal_id.uuid.end(),
       0u);
     cancel_request->goal_info.stamp = stamp;
     return async_cancel(cancel_request, cancel_callback);

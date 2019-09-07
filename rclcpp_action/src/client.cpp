@@ -50,7 +50,8 @@ public:
           if (RCL_RET_OK != rcl_action_client_fini(client, handle.get())) {
             RCLCPP_ERROR(
               rclcpp::get_logger(rcl_node_get_logger_name(handle.get())).get_child("rclcpp_action"),
-              "Error in destruction of rcl action client handle: %s", rcl_get_error_string().str);
+              "Error in destruction of rcl action client handle: %s",
+              rcl_get_error_string().str);
             rcl_reset_error();
           }
         } else {
@@ -69,7 +70,11 @@ public:
     }
 
     ret = rcl_action_client_wait_set_get_num_entities(
-      client_handle.get(), &num_subscriptions, &num_guard_conditions, &num_timers, &num_clients,
+      client_handle.get(),
+      &num_subscriptions,
+      &num_guard_conditions,
+      &num_timers,
+      &num_clients,
       &num_services);
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not retrieve rcl action client details");
@@ -216,8 +221,12 @@ bool ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 bool ClientBase::is_ready(rcl_wait_set_t * wait_set)
 {
   rcl_ret_t ret = rcl_action_client_wait_set_get_entities_ready(
-    wait_set, pimpl_->client_handle.get(), &pimpl_->is_feedback_ready, &pimpl_->is_status_ready,
-    &pimpl_->is_goal_response_ready, &pimpl_->is_cancel_response_ready,
+    wait_set,
+    pimpl_->client_handle.get(),
+    &pimpl_->is_feedback_ready,
+    &pimpl_->is_status_ready,
+    &pimpl_->is_goal_response_ready,
+    &pimpl_->is_cancel_response_ready,
     &pimpl_->is_result_response_ready);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to check for any ready entities");

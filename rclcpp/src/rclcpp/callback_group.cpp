@@ -34,7 +34,8 @@ void CallbackGroup::add_subscription(const rclcpp::SubscriptionBase::SharedPtr s
   subscription_ptrs_.push_back(subscription_ptr);
   subscription_ptrs_.erase(
     std::remove_if(
-      subscription_ptrs_.begin(), subscription_ptrs_.end(),
+      subscription_ptrs_.begin(),
+      subscription_ptrs_.end(),
       [](rclcpp::SubscriptionBase::WeakPtr x) { return x.expired(); }),
     subscription_ptrs_.end());
 }
@@ -45,7 +46,8 @@ void CallbackGroup::add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr)
   timer_ptrs_.push_back(timer_ptr);
   timer_ptrs_.erase(
     std::remove_if(
-      timer_ptrs_.begin(), timer_ptrs_.end(),
+      timer_ptrs_.begin(),
+      timer_ptrs_.end(),
       [](rclcpp::TimerBase::WeakPtr x) { return x.expired(); }),
     timer_ptrs_.end());
 }
@@ -56,7 +58,8 @@ void CallbackGroup::add_service(const rclcpp::ServiceBase::SharedPtr service_ptr
   service_ptrs_.push_back(service_ptr);
   service_ptrs_.erase(
     std::remove_if(
-      service_ptrs_.begin(), service_ptrs_.end(),
+      service_ptrs_.begin(),
+      service_ptrs_.end(),
       [](rclcpp::ServiceBase::WeakPtr x) { return x.expired(); }),
     service_ptrs_.end());
 }
@@ -67,7 +70,8 @@ void CallbackGroup::add_client(const rclcpp::ClientBase::SharedPtr client_ptr)
   client_ptrs_.push_back(client_ptr);
   client_ptrs_.erase(
     std::remove_if(
-      client_ptrs_.begin(), client_ptrs_.end(),
+      client_ptrs_.begin(),
+      client_ptrs_.end(),
       [](rclcpp::ClientBase::WeakPtr x) { return x.expired(); }),
     client_ptrs_.end());
 }
@@ -78,7 +82,8 @@ void CallbackGroup::add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr)
   waitable_ptrs_.push_back(waitable_ptr);
   waitable_ptrs_.erase(
     std::remove_if(
-      waitable_ptrs_.begin(), waitable_ptrs_.end(),
+      waitable_ptrs_.begin(),
+      waitable_ptrs_.end(),
       [](rclcpp::Waitable::WeakPtr x) { return x.expired(); }),
     waitable_ptrs_.end());
 }

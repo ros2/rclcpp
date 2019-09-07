@@ -43,7 +43,8 @@ SubscriptionBase::SubscriptionBase(
     if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {
       RCLCPP_ERROR(
         rclcpp::get_node_logger(node_handle.get()).get_child("rclcpp"),
-        "Error in destruction of rcl subscription handle: %s", rcl_get_error_string().str);
+        "Error in destruction of rcl subscription handle: %s",
+        rcl_get_error_string().str);
       rcl_reset_error();
     }
     delete rcl_subs;
@@ -58,7 +59,10 @@ SubscriptionBase::SubscriptionBase(
   *intra_process_subscription_handle_.get() = rcl_get_zero_initialized_subscription();
 
   rcl_ret_t ret = rcl_subscription_init(
-    subscription_handle_.get(), node_handle_.get(), &type_support_handle, topic_name.c_str(),
+    subscription_handle_.get(),
+    node_handle_.get(),
+    &type_support_handle,
+    topic_name.c_str(),
     &subscription_options);
   if (ret != RCL_RET_OK) {
     if (ret == RCL_RET_TOPIC_NAME_INVALID) {
@@ -152,16 +156,19 @@ void SubscriptionBase::setup_intra_process(
 {
   std::string intra_process_topic_name = std::string(get_topic_name()) + "/_intra";
   rcl_ret_t ret = rcl_subscription_init(
-    intra_process_subscription_handle_.get(), node_handle_.get(),
+    intra_process_subscription_handle_.get(),
+    node_handle_.get(),
     rclcpp::type_support::get_intra_process_message_msg_type_support(),
-    intra_process_topic_name.c_str(), &intra_process_options);
+    intra_process_topic_name.c_str(),
+    &intra_process_options);
   if (ret != RCL_RET_OK) {
     if (ret == RCL_RET_TOPIC_NAME_INVALID) {
       auto rcl_node_handle = node_handle_.get();
       // this will throw on any validation problem
       rcl_reset_error();
       expand_topic_or_service_name(
-        intra_process_topic_name, rcl_node_get_name(rcl_node_handle),
+        intra_process_topic_name,
+        rcl_node_get_name(rcl_node_handle),
         rcl_node_get_namespace(rcl_node_handle));
     }
 

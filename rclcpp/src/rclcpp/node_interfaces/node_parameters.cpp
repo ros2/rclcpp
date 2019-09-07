@@ -385,8 +385,14 @@ const rclcpp::ParameterValue & NodeParameters::declare_parameter(
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
   auto result = __declare_parameter_common(
-    name, default_value, parameter_descriptor, parameters_, parameter_overrides_,
-    on_parameters_set_callback_container_, on_parameters_set_callback_, &parameter_event,
+    name,
+    default_value,
+    parameter_descriptor,
+    parameters_,
+    parameter_overrides_,
+    on_parameters_set_callback_container_,
+    on_parameters_set_callback_,
+    &parameter_event,
     ignore_override);
 
   // If it failed to be set, then throw an exception.
@@ -511,13 +517,16 @@ rcl_interfaces::msg::SetParametersResult NodeParameters::set_parameters_atomical
     // This should not throw, because we validated the name and checked that
     // the parameter was not already declared.
     result = __declare_parameter_common(
-      parameter_to_be_declared->get_name(), parameter_to_be_declared->get_parameter_value(),
+      parameter_to_be_declared->get_name(),
+      parameter_to_be_declared->get_parameter_value(),
       rcl_interfaces::msg::ParameterDescriptor(),  // Implicit declare uses default descriptor.
-      staged_parameter_changes, parameter_overrides_,
+      staged_parameter_changes,
+      parameter_overrides_,
       // Only call callbacks once below
       empty_callback_container,  // callback_container is explicitly empty
       nullptr,                   // callback is explicitly null.
-      &parameter_event_msg, true);
+      &parameter_event_msg,
+      true);
     if (!result.successful) {
       // Declare failed, return knowing that nothing was changed because the
       // staged changes were not applied.
@@ -613,7 +622,8 @@ rcl_interfaces::msg::SetParametersResult NodeParameters::set_parameters_atomical
       continue;
     }
     auto it = std::find_if(
-      parameters_to_be_undeclared.begin(), parameters_to_be_undeclared.end(),
+      parameters_to_be_undeclared.begin(),
+      parameters_to_be_undeclared.end(),
       [&parameter](const auto & p) { return p->get_name() == parameter.get_name(); });
     if (it != parameters_to_be_undeclared.end()) {
       // This parameter was undeclared (deleted).
@@ -821,7 +831,8 @@ void NodeParameters::remove_on_set_parameters_callback(
   ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
 
   auto it = std::find_if(
-    on_parameters_set_callback_container_.begin(), on_parameters_set_callback_container_.end(),
+    on_parameters_set_callback_container_.begin(),
+    on_parameters_set_callback_container_.end(),
     HandleCompare(handle));
   if (it != on_parameters_set_callback_container_.end()) {
     on_parameters_set_callback_container_.erase(it);

@@ -23,8 +23,16 @@
 
 TEST(TestUtilities, remove_ros_arguments)
 {
-  const char * const argv[] = {"process_name",   "-d", "--ros-args", "-r",   "__ns:=/foo/bar", "-r",
-                               "__ns:=/fiz/buz", "--", "--foo=bar",  "--baz"};
+  const char * const argv[] = {"process_name",
+                               "-d",
+                               "--ros-args",
+                               "-r",
+                               "__ns:=/foo/bar",
+                               "-r",
+                               "__ns:=/fiz/buz",
+                               "--",
+                               "--foo=bar",
+                               "--baz"};
   int argc = sizeof(argv) / sizeof(const char *);
   auto args = rclcpp::remove_ros_arguments(argc, argv);
 

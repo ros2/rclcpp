@@ -131,7 +131,9 @@ std::vector<std::string> NodeGraph::get_node_names() const
   auto names_and_namespaces = get_node_names_and_namespaces();
 
   std::transform(
-    names_and_namespaces.begin(), names_and_namespaces.end(), std::back_inserter(nodes),
+    names_and_namespaces.begin(),
+    names_and_namespaces.end(),
+    std::back_inserter(nodes),
     [](std::pair<std::string, std::string> nns) {
       std::string return_string;
       if (nns.second.back() == '/') {
@@ -210,7 +212,9 @@ size_t NodeGraph::count_publishers(const std::string & topic_name) const
   auto rcl_node_handle = node_base_->get_rcl_node_handle();
 
   auto fqdn = rclcpp::expand_topic_or_service_name(
-    topic_name, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle),
+    topic_name,
+    rcl_node_get_name(rcl_node_handle),
+    rcl_node_get_namespace(rcl_node_handle),
     false);  // false = not a service
 
   size_t count;
@@ -229,7 +233,9 @@ size_t NodeGraph::count_subscribers(const std::string & topic_name) const
   auto rcl_node_handle = node_base_->get_rcl_node_handle();
 
   auto fqdn = rclcpp::expand_topic_or_service_name(
-    topic_name, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle),
+    topic_name,
+    rcl_node_get_name(rcl_node_handle),
+    rcl_node_get_namespace(rcl_node_handle),
     false);  // false = not a service
 
   size_t count;
@@ -265,7 +271,8 @@ void NodeGraph::notify_graph_change()
       // remove invalid pointers with the erase-remove idiom
       graph_events_.erase(
         std::remove_if(
-          graph_events_.begin(), graph_events_.end(),
+          graph_events_.begin(),
+          graph_events_.end(),
           [](const rclcpp::Event::WeakPtr & wptr) { return wptr.expired(); }),
         graph_events_.end());
       // update graph_users_count_

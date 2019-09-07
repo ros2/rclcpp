@@ -156,7 +156,9 @@ Transition & Transition::operator=(const Transition & rhs)
     transition_handle_->start->label = nullptr;
 
     ret = rcl_lifecycle_state_init(
-      transition_handle_->start, rhs.start_state().id(), rhs.start_state().label().c_str(),
+      transition_handle_->start,
+      rhs.start_state().id(),
+      rhs.start_state().label().c_str(),
       &allocator_);
     if (ret != RCL_RET_OK) {
       reset();
@@ -177,7 +179,9 @@ Transition & Transition::operator=(const Transition & rhs)
     transition_handle_->goal->label = nullptr;
 
     ret = rcl_lifecycle_state_init(
-      transition_handle_->goal, rhs.goal_state().id(), rhs.goal_state().label().c_str(),
+      transition_handle_->goal,
+      rhs.goal_state().id(),
+      rhs.goal_state().label().c_str(),
       &allocator_);
     if (ret != RCL_RET_OK) {
       reset();

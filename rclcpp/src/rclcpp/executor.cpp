@@ -301,8 +301,10 @@ void Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscrip
       subscription->handle_message(void_serialized_msg, message_info);
     } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp", "take_serialized failed for subscription on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string().str);
+        "rclcpp",
+        "take_serialized failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(),
+        rcl_get_error_string().str);
       rcl_reset_error();
     }
     subscription->return_serialized_message(serialized_msg);
@@ -314,8 +316,10 @@ void Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscrip
       subscription->handle_message(message, message_info);
     } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp", "could not deserialize serialized message on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string().str);
+        "rclcpp",
+        "could not deserialize serialized message on topic '%s': %s",
+        subscription->get_topic_name(),
+        rcl_get_error_string().str);
       rcl_reset_error();
     }
     subscription->return_message(message);
@@ -334,8 +338,10 @@ void Executor::execute_intra_process_subscription(rclcpp::SubscriptionBase::Shar
     subscription->handle_intra_process_message(ipm, message_info);
   } else if (status != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp", "take failed for intra process subscription on topic '%s': %s",
-      subscription->get_topic_name(), rcl_get_error_string().str);
+      "rclcpp",
+      "take failed for intra process subscription on topic '%s': %s",
+      subscription->get_topic_name(),
+      rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
@@ -352,7 +358,9 @@ void Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
     service->handle_request(request_header, request);
   } else if (status != RCL_RET_SERVICE_TAKE_FAILED) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp", "take request failed for server of service '%s': %s", service->get_service_name(),
+      "rclcpp",
+      "take request failed for server of service '%s': %s",
+      service->get_service_name(),
       rcl_get_error_string().str);
     rcl_reset_error();
   }
@@ -368,7 +376,9 @@ void Executor::execute_client(rclcpp::ClientBase::SharedPtr client)
     client->handle_response(request_header, response);
   } else if (status != RCL_RET_CLIENT_TAKE_FAILED) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp", "take response failed for client of service '%s': %s", client->get_service_name(),
+      "rclcpp",
+      "take response failed for client of service '%s': %s",
+      client->get_service_name(),
       rcl_get_error_string().str);
     rcl_reset_error();
   }
@@ -405,9 +415,12 @@ void Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
     // The size of waitables are accounted for in size of the other entities
     rcl_ret_t ret = rcl_wait_set_resize(
-      &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
-      memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
-      memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services(),
+      &wait_set_,
+      memory_strategy_->number_of_ready_subscriptions(),
+      memory_strategy_->number_of_guard_conditions(),
+      memory_strategy_->number_of_ready_timers(),
+      memory_strategy_->number_of_ready_clients(),
+      memory_strategy_->number_of_ready_services(),
       memory_strategy_->number_of_ready_events());
     if (RCL_RET_OK != ret) {
       throw std::runtime_error(

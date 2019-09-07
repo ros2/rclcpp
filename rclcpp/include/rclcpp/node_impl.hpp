@@ -104,8 +104,12 @@ std::shared_ptr<SubscriptionT> Node::create_subscription(
     msg_mem_strat)
 {
   return rclcpp::create_subscription<MessageT>(
-    *this, extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()), qos,
-    std::forward<CallbackT>(callback), options, msg_mem_strat);
+    *this,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    qos,
+    std::forward<CallbackT>(callback),
+    options,
+    msg_mem_strat);
 }
 
 template <typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
@@ -144,8 +148,11 @@ std::shared_ptr<SubscriptionT> Node::create_subscription(
   sub_options.allocator = allocator;
 
   return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
-    topic_name, rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)), std::forward<CallbackT>(callback),
-    sub_options, msg_mem_strat);
+    topic_name,
+    rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)),
+    std::forward<CallbackT>(callback),
+    sub_options,
+    msg_mem_strat);
 }
 
 template <typename DurationRepT, typename DurationT, typename CallbackT>
@@ -154,7 +161,8 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr Node::create_wall_timer(
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(period), std::move(callback),
+    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+    std::move(callback),
     this->node_base_->get_context());
   node_timers_->add_timer(timer, group);
   return timer;
@@ -166,8 +174,12 @@ typename Client<ServiceT>::SharedPtr Node::create_client(
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_client<ServiceT>(
-    node_base_, node_graph_, node_services_,
-    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()), qos_profile, group);
+    node_base_,
+    node_graph_,
+    node_services_,
+    extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
+    qos_profile,
+    group);
 }
 
 template <typename ServiceT, typename CallbackT>
@@ -176,9 +188,12 @@ typename rclcpp::Service<ServiceT>::SharedPtr Node::create_service(
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_service<ServiceT, CallbackT>(
-    node_base_, node_services_,
+    node_base_,
+    node_services_,
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()),
-    std::forward<CallbackT>(callback), qos_profile, group);
+    std::forward<CallbackT>(callback),
+    qos_profile,
+    group);
 }
 
 template <typename ParameterT>
@@ -200,11 +215,15 @@ std::vector<ParameterT> Node::declare_parameters(
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(result),
     [this, &normalized_namespace, ignore_overrides](auto element) {
       return this->declare_parameter(
-        normalized_namespace + element.first, element.second,
-        rcl_interfaces::msg::ParameterDescriptor(), ignore_overrides);
+        normalized_namespace + element.first,
+        element.second,
+        rcl_interfaces::msg::ParameterDescriptor(),
+        ignore_overrides);
     });
   return result;
 }
@@ -219,10 +238,14 @@ std::vector<ParameterT> Node::declare_parameters(
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(result),
     [this, &normalized_namespace, ignore_overrides](auto element) {
       return static_cast<ParameterT>(this->declare_parameter(
-        normalized_namespace + element.first, element.second.first, element.second.second,
+        normalized_namespace + element.first,
+        element.second.first,
+        element.second.second,
         ignore_overrides));
     });
   return result;

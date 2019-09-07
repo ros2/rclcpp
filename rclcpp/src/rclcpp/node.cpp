@@ -155,7 +155,8 @@ Node::Node(const Node & other, const std::string & sub_namespace)
 
   if (validation_result != RMW_NAMESPACE_VALID) {
     throw rclcpp::exceptions::InvalidNamespaceError(
-      effective_namespace_.c_str(), rmw_namespace_validation_result_string(validation_result),
+      effective_namespace_.c_str(),
+      rmw_namespace_validation_result_string(validation_result),
       invalid_index);
   }
 }

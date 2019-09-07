@@ -62,7 +62,8 @@ void __delete_context(rcl_context_t * context)
       rcl_ret_t ret = rcl_context_fini(context);
       if (RCL_RET_OK != ret) {
         RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"), "failed to finalize context: %s",
+          rclcpp::get_logger("rclcpp"),
+          "failed to finalize context: %s",
           rcl_get_error_string().str);
         rcl_reset_error();
       }
@@ -227,7 +228,8 @@ void Context::release_interrupt_guard_condition(
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"),
       "caught %s exception when releasing interrupt guard condition: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+      rmw::impl::cpp::demangle(exc).c_str(),
+      exc.what());
   } catch (...) {
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"),
@@ -242,7 +244,8 @@ void Context::interrupt_all_wait_sets()
     rcl_ret_t status = rcl_trigger_guard_condition(&(kv.second));
     if (status != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp", "failed to trigger guard condition in Context::interrupt_all_wait_sets(): %s",
+        "rclcpp",
+        "failed to trigger guard condition in Context::interrupt_all_wait_sets(): %s",
         rcl_get_error_string().str);
     }
   }

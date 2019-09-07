@@ -37,7 +37,9 @@ typename rclcpp::TimerBase::SharedPtr create_timer(
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
-    clock, period.to_chrono<std::chrono::nanoseconds>(), std::forward<CallbackT>(callback),
+    clock,
+    period.to_chrono<std::chrono::nanoseconds>(),
+    std::forward<CallbackT>(callback),
     node_base->get_context());
 
   node_timers->add_timer(timer, group);
@@ -52,8 +54,11 @@ typename rclcpp::TimerBase::SharedPtr create_timer(
 {
   return create_timer(
     rclcpp::node_interfaces::get_node_base_interface(node),
-    rclcpp::node_interfaces::get_node_timers_interface(node), clock, period,
-    std::forward<CallbackT>(callback), group);
+    rclcpp::node_interfaces::get_node_timers_interface(node),
+    clock,
+    period,
+    std::forward<CallbackT>(callback),
+    group);
 }
 
 }  // namespace rclcpp

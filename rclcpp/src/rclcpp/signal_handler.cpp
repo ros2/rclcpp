@@ -140,7 +140,8 @@ SignalHandler::~SignalHandler()
     RCLCPP_ERROR(
       get_logger(),
       "caught %s exception when uninstalling the sigint handler in rclcpp::~SignalHandler: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+      rmw::impl::cpp::demangle(exc).c_str(),
+      exc.what());
   } catch (...) {
     RCLCPP_ERROR(
       get_logger(),
@@ -308,7 +309,8 @@ void SignalHandler::wait_for_signal()
   switch (dw_wait_result) {
     case WAIT_ABANDONED:
       RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() failed in wait_for_signal() with WAIT_ABANDONED: %s",
+        get_logger(),
+        "WaitForSingleObject() failed in wait_for_signal() with WAIT_ABANDONED: %s",
         GetLastError());
       break;
     case WAIT_OBJECT_0:
@@ -323,7 +325,8 @@ void SignalHandler::wait_for_signal()
       break;
     default:
       RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() gave unknown return in wait_for_signal(): %s",
+        get_logger(),
+        "WaitForSingleObject() gave unknown return in wait_for_signal(): %s",
         GetLastError());
   }
 #elif defined(__APPLE__)

@@ -61,7 +61,8 @@ PublisherFactory create_publisher_factory(
   // factory function that creates a MessageT specific PublisherT
   factory.create_typed_publisher =
     [event_callbacks, allocator](
-      rclcpp::node_interfaces::NodeBaseInterface * node_base, const std::string & topic_name,
+      rclcpp::node_interfaces::NodeBaseInterface * node_base,
+      const std::string & topic_name,
       const rcl_publisher_options_t & publisher_options) -> std::shared_ptr<PublisherT> {
     auto options_copy = publisher_options;
     auto message_alloc = std::make_shared<typename PublisherT::MessageAlloc>(*allocator.get());

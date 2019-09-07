@@ -84,13 +84,15 @@ public:
     // the message) is done fully in RCL.
     // Services are handled in C++, so that it needs a C++ typesupport structure.
     rcl_ret_t ret = rcl_lifecycle_state_machine_init(
-      &state_machine_, node_handle,
+      &state_machine_,
+      node_handle,
       ROSIDL_GET_MSG_TYPE_SUPPORT(lifecycle_msgs, msg, TransitionEvent),
       rosidl_typesupport_cpp::get_service_type_support_handle<ChangeStateSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetStateSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableStatesSrv>(),
       rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
-      rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(), true,
+      rosidl_typesupport_cpp::get_service_type_support_handle<GetAvailableTransitionsSrv>(),
+      true,
       &node_options->allocator);
     if (ret != RCL_RET_OK) {
       throw std::runtime_error(
@@ -100,71 +102,91 @@ public:
 
     {  // change_state
       auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_change_state, this, std::placeholders::_1,
-        std::placeholders::_2, std::placeholders::_3);
+        &LifecycleNodeInterfaceImpl::on_change_state,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3);
       rclcpp::AnyServiceCallback<ChangeStateSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_change_state_ = std::make_shared<rclcpp::Service<ChangeStateSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_change_state, any_cb);
+        &state_machine_.com_interface.srv_change_state,
+        any_cb);
       node_services_interface_->add_service(
         std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_change_state_), nullptr);
     }
 
     {  // get_state
       auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_state, this, std::placeholders::_1,
-        std::placeholders::_2, std::placeholders::_3);
+        &LifecycleNodeInterfaceImpl::on_get_state,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3);
       rclcpp::AnyServiceCallback<GetStateSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_get_state_ = std::make_shared<rclcpp::Service<GetStateSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_state, any_cb);
+        &state_machine_.com_interface.srv_get_state,
+        any_cb);
       node_services_interface_->add_service(
         std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_state_), nullptr);
     }
 
     {  // get_available_states
       auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_available_states, this, std::placeholders::_1,
-        std::placeholders::_2, std::placeholders::_3);
+        &LifecycleNodeInterfaceImpl::on_get_available_states,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3);
       rclcpp::AnyServiceCallback<GetAvailableStatesSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_get_available_states_ = std::make_shared<rclcpp::Service<GetAvailableStatesSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_available_states, any_cb);
+        &state_machine_.com_interface.srv_get_available_states,
+        any_cb);
       node_services_interface_->add_service(
         std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_states_), nullptr);
     }
 
     {  // get_available_transitions
       auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_available_transitions, this, std::placeholders::_1,
-        std::placeholders::_2, std::placeholders::_3);
+        &LifecycleNodeInterfaceImpl::on_get_available_transitions,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3);
       rclcpp::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_get_available_transitions_ =
         std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
           node_base_interface_->get_shared_rcl_node_handle(),
-          &state_machine_.com_interface.srv_get_available_transitions, any_cb);
+          &state_machine_.com_interface.srv_get_available_transitions,
+          any_cb);
       node_services_interface_->add_service(
         std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_transitions_), nullptr);
     }
 
     {  // get_transition_graph
       auto cb = std::bind(
-        &LifecycleNodeInterfaceImpl::on_get_transition_graph, this, std::placeholders::_1,
-        std::placeholders::_2, std::placeholders::_3);
+        &LifecycleNodeInterfaceImpl::on_get_transition_graph,
+        this,
+        std::placeholders::_1,
+        std::placeholders::_2,
+        std::placeholders::_3);
       rclcpp::AnyServiceCallback<GetAvailableTransitionsSrv> any_cb;
       any_cb.set(std::move(cb));
 
       srv_get_transition_graph_ = std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
         node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_transition_graph, any_cb);
+        &state_machine_.com_interface.srv_get_transition_graph,
+        any_cb);
       node_services_interface_->add_service(
         std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_transition_graph_), nullptr);
     }
@@ -330,7 +352,8 @@ public:
   {
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR(
-        "Unable to change state for state machine for %s: %s", node_base_interface_->get_name(),
+        "Unable to change state for state machine for %s: %s",
+        node_base_interface_->get_name(),
         rcl_get_error_string().str);
       return RCL_RET_ERROR;
     }
@@ -343,8 +366,10 @@ public:
       rcl_lifecycle_trigger_transition_by_id(&state_machine_, transition_id, publish_update) !=
       RCL_RET_OK) {
       RCUTILS_LOG_ERROR(
-        "Unable to start transition %u from current state %s: %s", transition_id,
-        state_machine_.current_state->label, rcl_get_error_string().str);
+        "Unable to start transition %u from current state %s: %s",
+        transition_id,
+        state_machine_.current_state->label,
+        rcl_get_error_string().str);
       return RCL_RET_ERROR;
     }
 
@@ -366,7 +391,8 @@ public:
       rcl_lifecycle_trigger_transition_by_label(
         &state_machine_, transition_label, publish_update) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR(
-        "Failed to finish transition %u. Current state is now: %s", transition_id,
+        "Failed to finish transition %u. Current state is now: %s",
+        transition_id,
         state_machine_.current_state->label);
       return RCL_RET_ERROR;
     }

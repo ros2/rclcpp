@@ -53,7 +53,11 @@ TimerBase::TimerBase(
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
   if (
     rcl_timer_init(
-      timer_handle_.get(), clock_handle, rcl_context.get(), period.count(), nullptr,
+      timer_handle_.get(),
+      clock_handle,
+      rcl_context.get(),
+      period.count(),
+      nullptr,
       rcl_get_default_allocator()) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp", "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string().str);

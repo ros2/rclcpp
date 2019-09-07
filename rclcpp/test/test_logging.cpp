@@ -49,10 +49,13 @@ public:
     ASSERT_EQ(RCUTILS_RET_OK, rcutils_logging_initialize());
     rcutils_logging_set_default_logger_level(RCUTILS_LOG_SEVERITY_DEBUG);
 
-    auto rcutils_logging_console_output_handler =
-      [](
-        const rcutils_log_location_t * location, int level, const char * name,
-        rcutils_time_point_value_t timestamp, const char * format, va_list * args) -> void {
+    auto rcutils_logging_console_output_handler = [](
+                                                    const rcutils_log_location_t * location,
+                                                    int level,
+                                                    const char * name,
+                                                    rcutils_time_point_value_t timestamp,
+                                                    const char * format,
+                                                    va_list * args) -> void {
       g_log_calls += 1;
       g_last_log_event.location = location;
       g_last_log_event.level = level;
@@ -107,8 +110,9 @@ TEST_F(TestLoggingMacros, test_logging_string)
   EXPECT_EQ("message four", g_last_log_event.message);
 
   RCLCPP_DEBUG(
-    g_logger, std::string("message "
-                          "five"));
+    g_logger,
+    std::string("message "
+                "five"));
   EXPECT_EQ("message five", g_last_log_event.message);
 
   RCLCPP_DEBUG(g_logger, std::string("message %s"), "six");

@@ -38,7 +38,8 @@ static void rcl_node_options_t_destructor(rcl_node_options_t * node_options)
     if (RCL_RET_OK != ret) {
       // Cannot throw here, as it may be called in the destructor.
       RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"), "failed to finalize rcl node options: %s",
+        rclcpp::get_logger("rclcpp"),
+        "failed to finalize rcl node options: %s",
         rcl_get_error_string().str);
       rcl_reset_error();
     }

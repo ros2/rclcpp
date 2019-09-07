@@ -135,15 +135,20 @@ public:
     using rosidl_typesupport_cpp::get_service_type_support_handle;
     auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
-      this->get_client_handle().get(), this->get_rcl_node_handle(), service_type_support_handle,
-      service_name.c_str(), &client_options);
+      this->get_client_handle().get(),
+      this->get_rcl_node_handle(),
+      service_type_support_handle,
+      service_name.c_str(),
+      &client_options);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_SERVICE_NAME_INVALID) {
         auto rcl_node_handle = this->get_rcl_node_handle();
         // this will throw on any validation problem
         rcl_reset_error();
         expand_topic_or_service_name(
-          service_name, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle),
+          service_name,
+          rcl_node_get_name(rcl_node_handle),
+          rcl_node_get_namespace(rcl_node_handle),
           true);
       }
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create client");

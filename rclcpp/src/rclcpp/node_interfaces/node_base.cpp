@@ -60,7 +60,10 @@ NodeBase::NodeBase(
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
 
   ret = rcl_node_init(
-    rcl_node.get(), node_name.c_str(), namespace_.c_str(), context_->get_rcl_context().get(),
+    rcl_node.get(),
+    node_name.c_str(),
+    namespace_.c_str(),
+    context_->get_rcl_context().get(),
     &rcl_node_options);
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
@@ -81,7 +84,8 @@ NodeBase::NodeBase(
 
       if (validation_result != RMW_NODE_NAME_VALID) {
         throw rclcpp::exceptions::InvalidNodeNameError(
-          node_name.c_str(), rmw_node_name_validation_result_string(validation_result),
+          node_name.c_str(),
+          rmw_node_name_validation_result_string(validation_result),
           invalid_index);
       } else {
         throw std::runtime_error("valid rmw node name but invalid rcl node name");
@@ -103,7 +107,8 @@ NodeBase::NodeBase(
 
       if (validation_result != RMW_NAMESPACE_VALID) {
         throw rclcpp::exceptions::InvalidNamespaceError(
-          namespace_.c_str(), rmw_namespace_validation_result_string(validation_result),
+          namespace_.c_str(),
+          rmw_namespace_validation_result_string(validation_result),
           invalid_index);
       } else {
         throw std::runtime_error("valid rmw node namespace but invalid rcl node namespace");

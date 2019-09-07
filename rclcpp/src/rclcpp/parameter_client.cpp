@@ -46,41 +46,53 @@ AsyncParametersClient::AsyncParametersClient(
   using rclcpp::ClientBase;
 
   get_parameters_client_ = Client<rcl_interfaces::srv::GetParameters>::make_shared(
-    node_base_interface.get(), node_graph_interface,
-    remote_node_name_ + "/" + parameter_service_names::get_parameters, options);
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::get_parameters,
+    options);
   auto get_parameters_base = std::dynamic_pointer_cast<ClientBase>(get_parameters_client_);
   node_services_interface->add_client(get_parameters_base, group);
 
   get_parameter_types_client_ = Client<rcl_interfaces::srv::GetParameterTypes>::make_shared(
-    node_base_interface.get(), node_graph_interface,
-    remote_node_name_ + "/" + parameter_service_names::get_parameter_types, options);
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::get_parameter_types,
+    options);
   auto get_parameter_types_base =
     std::dynamic_pointer_cast<ClientBase>(get_parameter_types_client_);
   node_services_interface->add_client(get_parameter_types_base, group);
 
   set_parameters_client_ = Client<rcl_interfaces::srv::SetParameters>::make_shared(
-    node_base_interface.get(), node_graph_interface,
-    remote_node_name_ + "/" + parameter_service_names::set_parameters, options);
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::set_parameters,
+    options);
   auto set_parameters_base = std::dynamic_pointer_cast<ClientBase>(set_parameters_client_);
   node_services_interface->add_client(set_parameters_base, group);
 
   set_parameters_atomically_client_ =
     Client<rcl_interfaces::srv::SetParametersAtomically>::make_shared(
-      node_base_interface.get(), node_graph_interface,
-      remote_node_name_ + "/" + parameter_service_names::set_parameters_atomically, options);
+      node_base_interface.get(),
+      node_graph_interface,
+      remote_node_name_ + "/" + parameter_service_names::set_parameters_atomically,
+      options);
   auto set_parameters_atomically_base =
     std::dynamic_pointer_cast<ClientBase>(set_parameters_atomically_client_);
   node_services_interface->add_client(set_parameters_atomically_base, group);
 
   list_parameters_client_ = Client<rcl_interfaces::srv::ListParameters>::make_shared(
-    node_base_interface.get(), node_graph_interface,
-    remote_node_name_ + "/" + parameter_service_names::list_parameters, options);
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::list_parameters,
+    options);
   auto list_parameters_base = std::dynamic_pointer_cast<ClientBase>(list_parameters_client_);
   node_services_interface->add_client(list_parameters_base, group);
 
   describe_parameters_client_ = Client<rcl_interfaces::srv::DescribeParameters>::make_shared(
-    node_base_interface.get(), node_graph_interface,
-    remote_node_name_ + "/" + parameter_service_names::describe_parameters, options);
+    node_base_interface.get(),
+    node_graph_interface,
+    remote_node_name_ + "/" + parameter_service_names::describe_parameters,
+    options);
   auto describe_parameters_base =
     std::dynamic_pointer_cast<ClientBase>(describe_parameters_client_);
   node_services_interface->add_client(describe_parameters_base, group);
@@ -117,8 +129,9 @@ std::shared_future<std::vector<rclcpp::Parameter>> AsyncParametersClient::get_pa
   request->names = names;
 
   get_parameters_client_->async_send_request(
-    request, [request, promise_result, future_result,
-              callback](rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f) {
+    request,
+    [request, promise_result, future_result, callback](
+      rclcpp::Client<rcl_interfaces::srv::GetParameters>::SharedFuture cb_f) {
       std::vector<rclcpp::Parameter> parameters;
       auto & pvalues = cb_f.get()->values;
 
@@ -150,8 +163,9 @@ std::shared_future<std::vector<rclcpp::ParameterType>> AsyncParametersClient::ge
   request->names = names;
 
   get_parameter_types_client_->async_send_request(
-    request, [promise_result, future_result,
-              callback](rclcpp::Client<rcl_interfaces::srv::GetParameterTypes>::SharedFuture cb_f) {
+    request,
+    [promise_result, future_result, callback](
+      rclcpp::Client<rcl_interfaces::srv::GetParameterTypes>::SharedFuture cb_f) {
       std::vector<rclcpp::ParameterType> types;
       auto & pts = cb_f.get()->types;
       for (auto & pt : pts) {
@@ -179,12 +193,15 @@ AsyncParametersClient::set_parameters(
   auto request = std::make_shared<rcl_interfaces::srv::SetParameters::Request>();
 
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(request->parameters),
     [](rclcpp::Parameter p) { return p.to_parameter_msg(); });
 
   set_parameters_client_->async_send_request(
-    request, [promise_result, future_result,
-              callback](rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedFuture cb_f) {
+    request,
+    [promise_result, future_result, callback](
+      rclcpp::Client<rcl_interfaces::srv::SetParameters>::SharedFuture cb_f) {
       promise_result->set_value(cb_f.get()->results);
       if (callback != nullptr) {
         callback(future_result);
@@ -205,12 +222,15 @@ AsyncParametersClient::set_parameters_atomically(
   auto request = std::make_shared<rcl_interfaces::srv::SetParametersAtomically::Request>();
 
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(request->parameters),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(request->parameters),
     [](rclcpp::Parameter p) { return p.to_parameter_msg(); });
 
   set_parameters_atomically_client_->async_send_request(
-    request, [promise_result, future_result, callback](
-               rclcpp::Client<rcl_interfaces::srv::SetParametersAtomically>::SharedFuture cb_f) {
+    request,
+    [promise_result, future_result, callback](
+      rclcpp::Client<rcl_interfaces::srv::SetParametersAtomically>::SharedFuture cb_f) {
       promise_result->set_value(cb_f.get()->result);
       if (callback != nullptr) {
         callback(future_result);
@@ -233,8 +253,9 @@ AsyncParametersClient::list_parameters(
   request->depth = depth;
 
   list_parameters_client_->async_send_request(
-    request, [promise_result, future_result,
-              callback](rclcpp::Client<rcl_interfaces::srv::ListParameters>::SharedFuture cb_f) {
+    request,
+    [promise_result, future_result, callback](
+      rclcpp::Client<rcl_interfaces::srv::ListParameters>::SharedFuture cb_f) {
       promise_result->set_value(cb_f.get()->result);
       if (callback != nullptr) {
         callback(future_result);
@@ -255,9 +276,11 @@ bool AsyncParametersClient::service_is_ready() const
 
 bool AsyncParametersClient::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
 {
-  const std::vector<std::shared_ptr<rclcpp::ClientBase>> clients = {
-    get_parameters_client_, get_parameter_types_client_, set_parameters_client_,
-    list_parameters_client_, describe_parameters_client_};
+  const std::vector<std::shared_ptr<rclcpp::ClientBase>> clients = {get_parameters_client_,
+                                                                    get_parameter_types_client_,
+                                                                    set_parameters_client_,
+                                                                    list_parameters_client_,
+                                                                    describe_parameters_client_};
   for (auto & client : clients) {
     auto stamp = std::chrono::steady_clock::now();
     if (!client->wait_for_service(timeout)) {
@@ -321,8 +344,12 @@ SyncParametersClient::SyncParametersClient(
 : executor_(executor), node_base_interface_(node_base_interface)
 {
   async_parameters_client_ = std::make_shared<AsyncParametersClient>(
-    node_base_interface, node_topics_interface, node_graph_interface, node_services_interface,
-    remote_node_name, qos_profile);
+    node_base_interface,
+    node_topics_interface,
+    node_graph_interface,
+    node_services_interface,
+    remote_node_name,
+    qos_profile);
 }
 
 std::vector<rclcpp::Parameter> SyncParametersClient::get_parameters(

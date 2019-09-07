@@ -224,32 +224,37 @@ TEST(TestFunctionTraits, argument_types)
   // Test regular functions
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             func_one_int)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        func_one_int)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             func_two_ints)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        func_two_ints)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             func_two_ints)>::template argument_type<1> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        func_two_ints)>::template argument_type<1> >::value,
     "Functor accepts an int as second argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             func_one_int_one_char)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        func_one_int_one_char)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      char, rclcpp::function_traits::function_traits<decltype(
-              func_one_int_one_char)>::template argument_type<1> >::value,
+      char,
+      rclcpp::function_traits::function_traits<decltype(
+        func_one_int_one_char)>::template argument_type<1> >::value,
     "Functor accepts a char as second argument");
 
   // Test lambdas
@@ -272,63 +277,73 @@ TEST(TestFunctionTraits, argument_types)
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             lambda_one_int)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        lambda_one_int)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             lambda_two_ints)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        lambda_two_ints)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             lambda_two_ints)>::template argument_type<1> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        lambda_two_ints)>::template argument_type<1> >::value,
     "Functor accepts an int as second argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             lambda_one_int_one_char)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        lambda_one_int_one_char)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      char, rclcpp::function_traits::function_traits<decltype(
-              lambda_one_int_one_char)>::template argument_type<1> >::value,
+      char,
+      rclcpp::function_traits::function_traits<decltype(
+        lambda_one_int_one_char)>::template argument_type<1> >::value,
     "Functor accepts a char as second argument");
 
   // Test objects that have a call operator
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<FunctionObjectOneInt>::template argument_type<
-             0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<FunctionObjectOneInt>::template argument_type<0> >::
+      value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<FunctionObjectTwoInts>::template argument_type<
-             0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<FunctionObjectTwoInts>::template argument_type<0> >::
+      value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<FunctionObjectTwoInts>::template argument_type<
-             1> >::value,
+      int,
+      rclcpp::function_traits::function_traits<FunctionObjectTwoInts>::template argument_type<1> >::
+      value,
     "Functor accepts an int as second argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<
-             FunctionObjectOneIntOneChar>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<FunctionObjectOneIntOneChar>::template argument_type<
+        0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      char, rclcpp::function_traits::function_traits<
-              FunctionObjectOneIntOneChar>::template argument_type<1> >::value,
+      char,
+      rclcpp::function_traits::function_traits<FunctionObjectOneIntOneChar>::template argument_type<
+        1> >::value,
     "Functor accepts a char as second argument");
 
   ObjectMember object_member;
@@ -338,8 +353,9 @@ TEST(TestFunctionTraits, argument_types)
 
   static_assert(
     std::is_same<
-      bool, rclcpp::function_traits::function_traits<decltype(
-              bind_one_bool)>::template argument_type<0> >::value,
+      bool,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_one_bool)>::template argument_type<0> >::value,
     "Functor accepts a bool as first argument");
 
   auto bind_one_bool_const =
@@ -347,62 +363,74 @@ TEST(TestFunctionTraits, argument_types)
 
   static_assert(
     std::is_same<
-      bool, rclcpp::function_traits::function_traits<decltype(
-              bind_one_bool_const)>::template argument_type<0> >::value,
+      bool,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_one_bool_const)>::template argument_type<0> >::value,
     "Functor accepts a bool as first argument");
 
   auto bind_two_bools = std::bind(
-    &ObjectMember::callback_two_bools, &object_member, std::placeholders::_1,
+    &ObjectMember::callback_two_bools,
+    &object_member,
+    std::placeholders::_1,
     std::placeholders::_2);
 
   static_assert(
     std::is_same<
-      bool, rclcpp::function_traits::function_traits<decltype(
-              bind_two_bools)>::template argument_type<0> >::value,
+      bool,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_two_bools)>::template argument_type<0> >::value,
     "Functor accepts a bool as first argument");
 
   static_assert(
     std::is_same<
-      bool, rclcpp::function_traits::function_traits<decltype(
-              bind_two_bools)>::template argument_type<1> >::value,
+      bool,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_two_bools)>::template argument_type<1> >::value,
     "Functor accepts a bool as second argument");
 
   auto bind_one_bool_one_float = std::bind(
-    &ObjectMember::callback_one_bool_one_float, &object_member, std::placeholders::_1,
+    &ObjectMember::callback_one_bool_one_float,
+    &object_member,
+    std::placeholders::_1,
     std::placeholders::_2);
 
   static_assert(
     std::is_same<
-      bool, rclcpp::function_traits::function_traits<decltype(
-              bind_one_bool_one_float)>::template argument_type<0> >::value,
+      bool,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_one_bool_one_float)>::template argument_type<0> >::value,
     "Functor accepts a bool as first argument");
 
   static_assert(
     std::is_same<
-      float, rclcpp::function_traits::function_traits<decltype(
-               bind_one_bool_one_float)>::template argument_type<1> >::value,
+      float,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_one_bool_one_float)>::template argument_type<1> >::value,
     "Functor accepts a float as second argument");
 
   auto bind_one_int = std::bind(func_one_int, std::placeholders::_1);
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             bind_one_int)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_one_int)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   auto bind_two_ints = std::bind(func_two_ints, std::placeholders::_1, std::placeholders::_2);
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             bind_two_ints)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_two_ints)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             bind_two_ints)>::template argument_type<1> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_two_ints)>::template argument_type<1> >::value,
     "Functor accepts an int as second argument");
 
   auto bind_one_int_one_char =
@@ -410,14 +438,16 @@ TEST(TestFunctionTraits, argument_types)
 
   static_assert(
     std::is_same<
-      int, rclcpp::function_traits::function_traits<decltype(
-             bind_one_int_one_char)>::template argument_type<0> >::value,
+      int,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_one_int_one_char)>::template argument_type<0> >::value,
     "Functor accepts an int as first argument");
 
   static_assert(
     std::is_same<
-      char, rclcpp::function_traits::function_traits<decltype(
-              bind_one_int_one_char)>::template argument_type<1> >::value,
+      char,
+      rclcpp::function_traits::function_traits<decltype(
+        bind_one_int_one_char)>::template argument_type<1> >::value,
     "Functor accepts a char as second argument");
 }
 
@@ -538,23 +568,23 @@ TEST(TestFunctionTraits, same_arguments)
   };
 
   static_assert(
-    rclcpp::function_traits::same_arguments<
-      decltype(lambda_one_int), decltype(func_one_int)>::value,
+    rclcpp::function_traits::same_arguments<decltype(lambda_one_int), decltype(func_one_int)>::
+      value,
     "Lambda and function have the same arguments");
 
   static_assert(
-    !rclcpp::function_traits::same_arguments<
-      decltype(lambda_two_ints), decltype(func_one_int)>::value,
+    !rclcpp::function_traits::same_arguments<decltype(lambda_two_ints), decltype(func_one_int)>::
+      value,
     "Lambda and function have different arguments");
 
   static_assert(
-    !rclcpp::function_traits::same_arguments<
-      decltype(func_one_int_one_char), decltype(func_two_ints)>::value,
+    !rclcpp::function_traits::
+      same_arguments<decltype(func_one_int_one_char), decltype(func_two_ints)>::value,
     "Functions have different arguments");
 
   static_assert(
-    !rclcpp::function_traits::same_arguments<
-      decltype(lambda_one_int), decltype(lambda_two_ints)>::value,
+    !rclcpp::function_traits::same_arguments<decltype(lambda_one_int), decltype(lambda_two_ints)>::
+      value,
     "Lambdas have different arguments");
 
   static_assert(
@@ -562,8 +592,8 @@ TEST(TestFunctionTraits, same_arguments)
     "Functor and function have the same arguments");
 
   static_assert(
-    rclcpp::function_traits::same_arguments<
-      FunctionObjectTwoInts, decltype(lambda_two_ints)>::value,
+    rclcpp::function_traits::same_arguments<FunctionObjectTwoInts, decltype(lambda_two_ints)>::
+      value,
     "Functor and lambda have the same arguments");
 }
 
@@ -572,7 +602,8 @@ TEST(TestFunctionTraits, return_type)
   // Test regular function
   static_assert(
     std::is_same<
-      rclcpp::function_traits::function_traits<decltype(func_no_args)>::return_type, int>::value,
+      rclcpp::function_traits::function_traits<decltype(func_no_args)>::return_type,
+      int>::value,
     "Functor return ints");
 
   // Test lambda
@@ -589,8 +620,8 @@ TEST(TestFunctionTraits, return_type)
 
   // Test objects that have a call operator
   static_assert(
-    std::is_same<
-      rclcpp::function_traits::function_traits<FunctionObjectNoArgs>::return_type, int>::value,
+    std::is_same<rclcpp::function_traits::function_traits<FunctionObjectNoArgs>::return_type, int>::
+      value,
     "Functor return ints");
 }
 
@@ -664,11 +695,14 @@ public:
 TEST_F(TestMember, bind_member_functor)
 {
   auto bind_member_functor = std::bind(
-    &TestMember::MemberFunctor, this, std::placeholders::_1, std::placeholders::_2,
+    &TestMember::MemberFunctor,
+    this,
+    std::placeholders::_1,
+    std::placeholders::_2,
     std::placeholders::_3);
 
   static_assert(
-    rclcpp::function_traits::check_arguments<
-      decltype(bind_member_functor), int, float, std::string>::value,
+    rclcpp::function_traits::
+      check_arguments<decltype(bind_member_functor), int, float, std::string>::value,
     "Functor accepts an int, a float and a string as arguments");
 }

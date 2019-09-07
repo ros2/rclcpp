@@ -81,7 +81,8 @@ public:
   {
     if (!enabled_) {
       RCLCPP_WARN(
-        logger_, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -99,7 +100,8 @@ public:
   {
     if (!enabled_) {
       RCLCPP_WARN(
-        logger_, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;
@@ -127,7 +129,8 @@ public:
   {
     if (!enabled_) {
       RCLCPP_WARN(
-        logger_, "Trying to publish message on the topic '%s', but the publisher is not activated",
+        logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
         this->get_topic_name());
 
       return;

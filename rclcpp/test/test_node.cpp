@@ -498,8 +498,10 @@ TEST_F(TestNode, declare_parameter_with_overrides)
     // int default, with override and ignoring it
     rclcpp::ParameterValue default_value(43);
     rclcpp::ParameterValue value = node->declare_parameter(
-      "parameter_and_default_ignore_override", default_value,
-      rcl_interfaces::msg::ParameterDescriptor(), true);
+      "parameter_and_default_ignore_override",
+      default_value,
+      rcl_interfaces::msg::ParameterDescriptor(),
+      true);
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
     EXPECT_EQ(value.get<int>(), 43);  // and not 42, the parameter override is ignored.
   }
@@ -570,11 +572,12 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values)
     // with namespace, defaults, no custom descriptors, no initial
     int64_t bigger_than_int = INT64_MAX - 42;
     auto values = node->declare_parameters<int64_t>(
-      "namespace1", {
-                      {"parameter_a", 42},
-                      {"parameter_b", 256},
-                      {"parameter_c", bigger_than_int},
-                    });
+      "namespace1",
+      {
+        {"parameter_a", 42},
+        {"parameter_b", 256},
+        {"parameter_c", bigger_than_int},
+      });
     std::vector<int64_t> expected = {42, 256, bigger_than_int};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("namespace1.parameter_a"));
@@ -584,10 +587,11 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values)
   {
     // without namespace, defaults, no custom descriptors, no initial
     auto values = node->declare_parameters<int64_t>(
-      "", {
-            {"parameter_without_ns_a", 42},
-            {"parameter_without_ns_b", 256},
-          });
+      "",
+      {
+        {"parameter_without_ns_a", 42},
+        {"parameter_without_ns_b", 256},
+      });
     std::vector<int64_t> expected = {42, 256};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("parameter_without_ns_a"));
@@ -598,10 +602,11 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values)
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.read_only = true;
     auto values = node->declare_parameters<int64_t>(
-      "namespace2", {
-                      {"parameter_a", {42, descriptor}},
-                      {"parameter_b", {256, descriptor}},
-                    });
+      "namespace2",
+      {
+        {"parameter_a", {42, descriptor}},
+        {"parameter_b", {256, descriptor}},
+      });
     std::vector<int64_t> expected = {42, 256};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("namespace2.parameter_a"));
@@ -613,10 +618,11 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values)
     rcl_interfaces::msg::ParameterDescriptor descriptor;
     descriptor.read_only = true;
     auto values = node->declare_parameters<int64_t>(
-      "", {
-            {"parameter_without_ns_c", {42, descriptor}},
-            {"parameter_without_ns_d", {256, descriptor}},
-          });
+      "",
+      {
+        {"parameter_without_ns_c", {42, descriptor}},
+        {"parameter_without_ns_d", {256, descriptor}},
+      });
     std::vector<int64_t> expected = {42, 256};
     EXPECT_EQ(values, expected);
     EXPECT_TRUE(node->has_parameter("parameter_without_ns_c"));

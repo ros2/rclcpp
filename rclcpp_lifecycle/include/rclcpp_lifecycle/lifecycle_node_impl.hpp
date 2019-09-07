@@ -124,8 +124,11 @@ std::shared_ptr<SubscriptionT> LifecycleNode::create_subscription(
   sub_options.allocator = allocator;
 
   return this->create_subscription<MessageT, CallbackT, Alloc, SubscriptionT>(
-    topic_name, std::forward<CallbackT>(callback), rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)),
-    sub_options, msg_mem_strat);
+    topic_name,
+    std::forward<CallbackT>(callback),
+    rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)),
+    sub_options,
+    msg_mem_strat);
 }
 
 template <typename DurationRepT, typename DurationT, typename CallbackT>
@@ -134,7 +137,8 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr LifecycleNode::create_wall_time
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(period), std::move(callback),
+    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+    std::move(callback),
     this->node_base_->get_context());
   node_timers_->add_timer(timer, group);
   return timer;
@@ -164,7 +168,11 @@ typename rclcpp::Service<ServiceT>::SharedPtr LifecycleNode::create_service(
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_service<ServiceT, CallbackT>(
-    node_base_, node_services_, service_name, std::forward<CallbackT>(callback), qos_profile,
+    node_base_,
+    node_services_,
+    service_name,
+    std::forward<CallbackT>(callback),
+    qos_profile,
     group);
 }
 
@@ -184,7 +192,9 @@ std::vector<ParameterT> LifecycleNode::declare_parameters(
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(result),
     [this, &normalized_namespace](auto element) {
       return this->declare_parameter(normalized_namespace + element.first, element.second);
     });
@@ -200,7 +210,9 @@ std::vector<ParameterT> LifecycleNode::declare_parameters(
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(result),
     [this, &normalized_namespace](auto element) {
       return static_cast<ParameterT>(this->declare_parameter(
         normalized_namespace + element.first, element.second.first, element.second.second));

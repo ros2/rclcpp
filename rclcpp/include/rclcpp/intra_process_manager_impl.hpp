@@ -166,7 +166,8 @@ public:
       info.target_subscriptions_by_message_sequence[message_seq].clear();
     }
     std::copy(
-      destined_subscriptions.begin(), destined_subscriptions.end(),
+      destined_subscriptions.begin(),
+      destined_subscriptions.end(),
       // Memory allocation occurs in info.target_subscriptions_by_message_sequence[message_seq]
       std::inserter(
         info.target_subscriptions_by_message_sequence[message_seq],

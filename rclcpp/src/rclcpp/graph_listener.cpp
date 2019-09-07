@@ -47,7 +47,8 @@ GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
   // guard condition is using it.
   interrupt_guard_condition_context_ = parent_context->get_rcl_context();
   rcl_ret_t ret = rcl_guard_condition_init(
-    &interrupt_guard_condition_, interrupt_guard_condition_context_.get(),
+    &interrupt_guard_condition_,
+    interrupt_guard_condition_context_.get(),
     rcl_guard_condition_get_default_options());
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "failed to create interrupt guard condition");
@@ -74,7 +75,8 @@ void GraphListener::start_if_not_started()
       0,  // number_of_clients
       0,  // number_of_services
       0,  // number_of_events
-      this->parent_context_->get_rcl_context().get(), rcl_get_default_allocator());
+      this->parent_context_->get_rcl_context().get(),
+      rcl_get_default_allocator());
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to initialize wait set");
     }
@@ -101,8 +103,10 @@ void GraphListener::run()
     run_loop();
   } catch (const std::exception & exc) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp", "caught %s exception in GraphListener thread: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+      "rclcpp",
+      "caught %s exception in GraphListener thread: %s",
+      rmw::impl::cpp::demangle(exc).c_str(),
+      exc.what());
     std::rethrow_exception(std::current_exception());
   } catch (...) {
     RCUTILS_LOG_ERROR_NAMED("rclcpp", "unknown error in GraphListener thread");
@@ -245,7 +249,8 @@ bool GraphListener::has_node(rclcpp::node_interfaces::NodeGraphInterface * node_
   // Acquire the nodes mutex using the barrier to prevent the run loop from
   // re-locking the nodes mutex after being interrupted.
   acquire_nodes_lock_(
-    &node_graph_interfaces_barrier_mutex_, &node_graph_interfaces_mutex_,
+    &node_graph_interfaces_barrier_mutex_,
+    &node_graph_interfaces_mutex_,
     &interrupt_guard_condition_);
   // Store the now acquired node_graph_interfaces_mutex_ in the scoped lock using adopt_lock.
   std::lock_guard<std::mutex> nodes_lock(node_graph_interfaces_mutex_, std::adopt_lock);
@@ -265,7 +270,8 @@ void GraphListener::add_node(rclcpp::node_interfaces::NodeGraphInterface * node_
   // Acquire the nodes mutex using the barrier to prevent the run loop from
   // re-locking the nodes mutex after being interrupted.
   acquire_nodes_lock_(
-    &node_graph_interfaces_barrier_mutex_, &node_graph_interfaces_mutex_,
+    &node_graph_interfaces_barrier_mutex_,
+    &node_graph_interfaces_mutex_,
     &interrupt_guard_condition_);
   // Store the now acquired node_graph_interfaces_mutex_ in the scoped lock using adopt_lock.
   std::lock_guard<std::mutex> nodes_lock(node_graph_interfaces_mutex_, std::adopt_lock);
@@ -308,7 +314,8 @@ void GraphListener::remove_node(rclcpp::node_interfaces::NodeGraphInterface * no
   // Acquire the nodes mutex using the barrier to prevent the run loop from
   // re-locking the nodes mutex after being interrupted.
   acquire_nodes_lock_(
-    &node_graph_interfaces_barrier_mutex_, &node_graph_interfaces_mutex_,
+    &node_graph_interfaces_barrier_mutex_,
+    &node_graph_interfaces_mutex_,
     &interrupt_guard_condition_);
   // Store the now acquired node_graph_interfaces_mutex_ in the scoped lock using adopt_lock.
   std::lock_guard<std::mutex> nodes_lock(node_graph_interfaces_mutex_, std::adopt_lock);
@@ -353,8 +360,10 @@ void GraphListener::shutdown(const std::nothrow_t &) noexcept
     this->__shutdown(false);
   } catch (const std::exception & exc) {
     RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp"), "caught %s exception when shutting down GraphListener: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+      rclcpp::get_logger("rclcpp"),
+      "caught %s exception when shutting down GraphListener: %s",
+      rmw::impl::cpp::demangle(exc).c_str(),
+      exc.what());
   } catch (...) {
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"), "caught unknown exception when shutting down GraphListener");

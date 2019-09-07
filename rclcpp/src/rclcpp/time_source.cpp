@@ -43,9 +43,12 @@ TimeSource::TimeSource() : logger_(rclcpp::get_logger("rclcpp")), ros_time_activ
 void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
 {
   attachNode(
-    node->get_node_base_interface(), node->get_node_topics_interface(),
-    node->get_node_graph_interface(), node->get_node_services_interface(),
-    node->get_node_logging_interface(), node->get_node_clock_interface(),
+    node->get_node_base_interface(),
+    node->get_node_topics_interface(),
+    node->get_node_graph_interface(),
+    node->get_node_services_interface(),
+    node->get_node_logging_interface(),
+    node->get_node_clock_interface(),
     node->get_node_parameters_interface());
 }
 
@@ -89,7 +92,8 @@ void TimeSource::attachNode(
     // TODO(wjwwood): use set_on_parameters_set_callback to catch the type mismatch,
     //   before the use_sim_time parameter can ever be set to an invalid value
     RCLCPP_ERROR(
-      logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
+      logger_,
+      "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
       rclcpp::to_string(use_sim_time_param.get_type()).c_str());
   }
 
@@ -192,7 +196,9 @@ void TimeSource::create_clock_sub()
   }
 
   clock_subscription_ = rclcpp::create_subscription<rosgraph_msgs::msg::Clock>(
-    node_topics_, "/clock", rclcpp::QoS(QoSInitialization::from_rmw(rmw_qos_profile_default)),
+    node_topics_,
+    "/clock",
+    rclcpp::QoS(QoSInitialization::from_rmw(rmw_qos_profile_default)),
     std::bind(&TimeSource::clock_cb, this, std::placeholders::_1));
 }
 
@@ -210,7 +216,8 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
   }
   // Filter for only 'use_sim_time' being added or changed.
   rclcpp::ParameterEventsFilter filter(
-    event, {"use_sim_time"},
+    event,
+    {"use_sim_time"},
     {rclcpp::ParameterEventsFilter::EventType::NEW,
      rclcpp::ParameterEventsFilter::EventType::CHANGED});
   for (auto & it : filter.get_events()) {

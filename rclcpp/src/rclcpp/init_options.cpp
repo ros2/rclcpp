@@ -60,7 +60,8 @@ void InitOptions::finalize_init_options()
     rcl_ret_t ret = rcl_init_options_fini(init_options_.get());
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"), "failed to finalize rcl init options: %s",
+        rclcpp::get_logger("rclcpp"),
+        "failed to finalize rcl init options: %s",
         rcl_get_error_string().str);
       rcl_reset_error();
     }

@@ -125,7 +125,8 @@ void bounds_check_duration_sum(int64_t lhsns, int64_t rhsns, uint64_t max)
 Duration Duration::operator+(const rclcpp::Duration & rhs) const
 {
   bounds_check_duration_sum(
-    this->rcl_duration_.nanoseconds, rhs.rcl_duration_.nanoseconds,
+    this->rcl_duration_.nanoseconds,
+    rhs.rcl_duration_.nanoseconds,
     std::numeric_limits<rcl_duration_value_t>::max());
   return Duration(rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds);
 }
@@ -149,7 +150,8 @@ void bounds_check_duration_difference(int64_t lhsns, int64_t rhsns, uint64_t max
 Duration Duration::operator-(const rclcpp::Duration & rhs) const
 {
   bounds_check_duration_difference(
-    this->rcl_duration_.nanoseconds, rhs.rcl_duration_.nanoseconds,
+    this->rcl_duration_.nanoseconds,
+    rhs.rcl_duration_.nanoseconds,
     std::numeric_limits<rcl_duration_value_t>::max());
 
   return Duration(rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);

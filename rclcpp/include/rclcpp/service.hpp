@@ -106,7 +106,8 @@ public:
           if (rcl_service_fini(service, handle.get()) != RCL_RET_OK) {
             RCLCPP_ERROR(
               rclcpp::get_node_logger(handle.get()).get_child("rclcpp"),
-              "Error in destruction of rcl service handle: %s", rcl_get_error_string().str);
+              "Error in destruction of rcl service handle: %s",
+              rcl_get_error_string().str);
             rcl_reset_error();
           }
         } else {
@@ -120,7 +121,10 @@ public:
     *service_handle_.get() = rcl_get_zero_initialized_service();
 
     rcl_ret_t ret = rcl_service_init(
-      service_handle_.get(), node_handle.get(), service_type_support_handle, service_name.c_str(),
+      service_handle_.get(),
+      node_handle.get(),
+      service_type_support_handle,
+      service_name.c_str(),
       &service_options);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_SERVICE_NAME_INVALID) {
@@ -128,7 +132,9 @@ public:
         // this will throw on any validation problem
         rcl_reset_error();
         expand_topic_or_service_name(
-          service_name, rcl_node_get_name(rcl_node_handle), rcl_node_get_namespace(rcl_node_handle),
+          service_name,
+          rcl_node_get_name(rcl_node_handle),
+          rcl_node_get_namespace(rcl_node_handle),
           true);
       }
 

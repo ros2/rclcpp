@@ -96,8 +96,14 @@ typename Server<ActionT>::SharedPtr create_server(
 
   std::shared_ptr<Server<ActionT>> action_server(
     new Server<ActionT>(
-      node_base_interface, node_clock_interface, node_logging_interface, name, options, handle_goal,
-      handle_cancel, handle_accepted),
+      node_base_interface,
+      node_clock_interface,
+      node_logging_interface,
+      name,
+      options,
+      handle_goal,
+      handle_cancel,
+      handle_accepted),
     deleter);
 
   node_waitables_interface->add_waitable(action_server, group);
@@ -131,9 +137,16 @@ typename Server<ActionT>::SharedPtr create_server(
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_server<ActionT>(
-    node->get_node_base_interface(), node->get_node_clock_interface(),
-    node->get_node_logging_interface(), node->get_node_waitables_interface(), name, handle_goal,
-    handle_cancel, handle_accepted, options, group);
+    node->get_node_base_interface(),
+    node->get_node_clock_interface(),
+    node->get_node_logging_interface(),
+    node->get_node_waitables_interface(),
+    name,
+    handle_goal,
+    handle_cancel,
+    handle_accepted,
+    options,
+    group);
 }
 }  // namespace rclcpp_action
 #endif  // RCLCPP_ACTION__CREATE_SERVER_HPP_

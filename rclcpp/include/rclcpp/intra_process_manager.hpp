@@ -327,8 +327,10 @@ public:
     size_t target_subs_size = 0;
     std::lock_guard<std::mutex> lock(take_mutex_);
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->take_intra_process_message(
-      intra_process_publisher_id, message_sequence_number,
-      requesting_subscriptions_intra_process_id, target_subs_size);
+      intra_process_publisher_id,
+      message_sequence_number,
+      requesting_subscriptions_intra_process_id,
+      target_subs_size);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       return;
@@ -355,8 +357,10 @@ public:
     size_t target_subs_size = 0;
     std::lock_guard<std::mutex> lock(take_mutex_);
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->take_intra_process_message(
-      intra_process_publisher_id, message_sequence_number,
-      requesting_subscriptions_intra_process_id, target_subs_size);
+      intra_process_publisher_id,
+      message_sequence_number,
+      requesting_subscriptions_intra_process_id,
+      target_subs_size);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       return;

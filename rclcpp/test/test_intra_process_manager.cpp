@@ -74,8 +74,8 @@ public:
   mapped_ring_buffer::MappedRingBufferBase::SharedPtr make_mapped_ring_buffer(
     size_t size) const override
   {
-    return mapped_ring_buffer::MappedRingBuffer<
-      T, typename Publisher<T, Alloc>::MessageAlloc>::make_shared(size, allocator_);
+    return mapped_ring_buffer::MappedRingBuffer<T, typename Publisher<T, Alloc>::MessageAlloc>::
+      make_shared(size, allocator_);
   }
 
   std::shared_ptr<MessageAlloc> get_allocator() { return allocator_; }
