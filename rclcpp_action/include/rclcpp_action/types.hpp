@@ -47,7 +47,7 @@ void convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id);
 
 namespace std
 {
-template <>
+template<>
 struct less<rclcpp_action::GoalUUID>
 {
   bool operator()(const rclcpp_action::GoalUUID & lhs, const rclcpp_action::GoalUUID & rhs) const
@@ -57,7 +57,7 @@ struct less<rclcpp_action::GoalUUID>
 };
 
 /// Hash a goal id so it can be used as a key in std::unordered_map
-template <>
+template<>
 struct hash<rclcpp_action::GoalUUID>
 {
   size_t operator()(const rclcpp_action::GoalUUID & uuid) const noexcept

@@ -41,7 +41,7 @@
 namespace rclcpp
 {
 /// A publisher publishes messages of any type to a topic.
-template <typename MessageT, typename Alloc = std::allocator<void>>
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:

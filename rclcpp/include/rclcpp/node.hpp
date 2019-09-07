@@ -162,7 +162,7 @@ public:
    * \param[in] options Additional options for the created Publisher.
    * \return Shared pointer to the created publisher.
    */
-  template <
+  template<
     typename MessageT, typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   std::shared_ptr<PublisherT> create_publisher(
@@ -177,7 +177,7 @@ public:
    * \param[in] allocator Custom allocator.
    * \return Shared pointer to the created publisher.
    */
-  template <
+  template<
     typename MessageT, typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
@@ -195,7 +195,7 @@ public:
    * \param[in] allocator Optional custom allocator.
    * \return Shared pointer to the created publisher.
    */
-  template <
+  template<
     typename MessageT, typename AllocatorT = std::allocator<void>,
     typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
@@ -220,7 +220,7 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template <
+  template<
     typename MessageT, typename CallbackT, typename AllocatorT = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>>
@@ -247,7 +247,7 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template <
+  template<
     typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
@@ -280,7 +280,7 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template <
+  template<
     typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
@@ -303,20 +303,20 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
-  template <typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
+  template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Client. */
-  template <typename ServiceT>
+  template<typename ServiceT>
   typename rclcpp::Client<ServiceT>::SharedPtr create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template <typename ServiceT, typename CallbackT>
+  template<typename ServiceT, typename CallbackT>
   typename rclcpp::Service<ServiceT>::SharedPtr create_service(
     const std::string & service_name, CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
@@ -391,7 +391,7 @@ public:
    *   - https://herbsutter.com/2008/01/01/gotw-88-a-candidate-for-the-most-important-const/
    *   - https://www.youtube.com/watch?v=uQyT-5iWUow (cppnow 2018 presentation)
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   auto declare_parameter(
     const std::string & name, const ParameterT & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
@@ -434,7 +434,7 @@ public:
    * \throws rclcpp::exceptions::InvalidParameterValueException if initial
    *   value fails to be set.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   std::vector<ParameterT> declare_parameters(
     const std::string & namespace_, const std::map<std::string, ParameterT> & parameters,
     bool ignore_overrides = false);
@@ -446,7 +446,7 @@ public:
    *
    * See the simpler declare_parameters() on this class for more details.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   std::vector<ParameterT> declare_parameters(
     const std::string & namespace_,
     const std::map<std::string, std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>> &
@@ -588,7 +588,7 @@ public:
    * \param[in] parameters The vector of parameters to be set.
    * \return The result of each set action as a vector.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use declare_parameter() instead")]] void set_parameter_if_not_set(
     const std::string & name, const ParameterT & value);
@@ -603,7 +603,7 @@ public:
    * \param[in] name The prefix of the parameters to set.
    * \param[in] values The parameters to set in the given prefix.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   [[deprecated("use declare_parameters() instead")]] void set_parameters_if_not_set(
     const std::string & name, const std::map<std::string, ParameterT> & values);
 
@@ -657,7 +657,7 @@ public:
    * \throws rclcpp::ParameterTypeException if the requested type does not
    *   match the value of the parameter which is stored.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   bool get_parameter(const std::string & name, ParameterT & parameter) const;
 
   /// Get the parameter value, or the "alternative_value" if not set, and assign it to "parameter".
@@ -675,7 +675,7 @@ public:
    * \param[in] alternative_value Value to be stored in output if the parameter was not set.
    * \returns true if the parameter was set, false otherwise.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   bool get_parameter_or(
     const std::string & name, ParameterT & parameter, const ParameterT & alternative_value) const;
 
@@ -737,7 +737,7 @@ public:
    * \throws rclcpp::ParameterTypeException if the requested type does not
    *   match the value of the parameter which is stored.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   bool get_parameters(const std::string & prefix, std::map<std::string, ParameterT> & values) const;
 
   /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
@@ -754,7 +754,7 @@ public:
    * \param[out] value The output where the value of the parameter should be assigned.
    * \param[in] alternative_value Value to be used if the parameter was not set.
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   [[deprecated("use declare_parameter() and it's return value instead")]] void get_parameter_or_set(
     const std::string & name, ParameterT & value, const ParameterT & alternative_value);
 
@@ -945,7 +945,7 @@ public:
    *   It is expected to atomically set parameters.
    * \note Repeated invocations of this function will overwrite previous callbacks.
    */
-  template <typename CallbackT>
+  template<typename CallbackT>
   [[deprecated("use set_on_parameters_set_callback() instead")]] void
   register_param_change_callback(CallbackT && callback);
 

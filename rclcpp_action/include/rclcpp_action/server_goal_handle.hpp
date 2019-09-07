@@ -104,7 +104,7 @@ private:
 };
 
 // Forward declare server
-template <typename ActionT>
+template<typename ActionT>
 class Server;
 
 /// Class to interact with goals on a server.
@@ -118,7 +118,7 @@ class Server;
  * Internally, this class is responsible for coverting between the C++ action type and generic
  * types for `rclcpp_action::ServerGoalHandleBase`.
  */
-template <typename ActionT>
+template<typename ActionT>
 class ServerGoalHandle : public ServerGoalHandleBase
 {
 public:

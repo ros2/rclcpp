@@ -76,7 +76,7 @@ protected:
   bool owns_rcl_handle_ = true;
 };
 
-template <typename ServiceT>
+template<typename ServiceT>
 class Service : public ServiceBase
 {
 public:

@@ -55,7 +55,7 @@ public:
  * there is no guarantee on which value is returned if a key is used multiple
  * times.
  */
-template <typename T, typename Alloc = std::allocator<void>>
+template<typename T, typename Alloc = std::allocator<void>>
 class MappedRingBuffer : public MappedRingBufferBase
 {
 public:

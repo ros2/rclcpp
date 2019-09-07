@@ -28,7 +28,7 @@ namespace rclcpp
 {
 /// Create a service with a given type.
 /// \internal
-template <typename ServiceT, typename CallbackT>
+template<typename ServiceT, typename CallbackT>
 typename rclcpp::Service<ServiceT>::SharedPtr create_service(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeServicesInterface> node_services,

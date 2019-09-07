@@ -56,31 +56,31 @@ public:
   RCLCPP_PUBLIC
   explicit CallbackGroup(CallbackGroupType group_type);
 
-  template <typename Function>
+  template<typename Function>
   rclcpp::SubscriptionBase::SharedPtr find_subscription_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::SubscriptionBase, Function>(func, subscription_ptrs_);
   }
 
-  template <typename Function>
+  template<typename Function>
   rclcpp::TimerBase::SharedPtr find_timer_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::TimerBase, Function>(func, timer_ptrs_);
   }
 
-  template <typename Function>
+  template<typename Function>
   rclcpp::ServiceBase::SharedPtr find_service_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::ServiceBase, Function>(func, service_ptrs_);
   }
 
-  template <typename Function>
+  template<typename Function>
   rclcpp::ClientBase::SharedPtr find_client_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::ClientBase, Function>(func, client_ptrs_);
   }
 
-  template <typename Function>
+  template<typename Function>
   rclcpp::Waitable::SharedPtr find_waitable_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
@@ -127,7 +127,7 @@ protected:
   std::atomic_bool can_be_taken_from_;
 
 private:
-  template <typename TypeT, typename Function>
+  template<typename TypeT, typename Function>
   typename TypeT::SharedPtr _find_ptrs_if_impl(
     Function func, const std::vector<typename TypeT::WeakPtr> & vect_ptrs) const
   {

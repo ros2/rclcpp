@@ -116,7 +116,7 @@ public:
   NodeOptions & parameter_overrides(const std::vector<rclcpp::Parameter> & parameter_overrides);
 
   /// Append a single parameter override, parameter idiom style.
-  template <typename ParameterT>
+  template<typename ParameterT>
   NodeOptions & append_parameter_override(const std::string & name, const ParameterT & value)
   {
     this->parameter_overrides().emplace_back(name, rclcpp::ParameterValue(value));

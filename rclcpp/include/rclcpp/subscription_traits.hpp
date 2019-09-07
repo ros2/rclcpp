@@ -34,51 +34,51 @@ namespace subscription_traits
  * when no template is used, the colon has to be separated by a space.
  * Cheers!
  */
-template <typename T>
+template<typename T>
 struct is_serialized_subscription_argument : std::false_type
 {
 };
 
-template <>
+template<>
 struct is_serialized_subscription_argument<rcl_serialized_message_t> : std::true_type
 {
 };
 
-template <>
+template<>
 struct is_serialized_subscription_argument<std::shared_ptr<rcl_serialized_message_t>>
 : std::true_type
 {
 };
 
-template <typename T>
+template<typename T>
 struct is_serialized_subscription : is_serialized_subscription_argument<T>
 {
 };
 
-template <typename CallbackT>
+template<typename CallbackT>
 struct is_serialized_callback
 : is_serialized_subscription_argument<
     typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>>
 {
 };
 
-template <typename MessageT>
+template<typename MessageT>
 struct extract_message_type
 {
   using type = typename std::remove_cv<MessageT>::type;
 };
 
-template <typename MessageT>
+template<typename MessageT>
 struct extract_message_type<std::shared_ptr<MessageT>> : extract_message_type<MessageT>
 {
 };
 
-template <typename MessageT, typename Deleter>
+template<typename MessageT, typename Deleter>
 struct extract_message_type<std::unique_ptr<MessageT, Deleter>> : extract_message_type<MessageT>
 {
 };
 
-template <
+template<
   typename CallbackT,
   // Do not attempt if CallbackT is an integer (mistaken for depth)
   typename = std::enable_if_t<

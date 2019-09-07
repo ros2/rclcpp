@@ -18,13 +18,13 @@
 #include <type_traits>
 #include <utility>
 
-template <class T, typename = void>
+template<class T, typename = void>
 struct has_on_activate
 {
   static constexpr bool value = false;
 };
 
-template <class T>
+template<class T>
 struct has_on_activate<
   T, typename std::enable_if<
        std::is_same<void, decltype(std::declval<T>().on_activate())>::value>::type>
@@ -32,13 +32,13 @@ struct has_on_activate<
   static constexpr bool value = true;
 };
 
-template <class T, typename = void>
+template<class T, typename = void>
 struct has_on_deactivate
 {
   static constexpr bool value = false;
 };
 
-template <class T>
+template<class T>
 struct has_on_deactivate<
   T, typename std::enable_if<
        std::is_same<void, decltype(std::declval<T>().on_deactivate())>::value>::type>
@@ -46,12 +46,12 @@ struct has_on_deactivate<
   static constexpr bool value = true;
 };
 
-template <class T, typename = void>
+template<class T, typename = void>
 struct is_manageable_node : std::false_type
 {
 };
 
-template <class T>
+template<class T>
 struct is_manageable_node<
   T, typename std::enable_if<has_on_activate<T>::value && has_on_deactivate<T>::value>::type>
 : std::true_type

@@ -39,7 +39,7 @@ using std::chrono::duration;
 using std::chrono::duration_cast;
 using std::chrono::nanoseconds;
 
-template <class Clock = std::chrono::high_resolution_clock>
+template<class Clock = std::chrono::high_resolution_clock>
 class GenericRate : public RateBase
 {
 public:

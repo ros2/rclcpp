@@ -95,7 +95,7 @@ public:
     std::function<void(std::shared_future<rcl_interfaces::msg::ListParametersResult>)> callback =
       nullptr);
 
-  template <typename CallbackT, typename AllocatorT = std::allocator<void>>
+  template<typename CallbackT, typename AllocatorT = std::allocator<void>>
   typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr on_parameter_event(
     CallbackT && callback,
     const rclcpp::QoS & qos =
@@ -111,7 +111,7 @@ public:
    * which returns a shared_ptr to a NodeTopicsInterface, or be a
    * NodeTopicsInterface pointer itself.
    */
-  template <typename CallbackT, typename NodeT, typename AllocatorT = std::allocator<void>>
+  template<typename CallbackT, typename NodeT, typename AllocatorT = std::allocator<void>>
   static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(
     NodeT && node, CallbackT && callback,
@@ -127,7 +127,7 @@ public:
   RCLCPP_PUBLIC
   bool service_is_ready() const;
 
-  template <typename RepT = int64_t, typename RatioT = std::milli>
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   bool wait_for_service(
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
@@ -194,7 +194,7 @@ public:
   RCLCPP_PUBLIC
   bool has_parameter(const std::string & parameter_name);
 
-  template <typename T>
+  template<typename T>
   T get_parameter_impl(
     const std::string & parameter_name, std::function<T()> parameter_not_found_handler)
   {
@@ -208,14 +208,14 @@ public:
     }
   }
 
-  template <typename T>
+  template<typename T>
   T get_parameter(const std::string & parameter_name, const T & default_value)
   {
     return get_parameter_impl(
       parameter_name, std::function<T()>([&default_value]() -> T { return default_value; }));
   }
 
-  template <typename T>
+  template<typename T>
   T get_parameter(const std::string & parameter_name)
   {
     return get_parameter_impl(parameter_name, std::function<T()>([]() -> T {
@@ -239,7 +239,7 @@ public:
   rcl_interfaces::msg::ListParametersResult list_parameters(
     const std::vector<std::string> & parameter_prefixes, uint64_t depth);
 
-  template <typename CallbackT>
+  template<typename CallbackT>
   typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr on_parameter_event(
     CallbackT && callback)
   {
@@ -251,7 +251,7 @@ public:
    * which returns a shared_ptr to a NodeTopicsInterface, or be a
    * NodeTopicsInterface pointer itself.
    */
-  template <typename CallbackT, typename NodeT>
+  template<typename CallbackT, typename NodeT>
   static typename rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr
   on_parameter_event(NodeT && node, CallbackT && callback)
   {
@@ -261,7 +261,7 @@ public:
   RCLCPP_PUBLIC
   bool service_is_ready() const { return async_parameters_client_->service_is_ready(); }
 
-  template <typename RepT = int64_t, typename RatioT = std::milli>
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   bool wait_for_service(
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {

@@ -213,7 +213,7 @@ protected:
     client_node.reset();
   }
 
-  template <typename FutureT>
+  template<typename FutureT>
   void dual_spin_until_future_complete(std::shared_future<FutureT> & future)
   {
     std::future_status status;

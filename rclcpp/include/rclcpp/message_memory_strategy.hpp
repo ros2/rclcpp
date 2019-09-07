@@ -35,7 +35,7 @@ namespace message_memory_strategy
 {
 /// Default allocation strategy for messages received by subscriptions.
 /** A message memory strategy must be templated on the type of the subscription it belongs to. */
-template <typename MessageT, typename Alloc = std::allocator<void>>
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class MessageMemoryStrategy
 {
 public:

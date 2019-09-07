@@ -30,7 +30,7 @@
 
 namespace std
 {
-template <typename T>
+template<typename T>
 std::string to_string(T value)
 {
   std::ostringstream os;
@@ -210,7 +210,7 @@ bool sleep_for(
  * \tparam T is type of the operands.
  * \return True if the x + y sum is greater than T::max value.
  */
-template <typename T>
+template<typename T>
 bool add_will_overflow(const T x, const T y)
 {
   return (y > 0) && (x > (std::numeric_limits<T>::max() - y));
@@ -226,7 +226,7 @@ bool add_will_overflow(const T x, const T y)
  * \tparam T is type of the operands.
  * \return True if the x + y sum is less than T::min value.
  */
-template <typename T>
+template<typename T>
 bool add_will_underflow(const T x, const T y)
 {
   return (y < 0) && (x < (std::numeric_limits<T>::min() - y));
@@ -242,7 +242,7 @@ bool add_will_underflow(const T x, const T y)
  * \tparam T is type of the operands.
  * \return True if the difference `x - y` sum is grater than T::max value.
  */
-template <typename T>
+template<typename T>
 bool sub_will_overflow(const T x, const T y)
 {
   return (y < 0) && (x > (std::numeric_limits<T>::max() + y));
@@ -258,7 +258,7 @@ bool sub_will_overflow(const T x, const T y)
  * \tparam T is type of the operands.
  * \return True if the difference `x - y` sum is less than T::min value.
  */
-template <typename T>
+template<typename T>
 bool sub_will_underflow(const T x, const T y)
 {
   return (y > 0) && (x < (std::numeric_limits<T>::min() + y));

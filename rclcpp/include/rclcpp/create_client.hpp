@@ -26,7 +26,7 @@ namespace rclcpp
 {
 /// Create a service client with a given type.
 /// \internal
-template <typename ServiceT>
+template<typename ServiceT>
 typename rclcpp::Client<ServiceT>::SharedPtr create_client(
   std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
   std::shared_ptr<node_interfaces::NodeGraphInterface> node_graph,

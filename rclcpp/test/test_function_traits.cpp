@@ -77,7 +77,7 @@ struct ObjectMember
   }
 };
 
-template <
+template<
   typename FunctorT, std::size_t Arity = 0,
   typename std::enable_if<
     rclcpp::function_traits::arity_comparator<Arity, FunctorT>::value>::type * = nullptr>
@@ -86,7 +86,7 @@ int func_accept_callback(FunctorT callback)
   return callback();
 }
 
-template <
+template<
   typename FunctorT,
   typename std::enable_if<rclcpp::function_traits::check_arguments<FunctorT, int>::value>::type * =
     nullptr>
@@ -96,7 +96,7 @@ int func_accept_callback(FunctorT callback)
   return callback(a);
 }
 
-template <
+template<
   typename FunctorT, typename std::enable_if<rclcpp::function_traits::check_arguments<
                        FunctorT, int, int>::value>::type * = nullptr>
 int func_accept_callback(FunctorT callback)
@@ -106,7 +106,7 @@ int func_accept_callback(FunctorT callback)
   return callback(a, b);
 }
 
-template <
+template<
   typename FunctorT, typename std::enable_if<rclcpp::function_traits::check_arguments<
                        FunctorT, int, char>::value>::type * = nullptr>
 int func_accept_callback(FunctorT callback)
@@ -116,7 +116,7 @@ int func_accept_callback(FunctorT callback)
   return callback(a, b);
 }
 
-template <
+template<
   typename FunctorT, std::size_t Arity = 0,
   typename std::enable_if<
     rclcpp::function_traits::arity_comparator<Arity, FunctorT>::value>::type * = nullptr,
@@ -128,7 +128,7 @@ double func_accept_callback_return_type(FunctorT callback)
   return callback();
 }
 
-template <
+template<
   typename FunctorT, std::size_t Arity = 0,
   typename std::enable_if<
     rclcpp::function_traits::arity_comparator<Arity, FunctorT>::value>::type * = nullptr,

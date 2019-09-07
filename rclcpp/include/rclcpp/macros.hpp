@@ -73,7 +73,7 @@
   using ConstSharedPtr = std::shared_ptr<const __VA_ARGS__>;
 
 #define __RCLCPP_MAKE_SHARED_DEFINITION(...)                           \
-  template <typename... Args>                                          \
+  template<typename... Args>                                           \
   static std::shared_ptr<__VA_ARGS__> make_shared(Args &&... args)     \
   {                                                                    \
     return std::make_shared<__VA_ARGS__>(std::forward<Args>(args)...); \
@@ -94,7 +94,7 @@
 #define __RCLCPP_UNIQUE_PTR_ALIAS(...) using UniquePtr = std::unique_ptr<__VA_ARGS__>;
 
 #define __RCLCPP_MAKE_UNIQUE_DEFINITION(...)                                           \
-  template <typename... Args>                                                          \
+  template<typename... Args>                                                           \
   static std::unique_ptr<__VA_ARGS__> make_unique(Args &&... args)                     \
   {                                                                                    \
     return std::unique_ptr<__VA_ARGS__>(new __VA_ARGS__(std::forward<Args>(args)...)); \

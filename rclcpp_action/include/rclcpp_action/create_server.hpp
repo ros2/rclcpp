@@ -53,7 +53,7 @@ namespace rclcpp_action
  * \param group[in] The action server will be added to this callback group.
  *   If `nullptr`, then the action server is added to the default callback group.
  */
-template <typename ActionT>
+template<typename ActionT>
 typename Server<ActionT>::SharedPtr create_server(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
@@ -121,7 +121,7 @@ typename Server<ActionT>::SharedPtr create_server(
  * \param group[in] The action server will be added to this callback group.
  *   If `nullptr`, then the action server is added to the default callback group.
  */
-template <typename ActionT>
+template<typename ActionT>
 typename Server<ActionT>::SharedPtr create_server(
   rclcpp::Node::SharedPtr node, const std::string & name,
   typename Server<ActionT>::GoalCallback handle_goal,

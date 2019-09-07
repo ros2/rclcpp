@@ -41,15 +41,15 @@ namespace detail
 // This is a meta-programming checker for if a given Node-like object has a
 // getter called get_node_timers_interface() which returns various types,
 // e.g. const pointer or a shared pointer.
-template <typename NodeType, typename ReturnType>
+template<typename NodeType, typename ReturnType>
 struct has_get_node_timers_interface
 {
 private:
-  template <typename T>
+  template<typename T>
   static constexpr auto check(T *) -> typename std::is_same<
     decltype(std::declval<T>().get_node_timers_interface()), ReturnType>::type;
 
-  template <typename>
+  template<typename>
   static constexpr std::false_type check(...);
 
 public:
@@ -65,7 +65,7 @@ inline rclcpp::node_interfaces::NodeTimersInterface * get_node_timers_interface_
 }
 
 // If NodeType has a method called get_node_timers_interface() which returns a shared pointer.
-template <
+template<
   typename NodeType, typename std::enable_if<
                        has_get_node_timers_interface<
                          typename std::remove_pointer<NodeType>::type,
@@ -78,7 +78,7 @@ rclcpp::node_interfaces::NodeTimersInterface * get_node_timers_interface_from_po
 }
 
 // If NodeType has a method called get_node_timers_interface() which returns a pointer.
-template <
+template<
   typename NodeType, typename std::enable_if<
                        has_get_node_timers_interface<
                          typename std::remove_pointer<NodeType>::type,
@@ -91,7 +91,7 @@ rclcpp::node_interfaces::NodeTimersInterface * get_node_timers_interface_from_po
 }
 
 // Forward shared_ptr's to const node pointer signatures.
-template <
+template<
   typename NodeType, typename std::enable_if<
                        std::is_same<
                          NodeType, typename std::shared_ptr<typename std::remove_pointer<
@@ -106,7 +106,7 @@ rclcpp::node_interfaces::NodeTimersInterface * get_node_timers_interface_from_po
 }  // namespace detail
 
 /// Get the NodeTimersInterface as a pointer from a pointer to a "Node like" object.
-template <
+template<
   typename NodeType, typename std::enable_if<std::is_pointer<NodeType>::value, int>::type = 0>
 rclcpp::node_interfaces::NodeTimersInterface * get_node_timers_interface(NodeType node_pointer)
 {
@@ -115,7 +115,7 @@ rclcpp::node_interfaces::NodeTimersInterface * get_node_timers_interface(NodeTyp
 }
 
 /// Get the NodeTimersInterface as a pointer from a "Node like" object.
-template <
+template<
   typename NodeType,
   typename std::enable_if<
     !std::is_pointer<typename std::remove_reference<NodeType>::type>::value, int>::type = 0>

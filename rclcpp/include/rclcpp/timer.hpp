@@ -99,7 +99,7 @@ using VoidCallbackType = std::function<void()>;
 using TimerCallbackType = std::function<void(TimerBase &)>;
 
 /// Generic timer. Periodically executes a user-specified callback.
-template <
+template<
   typename FunctorT,
   typename std::enable_if<
     rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||
@@ -142,7 +142,7 @@ public:
   }
 
   // void specialization
-  template <
+  template<
     typename CallbackT = FunctorT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                                      CallbackT, VoidCallbackType>::value>::type * = nullptr>
   void execute_callback_delegate()
@@ -150,7 +150,7 @@ public:
     callback_();
   }
 
-  template <
+  template<
     typename CallbackT = FunctorT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                                      CallbackT, TimerCallbackType>::value>::type * = nullptr>
   void execute_callback_delegate()
@@ -166,7 +166,7 @@ protected:
   FunctorT callback_;
 };
 
-template <
+template<
   typename FunctorT,
   typename std::enable_if<
     rclcpp::function_traits::same_arguments<FunctorT, VoidCallbackType>::value ||

@@ -179,7 +179,7 @@ public:
     const rcl_publisher_options_t & intra_process_options);
 
 protected:
-  template <typename EventCallbackT>
+  template<typename EventCallbackT>
   void add_event_handler(
     const EventCallbackT & callback, const rcl_publisher_event_type_t event_type)
   {

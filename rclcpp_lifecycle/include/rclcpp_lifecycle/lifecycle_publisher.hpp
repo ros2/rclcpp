@@ -46,7 +46,7 @@ public:
  * Overrides all publisher functions to check for
  * enabled/disabled state.
  */
-template <typename MessageT, typename Alloc = std::allocator<void>>
+template<typename MessageT, typename Alloc = std::allocator<void>>
 class LifecyclePublisher : public LifecyclePublisherInterface,
                            public rclcpp::Publisher<MessageT, Alloc>
 {

@@ -135,7 +135,7 @@ public:
 
   // The following get() variants require the use of ParameterType
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<type == ParameterType::PARAMETER_BOOL, const bool &>::type get()
     const
   {
@@ -145,7 +145,7 @@ public:
     return value_.bool_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, const int64_t &>::type
   get() const
   {
@@ -155,7 +155,7 @@ public:
     return value_.integer_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, const double &>::type
   get() const
   {
@@ -165,7 +165,7 @@ public:
     return value_.double_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr
     typename std::enable_if<type == ParameterType::PARAMETER_STRING, const std::string &>::type
     get() const
@@ -176,7 +176,7 @@ public:
     return value_.string_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<
     type == ParameterType::PARAMETER_BYTE_ARRAY, const std::vector<uint8_t> &>::type
   get() const
@@ -187,7 +187,7 @@ public:
     return value_.byte_array_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<
     type == ParameterType::PARAMETER_BOOL_ARRAY, const std::vector<bool> &>::type
   get() const
@@ -198,7 +198,7 @@ public:
     return value_.bool_array_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<
     type == ParameterType::PARAMETER_INTEGER_ARRAY, const std::vector<int64_t> &>::type
   get() const
@@ -209,7 +209,7 @@ public:
     return value_.integer_array_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<
     type == ParameterType::PARAMETER_DOUBLE_ARRAY, const std::vector<double> &>::type
   get() const
@@ -220,7 +220,7 @@ public:
     return value_.double_array_value;
   }
 
-  template <ParameterType type>
+  template<ParameterType type>
   constexpr typename std::enable_if<
     type == ParameterType::PARAMETER_STRING_ARRAY, const std::vector<std::string> &>::type
   get() const
@@ -233,13 +233,13 @@ public:
 
   // The following get() variants allow the use of primitive types
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<std::is_same<type, bool>::value, const bool &>::type get() const
   {
     return get<ParameterType::PARAMETER_BOOL>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<
     std::is_integral<type>::value && !std::is_same<type, bool>::value, const int64_t &>::type
   get() const
@@ -247,14 +247,14 @@ public:
     return get<ParameterType::PARAMETER_INTEGER>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<std::is_floating_point<type>::value, const double &>::type get()
     const
   {
     return get<ParameterType::PARAMETER_DOUBLE>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<
     std::is_convertible<type, std::string>::value, const std::string &>::type
   get() const
@@ -262,7 +262,7 @@ public:
     return get<ParameterType::PARAMETER_STRING>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<
     std::is_convertible<type, const std::vector<uint8_t> &>::value,
     const std::vector<uint8_t> &>::type
@@ -271,7 +271,7 @@ public:
     return get<ParameterType::PARAMETER_BYTE_ARRAY>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<
     std::is_convertible<type, const std::vector<bool> &>::value, const std::vector<bool> &>::type
   get() const
@@ -279,7 +279,7 @@ public:
     return get<ParameterType::PARAMETER_BOOL_ARRAY>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<
     std::is_convertible<type, const std::vector<int64_t> &>::value,
     const std::vector<int64_t> &>::type
@@ -288,7 +288,7 @@ public:
     return get<ParameterType::PARAMETER_INTEGER_ARRAY>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<
     std::is_convertible<type, const std::vector<double> &>::value,
     const std::vector<double> &>::type
@@ -297,7 +297,7 @@ public:
     return get<ParameterType::PARAMETER_DOUBLE_ARRAY>();
   }
 
-  template <typename type>
+  template<typename type>
   constexpr typename std::enable_if<
     std::is_convertible<type, const std::vector<std::string> &>::value,
     const std::vector<std::string> &>::type

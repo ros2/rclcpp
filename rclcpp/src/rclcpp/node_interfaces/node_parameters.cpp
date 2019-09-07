@@ -444,7 +444,7 @@ std::vector<rcl_interfaces::msg::SetParametersResult> NodeParameters::set_parame
   return results;
 }
 
-template <typename ParameterVectorType>
+template<typename ParameterVectorType>
 auto __find_parameter_by_name(ParameterVectorType & parameters, const std::string & name)
 {
   return std::find_if(parameters.begin(), parameters.end(), [&](auto parameter) {

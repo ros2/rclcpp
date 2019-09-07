@@ -230,7 +230,7 @@ private:
  *  - coverting between the C++ action type and generic types for `rclcpp_action::ServerBase`, and
  *  - calling user callbacks.
  */
-template <typename ActionT>
+template<typename ActionT>
 class Server : public ServerBase, public std::enable_shared_from_this<Server<ActionT>>
 {
 public:

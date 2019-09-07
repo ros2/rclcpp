@@ -27,7 +27,7 @@ namespace rclcpp_components
  * The NodeFactoryTemplate class can be used to provide the NodeFactory interface for
  * components that implement a single-argument constructor and `get_node_base_interface`.
  */
-template <typename NodeT>
+template<typename NodeT>
 class NodeFactoryTemplate : public NodeFactory
 {
 public:

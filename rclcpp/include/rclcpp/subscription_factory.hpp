@@ -62,7 +62,7 @@ struct SubscriptionFactory
 };
 
 /// Return a SubscriptionFactory with functions for creating a SubscriptionT<MessageT, Alloc>.
-template <
+template<
   typename MessageT, typename CallbackT, typename Alloc, typename CallbackMessageT,
   typename SubscriptionT>
 SubscriptionFactory create_subscription_factory(

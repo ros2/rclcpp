@@ -34,7 +34,7 @@ namespace message_pool_memory_strategy
  * The size of the message pool should be at least the largest number of concurrent accesses to
  * the subscription (usually the number of threads).
  */
-template <
+template<
   typename MessageT, size_t Size,
   typename std::enable_if<rosidl_generator_traits::has_fixed_size<MessageT>::value>::type * =
     nullptr>

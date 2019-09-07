@@ -73,7 +73,7 @@ public:
   RCLCPP_PUBLIC
   bool service_is_ready() const;
 
-  template <typename RepT = int64_t, typename RatioT = std::milli>
+  template<typename RepT = int64_t, typename RatioT = std::milli>
   bool wait_for_service(
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
@@ -105,7 +105,7 @@ protected:
   std::shared_ptr<rcl_client_t> client_handle_;
 };
 
-template <typename ServiceT>
+template<typename ServiceT>
 class Client : public ClientBase
 {
 public:
@@ -192,7 +192,7 @@ public:
     return async_send_request(request, [](SharedFuture) {});
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, CallbackType>::value>::type * = nullptr>
   SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
@@ -211,7 +211,7 @@ public:
     return f;
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, CallbackWithRequestType>::value>::type * = nullptr>
   SharedFutureWithRequest async_send_request(SharedRequest request, CallbackT && cb)

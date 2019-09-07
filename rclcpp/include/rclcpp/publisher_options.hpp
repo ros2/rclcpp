@@ -42,7 +42,7 @@ struct PublisherOptionsBase
 };
 
 /// Structure containing optional configuration for Publishers.
-template <typename Allocator>
+template<typename Allocator>
 struct PublisherOptionsWithAllocator : public PublisherOptionsBase
 {
   /// Optional custom allocator.
@@ -57,7 +57,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   }
 
   /// Convert this class, and a rclcpp::QoS, into an rcl_publisher_options_t.
-  template <typename MessageT>
+  template<typename MessageT>
   rcl_publisher_options_t to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
     rcl_publisher_options_t result;

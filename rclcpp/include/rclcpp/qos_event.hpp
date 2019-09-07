@@ -74,11 +74,11 @@ protected:
   size_t wait_set_event_index_;
 };
 
-template <typename EventCallbackT>
+template<typename EventCallbackT>
 class QOSEventHandler : public QOSEventHandlerBase
 {
 public:
-  template <typename InitFuncT, typename ParentHandleT, typename EventTypeEnum>
+  template<typename InitFuncT, typename ParentHandleT, typename EventTypeEnum>
   QOSEventHandler(
     const EventCallbackT & callback, InitFuncT init_func, ParentHandleT parent_handle,
     EventTypeEnum event_type)

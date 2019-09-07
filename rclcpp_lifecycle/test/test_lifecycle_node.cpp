@@ -54,7 +54,7 @@ struct BadMood
     static_cast<CallbackReturnT>(lifecycle_msgs::msg::Transition::TRANSITION_CALLBACK_FAILURE);
 };
 
-template <class Mood = GoodMood>
+template<class Mood = GoodMood>
 class MoodyLifecycleNode : public rclcpp_lifecycle::LifecycleNode
 {
 public:
@@ -110,7 +110,7 @@ protected:
     const rclcpp_lifecycle::State &);
 };
 
-template <>
+template<>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 MoodyLifecycleNode<GoodMood>::on_error(const rclcpp_lifecycle::State &)
 {
@@ -119,7 +119,7 @@ MoodyLifecycleNode<GoodMood>::on_error(const rclcpp_lifecycle::State &)
   return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
 }
 
-template <>
+template<>
 rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
 MoodyLifecycleNode<BadMood>::on_error(const rclcpp_lifecycle::State &)
 {

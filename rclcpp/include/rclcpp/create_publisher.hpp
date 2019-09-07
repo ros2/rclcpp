@@ -28,7 +28,7 @@
 
 namespace rclcpp
 {
-template <
+template<
   typename MessageT, typename AllocatorT = std::allocator<void>,
   typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
 // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
@@ -56,7 +56,7 @@ create_publisher(
  * The NodeT type only needs to have a method called get_node_topics_interface()
  * which returns a shared_ptr to a NodeTopicsInterface.
  */
-template <
+template<
   typename MessageT, typename AllocatorT = std::allocator<void>,
   typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>, typename NodeT>
 std::shared_ptr<PublisherT> create_publisher(

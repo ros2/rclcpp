@@ -41,7 +41,7 @@ namespace allocator_memory_strategy
  * the rmw implementation after the executor waits for work, based on the number of entities that
  * come through.
  */
-template <typename Alloc = std::allocator<void>>
+template<typename Alloc = std::allocator<void>>
 class AllocatorMemoryStrategy : public memory_strategy::MemoryStrategy
 {
 public:
@@ -436,7 +436,7 @@ public:
   size_t number_of_waitables() const { return waitable_handles_.size(); }
 
 private:
-  template <typename T>
+  template<typename T>
   using VectorRebind =
     std::vector<T, typename std::allocator_traits<Alloc>::template rebind_alloc<T>>;
 

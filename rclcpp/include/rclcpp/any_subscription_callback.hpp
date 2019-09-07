@@ -29,7 +29,7 @@
 
 namespace rclcpp
 {
-template <typename MessageT, typename Alloc>
+template<typename MessageT, typename Alloc>
 class AnySubscriptionCallback
 {
   using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
@@ -70,7 +70,7 @@ public:
 
   AnySubscriptionCallback(const AnySubscriptionCallback &) = default;
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, SharedPtrCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
@@ -78,7 +78,7 @@ public:
     shared_ptr_callback_ = callback;
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, SharedPtrWithInfoCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
@@ -86,7 +86,7 @@ public:
     shared_ptr_with_info_callback_ = callback;
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, ConstSharedPtrCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
@@ -94,7 +94,7 @@ public:
     const_shared_ptr_callback_ = callback;
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, ConstSharedPtrWithInfoCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
@@ -102,7 +102,7 @@ public:
     const_shared_ptr_with_info_callback_ = callback;
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, UniquePtrCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
@@ -110,7 +110,7 @@ public:
     unique_ptr_callback_ = callback;
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, UniquePtrWithInfoCallback>::value>::type * = nullptr>
   void set(CallbackT callback)

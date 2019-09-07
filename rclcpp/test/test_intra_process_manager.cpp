@@ -57,7 +57,7 @@ public:
   size_t mock_queue_size;
 };
 
-template <typename T, typename Alloc = std::allocator<void>>
+template<typename T, typename Alloc = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:

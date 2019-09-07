@@ -51,7 +51,7 @@ class NodeTopicsInterface;
 }  // namespace node_interfaces
 
 /// Subscription implementation, templated on the type of message this subscription receives.
-template <typename CallbackMessageT, typename Alloc = std::allocator<void>>
+template<typename CallbackMessageT, typename Alloc = std::allocator<void>>
 class Subscription : public SubscriptionBase
 {
   friend class rclcpp::node_interfaces::NodeTopicsInterface;

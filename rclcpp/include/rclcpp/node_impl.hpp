@@ -63,7 +63,7 @@ inline std::string extend_name_with_sub_namespace(
   return name_with_sub_namespace;
 }
 
-template <typename MessageT, typename AllocatorT, typename PublisherT>
+template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT> Node::create_publisher(
   const std::string & topic_name, const rclcpp::QoS & qos,
   const PublisherOptionsWithAllocator<AllocatorT> & options)
@@ -72,7 +72,7 @@ std::shared_ptr<PublisherT> Node::create_publisher(
     *this, extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()), qos, options);
 }
 
-template <typename MessageT, typename AllocatorT, typename PublisherT>
+template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT> Node::create_publisher(
   const std::string & topic_name, size_t qos_history_depth, std::shared_ptr<AllocatorT> allocator)
 {
@@ -82,7 +82,7 @@ std::shared_ptr<PublisherT> Node::create_publisher(
     topic_name, rclcpp::QoS(rclcpp::KeepLast(qos_history_depth)), pub_options);
 }
 
-template <typename MessageT, typename AllocatorT, typename PublisherT>
+template<typename MessageT, typename AllocatorT, typename PublisherT>
 std::shared_ptr<PublisherT> Node::create_publisher(
   const std::string & topic_name, const rmw_qos_profile_t & qos_profile,
   std::shared_ptr<AllocatorT> allocator)
@@ -95,7 +95,7 @@ std::shared_ptr<PublisherT> Node::create_publisher(
   return this->create_publisher<MessageT, AllocatorT, PublisherT>(topic_name, qos, pub_options);
 }
 
-template <typename MessageT, typename CallbackT, typename AllocatorT, typename SubscriptionT>
+template<typename MessageT, typename CallbackT, typename AllocatorT, typename SubscriptionT>
 std::shared_ptr<SubscriptionT> Node::create_subscription(
   const std::string & topic_name, const rclcpp::QoS & qos, CallbackT && callback,
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
@@ -108,7 +108,7 @@ std::shared_ptr<SubscriptionT> Node::create_subscription(
     std::forward<CallbackT>(callback), options, msg_mem_strat);
 }
 
-template <typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
 std::shared_ptr<SubscriptionT> Node::create_subscription(
   const std::string & topic_name, CallbackT && callback, const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group, bool ignore_local_publications,
@@ -129,7 +129,7 @@ std::shared_ptr<SubscriptionT> Node::create_subscription(
     topic_name, qos, std::forward<CallbackT>(callback), sub_options, msg_mem_strat);
 }
 
-template <typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
+template<typename MessageT, typename CallbackT, typename Alloc, typename SubscriptionT>
 std::shared_ptr<SubscriptionT> Node::create_subscription(
   const std::string & topic_name, CallbackT && callback, size_t qos_history_depth,
   rclcpp::callback_group::CallbackGroup::SharedPtr group, bool ignore_local_publications,
@@ -148,7 +148,7 @@ std::shared_ptr<SubscriptionT> Node::create_subscription(
     sub_options, msg_mem_strat);
 }
 
-template <typename DurationRepT, typename DurationT, typename CallbackT>
+template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr Node::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
@@ -160,7 +160,7 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr Node::create_wall_timer(
   return timer;
 }
 
-template <typename ServiceT>
+template<typename ServiceT>
 typename Client<ServiceT>::SharedPtr Node::create_client(
   const std::string & service_name, const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
@@ -170,7 +170,7 @@ typename Client<ServiceT>::SharedPtr Node::create_client(
     extend_name_with_sub_namespace(service_name, this->get_sub_namespace()), qos_profile, group);
 }
 
-template <typename ServiceT, typename CallbackT>
+template<typename ServiceT, typename CallbackT>
 typename rclcpp::Service<ServiceT>::SharedPtr Node::create_service(
   const std::string & service_name, CallbackT && callback, const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
@@ -181,7 +181,7 @@ typename rclcpp::Service<ServiceT>::SharedPtr Node::create_service(
     std::forward<CallbackT>(callback), qos_profile, group);
 }
 
-template <typename ParameterT>
+template<typename ParameterT>
 auto Node::declare_parameter(
   const std::string & name, const ParameterT & default_value,
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor, bool ignore_override)
@@ -192,7 +192,7 @@ auto Node::declare_parameter(
     .get<ParameterT>();
 }
 
-template <typename ParameterT>
+template<typename ParameterT>
 std::vector<ParameterT> Node::declare_parameters(
   const std::string & namespace_, const std::map<std::string, ParameterT> & parameters,
   bool ignore_overrides)
@@ -209,7 +209,7 @@ std::vector<ParameterT> Node::declare_parameters(
   return result;
 }
 
-template <typename ParameterT>
+template<typename ParameterT>
 std::vector<ParameterT> Node::declare_parameters(
   const std::string & namespace_,
   const std::map<std::string, std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor> > &
@@ -228,7 +228,7 @@ std::vector<ParameterT> Node::declare_parameters(
   return result;
 }
 
-template <typename ParameterT>
+template<typename ParameterT>
 void Node::set_parameter_if_not_set(const std::string & name, const ParameterT & value)
 {
   if (!this->has_parameter(name) || this->describe_parameter(name).type == PARAMETER_NOT_SET) {
@@ -239,7 +239,7 @@ void Node::set_parameter_if_not_set(const std::string & name, const ParameterT &
 // this is a partially-specialized version of set_parameter_if_not_set above,
 // where our concrete type for ParameterT is std::map, but the to-be-determined
 // type is the value in the map.
-template <typename ParameterT>
+template<typename ParameterT>
 void Node::set_parameters_if_not_set(
   const std::string & name, const std::map<std::string, ParameterT> & values)
 {
@@ -257,7 +257,7 @@ void Node::set_parameters_if_not_set(
   this->set_parameters(params);
 }
 
-template <typename ParameterT>
+template<typename ParameterT>
 bool Node::get_parameter(const std::string & name, ParameterT & parameter) const
 {
   std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
@@ -272,7 +272,7 @@ bool Node::get_parameter(const std::string & name, ParameterT & parameter) const
   return result;
 }
 
-template <typename ParameterT>
+template<typename ParameterT>
 bool Node::get_parameter_or(
   const std::string & name, ParameterT & parameter, const ParameterT & alternative_value) const
 {
@@ -288,7 +288,7 @@ bool Node::get_parameter_or(
 // this is a partially-specialized version of get_parameter above,
 // where our concrete type for ParameterT is std::map, but the to-be-determined
 // type is the value in the map.
-template <typename ParameterT>
+template<typename ParameterT>
 bool Node::get_parameters(
   const std::string & prefix, std::map<std::string, ParameterT> & values) const
 {
@@ -303,7 +303,7 @@ bool Node::get_parameters(
   return result;
 }
 
-template <typename ParameterT>
+template<typename ParameterT>
 void Node::get_parameter_or_set(
   const std::string & name, ParameterT & value, const ParameterT & alternative_value)
 {
@@ -318,7 +318,7 @@ void Node::get_parameter_or_set(
   }
 }
 
-template <typename CallbackT>
+template<typename CallbackT>
 void Node::register_param_change_callback(CallbackT && callback)
 {
   this->node_parameters_->register_param_change_callback(std::forward<CallbackT>(callback));

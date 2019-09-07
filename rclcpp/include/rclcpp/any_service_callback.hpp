@@ -26,7 +26,7 @@
 
 namespace rclcpp
 {
-template <typename ServiceT>
+template<typename ServiceT>
 class AnyServiceCallback
 {
 private:
@@ -48,7 +48,7 @@ public:
 
   AnyServiceCallback(const AnyServiceCallback &) = default;
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, SharedPtrCallback>::value>::type * = nullptr>
   void set(CallbackT callback)
@@ -56,7 +56,7 @@ public:
     shared_ptr_callback_ = callback;
   }
 
-  template <
+  template<
     typename CallbackT, typename std::enable_if<rclcpp::function_traits::same_arguments<
                           CallbackT, SharedPtrWithRequestHeaderCallback>::value>::type * = nullptr>
   void set(CallbackT callback)

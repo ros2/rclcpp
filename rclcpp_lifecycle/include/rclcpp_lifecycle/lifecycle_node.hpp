@@ -70,18 +70,18 @@ namespace rclcpp_lifecycle
 // cannot be used in the function declaration below without getting an error like:
 //   'rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>':
 //     no appropriate default constructor available
-template <typename AllocatorT>
+template<typename AllocatorT>
 using PublisherOptionsWithAllocator = rclcpp::PublisherOptionsWithAllocator<AllocatorT>;
-template <typename AllocatorT>
+template<typename AllocatorT>
 using SubscriptionOptionsWithAllocator = rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>;
 
-template <typename AllocatorT>
+template<typename AllocatorT>
 PublisherOptionsWithAllocator<AllocatorT> create_default_publisher_options()
 {
   return rclcpp::PublisherOptionsWithAllocator<AllocatorT>();
 }
 
-template <typename AllocatorT>
+template<typename AllocatorT>
 SubscriptionOptionsWithAllocator<AllocatorT> create_default_subscription_options()
 {
   return rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>();
@@ -152,7 +152,7 @@ public:
    * \param[in] options The publisher options for this publisher.
    * \return Shared pointer to the created lifecycle publisher.
    */
-  template <typename MessageT, typename AllocatorT = std::allocator<void>>
+  template<typename MessageT, typename AllocatorT = std::allocator<void>>
   std::shared_ptr<rclcpp_lifecycle::LifecyclePublisher<MessageT, AllocatorT>> create_publisher(
     const std::string & topic_name, const rclcpp::QoS & qos,
     const PublisherOptionsWithAllocator<AllocatorT> & options =
@@ -165,7 +165,7 @@ public:
    * \param[in] allocator allocator to use during publishing activities.
    * \return Shared pointer to the created publisher.
    */
-  template <typename MessageT, typename Alloc = std::allocator<void>>
+  template<typename MessageT, typename Alloc = std::allocator<void>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated(
     "use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]] std::
@@ -180,7 +180,7 @@ public:
    * \param[in] allocator allocator to use during publishing activities.
    * \return Shared pointer to the created publisher.
    */
-  template <typename MessageT, typename Alloc = std::allocator<void>>
+  template<typename MessageT, typename Alloc = std::allocator<void>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated(
     "use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]] std::
@@ -203,7 +203,7 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template <
+  template<
     typename MessageT, typename CallbackT, typename AllocatorT = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>>
   std::shared_ptr<SubscriptionT> create_subscription(
@@ -228,7 +228,7 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template <
+  template<
     typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
@@ -260,7 +260,7 @@ public:
      Windows build breaks when static member function passed as default
      argument to msg_mem_strat, nullptr is a workaround.
    */
-  template <
+  template<
     typename MessageT, typename CallbackT, typename Alloc = std::allocator<void>,
     typename SubscriptionT = rclcpp::Subscription<MessageT, Alloc>>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
@@ -281,20 +281,20 @@ public:
    * \param[in] callback User-defined callback function.
    * \param[in] group Callback group to execute this timer's callback in.
    */
-  template <typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
+  template<typename DurationRepT = int64_t, typename DurationT = std::milli, typename CallbackT>
   typename rclcpp::WallTimer<CallbackT>::SharedPtr create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period, CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Client. */
-  template <typename ServiceT>
+  template<typename ServiceT>
   typename rclcpp::Client<ServiceT>::SharedPtr create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
-  template <typename ServiceT, typename CallbackT>
+  template<typename ServiceT, typename CallbackT>
   typename rclcpp::Service<ServiceT>::SharedPtr create_service(
     const std::string & service_name, CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
@@ -315,7 +315,7 @@ public:
   /**
    * \sa rclcpp::Node::declare_parameter
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   auto declare_parameter(
     const std::string & name, const ParameterT & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
@@ -325,7 +325,7 @@ public:
   /**
    * \sa rclcpp::Node::declare_parameters
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   std::vector<ParameterT> declare_parameters(
     const std::string & namespace_, const std::map<std::string, ParameterT> & parameters);
 
@@ -333,7 +333,7 @@ public:
   /**
    * \sa rclcpp::Node::declare_parameters
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   std::vector<ParameterT> declare_parameters(
     const std::string & namespace_,
     const std::map<std::string, std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>> &
@@ -380,7 +380,7 @@ public:
   /**
    * \sa rclcpp::Node::set_parameter_if_not_set
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use declare_parameter() instead")]] void set_parameter_if_not_set(
     const std::string & name, const ParameterT & value);
@@ -389,7 +389,7 @@ public:
   /**
    * \sa rclcpp::Node::set_parameters_if_not_set
    */
-  template <typename MapValueT>
+  template<typename MapValueT>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use declare_parameters() instead")]] void set_parameters_if_not_set(
     const std::string & name, const std::map<std::string, MapValueT> & values);
@@ -412,14 +412,14 @@ public:
   /**
    * \sa rclcpp::Node::get_parameter
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   bool get_parameter(const std::string & name, ParameterT & parameter) const;
 
   /// Get the parameter value, or the "alternative_value" if not set, and assign it to "parameter".
   /**
    * \sa rclcpp::Node::get_parameter_or
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   bool get_parameter_or(
     const std::string & name, ParameterT & value, const ParameterT & alternative_value) const;
 
@@ -434,14 +434,14 @@ public:
   /**
    * \sa rclcpp::Node::get_parameters
    */
-  template <typename MapValueT>
+  template<typename MapValueT>
   bool get_parameters(const std::string & prefix, std::map<std::string, MapValueT> & values) const;
 
   /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
   /**
    * \sa rclcpp::Node::get_parameter_or_set
    */
-  template <typename ParameterT>
+  template<typename ParameterT>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use declare_parameter() and it's return value instead")]] void get_parameter_or_set(
     const std::string & name, ParameterT & value, const ParameterT & alternative_value);
@@ -491,7 +491,7 @@ public:
   /**
    * \sa rclcpp::Node::register_param_change_callback
    */
-  template <typename CallbackT>
+  template<typename CallbackT>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
   [[deprecated("use set_on_parameters_set_callback() instead")]] void
   register_param_change_callback(CallbackT && callback);

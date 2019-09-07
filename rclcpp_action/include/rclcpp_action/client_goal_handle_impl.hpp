@@ -25,7 +25,7 @@
 
 namespace rclcpp_action
 {
-template <typename ActionT>
+template<typename ActionT>
 ClientGoalHandle<ActionT>::ClientGoalHandle(
   const GoalInfo & info, FeedbackCallback feedback_callback, ResultCallback result_callback)
 : info_(info),
@@ -35,24 +35,24 @@ ClientGoalHandle<ActionT>::ClientGoalHandle(
 {
 }
 
-template <typename ActionT>
+template<typename ActionT>
 ClientGoalHandle<ActionT>::~ClientGoalHandle()
 {
 }
 
-template <typename ActionT>
+template<typename ActionT>
 const GoalUUID & ClientGoalHandle<ActionT>::get_goal_id() const
 {
   return info_.goal_id.uuid;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 rclcpp::Time ClientGoalHandle<ActionT>::get_goal_stamp() const
 {
   return info_.stamp;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 std::shared_future<typename ClientGoalHandle<ActionT>::WrappedResult>
 ClientGoalHandle<ActionT>::async_result()
 {
@@ -63,7 +63,7 @@ ClientGoalHandle<ActionT>::async_result()
   return result_future_;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 void ClientGoalHandle<ActionT>::set_result(const WrappedResult & wrapped_result)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
@@ -74,49 +74,49 @@ void ClientGoalHandle<ActionT>::set_result(const WrappedResult & wrapped_result)
   }
 }
 
-template <typename ActionT>
+template<typename ActionT>
 void ClientGoalHandle<ActionT>::set_feedback_callback(FeedbackCallback callback)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   feedback_callback_ = callback;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 void ClientGoalHandle<ActionT>::set_result_callback(ResultCallback callback)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   result_callback_ = callback;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 int8_t ClientGoalHandle<ActionT>::get_status()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   return status_;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 void ClientGoalHandle<ActionT>::set_status(int8_t status)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   status_ = status;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 bool ClientGoalHandle<ActionT>::is_feedback_aware()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   return feedback_callback_ != nullptr;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 bool ClientGoalHandle<ActionT>::is_result_aware()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
   return is_result_aware_;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 bool ClientGoalHandle<ActionT>::set_result_awareness(bool awareness)
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
@@ -125,7 +125,7 @@ bool ClientGoalHandle<ActionT>::set_result_awareness(bool awareness)
   return previous;
 }
 
-template <typename ActionT>
+template<typename ActionT>
 void ClientGoalHandle<ActionT>::invalidate()
 {
   std::lock_guard<std::mutex> guard(handle_mutex_);
@@ -133,7 +133,7 @@ void ClientGoalHandle<ActionT>::invalidate()
   result_promise_.set_exception(std::make_exception_ptr(exceptions::UnawareGoalHandleError()));
 }
 
-template <typename ActionT>
+template<typename ActionT>
 void ClientGoalHandle<ActionT>::call_feedback_callback(
   typename ClientGoalHandle<ActionT>::SharedPtr shared_this,
   typename std::shared_ptr<const Feedback> feedback_message)

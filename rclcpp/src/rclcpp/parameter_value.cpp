@@ -54,7 +54,7 @@ std::ostream & rclcpp::operator<<(std::ostream & os, const ParameterType type)
   return os;
 }
 
-template <typename ValType, typename PrintType = ValType>
+template<typename ValType, typename PrintType = ValType>
 std::string array_to_string(
   const std::vector<ValType> & array, const std::ios::fmtflags format_flags = std::ios::dec)
 {

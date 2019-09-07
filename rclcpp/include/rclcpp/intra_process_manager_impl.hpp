@@ -78,7 +78,7 @@ private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase)
 };
 
-template <typename Allocator = std::allocator<void>>
+template<typename Allocator = std::allocator<void>>
 class IntraProcessManagerImpl : public IntraProcessManagerImplBase
 {
 public:
@@ -268,7 +268,7 @@ private:
     }
   };
 
-  template <typename T>
+  template<typename T>
   using RebindAlloc = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
   RebindAlloc<uint64_t> uint64_allocator;

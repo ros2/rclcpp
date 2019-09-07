@@ -25,7 +25,7 @@
 
 namespace rclcpp
 {
-template <typename Callable>
+template<typename Callable>
 struct ScopeExit
 {
   explicit ScopeExit(Callable callable) : callable_(callable) {}
@@ -35,7 +35,7 @@ private:
   Callable callable_;
 };
 
-template <typename Callable>
+template<typename Callable>
 ScopeExit<Callable> make_scope_exit(Callable callable)
 {
   return ScopeExit<Callable>(callable);

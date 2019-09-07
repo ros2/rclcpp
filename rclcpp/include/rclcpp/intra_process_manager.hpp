@@ -225,7 +225,7 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template <typename MessageT, typename Alloc = std::allocator<void>>
+  template<typename MessageT, typename Alloc = std::allocator<void>>
   uint64_t store_intra_process_message(
     uint64_t intra_process_publisher_id, std::shared_ptr<const MessageT> message)
   {
@@ -250,7 +250,7 @@ public:
     return message_seq;
   }
 
-  template <
+  template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename Deleter = std::default_delete<MessageT>>
   uint64_t store_intra_process_message(
@@ -312,7 +312,7 @@ public:
    * \param requesting_subscriptions_intra_process_id the subscription's id.
    * \param message the message typed unique_ptr used to return the message.
    */
-  template <
+  template<
     typename MessageT, typename Alloc = std::allocator<void>,
     typename Deleter = std::default_delete<MessageT>>
   void take_intra_process_message(
@@ -343,7 +343,7 @@ public:
     }
   }
 
-  template <typename MessageT, typename Alloc = std::allocator<void>>
+  template<typename MessageT, typename Alloc = std::allocator<void>>
   void take_intra_process_message(
     uint64_t intra_process_publisher_id, uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id, std::shared_ptr<const MessageT> & message)

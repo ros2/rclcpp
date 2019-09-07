@@ -272,7 +272,7 @@ public:
   virtual void interrupt_all_wait_sets();
 
   /// Return a singleton instance for the SubContext type, constructing one if necessary.
-  template <typename SubContext, typename... Args>
+  template<typename SubContext, typename... Args>
   std::shared_ptr<SubContext> get_sub_context(Args &&... args)
   {
     std::lock_guard<std::recursive_mutex> lock(sub_contexts_mutex_);

@@ -28,7 +28,7 @@
 
 namespace rclcpp
 {
-template <
+template<
   typename MessageT, typename CallbackT, typename AllocatorT, typename CallbackMessageT,
   typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>>
 // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
@@ -64,7 +64,7 @@ template <
  * which returns a shared_ptr to a NodeTopicsInterface, or be a
  * NodeTopicsInterface pointer itself.
  */
-template <
+template<
   typename MessageT, typename CallbackT, typename AllocatorT = std::allocator<void>,
   typename CallbackMessageT =
     typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,

@@ -40,7 +40,7 @@ enum class ResultCode : int8_t {
 };
 
 // Forward declarations
-template <typename ActionT>
+template<typename ActionT>
 class Client;
 
 /// Class for interacting with goals sent from action clients.
@@ -52,7 +52,7 @@ class Client;
  * A `Client` will create an instance and return it to the user (via a future) after calling
  * `Client::async_send_goal`.
  */
-template <typename ActionT>
+template<typename ActionT>
 class ClientGoalHandle
 {
 public:
