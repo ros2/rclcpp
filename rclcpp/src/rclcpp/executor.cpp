@@ -340,7 +340,10 @@ void Executor::execute_intra_process_subscription(rclcpp::SubscriptionBase::Shar
   }
 }
 
-void Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer) { timer->execute_callback(); }
+void Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer)
+{
+  timer->execute_callback();
+}
 
 void Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 {

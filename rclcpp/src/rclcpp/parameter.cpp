@@ -35,9 +35,13 @@
 using rclcpp::Parameter;
 using rclcpp::ParameterType;
 
-Parameter::Parameter() : name_("") {}
+Parameter::Parameter() : name_("")
+{
+}
 
-Parameter::Parameter(const std::string & name) : name_(name), value_() {}
+Parameter::Parameter(const std::string & name) : name_(name), value_()
+{
+}
 
 Parameter::Parameter(const std::string & name, const rclcpp::ParameterValue & value)
 : name_(name), value_(value)
@@ -54,26 +58,50 @@ bool Parameter::operator==(const Parameter & rhs) const
   return this->name_ == rhs.name_ && this->value_ == rhs.value_;
 }
 
-bool Parameter::operator!=(const Parameter & rhs) const { return !(*this == rhs); }
+bool Parameter::operator!=(const Parameter & rhs) const
+{
+  return !(*this == rhs);
+}
 
-ParameterType Parameter::get_type() const { return value_.get_type(); }
+ParameterType Parameter::get_type() const
+{
+  return value_.get_type();
+}
 
-std::string Parameter::get_type_name() const { return rclcpp::to_string(get_type()); }
+std::string Parameter::get_type_name() const
+{
+  return rclcpp::to_string(get_type());
+}
 
-const std::string & Parameter::get_name() const { return name_; }
+const std::string & Parameter::get_name() const
+{
+  return name_;
+}
 
 rcl_interfaces::msg::ParameterValue Parameter::get_value_message() const
 {
   return value_.to_value_msg();
 }
 
-const rclcpp::ParameterValue & Parameter::get_parameter_value() const { return value_; }
+const rclcpp::ParameterValue & Parameter::get_parameter_value() const
+{
+  return value_;
+}
 
-bool Parameter::as_bool() const { return get_value<ParameterType::PARAMETER_BOOL>(); }
+bool Parameter::as_bool() const
+{
+  return get_value<ParameterType::PARAMETER_BOOL>();
+}
 
-int64_t Parameter::as_int() const { return get_value<ParameterType::PARAMETER_INTEGER>(); }
+int64_t Parameter::as_int() const
+{
+  return get_value<ParameterType::PARAMETER_INTEGER>();
+}
 
-double Parameter::as_double() const { return get_value<ParameterType::PARAMETER_DOUBLE>(); }
+double Parameter::as_double() const
+{
+  return get_value<ParameterType::PARAMETER_DOUBLE>();
+}
 
 const std::string & Parameter::as_string() const
 {
@@ -118,7 +146,10 @@ rcl_interfaces::msg::Parameter Parameter::to_parameter_msg() const
   return parameter;
 }
 
-std::string Parameter::value_to_string() const { return rclcpp::to_string(value_); }
+std::string Parameter::value_to_string() const
+{
+  return rclcpp::to_string(value_);
+}
 
 std::string rclcpp::_to_json_dict_entry(const Parameter & param)
 {

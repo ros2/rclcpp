@@ -16,7 +16,9 @@
 
 using rclcpp::contexts::default_context::DefaultContext;
 
-DefaultContext::DefaultContext() {}
+DefaultContext::DefaultContext()
+{
+}
 
 DefaultContext::SharedPtr rclcpp::contexts::default_context::get_global_default_context()
 {

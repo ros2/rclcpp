@@ -23,7 +23,9 @@ SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::executor::ExecutorA
 {
 }
 
-SingleThreadedExecutor::~SingleThreadedExecutor() {}
+SingleThreadedExecutor::~SingleThreadedExecutor()
+{
+}
 
 void SingleThreadedExecutor::spin()
 {

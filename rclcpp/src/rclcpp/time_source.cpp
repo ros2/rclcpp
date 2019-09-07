@@ -38,7 +38,9 @@ TimeSource::TimeSource(std::shared_ptr<rclcpp::Node> node)
   this->attachNode(node);
 }
 
-TimeSource::TimeSource() : logger_(rclcpp::get_logger("rclcpp")), ros_time_active_(false) {}
+TimeSource::TimeSource() : logger_(rclcpp::get_logger("rclcpp")), ros_time_active_(false)
+{
+}
 
 void TimeSource::attachNode(rclcpp::Node::SharedPtr node)
 {

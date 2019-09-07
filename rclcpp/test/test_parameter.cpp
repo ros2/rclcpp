@@ -26,7 +26,10 @@
 class TestParameter : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 };
 
 TEST(TestParameter, not_set_variant)

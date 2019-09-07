@@ -24,9 +24,15 @@ CallbackGroup::CallbackGroup(CallbackGroupType group_type)
 {
 }
 
-std::atomic_bool & CallbackGroup::can_be_taken_from() { return can_be_taken_from_; }
+std::atomic_bool & CallbackGroup::can_be_taken_from()
+{
+  return can_be_taken_from_;
+}
 
-const CallbackGroupType & CallbackGroup::type() const { return type_; }
+const CallbackGroupType & CallbackGroup::type() const
+{
+  return type_;
+}
 
 void CallbackGroup::add_subscription(const rclcpp::SubscriptionBase::SharedPtr subscription_ptr)
 {

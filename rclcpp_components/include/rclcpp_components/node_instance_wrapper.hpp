@@ -30,7 +30,9 @@ public:
     std::function<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr(
       const std::shared_ptr<void> &)>;
 
-  NodeInstanceWrapper() : node_instance_(nullptr) {}
+  NodeInstanceWrapper() : node_instance_(nullptr)
+  {
+  }
 
   NodeInstanceWrapper(
     std::shared_ptr<void> node_instance, NodeBaseInterfaceGetter node_base_interface_getter)
@@ -45,7 +47,10 @@ public:
    *
    * \return Shared pointer to the encapsulated Node instance.
    */
-  const std::shared_ptr<void> get_node_instance() const { return node_instance_; }
+  const std::shared_ptr<void> get_node_instance() const
+  {
+    return node_instance_;
+  }
 
   /// Get NodeBaseInterface pointer for the encapsulated Node Instance.
   /**

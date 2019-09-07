@@ -22,7 +22,9 @@
 
 namespace rclcpp_action
 {
-ServerGoalHandleBase::~ServerGoalHandleBase() {}
+ServerGoalHandleBase::~ServerGoalHandleBase()
+{
+}
 
 bool ServerGoalHandleBase::is_canceling() const
 {

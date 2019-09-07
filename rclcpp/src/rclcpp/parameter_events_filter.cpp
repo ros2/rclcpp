@@ -49,4 +49,7 @@ ParameterEventsFilter::ParameterEventsFilter(
   }
 }
 
-const std::vector<EventPair> & ParameterEventsFilter::get_events() const { return result_; }
+const std::vector<EventPair> & ParameterEventsFilter::get_events() const
+{
+  return result_;
+}

@@ -16,14 +16,32 @@
 
 using rclcpp::Waitable;
 
-size_t Waitable::get_number_of_ready_subscriptions() { return 0u; }
+size_t Waitable::get_number_of_ready_subscriptions()
+{
+  return 0u;
+}
 
-size_t Waitable::get_number_of_ready_timers() { return 0u; }
+size_t Waitable::get_number_of_ready_timers()
+{
+  return 0u;
+}
 
-size_t Waitable::get_number_of_ready_clients() { return 0u; }
+size_t Waitable::get_number_of_ready_clients()
+{
+  return 0u;
+}
 
-size_t Waitable::get_number_of_ready_events() { return 0u; }
+size_t Waitable::get_number_of_ready_events()
+{
+  return 0u;
+}
 
-size_t Waitable::get_number_of_ready_services() { return 0u; }
+size_t Waitable::get_number_of_ready_services()
+{
+  return 0u;
+}
 
-size_t Waitable::get_number_of_ready_guard_conditions() { return 0u; }
+size_t Waitable::get_number_of_ready_guard_conditions()
+{
+  return 0u;
+}

@@ -19,33 +19,57 @@
 
 #include "rclcpp/function_traits.hpp"
 
-int func_no_args() { return 0; }
+int func_no_args()
+{
+  return 0;
+}
 
 // NOLINTNEXTLINE(readability/casting)
-int func_one_int(int) { return 1; }
+int func_one_int(int)
+{
+  return 1;
+}
 
-int func_two_ints(int, int) { return 2; }
+int func_two_ints(int, int)
+{
+  return 2;
+}
 
-int func_one_int_one_char(int, char) { return 3; }
+int func_one_int_one_char(int, char)
+{
+  return 3;
+}
 
 struct FunctionObjectNoArgs
 {
-  int operator()() const { return 0; }
+  int operator()() const
+  {
+    return 0;
+  }
 };
 
 struct FunctionObjectOneInt
 {
-  int operator()(int) const { return 1; }
+  int operator()(int) const
+  {
+    return 1;
+  }
 };
 
 struct FunctionObjectTwoInts
 {
-  int operator()(int, int) const { return 2; }
+  int operator()(int, int) const
+  {
+    return 2;
+  }
 };
 
 struct FunctionObjectOneIntOneChar
 {
-  int operator()(int, char) const { return 3; }
+  int operator()(int, char) const
+  {
+    return 3;
+  }
 };
 
 struct ObjectMember
@@ -654,7 +678,9 @@ TEST(TestFunctionTraits, sfinae_match)
 class TestMember : public ::testing::Test
 {
 public:
-  void MemberFunctor(int, float, std::string) {}
+  void MemberFunctor(int, float, std::string)
+  {
+  }
 };
 
 /*

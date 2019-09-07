@@ -25,11 +25,20 @@
 class TestService : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-  void SetUp() { node = std::make_shared<rclcpp::Node>("my_node", "/ns"); }
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  }
 
-  void TearDown() { node.reset(); }
+  void TearDown()
+  {
+    node.reset();
+  }
 
   rclcpp::Node::SharedPtr node;
 };
@@ -37,7 +46,9 @@ protected:
 class TestServiceSub : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() {}
+  static void SetUpTestCase()
+  {
+  }
 
   void SetUp()
   {
@@ -45,7 +56,10 @@ protected:
     subnode = node->create_sub_node("sub_ns");
   }
 
-  void TearDown() { node.reset(); }
+  void TearDown()
+  {
+    node.reset();
+  }
 
   rclcpp::Node::SharedPtr node;
   rclcpp::Node::SharedPtr subnode;

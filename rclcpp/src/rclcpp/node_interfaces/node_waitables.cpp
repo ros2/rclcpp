@@ -23,7 +23,9 @@ NodeWaitables::NodeWaitables(rclcpp::node_interfaces::NodeBaseInterface * node_b
 {
 }
 
-NodeWaitables::~NodeWaitables() {}
+NodeWaitables::~NodeWaitables()
+{
+}
 
 void NodeWaitables::add_waitable(
   rclcpp::Waitable::SharedPtr waitable_ptr, rclcpp::callback_group::CallbackGroup::SharedPtr group)

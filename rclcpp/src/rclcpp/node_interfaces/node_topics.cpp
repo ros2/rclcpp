@@ -28,7 +28,9 @@ NodeTopics::NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 {
 }
 
-NodeTopics::~NodeTopics() {}
+NodeTopics::~NodeTopics()
+{
+}
 
 rclcpp::PublisherBase::SharedPtr NodeTopics::create_publisher(
   const std::string & topic_name, const rclcpp::PublisherFactory & publisher_factory,

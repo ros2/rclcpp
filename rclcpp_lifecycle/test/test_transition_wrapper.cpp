@@ -23,7 +23,9 @@
 class TestTransitionWrapper : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() {}
+  static void SetUpTestCase()
+  {
+  }
 };
 
 TEST_F(TestTransitionWrapper, empty_transition)

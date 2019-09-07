@@ -448,7 +448,10 @@ public:
     weak_pubs_.push_back(pub);
   }
 
-  void add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer) { weak_timers_.push_back(timer); }
+  void add_timer_handle(std::shared_ptr<rclcpp::TimerBase> timer)
+  {
+    weak_timers_.push_back(timer);
+  }
 
   rcl_lifecycle_state_machine_t state_machine_;
   State current_state_;

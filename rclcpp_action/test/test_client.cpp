@@ -68,7 +68,10 @@ protected:
   using ActionFeedbackMessage = ActionType::Impl::FeedbackMessage;
   using ActionFeedback = ActionType::Feedback;
 
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
   void SetUp()
   {

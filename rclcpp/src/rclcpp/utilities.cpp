@@ -34,14 +34,20 @@ void init(int argc, char const * const argv[], const InitOptions & init_options)
   install_signal_handlers();
 }
 
-bool install_signal_handlers() { return SignalHandler::get_global_signal_handler().install(); }
+bool install_signal_handlers()
+{
+  return SignalHandler::get_global_signal_handler().install();
+}
 
 bool signal_handlers_installed()
 {
   return SignalHandler::get_global_signal_handler().is_installed();
 }
 
-bool uninstall_signal_handlers() { return SignalHandler::get_global_signal_handler().uninstall(); }
+bool uninstall_signal_handlers()
+{
+  return SignalHandler::get_global_signal_handler().uninstall();
+}
 
 std::vector<std::string> init_and_remove_ros_arguments(
   int argc, char const * const argv[], const InitOptions & init_options)
@@ -110,7 +116,10 @@ bool ok(Context::SharedPtr context)
   return context->is_valid();
 }
 
-bool is_initialized(Context::SharedPtr context) { return ok(context); }
+bool is_initialized(Context::SharedPtr context)
+{
+  return ok(context);
+}
 
 bool shutdown(Context::SharedPtr context, const std::string & reason)
 {
@@ -144,8 +153,14 @@ bool sleep_for(const std::chrono::nanoseconds & nanoseconds, Context::SharedPtr 
   return context->sleep_for(nanoseconds);
 }
 
-const char * get_c_string(const char * string_in) { return string_in; }
+const char * get_c_string(const char * string_in)
+{
+  return string_in;
+}
 
-const char * get_c_string(const std::string & string_in) { return string_in.c_str(); }
+const char * get_c_string(const std::string & string_in)
+{
+  return string_in.c_str();
+}
 
 }  // namespace rclcpp

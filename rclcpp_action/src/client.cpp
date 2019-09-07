@@ -119,7 +119,9 @@ ClientBase::ClientBase(
 {
 }
 
-ClientBase::~ClientBase() {}
+ClientBase::~ClientBase()
+{
+}
 
 bool ClientBase::action_server_is_ready() const
 {
@@ -194,17 +196,35 @@ bool ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds tim
   return false;  // timeout exceeded while waiting for the server to be ready
 }
 
-rclcpp::Logger ClientBase::get_logger() { return pimpl_->logger; }
+rclcpp::Logger ClientBase::get_logger()
+{
+  return pimpl_->logger;
+}
 
-size_t ClientBase::get_number_of_ready_subscriptions() { return pimpl_->num_subscriptions; }
+size_t ClientBase::get_number_of_ready_subscriptions()
+{
+  return pimpl_->num_subscriptions;
+}
 
-size_t ClientBase::get_number_of_ready_guard_conditions() { return pimpl_->num_guard_conditions; }
+size_t ClientBase::get_number_of_ready_guard_conditions()
+{
+  return pimpl_->num_guard_conditions;
+}
 
-size_t ClientBase::get_number_of_ready_timers() { return pimpl_->num_timers; }
+size_t ClientBase::get_number_of_ready_timers()
+{
+  return pimpl_->num_timers;
+}
 
-size_t ClientBase::get_number_of_ready_clients() { return pimpl_->num_clients; }
+size_t ClientBase::get_number_of_ready_clients()
+{
+  return pimpl_->num_clients;
+}
 
-size_t ClientBase::get_number_of_ready_services() { return pimpl_->num_services; }
+size_t ClientBase::get_number_of_ready_services()
+{
+  return pimpl_->num_services;
+}
 
 bool ClientBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {

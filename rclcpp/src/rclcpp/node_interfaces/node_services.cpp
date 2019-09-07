@@ -23,7 +23,9 @@ NodeServices::NodeServices(rclcpp::node_interfaces::NodeBaseInterface * node_bas
 {
 }
 
-NodeServices::~NodeServices() {}
+NodeServices::~NodeServices()
+{
+}
 
 void NodeServices::add_service(
   rclcpp::ServiceBase::SharedPtr service_base_ptr,

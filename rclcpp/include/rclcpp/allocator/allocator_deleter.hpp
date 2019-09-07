@@ -29,9 +29,13 @@ class AllocatorDeleter
   using AllocRebind = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
 public:
-  AllocatorDeleter() : allocator_(nullptr) {}
+  AllocatorDeleter() : allocator_(nullptr)
+  {
+  }
 
-  explicit AllocatorDeleter(Allocator * a) : allocator_(a) {}
+  explicit AllocatorDeleter(Allocator * a) : allocator_(a)
+  {
+  }
 
   template <typename T>
   AllocatorDeleter(const AllocatorDeleter<T> & a)
@@ -47,9 +51,15 @@ public:
     ptr = nullptr;
   }
 
-  Allocator * get_allocator() const { return allocator_; }
+  Allocator * get_allocator() const
+  {
+    return allocator_;
+  }
 
-  void set_allocator(Allocator * alloc) { allocator_ = alloc; }
+  void set_allocator(Allocator * alloc)
+  {
+    allocator_ = alloc;
+  }
 
 private:
   Allocator * allocator_;

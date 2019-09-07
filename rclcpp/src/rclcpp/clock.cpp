@@ -71,9 +71,15 @@ bool Clock::ros_time_is_active()
   return is_enabled;
 }
 
-rcl_clock_t * Clock::get_clock_handle() noexcept { return &rcl_clock_; }
+rcl_clock_t * Clock::get_clock_handle() noexcept
+{
+  return &rcl_clock_;
+}
 
-rcl_clock_type_t Clock::get_clock_type() const noexcept { return rcl_clock_.type; }
+rcl_clock_type_t Clock::get_clock_type() const noexcept
+{
+  return rcl_clock_.type;
+}
 
 void Clock::on_time_jump(
   const struct rcl_time_jump_t * time_jump, bool before_jump, void * user_data)

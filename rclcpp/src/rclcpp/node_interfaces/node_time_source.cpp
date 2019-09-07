@@ -41,4 +41,6 @@ NodeTimeSource::NodeTimeSource(
   time_source_.attachClock(node_clock_->get_clock());
 }
 
-NodeTimeSource::~NodeTimeSource() {}
+NodeTimeSource::~NodeTimeSource()
+{
+}

@@ -25,16 +25,25 @@
 
 #include "test_msgs/msg/empty.hpp"
 
-void serialized_callback_copy(rcl_serialized_message_t unused) { (void)unused; }
+void serialized_callback_copy(rcl_serialized_message_t unused)
+{
+  (void)unused;
+}
 
 void serialized_callback_shared_ptr(std::shared_ptr<rcl_serialized_message_t> unused)
 {
   (void)unused;
 }
 
-void not_serialized_callback(char * unused) { (void)unused; }
+void not_serialized_callback(char * unused)
+{
+  (void)unused;
+}
 
-void not_serialized_shared_ptr_callback(std::shared_ptr<char> unused) { (void)unused; }
+void not_serialized_shared_ptr_callback(std::shared_ptr<char> unused)
+{
+  (void)unused;
+}
 
 void not_serialized_unique_ptr_callback(
   test_msgs::msg::Empty::UniquePtrWithDeleter<

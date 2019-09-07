@@ -32,13 +32,25 @@ using namespace std::chrono_literals;
 class TestTimeSource : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-  static void TearDownTestCase() { rclcpp::shutdown(); }
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 
-  void SetUp() { node = std::make_shared<rclcpp::Node>("my_node"); }
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("my_node");
+  }
 
-  void TearDown() { node.reset(); }
+  void TearDown()
+  {
+    node.reset();
+  }
 
   rclcpp::Node::SharedPtr node;
 };

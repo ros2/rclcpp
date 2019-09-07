@@ -26,7 +26,9 @@ IntraProcessManager::IntraProcessManager(
 {
 }
 
-IntraProcessManager::~IntraProcessManager() {}
+IntraProcessManager::~IntraProcessManager()
+{
+}
 
 uint64_t IntraProcessManager::add_publisher(
   rclcpp::PublisherBase::SharedPtr publisher, size_t buffer_size)

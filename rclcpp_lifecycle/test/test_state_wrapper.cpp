@@ -23,7 +23,9 @@
 class TestStateWrapper : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() {}
+  static void SetUpTestCase()
+  {
+  }
 };
 
 TEST_F(TestStateWrapper, wrapper)

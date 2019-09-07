@@ -70,7 +70,10 @@ State::State(const State & rhs)
   *this = rhs;
 }
 
-State::~State() { reset(); }
+State::~State()
+{
+  reset();
+}
 
 State & State::operator=(const State & rhs)
 {

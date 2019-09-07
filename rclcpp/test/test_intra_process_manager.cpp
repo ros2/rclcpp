@@ -33,12 +33,22 @@ class PublisherBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
 
-  PublisherBase() : mock_topic_name(""), mock_queue_size(0) {}
+  PublisherBase() : mock_topic_name(""), mock_queue_size(0)
+  {
+  }
 
-  virtual ~PublisherBase() {}
+  virtual ~PublisherBase()
+  {
+  }
 
-  const char * get_topic_name() const { return mock_topic_name.c_str(); }
-  size_t get_queue_size() const { return mock_queue_size; }
+  const char * get_topic_name() const
+  {
+    return mock_topic_name.c_str();
+  }
+  size_t get_queue_size() const
+  {
+    return mock_queue_size;
+  }
 
   bool operator==(const rmw_gid_t * gid) const
   {
@@ -69,7 +79,10 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<T, Alloc>)
 
-  Publisher() { allocator_ = std::make_shared<MessageAlloc>(); }
+  Publisher()
+  {
+    allocator_ = std::make_shared<MessageAlloc>();
+  }
 
   mapped_ring_buffer::MappedRingBufferBase::SharedPtr make_mapped_ring_buffer(
     size_t size) const override
@@ -78,7 +91,10 @@ public:
       T, typename Publisher<T, Alloc>::MessageAlloc>::make_shared(size, allocator_);
   }
 
-  std::shared_ptr<MessageAlloc> get_allocator() { return allocator_; }
+  std::shared_ptr<MessageAlloc> get_allocator()
+  {
+    return allocator_;
+  }
 };
 
 }  // namespace mock
@@ -93,10 +109,18 @@ class SubscriptionBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SubscriptionBase)
 
-  SubscriptionBase() : mock_topic_name(""), mock_queue_size(0) {}
+  SubscriptionBase() : mock_topic_name(""), mock_queue_size(0)
+  {
+  }
 
-  const char * get_topic_name() const { return mock_topic_name.c_str(); }
-  size_t get_queue_size() const { return mock_queue_size; }
+  const char * get_topic_name() const
+  {
+    return mock_topic_name.c_str();
+  }
+  size_t get_queue_size() const
+  {
+    return mock_queue_size;
+  }
 
   std::string mock_topic_name;
   size_t mock_queue_size;

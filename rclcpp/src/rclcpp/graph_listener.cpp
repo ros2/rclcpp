@@ -56,7 +56,10 @@ GraphListener::GraphListener(std::shared_ptr<rclcpp::Context> parent_context)
   shutdown_guard_condition_ = parent_context->get_interrupt_guard_condition(&wait_set_);
 }
 
-GraphListener::~GraphListener() { this->shutdown(std::nothrow); }
+GraphListener::~GraphListener()
+{
+  this->shutdown(std::nothrow);
+}
 
 void GraphListener::start_if_not_started()
 {
@@ -345,7 +348,10 @@ void GraphListener::__shutdown(bool should_throw)
   }
 }
 
-void GraphListener::shutdown() { this->__shutdown(true); }
+void GraphListener::shutdown()
+{
+  this->__shutdown(true);
+}
 
 void GraphListener::shutdown(const std::nothrow_t &) noexcept
 {
@@ -361,7 +367,10 @@ void GraphListener::shutdown(const std::nothrow_t &) noexcept
   }
 }
 
-bool GraphListener::is_shutdown() { return is_shutdown_.load(); }
+bool GraphListener::is_shutdown()
+{
+  return is_shutdown_.load();
+}
 
 }  // namespace graph_listener
 }  // namespace rclcpp

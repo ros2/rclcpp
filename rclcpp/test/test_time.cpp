@@ -27,14 +27,20 @@
 
 namespace
 {
-bool logical_eq(const bool a, const bool b) { return (a && b) || ((!a) && !(b)); }
+bool logical_eq(const bool a, const bool b)
+{
+  return (a && b) || ((!a) && !(b));
+}
 
 }  // namespace
 
 class TestTime : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 };
 
 TEST(TestTime, clock_type_access)

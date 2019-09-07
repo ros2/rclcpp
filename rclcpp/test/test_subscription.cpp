@@ -25,14 +25,26 @@
 class TestSubscription : public ::testing::Test
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
 
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-  void SetUp() { node = std::make_shared<rclcpp::Node>("test_subscription", "/ns"); }
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns");
+  }
 
-  void TearDown() { node.reset(); }
+  void TearDown()
+  {
+    node.reset();
+  }
 
   rclcpp::Node::SharedPtr node;
 };
@@ -40,10 +52,15 @@ protected:
 class TestSubscriptionSub : public ::testing::Test
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
 
 protected:
-  static void SetUpTestCase() {}
+  static void SetUpTestCase()
+  {
+  }
 
   void SetUp()
   {
@@ -51,7 +68,10 @@ protected:
     subnode = node->create_sub_node("sub_ns");
   }
 
-  void TearDown() { node.reset(); }
+  void TearDown()
+  {
+    node.reset();
+  }
 
   rclcpp::Node::SharedPtr node;
   rclcpp::Node::SharedPtr subnode;
@@ -60,9 +80,14 @@ protected:
 class SubscriptionClassNodeInheritance : public rclcpp::Node
 {
 public:
-  SubscriptionClassNodeInheritance() : Node("subscription_class_node_inheritance") {}
+  SubscriptionClassNodeInheritance() : Node("subscription_class_node_inheritance")
+  {
+  }
 
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
 
   void CreateSubscription()
   {
@@ -76,7 +101,10 @@ public:
 class SubscriptionClass
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
+  void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+  {
+    (void)msg;
+  }
 
   void CreateSubscription()
   {

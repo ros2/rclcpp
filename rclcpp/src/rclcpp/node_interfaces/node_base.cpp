@@ -141,22 +141,40 @@ NodeBase::~NodeBase()
   }
 }
 
-const char * NodeBase::get_name() const { return rcl_node_get_name(node_handle_.get()); }
+const char * NodeBase::get_name() const
+{
+  return rcl_node_get_name(node_handle_.get());
+}
 
-const char * NodeBase::get_namespace() const { return rcl_node_get_namespace(node_handle_.get()); }
+const char * NodeBase::get_namespace() const
+{
+  return rcl_node_get_namespace(node_handle_.get());
+}
 
 const char * NodeBase::get_fully_qualified_name() const
 {
   return rcl_node_get_fully_qualified_name(node_handle_.get());
 }
 
-rclcpp::Context::SharedPtr NodeBase::get_context() { return context_; }
+rclcpp::Context::SharedPtr NodeBase::get_context()
+{
+  return context_;
+}
 
-rcl_node_t * NodeBase::get_rcl_node_handle() { return node_handle_.get(); }
+rcl_node_t * NodeBase::get_rcl_node_handle()
+{
+  return node_handle_.get();
+}
 
-const rcl_node_t * NodeBase::get_rcl_node_handle() const { return node_handle_.get(); }
+const rcl_node_t * NodeBase::get_rcl_node_handle() const
+{
+  return node_handle_.get();
+}
 
-std::shared_ptr<rcl_node_t> NodeBase::get_shared_rcl_node_handle() { return node_handle_; }
+std::shared_ptr<rcl_node_t> NodeBase::get_shared_rcl_node_handle()
+{
+  return node_handle_;
+}
 
 std::shared_ptr<const rcl_node_t> NodeBase::get_shared_rcl_node_handle() const
 {
@@ -220,4 +238,7 @@ std::unique_lock<std::recursive_mutex> NodeBase::acquire_notify_guard_condition_
   return std::unique_lock<std::recursive_mutex>(notify_guard_condition_mutex_);
 }
 
-bool NodeBase::get_use_intra_process_default() const { return use_intra_process_default_; }
+bool NodeBase::get_use_intra_process_default() const
+{
+  return use_intra_process_default_;
+}

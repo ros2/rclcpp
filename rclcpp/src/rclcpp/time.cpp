@@ -80,7 +80,9 @@ Time::Time(const rcl_time_point_t & time_point) : rcl_time_(time_point)
   // noop
 }
 
-Time::~Time() {}
+Time::~Time()
+{
+}
 
 Time::operator builtin_interfaces::msg::Time() const
 {
@@ -119,7 +121,10 @@ bool Time::operator==(const rclcpp::Time & rhs) const
   return rcl_time_.nanoseconds == rhs.rcl_time_.nanoseconds;
 }
 
-bool Time::operator!=(const rclcpp::Time & rhs) const { return !(*this == rhs); }
+bool Time::operator!=(const rclcpp::Time & rhs) const
+{
+  return !(*this == rhs);
+}
 
 bool Time::operator<(const rclcpp::Time & rhs) const
 {
@@ -197,14 +202,20 @@ Time Time::operator-(const rclcpp::Duration & rhs) const
   return Time(rcl_time_.nanoseconds - rhs.nanoseconds(), rcl_time_.clock_type);
 }
 
-int64_t Time::nanoseconds() const { return rcl_time_.nanoseconds; }
+int64_t Time::nanoseconds() const
+{
+  return rcl_time_.nanoseconds;
+}
 
 double Time::seconds() const
 {
   return std::chrono::duration<double>(std::chrono::nanoseconds(rcl_time_.nanoseconds)).count();
 }
 
-rcl_clock_type_t Time::get_clock_type() const { return rcl_time_.clock_type; }
+rcl_clock_type_t Time::get_clock_type() const
+{
+  return rcl_time_.clock_type;
+}
 
 Time operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
 {
@@ -217,6 +228,9 @@ Time operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
   return Time(lhs.nanoseconds() + rhs.nanoseconds(), rhs.get_clock_type());
 }
 
-Time Time::max() { return Time(std::numeric_limits<int32_t>::max(), 999999999); }
+Time Time::max()
+{
+  return Time(std::numeric_limits<int32_t>::max(), 999999999);
+}
 
 }  // namespace rclcpp

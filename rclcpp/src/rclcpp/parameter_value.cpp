@@ -212,9 +212,15 @@ ParameterValue::ParameterValue(const std::vector<std::string> & string_array_val
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY;
 }
 
-ParameterType ParameterValue::get_type() const { return static_cast<ParameterType>(value_.type); }
+ParameterType ParameterValue::get_type() const
+{
+  return static_cast<ParameterType>(value_.type);
+}
 
-rcl_interfaces::msg::ParameterValue ParameterValue::to_value_msg() const { return value_; }
+rcl_interfaces::msg::ParameterValue ParameterValue::to_value_msg() const
+{
+  return value_;
+}
 
 bool ParameterValue::operator==(const ParameterValue & rhs) const
 {

@@ -210,10 +210,16 @@ public:
   }
 
   /// Get the user provided message describing the goal.
-  const std::shared_ptr<const typename ActionT::Goal> get_goal() const { return goal_; }
+  const std::shared_ptr<const typename ActionT::Goal> get_goal() const
+  {
+    return goal_;
+  }
 
   /// Get the unique identifier of the goal
-  const GoalUUID & get_goal_id() const { return uuid_; }
+  const GoalUUID & get_goal_id() const
+  {
+    return uuid_;
+  }
 
   virtual ~ServerGoalHandle()
   {

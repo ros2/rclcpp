@@ -74,7 +74,9 @@ public:
     }
   }
 
-  virtual ~Publisher() {}
+  virtual ~Publisher()
+  {
+  }
 
   mapped_ring_buffer::MappedRingBufferBase::SharedPtr make_mapped_ring_buffer(
     size_t size) const override
@@ -182,7 +184,10 @@ public:
     return this->do_serialized_publish(serialized_msg.get());
   }
 
-  std::shared_ptr<MessageAlloc> get_allocator() const { return message_allocator_; }
+  std::shared_ptr<MessageAlloc> get_allocator() const
+  {
+    return message_allocator_;
+  }
 
 protected:
   void do_inter_process_publish(const MessageT * msg)

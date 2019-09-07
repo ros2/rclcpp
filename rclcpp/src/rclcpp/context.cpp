@@ -31,7 +31,9 @@ static std::vector<std::weak_ptr<rclcpp::Context>> g_contexts;
 
 using rclcpp::Context;
 
-Context::Context() : rcl_context_(nullptr), shutdown_reason_("") {}
+Context::Context() : rcl_context_(nullptr), shutdown_reason_("")
+{
+}
 
 Context::~Context()
 {
@@ -101,9 +103,15 @@ bool Context::is_valid() const
   return rcl_context_is_valid(local_rcl_context.get());
 }
 
-const rclcpp::InitOptions & Context::get_init_options() const { return init_options_; }
+const rclcpp::InitOptions & Context::get_init_options() const
+{
+  return init_options_;
+}
 
-rclcpp::InitOptions Context::get_init_options() { return init_options_; }
+rclcpp::InitOptions Context::get_init_options()
+{
+  return init_options_;
+}
 
 std::string Context::shutdown_reason()
 {
@@ -164,7 +172,10 @@ std::vector<rclcpp::Context::OnShutdownCallback> & Context::get_on_shutdown_call
   return on_shutdown_callbacks_;
 }
 
-std::shared_ptr<rcl_context_t> Context::get_rcl_context() { return rcl_context_; }
+std::shared_ptr<rcl_context_t> Context::get_rcl_context()
+{
+  return rcl_context_;
+}
 
 bool Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
@@ -183,7 +194,10 @@ bool Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
   return this->is_valid();
 }
 
-void Context::interrupt_all_sleep_for() { interrupt_condition_variable_.notify_all(); }
+void Context::interrupt_all_sleep_for()
+{
+  interrupt_condition_variable_.notify_all();
+}
 
 rcl_guard_condition_t * Context::get_interrupt_guard_condition(rcl_wait_set_t * wait_set)
 {

@@ -55,7 +55,10 @@ public:
     allocator_ = std::make_shared<VoidAlloc>(*allocator.get());
   }
 
-  AllocatorMemoryStrategy() { allocator_ = std::make_shared<VoidAlloc>(); }
+  AllocatorMemoryStrategy()
+  {
+    allocator_ = std::make_shared<VoidAlloc>();
+  }
 
   void add_guard_condition(const rcl_guard_condition_t * guard_condition)
   {
@@ -433,7 +436,10 @@ public:
     return number_of_timers;
   }
 
-  size_t number_of_waitables() const { return waitable_handles_.size(); }
+  size_t number_of_waitables() const
+  {
+    return waitable_handles_.size();
+  }
 
 private:
   template <typename T>

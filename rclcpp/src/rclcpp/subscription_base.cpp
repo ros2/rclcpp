@@ -131,7 +131,10 @@ const rosidl_message_type_support_t & SubscriptionBase::get_message_type_support
   return type_support_;
 }
 
-bool SubscriptionBase::is_serialized() const { return is_serialized_; }
+bool SubscriptionBase::is_serialized() const
+{
+  return is_serialized_;
+}
 
 size_t SubscriptionBase::get_publisher_count() const
 {

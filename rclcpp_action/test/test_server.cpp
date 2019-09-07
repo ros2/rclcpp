@@ -32,7 +32,10 @@ using GoalUUID = rclcpp_action::GoalUUID;
 class TestServer : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
   std::shared_ptr<Fibonacci::Impl::SendGoalService::Request> send_goal_request(
     rclcpp::Node::SharedPtr node, GoalUUID uuid)

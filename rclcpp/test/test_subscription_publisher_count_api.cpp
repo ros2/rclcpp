@@ -40,17 +40,27 @@ std::ostream & operator<<(std::ostream & out, const TestParameters & params)
 class TestSubscriptionPublisherCount : public ::testing::TestWithParam<TestParameters>
 {
 public:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
 protected:
-  void SetUp() {}
-  void TearDown() {}
+  void SetUp()
+  {
+  }
+  void TearDown()
+  {
+  }
   static std::chrono::milliseconds offset;
 };
 
 std::chrono::milliseconds TestSubscriptionPublisherCount::offset = std::chrono::milliseconds(2000);
 
-void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg) { (void)msg; }
+void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+{
+  (void)msg;
+}
 
 TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
 {

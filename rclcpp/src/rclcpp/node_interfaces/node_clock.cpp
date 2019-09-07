@@ -34,6 +34,11 @@ NodeClock::NodeClock(
 {
 }
 
-NodeClock::~NodeClock() {}
+NodeClock::~NodeClock()
+{
+}
 
-std::shared_ptr<rclcpp::Clock> NodeClock::get_clock() { return ros_clock_; }
+std::shared_ptr<rclcpp::Clock> NodeClock::get_clock()
+{
+  return ros_clock_;
+}

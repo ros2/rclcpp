@@ -43,7 +43,9 @@ class LifecycleNodeInterface
 {
 protected:
   RCLCPP_LIFECYCLE_PUBLIC
-  LifecycleNodeInterface() {}
+  LifecycleNodeInterface()
+  {
+  }
 
 public:
   enum class CallbackReturn : uint8_t {

@@ -27,22 +27,35 @@
 
 using rclcpp::ServiceBase;
 
-ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle) : node_handle_(node_handle) {}
+ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle) : node_handle_(node_handle)
+{
+}
 
-ServiceBase::~ServiceBase() {}
+ServiceBase::~ServiceBase()
+{
+}
 
 const char * ServiceBase::get_service_name()
 {
   return rcl_service_get_service_name(this->get_service_handle().get());
 }
 
-std::shared_ptr<rcl_service_t> ServiceBase::get_service_handle() { return service_handle_; }
+std::shared_ptr<rcl_service_t> ServiceBase::get_service_handle()
+{
+  return service_handle_;
+}
 
 std::shared_ptr<const rcl_service_t> ServiceBase::get_service_handle() const
 {
   return service_handle_;
 }
 
-rcl_node_t * ServiceBase::get_rcl_node_handle() { return node_handle_.get(); }
+rcl_node_t * ServiceBase::get_rcl_node_handle()
+{
+  return node_handle_.get();
+}
 
-const rcl_node_t * ServiceBase::get_rcl_node_handle() const { return node_handle_.get(); }
+const rcl_node_t * ServiceBase::get_rcl_node_handle() const
+{
+  return node_handle_.get();
+}

@@ -31,11 +31,20 @@ using namespace std::chrono_literals;
 class TestExecutors : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-  void SetUp() { node = std::make_shared<rclcpp::Node>("my_node"); }
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("my_node");
+  }
 
-  void TearDown() { node.reset(); }
+  void TearDown()
+  {
+    node.reset();
+  }
 
   rclcpp::Node::SharedPtr node;
 };

@@ -48,7 +48,9 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   /// Optional custom allocator.
   std::shared_ptr<Allocator> allocator = nullptr;
 
-  PublisherOptionsWithAllocator<Allocator>() {}
+  PublisherOptionsWithAllocator<Allocator>()
+  {
+  }
 
   /// Constructor using base class as input.
   explicit PublisherOptionsWithAllocator(const PublisherOptionsBase & publisher_options_base)

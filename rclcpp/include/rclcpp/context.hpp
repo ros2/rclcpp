@@ -39,7 +39,9 @@ namespace rclcpp
 class ContextAlreadyInitialized : public std::runtime_error
 {
 public:
-  ContextAlreadyInitialized() : std::runtime_error("context is already initialized") {}
+  ContextAlreadyInitialized() : std::runtime_error("context is already initialized")
+  {
+  }
 };
 
 /// Context which encapsulates shared state between nodes and other similar entities.

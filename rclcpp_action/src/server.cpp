@@ -110,17 +110,34 @@ ServerBase::ServerBase(
   }
 }
 
-ServerBase::~ServerBase() {}
+ServerBase::~ServerBase()
+{
+}
 
-size_t ServerBase::get_number_of_ready_subscriptions() { return pimpl_->num_subscriptions_; }
+size_t ServerBase::get_number_of_ready_subscriptions()
+{
+  return pimpl_->num_subscriptions_;
+}
 
-size_t ServerBase::get_number_of_ready_timers() { return pimpl_->num_timers_; }
+size_t ServerBase::get_number_of_ready_timers()
+{
+  return pimpl_->num_timers_;
+}
 
-size_t ServerBase::get_number_of_ready_clients() { return pimpl_->num_clients_; }
+size_t ServerBase::get_number_of_ready_clients()
+{
+  return pimpl_->num_clients_;
+}
 
-size_t ServerBase::get_number_of_ready_services() { return pimpl_->num_services_; }
+size_t ServerBase::get_number_of_ready_services()
+{
+  return pimpl_->num_services_;
+}
 
-size_t ServerBase::get_number_of_ready_guard_conditions() { return pimpl_->num_guard_conditions_; }
+size_t ServerBase::get_number_of_ready_guard_conditions()
+{
+  return pimpl_->num_guard_conditions_;
+}
 
 bool ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {

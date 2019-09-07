@@ -36,7 +36,10 @@ Duration::Duration(int32_t seconds, uint32_t nanoseconds)
   rcl_duration_.nanoseconds += nanoseconds;
 }
 
-Duration::Duration(int64_t nanoseconds) { rcl_duration_.nanoseconds = nanoseconds; }
+Duration::Duration(int64_t nanoseconds)
+{
+  rcl_duration_.nanoseconds = nanoseconds;
+}
 
 Duration::Duration(std::chrono::nanoseconds nanoseconds)
 {
@@ -179,9 +182,15 @@ Duration Duration::operator*(double scale) const
   return Duration(static_cast<rcl_duration_value_t>(rcl_duration_.nanoseconds * scale));
 }
 
-rcl_duration_value_t Duration::nanoseconds() const { return rcl_duration_.nanoseconds; }
+rcl_duration_value_t Duration::nanoseconds() const
+{
+  return rcl_duration_.nanoseconds;
+}
 
-Duration Duration::max() { return Duration(std::numeric_limits<int32_t>::max(), 999999999); }
+Duration Duration::max()
+{
+  return Duration(std::numeric_limits<int32_t>::max(), 999999999);
+}
 
 double Duration::seconds() const
 {

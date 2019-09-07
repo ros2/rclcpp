@@ -104,7 +104,10 @@ Transition::Transition(const Transition & rhs)
   *this = rhs;
 }
 
-Transition::~Transition() { reset(); }
+Transition::~Transition()
+{
+  reset();
+}
 
 Transition & Transition::operator=(const Transition & rhs)
 {

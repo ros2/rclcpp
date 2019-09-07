@@ -172,7 +172,9 @@ public:
 
   Service() = delete;
 
-  virtual ~Service() {}
+  virtual ~Service()
+  {
+  }
 
   std::shared_ptr<void> create_request()
   {

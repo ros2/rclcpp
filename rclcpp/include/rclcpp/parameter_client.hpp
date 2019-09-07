@@ -259,7 +259,10 @@ public:
   }
 
   RCLCPP_PUBLIC
-  bool service_is_ready() const { return async_parameters_client_->service_is_ready(); }
+  bool service_is_ready() const
+  {
+    return async_parameters_client_->service_is_ready();
+  }
 
   template <typename RepT = int64_t, typename RatioT = std::milli>
   bool wait_for_service(

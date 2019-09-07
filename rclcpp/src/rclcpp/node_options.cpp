@@ -133,7 +133,10 @@ const rcl_node_options_t * NodeOptions::get_rcl_node_options() const
   return node_options_.get();
 }
 
-rclcpp::Context::SharedPtr NodeOptions::context() const { return this->context_; }
+rclcpp::Context::SharedPtr NodeOptions::context() const
+{
+  return this->context_;
+}
 
 NodeOptions & NodeOptions::context(rclcpp::Context::SharedPtr context)
 {
@@ -141,7 +144,10 @@ NodeOptions & NodeOptions::context(rclcpp::Context::SharedPtr context)
   return *this;
 }
 
-const std::vector<std::string> & NodeOptions::arguments() const { return this->arguments_; }
+const std::vector<std::string> & NodeOptions::arguments() const
+{
+  return this->arguments_;
+}
 
 NodeOptions & NodeOptions::arguments(const std::vector<std::string> & arguments)
 {
@@ -167,7 +173,10 @@ NodeOptions & NodeOptions::parameter_overrides(
   return *this;
 }
 
-bool NodeOptions::use_global_arguments() const { return this->node_options_->use_global_arguments; }
+bool NodeOptions::use_global_arguments() const
+{
+  return this->node_options_->use_global_arguments;
+}
 
 NodeOptions & NodeOptions::use_global_arguments(bool use_global_arguments)
 {
@@ -176,7 +185,10 @@ NodeOptions & NodeOptions::use_global_arguments(bool use_global_arguments)
   return *this;
 }
 
-bool NodeOptions::use_intra_process_comms() const { return this->use_intra_process_comms_; }
+bool NodeOptions::use_intra_process_comms() const
+{
+  return this->use_intra_process_comms_;
+}
 
 NodeOptions & NodeOptions::use_intra_process_comms(bool use_intra_process_comms)
 {
@@ -184,7 +196,10 @@ NodeOptions & NodeOptions::use_intra_process_comms(bool use_intra_process_comms)
   return *this;
 }
 
-bool NodeOptions::start_parameter_services() const { return this->start_parameter_services_; }
+bool NodeOptions::start_parameter_services() const
+{
+  return this->start_parameter_services_;
+}
 
 NodeOptions & NodeOptions::start_parameter_services(bool start_parameter_services)
 {
@@ -203,7 +218,10 @@ NodeOptions & NodeOptions::start_parameter_event_publisher(bool start_parameter_
   return *this;
 }
 
-const rclcpp::QoS & NodeOptions::parameter_event_qos() const { return this->parameter_event_qos_; }
+const rclcpp::QoS & NodeOptions::parameter_event_qos() const
+{
+  return this->parameter_event_qos_;
+}
 
 NodeOptions & NodeOptions::parameter_event_qos(const rclcpp::QoS & parameter_event_qos)
 {
@@ -223,7 +241,10 @@ NodeOptions & NodeOptions::parameter_event_publisher_options(
   return *this;
 }
 
-bool NodeOptions::allow_undeclared_parameters() const { return this->allow_undeclared_parameters_; }
+bool NodeOptions::allow_undeclared_parameters() const
+{
+  return this->allow_undeclared_parameters_;
+}
 
 NodeOptions & NodeOptions::allow_undeclared_parameters(bool allow_undeclared_parameters)
 {
@@ -244,7 +265,10 @@ NodeOptions & NodeOptions::automatically_declare_parameters_from_overrides(
   return *this;
 }
 
-const rcl_allocator_t & NodeOptions::allocator() const { return this->allocator_; }
+const rcl_allocator_t & NodeOptions::allocator() const
+{
+  return this->allocator_;
+}
 
 NodeOptions & NodeOptions::allocator(rcl_allocator_t allocator)
 {

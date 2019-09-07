@@ -23,7 +23,9 @@
 class NodeWrapper
 {
 public:
-  explicit NodeWrapper(const std::string & name) : node(std::make_shared<rclcpp::Node>(name)) {}
+  explicit NodeWrapper(const std::string & name) : node(std::make_shared<rclcpp::Node>(name))
+  {
+  }
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_base_interface()
   {

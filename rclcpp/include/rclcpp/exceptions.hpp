@@ -33,7 +33,9 @@ namespace exceptions
 class InvalidNodeError : public std::runtime_error
 {
 public:
-  InvalidNodeError() : std::runtime_error("node is invalid") {}
+  InvalidNodeError() : std::runtime_error("node is invalid")
+  {
+  }
 };
 
 /// Thrown when a any kind of name (node, namespace, topic, etc.) is invalid.
@@ -124,7 +126,9 @@ class RCLErrorBase
 public:
   RCLCPP_PUBLIC
   RCLErrorBase(rcl_ret_t ret, const rcl_error_state_t * error_state);
-  virtual ~RCLErrorBase() {}
+  virtual ~RCLErrorBase()
+  {
+  }
 
   rcl_ret_t ret;
   std::string message;
@@ -193,14 +197,18 @@ public:
 class InvalidEventError : public std::runtime_error
 {
 public:
-  InvalidEventError() : std::runtime_error("event is invalid") {}
+  InvalidEventError() : std::runtime_error("event is invalid")
+  {
+  }
 };
 
 /// Thrown when an unregistered rclcpp::Event is encountered where a registered one was expected.
 class EventNotRegisteredError : public std::runtime_error
 {
 public:
-  EventNotRegisteredError() : std::runtime_error("event already registered") {}
+  EventNotRegisteredError() : std::runtime_error("event already registered")
+  {
+  }
 };
 
 /// Thrown if passed parameters are inconsistent or invalid

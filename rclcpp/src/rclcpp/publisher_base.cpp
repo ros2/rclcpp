@@ -121,13 +121,25 @@ size_t PublisherBase::get_queue_size() const
   return publisher_options->qos.depth;
 }
 
-const rmw_gid_t & PublisherBase::get_gid() const { return rmw_gid_; }
+const rmw_gid_t & PublisherBase::get_gid() const
+{
+  return rmw_gid_;
+}
 
-const rmw_gid_t & PublisherBase::get_intra_process_gid() const { return intra_process_rmw_gid_; }
+const rmw_gid_t & PublisherBase::get_intra_process_gid() const
+{
+  return intra_process_rmw_gid_;
+}
 
-rcl_publisher_t * PublisherBase::get_publisher_handle() { return &publisher_handle_; }
+rcl_publisher_t * PublisherBase::get_publisher_handle()
+{
+  return &publisher_handle_;
+}
 
-const rcl_publisher_t * PublisherBase::get_publisher_handle() const { return &publisher_handle_; }
+const rcl_publisher_t * PublisherBase::get_publisher_handle() const
+{
+  return &publisher_handle_;
+}
 
 const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
 PublisherBase::get_event_handlers() const
@@ -190,7 +202,10 @@ bool PublisherBase::assert_liveliness() const
   return RCL_RET_OK == rcl_publisher_assert_liveliness(&publisher_handle_);
 }
 
-bool PublisherBase::operator==(const rmw_gid_t & gid) const { return *this == &gid; }
+bool PublisherBase::operator==(const rmw_gid_t & gid) const
+{
+  return *this == &gid;
+}
 
 bool PublisherBase::operator==(const rmw_gid_t * gid) const
 {

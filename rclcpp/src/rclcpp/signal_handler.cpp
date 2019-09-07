@@ -51,7 +51,10 @@ sem_t SignalHandler::signal_handler_sem_;
 // it, because the destructor of SignalHandler uses this logger object.
 static rclcpp::Logger g_logger = rclcpp::get_logger("rclcpp");
 
-rclcpp::Logger & SignalHandler::get_logger() { return g_logger; }
+rclcpp::Logger & SignalHandler::get_logger()
+{
+  return g_logger;
+}
 
 SignalHandler & SignalHandler::get_global_signal_handler()
 {
@@ -130,7 +133,10 @@ bool SignalHandler::uninstall()
   return true;
 }
 
-bool SignalHandler::is_installed() { return installed_.load(); }
+bool SignalHandler::is_installed()
+{
+  return installed_.load();
+}
 
 SignalHandler::~SignalHandler()
 {

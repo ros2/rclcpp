@@ -98,13 +98,24 @@ LifecycleNode::LifecycleNode(
   register_on_error(std::bind(&LifecycleNodeInterface::on_error, this, std::placeholders::_1));
 }
 
-LifecycleNode::~LifecycleNode() {}
+LifecycleNode::~LifecycleNode()
+{
+}
 
-const char * LifecycleNode::get_name() const { return node_base_->get_name(); }
+const char * LifecycleNode::get_name() const
+{
+  return node_base_->get_name();
+}
 
-const char * LifecycleNode::get_namespace() const { return node_base_->get_namespace(); }
+const char * LifecycleNode::get_namespace() const
+{
+  return node_base_->get_namespace();
+}
 
-rclcpp::Logger LifecycleNode::get_logger() const { return node_logging_->get_logger(); }
+rclcpp::Logger LifecycleNode::get_logger() const
+{
+  return node_logging_->get_logger();
+}
 
 rclcpp::callback_group::CallbackGroup::SharedPtr LifecycleNode::create_callback_group(
   rclcpp::callback_group::CallbackGroupType group_type)
@@ -237,7 +248,10 @@ LifecycleNode::get_callback_groups() const
   return node_base_->get_callback_groups();
 }
 
-rclcpp::Event::SharedPtr LifecycleNode::get_graph_event() { return node_graph_->get_graph_event(); }
+rclcpp::Event::SharedPtr LifecycleNode::get_graph_event()
+{
+  return node_graph_->get_graph_event();
+}
 
 void LifecycleNode::wait_for_graph_change(
   rclcpp::Event::SharedPtr event, std::chrono::nanoseconds timeout)
@@ -245,9 +259,15 @@ void LifecycleNode::wait_for_graph_change(
   node_graph_->wait_for_graph_change(event, timeout);
 }
 
-rclcpp::Clock::SharedPtr LifecycleNode::get_clock() { return node_clock_->get_clock(); }
+rclcpp::Clock::SharedPtr LifecycleNode::get_clock()
+{
+  return node_clock_->get_clock();
+}
 
-rclcpp::Time LifecycleNode::now() { return node_clock_->get_clock()->now(); }
+rclcpp::Time LifecycleNode::now()
+{
+  return node_clock_->get_clock()->now();
+}
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr LifecycleNode::get_node_base_interface()
 {
@@ -303,7 +323,10 @@ LifecycleNode::get_node_waitables_interface()
   return node_waitables_;
 }
 
-const rclcpp::NodeOptions & LifecycleNode::get_node_options() const { return node_options_; }
+const rclcpp::NodeOptions & LifecycleNode::get_node_options() const
+{
+  return node_options_;
+}
 
 ////
 bool LifecycleNode::register_on_configure(
@@ -343,9 +366,15 @@ bool LifecycleNode::register_on_error(
     lifecycle_msgs::msg::State::TRANSITION_STATE_ERRORPROCESSING, fcn);
 }
 
-const State & LifecycleNode::get_current_state() { return impl_->get_current_state(); }
+const State & LifecycleNode::get_current_state()
+{
+  return impl_->get_current_state();
+}
 
-std::vector<State> LifecycleNode::get_available_states() { return impl_->get_available_states(); }
+std::vector<State> LifecycleNode::get_available_states()
+{
+  return impl_->get_available_states();
+}
 
 std::vector<Transition> LifecycleNode::get_available_transitions()
 {

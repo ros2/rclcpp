@@ -150,7 +150,10 @@ TEST_F(TestLoggingMacros, test_logging_expression)
 
 int g_counter = 0;
 
-bool mod3() { return (g_counter % 3) != 0; }
+bool mod3()
+{
+  return (g_counter % 3) != 0;
+}
 
 TEST_F(TestLoggingMacros, test_logging_function)
 {

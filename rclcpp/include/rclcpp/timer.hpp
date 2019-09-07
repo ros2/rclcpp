@@ -158,7 +158,10 @@ public:
     callback_(*this);
   }
 
-  bool is_steady() override { return clock_->get_clock_type() == RCL_STEADY_TIME; }
+  bool is_steady() override
+  {
+    return clock_->get_clock_type() == RCL_STEADY_TIME;
+  }
 
 protected:
   RCLCPP_DISABLE_COPY(GenericTimer)

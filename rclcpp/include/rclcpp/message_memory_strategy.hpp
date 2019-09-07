@@ -112,11 +112,17 @@ public:
     return borrow_serialized_message(default_buffer_capacity_);
   }
 
-  virtual void set_default_buffer_capacity(size_t capacity) { default_buffer_capacity_ = capacity; }
+  virtual void set_default_buffer_capacity(size_t capacity)
+  {
+    default_buffer_capacity_ = capacity;
+  }
 
   /// Release ownership of the message, which will deallocate it if it has no more owners.
   /** \param[in] msg Shared pointer to the message we are returning. */
-  virtual void return_message(std::shared_ptr<MessageT> & msg) { msg.reset(); }
+  virtual void return_message(std::shared_ptr<MessageT> & msg)
+  {
+    msg.reset();
+  }
 
   virtual void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & serialized_msg)
   {

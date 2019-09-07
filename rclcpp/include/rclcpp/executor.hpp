@@ -76,7 +76,10 @@ struct ExecutorArgs
   size_t max_conditions;
 };
 
-static inline ExecutorArgs create_default_executor_arguments() { return ExecutorArgs(); }
+static inline ExecutorArgs create_default_executor_arguments()
+{
+  return ExecutorArgs();
+}
 
 /// Coordinate the order and timing of available communication tasks.
 /**

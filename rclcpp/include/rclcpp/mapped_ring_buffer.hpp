@@ -87,7 +87,9 @@ public:
     }
   }
 
-  virtual ~MappedRingBuffer() {}
+  virtual ~MappedRingBuffer()
+  {
+  }
 
   /// Return a copy of the value stored in the ring buffer at the given key.
   /**

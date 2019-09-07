@@ -85,11 +85,20 @@ public:
     return true;
   }
 
-  virtual bool is_steady() const { return Clock::is_steady; }
+  virtual bool is_steady() const
+  {
+    return Clock::is_steady;
+  }
 
-  virtual void reset() { last_interval_ = Clock::now(); }
+  virtual void reset()
+  {
+    last_interval_ = Clock::now();
+  }
 
-  std::chrono::nanoseconds period() const { return period_; }
+  std::chrono::nanoseconds period() const
+  {
+    return period_;
+  }
 
 private:
   RCLCPP_DISABLE_COPY(GenericRate)

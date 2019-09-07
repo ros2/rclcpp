@@ -28,8 +28,13 @@ namespace rclcpp
 template <typename Callable>
 struct ScopeExit
 {
-  explicit ScopeExit(Callable callable) : callable_(callable) {}
-  ~ScopeExit() { callable_(); }
+  explicit ScopeExit(Callable callable) : callable_(callable)
+  {
+  }
+  ~ScopeExit()
+  {
+    callable_();
+  }
 
 private:
   Callable callable_;

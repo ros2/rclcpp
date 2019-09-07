@@ -32,7 +32,10 @@ using rcl_interfaces::msg::IntraProcessMessage;
 class TestMultiThreadedExecutor : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 };
 
 /*

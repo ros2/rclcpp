@@ -24,14 +24,26 @@
 class TestParameterClient : public ::testing::Test
 {
 public:
-  void OnMessage(const rcl_interfaces::msg::ParameterEvent::SharedPtr event) { (void)event; }
+  void OnMessage(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
+  {
+    (void)event;
+  }
 
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 
-  void SetUp() { node = std::make_shared<rclcpp::Node>("test_parameter_client", "/ns"); }
+  void SetUp()
+  {
+    node = std::make_shared<rclcpp::Node>("test_parameter_client", "/ns");
+  }
 
-  void TearDown() { node.reset(); }
+  void TearDown()
+  {
+    node.reset();
+  }
 
   rclcpp::Node::SharedPtr node;
 };

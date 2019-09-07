@@ -37,7 +37,9 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   }
 }
 
-MultiThreadedExecutor::~MultiThreadedExecutor() {}
+MultiThreadedExecutor::~MultiThreadedExecutor()
+{
+}
 
 void MultiThreadedExecutor::spin()
 {
@@ -61,7 +63,10 @@ void MultiThreadedExecutor::spin()
   }
 }
 
-size_t MultiThreadedExecutor::get_number_of_threads() { return number_of_threads_; }
+size_t MultiThreadedExecutor::get_number_of_threads()
+{
+  return number_of_threads_;
+}
 
 void MultiThreadedExecutor::run(size_t)
 {

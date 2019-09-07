@@ -82,13 +82,17 @@ private:
    * This is used when logging is disabled: see `RCLCPP_LOGGING_ENABLED`.
    * This cannot be called directly, see `rclcpp::get_logger` instead.
    */
-  Logger() : name_(nullptr) {}
+  Logger() : name_(nullptr)
+  {
+  }
 
   /// Constructor of a named logger.
   /**
    * This cannot be called directly, see `rclcpp::get_logger` instead.
    */
-  explicit Logger(const std::string & name) : name_(new std::string(name)) {}
+  explicit Logger(const std::string & name) : name_(new std::string(name))
+  {
+  }
 
   std::shared_ptr<const std::string> name_;
 

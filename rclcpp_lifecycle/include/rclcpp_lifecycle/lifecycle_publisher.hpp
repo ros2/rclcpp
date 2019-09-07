@@ -69,7 +69,9 @@ public:
   {
   }
 
-  ~LifecyclePublisher() {}
+  ~LifecyclePublisher()
+  {
+  }
 
   /// LifecyclePublisher publish function
   /**
@@ -152,11 +154,20 @@ public:
 #pragma GCC diagnostic pop
 #endif
 
-  virtual void on_activate() { enabled_ = true; }
+  virtual void on_activate()
+  {
+    enabled_ = true;
+  }
 
-  virtual void on_deactivate() { enabled_ = false; }
+  virtual void on_deactivate()
+  {
+    enabled_ = false;
+  }
 
-  virtual bool is_activated() { return enabled_; }
+  virtual bool is_activated()
+  {
+    return enabled_;
+  }
 
 private:
   bool enabled_ = false;

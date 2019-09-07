@@ -26,7 +26,10 @@ QOSEventHandlerBase::~QOSEventHandlerBase()
 }
 
 /// Get the number of ready events.
-size_t QOSEventHandlerBase::get_number_of_ready_events() { return 1; }
+size_t QOSEventHandlerBase::get_number_of_ready_events()
+{
+  return 1;
+}
 
 /// Add the Waitable to a wait set.
 bool QOSEventHandlerBase::add_to_wait_set(rcl_wait_set_t * wait_set)

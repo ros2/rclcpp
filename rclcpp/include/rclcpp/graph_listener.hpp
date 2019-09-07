@@ -36,21 +36,27 @@ namespace graph_listener
 class GraphListenerShutdownError : public std::runtime_error
 {
 public:
-  GraphListenerShutdownError() : std::runtime_error("GraphListener already shutdown") {}
+  GraphListenerShutdownError() : std::runtime_error("GraphListener already shutdown")
+  {
+  }
 };
 
 /// Thrown when a node has already been added to the GraphListener.
 class NodeAlreadyAddedError : public std::runtime_error
 {
 public:
-  NodeAlreadyAddedError() : std::runtime_error("node already added") {}
+  NodeAlreadyAddedError() : std::runtime_error("node already added")
+  {
+  }
 };
 
 /// Thrown when the given node is not in the GraphListener.
 class NodeNotFoundError : public std::runtime_error
 {
 public:
-  NodeNotFoundError() : std::runtime_error("node not found") {}
+  NodeNotFoundError() : std::runtime_error("node not found")
+  {
+  }
 };
 
 /// Notifies many nodes of graph changes by listening in a thread.

@@ -64,7 +64,10 @@ public:
     allow_modification_ = false;
   }
 
-  ~ParameterMutationRecursionGuard() { allow_modification_ = true; }
+  ~ParameterMutationRecursionGuard()
+  {
+    allow_modification_ = true;
+  }
 
 private:
   bool & allow_modification_;

@@ -23,7 +23,10 @@
 class TestFindWeakNodes : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 };
 
 TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes)

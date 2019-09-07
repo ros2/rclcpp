@@ -23,7 +23,9 @@ NodeTimers::NodeTimers(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 {
 }
 
-NodeTimers::~NodeTimers() {}
+NodeTimers::~NodeTimers()
+{
+}
 
 void NodeTimers::add_timer(
   rclcpp::TimerBase::SharedPtr timer,

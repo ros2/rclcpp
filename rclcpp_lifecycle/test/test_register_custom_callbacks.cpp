@@ -29,7 +29,10 @@ using lifecycle_msgs::msg::Transition;
 class TestRegisterCustomCallbacks : public ::testing::Test
 {
 protected:
-  static void SetUpTestCase() { rclcpp::init(0, nullptr); }
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
 };
 
 class CustomLifecycleNode : public rclcpp_lifecycle::LifecycleNode

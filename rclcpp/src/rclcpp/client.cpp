@@ -73,9 +73,15 @@ const char * ClientBase::get_service_name() const
   return rcl_client_get_service_name(this->get_client_handle().get());
 }
 
-std::shared_ptr<rcl_client_t> ClientBase::get_client_handle() { return client_handle_; }
+std::shared_ptr<rcl_client_t> ClientBase::get_client_handle()
+{
+  return client_handle_;
+}
 
-std::shared_ptr<const rcl_client_t> ClientBase::get_client_handle() const { return client_handle_; }
+std::shared_ptr<const rcl_client_t> ClientBase::get_client_handle() const
+{
+  return client_handle_;
+}
 
 bool ClientBase::service_is_ready() const
 {
@@ -150,6 +156,12 @@ bool ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   return false;  // timeout exceeded while waiting for the server to be ready
 }
 
-rcl_node_t * ClientBase::get_rcl_node_handle() { return node_handle_.get(); }
+rcl_node_t * ClientBase::get_rcl_node_handle()
+{
+  return node_handle_.get();
+}
 
-const rcl_node_t * ClientBase::get_rcl_node_handle() const { return node_handle_.get(); }
+const rcl_node_t * ClientBase::get_rcl_node_handle() const
+{
+  return node_handle_.get();
+}

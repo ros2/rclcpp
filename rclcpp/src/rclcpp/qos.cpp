@@ -36,9 +36,13 @@ QoSInitialization QoSInitialization::from_rmw(const rmw_qos_profile_t & rmw_qos)
   }
 }
 
-KeepAll::KeepAll() : QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 0) {}
+KeepAll::KeepAll() : QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_ALL, 0)
+{
+}
 
-KeepLast::KeepLast(size_t depth) : QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, depth) {}
+KeepLast::KeepLast(size_t depth) : QoSInitialization(RMW_QOS_POLICY_HISTORY_KEEP_LAST, depth)
+{
+}
 
 QoS::QoS(const QoSInitialization & qos_initialization, const rmw_qos_profile_t & initial_profile)
 : rmw_qos_profile_(initial_profile)
@@ -47,11 +51,19 @@ QoS::QoS(const QoSInitialization & qos_initialization, const rmw_qos_profile_t &
   rmw_qos_profile_.depth = qos_initialization.depth;
 }
 
-QoS::QoS(size_t history_depth) : QoS(KeepLast(history_depth)) {}
+QoS::QoS(size_t history_depth) : QoS(KeepLast(history_depth))
+{
+}
 
-rmw_qos_profile_t & QoS::get_rmw_qos_profile() { return rmw_qos_profile_; }
+rmw_qos_profile_t & QoS::get_rmw_qos_profile()
+{
+  return rmw_qos_profile_;
+}
 
-const rmw_qos_profile_t & QoS::get_rmw_qos_profile() const { return rmw_qos_profile_; }
+const rmw_qos_profile_t & QoS::get_rmw_qos_profile() const
+{
+  return rmw_qos_profile_;
+}
 
 QoS & QoS::history(rmw_qos_history_policy_t history)
 {
@@ -79,9 +91,15 @@ QoS & QoS::reliability(rmw_qos_reliability_policy_t reliability)
   return *this;
 }
 
-QoS & QoS::reliable() { return this->reliability(RMW_QOS_POLICY_RELIABILITY_RELIABLE); }
+QoS & QoS::reliable()
+{
+  return this->reliability(RMW_QOS_POLICY_RELIABILITY_RELIABLE);
+}
 
-QoS & QoS::best_effort() { return this->reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT); }
+QoS & QoS::best_effort()
+{
+  return this->reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+}
 
 QoS & QoS::durability(rmw_qos_durability_policy_t durability)
 {
@@ -89,9 +107,15 @@ QoS & QoS::durability(rmw_qos_durability_policy_t durability)
   return *this;
 }
 
-QoS & QoS::durability_volatile() { return this->durability(RMW_QOS_POLICY_DURABILITY_VOLATILE); }
+QoS & QoS::durability_volatile()
+{
+  return this->durability(RMW_QOS_POLICY_DURABILITY_VOLATILE);
+}
 
-QoS & QoS::transient_local() { return this->durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL); }
+QoS & QoS::transient_local()
+{
+  return this->durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+}
 
 QoS & QoS::deadline(rmw_time_t deadline)
 {

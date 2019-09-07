@@ -38,7 +38,9 @@ InitOptions::InitOptions(const rcl_init_options_t & init_options)
   }
 }
 
-InitOptions::InitOptions(const InitOptions & other) : InitOptions(*other.get_rcl_init_options()) {}
+InitOptions::InitOptions(const InitOptions & other) : InitOptions(*other.get_rcl_init_options())
+{
+}
 
 InitOptions & InitOptions::operator=(const InitOptions & other)
 {
@@ -52,7 +54,10 @@ InitOptions & InitOptions::operator=(const InitOptions & other)
   return *this;
 }
 
-InitOptions::~InitOptions() { this->finalize_init_options(); }
+InitOptions::~InitOptions()
+{
+  this->finalize_init_options();
+}
 
 void InitOptions::finalize_init_options()
 {
@@ -68,6 +73,9 @@ void InitOptions::finalize_init_options()
   }
 }
 
-const rcl_init_options_t * InitOptions::get_rcl_init_options() const { return init_options_.get(); }
+const rcl_init_options_t * InitOptions::get_rcl_init_options() const
+{
+  return init_options_.get();
+}
 
 }  // namespace rclcpp

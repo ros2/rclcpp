@@ -150,7 +150,9 @@ public:
     }
   }
 
-  virtual ~Client() {}
+  virtual ~Client()
+  {
+  }
 
   std::shared_ptr<void> create_response() override
   {

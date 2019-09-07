@@ -61,7 +61,9 @@ TimerBase::TimerBase(
   }
 }
 
-TimerBase::~TimerBase() {}
+TimerBase::~TimerBase()
+{
+}
 
 void TimerBase::cancel()
 {
@@ -107,4 +109,7 @@ std::chrono::nanoseconds TimerBase::time_until_trigger()
   return std::chrono::nanoseconds(time_until_next_call);
 }
 
-std::shared_ptr<const rcl_timer_t> TimerBase::get_timer_handle() { return timer_handle_; }
+std::shared_ptr<const rcl_timer_t> TimerBase::get_timer_handle()
+{
+  return timer_handle_;
+}

@@ -160,18 +160,29 @@ Node::Node(const Node & other, const std::string & sub_namespace)
   }
 }
 
-Node::~Node() {}
+Node::~Node()
+{
+}
 
-const char * Node::get_name() const { return node_base_->get_name(); }
+const char * Node::get_name() const
+{
+  return node_base_->get_name();
+}
 
-const char * Node::get_namespace() const { return node_base_->get_namespace(); }
+const char * Node::get_namespace() const
+{
+  return node_base_->get_namespace();
+}
 
 const char * Node::get_fully_qualified_name() const
 {
   return node_base_->get_fully_qualified_name();
 }
 
-rclcpp::Logger Node::get_logger() const { return node_logging_->get_logger(); }
+rclcpp::Logger Node::get_logger() const
+{
+  return node_logging_->get_logger();
+}
 
 rclcpp::callback_group::CallbackGroup::SharedPtr Node::create_callback_group(
   rclcpp::callback_group::CallbackGroupType group_type)
@@ -280,7 +291,10 @@ rclcpp::Node::OnParametersSetCallbackType Node::set_on_parameters_set_callback(
   return node_parameters_->set_on_parameters_set_callback(callback);
 }
 
-std::vector<std::string> Node::get_node_names() const { return node_graph_->get_node_names(); }
+std::vector<std::string> Node::get_node_names() const
+{
+  return node_graph_->get_node_names();
+}
 
 std::map<std::string, std::vector<std::string>> Node::get_topic_names_and_types() const
 {
@@ -308,16 +322,25 @@ const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> & Node::get_ca
   return node_base_->get_callback_groups();
 }
 
-rclcpp::Event::SharedPtr Node::get_graph_event() { return node_graph_->get_graph_event(); }
+rclcpp::Event::SharedPtr Node::get_graph_event()
+{
+  return node_graph_->get_graph_event();
+}
 
 void Node::wait_for_graph_change(rclcpp::Event::SharedPtr event, std::chrono::nanoseconds timeout)
 {
   node_graph_->wait_for_graph_change(event, timeout);
 }
 
-rclcpp::Clock::SharedPtr Node::get_clock() { return node_clock_->get_clock(); }
+rclcpp::Clock::SharedPtr Node::get_clock()
+{
+  return node_clock_->get_clock();
+}
 
-rclcpp::Time Node::now() { return node_clock_->get_clock()->now(); }
+rclcpp::Time Node::now()
+{
+  return node_clock_->get_clock()->now();
+}
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Node::get_node_base_interface()
 {
@@ -369,9 +392,15 @@ rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr Node::get_node_waitab
   return node_waitables_;
 }
 
-const std::string & Node::get_sub_namespace() const { return this->sub_namespace_; }
+const std::string & Node::get_sub_namespace() const
+{
+  return this->sub_namespace_;
+}
 
-const std::string & Node::get_effective_namespace() const { return this->effective_namespace_; }
+const std::string & Node::get_effective_namespace() const
+{
+  return this->effective_namespace_;
+}
 
 Node::SharedPtr Node::create_sub_node(const std::string & sub_namespace)
 {
@@ -380,6 +409,12 @@ Node::SharedPtr Node::create_sub_node(const std::string & sub_namespace)
   return std::shared_ptr<Node>(new Node(*this, sub_namespace));
 }
 
-const NodeOptions & Node::get_node_options() const { return this->node_options_; }
+const NodeOptions & Node::get_node_options() const
+{
+  return this->node_options_;
+}
 
-bool Node::assert_liveliness() const { return node_base_->assert_liveliness(); }
+bool Node::assert_liveliness() const
+{
+  return node_base_->assert_liveliness();
+}

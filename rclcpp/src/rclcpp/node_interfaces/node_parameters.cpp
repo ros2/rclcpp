@@ -168,7 +168,9 @@ NodeParameters::NodeParameters(
   }
 }
 
-NodeParameters::~NodeParameters() {}
+NodeParameters::~NodeParameters()
+{
+}
 
 RCLCPP_LOCAL
 bool __lockless_has_parameter(
@@ -802,7 +804,9 @@ rcl_interfaces::msg::ListParametersResult NodeParameters::list_parameters(
 
 struct HandleCompare : public std::unary_function<OnSetParametersCallbackHandle::WeakPtr, bool>
 {
-  explicit HandleCompare(const OnSetParametersCallbackHandle * const base) : base_(base) {}
+  explicit HandleCompare(const OnSetParametersCallbackHandle * const base) : base_(base)
+  {
+  }
   bool operator()(const OnSetParametersCallbackHandle::WeakPtr & handle)
   {
     auto shared_handle = handle.lock();
