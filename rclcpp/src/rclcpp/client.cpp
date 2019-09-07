@@ -114,9 +114,9 @@ bool ClientBase::wait_for_service_nanoseconds(std::chrono::nanoseconds timeout)
   auto event = node_ptr->get_graph_event();
   // update the time even on the first loop to account for time spent in the first call
   // to this->server_is_ready()
-  std::chrono::nanoseconds time_to_wait = timeout > std::chrono::nanoseconds(0)
-                                            ? timeout - (std::chrono::steady_clock::now() - start)
-                                            : std::chrono::nanoseconds::max();
+  std::chrono::nanoseconds time_to_wait = timeout > std::chrono::nanoseconds(0) ?
+                                            timeout - (std::chrono::steady_clock::now() - start) :
+                                            std::chrono::nanoseconds::max();
   if (time_to_wait < std::chrono::nanoseconds(0)) {
     // Do not allow the time_to_wait to become negative when timeout was originally positive.
     // Setting time_to_wait to 0 will allow one non-blocking wait because of the do-while.
