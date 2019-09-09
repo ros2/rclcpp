@@ -15,9 +15,9 @@
 #ifndef RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 #define RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 
-#include <map>
 #include <string>
 #include <utility>
+#include <unordered_map>
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
@@ -140,9 +140,33 @@ protected:
 
   rclcpp::QoS qos_;
 
-  // Map containers for registered parameters
-  std::map<std::string, std::string> parameter_node_map_;
-  std::map<std::string, std::function<void(const rclcpp::Parameter &)>> parameter_callbacks_;
+  // *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
+  // Hash function for string pair required in std::unordered_map
+  class stringPairHash
+  {
+  public:
+    template<typename T>
+    inline void hash_combine(std::size_t & seed, const T & v) const
+    {
+      std::hash<T> hasher;
+      seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+
+    inline size_t operator()(const std::pair<std::string, std::string> & s) const
+    {
+      size_t seed = 0;
+      hash_combine(seed, s.first);
+      hash_combine(seed, s.second);
+      return seed;
+    }
+  };
+  // *INDENT-ON*
+
+  // Map container for registered parameters
+  std::unordered_map<
+    std::pair<std::string, std::string>,
+    std::function<void(const rclcpp::Parameter &)>,
+    stringPairHash> parameter_callbacks_;
 
   // Vector of unique namespaces added
   std::vector<std::string> node_namespaces_;

@@ -58,18 +58,21 @@ protected:
     multiple = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
     remote_node_string = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
     diff_ns_bool = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
+    diff_node_int = std::make_shared<rcl_interfaces::msg::ParameterEvent>();
 
     same_node_int->node = node->get_fully_qualified_name();
     same_node_double->node = node->get_fully_qualified_name();
     multiple->node = node->get_fully_qualified_name();
     remote_node_string->node = remote_node_name;
     diff_ns_bool->node = diff_ns_name;
+    diff_node_int->node = remote_node_name;
 
     rcl_interfaces::msg::Parameter p;
     p.name = "my_int";
     p.value.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
     p.value.integer_value = 1;
     same_node_int->changed_parameters.push_back(p);
+    diff_node_int->changed_parameters.push_back(p);
     multiple->changed_parameters.push_back(p);
 
     p.name = "my_double";
@@ -97,6 +100,7 @@ protected:
 
   rcl_interfaces::msg::ParameterEvent::SharedPtr same_node_int;
   rcl_interfaces::msg::ParameterEvent::SharedPtr same_node_double;
+  rcl_interfaces::msg::ParameterEvent::SharedPtr diff_node_int;
   rcl_interfaces::msg::ParameterEvent::SharedPtr remote_node_string;
   rcl_interfaces::msg::ParameterEvent::SharedPtr multiple;
   rcl_interfaces::msg::ParameterEvent::SharedPtr diff_ns_bool;
@@ -164,6 +168,28 @@ TEST_F(TestNode, RegisterParameterUpdate)
   ParamSubscriber->test_event(multiple);
   EXPECT_EQ(double_param, 1.0);
   EXPECT_EQ(int_param, 1);
+}
+
+TEST_F(TestNode, SameParameterDifferentNode)
+{
+  int int_param_node1;
+  int int_param_node2;
+
+
+  // Set individual parameters
+  ParamSubscriber->register_parameter_update("my_int", int_param_node1);
+  ParamSubscriber->register_parameter_update("my_int", int_param_node2, remote_node_name);
+
+  ParamSubscriber->test_event(same_node_int);
+  EXPECT_EQ(int_param_node1, 1);
+  EXPECT_NE(int_param_node2, 1);
+
+  int_param_node1 = 0;
+  int_param_node2 = 0;
+
+  ParamSubscriber->test_event(diff_node_int);
+  EXPECT_NE(int_param_node1, 1);
+  EXPECT_EQ(int_param_node2, 1);
 }
 
 TEST_F(TestNode, UserCallback)

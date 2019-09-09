@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include "rclcpp/parameter_events_subscriber.hpp"
@@ -57,9 +57,9 @@ void ParameterEventsSubscriber::set_event_callback(
   std::string full_namespace;
   if (node_namespace == "") {
     full_namespace = node_base_->get_namespace();
+  } else {
+    full_namespace = resolve_path(full_namespace);
   }
-
-  full_namespace = resolve_path(full_namespace);
   add_namespace_event_subscriber(full_namespace);
   user_callback_ = callback;
 }
@@ -71,8 +71,7 @@ void ParameterEventsSubscriber::register_parameter_callback(
 {
   auto full_node_name = resolve_path(node_name);
   add_namespace_event_subscriber(split_path(full_node_name).first);
-  parameter_node_map_[parameter_name] = full_node_name;
-  parameter_callbacks_[parameter_name] = callback;
+  parameter_callbacks_[{parameter_name, full_node_name}] = callback;
 }
 
 bool ParameterEventsSubscriber::get_parameter_from_event(
@@ -86,7 +85,8 @@ bool ParameterEventsSubscriber::get_parameter_from_event(
       {rclcpp::ParameterEventsFilter::EventType::NEW,
         rclcpp::ParameterEventsFilter::EventType::CHANGED});
     if (!filter.get_events().empty()) {
-      auto param_msg = filter.get_events()[0].second;
+      const auto & events = filter.get_events();
+      auto param_msg = events[events.size() - 1].second;
       parameter = rclcpp::Parameter::from_parameter_msg(*param_msg);
       return true;
     }
@@ -101,12 +101,15 @@ void ParameterEventsSubscriber::event_callback(
   RCLCPP_DEBUG(node_logging_->get_logger(), "Parameter event received for node: %s",
     node_name.c_str());
 
-  for (std::map<std::string, std::string>::iterator it = parameter_node_map_.begin();
-    it != parameter_node_map_.end(); ++it)
-  {
+  std::unordered_map<
+    std::pair<std::string, std::string>,
+    std::function<void(const rclcpp::Parameter &)>,
+    stringPairHash>::iterator it;
+
+  for (it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
     rclcpp::Parameter p;
-    if (get_parameter_from_event(event, p, it->first, it->second)) {
-      parameter_callbacks_[it->first](p);
+    if (get_parameter_from_event(event, p, it->first.first, it->first.second)) {
+      it->second(p);
     }
   }
 
