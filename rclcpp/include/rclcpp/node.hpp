@@ -814,7 +814,7 @@ public:
    * \param[in] alternative_value Value to be used if the parameter was not set.
    */
   template<typename ParameterT>
-  [[deprecated("use declare_parameter() and it's return value instead")]]
+  [[deprecated("use declare_parameter() and its return value instead")]]
   void
   get_parameter_or_set(
     const std::string & name,
