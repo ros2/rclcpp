@@ -505,7 +505,7 @@ public:
    */
   template<typename ParameterT>
   // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated("use declare_parameter() and it's return value instead")]]
+  [[deprecated("use declare_parameter() and its return value instead")]]
   void
   get_parameter_or_set(
     const std::string & name,
