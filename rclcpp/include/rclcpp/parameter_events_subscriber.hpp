@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,8 +33,7 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const rclcpp::QoS & qos =
-    rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)));
+    const rclcpp::QoS & qos = rclcpp::ParameterEventsQoS());
 
   template<typename NodeT>
   ParameterEventsSubscriber(
@@ -48,68 +47,73 @@ public:
       qos)
   {}
 
-  /// Sets a custom callback for parameter events
+  /// Set a custom callback for parameter events.
   /**
-   * If no namespace is provided, a subscription will be created for the current namespace
-   * Repeated calls to this function will overwrite the callback
+   * If no namespace is provided, a subscription will be created for the current namespace.
+   * Repeated calls to this function will overwrite the callback.
    * If more than one namespace already has a subscription to its parameter events topic, then the
-   * provided callback will be applied to all of them
+   * provided callback will be applied to all of them.
    *
-   * \param[in] callback Function callback to be evaluated on event
-   * \param[in] Name of namespace for which a subscription will be created
+   * \param[in] callback Function callback to be evaluated on event.
+   * \param[in] node_namespace Name of namespace for which a subscription will be created.
    */
-  void set_event_callback(
+  void
+  set_event_callback(
     std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback,
     const std::string & node_namespace = "");
 
-  /// adds a custom callback for a specified parameter
+  /// Add a custom callback for a specified parameter.
   /**
-   * If a node_name is not provided, defaults to the current node
+   * If a node_name is not provided, defaults to the current node.
    *
-   * \param[in] parameter_name Name of parameter
-   * \param[in] callback Function callback to be evaluated upon parameter event
-   * \param[in] node_name Name of node which hosts the parameter
+   * \param[in] parameter_name Name of parameter.
+   * \param[in] callback Function callback to be evaluated upon parameter event.
+   * \param[in] node_name Name of node which hosts the parameter.
    */
-  void register_parameter_callback(
+  void
+  register_parameter_callback(
     const std::string & parameter_name,
     std::function<void(const rclcpp::Parameter &)> callback,
     const std::string & node_name = "");
 
-  /// adds a callback to assign the value of a changed parameter to a reference variable
+  /// Add a callback to assign the value of a changed parameter to a reference variable.
   /**
    * If a node_name is not provided, defaults to the current node
    *
-   * \param[in] parameter_name Name of parameter
-   * \param[in] value Reference to variable receiving update
-   * \param[in] node_name Name of node which hosts the parameter
+   * \param[in] parameter_name Name of parameter.
+   * \param[in] value Reference to variable receiving update.
+   * \param[in] node_name Name of node which hosts the parameter.
    */
   template<typename ParameterT>
-  void register_parameter_update(
+  void
+  register_parameter_update(
     const std::string & parameter_name, ParameterT & value, const std::string & node_name = "")
   {
     auto callback =
       [&value, this](const rclcpp::Parameter & param) {
-        get_parameter_update<ParameterT>(param, value);
+        this->get_parameter_update<ParameterT>(param, value);
       };
 
     register_parameter_callback(parameter_name, callback, node_name);
   }
 
-  bool get_parameter_from_event(
+  bool
+  get_parameter_from_event(
     const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
     rclcpp::Parameter & parameter,
     const std::string parameter_name,
     const std::string node_name = "");
 
 protected:
-  /// Gets value of specified parameter from an a rclcpp::Parameter
+  /// Get value of specified parameter from an a rclcpp::Parameter.
   /**
-   * If the parameter does not appear in the event, no value will be assigned
-   * \param[in] parameter_name Name of parameter
-   * \param[in] value Reference to variable receiving updates
+   * If the parameter does not appear in the event, no value will be assigned.
+   * \param[in] parameter_name Name of parameter.
+   * \param[in] value Reference to variable receiving updates.
    */
   template<typename ParameterT>
-  void get_parameter_update(
+  void
+  get_parameter_update(
     const rclcpp::Parameter & param, ParameterT & value)
   {
     try {
@@ -122,18 +126,20 @@ protected:
     }
   }
 
-  /// Adds a subscription (if unique) to a namespace parameter events topic
-  void add_namespace_event_subscriber(const std::string & node_namespace);
+  /// Add a subscription (if unique) to a namespace parameter events topic.
+  void
+  add_namespace_event_subscriber(const std::string & node_namespace);
 
-  /// Callback for parameter events subscriptions
-  void event_callback(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
+  /// Callback for parameter events subscriptions.
+  void
+  event_callback(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
 
-  // Utility functions for string and path name operations
+  // Utility functions for string and path name operations.
   std::string resolve_path(const std::string & path);
   std::pair<std::string, std::string> split_path(const std::string & str);
   std::string join_path(std::string path, std::string name);
 
-  // Node Interfaces used for logging and creating subscribers
+  // Node Interfaces used for logging and creating subscribers.
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
@@ -142,7 +148,7 @@ protected:
 
   // *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   // Hash function for string pair required in std::unordered_map
-  class stringPairHash
+  class StringPairHash
   {
   public:
     template<typename T>
@@ -162,16 +168,17 @@ protected:
   };
   // *INDENT-ON*
 
-  // Map container for registered parameters
+  // Map container for registered parameters.
   std::unordered_map<
     std::pair<std::string, std::string>,
     std::function<void(const rclcpp::Parameter &)>,
-    stringPairHash> parameter_callbacks_;
+    StringPairHash
+  > parameter_callbacks_;
 
-  // Vector of unique namespaces added
+  // Vector of unique namespaces added.
   std::vector<std::string> node_namespaces_;
 
-  // vector of event subscriptions for each namespace
+  // Vector of event subscriptions for each namespace.
   std::vector<rclcpp::Subscription
     <rcl_interfaces::msg::ParameterEvent>::SharedPtr> event_subscriptions_;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ ParameterEventsSubscriber::ParameterEventsSubscriber(
   qos_(qos)
 {}
 
-void ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string & node_namespace)
+void
+ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string & node_namespace)
 {
   if (std::find(node_namespaces_.begin(), node_namespaces_.end(),
     node_namespace) == node_namespaces_.end())
@@ -50,7 +51,8 @@ void ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string
   }
 }
 
-void ParameterEventsSubscriber::set_event_callback(
+void
+ParameterEventsSubscriber::set_event_callback(
   std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback,
   const std::string & node_namespace)
 {
@@ -64,7 +66,8 @@ void ParameterEventsSubscriber::set_event_callback(
   user_callback_ = callback;
 }
 
-void ParameterEventsSubscriber::register_parameter_callback(
+void
+ParameterEventsSubscriber::register_parameter_callback(
   const std::string & parameter_name,
   std::function<void(const rclcpp::Parameter &)> callback,
   const std::string & node_name)
@@ -74,7 +77,8 @@ void ParameterEventsSubscriber::register_parameter_callback(
   parameter_callbacks_[{parameter_name, full_node_name}] = callback;
 }
 
-bool ParameterEventsSubscriber::get_parameter_from_event(
+bool
+ParameterEventsSubscriber::get_parameter_from_event(
   const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
   rclcpp::Parameter & parameter,
   const std::string parameter_name,
@@ -86,7 +90,7 @@ bool ParameterEventsSubscriber::get_parameter_from_event(
         rclcpp::ParameterEventsFilter::EventType::CHANGED});
     if (!filter.get_events().empty()) {
       const auto & events = filter.get_events();
-      auto param_msg = events[events.size() - 1].second;
+      auto param_msg = events.back().second;
       parameter = rclcpp::Parameter::from_parameter_msg(*param_msg);
       return true;
     }
@@ -94,19 +98,15 @@ bool ParameterEventsSubscriber::get_parameter_from_event(
   return false;
 }
 
-void ParameterEventsSubscriber::event_callback(
+void
+ParameterEventsSubscriber::event_callback(
   const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
 {
-  std::string node_name = event->node;
+  const std::string & node_name = event->node;
   RCLCPP_DEBUG(node_logging_->get_logger(), "Parameter event received for node: %s",
     node_name.c_str());
 
-  std::unordered_map<
-    std::pair<std::string, std::string>,
-    std::function<void(const rclcpp::Parameter &)>,
-    stringPairHash>::iterator it;
-
-  for (it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
+  for (auto it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
     rclcpp::Parameter p;
     if (get_parameter_from_event(event, p, it->first.first, it->first.second)) {
       it->second(p);
@@ -118,7 +118,8 @@ void ParameterEventsSubscriber::event_callback(
   }
 }
 
-std::string ParameterEventsSubscriber::resolve_path(const std::string & path)
+std::string
+ParameterEventsSubscriber::resolve_path(const std::string & path)
 {
   std::string full_path;
 
@@ -134,7 +135,8 @@ std::string ParameterEventsSubscriber::resolve_path(const std::string & path)
   return full_path;
 }
 
-std::pair<std::string, std::string> ParameterEventsSubscriber::split_path(const std::string & str)
+std::pair<std::string, std::string>
+ParameterEventsSubscriber::split_path(const std::string & str)
 {
   std::string path;
   std::size_t found = str.find_last_of("/\\");
@@ -147,7 +149,8 @@ std::pair<std::string, std::string> ParameterEventsSubscriber::split_path(const 
   return {path, name};
 }
 
-std::string ParameterEventsSubscriber::join_path(std::string path, std::string name)
+std::string
+ParameterEventsSubscriber::join_path(std::string path, std::string name)
 {
   std::string joined_path = path;
   if (*joined_path.rbegin() != '/' && *name.begin() != '/') {
