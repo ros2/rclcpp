@@ -29,6 +29,7 @@ namespace rclcpp
 class ParameterEventsSubscriber
 {
 public:
+  RCLCPP_PUBLIC
   ParameterEventsSubscriber(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
     rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
@@ -57,6 +58,7 @@ public:
    * \param[in] callback Function callback to be evaluated on event.
    * \param[in] node_namespace Name of namespace for which a subscription will be created.
    */
+  RCLCPP_PUBLIC
   void
   set_event_callback(
     std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback,
@@ -70,6 +72,7 @@ public:
    * \param[in] callback Function callback to be evaluated upon parameter event.
    * \param[in] node_name Name of node which hosts the parameter.
    */
+  RCLCPP_PUBLIC
   void
   register_parameter_callback(
     const std::string & parameter_name,
@@ -97,6 +100,7 @@ public:
     register_parameter_callback(parameter_name, callback, node_name);
   }
 
+  RCLCPP_PUBLIC
   bool
   get_parameter_from_event(
     const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
