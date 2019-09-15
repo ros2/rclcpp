@@ -173,6 +173,15 @@ public:
   size_t
   get_publisher_count() const;
 
+  /// Check if subscription instance can loan messages.
+  /**
+   * Depending on the middleware and the message type, this will return true if the middleware
+   * can allocate a ROS message instance.
+   */
+  RCLCPP_PUBLIC
+  bool
+  can_loan_messages() const;
+
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
 
