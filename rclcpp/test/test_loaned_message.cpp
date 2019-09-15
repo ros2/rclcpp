@@ -42,10 +42,10 @@ TEST_F(TestLoanedMessage, initialize) {
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
   try {
-    auto loaned_msg_ptr = rclcpp::LoanedMessage<MessageT>::get_instance(pub.get());
-    ASSERT_TRUE(loaned_msg_ptr->is_valid());
-    loaned_msg_ptr->get().float32_value = 42.0f;
-    ASSERT_EQ(42.0f, loaned_msg_ptr->get().float32_value);
+    auto loaned_msg = rclcpp::LoanedMessage<MessageT>::get_instance(pub.get());
+    ASSERT_TRUE(loaned_msg.is_valid());
+    loaned_msg.get().float32_value = 42.0f;
+    ASSERT_EQ(42.0f, loaned_msg.get().float32_value);
   } catch (const std::runtime_error & e) {
     FAIL() << e.what();
   } catch (...) {
@@ -59,7 +59,7 @@ TEST_F(TestLoanedMessage, wrong_initialized) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
 
   try {
-    auto loaned_msg_ptr = rclcpp::LoanedMessage<MessageT>::get_instance(nullptr);
+    auto loaned_msg = rclcpp::LoanedMessage<MessageT>::get_instance(nullptr);
   } catch (const std::runtime_error & e) {
     SUCCEED();
   } catch (...) {
@@ -72,10 +72,10 @@ TEST_F(TestLoanedMessage, loan_from_pub) {
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
   try {
-    auto loaned_msg_ptr = pub->loan_message();
-    ASSERT_TRUE(loaned_msg_ptr->is_valid());
-    loaned_msg_ptr->get().float64_value = 42.0f;
-    ASSERT_EQ(42.0f, loaned_msg_ptr->get().float64_value);
+    auto loaned_msg = pub->loan_message();
+    ASSERT_TRUE(loaned_msg.is_valid());
+    loaned_msg.get().float64_value = 42.0f;
+    ASSERT_EQ(42.0f, loaned_msg.get().float64_value);
   } catch (const std::runtime_error & e) {
     FAIL() << e.what();
   }

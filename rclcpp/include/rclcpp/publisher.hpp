@@ -136,7 +136,7 @@ public:
     >::make_shared(size, this->get_allocator());
   }
 
-  std::unique_ptr<rclcpp::LoanedMessage<MessageT, Alloc>>
+  rclcpp::LoanedMessage<MessageT, Alloc>
   loan_message()
   {
     return rclcpp::LoanedMessage<MessageT, Alloc>::get_instance(this);
