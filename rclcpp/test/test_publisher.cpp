@@ -139,41 +139,6 @@ TEST_F(TestPublisher, various_creation_signatures) {
       rclcpp::create_publisher<IntraProcessMessage>(node, "topic", 42, rclcpp::PublisherOptions());
     (void)publisher;
   }
-  // Now deprecated functions.
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-  {
-    auto publisher = node->create_publisher<IntraProcessMessage>("topic");
-    (void)publisher;
-  }
-  {
-    auto publisher = node->create_publisher<IntraProcessMessage>(
-      "topic",
-      42,
-      std::make_shared<std::allocator<IntraProcessMessage>>());
-    (void)publisher;
-  }
-  {
-    auto publisher = node->create_publisher<IntraProcessMessage>("topic", rmw_qos_profile_default);
-    (void)publisher;
-  }
-  {
-    auto publisher = node->create_publisher<IntraProcessMessage>(
-      "topic",
-      rmw_qos_profile_default,
-      std::make_shared<std::allocator<IntraProcessMessage>>());
-    (void)publisher;
-  }
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
 }
 
 /*

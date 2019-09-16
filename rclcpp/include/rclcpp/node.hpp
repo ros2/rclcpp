@@ -174,7 +174,7 @@ public:
   template<
     typename MessageT,
     typename AllocatorT = std::allocator<void>,
-    typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
+    typename PublisherT = rclcpp::Publisher<MessageT, AllocatorT>>
   std::shared_ptr<PublisherT>
   create_publisher(
     const std::string & topic_name,
@@ -182,44 +182,6 @@ public:
     const PublisherOptionsWithAllocator<AllocatorT> & options =
     PublisherOptionsWithAllocator<AllocatorT>()
   );
-
-  /// Create and return a Publisher.
-  /**
-   * \param[in] topic_name The topic for this publisher to publish on.
-   * \param[in] qos_history_depth The depth of the publisher message queue.
-   * \param[in] allocator Custom allocator.
-   * \return Shared pointer to the created publisher.
-   */
-  template<
-    typename MessageT,
-    typename AllocatorT = std::allocator<void>,
-    typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
-  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
-  std::shared_ptr<PublisherT>
-  create_publisher(
-    const std::string & topic_name,
-    size_t qos_history_depth,
-    std::shared_ptr<AllocatorT> allocator);
-
-  /// Create and return a Publisher.
-  /**
-   * \param[in] topic_name The topic for this publisher to publish on.
-   * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
-   * \param[in] allocator Optional custom allocator.
-   * \return Shared pointer to the created publisher.
-   */
-  template<
-    typename MessageT,
-    typename AllocatorT = std::allocator<void>,
-    typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
-  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated("use create_publisher(const std::string &, const rclcpp::QoS &, ...) instead")]]
-  std::shared_ptr<PublisherT>
-  create_publisher(
-    const std::string & topic_name,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
-    std::shared_ptr<AllocatorT> allocator = nullptr);
 
   /// Create and return a Subscription.
   /**
@@ -251,80 +213,6 @@ public:
       typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
     >::SharedPtr
     msg_mem_strat = nullptr);
-
-  /// Create and return a Subscription.
-  /**
-   * \param[in] topic_name The topic to subscribe on.
-   * \param[in] callback The user-defined callback function.
-   * \param[in] qos_profile The quality of service profile to pass on to the rmw implementation.
-   * \param[in] group The callback group for this subscription. NULL for no callback group.
-   * \param[in] ignore_local_publications True to ignore local publications.
-   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
-   * \param[in] allocator Optional custom allocator.
-   * \return Shared pointer to the created subscription.
-   */
-  /* TODO(jacquelinekay):
-     Windows build breaks when static member function passed as default
-     argument to msg_mem_strat, nullptr is a workaround.
-   */
-  template<
-    typename MessageT,
-    typename CallbackT,
-    typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
-  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated(
-    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
-  )]]
-  std::shared_ptr<SubscriptionT>
-  create_subscription(
-    const std::string & topic_name,
-    CallbackT && callback,
-    const rmw_qos_profile_t & qos_profile = rmw_qos_profile_default,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
-    bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-    msg_mem_strat = nullptr,
-    std::shared_ptr<Alloc> allocator = nullptr);
-
-  /// Create and return a Subscription.
-  /**
-   * \param[in] topic_name The topic to subscribe on.
-   * \param[in] qos_history_depth The depth of the subscription's incoming message queue.
-   * \param[in] callback The user-defined callback function.
-   * \param[in] group The callback group for this subscription. NULL for no callback group.
-   * \param[in] ignore_local_publications True to ignore local publications.
-   * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
-   * \param[in] allocator Optional custom allocator.
-   * \return Shared pointer to the created subscription.
-   */
-  /* TODO(jacquelinekay):
-     Windows build breaks when static member function passed as default
-     argument to msg_mem_strat, nullptr is a workaround.
-   */
-  template<
-    typename MessageT,
-    typename CallbackT,
-    typename Alloc = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>>
-  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated(
-    "use create_subscription(const std::string &, const rclcpp::QoS &, CallbackT, ...) instead"
-  )]]
-  std::shared_ptr<SubscriptionT>
-  create_subscription(
-    const std::string & topic_name,
-    CallbackT && callback,
-    size_t qos_history_depth,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr,
-    bool ignore_local_publications = false,
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, Alloc>::SharedPtr
-    msg_mem_strat = nullptr,
-    std::shared_ptr<Alloc> allocator = nullptr);
 
   /// Create a timer.
   /**
@@ -624,38 +512,6 @@ public:
   rcl_interfaces::msg::SetParametersResult
   set_parameters_atomically(const std::vector<rclcpp::Parameter> & parameters);
 
-  /// Set one parameter, unless that parameter has already been set.
-  /**
-   * Set the given parameter unless already set.
-   *
-   * Deprecated, instead use declare_parameter().
-   *
-   * \param[in] parameters The vector of parameters to be set.
-   * \return The result of each set action as a vector.
-   */
-  template<typename ParameterT>
-  // cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-  [[deprecated("use declare_parameter() instead")]]
-  void
-  set_parameter_if_not_set(const std::string & name, const ParameterT & value);
-
-  /// Set a map of parameters with the same prefix.
-  /**
-   * For each key in the map, a parameter with a name of "name.key" will be set
-   * to the value in the map.
-   *
-   * Deprecated, instead use declare_parameters().
-   *
-   * \param[in] name The prefix of the parameters to set.
-   * \param[in] values The parameters to set in the given prefix.
-   */
-  template<typename ParameterT>
-  [[deprecated("use declare_parameters() instead")]]
-  void
-  set_parameters_if_not_set(
-    const std::string & name,
-    const std::map<std::string, ParameterT> & values);
-
   /// Return the parameter by the given name.
   /**
    * If the parameter has not been declared, then this method may throw the
@@ -798,28 +654,6 @@ public:
   get_parameters(
     const std::string & prefix,
     std::map<std::string, ParameterT> & values) const;
-
-  /// Get the parameter value; if not set, set the "alternative value" and store it in the node.
-  /**
-   * If the parameter is set, then the "value" argument is assigned the value
-   * in the parameter.
-   * If the parameter is not set, then the "value" argument is assigned the "alternative_value",
-   * and the parameter is set to the "alternative_value" on the node.
-   *
-   * Deprecated, instead use declare_parameter()'s return value, or use
-   * has_parameter() to ensure it exists before getting it.
-   *
-   * \param[in] name The name of the parameter to get.
-   * \param[out] value The output where the value of the parameter should be assigned.
-   * \param[in] alternative_value Value to be used if the parameter was not set.
-   */
-  template<typename ParameterT>
-  [[deprecated("use declare_parameter() and its return value instead")]]
-  void
-  get_parameter_or_set(
-    const std::string & name,
-    ParameterT & value,
-    const ParameterT & alternative_value);
 
   /// Return the parameter descriptor for the given parameter name.
   /**
@@ -1005,17 +839,6 @@ public:
   RCLCPP_PUBLIC
   OnParametersSetCallbackType
   set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
-
-  /// Register the callback for parameter changes
-  /**
-   * \param[in] callback User defined callback function.
-   *   It is expected to atomically set parameters.
-   * \note Repeated invocations of this function will overwrite previous callbacks.
-   */
-  template<typename CallbackT>
-  [[deprecated("use set_on_parameters_set_callback() instead")]]
-  void
-  register_param_change_callback(CallbackT && callback);
 
   /// Get the fully-qualified names of all available nodes.
   /**
