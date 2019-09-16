@@ -173,9 +173,6 @@ public:
 
   using OnParametersSetCallbackType = OnSetParametersCallbackHandle::OnParametersSetCallbackType;
 
-  using ParametersCallbackFunction [[deprecated("use OnParametersSetCallbackType instead")]] =
-    OnParametersSetCallbackType;
-
   /// Add a callback for when parameters are being set.
   /**
    * \sa rclcpp::Node::add_on_set_parameters_callback
@@ -202,12 +199,6 @@ public:
   virtual
   OnParametersSetCallbackType
   set_on_parameters_set_callback(OnParametersSetCallbackType callback) = 0;
-
-  [[deprecated("use set_on_parameters_set_callback() instead")]]
-  RCLCPP_PUBLIC
-  virtual
-  void
-  register_param_change_callback(OnParametersSetCallbackType callback) = 0;
 
   /// Return the initial parameter values used by the NodeParameters to override default values.
   RCLCPP_PUBLIC

@@ -12,17 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// When compiling this file, Windows produces a deprecation warning for the
-// deprecated function prototype of NodeParameters::register_param_change_callback().
-// Other compilers do not.
-#if defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
-#if defined(_WIN32)
-# pragma warning(pop)
-#endif
 
 #include <rcl_yaml_param_parser/parser.h>
 
@@ -918,33 +908,6 @@ NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callb
   on_parameters_set_callback_ = callback;
   return existing_callback;
 }
-
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-void
-NodeParameters::register_param_change_callback(ParametersCallbackFunction callback)
-{
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-
-  if (on_parameters_set_callback_) {
-    RCLCPP_WARN(
-      node_logging_->get_logger(),
-      "on_parameters_set_callback already registered, overwriting previous callback");
-  }
-  on_parameters_set_callback_ = callback;
-}
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
 
 const std::map<std::string, rclcpp::ParameterValue> &
 NodeParameters::get_parameter_overrides() const

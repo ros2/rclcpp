@@ -29,36 +29,6 @@
 namespace rclcpp
 {
 
-template<
-  typename MessageT,
-  typename AllocatorT = std::allocator<void>,
-  typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>>
-// cppcheck-suppress syntaxError // bug in cppcheck 1.82 for [[deprecated]] on templated function
-[[deprecated("use alternative rclcpp::create_publisher() signatures")]]
-std::shared_ptr<PublisherT>
-create_publisher(
-  rclcpp::node_interfaces::NodeTopicsInterface * node_topics,
-  const std::string & topic_name,
-  const rmw_qos_profile_t & qos_profile,
-  const PublisherEventCallbacks & event_callbacks,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  bool use_intra_process_comms,
-  std::shared_ptr<AllocatorT> allocator)
-{
-  auto publisher_options = rcl_publisher_get_default_options();
-  publisher_options.qos = qos_profile;
-
-  auto pub = node_topics->create_publisher(
-    topic_name,
-    rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(event_callbacks, allocator),
-    publisher_options,
-    use_intra_process_comms);
-
-  node_topics->add_publisher(pub, group);
-
-  return std::dynamic_pointer_cast<PublisherT>(pub);
-}
-
 /// Create and return a publisher of the given MessageT type.
 /**
  * The NodeT type only needs to have a method called get_node_topics_interface()
