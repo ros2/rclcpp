@@ -34,7 +34,9 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
+#include "rclcpp/publisher_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -57,25 +59,63 @@ public:
   Publisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
-    const rcl_publisher_options_t & publisher_options,
-    const PublisherEventCallbacks & event_callbacks,
-    const std::shared_ptr<MessageAlloc> & allocator)
+    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options,
+    const rclcpp::QoS & qos)
   : PublisherBase(
       node_base,
       topic,
       *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
-      publisher_options),
-    message_allocator_(allocator)
+      options.template to_rcl_publisher_options<MessageT>(qos)),
+    options_(options),
+    message_allocator_(new MessageAlloc(*options.get_allocator().get()))
   {
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
 
-    if (event_callbacks.deadline_callback) {
+    if (options_.event_callbacks.deadline_callback) {
       this->add_event_handler(
-        event_callbacks.deadline_callback,
+        options_.event_callbacks.deadline_callback,
         RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
     }
-    if (event_callbacks.liveliness_callback) {
-      this->add_event_handler(event_callbacks.liveliness_callback, RCL_PUBLISHER_LIVELINESS_LOST);
+    if (options_.event_callbacks.liveliness_callback) {
+      this->add_event_handler(
+        options_.event_callbacks.liveliness_callback,
+        RCL_PUBLISHER_LIVELINESS_LOST);
+    }
+
+    // Setup continues in the post construction method, post_init_setup().
+  }
+
+  /// Called post construction, so that construction may continue after shared_from_this() works.
+  virtual
+  void
+  post_init_setup(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options,
+    const rclcpp::QoS & qos)
+  {
+    // Topic is unused for now.
+    (void)topic;
+
+    // If needed, setup intra process communication.
+    if (options_.resolve_use_intra_process_comm(node_base->get_use_intra_process_default())) {
+      auto context = node_base->get_context();
+      // Get the intra process manager instance for this context.
+      auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+      // Register the publisher with the intra process manager.
+      if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with keep all history qos policy");
+      }
+      if (qos.get_rmw_qos_profile().depth == 0) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with a zero qos history depth value");
+      }
+      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
+      this->setup_intra_process(
+        intra_process_publisher_id,
+        ipm,
+        options.template to_rcl_publisher_options<MessageT>(qos));
     }
   }
 
@@ -150,7 +190,8 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
-  std::shared_ptr<MessageAlloc> get_allocator() const
+  std::shared_ptr<MessageAlloc>
+  get_allocator() const
   {
     return message_allocator_;
   }
@@ -245,6 +286,8 @@ protected:
       ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, std::move(msg));
     return message_seq;
   }
+
+  const rclcpp::PublisherOptionsWithAllocator<Alloc> options_;
 
   std::shared_ptr<MessageAlloc> message_allocator_;
 
