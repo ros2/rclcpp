@@ -207,7 +207,7 @@ public:
     if (!loaned_msg.is_valid()) {
       throw std::runtime_error("loaned message is not valid");
     }
-    return this->do_intra_process_publish(loaned_msg, true);
+    return rcl_publish(&publisher_handle_, *loaned_msg->get(), nullptr, true);
   }
 
   std::shared_ptr<MessageAllocator>
