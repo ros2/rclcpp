@@ -139,7 +139,7 @@ public:
   rclcpp::LoanedMessage<MessageT, Alloc>
   loan_message()
   {
-    return rclcpp::LoanedMessage<MessageT, Alloc>::get_instance(this);
+    return rclcpp::LoanedMessage<MessageT, Alloc>(this, this->get_allocator());
   }
 
   /// Send a message to the topic for this publisher.

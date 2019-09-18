@@ -16,7 +16,9 @@
 #define RCLCPP__LOANED_MESSAGE_HPP_
 
 #include <memory>
+#include <utility>
 
+#include "rclcpp/logging.hpp"
 #include "rclcpp/publisher.hpp"
 
 #include "rcl/allocator.h"
@@ -41,13 +43,41 @@ protected:
 
   const std::shared_ptr<MessageAlloc> message_allocator_;
 
+  /// Deleted copy constructor to preserve memory integrity
+  LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
+
+public:
+  /// Constructor of the LoanedMessage class
+  /**
+   * The constructor of this class allocates memory for a given message type
+   * and associates this with a given publisher.
+   *
+   * \Note: Given the publisher instance, a case differentiation is being performaned
+   * which decides whether the underlying middleware is able to allocate the appropriate
+   * memory for this message type or not.
+   * In the case that the middleware can not loan messages, the passed in allocator instance
+   * is being used to allocate the message within the scope of this class.
+   * Otherwise, the allocator is being ignored and the allocation is solely performaned
+   * in the underlying middleware with its appropriate allocation strategy.
+   * The need for this arises as the user code can be written explicitly targeting a middleware
+   * capable of loaning messages.
+   * However, this user code is ought to be usable even when dynamically linked against
+   * a middleware which doesn't support message loaning in which case the allocator will be used.
+   *
+   * \param pub rclcpp::Publisher instance to which the memory belongs
+   * \param allocator Allocator instance in case middleware can not allocate messages
+   */
   LoanedMessage(
     const rclcpp::Publisher<MessageT, Alloc> * pub,
-    const std::shared_ptr<std::allocator<MessageT>> & allocator)
+    const std::shared_ptr<std::allocator<MessageT>> allocator)
   : pub_(pub),
     message_(nullptr),
     message_allocator_(allocator)
   {
+    if (!pub) {
+      throw std::runtime_error("publisher pointer is null");
+    }
+
     void * message_memory = nullptr;
     if (pub_->can_loan_messages()) {
       message_memory =
@@ -61,19 +91,30 @@ protected:
     message_.reset(new (message_memory) MessageT());
   }
 
-  LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
-
-public:
+  /// Move semantic for RVO
   LoanedMessage(LoanedMessage<MessageT> && other)
   : pub_(std::move(other.pub_)),
     message_(std::move(other.message_)),
     message_allocator_(std::move(other.message_allocator_))
   {}
 
+  /// Destructor of the LoanedMessage class
+  /**
+   * The destructor has the explicit task to return the allocated memory for its message
+   * instance.
+   * If the message was previously allocated via the middleware, the message is getting
+   * returned to the middleware to cleanly destroy the allocation.
+   * In the case that the local allocator instance was used, the same instance is then
+   * being used to destroy the allocated memory.
+   *
+   * The contract here is that the memory for this message is valid as long as this instance
+   * of the LoanedMessage class is alive.
+   */
   virtual ~LoanedMessage()
   {
+    auto error_logger = rclcpp::get_logger("LoanedMessage");
     if (!pub_) {
-      fprintf(stderr, "Can't destroy LoanedMessage. Publisher instance is null.");
+      RCLCPP_ERROR(error_logger, "Can't deallocate message memory. Publisher instance is NULL");
       return;
     }
 
@@ -85,7 +126,7 @@ public:
       auto ret =
         rcl_deallocate_loaned_message(pub_->get_publisher_handle(), message_memory);
       if (ret != RCL_RET_OK) {
-        fprintf(stderr, "Can't deallocate loaned message");
+        RCLCPP_ERROR(error_logger, "rcl_deallocate_loaned_message failed");
         return;
       }
     } else {
@@ -95,24 +136,30 @@ public:
     message_ = nullptr;
   }
 
+  /// Validate if the message was correctly allocated
+  /**
+   * The allocated memory might not be always consistent and valid.
+   * Reasons why this could fail is that an allocation step was failing,
+   * e.g. just like malloc could fail or a maximum amount of previously allocated
+   * messages is exceeded in which case the loaned messages have to be returned
+   * to the middleware prior to be able to allocate a new one.
+   */
   bool is_valid() const
   {
     return message_ != nullptr;
   }
 
+  /// Access the ROS message instance
+  /**
+   * A call to `get()` will return a mutable reference to the underlying ROS message instance.
+   * This allows a user to modify the content of the message prior to publishing it.
+   *
+   * \Note: If this reference is copied, the memory for this copy is no longer managed
+   * by the LoanedMessage instance and has to be cleanup individually.
+   */
   MessageT & get() const
   {
     return *message_;
-  }
-
-  static
-  LoanedMessage<MessageT>
-  get_instance(const rclcpp::Publisher<MessageT, Alloc> * pub)
-  {
-    if (!pub) {
-      throw std::runtime_error("publisher pointer is null");
-    }
-    return rclcpp::LoanedMessage<MessageT, Alloc>(pub, pub->get_allocator());
   }
 };
 
