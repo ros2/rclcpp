@@ -64,7 +64,11 @@ protected:
   LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
 
 public:
-  LoanedMessage(LoanedMessage<MessageT> && other) = default;
+  LoanedMessage(LoanedMessage<MessageT> && other)
+  : pub_(std::move(other.pub_)),
+    message_(std::move(other.message_)),
+    message_allocator_(std::move(other.message_allocator_))
+  {}
 
   virtual ~LoanedMessage()
   {
