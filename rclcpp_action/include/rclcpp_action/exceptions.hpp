@@ -25,7 +25,7 @@ class UnknownGoalHandleError : public std::invalid_argument
 {
 public:
   UnknownGoalHandleError()
-  : std::invalid_argument("Goal handle is not know to this client.")
+  : std::invalid_argument("Goal handle is not known to this client.")
   {
   }
 };
