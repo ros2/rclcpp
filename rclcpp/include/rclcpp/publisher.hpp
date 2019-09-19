@@ -136,10 +136,52 @@ public:
     >::make_shared(size, this->get_allocator());
   }
 
+  /// Loan memory for a ROS message from the middleware
+  /**
+   * If the middleware is capable of loaning memory for a ROS message instance,
+   * the loaned message will be directly allocated in the middleware.
+   * If not, the message allocator of this rclcpp::Publisher instance is being used.
+   *
+   * With a call to \sa `publish` the LoanedMessage instance is being returned to the middleware
+   * or free'd accordingly to the allocator.
+   * If the message is not being published but processed differently, the message has to be
+   * returned by calling \sa `return_loaned_message`.
+   * \sa rclcpp::LoanedMessage for details of the LoanedMessage class.
+   *
+   * \return LoanedMessage containing memory for a ROS message of type MessageT
+   */
   rclcpp::LoanedMessage<MessageT, Alloc>
   loan_message()
   {
     return rclcpp::LoanedMessage<MessageT, Alloc>(this, this->get_allocator());
+  }
+
+  /// Return and deallocate the memory for the loaned message.
+  /**
+   * \param loaned_message The LoanedMessage instance to be returned.
+   */
+  void
+  return_loaned_message(rclcpp::LoanedMessage<MessageT, Alloc> && loaned_msg) const
+  {
+    // scope exit
+    (void) loaned_msg;
+  }
+
+  /// Publish an instance of a LoanedMessage
+  /**
+   * When publishing a loaned message, the memory for this ROS instance will be deallocated
+   * after being published.
+   * The instance of the loaned message is no longer valid after this call.
+   *
+   * \param loaned_msg The LoanedMessage instance to be published.
+   */
+  void
+  publish(std::unique_ptr<rclcpp::LoanedMessage<MessageT, Alloc>> loaned_msg)
+  {
+    if (!loaned_msg.is_valid()) {
+      throw std::runtime_error("loaned message is not valid");
+    }
+    return rcl_publish(&publisher_handle_, *loaned_msg->get(), nullptr, true);
   }
 
   /// Send a message to the topic for this publisher.
