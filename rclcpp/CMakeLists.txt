@@ -144,11 +144,14 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
+  find_package(rcpputils REQUIRED)
   find_package(rmw_implementation_cmake REQUIRED)
 
   find_package(test_msgs REQUIRED)
 
   include(cmake/rclcpp_add_build_failure_test.cmake)
+
+  add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/test/resources")
 
   ament_add_gtest(test_client test/test_client.cpp)
   if(TARGET test_client)
@@ -215,6 +218,7 @@ if(BUILD_TESTING)
   if(TARGET test_node)
     ament_target_dependencies(test_node
       "rcl_interfaces"
+      "rcpputils"
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
@@ -462,6 +466,11 @@ if(BUILD_TESTING)
       "rcl")
     target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
   endif()
+
+  # Install test resources
+  install(
+    DIRECTORY test/resources
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
 endif()
 
 ament_package()
