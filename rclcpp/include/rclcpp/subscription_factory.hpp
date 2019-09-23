@@ -56,7 +56,7 @@ struct SubscriptionFactory
       const std::string & topic_name,
       const rclcpp::QoS & qos)>;
 
-  SubscriptionFactoryFunction create_typed_subscription;
+  const SubscriptionFactoryFunction create_typed_subscription;
 };
 
 /// Return a SubscriptionFactory with functions for creating a SubscriptionT<MessageT, Alloc>.
@@ -77,16 +77,14 @@ create_subscription_factory(
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  SubscriptionFactory factory;
-
   auto allocator = options.get_allocator();
 
   using rclcpp::AnySubscriptionCallback;
   AnySubscriptionCallback<CallbackMessageT, AllocatorT> any_subscription_callback(allocator);
   any_subscription_callback.set(std::forward<CallbackT>(callback));
 
-  // factory function that creates a MessageT specific SubscriptionT
-  factory.create_typed_subscription =
+  SubscriptionFactory factory {
+    // factory function that creates a MessageT specific SubscriptionT
     [options, msg_mem_strat, any_subscription_callback](
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
@@ -110,7 +108,8 @@ create_subscription_factory(
       sub->post_init_setup(node_base, qos, options);
       auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
       return sub_base_ptr;
-    };
+    }
+  };
 
   // return the factory now that it is populated
   return factory;
