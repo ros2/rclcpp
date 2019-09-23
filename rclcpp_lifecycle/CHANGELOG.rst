@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* reset error message before setting a new one, embed the original one (`#854 <https://github.com/ros2/rclcpp/issues/854>`_) (`#866 <https://github.com/ros2/rclcpp/issues/866>`_)
+* Contributors: Dirk Thomas, Zachary Michaels
+
 0.7.9 (2019-09-20)
 ------------------
 
