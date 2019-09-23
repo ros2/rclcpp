@@ -77,13 +77,6 @@ template<typename AllocatorT>
 using SubscriptionOptionsWithAllocator = rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>;
 
 template<typename AllocatorT>
-PublisherOptionsWithAllocator<AllocatorT>
-create_default_publisher_options()
-{
-  return rclcpp::PublisherOptionsWithAllocator<AllocatorT>();
-}
-
-template<typename AllocatorT>
 SubscriptionOptionsWithAllocator<AllocatorT>
 create_default_subscription_options()
 {
@@ -166,8 +159,9 @@ public:
   create_publisher(
     const std::string & topic_name,
     const rclcpp::QoS & qos,
-    const PublisherOptionsWithAllocator<AllocatorT> & options =
-    create_default_publisher_options<AllocatorT>()
+    const PublisherOptionsWithAllocator<AllocatorT> & options = (
+      rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+    )
   );
 
   /// Create and return a Subscription.
@@ -179,15 +173,17 @@ public:
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
    * \return Shared pointer to the created subscription.
    */
-  /* TODO(jacquelinekay):
-     Windows build breaks when static member function passed as default
-     argument to msg_mem_strat, nullptr is a workaround.
-   */
   template<
     typename MessageT,
     typename CallbackT,
     typename AllocatorT = std::allocator<void>,
-    typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>>
+    typename CallbackMessageT =
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+    typename SubscriptionT = rclcpp::Subscription<MessageT, AllocatorT>,
+    typename MessageMemoryStrategyT = rclcpp::message_memory_strategy::MessageMemoryStrategy<
+      CallbackMessageT,
+      AllocatorT
+    >>
   std::shared_ptr<SubscriptionT>
   create_subscription(
     const std::string & topic_name,
@@ -195,10 +191,10 @@ public:
     CallbackT && callback,
     const SubscriptionOptionsWithAllocator<AllocatorT> & options =
     create_default_subscription_options<AllocatorT>(),
-    typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-      typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT
-    >::SharedPtr
-    msg_mem_strat = nullptr);
+    typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
+      MessageMemoryStrategyT::create_default()
+    )
+  );
 
   /// Create a timer.
   /**
