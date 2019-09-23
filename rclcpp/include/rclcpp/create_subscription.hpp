@@ -64,36 +64,13 @@ create_subscription(
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
 
-  std::shared_ptr<AllocatorT> allocator = options.allocator;
-  if (!allocator) {
-    allocator = std::make_shared<AllocatorT>();
-  }
-  auto factory = rclcpp::create_subscription_factory
-    <MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
-    std::forward<CallbackT>(callback), options.event_callbacks, msg_mem_strat, allocator);
+  auto factory = rclcpp::create_subscription_factory<MessageT>(
+    std::forward<CallbackT>(callback),
+    options,
+    msg_mem_strat
+  );
 
-  bool use_intra_process;
-  switch (options.use_intra_process_comm) {
-    case IntraProcessSetting::Enable:
-      use_intra_process = true;
-      break;
-    case IntraProcessSetting::Disable:
-      use_intra_process = false;
-      break;
-    case IntraProcessSetting::NodeDefault:
-      use_intra_process = node_topics->get_node_base_interface()->get_use_intra_process_default();
-      break;
-    default:
-      throw std::runtime_error("Unrecognized IntraProcessSetting value");
-      break;
-  }
-
-  // TODO(wjwwood): convert all of the interfaces to use QoS and SubscriptionOptionsBase
-  auto sub = node_topics->create_subscription(
-    topic_name,
-    factory,
-    options.template to_rcl_subscription_options<MessageT>(qos),
-    use_intra_process);
+  auto sub = node_topics->create_subscription(topic_name, factory, qos);
   node_topics->add_subscription(sub, options.callback_group);
   return std::dynamic_pointer_cast<SubscriptionT>(sub);
 }

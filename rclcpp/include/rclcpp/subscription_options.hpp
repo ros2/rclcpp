@@ -70,6 +70,16 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
     result.qos = qos.get_rmw_qos_profile();
     return result;
   }
+
+  /// Get the allocator, creating one if needed.
+  std::shared_ptr<Allocator>
+  get_allocator() const
+  {
+    if (!this->allocator) {
+      return std::make_shared<Allocator>();
+    }
+    return this->allocator;
+  }
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;

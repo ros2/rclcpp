@@ -62,8 +62,7 @@ public:
   create_subscription(
     const std::string & topic_name,
     const rclcpp::SubscriptionFactory & subscription_factory,
-    const rcl_subscription_options_t & subscription_options,
-    bool use_intra_process) override;
+    const rclcpp::QoS & qos) override;
 
   RCLCPP_PUBLIC
   void

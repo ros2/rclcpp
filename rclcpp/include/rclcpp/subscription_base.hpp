@@ -36,7 +36,7 @@ namespace rclcpp
 
 namespace node_interfaces
 {
-class NodeTopicsInterface;
+class NodeBaseInterface;
 }  // namespace node_interfaces
 
 namespace intra_process_manager
@@ -50,14 +50,14 @@ class IntraProcessManager;
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
-class SubscriptionBase
+class SubscriptionBase : public std::enable_shared_from_this<SubscriptionBase>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)
 
   /// Default constructor.
   /**
-   * \param[in] node_handle The rcl representation of the node that owns this subscription.
+   * \param[in] node_base NodeBaseInterface pointer used in parts of the setup.
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options options for the subscription.
@@ -65,7 +65,7 @@ public:
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
-    std::shared_ptr<rcl_node_t> node_handle,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,

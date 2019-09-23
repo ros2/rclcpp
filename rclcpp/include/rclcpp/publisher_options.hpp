@@ -25,7 +25,6 @@
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
-#include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
@@ -46,11 +45,6 @@ struct PublisherOptionsBase
 
   /// Callback group in which the waitable items from the publisher should be placed.
   std::shared_ptr<rclcpp::callback_group::CallbackGroup> callback_group;
-
-  /// Return whether or not to use intra process based on a the node's default.
-  RCLCPP_PUBLIC
-  bool
-  resolve_use_intra_process_comm(bool default_from_node_topics) const;
 };
 
 /// Structure containing optional configuration for Publishers.

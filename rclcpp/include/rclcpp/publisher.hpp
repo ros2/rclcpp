@@ -32,6 +32,7 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/detail/resolve_use_intra_process.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -98,7 +99,7 @@ public:
     (void)topic;
 
     // If needed, setup intra process communication.
-    if (options_.resolve_use_intra_process_comm(node_base->get_use_intra_process_default())) {
+    if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
       auto context = node_base->get_context();
       // Get the intra process manager instance for this context.
       auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();

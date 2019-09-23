@@ -42,6 +42,9 @@ namespace rclcpp
  * called from a templated "create_publisher" method on the Node class, and
  * is passed to the non-templated "create_publisher" method on the NodeTopics
  * class where it is used to create and setup the Publisher.
+ *
+ * It also handles the two step construction of Publishers, first calling
+ * the constructor and then the post_init_setup() method.
  */
 struct PublisherFactory
 {
@@ -75,7 +78,7 @@ create_publisher_factory(const rclcpp::PublisherOptionsWithAllocator<AllocatorT>
         options,
         qos);
       // This is used for setting up things like intra process comms which
-      // require this->enable_shared_from_this() which cannot be called from
+      // require this->shared_from_this() which cannot be called from
       // the constructor.
       publisher->post_init_setup(node_base, topic_name, options, qos);
       return publisher;
