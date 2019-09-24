@@ -165,6 +165,17 @@ ComponentManager::OnLoadNode(
         .parameter_overrides(parameters)
         .arguments(remap_rules);
 
+      for (const auto & a : request->extra_arguments) {
+        const rclcpp::Parameter extra_argument = rclcpp::Parameter::from_parameter_msg(a);
+        if (extra_argument.get_name() == "use_intra_process_comms") {
+          if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
+            throw ComponentManagerException(
+                    "Extra component argument 'use_intra_process_comms' must be a boolean");
+          }
+          options.use_intra_process_comms(extra_argument.get_value<bool>());
+        }
+      }
+
       auto node_id = unique_id++;
 
       if (0 == node_id) {
