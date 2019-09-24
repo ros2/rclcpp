@@ -27,7 +27,6 @@
 
 #include "rcpputils/filesystem_helper.hpp"
 
-
 class TestNode : public ::testing::Test
 {
 protected:
@@ -761,7 +760,6 @@ TEST_F(TestNode, declare_parameter_with_cli_overrides) {
     EXPECT_EQ(value.get<std::vector<std::string>>(), expected_value);
   }
 }
-
 
 TEST_F(TestNode, undeclare_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_undeclare_parameter_node"_unq);
