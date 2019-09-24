@@ -72,15 +72,11 @@ create_publisher_factory(const rclcpp::PublisherOptionsWithAllocator<AllocatorT>
       const rclcpp::QoS & qos
     ) -> std::shared_ptr<PublisherT>
     {
-      auto publisher = std::make_shared<PublisherT>(
-        node_base,
-        topic_name,
-        options,
-        qos);
+      auto publisher = std::make_shared<PublisherT>(node_base, topic_name, qos, options);
       // This is used for setting up things like intra process comms which
       // require this->shared_from_this() which cannot be called from
       // the constructor.
-      publisher->post_init_setup(node_base, topic_name, options, qos);
+      publisher->post_init_setup(node_base, topic_name, qos, options);
       return publisher;
     }
   };

@@ -60,9 +60,9 @@ public:
   LifecyclePublisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
-    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options,
-    const rclcpp::QoS & qos)
-  : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, options, qos),
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options)
+  : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options),
     enabled_(false),
     logger_(rclcpp::get_logger("LifecyclePublisher"))
   {

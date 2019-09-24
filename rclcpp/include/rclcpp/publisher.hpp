@@ -45,30 +45,30 @@ namespace rclcpp
 {
 
 /// A publisher publishes messages of any type to a topic.
-template<typename MessageT, typename Alloc = std::allocator<void>>
+template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:
-  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
-  using MessageAlloc = typename MessageAllocTraits::allocator_type;
-  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
+  using MessageAllocatorTraits = allocator::AllocRebind<MessageT, AllocatorT>;
+  using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAllocator, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
 
-  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>)
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
   Publisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
-    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options,
-    const rclcpp::QoS & qos)
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
   : PublisherBase(
       node_base,
       topic,
       *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
       options.template to_rcl_publisher_options<MessageT>(qos)),
     options_(options),
-    message_allocator_(new MessageAlloc(*options.get_allocator().get()))
+    message_allocator_(new MessageAllocator(*options.get_allocator().get()))
   {
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
 
@@ -92,8 +92,8 @@ public:
   post_init_setup(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
-    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options,
-    const rclcpp::QoS & qos)
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
   {
     // Topic is unused for now.
     (void)topic;
@@ -128,7 +128,7 @@ public:
   {
     return mapped_ring_buffer::MappedRingBuffer<
       MessageT,
-      typename Publisher<MessageT, Alloc>::MessageAlloc
+      typename Publisher<MessageT, AllocatorT>::MessageAllocator
     >::make_shared(size, this->get_allocator());
   }
 
@@ -179,8 +179,8 @@ public:
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     // As the message is not const, a copy should be made.
     // A shared_ptr<const MessageT> could also be constructed here.
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
+    auto ptr = MessageAllocatorTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocatorTraits::construct(*message_allocator_.get(), ptr, msg);
     MessageUniquePtr unique_msg(ptr, message_deleter_);
     this->publish(std::move(unique_msg));
   }
@@ -191,7 +191,7 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
-  std::shared_ptr<MessageAlloc>
+  std::shared_ptr<MessageAllocator>
   get_allocator() const
   {
     return message_allocator_;
@@ -266,7 +266,7 @@ protected:
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
+      ipm->template store_intra_process_message<MessageT, AllocatorT>(publisher_id, msg);
     return message_seq;
   }
 
@@ -284,13 +284,13 @@ protected:
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, std::move(msg));
+      ipm->template store_intra_process_message<MessageT, AllocatorT>(publisher_id, std::move(msg));
     return message_seq;
   }
 
-  const rclcpp::PublisherOptionsWithAllocator<Alloc> options_;
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> options_;
 
-  std::shared_ptr<MessageAlloc> message_allocator_;
+  std::shared_ptr<MessageAllocator> message_allocator_;
 
   MessageDeleter message_deleter_;
 };
