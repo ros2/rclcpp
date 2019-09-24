@@ -79,57 +79,22 @@ public:
     std::function<void(const rclcpp::Parameter &)> callback,
     const std::string & node_name = "");
 
-  /// Add a callback to assign the value of a changed parameter to a reference variable.
-  /**
-   * If a node_name is not provided, defaults to the current node
-   *
-   * \param[in] parameter_name Name of parameter.
-   * \param[in] value Reference to variable receiving update.
-   * \param[in] node_name Name of node which hosts the parameter.
-   */
-  template<typename ParameterT>
-  void
-  register_parameter_update(
-    const std::string & parameter_name, ParameterT & value, const std::string & node_name = "")
-  {
-    auto callback =
-      [&value, this](const rclcpp::Parameter & param) {
-        this->get_parameter_update<ParameterT>(param, value);
-      };
-
-    register_parameter_callback(parameter_name, callback, node_name);
-  }
-
   RCLCPP_PUBLIC
-  bool
+  static bool
   get_parameter_from_event(
     const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
     rclcpp::Parameter & parameter,
     const std::string parameter_name,
     const std::string node_name = "");
 
-protected:
-  /// Get value of specified parameter from an a rclcpp::Parameter.
-  /**
-   * If the parameter does not appear in the event, no value will be assigned.
-   * \param[in] parameter_name Name of parameter.
-   * \param[in] value Reference to variable receiving updates.
-   */
-  template<typename ParameterT>
-  void
-  get_parameter_update(
-    const rclcpp::Parameter & param, ParameterT & value)
-  {
-    try {
-      value = param.get_value<ParameterT>();
-      RCLCPP_DEBUG(node_logging_->get_logger(), "Updating parameter: %s", param.get_name().c_str());
-    } catch (...) {
-      RCLCPP_WARN(node_logging_->get_logger(),
-        "Parameter '%s' has different type (%s), cannot update registered parameter",
-        param.get_name().c_str(), param.get_type_name().c_str());
-    }
-  }
+  RCLCPP_PUBLIC
+  static rclcpp::Parameter
+  get_parameter_from_event(
+    const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+    const std::string parameter_name,
+    const std::string node_name = "");
 
+protected:
   /// Add a subscription (if unique) to a namespace parameter events topic.
   void
   add_namespace_event_subscriber(const std::string & node_namespace);
@@ -187,6 +152,8 @@ protected:
     <rcl_interfaces::msg::ParameterEvent>::SharedPtr> event_subscriptions_;
 
   std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> user_callback_;
+
+  std::recursive_mutex mutex_;
 };
 
 }  // namespace rclcpp

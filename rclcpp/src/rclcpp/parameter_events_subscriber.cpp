@@ -36,6 +36,7 @@ ParameterEventsSubscriber::ParameterEventsSubscriber(
 void
 ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string & node_namespace)
 {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (std::find(node_namespaces_.begin(), node_namespaces_.end(),
     node_namespace) == node_namespaces_.end())
   {
@@ -56,6 +57,7 @@ ParameterEventsSubscriber::set_event_callback(
   std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback,
   const std::string & node_namespace)
 {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   std::string full_namespace;
   if (node_namespace == "") {
     full_namespace = node_base_->get_namespace();
@@ -72,6 +74,7 @@ ParameterEventsSubscriber::register_parameter_callback(
   std::function<void(const rclcpp::Parameter &)> callback,
   const std::string & node_name)
 {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto full_node_name = resolve_path(node_name);
   add_namespace_event_subscriber(split_path(full_node_name).first);
   parameter_callbacks_[{parameter_name, full_node_name}] = callback;
@@ -84,7 +87,7 @@ ParameterEventsSubscriber::get_parameter_from_event(
   const std::string parameter_name,
   const std::string node_name)
 {
-  if (event->node == resolve_path(node_name)) {
+  if (event->node == node_name) {
     rclcpp::ParameterEventsFilter filter(event, {parameter_name},
       {rclcpp::ParameterEventsFilter::EventType::NEW,
         rclcpp::ParameterEventsFilter::EventType::CHANGED});
@@ -98,10 +101,22 @@ ParameterEventsSubscriber::get_parameter_from_event(
   return false;
 }
 
+rclcpp::Parameter
+ParameterEventsSubscriber::get_parameter_from_event(
+  const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+  const std::string parameter_name,
+  const std::string node_name)
+{
+  rclcpp::Parameter p(parameter_name);
+  get_parameter_from_event(event, p, parameter_name, node_name);
+  return p;
+}
+
 void
 ParameterEventsSubscriber::event_callback(
   const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
 {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
   const std::string & node_name = event->node;
   RCLCPP_DEBUG(node_logging_->get_logger(), "Parameter event received for node: %s",
     node_name.c_str());

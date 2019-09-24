@@ -138,47 +138,21 @@ TEST_F(TestNode, RegisterParameterCallback)
   EXPECT_EQ(received, true);
 }
 
-TEST_F(TestNode, RegisterParameterUpdate)
-{
-  double double_param;
-  int int_param;
-  bool bool_param;
-  std::string string_param;
-
-  // Set individual parameters
-  ParamSubscriber->register_parameter_update("my_double", double_param);
-  ParamSubscriber->register_parameter_update("my_int", int_param);
-  ParamSubscriber->register_parameter_update("my_string", string_param, remote_node_name);
-  ParamSubscriber->register_parameter_update("my_bool", bool_param, diff_ns_name);
-
-  ParamSubscriber->test_event(same_node_double);
-  ParamSubscriber->test_event(same_node_int);
-  ParamSubscriber->test_event(remote_node_string);
-  ParamSubscriber->test_event(diff_ns_bool);
-
-  EXPECT_EQ(double_param, 1.0);
-  EXPECT_EQ(int_param, 1);
-  EXPECT_EQ(string_param, "test");
-  EXPECT_EQ(bool_param, true);
-
-  // Set multiple parameters atomically
-  double_param = 0;
-  int_param = 0;
-
-  ParamSubscriber->test_event(multiple);
-  EXPECT_EQ(double_param, 1.0);
-  EXPECT_EQ(int_param, 1);
-}
-
 TEST_F(TestNode, SameParameterDifferentNode)
 {
   int int_param_node1;
   int int_param_node2;
 
+  auto cb1 = [&int_param_node1](const rclcpp::Parameter & p) {
+      int_param_node1 = p.get_value<int>();
+    };
+  auto cb2 = [&int_param_node2](const rclcpp::Parameter & p) {
+      int_param_node2 = p.get_value<int>();
+    };
 
   // Set individual parameters
-  ParamSubscriber->register_parameter_update("my_int", int_param_node1);
-  ParamSubscriber->register_parameter_update("my_int", int_param_node2, remote_node_name);
+  ParamSubscriber->register_parameter_callback("my_int", cb1);
+  ParamSubscriber->register_parameter_callback("my_int", cb2, remote_node_name);
 
   ParamSubscriber->test_event(same_node_int);
   EXPECT_EQ(int_param_node1, 1);
@@ -194,6 +168,8 @@ TEST_F(TestNode, SameParameterDifferentNode)
 
 TEST_F(TestNode, UserCallback)
 {
+  using rclcpp::ParameterEventsSubscriber;
+
   double double_param = 0.0;
   int int_param = 0;
   bool received = false;
@@ -210,12 +186,14 @@ TEST_F(TestNode, UserCallback)
       }
 
       rclcpp::Parameter p;
-      if (ParamSubscriber->get_parameter_from_event(event, p, "my_int")) {
+      if (ParameterEventsSubscriber::get_parameter_from_event(event, p, "my_int", node_name)) {
         int_param = p.get_value<int>();
       }
 
-      if (ParamSubscriber->get_parameter_from_event(event, p, "my_double")) {
+      p = ParameterEventsSubscriber::get_parameter_from_event(event, "my_double", node_name);
+      try {
         double_param = p.get_value<double>();
+      } catch (...) {
       }
 
       product = int_param * double_param;
