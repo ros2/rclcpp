@@ -15,9 +15,9 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_PARAMETERS_HPP_
 
+#include <list>
 #include <map>
 #include <memory>
-#include <list>
 #include <string>
 #include <vector>
 
@@ -55,12 +55,11 @@ struct ParameterInfo
 class ParameterMutationRecursionGuard
 {
 public:
-  explicit ParameterMutationRecursionGuard(bool & allow_mod)
-  : allow_modification_(allow_mod)
+  explicit ParameterMutationRecursionGuard(bool & allow_mod) : allow_modification_(allow_mod)
   {
     if (!allow_modification_) {
       throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-              "cannot set or declare a parameter, or change the callback from within set callback");
+        "cannot set or declare a parameter, or change the callback from within set callback");
     }
 
     allow_modification_ = false;
@@ -97,82 +96,69 @@ public:
     bool automatically_declare_parameters_from_overrides);
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeParameters();
+  virtual ~NodeParameters();
 
   RCLCPP_PUBLIC
-  const rclcpp::ParameterValue &
-  declare_parameter(
+  const rclcpp::ParameterValue & declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value,
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
     bool ignore_override) override;
 
   RCLCPP_PUBLIC
-  void
-  undeclare_parameter(const std::string & name) override;
+  void undeclare_parameter(const std::string & name) override;
 
   RCLCPP_PUBLIC
-  bool
-  has_parameter(const std::string & name) const override;
+  bool has_parameter(const std::string & name) const override;
 
   RCLCPP_PUBLIC
-  std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(
+  std::vector<rcl_interfaces::msg::SetParametersResult> set_parameters(
     const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(
+  rcl_interfaces::msg::SetParametersResult set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) override;
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & names) const override;
+  std::vector<rclcpp::Parameter> get_parameters(
+    const std::vector<std::string> & names) const override;
 
   RCLCPP_PUBLIC
-  rclcpp::Parameter
-  get_parameter(const std::string & name) const override;
+  rclcpp::Parameter get_parameter(const std::string & name) const override;
 
   RCLCPP_PUBLIC
-  bool
-  get_parameter(
-    const std::string & name,
-    rclcpp::Parameter & parameter) const override;
+  bool get_parameter(const std::string & name, rclcpp::Parameter & parameter) const override;
 
   RCLCPP_PUBLIC
-  bool
-  get_parameters_by_prefix(
+  bool get_parameters_by_prefix(
     const std::string & prefix,
     std::map<std::string, rclcpp::Parameter> & parameters) const override;
 
   RCLCPP_PUBLIC
-  std::vector<rcl_interfaces::msg::ParameterDescriptor>
-  describe_parameters(const std::vector<std::string> & names) const override;
+  std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
+    const std::vector<std::string> & names) const override;
 
   RCLCPP_PUBLIC
-  std::vector<uint8_t>
-  get_parameter_types(const std::vector<std::string> & names) const override;
+  std::vector<uint8_t> get_parameter_types(const std::vector<std::string> & names) const override;
 
   RCLCPP_PUBLIC
-  rcl_interfaces::msg::ListParametersResult
-  list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const override;
+  rcl_interfaces::msg::ListParametersResult list_parameters(
+    const std::vector<std::string> & prefixes, uint64_t depth) const override;
 
   RCLCPP_PUBLIC
-  OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
+  OnSetParametersCallbackHandle::SharedPtr add_on_set_parameters_callback(
+    OnParametersSetCallbackType callback) override;
 
   RCLCPP_PUBLIC
-  void
-  remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) override;
+  void remove_on_set_parameters_callback(
+    const OnSetParametersCallbackHandle * const handler) override;
 
   RCLCPP_PUBLIC
-  OnParametersSetCallbackType
-  set_on_parameters_set_callback(OnParametersSetCallbackType callback) override;
+  OnParametersSetCallbackType set_on_parameters_set_callback(
+    OnParametersSetCallbackType callback) override;
 
   RCLCPP_PUBLIC
-  const std::map<std::string, rclcpp::ParameterValue> &
-  get_parameter_overrides() const override;
+  const std::map<std::string, rclcpp::ParameterValue> & get_parameter_overrides() const override;
 
   using CallbacksContainerType = std::list<OnSetParametersCallbackHandle::WeakPtr>;
 

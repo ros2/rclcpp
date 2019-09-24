@@ -14,13 +14,12 @@
 
 #include "rclcpp_action/types.hpp"
 
-#include <string>
 #include <sstream>
+#include <string>
 
 namespace rclcpp_action
 {
-std::string
-to_string(const GoalUUID & goal_id)
+std::string to_string(const GoalUUID & goal_id)
 {
   std::stringstream stream;
   stream << std::hex;
@@ -30,16 +29,14 @@ to_string(const GoalUUID & goal_id)
   return stream.str();
 }
 
-void
-convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
+void convert(const GoalUUID & goal_id, rcl_action_goal_info_t * info)
 {
   for (size_t i = 0; i < 16; ++i) {
     info->goal_id.uuid[i] = goal_id[i];
   }
 }
 
-void
-convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id)
+void convert(const rcl_action_goal_info_t & info, GoalUUID * goal_id)
 {
   for (size_t i = 0; i < 16; ++i) {
     (*goal_id)[i] = info.goal_id.uuid[i];

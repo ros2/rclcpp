@@ -15,10 +15,10 @@
 #include <gtest/gtest.h>
 #include <memory>
 
-#include "rclcpp/strategies/allocator_memory_strategy.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/strategies/allocator_memory_strategy.hpp"
 
 class TestFindWeakNodes : public ::testing::Test
 {
@@ -29,7 +29,8 @@ protected:
   }
 };
 
-TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes) {
+TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes)
+{
   // GIVEN
   // A vector of weak pointers to nodes
   auto memory_strategy = std::make_shared<
@@ -57,7 +58,8 @@ TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes) {
   memory_strategy->clear_handles();
 }
 
-TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
+TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes)
+{
   // GIVEN
   // A vector of weak pointers to nodes, all valid
   auto memory_strategy = std::make_shared<

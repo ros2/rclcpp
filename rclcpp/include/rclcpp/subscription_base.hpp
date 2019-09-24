@@ -46,7 +46,7 @@ namespace intra_process_manager
  * `intra_process_manager.hpp` and `subscription_base.hpp`.
  */
 class IntraProcessManager;
-}
+}  // namespace intra_process_manager
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
@@ -77,26 +77,21 @@ public:
 
   /// Get the topic that this subscription is subscribed on.
   RCLCPP_PUBLIC
-  const char *
-  get_topic_name() const;
+  const char * get_topic_name() const;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rcl_subscription_t>
-  get_subscription_handle();
+  std::shared_ptr<rcl_subscription_t> get_subscription_handle();
 
   RCLCPP_PUBLIC
-  const std::shared_ptr<rcl_subscription_t>
-  get_subscription_handle() const;
+  const std::shared_ptr<rcl_subscription_t> get_subscription_handle() const;
 
   RCLCPP_PUBLIC
-  virtual const std::shared_ptr<rcl_subscription_t>
-  get_intra_process_subscription_handle() const;
+  virtual const std::shared_ptr<rcl_subscription_t> get_intra_process_subscription_handle() const;
 
   /// Get all the QoS event handlers associated with this subscription.
   /** \return The vector of QoS event handlers. */
   RCLCPP_PUBLIC
-  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
-  get_event_handlers() const;
+  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> & get_event_handlers() const;
 
   /// Get the actual QoS settings, after the defaults have been determined.
   /**
@@ -109,53 +104,43 @@ public:
    * \return The actual qos settings.
    */
   RCLCPP_PUBLIC
-  rmw_qos_profile_t
-  get_actual_qos() const;
+  rmw_qos_profile_t get_actual_qos() const;
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
-  virtual std::shared_ptr<void>
-  create_message() = 0;
+  virtual std::shared_ptr<void> create_message() = 0;
 
   /// Borrow a new serialized message
   /** \return Shared pointer to a rcl_message_serialized_t. */
-  virtual std::shared_ptr<rcl_serialized_message_t>
-  create_serialized_message() = 0;
+  virtual std::shared_ptr<rcl_serialized_message_t> create_serialized_message() = 0;
 
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.
    * \param[in] message_info Metadata associated with this message.
    */
-  virtual void
-  handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
+  virtual void handle_message(
+    std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
-  virtual void
-  return_message(std::shared_ptr<void> & message) = 0;
+  virtual void return_message(std::shared_ptr<void> & message) = 0;
 
   /// Return the message borrowed in create_serialized_message.
   /** \param[in] message Shared pointer to the returned message. */
-  virtual void
-  return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
+  virtual void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
 
-  virtual void
-  handle_intra_process_message(
-    rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info) = 0;
+  virtual void handle_intra_process_message(
+    rcl_interfaces::msg::IntraProcessMessage & ipm, const rmw_message_info_t & message_info) = 0;
 
-  const rosidl_message_type_support_t &
-  get_message_type_support_handle() const;
+  const rosidl_message_type_support_t & get_message_type_support_handle() const;
 
-  bool
-  is_serialized() const;
+  bool is_serialized() const;
 
   /// Get matching publisher count.
   /** \return The number of publishers on this topic. */
   RCLCPP_PUBLIC
-  size_t
-  get_publisher_count() const;
+  size_t get_publisher_count() const;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
@@ -168,16 +153,11 @@ public:
 
 protected:
   template<typename EventCallbackT>
-  void
-  add_event_handler(
-    const EventCallbackT & callback,
-    const rcl_subscription_event_type_t event_type)
+  void add_event_handler(
+    const EventCallbackT & callback, const rcl_subscription_event_type_t event_type)
   {
     auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
-      callback,
-      rcl_subscription_event_init,
-      get_subscription_handle().get(),
-      event_type);
+      callback, rcl_subscription_event_init, get_subscription_handle().get(), event_type);
     event_handlers_.emplace_back(handler);
   }
 

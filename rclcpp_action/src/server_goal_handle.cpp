@@ -15,8 +15,8 @@
 #include <rcl_action/action_server.h>
 #include <rcl_action/goal_handle.h>
 
-#include <rclcpp_action/server_goal_handle.hpp>
 #include <rclcpp/exceptions.hpp>
+#include <rclcpp_action/server_goal_handle.hpp>
 
 #include <memory>
 
@@ -26,8 +26,7 @@ ServerGoalHandleBase::~ServerGoalHandleBase()
 {
 }
 
-bool
-ServerGoalHandleBase::is_canceling() const
+bool ServerGoalHandleBase::is_canceling() const
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
@@ -38,15 +37,13 @@ ServerGoalHandleBase::is_canceling() const
   return GOAL_STATE_CANCELING == state;
 }
 
-bool
-ServerGoalHandleBase::is_active() const
+bool ServerGoalHandleBase::is_active() const
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   return rcl_action_goal_handle_is_active(rcl_handle_.get());
 }
 
-bool
-ServerGoalHandleBase::is_executing() const
+bool ServerGoalHandleBase::is_executing() const
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_action_goal_state_t state = GOAL_STATE_UNKNOWN;
@@ -57,8 +54,7 @@ ServerGoalHandleBase::is_executing() const
   return GOAL_STATE_EXECUTING == state;
 }
 
-void
-ServerGoalHandleBase::_abort()
+void ServerGoalHandleBase::_abort()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_ABORT);
@@ -67,8 +63,7 @@ ServerGoalHandleBase::_abort()
   }
 }
 
-void
-ServerGoalHandleBase::_succeed()
+void ServerGoalHandleBase::_succeed()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_SUCCEED);
@@ -77,8 +72,7 @@ ServerGoalHandleBase::_succeed()
   }
 }
 
-void
-ServerGoalHandleBase::_cancel_goal()
+void ServerGoalHandleBase::_cancel_goal()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCEL_GOAL);
@@ -87,8 +81,7 @@ ServerGoalHandleBase::_cancel_goal()
   }
 }
 
-void
-ServerGoalHandleBase::_canceled()
+void ServerGoalHandleBase::_canceled()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_CANCELED);
@@ -97,8 +90,7 @@ ServerGoalHandleBase::_canceled()
   }
 }
 
-void
-ServerGoalHandleBase::_execute()
+void ServerGoalHandleBase::_execute()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_ret_t ret = rcl_action_update_goal_state(rcl_handle_.get(), GOAL_EVENT_EXECUTE);
@@ -107,8 +99,7 @@ ServerGoalHandleBase::_execute()
   }
 }
 
-bool
-ServerGoalHandleBase::try_canceling() noexcept
+bool ServerGoalHandleBase::try_canceling() noexcept
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
   rcl_ret_t ret;

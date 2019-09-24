@@ -29,15 +29,11 @@ namespace rclcpp_lifecycle
 
 State::State(rcutils_allocator_t allocator)
 : State(lifecycle_msgs::msg::State::PRIMARY_STATE_UNKNOWN, "unknown", allocator)
-{}
+{
+}
 
-State::State(
-  uint8_t id,
-  const std::string & label,
-  rcutils_allocator_t allocator)
-: allocator_(allocator),
-  owns_rcl_state_handle_(true),
-  state_handle_(nullptr)
+State::State(uint8_t id, const std::string & label, rcutils_allocator_t allocator)
+: allocator_(allocator), owns_rcl_state_handle_(true), state_handle_(nullptr)
 {
   if (label.empty()) {
     throw std::runtime_error("Lifecycle State cannot have an empty label.");
@@ -60,11 +56,8 @@ State::State(
 }
 
 State::State(
-  const rcl_lifecycle_state_t * rcl_lifecycle_state_handle,
-  rcutils_allocator_t allocator)
-: allocator_(allocator),
-  owns_rcl_state_handle_(false),
-  state_handle_(nullptr)
+  const rcl_lifecycle_state_t * rcl_lifecycle_state_handle, rcutils_allocator_t allocator)
+: allocator_(allocator), owns_rcl_state_handle_(false), state_handle_(nullptr)
 {
   if (!rcl_lifecycle_state_handle) {
     throw std::runtime_error("rcl_lifecycle_state_handle is null");
@@ -73,9 +66,7 @@ State::State(
 }
 
 State::State(const State & rhs)
-: allocator_(rhs.allocator_),
-  owns_rcl_state_handle_(false),
-  state_handle_(nullptr)
+: allocator_(rhs.allocator_), owns_rcl_state_handle_(false), state_handle_(nullptr)
 {
   *this = rhs;
 }
@@ -85,8 +76,7 @@ State::~State()
   reset();
 }
 
-State &
-State::operator=(const State & rhs)
+State & State::operator=(const State & rhs)
 {
   if (this == &rhs) {
     return *this;
@@ -114,8 +104,7 @@ State::operator=(const State & rhs)
   state_handle_->id = 0;
   state_handle_->label = nullptr;
 
-  auto ret = rcl_lifecycle_state_init(
-    state_handle_, rhs.id(), rhs.label().c_str(), &allocator_);
+  auto ret = rcl_lifecycle_state_init(state_handle_, rhs.id(), rhs.label().c_str(), &allocator_);
   if (ret != RCL_RET_OK) {
     reset();
     throw std::runtime_error("failed to duplicate label for rcl_lifecycle_state_t");
@@ -124,8 +113,7 @@ State::operator=(const State & rhs)
   return *this;
 }
 
-uint8_t
-State::id() const
+uint8_t State::id() const
 {
   if (!state_handle_) {
     throw std::runtime_error("Error in state! Internal state_handle is NULL.");
@@ -133,8 +121,7 @@ State::id() const
   return state_handle_->id;
 }
 
-std::string
-State::label() const
+std::string State::label() const
 {
   if (!state_handle_) {
     throw std::runtime_error("Error in state! Internal state_handle is NULL.");
@@ -142,8 +129,7 @@ State::label() const
   return state_handle_->label;
 }
 
-void
-State::reset()
+void State::reset()
 {
   if (!owns_rcl_state_handle_) {
     state_handle_ = nullptr;

@@ -41,7 +41,7 @@ namespace node_interfaces
 {
 class NodeBaseInterface;
 class NodeTopicsInterface;
-}
+}  // namespace node_interfaces
 
 namespace intra_process_manager
 {
@@ -50,7 +50,7 @@ namespace intra_process_manager
  * `intra_process_manager.hpp` and `publisher_base.hpp`.
  */
 class IntraProcessManager;
-}
+}  // namespace intra_process_manager
 
 class PublisherBase
 {
@@ -81,56 +81,47 @@ public:
   /// Get the topic that this publisher publishes on.
   /** \return The topic name. */
   RCLCPP_PUBLIC
-  const char *
-  get_topic_name() const;
+  const char * get_topic_name() const;
 
   /// Get the queue size for this publisher.
   /** \return The queue size. */
   RCLCPP_PUBLIC
-  size_t
-  get_queue_size() const;
+  size_t get_queue_size() const;
 
   /// Get the global identifier for this publisher (used in rmw and by DDS).
   /** \return The gid. */
   RCLCPP_PUBLIC
-  const rmw_gid_t &
-  get_gid() const;
+  const rmw_gid_t & get_gid() const;
 
   /// Get the global identifier for this publisher used by intra-process communication.
   /** \return The intra-process gid. */
   RCLCPP_PUBLIC
-  const rmw_gid_t &
-  get_intra_process_gid() const;
+  const rmw_gid_t & get_intra_process_gid() const;
 
   /// Get the rcl publisher handle.
   /** \return The rcl publisher handle. */
   RCLCPP_PUBLIC
-  rcl_publisher_t *
-  get_publisher_handle();
+  rcl_publisher_t * get_publisher_handle();
 
   /// Get the rcl publisher handle.
   /** \return The rcl publisher handle. */
   RCLCPP_PUBLIC
-  const rcl_publisher_t *
-  get_publisher_handle() const;
+  const rcl_publisher_t * get_publisher_handle() const;
 
   /// Get all the QoS event handlers associated with this publisher.
   /** \return The vector of QoS event handlers. */
   RCLCPP_PUBLIC
-  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> &
-  get_event_handlers() const;
+  const std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> & get_event_handlers() const;
 
   /// Get subscription count
   /** \return The number of subscriptions. */
   RCLCPP_PUBLIC
-  size_t
-  get_subscription_count() const;
+  size_t get_subscription_count() const;
 
   /// Get intraprocess subscription count
   /** \return The number of intraprocess subscriptions. */
   RCLCPP_PUBLIC
-  size_t
-  get_intra_process_subscription_count() const;
+  size_t get_intra_process_subscription_count() const;
 
   /// Manually assert that this Publisher is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC).
   /**
@@ -142,8 +133,7 @@ public:
    */
   RCLCPP_PUBLIC
   RCUTILS_WARN_UNUSED
-  bool
-  assert_liveliness() const;
+  bool assert_liveliness() const;
 
   /// Get the actual QoS settings, after the defaults have been determined.
   /**
@@ -156,8 +146,7 @@ public:
    * \return The actual qos settings.
    */
   RCLCPP_PUBLIC
-  rmw_qos_profile_t
-  get_actual_qos() const;
+  rmw_qos_profile_t get_actual_qos() const;
 
   /// Compare this publisher to a gid.
   /**
@@ -166,8 +155,7 @@ public:
    * \return True if the publisher's gid matches the input.
    */
   RCLCPP_PUBLIC
-  bool
-  operator==(const rmw_gid_t & gid) const;
+  bool operator==(const rmw_gid_t & gid) const;
 
   /// Compare this publisher to a pointer gid.
   /**
@@ -176,37 +164,30 @@ public:
    * \return True if this publisher's gid matches the input.
    */
   RCLCPP_PUBLIC
-  bool
-  operator==(const rmw_gid_t * gid) const;
+  bool operator==(const rmw_gid_t * gid) const;
 
   using IntraProcessManagerSharedPtr =
     std::shared_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
 
   /// Implementation utility function that creates a typed mapped ring buffer.
   RCLCPP_PUBLIC
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  virtual make_mapped_ring_buffer(size_t size) const;
+  mapped_ring_buffer::MappedRingBufferBase::SharedPtr virtual make_mapped_ring_buffer(
+    size_t size) const;
 
   /// Implementation utility function used to setup intra process publishing after creation.
   RCLCPP_PUBLIC
-  void
-  setup_intra_process(
+  void setup_intra_process(
     uint64_t intra_process_publisher_id,
     IntraProcessManagerSharedPtr ipm,
     const rcl_publisher_options_t & intra_process_options);
 
 protected:
   template<typename EventCallbackT>
-  void
-  add_event_handler(
-    const EventCallbackT & callback,
-    const rcl_publisher_event_type_t event_type)
+  void add_event_handler(
+    const EventCallbackT & callback, const rcl_publisher_event_type_t event_type)
   {
     auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
-      callback,
-      rcl_publisher_event_init,
-      &publisher_handle_,
-      event_type);
+      callback, rcl_publisher_event_init, &publisher_handle_, event_type);
     event_handlers_.emplace_back(handler);
   }
 

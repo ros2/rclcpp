@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -68,7 +68,8 @@ protected:
 /*
    Testing client construction and destruction.
  */
-TEST_F(TestClient, construction_and_destruction) {
+TEST_F(TestClient, construction_and_destruction)
+{
   using rcl_interfaces::srv::ListParameters;
   {
     auto client = node->create_client<ListParameters>("service");
@@ -76,13 +77,13 @@ TEST_F(TestClient, construction_and_destruction) {
 
   {
     ASSERT_THROW(
-    {
-      auto client = node->create_client<ListParameters>("invalid_service?");
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      { auto client = node->create_client<ListParameters>("invalid_service?"); },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }
 
-TEST_F(TestClient, construction_with_free_function) {
+TEST_F(TestClient, construction_with_free_function)
+{
   {
     auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
       node->get_node_base_interface(),
@@ -94,22 +95,24 @@ TEST_F(TestClient, construction_with_free_function) {
   }
   {
     ASSERT_THROW(
-    {
-      auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
-        node->get_node_base_interface(),
-        node->get_node_graph_interface(),
-        node->get_node_services_interface(),
-        "invalid_?service",
-        rmw_qos_profile_services_default,
-        nullptr);
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      {
+        auto client = rclcpp::create_client<rcl_interfaces::srv::ListParameters>(
+          node->get_node_base_interface(),
+          node->get_node_graph_interface(),
+          node->get_node_services_interface(),
+          "invalid_?service",
+          rmw_qos_profile_services_default,
+          nullptr);
+      },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }
 
 /*
    Testing client construction and destruction for subnodes.
  */
-TEST_F(TestClientSub, construction_and_destruction) {
+TEST_F(TestClientSub, construction_and_destruction)
+{
   using rcl_interfaces::srv::ListParameters;
   {
     auto client = subnode->create_client<ListParameters>("service");
@@ -118,8 +121,7 @@ TEST_F(TestClientSub, construction_and_destruction) {
 
   {
     ASSERT_THROW(
-    {
-      auto client = node->create_client<ListParameters>("invalid_service?");
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      { auto client = node->create_client<ListParameters>("invalid_service?"); },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }

@@ -17,11 +17,11 @@
 
 #include <rcl_action/action_server.h>
 #include <rosidl_generator_c/action_type_support_struct.h>
-#include <rosidl_typesupport_cpp/action_type_support.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include <rclcpp/node_interfaces/node_logging_interface.hpp>
 #include <rclcpp/waitable.hpp>
+#include <rosidl_typesupport_cpp/action_type_support.hpp>
 
 #include <functional>
 #include <memory>
@@ -30,9 +30,9 @@
 #include <unordered_map>
 #include <utility>
 
-#include "rclcpp_action/visibility_control.hpp"
 #include "rclcpp_action/server_goal_handle.hpp"
 #include "rclcpp_action/types.hpp"
+#include "rclcpp_action/visibility_control.hpp"
 
 namespace rclcpp_action
 {
@@ -40,8 +40,7 @@ namespace rclcpp_action
 class ServerBaseImpl;
 
 /// A response returned by an action server callback when a goal is requested.
-enum class GoalResponse : int8_t
-{
+enum class GoalResponse : int8_t {
   /// The goal is rejected and will not be executed.
   REJECT = 1,
   /// The server accepts the goal, and is going to begin execution immediately.
@@ -51,8 +50,7 @@ enum class GoalResponse : int8_t
 };
 
 /// A response returned by an action server callback when a goal has been asked to be canceled.
-enum class CancelResponse : int8_t
-{
+enum class CancelResponse : int8_t {
   /// The server will not try to cancel the goal.
   REJECT = 1,
   /// The server has agreed to try to cancel the goal.
@@ -79,50 +77,42 @@ public:
   /// Return the number of subscriptions used to implement an action server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_subscriptions() override;
+  size_t get_number_of_ready_subscriptions() override;
 
   /// Return the number of timers used to implement an action server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_timers() override;
+  size_t get_number_of_ready_timers() override;
 
   /// Return the number of service clients used to implement an action server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_clients() override;
+  size_t get_number_of_ready_clients() override;
 
   /// Return the number of service servers used to implement an action server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_services() override;
+  size_t get_number_of_ready_services() override;
 
   /// Return the number of guard conditions used to implement an action server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  size_t
-  get_number_of_ready_guard_conditions() override;
+  size_t get_number_of_ready_guard_conditions() override;
 
   /// Add all entities to a wait set.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  bool
-  add_to_wait_set(rcl_wait_set_t * wait_set) override;
+  bool add_to_wait_set(rcl_wait_set_t * wait_set) override;
 
   /// Return true if any entity belonging to the action server is ready to be executed.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  bool
-  is_ready(rcl_wait_set_t *) override;
+  bool is_ready(rcl_wait_set_t *) override;
 
   /// Act on entities in the wait set which are ready to be acted upon.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  execute() override;
+  void execute() override;
 
   // End Waitables API
   // -----------------
@@ -144,82 +134,65 @@ protected:
   // The subclass should convert to the real type and call a user's callback.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(GoalUUID &, std::shared_ptr<void> request) = 0;
+  virtual std::pair<GoalResponse, std::shared_ptr<void>> call_handle_goal_callback(
+    GoalUUID &, std::shared_ptr<void> request) = 0;
 
   // ServerBase will determine which goal ids are being cancelled, and then call this function for
   // each goal id.
   // The subclass should look up a goal handle and call the user's callback.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  CancelResponse
-  call_handle_cancel_callback(const GoalUUID & uuid) = 0;
+  virtual CancelResponse call_handle_cancel_callback(const GoalUUID & uuid) = 0;
 
   /// Given a goal request message, return the UUID contained within.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  GoalUUID
-  get_goal_id_from_goal_request(void * message) = 0;
+  virtual GoalUUID get_goal_id_from_goal_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  std::shared_ptr<void>
-  create_goal_request() = 0;
+  virtual std::shared_ptr<void> create_goal_request() = 0;
 
   /// Call user callback to inform them a goal has been accepted.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  void
-  call_goal_accepted_callback(
+  virtual void call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    GoalUUID uuid, std::shared_ptr<void> goal_request_message) = 0;
+    GoalUUID uuid,
+    std::shared_ptr<void> goal_request_message) = 0;
 
   /// Given a result request message, return the UUID contained within.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  GoalUUID
-  get_goal_id_from_result_request(void * message) = 0;
+  virtual GoalUUID get_goal_id_from_result_request(void * message) = 0;
 
   /// Create an empty goal request message so it can be taken from a lower layer.
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  std::shared_ptr<void>
-  create_result_request() = 0;
+  virtual std::shared_ptr<void> create_result_request() = 0;
 
   /// Create an empty goal result message so it can be sent as a reply in a lower layer
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  virtual
-  std::shared_ptr<void>
-  create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) = 0;
+  virtual std::shared_ptr<void> create_result_response(
+    decltype(action_msgs::msg::GoalStatus::status) status) = 0;
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  publish_status();
+  void publish_status();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  notify_goal_terminal_state();
+  void notify_goal_terminal_state();
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_msg);
+  void publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_msg);
 
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  publish_feedback(std::shared_ptr<void> feedback_msg);
+  void publish_feedback(std::shared_ptr<void> feedback_msg);
 
   // End API for communication between ServerBase and Server<>
   // ---------------------------------------------------------
@@ -228,26 +201,22 @@ private:
   /// Handle a request to add a new goal to the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  execute_goal_request_received();
+  void execute_goal_request_received();
 
   /// Handle a request to cancel goals on the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  execute_cancel_request_received();
+  void execute_cancel_request_received();
 
   /// Handle a request to get the result of an action
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  execute_result_request_received();
+  void execute_result_request_received();
 
   /// Handle a timeout indicating a completed goal should be forgotten by the server
   /// \internal
   RCLCPP_ACTION_PUBLIC
-  void
-  execute_check_expired_goals();
+  void execute_check_expired_goals();
 
   /// Private implementation
   /// \internal
@@ -271,12 +240,12 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Server)
 
   /// Signature of a callback that accepts or rejects goal requests.
-  using GoalCallback = std::function<GoalResponse(
-        const GoalUUID &, std::shared_ptr<const typename ActionT::Goal>)>;
+  using GoalCallback =
+    std::function<GoalResponse(const GoalUUID &, std::shared_ptr<const typename ActionT::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ActionT>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
-  using AcceptedCallback = std::function<void (std::shared_ptr<ServerGoalHandle<ActionT>>)>;
+  using AcceptedCallback = std::function<void(std::shared_ptr<ServerGoalHandle<ActionT>>)>;
 
   /// Construct an action server.
   /**
@@ -312,8 +281,7 @@ public:
     const rcl_action_server_options_t & options,
     GoalCallback handle_goal,
     CancelCallback handle_cancel,
-    AcceptedCallback handle_accepted
-  )
+    AcceptedCallback handle_accepted)
   : ServerBase(
       node_base,
       node_clock,
@@ -334,23 +302,22 @@ protected:
   // API for communication between ServerBase and Server<>
 
   /// \internal
-  std::pair<GoalResponse, std::shared_ptr<void>>
-  call_handle_goal_callback(GoalUUID & uuid, std::shared_ptr<void> message) override
+  std::pair<GoalResponse, std::shared_ptr<void>> call_handle_goal_callback(
+    GoalUUID & uuid, std::shared_ptr<void> message) override
   {
-    auto request = std::static_pointer_cast<
-      typename ActionT::Impl::SendGoalService::Request>(message);
+    auto request =
+      std::static_pointer_cast<typename ActionT::Impl::SendGoalService::Request>(message);
     auto goal = std::shared_ptr<typename ActionT::Goal>(request, &request->goal);
     GoalResponse user_response = handle_goal_(uuid, goal);
 
     auto ros_response = std::make_shared<typename ActionT::Impl::SendGoalService::Response>();
     ros_response->accepted = GoalResponse::ACCEPT_AND_EXECUTE == user_response ||
-      GoalResponse::ACCEPT_AND_DEFER == user_response;
+                             GoalResponse::ACCEPT_AND_DEFER == user_response;
     return std::make_pair(user_response, ros_response);
   }
 
   /// \internal
-  CancelResponse
-  call_handle_cancel_callback(const GoalUUID & uuid) override
+  CancelResponse call_handle_cancel_callback(const GoalUUID & uuid) override
   {
     std::lock_guard<std::mutex> lock(goal_handles_mutex_);
     CancelResponse resp = CancelResponse::REJECT;
@@ -368,17 +335,16 @@ protected:
   }
 
   /// \internal
-  void
-  call_goal_accepted_callback(
+  void call_goal_accepted_callback(
     std::shared_ptr<rcl_action_goal_handle_t> rcl_goal_handle,
-    GoalUUID uuid, std::shared_ptr<void> goal_request_message) override
+    GoalUUID uuid,
+    std::shared_ptr<void> goal_request_message) override
   {
     std::shared_ptr<ServerGoalHandle<ActionT>> goal_handle;
     std::weak_ptr<Server<ActionT>> weak_this = this->shared_from_this();
 
     std::function<void(const GoalUUID &, std::shared_ptr<void>)> on_terminal_state =
-      [weak_this](const GoalUUID & uuid, std::shared_ptr<void> result_message)
-      {
+      [weak_this](const GoalUUID & uuid, std::shared_ptr<void> result_message) {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
@@ -394,21 +360,18 @@ protected:
         shared_this->goal_handles_.erase(uuid);
       };
 
-    std::function<void(const GoalUUID &)> on_executing =
-      [weak_this](const GoalUUID & uuid)
-      {
-        std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
-        if (!shared_this) {
-          return;
-        }
-        (void)uuid;
-        // Publish a status message any time a goal handle changes state
-        shared_this->publish_status();
-      };
+    std::function<void(const GoalUUID &)> on_executing = [weak_this](const GoalUUID & uuid) {
+      std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
+      if (!shared_this) {
+        return;
+      }
+      (void)uuid;
+      // Publish a status message any time a goal handle changes state
+      shared_this->publish_status();
+    };
 
     std::function<void(std::shared_ptr<typename ActionT::Impl::FeedbackMessage>)> publish_feedback =
-      [weak_this](std::shared_ptr<typename ActionT::Impl::FeedbackMessage> feedback_msg)
-      {
+      [weak_this](std::shared_ptr<typename ActionT::Impl::FeedbackMessage> feedback_msg) {
         std::shared_ptr<Server<ActionT>> shared_this = weak_this.lock();
         if (!shared_this) {
           return;
@@ -416,12 +379,11 @@ protected:
         shared_this->publish_feedback(std::static_pointer_cast<void>(feedback_msg));
       };
 
-    auto request = std::static_pointer_cast<
-      const typename ActionT::Impl::SendGoalService::Request>(goal_request_message);
+    auto request = std::static_pointer_cast<const typename ActionT::Impl::SendGoalService::Request>(
+      goal_request_message);
     auto goal = std::shared_ptr<const typename ActionT::Goal>(request, &request->goal);
-    goal_handle.reset(
-      new ServerGoalHandle<ActionT>(
-        rcl_goal_handle, uuid, goal, on_terminal_state, on_executing, publish_feedback));
+    goal_handle.reset(new ServerGoalHandle<ActionT>(
+      rcl_goal_handle, uuid, goal, on_terminal_state, on_executing, publish_feedback));
     {
       std::lock_guard<std::mutex> lock(goal_handles_mutex_);
       goal_handles_[uuid] = goal_handle;
@@ -430,38 +392,32 @@ protected:
   }
 
   /// \internal
-  GoalUUID
-  get_goal_id_from_goal_request(void * message) override
+  GoalUUID get_goal_id_from_goal_request(void * message) override
   {
-    return
-      static_cast<typename ActionT::Impl::SendGoalService::Request *>(message)->goal_id.uuid;
+    return static_cast<typename ActionT::Impl::SendGoalService::Request *>(message)->goal_id.uuid;
   }
 
   /// \internal
-  std::shared_ptr<void>
-  create_goal_request() override
+  std::shared_ptr<void> create_goal_request() override
   {
     return std::shared_ptr<void>(new typename ActionT::Impl::SendGoalService::Request());
   }
 
   /// \internal
-  GoalUUID
-  get_goal_id_from_result_request(void * message) override
+  GoalUUID get_goal_id_from_result_request(void * message) override
   {
-    return
-      static_cast<typename ActionT::Impl::GetResultService::Request *>(message)->goal_id.uuid;
+    return static_cast<typename ActionT::Impl::GetResultService::Request *>(message)->goal_id.uuid;
   }
 
   /// \internal
-  std::shared_ptr<void>
-  create_result_request() override
+  std::shared_ptr<void> create_result_request() override
   {
     return std::shared_ptr<void>(new typename ActionT::Impl::GetResultService::Request());
   }
 
   /// \internal
-  std::shared_ptr<void>
-  create_result_response(decltype(action_msgs::msg::GoalStatus::status) status) override
+  std::shared_ptr<void> create_result_response(
+    decltype(action_msgs::msg::GoalStatus::status) status) override
   {
     auto result = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
     result->status = status;

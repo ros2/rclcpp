@@ -15,8 +15,8 @@
 #ifndef RCLCPP_LIFECYCLE__TYPE_TRAITS__IS_MANAGEABLE_NODE_HPP_
 #define RCLCPP_LIFECYCLE__TYPE_TRAITS__IS_MANAGEABLE_NODE_HPP_
 
-#include <utility>
 #include <type_traits>
+#include <utility>
 
 template<class T, typename = void>
 struct has_on_activate
@@ -50,13 +50,15 @@ struct has_on_deactivate<
 
 template<class T, typename = void>
 struct is_manageable_node : std::false_type
-{};
+{
+};
 
 template<class T>
 struct is_manageable_node<
   T,
-  typename std::enable_if<
-    has_on_activate<T>::value && has_on_deactivate<T>::value>::type>: std::true_type
-{};
+  typename std::enable_if<has_on_activate<T>::value && has_on_deactivate<T>::value>::type>
+: std::true_type
+{
+};
 
 #endif  // RCLCPP_LIFECYCLE__TYPE_TRAITS__IS_MANAGEABLE_NODE_HPP_

@@ -38,24 +38,27 @@ namespace graph_listener
 class GraphListenerShutdownError : public std::runtime_error
 {
 public:
-  GraphListenerShutdownError()
-  : std::runtime_error("GraphListener already shutdown") {}
+  GraphListenerShutdownError() : std::runtime_error("GraphListener already shutdown")
+  {
+  }
 };
 
 /// Thrown when a node has already been added to the GraphListener.
 class NodeAlreadyAddedError : public std::runtime_error
 {
 public:
-  NodeAlreadyAddedError()
-  : std::runtime_error("node already added") {}
+  NodeAlreadyAddedError() : std::runtime_error("node already added")
+  {
+  }
 };
 
 /// Thrown when the given node is not in the GraphListener.
 class NodeNotFoundError : public std::runtime_error
 {
 public:
-  NodeNotFoundError()
-  : std::runtime_error("node not found") {}
+  NodeNotFoundError() : std::runtime_error("node not found")
+  {
+  }
 };
 
 /// Notifies many nodes of graph changes by listening in a thread.
@@ -75,9 +78,7 @@ public:
    * \throws GraphListenerShutdownError if the GraphListener is shutdown
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  start_if_not_started();
+  virtual void start_if_not_started();
 
   /// Add a node to the graph listener's list of nodes.
   /**
@@ -87,9 +88,7 @@ public:
    * \throws std::system_error anything std::mutex::lock() throws
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
+  virtual void add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Return true if the given node is in the graph listener's list of nodes.
   /**
@@ -98,9 +97,7 @@ public:
    * \throws std::system_error anything std::mutex::lock() throws
    */
   RCLCPP_PUBLIC
-  virtual
-  bool
-  has_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
+  virtual bool has_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Remove a node from the graph listener's list of nodes.
   /**
@@ -110,9 +107,7 @@ public:
    * \throws std::system_error anything std::mutex::lock() throws
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
+  virtual void remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph);
 
   /// Stop the listening thread.
   /**
@@ -130,40 +125,29 @@ public:
    * \throws std::system_error anything std::mutex::lock() throws
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  shutdown();
+  virtual void shutdown();
 
   /// Nothrow version of shutdown(), logs to RCLCPP_ERROR instead.
   RCLCPP_PUBLIC
-  virtual
-  void
-  shutdown(const std::nothrow_t &) noexcept;
+  virtual void shutdown(const std::nothrow_t &) noexcept;
 
   /// Return true if shutdown() has been called, else false.
   RCLCPP_PUBLIC
-  virtual
-  bool
-  is_shutdown();
+  virtual bool is_shutdown();
 
 protected:
   /// Main function for the listening thread.
   RCLCPP_PUBLIC
-  virtual
-  void
-  run();
+  virtual void run();
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  run_loop();
+  virtual void run_loop();
 
 private:
   RCLCPP_DISABLE_COPY(GraphListener)
 
   /** \internal */
-  void
-  __shutdown(bool);
+  void __shutdown(bool);
 
   rclcpp::Context::SharedPtr parent_context_;
 

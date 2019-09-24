@@ -29,48 +29,37 @@ namespace type_support
 {
 
 RCLCPP_PUBLIC
-const rosidl_message_type_support_t *
-get_intra_process_message_msg_type_support();
+const rosidl_message_type_support_t * get_intra_process_message_msg_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_message_type_support_t *
-get_parameter_event_msg_type_support();
+const rosidl_message_type_support_t * get_parameter_event_msg_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_message_type_support_t *
-get_set_parameters_result_msg_type_support();
+const rosidl_message_type_support_t * get_set_parameters_result_msg_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_message_type_support_t *
-get_parameter_descriptor_msg_type_support();
+const rosidl_message_type_support_t * get_parameter_descriptor_msg_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_message_type_support_t *
-get_list_parameters_result_msg_type_support();
+const rosidl_message_type_support_t * get_list_parameters_result_msg_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_service_type_support_t *
-get_get_parameters_srv_type_support();
+const rosidl_service_type_support_t * get_get_parameters_srv_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_service_type_support_t *
-get_get_parameter_types_srv_type_support();
+const rosidl_service_type_support_t * get_get_parameter_types_srv_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_service_type_support_t *
-get_set_parameters_srv_type_support();
+const rosidl_service_type_support_t * get_set_parameters_srv_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_service_type_support_t *
-get_list_parameters_srv_type_support();
+const rosidl_service_type_support_t * get_list_parameters_srv_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_service_type_support_t *
-get_describe_parameters_srv_type_support();
+const rosidl_service_type_support_t * get_describe_parameters_srv_type_support();
 
 RCLCPP_PUBLIC
-const rosidl_service_type_support_t *
-get_set_parameters_atomically_srv_type_support();
+const rosidl_service_type_support_t * get_set_parameters_atomically_srv_type_support();
 
 }  // namespace type_support
 }  // namespace rclcpp

@@ -47,15 +47,15 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(GenericRate)
 
   explicit GenericRate(double rate)
-  : GenericRate<Clock>(
-      duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
-  {}
+  : GenericRate<Clock>(duration_cast<nanoseconds>(duration<double>(1.0 / rate)))
+  {
+  }
   explicit GenericRate(std::chrono::nanoseconds period)
   : period_(period), last_interval_(Clock::now())
-  {}
+  {
+  }
 
-  virtual bool
-  sleep()
+  virtual bool sleep()
   {
     // Time coming into sleep
     auto now = Clock::now();
@@ -86,14 +86,12 @@ public:
     return true;
   }
 
-  virtual bool
-  is_steady() const
+  virtual bool is_steady() const
   {
     return Clock::is_steady;
   }
 
-  virtual void
-  reset()
+  virtual void reset()
   {
     last_interval_ = Clock::now();
   }

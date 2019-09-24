@@ -17,9 +17,9 @@
 #include <memory>
 #include <string>
 
+#include "composition_interfaces/srv/list_nodes.hpp"
 #include "composition_interfaces/srv/load_node.hpp"
 #include "composition_interfaces/srv/unload_node.hpp"
-#include "composition_interfaces/srv/list_nodes.hpp"
 
 #include "component_manager.hpp"
 
@@ -114,8 +114,8 @@ TEST_F(TestComponentManager, load_components)
   auto node_names = node->get_node_names();
 
   auto find_in_nodes = [node_names](std::string name) {
-      return std::find(node_names.begin(), node_names.end(), name) != node_names.end();
-    };
+    return std::find(node_names.begin(), node_names.end(), name) != node_names.end();
+  };
 
   EXPECT_TRUE(find_in_nodes("/test_component_foo"));
   EXPECT_TRUE(find_in_nodes("/test_component_bar"));
@@ -169,7 +169,6 @@ TEST_F(TestComponentManager, load_invalid_components)
     EXPECT_EQ(result.get()->unique_id, 0u);
   }
 }
-
 
 TEST_F(TestComponentManager, list_components)
 {
@@ -261,8 +260,8 @@ TEST_F(TestComponentManager, unload_component)
 
   auto node_names = node->get_node_names();
   auto find_in_nodes = [node_names](std::string name) {
-      return std::find(node_names.begin(), node_names.end(), name) != node_names.end();
-    };
+    return std::find(node_names.begin(), node_names.end(), name) != node_names.end();
+  };
   EXPECT_TRUE(find_in_nodes("/test_component_foo"));
 
   {

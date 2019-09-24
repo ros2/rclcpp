@@ -15,13 +15,13 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/executors.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/executors.hpp"
 
 #include "rcl_interfaces/msg/intra_process_message.hpp"
 
@@ -41,7 +41,8 @@ protected:
 /*
    Test that timers are not taken multiple times when using reentrant callback groups.
  */
-TEST_F(TestMultiThreadedExecutor, timer_over_take) {
+TEST_F(TestMultiThreadedExecutor, timer_over_take)
+{
 #ifdef __linux__
   // This seems to be the most effective way to force the bug to happen on Linux.
   // This is unnecessary on MacOS, since the default scheduler causes it.
@@ -68,34 +69,34 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   std::mutex last_mutex;
   auto last = system_clock.now();
 
-  std::atomic_int timer_count {0};
+  std::atomic_int timer_count{0};
 
   auto timer_callback = [&timer_count, &executor, &system_clock, &last_mutex, &last]() {
-      // While this tolerance is a little wide, if the bug occurs, the next step will
-      // happen almost instantly. The purpose of this test is not to measure the jitter
-      // in timers, just assert that a reasonable amount of time has passed.
-      const double PERIOD = 0.1f;
-      const double TOLERANCE = 0.025f;
+    // While this tolerance is a little wide, if the bug occurs, the next step will
+    // happen almost instantly. The purpose of this test is not to measure the jitter
+    // in timers, just assert that a reasonable amount of time has passed.
+    const double PERIOD = 0.1f;
+    const double TOLERANCE = 0.025f;
 
-      rclcpp::Time now = system_clock.now();
-      timer_count++;
+    rclcpp::Time now = system_clock.now();
+    timer_count++;
 
-      if (timer_count > 5) {
+    if (timer_count > 5) {
+      executor.cancel();
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(last_mutex);
+      double diff = std::abs((now - last).nanoseconds()) / 1.0e9;
+      last = now;
+
+      if (diff < PERIOD - TOLERANCE || diff > PERIOD + TOLERANCE) {
         executor.cancel();
+        ASSERT_GT(diff, PERIOD - TOLERANCE);
+        ASSERT_LT(diff, PERIOD + TOLERANCE);
       }
-
-      {
-        std::lock_guard<std::mutex> lock(last_mutex);
-        double diff = std::abs((now - last).nanoseconds()) / 1.0e9;
-        last = now;
-
-        if (diff < PERIOD - TOLERANCE || diff > PERIOD + TOLERANCE) {
-          executor.cancel();
-          ASSERT_GT(diff, PERIOD - TOLERANCE);
-          ASSERT_LT(diff, PERIOD + TOLERANCE);
-        }
-      }
-    };
+    }
+  };
 
   auto timer = node->create_wall_timer(100ms, timer_callback, cbg);
   executor.add_node(node);

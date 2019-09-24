@@ -21,8 +21,7 @@
 namespace rclcpp
 {
 
-Logger
-get_logger(const std::string & name)
+Logger get_logger(const std::string & name)
 {
 #if RCLCPP_LOGGING_ENABLED
   return rclcpp::Logger(name);
@@ -32,8 +31,7 @@ get_logger(const std::string & name)
 #endif
 }
 
-Logger
-get_node_logger(const rcl_node_t * node)
+Logger get_node_logger(const rcl_node_t * node)
 {
   const char * logger_name = rcl_node_get_logger_name(node);
   if (nullptr == logger_name) {

@@ -62,7 +62,6 @@ void * retyped_reallocate(void * untyped_pointer, size_t size, void * untyped_al
   return std::allocator_traits<Alloc>::allocate(*typed_allocator, size);
 }
 
-
 // Convert a std::allocator_traits-formatted Allocator into an rcl allocator
 template<
   typename T,

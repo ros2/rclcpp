@@ -19,14 +19,16 @@
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 
-TEST(TestLogger, factory_functions) {
+TEST(TestLogger, factory_functions)
+{
   rclcpp::Logger logger = rclcpp::get_logger("test_logger");
   EXPECT_STREQ("test_logger", logger.get_name());
   rclcpp::Logger logger_copy = rclcpp::Logger(logger);
   EXPECT_STREQ("test_logger", logger_copy.get_name());
 }
 
-TEST(TestLogger, hierarchy) {
+TEST(TestLogger, hierarchy)
+{
   rclcpp::Logger logger = rclcpp::get_logger("test_logger");
   rclcpp::Logger sublogger = logger.get_child("child");
   EXPECT_STREQ("test_logger.child", sublogger.get_name());

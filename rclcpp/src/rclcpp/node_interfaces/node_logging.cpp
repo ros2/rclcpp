@@ -26,14 +26,12 @@ NodeLogging::~NodeLogging()
 {
 }
 
-rclcpp::Logger
-NodeLogging::get_logger() const
+rclcpp::Logger NodeLogging::get_logger() const
 {
   return logger_;
 }
 
-const char *
-NodeLogging::get_logger_name() const
+const char * NodeLogging::get_logger_name() const
 {
   return rcl_node_get_logger_name(node_base_->get_rcl_node_handle());
 }

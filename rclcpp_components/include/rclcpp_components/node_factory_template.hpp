@@ -39,13 +39,11 @@ public:
   /**
    * \param[in] options Additional options used in the construction of the component.
    */
-  NodeInstanceWrapper
-  create_node_instance(const rclcpp::NodeOptions & options) override
+  NodeInstanceWrapper create_node_instance(const rclcpp::NodeOptions & options) override
   {
     auto node = std::make_shared<NodeT>(options);
 
-    return NodeInstanceWrapper(
-      node, std::bind(&NodeT::get_node_base_interface, node));
+    return NodeInstanceWrapper(node, std::bind(&NodeT::get_node_base_interface, node));
   }
 };
 }  // namespace rclcpp_components

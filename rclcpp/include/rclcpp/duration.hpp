@@ -39,7 +39,8 @@ public:
   // cppcheck-suppress noExplicitConstructor
   Duration(const std::chrono::duration<Rep, Period> & duration)  // NOLINT(runtime/explicit)
   : Duration(std::chrono::duration_cast<std::chrono::nanoseconds>(duration))
-  {}
+  {
+  }
 
   // cppcheck-suppress noExplicitConstructor
   Duration(const builtin_interfaces::msg::Duration & duration_msg);  // NOLINT(runtime/explicit)
@@ -53,62 +54,45 @@ public:
   operator builtin_interfaces::msg::Duration() const;
 
   // cppcheck-suppress operatorEq // this is a false positive from cppcheck
-  Duration &
-  operator=(const Duration & rhs);
+  Duration & operator=(const Duration & rhs);
 
-  Duration &
-  operator=(const builtin_interfaces::msg::Duration & Duration_msg);
+  Duration & operator=(const builtin_interfaces::msg::Duration & Duration_msg);
 
-  bool
-  operator==(const rclcpp::Duration & rhs) const;
+  bool operator==(const rclcpp::Duration & rhs) const;
 
-  bool
-  operator<(const rclcpp::Duration & rhs) const;
+  bool operator<(const rclcpp::Duration & rhs) const;
 
-  bool
-  operator<=(const rclcpp::Duration & rhs) const;
+  bool operator<=(const rclcpp::Duration & rhs) const;
 
-  bool
-  operator>=(const rclcpp::Duration & rhs) const;
+  bool operator>=(const rclcpp::Duration & rhs) const;
 
-  bool
-  operator>(const rclcpp::Duration & rhs) const;
+  bool operator>(const rclcpp::Duration & rhs) const;
 
-  Duration
-  operator+(const rclcpp::Duration & rhs) const;
+  Duration operator+(const rclcpp::Duration & rhs) const;
 
-  Duration
-  operator-(const rclcpp::Duration & rhs) const;
+  Duration operator-(const rclcpp::Duration & rhs) const;
 
-  static
-  Duration
-  max();
+  static Duration max();
 
-  Duration
-  operator*(double scale) const;
+  Duration operator*(double scale) const;
 
-  rcl_duration_value_t
-  nanoseconds() const;
+  rcl_duration_value_t nanoseconds() const;
 
   /// \return the duration in seconds as a floating point number.
   /// \warning Depending on sizeof(double) there could be significant precision loss.
   /// When an exact time is required use nanoseconds() instead.
-  double
-  seconds() const;
+  double seconds() const;
 
   // Create a duration object from a floating point number representing seconds
-  static Duration
-  from_seconds(double seconds);
+  static Duration from_seconds(double seconds);
 
   template<class DurationT>
-  DurationT
-  to_chrono() const
+  DurationT to_chrono() const
   {
     return std::chrono::duration_cast<DurationT>(std::chrono::nanoseconds(this->nanoseconds()));
   }
 
-  rmw_time_t
-  to_rmw_time() const;
+  rmw_time_t to_rmw_time() const;
 
 private:
   rcl_duration_t rcl_duration_;

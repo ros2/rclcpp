@@ -28,12 +28,12 @@
 #include "rcl/wait.h"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/function_traits.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/utilities.hpp"
-#include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcutils/logging_macros.h"
@@ -63,29 +63,23 @@ public:
   virtual ~ClientBase();
 
   RCLCPP_PUBLIC
-  const char *
-  get_service_name() const;
+  const char * get_service_name() const;
 
   RCLCPP_PUBLIC
-  std::shared_ptr<rcl_client_t>
-  get_client_handle();
+  std::shared_ptr<rcl_client_t> get_client_handle();
 
   RCLCPP_PUBLIC
-  std::shared_ptr<const rcl_client_t>
-  get_client_handle() const;
+  std::shared_ptr<const rcl_client_t> get_client_handle() const;
 
   RCLCPP_PUBLIC
-  bool
-  service_is_ready() const;
+  bool service_is_ready() const;
 
   template<typename RepT = int64_t, typename RatioT = std::milli>
-  bool
-  wait_for_service(
+  bool wait_for_service(
     std::chrono::duration<RepT, RatioT> timeout = std::chrono::duration<RepT, RatioT>(-1))
   {
     return wait_for_service_nanoseconds(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout)
-    );
+      std::chrono::duration_cast<std::chrono::nanoseconds>(timeout));
   }
 
   virtual std::shared_ptr<void> create_response() = 0;
@@ -97,16 +91,13 @@ protected:
   RCLCPP_DISABLE_COPY(ClientBase)
 
   RCLCPP_PUBLIC
-  bool
-  wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
+  bool wait_for_service_nanoseconds(std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
-  rcl_node_t *
-  get_rcl_node_handle();
+  rcl_node_t * get_rcl_node_handle();
 
   RCLCPP_PUBLIC
-  const rcl_node_t *
-  get_rcl_node_handle() const;
+  const rcl_node_t * get_rcl_node_handle() const;
 
   rclcpp::node_interfaces::NodeGraphInterface::WeakPtr node_graph_;
   std::shared_ptr<rcl_node_t> node_handle_;
@@ -131,8 +122,8 @@ public:
   using SharedFuture = std::shared_future<SharedResponse>;
   using SharedFutureWithRequest = std::shared_future<std::pair<SharedRequest, SharedResponse>>;
 
-  using CallbackType = std::function<void (SharedFuture)>;
-  using CallbackWithRequestType = std::function<void (SharedFutureWithRequest)>;
+  using CallbackType = std::function<void(SharedFuture)>;
+  using CallbackWithRequestType = std::function<void(SharedFutureWithRequest)>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
@@ -144,8 +135,7 @@ public:
   : ClientBase(node_base, node_graph)
   {
     using rosidl_typesupport_cpp::get_service_type_support_handle;
-    auto service_type_support_handle =
-      get_service_type_support_handle<ServiceT>();
+    auto service_type_support_handle = get_service_type_support_handle<ServiceT>();
     rcl_ret_t ret = rcl_client_init(
       this->get_client_handle().get(),
       this->get_rcl_node_handle(),
@@ -171,33 +161,27 @@ public:
   {
   }
 
-  std::shared_ptr<void>
-  create_response() override
+  std::shared_ptr<void> create_response() override
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
   }
 
-  std::shared_ptr<rmw_request_id_t>
-  create_request_header() override
+  std::shared_ptr<rmw_request_id_t> create_request_header() override
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
     return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
-  void
-  handle_response(
-    std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> response) override
+  void handle_response(
+    std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) override
   {
     std::unique_lock<std::mutex> lock(pending_requests_mutex_);
     auto typed_response = std::static_pointer_cast<typename ServiceT::Response>(response);
     int64_t sequence_number = request_header->sequence_number;
     // TODO(esteve) this should throw instead since it is not expected to happen in the first place
     if (this->pending_requests_.count(sequence_number) == 0) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "Received invalid sequence number. Ignoring...");
+      RCUTILS_LOG_ERROR_NAMED("rclcpp", "Received invalid sequence number. Ignoring...");
       return;
     }
     auto tuple = this->pending_requests_[sequence_number];
@@ -212,8 +196,7 @@ public:
     callback(future);
   }
 
-  SharedFuture
-  async_send_request(SharedRequest request)
+  SharedFuture async_send_request(SharedRequest request)
   {
     return async_send_request(request, [](SharedFuture) {});
   }
@@ -221,14 +204,8 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        CallbackType
-      >::value
-    >::type * = nullptr
-  >
-  SharedFuture
-  async_send_request(SharedRequest request, CallbackT && cb)
+      rclcpp::function_traits::same_arguments<CallbackT, CallbackType>::value>::type * = nullptr>
+  SharedFuture async_send_request(SharedRequest request, CallbackT && cb)
   {
     std::lock_guard<std::mutex> lock(pending_requests_mutex_);
     int64_t sequence_number;
@@ -247,23 +224,18 @@ public:
   template<
     typename CallbackT,
     typename std::enable_if<
-      rclcpp::function_traits::same_arguments<
-        CallbackT,
-        CallbackWithRequestType
-      >::value
-    >::type * = nullptr
-  >
-  SharedFutureWithRequest
-  async_send_request(SharedRequest request, CallbackT && cb)
+      rclcpp::function_traits::same_arguments<CallbackT, CallbackWithRequestType>::value>::type * =
+      nullptr>
+  SharedFutureWithRequest async_send_request(SharedRequest request, CallbackT && cb)
   {
     SharedPromiseWithRequest promise = std::make_shared<PromiseWithRequest>();
     SharedFutureWithRequest future_with_request(promise->get_future());
 
     auto wrapping_cb = [future_with_request, promise, request, &cb](SharedFuture future) {
-        auto response = future.get();
-        promise->set_value(std::make_pair(request, response));
-        cb(future_with_request);
-      };
+      auto response = future.get();
+      promise->set_value(std::make_pair(request, response));
+      cb(future_with_request);
+    };
 
     async_send_request(request, wrapping_cb);
 

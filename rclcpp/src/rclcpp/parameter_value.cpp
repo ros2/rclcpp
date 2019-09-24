@@ -20,8 +20,7 @@
 using rclcpp::ParameterType;
 using rclcpp::ParameterValue;
 
-std::string
-rclcpp::to_string(const ParameterType type)
+std::string rclcpp::to_string(const ParameterType type)
 {
   switch (type) {
     case ParameterType::PARAMETER_NOT_SET:
@@ -49,18 +48,15 @@ rclcpp::to_string(const ParameterType type)
   }
 }
 
-std::ostream &
-rclcpp::operator<<(std::ostream & os, const ParameterType type)
+std::ostream & rclcpp::operator<<(std::ostream & os, const ParameterType type)
 {
   os << rclcpp::to_string(type);
   return os;
 }
 
 template<typename ValType, typename PrintType = ValType>
-std::string
-array_to_string(
-  const std::vector<ValType> & array,
-  const std::ios::fmtflags format_flags = std::ios::dec)
+std::string array_to_string(
+  const std::vector<ValType> & array, const std::ios::fmtflags format_flags = std::ios::dec)
 {
   std::stringstream type_array;
   bool first_item = true;
@@ -79,8 +75,7 @@ array_to_string(
   return type_array.str();
 }
 
-std::string
-rclcpp::to_string(const ParameterValue & value)
+std::string rclcpp::to_string(const ParameterValue & value)
 {
   switch (value.get_type()) {
     case ParameterType::PARAMETER_NOT_SET:
@@ -172,7 +167,8 @@ ParameterValue::ParameterValue(const std::string & string_value)
 
 ParameterValue::ParameterValue(const char * string_value)
 : ParameterValue(std::string(string_value))
-{}
+{
+}
 
 ParameterValue::ParameterValue(const std::vector<uint8_t> & byte_array_value)
 {
@@ -216,26 +212,22 @@ ParameterValue::ParameterValue(const std::vector<std::string> & string_array_val
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_STRING_ARRAY;
 }
 
-ParameterType
-ParameterValue::get_type() const
+ParameterType ParameterValue::get_type() const
 {
   return static_cast<ParameterType>(value_.type);
 }
 
-rcl_interfaces::msg::ParameterValue
-ParameterValue::to_value_msg() const
+rcl_interfaces::msg::ParameterValue ParameterValue::to_value_msg() const
 {
   return value_;
 }
 
-bool
-ParameterValue::operator==(const ParameterValue & rhs) const
+bool ParameterValue::operator==(const ParameterValue & rhs) const
 {
   return this->value_ == rhs.value_;
 }
 
-bool
-ParameterValue::operator!=(const ParameterValue & rhs) const
+bool ParameterValue::operator!=(const ParameterValue & rhs) const
 {
   return this->value_ != rhs.value_;
 }

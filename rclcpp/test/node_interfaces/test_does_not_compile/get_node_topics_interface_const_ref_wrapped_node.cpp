@@ -14,8 +14,8 @@
 
 #include <memory>
 
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 #include "../node_wrapper.hpp"
 

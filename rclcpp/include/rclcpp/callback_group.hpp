@@ -43,11 +43,7 @@ class NodeWaitables;
 namespace callback_group
 {
 
-enum class CallbackGroupType
-{
-  MutuallyExclusive,
-  Reentrant
-};
+enum class CallbackGroupType { MutuallyExclusive, Reentrant };
 
 class CallbackGroup
 {
@@ -63,78 +59,64 @@ public:
   explicit CallbackGroup(CallbackGroupType group_type);
 
   template<typename Function>
-  rclcpp::SubscriptionBase::SharedPtr
-  find_subscription_ptrs_if(Function func) const
+  rclcpp::SubscriptionBase::SharedPtr find_subscription_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::SubscriptionBase, Function>(func, subscription_ptrs_);
   }
 
   template<typename Function>
-  rclcpp::TimerBase::SharedPtr
-  find_timer_ptrs_if(Function func) const
+  rclcpp::TimerBase::SharedPtr find_timer_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::TimerBase, Function>(func, timer_ptrs_);
   }
 
   template<typename Function>
-  rclcpp::ServiceBase::SharedPtr
-  find_service_ptrs_if(Function func) const
+  rclcpp::ServiceBase::SharedPtr find_service_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::ServiceBase, Function>(func, service_ptrs_);
   }
 
   template<typename Function>
-  rclcpp::ClientBase::SharedPtr
-  find_client_ptrs_if(Function func) const
+  rclcpp::ClientBase::SharedPtr find_client_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::ClientBase, Function>(func, client_ptrs_);
   }
 
   template<typename Function>
-  rclcpp::Waitable::SharedPtr
-  find_waitable_ptrs_if(Function func) const
+  rclcpp::Waitable::SharedPtr find_waitable_ptrs_if(Function func) const
   {
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
 
   RCLCPP_PUBLIC
-  std::atomic_bool &
-  can_be_taken_from();
+  std::atomic_bool & can_be_taken_from();
 
   RCLCPP_PUBLIC
-  const CallbackGroupType &
-  type() const;
+  const CallbackGroupType & type() const;
 
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)
 
   RCLCPP_PUBLIC
-  void
-  add_publisher(const rclcpp::PublisherBase::SharedPtr publisher_ptr);
+  void add_publisher(const rclcpp::PublisherBase::SharedPtr publisher_ptr);
 
   RCLCPP_PUBLIC
-  void
-  add_subscription(const rclcpp::SubscriptionBase::SharedPtr subscription_ptr);
+  void add_subscription(const rclcpp::SubscriptionBase::SharedPtr subscription_ptr);
 
   RCLCPP_PUBLIC
-  void
-  add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr);
+  void add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr);
 
   RCLCPP_PUBLIC
-  void
-  add_service(const rclcpp::ServiceBase::SharedPtr service_ptr);
+  void add_service(const rclcpp::ServiceBase::SharedPtr service_ptr);
 
   RCLCPP_PUBLIC
-  void
-  add_client(const rclcpp::ClientBase::SharedPtr client_ptr);
+  void add_client(const rclcpp::ClientBase::SharedPtr client_ptr);
 
   RCLCPP_PUBLIC
-  void
-  add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr);
+  void add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr);
 
   RCLCPP_PUBLIC
-  void
-  remove_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr) noexcept;
+  void remove_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr) noexcept;
 
   CallbackGroupType type_;
   // Mutex to protect the subsequent vectors of pointers.

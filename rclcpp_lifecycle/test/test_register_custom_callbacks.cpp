@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
@@ -41,45 +40,46 @@ class CustomLifecycleNode : public rclcpp_lifecycle::LifecycleNode
 public:
   explicit CustomLifecycleNode(std::string node_name)
   : rclcpp_lifecycle::LifecycleNode(std::move(node_name))
-  {}
+  {
+  }
 
   size_t number_of_callbacks = 0;
 
 protected:
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_configure(const rclcpp_lifecycle::State &)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_configure(
+    const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_activate(const rclcpp_lifecycle::State &)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_activate(
+    const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_deactivate(const rclcpp_lifecycle::State &)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_deactivate(
+    const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_cleanup(const rclcpp_lifecycle::State &)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_cleanup(
+    const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_shutdown(const rclcpp_lifecycle::State &)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_shutdown(
+    const rclcpp_lifecycle::State &)
   {
     ADD_FAILURE();
     ++number_of_callbacks;
@@ -89,8 +89,8 @@ protected:
   // Custom callbacks
 
 public:
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_custom_configure(const rclcpp_lifecycle::State & previous_state)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_custom_configure(
+    const rclcpp_lifecycle::State & previous_state)
   {
     EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_CONFIGURING, get_current_state().id());
@@ -98,8 +98,8 @@ public:
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_custom_activate(const rclcpp_lifecycle::State & previous_state)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_custom_activate(
+    const rclcpp_lifecycle::State & previous_state)
   {
     EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_ACTIVATING, get_current_state().id());
@@ -107,8 +107,8 @@ public:
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_custom_deactivate(const rclcpp_lifecycle::State & previous_state)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_custom_deactivate(
+    const rclcpp_lifecycle::State & previous_state)
   {
     EXPECT_EQ(State::PRIMARY_STATE_ACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_DEACTIVATING, get_current_state().id());
@@ -116,8 +116,8 @@ public:
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_custom_cleanup(const rclcpp_lifecycle::State & previous_state)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_custom_cleanup(
+    const rclcpp_lifecycle::State & previous_state)
   {
     EXPECT_EQ(State::PRIMARY_STATE_INACTIVE, previous_state.id());
     EXPECT_EQ(State::TRANSITION_STATE_CLEANINGUP, get_current_state().id());
@@ -125,8 +125,8 @@ public:
     return rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn::SUCCESS;
   }
 
-  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn
-  on_custom_shutdown(const rclcpp_lifecycle::State &)
+  rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn on_custom_shutdown(
+    const rclcpp_lifecycle::State &)
   {
     EXPECT_EQ(State::TRANSITION_STATE_SHUTTINGDOWN, get_current_state().id());
     ++number_of_callbacks;
@@ -134,46 +134,44 @@ public:
   }
 };
 
-TEST_F(TestRegisterCustomCallbacks, custom_callbacks) {
+TEST_F(TestRegisterCustomCallbacks, custom_callbacks)
+{
   auto test_node = std::make_shared<CustomLifecycleNode>("testnode");
 
   test_node->register_on_configure(
-    std::bind(
-      &CustomLifecycleNode::on_custom_configure,
-      test_node.get(), std::placeholders::_1));
+    std::bind(&CustomLifecycleNode::on_custom_configure, test_node.get(), std::placeholders::_1));
   test_node->register_on_cleanup(
-    std::bind(
-      &CustomLifecycleNode::on_custom_cleanup,
-      test_node.get(), std::placeholders::_1));
+    std::bind(&CustomLifecycleNode::on_custom_cleanup, test_node.get(), std::placeholders::_1));
   test_node->register_on_shutdown(
-    std::bind(
-      &CustomLifecycleNode::on_custom_shutdown,
-      test_node.get(), std::placeholders::_1));
+    std::bind(&CustomLifecycleNode::on_custom_shutdown, test_node.get(), std::placeholders::_1));
   test_node->register_on_activate(
-    std::bind(
-      &CustomLifecycleNode::on_custom_activate,
-      test_node.get(), std::placeholders::_1));
+    std::bind(&CustomLifecycleNode::on_custom_activate, test_node.get(), std::placeholders::_1));
   test_node->register_on_deactivate(
-    std::bind(
-      &CustomLifecycleNode::on_custom_deactivate,
-      test_node.get(), std::placeholders::_1));
+    std::bind(&CustomLifecycleNode::on_custom_deactivate, test_node.get(), std::placeholders::_1));
 
   EXPECT_EQ(State::PRIMARY_STATE_UNCONFIGURED, test_node->get_current_state().id());
   EXPECT_EQ(
-    State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
-      rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE)).id());
+    State::PRIMARY_STATE_INACTIVE,
+    test_node->trigger_transition(rclcpp_lifecycle::Transition(Transition::TRANSITION_CONFIGURE))
+      .id());
   EXPECT_EQ(
-    State::PRIMARY_STATE_ACTIVE, test_node->trigger_transition(
-      rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE)).id());
+    State::PRIMARY_STATE_ACTIVE,
+    test_node->trigger_transition(rclcpp_lifecycle::Transition(Transition::TRANSITION_ACTIVATE))
+      .id());
   EXPECT_EQ(
-    State::PRIMARY_STATE_INACTIVE, test_node->trigger_transition(
-      rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE)).id());
+    State::PRIMARY_STATE_INACTIVE,
+    test_node->trigger_transition(rclcpp_lifecycle::Transition(Transition::TRANSITION_DEACTIVATE))
+      .id());
   EXPECT_EQ(
-    State::PRIMARY_STATE_UNCONFIGURED, test_node->trigger_transition(
-      rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP)).id());
+    State::PRIMARY_STATE_UNCONFIGURED,
+    test_node->trigger_transition(rclcpp_lifecycle::Transition(Transition::TRANSITION_CLEANUP))
+      .id());
   EXPECT_EQ(
-    State::PRIMARY_STATE_FINALIZED, test_node->trigger_transition(
-      rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN)).id());
+    State::PRIMARY_STATE_FINALIZED,
+    test_node
+      ->trigger_transition(
+        rclcpp_lifecycle::Transition(Transition::TRANSITION_UNCONFIGURED_SHUTDOWN))
+      .id());
 
   // check if all callbacks were successfully overwritten
   EXPECT_EQ(5u, test_node->number_of_callbacks);

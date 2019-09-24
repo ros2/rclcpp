@@ -20,8 +20,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
-#include "rclcpp/waitable.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -38,20 +38,15 @@ public:
   explicit NodeWaitables(rclcpp::node_interfaces::NodeBaseInterface * node_base);
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeWaitables();
+  virtual ~NodeWaitables();
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  add_waitable(
+  virtual void add_waitable(
     rclcpp::Waitable::SharedPtr waitable_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  remove_waitable(
+  virtual void remove_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept;
 

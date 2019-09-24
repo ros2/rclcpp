@@ -54,17 +54,14 @@ public:
   State & operator=(const State & rhs);
 
   RCLCPP_LIFECYCLE_PUBLIC
-  uint8_t
-  id() const;
+  uint8_t id() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  std::string
-  label() const;
+  std::string label() const;
 
 protected:
   RCLCPP_LIFECYCLE_PUBLIC
-  void
-  reset();
+  void reset();
 
   rcutils_allocator_t allocator_;
 

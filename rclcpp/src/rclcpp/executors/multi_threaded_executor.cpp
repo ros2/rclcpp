@@ -19,8 +19,8 @@
 #include <memory>
 #include <vector>
 
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/scope_exit.hpp"
+#include "rclcpp/utilities.hpp"
 
 using rclcpp::executors::MultiThreadedExecutor;
 
@@ -39,15 +39,16 @@ MultiThreadedExecutor::MultiThreadedExecutor(
   }
 }
 
-MultiThreadedExecutor::~MultiThreadedExecutor() {}
+MultiThreadedExecutor::~MultiThreadedExecutor()
+{
+}
 
-void
-MultiThreadedExecutor::spin()
+void MultiThreadedExecutor::spin()
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
   std::vector<std::thread> threads;
   size_t thread_id = 0;
   {
@@ -64,14 +65,12 @@ MultiThreadedExecutor::spin()
   }
 }
 
-size_t
-MultiThreadedExecutor::get_number_of_threads()
+size_t MultiThreadedExecutor::get_number_of_threads()
 {
   return number_of_threads_;
 }
 
-void
-MultiThreadedExecutor::run(size_t)
+void MultiThreadedExecutor::run(size_t)
 {
   while (rclcpp::ok(this->context_) && spinning.load()) {
     executor::AnyExecutable any_exec;

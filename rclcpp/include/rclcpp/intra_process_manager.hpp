@@ -24,14 +24,14 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <unordered_map>
 #include <utility>
-#include <set>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/intra_process_manager_impl.hpp"
-#include "rclcpp/mapped_ring_buffer.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/mapped_ring_buffer.hpp"
 #include "rclcpp/publisher_base.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -149,8 +149,7 @@ public:
    * \return an unsigned 64-bit integer which is the subscription's unique id.
    */
   RCLCPP_PUBLIC
-  uint64_t
-  add_subscription(SubscriptionBase::SharedPtr subscription);
+  uint64_t add_subscription(SubscriptionBase::SharedPtr subscription);
 
   /// Unregister a subscription using the subscription's unique id.
   /**
@@ -159,8 +158,7 @@ public:
    * \param intra_process_subscription_id id of the subscription to remove.
    */
   RCLCPP_PUBLIC
-  void
-  remove_subscription(uint64_t intra_process_subscription_id);
+  void remove_subscription(uint64_t intra_process_subscription_id);
 
   /// Register a publisher with the manager, returns the publisher unique id.
   /**
@@ -186,10 +184,7 @@ public:
    * \return an unsigned 64-bit integer which is the publisher's unique id.
    */
   RCLCPP_PUBLIC
-  uint64_t
-  add_publisher(
-    rclcpp::PublisherBase::SharedPtr publisher,
-    size_t buffer_size = 0);
+  uint64_t add_publisher(rclcpp::PublisherBase::SharedPtr publisher, size_t buffer_size = 0);
 
   /// Unregister a publisher using the publisher's unique id.
   /**
@@ -198,8 +193,7 @@ public:
    * \param intra_process_publisher_id id of the publisher to remove.
    */
   RCLCPP_PUBLIC
-  void
-  remove_publisher(uint64_t intra_process_publisher_id);
+  void remove_publisher(uint64_t intra_process_publisher_id);
 
   /// Store a message in the manager, and return the message sequence number.
   /**
@@ -232,18 +226,15 @@ public:
    * \param message the message that is being stored.
    * \return the message sequence number.
    */
-  template<
-    typename MessageT, typename Alloc = std::allocator<void>>
-  uint64_t
-  store_intra_process_message(
-    uint64_t intra_process_publisher_id,
-    std::shared_ptr<const MessageT> message)
+  template<typename MessageT, typename Alloc = std::allocator<void>>
+  uint64_t store_intra_process_message(
+    uint64_t intra_process_publisher_id, std::shared_ptr<const MessageT> message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
     uint64_t message_seq = 0;
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->get_publisher_info_for_id(
-      intra_process_publisher_id, message_seq);
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer =
+      impl_->get_publisher_info_for_id(intra_process_publisher_id, message_seq);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       throw std::runtime_error("Typecast failed due to incorrect message type");
@@ -261,18 +252,17 @@ public:
   }
 
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
+    typename MessageT,
+    typename Alloc = std::allocator<void>,
     typename Deleter = std::default_delete<MessageT>>
-  uint64_t
-  store_intra_process_message(
-    uint64_t intra_process_publisher_id,
-    std::unique_ptr<MessageT, Deleter> message)
+  uint64_t store_intra_process_message(
+    uint64_t intra_process_publisher_id, std::unique_ptr<MessageT, Deleter> message)
   {
     using MRBMessageAlloc = typename std::allocator_traits<Alloc>::template rebind_alloc<MessageT>;
     using TypedMRB = typename mapped_ring_buffer::MappedRingBuffer<MessageT, MRBMessageAlloc>;
     uint64_t message_seq = 0;
-    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer = impl_->get_publisher_info_for_id(
-      intra_process_publisher_id, message_seq);
+    mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer =
+      impl_->get_publisher_info_for_id(intra_process_publisher_id, message_seq);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       throw std::runtime_error("Typecast failed due to incorrect message type");
@@ -325,10 +315,10 @@ public:
    * \param message the message typed unique_ptr used to return the message.
    */
   template<
-    typename MessageT, typename Alloc = std::allocator<void>,
+    typename MessageT,
+    typename Alloc = std::allocator<void>,
     typename Deleter = std::default_delete<MessageT>>
-  void
-  take_intra_process_message(
+  void take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
@@ -344,8 +334,7 @@ public:
       intra_process_publisher_id,
       message_sequence_number,
       requesting_subscriptions_intra_process_id,
-      target_subs_size
-    );
+      target_subs_size);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       return;
@@ -360,10 +349,8 @@ public:
     }
   }
 
-  template<
-    typename MessageT, typename Alloc = std::allocator<void>>
-  void
-  take_intra_process_message(
+  template<typename MessageT, typename Alloc = std::allocator<void>>
+  void take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
@@ -379,8 +366,7 @@ public:
       intra_process_publisher_id,
       message_sequence_number,
       requesting_subscriptions_intra_process_id,
-      target_subs_size
-    );
+      target_subs_size);
     typename TypedMRB::SharedPtr typed_buffer = std::static_pointer_cast<TypedMRB>(buffer);
     if (!typed_buffer) {
       return;
@@ -397,18 +383,15 @@ public:
 
   /// Return true if the given rmw_gid_t matches any stored Publishers.
   RCLCPP_PUBLIC
-  bool
-  matches_any_publishers(const rmw_gid_t * id) const;
+  bool matches_any_publishers(const rmw_gid_t * id) const;
 
   /// Return the number of intraprocess subscriptions to a topic, given the publisher id.
   RCLCPP_PUBLIC
-  size_t
-  get_subscription_count(uint64_t intra_process_publisher_id) const;
+  size_t get_subscription_count(uint64_t intra_process_publisher_id) const;
 
 private:
   RCLCPP_PUBLIC
-  static uint64_t
-  get_next_unique_id();
+  static uint64_t get_next_unique_id();
 
   IntraProcessManagerImplBase::SharedPtr impl_;
   std::mutex take_mutex_;

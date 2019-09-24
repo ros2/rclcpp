@@ -20,13 +20,14 @@ using rclcpp::node_interfaces::NodeTimers;
 
 NodeTimers::NodeTimers(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
-{}
+{
+}
 
 NodeTimers::~NodeTimers()
-{}
+{
+}
 
-void
-NodeTimers::add_timer(
+void NodeTimers::add_timer(
   rclcpp::TimerBase::SharedPtr timer,
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
 {
@@ -41,7 +42,6 @@ NodeTimers::add_timer(
   }
   if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
     throw std::runtime_error(
-            std::string("Failed to notify wait set on timer creation: ") +
-            rmw_get_error_string().str);
+      std::string("Failed to notify wait set on timer creation: ") + rmw_get_error_string().str);
   }
 }

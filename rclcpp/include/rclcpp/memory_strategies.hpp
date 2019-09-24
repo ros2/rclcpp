@@ -24,8 +24,7 @@ namespace memory_strategies
 {
 
 RCLCPP_PUBLIC
-memory_strategy::MemoryStrategy::SharedPtr
-create_default_strategy();
+memory_strategy::MemoryStrategy::SharedPtr create_default_strategy();
 
 }  // namespace memory_strategies
 }  // namespace rclcpp

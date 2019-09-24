@@ -17,23 +17,21 @@
 namespace rclcpp
 {
 
-Event::Event()
-: state_(false) {}
+Event::Event() : state_(false)
+{
+}
 
-bool
-Event::set()
+bool Event::set()
 {
   return state_.exchange(true);
 }
 
-bool
-Event::check()
+bool Event::check()
 {
   return state_.load();
 }
 
-bool
-Event::check_and_clear()
+bool Event::check_and_clear()
 {
   return state_.exchange(false);
 }

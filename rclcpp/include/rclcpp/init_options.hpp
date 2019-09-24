@@ -44,21 +44,17 @@ public:
 
   /// Assignment operator.
   RCLCPP_PUBLIC
-  InitOptions &
-  operator=(const InitOptions & other);
+  InitOptions & operator=(const InitOptions & other);
 
   RCLCPP_PUBLIC
-  virtual
-  ~InitOptions();
+  virtual ~InitOptions();
 
   /// Return the rcl init options.
   RCLCPP_PUBLIC
-  const rcl_init_options_t *
-  get_rcl_init_options() const;
+  const rcl_init_options_t * get_rcl_init_options() const;
 
 protected:
-  void
-  finalize_init_options();
+  void finalize_init_options();
 
 private:
   std::unique_ptr<rcl_init_options_t> init_options_;

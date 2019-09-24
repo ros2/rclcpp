@@ -30,13 +30,11 @@ class AllocatorDeleter
   using AllocRebind = typename std::allocator_traits<Allocator>::template rebind_alloc<T>;
 
 public:
-  AllocatorDeleter()
-  : allocator_(nullptr)
+  AllocatorDeleter() : allocator_(nullptr)
   {
   }
 
-  explicit AllocatorDeleter(Allocator * a)
-  : allocator_(a)
+  explicit AllocatorDeleter(Allocator * a) : allocator_(a)
   {
   }
 
@@ -71,16 +69,16 @@ private:
 template<typename Alloc, typename T, typename D>
 void set_allocator_for_deleter(D * deleter, Alloc * alloc)
 {
-  (void) alloc;
-  (void) deleter;
+  (void)alloc;
+  (void)deleter;
   throw std::runtime_error("Reached unexpected template specialization");
 }
 
 template<typename T, typename U>
 void set_allocator_for_deleter(std::default_delete<T> * deleter, std::allocator<U> * alloc)
 {
-  (void) deleter;
-  (void) alloc;
+  (void)deleter;
+  (void)alloc;
 }
 
 template<typename Alloc, typename T>
@@ -94,11 +92,11 @@ void set_allocator_for_deleter(AllocatorDeleter<T> * deleter, Alloc * alloc)
 
 template<typename Alloc, typename T>
 using Deleter = typename std::conditional<
-  std::is_same<typename std::allocator_traits<Alloc>::template rebind_alloc<T>,
-  typename std::allocator<void>::template rebind<T>::other>::value,
+  std::is_same<
+    typename std::allocator_traits<Alloc>::template rebind_alloc<T>,
+    typename std::allocator<void>::template rebind<T>::other>::value,
   std::default_delete<T>,
-  AllocatorDeleter<Alloc>
-  >::type;
+  AllocatorDeleter<Alloc>>::type;
 }  // namespace allocator
 }  // namespace rclcpp
 

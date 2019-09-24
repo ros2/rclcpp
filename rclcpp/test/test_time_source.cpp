@@ -92,9 +92,7 @@ void spin_until_time(
 }
 
 void spin_until_ros_time_updated(
-  rclcpp::Clock::SharedPtr clock,
-  rclcpp::Node::SharedPtr node,
-  rclcpp::ParameterValue value)
+  rclcpp::Clock::SharedPtr clock, rclcpp::Node::SharedPtr node, rclcpp::ParameterValue value)
 {
   // Similar to above:  Call spin_once until we see the clock's ros_time_is_active method
   // match the ParameterValue
@@ -144,27 +142,19 @@ void trigger_clock_changes(
     // to a clock change callback and spin until future complete, but that's an upstream
     // change
     spin_until_time(
-      clock,
-      node,
-      std::chrono::seconds(i) + std::chrono::nanoseconds(1000),
-      expect_time_update
-    );
+      clock, node, std::chrono::seconds(i) + std::chrono::nanoseconds(1000), expect_time_update);
   }
 }
 
 void set_use_sim_time_parameter(
-  rclcpp::Node::SharedPtr node,
-  rclcpp::ParameterValue value,
-  rclcpp::Clock::SharedPtr clock)
+  rclcpp::Node::SharedPtr node, rclcpp::ParameterValue value, rclcpp::Clock::SharedPtr clock)
 {
   auto parameters_client = std::make_shared<rclcpp::SyncParametersClient>(node);
 
   using namespace std::chrono_literals;
   EXPECT_TRUE(parameters_client->wait_for_service(2s));
-  auto set_parameters_results = parameters_client->set_parameters(
-  {
-    rclcpp::Parameter("use_sim_time", value)
-  });
+  auto set_parameters_results =
+    parameters_client->set_parameters({rclcpp::Parameter("use_sim_time", value)});
   for (auto & result : set_parameters_results) {
     EXPECT_TRUE(result.successful);
   }
@@ -176,7 +166,8 @@ void set_use_sim_time_parameter(
   spin_until_ros_time_updated(clock, node, value);
 }
 
-TEST_F(TestTimeSource, detachUnattached) {
+TEST_F(TestTimeSource, detachUnattached)
+{
   rclcpp::TimeSource ts;
 
   ASSERT_NO_THROW(ts.detachNode());
@@ -185,14 +176,16 @@ TEST_F(TestTimeSource, detachUnattached) {
   ASSERT_NO_THROW(ts.detachNode());
 }
 
-TEST_F(TestTimeSource, reattach) {
+TEST_F(TestTimeSource, reattach)
+{
   rclcpp::TimeSource ts;
   // Try reattach
   ASSERT_NO_THROW(ts.attachNode(node));
   ASSERT_NO_THROW(ts.attachNode(node));
 }
 
-TEST_F(TestTimeSource, ROS_time_valid_attach_detach) {
+TEST_F(TestTimeSource, ROS_time_valid_attach_detach)
+{
   rclcpp::TimeSource ts;
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
 
@@ -211,7 +204,8 @@ TEST_F(TestTimeSource, ROS_time_valid_attach_detach) {
   EXPECT_FALSE(ros_clock->ros_time_is_active());
 }
 
-TEST_F(TestTimeSource, ROS_time_valid_wall_time) {
+TEST_F(TestTimeSource, ROS_time_valid_wall_time)
+{
   rclcpp::TimeSource ts;
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   auto ros_clock2 = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
@@ -226,7 +220,8 @@ TEST_F(TestTimeSource, ROS_time_valid_wall_time) {
   EXPECT_FALSE(ros_clock2->ros_time_is_active());
 }
 
-TEST_F(TestTimeSource, ROS_time_valid_sim_time) {
+TEST_F(TestTimeSource, ROS_time_valid_sim_time)
+{
   rclcpp::TimeSource ts;
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   auto ros_clock2 = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
@@ -242,7 +237,8 @@ TEST_F(TestTimeSource, ROS_time_valid_sim_time) {
   EXPECT_TRUE(ros_clock2->ros_time_is_active());
 }
 
-TEST_F(TestTimeSource, clock) {
+TEST_F(TestTimeSource, clock)
+{
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
@@ -287,12 +283,14 @@ public:
   rcl_time_jump_t last_timejump_;
   void post_callback(const rcl_time_jump_t & jump, int id)
   {
-    last_postcallback_id_ = id; last_timejump_ = jump;
+    last_postcallback_id_ = id;
+    last_timejump_ = jump;
     ++post_callback_calls_;
   }
 };
 
-TEST_F(TestTimeSource, callbacks) {
+TEST_F(TestTimeSource, callbacks)
+{
   CallbackObject cbo;
   rcl_jump_threshold_t jump_threshold;
   jump_threshold.min_forward.nanoseconds = 0;
@@ -383,8 +381,8 @@ TEST_F(TestTimeSource, callbacks) {
   EXPECT_EQ(4, cbo.last_postcallback_id_);
 }
 
-
-TEST_F(TestTimeSource, callback_handler_erasure) {
+TEST_F(TestTimeSource, callback_handler_erasure)
+{
   CallbackObject cbo;
   rcl_jump_threshold_t jump_threshold;
   jump_threshold.min_forward.nanoseconds = 0;
@@ -454,7 +452,8 @@ TEST_F(TestTimeSource, callback_handler_erasure) {
   EXPECT_GT(t_high.nanoseconds(), t_out.nanoseconds());
 }
 
-TEST_F(TestTimeSource, parameter_activation) {
+TEST_F(TestTimeSource, parameter_activation)
+{
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
   EXPECT_FALSE(ros_clock->ros_time_is_active());
@@ -478,7 +477,8 @@ TEST_F(TestTimeSource, parameter_activation) {
   EXPECT_TRUE(ros_clock->ros_time_is_active());
 }
 
-TEST_F(TestTimeSource, no_pre_jump_callback) {
+TEST_F(TestTimeSource, no_pre_jump_callback)
+{
   CallbackObject cbo;
   rcl_jump_threshold_t jump_threshold;
   jump_threshold.min_forward.nanoseconds = 0;

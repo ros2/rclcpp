@@ -29,17 +29,20 @@ namespace rclcpp
 template<typename Callable>
 struct ScopeExit
 {
-  explicit ScopeExit(Callable callable)
-  : callable_(callable) {}
-  ~ScopeExit() {callable_();}
+  explicit ScopeExit(Callable callable) : callable_(callable)
+  {
+  }
+  ~ScopeExit()
+  {
+    callable_();
+  }
 
 private:
   Callable callable_;
 };
 
 template<typename Callable>
-ScopeExit<Callable>
-make_scope_exit(Callable callable)
+ScopeExit<Callable> make_scope_exit(Callable callable)
 {
   return ScopeExit<Callable>(callable);
 }
@@ -47,6 +50,6 @@ make_scope_exit(Callable callable)
 }  // namespace rclcpp
 
 #define RCLCPP_SCOPE_EXIT(code) \
-  auto RCLCPP_STRING_JOIN(scope_exit_, __LINE__) = rclcpp::make_scope_exit([&]() {code;})
+  auto RCLCPP_STRING_JOIN(scope_exit_, __LINE__) = rclcpp::make_scope_exit([&]() { code; })
 
 #endif  // RCLCPP__SCOPE_EXIT_HPP_

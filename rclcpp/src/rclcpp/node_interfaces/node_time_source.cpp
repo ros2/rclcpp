@@ -47,4 +47,5 @@ NodeTimeSource::NodeTimeSource(
 }
 
 NodeTimeSource::~NodeTimeSource()
-{}
+{
+}

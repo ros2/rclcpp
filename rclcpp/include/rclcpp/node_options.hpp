@@ -59,8 +59,7 @@ public:
 
   /// Destructor.
   RCLCPP_PUBLIC
-  virtual
-  ~NodeOptions() = default;
+  virtual ~NodeOptions() = default;
 
   /// Copy constructor.
   RCLCPP_PUBLIC
@@ -68,8 +67,7 @@ public:
 
   /// Assignment operator.
   RCLCPP_PUBLIC
-  NodeOptions &
-  operator=(const NodeOptions & other);
+  NodeOptions & operator=(const NodeOptions & other);
 
   /// Return the rcl_node_options used by the node.
   /**
@@ -78,23 +76,19 @@ public:
    * changed, like arguments, use_global_arguments, or the rcl allocator.
    */
   RCLCPP_PUBLIC
-  const rcl_node_options_t *
-  get_rcl_node_options() const;
+  const rcl_node_options_t * get_rcl_node_options() const;
 
   /// Return the context to be used by the node.
   RCLCPP_PUBLIC
-  rclcpp::Context::SharedPtr
-  context() const;
+  rclcpp::Context::SharedPtr context() const;
 
   /// Set the context, return this for parameter idiom.
   RCLCPP_PUBLIC
-  NodeOptions &
-  context(rclcpp::Context::SharedPtr context);
+  NodeOptions & context(rclcpp::Context::SharedPtr context);
 
   /// Return a reference to the list of arguments for the node.
   RCLCPP_PUBLIC
-  const std::vector<std::string> &
-  arguments() const;
+  const std::vector<std::string> & arguments() const;
 
   /// Set the arguments, return this for parameter idiom.
   /**
@@ -104,17 +98,14 @@ public:
    * This will cause the internal rcl_node_options_t struct to be invalidated.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  arguments(const std::vector<std::string> & arguments);
+  NodeOptions & arguments(const std::vector<std::string> & arguments);
 
   /// Return a reference to the list of parameter overrides.
   RCLCPP_PUBLIC
-  std::vector<rclcpp::Parameter> &
-  parameter_overrides();
+  std::vector<rclcpp::Parameter> & parameter_overrides();
 
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::Parameter> &
-  parameter_overrides() const;
+  const std::vector<rclcpp::Parameter> & parameter_overrides() const;
 
   /// Set the parameters overrides, return this for parameter idiom.
   /**
@@ -123,13 +114,11 @@ public:
    * values if necessary.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  parameter_overrides(const std::vector<rclcpp::Parameter> & parameter_overrides);
+  NodeOptions & parameter_overrides(const std::vector<rclcpp::Parameter> & parameter_overrides);
 
   /// Append a single parameter override, parameter idiom style.
   template<typename ParameterT>
-  NodeOptions &
-  append_parameter_override(const std::string & name, const ParameterT & value)
+  NodeOptions & append_parameter_override(const std::string & name, const ParameterT & value)
   {
     this->parameter_overrides().emplace_back(name, rclcpp::ParameterValue(value));
     return *this;
@@ -137,8 +126,7 @@ public:
 
   /// Return the use_global_arguments flag.
   RCLCPP_PUBLIC
-  bool
-  use_global_arguments() const;
+  bool use_global_arguments() const;
 
   /// Set the use_global_arguments flag, return this for parameter idiom.
   /**
@@ -149,13 +137,11 @@ public:
    * This will cause the internal rcl_node_options_t struct to be invalidated.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  use_global_arguments(bool use_global_arguments);
+  NodeOptions & use_global_arguments(bool use_global_arguments);
 
   /// Return the use_intra_process_comms flag.
   RCLCPP_PUBLIC
-  bool
-  use_intra_process_comms() const;
+  bool use_intra_process_comms() const;
 
   /// Set the use_intra_process_comms flag, return this for parameter idiom.
   /**
@@ -168,13 +154,11 @@ public:
    * desirable.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  use_intra_process_comms(bool use_intra_process_comms);
+  NodeOptions & use_intra_process_comms(bool use_intra_process_comms);
 
   /// Return the start_parameter_services flag.
   RCLCPP_PUBLIC
-  bool
-  start_parameter_services() const;
+  bool start_parameter_services() const;
 
   /// Set the start_parameter_services flag, return this for parameter idiom.
   /**
@@ -187,13 +171,11 @@ public:
    * \sa start_parameter_event_publisher()
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  start_parameter_services(bool start_parameter_services);
+  NodeOptions & start_parameter_services(bool start_parameter_services);
 
   /// Return the start_parameter_event_publisher flag.
   RCLCPP_PUBLIC
-  bool
-  start_parameter_event_publisher() const;
+  bool start_parameter_event_publisher() const;
 
   /// Set the start_parameter_event_publisher flag, return this for parameter idiom.
   /**
@@ -203,26 +185,22 @@ public:
    * separately from the other parameter services.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  start_parameter_event_publisher(bool start_parameter_event_publisher);
+  NodeOptions & start_parameter_event_publisher(bool start_parameter_event_publisher);
 
   /// Return a reference to the parameter_event_qos QoS.
   RCLCPP_PUBLIC
-  const rclcpp::QoS &
-  parameter_event_qos() const;
+  const rclcpp::QoS & parameter_event_qos() const;
 
   /// Set the parameter_event_qos QoS, return this for parameter idiom.
   /**
    * The QoS settings to be used for the parameter event publisher, if enabled.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  parameter_event_qos(const rclcpp::QoS & parameter_event_qos);
+  NodeOptions & parameter_event_qos(const rclcpp::QoS & parameter_event_qos);
 
   /// Return a reference to the parameter_event_publisher_options.
   RCLCPP_PUBLIC
-  const rclcpp::PublisherOptionsBase &
-  parameter_event_publisher_options() const;
+  const rclcpp::PublisherOptionsBase & parameter_event_publisher_options() const;
 
   /// Set the parameter_event_publisher_options, return this for parameter idiom.
   /**
@@ -233,14 +211,12 @@ public:
    *   NodeOptions to also be templated based on the Allocator type.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  parameter_event_publisher_options(
+  NodeOptions & parameter_event_publisher_options(
     const rclcpp::PublisherOptionsBase & parameter_event_publisher_options);
 
   /// Return the allow_undeclared_parameters flag.
   RCLCPP_PUBLIC
-  bool
-  allow_undeclared_parameters() const;
+  bool allow_undeclared_parameters() const;
 
   /// Set the allow_undeclared_parameters, return this for parameter idiom.
   /**
@@ -253,13 +229,11 @@ public:
    * any parameter overrides.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  allow_undeclared_parameters(bool allow_undeclared_parameters);
+  NodeOptions & allow_undeclared_parameters(bool allow_undeclared_parameters);
 
   /// Return the automatically_declare_parameters_from_overrides flag.
   RCLCPP_PUBLIC
-  bool
-  automatically_declare_parameters_from_overrides() const;
+  bool automatically_declare_parameters_from_overrides() const;
 
   /// Set the automatically_declare_parameters_from_overrides, return this.
   /**
@@ -273,27 +247,23 @@ public:
    * declared in this way will use the default constructed ParameterDescriptor.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  automatically_declare_parameters_from_overrides(
+  NodeOptions & automatically_declare_parameters_from_overrides(
     bool automatically_declare_parameters_from_overrides);
 
   /// Return the rcl_allocator_t to be used.
   RCLCPP_PUBLIC
-  const rcl_allocator_t &
-  allocator() const;
+  const rcl_allocator_t & allocator() const;
 
   /// Set the rcl_allocator_t to be used, may cause deallocation of existing rcl_node_options_t.
   /**
    * This will cause the internal rcl_node_options_t struct to be invalidated.
    */
   RCLCPP_PUBLIC
-  NodeOptions &
-  allocator(rcl_allocator_t allocator);
+  NodeOptions & allocator(rcl_allocator_t allocator);
 
 protected:
   /// Retrieve the ROS_DOMAIN_ID environment variable and populate options.
-  size_t
-  get_domain_id_from_env() const;
+  size_t get_domain_id_from_env() const;
 
 private:
   // This is mutable to allow for a const accessor which lazily creates the node options instance.
@@ -303,32 +273,31 @@ private:
   // IMPORTANT: if any of these default values are changed, please update the
   // documentation in this class.
 
-  rclcpp::Context::SharedPtr context_ {
+  rclcpp::Context::SharedPtr context_{
     rclcpp::contexts::default_context::get_global_default_context()};
 
-  std::vector<std::string> arguments_ {};
+  std::vector<std::string> arguments_{};
 
-  std::vector<rclcpp::Parameter> parameter_overrides_ {};
+  std::vector<rclcpp::Parameter> parameter_overrides_{};
 
-  bool use_global_arguments_ {true};
+  bool use_global_arguments_{true};
 
-  bool use_intra_process_comms_ {false};
+  bool use_intra_process_comms_{false};
 
-  bool start_parameter_services_ {true};
+  bool start_parameter_services_{true};
 
-  bool start_parameter_event_publisher_ {true};
+  bool start_parameter_event_publisher_{true};
 
   rclcpp::QoS parameter_event_qos_ = rclcpp::ParameterEventsQoS(
-    rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
-  );
+    rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events));
 
   rclcpp::PublisherOptionsBase parameter_event_publisher_options_ = rclcpp::PublisherOptionsBase();
 
-  bool allow_undeclared_parameters_ {false};
+  bool allow_undeclared_parameters_{false};
 
-  bool automatically_declare_parameters_from_overrides_ {false};
+  bool automatically_declare_parameters_from_overrides_{false};
 
-  rcl_allocator_t allocator_ {rcl_get_default_allocator()};
+  rcl_allocator_t allocator_{rcl_get_default_allocator()};
 };
 
 }  // namespace rclcpp

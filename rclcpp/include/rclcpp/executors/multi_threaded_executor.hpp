@@ -61,17 +61,14 @@ public:
   virtual ~MultiThreadedExecutor();
 
   RCLCPP_PUBLIC
-  void
-  spin();
+  void spin();
 
   RCLCPP_PUBLIC
-  size_t
-  get_number_of_threads();
+  size_t get_number_of_threads();
 
 protected:
   RCLCPP_PUBLIC
-  void
-  run(size_t this_thread_number);
+  void run(size_t this_thread_number);
 
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)

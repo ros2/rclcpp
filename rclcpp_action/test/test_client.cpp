@@ -18,8 +18,8 @@
 #include <rcl/time.h>
 #include <rcl/types.h>
 
-#include <rcl_action/names.h>
 #include <rcl_action/default_qos.h>
+#include <rcl_action/names.h>
 
 #include <rclcpp/clock.hpp>
 #include <rclcpp/exceptions.hpp>
@@ -32,16 +32,16 @@
 
 #include <test_msgs/action/fibonacci.hpp>
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
-#include <utility>
 #include <thread>
-#include <chrono>
+#include <utility>
 
-#include "rclcpp_action/exceptions.hpp"
-#include "rclcpp_action/create_client.hpp"
 #include "rclcpp_action/client.hpp"
+#include "rclcpp_action/create_client.hpp"
+#include "rclcpp_action/exceptions.hpp"
 #include "rclcpp_action/qos.hpp"
 #include "rclcpp_action/types.hpp"
 
@@ -80,15 +80,11 @@ protected:
     server_node = std::make_shared<rclcpp::Node>(server_node_name, namespace_name);
 
     char * goal_service_name = nullptr;
-    rcl_ret_t ret = rcl_action_get_goal_service_name(
-      action_name, allocator, &goal_service_name);
+    rcl_ret_t ret = rcl_action_get_goal_service_name(action_name, allocator, &goal_service_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     goal_service = server_node->create_service<ActionGoalRequestService>(
       goal_service_name,
-      [this](
-        const ActionGoalRequest::SharedPtr request,
-        ActionGoalResponse::SharedPtr response)
-      {
+      [this](const ActionGoalRequest::SharedPtr request, ActionGoalResponse::SharedPtr response) {
         response->stamp = clock.now();
         response->accepted = (request->goal.order >= 0);
         if (response->accepted) {
@@ -99,15 +95,13 @@ protected:
     allocator.deallocate(goal_service_name, allocator.state);
 
     char * result_service_name = nullptr;
-    ret = rcl_action_get_result_service_name(
-      action_name, allocator, &result_service_name);
+    ret = rcl_action_get_result_service_name(action_name, allocator, &result_service_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     result_service = server_node->create_service<ActionGoalResultService>(
       result_service_name,
       [this](
         const ActionGoalResultRequest::SharedPtr request,
-        ActionGoalResultResponse::SharedPtr response)
-      {
+        ActionGoalResultResponse::SharedPtr response) {
         if (goals.count(request->goal_id.uuid) == 1) {
           auto goal_request = goals[request->goal_id.uuid].first;
           auto goal_response = goals[request->goal_id.uuid].second;
@@ -130,8 +124,7 @@ protected:
             client_executor.spin_once();
             for (int i = 1; i < goal_request->goal.order; ++i) {
               feedback_message.feedback.sequence.push_back(
-                feedback_message.feedback.sequence[i] +
-                feedback_message.feedback.sequence[i - 1]);
+                feedback_message.feedback.sequence[i] + feedback_message.feedback.sequence[i - 1]);
               feedback_publisher->publish(feedback_message);
               client_executor.spin_once();
             }
@@ -151,30 +144,27 @@ protected:
     allocator.deallocate(result_service_name, allocator.state);
 
     char * cancel_service_name = nullptr;
-    ret = rcl_action_get_cancel_service_name(
-      action_name, allocator, &cancel_service_name);
+    ret = rcl_action_get_cancel_service_name(action_name, allocator, &cancel_service_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     cancel_service = server_node->create_service<ActionCancelGoalService>(
       cancel_service_name,
       [this](
         const ActionCancelGoalRequest::SharedPtr request,
-        ActionCancelGoalResponse::SharedPtr response)
-      {
+        ActionCancelGoalResponse::SharedPtr response) {
         rclcpp_action::GoalUUID zero_uuid;
         std::fill(zero_uuid.begin(), zero_uuid.end(), 0u);
         const rclcpp::Time cancel_stamp = request->goal_info.stamp;
-        bool cancel_all = (
-          request->goal_info.goal_id.uuid == zero_uuid &&
-          cancel_stamp == zero_stamp);
+        bool cancel_all =
+          (request->goal_info.goal_id.uuid == zero_uuid && cancel_stamp == zero_stamp);
         ActionStatusMessage status_message;
         auto it = goals.begin();
         while (it != goals.end()) {
           auto goal_request = it->second.first;
           auto goal_response = it->second.second;
           const rclcpp::Time goal_stamp = goal_response->stamp;
-          bool cancel_this = (
-            request->goal_info.goal_id.uuid == goal_request->goal_id.uuid ||
-            cancel_stamp > goal_stamp);
+          bool cancel_this =
+            (request->goal_info.goal_id.uuid == goal_request->goal_id.uuid ||
+             cancel_stamp > goal_stamp);
           if (cancel_all || cancel_this) {
             rclcpp_action::GoalStatus goal_status;
             goal_status.goal_info.goal_id.uuid = goal_request->goal_id.uuid;
@@ -194,8 +184,7 @@ protected:
     allocator.deallocate(cancel_service_name, allocator.state);
 
     char * feedback_topic_name = nullptr;
-    ret = rcl_action_get_feedback_topic_name(
-      action_name, allocator, &feedback_topic_name);
+    ret = rcl_action_get_feedback_topic_name(action_name, allocator, &feedback_topic_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     feedback_publisher =
       server_node->create_publisher<ActionFeedbackMessage>(feedback_topic_name, 10);
@@ -203,8 +192,7 @@ protected:
     allocator.deallocate(feedback_topic_name, allocator.state);
 
     char * status_topic_name = nullptr;
-    ret = rcl_action_get_status_topic_name(
-      action_name, allocator, &status_topic_name);
+    ret = rcl_action_get_status_topic_name(action_name, allocator, &status_topic_name);
     ASSERT_EQ(RCL_RET_OK, ret);
     status_publisher = server_node->create_publisher<ActionStatusMessage>(
       status_topic_name, rclcpp_action::DefaultActionStatusQoS());
@@ -255,9 +243,8 @@ protected:
 
   std::map<
     rclcpp_action::GoalUUID,
-    std::pair<
-      typename ActionGoalRequest::SharedPtr,
-      typename ActionGoalResponse::SharedPtr>> goals;
+    std::pair<typename ActionGoalRequest::SharedPtr, typename ActionGoalResponse::SharedPtr>>
+    goals;
   typename rclcpp::Service<ActionGoalRequestService>::SharedPtr goal_service;
   typename rclcpp::Service<ActionGoalResultService>::SharedPtr result_service;
   typename rclcpp::Service<ActionCancelGoalService>::SharedPtr cancel_service;
@@ -325,9 +312,8 @@ TEST_F(TestClient, async_send_goal_with_goal_response_callback_wait_for_result)
   bool goal_response_received = false;
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.goal_response_callback =
-    [&goal_response_received]
-      (std::shared_future<typename ActionGoalHandle::SharedPtr> future) mutable
-    {
+    [&goal_response_received](
+      std::shared_future<typename ActionGoalHandle::SharedPtr> future) mutable {
       auto goal_handle = future.get();
       if (goal_handle) {
         goal_response_received = true;
@@ -360,9 +346,8 @@ TEST_F(TestClient, async_send_goal_with_feedback_callback_wait_for_result)
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.feedback_callback =
     [&feedback_count](
-    typename ActionGoalHandle::SharedPtr goal_handle,
-    const std::shared_ptr<const ActionFeedback> feedback) mutable
-    {
+      typename ActionGoalHandle::SharedPtr goal_handle,
+      const std::shared_ptr<const ActionFeedback> feedback) mutable {
       (void)goal_handle;
       (void)feedback;
       feedback_count++;
@@ -393,13 +378,10 @@ TEST_F(TestClient, async_send_goal_with_result_callback_wait_for_result)
   bool result_callback_received = false;
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.result_callback =
-    [&result_callback_received](
-    const typename ActionGoalHandle::WrappedResult & result) mutable
-    {
+    [&result_callback_received](const typename ActionGoalHandle::WrappedResult & result) mutable {
       if (
         rclcpp_action::ResultCode::SUCCEEDED == result.code &&
-        result.result->sequence.size() == 5u)
-      {
+        result.result->sequence.size() == 5u) {
         result_callback_received = true;
       }
     };
@@ -435,13 +417,10 @@ TEST_F(TestClient, async_get_result_with_callback)
   bool result_callback_received = false;
   auto future_result = action_client->async_get_result(
     goal_handle,
-    [&result_callback_received](
-      const typename ActionGoalHandle::WrappedResult & result) mutable
-    {
+    [&result_callback_received](const typename ActionGoalHandle::WrappedResult & result) mutable {
       if (
         rclcpp_action::ResultCode::SUCCEEDED == result.code &&
-        result.result->sequence.size() == 5u)
-      {
+        result.result->sequence.size() == 5u) {
         result_callback_received = true;
       }
     });
@@ -486,14 +465,11 @@ TEST_F(TestClient, async_cancel_one_goal_with_callback)
   bool cancel_response_received = false;
   auto future_cancel = action_client->async_cancel_goal(
     goal_handle,
-    [&cancel_response_received, goal_handle](
-      ActionCancelGoalResponse::SharedPtr response) mutable
-    {
+    [&cancel_response_received, goal_handle](ActionCancelGoalResponse::SharedPtr response) mutable {
       if (
         ActionCancelGoalResponse::ERROR_NONE == response->return_code &&
         1ul == response->goals_canceling.size() &&
-        goal_handle->get_goal_id() == response->goals_canceling[0].goal_id.uuid)
-      {
+        goal_handle->get_goal_id() == response->goals_canceling[0].goal_id.uuid) {
         cancel_response_received = true;
       }
     });
@@ -566,16 +542,13 @@ TEST_F(TestClient, async_cancel_all_goals_with_callback)
   ASSERT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock.get_clock_handle(), RCL_S_TO_NS(3)));
 
   bool cancel_callback_received = false;
-  auto future_cancel_all = action_client->async_cancel_all_goals(
-    [&cancel_callback_received, goal_handle0, goal_handle1](
-      ActionCancelGoalResponse::SharedPtr response)
-    {
+  auto future_cancel_all =
+    action_client->async_cancel_all_goals([&cancel_callback_received, goal_handle0, goal_handle1](
+                                            ActionCancelGoalResponse::SharedPtr response) {
       if (
-        response &&
-        2ul == response->goals_canceling.size() &&
+        response && 2ul == response->goals_canceling.size() &&
         goal_handle0->get_goal_id() == response->goals_canceling[0].goal_id.uuid &&
-        goal_handle1->get_goal_id() == response->goals_canceling[1].goal_id.uuid)
-      {
+        goal_handle1->get_goal_id() == response->goals_canceling[1].goal_id.uuid) {
         cancel_callback_received = true;
       }
     });
@@ -645,13 +618,10 @@ TEST_F(TestClient, async_cancel_some_goals_with_callback)
   bool cancel_callback_received = false;
   auto future_cancel_some = action_client->async_cancel_goals_before(
     goal_handle1->get_goal_stamp(),
-    [&cancel_callback_received, goal_handle0](ActionCancelGoalResponse::SharedPtr response)
-    {
+    [&cancel_callback_received, goal_handle0](ActionCancelGoalResponse::SharedPtr response) {
       if (
-        response &&
-        1ul == response->goals_canceling.size() &&
-        goal_handle0->get_goal_id() == response->goals_canceling[0].goal_id.uuid)
-      {
+        response && 1ul == response->goals_canceling.size() &&
+        goal_handle0->get_goal_id() == response->goals_canceling[0].goal_id.uuid) {
         cancel_callback_received = true;
       }
     });

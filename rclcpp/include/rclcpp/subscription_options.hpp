@@ -48,18 +48,20 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   /// Optional custom allocator.
   std::shared_ptr<Allocator> allocator = nullptr;
 
-  SubscriptionOptionsWithAllocator<Allocator>() {}
+  SubscriptionOptionsWithAllocator<Allocator>()
+  {
+  }
 
   /// Constructor using base class as input.
   explicit SubscriptionOptionsWithAllocator(
     const SubscriptionOptionsBase & subscription_options_base)
   : SubscriptionOptionsBase(subscription_options_base)
-  {}
+  {
+  }
 
   /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
   template<typename MessageT>
-  rcl_subscription_options_t
-  to_rcl_subscription_options(const rclcpp::QoS & qos) const
+  rcl_subscription_options_t to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
     rcl_subscription_options_t result;
     using AllocatorTraits = std::allocator_traits<Allocator>;

@@ -37,9 +37,7 @@ public:
   /**
    * \param[in] options Additional options used in the construction of the component.
    */
-  virtual
-  NodeInstanceWrapper
-  create_node_instance(const rclcpp::NodeOptions & options) = 0;
+  virtual NodeInstanceWrapper create_node_instance(const rclcpp::NodeOptions & options) = 0;
 };
 }  // namespace rclcpp_components
 

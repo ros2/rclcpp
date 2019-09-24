@@ -14,21 +14,25 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
-TEST(TestUtilities, remove_ros_arguments) {
-  const char * const argv[] = {
-    "process_name",
-    "-d", "--ros-args",
-    "-r", "__ns:=/foo/bar",
-    "-r", "__ns:=/fiz/buz",
-    "--", "--foo=bar", "--baz"
-  };
+TEST(TestUtilities, remove_ros_arguments)
+{
+  const char * const argv[] = {"process_name",
+                               "-d",
+                               "--ros-args",
+                               "-r",
+                               "__ns:=/foo/bar",
+                               "-r",
+                               "__ns:=/fiz/buz",
+                               "--",
+                               "--foo=bar",
+                               "--baz"};
   int argc = sizeof(argv) / sizeof(const char *);
   auto args = rclcpp::remove_ros_arguments(argc, argv);
 
@@ -39,16 +43,15 @@ TEST(TestUtilities, remove_ros_arguments) {
   ASSERT_EQ(std::string{"--baz"}, args[3]);
 }
 
-TEST(TestUtilities, remove_ros_arguments_null) {
+TEST(TestUtilities, remove_ros_arguments_null)
+{
   // In the case of a C executable, we would expect to get
   // argc=1 and argv = ["process_name"], so this is an invalid input.
-  ASSERT_THROW(
-  {
-    rclcpp::remove_ros_arguments(0, nullptr);
-  }, rclcpp::exceptions::RCLErrorBase);
+  ASSERT_THROW({ rclcpp::remove_ros_arguments(0, nullptr); }, rclcpp::exceptions::RCLErrorBase);
 }
 
-TEST(TestUtilities, init_with_args) {
+TEST(TestUtilities, init_with_args)
+{
   const char * const argv[] = {"process_name"};
   int argc = sizeof(argv) / sizeof(const char *);
   auto other_args = rclcpp::init_and_remove_ros_arguments(argc, argv);
@@ -60,7 +63,8 @@ TEST(TestUtilities, init_with_args) {
   rclcpp::shutdown();
 }
 
-TEST(TestUtilities, multi_init) {
+TEST(TestUtilities, multi_init)
+{
   auto context1 = std::make_shared<rclcpp::contexts::default_context::DefaultContext>();
   auto context2 = std::make_shared<rclcpp::contexts::default_context::DefaultContext>();
 

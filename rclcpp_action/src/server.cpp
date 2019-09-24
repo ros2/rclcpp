@@ -27,18 +27,15 @@
 #include <unordered_map>
 #include <vector>
 
-using rclcpp_action::ServerBase;
 using rclcpp_action::GoalUUID;
+using rclcpp_action::ServerBase;
 
 namespace rclcpp_action
 {
 class ServerBaseImpl
 {
 public:
-  ServerBaseImpl(
-    rclcpp::Clock::SharedPtr clock,
-    rclcpp::Logger logger
-  )
+  ServerBaseImpl(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger)
   : clock_(clock), logger_(logger)
   {
   }
@@ -78,23 +75,20 @@ ServerBase::ServerBase(
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
   const std::string & name,
   const rosidl_action_type_support_t * type_support,
-  const rcl_action_server_options_t & options
-)
+  const rcl_action_server_options_t & options)
 : pimpl_(new ServerBaseImpl(
-      node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
+    node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
 {
-  auto deleter = [node_base](rcl_action_server_t * ptr)
-    {
-      if (nullptr != ptr) {
-        rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
-        rcl_ret_t ret = rcl_action_server_fini(ptr, rcl_node);
-        (void)ret;
-        RCLCPP_DEBUG(
-          rclcpp::get_logger("rclcpp_action"),
-          "failed to fini rcl_action_server_t in deleter");
-      }
-      delete ptr;
-    };
+  auto deleter = [node_base](rcl_action_server_t * ptr) {
+    if (nullptr != ptr) {
+      rcl_node_t * rcl_node = node_base->get_rcl_node_handle();
+      rcl_ret_t ret = rcl_action_server_fini(ptr, rcl_node);
+      (void)ret;
+      RCLCPP_DEBUG(
+        rclcpp::get_logger("rclcpp_action"), "failed to fini rcl_action_server_t in deleter");
+    }
+    delete ptr;
+  };
 
   pimpl_->action_server_.reset(new rcl_action_server_t, deleter);
   *(pimpl_->action_server_) = rcl_action_get_zero_initialized_server();
@@ -126,47 +120,40 @@ ServerBase::~ServerBase()
 {
 }
 
-size_t
-ServerBase::get_number_of_ready_subscriptions()
+size_t ServerBase::get_number_of_ready_subscriptions()
 {
   return pimpl_->num_subscriptions_;
 }
 
-size_t
-ServerBase::get_number_of_ready_timers()
+size_t ServerBase::get_number_of_ready_timers()
 {
   return pimpl_->num_timers_;
 }
 
-size_t
-ServerBase::get_number_of_ready_clients()
+size_t ServerBase::get_number_of_ready_clients()
 {
   return pimpl_->num_clients_;
 }
 
-size_t
-ServerBase::get_number_of_ready_services()
+size_t ServerBase::get_number_of_ready_services()
 {
   return pimpl_->num_services_;
 }
 
-size_t
-ServerBase::get_number_of_ready_guard_conditions()
+size_t ServerBase::get_number_of_ready_guard_conditions()
 {
   return pimpl_->num_guard_conditions_;
 }
 
-bool
-ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
+bool ServerBase::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
-  rcl_ret_t ret = rcl_action_wait_set_add_action_server(
-    wait_set, pimpl_->action_server_.get(), NULL);
+  rcl_ret_t ret =
+    rcl_action_wait_set_add_action_server(wait_set, pimpl_->action_server_.get(), NULL);
   return RCL_RET_OK == ret;
 }
 
-bool
-ServerBase::is_ready(rcl_wait_set_t * wait_set)
+bool ServerBase::is_ready(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
   rcl_ret_t ret = rcl_action_server_wait_set_get_entities_ready(
@@ -181,14 +168,11 @@ ServerBase::is_ready(rcl_wait_set_t * wait_set)
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  return pimpl_->goal_request_ready_ ||
-         pimpl_->cancel_request_ready_ ||
-         pimpl_->result_request_ready_ ||
-         pimpl_->goal_expired_;
+  return pimpl_->goal_request_ready_ || pimpl_->cancel_request_ready_ ||
+         pimpl_->result_request_ready_ || pimpl_->goal_expired_;
 }
 
-void
-ServerBase::execute()
+void ServerBase::execute()
 {
   if (pimpl_->goal_request_ready_) {
     execute_goal_request_received();
@@ -203,8 +187,7 @@ ServerBase::execute()
   }
 }
 
-void
-ServerBase::execute_goal_request_received()
+void ServerBase::execute_goal_request_received()
 {
   rcl_ret_t ret;
   rcl_action_goal_info_t goal_info = rcl_action_get_zero_initialized_goal_info();
@@ -213,10 +196,7 @@ ServerBase::execute_goal_request_received()
   std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
 
   std::shared_ptr<void> message = create_goal_request();
-  ret = rcl_action_take_goal_request(
-    pimpl_->action_server_.get(),
-    &request_header,
-    message.get());
+  ret = rcl_action_take_goal_request(pimpl_->action_server_.get(), &request_header, message.get());
 
   pimpl_->goal_request_ready_ = false;
 
@@ -236,9 +216,7 @@ ServerBase::execute_goal_request_received()
   auto response_pair = call_handle_goal_callback(uuid, message);
 
   ret = rcl_action_send_goal_response(
-    pimpl_->action_server_.get(),
-    &request_header,
-    response_pair.second.get());
+    pimpl_->action_server_.get(), &request_header, response_pair.second.get());
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -250,17 +228,16 @@ ServerBase::execute_goal_request_received()
   if (GoalResponse::ACCEPT_AND_EXECUTE == status || GoalResponse::ACCEPT_AND_DEFER == status) {
     RCLCPP_DEBUG(pimpl_->logger_, "Accepted goal %s", to_string(uuid).c_str());
     // rcl_action will set time stamp
-    auto deleter = [](rcl_action_goal_handle_t * ptr)
-      {
-        if (nullptr != ptr) {
-          rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
-          (void)fail_ret;
-          RCLCPP_DEBUG(
-            rclcpp::get_logger("rclcpp_action"),
-            "failed to fini rcl_action_goal_handle_t in deleter");
-          delete ptr;
-        }
-      };
+    auto deleter = [](rcl_action_goal_handle_t * ptr) {
+      if (nullptr != ptr) {
+        rcl_ret_t fail_ret = rcl_action_goal_handle_fini(ptr);
+        (void)fail_ret;
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("rclcpp_action"),
+          "failed to fini rcl_action_goal_handle_t in deleter");
+        delete ptr;
+      }
+    };
     rcl_action_goal_handle_t * rcl_handle;
     rcl_handle = rcl_action_accept_new_goal(pimpl_->action_server_.get(), &goal_info);
     if (!rcl_handle) {
@@ -288,8 +265,7 @@ ServerBase::execute_goal_request_received()
   }
 }
 
-void
-ServerBase::execute_cancel_request_received()
+void ServerBase::execute_cancel_request_received()
 {
   rcl_ret_t ret;
   rmw_request_id_t request_header;
@@ -298,10 +274,8 @@ ServerBase::execute_cancel_request_received()
   auto request = std::make_shared<action_msgs::srv::CancelGoal::Request>();
 
   std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
-  ret = rcl_action_take_cancel_request(
-    pimpl_->action_server_.get(),
-    &request_header,
-    request.get());
+  ret =
+    rcl_action_take_cancel_request(pimpl_->action_server_.get(), &request_header, request.get());
 
   pimpl_->cancel_request_ready_ = false;
 
@@ -324,15 +298,12 @@ ServerBase::execute_cancel_request_received()
   rcl_action_cancel_response_t cancel_response = rcl_action_get_zero_initialized_cancel_response();
 
   ret = rcl_action_process_cancel_request(
-    pimpl_->action_server_.get(),
-    &cancel_request,
-    &cancel_response);
+    pimpl_->action_server_.get(), &cancel_request, &cancel_response);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  RCLCPP_SCOPE_EXIT(
-  {
+  RCLCPP_SCOPE_EXIT({
     ret = rcl_action_cancel_response_fini(&cancel_response);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(pimpl_->logger_, "Failed to fini cancel response");
@@ -369,15 +340,14 @@ ServerBase::execute_cancel_request_received()
     publish_status();
   }
 
-  ret = rcl_action_send_cancel_response(
-    pimpl_->action_server_.get(), &request_header, response.get());
+  ret =
+    rcl_action_send_cancel_response(pimpl_->action_server_.get(), &request_header, response.get());
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
 
-void
-ServerBase::execute_result_request_received()
+void ServerBase::execute_result_request_received()
 {
   rcl_ret_t ret;
   // Get the result request message
@@ -430,8 +400,7 @@ ServerBase::execute_result_request_received()
   }
 }
 
-void
-ServerBase::execute_check_expired_goals()
+void ServerBase::execute_check_expired_goals()
 {
   // Allocate expecting only one goal to expire at a time
   rcl_action_goal_info_t expired_goals[1];
@@ -456,16 +425,14 @@ ServerBase::execute_check_expired_goals()
   }
 }
 
-void
-ServerBase::publish_status()
+void ServerBase::publish_status()
 {
   rcl_ret_t ret;
 
   // Get all goal handles known to C action server
   rcl_action_goal_handle_t ** goal_handles = NULL;
   size_t num_goals = 0;
-  ret = rcl_action_server_get_goal_handles(
-    pimpl_->action_server_.get(), &goal_handles, &num_goals);
+  ret = rcl_action_server_get_goal_handles(pimpl_->action_server_.get(), &goal_handles, &num_goals);
 
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -481,8 +448,7 @@ ServerBase::publish_status()
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
-  RCLCPP_SCOPE_EXIT(
-  {
+  RCLCPP_SCOPE_EXIT({
     ret = rcl_action_goal_status_array_fini(&c_status_array);
     if (RCL_RET_OK != ret) {
       RCLCPP_ERROR(pimpl_->logger_, "Failed to fini status array message");
@@ -510,8 +476,7 @@ ServerBase::publish_status()
   }
 }
 
-void
-ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_msg)
+void ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_msg)
 {
   // Check that the goal exists
   rcl_action_goal_info_t goal_info;
@@ -539,8 +504,7 @@ ServerBase::publish_result(const GoalUUID & uuid, std::shared_ptr<void> result_m
   }
 }
 
-void
-ServerBase::notify_goal_terminal_state()
+void ServerBase::notify_goal_terminal_state()
 {
   std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
   rcl_ret_t ret = rcl_action_notify_goal_done(pimpl_->action_server_.get());
@@ -549,8 +513,7 @@ ServerBase::notify_goal_terminal_state()
   }
 }
 
-void
-ServerBase::publish_feedback(std::shared_ptr<void> feedback_msg)
+void ServerBase::publish_feedback(std::shared_ptr<void> feedback_msg)
 {
   std::lock_guard<std::recursive_mutex> lock(pimpl_->reentrant_mutex_);
   rcl_ret_t ret = rcl_action_publish_feedback(pimpl_->action_server_.get(), feedback_msg.get());

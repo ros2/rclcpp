@@ -39,14 +39,12 @@ template<
   typename AllocatorT = std::allocator<void>,
   typename PublisherT = ::rclcpp::Publisher<MessageT, AllocatorT>,
   typename NodeT>
-std::shared_ptr<PublisherT>
-create_publisher(
+std::shared_ptr<PublisherT> create_publisher(
   NodeT & node,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
-  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
-    rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
-))
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options =
+    (rclcpp::PublisherOptionsWithAllocator<AllocatorT>()))
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(node);
@@ -76,12 +74,9 @@ create_publisher(
   auto pub = node_topics->create_publisher(
     topic_name,
     rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(
-      options.event_callbacks,
-      allocator
-    ),
+      options.event_callbacks, allocator),
     options.template to_rcl_publisher_options<MessageT>(qos),
-    use_intra_process
-  );
+    use_intra_process);
   node_topics->add_publisher(pub, options.callback_group);
   return std::dynamic_pointer_cast<PublisherT>(pub);
 }

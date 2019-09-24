@@ -63,8 +63,7 @@ GraphListener::~GraphListener()
   this->shutdown(std::nothrow);
 }
 
-void
-GraphListener::start_if_not_started()
+void GraphListener::start_if_not_started()
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
   if (is_shutdown_.load()) {
@@ -89,22 +88,20 @@ GraphListener::start_if_not_started()
     // This is important to ensure that the wait set is finalized before
     // destruction of static objects occurs.
     std::weak_ptr<GraphListener> weak_this = shared_from_this();
-    rclcpp::on_shutdown(
-      [weak_this]() {
-        auto shared_this = weak_this.lock();
-        if (shared_this) {
-          // should not throw from on_shutdown if it can be avoided
-          shared_this->shutdown(std::nothrow);
-        }
-      });
+    rclcpp::on_shutdown([weak_this]() {
+      auto shared_this = weak_this.lock();
+      if (shared_this) {
+        // should not throw from on_shutdown if it can be avoided
+        shared_this->shutdown(std::nothrow);
+      }
+    });
     // Start the listener thread.
     listener_thread_ = std::thread(&GraphListener::run, this);
     is_started_ = true;
   }
 }
 
-void
-GraphListener::run()
+void GraphListener::run()
 {
   try {
     run_loop();
@@ -116,15 +113,12 @@ GraphListener::run()
       exc.what());
     std::rethrow_exception(std::current_exception());
   } catch (...) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "unknown error in GraphListener thread");
+    RCUTILS_LOG_ERROR_NAMED("rclcpp", "unknown error in GraphListener thread");
     std::rethrow_exception(std::current_exception());
   }
 }
 
-void
-GraphListener::run_loop()
+void GraphListener::run_loop()
 {
   while (true) {
     // If shutdown() was called, exit.
@@ -217,8 +211,7 @@ GraphListener::run_loop()
   }  // while (true)
 }
 
-static void
-interrupt_(rcl_guard_condition_t * interrupt_guard_condition)
+static void interrupt_(rcl_guard_condition_t * interrupt_guard_condition)
 {
   rcl_ret_t ret = rcl_trigger_guard_condition(interrupt_guard_condition);
   if (RCL_RET_OK != ret) {
@@ -226,8 +219,7 @@ interrupt_(rcl_guard_condition_t * interrupt_guard_condition)
   }
 }
 
-static void
-acquire_nodes_lock_(
+static void acquire_nodes_lock_(
   std::mutex * node_graph_interfaces_barrier_mutex,
   std::mutex * node_graph_interfaces_mutex,
   rcl_guard_condition_t * interrupt_guard_condition)
@@ -242,8 +234,7 @@ acquire_nodes_lock_(
   }
 }
 
-static bool
-has_node_(
+static bool has_node_(
   std::vector<rclcpp::node_interfaces::NodeGraphInterface *> * node_graph_interfaces,
   rclcpp::node_interfaces::NodeGraphInterface * node_graph)
 {
@@ -255,8 +246,7 @@ has_node_(
   return false;
 }
 
-bool
-GraphListener::has_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph)
+bool GraphListener::has_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph)
 {
   if (!node_graph) {
     return false;
@@ -272,8 +262,7 @@ GraphListener::has_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph
   return has_node_(&node_graph_interfaces_, node_graph);
 }
 
-void
-GraphListener::add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph)
+void GraphListener::add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph)
 {
   if (!node_graph) {
     throw std::invalid_argument("node is nullptr");
@@ -299,8 +288,7 @@ GraphListener::add_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph
   // will evaluate the new node when nodes_lock releases the node_graph_interfaces_mutex_.
 }
 
-static void
-remove_node_(
+static void remove_node_(
   std::vector<rclcpp::node_interfaces::NodeGraphInterface *> * node_graph_interfaces,
   rclcpp::node_interfaces::NodeGraphInterface * node_graph)
 {
@@ -317,8 +305,7 @@ remove_node_(
   throw NodeNotFoundError();
 }
 
-void
-GraphListener::remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph)
+void GraphListener::remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_graph)
 {
   if (!node_graph) {
     throw std::invalid_argument("node is nullptr");
@@ -340,8 +327,7 @@ GraphListener::remove_node(rclcpp::node_interfaces::NodeGraphInterface * node_gr
   remove_node_(&node_graph_interfaces_, node_graph);
 }
 
-void
-GraphListener::__shutdown(bool should_throw)
+void GraphListener::__shutdown(bool should_throw)
 {
   std::lock_guard<std::mutex> shutdown_lock(shutdown_mutex_);
   if (!is_shutdown_.exchange(true)) {
@@ -371,14 +357,12 @@ GraphListener::__shutdown(bool should_throw)
   }
 }
 
-void
-GraphListener::shutdown()
+void GraphListener::shutdown()
 {
   this->__shutdown(true);
 }
 
-void
-GraphListener::shutdown(const std::nothrow_t &) noexcept
+void GraphListener::shutdown(const std::nothrow_t &) noexcept
 {
   try {
     this->__shutdown(false);
@@ -386,16 +370,15 @@ GraphListener::shutdown(const std::nothrow_t &) noexcept
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"),
       "caught %s exception when shutting down GraphListener: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+      rmw::impl::cpp::demangle(exc).c_str(),
+      exc.what());
   } catch (...) {
     RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp"),
-      "caught unknown exception when shutting down GraphListener");
+      rclcpp::get_logger("rclcpp"), "caught unknown exception when shutting down GraphListener");
   }
 }
 
-bool
-GraphListener::is_shutdown()
+bool GraphListener::is_shutdown()
 {
   return is_shutdown_.load();
 }

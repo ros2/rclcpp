@@ -48,7 +48,7 @@ public:
  */
 template<typename MessageT, typename Alloc = std::allocator<void>>
 class LifecyclePublisher : public LifecyclePublisherInterface,
-  public rclcpp::Publisher<MessageT, Alloc>
+                           public rclcpp::Publisher<MessageT, Alloc>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(LifecyclePublisher)
@@ -71,7 +71,9 @@ public:
   {
   }
 
-  ~LifecyclePublisher() {}
+  ~LifecyclePublisher()
+  {
+  }
 
   /// LifecyclePublisher publish function
   /**
@@ -79,8 +81,7 @@ public:
    * was enabled or disabled and forwards the message
    * to the actual rclcpp Publisher base class
    */
-  virtual void
-  publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  virtual void publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(
@@ -99,8 +100,7 @@ public:
    * was enabled or disabled and forwards the message
    * to the actual rclcpp Publisher base class
    */
-  virtual void
-  publish(const MessageT & msg)
+  virtual void publish(const MessageT & msg)
   {
     if (!enabled_) {
       RCLCPP_WARN(
@@ -113,20 +113,17 @@ public:
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
 
-  virtual void
-  on_activate()
+  virtual void on_activate()
   {
     enabled_ = true;
   }
 
-  virtual void
-  on_deactivate()
+  virtual void on_deactivate()
   {
     enabled_ = false;
   }
 
-  virtual bool
-  is_activated()
+  virtual bool is_activated()
   {
     return enabled_;
   }

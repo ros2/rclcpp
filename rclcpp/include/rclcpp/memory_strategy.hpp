@@ -64,83 +64,52 @@ public:
 
   virtual void remove_guard_condition(const rcl_guard_condition_t * guard_condition) = 0;
 
-  virtual void
-  get_next_subscription(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes) = 0;
+  virtual void get_next_subscription(
+    rclcpp::executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) = 0;
 
-  virtual void
-  get_next_service(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes) = 0;
+  virtual void get_next_service(
+    rclcpp::executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) = 0;
 
-  virtual void
-  get_next_client(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes) = 0;
+  virtual void get_next_client(
+    rclcpp::executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) = 0;
 
-  virtual void
-  get_next_timer(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes) = 0;
+  virtual void get_next_timer(
+    rclcpp::executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) = 0;
 
-  virtual void
-  get_next_waitable(
-    rclcpp::executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes) = 0;
+  virtual void get_next_waitable(
+    rclcpp::executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) = 0;
 
-  virtual rcl_allocator_t
-  get_allocator() = 0;
+  virtual rcl_allocator_t get_allocator() = 0;
 
-  static rclcpp::SubscriptionBase::SharedPtr
-  get_subscription_by_handle(
-    std::shared_ptr<const rcl_subscription_t> subscriber_handle,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::SubscriptionBase::SharedPtr get_subscription_by_handle(
+    std::shared_ptr<const rcl_subscription_t> subscriber_handle, const WeakNodeList & weak_nodes);
 
-  static rclcpp::ServiceBase::SharedPtr
-  get_service_by_handle(
-    std::shared_ptr<const rcl_service_t> service_handle,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::ServiceBase::SharedPtr get_service_by_handle(
+    std::shared_ptr<const rcl_service_t> service_handle, const WeakNodeList & weak_nodes);
 
-  static rclcpp::ClientBase::SharedPtr
-  get_client_by_handle(
-    std::shared_ptr<const rcl_client_t> client_handle,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::ClientBase::SharedPtr get_client_by_handle(
+    std::shared_ptr<const rcl_client_t> client_handle, const WeakNodeList & weak_nodes);
 
-  static rclcpp::TimerBase::SharedPtr
-  get_timer_by_handle(
-    std::shared_ptr<const rcl_timer_t> timer_handle,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::TimerBase::SharedPtr get_timer_by_handle(
+    std::shared_ptr<const rcl_timer_t> timer_handle, const WeakNodeList & weak_nodes);
 
-  static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_by_group(
-    rclcpp::callback_group::CallbackGroup::SharedPtr group,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::node_interfaces::NodeBaseInterface::SharedPtr get_node_by_group(
+    rclcpp::callback_group::CallbackGroup::SharedPtr group, const WeakNodeList & weak_nodes);
 
-  static rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_subscription(
-    rclcpp::SubscriptionBase::SharedPtr subscription,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::callback_group::CallbackGroup::SharedPtr get_group_by_subscription(
+    rclcpp::SubscriptionBase::SharedPtr subscription, const WeakNodeList & weak_nodes);
 
-  static rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_service(
-    rclcpp::ServiceBase::SharedPtr service,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::callback_group::CallbackGroup::SharedPtr get_group_by_service(
+    rclcpp::ServiceBase::SharedPtr service, const WeakNodeList & weak_nodes);
 
-  static rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_client(
-    rclcpp::ClientBase::SharedPtr client,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::callback_group::CallbackGroup::SharedPtr get_group_by_client(
+    rclcpp::ClientBase::SharedPtr client, const WeakNodeList & weak_nodes);
 
-  static rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_timer(
-    rclcpp::TimerBase::SharedPtr timer,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::callback_group::CallbackGroup::SharedPtr get_group_by_timer(
+    rclcpp::TimerBase::SharedPtr timer, const WeakNodeList & weak_nodes);
 
-  static rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_group_by_waitable(
-    rclcpp::Waitable::SharedPtr waitable,
-    const WeakNodeList & weak_nodes);
+  static rclcpp::callback_group::CallbackGroup::SharedPtr get_group_by_waitable(
+    rclcpp::Waitable::SharedPtr waitable, const WeakNodeList & weak_nodes);
 };
 
 }  // namespace memory_strategy

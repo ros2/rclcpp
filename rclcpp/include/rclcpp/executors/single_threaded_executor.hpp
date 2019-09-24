@@ -26,8 +26,8 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/rate.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -44,8 +44,7 @@ public:
 
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
-  SingleThreadedExecutor(
-    const executor::ExecutorArgs & args = executor::ExecutorArgs());
+  SingleThreadedExecutor(const executor::ExecutorArgs & args = executor::ExecutorArgs());
 
   /// Default destrcutor.
   RCLCPP_PUBLIC
@@ -55,8 +54,7 @@ public:
   // This function will block until work comes in, execute it, and keep blocking.
   // It will only be interrupt by a CTRL-C (managed by the global signal handler).
   RCLCPP_PUBLIC
-  void
-  spin();
+  void spin();
 
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)

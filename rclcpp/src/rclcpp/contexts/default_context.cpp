@@ -17,10 +17,10 @@
 using rclcpp::contexts::default_context::DefaultContext;
 
 DefaultContext::DefaultContext()
-{}
+{
+}
 
-DefaultContext::SharedPtr
-rclcpp::contexts::default_context::get_global_default_context()
+DefaultContext::SharedPtr rclcpp::contexts::default_context::get_global_default_context()
 {
   static DefaultContext::SharedPtr default_context = DefaultContext::make_shared();
   return default_context;

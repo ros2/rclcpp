@@ -59,8 +59,7 @@ class Logger;
  * \return a dummy logger if logging is disabled.
  */
 RCLCPP_PUBLIC
-Logger
-get_logger(const std::string & name);
+Logger get_logger(const std::string & name);
 
 /// Return a named logger using an rcl_node_t.
 /**
@@ -71,8 +70,7 @@ get_logger(const std::string & name);
  * \return a logger based on the node name, or "rclcpp" if there's an error
  */
 RCLCPP_PUBLIC
-Logger
-get_node_logger(const rcl_node_t * node);
+Logger get_node_logger(const rcl_node_t * node);
 
 class Logger
 {
@@ -85,15 +83,17 @@ private:
    * This is used when logging is disabled: see `RCLCPP_LOGGING_ENABLED`.
    * This cannot be called directly, see `rclcpp::get_logger` instead.
    */
-  Logger()
-  : name_(nullptr) {}
+  Logger() : name_(nullptr)
+  {
+  }
 
   /// Constructor of a named logger.
   /**
    * This cannot be called directly, see `rclcpp::get_logger` instead.
    */
-  explicit Logger(const std::string & name)
-  : name_(new std::string(name)) {}
+  explicit Logger(const std::string & name) : name_(new std::string(name))
+  {
+  }
 
   std::shared_ptr<const std::string> name_;
 
@@ -108,8 +108,7 @@ public:
    *   disabled).
    */
   RCLCPP_PUBLIC
-  const char *
-  get_name() const
+  const char * get_name() const
   {
     if (!name_) {
       return nullptr;
@@ -130,8 +129,7 @@ public:
    *   disabled).
    */
   RCLCPP_PUBLIC
-  Logger
-  get_child(const std::string & suffix)
+  Logger get_child(const std::string & suffix)
   {
     if (!name_) {
       return Logger();

@@ -30,10 +30,10 @@ protected:
   }
 };
 
-TEST_F(TestStateMachineInfo, available_states) {
+TEST_F(TestStateMachineInfo, available_states)
+{
   auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
-  std::vector<rclcpp_lifecycle::State> available_states =
-    test_node->get_available_states();
+  std::vector<rclcpp_lifecycle::State> available_states = test_node->get_available_states();
   EXPECT_EQ(11u, available_states.size());
 
   // Primary States
@@ -44,15 +44,16 @@ TEST_F(TestStateMachineInfo, available_states) {
   EXPECT_EQ(4, available_states[4].id());  // finalized
 
   // Transition States
-  EXPECT_EQ(10, available_states[5].id());  // configuring
-  EXPECT_EQ(11, available_states[6].id());  // cleaningup
-  EXPECT_EQ(12, available_states[7].id());  // shuttingdown
-  EXPECT_EQ(13, available_states[8].id());  // activating
-  EXPECT_EQ(14, available_states[9].id());  // deactivating
+  EXPECT_EQ(10, available_states[5].id());   // configuring
+  EXPECT_EQ(11, available_states[6].id());   // cleaningup
+  EXPECT_EQ(12, available_states[7].id());   // shuttingdown
+  EXPECT_EQ(13, available_states[8].id());   // activating
+  EXPECT_EQ(14, available_states[9].id());   // deactivating
   EXPECT_EQ(15, available_states[10].id());  // errorprocessing
 }
 
-TEST_F(TestStateMachineInfo, available_transitions) {
+TEST_F(TestStateMachineInfo, available_transitions)
+{
   auto test_node = std::make_shared<rclcpp_lifecycle::LifecycleNode>("testnode");
   std::vector<rclcpp_lifecycle::Transition> available_transitions =
     test_node->get_available_transitions();
@@ -62,14 +63,12 @@ TEST_F(TestStateMachineInfo, available_transitions) {
 
     EXPECT_TRUE(
       transition.start_state().id() <= 4 ||
-      (transition.start_state().id() >= 10 &&
-      (transition.start_state().id() <= 15)));
+      (transition.start_state().id() >= 10 && (transition.start_state().id() <= 15)));
     EXPECT_FALSE(transition.start_state().label().empty());
 
     EXPECT_TRUE(
       transition.goal_state().id() <= 4 ||
-      (transition.goal_state().id() >= 10 &&
-      (transition.goal_state().id() <= 15)));
+      (transition.goal_state().id() >= 10 && (transition.goal_state().id() <= 15)));
     EXPECT_FALSE(transition.goal_state().label().empty());
   }
 }

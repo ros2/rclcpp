@@ -34,8 +34,9 @@ namespace exceptions
 class InvalidNodeError : public std::runtime_error
 {
 public:
-  InvalidNodeError()
-  : std::runtime_error("node is invalid") {}
+  InvalidNodeError() : std::runtime_error("node is invalid")
+  {
+  }
 };
 
 /// Thrown when a any kind of name (node, namespace, topic, etc.) is invalid.
@@ -43,20 +44,17 @@ class NameValidationError : public std::invalid_argument
 {
 public:
   NameValidationError(
-    const char * name_type_,
-    const char * name_,
-    const char * error_msg_,
-    size_t invalid_index_)
+    const char * name_type_, const char * name_, const char * error_msg_, size_t invalid_index_)
   : std::invalid_argument(format_error(name_type_, name_, error_msg_, invalid_index_)),
-    name_type(name_type_), name(name_), error_msg(error_msg_), invalid_index(invalid_index_)
-  {}
+    name_type(name_type_),
+    name(name_),
+    error_msg(error_msg_),
+    invalid_index(invalid_index_)
+  {
+  }
 
-  static std::string
-  format_error(
-    const char * name_type,
-    const char * name,
-    const char * error_msg,
-    size_t invalid_index);
+  static std::string format_error(
+    const char * name_type, const char * name, const char * error_msg, size_t invalid_index);
 
   const std::string name_type;
   const std::string name;
@@ -70,7 +68,8 @@ class InvalidNodeNameError : public NameValidationError
 public:
   InvalidNodeNameError(const char * node_name, const char * error_msg, size_t invalid_index)
   : NameValidationError("node name", node_name, error_msg, invalid_index)
-  {}
+  {
+  }
 };
 
 /// Thrown when a node namespace is invalid.
@@ -79,7 +78,8 @@ class InvalidNamespaceError : public NameValidationError
 public:
   InvalidNamespaceError(const char * namespace_, const char * error_msg, size_t invalid_index)
   : NameValidationError("namespace", namespace_, error_msg, invalid_index)
-  {}
+  {
+  }
 };
 
 /// Thrown when a topic name is invalid.
@@ -88,7 +88,8 @@ class InvalidTopicNameError : public NameValidationError
 public:
   InvalidTopicNameError(const char * namespace_, const char * error_msg, size_t invalid_index)
   : NameValidationError("topic name", namespace_, error_msg, invalid_index)
-  {}
+  {
+  }
 };
 
 /// Thrown when a service name is invalid.
@@ -97,7 +98,8 @@ class InvalidServiceNameError : public NameValidationError
 public:
   InvalidServiceNameError(const char * namespace_, const char * error_msg, size_t invalid_index)
   : NameValidationError("service name", namespace_, error_msg, invalid_index)
-  {}
+  {
+  }
 };
 
 /// Throw a C++ std::exception which was created based on an rcl error.
@@ -115,12 +117,11 @@ public:
  */
 /* *INDENT-OFF* */  // Uncrustify cannot yet understand [[noreturn]] properly
 RCLCPP_PUBLIC
-void
-throw_from_rcl_error [[noreturn]] (
+void throw_from_rcl_error[[noreturn]](
   rcl_ret_t ret,
   const std::string & prefix = "",
   const rcl_error_state_t * error_state = nullptr,
-  void (* reset_error)() = rcl_reset_error);
+  void (*reset_error)() = rcl_reset_error);
 /* *INDENT-ON* */
 
 class RCLErrorBase
@@ -128,7 +129,9 @@ class RCLErrorBase
 public:
   RCLCPP_PUBLIC
   RCLErrorBase(rcl_ret_t ret, const rcl_error_state_t * error_state);
-  virtual ~RCLErrorBase() {}
+  virtual ~RCLErrorBase()
+  {
+  }
 
   rcl_ret_t ret;
   std::string message;
@@ -163,9 +166,7 @@ class RCLInvalidArgument : public RCLErrorBase, public std::invalid_argument
 public:
   RCLCPP_PUBLIC
   RCLInvalidArgument(
-    rcl_ret_t ret,
-    const rcl_error_state_t * error_state,
-    const std::string & prefix);
+    rcl_ret_t ret, const rcl_error_state_t * error_state, const std::string & prefix);
   RCLCPP_PUBLIC
   RCLInvalidArgument(const RCLErrorBase & base_exc, const std::string & prefix);
 };
@@ -199,16 +200,18 @@ public:
 class InvalidEventError : public std::runtime_error
 {
 public:
-  InvalidEventError()
-  : std::runtime_error("event is invalid") {}
+  InvalidEventError() : std::runtime_error("event is invalid")
+  {
+  }
 };
 
 /// Thrown when an unregistered rclcpp::Event is encountered where a registered one was expected.
 class EventNotRegisteredError : public std::runtime_error
 {
 public:
-  EventNotRegisteredError()
-  : std::runtime_error("event already registered") {}
+  EventNotRegisteredError() : std::runtime_error("event already registered")
+  {
+  }
 };
 
 /// Thrown if passed parameters are inconsistent or invalid

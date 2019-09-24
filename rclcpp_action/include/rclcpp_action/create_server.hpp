@@ -54,8 +54,7 @@ namespace rclcpp_action
  *   If `nullptr`, then the action server is added to the default callback group.
  */
 template<typename ActionT>
-typename Server<ActionT>::SharedPtr
-create_server(
+typename Server<ActionT>::SharedPtr create_server(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
   rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
@@ -72,32 +71,32 @@ create_server(
   std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
   bool group_is_null = (nullptr == group.get());
 
-  auto deleter = [weak_node, weak_group, group_is_null](Server<ActionT> * ptr)
-    {
-      if (nullptr == ptr) {
-        return;
-      }
-      auto shared_node = weak_node.lock();
-      if (!shared_node) {
-        return;
-      }
-      // API expects a shared pointer, give it one with a deleter that does nothing.
-      std::shared_ptr<Server<ActionT>> fake_shared_ptr(ptr, [](Server<ActionT> *) {});
+  auto deleter = [weak_node, weak_group, group_is_null](Server<ActionT> * ptr) {
+    if (nullptr == ptr) {
+      return;
+    }
+    auto shared_node = weak_node.lock();
+    if (!shared_node) {
+      return;
+    }
+    // API expects a shared pointer, give it one with a deleter that does nothing.
+    std::shared_ptr<Server<ActionT>> fake_shared_ptr(ptr, [](Server<ActionT> *) {});
 
-      if (group_is_null) {
-        // Was added to default group
-        shared_node->remove_waitable(fake_shared_ptr, nullptr);
-      } else {
-        // Was added to a specfic group
-        auto shared_group = weak_group.lock();
-        if (shared_group) {
-          shared_node->remove_waitable(fake_shared_ptr, shared_group);
-        }
+    if (group_is_null) {
+      // Was added to default group
+      shared_node->remove_waitable(fake_shared_ptr, nullptr);
+    } else {
+      // Was added to a specfic group
+      auto shared_group = weak_group.lock();
+      if (shared_group) {
+        shared_node->remove_waitable(fake_shared_ptr, shared_group);
       }
-      delete ptr;
-    };
+    }
+    delete ptr;
+  };
 
-  std::shared_ptr<Server<ActionT>> action_server(new Server<ActionT>(
+  std::shared_ptr<Server<ActionT>> action_server(
+    new Server<ActionT>(
       node_base_interface,
       node_clock_interface,
       node_logging_interface,
@@ -105,7 +104,8 @@ create_server(
       options,
       handle_goal,
       handle_cancel,
-      handle_accepted), deleter);
+      handle_accepted),
+    deleter);
 
   node_waitables_interface->add_waitable(action_server, group);
   return action_server;
@@ -129,8 +129,7 @@ create_server(
  *   If `nullptr`, then the action server is added to the default callback group.
  */
 template<typename ActionT>
-typename Server<ActionT>::SharedPtr
-create_server(
+typename Server<ActionT>::SharedPtr create_server(
   rclcpp::Node::SharedPtr node,
   const std::string & name,
   typename Server<ActionT>::GoalCallback handle_goal,

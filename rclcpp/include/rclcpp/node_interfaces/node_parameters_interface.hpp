@@ -38,9 +38,7 @@ struct OnSetParametersCallbackHandle
   RCLCPP_SMART_PTR_DEFINITIONS(OnSetParametersCallbackHandle)
 
   using OnParametersSetCallbackType =
-    std::function<
-    rcl_interfaces::msg::SetParametersResult(
-      const std::vector<rclcpp::Parameter> &)>;
+    std::function<rcl_interfaces::msg::SetParametersResult(const std::vector<rclcpp::Parameter> &)>;
 
   OnParametersSetCallbackType callback;
 };
@@ -52,21 +50,18 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeParametersInterface)
 
   RCLCPP_PUBLIC
-  virtual
-  ~NodeParametersInterface() = default;
+  virtual ~NodeParametersInterface() = default;
 
   /// Declare and initialize a parameter.
   /**
    * \sa rclcpp::Node::declare_parameter
    */
   RCLCPP_PUBLIC
-  virtual
-  const rclcpp::ParameterValue &
-  declare_parameter(
+  virtual const rclcpp::ParameterValue & declare_parameter(
     const std::string & name,
     const rclcpp::ParameterValue & default_value = rclcpp::ParameterValue(),
     const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor =
-    rcl_interfaces::msg::ParameterDescriptor(),
+      rcl_interfaces::msg::ParameterDescriptor(),
     bool ignore_override = false) = 0;
 
   /// Undeclare a parameter.
@@ -74,36 +69,29 @@ public:
    * \sa rclcpp::Node::undeclare_parameter
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  undeclare_parameter(const std::string & name) = 0;
+  virtual void undeclare_parameter(const std::string & name) = 0;
 
   /// Return true if the parameter has been declared, otherwise false.
   /**
    * \sa rclcpp::Node::has_parameter
    */
   RCLCPP_PUBLIC
-  virtual
-  bool
-  has_parameter(const std::string & name) const = 0;
+  virtual bool has_parameter(const std::string & name) const = 0;
 
   /// Set one or more parameters, one at a time.
   /**
    * \sa rclcpp::Node::set_parameters
    */
   RCLCPP_PUBLIC
-  virtual
-  std::vector<rcl_interfaces::msg::SetParametersResult>
-  set_parameters(const std::vector<rclcpp::Parameter> & parameters) = 0;
+  virtual std::vector<rcl_interfaces::msg::SetParametersResult> set_parameters(
+    const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Set and initialize a parameter, all at once.
   /**
    * \sa rclcpp::Node::set_parameters_atomically
    */
   RCLCPP_PUBLIC
-  virtual
-  rcl_interfaces::msg::SetParametersResult
-  set_parameters_atomically(
+  virtual rcl_interfaces::msg::SetParametersResult set_parameters_atomically(
     const std::vector<rclcpp::Parameter> & parameters) = 0;
 
   /// Get descriptions of parameters given their names.
@@ -113,9 +101,8 @@ public:
    * Any parameter not found is omitted from the returned list.
    */
   RCLCPP_PUBLIC
-  virtual
-  std::vector<rclcpp::Parameter>
-  get_parameters(const std::vector<std::string> & names) const = 0;
+  virtual std::vector<rclcpp::Parameter> get_parameters(
+    const std::vector<std::string> & names) const = 0;
 
   /// Get the description of one parameter given a name.
   /*
@@ -124,9 +111,7 @@ public:
    * \throws std::out_of_range if the parameter does not exist on the node.
    */
   RCLCPP_PUBLIC
-  virtual
-  rclcpp::Parameter
-  get_parameter(const std::string & name) const = 0;
+  virtual rclcpp::Parameter get_parameter(const std::string & name) const = 0;
 
   /// Get the description of one parameter given a name.
   /*
@@ -136,11 +121,7 @@ public:
    * \return false if the parameter does not exist.
    */
   RCLCPP_PUBLIC
-  virtual
-  bool
-  get_parameter(
-    const std::string & name,
-    rclcpp::Parameter & parameter) const = 0;
+  virtual bool get_parameter(const std::string & name, rclcpp::Parameter & parameter) const = 0;
 
   /// Get all parameters that have the specified prefix into the parameters map.
   /*
@@ -150,26 +131,20 @@ public:
    * \return false otherwise.
    */
   RCLCPP_PUBLIC
-  virtual
-  bool
-  get_parameters_by_prefix(
-    const std::string & prefix,
-    std::map<std::string, rclcpp::Parameter> & parameters) const = 0;
+  virtual bool get_parameters_by_prefix(
+    const std::string & prefix, std::map<std::string, rclcpp::Parameter> & parameters) const = 0;
 
   RCLCPP_PUBLIC
-  virtual
-  std::vector<rcl_interfaces::msg::ParameterDescriptor>
-  describe_parameters(const std::vector<std::string> & names) const = 0;
+  virtual std::vector<rcl_interfaces::msg::ParameterDescriptor> describe_parameters(
+    const std::vector<std::string> & names) const = 0;
 
   RCLCPP_PUBLIC
-  virtual
-  std::vector<uint8_t>
-  get_parameter_types(const std::vector<std::string> & names) const = 0;
+  virtual std::vector<uint8_t> get_parameter_types(
+    const std::vector<std::string> & names) const = 0;
 
   RCLCPP_PUBLIC
-  virtual
-  rcl_interfaces::msg::ListParametersResult
-  list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
+  virtual rcl_interfaces::msg::ListParametersResult list_parameters(
+    const std::vector<std::string> & prefixes, uint64_t depth) const = 0;
 
   using OnParametersSetCallbackType = OnSetParametersCallbackHandle::OnParametersSetCallbackType;
 
@@ -178,33 +153,28 @@ public:
    * \sa rclcpp::Node::add_on_set_parameters_callback
    */
   RCLCPP_PUBLIC
-  virtual
-  OnSetParametersCallbackHandle::SharedPtr
-  add_on_set_parameters_callback(OnParametersSetCallbackType callback) = 0;
+  virtual OnSetParametersCallbackHandle::SharedPtr add_on_set_parameters_callback(
+    OnParametersSetCallbackType callback) = 0;
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
   /**
    * \sa rclcpp::Node::remove_on_set_parameters_callback
    */
   RCLCPP_PUBLIC
-  virtual
-  void
-  remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) = 0;
+  virtual void remove_on_set_parameters_callback(
+    const OnSetParametersCallbackHandle * const handler) = 0;
 
   /// Register a callback for when parameters are being set, return an existing one.
   /**
    * \sa rclcpp::Node::set_on_parameters_set_callback
    */
   RCLCPP_PUBLIC
-  virtual
-  OnParametersSetCallbackType
-  set_on_parameters_set_callback(OnParametersSetCallbackType callback) = 0;
+  virtual OnParametersSetCallbackType set_on_parameters_set_callback(
+    OnParametersSetCallbackType callback) = 0;
 
   /// Return the initial parameter values used by the NodeParameters to override default values.
   RCLCPP_PUBLIC
-  virtual
-  const std::map<std::string, rclcpp::ParameterValue> &
-  get_parameter_overrides() const = 0;
+  virtual const std::map<std::string, rclcpp::ParameterValue> & get_parameter_overrides() const = 0;
 };
 
 }  // namespace node_interfaces

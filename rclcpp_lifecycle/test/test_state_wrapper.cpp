@@ -28,7 +28,8 @@ protected:
   }
 };
 
-TEST_F(TestStateWrapper, wrapper) {
+TEST_F(TestStateWrapper, wrapper)
+{
   {
     rclcpp_lifecycle::State state(1, "my_state");
     EXPECT_EQ(1, state.id());
@@ -60,8 +61,7 @@ TEST_F(TestStateWrapper, wrapper) {
   }
 
   {
-    rcl_lifecycle_state_t * lc_state =
-      new rcl_lifecycle_state_t {"my_c_state", 3, NULL, 0};
+    rcl_lifecycle_state_t * lc_state = new rcl_lifecycle_state_t{"my_c_state", 3, NULL, 0};
     rclcpp_lifecycle::State c_state(lc_state->id, lc_state->label);
     EXPECT_EQ(3, c_state.id());
     EXPECT_FALSE(c_state.label().empty());
@@ -83,7 +83,8 @@ TEST_F(TestStateWrapper, wrapper) {
   // }
 }
 
-TEST_F(TestStateWrapper, copy_constructor) {
+TEST_F(TestStateWrapper, copy_constructor)
+{
   auto a = std::make_shared<rclcpp_lifecycle::State>(1, "my_c_state");
   rclcpp_lifecycle::State b(*a);
 
@@ -93,7 +94,8 @@ TEST_F(TestStateWrapper, copy_constructor) {
   EXPECT_STREQ("my_c_state", b.label().c_str());
 }
 
-TEST_F(TestStateWrapper, assignment_operator) {
+TEST_F(TestStateWrapper, assignment_operator)
+{
   auto a = std::make_shared<rclcpp_lifecycle::State>(1, "one");
   auto b = std::make_shared<rclcpp_lifecycle::State>(2, "two");
   *b = *a;
@@ -104,15 +106,14 @@ TEST_F(TestStateWrapper, assignment_operator) {
   EXPECT_STREQ("one", b->label().c_str());
 }
 
-TEST_F(TestStateWrapper, assignment_operator2) {
+TEST_F(TestStateWrapper, assignment_operator2)
+{
   // Non-owning State
-  rcl_lifecycle_state_t * lc_state1 =
-    new rcl_lifecycle_state_t{"my_c_state1", 1, NULL, 0};
+  rcl_lifecycle_state_t * lc_state1 = new rcl_lifecycle_state_t{"my_c_state1", 1, NULL, 0};
   auto non_owning_state1 = std::make_shared<rclcpp_lifecycle::State>(lc_state1);
 
   // Non-owning State
-  rcl_lifecycle_state_t * lc_state2 =
-    new rcl_lifecycle_state_t{"my_c_state2", 2, NULL, 0};
+  rcl_lifecycle_state_t * lc_state2 = new rcl_lifecycle_state_t{"my_c_state2", 2, NULL, 0};
   auto non_owning_state2 = std::make_shared<rclcpp_lifecycle::State>(lc_state2);
 
   *non_owning_state2 = *non_owning_state1;
@@ -127,10 +128,10 @@ TEST_F(TestStateWrapper, assignment_operator2) {
   delete lc_state2;
 }
 
-TEST_F(TestStateWrapper, assignment_operator3) {
+TEST_F(TestStateWrapper, assignment_operator3)
+{
   // Non-owning State
-  rcl_lifecycle_state_t * lc_state1 =
-    new rcl_lifecycle_state_t{"my_c_state1", 1, NULL, 0};
+  rcl_lifecycle_state_t * lc_state1 = new rcl_lifecycle_state_t{"my_c_state1", 1, NULL, 0};
   auto non_owning_state1 = std::make_shared<rclcpp_lifecycle::State>(lc_state1);
 
   // owning State
@@ -147,10 +148,10 @@ TEST_F(TestStateWrapper, assignment_operator3) {
   delete lc_state1;
 }
 
-TEST_F(TestStateWrapper, assignment_operator4) {
+TEST_F(TestStateWrapper, assignment_operator4)
+{
   // Non-owning State
-  rcl_lifecycle_state_t * lc_state1 =
-    new rcl_lifecycle_state_t{"my_c_state1", 1, NULL, 0};
+  rcl_lifecycle_state_t * lc_state1 = new rcl_lifecycle_state_t{"my_c_state1", 1, NULL, 0};
   auto non_owning_state1 = std::make_shared<rclcpp_lifecycle::State>(lc_state1);
 
   // owning State

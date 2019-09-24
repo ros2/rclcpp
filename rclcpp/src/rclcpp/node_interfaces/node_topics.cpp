@@ -16,8 +16,8 @@
 
 #include <string>
 
-#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/intra_process_manager.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
@@ -25,21 +25,22 @@ using rclcpp::node_interfaces::NodeTopics;
 
 NodeTopics::NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base)
-{}
+{
+}
 
 NodeTopics::~NodeTopics()
-{}
+{
+}
 
-rclcpp::PublisherBase::SharedPtr
-NodeTopics::create_publisher(
+rclcpp::PublisherBase::SharedPtr NodeTopics::create_publisher(
   const std::string & topic_name,
   const rclcpp::PublisherFactory & publisher_factory,
   const rcl_publisher_options_t & publisher_options,
   bool use_intra_process)
 {
   // Create the MessageT specific Publisher using the factory, but store it as PublisherBase.
-  auto publisher = publisher_factory.create_typed_publisher(
-    node_base_, topic_name, publisher_options);
+  auto publisher =
+    publisher_factory.create_typed_publisher(node_base_, topic_name, publisher_options);
 
   // Setup intra process publishing if requested.
   if (use_intra_process) {
@@ -49,25 +50,21 @@ NodeTopics::create_publisher(
     // Register the publisher with the intra process manager.
     if (publisher_options.qos.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
       throw std::invalid_argument(
-              "intraprocess communication is not allowed with keep all history qos policy");
+        "intraprocess communication is not allowed with keep all history qos policy");
     }
     if (publisher_options.qos.depth == 0) {
       throw std::invalid_argument(
-              "intraprocess communication is not allowed with a zero qos history depth value");
+        "intraprocess communication is not allowed with a zero qos history depth value");
     }
     uint64_t intra_process_publisher_id = ipm->add_publisher(publisher);
-    publisher->setup_intra_process(
-      intra_process_publisher_id,
-      ipm,
-      publisher_options);
+    publisher->setup_intra_process(intra_process_publisher_id, ipm, publisher_options);
   }
 
   // Return the completed publisher.
   return publisher;
 }
 
-void
-NodeTopics::add_publisher(
+void NodeTopics::add_publisher(
   rclcpp::PublisherBase::SharedPtr publisher,
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
 {
@@ -89,27 +86,25 @@ NodeTopics::add_publisher(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Failed to notify wait set on publisher creation: ") +
-              rmw_get_error_string().str);
+        std::string("Failed to notify wait set on publisher creation: ") +
+        rmw_get_error_string().str);
     }
   }
 }
 
-rclcpp::SubscriptionBase::SharedPtr
-NodeTopics::create_subscription(
+rclcpp::SubscriptionBase::SharedPtr NodeTopics::create_subscription(
   const std::string & topic_name,
   const rclcpp::SubscriptionFactory & subscription_factory,
   const rcl_subscription_options_t & subscription_options,
   bool use_intra_process)
 {
-  auto subscription = subscription_factory.create_typed_subscription(
-    node_base_, topic_name, subscription_options);
+  auto subscription =
+    subscription_factory.create_typed_subscription(node_base_, topic_name, subscription_options);
 
   // Setup intra process publishing if requested.
   if (use_intra_process) {
     auto context = node_base_->get_context();
-    auto ipm =
-      context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+    auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
     uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
     auto options_copy = subscription_options;
     options_copy.ignore_local_publications = false;
@@ -120,8 +115,7 @@ NodeTopics::create_subscription(
   return subscription;
 }
 
-void
-NodeTopics::add_subscription(
+void NodeTopics::add_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription,
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
 {
@@ -145,15 +139,13 @@ NodeTopics::add_subscription(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Failed to notify wait set on subscription creation: ") +
-              rmw_get_error_string().str
-      );
+        std::string("Failed to notify wait set on subscription creation: ") +
+        rmw_get_error_string().str);
     }
   }
 }
 
-rclcpp::node_interfaces::NodeBaseInterface *
-NodeTopics::get_node_base_interface() const
+rclcpp::node_interfaces::NodeBaseInterface * NodeTopics::get_node_base_interface() const
 {
   return node_base_;
 }

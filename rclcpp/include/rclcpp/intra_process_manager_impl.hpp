@@ -51,11 +51,9 @@ public:
   IntraProcessManagerImplBase() = default;
   virtual ~IntraProcessManagerImplBase() = default;
 
-  virtual void
-  add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription) = 0;
+  virtual void add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription) = 0;
 
-  virtual void
-  remove_subscription(uint64_t intra_process_subscription_id) = 0;
+  virtual void remove_subscription(uint64_t intra_process_subscription_id) = 0;
 
   virtual void add_publisher(
     uint64_t id,
@@ -63,29 +61,23 @@ public:
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr mrb,
     size_t size) = 0;
 
-  virtual void
-  remove_publisher(uint64_t intra_process_publisher_id) = 0;
+  virtual void remove_publisher(uint64_t intra_process_publisher_id) = 0;
 
-  virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  get_publisher_info_for_id(
-    uint64_t intra_process_publisher_id,
-    uint64_t & message_seq) = 0;
+  virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr get_publisher_info_for_id(
+    uint64_t intra_process_publisher_id, uint64_t & message_seq) = 0;
 
-  virtual void
-  store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq) = 0;
+  virtual void store_intra_process_message(
+    uint64_t intra_process_publisher_id, uint64_t message_seq) = 0;
 
-  virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  take_intra_process_message(
+  virtual mapped_ring_buffer::MappedRingBufferBase::SharedPtr take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
     size_t & size) = 0;
 
-  virtual bool
-  matches_any_publishers(const rmw_gid_t * id) const = 0;
+  virtual bool matches_any_publishers(const rmw_gid_t * id) const = 0;
 
-  virtual size_t
-  get_subscription_count(uint64_t intra_process_publisher_id) const = 0;
+  virtual size_t get_subscription_count(uint64_t intra_process_publisher_id) const = 0;
 
 private:
   RCLCPP_DISABLE_COPY(IntraProcessManagerImplBase)
@@ -98,15 +90,13 @@ public:
   IntraProcessManagerImpl() = default;
   ~IntraProcessManagerImpl() = default;
 
-  void
-  add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription)
+  void add_subscription(uint64_t id, SubscriptionBase::SharedPtr subscription)
   {
     subscriptions_[id] = subscription;
     subscription_ids_by_topic_[fixed_size_string(subscription->get_topic_name())].insert(id);
   }
 
-  void
-  remove_subscription(uint64_t intra_process_subscription_id)
+  void remove_subscription(uint64_t intra_process_subscription_id)
   {
     subscriptions_.erase(intra_process_subscription_id);
     for (auto & pair : subscription_ids_by_topic_) {
@@ -138,17 +128,14 @@ public:
     publishers_[id].target_subscriptions_by_message_sequence.reserve(size);
   }
 
-  void
-  remove_publisher(uint64_t intra_process_publisher_id)
+  void remove_publisher(uint64_t intra_process_publisher_id)
   {
     publishers_.erase(intra_process_publisher_id);
   }
 
   // return message_seq and mrb
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  get_publisher_info_for_id(
-    uint64_t intra_process_publisher_id,
-    uint64_t & message_seq)
+  mapped_ring_buffer::MappedRingBufferBase::SharedPtr get_publisher_info_for_id(
+    uint64_t intra_process_publisher_id, uint64_t & message_seq)
   {
     std::lock_guard<std::mutex> lock(runtime_mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
@@ -162,8 +149,7 @@ public:
     return info.buffer;
   }
 
-  void
-  store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq)
+  void store_intra_process_message(uint64_t intra_process_publisher_id, uint64_t message_seq)
   {
     std::lock_guard<std::mutex> lock(runtime_mutex_);
     auto it = publishers_.find(intra_process_publisher_id);
@@ -187,23 +173,20 @@ public:
       info.target_subscriptions_by_message_sequence[message_seq].clear();
     }
     std::copy(
-      destined_subscriptions.begin(), destined_subscriptions.end(),
+      destined_subscriptions.begin(),
+      destined_subscriptions.end(),
       // Memory allocation occurs in info.target_subscriptions_by_message_sequence[message_seq]
       std::inserter(
         info.target_subscriptions_by_message_sequence[message_seq],
         // This ends up only being a hint to std::set, could also be .begin().
-        info.target_subscriptions_by_message_sequence[message_seq].end()
-      )
-    );
+        info.target_subscriptions_by_message_sequence[message_seq].end()));
   }
 
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  take_intra_process_message(
+  mapped_ring_buffer::MappedRingBufferBase::SharedPtr take_intra_process_message(
     uint64_t intra_process_publisher_id,
     uint64_t message_sequence_number,
     uint64_t requesting_subscriptions_intra_process_id,
-    size_t & size
-  )
+    size_t & size)
   {
     std::lock_guard<std::mutex> lock(runtime_mutex_);
     PublisherInfo * info;
@@ -227,8 +210,7 @@ public:
     }
     {
       auto it = std::find(
-        target_subs->begin(), target_subs->end(),
-        requesting_subscriptions_intra_process_id);
+        target_subs->begin(), target_subs->end(), requesting_subscriptions_intra_process_id);
       if (it == target_subs->end()) {
         // This publisher id/message seq pair was not intended for this subscription.
         return 0;
@@ -239,8 +221,7 @@ public:
     return info->buffer;
   }
 
-  bool
-  matches_any_publishers(const rmw_gid_t * id) const
+  bool matches_any_publishers(const rmw_gid_t * id) const
   {
     for (auto & publisher_pair : publishers_) {
       auto publisher = publisher_pair.second.publisher.lock();
@@ -254,8 +235,7 @@ public:
     return false;
   }
 
-  size_t
-  get_subscription_count(uint64_t intra_process_publisher_id) const
+  size_t get_subscription_count(uint64_t intra_process_publisher_id) const
   {
     auto publisher_it = publishers_.find(intra_process_publisher_id);
     if (publisher_it == publishers_.end()) {
@@ -280,8 +260,7 @@ private:
 
   using FixedSizeString = std::array<char, RMW_TOPIC_MAX_NAME_LENGTH + 1>;
 
-  FixedSizeString
-  fixed_size_string(const char * str) const
+  FixedSizeString fixed_size_string(const char * str) const
   {
     FixedSizeString ret;
     size_t size = std::strlen(str) + 1;
@@ -293,8 +272,7 @@ private:
   }
   struct strcmp_wrapper
   {
-    bool
-    operator()(const FixedSizeString lhs, const FixedSizeString rhs) const
+    bool operator()(const FixedSizeString lhs, const FixedSizeString rhs) const
     {
       return std::strcmp(lhs.data(), rhs.data()) < 0;
     }
@@ -307,8 +285,10 @@ private:
 
   using AllocSet = std::set<uint64_t, std::less<uint64_t>, RebindAlloc<uint64_t>>;
   using SubscriptionMap = std::unordered_map<
-    uint64_t, SubscriptionBase::WeakPtr,
-    std::hash<uint64_t>, std::equal_to<uint64_t>,
+    uint64_t,
+    SubscriptionBase::WeakPtr,
+    std::hash<uint64_t>,
+    std::equal_to<uint64_t>,
     RebindAlloc<std::pair<const uint64_t, SubscriptionBase::WeakPtr>>>;
 
   using IDTopicMap = std::map<
@@ -332,15 +312,19 @@ private:
     mapped_ring_buffer::MappedRingBufferBase::SharedPtr buffer;
 
     using TargetSubscriptionsMap = std::unordered_map<
-      uint64_t, AllocSet,
-      std::hash<uint64_t>, std::equal_to<uint64_t>,
+      uint64_t,
+      AllocSet,
+      std::hash<uint64_t>,
+      std::equal_to<uint64_t>,
       RebindAlloc<std::pair<const uint64_t, AllocSet>>>;
     TargetSubscriptionsMap target_subscriptions_by_message_sequence;
   };
 
   using PublisherMap = std::unordered_map<
-    uint64_t, PublisherInfo,
-    std::hash<uint64_t>, std::equal_to<uint64_t>,
+    uint64_t,
+    PublisherInfo,
+    std::hash<uint64_t>,
+    std::equal_to<uint64_t>,
     RebindAlloc<std::pair<const uint64_t, PublisherInfo>>>;
 
   PublisherMap publishers_;
@@ -349,8 +333,7 @@ private:
 };
 
 RCLCPP_PUBLIC
-IntraProcessManagerImplBase::SharedPtr
-create_default_impl();
+IntraProcessManagerImplBase::SharedPtr create_default_impl();
 
 }  // namespace intra_process_manager
 }  // namespace rclcpp

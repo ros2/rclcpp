@@ -15,8 +15,8 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -46,8 +46,12 @@ public:
   }
 
 protected:
-  void SetUp() {}
-  void TearDown() {}
+  void SetUp()
+  {
+  }
+  void TearDown()
+  {
+  }
   static std::chrono::milliseconds offset;
 };
 
@@ -61,10 +65,7 @@ void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
 TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
 {
   rclcpp::NodeOptions node_options = GetParam().node_options;
-  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>(
-    "my_node",
-    "/ns",
-    node_options);
+  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("my_node", "/ns", node_options);
   auto subscription = node->create_subscription<IntraProcessMessage>("/topic", 10, &OnMessage);
 
   EXPECT_EQ(subscription->get_publisher_count(), 0u);
@@ -73,12 +74,9 @@ TEST_P(TestSubscriptionPublisherCount, increasing_and_decreasing_counts)
     rclcpp::sleep_for(offset);
     EXPECT_EQ(subscription->get_publisher_count(), 1u);
     {
-      rclcpp::Node::SharedPtr another_node = std::make_shared<rclcpp::Node>(
-        "another_node",
-        "/ns",
-        node_options);
-      auto another_pub =
-        another_node->create_publisher<IntraProcessMessage>("/topic", 10);
+      rclcpp::Node::SharedPtr another_node =
+        std::make_shared<rclcpp::Node>("another_node", "/ns", node_options);
+      auto another_pub = another_node->create_publisher<IntraProcessMessage>("/topic", 10);
 
       rclcpp::sleep_for(offset);
       EXPECT_EQ(subscription->get_publisher_count(), 2u);
@@ -102,19 +100,12 @@ TestParameters parameters[] = {
      Testing subscription publisher count api.
      One context.
    */
-  {
-    rclcpp::NodeOptions(),
-    "one_context_test"
-  },
+  {rclcpp::NodeOptions(), "one_context_test"},
   /*
      Testing subscription publisher count api.
      Two contexts.
    */
-  {
-    rclcpp::NodeOptions().context(get_new_context()),
-    "two_contexts_test"
-  }
-};
+  {rclcpp::NodeOptions().context(get_new_context()), "two_contexts_test"}};
 
 INSTANTIATE_TEST_CASE_P(
   TestWithDifferentNodeOptions,

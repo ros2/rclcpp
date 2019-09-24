@@ -24,8 +24,7 @@ namespace exceptions
 class UnknownGoalHandleError : public std::invalid_argument
 {
 public:
-  UnknownGoalHandleError()
-  : std::invalid_argument("Goal handle is not known to this client.")
+  UnknownGoalHandleError() : std::invalid_argument("Goal handle is not known to this client.")
   {
   }
 };
@@ -33,8 +32,7 @@ public:
 class UnawareGoalHandleError : public std::runtime_error
 {
 public:
-  UnawareGoalHandleError()
-  : std::runtime_error("Goal handle is not tracking the goal result.")
+  UnawareGoalHandleError() : std::runtime_error("Goal handle is not tracking the goal result.")
   {
   }
 };

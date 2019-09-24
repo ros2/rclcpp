@@ -54,9 +54,8 @@ namespace rclcpp
 {
 
 RCLCPP_LOCAL
-inline
-std::string
-extend_name_with_sub_namespace(const std::string & name, const std::string & sub_namespace)
+inline std::string extend_name_with_sub_namespace(
+  const std::string & name, const std::string & sub_namespace)
 {
   std::string name_with_sub_namespace(name);
   if (sub_namespace != "" && name.front() != '/' && name.front() != '~') {
@@ -66,33 +65,24 @@ extend_name_with_sub_namespace(const std::string & name, const std::string & sub
 }
 
 template<typename MessageT, typename AllocatorT, typename PublisherT>
-std::shared_ptr<PublisherT>
-Node::create_publisher(
+std::shared_ptr<PublisherT> Node::create_publisher(
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   const PublisherOptionsWithAllocator<AllocatorT> & options)
 {
   return rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
-    *this,
-    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-    qos,
-    options);
+    *this, extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()), qos, options);
 }
 
-template<
-  typename MessageT,
-  typename CallbackT,
-  typename AllocatorT,
-  typename SubscriptionT>
-std::shared_ptr<SubscriptionT>
-Node::create_subscription(
+template<typename MessageT, typename CallbackT, typename AllocatorT, typename SubscriptionT>
+std::shared_ptr<SubscriptionT> Node::create_subscription(
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   CallbackT && callback,
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type, AllocatorT>::SharedPtr
-  msg_mem_strat)
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+    AllocatorT>::SharedPtr msg_mem_strat)
 {
   return rclcpp::create_subscription<MessageT>(
     *this,
@@ -104,8 +94,7 @@ Node::create_subscription(
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>
-typename rclcpp::WallTimer<CallbackT>::SharedPtr
-Node::create_wall_timer(
+typename rclcpp::WallTimer<CallbackT>::SharedPtr Node::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
@@ -119,8 +108,7 @@ Node::create_wall_timer(
 }
 
 template<typename ServiceT>
-typename Client<ServiceT>::SharedPtr
-Node::create_client(
+typename Client<ServiceT>::SharedPtr Node::create_client(
   const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
@@ -135,8 +123,7 @@ Node::create_client(
 }
 
 template<typename ServiceT, typename CallbackT>
-typename rclcpp::Service<ServiceT>::SharedPtr
-Node::create_service(
+typename rclcpp::Service<ServiceT>::SharedPtr Node::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
@@ -152,24 +139,20 @@ Node::create_service(
 }
 
 template<typename ParameterT>
-auto
-Node::declare_parameter(
+auto Node::declare_parameter(
   const std::string & name,
   const ParameterT & default_value,
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
-  return this->declare_parameter(
-    name,
-    rclcpp::ParameterValue(default_value),
-    parameter_descriptor,
-    ignore_override
-  ).get<ParameterT>();
+  return this
+    ->declare_parameter(
+      name, rclcpp::ParameterValue(default_value), parameter_descriptor, ignore_override)
+    .get<ParameterT>();
 }
 
 template<typename ParameterT>
-std::vector<ParameterT>
-Node::declare_parameters(
+std::vector<ParameterT> Node::declare_parameters(
   const std::string & namespace_,
   const std::map<std::string, ParameterT> & parameters,
   bool ignore_overrides)
@@ -177,48 +160,44 @@ Node::declare_parameters(
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(result),
     [this, &normalized_namespace, ignore_overrides](auto element) {
       return this->declare_parameter(
         normalized_namespace + element.first,
         element.second,
         rcl_interfaces::msg::ParameterDescriptor(),
         ignore_overrides);
-    }
-  );
+    });
   return result;
 }
 
 template<typename ParameterT>
-std::vector<ParameterT>
-Node::declare_parameters(
+std::vector<ParameterT> Node::declare_parameters(
   const std::string & namespace_,
-  const std::map<
-    std::string,
-    std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor>
-  > & parameters,
+  const std::map<std::string, std::pair<ParameterT, rcl_interfaces::msg::ParameterDescriptor> > &
+    parameters,
   bool ignore_overrides)
 {
   std::vector<ParameterT> result;
   std::string normalized_namespace = namespace_.empty() ? "" : (namespace_ + ".");
   std::transform(
-    parameters.begin(), parameters.end(), std::back_inserter(result),
+    parameters.begin(),
+    parameters.end(),
+    std::back_inserter(result),
     [this, &normalized_namespace, ignore_overrides](auto element) {
-      return static_cast<ParameterT>(
-        this->declare_parameter(
-          normalized_namespace + element.first,
-          element.second.first,
-          element.second.second,
-          ignore_overrides)
-      );
-    }
-  );
+      return static_cast<ParameterT>(this->declare_parameter(
+        normalized_namespace + element.first,
+        element.second.first,
+        element.second.second,
+        ignore_overrides));
+    });
   return result;
 }
 
 template<typename ParameterT>
-bool
-Node::get_parameter(const std::string & name, ParameterT & parameter) const
+bool Node::get_parameter(const std::string & name, ParameterT & parameter) const
 {
   std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
 
@@ -233,11 +212,8 @@ Node::get_parameter(const std::string & name, ParameterT & parameter) const
 }
 
 template<typename ParameterT>
-bool
-Node::get_parameter_or(
-  const std::string & name,
-  ParameterT & parameter,
-  const ParameterT & alternative_value) const
+bool Node::get_parameter_or(
+  const std::string & name, ParameterT & parameter, const ParameterT & alternative_value) const
 {
   std::string sub_name = extend_name_with_sub_namespace(name, this->get_sub_namespace());
 
@@ -252,10 +228,8 @@ Node::get_parameter_or(
 // where our concrete type for ParameterT is std::map, but the to-be-determined
 // type is the value in the map.
 template<typename ParameterT>
-bool
-Node::get_parameters(
-  const std::string & prefix,
-  std::map<std::string, ParameterT> & values) const
+bool Node::get_parameters(
+  const std::string & prefix, std::map<std::string, ParameterT> & values) const
 {
   std::map<std::string, rclcpp::Parameter> params;
   bool result = node_parameters_->get_parameters_by_prefix(prefix, params);

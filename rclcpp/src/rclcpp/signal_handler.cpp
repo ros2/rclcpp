@@ -51,14 +51,12 @@ sem_t SignalHandler::signal_handler_sem_;
 // it, because the destructor of SignalHandler uses this logger object.
 static rclcpp::Logger g_logger = rclcpp::get_logger("rclcpp");
 
-rclcpp::Logger &
-SignalHandler::get_logger()
+rclcpp::Logger & SignalHandler::get_logger()
 {
   return g_logger;
 }
 
-SignalHandler &
-SignalHandler::get_global_signal_handler()
+SignalHandler & SignalHandler::get_global_signal_handler()
 {
   // This is initialized after the g_logger static global, ensuring
   // SignalHandler::get_logger() may be called from the destructor of
@@ -80,8 +78,7 @@ SignalHandler::get_global_signal_handler()
   return signal_handler;
 }
 
-bool
-SignalHandler::install()
+bool SignalHandler::install()
 {
   std::lock_guard<std::mutex> lock(install_mutex_);
   bool already_installed = installed_.exchange(true);
@@ -113,8 +110,7 @@ SignalHandler::install()
   return true;
 }
 
-bool
-SignalHandler::uninstall()
+bool SignalHandler::uninstall()
 {
   std::lock_guard<std::mutex> lock(install_mutex_);
   bool installed = installed_.exchange(false);
@@ -137,8 +133,7 @@ SignalHandler::uninstall()
   return true;
 }
 
-bool
-SignalHandler::is_installed()
+bool SignalHandler::is_installed()
 {
   return installed_.load();
 }
@@ -151,7 +146,8 @@ SignalHandler::~SignalHandler()
     RCLCPP_ERROR(
       get_logger(),
       "caught %s exception when uninstalling the sigint handler in rclcpp::~SignalHandler: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+      rmw::impl::cpp::demangle(exc).c_str(),
+      exc.what());
   } catch (...) {
     RCLCPP_ERROR(
       get_logger(),
@@ -160,8 +156,7 @@ SignalHandler::~SignalHandler()
 }
 
 RCLCPP_LOCAL
-void
-__safe_strerror(int errnum, char * buffer, size_t buffer_length)
+void __safe_strerror(int errnum, char * buffer, size_t buffer_length)
 {
 #if defined(_WIN32)
   strerror_s(buffer, buffer_length, errnum);
@@ -181,10 +176,8 @@ __safe_strerror(int errnum, char * buffer, size_t buffer_length)
 #endif
 }
 
-SignalHandler::signal_handler_type
-SignalHandler::set_signal_handler(
-  int signal_value,
-  const SignalHandler::signal_handler_type & signal_handler)
+SignalHandler::signal_handler_type SignalHandler::set_signal_handler(
+  int signal_value, const SignalHandler::signal_handler_type & signal_handler)
 {
   bool signal_handler_install_failed;
   SignalHandler::signal_handler_type old_signal_handler;
@@ -206,19 +199,16 @@ SignalHandler::set_signal_handler(
   return old_signal_handler;
 }
 
-void
-SignalHandler::signal_handler_common()
+void SignalHandler::signal_handler_common()
 {
   signal_received_.store(true);
   RCLCPP_DEBUG(
-    get_logger(),
-    "signal_handler(): SIGINT received, notifying deferred signal handler");
+    get_logger(), "signal_handler(): SIGINT received, notifying deferred signal handler");
   notify_signal_handler();
 }
 
 #if defined(RCLCPP_HAS_SIGACTION)
-void
-SignalHandler::signal_handler(int signal_value, siginfo_t * siginfo, void * context)
+void SignalHandler::signal_handler(int signal_value, siginfo_t * siginfo, void * context)
 {
   RCLCPP_INFO(get_logger(), "signal_handler(signal_value=%d)", signal_value);
 
@@ -228,9 +218,9 @@ SignalHandler::signal_handler(int signal_value, siginfo_t * siginfo, void * cont
     }
   } else {
     if (
-      old_signal_handler_.sa_handler != NULL &&  // Is set
+      old_signal_handler_.sa_handler != NULL &&     // Is set
       old_signal_handler_.sa_handler != SIG_DFL &&  // Is not default
-      old_signal_handler_.sa_handler != SIG_IGN)  // Is not ignored
+      old_signal_handler_.sa_handler != SIG_IGN)    // Is not ignored
     {
       old_signal_handler_.sa_handler(signal_value);
     }
@@ -239,8 +229,7 @@ SignalHandler::signal_handler(int signal_value, siginfo_t * siginfo, void * cont
   signal_handler_common();
 }
 #else
-void
-SignalHandler::signal_handler(int signal_value)
+void SignalHandler::signal_handler(int signal_value)
 {
   RCLCPP_INFO(get_logger(), "signal_handler(signal_value=%d)", signal_value);
 
@@ -252,8 +241,7 @@ SignalHandler::signal_handler(int signal_value)
 }
 #endif
 
-void
-SignalHandler::deferred_signal_handler()
+void SignalHandler::deferred_signal_handler()
 {
   while (true) {
     if (signal_received_.exchange(false)) {
@@ -279,14 +267,13 @@ SignalHandler::deferred_signal_handler()
   }
 }
 
-void
-SignalHandler::setup_wait_for_signal()
+void SignalHandler::setup_wait_for_signal()
 {
 #if defined(_WIN32)
   signal_handler_sem_ = CreateSemaphore(
-    NULL,  // default security attributes
-    0,  // initial semaphore count
-    1,  // maximum semaphore count
+    NULL,   // default security attributes
+    0,      // initial semaphore count
+    1,      // maximum semaphore count
     NULL);  // unnamed semaphore
   if (NULL == signal_handler_sem_) {
     throw std::runtime_error("CreateSemaphore() failed in setup_wait_for_signal()");
@@ -301,8 +288,7 @@ SignalHandler::setup_wait_for_signal()
   wait_for_signal_is_setup_.store(true);
 }
 
-void
-SignalHandler::teardown_wait_for_signal() noexcept
+void SignalHandler::teardown_wait_for_signal() noexcept
 {
   if (!wait_for_signal_is_setup_.exchange(false)) {
     return;
@@ -318,8 +304,7 @@ SignalHandler::teardown_wait_for_signal() noexcept
 #endif
 }
 
-void
-SignalHandler::wait_for_signal()
+void SignalHandler::wait_for_signal()
 {
   if (!wait_for_signal_is_setup_.load()) {
     RCLCPP_ERROR(get_logger(), "called wait_for_signal() before setup_wait_for_signal()");
@@ -330,7 +315,8 @@ SignalHandler::wait_for_signal()
   switch (dw_wait_result) {
     case WAIT_ABANDONED:
       RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() failed in wait_for_signal() with WAIT_ABANDONED: %s",
+        get_logger(),
+        "WaitForSingleObject() failed in wait_for_signal() with WAIT_ABANDONED: %s",
         GetLastError());
       break;
     case WAIT_OBJECT_0:
@@ -345,7 +331,8 @@ SignalHandler::wait_for_signal()
       break;
     default:
       RCLCPP_ERROR(
-        get_logger(), "WaitForSingleObject() gave unknown return in wait_for_signal(): %s",
+        get_logger(),
+        "WaitForSingleObject() gave unknown return in wait_for_signal(): %s",
         GetLastError());
   }
 #elif defined(__APPLE__)
@@ -358,8 +345,7 @@ SignalHandler::wait_for_signal()
 #endif
 }
 
-void
-SignalHandler::notify_signal_handler() noexcept
+void SignalHandler::notify_signal_handler() noexcept
 {
   if (!wait_for_signal_is_setup_.load()) {
     return;

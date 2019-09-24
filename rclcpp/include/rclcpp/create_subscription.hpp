@@ -21,9 +21,9 @@
 
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/subscription_options.hpp"
-#include "rclcpp/qos.hpp"
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
@@ -40,21 +40,18 @@ template<
   typename CallbackT,
   typename AllocatorT = std::allocator<void>,
   typename CallbackMessageT =
-  typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+    typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
   typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>,
   typename NodeT>
-typename std::shared_ptr<SubscriptionT>
-create_subscription(
+typename std::shared_ptr<SubscriptionT> create_subscription(
   NodeT && node,
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   CallbackT && callback,
-  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
-    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
-  ),
-  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<
-    CallbackMessageT, AllocatorT>::SharedPtr
-  msg_mem_strat = nullptr)
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options =
+    (rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()),
+  typename rclcpp::message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::
+    SharedPtr msg_mem_strat = nullptr)
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
@@ -68,9 +65,9 @@ create_subscription(
   if (!allocator) {
     allocator = std::make_shared<AllocatorT>();
   }
-  auto factory = rclcpp::create_subscription_factory
-    <MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
-    std::forward<CallbackT>(callback), options.event_callbacks, msg_mem_strat, allocator);
+  auto factory = rclcpp::
+    create_subscription_factory<MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT>(
+      std::forward<CallbackT>(callback), options.event_callbacks, msg_mem_strat, allocator);
 
   bool use_intra_process;
   switch (options.use_intra_process_comm) {

@@ -126,28 +126,21 @@ public:
 
     subscription_handles_.erase(
       std::remove(subscription_handles_.begin(), subscription_handles_.end(), nullptr),
-      subscription_handles_.end()
-    );
+      subscription_handles_.end());
 
     service_handles_.erase(
       std::remove(service_handles_.begin(), service_handles_.end(), nullptr),
-      service_handles_.end()
-    );
+      service_handles_.end());
 
     client_handles_.erase(
-      std::remove(client_handles_.begin(), client_handles_.end(), nullptr),
-      client_handles_.end()
-    );
+      std::remove(client_handles_.begin(), client_handles_.end(), nullptr), client_handles_.end());
 
     timer_handles_.erase(
-      std::remove(timer_handles_.begin(), timer_handles_.end(), nullptr),
-      timer_handles_.end()
-    );
+      std::remove(timer_handles_.begin(), timer_handles_.end(), nullptr), timer_handles_.end());
 
     waitable_handles_.erase(
       std::remove(waitable_handles_.begin(), waitable_handles_.end(), nullptr),
-      waitable_handles_.end()
-    );
+      waitable_handles_.end());
   }
 
   bool collect_entities(const WeakNodeList & weak_nodes)
@@ -174,21 +167,21 @@ public:
             return false;
           });
         group->find_service_ptrs_if([this](const rclcpp::ServiceBase::SharedPtr & service) {
-            service_handles_.push_back(service->get_service_handle());
-            return false;
-          });
+          service_handles_.push_back(service->get_service_handle());
+          return false;
+        });
         group->find_client_ptrs_if([this](const rclcpp::ClientBase::SharedPtr & client) {
-            client_handles_.push_back(client->get_client_handle());
-            return false;
-          });
+          client_handles_.push_back(client->get_client_handle());
+          return false;
+        });
         group->find_timer_ptrs_if([this](const rclcpp::TimerBase::SharedPtr & timer) {
-            timer_handles_.push_back(timer->get_timer_handle());
-            return false;
-          });
+          timer_handles_.push_back(timer->get_timer_handle());
+          return false;
+        });
         group->find_waitable_ptrs_if([this](const rclcpp::Waitable::SharedPtr & waitable) {
-            waitable_handles_.push_back(waitable);
-            return false;
-          });
+          waitable_handles_.push_back(waitable);
+          return false;
+        });
       }
     }
     return has_invalid_weak_nodes;
@@ -199,8 +192,7 @@ public:
     for (auto subscription : subscription_handles_) {
       if (rcl_wait_set_add_subscription(wait_set, subscription.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add subscription to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add subscription to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -208,8 +200,7 @@ public:
     for (auto client : client_handles_) {
       if (rcl_wait_set_add_client(wait_set, client.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add client to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add client to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -217,8 +208,7 @@ public:
     for (auto service : service_handles_) {
       if (rcl_wait_set_add_service(wait_set, service.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add service to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add service to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -226,8 +216,7 @@ public:
     for (auto timer : timer_handles_) {
       if (rcl_wait_set_add_timer(wait_set, timer.get(), NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add timer to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add timer to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -235,9 +224,7 @@ public:
     for (auto guard_condition : guard_conditions_) {
       if (rcl_wait_set_add_guard_condition(wait_set, guard_condition, NULL) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add guard_condition to wait set: %s",
-          rcl_get_error_string().str);
+          "rclcpp", "Couldn't add guard_condition to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
@@ -245,18 +232,15 @@ public:
     for (auto waitable : waitable_handles_) {
       if (!waitable->add_to_wait_set(wait_set)) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Couldn't add waitable to wait set: %s", rcl_get_error_string().str);
+          "rclcpp", "Couldn't add waitable to wait set: %s", rcl_get_error_string().str);
         return false;
       }
     }
     return true;
   }
 
-  virtual void
-  get_next_subscription(
-    executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes)
+  virtual void get_next_subscription(
+    executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = subscription_handles_.begin();
     while (it != subscription_handles_.end()) {
@@ -297,10 +281,7 @@ public:
     }
   }
 
-  virtual void
-  get_next_service(
-    executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes)
+  virtual void get_next_service(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = service_handles_.begin();
     while (it != service_handles_.end()) {
@@ -332,8 +313,7 @@ public:
     }
   }
 
-  virtual void
-  get_next_client(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
+  virtual void get_next_client(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = client_handles_.begin();
     while (it != client_handles_.end()) {
@@ -365,10 +345,7 @@ public:
     }
   }
 
-  virtual void
-  get_next_timer(
-    executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes)
+  virtual void get_next_timer(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = timer_handles_.begin();
     while (it != timer_handles_.end()) {
@@ -400,8 +377,8 @@ public:
     }
   }
 
-  virtual void
-  get_next_waitable(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
+  virtual void get_next_waitable(
+    executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = waitable_handles_.begin();
     while (it != waitable_handles_.end()) {

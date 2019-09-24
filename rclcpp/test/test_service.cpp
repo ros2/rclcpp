@@ -14,8 +14,8 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -68,31 +68,30 @@ protected:
 /*
    Testing service construction and destruction.
  */
-TEST_F(TestService, construction_and_destruction) {
+TEST_F(TestService, construction_and_destruction)
+{
   using rcl_interfaces::srv::ListParameters;
   auto callback =
-    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
-    };
+    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {};
   {
     auto service = node->create_service<ListParameters>("service", callback);
   }
 
   {
     ASSERT_THROW(
-    {
-      auto service = node->create_service<ListParameters>("invalid_service?", callback);
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      { auto service = node->create_service<ListParameters>("invalid_service?", callback); },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }
 
 /*
    Testing service construction and destruction for subnodes.
  */
-TEST_F(TestServiceSub, construction_and_destruction) {
+TEST_F(TestServiceSub, construction_and_destruction)
+{
   using rcl_interfaces::srv::ListParameters;
   auto callback =
-    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
-    };
+    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {};
   {
     auto service = subnode->create_service<ListParameters>("service", callback);
     EXPECT_STREQ(service->get_service_name(), "/ns/sub_ns/service");
@@ -100,8 +99,7 @@ TEST_F(TestServiceSub, construction_and_destruction) {
 
   {
     ASSERT_THROW(
-    {
-      auto service = node->create_service<ListParameters>("invalid_service?", callback);
-    }, rclcpp::exceptions::InvalidServiceNameError);
+      { auto service = node->create_service<ListParameters>("invalid_service?", callback); },
+      rclcpp::exceptions::InvalidServiceNameError);
   }
 }

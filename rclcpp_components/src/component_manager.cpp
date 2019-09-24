@@ -28,20 +28,15 @@ using namespace std::placeholders;
 namespace rclcpp_components
 {
 
-ComponentManager::ComponentManager(
-  std::weak_ptr<rclcpp::executor::Executor> executor)
-: Node("ComponentManager"),
-  executor_(executor)
+ComponentManager::ComponentManager(std::weak_ptr<rclcpp::executor::Executor> executor)
+: Node("ComponentManager"), executor_(executor)
 {
   loadNode_srv_ = create_service<LoadNode>(
-    "~/_container/load_node",
-    std::bind(&ComponentManager::OnLoadNode, this, _1, _2, _3));
+    "~/_container/load_node", std::bind(&ComponentManager::OnLoadNode, this, _1, _2, _3));
   unloadNode_srv_ = create_service<UnloadNode>(
-    "~/_container/unload_node",
-    std::bind(&ComponentManager::OnUnloadNode, this, _1, _2, _3));
+    "~/_container/unload_node", std::bind(&ComponentManager::OnUnloadNode, this, _1, _2, _3));
   listNodes_srv_ = create_service<ListNodes>(
-    "~/_container/list_nodes",
-    std::bind(&ComponentManager::OnListNodes, this, _1, _2, _3));
+    "~/_container/list_nodes", std::bind(&ComponentManager::OnListNodes, this, _1, _2, _3));
 }
 
 ComponentManager::~ComponentManager()
@@ -56,15 +51,12 @@ ComponentManager::~ComponentManager()
   }
 }
 
-std::vector<ComponentManager::ComponentResource>
-ComponentManager::get_component_resources(const std::string & package_name) const
+std::vector<ComponentManager::ComponentResource> ComponentManager::get_component_resources(
+  const std::string & package_name) const
 {
   std::string content;
   std::string base_path;
-  if (
-    !ament_index_cpp::get_resource(
-      "rclcpp_components", package_name, content, &base_path))
-  {
+  if (!ament_index_cpp::get_resource("rclcpp_components", package_name, content, &base_path)) {
     throw ComponentManagerException("Could not find requested resource in ament index");
   }
 
@@ -85,8 +77,8 @@ ComponentManager::get_component_resources(const std::string & package_name) cons
   return resources;
 }
 
-std::shared_ptr<rclcpp_components::NodeFactory>
-ComponentManager::create_component_factory(const ComponentResource & resource)
+std::shared_ptr<rclcpp_components::NodeFactory> ComponentManager::create_component_factory(
+  const ComponentResource & resource)
 {
   std::string library_path = resource.second;
   std::string class_name = resource.first;
@@ -116,13 +108,12 @@ ComponentManager::create_component_factory(const ComponentResource & resource)
   return {};
 }
 
-void
-ComponentManager::OnLoadNode(
+void ComponentManager::OnLoadNode(
   const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<LoadNode::Request> request,
   std::shared_ptr<LoadNode::Response> response)
 {
-  (void) request_header;
+  (void)request_header;
 
   try {
     auto resources = get_component_resources(request->package_name);
@@ -161,9 +152,9 @@ ComponentManager::OnLoadNode(
       }
 
       auto options = rclcpp::NodeOptions()
-        .use_global_arguments(false)
-        .parameter_overrides(parameters)
-        .arguments(remap_rules);
+                       .use_global_arguments(false)
+                       .parameter_overrides(parameters)
+                       .arguments(remap_rules);
 
       auto node_id = unique_id++;
 
@@ -196,7 +187,8 @@ ComponentManager::OnLoadNode(
       return;
     }
     RCLCPP_ERROR(
-      get_logger(), "Failed to find class with the requested plugin name '%s' in "
+      get_logger(),
+      "Failed to find class with the requested plugin name '%s' in "
       "the loaded library",
       request->plugin_name.c_str());
     response->error_message = "Failed to find class with the requested plugin name.";
@@ -208,13 +200,12 @@ ComponentManager::OnLoadNode(
   }
 }
 
-void
-ComponentManager::OnUnloadNode(
+void ComponentManager::OnUnloadNode(
   const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<UnloadNode::Request> request,
   std::shared_ptr<UnloadNode::Response> response)
 {
-  (void) request_header;
+  (void)request_header;
 
   auto wrapper = node_wrappers_.find(request->unique_id);
 
@@ -233,14 +224,13 @@ ComponentManager::OnUnloadNode(
   }
 }
 
-void
-ComponentManager::OnListNodes(
+void ComponentManager::OnListNodes(
   const std::shared_ptr<rmw_request_id_t> request_header,
   const std::shared_ptr<ListNodes::Request> request,
   std::shared_ptr<ListNodes::Response> response)
 {
-  (void) request_header;
-  (void) request;
+  (void)request_header;
+  (void)request;
 
   for (auto & wrapper : node_wrappers_) {
     response->unique_ids.push_back(wrapper.first);

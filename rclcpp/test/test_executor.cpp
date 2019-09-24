@@ -50,7 +50,8 @@ protected:
 };
 
 // Make sure that executors detach from nodes when destructing
-TEST_F(TestExecutors, detachOnDestruction) {
+TEST_F(TestExecutors, detachOnDestruction)
+{
   {
     rclcpp::executors::SingleThreadedExecutor executor;
     executor.add_node(node);
@@ -62,7 +63,8 @@ TEST_F(TestExecutors, detachOnDestruction) {
 }
 
 // Make sure that the executor can automatically remove expired nodes correctly
-TEST_F(TestExecutors, addTemporaryNode) {
+TEST_F(TestExecutors, addTemporaryNode)
+{
   rclcpp::executors::SingleThreadedExecutor executor;
   executor.add_node(std::make_shared<rclcpp::Node>("temporary_node"));
   EXPECT_NO_THROW(executor.spin_some());

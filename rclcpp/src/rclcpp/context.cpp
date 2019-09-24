@@ -31,8 +31,9 @@ static std::vector<std::weak_ptr<rclcpp::Context>> g_contexts;
 
 using rclcpp::Context;
 
-Context::Context()
-: rcl_context_(nullptr), shutdown_reason_("") {}
+Context::Context() : rcl_context_(nullptr), shutdown_reason_("")
+{
+}
 
 Context::~Context()
 {
@@ -52,8 +53,7 @@ Context::~Context()
 }
 
 RCLCPP_LOCAL
-void
-__delete_context(rcl_context_t * context)
+void __delete_context(rcl_context_t * context)
 {
   if (context) {
     if (rcl_context_is_valid(context)) {
@@ -65,7 +65,8 @@ __delete_context(rcl_context_t * context)
       if (RCL_RET_OK != ret) {
         RCLCPP_ERROR(
           rclcpp::get_logger("rclcpp"),
-          "failed to finalize context: %s", rcl_get_error_string().str);
+          "failed to finalize context: %s",
+          rcl_get_error_string().str);
         rcl_reset_error();
       }
     }
@@ -73,11 +74,7 @@ __delete_context(rcl_context_t * context)
   }
 }
 
-void
-Context::init(
-  int argc,
-  char const * const argv[],
-  const rclcpp::InitOptions & init_options)
+void Context::init(int argc, char const * const argv[], const rclcpp::InitOptions & init_options)
 {
   std::lock_guard<std::recursive_mutex> init_lock(init_mutex_);
   if (this->is_valid()) {
@@ -97,8 +94,7 @@ Context::init(
   g_contexts.push_back(this->shared_from_this());
 }
 
-bool
-Context::is_valid() const
+bool Context::is_valid() const
 {
   // Take a local copy of the shared pointer to avoid it getting nulled under our feet.
   auto local_rcl_context = rcl_context_;
@@ -108,27 +104,23 @@ Context::is_valid() const
   return rcl_context_is_valid(local_rcl_context.get());
 }
 
-const rclcpp::InitOptions &
-Context::get_init_options() const
+const rclcpp::InitOptions & Context::get_init_options() const
 {
   return init_options_;
 }
 
-rclcpp::InitOptions
-Context::get_init_options()
+rclcpp::InitOptions Context::get_init_options()
 {
   return init_options_;
 }
 
-std::string
-Context::shutdown_reason()
+std::string Context::shutdown_reason()
 {
   std::lock_guard<std::recursive_mutex> lock(init_mutex_);
   return shutdown_reason_;
 }
 
-bool
-Context::shutdown(const std::string & reason)
+bool Context::shutdown(const std::string & reason)
 {
   // prevent races
   std::lock_guard<std::recursive_mutex> init_lock(init_mutex_);
@@ -153,7 +145,7 @@ Context::shutdown(const std::string & reason)
   this->interrupt_all_wait_sets();
   // remove self from the global contexts
   std::lock_guard<std::mutex> context_lock(g_contexts_mutex);
-  for (auto it = g_contexts.begin(); it != g_contexts.end(); ) {
+  for (auto it = g_contexts.begin(); it != g_contexts.end();) {
     auto shared_context = it->lock();
     if (shared_context.get() == this) {
       it = g_contexts.erase(it);
@@ -165,33 +157,28 @@ Context::shutdown(const std::string & reason)
   return true;
 }
 
-rclcpp::Context::OnShutdownCallback
-Context::on_shutdown(OnShutdownCallback callback)
+rclcpp::Context::OnShutdownCallback Context::on_shutdown(OnShutdownCallback callback)
 {
   on_shutdown_callbacks_.push_back(callback);
   return callback;
 }
 
-const std::vector<rclcpp::Context::OnShutdownCallback> &
-Context::get_on_shutdown_callbacks() const
+const std::vector<rclcpp::Context::OnShutdownCallback> & Context::get_on_shutdown_callbacks() const
 {
   return on_shutdown_callbacks_;
 }
 
-std::vector<rclcpp::Context::OnShutdownCallback> &
-Context::get_on_shutdown_callbacks()
+std::vector<rclcpp::Context::OnShutdownCallback> & Context::get_on_shutdown_callbacks()
 {
   return on_shutdown_callbacks_;
 }
 
-std::shared_ptr<rcl_context_t>
-Context::get_rcl_context()
+std::shared_ptr<rcl_context_t> Context::get_rcl_context()
 {
   return rcl_context_;
 }
 
-bool
-Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
+bool Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
 {
   std::chrono::nanoseconds time_left = nanoseconds;
   {
@@ -208,14 +195,12 @@ Context::sleep_for(const std::chrono::nanoseconds & nanoseconds)
   return this->is_valid();
 }
 
-void
-Context::interrupt_all_sleep_for()
+void Context::interrupt_all_sleep_for()
 {
   interrupt_condition_variable_.notify_all();
 }
 
-rcl_guard_condition_t *
-Context::get_interrupt_guard_condition(rcl_wait_set_t * wait_set)
+rcl_guard_condition_t * Context::get_interrupt_guard_condition(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(interrupt_guard_cond_handles_mutex_);
   auto kv = interrupt_guard_cond_handles_.find(wait_set);
@@ -233,8 +218,7 @@ Context::get_interrupt_guard_condition(rcl_wait_set_t * wait_set)
   }
 }
 
-void
-Context::release_interrupt_guard_condition(rcl_wait_set_t * wait_set)
+void Context::release_interrupt_guard_condition(rcl_wait_set_t * wait_set)
 {
   std::lock_guard<std::mutex> lock(interrupt_guard_cond_handles_mutex_);
   auto kv = interrupt_guard_cond_handles_.find(wait_set);
@@ -249,10 +233,8 @@ Context::release_interrupt_guard_condition(rcl_wait_set_t * wait_set)
   }
 }
 
-void
-Context::release_interrupt_guard_condition(
-  rcl_wait_set_t * wait_set,
-  const std::nothrow_t &) noexcept
+void Context::release_interrupt_guard_condition(
+  rcl_wait_set_t * wait_set, const std::nothrow_t &) noexcept
 {
   try {
     this->release_interrupt_guard_condition(wait_set);
@@ -260,7 +242,8 @@ Context::release_interrupt_guard_condition(
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"),
       "caught %s exception when releasing interrupt guard condition: %s",
-      rmw::impl::cpp::demangle(exc).c_str(), exc.what());
+      rmw::impl::cpp::demangle(exc).c_str(),
+      exc.what());
   } catch (...) {
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"),
@@ -268,8 +251,7 @@ Context::release_interrupt_guard_condition(
   }
 }
 
-void
-Context::interrupt_all_wait_sets()
+void Context::interrupt_all_wait_sets()
 {
   std::lock_guard<std::mutex> lock(interrupt_guard_cond_handles_mutex_);
   for (auto & kv : interrupt_guard_cond_handles_) {
@@ -283,15 +265,13 @@ Context::interrupt_all_wait_sets()
   }
 }
 
-void
-Context::clean_up()
+void Context::clean_up()
 {
   shutdown_reason_ = "";
   rcl_context_.reset();
 }
 
-std::vector<Context::SharedPtr>
-rclcpp::get_contexts()
+std::vector<Context::SharedPtr> rclcpp::get_contexts()
 {
   std::lock_guard<std::mutex> lock(g_contexts_mutex);
   std::vector<Context::SharedPtr> shared_contexts;

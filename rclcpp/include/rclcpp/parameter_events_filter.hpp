@@ -35,7 +35,7 @@ class ParameterEventsFilter
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterEventsFilter)
-  enum class EventType {NEW, DELETED, CHANGED};  ///< An enum for the type of event.
+  enum class EventType { NEW, DELETED, CHANGED };  ///< An enum for the type of event.
   /// Used for the listed results
   using EventPair = std::pair<EventType, rcl_interfaces::msg::Parameter *>;
 
@@ -73,7 +73,7 @@ public:
 
 private:
   // access only allowed via const accessor.
-  std::vector<EventPair> result_;  ///< Storage of the resultant vector
+  std::vector<EventPair> result_;                         ///< Storage of the resultant vector
   rcl_interfaces::msg::ParameterEvent::SharedPtr event_;  ///< Keep event in scope
 };
 

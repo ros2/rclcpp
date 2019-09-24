@@ -37,8 +37,7 @@ using rclcpp::executor::ExecutorArgs;
 using rclcpp::executor::FutureReturnCode;
 
 Executor::Executor(const ExecutorArgs & args)
-: spinning(false),
-  memory_strategy_(args.memory_strategy)
+: spinning(false), memory_strategy_(args.memory_strategy)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   rcl_ret_t ret = rcl_guard_condition_init(
@@ -60,20 +59,14 @@ Executor::Executor(const ExecutorArgs & args)
   // Store the context for later use.
   context_ = args.context;
 
-  ret = rcl_wait_set_init(
-    &wait_set_,
-    0, 2, 0, 0, 0, 0,
-    context_->get_rcl_context().get(),
-    allocator);
+  ret =
+    rcl_wait_set_init(&wait_set_, 0, 2, 0, 0, 0, 0, context_->get_rcl_context().get(), allocator);
   if (RCL_RET_OK != ret) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "failed to create wait set: %s", rcl_get_error_string().str);
+    RCUTILS_LOG_ERROR_NAMED("rclcpp", "failed to create wait set: %s", rcl_get_error_string().str);
     rcl_reset_error();
     if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "failed to destroy guard condition: %s", rcl_get_error_string().str);
+        "rclcpp", "failed to destroy guard condition: %s", rcl_get_error_string().str);
       rcl_reset_error();
     }
     throw std::runtime_error("Failed to create wait set in Executor constructor");
@@ -98,16 +91,13 @@ Executor::~Executor()
 
   // Finalize the wait set.
   if (rcl_wait_set_fini(&wait_set_) != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "failed to destroy wait set: %s", rcl_get_error_string().str);
+    RCUTILS_LOG_ERROR_NAMED("rclcpp", "failed to destroy wait set: %s", rcl_get_error_string().str);
     rcl_reset_error();
   }
   // Finalize the interrupt guard condition.
   if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "failed to destroy guard condition: %s", rcl_get_error_string().str);
+      "rclcpp", "failed to destroy guard condition: %s", rcl_get_error_string().str);
     rcl_reset_error();
   }
   // Remove and release the sigint guard condition
@@ -115,8 +105,7 @@ Executor::~Executor()
   context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
 }
 
-void
-Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
+void Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   // If the node already has an executor
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
@@ -144,14 +133,13 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
-void
-Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
+void Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->add_node(node_ptr->get_node_base_interface(), notify);
 }
 
-void
-Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
+void Executor::remove_node(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   bool node_removed = false;
   {
@@ -183,16 +171,13 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
   memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
-void
-Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
+void Executor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->remove_node(node_ptr->get_node_base_interface(), notify);
 }
 
-void
-Executor::spin_node_once_nanoseconds(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
-  std::chrono::nanoseconds timeout)
+void Executor::spin_node_once_nanoseconds(
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node, std::chrono::nanoseconds timeout)
 {
   this->add_node(node, false);
   // non-blocking = true
@@ -200,40 +185,37 @@ Executor::spin_node_once_nanoseconds(
   this->remove_node(node, false);
 }
 
-void
-Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
+void Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node)
 {
   this->add_node(node, false);
   spin_some();
   this->remove_node(node, false);
 }
 
-void
-Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
+void Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
 {
   this->spin_node_some(node->get_node_base_interface());
 }
 
-void
-Executor::spin_some(std::chrono::nanoseconds max_duration)
+void Executor::spin_some(std::chrono::nanoseconds max_duration)
 {
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
-      if (std::chrono::nanoseconds(0) == max_duration) {
-        // told to spin forever if need be
-        return true;
-      } else if (std::chrono::steady_clock::now() - start < max_duration) {
-        // told to spin only for some maximum amount of time
-        return true;
-      }
-      // spun too long
-      return false;
-    };
+    if (std::chrono::nanoseconds(0) == max_duration) {
+      // told to spin forever if need be
+      return true;
+    } else if (std::chrono::steady_clock::now() - start < max_duration) {
+      // told to spin only for some maximum amount of time
+      return true;
+    }
+    // spun too long
+    return false;
+  };
 
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_some() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
   while (spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
     if (get_next_executable(any_exec, std::chrono::milliseconds::zero())) {
@@ -244,21 +226,19 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
   }
 }
 
-void
-Executor::spin_once(std::chrono::nanoseconds timeout)
+void Executor::spin_once(std::chrono::nanoseconds timeout)
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
-  RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  RCLCPP_SCOPE_EXIT(this->spinning.store(false););
   AnyExecutable any_exec;
   if (get_next_executable(any_exec, timeout)) {
     execute_any_executable(any_exec);
   }
 }
 
-void
-Executor::cancel()
+void Executor::cancel()
 {
   spinning.store(false);
   if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
@@ -266,8 +246,8 @@ Executor::cancel()
   }
 }
 
-void
-Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
+void Executor::set_memory_strategy(
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
 {
   if (memory_strategy == nullptr) {
     throw std::runtime_error("Received NULL memory strategy in executor.");
@@ -275,8 +255,7 @@ Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr
   memory_strategy_ = memory_strategy;
 }
 
-void
-Executor::execute_any_executable(AnyExecutable & any_exec)
+void Executor::execute_any_executable(AnyExecutable & any_exec)
 {
   if (!spinning.load()) {
     return;
@@ -308,9 +287,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 }
 
-void
-Executor::execute_subscription(
-  rclcpp::SubscriptionBase::SharedPtr subscription)
+void Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   rmw_message_info_t message_info;
   message_info.from_intra_process = false;
@@ -318,8 +295,7 @@ Executor::execute_subscription(
   if (subscription->is_serialized()) {
     auto serialized_msg = subscription->create_serialized_message();
     auto ret = rcl_take_serialized_message(
-      subscription->get_subscription_handle().get(),
-      serialized_msg.get(), &message_info, nullptr);
+      subscription->get_subscription_handle().get(), serialized_msg.get(), &message_info, nullptr);
     if (RCL_RET_OK == ret) {
       auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
       subscription->handle_message(void_serialized_msg, message_info);
@@ -327,39 +303,35 @@ Executor::execute_subscription(
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "take_serialized failed for subscription on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string().str);
+        subscription->get_topic_name(),
+        rcl_get_error_string().str);
       rcl_reset_error();
     }
     subscription->return_serialized_message(serialized_msg);
   } else {
     std::shared_ptr<void> message = subscription->create_message();
     auto ret = rcl_take(
-      subscription->get_subscription_handle().get(),
-      message.get(), &message_info, nullptr);
+      subscription->get_subscription_handle().get(), message.get(), &message_info, nullptr);
     if (RCL_RET_OK == ret) {
       subscription->handle_message(message, message_info);
     } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
         "could not deserialize serialized message on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string().str);
+        subscription->get_topic_name(),
+        rcl_get_error_string().str);
       rcl_reset_error();
     }
     subscription->return_message(message);
   }
 }
 
-void
-Executor::execute_intra_process_subscription(
-  rclcpp::SubscriptionBase::SharedPtr subscription)
+void Executor::execute_intra_process_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   rcl_interfaces::msg::IntraProcessMessage ipm;
   rmw_message_info_t message_info;
   rcl_ret_t status = rcl_take(
-    subscription->get_intra_process_subscription_handle().get(),
-    &ipm,
-    &message_info,
-    nullptr);
+    subscription->get_intra_process_subscription_handle().get(), &ipm, &message_info, nullptr);
 
   if (status == RCL_RET_OK) {
     message_info.from_intra_process = true;
@@ -368,62 +340,54 @@ Executor::execute_intra_process_subscription(
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take failed for intra process subscription on topic '%s': %s",
-      subscription->get_topic_name(), rcl_get_error_string().str);
+      subscription->get_topic_name(),
+      rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
 
-void
-Executor::execute_timer(
-  rclcpp::TimerBase::SharedPtr timer)
+void Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer)
 {
   timer->execute_callback();
 }
 
-void
-Executor::execute_service(
-  rclcpp::ServiceBase::SharedPtr service)
+void Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
-  rcl_ret_t status = rcl_take_request(
-    service->get_service_handle().get(),
-    request_header.get(),
-    request.get());
+  rcl_ret_t status =
+    rcl_take_request(service->get_service_handle().get(), request_header.get(), request.get());
   if (status == RCL_RET_OK) {
     service->handle_request(request_header, request);
   } else if (status != RCL_RET_SERVICE_TAKE_FAILED) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take request failed for server of service '%s': %s",
-      service->get_service_name(), rcl_get_error_string().str);
+      service->get_service_name(),
+      rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
 
-void
-Executor::execute_client(
-  rclcpp::ClientBase::SharedPtr client)
+void Executor::execute_client(rclcpp::ClientBase::SharedPtr client)
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
-  rcl_ret_t status = rcl_take_response(
-    client->get_client_handle().get(),
-    request_header.get(),
-    response.get());
+  rcl_ret_t status =
+    rcl_take_response(client->get_client_handle().get(), request_header.get(), response.get());
   if (status == RCL_RET_OK) {
     client->handle_response(request_header, response);
   } else if (status != RCL_RET_CLIENT_TAKE_FAILED) {
     RCUTILS_LOG_ERROR_NAMED(
       "rclcpp",
       "take response failed for client of service '%s': %s",
-      client->get_service_name(), rcl_get_error_string().str);
+      client->get_service_name(),
+      rcl_get_error_string().str);
     rcl_reset_error();
   }
 }
 
-void
-Executor::wait_for_work(std::chrono::nanoseconds timeout)
+void Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
   {
     std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
@@ -454,13 +418,16 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
     // The size of waitables are accounted for in size of the other entities
     rcl_ret_t ret = rcl_wait_set_resize(
-      &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
-      memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
-      memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services(),
+      &wait_set_,
+      memory_strategy_->number_of_ready_subscriptions(),
+      memory_strategy_->number_of_guard_conditions(),
+      memory_strategy_->number_of_ready_timers(),
+      memory_strategy_->number_of_ready_clients(),
+      memory_strategy_->number_of_ready_services(),
       memory_strategy_->number_of_ready_events());
     if (RCL_RET_OK != ret) {
       throw std::runtime_error(
-              std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
+        std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
     }
 
     if (!memory_strategy_->add_handles_to_wait_set(&wait_set_)) {
@@ -471,8 +438,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     rcl_wait(&wait_set_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
   if (status == RCL_RET_WAIT_SET_EMPTY) {
     RCUTILS_LOG_WARN_NAMED(
-      "rclcpp",
-      "empty wait set received in rcl_wait(). This should never happen.");
+      "rclcpp", "empty wait set received in rcl_wait(). This should never happen.");
   } else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {
     using rclcpp::exceptions::throw_from_rcl_error;
     throw_from_rcl_error(status, "rcl_wait() failed");
@@ -483,8 +449,8 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   memory_strategy_->remove_null_handles(&wait_set_);
 }
 
-rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group)
+rclcpp::node_interfaces::NodeBaseInterface::SharedPtr Executor::get_node_by_group(
+  rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
   if (!group) {
     return nullptr;
@@ -504,8 +470,8 @@ Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr gro
   return nullptr;
 }
 
-rclcpp::callback_group::CallbackGroup::SharedPtr
-Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
+rclcpp::callback_group::CallbackGroup::SharedPtr Executor::get_group_by_timer(
+  rclcpp::TimerBase::SharedPtr timer)
 {
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
@@ -517,8 +483,8 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
       if (!group) {
         continue;
       }
-      auto timer_ref = group->find_timer_ptrs_if(
-        [timer](const rclcpp::TimerBase::SharedPtr & timer_ptr) -> bool {
+      auto timer_ref =
+        group->find_timer_ptrs_if([timer](const rclcpp::TimerBase::SharedPtr & timer_ptr) -> bool {
           return timer_ptr == timer;
         });
       if (timer_ref) {
@@ -529,8 +495,7 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
   return rclcpp::callback_group::CallbackGroup::SharedPtr();
 }
 
-bool
-Executor::get_next_ready_executable(AnyExecutable & any_executable)
+bool Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
   // Check the timers to see if there are any that are ready
   memory_strategy_->get_next_timer(any_executable, weak_nodes_);
@@ -561,8 +526,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   return false;
 }
 
-bool
-Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanoseconds timeout)
+bool Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanoseconds timeout)
 {
   bool success = false;
   // Check to see if there are any subscriptions or timers needing service
@@ -586,8 +550,7 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
     using callback_group::CallbackGroupType;
     if (
       any_executable.callback_group &&
-      any_executable.callback_group->type() == CallbackGroupType::MutuallyExclusive)
-    {
+      any_executable.callback_group->type() == CallbackGroupType::MutuallyExclusive) {
       // It should not have been taken otherwise
       assert(any_executable.callback_group->can_be_taken_from().load());
       // Set to false to indicate something is being run from this group
@@ -599,14 +562,13 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
   return success;
 }
 
-std::ostream &
-rclcpp::executor::operator<<(std::ostream & os, const FutureReturnCode & future_return_code)
+std::ostream & rclcpp::executor::operator<<(
+  std::ostream & os, const FutureReturnCode & future_return_code)
 {
   return os << to_string(future_return_code);
 }
 
-std::string
-rclcpp::executor::to_string(const FutureReturnCode & future_return_code)
+std::string rclcpp::executor::to_string(const FutureReturnCode & future_return_code)
 {
   using enum_type = std::underlying_type<FutureReturnCode>::type;
   std::string prefix = "Unknown enum value (";

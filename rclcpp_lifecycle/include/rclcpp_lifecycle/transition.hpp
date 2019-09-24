@@ -42,8 +42,10 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   Transition(
-    uint8_t id, const std::string & label,
-    State && start, State && goal,
+    uint8_t id,
+    const std::string & label,
+    State && start,
+    State && goal,
     rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
   RCLCPP_LIFECYCLE_PUBLIC
@@ -61,25 +63,20 @@ public:
   Transition & operator=(const Transition & rhs);
 
   RCLCPP_LIFECYCLE_PUBLIC
-  uint8_t
-  id() const;
+  uint8_t id() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  std::string
-  label() const;
+  std::string label() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  State
-  start_state() const;
+  State start_state() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
-  State
-  goal_state() const;
+  State goal_state() const;
 
 protected:
   RCLCPP_LIFECYCLE_PUBLIC
-  void
-  reset();
+  void reset();
 
   rcutils_allocator_t allocator_;
 

@@ -23,8 +23,7 @@
 
 #include "rclcpp/parameter_map.hpp"
 
-rcl_params_t *
-make_params(std::vector<std::string> node_names)
+rcl_params_t * make_params(std::vector<std::string> node_names)
 {
   rcl_allocator_t alloc = rcl_get_default_allocator();
   rcl_params_t * c_params = rcl_yaml_node_struct_init(alloc);
@@ -33,8 +32,8 @@ make_params(std::vector<std::string> node_names)
   if (c_params->num_nodes) {
     // Copy node names
     for (size_t n = 0; n < node_names.size(); ++n) {
-      c_params->node_names[n] = static_cast<char *>(alloc.allocate(
-          sizeof(char) * (node_names[n].size() + 1), alloc.state));
+      c_params->node_names[n] =
+        static_cast<char *>(alloc.allocate(sizeof(char) * (node_names[n].size() + 1), alloc.state));
       std::snprintf(c_params->node_names[n], node_names[n].size() + 1, "%s", node_names[n].c_str());
     }
     // zero init node params
@@ -47,8 +46,8 @@ make_params(std::vector<std::string> node_names)
   return c_params;
 }
 
-void
-make_node_params(rcl_params_t * c_params, size_t node_idx, std::vector<std::string> param_names)
+void make_node_params(
+  rcl_params_t * c_params, size_t node_idx, std::vector<std::string> param_names)
 {
   rcl_allocator_t alloc = c_params->allocator;
   ASSERT_LT(node_idx, c_params->num_nodes);
@@ -58,18 +57,18 @@ make_node_params(rcl_params_t * c_params, size_t node_idx, std::vector<std::stri
   c_node_params->num_params = param_names.size();
 
   // Copy parameter names
-  c_node_params->parameter_names = static_cast<char **>(
-    alloc.allocate(sizeof(char *) * param_names.size(), alloc.state));
+  c_node_params->parameter_names =
+    static_cast<char **>(alloc.allocate(sizeof(char *) * param_names.size(), alloc.state));
   for (size_t p = 0; p < param_names.size(); ++p) {
     const std::string & param_name = param_names[p];
-    c_node_params->parameter_names[p] = static_cast<char *>(alloc.allocate(
-        sizeof(char) * (param_name.size() + 1), alloc.state));
+    c_node_params->parameter_names[p] =
+      static_cast<char *>(alloc.allocate(sizeof(char) * (param_name.size() + 1), alloc.state));
     std::snprintf(
       c_node_params->parameter_names[p], param_name.size() + 1, "%s", param_name.c_str());
   }
   // zero init parameter value
-  c_node_params->parameter_values = static_cast<rcl_variant_t *>(alloc.allocate(
-      sizeof(rcl_variant_t) * param_names.size(), alloc.state));
+  c_node_params->parameter_values = static_cast<rcl_variant_t *>(
+    alloc.allocate(sizeof(rcl_variant_t) * param_names.size(), alloc.state));
   for (size_t p = 0; p < param_names.size(); ++p) {
     c_node_params->parameter_values[p].bool_value = NULL;
     c_node_params->parameter_values[p].integer_value = NULL;
@@ -235,16 +234,16 @@ TEST(Test_parameter_map_from, string_param_value)
 }
 
 #define MAKE_ARRAY_VALUE(VAR, TYPE, V1, V2) \
-  do { \
-    VAR.values = new TYPE[2]; \
-    VAR.size = 2; \
-    VAR.values[0] = V1; \
-    VAR.values[1] = V2; \
+  do {                                      \
+    VAR.values = new TYPE[2];               \
+    VAR.size = 2;                           \
+    VAR.values[0] = V1;                     \
+    VAR.values[1] = V2;                     \
   } while (false)
 
 #define FREE_ARRAY_VALUE(VAR) \
-  do { \
-    delete[] VAR.values; \
+  do {                        \
+    delete[] VAR.values;      \
   } while (false)
 
 TEST(Test_parameter_map_from, byte_array_param_value)
