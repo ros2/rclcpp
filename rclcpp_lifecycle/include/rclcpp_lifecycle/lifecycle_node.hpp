@@ -77,6 +77,13 @@ template<typename AllocatorT>
 using SubscriptionOptionsWithAllocator = rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>;
 
 template<typename AllocatorT>
+PublisherOptionsWithAllocator<AllocatorT>
+create_default_publisher_options()
+{
+  return rclcpp::PublisherOptionsWithAllocator<AllocatorT>();
+}
+
+template<typename AllocatorT>
 SubscriptionOptionsWithAllocator<AllocatorT>
 create_default_subscription_options()
 {
@@ -160,7 +167,7 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos,
     const PublisherOptionsWithAllocator<AllocatorT> & options = (
-      rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+      create_default_publisher_options<AllocatorT>()
     )
   );
 
