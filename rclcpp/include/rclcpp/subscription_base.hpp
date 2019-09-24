@@ -114,12 +114,16 @@ public:
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
-  virtual std::shared_ptr<void>
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<void>
   create_message() = 0;
 
   /// Borrow a new serialized message
   /** \return Shared pointer to a rcl_message_serialized_t. */
-  virtual std::shared_ptr<rcl_serialized_message_t>
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<rcl_serialized_message_t>
   create_serialized_message() = 0;
 
   /// Check if we need to handle the message, and execute the callback if we do.
@@ -127,27 +131,37 @@ public:
    * \param[in] message Shared pointer to the message to handle.
    * \param[in] message_info Metadata associated with this message.
    */
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   return_message(std::shared_ptr<void> & message) = 0;
 
   /// Return the message borrowed in create_serialized_message.
   /** \param[in] message Shared pointer to the returned message. */
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
 
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
 
+  RCLCPP_PUBLIC
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
+  RCLCPP_PUBLIC
   bool
   is_serialized() const;
 
@@ -161,7 +175,9 @@ public:
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
 
   /// Implemenation detail.
-  void setup_intra_process(
+  RCLCPP_PUBLIC
+  void
+  setup_intra_process(
     uint64_t intra_process_subscription_id,
     IntraProcessManagerWeakPtr weak_ipm,
     const rcl_subscription_options_t & intra_process_options);
