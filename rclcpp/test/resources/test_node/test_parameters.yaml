@@ -1,0 +1,4 @@
+/**:
+  ros__parameters:
+    parameter_int: 21
+    parameter_string_array: [baz, baz, baz]
