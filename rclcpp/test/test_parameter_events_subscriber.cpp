@@ -30,6 +30,11 @@ public:
   {
     event_callback(event);
   }
+
+  int get_number_of_subscriptions()
+  {
+    return event_subscriptions_.size();
+  }
 };
 
 class TestNode : public ::testing::Test
@@ -116,10 +121,10 @@ TEST_F(TestNode, RegisterParameterCallback)
   bool received;
   auto cb = [&received](const rclcpp::Parameter &) {received = true;};
 
-  ParamSubscriber->register_parameter_callback("my_double", cb);  // same node
-  ParamSubscriber->register_parameter_callback("my_int", cb);  // same node
-  ParamSubscriber->register_parameter_callback("my_string", cb, remote_node_name);  // remote node
-  ParamSubscriber->register_parameter_callback("my_bool", cb, diff_ns_name);  // different namespace
+  auto h1 = ParamSubscriber->add_parameter_callback("my_double", cb);
+  auto h2 = ParamSubscriber->add_parameter_callback("my_int", cb);
+  auto h3 = ParamSubscriber->add_parameter_callback("my_string", cb, remote_node_name);
+  auto h4 = ParamSubscriber->add_parameter_callback("my_bool", cb, diff_ns_name);
 
   received = false;
   ParamSubscriber->test_event(same_node_double);
@@ -151,8 +156,8 @@ TEST_F(TestNode, SameParameterDifferentNode)
     };
 
   // Set individual parameters
-  ParamSubscriber->register_parameter_callback("my_int", cb1);
-  ParamSubscriber->register_parameter_callback("my_int", cb2, remote_node_name);
+  auto h1 = ParamSubscriber->add_parameter_callback("my_int", cb1);
+  auto h2 = ParamSubscriber->add_parameter_callback("my_int", cb2, remote_node_name);
 
   ParamSubscriber->test_event(same_node_int);
   EXPECT_EQ(int_param_node1, 1);
@@ -166,17 +171,18 @@ TEST_F(TestNode, SameParameterDifferentNode)
   EXPECT_EQ(int_param_node2, 1);
 }
 
-TEST_F(TestNode, UserCallback)
+TEST_F(TestNode, EventCallback)
 {
   using rclcpp::ParameterEventsSubscriber;
 
   double double_param = 0.0;
   int int_param = 0;
-  bool received = false;
+  bool bool_param{false};
+  bool received{false};
 
   double product;
   auto cb =
-    [&int_param, &double_param, &product, &received,
+    [&int_param, &double_param, &product, &bool_param, &received,
       this](const rcl_interfaces::msg::ParameterEvent::SharedPtr & event)
     {
       auto node_name = node->get_fully_qualified_name();
@@ -197,13 +203,69 @@ TEST_F(TestNode, UserCallback)
       }
 
       product = int_param * double_param;
+
+      if (ParameterEventsSubscriber::get_parameter_from_event(event, p, "my_bool", diff_ns_name)) {
+        bool_param = p.get_value<bool>();
+      }
     };
 
-  ParamSubscriber->set_event_callback(cb);
+  ParamSubscriber->set_event_callback(cb, {"ns", node->get_namespace()});
+  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 2);
 
   ParamSubscriber->test_event(diff_ns_bool);
   EXPECT_EQ(received, false);
+  EXPECT_EQ(bool_param, true);
 
+  bool_param = false;
   ParamSubscriber->test_event(multiple);
+  EXPECT_EQ(received, true);
   EXPECT_EQ(product, 1.0);
+  EXPECT_EQ(bool_param, false);
+
+  ParamSubscriber->remove_event_callback();
+  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 0);
+}
+
+TEST_F(TestNode, MultipleParameterCallbacks)
+{
+  bool received_1{false};
+  bool received_2{false};
+
+  auto cb1 = [&received_1](const rclcpp::Parameter &) {received_1 = true;};
+  auto cb2 = [&received_2](const rclcpp::Parameter &) {received_2 = true;};
+  auto cb3 = [](const rclcpp::Parameter &) {/*do nothing*/};
+  auto event_cb = [](const rcl_interfaces::msg::ParameterEvent::SharedPtr &) {/*do nothing*/};
+
+  auto h1 = ParamSubscriber->add_parameter_callback("my_int", cb1);
+  auto h2 = ParamSubscriber->add_parameter_callback("my_int", cb2);
+  auto h3 = ParamSubscriber->add_parameter_callback("my_double", cb3);
+
+  // Test multiple callbacks per parameter
+  ParamSubscriber->test_event(same_node_int);
+  EXPECT_EQ(received_1, true);
+  EXPECT_EQ(received_2, true);
+
+  // Test removal of parameter callback by callback handle
+  received_1 = false;
+  received_2 = false;
+  ParamSubscriber->remove_parameter_callback(h1.get());
+  ParamSubscriber->test_event(same_node_int);
+  EXPECT_EQ(received_1, false);
+  EXPECT_EQ(received_2, true);
+
+  // Test removal of parameter callback by name
+  received_2 = false;
+  ParamSubscriber->remove_parameter_callback("my_int");
+  ParamSubscriber->test_event(same_node_int);
+  EXPECT_EQ(received_2, false);
+  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 1); // still has other parameter
+
+  // Test subscription removal when all parameter callbacks removed (with event callback)
+  ParamSubscriber->set_event_callback(event_cb);
+  ParamSubscriber->remove_parameter_callback("my_double");
+  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 1); // has event callback
+
+  // Test subscription removal when all parameter and event callbacks removed
+  ParamSubscriber->remove_event_callback();
+  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 0); // no more callbacks
 }

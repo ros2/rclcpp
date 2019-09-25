@@ -26,6 +26,17 @@
 namespace rclcpp
 {
 
+struct ParameterEventsCallbackHandle
+{
+  RCLCPP_SMART_PTR_DEFINITIONS(ParameterEventsCallbackHandle)
+
+  using ParameterEventsCallbackType = std::function<void(const rclcpp::Parameter &)>;
+
+  std::string parameter_name;
+  std::string node_name;
+  ParameterEventsCallbackType callback;
+};
+
 class ParameterEventsSubscriber
 {
 public:
@@ -56,13 +67,25 @@ public:
    * provided callback will be applied to all of them.
    *
    * \param[in] callback Function callback to be evaluated on event.
-   * \param[in] node_namespace Name of namespace for which a subscription will be created.
+   * \param[in] node_namespaces Vector of namespaces for which a subscription will be created.
    */
   RCLCPP_PUBLIC
   void
   set_event_callback(
     std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback,
-    const std::string & node_namespace = "");
+    const std::vector<std::string> & node_namespaces = {""});
+
+  /// Remove parameter event callback.
+  /**
+   * Calling this function will set the event callback to nullptr. This function will also remove
+   * event subscriptions on the namespaces for which there are no other callbacks (from parameter
+   * callbacks) active on that namespace.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_event_callback();
+
+  using ParameterEventsCallbackType = ParameterEventsCallbackHandle::ParameterEventsCallbackType;
 
   /// Add a custom callback for a specified parameter.
   /**
@@ -73,12 +96,50 @@ public:
    * \param[in] node_name Name of node which hosts the parameter.
    */
   RCLCPP_PUBLIC
-  void
-  register_parameter_callback(
+  ParameterEventsCallbackHandle::SharedPtr
+  add_parameter_callback(
     const std::string & parameter_name,
-    std::function<void(const rclcpp::Parameter &)> callback,
+    ParameterEventsCallbackType callback,
     const std::string & node_name = "");
 
+  /// Remove a custom callback for a specified parameter given its callback handle.
+  /**
+   * The parameter name and node name are inspected from the callback handle. The callback handle
+   * is erased from the list of callback handles on the {parameter_name, node_name} in the map.
+   * An error is thrown if the handle does not exist and/or was already removed.
+   *
+   * \param[in] handle Pointer to callback handle to be removed.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_parameter_callback(
+    const ParameterEventsCallbackHandle * const handle);
+
+  /// Remove a custom callback for a specified parameter given its name and respective node.
+  /**
+   * If a node_name is not provided, defaults to the current node.
+   * The {parameter_name, node_name} key on the parameter_callbacks_ map will be erased, removing
+   * all callback associated with that parameter.
+   *
+   * \param[in] parameter_name Name of parameter.
+   * \param[in] node_name Name of node which hosts the parameter.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_parameter_callback(
+    const std::string & parameter_name,
+    const std::string & node_name = "");
+
+  /// Get a rclcpp::Parameter from parameter event, return true if parameter name & node in event.
+  /**
+   * If a node_name is not provided, defaults to the current node.
+   * 
+   * \param[in] event Event msg to be inspected.
+   * \param[out] parameter Reference to rclcpp::Parameter to be assigned.
+   * \param[in] parameter_name Name of parameter.
+   * \param[in] node_name Name of node which hosts the parameter.
+   * \returns true if requested parameter name & node is in event, false otherwise
+   */
   RCLCPP_PUBLIC
   static bool
   get_parameter_from_event(
@@ -87,6 +148,19 @@ public:
     const std::string parameter_name,
     const std::string node_name = "");
 
+  /// Get a rclcpp::Parameter from parameter event
+  /**
+   * If a node_name is not provided, defaults to the current node.
+   * 
+   * The user is responsible to check if the returned parameter has been properly assigned.
+   * By default, if the requested parameter is not found in the event, the returned parameter 
+   * has parameter value of type rclcpp::PARAMETER_NOT_SET.
+   * 
+   * \param[in] event Event msg to be inspected.
+   * \param[in] parameter_name Name of parameter.
+   * \param[in] node_name Name of node which hosts the parameter.
+   * \returns The resultant rclcpp::Parameter from the event
+   */
   RCLCPP_PUBLIC
   static rclcpp::Parameter
   get_parameter_from_event(
@@ -94,10 +168,20 @@ public:
     const std::string parameter_name,
     const std::string node_name = "");
 
+  using CallbacksContainerType = std::list<ParameterEventsCallbackHandle::WeakPtr>;
+
 protected:
   /// Add a subscription (if unique) to a namespace parameter events topic.
   void
   add_namespace_event_subscriber(const std::string & node_namespace);
+
+  /// Remove a subscription to a namespace parameter events topic.
+  void
+  remove_namespace_event_subscriber(const std::string & node_namespace);
+
+  /// Return true if any callbacks still exist on a namespace event topic, otherwise return false
+  bool
+  should_unsubscribe_to_namespace(const std::string & node_namespace);
 
   /// Callback for parameter events subscriptions.
   void
@@ -140,18 +224,20 @@ protected:
   // Map container for registered parameters.
   std::unordered_map<
     std::pair<std::string, std::string>,
-    std::function<void(const rclcpp::Parameter &)>,
+    CallbacksContainerType,
     StringPairHash
   > parameter_callbacks_;
 
   // Vector of unique namespaces added.
-  std::vector<std::string> node_namespaces_;
+  std::vector<std::string> subscribed_namespaces_;
+  // Vector of event callback namespaces
+  std::vector<std::string> event_namespaces_;
 
   // Vector of event subscriptions for each namespace.
   std::vector<rclcpp::Subscription
     <rcl_interfaces::msg::ParameterEvent>::SharedPtr> event_subscriptions_;
 
-  std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> user_callback_;
+  std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> event_callback_;
 
   std::recursive_mutex mutex_;
 };
