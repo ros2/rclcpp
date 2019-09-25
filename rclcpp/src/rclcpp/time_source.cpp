@@ -82,7 +82,7 @@ void TimeSource::attachNode(
   // Though this defaults to false, it can be overridden by initial parameter values for the node,
   // which may be given by the user at the node's construction or even by command-line arguments.
   rclcpp::ParameterValue use_sim_time_param;
-  const char * use_sim_time_name = "use_sim_time";
+  const std::string use_sim_time_name = "use_sim_time";
   if (!node_parameters_->has_parameter(use_sim_time_name)) {
     use_sim_time_param = node_parameters_->declare_parameter(
       use_sim_time_name,
@@ -98,12 +98,25 @@ void TimeSource::attachNode(
       create_clock_sub();
     }
   } else {
-    // TODO(wjwwood): use set_on_parameters_set_callback to catch the type mismatch,
-    //   before the use_sim_time parameter can ever be set to an invalid value
     RCLCPP_ERROR(
       logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
       rclcpp::to_string(use_sim_time_param.get_type()).c_str());
   }
+  sim_time_cb_handler = node_parameters_->add_on_set_parameters_callback(
+    [use_sim_time_name](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      for (const auto & parameter : parameters) {
+        if (
+          parameter.get_name() == use_sim_time_name &&
+          parameter.get_type() != rclcpp::PARAMETER_BOOL)
+        {
+          result.successful = false;
+          result.reason = "'" + use_sim_time_name + "' must be a bool";
+        }
+      }
+      return result;
+    });
 
   // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
   parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
@@ -122,6 +135,10 @@ void TimeSource::detachNode()
   node_services_.reset();
   node_logging_.reset();
   node_clock_.reset();
+  if (sim_time_cb_handler && node_parameters_) {
+    node_parameters_->remove_on_set_parameters_callback(sim_time_cb_handler.get());
+  }
+  sim_time_cb_handler.reset();
   node_parameters_.reset();
   disable_ros_time();
 }
@@ -231,10 +248,6 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
     {rclcpp::ParameterEventsFilter::EventType::NEW,
       rclcpp::ParameterEventsFilter::EventType::CHANGED});
   for (auto & it : filter.get_events()) {
-    if (it.second->value.type != ParameterType::PARAMETER_BOOL) {
-      RCLCPP_ERROR(logger_, "use_sim_time parameter cannot be set to anything but a bool");
-      continue;
-    }
     if (it.second->value.bool_value) {
       parameter_state_ = SET_TRUE;
       enable_ros_time();
