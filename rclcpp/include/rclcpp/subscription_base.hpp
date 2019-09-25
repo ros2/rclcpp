@@ -36,7 +36,7 @@ namespace rclcpp
 
 namespace node_interfaces
 {
-class NodeTopicsInterface;
+class NodeBaseInterface;
 }  // namespace node_interfaces
 
 namespace intra_process_manager
@@ -50,14 +50,14 @@ class IntraProcessManager;
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
-class SubscriptionBase
+class SubscriptionBase : public std::enable_shared_from_this<SubscriptionBase>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(SubscriptionBase)
 
   /// Default constructor.
   /**
-   * \param[in] node_handle The rcl representation of the node that owns this subscription.
+   * \param[in] node_base NodeBaseInterface pointer used in parts of the setup.
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] subscription_options options for the subscription.
@@ -65,7 +65,7 @@ public:
    */
   RCLCPP_PUBLIC
   SubscriptionBase(
-    std::shared_ptr<rcl_node_t> node_handle,
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rosidl_message_type_support_t & type_support_handle,
     const std::string & topic_name,
     const rcl_subscription_options_t & subscription_options,
@@ -114,12 +114,16 @@ public:
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
-  virtual std::shared_ptr<void>
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<void>
   create_message() = 0;
 
   /// Borrow a new serialized message
   /** \return Shared pointer to a rcl_message_serialized_t. */
-  virtual std::shared_ptr<rcl_serialized_message_t>
+  RCLCPP_PUBLIC
+  virtual
+  std::shared_ptr<rcl_serialized_message_t>
   create_serialized_message() = 0;
 
   /// Check if we need to handle the message, and execute the callback if we do.
@@ -127,27 +131,37 @@ public:
    * \param[in] message Shared pointer to the message to handle.
    * \param[in] message_info Metadata associated with this message.
    */
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   return_message(std::shared_ptr<void> & message) = 0;
 
   /// Return the message borrowed in create_serialized_message.
   /** \param[in] message Shared pointer to the returned message. */
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
 
-  virtual void
+  RCLCPP_PUBLIC
+  virtual
+  void
   handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
     const rmw_message_info_t & message_info) = 0;
 
+  RCLCPP_PUBLIC
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
+  RCLCPP_PUBLIC
   bool
   is_serialized() const;
 
@@ -161,7 +175,9 @@ public:
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
 
   /// Implemenation detail.
-  void setup_intra_process(
+  RCLCPP_PUBLIC
+  void
+  setup_intra_process(
     uint64_t intra_process_subscription_id,
     IntraProcessManagerWeakPtr weak_ipm,
     const rcl_subscription_options_t & intra_process_options);

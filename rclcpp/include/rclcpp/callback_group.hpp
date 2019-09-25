@@ -21,9 +21,9 @@
 #include <vector>
 
 #include "rclcpp/client.hpp"
-#include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_base.hpp"
 #include "rclcpp/service.hpp"
-#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_base.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
