@@ -80,7 +80,12 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   get_allocator() const
   {
     if (!this->allocator) {
-      return std::make_shared<Allocator>();
+      // TODO(wjwwood): I would like to use the commented line instead, but
+      //   cppcheck 1.89 fails with:
+      //     Syntax Error: AST broken, binary operator '>' doesn't have two operands.
+      // return std::make_shared<Allocator>();
+      std::shared_ptr<Allocator> tmp(new Allocator());
+      return tmp;
     }
     return this->allocator;
   }
