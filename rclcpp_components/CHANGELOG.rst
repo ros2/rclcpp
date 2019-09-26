@@ -2,6 +2,17 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2019-09-26)
+------------------
+* Force explicit --ros-args in NodeOptions::arguments(). (`#845 <https://github.com/ros2/rclcpp/issues/845>`_)
+* Use of -r/--remap flags where appropriate. (`#834 <https://github.com/ros2/rclcpp/issues/834>`_)
+* Add line break after first open paren in multiline function call (`#785 <https://github.com/ros2/rclcpp/issues/785>`_)
+* fix linter issue (`#795 <https://github.com/ros2/rclcpp/issues/795>`_)
+* Remove non-package from ament_target_dependencies() (`#793 <https://github.com/ros2/rclcpp/issues/793>`_)
+* fix for multiple nodes not being recognized (`#790 <https://github.com/ros2/rclcpp/issues/790>`_)
+* Cmake infrastructure for creating components (`#784 <https://github.com/ros2/rclcpp/issues/784>`_)
+* Contributors: Dan Rose, Michel Hidalgo, Shane Loretz, Siddharth Kucheria
+
 0.7.5 (2019-05-30)
 ------------------
 
