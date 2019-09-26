@@ -123,16 +123,18 @@ template<
   typename std::enable_if<std::is_pointer<NodeType>::value, int>::type = 0
 >
 rclcpp::node_interfaces::NodeTopicsInterface *
-get_node_topics_interface(NodeType && node_pointer)
+get_node_topics_interface(NodeType node_pointer)
 {
   // Forward pointers to detail implmentation directly.
-  return detail::get_node_topics_interface_from_pointer(std::forward<NodeType>(node_pointer));
+  return detail::get_node_topics_interface_from_pointer(node_pointer);
 }
 
 /// Get the NodeTopicsInterface as a pointer from a "Node like" object.
 template<
   typename NodeType,
-  typename std::enable_if<!std::is_pointer<NodeType>::value, int>::type = 0
+  typename std::enable_if<
+    !std::is_pointer<typename std::remove_reference<NodeType>::type>::value, int
+  >::type = 0
 >
 rclcpp::node_interfaces::NodeTopicsInterface *
 get_node_topics_interface(NodeType && node_reference)
