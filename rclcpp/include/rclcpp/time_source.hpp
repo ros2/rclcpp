@@ -135,7 +135,7 @@ private:
   // A vector to store references to associated clocks.
   std::vector<rclcpp::Clock::SharedPtr> associated_clocks_;
   // A handler for the use_sim_time parameter callback.
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr sim_time_cb_handler = nullptr;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr sim_time_cb_handler_ = nullptr;
 };
 
 }  // namespace rclcpp

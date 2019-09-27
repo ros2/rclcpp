@@ -102,7 +102,7 @@ void TimeSource::attachNode(
       logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
       rclcpp::to_string(use_sim_time_param.get_type()).c_str());
   }
-  sim_time_cb_handler = node_parameters_->add_on_set_parameters_callback(
+  sim_time_cb_handler_ = node_parameters_->add_on_set_parameters_callback(
     [use_sim_time_name](const std::vector<rclcpp::Parameter> & parameters) {
       rcl_interfaces::msg::SetParametersResult result;
       result.successful = true;
@@ -113,6 +113,7 @@ void TimeSource::attachNode(
         {
           result.successful = false;
           result.reason = "'" + use_sim_time_name + "' must be a bool";
+          break;
         }
       }
       return result;
@@ -135,10 +136,10 @@ void TimeSource::detachNode()
   node_services_.reset();
   node_logging_.reset();
   node_clock_.reset();
-  if (sim_time_cb_handler && node_parameters_) {
-    node_parameters_->remove_on_set_parameters_callback(sim_time_cb_handler.get());
+  if (sim_time_cb_handler_ && node_parameters_) {
+    node_parameters_->remove_on_set_parameters_callback(sim_time_cb_handler_.get());
   }
-  sim_time_cb_handler.reset();
+  sim_time_cb_handler_.reset();
   node_parameters_.reset();
   disable_ros_time();
 }
