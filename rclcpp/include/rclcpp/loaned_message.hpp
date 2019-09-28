@@ -27,21 +27,21 @@
 namespace rclcpp
 {
 
-template<typename MessageT, typename Alloc>
+template<typename MessageT, typename AllocatorT>
 class Publisher;
 
-template<typename MessageT, typename Alloc = std::allocator<void>>
+template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class LoanedMessage
 {
-  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
-  using MessageAlloc = typename MessageAllocTraits::allocator_type;
+  using MessageAllocatorTraits = allocator::AllocRebind<MessageT, AllocatorT>;
+  using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
 
 protected:
-  const rclcpp::Publisher<MessageT, Alloc> * pub_;
+  const rclcpp::Publisher<MessageT, AllocatorT> * pub_;
 
   std::unique_ptr<MessageT> message_;
 
-  const std::shared_ptr<MessageAlloc> message_allocator_;
+  const std::shared_ptr<MessageAllocator> message_allocator_;
 
   /// Deleted copy constructor to preserve memory integrity
   LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
@@ -68,7 +68,7 @@ public:
    * \param allocator Allocator instance in case middleware can not allocate messages
    */
   LoanedMessage(
-    const rclcpp::Publisher<MessageT, Alloc> * pub,
+    const rclcpp::Publisher<MessageT, AllocatorT> * pub,
     const std::shared_ptr<std::allocator<MessageT>> allocator)
   : pub_(pub),
     message_(nullptr),

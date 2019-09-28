@@ -45,7 +45,7 @@
 namespace rclcpp
 {
 
-template<typename MessageT, typename Alloc>
+template<typename MessageT, typename AllocatorT>
 class LoanedMessage;
 
 /// A publisher publishes messages of any type to a topic.
@@ -150,10 +150,10 @@ public:
    *
    * \return LoanedMessage containing memory for a ROS message of type MessageT
    */
-  rclcpp::LoanedMessage<MessageT, Alloc>
+  rclcpp::LoanedMessage<MessageT, AllocatorT>
   loan_message()
   {
-    return rclcpp::LoanedMessage<MessageT, Alloc>(this, this->get_allocator());
+    return rclcpp::LoanedMessage<MessageT, AllocatorT>(this, this->get_allocator());
   }
 
   /// Return and deallocate the memory for the loaned message.
@@ -161,27 +161,10 @@ public:
    * \param loaned_message The LoanedMessage instance to be returned.
    */
   void
-  return_loaned_message(rclcpp::LoanedMessage<MessageT, Alloc> && loaned_msg) const
+  return_loaned_message(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg) const
   {
     // scope exit
     (void) loaned_msg;
-  }
-
-  /// Publish an instance of a LoanedMessage
-  /**
-   * When publishing a loaned message, the memory for this ROS instance will be deallocated
-   * after being published.
-   * The instance of the loaned message is no longer valid after this call.
-   *
-   * \param loaned_msg The LoanedMessage instance to be published.
-   */
-  void
-  publish(std::unique_ptr<rclcpp::LoanedMessage<MessageT, Alloc>> loaned_msg)
-  {
-    if (!loaned_msg.is_valid()) {
-      throw std::runtime_error("loaned message is not valid");
-    }
-    return rcl_publish(&publisher_handle_, *loaned_msg->get(), nullptr, true);
   }
 
   /// Send a message to the topic for this publisher.
@@ -243,13 +226,21 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
+  /// Publish an instance of a LoanedMessage
+  /**
+   * When publishing a loaned message, the memory for this ROS instance will be deallocated
+   * after being published.
+   * The instance of the loaned message is no longer valid after this call.
+   *
+   * \param loaned_msg The LoanedMessage instance to be published.
+   */
   void
-  publish(std::unique_ptr<rclcpp::LoanedMessage<MessageT, Alloc>> loaned_msg)
+  publish(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg)
   {
     if (!loaned_msg.is_valid()) {
       throw std::runtime_error("loaned message is not valid");
     }
-    return rcl_publish(&publisher_handle_, *loaned_msg->get(), nullptr, true);
+    return rcl_publish(&publisher_handle_, *loaned_msg.get(), nullptr, true);
   }
 
   std::shared_ptr<MessageAllocator>
