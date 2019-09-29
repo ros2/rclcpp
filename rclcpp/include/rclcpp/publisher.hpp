@@ -240,7 +240,12 @@ public:
     if (!loaned_msg.is_valid()) {
       throw std::runtime_error("loaned message is not valid");
     }
-    return rcl_publish(&publisher_handle_, *loaned_msg.get(), nullptr, true);
+    if (intra_process_is_enabled_) {
+      // TODO(Karsten1987): support loaned message passed by intraprocess
+      throw std::runtime_error("storing loaned messages in intra process is not supported yet");
+    }
+    // set is_loaned to true
+    this->do_inter_process_publish(&loaned_msg.get(), true);
   }
 
   std::shared_ptr<MessageAllocator>
@@ -251,9 +256,9 @@ public:
 
 protected:
   void
-  do_inter_process_publish(const MessageT * msg)
+  do_inter_process_publish(const MessageT * msg, bool is_loaned = false)
   {
-    auto status = rcl_publish(&publisher_handle_, msg, nullptr, false);
+    auto status = rcl_publish(&publisher_handle_, msg, nullptr, is_loaned);
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {

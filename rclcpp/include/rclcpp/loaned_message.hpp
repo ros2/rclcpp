@@ -83,6 +83,9 @@ public:
       message_memory =
         rcl_allocate_loaned_message(pub_->get_publisher_handle(), nullptr, sizeof(MessageT));
     } else {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Currently used middleware can't loan messages. Local allocator will be used.");
       message_memory = message_allocator_->allocate(1);
     }
     if (!message_memory) {
