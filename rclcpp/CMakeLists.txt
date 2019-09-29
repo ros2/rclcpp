@@ -223,6 +223,12 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_loaned_message ${PROJECT_NAME})
 
+  ament_add_gtest(test_loaned_message_sequence test/test_loaned_message_sequence.cpp)
+  ament_target_dependencies(test_loaned_message_sequence
+    "test_msgs"
+  )
+  target_link_libraries(test_loaned_message_sequence ${PROJECT_NAME})
+
   ament_add_gtest(test_node test/test_node.cpp)
   if(TARGET test_node)
     ament_target_dependencies(test_node

@@ -19,16 +19,13 @@
 #include <utility>
 
 #include "rclcpp/logging.hpp"
-#include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_base.hpp"
 
 #include "rcl/allocator.h"
 #include "rcl/publisher.h"
 
 namespace rclcpp
 {
-
-template<typename MessageT, typename AllocatorT>
-class Publisher;
 
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class LoanedMessage
@@ -37,7 +34,7 @@ class LoanedMessage
   using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
 
 protected:
-  const rclcpp::Publisher<MessageT, AllocatorT> * pub_;
+  const rclcpp::PublisherBase * pub_;
 
   std::unique_ptr<MessageT> message_;
 
@@ -68,7 +65,7 @@ public:
    * \param allocator Allocator instance in case middleware can not allocate messages
    */
   LoanedMessage(
-    const rclcpp::Publisher<MessageT, AllocatorT> * pub,
+    const rclcpp::PublisherBase * pub,
     const std::shared_ptr<std::allocator<MessageT>> allocator)
   : pub_(pub),
     message_(nullptr),
@@ -129,7 +126,9 @@ public:
       auto ret =
         rcl_deallocate_loaned_message(pub_->get_publisher_handle(), message_memory);
       if (ret != RCL_RET_OK) {
-        RCLCPP_ERROR(error_logger, "rcl_deallocate_loaned_message failed");
+        RCLCPP_ERROR(
+          error_logger, "rcl_deallocate_loaned_message failed: %s", rcl_get_error_string().str);
+        rcl_reset_error();
         return;
       }
     } else {

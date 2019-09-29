@@ -177,6 +177,8 @@ public:
   /**
    * Depending on the middleware and the message type, this will return true if the middleware
    * can allocate a ROS message instance.
+   *
+   * \return boolean flag indicating if middleware can loan messages.
    */
   RCLCPP_PUBLIC
   bool
