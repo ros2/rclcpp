@@ -105,17 +105,36 @@ void TimeSource::attachNode(
       rclcpp::to_string(use_sim_time_param.get_type()).c_str());
   }
 
-  // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
-  parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
-    node_topics_,
-    std::bind(&TimeSource::on_parameter_event, this, std::placeholders::_1));
+  // It's better to keep existing_callback whatever internal framework changed
+  // (such as other feature need to set callback before this) in the future
+  auto existing_callback = node_parameters_->set_on_parameters_set_callback(nullptr);
+  // Declare a parameter change request callback
+  auto param_change_callback =
+    [this, existing_callback](const std::vector<rclcpp::Parameter> & parameters)
+    {
+      auto result = rcl_interfaces::msg::SetParametersResult();
+      // first call the existing callback, if there was one
+      if (nullptr != existing_callback) {
+        result = existing_callback(parameters);
+        // if the existing callback failed, go ahead and return the result
+        if (!result.successful) {
+          return result;
+        }
+      }
+      result.successful = true;
+
+      on_parameter_event(parameters);
+
+      return result;
+    };
+
+  node_parameters_->set_on_parameters_set_callback(param_change_callback);
 }
 
 void TimeSource::detachNode()
 {
   this->ros_time_active_ = false;
   clock_subscription_.reset();
-  parameter_subscription_.reset();
   node_base_.reset();
   node_topics_.reset();
   node_graph_.reset();
@@ -220,38 +239,33 @@ void TimeSource::destroy_clock_sub()
   clock_subscription_.reset();
 }
 
-void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)
+void TimeSource::on_parameter_event(const std::vector<rclcpp::Parameter> & parameters)
 {
-  // Filter out events on 'use_sim_time' parameter instances in other nodes.
-  if (event->node != node_base_->get_fully_qualified_name()) {
-    return;
-  }
-  // Filter for only 'use_sim_time' being added or changed.
-  rclcpp::ParameterEventsFilter filter(event, {"use_sim_time"},
-    {rclcpp::ParameterEventsFilter::EventType::NEW,
-      rclcpp::ParameterEventsFilter::EventType::CHANGED});
-  for (auto & it : filter.get_events()) {
-    if (it.second->value.type != ParameterType::PARAMETER_BOOL) {
+  const char* use_sim_time_name = "use_sim_time";
+  for (auto & parameter : parameters) {
+    std::string parameter_name = parameter.get_name();
+    if (parameter_name.find(use_sim_time_name) != 0) {
+      continue;
+    }
+
+    rclcpp::ParameterType parameter_type = parameter.get_type();
+    if (rclcpp::ParameterType::PARAMETER_NOT_SET == parameter_type) {
+      RCLCPP_INFO(logger_, "use_sim_time PARAMETER_NOT_SET");
+      parameter_state_ = UNSET;
+    } else if (rclcpp::ParameterType::PARAMETER_BOOL == parameter_type) {
+      if (parameter.as_bool()) {
+        parameter_state_ = SET_TRUE;
+        enable_ros_time();
+        create_clock_sub();
+      } else {
+        parameter_state_ = SET_FALSE;
+        disable_ros_time();
+        destroy_clock_sub();
+      }
+    } else {
       RCLCPP_ERROR(logger_, "use_sim_time parameter cannot be set to anything but a bool");
       continue;
     }
-    if (it.second->value.bool_value) {
-      parameter_state_ = SET_TRUE;
-      enable_ros_time();
-      create_clock_sub();
-    } else {
-      parameter_state_ = SET_FALSE;
-      disable_ros_time();
-      destroy_clock_sub();
-    }
-  }
-  // Handle the case that use_sim_time was deleted.
-  rclcpp::ParameterEventsFilter deleted(event, {"use_sim_time"},
-    {rclcpp::ParameterEventsFilter::EventType::DELETED});
-  for (auto & it : deleted.get_events()) {
-    (void) it;  // if there is a match it's already matched, don't bother reading it.
-    // If the parameter is deleted mark it as unset but dont' change state.
-    parameter_state_ = UNSET;
   }
 }
 

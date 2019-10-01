@@ -98,13 +98,8 @@ private:
   // Destroy the subscription for the clock topic
   void destroy_clock_sub();
 
-  // Parameter Event subscription
-  using ParamMessageT = rcl_interfaces::msg::ParameterEvent;
-  using ParamSubscriptionT = rclcpp::Subscription<ParamMessageT, Alloc>;
-  std::shared_ptr<ParamSubscriptionT> parameter_subscription_;
-
   // Callback for parameter updates
-  void on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
+  void on_parameter_event(const std::vector<rclcpp::Parameter> & parameters);
 
   // An enum to hold the parameter state
   enum UseSimTimeParameterState {UNSET, SET_TRUE, SET_FALSE};
