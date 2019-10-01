@@ -22,6 +22,8 @@
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcl/time.h"
+#include "rcutils/time.h"
+#include "rcutils/types/rcutils_ret.h"
 
 namespace rclcpp
 {
@@ -120,6 +122,16 @@ public:
     JumpHandler::pre_callback_t pre_callback,
     JumpHandler::post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
+
+  /**
+   * Get current time from the time source specified by clock_type as nanoseconds.
+   *
+   * \return RCUTILS_RET_OK if time was successfully retrieved
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   */
+  RCLCPP_PUBLIC
+  rcutils_ret_t
+  get_now_as_ns(rcutils_time_point_value_t * now);
 
 private:
   // Invoke time jump callback

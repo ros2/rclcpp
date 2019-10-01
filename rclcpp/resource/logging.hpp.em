@@ -50,8 +50,7 @@ from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
 
-# TODO(dhood): Implement the throttle macro using time sources available in rclcpp
-excluded_features = ['named', 'throttle']
+excluded_features = ['named']
 def is_supported_feature_combination(feature_combination):
     is_excluded = any([ef in feature_combination for ef in excluded_features])
     return not is_excluded
