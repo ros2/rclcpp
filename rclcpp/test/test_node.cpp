@@ -25,6 +25,8 @@
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "rcpputils/filesystem_helper.hpp"
+
 class TestNode : public ::testing::Test
 {
 protected:
@@ -32,6 +34,13 @@ protected:
   {
     rclcpp::init(0, nullptr);
   }
+
+  void SetUp() override
+  {
+    test_resources_path /= "test_node";
+  }
+
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 /*
@@ -66,7 +75,7 @@ TEST_F(TestNode, get_name_and_namespace) {
   }
   {
     auto options = rclcpp::NodeOptions()
-      .arguments({"__ns:=/another_ns"});
+      .arguments({"--ros-args", "-r", "__ns:=/another_ns"});
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns", options);
     EXPECT_STREQ("my_node", node->get_name());
     EXPECT_STREQ("/another_ns", node->get_namespace());
@@ -469,6 +478,7 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
     {"parameter_rejected", 42},
     {"parameter_type_mismatch", "not an int"},
   });
+
   auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node"_unq, no);
   {
     // no default, with override
@@ -682,6 +692,72 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
     EXPECT_THROW(
       {node->declare_parameters<std::string>("", {{name, "not an int"}});},
       rclcpp::exceptions::InvalidParameterValueException);
+  }
+}
+
+TEST_F(TestNode, declare_parameter_with_cli_overrides) {
+  const std::string parameters_filepath = (
+    test_resources_path / "test_parameters.yaml").string();
+  // test cases with overrides
+  rclcpp::NodeOptions no;
+  no.arguments({
+    "--ros-args",
+    "-p", "parameter_bool:=true",
+    "-p", "parameter_int:=42",
+    "-p", "parameter_double:=0.42",
+    "-p", "parameter_string:=foo",
+    "--params-file", parameters_filepath.c_str(),
+    "-p", "parameter_bool_array:=[false, true]",
+    "-p", "parameter_int_array:=[-21, 42]",
+    "-p", "parameter_double_array:=[-1.0, .42]",
+    "-p", "parameter_string_array:=[foo, bar]"
+  });
+
+  auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node"_unq, no);
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_bool");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_BOOL);
+    EXPECT_EQ(value.get<bool>(), true);
+  }
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_int");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER);
+    EXPECT_EQ(value.get<int64_t>(), 21);  // set to 42 in CLI, overriden by file
+  }
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_double");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE);
+    EXPECT_EQ(value.get<double>(), 0.42);
+  }
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_string");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_STRING);
+    EXPECT_EQ(value.get<std::string>(), "foo");
+  }
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_bool_array");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_BOOL_ARRAY);
+    std::vector<bool> expected_value{false, true};
+    EXPECT_EQ(value.get<std::vector<bool>>(), expected_value);
+  }
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_int_array");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_INTEGER_ARRAY);
+    std::vector<int64_t> expected_value{-21, 42};
+    EXPECT_EQ(value.get<std::vector<int64_t>>(), expected_value);
+  }
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_double_array");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_DOUBLE_ARRAY);
+    std::vector<double> expected_value{-1.0, 0.42};
+    EXPECT_EQ(value.get<std::vector<double>>(), expected_value);
+  }
+  {
+    rclcpp::ParameterValue value = node->declare_parameter("parameter_string_array");
+    EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_STRING_ARRAY);
+    std::vector<std::string> expected_value{"foo", "bar"};
+    // set to [baz, baz, baz] in file, overriden by CLI
+    EXPECT_EQ(value.get<std::vector<std::string>>(), expected_value);
   }
 }
 

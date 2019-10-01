@@ -7,6 +7,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rcl_yaml_param_parser REQUIRED)
+find_package(rcpputils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rmw_implementation REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
@@ -106,6 +107,7 @@ add_library(${PROJECT_NAME}
 ament_target_dependencies(${PROJECT_NAME}
   "rcl"
   "rcl_yaml_param_parser"
+  "rcpputils"
   "builtin_interfaces"
   "rosgraph_msgs"
   "rosidl_typesupport_cpp"
@@ -129,6 +131,7 @@ ament_export_libraries(${PROJECT_NAME})
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(rcl)
+ament_export_dependencies(rcpputils)
 ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rosgraph_msgs)
 ament_export_dependencies(rosidl_typesupport_cpp)
@@ -146,6 +149,8 @@ if(BUILD_TESTING)
   find_package(test_msgs REQUIRED)
 
   include(cmake/rclcpp_add_build_failure_test.cmake)
+
+  add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/test/resources")
 
   ament_add_gtest(test_client test/test_client.cpp)
   if(TARGET test_client)
@@ -212,6 +217,7 @@ if(BUILD_TESTING)
   if(TARGET test_node)
     ament_target_dependencies(test_node
       "rcl_interfaces"
+      "rcpputils"
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
@@ -460,16 +466,10 @@ if(BUILD_TESTING)
     target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_local_parameters test/test_local_parameters.cpp)
-  if(TARGET test_local_parameters)
-    ament_target_dependencies(test_local_parameters
-      "rcl_interfaces"
-      "rmw"
-      "rosidl_generator_cpp"
-      "rosidl_typesupport_cpp"
-    )
-    target_link_libraries(test_local_parameters ${PROJECT_NAME})
-  endif()
+  # Install test resources
+  install(
+    DIRECTORY test/resources
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
 endif()
 
 ament_package()

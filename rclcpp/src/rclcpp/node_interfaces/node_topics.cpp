@@ -34,36 +34,10 @@ rclcpp::PublisherBase::SharedPtr
 NodeTopics::create_publisher(
   const std::string & topic_name,
   const rclcpp::PublisherFactory & publisher_factory,
-  const rcl_publisher_options_t & publisher_options,
-  bool use_intra_process)
+  const rclcpp::QoS & qos)
 {
-  // Create the MessageT specific Publisher using the factory, but store it as PublisherBase.
-  auto publisher = publisher_factory.create_typed_publisher(
-    node_base_, topic_name, publisher_options);
-
-  // Setup intra process publishing if requested.
-  if (use_intra_process) {
-    auto context = node_base_->get_context();
-    // Get the intra process manager instance for this context.
-    auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    // Register the publisher with the intra process manager.
-    if (publisher_options.qos.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
-      throw std::invalid_argument(
-              "intraprocess communication is not allowed with keep all history qos policy");
-    }
-    if (publisher_options.qos.depth == 0) {
-      throw std::invalid_argument(
-              "intraprocess communication is not allowed with a zero qos history depth value");
-    }
-    uint64_t intra_process_publisher_id = ipm->add_publisher(publisher);
-    publisher->setup_intra_process(
-      intra_process_publisher_id,
-      ipm,
-      publisher_options);
-  }
-
-  // Return the completed publisher.
-  return publisher;
+  // Create the MessageT specific Publisher using the factory, but return it as PublisherBase.
+  return publisher_factory.create_typed_publisher(node_base_, topic_name, qos);
 }
 
 void
@@ -99,25 +73,10 @@ rclcpp::SubscriptionBase::SharedPtr
 NodeTopics::create_subscription(
   const std::string & topic_name,
   const rclcpp::SubscriptionFactory & subscription_factory,
-  const rcl_subscription_options_t & subscription_options,
-  bool use_intra_process)
+  const rclcpp::QoS & qos)
 {
-  auto subscription = subscription_factory.create_typed_subscription(
-    node_base_, topic_name, subscription_options);
-
-  // Setup intra process publishing if requested.
-  if (use_intra_process) {
-    auto context = node_base_->get_context();
-    auto ipm =
-      context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
-    auto options_copy = subscription_options;
-    options_copy.ignore_local_publications = false;
-    subscription->setup_intra_process(intra_process_subscription_id, ipm, options_copy);
-  }
-
-  // Return the completed subscription.
-  return subscription;
+  // Create the MessageT specific Subscription using the factory, but return a SubscriptionBase.
+  return subscription_factory.create_typed_subscription(node_base_, topic_name, qos);
 }
 
 void

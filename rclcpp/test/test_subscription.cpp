@@ -203,40 +203,6 @@ TEST_F(TestSubscription, various_creation_signatures) {
       node, "topic", 42, cb, rclcpp::SubscriptionOptions());
     (void)sub;
   }
-  // Now deprecated functions.
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-  {
-    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb, 42);
-    (void)sub;
-  }
-  {
-    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb);
-    (void)sub;
-  }
-  {
-    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb, rmw_qos_profile_default);
-    (void)sub;
-  }
-  {
-    auto sub =
-      node->create_subscription<IntraProcessMessage>("topic", cb, rmw_qos_profile_default, nullptr);
-    (void)sub;
-  }
-  {
-    auto sub = node->create_subscription<IntraProcessMessage>("topic", cb, 42, nullptr);
-    (void)sub;
-  }
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
 }
 
 /*

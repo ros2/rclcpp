@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <functional>
 #include <string>
+#include <vector>
 
 using namespace std::string_literals;
 
@@ -68,6 +69,8 @@ from_rcl_error(
       return std::make_exception_ptr(RCLBadAlloc(base_exc));
     case RCL_RET_INVALID_ARGUMENT:
       return std::make_exception_ptr(RCLInvalidArgument(base_exc, formatted_prefix));
+    case RCL_RET_INVALID_ROS_ARGS:
+      return std::make_exception_ptr(RCLInvalidROSArgsError(base_exc, formatted_prefix));
     default:
       return std::make_exception_ptr(RCLError(base_exc, formatted_prefix));
   }
@@ -124,6 +127,19 @@ RCLInvalidArgument::RCLInvalidArgument(
   const RCLErrorBase & base_exc,
   const std::string & prefix)
 : RCLErrorBase(base_exc), std::invalid_argument(prefix + base_exc.formatted_message)
+{}
+
+RCLInvalidROSArgsError::RCLInvalidROSArgsError(
+  rcl_ret_t ret,
+  const rcl_error_state_t * error_state,
+  const std::string & prefix)
+: RCLInvalidROSArgsError(RCLErrorBase(ret, error_state), prefix)
+{}
+
+RCLInvalidROSArgsError::RCLInvalidROSArgsError(
+  const RCLErrorBase & base_exc,
+  const std::string & prefix)
+: RCLErrorBase(base_exc), std::runtime_error(prefix + base_exc.formatted_message)
 {}
 
 }  // namespace exceptions

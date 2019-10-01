@@ -23,6 +23,7 @@
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -30,18 +31,18 @@
 using rclcpp::SubscriptionBase;
 
 SubscriptionBase::SubscriptionBase(
-  std::shared_ptr<rcl_node_t> node_handle,
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
   const rosidl_message_type_support_t & type_support_handle,
   const std::string & topic_name,
   const rcl_subscription_options_t & subscription_options,
   bool is_serialized)
-: node_handle_(node_handle),
+: node_handle_(node_base->get_shared_rcl_node_handle()),
   use_intra_process_(false),
   intra_process_subscription_id_(0),
   type_support_(type_support_handle),
   is_serialized_(is_serialized)
 {
-  auto custom_deletor = [node_handle](rcl_subscription_t * rcl_subs)
+  auto custom_deletor = [node_handle = this->node_handle_](rcl_subscription_t * rcl_subs)
     {
       if (rcl_subscription_fini(rcl_subs, node_handle.get()) != RCL_RET_OK) {
         RCLCPP_ERROR(
@@ -167,7 +168,8 @@ SubscriptionBase::get_publisher_count() const
   return inter_process_publisher_count;
 }
 
-void SubscriptionBase::setup_intra_process(
+void
+SubscriptionBase::setup_intra_process(
   uint64_t intra_process_subscription_id,
   IntraProcessManagerWeakPtr weak_ipm,
   const rcl_subscription_options_t & intra_process_options)

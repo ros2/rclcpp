@@ -32,9 +32,12 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/detail/resolve_use_intra_process.hpp"
 #include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
+#include "rclcpp/publisher_options.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -42,40 +45,78 @@ namespace rclcpp
 {
 
 /// A publisher publishes messages of any type to a topic.
-template<typename MessageT, typename Alloc = std::allocator<void>>
+template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class Publisher : public PublisherBase
 {
 public:
-  using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
-  using MessageAlloc = typename MessageAllocTraits::allocator_type;
-  using MessageDeleter = allocator::Deleter<MessageAlloc, MessageT>;
+  using MessageAllocatorTraits = allocator::AllocRebind<MessageT, AllocatorT>;
+  using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
+  using MessageDeleter = allocator::Deleter<MessageAllocator, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
 
-  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, Alloc>)
+  RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
   Publisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
-    const rcl_publisher_options_t & publisher_options,
-    const PublisherEventCallbacks & event_callbacks,
-    const std::shared_ptr<MessageAlloc> & allocator)
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
   : PublisherBase(
       node_base,
       topic,
       *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
-      publisher_options),
-    message_allocator_(allocator)
+      options.template to_rcl_publisher_options<MessageT>(qos)),
+    options_(options),
+    message_allocator_(new MessageAllocator(*options.get_allocator().get()))
   {
     allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
 
-    if (event_callbacks.deadline_callback) {
+    if (options_.event_callbacks.deadline_callback) {
       this->add_event_handler(
-        event_callbacks.deadline_callback,
+        options_.event_callbacks.deadline_callback,
         RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
     }
-    if (event_callbacks.liveliness_callback) {
-      this->add_event_handler(event_callbacks.liveliness_callback, RCL_PUBLISHER_LIVELINESS_LOST);
+    if (options_.event_callbacks.liveliness_callback) {
+      this->add_event_handler(
+        options_.event_callbacks.liveliness_callback,
+        RCL_PUBLISHER_LIVELINESS_LOST);
+    }
+
+    // Setup continues in the post construction method, post_init_setup().
+  }
+
+  /// Called post construction, so that construction may continue after shared_from_this() works.
+  virtual
+  void
+  post_init_setup(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  {
+    // Topic is unused for now.
+    (void)topic;
+
+    // If needed, setup intra process communication.
+    if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
+      auto context = node_base->get_context();
+      // Get the intra process manager instance for this context.
+      auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+      // Register the publisher with the intra process manager.
+      if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with keep all history qos policy");
+      }
+      if (qos.get_rmw_qos_profile().depth == 0) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with a zero qos history depth value");
+      }
+      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
+      this->setup_intra_process(
+        intra_process_publisher_id,
+        ipm,
+        options.template to_rcl_publisher_options<MessageT>(qos));
     }
   }
 
@@ -87,7 +128,7 @@ public:
   {
     return mapped_ring_buffer::MappedRingBuffer<
       MessageT,
-      typename Publisher<MessageT, Alloc>::MessageAlloc
+      typename Publisher<MessageT, AllocatorT>::MessageAllocator
     >::make_shared(size, this->get_allocator());
   }
 
@@ -127,18 +168,6 @@ public:
     }
   }
 
-// Skip deprecated attribute in windows, as it raise a warning in template specialization.
-#if !defined(_WIN32)
-  [[deprecated(
-    "publishing an unique_ptr is prefered when using intra process communication."
-    " If using a shared_ptr, use publish(*msg).")]]
-#endif
-  virtual void
-  publish(const std::shared_ptr<const MessageT> & msg)
-  {
-    publish(*msg);
-  }
-
   virtual void
   publish(const MessageT & msg)
   {
@@ -150,24 +179,10 @@ public:
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     // As the message is not const, a copy should be made.
     // A shared_ptr<const MessageT> could also be constructed here.
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr, msg);
+    auto ptr = MessageAllocatorTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocatorTraits::construct(*message_allocator_.get(), ptr, msg);
     MessageUniquePtr unique_msg(ptr, message_deleter_);
     this->publish(std::move(unique_msg));
-  }
-
-// Skip deprecated attribute in windows, as it raise a warning in template specialization.
-#if !defined(_WIN32)
-  [[deprecated(
-    "Use publish(*msg). Check against nullptr before calling if necessary.")]]
-#endif
-  virtual void
-  publish(const MessageT * msg)
-  {
-    if (!msg) {
-      throw std::runtime_error("msg argument is nullptr");
-    }
-    return this->publish(*msg);
   }
 
   void
@@ -176,29 +191,8 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
-// Skip deprecated attribute in windows, as it raise a warning in template specialization.
-#if !defined(_WIN32)
-  [[deprecated(
-    "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
-#endif
-  void
-  publish(const rcl_serialized_message_t * serialized_msg)
-  {
-    return this->do_serialized_publish(serialized_msg);
-  }
-
-// Skip deprecated attribute in windows, as it raise a warning in template specialization.
-#if !defined(_WIN32)
-  [[deprecated(
-    "Use publish(*serialized_msg). Check against nullptr before calling if necessary.")]]
-#endif
-  void
-  publish(std::shared_ptr<const rcl_serialized_message_t> serialized_msg)
-  {
-    return this->do_serialized_publish(serialized_msg.get());
-  }
-
-  std::shared_ptr<MessageAlloc> get_allocator() const
+  std::shared_ptr<MessageAllocator>
+  get_allocator() const
   {
     return message_allocator_;
   }
@@ -272,7 +266,7 @@ protected:
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, msg);
+      ipm->template store_intra_process_message<MessageT, AllocatorT>(publisher_id, msg);
     return message_seq;
   }
 
@@ -290,11 +284,13 @@ protected:
       throw std::runtime_error("cannot publisher msg which is a null pointer");
     }
     uint64_t message_seq =
-      ipm->template store_intra_process_message<MessageT, Alloc>(publisher_id, std::move(msg));
+      ipm->template store_intra_process_message<MessageT, AllocatorT>(publisher_id, std::move(msg));
     return message_seq;
   }
 
-  std::shared_ptr<MessageAlloc> message_allocator_;
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> options_;
+
+  std::shared_ptr<MessageAllocator> message_allocator_;
 
   MessageDeleter message_deleter_;
 };

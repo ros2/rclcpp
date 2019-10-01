@@ -12,17 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// When compiling this file, Windows produces a deprecation warning for the
-// deprecated function prototype of NodeParameters::register_param_change_callback().
-// Other compilers do not.
-#if defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
-#if defined(_WIN32)
-# pragma warning(pop)
-#endif
 
 #include <rcl_yaml_param_parser/parser.h>
 
@@ -94,65 +84,37 @@ NodeParameters::NodeParameters(
     throw std::runtime_error("Need valid node options in NodeParameters");
   }
 
-  // Get paths to yaml files containing initial parameter values
-  std::vector<std::string> yaml_paths;
-
-  auto get_yaml_paths = [&yaml_paths, &options](const rcl_arguments_t * args) {
-      int num_yaml_files = rcl_arguments_get_param_files_count(args);
-      if (num_yaml_files > 0) {
-        char ** param_files;
-        rcl_ret_t ret = rcl_arguments_get_param_files(args, options->allocator, &param_files);
-        if (RCL_RET_OK != ret) {
-          rclcpp::exceptions::throw_from_rcl_error(ret);
-        }
-        auto cleanup_param_files = make_scope_exit(
-          [&param_files, &num_yaml_files, &options]() {
-            for (int i = 0; i < num_yaml_files; ++i) {
-              options->allocator.deallocate(param_files[i], options->allocator.state);
-            }
-            options->allocator.deallocate(param_files, options->allocator.state);
-          });
-        for (int i = 0; i < num_yaml_files; ++i) {
-          yaml_paths.emplace_back(param_files[i]);
-        }
-      }
-    };
-
+  std::vector<const rcl_arguments_t *> argument_sources;
   // global before local so that local overwrites global
   if (options->use_global_arguments) {
     auto context_ptr = node_base->get_context()->get_rcl_context();
-    get_yaml_paths(&(context_ptr->global_arguments));
+    argument_sources.push_back(&(context_ptr->global_arguments));
   }
-  get_yaml_paths(&(options->arguments));
+  argument_sources.push_back(&options->arguments);
 
   // Get fully qualified node name post-remapping to use to find node's params in yaml files
   combined_name_ = node_base->get_fully_qualified_name();
 
-  // TODO(sloretz) use rcl to parse yaml when circular dependency is solved
-  // See https://github.com/ros2/rcl/issues/252
-  for (const std::string & yaml_path : yaml_paths) {
-    rcl_params_t * yaml_params = rcl_yaml_node_struct_init(options->allocator);
-    if (nullptr == yaml_params) {
-      throw std::bad_alloc();
+  for (const rcl_arguments_t * source : argument_sources) {
+    rcl_params_t * params = NULL;
+    rcl_ret_t ret = rcl_arguments_get_param_overrides(source, &params);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
     }
-    if (!rcl_parse_yaml_file(yaml_path.c_str(), yaml_params)) {
-      std::ostringstream ss;
-      ss << "Failed to parse parameters from file '" << yaml_path << "': " <<
-        rcl_get_error_string().str;
-      rcl_reset_error();
-      throw std::runtime_error(ss.str());
-    }
-
-    rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(yaml_params);
-    rcl_yaml_node_struct_fini(yaml_params);
-
-    for (auto iter = initial_map.begin(); initial_map.end() != iter; iter++) {
-      // TODO(cottsay) implement further wildcard matching
-      if (iter->first == "/**" || iter->first == combined_name_) {
-        // Combine parameter yaml files, overwriting values in older ones
-        for (auto & param : iter->second) {
-          parameter_overrides_[param.get_name()] =
-            rclcpp::ParameterValue(param.get_value_message());
+    if (params) {
+      auto cleanup_params = make_scope_exit(
+        [params]() {
+          rcl_yaml_node_struct_fini(params);
+        });
+      rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
+      for (auto iter = initial_map.begin(); initial_map.end() != iter; iter++) {
+        // TODO(cottsay) implement further wildcard matching
+        if (iter->first == "/**" || iter->first == combined_name_) {
+          // Combine parameter yaml files, overwriting values in older ones
+          for (auto & param : iter->second) {
+            parameter_overrides_[param.get_name()] =
+              rclcpp::ParameterValue(param.get_value_message());
+          }
         }
       }
     }
@@ -918,33 +880,6 @@ NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callb
   on_parameters_set_callback_ = callback;
   return existing_callback;
 }
-
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-void
-NodeParameters::register_param_change_callback(ParametersCallbackFunction callback)
-{
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-
-  if (on_parameters_set_callback_) {
-    RCLCPP_WARN(
-      node_logging_->get_logger(),
-      "on_parameters_set_callback already registered, overwriting previous callback");
-  }
-  on_parameters_set_callback_ = callback;
-}
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
 
 const std::map<std::string, rclcpp::ParameterValue> &
 NodeParameters::get_parameter_overrides() const
