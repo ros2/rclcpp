@@ -21,7 +21,7 @@
 #include "test_msgs/msg/basic_types.hpp"
 
 using MessageT = test_msgs::msg::BasicTypes;
-using LoanedMessageSequenceT = rclcpp::LoanedMessageSequence<MessageT>;
+using LoanedMessageSequenceT = rclcpp::LoanedMessageSequence;
 
 class TestLoanedMessageSequence : public ::testing::Test
 {
