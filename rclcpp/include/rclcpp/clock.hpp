@@ -131,7 +131,7 @@ public:
    */
   RCLCPP_PUBLIC
   rcutils_ret_t
-  get_now_as_ns(rcutils_time_point_value_t * now);
+  get_now_as_timepoint(rcutils_time_point_value_t * now);
 
 private:
   // Invoke time jump callback

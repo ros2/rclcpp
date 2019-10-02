@@ -166,26 +166,27 @@ TEST_F(TestLoggingMacros, test_logging_skipfirst) {
 
 TEST_F(TestLoggingMacros, test_throttle) {
   using namespace std::chrono_literals;
+  rclcpp::Clock steady_clock(RCL_STEADY_TIME);
   for (uint64_t i = 0; i < 3; ++i) {
-    RCLCPP_DEBUG_THROTTLE(g_logger, rcutils_steady_time_now, 10000, "Throttling");
+    RCLCPP_DEBUG_THROTTLE(g_logger, steady_clock, 10000, "Throttling");
   }
   EXPECT_EQ(1u, g_log_calls);
-  RCLCPP_DEBUG_SKIPFIRST_THROTTLE(g_logger, rcutils_steady_time_now, 1, "Skip first throttling");
+  RCLCPP_DEBUG_SKIPFIRST_THROTTLE(g_logger, steady_clock, 1, "Skip first throttling");
   EXPECT_EQ(1u, g_log_calls);
   for (uint64_t i = 0; i < 3; ++i) {
-    RCLCPP_DEBUG_THROTTLE(g_logger, rcutils_steady_time_now, 10, "Throttling");
+    RCLCPP_DEBUG_THROTTLE(g_logger, steady_clock, 10, "Throttling");
     std::this_thread::sleep_for(10ms);
   }
   EXPECT_EQ(4u, g_log_calls);
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
   ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(ros_clock.get_clock_handle()));
-  RCLCPP_DEBUG_THROTTLE(g_logger, ros_clock.get_now_as_ns, 10000, "Throttling");
+  RCLCPP_DEBUG_THROTTLE(g_logger, ros_clock, 10000, "Throttling");
   rcl_clock_t * clock = ros_clock.get_clock_handle();
   ASSERT_TRUE(clock);
   EXPECT_EQ(4u, g_log_calls);
   EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock, RCUTILS_MS_TO_NS(10)));
   for (uint64_t i = 0; i < 2; ++i) {
-    RCLCPP_DEBUG_THROTTLE(g_logger, ros_clock.get_now_as_ns, 10, "Throttling");
+    RCLCPP_DEBUG_THROTTLE(g_logger, ros_clock, 10, "Throttling");
     if (i == 0) {
       EXPECT_EQ(5u, g_log_calls);
       rcl_time_point_value_t clock_ns = ros_clock.now().nanoseconds() + RCUTILS_MS_TO_NS(10);

@@ -86,19 +86,25 @@ def is_supported_feature_combination(feature_combination):
 @[ end for]@
  * \param logger The `rclcpp::Logger` to use
 @[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
+@[ if not param_name == 'time_source']@
  * \param @(param_name) @(doc_line)
+@[ else]@
+ * \param clock rclcpp::Clock that will be used to get the time point.
+@[ end if]@
 @[ end for]@
  * \param ... The format string, followed by the variable arguments for the format string.
  * It also accepts a single argument of type std::string.
  */
-#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+@{params = get_macro_parameters(feature_combination).keys()}@
+@{params = [p if not p == 'time_source' else 'clock' for p in params]}@
+#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in params]))...) \
   do { \
     static_assert( \
       ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = get_macro_parameters(feature_combination).keys()}@
+@{params = [p if not p == 'clock' else 'clock.get_now_as_timepoint' for p in params]}@
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
