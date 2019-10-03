@@ -33,23 +33,58 @@ class LoanedMessage
   using MessageAllocatorTraits = allocator::AllocRebind<MessageT, AllocatorT>;
   using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
 
-protected:
-  const rclcpp::PublisherBase * pub_;
-
-  std::unique_ptr<MessageT> message_;
-
-  const std::shared_ptr<MessageAllocator> message_allocator_;
-
-  /// Deleted copy constructor to preserve memory integrity
-  LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
-
 public:
   /// Constructor of the LoanedMessage class
   /**
    * The constructor of this class allocates memory for a given message type
    * and associates this with a given publisher.
    *
-   * \Note: Given the publisher instance, a case differentiation is being performaned
+   * Given the publisher instance, a case differentiation is being performaned
+   * which decides whether the underlying middleware is able to allocate the appropriate
+   * memory for this message type or not.
+   * In the case that the middleware can not loan messages, the passed in allocator instance
+   * is being used to allocate the message within the scope of this class.
+   * Otherwise, the allocator is being ignored and the allocation is solely performaned
+   * in the underlying middleware with its appropriate allocation strategy.
+   * The need for this arises as the user code can be written explicitly targeting a middleware
+   * capable of loaning messages.
+   * However, this user code is ought to be usable even when dynamically linked against
+   * a middleware which doesn't support message loaning in which case the allocator will be used.
+   *
+   * \param pub rclcpp::Publisher instance to which the memory belongs
+   * \param allocator Allocator instance in case middleware can not allocate messages
+   */
+  LoanedMessage(
+    const rclcpp::PublisherBase & pub,
+    std::allocator<MessageT> allocator)
+  : pub_(pub),
+    message_(nullptr),
+    message_allocator_(std::move(allocator))
+  {
+    if (pub_.can_loan_messages()) {
+      void * message_ptr = nullptr;
+      auto ret = rcl_borrow_loaned_message(
+        pub_.get_publisher_handle(),
+        rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+        &message_ptr);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+      message_ = static_cast<MessageT *>(message_ptr);
+    } else {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "Currently used middleware can't loan messages. Local allocator will be used.");
+      message_ = message_allocator_.allocate(1);
+    }
+  }
+
+  /// Constructor of the LoanedMessage class
+  /**
+   * The constructor of this class allocates memory for a given message type
+   * and associates this with a given publisher.
+   *
+   * Given the publisher instance, a case differentiation is being performaned
    * which decides whether the underlying middleware is able to allocate the appropriate
    * memory for this message type or not.
    * In the case that the middleware can not loan messages, the passed in allocator instance
@@ -66,30 +101,9 @@ public:
    */
   LoanedMessage(
     const rclcpp::PublisherBase * pub,
-    const std::shared_ptr<std::allocator<MessageT>> allocator)
-  : pub_(pub),
-    message_(nullptr),
-    message_allocator_(allocator)
-  {
-    if (!pub) {
-      throw std::runtime_error("publisher pointer is null");
-    }
-
-    void * message_memory = nullptr;
-    if (pub_->can_loan_messages()) {
-      message_memory =
-        rcl_allocate_loaned_message(pub_->get_publisher_handle(), nullptr, sizeof(MessageT));
-    } else {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Currently used middleware can't loan messages. Local allocator will be used.");
-      message_memory = message_allocator_->allocate(1);
-    }
-    if (!message_memory) {
-      throw std::runtime_error("unable to allocate memory for loaned message");
-    }
-    message_.reset(new (message_memory) MessageT());
-  }
+    std::shared_ptr<std::allocator<MessageT>> allocator)
+  : LoanedMessage(*pub, *allocator)
+  {}
 
   /// Move semantic for RVO
   LoanedMessage(LoanedMessage<MessageT> && other)
@@ -113,28 +127,21 @@ public:
   virtual ~LoanedMessage()
   {
     auto error_logger = rclcpp::get_logger("LoanedMessage");
-    if (!pub_) {
-      RCLCPP_ERROR(error_logger, "Can't deallocate message memory. Publisher instance is NULL");
-      return;
-    }
 
-    // release allocated memory from unique_ptr
-    MessageT * message_memory = message_.release();
-
-    if (pub_->can_loan_messages()) {
+    if (pub_.can_loan_messages()) {
       // return allocated memory to the middleware
       auto ret =
-        rcl_deallocate_loaned_message(pub_->get_publisher_handle(), message_memory);
+        rcl_return_loaned_message(pub_.get_publisher_handle(), message_);
       if (ret != RCL_RET_OK) {
         RCLCPP_ERROR(
           error_logger, "rcl_deallocate_loaned_message failed: %s", rcl_get_error_string().str);
         rcl_reset_error();
-        return;
       }
     } else {
-      message_allocator_->deallocate(message_memory, 1);
+      // call destructor before deallocating
+      message_->~MessageT();
+      message_allocator_.deallocate(message_, 1);
     }
-    message_memory = nullptr;
     message_ = nullptr;
   }
 
@@ -156,13 +163,23 @@ public:
    * A call to `get()` will return a mutable reference to the underlying ROS message instance.
    * This allows a user to modify the content of the message prior to publishing it.
    *
-   * \Note: If this reference is copied, the memory for this copy is no longer managed
+   * If this reference is copied, the memory for this copy is no longer managed
    * by the LoanedMessage instance and has to be cleanup individually.
    */
   MessageT & get() const
   {
     return *message_;
   }
+
+protected:
+  const rclcpp::PublisherBase & pub_;
+
+  MessageT * message_;
+
+  MessageAllocator message_allocator_;
+
+  /// Deleted copy constructor to preserve memory integrity.
+  LoanedMessage(const LoanedMessage<MessageT> & other) = delete;
 };
 
 }  // namespace rclcpp

@@ -55,18 +55,6 @@ TEST_F(TestLoanedMessage, initialize) {
   SUCCEED();
 }
 
-TEST_F(TestLoanedMessage, wrong_initialized) {
-  auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
-
-  try {
-    auto loaned_msg = rclcpp::LoanedMessage<MessageT>(nullptr, nullptr);
-  } catch (const std::runtime_error & e) {
-    SUCCEED();
-  } catch (...) {
-    FAIL() << "something bad happened";
-  }
-}
-
 TEST_F(TestLoanedMessage, loan_from_pub) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);

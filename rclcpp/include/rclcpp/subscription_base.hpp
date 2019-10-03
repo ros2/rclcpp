@@ -49,8 +49,6 @@ namespace intra_process_manager
 class IntraProcessManager;
 }
 
-class LoanedMessageSequence;
-
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
 class SubscriptionBase : public std::enable_shared_from_this<SubscriptionBase>
@@ -130,20 +128,6 @@ public:
   std::shared_ptr<rcl_serialized_message_t>
   create_serialized_message() = 0;
 
-  /// Loan a single message
-  /** \return raw pointer to a non-initialized message. */
-  RCLCPP_PUBLIC
-  virtual
-  void *
-  loan_message() = 0;
-
-  /// Loan a message sequence
-  /** \return loaned message sequence */
-  RCLCPP_PUBLIC
-  virtual
-  rclcpp::LoanedMessageSequence
-  loan_message_sequence() = 0;
-
   /// Check if we need to handle the message, and execute the callback if we do.
   /**
    * \param[in] message Shared pointer to the message to handle.
@@ -154,6 +138,7 @@ public:
   void
   handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
+  // TODO(karsten1987): Does it make sense to pass in a weak_ptr?
   RCLCPP_PUBLIC
   virtual
   void
@@ -172,19 +157,6 @@ public:
   virtual
   void
   return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
-
-  /// Return the message loaned in loan_message.
-  /** \param[in] message Loaned message. */
-  RCLCPP_PUBLIC
-  virtual
-  void
-  return_loaned_message(void * msg) = 0;
-
-  /// Return a message sequence
-  RCLCPP_PUBLIC
-  virtual
-  void
-  return_loaned_message_sequence(rclcpp::LoanedMessageSequence && loaned_message_sequence) = 0;
 
   RCLCPP_PUBLIC
   virtual

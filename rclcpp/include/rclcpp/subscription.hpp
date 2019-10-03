@@ -36,7 +36,6 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/intra_process_manager.hpp"
-#include "rclcpp/loaned_message_sequence.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
@@ -166,19 +165,6 @@ public:
     return message_memory_strategy_->borrow_serialized_message();
   }
 
-  void *
-  loan_message() override
-  {
-    CallbackMessageT * msg = nullptr;
-    return msg;
-  }
-
-  rclcpp::LoanedMessageSequence
-  loan_message_sequence() override
-  {
-    return rclcpp::LoanedMessageSequence(this);
-  }
-
   void handle_message(
     std::shared_ptr<void> & message, const rmw_message_info_t & message_info) override
   {
@@ -196,7 +182,7 @@ public:
     void * loaned_message, const rmw_message_info_t & message_info) override
   {
     // make messageT pointer out of it.
-    auto typed_message = reinterpret_cast<CallbackMessageT*>(loaned_message);
+    auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
     any_callback_.dispatch(std::shared_ptr<CallbackMessageT>(typed_message), message_info);
   }
 
@@ -211,24 +197,6 @@ public:
   void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
   {
     message_memory_strategy_->return_serialized_message(message);
-  }
-
-  void return_loaned_message(void * msg) override
-  {
-    auto ret = rcl_return_loaned_message(subscription_handle_.get(), msg);
-    if (RCL_RET_OK != ret) {
-      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "%s", rcl_get_error_string().str);
-      rcl_reset_error();
-    }
-  }
-
-  void
-  return_loaned_message_sequence(
-    rclcpp::LoanedMessageSequence && loaned_message_sequence) override
-  {
-    // scope exit
-    // destructor of loaned_message_sequence to take care of returning
-    (void) loaned_message_sequence;
   }
 
   void handle_intra_process_message(

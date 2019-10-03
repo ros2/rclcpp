@@ -47,7 +47,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/init_options.cpp
   src/rclcpp/intra_process_manager.cpp
   src/rclcpp/intra_process_manager_impl.cpp
-  src/rclcpp/loaned_message_sequence.cpp
   src/rclcpp/logger.cpp
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
@@ -223,12 +222,6 @@ if(BUILD_TESTING)
     "test_msgs"
   )
   target_link_libraries(test_loaned_message ${PROJECT_NAME})
-
-  ament_add_gtest(test_loaned_message_sequence test/test_loaned_message_sequence.cpp)
-  ament_target_dependencies(test_loaned_message_sequence
-    "test_msgs"
-  )
-  target_link_libraries(test_loaned_message_sequence ${PROJECT_NAME})
 
   ament_add_gtest(test_node test/test_node.cpp)
   if(TARGET test_node)
