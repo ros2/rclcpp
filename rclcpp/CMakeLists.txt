@@ -32,6 +32,9 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/clock.cpp
   src/rclcpp/context.cpp
   src/rclcpp/contexts/default_context.cpp
+  src/rclcpp/detail/rmw_implementation_specific_payload.cpp
+  src/rclcpp/detail/rmw_implementation_specific_publisher_payload.cpp
+  src/rclcpp/detail/rmw_implementation_specific_subscription_payload.cpp
   src/rclcpp/duration.cpp
   src/rclcpp/event.cpp
   src/rclcpp/exceptions.cpp

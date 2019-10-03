@@ -104,6 +104,7 @@ public:
       options.template to_rcl_subscription_options<CallbackMessageT>(qos),
       rclcpp::subscription_traits::is_serialized_subscription_argument<CallbackMessageT>::value),
     any_callback_(callback),
+    options_(options),
     message_memory_strategy_(message_memory_strategy)
   {
     if (options.event_callbacks.deadline_callback) {
@@ -302,6 +303,12 @@ private:
   RCLCPP_DISABLE_COPY(Subscription)
 
   AnySubscriptionCallback<CallbackMessageT, AllocatorT> any_callback_;
+  /// Copy of original options passed during construction.
+  /**
+   * It is important to save a copy of this so that the rmw payload which it
+   * may contain is kept alive for the duration of the subscription.
+   */
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
   typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::SharedPtr
     message_memory_strategy_;
 };
