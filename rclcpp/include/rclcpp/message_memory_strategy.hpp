@@ -98,9 +98,9 @@ public:
     auto serialized_msg = std::shared_ptr<rcl_serialized_message_t>(
       msg,
       [](rmw_serialized_message_t * msg) {
-        auto ret = rmw_serialized_message_fini(msg);
+        auto fini_ret = rmw_serialized_message_fini(msg);
         delete msg;
-        if (ret != RCL_RET_OK) {
+        if (fini_ret != RCL_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
             "rclcpp",
             "failed to destroy serialized message: %s", rcl_get_error_string().str);
