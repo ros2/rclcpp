@@ -49,9 +49,10 @@ from collections import OrderedDict
 import rcutils.logging
 
 rcutils.logging.throttle_args['condition_before'] = 'RCUTILS_LOG_CONDITION_THROTTLE_BEFORE(clock, duration)'
-rcutils.logging.throttle_params = OrderedDict([(
-	'clock', 'rclcpp::Clock that will be used to get the time point.') if k == 'get_time_point_value' else (k,v) for k,v in rcutils.logging.throttle_params.items()])
-rcutils.logging.feature_combinations = rcutils.logging.reconstruct_feature_combinations()
+del rcutils.logging.throttle_params['get_time_point_value']
+rcutils.logging.throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
+rcutils.logging.throttle_params.move_to_end('clock', last=False)
+
 
 excluded_features = ['named']
 def is_supported_feature_combination(feature_combination):
