@@ -242,11 +242,11 @@ public:
     if (this->can_loan_messages()) {
       // we release the ownership from the rclpp::LoanedMessage instance
       // and let the middleware clean up the memory.
-      this->do_inter_process_publish(loaned_msg.release(), true);
+      this->do_loaned_message_publish(loaned_msg.release());
     } else {
       // we don't release the ownership, let the middleware copy the ros message
       // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
-      this->do_inter_process_publish(&loaned_msg.get(), false);
+      this->do_inter_process_publish(&loaned_msg.get());
     }
   }
 
@@ -258,15 +258,9 @@ public:
 
 protected:
   void
-  do_inter_process_publish(const MessageT * msg, bool is_loaned = false)
+  do_inter_process_publish(const MessageT * msg)
   {
-    auto status = RCL_RET_ERROR;
-    if (is_loaned)
-    {
-      status = rcl_publish_loaned_message(&publisher_handle_, msg, nullptr);
-    } else {
-      status = rcl_publish(&publisher_handle_, msg, nullptr);
-    }
+    auto status = rcl_publish(&publisher_handle_, msg, nullptr);
 
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
@@ -315,6 +309,26 @@ protected:
     }
     if (RCL_RET_OK != status) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
+    }
+  }
+
+  void
+  do_loaned_message_publish(MessageT * msg)
+  {
+    auto status = rcl_publish_loaned_message(&publisher_handle_, msg, nullptr);
+
+    if (RCL_RET_PUBLISHER_INVALID == status) {
+      rcl_reset_error();  // next call will reset error message if not context
+      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
+        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
+        if (nullptr != context && !rcl_context_is_valid(context)) {
+          // publisher is invalid due to context being shutdown
+          return;
+        }
+      }
+    }
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
     }
   }
 
