@@ -186,7 +186,7 @@ public:
     any_callback_.dispatch(std::shared_ptr<CallbackMessageT>(typed_message), message_info);
   }
 
-  /// Return the loaned message.
+  /// Return the borrowed message.
   /** \param message message to be returned */
   void return_message(std::shared_ptr<void> & message) override
   {

@@ -34,7 +34,7 @@ class LoanedMessage
   using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
 
 public:
-  /// Constructor of the LoanedMessage class
+  /// Constructor of the LoanedMessage class.
   /**
    * The constructor of this class allocates memory for a given message type
    * and associates this with a given publisher.
@@ -79,7 +79,7 @@ public:
     }
   }
 
-  /// Constructor of the LoanedMessage class
+  /// Constructor of the LoanedMessage class.
   /**
    * The constructor of this class allocates memory for a given message type
    * and associates this with a given publisher.
@@ -112,7 +112,7 @@ public:
     message_allocator_(std::move(other.message_allocator_))
   {}
 
-  /// Destructor of the LoanedMessage class
+  /// Destructor of the LoanedMessage class.
   /**
    * The destructor has the explicit task to return the allocated memory for its message
    * instance.
@@ -127,6 +127,10 @@ public:
   virtual ~LoanedMessage()
   {
     auto error_logger = rclcpp::get_logger("LoanedMessage");
+
+    if (message_ == nullptr) {
+      return;
+    }
 
     if (pub_.can_loan_messages()) {
       // return allocated memory to the middleware
@@ -145,7 +149,7 @@ public:
     message_ = nullptr;
   }
 
-  /// Validate if the message was correctly allocated
+  /// Validate if the message was correctly allocated.
   /**
    * The allocated memory might not be always consistent and valid.
    * Reasons why this could fail is that an allocation step was failing,
@@ -158,7 +162,7 @@ public:
     return message_ != nullptr;
   }
 
-  /// Access the ROS message instance
+  /// Access the ROS message instance.
   /**
    * A call to `get()` will return a mutable reference to the underlying ROS message instance.
    * This allows a user to modify the content of the message prior to publishing it.
@@ -169,6 +173,20 @@ public:
   MessageT & get() const
   {
     return *message_;
+  }
+
+  /// Release ownership of the ROS message instance.
+  /**
+   * A call to `release()` will unmanage the memory for the ROS message.
+   * That means that the destructor of this class will not free the memory on scope exit.
+   *
+   * \return Raw pointer to the message instance.
+   */
+  MessageT * release()
+  {
+    auto msg = message_;
+    message_ = nullptr;
+    return msg;
   }
 
 protected:

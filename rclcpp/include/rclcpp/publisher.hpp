@@ -156,17 +156,6 @@ public:
     return rclcpp::LoanedMessage<MessageT, AllocatorT>(this, this->get_allocator());
   }
 
-  /// Return and deallocate the memory for the loaned message.
-  /**
-   * \param loaned_message The LoanedMessage instance to be returned.
-   */
-  void
-  return_loaned_message(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg) const
-  {
-    // scope exit
-    (void) loaned_msg;
-  }
-
   /// Send a message to the topic for this publisher.
   /**
    * This function is templated on the input message type, MessageT.
@@ -244,8 +233,21 @@ public:
       // TODO(Karsten1987): support loaned message passed by intraprocess
       throw std::runtime_error("storing loaned messages in intra process is not supported yet");
     }
-    // set is_loaned to true
-    this->do_inter_process_publish(&loaned_msg.get(), true);
+
+    // verify that publisher supports loaned messages
+    // TODO(Karsten1987): This case separation has to be done in rclcpp
+    // otherwise we have to ensure that every middleware implements
+    // `rmw_publish_loaned_message` explicitly the same way as `rmw_publish`
+    // by taking a copy of the ros message.
+    if (this->can_loan_messages()) {
+      // we release the ownership from the rclpp::LoanedMessage instance
+      // and let the middleware clean up the memory.
+      this->do_inter_process_publish(loaned_msg.release(), true);
+    } else {
+      // we don't release the ownership, let the middleware copy the ros message
+      // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
+      this->do_inter_process_publish(&loaned_msg.get(), false);
+    }
   }
 
   std::shared_ptr<MessageAllocator>
@@ -258,7 +260,14 @@ protected:
   void
   do_inter_process_publish(const MessageT * msg, bool is_loaned = false)
   {
-    auto status = rcl_publish(&publisher_handle_, msg, nullptr, is_loaned);
+    auto status = RCL_RET_ERROR;
+    if (is_loaned)
+    {
+      status = rcl_publish_loaned_message(&publisher_handle_, msg, nullptr);
+    } else {
+      status = rcl_publish(&publisher_handle_, msg, nullptr);
+    }
+
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
@@ -288,12 +297,12 @@ protected:
   }
 
   void
-  do_intra_process_publish(uint64_t message_seq, bool is_loaned = false)
+  do_intra_process_publish(uint64_t message_seq)
   {
     rcl_interfaces::msg::IntraProcessMessage ipm;
     ipm.publisher_id = intra_process_publisher_id_;
     ipm.message_sequence = message_seq;
-    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr, is_loaned);
+    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr);
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
