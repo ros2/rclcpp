@@ -181,9 +181,11 @@ public:
   handle_loaned_message(
     void * loaned_message, const rmw_message_info_t & message_info) override
   {
-    // make messageT pointer out of it.
     auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
-    any_callback_.dispatch(std::shared_ptr<CallbackMessageT>(typed_message), message_info);
+    // message is loaned, so we have to make sure that the deleter does not deallocate the message
+    auto sptr = std::shared_ptr<CallbackMessageT>(
+      typed_message, [](CallbackMessageT * msg) { (void) msg; });
+    any_callback_.dispatch(sptr, message_info);
   }
 
   /// Return the borrowed message.
