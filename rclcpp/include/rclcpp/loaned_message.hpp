@@ -76,6 +76,7 @@ public:
         rclcpp::get_logger("rclcpp"),
         "Currently used middleware can't loan messages. Local allocator will be used.");
       message_ = message_allocator_.allocate(1);
+      new (message_) MessageT();
     }
   }
 
