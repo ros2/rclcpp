@@ -72,9 +72,9 @@ public:
       }
       message_ = static_cast<MessageT *>(message_ptr);
     } else {
-      RCLCPP_WARN(
-        rclcpp::get_logger("rclcpp"),
-        "Currently used middleware can't loan messages. Local allocator will be used.");
+      RCLCPP_INFO_ONCE(
+          rclcpp::get_logger("rclcpp"),
+          "Currently used middleware can't loan messages. Local allocator will be used.");
       message_ = message_allocator_.allocate(1);
       new (message_) MessageT();
     }
