@@ -184,7 +184,7 @@ public:
     auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
     auto sptr = std::shared_ptr<CallbackMessageT>(
-      typed_message, [](CallbackMessageT * msg) { (void) msg; });
+      typed_message, [](CallbackMessageT * msg) {(void) msg;});
     any_callback_.dispatch(sptr, message_info);
   }
 
