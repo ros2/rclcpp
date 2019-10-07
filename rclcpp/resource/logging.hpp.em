@@ -46,12 +46,17 @@
 
 @{
 from collections import OrderedDict
-import rcutils.logging
+from rcutils.logging import feature_combinations
+from rcutils.logging import get_macro_parameters
+from rcutils.logging import get_suffix_from_features
+from rcutils.logging import severities
+from rcutils.logging import throttle_args
+from rcutils.logging import throttle_params
 
-rcutils.logging.throttle_args['condition_before'] = 'RCUTILS_LOG_CONDITION_THROTTLE_BEFORE(clock, duration)'
-del rcutils.logging.throttle_params['get_time_point_value']
-rcutils.logging.throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
-rcutils.logging.throttle_params.move_to_end('clock', last=False)
+throttle_args['condition_before'] = 'RCUTILS_LOG_CONDITION_THROTTLE_BEFORE(clock, duration)'
+del throttle_params['get_time_point_value']
+throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
+throttle_params.move_to_end('clock', last=False)
 
 
 excluded_features = ['named']
@@ -59,43 +64,43 @@ def is_supported_feature_combination(feature_combination):
     is_excluded = any([ef in feature_combination for ef in excluded_features])
     return not is_excluded
 }@
-@[for severity in rcutils.logging.severities]@
+@[for severity in severities]@
 /** @@name Logging macros for severity @(severity).
  */
 ///@@{
 #if (RCLCPP_LOG_MIN_SEVERITY > RCLCPP_LOG_MIN_SEVERITY_@(severity))
 // empty logging macros for severity @(severity) when being disabled at compile time
-@[ for feature_combination in [fc for fc in rcutils.logging.feature_combinations if is_supported_feature_combination(fc)]]@
-@{suffix = rcutils.logging.get_suffix_from_features(feature_combination)}@
+@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
+@{suffix = get_suffix_from_features(feature_combination)}@
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_@(severity)@(suffix)(...)
 @[ end for]@
 
 #else
-@[ for feature_combination in [fc for fc in rcutils.logging.feature_combinations if is_supported_feature_combination(fc)]]@
-@{suffix = rcutils.logging.get_suffix_from_features(feature_combination)}@
+@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
+@{suffix = get_suffix_from_features(feature_combination)}@
 // The RCLCPP_@(severity)@(suffix) macro is surrounded by do { .. } while (0)
 // to implement the standard C macro idiom to make the macro safe in all
 // contexts; see http://c-faq.com/cpp/multistmt.html for more information.
 /**
  * \def RCLCPP_@(severity)@(suffix)
  * Log a message with severity @(severity)@
-@[ if rcutils.logging.feature_combinations[feature_combination].doc_lines]@
+@[ if feature_combinations[feature_combination].doc_lines]@
  with the following conditions:
 @[ else]@
 .
 @[ end if]@
-@[ for doc_line in rcutils.logging.feature_combinations[feature_combination].doc_lines]@
+@[ for doc_line in feature_combinations[feature_combination].doc_lines]@
  * @(doc_line)
 @[ end for]@
  * \param logger The `rclcpp::Logger` to use
-@[ for param_name, doc_line in rcutils.logging.feature_combinations[feature_combination].params.items()]@
+@[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
  * \param ... The format string, followed by the variable arguments for the format string.
  * It also accepts a single argument of type std::string.
  */
-@{params = rcutils.logging.get_macro_parameters(feature_combination).keys()}@
+@{params = get_macro_parameters(feature_combination).keys()}@
 #define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in params]))...) \
   do { \
     static_assert( \
@@ -103,7 +108,7 @@ def is_supported_feature_combination(feature_combination):
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = ['clock.get_now_as_timepoint' if p == 'clock' and '_THROTTLE' in suffix else p for p in params]}@
+@{params = ['clock.get_now_as_timepoint' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
