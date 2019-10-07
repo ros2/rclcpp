@@ -22,11 +22,11 @@ namespace detail
 {
 
 void
-RMWImplementationSpecificPublisherPayload::modify_rcl_publisher_options(
-  rcl_publisher_options_t & rcl_publisher_options) const
+RMWImplementationSpecificPublisherPayload::modify_rmw_publisher_options(
+  rmw_publisher_options_t & rmw_publisher_options) const
 {
-  // By default, do not mutate the rcl publisher options.
-  (void)rcl_publisher_options;
+  // By default, do not mutate the rmw publisher options.
+  (void)rmw_publisher_options;
 }
 
 }  // namespace detail

@@ -37,11 +37,14 @@ public:
    * This is called after the rcl_subscription_options_t has been prepared by
    * rclcpp, but before rcl_subscription_init() is called.
    *
+   * The passed option is the rmw_subscription_options field of the
+   * rcl_subscription_options_t that will be passed to rcl_subscription_init().
+   *
    * By default the options are unmodified.
    */
   virtual
   void
-  modify_rcl_subscription_options(rcl_subscription_options_t & rcl_subscription_options) const;
+  modify_rmw_subscription_options(rmw_subscription_options_t & rmw_subscription_options) const;
 };
 
 }  // namespace detail

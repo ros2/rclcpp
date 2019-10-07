@@ -36,11 +36,14 @@ public:
    * This is called after the rcl_publisher_options_t has been prepared by
    * rclcpp, but before rcl_publisher_init() is called.
    *
+   * The passed option is the rmw_publisher_options field of the
+   * rcl_publisher_options_t that will be passed to rcl_publisher_init().
+   *
    * By default the options are unmodified.
    */
   virtual
   void
-  modify_rcl_publisher_options(rcl_publisher_options_t & rcl_publisher_options) const;
+  modify_rmw_publisher_options(rmw_publisher_options_t & rmw_publisher_options) const;
 };
 
 }  // namespace detail
