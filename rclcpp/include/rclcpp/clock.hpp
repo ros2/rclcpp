@@ -124,9 +124,11 @@ public:
     const rcl_jump_threshold_t & threshold);
 
   /**
-   * Get current time from the time source specified by clock_type as nanoseconds.
+   * Get current time from the time source specified by Clock::get_clock_type() const noexcept.
    *
    * \return RCUTILS_RET_OK if time was successfully retrieved
+   * \param now. A time point value pointer that will contain the
+   * current time from the underlying clock
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   RCLCPP_PUBLIC
