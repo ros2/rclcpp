@@ -23,8 +23,9 @@ namespace detail
 {
 
 /// Mechanism for passing rmw implementation specific settings through the ROS interfaces.
-struct RCLCPP_PUBLIC RMWImplementationSpecificPayload
+class RCLCPP_PUBLIC RMWImplementationSpecificPayload
 {
+public:
   virtual
   ~RMWImplementationSpecificPayload() = default;
 

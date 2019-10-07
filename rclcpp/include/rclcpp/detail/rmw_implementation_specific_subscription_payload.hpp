@@ -26,9 +26,10 @@ namespace detail
 {
 
 /// Subscription payload that may be rmw implementation specific.
-struct RCLCPP_PUBLIC RMWImplementationSpecificSubscriptionPayload
+class RCLCPP_PUBLIC RMWImplementationSpecificSubscriptionPayload
   : public RMWImplementationSpecificPayload
 {
+public:
   ~RMWImplementationSpecificSubscriptionPayload() override = default;
 
   /// Opportunity for a derived class to inject information into the rcl options.

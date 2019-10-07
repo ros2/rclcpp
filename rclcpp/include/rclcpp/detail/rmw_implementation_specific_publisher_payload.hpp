@@ -25,9 +25,10 @@ namespace rclcpp
 namespace detail
 {
 
-struct RCLCPP_PUBLIC RMWImplementationSpecificPublisherPayload
+class RCLCPP_PUBLIC RMWImplementationSpecificPublisherPayload
   : public RMWImplementationSpecificPayload
 {
+public:
   ~RMWImplementationSpecificPublisherPayload() override = default;
 
   /// Opportunity for a derived class to inject information into the rcl options.
