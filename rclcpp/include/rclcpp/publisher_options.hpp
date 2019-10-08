@@ -80,7 +80,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
 
     // Apply payload to rcl_publisher_options if necessary.
     if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {
-      rmw_implementation_payload->modify_rcl_publisher_options(result);
+      rmw_implementation_payload->modify_rmw_publisher_options(result.rmw_publisher_options);
     }
 
     return result;

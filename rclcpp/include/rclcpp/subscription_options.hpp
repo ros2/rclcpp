@@ -79,7 +79,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 
     // Apply payload to rcl_subscription_options if necessary.
     if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {
-      rmw_implementation_payload->modify_rcl_subscription_options(result);
+      rmw_implementation_payload->modify_rmw_subscription_options(result.rmw_subscription_options);
     }
 
     return result;
