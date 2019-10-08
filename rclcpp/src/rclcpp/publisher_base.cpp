@@ -215,16 +215,7 @@ PublisherBase::get_actual_qos() const
     throw std::runtime_error(msg);
   }
 
-  class RMWQoSIntializedQoS : public rclcpp::QoS
-  {
-  public:
-    explicit
-    RMWQoSIntializedQoS(const rmw_qos_profile_t & rmw_qos):
-    QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos), rmw_qos)
-    {}
-  };
-
-  return RMWQoSIntializedQoS(*qos);
+  return rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
 }
 
 bool
