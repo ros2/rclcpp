@@ -205,7 +205,7 @@ PublisherBase::get_intra_process_subscription_count() const
   return ipm->get_subscription_count(intra_process_publisher_id_);
 }
 
-rmw_qos_profile_t
+rclcpp::QoS
 PublisherBase::get_actual_qos() const
 {
   const rmw_qos_profile_t * qos = rcl_publisher_get_actual_qos(&publisher_handle_);
@@ -214,7 +214,8 @@ PublisherBase::get_actual_qos() const
     rcl_reset_error();
     throw std::runtime_error(msg);
   }
-  return *qos;
+
+  return rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
 }
 
 bool
@@ -264,7 +265,8 @@ PublisherBase::setup_intra_process(
   const rcl_publisher_options_t & intra_process_options)
 {
   // Intraprocess configuration is not allowed with "durability" qos policy non "volatile".
-  if (this->get_actual_qos().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+  auto actual_durability = this->get_actual_qos().get_rmw_qos_profile().durability;
+  if (actual_durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
     throw std::invalid_argument(
             "intraprocess communication is not allowed with durability qos policy non-volatile");
   }
