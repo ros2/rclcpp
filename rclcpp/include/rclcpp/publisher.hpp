@@ -288,6 +288,11 @@ protected:
     return message_seq;
   }
 
+  /// Copy of original options passed during construction.
+  /**
+   * It is important to save a copy of this so that the rmw payload which it
+   * may contain is kept alive for the duration of the publisher.
+   */
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> options_;
 
   std::shared_ptr<MessageAllocator> message_allocator_;
