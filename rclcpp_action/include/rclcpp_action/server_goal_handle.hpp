@@ -60,6 +60,12 @@ public:
   bool
   is_executing() const;
 
+  /// Start canceling the goal.
+  /// \throws rclcpp::exceptions::RCLException if the transition to the canceling state is invalid.
+  RCLCPP_ACTION_PUBLIC
+  void
+  cancel_goal();
+
   RCLCPP_ACTION_PUBLIC
   virtual
   ~ServerGoalHandleBase();

@@ -58,6 +58,12 @@ ServerGoalHandleBase::is_executing() const
 }
 
 void
+ServerGoalHandleBase::cancel_goal()
+{
+  _cancel_goal();
+}
+
+void
 ServerGoalHandleBase::_abort()
 {
   std::lock_guard<std::mutex> lock(rcl_handle_mutex_);
