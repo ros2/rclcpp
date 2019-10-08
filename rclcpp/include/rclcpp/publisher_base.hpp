@@ -29,6 +29,7 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/mapped_ring_buffer.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -153,10 +154,11 @@ public:
    * If the underlying setting in use can't be represented in ROS terms,
    * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
    * May throw runtime_error when an unexpected error occurs.
+   *
    * \return The actual qos settings.
    */
   RCLCPP_PUBLIC
-  rmw_qos_profile_t
+  rclcpp::QoS
   get_actual_qos() const;
 
   /// Compare this publisher to a gid.

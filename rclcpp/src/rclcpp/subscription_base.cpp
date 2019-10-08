@@ -129,7 +129,7 @@ SubscriptionBase::get_event_handlers() const
   return event_handlers_;
 }
 
-rmw_qos_profile_t
+rclcpp::QoS
 SubscriptionBase::get_actual_qos() const
 {
   const rmw_qos_profile_t * qos = rcl_subscription_get_actual_qos(subscription_handle_.get());
@@ -138,7 +138,17 @@ SubscriptionBase::get_actual_qos() const
     rcl_reset_error();
     throw std::runtime_error(msg);
   }
-  return *qos;
+
+  class RMWQoSIntializedQoS : public rclcpp::QoS
+  {
+  public:
+    explicit
+    RMWQoSIntializedQoS(const rmw_qos_profile_t & rmw_qos):
+    QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos), rmw_qos)
+    {}
+  };
+
+  return RMWQoSIntializedQoS(*qos);
 }
 
 const rosidl_message_type_support_t &
