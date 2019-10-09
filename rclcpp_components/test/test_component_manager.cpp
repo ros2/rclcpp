@@ -27,6 +27,10 @@ protected:
   {
     rclcpp::init(0, nullptr);
   }
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 };
 
 TEST_F(TestComponentManager, get_component_resources_invalid)
