@@ -126,14 +126,13 @@ public:
   /**
    * Get current time from the time source specified by Clock::get_clock_type() const noexcept.
    *
+   * \param now. A pointer to time point value, which will be
+   * set to the current time according to the underlying clock.
    * \return RCUTILS_RET_OK if time was successfully retrieved
-   * \param now. A time point value pointer that will contain the
-   * current time from the underlying clock
-   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   RCLCPP_PUBLIC
   rcutils_ret_t
-  get_now_as_timepoint(rcutils_time_point_value_t * now);
+  get_now_as_time_point_for_logging(rcutils_time_point_value_t * now);
 
 private:
   // Invoke time jump callback

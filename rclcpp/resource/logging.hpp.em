@@ -58,7 +58,6 @@ del throttle_params['get_time_point_value']
 throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
 throttle_params.move_to_end('clock', last=False)
 
-
 excluded_features = ['named']
 def is_supported_feature_combination(feature_combination):
     is_excluded = any([ef in feature_combination for ef in excluded_features])
@@ -108,7 +107,7 @@ def is_supported_feature_combination(feature_combination):
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = ['clock.get_now_as_timepoint' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
+@{params = ['clock.get_now_as_time_point_for_logging' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
