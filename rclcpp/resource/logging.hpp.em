@@ -44,20 +44,66 @@
 #define RCLCPP_LOG_MIN_SEVERITY RCLCPP_LOG_MIN_SEVERITY_DEBUG
 #endif
 
+/**
+ * \def RCLCPP_LOG_CONDITION_THROTTLE_BEFORE
+ * A macro initializing and checking the `throttle` condition.
+ */
+#define RCLCPP_LOG_CONDITION_THROTTLE_BEFORE(clock, duration) { \
+    static rcl_time_point_value_t __rclcpp_logging_duration = RCUTILS_MS_TO_NS((rcl_time_point_value_t)duration); \
+    static rcl_time_point_value_t __rclcpp_logging_last_logged = 0; \
+    rcl_time_point_value_t __rclcpp_logging_now = clock.now().nanoseconds(); \
+    bool __rclcpp_logging_condition = __rclcpp_logging_now >= __rclcpp_logging_last_logged + __rclcpp_logging_duration; \
+    if (RCUTILS_LIKELY(__rclcpp_logging_condition)) { \
+      __rclcpp_logging_last_logged = __rclcpp_logging_now;
+
 @{
 from collections import OrderedDict
+from rcutils.logging import default_args
 from rcutils.logging import feature_combinations
+from rcutils.logging import Feature
+from rcutils.logging import get_macro_arguments
 from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
+from rcutils.logging import name_args
+from rcutils.logging import name_doc_lines
+from rcutils.logging import name_params
 from rcutils.logging import severities
+from rcutils.logging import skipfirst_args
+from rcutils.logging import skipfirst_doc_lines
 from rcutils.logging import throttle_args
+from rcutils.logging import throttle_doc_lines
 from rcutils.logging import throttle_params
 
-throttle_args['condition_before'] = 'RCUTILS_LOG_CONDITION_THROTTLE_BEFORE(clock, duration)'
+default_args['name'] = 'logger.get_name()'
+throttle_args['condition_before'] = 'RCLCPP_LOG_CONDITION_THROTTLE_BEFORE(clock, duration)'
 del throttle_params['get_time_point_value']
 throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
 throttle_params.move_to_end('clock', last=False)
 
+feature_combinations[('skip_first', 'throttle')] = Feature(
+        params=throttle_params,
+        args={
+            'condition_before': ' '.join([
+                throttle_args['condition_before'],
+                skipfirst_args['condition_before']]),
+            'condition_after': ' '.join([
+                throttle_args['condition_after'], skipfirst_args['condition_after']]),
+        },
+        doc_lines=skipfirst_doc_lines + throttle_doc_lines)
+
+feature_combinations[('skip_first', 'throttle', 'named')] = Feature(
+        params=OrderedDict((*throttle_params.items(), *name_params.items())),
+        args={
+            **{
+                'condition_before': ' '.join([
+                    throttle_args['condition_before'],
+                    skipfirst_args['condition_before']]),
+                'condition_after': ' '.join([
+                    throttle_args['condition_after'],
+                    skipfirst_args['condition_after']]),
+            }, **name_args
+        },
+        doc_lines=skipfirst_doc_lines + throttle_doc_lines + name_doc_lines)
 
 excluded_features = ['named']
 def is_supported_feature_combination(feature_combination):
@@ -101,6 +147,7 @@ def is_supported_feature_combination(feature_combination):
  * It also accepts a single argument of type std::string.
  */
 @{params = get_macro_parameters(feature_combination).keys()}@
+@[ if not 'throttle' in feature_combination]
 #define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in params]))...) \
   do { \
     static_assert( \
@@ -108,7 +155,6 @@ def is_supported_feature_combination(feature_combination):
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = ['clock.get_now_as_timepoint' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
@@ -116,7 +162,20 @@ def is_supported_feature_combination(feature_combination):
       rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
         RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,"")); \
   } while (0)
-
+@[ else]
+#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in params]))...) \
+  do { \
+    static_assert( \
+      ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
+      typename ::rclcpp::Logger>::value, \
+      "First argument to logging macros must be an rclcpp::Logger"); \
+    RCUTILS_LOG_COND_NAMED( \
+      RCUTILS_LOG_SEVERITY_@(severity), \
+      @(''.join([str(a) + ', ' for a in get_macro_arguments(feature_combination)])) \
+      rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
+        RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,"")); \
+  } while (0)
+@[ end if]@
 @[ end for]@
 #endif
 ///@@}
