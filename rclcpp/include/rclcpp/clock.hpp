@@ -123,16 +123,15 @@ public:
     JumpHandler::post_callback_t post_callback,
     const rcl_jump_threshold_t & threshold);
 
+  /// Get current time from the time source specified by Clock::get_clock_type() const noexcept.
   /**
-   * Get current time from the time source specified by Clock::get_clock_type() const noexcept.
-   *
-   * \param now. A pointer to time point value, which will be
+   * \param now A pointer to time point value, which will be
    * set to the current time according to the underlying clock.
    * \return RCUTILS_RET_OK if time was successfully retrieved
    */
   RCLCPP_PUBLIC
   rcutils_ret_t
-  get_now_as_time_point_for_logging(rcutils_time_point_value_t * now);
+  get_now_as_rcutils_time_point(rcutils_time_point_value_t * now);
 
 private:
   // Invoke time jump callback

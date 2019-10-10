@@ -107,7 +107,7 @@ def is_supported_feature_combination(feature_combination):
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = ['clock.get_now_as_time_point_for_logging' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
+@{params = ['clock.get_now_as_rcutils_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
