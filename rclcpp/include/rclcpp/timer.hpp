@@ -139,9 +139,10 @@ public:
       rclcpp_timer_callback_added,
       (const void *)get_timer_handle().get(),
       (const void *)&callback_);
-    // TODO(christophebedard) maybe there's a simpler way
-    // to treat callback_ as an std::function here explicitly
-    this->register_callback_for_tracing();
+    TRACEPOINT(
+      rclcpp_callback_register,
+      (const void *)&callback_,
+      get_symbol(callback_));
   }
 
   /// Default destructor.
@@ -201,39 +202,6 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
-
-private:
-  template<
-    typename CallbackT = FunctorT,
-    typename std::enable_if<
-      rclcpp::function_traits::same_arguments<CallbackT, VoidCallbackType>::value
-    >::type * = nullptr
-  >
-  void
-  register_callback_for_tracing()
-  {
-    VoidCallbackType function = callback_;
-    TRACEPOINT(
-      rclcpp_callback_register,
-      (const void *)&callback_,
-      get_symbol(function));
-  }
-
-  template<
-    typename CallbackT = FunctorT,
-    typename std::enable_if<
-      rclcpp::function_traits::same_arguments<CallbackT, TimerCallbackType>::value
-    >::type * = nullptr
-  >
-  void
-  register_callback_for_tracing()
-  {
-    TimerCallbackType function = callback_;
-    TRACEPOINT(
-      rclcpp_callback_register,
-      (const void *)&callback_,
-      get_symbol(function));
-  }
 };
 
 template<
