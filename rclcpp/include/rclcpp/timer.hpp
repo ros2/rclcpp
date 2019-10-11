@@ -203,8 +203,7 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
-
-private:
+};
 
 template<
   typename FunctorT,
