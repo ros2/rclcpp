@@ -141,7 +141,7 @@ public:
       (const void *)&callback_);
     // TODO(christophebedard) maybe there's a simpler way
     // to treat callback_ as an std::function here explicitly
-    this->register_callback_function();
+    this->register_callback_for_tracing();
   }
 
   /// Default destructor.
@@ -210,7 +210,7 @@ private:
     >::type * = nullptr
   >
   void
-  register_callback_function()
+  register_callback_for_tracing()
   {
     VoidCallbackType function = callback_;
     TRACEPOINT(
@@ -226,7 +226,7 @@ private:
     >::type * = nullptr
   >
   void
-  register_callback_function()
+  register_callback_for_tracing()
   {
     TimerCallbackType function = callback_;
     TRACEPOINT(

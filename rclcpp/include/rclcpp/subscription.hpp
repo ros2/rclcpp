@@ -122,10 +122,10 @@ public:
       rclcpp_subscription_callback_added,
       (const void *)get_subscription_handle().get(),
       (const void *)&any_callback_);
-    // TODO(christophebedard) find another way
-    // this object seems to get copied, so if registration is done too early
-    // (e.g. in `set()`), `this` won't match any address used later
-    any_callback_.register_callback_function();
+    // The callback object gets copied, so if registration is done too early/before this point
+    // (e.g. in `AnySubscriptionCallback::set()`), its address won't match any address used later
+    // in subsequent tracepoints.
+    any_callback_.register_callback_for_tracing();
   }
 
   /// Called after construction to continue setup that requires shared_from_this().

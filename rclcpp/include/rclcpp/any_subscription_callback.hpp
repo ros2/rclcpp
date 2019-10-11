@@ -232,7 +232,7 @@ public:
     return const_shared_ptr_callback_ || const_shared_ptr_with_info_callback_;
   }
 
-  void register_callback_function()
+  void register_callback_for_tracing()
   {
     if (shared_ptr_callback_) {
       TRACEPOINT(
