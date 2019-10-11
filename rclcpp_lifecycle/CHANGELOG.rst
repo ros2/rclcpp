@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.7.11 (2019-10-11)
+-------------------
+
 0.7.10 (2019-09-23)
 -------------------
 * reset error message before setting a new one, embed the original one (`#854 <https://github.com/ros2/rclcpp/issues/854>`_) (`#866 <https://github.com/ros2/rclcpp/issues/866>`_)

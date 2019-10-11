@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.11 (2019-10-11)
+-------------------
+* Fix `get_node_*_interface` functions taking a pointer (`#870 <https://github.com/ros2/rclcpp/pull/870>`_).
+* Fix hang with timers in `MultiThreadedExecutor` (`#869 <https://github.com/ros2/rclcpp/pull/869>`_).
+* Contributors: Todd Malsbary, ivanpauno
+
 0.7.10 (2019-09-23)
 -------------------
 
