@@ -139,11 +139,18 @@ public:
       rclcpp_timer_callback_added,
       (const void *)get_timer_handle().get(),
       (const void *)&callback_);
+<<<<<<< HEAD
 
     TRACEPOINT(
       rclcpp_callback_register,
       (const void *)&callback_,
       get_symbol(callback));
+=======
+    TRACEPOINT(
+      rclcpp_callback_register,
+      (const void *)&callback_,
+      get_symbol(callback_));
+>>>>>>> ca559de1d8e6416e13fa4daf3771b0f622770d6d
   }
 
   /// Default destructor.
