@@ -97,10 +97,10 @@ create_client(
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
  */
-template<typename ActionT>
+template<typename ActionT, typename NodeT = rclcpp::Node>
 typename Client<ActionT>::SharedPtr
 create_client(
-  rclcpp::Node::SharedPtr node,
+  typename NodeT::SharedPtr node,
   const std::string & name,
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
