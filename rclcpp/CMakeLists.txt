@@ -14,6 +14,7 @@ find_package(rosgraph_msgs REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
+find_package(tracetools REQUIRED)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -114,7 +115,9 @@ ament_target_dependencies(${PROJECT_NAME}
   "builtin_interfaces"
   "rosgraph_msgs"
   "rosidl_typesupport_cpp"
-  "rosidl_generator_cpp")
+  "rosidl_generator_cpp"
+  "tracetools"
+)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -141,6 +144,7 @@ ament_export_dependencies(rosidl_typesupport_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rcl_yaml_param_parser)
+ament_export_dependencies(tracetools)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)

@@ -33,6 +33,7 @@
 #include "rclcpp/logging.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
@@ -154,6 +155,10 @@ public:
 
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service");
     }
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
   }
 
   Service(
@@ -172,6 +177,10 @@ public:
     }
 
     service_handle_ = service_handle;
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
   }
 
   Service(
@@ -192,6 +201,10 @@ public:
     // In this case, rcl owns the service handle memory
     service_handle_ = std::shared_ptr<rcl_service_t>(new rcl_service_t);
     service_handle_->impl = service_handle->impl;
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
   }
 
   Service() = delete;
