@@ -107,10 +107,14 @@ def is_supported_feature_combination(feature_combination):
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
 @[ if 'throttle' in feature_combination]@ \
-      std::function<rcutils_ret_t (rcutils_time_point_value_t *)> get_time_point = [&clock](rcutils_time_point_value_t * time_point) -> rcutils_ret_t { \
+    auto get_time_point = [&clock](rcutils_time_point_value_t * time_point) -> rcutils_ret_t { \
+    try { \
         *time_point = clock.now().nanoseconds(); \
-        return RCUTILS_RET_OK; \
-      }; \
+    } catch (...) { \
+        return RCUTILS_RET_ERROR; \
+    } \
+      return RCUTILS_RET_OK; \
+    }; \
 @[ end if] \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
 @{params = ['get_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
