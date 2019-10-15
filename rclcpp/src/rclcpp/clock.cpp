@@ -52,7 +52,7 @@ Clock::now()
 {
   Time now(0, 0, rcl_clock_.type);
 
-  auto ret = get_now_as_rcutils_time_point(&now.rcl_time_.nanoseconds);
+  auto ret = rcl_clock_get_now(&rcl_clock_, &now.rcl_time_.nanoseconds);
   if (ret != RCL_RET_OK) {
     exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
   }
@@ -139,13 +139,6 @@ Clock::create_jump_callback(
     }
   });
   // *INDENT-ON*
-}
-
-rcutils_ret_t
-Clock::get_now_as_rcutils_time_point(
-  rcutils_time_point_value_t * now)
-{
-  return rcl_clock_get_now(&rcl_clock_, now);
 }
 
 }  // namespace rclcpp

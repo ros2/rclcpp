@@ -106,8 +106,14 @@ def is_supported_feature_combination(feature_combination):
       ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
+@[ if 'throttle' in feature_combination]@ \
+      std::function<rcutils_ret_t (rcutils_time_point_value_t *)> get_time_point = [&clock](rcutils_time_point_value_t * time_point) -> rcutils_ret_t { \
+        *time_point = clock.now().nanoseconds(); \
+        return RCUTILS_RET_OK; \
+      }; \
+@[ end if] \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = ['clock.get_now_as_rcutils_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
+@{params = ['get_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
