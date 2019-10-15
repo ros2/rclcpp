@@ -26,47 +26,74 @@ TEST(TestActionTraits, is_action) {
   using Fibonacci = test_msgs::action::Fibonacci;
 
   // Top level definition is an action
-  ASSERT_FALSE(is_message<Fibonacci>());
-  ASSERT_FALSE(is_service<Fibonacci>());
-  ASSERT_TRUE(is_action<Fibonacci>());
-  ASSERT_FALSE(is_action_goal<Fibonacci>());
-  ASSERT_FALSE(is_action_result<Fibonacci>());
-  ASSERT_FALSE(is_action_feedback<Fibonacci>());
+  EXPECT_FALSE(is_message<Fibonacci>());
+  EXPECT_FALSE(is_service<Fibonacci>());
+  EXPECT_TRUE(is_action<Fibonacci>());
+  EXPECT_FALSE(is_action_goal<Fibonacci>());
+  EXPECT_FALSE(is_action_result<Fibonacci>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci>());
 
   // Goal is an action_goal as well as a message
-  ASSERT_TRUE(is_message<Fibonacci::Goal>());
-  ASSERT_FALSE(is_service<Fibonacci::Goal>());
-  ASSERT_FALSE(is_action<Fibonacci::Goal>());
-  ASSERT_TRUE(is_action_goal<Fibonacci::Goal>());
-  ASSERT_FALSE(is_action_result<Fibonacci::Goal>());
-  ASSERT_FALSE(is_action_feedback<Fibonacci::Goal>());
+  EXPECT_TRUE(is_message<Fibonacci::Goal>());
+  EXPECT_FALSE(is_service<Fibonacci::Goal>());
+  EXPECT_FALSE(is_action<Fibonacci::Goal>());
+  EXPECT_TRUE(is_action_goal<Fibonacci::Goal>());
+  EXPECT_FALSE(is_action_result<Fibonacci::Goal>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci::Goal>());
 
   // Result is an action_result as well as a message
-  ASSERT_TRUE(is_message<Fibonacci::Result>());
-  ASSERT_FALSE(is_service<Fibonacci::Result>());
-  ASSERT_FALSE(is_action<Fibonacci::Result>());
-  ASSERT_FALSE(is_action_goal<Fibonacci::Result>());
-  ASSERT_TRUE(is_action_result<Fibonacci::Result>());
-  ASSERT_FALSE(is_action_feedback<Fibonacci::Result>());
+  EXPECT_TRUE(is_message<Fibonacci::Result>());
+  EXPECT_FALSE(is_service<Fibonacci::Result>());
+  EXPECT_FALSE(is_action<Fibonacci::Result>());
+  EXPECT_FALSE(is_action_goal<Fibonacci::Result>());
+  EXPECT_TRUE(is_action_result<Fibonacci::Result>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci::Result>());
 
   // Feedback is an action_feedback as well as a message
-  ASSERT_TRUE(is_message<Fibonacci::Feedback>());
-  ASSERT_FALSE(is_service<Fibonacci::Feedback>());
-  ASSERT_FALSE(is_action<Fibonacci::Feedback>());
-  ASSERT_FALSE(is_action_goal<Fibonacci::Feedback>());
-  ASSERT_FALSE(is_action_result<Fibonacci::Feedback>());
-  ASSERT_TRUE(is_action_feedback<Fibonacci::Feedback>());
+  EXPECT_TRUE(is_message<Fibonacci::Feedback>());
+  EXPECT_FALSE(is_service<Fibonacci::Feedback>());
+  EXPECT_FALSE(is_action<Fibonacci::Feedback>());
+  EXPECT_FALSE(is_action_goal<Fibonacci::Feedback>());
+  EXPECT_FALSE(is_action_result<Fibonacci::Feedback>());
+  EXPECT_TRUE(is_action_feedback<Fibonacci::Feedback>());
 }
 
 TEST(TestActionTraits, is_action_impl) {
   using Fibonacci = test_msgs::action::Fibonacci;
 
-  // Test traits on some of the internal implementation of actionlib
-  ASSERT_TRUE(is_service<Fibonacci::Impl::SendGoalService>());
-  ASSERT_TRUE(is_service<Fibonacci::Impl::GetResultService>());
-  ASSERT_TRUE(is_message<Fibonacci::Impl::FeedbackMessage>());
+  // Test traits on some of the internal implementation of actions
+  EXPECT_FALSE(is_message<Fibonacci::Impl::SendGoalService>());
+  EXPECT_TRUE(is_service<Fibonacci::Impl::SendGoalService>());
+  EXPECT_FALSE(is_action<Fibonacci::Impl::SendGoalService>());
+  EXPECT_FALSE(is_action_goal<Fibonacci::Impl::SendGoalService>());
+  EXPECT_FALSE(is_action_result<Fibonacci::Impl::SendGoalService>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci::Impl::SendGoalService>());
 
-  ASSERT_TRUE(is_service<Fibonacci::Impl::CancelGoalService>());
-  ASSERT_TRUE(is_message<Fibonacci::Impl::GoalStatusMessage>());
+  EXPECT_FALSE(is_message<Fibonacci::Impl::GetResultService>());
+  EXPECT_TRUE(is_service<Fibonacci::Impl::GetResultService>());
+  EXPECT_FALSE(is_action<Fibonacci::Impl::GetResultService>());
+  EXPECT_FALSE(is_action_goal<Fibonacci::Impl::GetResultService>());
+  EXPECT_FALSE(is_action_result<Fibonacci::Impl::GetResultService>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci::Impl::GetResultService>());
+
+  EXPECT_FALSE(is_message<Fibonacci::Impl::CancelGoalService>());
+  EXPECT_TRUE(is_service<Fibonacci::Impl::CancelGoalService>());
+  EXPECT_FALSE(is_action<Fibonacci::Impl::CancelGoalService>());
+  EXPECT_FALSE(is_action_goal<Fibonacci::Impl::CancelGoalService>());
+  EXPECT_FALSE(is_action_result<Fibonacci::Impl::CancelGoalService>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci::Impl::CancelGoalService>());
+
+  EXPECT_TRUE(is_message<Fibonacci::Impl::FeedbackMessage>());
+  EXPECT_FALSE(is_service<Fibonacci::Impl::FeedbackMessage>());
+  EXPECT_FALSE(is_action<Fibonacci::Impl::FeedbackMessage>());
+  EXPECT_FALSE(is_action_goal<Fibonacci::Impl::FeedbackMessage>());
+  EXPECT_FALSE(is_action_result<Fibonacci::Impl::FeedbackMessage>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci::Impl::FeedbackMessage>());
+
+  EXPECT_TRUE(is_message<Fibonacci::Impl::GoalStatusMessage>());
+  EXPECT_FALSE(is_service<Fibonacci::Impl::GoalStatusMessage>());
+  EXPECT_FALSE(is_action<Fibonacci::Impl::GoalStatusMessage>());
+  EXPECT_FALSE(is_action_goal<Fibonacci::Impl::GoalStatusMessage>());
+  EXPECT_FALSE(is_action_result<Fibonacci::Impl::GoalStatusMessage>());
+  EXPECT_FALSE(is_action_feedback<Fibonacci::Impl::GoalStatusMessage>());
 }
-
