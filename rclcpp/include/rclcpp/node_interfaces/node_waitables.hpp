@@ -42,14 +42,14 @@ public:
   ~NodeWaitables();
 
   RCLCPP_PUBLIC
-  virtual
+
   void
   add_waitable(
     rclcpp::Waitable::SharedPtr waitable_base_ptr,
     rclcpp::callback_group::CallbackGroup::SharedPtr group);
 
   RCLCPP_PUBLIC
-  virtual
+
   void
   remove_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,

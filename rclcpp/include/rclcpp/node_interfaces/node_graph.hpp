@@ -56,64 +56,64 @@ public:
   ~NodeGraph();
 
   RCLCPP_PUBLIC
-  virtual
+
   std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types(bool no_demangle = false) const;
 
   RCLCPP_PUBLIC
-  virtual
+
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
 
   RCLCPP_PUBLIC
-  virtual
+
   std::vector<std::string>
   get_node_names() const;
 
   RCLCPP_PUBLIC
-  virtual
+
   std::vector<std::pair<std::string, std::string>>
   get_node_names_and_namespaces() const;
 
   RCLCPP_PUBLIC
-  virtual
+
   size_t
   count_publishers(const std::string & topic_name) const;
 
   RCLCPP_PUBLIC
-  virtual
+
   size_t
   count_subscribers(const std::string & topic_name) const;
 
   RCLCPP_PUBLIC
-  virtual
+
   const rcl_guard_condition_t *
   get_graph_guard_condition() const;
 
   RCLCPP_PUBLIC
-  virtual
+
   void
   notify_graph_change();
 
   RCLCPP_PUBLIC
-  virtual
+
   void
   notify_shutdown();
 
   RCLCPP_PUBLIC
-  virtual
+
   rclcpp::Event::SharedPtr
   get_graph_event();
 
   RCLCPP_PUBLIC
-  virtual
+
   void
   wait_for_graph_change(
     rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
   RCLCPP_PUBLIC
-  virtual
+
   size_t
   count_graph_users();
 

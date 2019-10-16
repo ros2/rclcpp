@@ -90,7 +90,7 @@ public:
     waitable_handles_.clear();
   }
 
-  virtual void remove_null_handles(rcl_wait_set_t * wait_set)
+  void remove_null_handles(rcl_wait_set_t * wait_set)
   {
     // TODO(jacobperron): Check if wait set sizes are what we expect them to be?
     //                    e.g. wait_set->size_of_clients == client_handles_.size()
@@ -250,7 +250,7 @@ public:
     return true;
   }
 
-  virtual void
+  void
   get_next_subscription(
     executor::AnyExecutable & any_exec,
     const WeakNodeList & weak_nodes)
@@ -285,7 +285,7 @@ public:
     }
   }
 
-  virtual void
+  void
   get_next_service(
     executor::AnyExecutable & any_exec,
     const WeakNodeList & weak_nodes)
@@ -320,7 +320,7 @@ public:
     }
   }
 
-  virtual void
+  void
   get_next_client(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = client_handles_.begin();
@@ -353,7 +353,7 @@ public:
     }
   }
 
-  virtual void
+  void
   get_next_timer(
     executor::AnyExecutable & any_exec,
     const WeakNodeList & weak_nodes)
@@ -388,7 +388,7 @@ public:
     }
   }
 
-  virtual void
+  void
   get_next_waitable(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
   {
     auto it = waitable_handles_.begin();
@@ -421,7 +421,7 @@ public:
     }
   }
 
-  virtual rcl_allocator_t get_allocator()
+  rcl_allocator_t get_allocator()
   {
     return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
   }

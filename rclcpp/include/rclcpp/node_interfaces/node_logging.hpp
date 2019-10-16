@@ -42,12 +42,12 @@ public:
   ~NodeLogging();
 
   RCLCPP_PUBLIC
-  virtual
+
   rclcpp::Logger
   get_logger() const;
 
   RCLCPP_PUBLIC
-  virtual
+
   const char *
   get_logger_name() const;
 
