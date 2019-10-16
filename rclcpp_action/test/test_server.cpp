@@ -83,7 +83,7 @@ TEST_F(TestServer, construction_and_destruction)
   auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
-  auto as = rclcpp_action::create_server<Fibonacci, rclcpp::Node>(
+  auto as = rclcpp_action::create_server<Fibonacci>(
     node, "fibonacci",
     [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
       return rclcpp_action::GoalResponse::REJECT;

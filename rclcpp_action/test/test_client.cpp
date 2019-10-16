@@ -272,7 +272,7 @@ TEST_F(TestClient, construction_and_destruction)
 
 TEST_F(TestClient, async_send_goal_no_callbacks)
 {
-  auto action_client = rclcpp_action::create_client<ActionType, rclcpp::Node>(client_node,
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node,
       action_name);
   ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
 

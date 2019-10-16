@@ -128,10 +128,10 @@ create_server(
  * \param group[in] The action server will be added to this callback group.
  *   If `nullptr`, then the action server is added to the default callback group.
  */
-template<typename ActionT, typename NodeT = rclcpp::Node>
+template<typename ActionT, typename NodeT>
 typename Server<ActionT>::SharedPtr
 create_server(
-  typename NodeT::SharedPtr node,
+  NodeT node,
   const std::string & name,
   typename Server<ActionT>::GoalCallback handle_goal,
   typename Server<ActionT>::CancelCallback handle_cancel,
