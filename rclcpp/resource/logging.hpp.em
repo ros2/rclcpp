@@ -109,9 +109,9 @@ def is_supported_feature_combination(feature_combination):
 @[ if 'throttle' in feature_combination]@ \
     auto get_time_point = [&clock](rcutils_time_point_value_t * time_point) -> rcutils_ret_t { \
     try { \
-        *time_point = clock.now().nanoseconds(); \
+      *time_point = clock.now().nanoseconds(); \
     } catch (...) { \
-        return RCUTILS_RET_ERROR; \
+      return RCUTILS_RET_ERROR; \
     } \
       return RCUTILS_RET_OK; \
     }; \
