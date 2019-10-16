@@ -154,7 +154,7 @@ ParameterValue::ParameterValue(const int64_t int_value)
 
 ParameterValue::ParameterValue(const float double_value)
 {
-  value_.double_value = double_value;
+  value_.double_value = static_cast<double>(double_value);
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE;
 }
 
