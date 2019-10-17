@@ -33,8 +33,8 @@ namespace rclcpp
 
 /// A map of fully qualified node names to a list of parameters
 using rcl_interfaces::msg::ParameterDescriptor;
-using ParameterAndDescriptor = std::pair<Parameter, ParameterDescriptor>;
-using ParameterMap = std::unordered_map<std::string, std::vector<ParameterAndDescriptor>;
+using ParameterAndDescriptor = std::unordered_map<std::string, std::pair<Parameter, ParameterDescriptor>>;
+using ParameterMap = std::unordered_map<std::string, ParameterAndDescriptor>;
 
 /// Convert parameters from rcl_yaml_param_parser into C++ class instances.
 /// \param[in] c_params C structures containing parameters for multiple nodes.
@@ -53,7 +53,7 @@ ParameterValue
 parameter_value_from(const rcl_variant_t * const c_value);
 
 RCLCPP_PUBLIC
-ParameterDescriptor
+rcl_interfaces::msg::ParameterDescriptor
 parameter_descriptor_from(const rcl_param_descriptor_t * const c_descriptor);
 
 /// Get the ParameterMap from a yaml file.
