@@ -108,12 +108,13 @@ def is_supported_feature_combination(feature_combination):
       "First argument to logging macros must be an rclcpp::Logger"); \
 @[ if 'throttle' in feature_combination]@ \
     auto get_time_point = [&clock](rcutils_time_point_value_t * time_point) -> rcutils_ret_t { \
-    try { \
-      *time_point = clock.now().nanoseconds(); \
-    } catch (...) { \
-      return RCUTILS_RET_ERROR; \
-    } \
-      return RCUTILS_RET_OK; \
+      try { \
+        *time_point = clock.now().nanoseconds(); \
+      } catch (...) { \
+        RCUTILS_SAFE_FWRITE_TO_STDERR("could not get current time stamp\n"); \
+        return RCUTILS_RET_ERROR; \
+      } \
+        return RCUTILS_RET_OK; \
     }; \
 @[ end if] \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
