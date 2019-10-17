@@ -23,6 +23,7 @@
 #define RCLCPP_BUILDING_LIBRARY 1
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/qos.hpp"
 #include "rmw/types.h"
 #include "rmw/qos_profiles.h"
 
@@ -52,7 +53,8 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(PublisherBase)
 
   PublisherBase()
-  : topic_name("topic")
+  : qos(rclcpp::QoS(10)),
+    topic_name("topic")
   {}
 
   virtual ~PublisherBase()
@@ -71,10 +73,10 @@ public:
     weak_ipm_ = ipm;
   }
 
-  rmw_qos_profile_t
-  get_actual_qos()
+  rclcpp::QoS
+  get_actual_qos() const
   {
-    return qos_profile;
+    return qos;
   }
 
   bool
@@ -91,7 +93,7 @@ public:
     return false;
   }
 
-  rmw_qos_profile_t qos_profile;
+  rclcpp::QoS qos;
   std::string topic_name;
   uint64_t intra_process_publisher_id_;
   IntraProcessManagerWeakPtr weak_ipm_;
@@ -111,7 +113,7 @@ public:
 
   Publisher()
   {
-    qos_profile = rmw_qos_profile_default;
+    qos = rclcpp::QoS(10);
     auto allocator = std::make_shared<Alloc>();
     message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
   }
@@ -188,6 +190,8 @@ public:
   SubscriptionIntraProcessBase()
   : qos_profile(rmw_qos_profile_default), topic_name("topic")
   {}
+
+  virtual ~SubscriptionIntraProcessBase() {}
 
   virtual bool
   use_take_shared_method() const = 0;
@@ -344,10 +348,10 @@ TEST(TestIntraProcessManager, add_pub_sub) {
   auto ipm = std::make_shared<IntraProcessManagerT>();
 
   auto p1 = std::make_shared<PublisherT>();
-  p1->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+  p1->qos.get_rmw_qos_profile().reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
 
   auto p2 = std::make_shared<PublisherT>();
-  p2->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+  p2->qos.get_rmw_qos_profile().reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
   p2->topic_name = "different_topic_name";
 
   auto s1 = std::make_shared<SubscriptionIntraProcessT>();
@@ -368,7 +372,7 @@ TEST(TestIntraProcessManager, add_pub_sub) {
   ASSERT_EQ(0u, non_existing_pub_subs);
 
   auto p3 = std::make_shared<PublisherT>();
-  p3->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+  p3->qos.get_rmw_qos_profile().reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
 
   auto s2 = std::make_shared<SubscriptionIntraProcessT>();
   s2->qos_profile.reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;

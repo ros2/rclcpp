@@ -24,6 +24,8 @@ template<typename BufferT>
 class BufferImplementationBase
 {
 public:
+  virtual ~BufferImplementationBase() {}
+
   virtual BufferT dequeue() = 0;
   virtual void enqueue(BufferT request) = 0;
 

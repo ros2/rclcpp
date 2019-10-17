@@ -249,13 +249,10 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
     {rclcpp::ParameterEventsFilter::EventType::NEW,
       rclcpp::ParameterEventsFilter::EventType::CHANGED});
   for (auto & it : filter.get_events()) {
-<<<<<<< HEAD
-=======
     if (it.second->value.type != ParameterType::PARAMETER_BOOL) {
       RCLCPP_ERROR(logger_, "use_sim_time parameter cannot be set to anything but a bool");
       continue;
     }
->>>>>>> basic ipc implementation from alsora/new_ipc_proposal
     if (it.second->value.bool_value) {
       parameter_state_ = SET_TRUE;
       enable_ros_time();

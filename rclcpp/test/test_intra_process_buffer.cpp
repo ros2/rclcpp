@@ -37,16 +37,14 @@ TEST(TestIntraProcessBuffer, constructor) {
   auto shared_buffer_impl =
     std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<SharedMessageT>>(2);
 
-  auto shared_intra_process_buffer =
-    SharedIntraProcessBufferT(std::move(shared_buffer_impl));
+  SharedIntraProcessBufferT shared_intra_process_buffer(std::move(shared_buffer_impl));
 
   EXPECT_EQ(true, shared_intra_process_buffer.use_take_shared_method());
 
   auto unique_buffer_impl =
     std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<UniqueMessageT>>(2);
 
-  auto unique_intra_process_buffer =
-    UniqueIntraProcessBufferT(std::move(unique_buffer_impl));
+  UniqueIntraProcessBufferT unique_intra_process_buffer(std::move(unique_buffer_impl));
 
   EXPECT_EQ(false, unique_intra_process_buffer.use_take_shared_method());
 }
@@ -68,8 +66,7 @@ TEST(TestIntraProcessBuffer, shared_buffer_add) {
   auto buffer_impl =
     std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<SharedMessageT>>(2);
 
-  auto intra_process_buffer =
-    SharedIntraProcessBufferT(std::move(buffer_impl));
+  SharedIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 
   auto original_shared_msg = std::make_shared<char>('a');
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(original_shared_msg.get());
@@ -117,8 +114,7 @@ TEST(TestIntraProcessBuffer, unique_buffer_add) {
   auto buffer_impl =
     std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<UniqueMessageT>>(2);
 
-  auto intra_process_buffer =
-    UniqueIntraProcessBufferT(std::move(buffer_impl));
+  UniqueIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 
   auto original_shared_msg = std::make_shared<char>('a');
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(original_shared_msg.get());
@@ -165,8 +161,7 @@ TEST(TestIntraProcessBuffer, shared_buffer_consume) {
   auto buffer_impl =
     std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<SharedMessageT>>(2);
 
-  auto intra_process_buffer =
-    SharedIntraProcessBufferT(std::move(buffer_impl));
+  SharedIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 
   auto original_shared_msg = std::make_shared<char>('a');
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(original_shared_msg.get());
@@ -215,8 +210,7 @@ TEST(TestIntraProcessBuffer, unique_buffer_consume) {
   auto buffer_impl =
     std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<UniqueMessageT>>(2);
 
-  auto intra_process_buffer =
-    UniqueIntraProcessBufferT(std::move(buffer_impl));
+  UniqueIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 
   auto original_unique_msg = std::make_unique<char>('a');
   auto original_message_pointer = reinterpret_cast<std::uintptr_t>(original_unique_msg.get());

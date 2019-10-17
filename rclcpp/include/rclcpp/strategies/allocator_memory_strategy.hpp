@@ -171,10 +171,8 @@ public:
           });
 
         group->find_service_ptrs_if([this](const rclcpp::ServiceBase::SharedPtr & service) {
-          if (service) {
-            service_handles_.push_back(service->get_service_handle());
-            return false;
-          }
+          service_handles_.push_back(service->get_service_handle());
+          return false;
         });
         group->find_client_ptrs_if([this](const rclcpp::ClientBase::SharedPtr & client) {
             client_handles_.push_back(client->get_client_handle());

@@ -27,6 +27,7 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
+#include "rclcpp/subscription_intra_process_base.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 

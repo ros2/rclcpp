@@ -22,6 +22,7 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/buffers/buffer_implementation_base.hpp"
+#include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
@@ -32,6 +33,8 @@ class IntraProcessBufferBase
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(IntraProcessBufferBase)
+
+  virtual ~IntraProcessBufferBase() {}
 
   virtual void clear() = 0;
 
@@ -47,6 +50,8 @@ class IntraProcessBuffer : public IntraProcessBufferBase
 {
 public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(IntraProcessBuffer)
+
+  virtual ~IntraProcessBuffer() {}
 
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
@@ -73,6 +78,7 @@ public:
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
 
+  explicit
   TypedIntraProcessBuffer(
     std::unique_ptr<BufferImplementationBase<BufferT>> buffer_impl,
     std::shared_ptr<Alloc> allocator = nullptr)
@@ -92,37 +98,39 @@ public:
     }
   }
 
-  void add_shared(MessageSharedPtr msg)
+  virtual ~TypedIntraProcessBuffer() {}
+
+  void add_shared(MessageSharedPtr msg) override
   {
     add_shared_impl<BufferT>(std::move(msg));
   }
 
-  void add_unique(MessageUniquePtr msg)
+  void add_unique(MessageUniquePtr msg) override
   {
     buffer_->enqueue(std::move(msg));
   }
 
-  MessageSharedPtr consume_shared()
+  MessageSharedPtr consume_shared() override
   {
     return consume_shared_impl<BufferT>();
   }
 
-  MessageUniquePtr consume_unique()
+  MessageUniquePtr consume_unique() override
   {
     return consume_unique_impl<BufferT>();
   }
 
-  bool has_data() const
+  bool has_data() const override
   {
     return buffer_->has_data();
   }
 
-  void clear()
+  void clear() override
   {
     buffer_->clear();
   }
 
-  bool use_take_shared_method() const
+  bool use_take_shared_method() const override
   {
     return std::is_same<BufferT, MessageSharedPtr>::value;
   }

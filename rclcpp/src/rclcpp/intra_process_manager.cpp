@@ -37,7 +37,7 @@ IntraProcessManager::add_publisher(
 
   publishers_[id].publisher = publisher;
   publishers_[id].topic_name = publisher->get_topic_name();
-  publishers_[id].qos = publisher->get_actual_qos();
+  publishers_[id].qos = publisher->get_actual_qos().get_rmw_qos_profile();
 
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[id] = SplittedSubscriptions();

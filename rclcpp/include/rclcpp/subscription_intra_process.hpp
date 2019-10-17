@@ -24,9 +24,9 @@
 
 #include "rcl/error_handling.h"
 
+#include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/buffers/intra_process_buffer.hpp"
 #include "rclcpp/create_intra_process_buffer.hpp"
-#include "rclcpp/subscription.hpp"
 #include "rclcpp/subscription_intra_process_base.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"

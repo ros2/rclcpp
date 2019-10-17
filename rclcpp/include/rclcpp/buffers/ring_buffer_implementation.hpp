@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "rclcpp/buffers/buffer_implementation_base.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
