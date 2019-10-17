@@ -51,36 +51,40 @@ namespace intra_process_manager
  * A singleton instance of this class is owned by a rclcpp::Context and a
  * rclcpp::Node can use an associated Context to get an instance of this class.
  * Nodes which do not have a common Context will not exchange intra process
- * messages because they will not share access to an instance of this class.
+ * messages because they do not share access to the same instance of this class.
  *
- * When a Node creates a subscription, it can also create an additional
- * wrapper meant to receive intra process messages.
- * This structure can be registered with this class.
+ * When a Node creates a subscription, it can also create a helper class,
+ * called SubscriptionIntraProcess, meant to receive intra process messages.
+ * It can be registered with this class.
  * It is also allocated an id which is unique among all publishers
  * and subscriptions in this process and that is associated to the subscription.
  *
- * When a Node creates a publisher, as before this can be registered with this class.
+ * When a Node creates a publisher, as with subscriptions, a helper class can
+ * be registered with this class.
  * This is required in order to publish intra-process messages.
  * It is also allocated an id which is unique among all publishers
  * and subscriptions in this process and that is associated to the publisher.
  *
- * When a publisher or a subscription are registered with this class, an internal
- * structure is updated in order to store which of them can communicate.
+ * When a publisher or a subscription are registered, this class checks to see
+ * which other subscriptions or publishers it will communicate with,
  * i.e. they have the same topic and compatible QoS.
  *
  * When the user publishes a message, if intra-process communication is enabled
- * on the publisher, the message is handed to this class.
+ * on the publisher, the message is given to this class.
  * Using the publisher id, a list of recipients for the message is selected.
- * For each item in the list, this class stores its intra-process wrapper.
+ * For each subscription in the list, this class stores the message, whether
+ * sharing ownership or making a copy, in a buffer associated with the
+ * subscription helper class.
  *
- * The wrapper contains a buffer where published intra-process messages are stored
- * until the subscription picks them up.
- * Depending on the data type stored in the buffer, the subscription intra process
- * can request ownership on the inserted messages.
+ * The subscription helper class contains a buffer where published
+ * intra-process messages are stored until they are taken from the subscription.
+ * Depending on the data type stored in the buffer, the subscription helper
+ * class can request either shared or exclusive ownership on the message.
  *
  * Thus, when an intra-process message is published, this class knows how many
  * intra-process subscriptions needs it and how many require ownership.
- * This information allows to efficiently perform a minimum number of copies of the message.
+ * This information allows this class to operate efficiently by performing the
+ * fewest number of copies of the message required.
  *
  * This class is neither CopyConstructable nor CopyAssignable.
  */
@@ -110,8 +114,7 @@ public:
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_subscription(
-    SubscriptionIntraProcessBase::SharedPtr subscription);
+  add_subscription(SubscriptionIntraProcessBase::SharedPtr subscription);
 
   /// Unregister a subscription using the subscription's unique id.
   /**
@@ -345,17 +348,18 @@ private:
     std::vector<uint64_t> take_ownership_subscriptions;
   };
 
-  using SubscriptionMap = std::unordered_map<
-    uint64_t, SubscriptionInfo>;
+  using SubscriptionMap =
+    std::unordered_map<uint64_t, SubscriptionInfo>;
 
-  using PublisherMap = std::unordered_map<
-    uint64_t, PublisherInfo>;
+  using PublisherMap =
+    std::unordered_map<uint64_t, PublisherInfo>;
 
-  using PublisherToSubscriptionIdsMap = std::unordered_map<
-    uint64_t, SplittedSubscriptions>;
+  using PublisherToSubscriptionIdsMap =
+    std::unordered_map<uint64_t, SplittedSubscriptions>;
 
   RCLCPP_PUBLIC
-  static uint64_t
+  static
+  uint64_t
   get_next_unique_id();
 
   RCLCPP_PUBLIC

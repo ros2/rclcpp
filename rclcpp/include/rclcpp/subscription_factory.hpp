@@ -34,10 +34,10 @@
 namespace rclcpp
 {
 
-/// Factory with functions used to create a Subscription<MessageT>.
+/// Factory containing a function used to create a Subscription<MessageT>.
 /**
- * This factory class is used to encapsulate the template generated functions
- * which are used during the creation of a Message type specific subscription
+ * This factory class is used to encapsulate the template generated function
+ * which is used during the creation of a Message type specific subscription
  * within a non-templated class.
  *
  * It is created using the create_subscription_factory function, which is
@@ -60,7 +60,7 @@ struct SubscriptionFactory
   const SubscriptionFactoryFunction create_typed_subscription;
 };
 
-/// Return a SubscriptionFactory with functions for creating a SubscriptionT<MessageT, Alloc>.
+/// Return a SubscriptionFactory setup to create a SubscriptionT<MessageT, AllocatorT>.
 template<
   typename MessageT,
   typename CallbackT,

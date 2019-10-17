@@ -225,8 +225,7 @@ public:
     message_memory_strategy_->return_serialized_message(message);
   }
 
-  bool
-  use_take_shared_method() const
+  bool use_take_shared_method() const
   {
     return any_callback_.use_take_shared_method();
   }

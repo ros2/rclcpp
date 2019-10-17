@@ -28,8 +28,7 @@ IntraProcessManager::~IntraProcessManager()
 {}
 
 uint64_t
-IntraProcessManager::add_publisher(
-  rclcpp::PublisherBase::SharedPtr publisher)
+IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -53,8 +52,7 @@ IntraProcessManager::add_publisher(
 }
 
 uint64_t
-IntraProcessManager::add_subscription(
-  SubscriptionIntraProcessBase::SharedPtr subscription)
+IntraProcessManager::add_subscription(SubscriptionIntraProcessBase::SharedPtr subscription)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 

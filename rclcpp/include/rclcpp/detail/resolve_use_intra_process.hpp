@@ -25,6 +25,7 @@ namespace rclcpp
 namespace detail
 {
 
+/// Return the whether or not intra process is enabled, resolving "NodeDefault" if needed.
 template<typename OptionsT, typename NodeBaseT>
 bool
 resolve_use_intra_process(const OptionsT & options, const NodeBaseT & node_base)
