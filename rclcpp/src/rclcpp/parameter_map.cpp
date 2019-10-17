@@ -21,6 +21,8 @@ using rclcpp::exceptions::InvalidParametersException;
 using rclcpp::exceptions::InvalidParameterValueException;
 using rclcpp::ParameterMap;
 using rclcpp::ParameterValue;
+using rcl_interfaces::msg::FloatingPointRange;
+using rcl_interfaces::msg::IntegerRange;
 
 ParameterMap
 rclcpp::parameter_map_from(const rcl_params_t * const c_params)
@@ -125,6 +127,56 @@ rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
   }
 
   throw InvalidParameterValueException("No parameter value set");
+}
+
+ParameterDescriptor
+parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_descriptor) {
+  if (NULL == c_param_descriptor) {
+    throw InvalidParameterValueException("Passed argument is NULL");    
+  }
+  ParameterDescriptor p;
+
+  if (c_param_descriptor->name) {
+    p.name = std::string(*(c_param_descriptor->name));
+  } 
+  if (c_param_descriptor->type) {
+    p.type = *(c_param_descriptor->type);
+  }
+  if (c_param_descriptor->description) {
+    p.description = std::string(*(c_param_descriptor->description));
+  }
+  if (c_param_descriptor->additional_constraints) {
+    p.additional_constraints = std::string(*(c_param_descriptor->additional_constraints));
+  }
+  if (c_param_descriptor->read_only) {
+    p.read_only = *(c_param_descriptor->read_only);
+  }
+
+  FloatingPointRange f;
+  IntegerRange i;
+  if (c_param_descriptor->from_value_int) {
+    i.from_value = *(c_param_descriptor->from_value_int);
+  }
+  if (c_param_descriptor->from_value_float) {
+    f.from_value = *(c_param_descriptor->from_value_float);
+  }
+  if (c_param_descriptor->to_value_int) {
+    i.to_value = *(c_param_descriptor->to_value_int);
+  }
+  if (c_param_descriptor->to_value_float) {
+    f.to_value = *(c_param_descriptor->to_value_float);
+  }
+  if (c_param_descriptor->step_int) {
+    i.step = *(c_param_descriptor->step_int);
+  }
+  if (c_param_descriptor->step_float) {
+    f.step = *(c_param_descriptor->step_float);
+  }
+
+  p.floating_point_range = f;
+  p.integer_range = i;
+
+  return p;
 }
 
 ParameterMap
