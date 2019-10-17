@@ -39,15 +39,6 @@ TEST(TestUtilities, remove_ros_arguments) {
   ASSERT_EQ(std::string{"--baz"}, args[3]);
 }
 
-TEST(TestUtilities, remove_ros_arguments_null) {
-  // In the case of a C executable, we would expect to get
-  // argc=1 and argv = ["process_name"], so this is an invalid input.
-  ASSERT_THROW(
-  {
-    rclcpp::remove_ros_arguments(0, nullptr);
-  }, rclcpp::exceptions::RCLErrorBase);
-}
-
 TEST(TestUtilities, init_with_args) {
   const char * const argv[] = {"process_name"};
   int argc = sizeof(argv) / sizeof(const char *);
