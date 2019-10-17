@@ -99,6 +99,7 @@ public:
   {
     // Topic is unused for now.
     (void)topic;
+    (void)options;
 
     // If needed, setup intra process communication.
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
@@ -117,8 +118,7 @@ public:
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
       this->setup_intra_process(
         intra_process_publisher_id,
-        ipm,
-        options.template to_rcl_publisher_options<MessageT>(qos));
+        ipm);
     }
   }
 

@@ -82,8 +82,7 @@ NodeTopics::create_subscription(
 void
 NodeTopics::add_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group,
-  bool use_intra_process)
+  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
 {
   // Assign to a group.
   if (callback_group) {
@@ -96,32 +95,24 @@ NodeTopics::add_subscription(
   }
 
   callback_group->add_subscription(subscription);
+
   for (auto & subscription_event : subscription->get_event_handlers()) {
     callback_group->add_waitable(subscription_event);
   }
 
-  if (use_intra_process) {
-    // Get the intra process manager for this context.
-    auto context = node_base_->get_context();
-    auto ipm =
-      context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-
-    // Use the id to retrieve the subscription intra-process from the intra-process manager.
-    auto subscription_intra_process =
-      ipm->get_subscription_intra_process(subscription->get_intra_process_id());
-
+  auto intra_process_waitable = subscription->get_intra_process_waitable();
+  if (nullptr != intra_process_waitable) {
     // Add to the callback group to be notified about intra-process msgs.
-    callback_group->add_waitable(subscription_intra_process);
+    callback_group->add_waitable(intra_process_waitable);
   }
 
   // Notify the executor that a new subscription was created using the parent Node.
   {
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
-    if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
-      throw std::runtime_error(
-              std::string("Failed to notify wait set on subscription creation: ") +
-              rmw_get_error_string().str
-      );
+    auto ret = rcl_trigger_guard_condition(node_base_->get_notify_guard_condition());
+    if (ret != RCL_RET_OK) {
+      using rclcpp::exceptions::throw_from_rcl_error;
+      throw_from_rcl_error(ret, "failed to notify wait set on subscription creation");
     }
   }
 }

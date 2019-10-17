@@ -73,8 +73,7 @@ public:
   void
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group,
-    bool use_intra_process) = 0;
+    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
 
   RCLCPP_PUBLIC
   virtual

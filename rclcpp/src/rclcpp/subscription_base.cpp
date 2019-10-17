@@ -36,7 +36,8 @@ SubscriptionBase::SubscriptionBase(
   const std::string & topic_name,
   const rcl_subscription_options_t & subscription_options,
   bool is_serialized)
-: node_handle_(node_base->get_shared_rcl_node_handle()),
+: node_base_(node_base),
+  node_handle_(node_base_->get_shared_rcl_node_handle()),
   use_intra_process_(false),
   intra_process_subscription_id_(0),
   type_support_(type_support_handle),
@@ -175,10 +176,15 @@ SubscriptionBase::can_loan_messages() const
   return rcl_subscription_can_loan_messages(subscription_handle_.get());
 }
 
-uint64_t
-SubscriptionBase::get_intra_process_id() const
+rclcpp::Waitable::SharedPtr
+SubscriptionBase::get_intra_process_waitable() const
 {
-  return intra_process_subscription_id_;
+  // Get the intra process manager for this context.
+  auto context = node_base_->get_context();
+  auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+
+  // Use the id to retrieve the subscription intra-process from the intra-process manager.
+  return ipm->get_subscription_intra_process(intra_process_subscription_id_);
 }
 
 bool

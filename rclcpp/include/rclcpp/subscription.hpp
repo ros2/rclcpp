@@ -31,13 +31,16 @@
 
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
+#include "rclcpp/detail/resolve_intra_process_buffer_type.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
+#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_intra_process.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -115,6 +118,30 @@ public:
         options.event_callbacks.liveliness_callback,
         RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
     }
+
+    // Setup intra process publishing if requested.
+    if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
+      using rclcpp::detail::resolve_intra_process_buffer_type;
+
+      // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
+      auto context = node_base->get_context();
+      auto subscription_intra_process =
+        std::make_shared<rclcpp::SubscriptionIntraProcess<CallbackMessageT, AllocatorT>>(
+          callback,
+          options.get_allocator(),
+          context,
+          topic_name,
+          qos.get_rmw_qos_profile(),
+          resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
+        );
+
+      // Add it to the intra process manager.
+      using rclcpp::intra_process_manager::IntraProcessManager;
+      auto ipm = context->get_sub_context<IntraProcessManager>();
+      uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
+      this->setup_intra_process(intra_process_subscription_id, ipm);
+    }
+
     TRACEPOINT(
       rclcpp_subscription_callback_added,
       (const void *)get_subscription_handle().get(),
@@ -126,23 +153,14 @@ public:
   }
 
   /// Called after construction to continue setup that requires shared_from_this().
-  void
-  post_init_setup(
+  void post_init_setup(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rclcpp::QoS & qos,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   {
-    // Setup intra process publishing if requested.
-    if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
-      auto context = node_base->get_context();
-      using rclcpp::intra_process_manager::IntraProcessManager;
-      auto ipm = context->get_sub_context<IntraProcessManager>();
-      uint64_t intra_process_subscription_id = ipm->add_subscription(this->shared_from_this());
-      this->setup_intra_process(
-        intra_process_subscription_id,
-        ipm,
-        options.template to_rcl_subscription_options<CallbackMessageT>(qos));
-    }
+    (void)node_base;
+    (void)qos;
+    (void)options;
   }
 
   /// Support dynamically setting the message memory strategy.

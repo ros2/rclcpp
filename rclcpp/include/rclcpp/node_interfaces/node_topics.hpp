@@ -68,8 +68,7 @@ public:
   void
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group,
-    bool use_intra_process) override;
+    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) override;
 
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface *

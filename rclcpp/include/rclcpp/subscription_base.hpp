@@ -188,9 +188,10 @@ public:
     uint64_t intra_process_subscription_id,
     IntraProcessManagerWeakPtr weak_ipm);
 
+  /// Return the waitable for intra-process, or nullptr if intra-process is not setup.
   RCLCPP_PUBLIC
-  uint64_t
-  get_intra_process_id() const;
+  rclcpp::Waitable::SharedPtr
+  get_intra_process_waitable() const;
 
 protected:
   template<typename EventCallbackT>
@@ -210,6 +211,8 @@ protected:
   RCLCPP_PUBLIC
   bool
   matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const;
+
+  rclcpp::node_interfaces::NodeBaseInterface * const node_base_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
