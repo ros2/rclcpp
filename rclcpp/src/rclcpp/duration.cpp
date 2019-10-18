@@ -233,8 +233,8 @@ Duration::to_rmw_time() const
   // reuse conversion logic from msg creation
   builtin_interfaces::msg::Duration msg = *this;
   rmw_time_t result;
-  result.sec = msg.sec;
-  result.nsec = msg.nanosec;
+  result.sec = static_cast<uint64_t>(msg.sec);
+  result.nsec = static_cast<uint64_t>(msg.nanosec);
   return result;
 }
 
