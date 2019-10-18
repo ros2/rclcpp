@@ -1,5 +1,3 @@
-// Copyright 2019 Nobleo Technology
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,13 +15,12 @@
 using rclcpp::executor::ExecutableList;
 
 ExecutableList::ExecutableList()
-:
-  number_of_subscriptions(0),
+: number_of_subscriptions(0),
   number_of_timers(0),
   number_of_services(0),
   number_of_clients(0),
   number_of_waitables(0)
-  {}
+{}
 
 ExecutableList::~ExecutableList()
 {}

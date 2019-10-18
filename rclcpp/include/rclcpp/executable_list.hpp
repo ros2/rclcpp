@@ -1,5 +1,3 @@
-// Copyright 2019 Nobleo Technology
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +14,7 @@
 #define RCLCPP__EXECUTABLE_LIST_HPP_
 
 #include <memory>
+#include <vector>
 
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
