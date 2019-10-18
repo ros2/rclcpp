@@ -136,7 +136,7 @@ public:
     >::make_shared(size, this->get_allocator());
   }
 
-  /// Loan memory for a ROS message from the middleware
+  /// Loan memory for a ROS message from the middleware.
   /**
    * If the middleware is capable of loaning memory for a ROS message instance,
    * the loaned message will be directly allocated in the middleware.
@@ -144,8 +144,9 @@ public:
    *
    * With a call to \sa `publish` the LoanedMessage instance is being returned to the middleware
    * or free'd accordingly to the allocator.
-   * If the message is not being published but processed differently, the message has to be
-   * returned by calling \sa `return_loaned_message`.
+   * If the message is not being published but processed differently, the destructor of this
+   * class will either return the message to the middleware or deallocate it via the internal
+   * allocator.
    * \sa rclcpp::LoanedMessage for details of the LoanedMessage class.
    *
    * \return LoanedMessage containing memory for a ROS message of type MessageT
@@ -215,9 +216,9 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
-  /// Publish an instance of a LoanedMessage
+  /// Publish an instance of a LoanedMessage.
   /**
-   * When publishing a loaned message, the memory for this ROS instance will be deallocated
+   * When publishing a loaned message, the memory for this ROS message will be deallocated
    * after being published.
    * The instance of the loaned message is no longer valid after this call.
    *
