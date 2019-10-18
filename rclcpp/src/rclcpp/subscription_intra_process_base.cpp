@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/subscription_intra_process_base.hpp"
+#include "rclcpp/experimental/subscription_intra_process_base.hpp"
 
-using rclcpp::SubscriptionIntraProcessBase;
+using rclcpp::experimental::SubscriptionIntraProcessBase;
 
 bool
 SubscriptionIntraProcessBase::add_to_wait_set(rcl_wait_set_t * wait_set)

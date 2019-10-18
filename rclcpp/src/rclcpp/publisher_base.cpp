@@ -32,7 +32,7 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
 

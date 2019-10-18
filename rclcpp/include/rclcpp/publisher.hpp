@@ -31,7 +31,7 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/loaned_message.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -105,7 +105,7 @@ public:
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
       auto context = node_base->get_context();
       // Get the intra process manager instance for this context.
-      auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+      auto ipm = context->get_sub_context<rclcpp::experimental::IntraProcessManager>();
       // Register the publisher with the intra process manager.
       if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
         throw std::invalid_argument(

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__SUBSCRIPTION_INTRA_PROCESS_HPP_
-#define RCLCPP__SUBSCRIPTION_INTRA_PROCESS_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_HPP_
+#define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_HPP_
 
 #include <rmw/rmw.h>
 
@@ -25,13 +25,15 @@
 #include "rcl/error_handling.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
-#include "rclcpp/buffers/intra_process_buffer.hpp"
-#include "rclcpp/create_intra_process_buffer.hpp"
-#include "rclcpp/subscription_intra_process_base.hpp"
+#include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
+#include "rclcpp/experimental/create_intra_process_buffer.hpp"
+#include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
+{
+namespace experimental
 {
 
 template<
@@ -49,8 +51,11 @@ public:
   using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
 
-  using BufferUniquePtr =
-    typename intra_process_buffer::IntraProcessBuffer<MessageT, Alloc, Deleter>::UniquePtr;
+  using BufferUniquePtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
+    MessageT,
+    Alloc,
+    Deleter
+  >::UniquePtr;
 
   SubscriptionIntraProcess(
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
@@ -67,7 +72,7 @@ public:
     }
 
     // Create the intra-process buffer.
-    buffer_ = rclcpp::create_intra_process_buffer<MessageT, Alloc, Deleter>(
+    buffer_ = rclcpp::experimental::create_intra_process_buffer<MessageT, Alloc, Deleter>(
       buffer_type,
       qos_profile,
       allocator);
@@ -152,6 +157,7 @@ private:
   BufferUniquePtr buffer_;
 };
 
+}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__SUBSCRIPTION_INTRA_PROCESS_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_HPP_

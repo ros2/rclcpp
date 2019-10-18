@@ -29,20 +29,20 @@ TEST(TestIntraProcessBuffer, constructor) {
   using Deleter = std::default_delete<MessageT>;
   using SharedMessageT = std::shared_ptr<const MessageT>;
   using UniqueMessageT = std::unique_ptr<MessageT, Deleter>;
-  using SharedIntraProcessBufferT =
-    rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc, Deleter, SharedMessageT>;
-  using UniqueIntraProcessBufferT =
-    rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc, Deleter, UniqueMessageT>;
+  using SharedIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, SharedMessageT>;
+  using UniqueIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, UniqueMessageT>;
 
   auto shared_buffer_impl =
-    std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<SharedMessageT>>(2);
+    std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<SharedMessageT>>(2);
 
   SharedIntraProcessBufferT shared_intra_process_buffer(std::move(shared_buffer_impl));
 
   EXPECT_EQ(true, shared_intra_process_buffer.use_take_shared_method());
 
   auto unique_buffer_impl =
-    std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<UniqueMessageT>>(2);
+    std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<UniqueMessageT>>(2);
 
   UniqueIntraProcessBufferT unique_intra_process_buffer(std::move(unique_buffer_impl));
 
@@ -60,11 +60,11 @@ TEST(TestIntraProcessBuffer, shared_buffer_add) {
   using Alloc = std::allocator<void>;
   using Deleter = std::default_delete<MessageT>;
   using SharedMessageT = std::shared_ptr<const MessageT>;
-  using SharedIntraProcessBufferT =
-    rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc, Deleter, SharedMessageT>;
+  using SharedIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, SharedMessageT>;
 
   auto buffer_impl =
-    std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<SharedMessageT>>(2);
+    std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<SharedMessageT>>(2);
 
   SharedIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 
@@ -108,11 +108,11 @@ TEST(TestIntraProcessBuffer, unique_buffer_add) {
   using Alloc = std::allocator<void>;
   using Deleter = std::default_delete<MessageT>;
   using UniqueMessageT = std::unique_ptr<MessageT, Deleter>;
-  using UniqueIntraProcessBufferT =
-    rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc, Deleter, UniqueMessageT>;
+  using UniqueIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, UniqueMessageT>;
 
   auto buffer_impl =
-    std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<UniqueMessageT>>(2);
+    std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<UniqueMessageT>>(2);
 
   UniqueIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 
@@ -155,11 +155,11 @@ TEST(TestIntraProcessBuffer, shared_buffer_consume) {
   using Deleter = std::default_delete<MessageT>;
   using SharedMessageT = std::shared_ptr<const MessageT>;
   using UniqueMessageT = std::unique_ptr<MessageT, Deleter>;
-  using SharedIntraProcessBufferT =
-    rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc, Deleter, SharedMessageT>;
+  using SharedIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, SharedMessageT>;
 
   auto buffer_impl =
-    std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<SharedMessageT>>(2);
+    std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<SharedMessageT>>(2);
 
   SharedIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 
@@ -204,11 +204,11 @@ TEST(TestIntraProcessBuffer, unique_buffer_consume) {
   using Deleter = std::default_delete<MessageT>;
   using SharedMessageT = std::shared_ptr<const MessageT>;
   using UniqueMessageT = std::unique_ptr<MessageT, Deleter>;
-  using UniqueIntraProcessBufferT =
-    rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc, Deleter, UniqueMessageT>;
+  using UniqueIntraProcessBufferT = rclcpp::experimental::buffers::TypedIntraProcessBuffer<
+    MessageT, Alloc, Deleter, UniqueMessageT>;
 
   auto buffer_impl =
-    std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<UniqueMessageT>>(2);
+    std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<UniqueMessageT>>(2);
 
   UniqueIntraProcessBufferT intra_process_buffer(std::move(buffer_impl));
 

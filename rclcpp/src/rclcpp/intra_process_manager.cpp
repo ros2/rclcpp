@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+
+#include <atomic>
+#include <memory>
+#include <mutex>
 
 namespace rclcpp
 {
-namespace intra_process_manager
+namespace experimental
 {
 
 static std::atomic<uint64_t> _next_unique_id {1};
@@ -61,8 +65,7 @@ IntraProcessManager::add_subscription(SubscriptionIntraProcessBase::SharedPtr su
   subscriptions_[id].subscription = subscription;
   subscriptions_[id].topic_name = subscription->get_topic_name();
   subscriptions_[id].qos = subscription->get_actual_qos();
-  subscriptions_[id].use_take_shared_method =
-    subscription->use_take_shared_method();
+  subscriptions_[id].use_take_shared_method = subscription->use_take_shared_method();
 
   // adds the subscription id to all the matchable publishers
   for (auto & pair : publishers_) {
@@ -82,13 +85,15 @@ IntraProcessManager::remove_subscription(uint64_t intra_process_subscription_id)
   subscriptions_.erase(intra_process_subscription_id);
 
   for (auto & pair : pub_to_subs_) {
-    pair.second.take_shared_subscriptions.erase(std::remove(
+    pair.second.take_shared_subscriptions.erase(
+      std::remove(
         pair.second.take_shared_subscriptions.begin(),
         pair.second.take_shared_subscriptions.end(),
         intra_process_subscription_id),
       pair.second.take_shared_subscriptions.end());
 
-    pair.second.take_ownership_subscriptions.erase(std::remove(
+    pair.second.take_ownership_subscriptions.erase(
+      std::remove(
         pair.second.take_ownership_subscriptions.begin(),
         pair.second.take_ownership_subscriptions.end(),
         intra_process_subscription_id),
@@ -203,7 +208,8 @@ IntraProcessManager::can_communicate(
 
   // TODO(alsora): the following checks for qos compatibility should be provided by the RMW
   // a reliable subscription can't be connected with a best effort publisher
-  if (sub_info.qos.reliability == RMW_QOS_POLICY_RELIABILITY_RELIABLE &&
+  if (
+    sub_info.qos.reliability == RMW_QOS_POLICY_RELIABILITY_RELIABLE &&
     pub_info.qos.reliability == RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT)
   {
     return false;
@@ -217,5 +223,5 @@ IntraProcessManager::can_communicate(
   return true;
 }
 
-}  // namespace intra_process_manager
+}  // namespace experimental
 }  // namespace rclcpp

@@ -24,10 +24,11 @@
 #include "rmw/rmw.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
-#include "rclcpp/subscription_intra_process_base.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -39,14 +40,14 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
-namespace intra_process_manager
+namespace experimental
 {
 /**
  * IntraProcessManager is forward declared here, avoiding a circular inclusion between
  * `intra_process_manager.hpp` and `subscription_base.hpp`.
  */
 class IntraProcessManager;
-}
+}  // namespace experimental
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
@@ -179,7 +180,7 @@ public:
   can_loan_messages() const;
 
   using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+    std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
 
   /// Implemenation detail.
   RCLCPP_PUBLIC

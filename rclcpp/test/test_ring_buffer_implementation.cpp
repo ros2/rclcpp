@@ -18,8 +18,8 @@
 
 #include "gtest/gtest.h"
 
-#include "rclcpp/buffers/buffer_implementation_base.hpp"
-#include "rclcpp/buffers/ring_buffer_implementation.hpp"
+#include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
+#include "rclcpp/experimental/buffers/ring_buffer_implementation.hpp"
 
 /*
    Construtctor
@@ -27,9 +27,10 @@
 TEST(TestRingBufferImplementation, constructor) {
   // Cannot create a buffer of size zero.
   EXPECT_THROW(
-    rclcpp::intra_process_buffer::RingBufferImplementation<char> rb(0), std::invalid_argument);
+    rclcpp::experimental::buffers::RingBufferImplementation<char> rb(0),
+    std::invalid_argument);
 
-  rclcpp::intra_process_buffer::RingBufferImplementation<char> rb(1);
+  rclcpp::experimental::buffers::RingBufferImplementation<char> rb(1);
 
   EXPECT_EQ(false, rb.has_data());
   EXPECT_EQ(false, rb.is_full());
@@ -42,7 +43,7 @@ TEST(TestRingBufferImplementation, constructor) {
    - overwrite old data writing over the buffer capacity
  */
 TEST(TestRingBufferImplementation, basic_usage) {
-  rclcpp::intra_process_buffer::RingBufferImplementation<char> rb(2);
+  rclcpp::experimental::buffers::RingBufferImplementation<char> rb(2);
 
   rb.enqueue('a');
 

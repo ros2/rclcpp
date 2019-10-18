@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__CREATE_INTRA_PROCESS_BUFFER_HPP_
-#define RCLCPP__CREATE_INTRA_PROCESS_BUFFER_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__CREATE_INTRA_PROCESS_BUFFER_HPP_
+#define RCLCPP__EXPERIMENTAL__CREATE_INTRA_PROCESS_BUFFER_HPP_
 
 #include <memory>
 #include <type_traits>
@@ -21,18 +21,20 @@
 
 #include "rcl/subscription.h"
 
-#include "rclcpp/buffers/ring_buffer_implementation.hpp"
-#include "rclcpp/buffers/intra_process_buffer.hpp"
+#include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
+#include "rclcpp/experimental/buffers/ring_buffer_implementation.hpp"
 #include "rclcpp/intra_process_buffer_type.hpp"
 
 namespace rclcpp
+{
+namespace experimental
 {
 
 template<
   typename MessageT,
   typename Alloc = std::allocator<void>,
   typename Deleter = std::default_delete<MessageT>>
-typename intra_process_buffer::IntraProcessBuffer<MessageT, Alloc, Deleter>::UniquePtr
+typename rclcpp::experimental::buffers::IntraProcessBuffer<MessageT, Alloc, Deleter>::UniquePtr
 create_intra_process_buffer(
   IntraProcessBufferType buffer_type,
   rmw_qos_profile_t qos,
@@ -43,7 +45,8 @@ create_intra_process_buffer(
 
   size_t buffer_size = qos.depth;
 
-  typename intra_process_buffer::IntraProcessBuffer<MessageT, Alloc, Deleter>::UniquePtr buffer;
+  using rclcpp::experimental::buffers::IntraProcessBuffer;
+  typename IntraProcessBuffer<MessageT, Alloc, Deleter>::UniquePtr buffer;
 
   switch (buffer_type) {
     case IntraProcessBufferType::SharedPtr:
@@ -51,12 +54,12 @@ create_intra_process_buffer(
         using BufferT = MessageSharedPtr;
 
         auto buffer_implementation =
-          std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<BufferT>>(
+          std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<BufferT>>(
           buffer_size);
 
         // Construct the intra_process_buffer
         buffer =
-          std::make_unique<rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc,
+          std::make_unique<rclcpp::experimental::buffers::TypedIntraProcessBuffer<MessageT, Alloc,
             Deleter, BufferT>>(
           std::move(buffer_implementation),
           allocator);
@@ -68,12 +71,12 @@ create_intra_process_buffer(
         using BufferT = MessageUniquePtr;
 
         auto buffer_implementation =
-          std::make_unique<rclcpp::intra_process_buffer::RingBufferImplementation<BufferT>>(
+          std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<BufferT>>(
           buffer_size);
 
         // Construct the intra_process_buffer
         buffer =
-          std::make_unique<rclcpp::intra_process_buffer::TypedIntraProcessBuffer<MessageT, Alloc,
+          std::make_unique<rclcpp::experimental::buffers::TypedIntraProcessBuffer<MessageT, Alloc,
             Deleter, BufferT>>(
           std::move(buffer_implementation),
           allocator);
@@ -90,6 +93,7 @@ create_intra_process_buffer(
   return buffer;
 }
 
+}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__CREATE_INTRA_PROCESS_BUFFER_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__CREATE_INTRA_PROCESS_BUFFER_HPP_

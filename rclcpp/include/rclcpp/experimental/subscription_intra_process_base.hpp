@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
-#define RCLCPP__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
+#define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 
 #include <rmw/rmw.h>
 
@@ -29,6 +29,8 @@
 #include "rclcpp/waitable.hpp"
 
 namespace rclcpp
+{
+namespace experimental
 {
 
 class SubscriptionIntraProcessBase : public rclcpp::Waitable
@@ -79,6 +81,8 @@ private:
   std::string topic_name_;
   rmw_qos_profile_t qos_profile_;
 };
+
+}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_

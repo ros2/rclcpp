@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
-#define RCLCPP__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
+#define RCLCPP__EXPERIMENTAL__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
 
 namespace rclcpp
 {
-namespace intra_process_buffer
+namespace experimental
+{
+namespace buffers
 {
 
 template<typename BufferT>
@@ -33,7 +35,8 @@ public:
   virtual bool has_data() const = 0;
 };
 
-}  // namespace intra_process_buffer
+}  // namespace buffers
+}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__BUFFERS__BUFFER_IMPLEMENTATION_BASE_HPP_

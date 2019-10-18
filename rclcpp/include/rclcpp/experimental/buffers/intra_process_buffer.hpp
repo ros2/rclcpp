@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
-#define RCLCPP__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
+#define RCLCPP__EXPERIMENTAL__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
 
 #include <memory>
 #include <type_traits>
@@ -21,12 +21,14 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
-#include "rclcpp/buffers/buffer_implementation_base.hpp"
+#include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
 #include "rclcpp/macros.hpp"
 
 namespace rclcpp
 {
-namespace intra_process_buffer
+namespace experimental
+{
+namespace buffers
 {
 
 class IntraProcessBufferBase
@@ -231,8 +233,9 @@ private:
   }
 };
 
-}  // namespace intra_process_buffer
+}  // namespace buffers
+}  // namespace experimental
 }  // namespace rclcpp
 
 
-#endif  // RCLCPP__BUFFERS__INTRA_PROCESS_BUFFER_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__BUFFERS__INTRA_PROCESS_BUFFER_HPP_

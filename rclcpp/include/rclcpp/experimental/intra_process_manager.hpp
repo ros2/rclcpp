@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__INTRA_PROCESS_MANAGER_HPP_
-#define RCLCPP__INTRA_PROCESS_MANAGER_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__INTRA_PROCESS_MANAGER_HPP_
+#define RCLCPP__EXPERIMENTAL__INTRA_PROCESS_MANAGER_HPP_
 
 #include <rmw/types.h>
 
@@ -31,18 +31,18 @@
 #include <vector>
 
 #include "rclcpp/allocator/allocator_deleter.hpp"
+#include "rclcpp/experimental/subscription_intra_process.hpp"
+#include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/publisher_base.hpp"
-#include "rclcpp/subscription_intra_process.hpp"
-#include "rclcpp/subscription_intra_process_base.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
 
-namespace intra_process_manager
+namespace experimental
 {
 
 /// This class performs intra process communication between nodes.
@@ -114,7 +114,7 @@ public:
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_subscription(SubscriptionIntraProcessBase::SharedPtr subscription);
+  add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription);
 
   /// Unregister a subscription using the subscription's unique id.
   /**
@@ -138,8 +138,7 @@ public:
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_publisher(
-    PublisherBase::SharedPtr publisher);
+  add_publisher(rclcpp::PublisherBase::SharedPtr publisher);
 
   /// Unregister a publisher using the publisher's unique id.
   /**
@@ -319,7 +318,7 @@ public:
   get_subscription_count(uint64_t intra_process_publisher_id) const;
 
   RCLCPP_PUBLIC
-  SubscriptionIntraProcessBase::SharedPtr
+  rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr
   get_subscription_intra_process(uint64_t intra_process_subscription_id);
 
 private:
@@ -327,7 +326,7 @@ private:
   {
     SubscriptionInfo() = default;
 
-    SubscriptionIntraProcessBase::SharedPtr subscription;
+    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription;
     rmw_qos_profile_t qos;
     const char * topic_name;
     bool use_take_shared_method;
@@ -337,7 +336,7 @@ private:
   {
     PublisherInfo() = default;
 
-    PublisherBase::WeakPtr publisher;
+    rclcpp::PublisherBase::WeakPtr publisher;
     rmw_qos_profile_t qos;
     const char * topic_name;
   };
@@ -383,8 +382,9 @@ private:
       }
       auto subscription_base = subscription_it->second.subscription;
 
-      auto subscription =
-        std::static_pointer_cast<SubscriptionIntraProcess<MessageT>>(subscription_base);
+      auto subscription = std::static_pointer_cast<
+        rclcpp::experimental::SubscriptionIntraProcess<MessageT>
+      >(subscription_base);
 
       subscription->provide_intra_process_message(message);
     }
@@ -410,8 +410,9 @@ private:
       }
       auto subscription_base = subscription_it->second.subscription;
 
-      auto subscription =
-        std::static_pointer_cast<SubscriptionIntraProcess<MessageT>>(subscription_base);
+      auto subscription = std::static_pointer_cast<
+        rclcpp::experimental::SubscriptionIntraProcess<MessageT>
+      >(subscription_base);
 
       if (std::next(it) == subscription_ids.end()) {
         // If this is the last subscription, give up ownership
@@ -436,7 +437,7 @@ private:
   mutable std::shared_timed_mutex mutex_;
 };
 
-}  // namespace intra_process_manager
+}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__INTRA_PROCESS_MANAGER_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__INTRA_PROCESS_MANAGER_HPP_

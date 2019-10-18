@@ -34,13 +34,13 @@
 #include "rclcpp/detail/resolve_intra_process_buffer_type.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/subscription_base.hpp"
-#include "rclcpp/subscription_intra_process.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -125,18 +125,19 @@ public:
 
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
-      auto subscription_intra_process =
-        std::make_shared<rclcpp::SubscriptionIntraProcess<CallbackMessageT, AllocatorT>>(
-          callback,
-          options.get_allocator(),
-          context,
-          topic_name,
-          qos.get_rmw_qos_profile(),
-          resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
-        );
+      auto subscription_intra_process = std::make_shared<
+        rclcpp::experimental::SubscriptionIntraProcess<CallbackMessageT, AllocatorT>
+      >(
+        callback,
+        options.get_allocator(),
+        context,
+        topic_name,
+        qos.get_rmw_qos_profile(),
+        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
+      );
 
       // Add it to the intra process manager.
-      using rclcpp::intra_process_manager::IntraProcessManager;
+      using rclcpp::experimental::IntraProcessManager;
       auto ipm = context->get_sub_context<IntraProcessManager>();
       uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
       this->setup_intra_process(intra_process_subscription_id, ipm);

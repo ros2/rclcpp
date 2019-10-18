@@ -16,7 +16,6 @@
 
 #include <string>
 
-#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/exceptions.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;

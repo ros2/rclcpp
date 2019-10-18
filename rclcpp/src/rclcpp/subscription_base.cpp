@@ -21,7 +21,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 
@@ -179,9 +179,13 @@ SubscriptionBase::can_loan_messages() const
 rclcpp::Waitable::SharedPtr
 SubscriptionBase::get_intra_process_waitable() const
 {
-  // Get the intra process manager for this context.
-  auto context = node_base_->get_context();
-  auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+  // Get the intra process manager.
+  auto ipm = weak_ipm_.lock();
+  if (!ipm) {
+    throw std::runtime_error(
+            "SubscriptionBase::get_intra_process_waitable() called "
+            "after destruction of intra process manager");
+  }
 
   // Use the id to retrieve the subscription intra-process from the intra-process manager.
   return ipm->get_subscription_intra_process(intra_process_subscription_id_);

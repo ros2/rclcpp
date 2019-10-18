@@ -24,11 +24,13 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-#include "rclcpp/subscription.hpp"
-#include "rclcpp/subscription_traits.hpp"
+#include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/intra_process_buffer_type.hpp"
-#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_options.hpp"
+#include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

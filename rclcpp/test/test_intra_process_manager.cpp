@@ -33,19 +33,19 @@
 namespace rclcpp
 {
 // forward declaration
-namespace intra_process_manager
+namespace experimental
 {
 class IntraProcessManager;
-}
+}  // namespace experimental
 
 namespace mock
 {
 
 using IntraProcessManagerSharedPtr =
-  std::shared_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  std::shared_ptr<rclcpp::experimental::IntraProcessManager>;
 
 using IntraProcessManagerWeakPtr =
-  std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+  std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
 
 class PublisherBase
 {
@@ -131,7 +131,9 @@ public:
 
 namespace rclcpp
 {
-namespace intra_process_buffer
+namespace experimental
+{
+namespace buffers
 {
 namespace mock
 {
@@ -173,11 +175,14 @@ public:
 };
 
 }  // namespace mock
-}  // namespace intra_process_buffer
+}  // namespace buffers
+}  // namespace experimental
 }  // namespace rclcpp
 
 
 namespace rclcpp
+{
+namespace experimental
 {
 namespace mock
 {
@@ -221,7 +226,7 @@ public:
   SubscriptionIntraProcess()
   : take_shared_method(false)
   {
-    buffer = std::make_unique<intra_process_buffer::mock::IntraProcessBuffer<MessageT>>();
+    buffer = std::make_unique<rclcpp::experimental::buffers::mock::IntraProcessBuffer<MessageT>>();
   }
 
   void
@@ -252,17 +257,18 @@ public:
 
   bool take_shared_method;
 
-  typename intra_process_buffer::mock::IntraProcessBuffer<MessageT>::UniquePtr buffer;
+  typename rclcpp::experimental::buffers::mock::IntraProcessBuffer<MessageT>::UniquePtr buffer;
 };
 
 }  // namespace mock
+}  // namespace experimental
 }  // namespace rclcpp
 
 // Prevent the header files of the mocked classes to be included
 #define RCLCPP__PUBLISHER_HPP_
 #define RCLCPP__PUBLISHER_BASE_HPP_
-#define RCLCPP__SUBSCRIPTION_INTRA_PROCESS_HPP_
-#define RCLCPP__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
+#define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_HPP_
+#define RCLCPP__EXPERIMENTAL__SUBSCRIPTION_INTRA_PROCESS_BASE_HPP_
 // Force ipm to use our mock publisher class.
 #define Publisher mock::Publisher
 #define PublisherBase mock::PublisherBase
@@ -340,10 +346,10 @@ void Publisher<T, Alloc>::publish(MessageSharedPtr msg)
    - The count for the last publisher is expected to decrease to 1.
  */
 TEST(TestIntraProcessManager, add_pub_sub) {
-  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
   using MessageT = rcl_interfaces::msg::Log;
   using PublisherT = rclcpp::mock::Publisher<MessageT>;
-  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::experimental::mock::SubscriptionIntraProcess<MessageT>;
 
   auto ipm = std::make_shared<IntraProcessManagerT>();
 
@@ -407,10 +413,10 @@ TEST(TestIntraProcessManager, add_pub_sub) {
    - The received message is expected to be the same.
  */
 TEST(TestIntraProcessManager, single_subscription) {
-  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
   using MessageT = rcl_interfaces::msg::Log;
   using PublisherT = rclcpp::mock::Publisher<MessageT>;
-  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::experimental::mock::SubscriptionIntraProcess<MessageT>;
 
   auto ipm = std::make_shared<IntraProcessManagerT>();
 
@@ -461,10 +467,10 @@ TEST(TestIntraProcessManager, single_subscription) {
    - Both received messages are expected to be the same as the published one.
  */
 TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
-  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
   using MessageT = rcl_interfaces::msg::Log;
   using PublisherT = rclcpp::mock::Publisher<MessageT>;
-  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::experimental::mock::SubscriptionIntraProcess<MessageT>;
 
   auto ipm = std::make_shared<IntraProcessManagerT>();
 
@@ -566,10 +572,10 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
      the other is expected to receive the published message
  */
 TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
-  using IntraProcessManagerT = rclcpp::intra_process_manager::IntraProcessManager;
+  using IntraProcessManagerT = rclcpp::experimental::IntraProcessManager;
   using MessageT = rcl_interfaces::msg::Log;
   using PublisherT = rclcpp::mock::Publisher<MessageT>;
-  using SubscriptionIntraProcessT = rclcpp::mock::SubscriptionIntraProcess<MessageT>;
+  using SubscriptionIntraProcessT = rclcpp::experimental::mock::SubscriptionIntraProcess<MessageT>;
 
   auto ipm = std::make_shared<IntraProcessManagerT>();
 

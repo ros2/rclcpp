@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_
-#define RCLCPP__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_
+#define RCLCPP__EXPERIMENTAL__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_
 
 #include <algorithm>
 #include <cstddef>
@@ -24,7 +24,7 @@
 #include <utility>
 #include <vector>
 
-#include "rclcpp/buffers/buffer_implementation_base.hpp"
+#include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
@@ -34,7 +34,9 @@
 
 namespace rclcpp
 {
-namespace intra_process_buffer
+namespace experimental
+{
+namespace buffers
 {
 
 template<typename BufferT>
@@ -115,7 +117,8 @@ private:
   std::mutex mutex_;
 };
 
-}  // namespace intra_process_buffer
+}  // namespace buffers
+}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__BUFFERS__RING_BUFFER_IMPLEMENTATION_HPP_

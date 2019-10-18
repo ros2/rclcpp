@@ -41,16 +41,16 @@ namespace node_interfaces
 {
 class NodeBaseInterface;
 class NodeTopicsInterface;
-}
+}  // namespace node_interfaces
 
-namespace intra_process_manager
+namespace experimental
 {
 /**
  * IntraProcessManager is forward declared here, avoiding a circular inclusion between
  * `intra_process_manager.hpp` and `publisher_base.hpp`.
  */
 class IntraProcessManager;
-}
+}  // namespace experimental
 
 class PublisherBase : public std::enable_shared_from_this<PublisherBase>
 {
@@ -184,7 +184,7 @@ public:
   operator==(const rmw_gid_t * gid) const;
 
   using IntraProcessManagerSharedPtr =
-    std::shared_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+    std::shared_ptr<rclcpp::experimental::IntraProcessManager>;
 
   /// Implementation utility function used to setup intra process publishing after creation.
   RCLCPP_PUBLIC
@@ -215,7 +215,7 @@ protected:
   std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
 
   using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+    std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
   bool intra_process_is_enabled_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
