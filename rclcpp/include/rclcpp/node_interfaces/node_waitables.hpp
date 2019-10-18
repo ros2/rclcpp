@@ -46,14 +46,14 @@ public:
   void
   add_waitable(
     rclcpp::Waitable::SharedPtr waitable_base_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group);
+    rclcpp::callback_group::CallbackGroup::SharedPtr group) override;
 
   RCLCPP_PUBLIC
 
   void
   remove_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept;
+    rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeWaitables)

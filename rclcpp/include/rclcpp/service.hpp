@@ -213,12 +213,12 @@ public:
   {
   }
 
-  std::shared_ptr<void> create_request()
+  std::shared_ptr<void> create_request() override
   {
     return std::shared_ptr<void>(new typename ServiceT::Request());
   }
 
-  std::shared_ptr<rmw_request_id_t> create_request_header()
+  std::shared_ptr<rmw_request_id_t> create_request_header() override
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
@@ -227,7 +227,7 @@ public:
 
   void handle_request(
     std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> request)
+    std::shared_ptr<void> request) override
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);

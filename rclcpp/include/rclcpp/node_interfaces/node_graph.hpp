@@ -58,64 +58,64 @@ public:
   RCLCPP_PUBLIC
 
   std::map<std::string, std::vector<std::string>>
-  get_topic_names_and_types(bool no_demangle = false) const;
+  get_topic_names_and_types(bool no_demangle = false) const override;
 
   RCLCPP_PUBLIC
 
   std::map<std::string, std::vector<std::string>>
-  get_service_names_and_types() const;
+  get_service_names_and_types() const override;
 
   RCLCPP_PUBLIC
 
   std::vector<std::string>
-  get_node_names() const;
+  get_node_names() const override;
 
   RCLCPP_PUBLIC
 
   std::vector<std::pair<std::string, std::string>>
-  get_node_names_and_namespaces() const;
+  get_node_names_and_namespaces() const override;
 
   RCLCPP_PUBLIC
 
   size_t
-  count_publishers(const std::string & topic_name) const;
+  count_publishers(const std::string & topic_name) const override;
 
   RCLCPP_PUBLIC
 
   size_t
-  count_subscribers(const std::string & topic_name) const;
+  count_subscribers(const std::string & topic_name) const override;
 
   RCLCPP_PUBLIC
 
   const rcl_guard_condition_t *
-  get_graph_guard_condition() const;
+  get_graph_guard_condition() const override;
 
   RCLCPP_PUBLIC
 
   void
-  notify_graph_change();
+  notify_graph_change() override;
 
   RCLCPP_PUBLIC
 
   void
-  notify_shutdown();
+  notify_shutdown() override;
 
   RCLCPP_PUBLIC
 
   rclcpp::Event::SharedPtr
-  get_graph_event();
+  get_graph_event() override;
 
   RCLCPP_PUBLIC
 
   void
   wait_for_graph_change(
     rclcpp::Event::SharedPtr event,
-    std::chrono::nanoseconds timeout);
+    std::chrono::nanoseconds timeout) override;
 
   RCLCPP_PUBLIC
 
   size_t
-  count_graph_users();
+  count_graph_users() override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeGraph)

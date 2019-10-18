@@ -44,12 +44,12 @@ public:
   RCLCPP_PUBLIC
 
   rclcpp::Logger
-  get_logger() const;
+  get_logger() const override;
 
   RCLCPP_PUBLIC
 
   const char *
-  get_logger_name() const;
+  get_logger_name() const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeLogging)
