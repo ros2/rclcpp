@@ -164,7 +164,7 @@ on_shutdown(std::function<void()> callback, Context::SharedPtr context)
 }
 
 bool
-sleep_for(const std::chrono::nanoseconds & nanoseconds, Context::SharedPtr context)
+sleep_for(const std::chrono::nanoseconds nanoseconds, Context::SharedPtr context)
 {
   using contexts::default_context::get_global_default_context;
   if (nullptr == context) {

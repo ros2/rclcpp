@@ -212,7 +212,7 @@ on_shutdown(std::function<void()> callback, rclcpp::Context::SharedPtr context =
 RCLCPP_PUBLIC
 bool
 sleep_for(
-  const std::chrono::nanoseconds & nanoseconds,
+  const std::chrono::nanoseconds nanoseconds,
   rclcpp::Context::SharedPtr context = nullptr);
 
 /// Safely check if addition will overflow.
