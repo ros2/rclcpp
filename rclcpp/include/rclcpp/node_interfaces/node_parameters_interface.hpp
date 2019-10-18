@@ -33,6 +33,16 @@ namespace rclcpp
 namespace node_interfaces
 {
 
+// Internal struct for holding useful info about parameters
+struct ParameterInfo
+{
+  /// Current value of the parameter.
+  rclcpp::ParameterValue value;
+
+  /// A description of the parameter
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+};
+
 struct OnSetParametersCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(OnSetParametersCallbackHandle)
@@ -228,7 +238,7 @@ public:
   /// Return the initial parameter values used by the NodeParameters to override default values.
   RCLCPP_PUBLIC
   virtual
-  const std::map<std::string, rclcpp::ParameterValue> &
+  const std::map<std::string, ParameterInfo> &
   get_parameter_overrides() const = 0;
 };
 

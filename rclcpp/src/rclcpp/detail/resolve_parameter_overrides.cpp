@@ -23,7 +23,7 @@
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/parameter_map.hpp"
 
-std::map<std::string, rclcpp::ParameterValue>
+std::map<std::string, rclcpp::ParameterInfo>
 rclcpp::detail::resolve_parameter_overrides(
   const std::string & node_fqn,
   const std::vector<rclcpp::Parameter> & parameter_overrides,
@@ -59,9 +59,12 @@ rclcpp::detail::resolve_parameter_overrides(
       for (const auto & node_name : node_matching_names) {
         if (initial_map.count(node_name) > 0) {
           // Combine parameter yaml files, overwriting values in older ones
-          for (const rclcpp::Parameter & param : initial_map.at(node_name)) {
-            result[param.get_name()] =
-              rclcpp::ParameterValue(param.get_value_message());
+          for (const auto & param : initial_map.at(node_name)) {
+            rclcpp::node_interfaces::ParameterInfo param_info;
+            param_info.value = rclcpp::ParameterValue((param.second.first).get_value_message());
+            param_info.descriptor = param.second.second;
+            param_info.descriptor.dynamic_typing = true;
+            result[(param.second.first).get_name()] = param_info;
           }
         }
       }
@@ -70,7 +73,7 @@ rclcpp::detail::resolve_parameter_overrides(
 
   // parameter overrides passed to constructor will overwrite overrides from yaml file sources
   for (auto & param : parameter_overrides) {
-    result[param.get_name()] =
+    result[param.get_name()].value =
       rclcpp::ParameterValue(param.get_value_message());
   }
   return result;

@@ -96,20 +96,48 @@ NodeParameters::NodeParameters(
   }
   combined_name_ = node_base->get_fully_qualified_name();
 
-  parameter_overrides_ = rclcpp::detail::resolve_parameter_overrides(
-    combined_name_, parameter_overrides, &options->arguments, global_args);
+  for (const rcl_arguments_t * source : argument_sources) {
+    rcl_params_t * params = NULL;
+    rcl_ret_t ret = rcl_arguments_get_param_overrides(source, &params);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+    if (params) {
+      auto cleanup_params = make_scope_exit(
+        [params]() {
+          rcl_yaml_node_struct_fini(params);
+        });
+      rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
+      for (auto iter = initial_map.begin(); initial_map.end() != iter; iter++) {
+        // TODO(cottsay) implement further wildcard matching
+        if (iter->first == "/**" || iter->first == combined_name_) {
+          // Combine parameter yaml files, overwriting values in older ones
+          for (auto & param : iter->second) {
+            rclcpp::node_interfaces::ParameterInfo param_info;
+            param_info.value = rclcpp::ParameterValue((param.second.first).get_value_message());
+            param_info.descriptor = param.second.second;
+            parameter_overrides_[(param.second.first).get_name()] = param_info;
+          }
+        }
+      }
+    }
+  }
+
+  // parameter overrides passed to constructor will overwrite overrides from yaml file sources
+  for (auto & param : parameter_overrides) {
+    parameter_overrides_[param.get_name()].value =
+      rclcpp::ParameterValue(param.get_value_message());
+  }
 
   // If asked, initialize any parameters that ended up in the initial parameter values,
   // but did not get declared explcitily by this point.
   if (automatically_declare_parameters_from_overrides) {
-    rcl_interfaces::msg::ParameterDescriptor descriptor;
-    descriptor.dynamic_typing = true;
     for (const auto & pair : this->get_parameter_overrides()) {
       if (!this->has_parameter(pair.first)) {
         this->declare_parameter(
           pair.first,
-          pair.second,
-          descriptor,
+          pair.second.value,
+          pair.second.descriptor,
           true);
       }
     }
@@ -332,7 +360,7 @@ __declare_parameter_common(
   const rclcpp::ParameterValue & default_value,
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & parameters_out,
-  const std::map<std::string, rclcpp::ParameterValue> & overrides,
+  const std::map<std::string, rclcpp::node_interfaces::ParameterInfo> & overrides,
   CallbacksContainerType & callback_container,
   const OnParametersSetCallbackType & callback,
   rcl_interfaces::msg::ParameterEvent * parameter_event_out,
@@ -345,8 +373,33 @@ __declare_parameter_common(
   // Use the value from the overrides if available, otherwise use the default.
   const rclcpp::ParameterValue * initial_value = &default_value;
   auto overrides_it = overrides.find(name);
+
+  // If override for parameter value, use it
+  // If parameter override only, don't override descriptor
+  // If override for descriptor, use it
+  // If descriptor override only, don't override parameter value
+
   if (!ignore_override && overrides_it != overrides.end()) {
-    initial_value = &overrides_it->second;
+    auto has_parameter_override = false;
+    auto has_descriptor_override = false;
+
+    if (overrides_it->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET)
+    {
+      has_parameter_override = true;
+    }
+    if (overrides_it->second.descriptor.name != "")
+    {
+      has_descriptor_override = true;
+    }
+
+    if (has_parameter_override && has_descriptor_override) {
+      initial_value = &overrides_it->second.value;
+      parameter_infos.at(name).descriptor = overrides_it->second.descriptor;
+    } else if (has_parameter_override) {
+      initial_value = &overrides_it->second.value;
+    } else if (has_descriptor_override) {
+      parameter_infos.at(name).descriptor = overrides_it->second.descriptor;
+    }
   }
 
   // If there is no initial value, then skip initialization
@@ -1002,7 +1055,7 @@ NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callb
   return handle;
 }
 
-const std::map<std::string, rclcpp::ParameterValue> &
+const std::map<std::string, rclcpp::node_interfaces::ParameterInfo> &
 NodeParameters::get_parameter_overrides() const
 {
   return parameter_overrides_;

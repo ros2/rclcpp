@@ -31,7 +31,7 @@ namespace detail
 {
 /// \internal Get the parameter overrides from the arguments.
 RCLCPP_LOCAL
-std::map<std::string, rclcpp::ParameterValue>
+std::map<std::string, rclcpp::ParameterInfo>
 resolve_parameter_overrides(
   const std::string & node_name,
   const std::vector<rclcpp::Parameter> & parameter_overrides,

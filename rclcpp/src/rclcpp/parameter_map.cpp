@@ -66,12 +66,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
         throw InvalidParametersException(message);
       }
       const rcl_variant_t * const c_param_value = &(c_params_node->parameter_values[p]);
-      Parameter param(c_param_name, parameter_value_from(c_param_value));
-      params[c_param_name].first = param;
-      if (params.count(std::string(c_param_name)) < 1) {
-        ParameterDescriptor d;
-        params[c_param_name].second = d;
-      }
+      params[c_param_name].first = Parameter(c_param_name, parameter_value_from(c_param_value));
     }
 
     const rcl_node_params_descriptors_t * const c_param_descriptors_node = &(c_params->descriptors[n]);
@@ -83,11 +78,10 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
         throw InvalidParametersException(message);
       }
       const rcl_param_descriptor_t * const c_param_descriptor = &(c_param_descriptors_node->parameter_descriptors[p]);
-      params[c_param_name].second = parameter_descriptor_from(c_param_descriptor);
       if (params.count(std::string(c_param_name)) < 1) {
-        Parameter param;
-        params[c_param_name].first = param;
+        params[c_param_name].first = Parameter(c_param_name);;
       }
+      params[c_param_name].second = parameter_descriptor_from(c_param_descriptor); 
     }
   }
   return parameters;
@@ -196,8 +190,8 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
     f.step = *(c_param_descriptor->step_float);
   }
 
-  // p.floating_point_range = f;
-  // p.integer_range = i;
+  p.floating_point_range = {f};
+  p.integer_range = {i};
 
   return p;
 }
