@@ -138,6 +138,12 @@ public:
   void
   handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
+  // TODO(karsten1987): Does it make sense to pass in a weak_ptr?
+  RCLCPP_PUBLIC
+  virtual
+  void
+  handle_loaned_message(void * loaned_message, const rmw_message_info_t & message_info) = 0;
+
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
   RCLCPP_PUBLIC
@@ -172,6 +178,17 @@ public:
   RCLCPP_PUBLIC
   size_t
   get_publisher_count() const;
+
+  /// Check if subscription instance can loan messages.
+  /**
+   * Depending on the middleware and the message type, this will return true if the middleware
+   * can allocate a ROS message instance.
+   *
+   * \return boolean flag indicating if middleware can loan messages.
+   */
+  RCLCPP_PUBLIC
+  bool
+  can_loan_messages() const;
 
   using IntraProcessManagerWeakPtr =
     std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;

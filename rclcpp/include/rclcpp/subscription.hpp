@@ -151,7 +151,7 @@ public:
     message_memory_strategy_ = message_memory_strategy;
   }
 
-  std::shared_ptr<void> create_message()
+  std::shared_ptr<void> create_message() override
   {
     /* The default message memory strategy provides a dynamically allocated message on each call to
      * create_message, though alternative memory strategies that re-use a preallocated message may be
@@ -160,12 +160,13 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  std::shared_ptr<rcl_serialized_message_t> create_serialized_message()
+  std::shared_ptr<rcl_serialized_message_t> create_serialized_message() override
   {
     return message_memory_strategy_->borrow_serialized_message();
   }
 
-  void handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info)
+  void handle_message(
+    std::shared_ptr<void> & message, const rmw_message_info_t & message_info) override
   {
     if (matches_any_intra_process_publishers(&message_info.publisher_gid)) {
       // In this case, the message will be delivered via intra process and
@@ -176,22 +177,33 @@ public:
     any_callback_.dispatch(typed_message, message_info);
   }
 
-  /// Return the loaned message.
+  void
+  handle_loaned_message(
+    void * loaned_message, const rmw_message_info_t & message_info) override
+  {
+    auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
+    // message is loaned, so we have to make sure that the deleter does not deallocate the message
+    auto sptr = std::shared_ptr<CallbackMessageT>(
+      typed_message, [](CallbackMessageT * msg) {(void) msg;});
+    any_callback_.dispatch(sptr, message_info);
+  }
+
+  /// Return the borrowed message.
   /** \param message message to be returned */
-  void return_message(std::shared_ptr<void> & message)
+  void return_message(std::shared_ptr<void> & message) override
   {
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     message_memory_strategy_->return_message(typed_message);
   }
 
-  void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message)
+  void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
   {
     message_memory_strategy_->return_serialized_message(message);
   }
 
   void handle_intra_process_message(
     rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info)
+    const rmw_message_info_t & message_info) override
   {
     if (!use_intra_process_) {
       // throw std::runtime_error(
@@ -244,7 +256,7 @@ public:
 
   /// Implemenation detail.
   const std::shared_ptr<rcl_subscription_t>
-  get_intra_process_subscription_handle() const
+  get_intra_process_subscription_handle() const override
   {
     if (!use_intra_process_) {
       return nullptr;

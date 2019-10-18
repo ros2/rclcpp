@@ -200,3 +200,9 @@ SubscriptionBase::setup_intra_process(
   weak_ipm_ = weak_ipm;
   use_intra_process_ = true;
 }
+
+bool
+SubscriptionBase::can_loan_messages() const
+{
+  return rcl_subscription_can_loan_messages(subscription_handle_.get());
+}

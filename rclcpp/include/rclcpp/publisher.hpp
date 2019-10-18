@@ -34,6 +34,7 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
 #include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/loaned_message.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
@@ -43,6 +44,9 @@
 
 namespace rclcpp
 {
+
+template<typename MessageT, typename AllocatorT>
+class LoanedMessage;
 
 /// A publisher publishes messages of any type to a topic.
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
@@ -132,6 +136,26 @@ public:
     >::make_shared(size, this->get_allocator());
   }
 
+  /// Loan memory for a ROS message from the middleware
+  /**
+   * If the middleware is capable of loaning memory for a ROS message instance,
+   * the loaned message will be directly allocated in the middleware.
+   * If not, the message allocator of this rclcpp::Publisher instance is being used.
+   *
+   * With a call to \sa `publish` the LoanedMessage instance is being returned to the middleware
+   * or free'd accordingly to the allocator.
+   * If the message is not being published but processed differently, the message has to be
+   * returned by calling \sa `return_loaned_message`.
+   * \sa rclcpp::LoanedMessage for details of the LoanedMessage class.
+   *
+   * \return LoanedMessage containing memory for a ROS message of type MessageT
+   */
+  rclcpp::LoanedMessage<MessageT, AllocatorT>
+  loan_message()
+  {
+    return rclcpp::LoanedMessage<MessageT, AllocatorT>(this, this->get_allocator());
+  }
+
   /// Send a message to the topic for this publisher.
   /**
    * This function is templated on the input message type, MessageT.
@@ -191,6 +215,41 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
+  /// Publish an instance of a LoanedMessage
+  /**
+   * When publishing a loaned message, the memory for this ROS instance will be deallocated
+   * after being published.
+   * The instance of the loaned message is no longer valid after this call.
+   *
+   * \param loaned_msg The LoanedMessage instance to be published.
+   */
+  void
+  publish(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg)
+  {
+    if (!loaned_msg.is_valid()) {
+      throw std::runtime_error("loaned message is not valid");
+    }
+    if (intra_process_is_enabled_) {
+      // TODO(Karsten1987): support loaned message passed by intraprocess
+      throw std::runtime_error("storing loaned messages in intra process is not supported yet");
+    }
+
+    // verify that publisher supports loaned messages
+    // TODO(Karsten1987): This case separation has to be done in rclcpp
+    // otherwise we have to ensure that every middleware implements
+    // `rmw_publish_loaned_message` explicitly the same way as `rmw_publish`
+    // by taking a copy of the ros message.
+    if (this->can_loan_messages()) {
+      // we release the ownership from the rclpp::LoanedMessage instance
+      // and let the middleware clean up the memory.
+      this->do_loaned_message_publish(loaned_msg.release());
+    } else {
+      // we don't release the ownership, let the middleware copy the ros message
+      // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
+      this->do_inter_process_publish(&loaned_msg.get());
+    }
+  }
+
   std::shared_ptr<MessageAllocator>
   get_allocator() const
   {
@@ -202,6 +261,7 @@ protected:
   do_inter_process_publish(const MessageT * msg)
   {
     auto status = rcl_publish(&publisher_handle_, msg, nullptr);
+
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
@@ -249,6 +309,26 @@ protected:
     }
     if (RCL_RET_OK != status) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
+    }
+  }
+
+  void
+  do_loaned_message_publish(MessageT * msg)
+  {
+    auto status = rcl_publish_loaned_message(&publisher_handle_, msg, nullptr);
+
+    if (RCL_RET_PUBLISHER_INVALID == status) {
+      rcl_reset_error();  // next call will reset error message if not context
+      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
+        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
+        if (nullptr != context && !rcl_context_is_valid(context)) {
+          // publisher is invalid due to context being shutdown
+          return;
+        }
+      }
+    }
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
     }
   }
 

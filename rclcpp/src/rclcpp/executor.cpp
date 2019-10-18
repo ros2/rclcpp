@@ -331,6 +331,32 @@ Executor::execute_subscription(
       rcl_reset_error();
     }
     subscription->return_serialized_message(serialized_msg);
+  } else if (subscription->can_loan_messages()) {
+    void * loaned_msg = nullptr;
+    auto ret = rcl_take_loaned_message(
+      subscription->get_subscription_handle().get(),
+      &loaned_msg,
+      &message_info,
+      nullptr);
+    if (RCL_RET_OK == ret) {
+      subscription->handle_loaned_message(loaned_msg, message_info);
+    } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "take_loaned failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+    ret = rcl_release_loaned_message(
+      subscription->get_subscription_handle().get(),
+      loaned_msg);
+    if (RCL_RET_OK != ret) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "release_loaned failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string().str);
+    }
+    loaned_msg = nullptr;
   } else {
     std::shared_ptr<void> message = subscription->create_message();
     auto ret = rcl_take(
