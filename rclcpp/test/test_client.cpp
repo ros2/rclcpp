@@ -16,11 +16,14 @@
 
 #include <string>
 #include <memory>
+#include <chrono>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
+
+using namespace std::chrono_literals;
 
 class TestClient : public ::testing::Test
 {
@@ -122,4 +125,42 @@ TEST_F(TestClientSub, construction_and_destruction) {
       auto client = node->create_client<ListParameters>("invalid_service?");
     }, rclcpp::exceptions::InvalidServiceNameError);
   }
+}
+
+/*
+   Basic nominal test of a client.
+ */
+TEST_F(TestClient, test_client_nominal) {
+  // Initialize the client.
+  const std::string topic_name = "test_client";
+  const std::string request_str = "test message";
+
+  using RequestType = rcl_interfaces::srv::GetParameters::Request;
+  using ResponseType = rcl_interfaces::srv::GetParameters::Response;
+
+  auto server_cb = [request_str](const std::shared_ptr<RequestType> request,
+      std::shared_ptr<ResponseType> response) -> void
+  {
+    EXPECT_EQ(request->names.size(), 1U);
+    EXPECT_EQ(request->names.front(), request_str);
+
+    rcl_interfaces::msg::ParameterValue resp;
+    resp.string_value = request_str;
+    response->values.push_back(resp);
+    return;
+  };
+
+  auto client = node->create_client<rcl_interfaces::srv::GetParameters>(topic_name);
+  auto server = node->create_service<rcl_interfaces::srv::GetParameters>(topic_name, server_cb);
+  auto request = std::make_shared<RequestType>();
+  request->names.emplace_back(request_str);
+
+  EXPECT_TRUE(client->wait_for_service(1s));
+
+  auto result = client->async_send_request(request);
+
+  EXPECT_EQ(rclcpp::spin_until_future_complete(node, result),
+    rclcpp::executor::FutureReturnCode::SUCCESS);
+
+  EXPECT_EQ(request_str, result.get()->values.front().string_value);
 }
