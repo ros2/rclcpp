@@ -384,7 +384,7 @@ private:
 
       auto subscription = std::static_pointer_cast<
         rclcpp::experimental::SubscriptionIntraProcess<MessageT>
-      >(subscription_base);
+        >(subscription_base);
 
       subscription->provide_intra_process_message(message);
     }
@@ -412,7 +412,7 @@ private:
 
       auto subscription = std::static_pointer_cast<
         rclcpp::experimental::SubscriptionIntraProcess<MessageT>
-      >(subscription_base);
+        >(subscription_base);
 
       if (std::next(it) == subscription_ids.end()) {
         // If this is the last subscription, give up ownership

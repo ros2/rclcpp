@@ -55,7 +55,7 @@ public:
     MessageT,
     Alloc,
     Deleter
-  >::UniquePtr;
+    >::UniquePtr;
 
   SubscriptionIntraProcess(
     AnySubscriptionCallback<CallbackMessageT, Alloc> callback,

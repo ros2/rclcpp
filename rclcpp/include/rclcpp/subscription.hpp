@@ -127,14 +127,14 @@ public:
       auto context = node_base->get_context();
       auto subscription_intra_process = std::make_shared<
         rclcpp::experimental::SubscriptionIntraProcess<CallbackMessageT, AllocatorT>
-      >(
+        >(
         callback,
         options.get_allocator(),
         context,
         topic_name,
         qos.get_rmw_qos_profile(),
         resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
-      );
+        );
 
       // Add it to the intra process manager.
       using rclcpp::experimental::IntraProcessManager;
