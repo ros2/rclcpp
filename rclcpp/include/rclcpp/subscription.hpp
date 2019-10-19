@@ -123,6 +123,20 @@ public:
     if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
       using rclcpp::detail::resolve_intra_process_buffer_type;
 
+      // Check if the QoS is compatible with intra-process.
+      if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with keep all history qos policy");
+      }
+      if (qos.get_rmw_qos_profile().depth == 0) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with 0 depth qos policy");
+      }
+      if (qos.get_rmw_qos_profile().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+        throw std::invalid_argument(
+                "intraprocess communication allowed only with volatile durability");
+      }
+
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
       auto subscription_intra_process = std::make_shared<

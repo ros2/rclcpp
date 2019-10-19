@@ -115,6 +115,10 @@ public:
         throw std::invalid_argument(
                 "intraprocess communication is not allowed with a zero qos history depth value");
       }
+      if (qos.get_rmw_qos_profile().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+        throw std::invalid_argument(
+                "intraprocess communication allowed only with volatile durability");
+      }
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
       this->setup_intra_process(
         intra_process_publisher_id,
