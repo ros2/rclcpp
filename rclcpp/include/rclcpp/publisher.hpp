@@ -229,7 +229,7 @@ public:
     } else {
       // we don't release the ownership, let the middleware copy the ros message
       // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
-      this->do_inter_process_publish(&loaned_msg.get());
+      this->do_inter_process_publish(loaned_msg.get());
     }
   }
 
