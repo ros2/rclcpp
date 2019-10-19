@@ -138,7 +138,7 @@ public:
     >::make_shared(size, this->get_allocator());
   }
 
-  /// Loan memory for a ROS message from the middleware.
+  /// Borrow a loaned ROS message from the middleware.
   /**
    * If the middleware is capable of loaning memory for a ROS message instance,
    * the loaned message will be directly allocated in the middleware.
@@ -154,7 +154,7 @@ public:
    * \return LoanedMessage containing memory for a ROS message of type MessageT
    */
   rclcpp::LoanedMessage<MessageT, AllocatorT>
-  loan_message()
+  borrow_loaned_message()
   {
     return rclcpp::LoanedMessage<MessageT, AllocatorT>(this, this->get_allocator());
   }
