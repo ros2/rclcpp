@@ -179,6 +179,10 @@ SubscriptionBase::can_loan_messages() const
 rclcpp::Waitable::SharedPtr
 SubscriptionBase::get_intra_process_waitable() const
 {
+  // If not using intra process, shortcut to nullptr.
+  if (!use_intra_process_) {
+    return nullptr;
+  }
   // Get the intra process manager.
   auto ipm = weak_ipm_.lock();
   if (!ipm) {
