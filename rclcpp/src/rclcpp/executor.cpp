@@ -344,13 +344,13 @@ Executor::execute_subscription(
         subscription->get_topic_name(), rcl_get_error_string().str);
       rcl_reset_error();
     }
-    ret = rcl_release_loaned_message(
+    ret = rcl_return_loaned_message_from_subscription(
       subscription->get_subscription_handle().get(),
       loaned_msg);
     if (RCL_RET_OK != ret) {
       RCUTILS_LOG_ERROR_NAMED(
         "rclcpp",
-        "release_loaned failed for subscription on topic '%s': %s",
+        "return_loaned_message failed for subscription on topic '%s': %s",
         subscription->get_topic_name(), rcl_get_error_string().str);
     }
     loaned_msg = nullptr;

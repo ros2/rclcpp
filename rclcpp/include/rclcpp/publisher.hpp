@@ -129,15 +129,6 @@ public:
   virtual ~Publisher()
   {}
 
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  make_mapped_ring_buffer(size_t size) const override
-  {
-    return mapped_ring_buffer::MappedRingBuffer<
-      MessageT,
-      typename Publisher<MessageT, AllocatorT>::MessageAllocator
-    >::make_shared(size, this->get_allocator());
-  }
-
   /// Borrow a loaned ROS message from the middleware.
   /**
    * If the middleware is capable of loaning memory for a ROS message instance,
