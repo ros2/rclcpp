@@ -121,7 +121,6 @@ public:
   // The following functions use the IntraProcessManager
   // so they are declared after including it to avoid "invalid use of incomplete type"
   void publish(MessageUniquePtr msg);
-  void publish(MessageSharedPtr msg);
 
   std::shared_ptr<MessageAlloc> message_allocator_;
 };
@@ -308,26 +307,6 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
     message_allocator_);
 }
 
-// This function is actually deprecated in the real rclcpp::publisher, but
-// here it is used to mimic what happens when publishing both inter and intra-process
-template<typename T, typename Alloc>
-void Publisher<T, Alloc>::publish(MessageSharedPtr msg)
-{
-  auto ipm = weak_ipm_.lock();
-  if (!ipm) {
-    throw std::runtime_error(
-            "intra process publish called after destruction of intra process manager");
-  }
-  if (!msg) {
-    throw std::runtime_error("cannot publish msg which is a null pointer");
-  }
-
-  ipm->template do_intra_process_publish<T, Alloc>(
-    intra_process_publisher_id_,
-    msg,
-    message_allocator_);
-}
-
 }  // namespace mock
 }  // namespace rclcpp
 
@@ -448,9 +427,9 @@ TEST(TestIntraProcessManager, single_subscription) {
   ASSERT_EQ(original_message_pointer, received_message_pointer_2);
   ASSERT_EQ(0u, received_message_pointer_1);
 
-  auto shared_msg = std::make_shared<MessageT>();
-  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
-  p1->publish(shared_msg);
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
   received_message_pointer_2 = s2->pop();
   ASSERT_EQ(original_message_pointer, received_message_pointer_2);
 }
@@ -525,9 +504,9 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   s6->take_shared_method = false;
   auto s6_id = ipm->add_subscription(s6);
 
-  auto shared_msg = std::make_shared<MessageT>();
-  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
-  p1->publish(shared_msg);
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
   auto received_message_pointer_5 = s5->pop();
   auto received_message_pointer_6 = s6->pop();
   ASSERT_NE(original_message_pointer, received_message_pointer_5);
@@ -546,9 +525,9 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   auto s8_id = ipm->add_subscription(s8);
   (void)s8_id;
 
-  shared_msg = std::make_shared<MessageT>();
-  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
-  p1->publish(shared_msg);
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
   auto received_message_pointer_7 = s7->pop();
   auto received_message_pointer_8 = s8->pop();
   ASSERT_EQ(original_message_pointer, received_message_pointer_7);
@@ -682,9 +661,9 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   auto s11_id = ipm->add_subscription(s11);
   (void)s11_id;
 
-  auto shared_msg = std::make_shared<MessageT>();
-  original_message_pointer = reinterpret_cast<std::uintptr_t>(shared_msg.get());
-  p1->publish(shared_msg);
+  unique_msg = std::make_unique<MessageT>();
+  original_message_pointer = reinterpret_cast<std::uintptr_t>(unique_msg.get());
+  p1->publish(std::move(unique_msg));
   auto received_message_pointer_10 = s10->pop();
   auto received_message_pointer_11 = s11->pop();
   ASSERT_NE(original_message_pointer, received_message_pointer_10);

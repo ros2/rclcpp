@@ -171,8 +171,7 @@ public:
       get_subscription_count() > get_intra_process_subscription_count();
 
     if (inter_process_publish_needed) {
-      std::shared_ptr<MessageT> shared_msg = std::move(msg);
-      this->do_intra_process_publish(shared_msg);
+      auto shared_msg = this->do_intra_process_publish_and_return_shared(std::move(msg));
       this->do_inter_process_publish(*shared_msg);
     } else {
       this->do_intra_process_publish(std::move(msg));
@@ -298,7 +297,7 @@ protected:
   }
 
   void
-  do_intra_process_publish(std::shared_ptr<const MessageT> msg)
+  do_intra_process_publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -315,8 +314,8 @@ protected:
       message_allocator_);
   }
 
-  void
-  do_intra_process_publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  std::shared_ptr<const MessageT>
+  do_intra_process_publish_and_return_shared(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -327,7 +326,7 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    ipm->template do_intra_process_publish<MessageT, AllocatorT>(
+    return ipm->template do_intra_process_publish_and_return_shared<MessageT, AllocatorT>(
       intra_process_publisher_id_,
       std::move(msg),
       message_allocator_);
