@@ -510,7 +510,8 @@ TEST(TestIntraProcessManager, multiple_subscriptions_same_type) {
   auto received_message_pointer_5 = s5->pop();
   auto received_message_pointer_6 = s6->pop();
   ASSERT_NE(original_message_pointer, received_message_pointer_5);
-  ASSERT_NE(original_message_pointer, received_message_pointer_6);
+  // Someone gets the original unique_ptr, the last one to take.
+  ASSERT_EQ(original_message_pointer, received_message_pointer_6);
 
   ipm->remove_subscription(s5_id);
   ipm->remove_subscription(s6_id);
@@ -666,6 +667,6 @@ TEST(TestIntraProcessManager, multiple_subscriptions_different_type) {
   p1->publish(std::move(unique_msg));
   auto received_message_pointer_10 = s10->pop();
   auto received_message_pointer_11 = s11->pop();
-  ASSERT_NE(original_message_pointer, received_message_pointer_10);
-  ASSERT_EQ(original_message_pointer, received_message_pointer_11);
+  EXPECT_EQ(original_message_pointer, received_message_pointer_10);
+  EXPECT_NE(original_message_pointer, received_message_pointer_11);
 }

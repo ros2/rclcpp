@@ -28,7 +28,9 @@ class TestPublisher : public ::testing::Test
 public:
   static void SetUpTestCase()
   {
-    rclcpp::init(0, nullptr);
+    if (!rclcpp::is_initialized()) {
+      rclcpp::init(0, nullptr);
+    }
   }
 
 protected:
@@ -47,7 +49,7 @@ protected:
 
 struct TestParameters
 {
-  TestParameters(rclcpp::QoS qos, std::string description)
+  TestParameters(rclcpp::QoS qos, const std::string & description)
   : qos(qos), description(description) {}
   rclcpp::QoS qos;
   std::string description;
