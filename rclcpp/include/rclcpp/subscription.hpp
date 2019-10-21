@@ -140,12 +140,15 @@ public:
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
       auto subscription_intra_process = std::make_shared<
-        rclcpp::experimental::SubscriptionIntraProcess<CallbackMessageT, AllocatorT>
-        >(
+        rclcpp::experimental::SubscriptionIntraProcess<
+          CallbackMessageT,
+          AllocatorT,
+          typename MessageUniquePtr::deleter_type
+        >>(
         callback,
         options.get_allocator(),
         context,
-        this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
+        this->get_topic_name(),    // important to get like this, as it has the fully-qualified name
         qos.get_rmw_qos_profile(),
         resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
         );
