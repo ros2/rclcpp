@@ -111,7 +111,8 @@ def is_supported_feature_combination(feature_combination):
       try { \
         *time_point = clock.now().nanoseconds(); \
       } catch (...) { \
-        RCUTILS_SAFE_FWRITE_TO_STDERR("could not get current time stamp\n"); \
+        RCUTILS_SAFE_FWRITE_TO_STDERR( \
+        "[rclcpp|logging.hpp] RCLCPP_@(severity)@(suffix) could not get current time stamp\n"); \
         return RCUTILS_RET_ERROR; \
       } \
         return RCUTILS_RET_OK; \
