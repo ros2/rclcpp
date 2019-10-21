@@ -86,7 +86,7 @@ public:
     return request;
   }
 
-  inline uint32_t next(uint32_t val)
+  inline size_t next(size_t val)
   {
     return (val + 1) % capacity_;
   }
