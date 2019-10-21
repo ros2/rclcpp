@@ -45,13 +45,20 @@
 #endif
 
 @{
+from collections import OrderedDict
 from rcutils.logging import feature_combinations
 from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
+from rcutils.logging import throttle_args
+from rcutils.logging import throttle_params
 
-# TODO(dhood): Implement the throttle macro using time sources available in rclcpp
-excluded_features = ['named', 'throttle']
+throttle_args['condition_before'] = 'RCUTILS_LOG_CONDITION_THROTTLE_BEFORE(clock, duration)'
+del throttle_params['get_time_point_value']
+throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
+throttle_params.move_to_end('clock', last=False)
+
+excluded_features = ['named']
 def is_supported_feature_combination(feature_combination):
     is_excluded = any([ef in feature_combination for ef in excluded_features])
     return not is_excluded
@@ -92,14 +99,27 @@ def is_supported_feature_combination(feature_combination):
  * \param ... The format string, followed by the variable arguments for the format string.
  * It also accepts a single argument of type std::string.
  */
-#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+@{params = get_macro_parameters(feature_combination).keys()}@
+#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in params]))...) \
   do { \
     static_assert( \
       ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
+@[ if 'throttle' in feature_combination]@ \
+    auto get_time_point = [&clock](rcutils_time_point_value_t * time_point) -> rcutils_ret_t { \
+      try { \
+        *time_point = clock.now().nanoseconds(); \
+      } catch (...) { \
+        RCUTILS_SAFE_FWRITE_TO_STDERR( \
+        "[rclcpp|logging.hpp] RCLCPP_@(severity)@(suffix) could not get current time stamp\n"); \
+        return RCUTILS_RET_ERROR; \
+      } \
+        return RCUTILS_RET_OK; \
+    }; \
+@[ end if] \
     RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = get_macro_parameters(feature_combination).keys()}@
+@{params = ['get_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
 @(''.join(['      ' + p + ', \\\n' for p in params]))@
 @[ end if]@
