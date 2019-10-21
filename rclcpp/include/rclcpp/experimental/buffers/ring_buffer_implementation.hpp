@@ -43,10 +43,10 @@ class RingBufferImplementation : public BufferImplementationBase<BufferT>
 public:
   explicit RingBufferImplementation(size_t capacity)
   : ring_buffer_(capacity),
-    capacity_(capacity),
     write_index_(capacity_ - 1),
     read_index_(0),
-    size_(0)
+    size_(0),
+    capacity_(capacity)
   {
     if (capacity == 0) {
       throw std::invalid_argument("capacity must be a positive, non-zero value");
