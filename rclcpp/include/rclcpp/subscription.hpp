@@ -29,13 +29,13 @@
 #include "rcl/error_handling.h"
 #include "rcl/subscription.h"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
+#include "rclcpp/detail/resolve_intra_process_buffer_type.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
@@ -118,6 +118,48 @@ public:
         options.event_callbacks.liveliness_callback,
         RCL_SUBSCRIPTION_LIVELINESS_CHANGED);
     }
+
+    // Setup intra process publishing if requested.
+    if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
+      using rclcpp::detail::resolve_intra_process_buffer_type;
+
+      // Check if the QoS is compatible with intra-process.
+      if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with keep all history qos policy");
+      }
+      if (qos.get_rmw_qos_profile().depth == 0) {
+        throw std::invalid_argument(
+                "intraprocess communication is not allowed with 0 depth qos policy");
+      }
+      if (qos.get_rmw_qos_profile().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+        throw std::invalid_argument(
+                "intraprocess communication allowed only with volatile durability");
+      }
+
+      // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
+      auto context = node_base->get_context();
+      auto subscription_intra_process = std::make_shared<
+        rclcpp::experimental::SubscriptionIntraProcess<
+          CallbackMessageT,
+          AllocatorT,
+          typename MessageUniquePtr::deleter_type
+        >>(
+        callback,
+        options.get_allocator(),
+        context,
+        this->get_topic_name(),    // important to get like this, as it has the fully-qualified name
+        qos.get_rmw_qos_profile(),
+        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
+        );
+
+      // Add it to the intra process manager.
+      using rclcpp::experimental::IntraProcessManager;
+      auto ipm = context->get_sub_context<IntraProcessManager>();
+      uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
+      this->setup_intra_process(intra_process_subscription_id, ipm);
+    }
+
     TRACEPOINT(
       rclcpp_subscription_callback_added,
       (const void *)get_subscription_handle().get(),
@@ -129,23 +171,14 @@ public:
   }
 
   /// Called after construction to continue setup that requires shared_from_this().
-  void
-  post_init_setup(
+  void post_init_setup(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rclcpp::QoS & qos,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
   {
-    // Setup intra process publishing if requested.
-    if (rclcpp::detail::resolve_use_intra_process(options, *node_base)) {
-      auto context = node_base->get_context();
-      using rclcpp::intra_process_manager::IntraProcessManager;
-      auto ipm = context->get_sub_context<IntraProcessManager>();
-      uint64_t intra_process_subscription_id = ipm->add_subscription(this->shared_from_this());
-      this->setup_intra_process(
-        intra_process_subscription_id,
-        ipm,
-        options.template to_rcl_subscription_options<CallbackMessageT>(qos));
-    }
+    (void)node_base;
+    (void)qos;
+    (void)options;
   }
 
   /// Support dynamically setting the message memory strategy.
@@ -210,117 +243,12 @@ public:
     message_memory_strategy_->return_serialized_message(message);
   }
 
-  void handle_intra_process_message(
-    rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info) override
+  bool use_take_shared_method() const
   {
-    if (!use_intra_process_) {
-      // throw std::runtime_error(
-      //   "handle_intra_process_message called before setup_intra_process");
-      // TODO(wjwwood): for now, this could mean that intra process was just not enabled.
-      // However, this can only really happen if this node has it disabled, but the other doesn't.
-      return;
-    }
-
-    if (!matches_any_intra_process_publishers(&message_info.publisher_gid)) {
-      // This intra-process message has not been created by a publisher from this context.
-      // we should ignore this copy of the message.
-      return;
-    }
-
-    if (any_callback_.use_take_shared_method()) {
-      ConstMessageSharedPtr msg;
-      take_intra_process_message(
-        ipm.publisher_id,
-        ipm.message_sequence,
-        intra_process_subscription_id_,
-        msg);
-      if (!msg) {
-        // This can happen when having two nodes in different process both using intraprocess
-        // communication. It could happen too if the publisher no longer exists or the requested
-        // message is not longer being stored.
-        // TODO(ivanpauno): Print a warn message in the last two cases described above,
-        // but not in the first one.
-        return;
-      }
-      any_callback_.dispatch_intra_process(msg, message_info);
-    } else {
-      MessageUniquePtr msg;
-      take_intra_process_message(
-        ipm.publisher_id,
-        ipm.message_sequence,
-        intra_process_subscription_id_,
-        msg);
-      if (!msg) {
-        // This can happen when having two nodes in different process both using intraprocess
-        // communication. It could happen too if the publisher no longer exists or the requested
-        // message is not longer being stored.
-        // TODO(ivanpauno): Print a warn message in the last two cases described above,
-        // but not in the first one.
-        return;
-      }
-      any_callback_.dispatch_intra_process(std::move(msg), message_info);
-    }
-  }
-
-  /// Implemenation detail.
-  const std::shared_ptr<rcl_subscription_t>
-  get_intra_process_subscription_handle() const override
-  {
-    if (!use_intra_process_) {
-      return nullptr;
-    }
-    return intra_process_subscription_handle_;
+    return any_callback_.use_take_shared_method();
   }
 
 private:
-  void
-  take_intra_process_message(
-    uint64_t publisher_id,
-    uint64_t message_sequence,
-    uint64_t subscription_id,
-    MessageUniquePtr & message)
-  {
-    auto ipm = weak_ipm_.lock();
-    if (!ipm) {
-      throw std::runtime_error(
-              "intra process take called after destruction of intra process manager");
-    }
-    ipm->template take_intra_process_message<CallbackMessageT, AllocatorT>(
-      publisher_id, message_sequence, subscription_id, message);
-  }
-
-  void
-  take_intra_process_message(
-    uint64_t publisher_id,
-    uint64_t message_sequence,
-    uint64_t subscription_id,
-    ConstMessageSharedPtr & message)
-  {
-    auto ipm = weak_ipm_.lock();
-    if (!ipm) {
-      throw std::runtime_error(
-              "intra process take called after destruction of intra process manager");
-    }
-    ipm->template take_intra_process_message<CallbackMessageT, AllocatorT>(
-      publisher_id, message_sequence, subscription_id, message);
-  }
-
-  bool
-  matches_any_intra_process_publishers(const rmw_gid_t * sender_gid)
-  {
-    if (!use_intra_process_) {
-      return false;
-    }
-    auto ipm = weak_ipm_.lock();
-    if (!ipm) {
-      throw std::runtime_error(
-              "intra process publisher check called "
-              "after destruction of intra process manager");
-    }
-    return ipm->matches_any_publishers(sender_gid);
-  }
-
   RCLCPP_DISABLE_COPY(Subscription)
 
   AnySubscriptionCallback<CallbackMessageT, AllocatorT> any_callback_;

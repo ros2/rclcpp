@@ -22,8 +22,8 @@
 #include <vector>
 
 #include "rclcpp/contexts/default_context.hpp"
-#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/event.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"

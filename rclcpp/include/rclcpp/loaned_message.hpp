@@ -18,6 +18,7 @@
 #include <memory>
 #include <utility>
 
+#include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/publisher_base.hpp"
 
@@ -30,7 +31,7 @@ namespace rclcpp
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
 class LoanedMessage
 {
-  using MessageAllocatorTraits = allocator::AllocRebind<MessageT, AllocatorT>;
+  using MessageAllocatorTraits = rclcpp::allocator::AllocRebind<MessageT, AllocatorT>;
   using MessageAllocator = typename MessageAllocatorTraits::allocator_type;
 
 public:

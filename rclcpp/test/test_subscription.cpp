@@ -16,6 +16,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -30,15 +31,15 @@ public:
     (void)msg;
   }
 
-protected:
   static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
   }
 
-  void SetUp()
+protected:
+  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
   {
-    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns");
+    node = std::make_shared<rclcpp::Node>("test_subscription", "/ns", node_options);
   }
 
   void TearDown()
@@ -48,6 +49,25 @@ protected:
 
   rclcpp::Node::SharedPtr node;
 };
+
+struct TestParameters
+{
+  TestParameters(rclcpp::QoS qos, std::string description)
+  : qos(qos), description(description) {}
+  rclcpp::QoS qos;
+  std::string description;
+};
+
+std::ostream & operator<<(std::ostream & out, const TestParameters & params)
+{
+  out << params.description;
+  return out;
+}
+
+class TestSubscriptionInvalidIntraprocessQos
+  : public TestSubscription,
+  public ::testing::WithParamInterface<TestParameters>
+{};
 
 class TestSubscriptionSub : public ::testing::Test
 {
@@ -120,6 +140,7 @@ public:
    Testing subscription construction and destruction.
  */
 TEST_F(TestSubscription, construction_and_destruction) {
+  initialize();
   using rcl_interfaces::msg::IntraProcessMessage;
   auto callback = [](const IntraProcessMessage::SharedPtr msg) {
       (void)msg;
@@ -173,6 +194,7 @@ TEST_F(TestSubscriptionSub, construction_and_destruction) {
    Testing subscription creation signatures.
  */
 TEST_F(TestSubscription, various_creation_signatures) {
+  initialize();
   using rcl_interfaces::msg::IntraProcessMessage;
   auto cb = [](rcl_interfaces::msg::IntraProcessMessage::SharedPtr) {};
   {
@@ -209,6 +231,7 @@ TEST_F(TestSubscription, various_creation_signatures) {
    Testing subscriptions using std::bind.
  */
 TEST_F(TestSubscription, callback_bind) {
+  initialize();
   using rcl_interfaces::msg::IntraProcessMessage;
   {
     // Member callback for plain class
@@ -228,3 +251,51 @@ TEST_F(TestSubscription, callback_bind) {
     auto sub = node->create_subscription<IntraProcessMessage>("topic", 1, callback);
   }
 }
+
+/*
+   Testing subscription with intraprocess enabled and invalid QoS
+ */
+TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws) {
+  initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
+  rclcpp::QoS qos = GetParam().qos;
+  using rcl_interfaces::msg::IntraProcessMessage;
+  {
+    auto callback = std::bind(
+      &TestSubscriptionInvalidIntraprocessQos::OnMessage,
+      this,
+      std::placeholders::_1);
+
+    ASSERT_THROW(
+      {auto subscription = node->create_subscription<IntraProcessMessage>(
+          "topic",
+          qos,
+          callback);},
+      std::invalid_argument);
+  }
+}
+
+static std::vector<TestParameters> invalid_qos_profiles()
+{
+  std::vector<TestParameters> parameters;
+
+  parameters.reserve(3);
+  parameters.push_back(
+    TestParameters(
+      rclcpp::QoS(rclcpp::KeepLast(10)).transient_local(),
+      "transient_local_qos"));
+  parameters.push_back(
+    TestParameters(
+      rclcpp::QoS(rclcpp::KeepAll()),
+      "keep_all_qos"));
+  parameters.push_back(
+    TestParameters(
+      rclcpp::QoS(rclcpp::KeepLast(0)),
+      "keep_last_zero_depth_qos"));
+
+  return parameters;
+}
+
+INSTANTIATE_TEST_CASE_P(
+  TestSubscriptionThrows, TestSubscriptionInvalidIntraprocessQos,
+  ::testing::ValuesIn(invalid_qos_profiles()),
+  ::testing::PrintToStringParamName());

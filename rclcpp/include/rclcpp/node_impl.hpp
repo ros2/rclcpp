@@ -40,7 +40,6 @@
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
-#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"

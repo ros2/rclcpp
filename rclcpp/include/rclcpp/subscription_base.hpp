@@ -21,11 +21,11 @@
 
 #include "rcl/subscription.h"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 #include "rmw/rmw.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
@@ -40,14 +40,14 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
-namespace intra_process_manager
+namespace experimental
 {
 /**
  * IntraProcessManager is forward declared here, avoiding a circular inclusion between
  * `intra_process_manager.hpp` and `subscription_base.hpp`.
  */
 class IntraProcessManager;
-}
+}  // namespace experimental
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
@@ -88,10 +88,6 @@ public:
   RCLCPP_PUBLIC
   const std::shared_ptr<rcl_subscription_t>
   get_subscription_handle() const;
-
-  RCLCPP_PUBLIC
-  virtual const std::shared_ptr<rcl_subscription_t>
-  get_intra_process_subscription_handle() const;
 
   /// Get all the QoS event handlers associated with this subscription.
   /** \return The vector of QoS event handlers. */
@@ -159,13 +155,6 @@ public:
   return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  handle_intra_process_message(
-    rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info) = 0;
-
-  RCLCPP_PUBLIC
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
@@ -191,15 +180,19 @@ public:
   can_loan_messages() const;
 
   using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+    std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
 
   /// Implemenation detail.
   RCLCPP_PUBLIC
   void
   setup_intra_process(
     uint64_t intra_process_subscription_id,
-    IntraProcessManagerWeakPtr weak_ipm,
-    const rcl_subscription_options_t & intra_process_options);
+    IntraProcessManagerWeakPtr weak_ipm);
+
+  /// Return the waitable for intra-process, or nullptr if intra-process is not setup.
+  RCLCPP_PUBLIC
+  rclcpp::Waitable::SharedPtr
+  get_intra_process_waitable() const;
 
 protected:
   template<typename EventCallbackT>
@@ -215,6 +208,12 @@ protected:
       event_type);
     event_handlers_.emplace_back(handler);
   }
+
+  RCLCPP_PUBLIC
+  bool
+  matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const;
+
+  rclcpp::node_interfaces::NodeBaseInterface * const node_base_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;

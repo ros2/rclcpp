@@ -47,7 +47,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/graph_listener.cpp
   src/rclcpp/init_options.cpp
   src/rclcpp/intra_process_manager.cpp
-  src/rclcpp/intra_process_manager_impl.cpp
   src/rclcpp/logger.cpp
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
@@ -75,6 +74,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/service.cpp
   src/rclcpp/signal_handler.cpp
   src/rclcpp/subscription_base.cpp
+  src/rclcpp/subscription_intra_process_base.cpp
   src/rclcpp/time.cpp
   src/rclcpp/time_source.cpp
   src/rclcpp/timer.cpp
@@ -200,17 +200,7 @@ if(BUILD_TESTING)
       "rosidl_typesupport_cpp"
     )
   endif()
-  ament_add_gtest(test_mapped_ring_buffer test/test_mapped_ring_buffer.cpp)
-  if(TARGET test_mapped_ring_buffer)
-    ament_target_dependencies(test_mapped_ring_buffer
-      "rcl"
-      "rcl_interfaces"
-      "rmw"
-      "rosidl_generator_cpp"
-      "rosidl_typesupport_cpp"
-    )
-  endif()
-  ament_add_gtest(test_intra_process_manager test/test_intra_process_manager.cpp)
+  ament_add_gmock(test_intra_process_manager test/test_intra_process_manager.cpp)
   if(TARGET test_intra_process_manager)
     ament_target_dependencies(test_intra_process_manager
       "rcl"
@@ -219,6 +209,27 @@ if(BUILD_TESTING)
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
     )
+    target_link_libraries(test_intra_process_manager ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_ring_buffer_implementation test/test_ring_buffer_implementation.cpp)
+  if(TARGET test_ring_buffer_implementation)
+    ament_target_dependencies(test_ring_buffer_implementation
+      "rcl_interfaces"
+      "rmw"
+      "rosidl_generator_cpp"
+      "rosidl_typesupport_cpp"
+    )
+    target_link_libraries(test_ring_buffer_implementation ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_intra_process_buffer test/test_intra_process_buffer.cpp)
+  if(TARGET test_intra_process_buffer)
+    ament_target_dependencies(test_intra_process_buffer
+      "rcl_interfaces"
+      "rmw"
+      "rosidl_generator_cpp"
+      "rosidl_typesupport_cpp"
+    )
+    target_link_libraries(test_intra_process_buffer ${PROJECT_NAME})
   endif()
 
   ament_add_gtest(test_loaned_message test/test_loaned_message.cpp)

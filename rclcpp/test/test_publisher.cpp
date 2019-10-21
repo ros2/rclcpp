@@ -28,7 +28,9 @@ class TestPublisher : public ::testing::Test
 public:
   static void SetUpTestCase()
   {
-    rclcpp::init(0, nullptr);
+    if (!rclcpp::is_initialized()) {
+      rclcpp::init(0, nullptr);
+    }
   }
 
 protected:
@@ -47,7 +49,7 @@ protected:
 
 struct TestParameters
 {
-  TestParameters(rclcpp::QoS qos, std::string description)
+  TestParameters(rclcpp::QoS qos, const std::string & description)
   : qos(qos), description(description) {}
   rclcpp::QoS qos;
   std::string description;
@@ -159,15 +161,11 @@ static std::vector<TestParameters> invalid_qos_profiles()
 {
   std::vector<TestParameters> parameters;
 
-  parameters.reserve(3);
+  parameters.reserve(2);
   parameters.push_back(
     TestParameters(
       rclcpp::QoS(rclcpp::KeepLast(10)).transient_local(),
       "transient_local_qos"));
-  parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepLast(0)),
-      "keep_last_qos_with_zero_history_depth"));
   parameters.push_back(
     TestParameters(
       rclcpp::QoS(rclcpp::KeepAll()),
