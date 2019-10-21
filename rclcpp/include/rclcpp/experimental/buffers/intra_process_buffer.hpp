@@ -178,7 +178,7 @@ private:
   // MessageSharedPtr to MessageSharedPtr
   template<typename OriginT>
   typename std::enable_if<
-    (std::is_same<OriginT, MessageSharedPtr>::value),
+    std::is_same<OriginT, MessageSharedPtr>::value,
     MessageSharedPtr
   >::type
   consume_shared_impl()

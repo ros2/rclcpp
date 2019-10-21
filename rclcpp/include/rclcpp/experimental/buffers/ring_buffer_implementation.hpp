@@ -30,8 +30,6 @@
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "iostream"
-
 namespace rclcpp
 {
 namespace experimental
@@ -44,13 +42,12 @@ class RingBufferImplementation : public BufferImplementationBase<BufferT>
 {
 public:
   explicit RingBufferImplementation(size_t capacity)
-  : ring_buffer_(capacity)
+  : ring_buffer_(capacity),
+    capacity_(capacity),
+    write_index_(capacity_ - 1),
+    read_index_(0),
+    size_(0)
   {
-    capacity_ = capacity;
-    write_index_ = capacity_ - 1;
-    read_index_ = 0;
-    size_ = 0;
-
     if (capacity == 0) {
       throw std::invalid_argument("capacity must be a positive, non-zero value");
     }
@@ -74,12 +71,12 @@ public:
 
   BufferT dequeue()
   {
+    std::lock_guard<std::mutex> lock(mutex_);
+
     if (!has_data()) {
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Calling dequeue on empty intra-process buffer");
       throw std::runtime_error("Calling dequeue on empty intra-process buffer");
     }
-
-    std::lock_guard<std::mutex> lock(mutex_);
 
     auto request = std::move(ring_buffer_[read_index_]);
     read_index_ = next(read_index_);
