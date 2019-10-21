@@ -42,11 +42,11 @@ class RingBufferImplementation : public BufferImplementationBase<BufferT>
 {
 public:
   explicit RingBufferImplementation(size_t capacity)
-  : ring_buffer_(capacity),
+  : capacity_(capacity),
+    ring_buffer_(capacity),
     write_index_(capacity_ - 1),
     read_index_(0),
-    size_(0),
-    capacity_(capacity)
+    size_(0)
   {
     if (capacity == 0) {
       throw std::invalid_argument("capacity must be a positive, non-zero value");
@@ -104,12 +104,13 @@ public:
   void clear() {}
 
 private:
+  size_t capacity_;
+
   std::vector<BufferT> ring_buffer_;
 
   size_t write_index_;
   size_t read_index_;
   size_t size_;
-  size_t capacity_;
 
   std::mutex mutex_;
 };
