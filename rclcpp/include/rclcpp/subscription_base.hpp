@@ -134,7 +134,6 @@ public:
   void
   handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
 
-  // TODO(karsten1987): Does it make sense to pass in a weak_ptr?
   RCLCPP_PUBLIC
   virtual
   void

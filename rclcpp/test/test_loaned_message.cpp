@@ -53,7 +53,7 @@ TEST_F(TestLoanedMessage, loan_from_pub) {
   auto node = std::make_shared<rclcpp::Node>("loaned_message_test_node");
   auto pub = node->create_publisher<MessageT>("loaned_message_test_topic", 1);
 
-  auto loaned_msg = pub->loan_message();
+  auto loaned_msg = pub->borrow_loaned_message();
   ASSERT_TRUE(loaned_msg.is_valid());
   loaned_msg.get().float64_value = 42.0f;
   ASSERT_EQ(42.0f, loaned_msg.get().float64_value);
@@ -67,7 +67,7 @@ TEST_F(TestLoanedMessage, release) {
 
   MessageT * msg = nullptr;
   {
-    auto loaned_msg = pub->loan_message();
+    auto loaned_msg = pub->borrow_loaned_message();
     ASSERT_TRUE(loaned_msg.is_valid());
     loaned_msg.get().float64_value = 42.0f;
     ASSERT_EQ(42.0f, loaned_msg.get().float64_value);

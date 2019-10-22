@@ -137,7 +137,7 @@ public:
     if (pub_.can_loan_messages()) {
       // return allocated memory to the middleware
       auto ret =
-        rcl_return_loaned_message(pub_.get_publisher_handle(), message_);
+        rcl_return_loaned_message_from_publisher(pub_.get_publisher_handle(), message_);
       if (ret != RCL_RET_OK) {
         RCLCPP_ERROR(
           error_logger, "rcl_deallocate_loaned_message failed: %s", rcl_get_error_string().str);
