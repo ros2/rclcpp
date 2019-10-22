@@ -169,29 +169,31 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
     p.read_only = *(c_param_descriptor->read_only);
   }
 
-  FloatingPointRange f;
-  IntegerRange i;
-  if (c_param_descriptor->from_value_int) {
-    i.from_value = *(c_param_descriptor->from_value_int);
+  if (c_param_descriptor->from_value_int || c_param_descriptor->to_value_int || c_param_descriptor->step_int) {
+    IntegerRange i;
+    if (c_param_descriptor->from_value_int) {
+      i.from_value = *(c_param_descriptor->from_value_int);
+    }
+    if (c_param_descriptor->to_value_int) {
+      i.to_value = *(c_param_descriptor->to_value_int);
+    }
+    if (c_param_descriptor->step_int) {
+      i.step = *(c_param_descriptor->step_int);
+    }
+    p.integer_range.push_back(i);
+  } else if (c_param_descriptor->from_value_float || c_param_descriptor->to_value_float || c_param_descriptor->step_float) {
+    FloatingPointRange f;
+    if (c_param_descriptor->from_value_float) {
+      f.from_value = *(c_param_descriptor->from_value_float);
+    }
+    if (c_param_descriptor->to_value_float) {
+      f.to_value = *(c_param_descriptor->to_value_float);
+    }
+    if (c_param_descriptor->step_float) {
+      f.step = *(c_param_descriptor->step_float);
+    }
+    p.floating_point_range.push_back(f);
   }
-  if (c_param_descriptor->from_value_float) {
-    f.from_value = *(c_param_descriptor->from_value_float);
-  }
-  if (c_param_descriptor->to_value_int) {
-    i.to_value = *(c_param_descriptor->to_value_int);
-  }
-  if (c_param_descriptor->to_value_float) {
-    f.to_value = *(c_param_descriptor->to_value_float);
-  }
-  if (c_param_descriptor->step_int) {
-    i.step = *(c_param_descriptor->step_int);
-  }
-  if (c_param_descriptor->step_float) {
-    f.step = *(c_param_descriptor->step_float);
-  }
-
-  p.floating_point_range = {f};
-  p.integer_range = {i};
 
   return p;
 }
