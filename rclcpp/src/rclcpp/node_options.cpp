@@ -90,6 +90,7 @@ NodeOptions::get_rcl_node_options() const
     node_options_->allocator = this->allocator_;
     node_options_->use_global_arguments = this->use_global_arguments_;
     node_options_->domain_id = this->get_domain_id_from_env();
+    node_options_->disable_rosout = this->disable_rosout_;
 
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
@@ -195,6 +196,19 @@ NodeOptions::use_global_arguments(bool use_global_arguments)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->use_global_arguments_ = use_global_arguments;
+  return *this;
+}
+
+bool
+NodeOptions::disable_rosout() const
+{
+  return this->disable_rosout_;
+}
+
+NodeOptions &
+NodeOptions::disable_rosout(bool disable_rosout)
+{
+  this->disable_rosout_ = disable_rosout;
   return *this;
 }
 

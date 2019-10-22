@@ -152,6 +152,22 @@ public:
   NodeOptions &
   use_global_arguments(bool use_global_arguments);
 
+  /// Return the disable_rosout flag.
+  RCLCPP_PUBLIC
+  bool
+  disable_rosout() const;
+
+  /// Set the disable_rosout flag, return this for parameter idiom.
+  /**
+   * If true this will cause the node not to use rosout publisher
+   *
+   * Defaults to false for now, as there are still some cases where it is not
+   * desirable.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  disable_rosout(bool disable_rosout);
+
   /// Return the use_intra_process_comms flag.
   RCLCPP_PUBLIC
   bool
@@ -311,6 +327,8 @@ private:
   std::vector<rclcpp::Parameter> parameter_overrides_ {};
 
   bool use_global_arguments_ {true};
+
+  bool disable_rosout_ {false};
 
   bool use_intra_process_comms_ {false};
 
