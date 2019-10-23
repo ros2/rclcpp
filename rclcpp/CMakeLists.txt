@@ -238,7 +238,7 @@ if(BUILD_TESTING)
   )
   target_link_libraries(test_loaned_message ${PROJECT_NAME})
 
-  ament_add_gtest(test_node test/test_node.cpp)
+  ament_add_gtest(test_node test/test_node.cpp TIMEOUT 240)
   if(TARGET test_node)
     ament_target_dependencies(test_node
       "rcl_interfaces"

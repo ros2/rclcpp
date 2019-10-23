@@ -147,22 +147,6 @@ TEST_F(TestNode, subnode_get_name_and_namespace) {
     EXPECT_STREQ("/ns", subnode->get_namespace());
     EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
     EXPECT_STREQ("/ns/sub_ns", subnode->get_effective_namespace().c_str());
-  }
-  {
-    auto node = std::make_shared<rclcpp::Node>("my_node");
-    auto subnode = node->create_sub_node("sub_ns");
-    EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/", subnode->get_namespace());
-    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
-    EXPECT_STREQ("/sub_ns", subnode->get_effective_namespace().c_str());
-  }
-  {
-    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-    auto subnode = node->create_sub_node("sub_ns");
-    EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/ns", subnode->get_namespace());
-    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
-    EXPECT_STREQ("/ns/sub_ns", subnode->get_effective_namespace().c_str());
     auto subnode2 = subnode->create_sub_node("sub_ns2");
     EXPECT_STREQ("my_node", subnode2->get_name());
     EXPECT_STREQ("/ns", subnode2->get_namespace());
