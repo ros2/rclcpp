@@ -221,12 +221,12 @@ public:
 
   void
   handle_loaned_message(
-    void * loaned_message, const rmw_message_info_t & message_info) override
+    const void * loaned_message, const rmw_message_info_t & message_info) override
   {
-    auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
+    auto typed_message = static_cast<const CallbackMessageT *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
-    auto sptr = std::shared_ptr<CallbackMessageT>(
-      typed_message, [](CallbackMessageT * msg) {(void) msg;});
+    auto sptr = std::shared_ptr<const CallbackMessageT>(
+      typed_message, [](const CallbackMessageT * msg) {(void) msg;});
     any_callback_.dispatch(sptr, message_info);
   }
 

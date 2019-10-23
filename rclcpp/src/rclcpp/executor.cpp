@@ -329,7 +329,7 @@ Executor::execute_subscription(
     }
     subscription->return_serialized_message(serialized_msg);
   } else if (subscription->can_loan_messages()) {
-    void * loaned_msg = nullptr;
+    const void * loaned_msg = nullptr;
     auto ret = rcl_take_loaned_message(
       subscription->get_subscription_handle().get(),
       &loaned_msg,

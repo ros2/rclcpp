@@ -180,6 +180,20 @@ public:
     TRACEPOINT(callback_end, (const void *)this);
   }
 
+  void dispatch(
+    std::shared_ptr<const MessageT> message, const rmw_message_info_t & message_info)
+  {
+    TRACEPOINT(callback_start, (const void*)this, false);
+    if (const_shared_ptr_callback_) {
+      const_shared_ptr_callback_(message);
+    } else if (const_shared_ptr_with_info_callback_) {
+      const_shared_ptr_with_info_callback_(message, message_info);
+    } else {
+      throw std::runtime_error("can't dispatch const message to non-cost callback");
+    }
+    TRACEPOINT(callback_end, (const void *)this);
+  }
+
   void dispatch_intra_process(
     ConstMessageSharedPtr message, const rmw_message_info_t & message_info)
   {

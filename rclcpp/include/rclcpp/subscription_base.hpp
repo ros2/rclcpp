@@ -137,7 +137,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  handle_loaned_message(void * loaned_message, const rmw_message_info_t & message_info) = 0;
+  handle_loaned_message(const void * loaned_message, const rmw_message_info_t & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
