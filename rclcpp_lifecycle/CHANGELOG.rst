@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.8.1 (2019-10-23)
+------------------
+* New Intra-Process Communication (`#778 <https://github.com/ros2/rclcpp/issues/778>`_)
+* Contributors: Alberto Soragna
+
 0.8.0 (2019-09-26)
 ------------------
 * clean up publisher and subscription creation logic (`#867 <https://github.com/ros2/rclcpp/issues/867>`_)

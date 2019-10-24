@@ -2,6 +2,21 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-10-23)
+------------------
+* De-flake tests for rmw_connext (`#899 <https://github.com/ros2/rclcpp/issues/899>`_)
+* rename return functions for loaned messages (`#896 <https://github.com/ros2/rclcpp/issues/896>`_)
+* Enable throttling logs (`#879 <https://github.com/ros2/rclcpp/issues/879>`_)
+* New Intra-Process Communication (`#778 <https://github.com/ros2/rclcpp/issues/778>`_)
+* Instrumentation update (`#789 <https://github.com/ros2/rclcpp/issues/789>`_)
+* Zero copy api (`#864 <https://github.com/ros2/rclcpp/issues/864>`_)
+* Drop rclcpp remove_ros_arguments_null test case. (`#894 <https://github.com/ros2/rclcpp/issues/894>`_)
+* add mechanism to pass rmw impl specific payloads during pub/sub creation (`#882 <https://github.com/ros2/rclcpp/issues/882>`_)
+* make get_actual_qos return a rclcpp::QoS (`#883 <https://github.com/ros2/rclcpp/issues/883>`_)
+* Fix Compiler Warning (`#881 <https://github.com/ros2/rclcpp/issues/881>`_)
+* Add callback handler for use_sim_time parameter `#802 <https://github.com/ros2/rclcpp/issues/802>`_ (`#875 <https://github.com/ros2/rclcpp/issues/875>`_)
+* Contributors: Alberto Soragna, Brian Marchi, Hunter L. Allen, Ingo Lütkebohle, Karsten Knese, Michael Carroll, Michel Hidalgo, William Woodall
+
 0.8.0 (2019-09-26)
 ------------------
 * clean up publisher and subscription creation logic (`#867 <https://github.com/ros2/rclcpp/issues/867>`_)

@@ -2,6 +2,12 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-10-23)
+------------------
+* Enable intra-process comm via LoadNode request. (`#871 <https://github.com/ros2/rclcpp/issues/871>`_)
+* Aggregate all component manager API tests. (`#876 <https://github.com/ros2/rclcpp/issues/876>`_)
+* Contributors: Michel Hidalgo
+
 0.8.0 (2019-09-26)
 ------------------
 * Force explicit --ros-args in NodeOptions::arguments(). (`#845 <https://github.com/ros2/rclcpp/issues/845>`_)
