@@ -159,7 +159,7 @@ public:
 
   /// Set the disable_rosout flag, return this for parameter idiom.
   /**
-   * If true this will cause the node not to use rosout publisher
+   * If true this will cause the node not to use rosout logging
    *
    * Defaults to false for now, as there are still some cases where it is not
    * desirable.
