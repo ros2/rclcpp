@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -173,24 +174,32 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
     IntegerRange i;
     if (c_param_descriptor->from_value_int) {
       i.from_value = *(c_param_descriptor->from_value_int);
+    } else {
+      i.from_value = std::numeric_limits<int64_t>::min();
     }
     if (c_param_descriptor->to_value_int) {
       i.to_value = *(c_param_descriptor->to_value_int);
+    } else {
+      i.to_value = std::numeric_limits<int64_t>::max();
     }
     if (c_param_descriptor->step_int) {
       i.step = *(c_param_descriptor->step_int);
     }
     p.integer_range.push_back(i);
-  } else if (c_param_descriptor->from_value_float || c_param_descriptor->to_value_float || c_param_descriptor->step_float) {
+  } else if (c_param_descriptor->min_value_double || c_param_descriptor->max_value_double || c_param_descriptor->step_double) {
     FloatingPointRange f;
-    if (c_param_descriptor->from_value_float) {
-      f.from_value = *(c_param_descriptor->from_value_float);
+    if (c_param_descriptor->min_value_double) {
+      f.from_value = *(c_param_descriptor->min_value_double);
+    } else {
+      f.from_value = std::numeric_limits<double>::lowest();
     }
-    if (c_param_descriptor->to_value_float) {
-      f.to_value = *(c_param_descriptor->to_value_float);
+    if (c_param_descriptor->max_value_double) {
+      f.to_value = *(c_param_descriptor->max_value_double);
+    } else {
+      f.to_value = std::numeric_limits<double>::max();
     }
-    if (c_param_descriptor->step_float) {
-      f.step = *(c_param_descriptor->step_float);
+    if (c_param_descriptor->step_double) {
+      f.step = *(c_param_descriptor->step_double);
     }
     p.floating_point_range.push_back(f);
   }
