@@ -53,10 +53,7 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
       node_name = c_node_name;
     }
 
-
-    // std::vector<Parameter> & params_node = parameters[node_name];
     ParameterAndDescriptor & params = parameters[node_name];
-    // params_node.reserve(c_params_node->num_params);
 
     const rcl_node_params_t * const c_params_node = &(c_params->params[n]);
     for (size_t p = 0; p < c_params_node->num_params; ++p) {
@@ -70,7 +67,8 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
       params[c_param_name].first = Parameter(c_param_name, parameter_value_from(c_param_value));
     }
 
-    const rcl_node_params_descriptors_t * const c_param_descriptors_node = &(c_params->descriptors[n]);
+    const rcl_node_params_descriptors_t * const c_param_descriptors_node =
+      &(c_params->descriptors[n]);
     for (size_t p = 0; p < c_param_descriptors_node->num_params; ++p) {
       const char * const c_param_name = c_param_descriptors_node->parameter_names[p];
       if (NULL == c_param_name) {
@@ -78,11 +76,12 @@ rclcpp::parameter_map_from(const rcl_params_t * const c_params)
           "At node " + std::to_string(n) + " parameter " + std::to_string(p) + " name is NULL");
         throw InvalidParametersException(message);
       }
-      const rcl_param_descriptor_t * const c_param_descriptor = &(c_param_descriptors_node->parameter_descriptors[p]);
+      const rcl_param_descriptor_t * const c_param_descriptor =
+        &(c_param_descriptors_node->parameter_descriptors[p]);
       if (params.count(std::string(c_param_name)) < 1) {
-        params[c_param_name].first = Parameter(c_param_name);;
+        params[c_param_name].first = Parameter(c_param_name);
       }
-      params[c_param_name].second = parameter_descriptor_from(c_param_descriptor); 
+      params[c_param_name].second = parameter_descriptor_from(c_param_descriptor);
     }
   }
   return parameters;
@@ -148,9 +147,10 @@ rclcpp::parameter_value_from(const rcl_variant_t * const c_param_value)
 }
 
 ParameterDescriptor
-rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_descriptor) {
+rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_descriptor)
+{
   if (NULL == c_param_descriptor) {
-    throw InvalidParameterValueException("Passed argument is NULL");    
+    throw InvalidParameterValueException("Passed argument is NULL");
   }
   ParameterDescriptor p;
 
@@ -170,15 +170,23 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
     p.read_only = *(c_param_descriptor->read_only);
   }
 
-  if (c_param_descriptor->from_value_int || c_param_descriptor->to_value_int || c_param_descriptor->step_int) {
+  if (c_param_descriptor->min_value_int || c_param_descriptor->max_value_int ||
+    c_param_descriptor->step_int)
+  {
+    if (c_param_descriptor->min_value_double || c_param_descriptor->max_value_double ||
+      c_param_descriptor->step_double)
+    {
+      throw InvalidParameterValueException(
+              "Mixed 'integer' and 'double' types not supported for parameter descriptor range");
+    }
     IntegerRange i;
-    if (c_param_descriptor->from_value_int) {
-      i.from_value = *(c_param_descriptor->from_value_int);
+    if (c_param_descriptor->min_value_int) {
+      i.from_value = *(c_param_descriptor->min_value_int);
     } else {
       i.from_value = std::numeric_limits<int64_t>::min();
     }
-    if (c_param_descriptor->to_value_int) {
-      i.to_value = *(c_param_descriptor->to_value_int);
+    if (c_param_descriptor->max_value_int) {
+      i.to_value = *(c_param_descriptor->max_value_int);
     } else {
       i.to_value = std::numeric_limits<int64_t>::max();
     }
@@ -186,7 +194,9 @@ rclcpp::parameter_descriptor_from(const rcl_param_descriptor_t * const c_param_d
       i.step = *(c_param_descriptor->step_int);
     }
     p.integer_range.push_back(i);
-  } else if (c_param_descriptor->min_value_double || c_param_descriptor->max_value_double || c_param_descriptor->step_double) {
+  } else if (c_param_descriptor->min_value_double || c_param_descriptor->max_value_double ||  // NOLINT
+    c_param_descriptor->step_double)
+  {
     FloatingPointRange f;
     if (c_param_descriptor->min_value_double) {
       f.from_value = *(c_param_descriptor->min_value_double);

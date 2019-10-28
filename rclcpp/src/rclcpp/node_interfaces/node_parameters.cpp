@@ -383,12 +383,10 @@ __declare_parameter_common(
     auto has_parameter_override = false;
     auto has_descriptor_override = false;
 
-    if (overrides_it->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET)
-    {
+    if (overrides_it->second.value.get_type() != rclcpp::ParameterType::PARAMETER_NOT_SET) {
       has_parameter_override = true;
     }
-    if (overrides_it->second.descriptor.name != "")
-    {
+    if (overrides_it->second.descriptor.name != "") {
       has_descriptor_override = true;
     }
 
