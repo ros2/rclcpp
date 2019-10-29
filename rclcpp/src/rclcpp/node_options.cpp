@@ -90,7 +90,7 @@ NodeOptions::get_rcl_node_options() const
     node_options_->allocator = this->allocator_;
     node_options_->use_global_arguments = this->use_global_arguments_;
     node_options_->domain_id = this->get_domain_id_from_env();
-    node_options_->disable_rosout = this->disable_rosout_;
+    node_options_->enable_rosout = this->enable_rosout_;
 
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
@@ -200,15 +200,15 @@ NodeOptions::use_global_arguments(bool use_global_arguments)
 }
 
 bool
-NodeOptions::disable_rosout() const
+NodeOptions::enable_rosout() const
 {
-  return this->disable_rosout_;
+  return this->enable_rosout_;
 }
 
 NodeOptions &
-NodeOptions::disable_rosout(bool disable_rosout)
+NodeOptions::enable_rosout(bool enable_rosout)
 {
-  this->disable_rosout_ = disable_rosout;
+  this->enable_rosout_ = enable_rosout;
   return *this;
 }
 

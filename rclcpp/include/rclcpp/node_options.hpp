@@ -152,21 +152,21 @@ public:
   NodeOptions &
   use_global_arguments(bool use_global_arguments);
 
-  /// Return the disable_rosout flag.
+  /// Return the enable_rosout flag.
   RCLCPP_PUBLIC
   bool
-  disable_rosout() const;
+  enable_rosout() const;
 
-  /// Set the disable_rosout flag, return this for parameter idiom.
+  /// Set the enable_rosout flag, return this for parameter idiom.
   /**
-   * If true this will cause the node not to use rosout logging
+   * If false this will cause the node not to use rosout logging
    *
-   * Defaults to false for now, as there are still some cases where it is not
+   * Defaults to true for now, as there are still some cases where it is not
    * desirable.
    */
   RCLCPP_PUBLIC
   NodeOptions &
-  disable_rosout(bool disable_rosout);
+  enable_rosout(bool enable_rosout);
 
   /// Return the use_intra_process_comms flag.
   RCLCPP_PUBLIC
@@ -328,7 +328,7 @@ private:
 
   bool use_global_arguments_ {true};
 
-  bool disable_rosout_ {false};
+  bool enable_rosout_ {true};
 
   bool use_intra_process_comms_ {false};
 
