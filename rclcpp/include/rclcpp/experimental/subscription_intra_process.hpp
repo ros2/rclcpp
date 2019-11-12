@@ -58,7 +58,7 @@ public:
     >::UniquePtr;
 
   SubscriptionIntraProcess(
-    AnySubscriptionCallback<CallbackMessageT, Alloc> callback,
+    AnySubscriptionCallback<CallbackMessageT, Alloc> & callback,
     std::shared_ptr<Alloc> allocator,
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
@@ -153,7 +153,7 @@ private:
     }
   }
 
-  AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
+  AnySubscriptionCallback<CallbackMessageT, Alloc> & any_callback_;
   BufferUniquePtr buffer_;
 };
 
