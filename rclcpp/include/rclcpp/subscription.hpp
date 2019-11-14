@@ -159,16 +159,16 @@ public:
       auto ipm = context->get_sub_context<IntraProcessManager>();
       uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
       this->setup_intra_process(intra_process_subscription_id, ipm);
-    } else {
-      TRACEPOINT(
-        rclcpp_subscription_callback_added,
-        (const void *)get_subscription_handle().get(),
-        (const void *)&any_callback_);
-      // The callback object gets copied, so if registration is done too early/before this point
-      // (e.g. in `AnySubscriptionCallback::set()`), its address won't match any address used later
-      // in subsequent tracepoints.
-      any_callback_.register_callback_for_tracing();
     }
+
+    TRACEPOINT(
+      rclcpp_subscription_callback_added,
+      (const void *)get_subscription_handle().get(),
+      (const void *)&any_callback_);
+    // The callback object gets copied, so if registration is done too early/before this point
+    // (e.g. in `AnySubscriptionCallback::set()`), its address won't match any address used later
+    // in subsequent tracepoints.
+    any_callback_.register_callback_for_tracing();
   }
 
   /// Called after construction to continue setup that requires shared_from_this().
