@@ -463,6 +463,10 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Clock::SharedPtr
+  get_clock();
+
+  RCLCPP_PUBLIC
+  rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 
   RCLCPP_LIFECYCLE_PUBLIC

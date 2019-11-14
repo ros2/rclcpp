@@ -385,6 +385,12 @@ Node::wait_for_graph_change(
 }
 
 rclcpp::Clock::SharedPtr
+Node::get_clock()
+{
+  return node_clock_->get_clock();
+}
+
+rclcpp::Clock::ConstSharedPtr
 Node::get_clock() const
 {
   return node_clock_->get_clock();

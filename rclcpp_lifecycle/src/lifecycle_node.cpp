@@ -311,6 +311,12 @@ LifecycleNode::wait_for_graph_change(
 }
 
 rclcpp::Clock::SharedPtr
+LifecycleNode::get_clock()
+{
+  return node_clock_->get_clock();
+}
+
+rclcpp::Clock::ConstSharedPtr
 LifecycleNode::get_clock() const
 {
   return node_clock_->get_clock();
