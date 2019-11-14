@@ -52,6 +52,12 @@ public:
   RCLCPP_PUBLIC
   virtual
   rclcpp::Clock::SharedPtr
+  get_clock();
+
+  /// Get a clock which will be kept up to date by the node.
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 
 private:
