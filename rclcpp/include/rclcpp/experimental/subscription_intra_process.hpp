@@ -30,6 +30,7 @@
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
