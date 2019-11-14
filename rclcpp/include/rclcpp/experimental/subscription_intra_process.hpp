@@ -64,8 +64,7 @@ public:
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     rmw_qos_profile_t qos_profile,
-    rclcpp::IntraProcessBufferType buffer_type,
-    rcl_subscription_t * subscription_handle)
+    rclcpp::IntraProcessBufferType buffer_type)
   : SubscriptionIntraProcessBase(topic_name, qos_profile),
     any_callback_(callback)
   {
@@ -93,7 +92,7 @@ public:
 
     TRACEPOINT(
       rclcpp_subscription_callback_added,
-      (const void *)subscription_handle,
+      (const void *)this,
       (const void *)&any_callback_);
     // The callback object gets copied, so if registration is done too early/before this point
     // (e.g. in `AnySubscriptionCallback::set()`), its address won't match any address used later
