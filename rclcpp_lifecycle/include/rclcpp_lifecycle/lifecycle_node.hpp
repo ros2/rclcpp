@@ -463,11 +463,11 @@ public:
 
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Clock::SharedPtr
-  get_clock();
+  get_clock() const;
 
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp::Time
-  now();
+  now() const;
 
   /// Return the Node's internal NodeBaseInterface implementation.
   RCLCPP_LIFECYCLE_PUBLIC

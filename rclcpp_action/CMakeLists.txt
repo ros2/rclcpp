@@ -68,7 +68,7 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
-  ament_add_gtest(test_client test/test_client.cpp)
+  ament_add_gtest(test_client test/test_client.cpp TIMEOUT 120)
   if(TARGET test_client)
     ament_target_dependencies(test_client
       "test_msgs"

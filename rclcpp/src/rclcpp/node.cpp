@@ -385,13 +385,13 @@ Node::wait_for_graph_change(
 }
 
 rclcpp::Clock::SharedPtr
-Node::get_clock()
+Node::get_clock() const
 {
   return node_clock_->get_clock();
 }
 
 rclcpp::Time
-Node::now()
+Node::now() const
 {
   return node_clock_->get_clock()->now();
 }

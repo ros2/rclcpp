@@ -39,7 +39,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   rclcpp::Clock::SharedPtr
-  get_clock() = 0;
+  get_clock() const = 0;
 };
 
 }  // namespace node_interfaces

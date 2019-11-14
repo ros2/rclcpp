@@ -52,7 +52,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   rclcpp::Clock::SharedPtr
-  get_clock();
+  get_clock() const;
 
 private:
   RCLCPP_DISABLE_COPY(NodeClock)

@@ -892,11 +892,11 @@ public:
 
   RCLCPP_PUBLIC
   rclcpp::Clock::SharedPtr
-  get_clock();
+  get_clock() const;
 
   RCLCPP_PUBLIC
   Time
-  now();
+  now() const;
 
   /// Return the Node's internal NodeBaseInterface implementation.
   RCLCPP_PUBLIC
