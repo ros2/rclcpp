@@ -58,10 +58,12 @@ del throttle_params['get_time_point_value']
 throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
 throttle_params.move_to_end('clock', last=False)
 
-excluded_features = ['named']
-def is_supported_feature_combination(feature_combination):
-    is_excluded = any([ef in feature_combination for ef in excluded_features])
-    return not is_excluded
+rclcpp_feature_combinations = OrderedDict()
+for combinations, feature in feature_combinations.items():
+    # skip feature combinations using 'named'
+    if 'named' in combinations:
+        continue
+    rclcpp_feature_combinations[combinations] = feature
 }@
 @[for severity in severities]@
 /** @@name Logging macros for severity @(severity).
@@ -69,14 +71,14 @@ def is_supported_feature_combination(feature_combination):
 ///@@{
 #if (RCLCPP_LOG_MIN_SEVERITY > RCLCPP_LOG_MIN_SEVERITY_@(severity))
 // empty logging macros for severity @(severity) when being disabled at compile time
-@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
+@[ for feature_combination in rclcpp_feature_combinations.keys()]@
 @{suffix = get_suffix_from_features(feature_combination)}@
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_@(severity)@(suffix)(...)
 @[ end for]@
 
 #else
-@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
+@[ for feature_combination in rclcpp_feature_combinations.keys()]@
 @{suffix = get_suffix_from_features(feature_combination)}@
 // The RCLCPP_@(severity)@(suffix) macro is surrounded by do { .. } while (0)
 // to implement the standard C macro idiom to make the macro safe in all
@@ -84,16 +86,16 @@ def is_supported_feature_combination(feature_combination):
 /**
  * \def RCLCPP_@(severity)@(suffix)
  * Log a message with severity @(severity)@
-@[ if feature_combinations[feature_combination].doc_lines]@
+@[ if rclcpp_feature_combinations[feature_combination].doc_lines]@
  with the following conditions:
 @[ else]@
 .
 @[ end if]@
-@[ for doc_line in feature_combinations[feature_combination].doc_lines]@
+@[ for doc_line in rclcpp_feature_combinations[feature_combination].doc_lines]@
  * @(doc_line)
 @[ end for]@
  * \param logger The `rclcpp::Logger` to use
-@[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
+@[ for param_name, doc_line in rclcpp_feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
  * \param ... The format string, followed by the variable arguments for the format string.
