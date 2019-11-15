@@ -32,17 +32,22 @@ using QOSDeadlineRequestedInfo = rmw_requested_deadline_missed_status_t;
 using QOSDeadlineOfferedInfo = rmw_offered_deadline_missed_status_t;
 using QOSLivelinessChangedInfo = rmw_liveliness_changed_status_t;
 using QOSLivelinessLostInfo = rmw_liveliness_lost_status_t;
+using QOSOfferedIncompatibleQoSInfo = rmw_offered_incompatible_qos_status_t;
+using QOSRequestedIncompatibleQoSInfo = rmw_requested_incompatible_qos_status_t;
 
 using QOSDeadlineRequestedCallbackType = std::function<void (QOSDeadlineRequestedInfo &)>;
 using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInfo &)>;
 using QOSLivelinessChangedCallbackType = std::function<void (QOSLivelinessChangedInfo &)>;
 using QOSLivelinessLostCallbackType = std::function<void (QOSLivelinessLostInfo &)>;
+using QOSOfferedIncompatibleQoSCallbackType = std::function<void (QOSOfferedIncompatibleQoSInfo &)>;
+using QOSRequestedIncompatibleQoSCallbackType = std::function<void (QOSRequestedIncompatibleQoSInfo &)>;
 
 /// Contains callbacks for various types of events a Publisher can receive from the middleware.
 struct PublisherEventCallbacks
 {
   QOSDeadlineOfferedCallbackType deadline_callback;
   QOSLivelinessLostCallbackType liveliness_callback;
+  QOSOfferedIncompatibleQoSCallbackType incompatible_qos_callback;
 };
 
 /// Contains callbacks for non-message events that a Subscription can receive from the middleware.
@@ -50,6 +55,7 @@ struct SubscriptionEventCallbacks
 {
   QOSDeadlineRequestedCallbackType deadline_callback;
   QOSLivelinessChangedCallbackType liveliness_callback;
+  QOSRequestedIncompatibleQoSCallbackType incompatible_qos_callback;
 };
 
 class QOSEventHandlerBase : public Waitable
