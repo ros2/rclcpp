@@ -46,8 +46,8 @@
 
 @{
 from collections import OrderedDict
+from copy import deepcopy
 from rcutils.logging import feature_combinations
-from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
 from rcutils.logging import throttle_args
@@ -64,6 +64,19 @@ for combinations, feature in feature_combinations.items():
     if 'named' in combinations:
         continue
     rclcpp_feature_combinations[combinations] = feature
+# add a stream variant for each available feature combination
+stream_arg = 'stream_arg'
+for combinations, feature in list(rclcpp_feature_combinations.items()):
+    combinations = ('stream', ) + combinations
+    feature = deepcopy(feature)
+    feature.params[stream_arg] = 'The argument << into a stringstream'
+    rclcpp_feature_combinations[combinations] = feature
+
+def get_rclcpp_suffix_from_features(features):
+    suffix = get_suffix_from_features(features)
+    if 'stream' in features:
+        suffix = '_STREAM' + suffix
+    return suffix
 }@
 @[for severity in severities]@
 /** @@name Logging macros for severity @(severity).
@@ -72,14 +85,14 @@ for combinations, feature in feature_combinations.items():
 #if (RCLCPP_LOG_MIN_SEVERITY > RCLCPP_LOG_MIN_SEVERITY_@(severity))
 // empty logging macros for severity @(severity) when being disabled at compile time
 @[ for feature_combination in rclcpp_feature_combinations.keys()]@
-@{suffix = get_suffix_from_features(feature_combination)}@
+@{suffix = get_rclcpp_suffix_from_features(feature_combination)}@
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_@(severity)@(suffix)(...)
 @[ end for]@
 
 #else
 @[ for feature_combination in rclcpp_feature_combinations.keys()]@
-@{suffix = get_suffix_from_features(feature_combination)}@
+@{suffix = get_rclcpp_suffix_from_features(feature_combination)}@
 // The RCLCPP_@(severity)@(suffix) macro is surrounded by do { .. } while (0)
 // to implement the standard C macro idiom to make the macro safe in all
 // contexts; see http://c-faq.com/cpp/multistmt.html for more information.
@@ -98,11 +111,17 @@ for combinations, feature in feature_combinations.items():
 @[ for param_name, doc_line in rclcpp_feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
+@[ if 'stream' not in feature_combination]@
  * \param ... The format string, followed by the variable arguments for the format string.
  * It also accepts a single argument of type std::string.
+@[ end if]@
  */
-@{params = get_macro_parameters(feature_combination).keys()}@
-#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in params]))...) \
+@{params = rclcpp_feature_combinations[feature_combination].params.keys()}@
+#define RCLCPP_@(severity)@(suffix)(logger@(''.join([', ' + p for p in params]))@
+@[ if 'stream' not in feature_combination]@
+, ...@
+@[ end if]@
+) \
   do { \
     static_assert( \
       ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
@@ -120,14 +139,22 @@ for combinations, feature in feature_combinations.items():
         return RCUTILS_RET_OK; \
     }; \
 @[ end if] \
-    RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
+@[ if 'stream' in feature_combination]@
+    std::stringstream ss; \
+    ss << @(stream_arg); \
+@[ end if]@
+    RCUTILS_LOG_@(severity)@(get_suffix_from_features(feature_combination))_NAMED( \
 @{params = ['get_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
-@(''.join(['      ' + p + ', \\\n' for p in params]))@
+@(''.join(['      ' + p + ', \\\n' for p in params if p != stream_arg]))@
 @[ end if]@
       logger.get_name(), \
+@[ if 'stream' not in feature_combination]@
       rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
         RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,"")); \
+@[ else]@
+      "%s", rclcpp::get_c_string(ss.str())); \
+@[ end if]@
   } while (0)
 
 @[ end for]@
