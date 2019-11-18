@@ -234,9 +234,11 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
     throw std::runtime_error("spin_some() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+  // non-blocking call to pre-load all available work
+  wait_for_work(std::chrono::milliseconds::zero());
   while (spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
-    if (get_next_executable(any_exec, std::chrono::milliseconds::zero())) {
+    if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
     } else {
       break;
@@ -531,51 +533,39 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
+  bool success = false;
   // Check the timers to see if there are any that are ready
   memory_strategy_->get_next_timer(any_executable, weak_nodes_);
   if (any_executable.timer) {
-    return true;
+    success = true;
   }
-  // Check the subscriptions to see if there are any that are ready
-  memory_strategy_->get_next_subscription(any_executable, weak_nodes_);
-  if (any_executable.subscription) {
-    return true;
-  }
-  // Check the services to see if there are any that are ready
-  memory_strategy_->get_next_service(any_executable, weak_nodes_);
-  if (any_executable.service) {
-    return true;
-  }
-  // Check the clients to see if there are any that are ready
-  memory_strategy_->get_next_client(any_executable, weak_nodes_);
-  if (any_executable.client) {
-    return true;
-  }
-  // Check the waitables to see if there are any that are ready
-  memory_strategy_->get_next_waitable(any_executable, weak_nodes_);
-  if (any_executable.waitable) {
-    return true;
-  }
-  // If there is no ready executable, return a null ptr
-  return false;
-}
-
-bool
-Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanoseconds timeout)
-{
-  bool success = false;
-  // Check to see if there are any subscriptions or timers needing service
-  // TODO(wjwwood): improve run to run efficiency of this function
-  success = get_next_ready_executable(any_executable);
-  // If there are none
   if (!success) {
-    // Wait for subscriptions or timers to work on
-    wait_for_work(timeout);
-    if (!spinning.load()) {
-      return false;
+    // Check the subscriptions to see if there are any that are ready
+    memory_strategy_->get_next_subscription(any_executable, weak_nodes_);
+    if (any_executable.subscription) {
+      success = true;
     }
-    // Try again
-    success = get_next_ready_executable(any_executable);
+  }
+  if (!success) {
+    // Check the services to see if there are any that are ready
+    memory_strategy_->get_next_service(any_executable, weak_nodes_);
+    if (any_executable.service) {
+      success = true;
+    }
+  }
+  if (!success) {
+    // Check the clients to see if there are any that are ready
+    memory_strategy_->get_next_client(any_executable, weak_nodes_);
+    if (any_executable.client) {
+      success = true;
+    }
+  }
+  if (!success) {
+    // Check the waitables to see if there are any that are ready
+    memory_strategy_->get_next_waitable(any_executable, weak_nodes_);
+    if (any_executable.waitable) {
+      success = true;
+    }
   }
   // At this point any_exec should be valid with either a valid subscription
   // or a valid timer, or it should be a null shared_ptr
@@ -594,6 +584,27 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
       // any_exec is destructued
       any_executable.callback_group->can_be_taken_from().store(false);
     }
+  }
+  // If there is no ready executable, return a null ptr
+  return success;
+}
+
+bool
+Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanoseconds timeout)
+{
+  bool success = false;
+  // Check to see if there are any subscriptions or timers needing service
+  // TODO(wjwwood): improve run to run efficiency of this function
+  success = get_next_ready_executable(any_executable);
+  // If there are none
+  if (!success) {
+    // Wait for subscriptions or timers to work on
+    wait_for_work(timeout);
+    if (!spinning.load()) {
+      return false;
+    }
+    // Try again
+    success = get_next_ready_executable(any_executable);
   }
   return success;
 }
