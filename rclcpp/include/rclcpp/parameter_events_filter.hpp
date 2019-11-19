@@ -44,16 +44,20 @@ public:
    * \param[in] event The parameter event message to filter.
    * \param[in] names A list of parameter names of interest.
    * \param[in] types A list of the types of parameter events of iterest.
-  *    EventType NEW, DELETED, or CHANGED
-  *
-  * Example Usage:
-  * If you have recieved a parameter event and are only interested in parameters foo and
-  * bar being added or changed but don't care about deletion.
-  *    auto res = rclcpp::ParameterEventsFilter(
-  *      event_shared_ptr,
-  *      {"foo", "bar"},
-  *      {rclcpp::ParameterEventsFilter::EventType::NEW, rclcpp::ParameterEventsFilter::EventType::CHANGED});
-  */
+   *    EventType NEW, DELETED, or CHANGED
+   *
+   * Example Usage:
+   *
+   * If you have recieved a parameter event and are only interested in parameters foo and
+   * bar being added or changed but don't care about deletion.
+   *
+   * ```cpp
+   * auto res = rclcpp::ParameterEventsFilter(
+   *   event_shared_ptr,
+   *   {"foo", "bar"},
+   *   {rclcpp::ParameterEventsFilter::EventType::NEW, rclcpp::ParameterEventsFilter::EventType::CHANGED});
+   * ```
+   */
   RCLCPP_PUBLIC
   ParameterEventsFilter(
     rcl_interfaces::msg::ParameterEvent::SharedPtr event,

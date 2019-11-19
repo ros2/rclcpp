@@ -31,17 +31,7 @@
 #include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_logging.hpp"
-// When compiling this file, Windows produces a deprecation warning for the
-// deprecated function prototype of NodeParameters::register_param_change_callback().
-// Other compilers do not.
-#if defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
-#if defined(_WIN32)
-# pragma warning(pop)
-#endif
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
@@ -114,15 +104,23 @@ LifecycleNode::LifecycleNode(
 {
   impl_->init();
 
-  register_on_configure(std::bind(&LifecycleNodeInterface::on_configure, this,
-    std::placeholders::_1));
+  register_on_configure(
+    std::bind(
+      &LifecycleNodeInterface::on_configure, this,
+      std::placeholders::_1));
   register_on_cleanup(std::bind(&LifecycleNodeInterface::on_cleanup, this, std::placeholders::_1));
-  register_on_shutdown(std::bind(&LifecycleNodeInterface::on_shutdown, this,
-    std::placeholders::_1));
-  register_on_activate(std::bind(&LifecycleNodeInterface::on_activate, this,
-    std::placeholders::_1));
-  register_on_deactivate(std::bind(&LifecycleNodeInterface::on_deactivate, this,
-    std::placeholders::_1));
+  register_on_shutdown(
+    std::bind(
+      &LifecycleNodeInterface::on_shutdown, this,
+      std::placeholders::_1));
+  register_on_activate(
+    std::bind(
+      &LifecycleNodeInterface::on_activate, this,
+      std::placeholders::_1));
+  register_on_deactivate(
+    std::bind(
+      &LifecycleNodeInterface::on_deactivate, this,
+      std::placeholders::_1));
   register_on_error(std::bind(&LifecycleNodeInterface::on_error, this, std::placeholders::_1));
 }
 

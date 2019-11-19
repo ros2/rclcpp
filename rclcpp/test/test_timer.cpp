@@ -40,17 +40,18 @@ protected:
 
     test_node = std::make_shared<rclcpp::Node>("test_timer_node");
 
-    timer = test_node->create_wall_timer(100ms,
-        [this]() -> void
-        {
-          this->has_timer_run.store(true);
+    timer = test_node->create_wall_timer(
+      100ms,
+      [this]() -> void
+      {
+        this->has_timer_run.store(true);
 
-          if (this->cancel_timer.load()) {
-            this->timer->cancel();
-          }
-          // prevent any tests running timer from blocking
-          this->executor->cancel();
+        if (this->cancel_timer.load()) {
+          this->timer->cancel();
         }
+        // prevent any tests running timer from blocking
+        this->executor->cancel();
+      }
     );
 
     executor->add_node(test_node);

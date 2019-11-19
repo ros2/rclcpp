@@ -60,12 +60,14 @@ TEST_F(TestStateMachineInfo, available_transitions) {
   for (rclcpp_lifecycle::Transition & transition : available_transitions) {
     EXPECT_FALSE(transition.label().empty());
 
-    EXPECT_TRUE(transition.start_state().id() <= 4 ||
+    EXPECT_TRUE(
+      transition.start_state().id() <= 4 ||
       (transition.start_state().id() >= 10 &&
       (transition.start_state().id() <= 15)));
     EXPECT_FALSE(transition.start_state().label().empty());
 
-    EXPECT_TRUE(transition.goal_state().id() <= 4 ||
+    EXPECT_TRUE(
+      transition.goal_state().id() <= 4 ||
       (transition.goal_state().id() >= 10 &&
       (transition.goal_state().id() <= 15)));
     EXPECT_FALSE(transition.goal_state().label().empty());

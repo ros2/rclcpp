@@ -17,10 +17,13 @@
 
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "rcl/error_handling.h"
 #include "rcl/types.h"
 #include "rclcpp/visibility_control.hpp"
+
+#include "rcpputils/join.hpp"
 
 namespace rclcpp
 {
@@ -167,6 +170,31 @@ public:
   RCLInvalidArgument(const RCLErrorBase & base_exc, const std::string & prefix);
 };
 
+/// Created when the ret is RCL_RET_INVALID_ROS_ARGS.
+class RCLInvalidROSArgsError : public RCLErrorBase, public std::runtime_error
+{
+public:
+  RCLCPP_PUBLIC
+  RCLInvalidROSArgsError(
+    rcl_ret_t ret, const rcl_error_state_t * error_state, const std::string & prefix);
+  RCLCPP_PUBLIC
+  RCLInvalidROSArgsError(const RCLErrorBase & base_exc, const std::string & prefix);
+};
+
+/// Thrown when unparsed ROS specific arguments are found.
+class UnknownROSArgsError : public std::runtime_error
+{
+public:
+  explicit UnknownROSArgsError(std::vector<std::string> && unknown_ros_args_in)
+  : std::runtime_error(
+      "found unknown ROS arguments: '" + rcpputils::join(unknown_ros_args_in, "', '") + "'"),
+    unknown_ros_args(unknown_ros_args_in)
+  {
+  }
+
+  const std::vector<std::string> unknown_ros_args;
+};
+
 /// Thrown when an invalid rclcpp::Event object or SharedPtr is encountered.
 class InvalidEventError : public std::runtime_error
 {
@@ -214,6 +242,13 @@ class ParameterNotDeclaredException : public std::runtime_error
 
 /// Thrown if parameter is immutable and therefore cannot be undeclared.
 class ParameterImmutableException : public std::runtime_error
+{
+  // Inherit constructors from runtime_error.
+  using std::runtime_error::runtime_error;
+};
+
+/// Thrown if parameter is modified while in a set callback.
+class ParameterModifiedInCallbackException : public std::runtime_error
 {
   // Inherit constructors from runtime_error.
   using std::runtime_error::runtime_error;

@@ -45,16 +45,38 @@
 #endif
 
 @{
+from collections import OrderedDict
+from copy import deepcopy
 from rcutils.logging import feature_combinations
-from rcutils.logging import get_macro_parameters
 from rcutils.logging import get_suffix_from_features
 from rcutils.logging import severities
+from rcutils.logging import throttle_args
+from rcutils.logging import throttle_params
 
-# TODO(dhood): Implement the throttle macro using time sources available in rclcpp
-excluded_features = ['named', 'throttle']
-def is_supported_feature_combination(feature_combination):
-    is_excluded = any([ef in feature_combination for ef in excluded_features])
-    return not is_excluded
+throttle_args['condition_before'] = 'RCUTILS_LOG_CONDITION_THROTTLE_BEFORE(clock, duration)'
+del throttle_params['get_time_point_value']
+throttle_params['clock'] = 'rclcpp::Clock that will be used to get the time point.'
+throttle_params.move_to_end('clock', last=False)
+
+rclcpp_feature_combinations = OrderedDict()
+for combinations, feature in feature_combinations.items():
+    # skip feature combinations using 'named'
+    if 'named' in combinations:
+        continue
+    rclcpp_feature_combinations[combinations] = feature
+# add a stream variant for each available feature combination
+stream_arg = 'stream_arg'
+for combinations, feature in list(rclcpp_feature_combinations.items()):
+    combinations = ('stream', ) + combinations
+    feature = deepcopy(feature)
+    feature.params[stream_arg] = 'The argument << into a stringstream'
+    rclcpp_feature_combinations[combinations] = feature
+
+def get_rclcpp_suffix_from_features(features):
+    suffix = get_suffix_from_features(features)
+    if 'stream' in features:
+        suffix = '_STREAM' + suffix
+    return suffix
 }@
 @[for severity in severities]@
 /** @@name Logging macros for severity @(severity).
@@ -62,50 +84,77 @@ def is_supported_feature_combination(feature_combination):
 ///@@{
 #if (RCLCPP_LOG_MIN_SEVERITY > RCLCPP_LOG_MIN_SEVERITY_@(severity))
 // empty logging macros for severity @(severity) when being disabled at compile time
-@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
-@{suffix = get_suffix_from_features(feature_combination)}@
+@[ for feature_combination in rclcpp_feature_combinations.keys()]@
+@{suffix = get_rclcpp_suffix_from_features(feature_combination)}@
 /// Empty logging macro due to the preprocessor definition of RCLCPP_LOG_MIN_SEVERITY.
 #define RCLCPP_@(severity)@(suffix)(...)
 @[ end for]@
 
 #else
-@[ for feature_combination in [fc for fc in feature_combinations if is_supported_feature_combination(fc)]]@
-@{suffix = get_suffix_from_features(feature_combination)}@
+@[ for feature_combination in rclcpp_feature_combinations.keys()]@
+@{suffix = get_rclcpp_suffix_from_features(feature_combination)}@
 // The RCLCPP_@(severity)@(suffix) macro is surrounded by do { .. } while (0)
 // to implement the standard C macro idiom to make the macro safe in all
 // contexts; see http://c-faq.com/cpp/multistmt.html for more information.
 /**
  * \def RCLCPP_@(severity)@(suffix)
  * Log a message with severity @(severity)@
-@[ if feature_combinations[feature_combination].doc_lines]@
+@[ if rclcpp_feature_combinations[feature_combination].doc_lines]@
  with the following conditions:
 @[ else]@
 .
 @[ end if]@
-@[ for doc_line in feature_combinations[feature_combination].doc_lines]@
+@[ for doc_line in rclcpp_feature_combinations[feature_combination].doc_lines]@
  * @(doc_line)
 @[ end for]@
  * \param logger The `rclcpp::Logger` to use
-@[ for param_name, doc_line in feature_combinations[feature_combination].params.items()]@
+@[ for param_name, doc_line in rclcpp_feature_combinations[feature_combination].params.items()]@
  * \param @(param_name) @(doc_line)
 @[ end for]@
+@[ if 'stream' not in feature_combination]@
  * \param ... The format string, followed by the variable arguments for the format string.
  * It also accepts a single argument of type std::string.
+@[ end if]@
  */
-#define RCLCPP_@(severity)@(suffix)(logger, @(''.join([p + ', ' for p in get_macro_parameters(feature_combination).keys()]))...) \
+@{params = rclcpp_feature_combinations[feature_combination].params.keys()}@
+#define RCLCPP_@(severity)@(suffix)(logger@(''.join([', ' + p for p in params]))@
+@[ if 'stream' not in feature_combination]@
+, ...@
+@[ end if]@
+) \
   do { \
     static_assert( \
-      ::std::is_same<typename std::remove_reference<typename std::remove_cv<decltype(logger)>::type>::type, \
+      ::std::is_same<typename std::remove_cv<typename std::remove_reference<decltype(logger)>::type>::type, \
       typename ::rclcpp::Logger>::value, \
       "First argument to logging macros must be an rclcpp::Logger"); \
-    RCUTILS_LOG_@(severity)@(suffix)_NAMED( \
-@{params = get_macro_parameters(feature_combination).keys()}@
+@[ if 'throttle' in feature_combination]@ \
+    auto get_time_point = [&clock](rcutils_time_point_value_t * time_point) -> rcutils_ret_t { \
+      try { \
+        *time_point = clock.now().nanoseconds(); \
+      } catch (...) { \
+        RCUTILS_SAFE_FWRITE_TO_STDERR( \
+        "[rclcpp|logging.hpp] RCLCPP_@(severity)@(suffix) could not get current time stamp\n"); \
+        return RCUTILS_RET_ERROR; \
+      } \
+        return RCUTILS_RET_OK; \
+    }; \
+@[ end if] \
+@[ if 'stream' in feature_combination]@
+    std::stringstream ss; \
+    ss << @(stream_arg); \
+@[ end if]@
+    RCUTILS_LOG_@(severity)@(get_suffix_from_features(feature_combination))_NAMED( \
+@{params = ['get_time_point' if p == 'clock' and 'throttle' in feature_combination else p for p in params]}@
 @[ if params]@
-@(''.join(['      ' + p + ', \\\n' for p in params]))@
+@(''.join(['      ' + p + ', \\\n' for p in params if p != stream_arg]))@
 @[ end if]@
       logger.get_name(), \
+@[ if 'stream' not in feature_combination]@
       rclcpp::get_c_string(RCLCPP_FIRST_ARG(__VA_ARGS__, "")), \
         RCLCPP_ALL_BUT_FIRST_ARGS(__VA_ARGS__,"")); \
+@[ else]@
+      "%s", rclcpp::get_c_string(ss.str())); \
+@[ end if]@
   } while (0)
 
 @[ end for]@

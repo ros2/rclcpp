@@ -140,6 +140,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
     }
   }
   // Add the node's notify condition to the guard condition handles
+  std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
   memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
@@ -178,6 +179,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
       }
     }
   }
+  std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
   memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
@@ -285,9 +287,6 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   if (any_exec.subscription) {
     execute_subscription(any_exec.subscription);
   }
-  if (any_exec.subscription_intra_process) {
-    execute_intra_process_subscription(any_exec.subscription_intra_process);
-  }
   if (any_exec.service) {
     execute_service(any_exec.service);
   }
@@ -329,6 +328,32 @@ Executor::execute_subscription(
       rcl_reset_error();
     }
     subscription->return_serialized_message(serialized_msg);
+  } else if (subscription->can_loan_messages()) {
+    void * loaned_msg = nullptr;
+    auto ret = rcl_take_loaned_message(
+      subscription->get_subscription_handle().get(),
+      &loaned_msg,
+      &message_info,
+      nullptr);
+    if (RCL_RET_OK == ret) {
+      subscription->handle_loaned_message(loaned_msg, message_info);
+    } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "take_loaned failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string().str);
+      rcl_reset_error();
+    }
+    ret = rcl_return_loaned_message_from_subscription(
+      subscription->get_subscription_handle().get(),
+      loaned_msg);
+    if (RCL_RET_OK != ret) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "return_loaned_message failed for subscription on topic '%s': %s",
+        subscription->get_topic_name(), rcl_get_error_string().str);
+    }
+    loaned_msg = nullptr;
   } else {
     std::shared_ptr<void> message = subscription->create_message();
     auto ret = rcl_take(
@@ -344,30 +369,6 @@ Executor::execute_subscription(
       rcl_reset_error();
     }
     subscription->return_message(message);
-  }
-}
-
-void
-Executor::execute_intra_process_subscription(
-  rclcpp::SubscriptionBase::SharedPtr subscription)
-{
-  rcl_interfaces::msg::IntraProcessMessage ipm;
-  rmw_message_info_t message_info;
-  rcl_ret_t status = rcl_take(
-    subscription->get_intra_process_subscription_handle().get(),
-    &ipm,
-    &message_info,
-    nullptr);
-
-  if (status == RCL_RET_OK) {
-    message_info.from_intra_process = true;
-    subscription->handle_intra_process_message(ipm, message_info);
-  } else if (status != RCL_RET_SUBSCRIPTION_TAKE_FAILED) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "take failed for intra process subscription on topic '%s': %s",
-      subscription->get_topic_name(), rcl_get_error_string().str);
-    rcl_reset_error();
   }
 }
 
@@ -423,43 +424,47 @@ Executor::execute_client(
 void
 Executor::wait_for_work(std::chrono::nanoseconds timeout)
 {
-  // Collect the subscriptions and timers to be waited on
-  memory_strategy_->clear_handles();
-  bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
+  {
+    std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
 
-  // Clean up any invalid nodes, if they were detected
-  if (has_invalid_weak_nodes) {
-    auto node_it = weak_nodes_.begin();
-    auto gc_it = guard_conditions_.begin();
-    while (node_it != weak_nodes_.end()) {
-      if (node_it->expired()) {
-        node_it = weak_nodes_.erase(node_it);
-        memory_strategy_->remove_guard_condition(*gc_it);
-        gc_it = guard_conditions_.erase(gc_it);
-      } else {
-        ++node_it;
-        ++gc_it;
+    // Collect the subscriptions and timers to be waited on
+    memory_strategy_->clear_handles();
+    bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
+
+    // Clean up any invalid nodes, if they were detected
+    if (has_invalid_weak_nodes) {
+      auto node_it = weak_nodes_.begin();
+      auto gc_it = guard_conditions_.begin();
+      while (node_it != weak_nodes_.end()) {
+        if (node_it->expired()) {
+          node_it = weak_nodes_.erase(node_it);
+          memory_strategy_->remove_guard_condition(*gc_it);
+          gc_it = guard_conditions_.erase(gc_it);
+        } else {
+          ++node_it;
+          ++gc_it;
+        }
       }
     }
-  }
-  // clear wait set
-  if (rcl_wait_set_clear(&wait_set_) != RCL_RET_OK) {
-    throw std::runtime_error("Couldn't clear wait set");
-  }
+    // clear wait set
+    if (rcl_wait_set_clear(&wait_set_) != RCL_RET_OK) {
+      throw std::runtime_error("Couldn't clear wait set");
+    }
 
-  // The size of waitables are accounted for in size of the other entities
-  rcl_ret_t ret = rcl_wait_set_resize(
-    &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
-    memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
-    memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services(),
-    memory_strategy_->number_of_ready_events());
-  if (RCL_RET_OK != ret) {
-    throw std::runtime_error(
-            std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
-  }
+    // The size of waitables are accounted for in size of the other entities
+    rcl_ret_t ret = rcl_wait_set_resize(
+      &wait_set_, memory_strategy_->number_of_ready_subscriptions(),
+      memory_strategy_->number_of_guard_conditions(), memory_strategy_->number_of_ready_timers(),
+      memory_strategy_->number_of_ready_clients(), memory_strategy_->number_of_ready_services(),
+      memory_strategy_->number_of_ready_events());
+    if (RCL_RET_OK != ret) {
+      throw std::runtime_error(
+              std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
+    }
 
-  if (!memory_strategy_->add_handles_to_wait_set(&wait_set_)) {
-    throw std::runtime_error("Couldn't fill wait set");
+    if (!memory_strategy_->add_handles_to_wait_set(&wait_set_)) {
+      throw std::runtime_error("Couldn't fill wait set");
+    }
   }
   rcl_ret_t status =
     rcl_wait(&wait_set_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
@@ -511,54 +516,29 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
       if (!group) {
         continue;
       }
-      for (auto & weak_timer : group->get_timer_ptrs()) {
-        auto t = weak_timer.lock();
-        if (t == timer) {
-          return group;
-        }
+      auto timer_ref = group->find_timer_ptrs_if(
+        [timer](const rclcpp::TimerBase::SharedPtr & timer_ptr) -> bool {
+          return timer_ptr == timer;
+        });
+      if (timer_ref) {
+        return group;
       }
     }
   }
   return rclcpp::callback_group::CallbackGroup::SharedPtr();
 }
 
-void
-Executor::get_next_timer(AnyExecutable & any_exec)
-{
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (!node) {
-      continue;
-    }
-    for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
-      if (!group || !group->can_be_taken_from().load()) {
-        continue;
-      }
-      for (auto & timer_ref : group->get_timer_ptrs()) {
-        auto timer = timer_ref.lock();
-        if (timer && timer->is_ready()) {
-          any_exec.timer = timer;
-          any_exec.callback_group = group;
-          node = get_node_by_group(group);
-          return;
-        }
-      }
-    }
-  }
-}
-
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
-  // Check the timers to see if there are any that are ready, if so return
-  get_next_timer(any_executable);
+  // Check the timers to see if there are any that are ready
+  memory_strategy_->get_next_timer(any_executable, weak_nodes_);
   if (any_executable.timer) {
     return true;
   }
   // Check the subscriptions to see if there are any that are ready
   memory_strategy_->get_next_subscription(any_executable, weak_nodes_);
-  if (any_executable.subscription || any_executable.subscription_intra_process) {
+  if (any_executable.subscription) {
     return true;
   }
   // Check the services to see if there are any that are ready

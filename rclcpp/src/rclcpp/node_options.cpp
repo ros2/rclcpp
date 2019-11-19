@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
@@ -90,24 +91,47 @@ NodeOptions::get_rcl_node_options() const
     node_options_->use_global_arguments = this->use_global_arguments_;
     node_options_->domain_id = this->get_domain_id_from_env();
 
-    std::unique_ptr<const char *[]> c_args;
+    int c_argc = 0;
+    std::unique_ptr<const char *[]> c_argv;
     if (!this->arguments_.empty()) {
-      c_args.reset(new const char *[this->arguments_.size()]);
+      if (this->arguments_.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
+        throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
+      }
+
+      c_argc = static_cast<int>(this->arguments_.size());
+      c_argv.reset(new const char *[c_argc]);
+
       for (std::size_t i = 0; i < this->arguments_.size(); ++i) {
-        c_args[i] = this->arguments_[i].c_str();
+        c_argv[i] = this->arguments_[i].c_str();
       }
     }
 
-    if (this->arguments_.size() > std::numeric_limits<int>::max()) {
-      throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
-    }
-
-    rmw_ret_t ret = rcl_parse_arguments(
-      static_cast<int>(this->arguments_.size()), c_args.get(), this->allocator_,
-      &(node_options_->arguments));
+    rcl_ret_t ret = rcl_parse_arguments(
+      c_argc, c_argv.get(), this->allocator_, &(node_options_->arguments));
 
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to parse arguments");
+    }
+
+    int unparsed_ros_args_count =
+      rcl_arguments_get_count_unparsed_ros(&(node_options_->arguments));
+    if (unparsed_ros_args_count > 0) {
+      int * unparsed_ros_args_indices = nullptr;
+      ret = rcl_arguments_get_unparsed_ros(
+        &(node_options_->arguments), this->allocator_, &unparsed_ros_args_indices);
+      if (RCL_RET_OK != ret) {
+        throw_from_rcl_error(ret, "failed to get unparsed ROS arguments");
+      }
+      try {
+        std::vector<std::string> unparsed_ros_args;
+        for (int i = 0; i < unparsed_ros_args_count; ++i) {
+          unparsed_ros_args.push_back(c_argv[unparsed_ros_args_indices[i]]);
+        }
+        throw exceptions::UnknownROSArgsError(std::move(unparsed_ros_args));
+      } catch (...) {
+        this->allocator_.deallocate(unparsed_ros_args_indices, this->allocator_.state);
+        throw;
+      }
     }
   }
 

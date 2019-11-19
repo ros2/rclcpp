@@ -388,20 +388,20 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_feedback(
       pimpl_->client_handle.get(), feedback_message.get());
     pimpl_->is_feedback_ready = false;
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking feedback");
-    } else {
+    if (RCL_RET_OK == ret) {
       this->handle_feedback_message(feedback_message);
+    } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking feedback");
     }
   } else if (pimpl_->is_status_ready) {
     std::shared_ptr<void> status_message = this->create_status_message();
     rcl_ret_t ret = rcl_action_take_status(
       pimpl_->client_handle.get(), status_message.get());
     pimpl_->is_status_ready = false;
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking status");
-    } else {
+    if (RCL_RET_OK == ret) {
       this->handle_status_message(status_message);
+    } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking status");
     }
   } else if (pimpl_->is_goal_response_ready) {
     rmw_request_id_t response_header;
@@ -409,10 +409,10 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_goal_response(
       pimpl_->client_handle.get(), &response_header, goal_response.get());
     pimpl_->is_goal_response_ready = false;
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking goal response");
-    } else {
+    if (RCL_RET_OK == ret) {
       this->handle_goal_response(response_header, goal_response);
+    } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking goal response");
     }
   } else if (pimpl_->is_result_response_ready) {
     rmw_request_id_t response_header;
@@ -420,10 +420,10 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_result_response(
       pimpl_->client_handle.get(), &response_header, result_response.get());
     pimpl_->is_result_response_ready = false;
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking result response");
-    } else {
+    if (RCL_RET_OK == ret) {
       this->handle_result_response(response_header, result_response);
+    } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking result response");
     }
   } else if (pimpl_->is_cancel_response_ready) {
     rmw_request_id_t response_header;
@@ -431,10 +431,10 @@ ClientBase::execute()
     rcl_ret_t ret = rcl_action_take_cancel_response(
       pimpl_->client_handle.get(), &response_header, cancel_response.get());
     pimpl_->is_cancel_response_ready = false;
-    if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking cancel response");
-    } else {
+    if (RCL_RET_OK == ret) {
       this->handle_cancel_response(response_header, cancel_response);
+    } else if (RCL_RET_ACTION_CLIENT_TAKE_FAILED != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "error taking cancel response");
     }
   } else {
     throw std::runtime_error("Executing action client but nothing is ready");

@@ -27,8 +27,11 @@ using rclcpp::executors::MultiThreadedExecutor;
 MultiThreadedExecutor::MultiThreadedExecutor(
   const rclcpp::executor::ExecutorArgs & args,
   size_t number_of_threads,
-  bool yield_before_execute)
-: executor::Executor(args), yield_before_execute_(yield_before_execute)
+  bool yield_before_execute,
+  std::chrono::nanoseconds next_exec_timeout)
+: executor::Executor(args),
+  yield_before_execute_(yield_before_execute),
+  next_exec_timeout_(next_exec_timeout)
 {
   number_of_threads_ = number_of_threads ? number_of_threads : std::thread::hardware_concurrency();
   if (number_of_threads_ == 0) {
@@ -77,12 +80,17 @@ MultiThreadedExecutor::run(size_t)
       if (!rclcpp::ok(this->context_) || !spinning.load()) {
         return;
       }
-      if (!get_next_executable(any_exec)) {
+      if (!get_next_executable(any_exec, next_exec_timeout_)) {
         continue;
       }
       if (any_exec.timer) {
         // Guard against multiple threads getting the same timer.
         if (scheduled_timers_.count(any_exec.timer) != 0) {
+          // Make sure that any_exec's callback group is reset before
+          // the lock is released.
+          if (any_exec.callback_group) {
+            any_exec.callback_group->can_be_taken_from().store(true);
+          }
           continue;
         }
         scheduled_timers_.insert(any_exec.timer);

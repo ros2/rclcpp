@@ -99,7 +99,7 @@ public:
   /// Set the arguments, return this for parameter idiom.
   /**
    * These arguments are used to extract remappings used by the node and other
-   * settings.
+   * ROS specific settings, as well as user defined non-ROS arguments.
    *
    * This will cause the internal rcl_node_options_t struct to be invalidated.
    */

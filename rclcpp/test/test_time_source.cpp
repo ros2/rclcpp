@@ -161,7 +161,8 @@ void set_use_sim_time_parameter(
 
   using namespace std::chrono_literals;
   EXPECT_TRUE(parameters_client->wait_for_service(2s));
-  auto set_parameters_results = parameters_client->set_parameters({
+  auto set_parameters_results = parameters_client->set_parameters(
+  {
     rclcpp::Parameter("use_sim_time", value)
   });
   for (auto & result : set_parameters_results) {
@@ -239,6 +240,12 @@ TEST_F(TestTimeSource, ROS_time_valid_sim_time) {
 
   ts.attachClock(ros_clock2);
   EXPECT_TRUE(ros_clock2->ros_time_is_active());
+}
+
+TEST_F(TestTimeSource, ROS_invalid_sim_time) {
+  rclcpp::TimeSource ts;
+  ts.attachNode(node);
+  EXPECT_FALSE(node->set_parameter(rclcpp::Parameter("use_sim_time", "not boolean")).successful);
 }
 
 TEST_F(TestTimeSource, clock) {

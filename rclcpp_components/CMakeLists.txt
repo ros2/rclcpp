@@ -41,6 +41,11 @@ ament_target_dependencies(component_container
   "rclcpp"
 )
 
+set(node_main_template_install_dir "share/${PROJECT_NAME}")
+install(FILES
+  src/node_main.cpp.in
+  DESTINATION ${node_main_template_install_dir})
+
 add_executable(
   component_container_mt
   src/component_container_mt.cpp
@@ -63,8 +68,7 @@ if(BUILD_TESTING)
   add_library(test_component SHARED test/components/test_component.cpp)
   ament_target_dependencies(test_component
     "class_loader"
-    "rclcpp"
-    "rclcpp_components")
+    "rclcpp")
   #rclcpp_components_register_nodes(test_component "test_rclcpp_components::TestComponent")
   set(components "${components}test_rclcpp_components::TestComponentFoo;$<TARGET_FILE:test_component>\n")
   set(components "${components}test_rclcpp_components::TestComponentBar;$<TARGET_FILE:test_component>\n")
@@ -119,4 +123,4 @@ install(
 ament_export_include_directories(include)
 ament_export_dependencies(class_loader)
 ament_export_dependencies(rclcpp)
-ament_package(CONFIG_EXTRAS rclcpp_components-extras.cmake)
+ament_package(CONFIG_EXTRAS rclcpp_components-extras.cmake.in)

@@ -85,6 +85,26 @@ TEST_F(TestGetNodeInterfaces, node_reference) {
     >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
 }
 
+TEST_F(TestGetNodeInterfaces, rclcpp_node_pointer) {
+  rclcpp::Node * node_pointer = this->node.get();
+  auto result = rclcpp::node_interfaces::get_node_topics_interface(node_pointer);
+  static_assert(
+    std::is_same<
+      rclcpp::node_interfaces::NodeTopicsInterface *,
+      decltype(result)
+    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+}
+
+TEST_F(TestGetNodeInterfaces, node_pointer) {
+  NodeWrapper * wrapped_node_pointer = this->wrapped_node.get();
+  auto result = rclcpp::node_interfaces::get_node_topics_interface(wrapped_node_pointer);
+  static_assert(
+    std::is_same<
+      rclcpp::node_interfaces::NodeTopicsInterface *,
+      decltype(result)
+    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+}
+
 TEST_F(TestGetNodeInterfaces, interface_shared_pointer) {
   std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface> interface_shared_ptr =
     this->node->get_node_topics_interface();

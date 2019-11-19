@@ -22,6 +22,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,7 @@ namespace executor
 /// Return codes to be used with spin_until_future_complete.
 /**
  * SUCCESS: The future is complete and can be accessed with "get" without blocking.
+ *          This does not indicate that the operation succeeded; "get" may still throw an exception.
  * INTERRUPTED: The future is not complete, spinning was interrupted by Ctrl-C or another error.
  * TIMEOUT: Spinning timed out.
  */
@@ -210,8 +212,8 @@ public:
 
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**
-   * \param[in] future The future to wait on. If SUCCESS, the future is safe to access after this
-   *   function.
+   * \param[in] future The future to wait on. If this function returns SUCCESS, the future can be
+   *   accessed without blocking (though it may still throw an exception).
    * \param[in] timeout Optional timeout parameter, which gets passed to Executor::spin_node_once.
    *   `-1` is block forever, `0` is non-blocking.
    *   If the time spent inside the blocking loop exceeds this timeout, return a TIMEOUT return
@@ -305,11 +307,6 @@ protected:
 
   RCLCPP_PUBLIC
   static void
-  execute_intra_process_subscription(
-    rclcpp::SubscriptionBase::SharedPtr subscription);
-
-  RCLCPP_PUBLIC
-  static void
   execute_timer(rclcpp::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
@@ -333,10 +330,6 @@ protected:
   get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
-  void
-  get_next_timer(AnyExecutable & any_exec);
-
-  RCLCPP_PUBLIC
   bool
   get_next_ready_executable(AnyExecutable & any_executable);
 
@@ -354,6 +347,9 @@ protected:
 
   /// Wait set for managing entities that the rmw layer waits on.
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
+
+  // Mutex to protect the subsequent memory_strategy_.
+  std::mutex memory_strategy_mutex_;
 
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;

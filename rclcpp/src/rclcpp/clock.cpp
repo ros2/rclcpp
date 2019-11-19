@@ -119,8 +119,9 @@ Clock::create_jump_callback(
   }
 
   // Try to add the jump callback to the clock
-  rcl_ret_t ret = rcl_clock_add_jump_callback(&rcl_clock_, threshold,
-      Clock::on_time_jump, handler.get());
+  rcl_ret_t ret = rcl_clock_add_jump_callback(
+    &rcl_clock_, threshold, Clock::on_time_jump,
+    handler.get());
   if (RCL_RET_OK != ret) {
     exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
   }

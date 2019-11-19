@@ -3,6 +3,29 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.8.2 (2019-11-18)
+------------------
+* Increased a timeout for the ``test_client`` tests. (`#917 <https://github.com/ros2/rclcpp/issues/917>`_)
+* Contributors: Michel Hidalgo
+
+0.8.1 (2019-10-23)
+------------------
+* Template node type for rclcpp action server and clients (`#892 <https://github.com/ros2/rclcpp/issues/892>`_)
+* Trait tests for generated actions (`#853 <https://github.com/ros2/rclcpp/issues/853>`_)
+* Do not throw exception in action client if take fails (`#888 <https://github.com/ros2/rclcpp/issues/888>`_)
+* Contributors: Jacob Perron, Michael Carroll, Steven Macenski
+
+0.8.0 (2019-09-26)
+------------------
+* Fix UnknownGoalHandle error string. (`#856 <https://github.com/ros2/rclcpp/issues/856>`_)
+* Guard against making multiple result requests for a goal handle (`#808 <https://github.com/ros2/rclcpp/issues/808>`_)
+* Add line break after first open paren in multiline function call (`#785 <https://github.com/ros2/rclcpp/issues/785>`_)
+* Fix typo in test fixture tear down method name (`#787 <https://github.com/ros2/rclcpp/issues/787>`_)
+* Contributors: Chris Lalancette, Dan Rose, Jacob Perron
+
+0.7.5 (2019-05-30)
+------------------
+
 0.7.4 (2019-05-29)
 ------------------
 * Guard against calling null goal response callback (`#738 <https://github.com/ros2/rclcpp/issues/738>`_)
