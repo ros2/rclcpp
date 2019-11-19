@@ -162,9 +162,6 @@ Context::shutdown(const std::string & reason)
       ++it;
     }
   }
-  // clear sub contexts
-  std::lock_guard<std::recursive_mutex> lock(sub_contexts_mutex_);
-  sub_contexts_.clear();
   return true;
 }
 
