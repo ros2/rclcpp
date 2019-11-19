@@ -3,6 +3,9 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+
 0.8.1 (2019-10-23)
 ------------------
 * New Intra-Process Communication (`#778 <https://github.com/ros2/rclcpp/issues/778>`_)

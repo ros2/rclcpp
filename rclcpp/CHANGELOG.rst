@@ -2,6 +2,14 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated tracing logic to match changes in rclcpp's intra-process system (`#918 <https://github.com/ros2/rclcpp/issues/918>`_)
+* Fixed a bug that prevented the ``shutdown_on_sigint`` option to not work correctly (`#850 <https://github.com/ros2/rclcpp/issues/850>`_)
+* Added support for STREAM logging macros (`#926 <https://github.com/ros2/rclcpp/issues/926>`_)
+* Relaxed multithreaded test constraint (`#907 <https://github.com/ros2/rclcpp/issues/907>`_)
+* Contributors: Anas Abou Allaban, Christophe Bedard, Dirk Thomas, alexfneves
+
 0.8.1 (2019-10-23)
 ------------------
 * De-flake tests for rmw_connext (`#899 <https://github.com/ros2/rclcpp/issues/899>`_)
