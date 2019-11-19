@@ -165,11 +165,11 @@ ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
   if (!node_ptr) {
     throw rclcpp::exceptions::InvalidNodeError();
   }
-  auto event = node_ptr->get_graph_event();
   // check to see if the server is ready immediately
   if (this->action_server_is_ready()) {
     return true;
   }
+  auto event = node_ptr->get_graph_event();
   if (timeout == std::chrono::nanoseconds(0)) {
     // check was non-blocking, return immediately
     return false;
