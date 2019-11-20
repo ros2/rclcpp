@@ -2,6 +2,9 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.3 (2019-11-19)
+------------------
+
 0.8.2 (2019-11-18)
 ------------------
 * Updated tracing logic to match changes in rclcpp's intra-process system (`#918 <https://github.com/ros2/rclcpp/issues/918>`_)
