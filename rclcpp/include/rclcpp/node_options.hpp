@@ -159,9 +159,9 @@ public:
 
   /// Set the enable_rosout flag, return this for parameter idiom.
   /**
-   * If false this will cause the node not to use rosout logging
+   * If false this will cause the node not to use rosout logging.
    *
-   * Defaults to true for now, as there are still some cases where it is not
+   * Defaults to true for now, as there are still some cases where it is
    * desirable.
    */
   RCLCPP_PUBLIC
