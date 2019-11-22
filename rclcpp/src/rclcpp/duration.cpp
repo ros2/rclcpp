@@ -126,12 +126,12 @@ bounds_check_duration_sum(int64_t lhsns, int64_t rhsns, uint64_t max)
   auto abs_lhs = static_cast<uint64_t>(std::abs(lhsns));
   auto abs_rhs = static_cast<uint64_t>(std::abs(rhsns));
 
-  if ((lhsns > 0) && (rhsns > 0)) {
-    if ((abs_lhs + abs_rhs) > max) {
+  if (lhsns > 0 && rhsns > 0) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::overflow_error("addition leads to int64_t overflow");
     }
-  } else if ((lhsns < 0) && (rhsns < 0)) {
-    if ((abs_lhs + abs_rhs) > max) {
+  } else if (lhsns < 0 && rhsns < 0) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::underflow_error("addition leads to int64_t underflow");
     }
   }
@@ -154,12 +154,12 @@ bounds_check_duration_difference(int64_t lhsns, int64_t rhsns, uint64_t max)
   auto abs_lhs = static_cast<uint64_t>(std::abs(lhsns));
   auto abs_rhs = static_cast<uint64_t>(std::abs(rhsns));
 
-  if ((lhsns > 0) && (rhsns < 0)) {
-    if ((abs_lhs + abs_rhs) > max) {
+  if (lhsns > 0 && rhsns < 0) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::overflow_error("duration subtraction leads to int64_t overflow");
     }
-  } else if ((lhsns < 0) && (rhsns > 0)) {
-    if ((abs_lhs + abs_rhs) > max) {
+  } else if (lhsns < 0 && rhsns > 0) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::underflow_error("duration subtraction leads to int64_t underflow");
     }
   }
@@ -183,10 +183,10 @@ bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
   auto abs_dns = static_cast<uint64_t>(std::abs(dns));
   auto abs_scale = std::abs(scale);
   long double max_ld = static_cast<long double>(max);
-  if ((abs_scale > 1.0) &&
-    (abs_dns > static_cast<uint64_t>(max_ld / static_cast<long double>(abs_scale))))
+  if (abs_scale > 1.0 &&
+    abs_dns > static_cast<uint64_t>(max_ld / static_cast<long double>(abs_scale)))
   {
-    if (((dns > 0) && (scale > 0)) || ((dns < 0) && (scale < 0))) {
+    if ((dns > 0 && scale > 0) || (dns < 0 && scale < 0)) {
       throw std::overflow_error("duration scaling leads to int64_t overflow");
     } else {
       throw std::underflow_error("duration scaling leads to int64_t underflow");

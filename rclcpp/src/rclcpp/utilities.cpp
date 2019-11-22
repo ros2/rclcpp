@@ -103,9 +103,9 @@ remove_ros_arguments(int argc, char const * const argv[])
     throw exceptions::RCLError(base_exc, "");
   }
 
-  std::vector<std::string> return_arguments(static_cast<std::size_t>(nonros_argc));
+  std::vector<std::string> return_arguments(static_cast<size_t>(nonros_argc));
 
-  for (std::size_t ii = 0; ii < static_cast<std::size_t>(nonros_argc); ++ii) {
+  for (size_t ii = 0; ii < static_cast<size_t>(nonros_argc); ++ii) {
     return_arguments[ii] = std::string(nonros_argv[ii]);
   }
 

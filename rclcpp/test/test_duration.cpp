@@ -47,15 +47,15 @@ TEST(TestDuration, operators) {
   EXPECT_FALSE(young == old);
 
   rclcpp::Duration add = old + young;
-  EXPECT_EQ(add.nanoseconds(), (old.nanoseconds() + young.nanoseconds()));
+  EXPECT_EQ(add.nanoseconds(), old.nanoseconds() + young.nanoseconds());
   EXPECT_EQ(add, old + young);
 
   rclcpp::Duration sub = young - old;
-  EXPECT_EQ(sub.nanoseconds(), (young.nanoseconds() - old.nanoseconds()));
+  EXPECT_EQ(sub.nanoseconds(), young.nanoseconds() - old.nanoseconds());
   EXPECT_EQ(sub, young - old);
 
   rclcpp::Duration scale = old * 3;
-  EXPECT_EQ(scale.nanoseconds(), (old.nanoseconds() * 3));
+  EXPECT_EQ(scale.nanoseconds(), old.nanoseconds() * 3);
 
   rclcpp::Duration time = rclcpp::Duration(0, 0);
   rclcpp::Duration copy_constructor_duration(time);
