@@ -182,9 +182,8 @@ bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
 {
   auto abs_dns = static_cast<uint64_t>(std::abs(dns));
   auto abs_scale = std::abs(scale);
-  long double max_ld = static_cast<long double>(max);
   if (abs_scale > 1.0 &&
-    abs_dns > static_cast<uint64_t>(max_ld / static_cast<long double>(abs_scale)))
+    abs_dns > static_cast<uint64_t>(static_cast<long double>(max) / static_cast<long double>(abs_scale)))
   {
     if ((dns > 0 && scale > 0) || (dns < 0 && scale < 0)) {
       throw std::overflow_error("duration scaling leads to int64_t overflow");
