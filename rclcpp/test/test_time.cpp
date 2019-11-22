@@ -123,7 +123,7 @@ TEST(TestTime, operators) {
   EXPECT_TRUE(young != old);
 
   rclcpp::Duration sub = young - old;
-  EXPECT_EQ(sub.nanoseconds(), (rcl_duration_value_t)(young.nanoseconds() - old.nanoseconds()));
+  EXPECT_EQ(sub.nanoseconds(), (young.nanoseconds() - old.nanoseconds()));
   EXPECT_EQ(sub, young - old);
 
   rclcpp::Time young_changed(young);
