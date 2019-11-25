@@ -287,10 +287,6 @@ static std::vector<TestParameters> invalid_qos_profiles()
     TestParameters(
       rclcpp::QoS(rclcpp::KeepAll()),
       "keep_all_qos"));
-  parameters.push_back(
-    TestParameters(
-      rclcpp::QoS(rclcpp::KeepLast(0)),
-      "keep_last_zero_depth_qos"));
 
   return parameters;
 }
