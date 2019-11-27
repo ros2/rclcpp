@@ -305,21 +305,18 @@ public:
     std::type_index type_i(typeid(SubContext));
     std::shared_ptr<SubContext> sub_context;
     auto it = sub_contexts_.find(type_i);
-    if (it != sub_contexts_.end()) {
+    if (it == sub_contexts_.end()) {
+      // It doesn't exist yet, make it
+      sub_context = std::shared_ptr<SubContext>(
+        new SubContext(std::forward<Args>(args) ...),
+        [](SubContext * sub_context_ptr) {
+          delete sub_context_ptr;
+        });
+      sub_contexts_[type_i] = sub_context;
+    } else {
       // It exists, get it out and cast it.
-      auto sub_context_ptr = it->second.lock();
-      if (sub_context_ptr) {
-        return std::static_pointer_cast<SubContext>(sub_context_ptr);
-      }
+      sub_context = std::static_pointer_cast<SubContext>(it->second);
     }
-
-    // It doesn't exist yet, make it
-    sub_context = std::shared_ptr<SubContext>(
-      new SubContext(std::forward<Args>(args) ...),
-      [](SubContext * sub_context_ptr) {
-        delete sub_context_ptr;
-      });
-    sub_contexts_[type_i] = sub_context;
     return sub_context;
   }
 
@@ -341,7 +338,7 @@ private:
   rclcpp::InitOptions init_options_;
   std::string shutdown_reason_;
 
-  std::unordered_map<std::type_index, std::weak_ptr<void>> sub_contexts_;
+  std::unordered_map<std::type_index, std::shared_ptr<void>> sub_contexts_;
   // This mutex is recursive so that the constructor of a sub context may
   // attempt to acquire another sub context.
   std::recursive_mutex sub_contexts_mutex_;
