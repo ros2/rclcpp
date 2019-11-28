@@ -71,11 +71,6 @@ GraphListener::start_if_not_started()
     throw GraphListenerShutdownError();
   }
   if (!is_started_) {
-    auto parent_context_ptr = parent_context_.lock();
-    if (!parent_context_ptr) {
-      throw std::runtime_error(
-              "graph listener start called after destruction of parent context");
-    }
     // Initialize the wait set before starting.
     rcl_ret_t ret = rcl_wait_set_init(
       &wait_set_,
@@ -85,7 +80,7 @@ GraphListener::start_if_not_started()
       0,  // number_of_clients
       0,  // number_of_services
       0,  // number_of_events
-      parent_context_ptr->get_rcl_context().get(),
+      interrupt_guard_condition_context_.get(),
       rcl_get_default_allocator());
     if (RCL_RET_OK != ret) {
       throw_from_rcl_error(ret, "failed to initialize wait set");
