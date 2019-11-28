@@ -70,6 +70,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->arguments_ = other.arguments_;
     this->parameter_overrides_ = other.parameter_overrides_;
     this->use_global_arguments_ = other.use_global_arguments_;
+    this->enable_rosout_ = other.enable_rosout_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->allocator_ = other.allocator_;
@@ -208,6 +209,7 @@ NodeOptions::enable_rosout() const
 NodeOptions &
 NodeOptions::enable_rosout(bool enable_rosout)
 {
+  this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->enable_rosout_ = enable_rosout;
   return *this;
 }
