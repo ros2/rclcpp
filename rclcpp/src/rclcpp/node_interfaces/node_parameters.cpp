@@ -402,6 +402,8 @@ NodeParameters::declare_parameter(
 
   // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
   if (nullptr != events_publisher_) {
+    parameter_event.node = combined_name_;
+    parameter_event.stamp = node_clock_->get_clock()->now();
     events_publisher_->publish(parameter_event);
   }
 
