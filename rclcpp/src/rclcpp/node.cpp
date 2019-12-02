@@ -391,7 +391,7 @@ Node::get_clock()
 }
 
 rclcpp::Time
-Node::now()
+Node::now() const
 {
   return node_clock_->get_clock()->now();
 }
