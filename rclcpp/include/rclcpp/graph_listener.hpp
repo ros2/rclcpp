@@ -165,7 +165,7 @@ private:
   void
   __shutdown(bool);
 
-  rclcpp::Context::SharedPtr parent_context_;
+  rclcpp::Context::WeakPtr parent_context_;
 
   std::thread listener_thread_;
   bool is_started_;
