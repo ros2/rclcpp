@@ -98,3 +98,35 @@ TEST(TestNodeOptions, bad_ros_args) {
     options.get_rcl_node_options(),
     rclcpp::exceptions::UnknownROSArgsError);
 }
+
+TEST(TestNodeOptions, enable_rosout) {
+  {
+    auto options = rclcpp::NodeOptions();
+    EXPECT_TRUE(options.enable_rosout());
+    EXPECT_TRUE(options.get_rcl_node_options()->enable_rosout);
+  }
+
+  {
+    auto options = rclcpp::NodeOptions().enable_rosout(false);
+    EXPECT_FALSE(options.enable_rosout());
+    EXPECT_FALSE(options.get_rcl_node_options()->enable_rosout);
+  }
+
+  {
+    auto options = rclcpp::NodeOptions().enable_rosout(true);
+    EXPECT_TRUE(options.enable_rosout());
+    EXPECT_TRUE(options.get_rcl_node_options()->enable_rosout);
+  }
+
+  {
+    auto options = rclcpp::NodeOptions();
+    EXPECT_TRUE(options.enable_rosout());
+    EXPECT_TRUE(options.get_rcl_node_options()->enable_rosout);
+    options.enable_rosout(false);
+    EXPECT_FALSE(options.enable_rosout());
+    EXPECT_FALSE(options.get_rcl_node_options()->enable_rosout);
+    options.enable_rosout(true);
+    EXPECT_TRUE(options.enable_rosout());
+    EXPECT_TRUE(options.get_rcl_node_options()->enable_rosout);
+  }
+}
