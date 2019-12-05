@@ -25,5 +25,7 @@ macro(_rclcpp_components_register_package_hook)
   endif()
 endmacro()
 
-include("${rclcpp_components_DIR}/rclcpp_components_register_nodes.cmake")
+set(@PROJECT_NAME@_NODE_TEMPLATE "@CMAKE_INSTALL_PREFIX@/@node_main_template_install_dir@/node_main.cpp.in")
 
+include("${rclcpp_components_DIR}/rclcpp_components_register_nodes.cmake")
+include("${rclcpp_components_DIR}/rclcpp_components_register_node.cmake")
