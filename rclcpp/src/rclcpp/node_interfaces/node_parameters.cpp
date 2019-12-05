@@ -69,7 +69,7 @@ NodeParameters::NodeParameters(
   if (start_parameter_event_publisher) {
     events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
       node_topics,
-      "parameter_events",
+      "/parameter_events",
       parameter_event_qos,
       publisher_options);
   }
