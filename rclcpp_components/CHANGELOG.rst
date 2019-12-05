@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.12 (2019-12-05)
+-------------------
+* Backport rclcpp_components_register_node (`#935 <https://github.com/ros2/rclcpp/issues/935>`_)
+* Contributors: Shane Loretz
+
 0.7.11 (2019-10-11)
 -------------------
 

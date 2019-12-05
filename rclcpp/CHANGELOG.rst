@@ -2,6 +2,9 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.12 (2019-12-05)
+-------------------
+
 0.7.11 (2019-10-11)
 -------------------
 * Fix `get_node_*_interface` functions taking a pointer (`#870 <https://github.com/ros2/rclcpp/pull/870>`_).

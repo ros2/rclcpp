@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.7.12 (2019-12-05)
+-------------------
+* Fixed memory leak in action clients (`#934 <https://github.com/ros2/rclcpp/issues/934>`_)
+* Do not throw exception in action client if take fails (`#891 <https://github.com/ros2/rclcpp/issues/891>`_)
+* Contributors: Ivan Santiago Paunovic, Jacob Perron
+
 0.7.11 (2019-10-11)
 -------------------
 
