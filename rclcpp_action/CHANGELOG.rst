@@ -2,6 +2,11 @@
 Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.5 (2019-12-05)
+------------------
+* Do not throw exception in action client if take fails (`#888 <https://github.com/ros2/rclcpp/issues/888>`_) (`#905 <https://github.com/ros2/rclcpp/issues/905>`_)
+* Contributors: Jacob Perron
+
 0.6.4 (2019-04-05)
 ------------------
 * Wait for action server before sending goal (`#686 <https://github.com/ros2/rclcpp/issues/686>`_)
