@@ -73,7 +73,7 @@ TEST(TestIntraProcessBuffer, shared_buffer_add) {
 
   intra_process_buffer.add_shared(original_shared_msg);
 
-  EXPECT_EQ(2, original_shared_msg.use_count());
+  EXPECT_EQ(2L, original_shared_msg.use_count());
 
   SharedMessageT popped_shared_msg;
   popped_shared_msg = intra_process_buffer.consume_shared();
@@ -92,7 +92,7 @@ TEST(TestIntraProcessBuffer, shared_buffer_add) {
   popped_shared_msg = intra_process_buffer.consume_shared();
   popped_message_pointer = reinterpret_cast<std::uintptr_t>(popped_shared_msg.get());
 
-  EXPECT_EQ(1, popped_shared_msg.use_count());
+  EXPECT_EQ(1L, popped_shared_msg.use_count());
   EXPECT_EQ(original_value, *popped_shared_msg);
   EXPECT_EQ(original_message_pointer, popped_message_pointer);
 }
@@ -168,7 +168,7 @@ TEST(TestIntraProcessBuffer, shared_buffer_consume) {
 
   intra_process_buffer.add_shared(original_shared_msg);
 
-  EXPECT_EQ(2, original_shared_msg.use_count());
+  EXPECT_EQ(2L, original_shared_msg.use_count());
 
   SharedMessageT popped_shared_msg;
   popped_shared_msg = intra_process_buffer.consume_shared();
@@ -187,7 +187,7 @@ TEST(TestIntraProcessBuffer, shared_buffer_consume) {
   popped_unique_msg = intra_process_buffer.consume_unique();
   popped_message_pointer = reinterpret_cast<std::uintptr_t>(popped_unique_msg.get());
 
-  EXPECT_EQ(1, original_shared_msg.use_count());
+  EXPECT_EQ(1L, original_shared_msg.use_count());
   EXPECT_EQ(*original_shared_msg, *popped_unique_msg);
   EXPECT_NE(original_message_pointer, popped_message_pointer);
 }
