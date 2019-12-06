@@ -121,7 +121,7 @@ TEST(TestIntraProcessBuffer, unique_buffer_add) {
 
   intra_process_buffer.add_shared(original_shared_msg);
 
-  EXPECT_EQ(1, original_shared_msg.use_count());
+  EXPECT_EQ(1L, original_shared_msg.use_count());
 
   UniqueMessageT popped_unique_msg;
   popped_unique_msg = intra_process_buffer.consume_unique();
