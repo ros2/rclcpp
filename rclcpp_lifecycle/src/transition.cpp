@@ -213,7 +213,7 @@ Transition::id() const
   if (!transition_handle_) {
     throw std::runtime_error("internal transition_handle is null");
   }
-  return transition_handle_->id;
+  return static_cast<uint8_t>(transition_handle_->id);
 }
 
 std::string

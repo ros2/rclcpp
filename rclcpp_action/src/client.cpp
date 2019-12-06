@@ -41,7 +41,7 @@ public:
     const rcl_action_client_options_t & client_options)
   : node_graph_(node_graph),
     node_handle(node_base->get_shared_rcl_node_handle()),
-    logger(node_logging->get_logger().get_child("rclcpp_acton")),
+    logger(node_logging->get_logger().get_child("rclcpp_action")),
     random_bytes_generator(std::random_device{} ())
   {
     std::weak_ptr<rcl_node_t> weak_node_handle(node_handle);
@@ -165,11 +165,11 @@ ClientBase::wait_for_action_server_nanoseconds(std::chrono::nanoseconds timeout)
   if (!node_ptr) {
     throw rclcpp::exceptions::InvalidNodeError();
   }
-  auto event = node_ptr->get_graph_event();
   // check to see if the server is ready immediately
   if (this->action_server_is_ready()) {
     return true;
   }
+  auto event = node_ptr->get_graph_event();
   if (timeout == std::chrono::nanoseconds(0)) {
     // check was non-blocking, return immediately
     return false;

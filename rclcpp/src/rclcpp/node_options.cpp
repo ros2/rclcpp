@@ -70,6 +70,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->arguments_ = other.arguments_;
     this->parameter_overrides_ = other.parameter_overrides_;
     this->use_global_arguments_ = other.use_global_arguments_;
+    this->enable_rosout_ = other.enable_rosout_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->allocator_ = other.allocator_;
@@ -90,6 +91,7 @@ NodeOptions::get_rcl_node_options() const
     node_options_->allocator = this->allocator_;
     node_options_->use_global_arguments = this->use_global_arguments_;
     node_options_->domain_id = this->get_domain_id_from_env();
+    node_options_->enable_rosout = this->enable_rosout_;
 
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
@@ -195,6 +197,20 @@ NodeOptions::use_global_arguments(bool use_global_arguments)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->use_global_arguments_ = use_global_arguments;
+  return *this;
+}
+
+bool
+NodeOptions::enable_rosout() const
+{
+  return this->enable_rosout_;
+}
+
+NodeOptions &
+NodeOptions::enable_rosout(bool enable_rosout)
+{
+  this->node_options_.reset();  // reset node options to make it be recreated on next access.
+  this->enable_rosout_ = enable_rosout;
   return *this;
 }
 

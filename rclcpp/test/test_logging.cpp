@@ -113,6 +113,20 @@ TEST_F(TestLoggingMacros, test_logging_string) {
   EXPECT_EQ("message seven", g_last_log_event.message);
 }
 
+TEST_F(TestLoggingMacros, test_logging_stream) {
+  for (std::string i : {"one", "two", "three"}) {
+    RCLCPP_DEBUG_STREAM(g_logger, "message " << i);
+  }
+  EXPECT_EQ(3u, g_log_calls);
+  EXPECT_EQ("message three", g_last_log_event.message);
+
+  RCLCPP_DEBUG_STREAM(g_logger, 4 << "th message");
+  EXPECT_EQ("4th message", g_last_log_event.message);
+
+  RCLCPP_DEBUG_STREAM(g_logger, "message " << 5);
+  EXPECT_EQ("message 5", g_last_log_event.message);
+}
+
 TEST_F(TestLoggingMacros, test_logging_once) {
   for (int i : {1, 2, 3}) {
     RCLCPP_INFO_ONCE(g_logger, "message %d", i);

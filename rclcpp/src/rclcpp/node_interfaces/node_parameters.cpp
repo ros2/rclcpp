@@ -69,7 +69,7 @@ NodeParameters::NodeParameters(
   if (start_parameter_event_publisher) {
     events_publisher_ = rclcpp::create_publisher<MessageT, AllocatorT, PublisherT>(
       node_topics,
-      "parameter_events",
+      "/parameter_events",
       parameter_event_qos,
       publisher_options);
   }
@@ -402,6 +402,8 @@ NodeParameters::declare_parameter(
 
   // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
   if (nullptr != events_publisher_) {
+    parameter_event.node = combined_name_;
+    parameter_event.stamp = node_clock_->get_clock()->now();
     events_publisher_->publish(parameter_event);
   }
 
