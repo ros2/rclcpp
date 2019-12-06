@@ -316,8 +316,14 @@ LifecycleNode::get_clock()
   return node_clock_->get_clock();
 }
 
+rclcpp::Clock::ConstSharedPtr
+LifecycleNode::get_clock() const
+{
+  return node_clock_->get_clock();
+}
+
 rclcpp::Time
-LifecycleNode::now()
+LifecycleNode::now() const
 {
   return node_clock_->get_clock()->now();
 }
