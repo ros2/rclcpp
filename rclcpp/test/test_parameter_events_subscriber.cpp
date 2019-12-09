@@ -30,11 +30,6 @@ public:
   {
     event_callback(event);
   }
-
-  int get_number_of_subscriptions()
-  {
-    return event_subscriptions_.size();
-  }
 };
 
 class TestNode : public ::testing::Test
@@ -209,8 +204,7 @@ TEST_F(TestNode, EventCallback)
       }
     };
 
-  ParamSubscriber->set_event_callback(cb, {"ns", node->get_namespace()});
-  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 2);
+  ParamSubscriber->set_event_callback(cb);
 
   ParamSubscriber->test_event(diff_ns_bool);
   EXPECT_EQ(received, false);
@@ -223,7 +217,6 @@ TEST_F(TestNode, EventCallback)
   EXPECT_EQ(bool_param, false);
 
   ParamSubscriber->remove_event_callback();
-  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 0);
 }
 
 TEST_F(TestNode, MultipleParameterCallbacks)
@@ -233,8 +226,8 @@ TEST_F(TestNode, MultipleParameterCallbacks)
 
   auto cb1 = [&received_1](const rclcpp::Parameter &) {received_1 = true;};
   auto cb2 = [&received_2](const rclcpp::Parameter &) {received_2 = true;};
-  auto cb3 = [](const rclcpp::Parameter &) {/*do nothing*/};
-  auto event_cb = [](const rcl_interfaces::msg::ParameterEvent::SharedPtr &) {/*do nothing*/};
+  auto cb3 = [](const rclcpp::Parameter &) { /*do nothing*/};
+  auto event_cb = [](const rcl_interfaces::msg::ParameterEvent::SharedPtr &) { /*do nothing*/};
 
   auto h1 = ParamSubscriber->add_parameter_callback("my_int", cb1);
   auto h2 = ParamSubscriber->add_parameter_callback("my_int", cb2);
@@ -258,14 +251,11 @@ TEST_F(TestNode, MultipleParameterCallbacks)
   ParamSubscriber->remove_parameter_callback("my_int");
   ParamSubscriber->test_event(same_node_int);
   EXPECT_EQ(received_2, false);
-  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 1); // still has other parameter
 
   // Test subscription removal when all parameter callbacks removed (with event callback)
   ParamSubscriber->set_event_callback(event_cb);
   ParamSubscriber->remove_parameter_callback("my_double");
-  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 1); // has event callback
 
   // Test subscription removal when all parameter and event callbacks removed
   ParamSubscriber->remove_event_callback();
-  EXPECT_EQ(ParamSubscriber->get_number_of_subscriptions(), 0); // no more callbacks
 }

@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "rclcpp/parameter_events_subscriber.hpp"
+#include "rcpputils/join.hpp"
 
 namespace rclcpp
 {
@@ -33,66 +34,17 @@ ParameterEventsSubscriber::ParameterEventsSubscriber(
   node_topics_(node_topics),
   node_logging_(node_logging),
   qos_(qos)
-{}
-
-void
-ParameterEventsSubscriber::add_namespace_event_subscriber(const std::string & node_namespace)
 {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  if (std::find(subscribed_namespaces_.begin(), subscribed_namespaces_.end(),
-    node_namespace) == subscribed_namespaces_.end())
-  {
-    subscribed_namespaces_.push_back(node_namespace);
-    auto topic = join_path(node_namespace, "parameter_events");
-    RCLCPP_DEBUG(node_logging_->get_logger(), "Subscribing to topic: %s", topic.c_str());
-
-    auto event_sub = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
-      node_topics_, topic, qos_,
-      std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
-
-    event_subscriptions_.push_back(event_sub);
-  }
-}
-
-void
-ParameterEventsSubscriber::remove_namespace_event_subscriber(const std::string & node_namespace)
-{
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-  auto check_sub_cb = [this, &node_namespace](
-    rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr sub) {
-      return sub->get_topic_name() == join_path(node_namespace, "parameter_events");
-    };
-
-  auto it = std::find_if(
-    event_subscriptions_.begin(),
-    event_subscriptions_.end(),
-    check_sub_cb);
-
-  if (it != event_subscriptions_.end()) {
-    event_subscriptions_.erase(it);
-    subscribed_namespaces_.erase(
-      std::remove(subscribed_namespaces_.begin(), subscribed_namespaces_.end(), node_namespace));
-  }
+  event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
+    node_topics_, "/parameter_events", qos_,
+    std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
 }
 
 void
 ParameterEventsSubscriber::set_event_callback(
-  std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback,
-  const std::vector<std::string> & node_namespaces)
+  std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  remove_event_callback();
-  std::string full_namespace;
-  for (auto & ns : node_namespaces) {
-    if (ns == "") {
-      full_namespace = node_base_->get_namespace();
-    } else {
-      full_namespace = resolve_path(ns);
-    }
-    add_namespace_event_subscriber(full_namespace);
-    event_namespaces_.push_back(full_namespace);
-  }
-
   event_callback_ = callback;
 }
 
@@ -100,15 +52,6 @@ void
 ParameterEventsSubscriber::remove_event_callback()
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  // Clear current vector of event namespaces and remove subscriptions
-  auto temp_namespaces = event_namespaces_;
-  event_namespaces_.clear();
-  for (auto temp_ns : temp_namespaces) {
-    if (should_unsubscribe_to_namespace(temp_ns)) {
-      remove_namespace_event_subscriber(temp_ns);
-    }
-  }
-
   event_callback_ = nullptr;
 }
 
@@ -120,7 +63,6 @@ ParameterEventsSubscriber::add_parameter_callback(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto full_node_name = resolve_path(node_name);
-  add_namespace_event_subscriber(split_path(full_node_name).first);
 
   auto handle = std::make_shared<ParameterEventsCallbackHandle>();
   handle->callback = callback;
@@ -162,31 +104,10 @@ ParameterEventsSubscriber::remove_parameter_callback(
     container.erase(it);
     if (container.empty()) {
       parameter_callbacks_.erase({handle->parameter_name, handle->node_name});
-      if (should_unsubscribe_to_namespace(split_path(handle->node_name).first)) {
-        remove_namespace_event_subscriber(split_path(handle->node_name).first);
-      }
     }
   } else {
     throw std::runtime_error("Callback doesn't exist");
   }
-}
-
-bool
-ParameterEventsSubscriber::should_unsubscribe_to_namespace(const std::string & node_namespace)
-{
-  auto it1 = std::find(event_namespaces_.begin(), event_namespaces_.end(), node_namespace);
-  if (it1 != event_namespaces_.end()) {
-    return false;
-  }
-
-  auto it2 = parameter_callbacks_.begin();
-  while (it2 != parameter_callbacks_.end()) {
-    if (split_path(it2->first.second).first == node_namespace) {
-      return false;
-    }
-    ++it2;
-  }
-  return true;
 }
 
 void
@@ -197,10 +118,6 @@ ParameterEventsSubscriber::remove_parameter_callback(
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto full_node_name = resolve_path(node_name);
   parameter_callbacks_.erase({parameter_name, full_node_name});
-  if (should_unsubscribe_to_namespace(split_path(full_node_name).first)) {
-    RCLCPP_INFO(node_logging_->get_logger(), "Removing namespace event subscription");
-    remove_namespace_event_subscriber(split_path(full_node_name).first);
-  }
 }
 
 bool
@@ -273,36 +190,12 @@ ParameterEventsSubscriber::resolve_path(const std::string & path)
   } else {
     full_path = path;
     if (*full_path.begin() != '/') {
-      full_path = join_path(node_base_->get_namespace(), full_path);
+      const std::vector<std::string> paths{node_base_->get_namespace(), full_path};
+      full_path = rcpputils::join(paths, "/");
     }
   }
 
   return full_path;
-}
-
-std::pair<std::string, std::string>
-ParameterEventsSubscriber::split_path(const std::string & str)
-{
-  std::string path;
-  std::size_t found = str.find_last_of("/\\");
-  if (found == 0) {
-    path = str.substr(0, found + 1);
-  } else {
-    path = str.substr(0, found);
-  }
-  std::string name = str.substr(found + 1);
-  return {path, name};
-}
-
-std::string
-ParameterEventsSubscriber::join_path(std::string path, std::string name)
-{
-  std::string joined_path = path;
-  if (*joined_path.rbegin() != '/' && *name.begin() != '/') {
-    joined_path = joined_path + "/";
-  }
-
-  return joined_path + name;
 }
 
 }  // namespace rclcpp

@@ -15,6 +15,7 @@
 #ifndef RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 #define RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 
+#include <list>
 #include <string>
 #include <utility>
 #include <unordered_map>
@@ -30,7 +31,7 @@ struct ParameterEventsCallbackHandle
 {
   RCLCPP_SMART_PTR_DEFINITIONS(ParameterEventsCallbackHandle)
 
-  using ParameterEventsCallbackType = std::function<void(const rclcpp::Parameter &)>;
+  using ParameterEventsCallbackType = std::function<void (const rclcpp::Parameter &)>;
 
   std::string parameter_name;
   std::string node_name;
@@ -61,10 +62,7 @@ public:
 
   /// Set a custom callback for parameter events.
   /**
-   * If no namespace is provided, a subscription will be created for the current namespace.
    * Repeated calls to this function will overwrite the callback.
-   * If more than one namespace already has a subscription to its parameter events topic, then the
-   * provided callback will be applied to all of them.
    *
    * \param[in] callback Function callback to be evaluated on event.
    * \param[in] node_namespaces Vector of namespaces for which a subscription will be created.
@@ -72,14 +70,11 @@ public:
   RCLCPP_PUBLIC
   void
   set_event_callback(
-    std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback,
-    const std::vector<std::string> & node_namespaces = {""});
+    std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback);
 
   /// Remove parameter event callback.
   /**
-   * Calling this function will set the event callback to nullptr. This function will also remove
-   * event subscriptions on the namespaces for which there are no other callbacks (from parameter
-   * callbacks) active on that namespace.
+   * Calling this function will set the event callback to nullptr.
    */
   RCLCPP_PUBLIC
   void
@@ -133,7 +128,7 @@ public:
   /// Get a rclcpp::Parameter from parameter event, return true if parameter name & node in event.
   /**
    * If a node_name is not provided, defaults to the current node.
-   * 
+   *
    * \param[in] event Event msg to be inspected.
    * \param[out] parameter Reference to rclcpp::Parameter to be assigned.
    * \param[in] parameter_name Name of parameter.
@@ -151,11 +146,11 @@ public:
   /// Get a rclcpp::Parameter from parameter event
   /**
    * If a node_name is not provided, defaults to the current node.
-   * 
+   *
    * The user is responsible to check if the returned parameter has been properly assigned.
-   * By default, if the requested parameter is not found in the event, the returned parameter 
+   * By default, if the requested parameter is not found in the event, the returned parameter
    * has parameter value of type rclcpp::PARAMETER_NOT_SET.
-   * 
+   *
    * \param[in] event Event msg to be inspected.
    * \param[in] parameter_name Name of parameter.
    * \param[in] node_name Name of node which hosts the parameter.
@@ -171,26 +166,12 @@ public:
   using CallbacksContainerType = std::list<ParameterEventsCallbackHandle::WeakPtr>;
 
 protected:
-  /// Add a subscription (if unique) to a namespace parameter events topic.
-  void
-  add_namespace_event_subscriber(const std::string & node_namespace);
-
-  /// Remove a subscription to a namespace parameter events topic.
-  void
-  remove_namespace_event_subscriber(const std::string & node_namespace);
-
-  /// Return true if any callbacks still exist on a namespace event topic, otherwise return false
-  bool
-  should_unsubscribe_to_namespace(const std::string & node_namespace);
-
   /// Callback for parameter events subscriptions.
   void
   event_callback(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
 
   // Utility functions for string and path name operations.
   std::string resolve_path(const std::string & path);
-  std::pair<std::string, std::string> split_path(const std::string & str);
-  std::string join_path(std::string path, std::string name);
 
   // Node Interfaces used for logging and creating subscribers.
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
@@ -228,14 +209,7 @@ protected:
     StringPairHash
   > parameter_callbacks_;
 
-  // Vector of unique namespaces added.
-  std::vector<std::string> subscribed_namespaces_;
-  // Vector of event callback namespaces
-  std::vector<std::string> event_namespaces_;
-
-  // Vector of event subscriptions for each namespace.
-  std::vector<rclcpp::Subscription
-    <rcl_interfaces::msg::ParameterEvent>::SharedPtr> event_subscriptions_;
+  rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr event_subscription_;
 
   std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> event_callback_;
 
