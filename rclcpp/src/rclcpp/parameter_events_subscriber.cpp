@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -40,31 +39,44 @@ ParameterEventsSubscriber::ParameterEventsSubscriber(
     std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
 }
 
-void
-ParameterEventsSubscriber::set_event_callback(
-  std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback)
+ParameterEventCallbackHandle::SharedPtr
+ParameterEventsSubscriber::add_parameter_event_callback(
+  ParameterEventCallbackType callback)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  event_callback_ = callback;
+  auto handle = std::make_shared<ParameterEventCallbackHandle>();
+  handle->callback = callback;
+  event_callbacks_.emplace_front(handle);
+
+  return handle;
 }
 
 void
-ParameterEventsSubscriber::remove_event_callback()
+ParameterEventsSubscriber::remove_parameter_event_callback(
+  const ParameterEventCallbackHandle * const handle)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  event_callback_ = nullptr;
+  auto it = std::find_if(
+    event_callbacks_.begin(),
+    event_callbacks_.end(),
+    HandleCompare<ParameterEventCallbackHandle>(handle));
+  if (it != event_callbacks_.end()) {
+    event_callbacks_.erase(it);
+  } else {
+    throw std::runtime_error("Callback doesn't exist");
+  }
 }
 
-ParameterEventsCallbackHandle::SharedPtr
+ParameterCallbackHandle::SharedPtr
 ParameterEventsSubscriber::add_parameter_callback(
   const std::string & parameter_name,
-  ParameterEventsCallbackType callback,
+  ParameterCallbackType callback,
   const std::string & node_name)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto full_node_name = resolve_path(node_name);
 
-  auto handle = std::make_shared<ParameterEventsCallbackHandle>();
+  auto handle = std::make_shared<ParameterCallbackHandle>();
   handle->callback = callback;
   handle->parameter_name = parameter_name;
   handle->node_name = full_node_name;
@@ -74,32 +86,16 @@ ParameterEventsSubscriber::add_parameter_callback(
   return handle;
 }
 
-struct HandleCompare
-  : public std::unary_function<ParameterEventsCallbackHandle::WeakPtr, bool>
-{
-  explicit HandleCompare(const ParameterEventsCallbackHandle * const base)
-  : base_(base) {}
-  bool operator()(const ParameterEventsCallbackHandle::WeakPtr & handle)
-  {
-    auto shared_handle = handle.lock();
-    if (base_ == shared_handle.get()) {
-      return true;
-    }
-    return false;
-  }
-  const ParameterEventsCallbackHandle * const base_;
-};
-
 void
 ParameterEventsSubscriber::remove_parameter_callback(
-  const ParameterEventsCallbackHandle * const handle)
+  const ParameterCallbackHandle * const handle)
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   auto & container = parameter_callbacks_[{handle->parameter_name, handle->node_name}];
   auto it = std::find_if(
     container.begin(),
     container.end(),
-    HandleCompare(handle));
+    HandleCompare<ParameterCallbackHandle>(handle));
   if (it != container.end()) {
     container.erase(it);
     if (container.empty()) {
@@ -147,8 +143,12 @@ ParameterEventsSubscriber::get_parameter_from_event(
   const std::string parameter_name,
   const std::string node_name)
 {
-  rclcpp::Parameter p(parameter_name);
-  get_parameter_from_event(event, p, parameter_name, node_name);
+  rclcpp::Parameter p;
+  if (!get_parameter_from_event(event, p, parameter_name, node_name)) {
+    throw std::runtime_error(
+            "Parameter '" + parameter_name + "' of node '" + node_name +
+            "' is not part of parameter event");
+  }
   return p;
 }
 
@@ -175,8 +175,13 @@ ParameterEventsSubscriber::event_callback(
     }
   }
 
-  if (event_callback_) {
-    event_callback_(event);
+  for (auto event_cb = event_callbacks_.begin(); event_cb != event_callbacks_.end(); ++event_cb) {
+    auto shared_event_handle = event_cb->lock();
+    if (nullptr != shared_event_handle) {
+      shared_event_handle->callback(event);
+    } else {
+      event_cb = event_callbacks_.erase(event_cb);
+    }
   }
 }
 

@@ -15,6 +15,7 @@
 #ifndef RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 #define RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 
+#include <functional>
 #include <list>
 #include <string>
 #include <utility>
@@ -27,15 +28,25 @@
 namespace rclcpp
 {
 
-struct ParameterEventsCallbackHandle
+struct ParameterCallbackHandle
 {
-  RCLCPP_SMART_PTR_DEFINITIONS(ParameterEventsCallbackHandle)
+  RCLCPP_SMART_PTR_DEFINITIONS(ParameterCallbackHandle)
 
-  using ParameterEventsCallbackType = std::function<void (const rclcpp::Parameter &)>;
+  using ParameterCallbackType = std::function<void (const rclcpp::Parameter &)>;
 
   std::string parameter_name;
   std::string node_name;
-  ParameterEventsCallbackType callback;
+  ParameterCallbackType callback;
+};
+
+struct ParameterEventCallbackHandle
+{
+  RCLCPP_SMART_PTR_DEFINITIONS(ParameterEventCallbackHandle)
+
+  using ParameterEventCallbackType =
+    std::function<void (const rcl_interfaces::msg::ParameterEvent::SharedPtr &)>;
+
+  ParameterEventCallbackType callback;
 };
 
 class ParameterEventsSubscriber
@@ -60,6 +71,9 @@ public:
       qos)
   {}
 
+  using ParameterEventCallbackType =
+    ParameterEventCallbackHandle::ParameterEventCallbackType;
+
   /// Set a custom callback for parameter events.
   /**
    * Repeated calls to this function will overwrite the callback.
@@ -68,9 +82,9 @@ public:
    * \param[in] node_namespaces Vector of namespaces for which a subscription will be created.
    */
   RCLCPP_PUBLIC
-  void
-  set_event_callback(
-    std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> callback);
+  ParameterEventCallbackHandle::SharedPtr
+  add_parameter_event_callback(
+    ParameterEventCallbackType callback);
 
   /// Remove parameter event callback.
   /**
@@ -78,9 +92,10 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  remove_event_callback();
+  remove_parameter_event_callback(
+    const ParameterEventCallbackHandle * const handle);
 
-  using ParameterEventsCallbackType = ParameterEventsCallbackHandle::ParameterEventsCallbackType;
+  using ParameterCallbackType = ParameterCallbackHandle::ParameterCallbackType;
 
   /// Add a custom callback for a specified parameter.
   /**
@@ -91,10 +106,10 @@ public:
    * \param[in] node_name Name of node which hosts the parameter.
    */
   RCLCPP_PUBLIC
-  ParameterEventsCallbackHandle::SharedPtr
+  ParameterCallbackHandle::SharedPtr
   add_parameter_callback(
     const std::string & parameter_name,
-    ParameterEventsCallbackType callback,
+    ParameterCallbackType callback,
     const std::string & node_name = "");
 
   /// Remove a custom callback for a specified parameter given its callback handle.
@@ -108,7 +123,7 @@ public:
   RCLCPP_PUBLIC
   void
   remove_parameter_callback(
-    const ParameterEventsCallbackHandle * const handle);
+    const ParameterCallbackHandle * const handle);
 
   /// Remove a custom callback for a specified parameter given its name and respective node.
   /**
@@ -163,7 +178,7 @@ public:
     const std::string parameter_name,
     const std::string node_name = "");
 
-  using CallbacksContainerType = std::list<ParameterEventsCallbackHandle::WeakPtr>;
+  using CallbacksContainerType = std::list<ParameterCallbackHandle::WeakPtr>;
 
 protected:
   /// Callback for parameter events subscriptions.
@@ -209,9 +224,26 @@ protected:
     StringPairHash
   > parameter_callbacks_;
 
+  template<typename CallbackHandleT>
+  struct HandleCompare
+    : public std::unary_function<typename CallbackHandleT::WeakPtr, bool>
+  {
+    explicit HandleCompare(const CallbackHandleT * const base)
+    : base_(base) {}
+    bool operator()(const typename CallbackHandleT::WeakPtr & handle)
+    {
+      auto shared_handle = handle.lock();
+      if (base_ == shared_handle.get()) {
+        return true;
+      }
+      return false;
+    }
+    const CallbackHandleT * const base_;
+  };
+
   rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr event_subscription_;
 
-  std::function<void(const rcl_interfaces::msg::ParameterEvent::SharedPtr &)> event_callback_;
+  std::list<ParameterEventCallbackHandle::WeakPtr> event_callbacks_;
 
   std::recursive_mutex mutex_;
 };
