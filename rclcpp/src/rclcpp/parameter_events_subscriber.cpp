@@ -158,8 +158,8 @@ ParameterEventsSubscriber::event_callback(
 {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   const std::string & node_name = event->node;
-  RCLCPP_DEBUG(node_logging_->get_logger(), "Parameter event received for node: %s",
-    node_name.c_str());
+  RCLCPP_DEBUG(node_logging_->get_logger().get_child(
+      "ParameterEventsSubscriber"), "Parameter event received for node: %s", node_name.c_str());
 
   for (auto it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
     rclcpp::Parameter p;
