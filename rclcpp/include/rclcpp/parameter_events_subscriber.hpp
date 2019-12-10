@@ -185,7 +185,7 @@ protected:
   void
   event_callback(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
 
-  // Utility functions for string and path name operations.
+  // Utility function for resolving node path.
   std::string resolve_path(const std::string & path);
 
   // Node Interfaces used for logging and creating subscribers.
