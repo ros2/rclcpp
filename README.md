@@ -8,7 +8,7 @@ rclcpp provides the accepted, standard C++ API for interacting with ROS 2.
 
 `#include "rclcpp/rclcpp.hpp"` allows use of the most common elements of the ROS 2 system.
 
-Visit the [rclcpp API documentation](http://docs.ros2.org/dashing/api/rclcpp/) for a complete list of its main components.
+Visit the [rclcpp API documentation](http://docs.ros2.org/eloquent/api/rclcpp/) for a complete list of its main components.
 
 ### Examples
 
