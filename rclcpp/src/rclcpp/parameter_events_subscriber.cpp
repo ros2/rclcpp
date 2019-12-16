@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -50,6 +51,23 @@ ParameterEventsSubscriber::add_parameter_event_callback(
 
   return handle;
 }
+
+template<typename CallbackHandleT>
+struct HandleCompare
+  : public std::unary_function<typename CallbackHandleT::WeakPtr, bool>
+{
+  explicit HandleCompare(const CallbackHandleT * const base)
+  : base_(base) {}
+  bool operator()(const typename CallbackHandleT::WeakPtr & handle)
+  {
+    auto shared_handle = handle.lock();
+    if (base_ == shared_handle.get()) {
+      return true;
+    }
+    return false;
+  }
+  const CallbackHandleT * const base_;
+};
 
 void
 ParameterEventsSubscriber::remove_parameter_event_callback(

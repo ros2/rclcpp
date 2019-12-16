@@ -166,6 +166,36 @@ TEST_F(TestNode, SameParameterDifferentNode)
   EXPECT_EQ(int_param_node2, 1);
 }
 
+TEST_F(TestNode, GetParameterFromEvent)
+{
+  using rclcpp::ParameterEventsSubscriber;
+  std::string node_name = node->get_fully_qualified_name();
+  std::string wrong_name = "/wrong_node_name";
+
+  rclcpp::Parameter p;
+  EXPECT_TRUE(
+    ParameterEventsSubscriber::get_parameter_from_event(multiple, p, "my_int", node_name));
+  EXPECT_EQ(p.get_value<int>(), 1);
+  // False if parameter not with correct node name
+  EXPECT_FALSE(
+    ParameterEventsSubscriber::get_parameter_from_event(multiple, p, "my_int", wrong_name));
+  // False if parameter not part of event
+  EXPECT_FALSE(
+    ParameterEventsSubscriber::get_parameter_from_event(diff_ns_bool, p, "my_int", node_name));
+
+
+  EXPECT_NO_THROW(
+    ParameterEventsSubscriber::get_parameter_from_event(multiple, "my_int", node_name));
+  // Throws if parameter not with correct node name
+  EXPECT_THROW(
+    ParameterEventsSubscriber::get_parameter_from_event(multiple, "my_int", wrong_name),
+    std::runtime_error);
+  // Throws if parameter not part of event
+  EXPECT_THROW(
+    ParameterEventsSubscriber::get_parameter_from_event(diff_ns_bool, "my_int", node_name),
+    std::runtime_error);
+}
+
 TEST_F(TestNode, EventCallback)
 {
   using rclcpp::ParameterEventsSubscriber;
@@ -232,6 +262,10 @@ TEST_F(TestNode, EventCallback)
   ParamSubscriber->test_event(diff_ns_bool);
   EXPECT_EQ(received, false);
   EXPECT_EQ(bool_param, true);
+
+  // Should throw if callback handle no longer exists or already removed
+  EXPECT_THROW(
+    ParamSubscriber->remove_parameter_event_callback(event_handle.get()), std::runtime_error);
 }
 
 TEST_F(TestNode, MultipleParameterCallbacks)
@@ -265,4 +299,8 @@ TEST_F(TestNode, MultipleParameterCallbacks)
   ParamSubscriber->remove_parameter_callback("my_int");
   ParamSubscriber->test_event(same_node_int);
   EXPECT_EQ(received_2, false);
+
+  // Should throw if callback handle no longer exists or already removed
+  EXPECT_THROW(ParamSubscriber->remove_parameter_callback(h1.get()), std::runtime_error);
+  EXPECT_THROW(ParamSubscriber->remove_parameter_callback(h2.get()), std::runtime_error);
 }

@@ -15,7 +15,6 @@
 #ifndef RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 #define RCLCPP__PARAMETER_EVENTS_SUBSCRIBER_HPP_
 
-#include <functional>
 #include <list>
 #include <string>
 #include <utility>
@@ -197,6 +196,7 @@ protected:
 
   // *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   // Hash function for string pair required in std::unordered_map
+  // See: https://stackoverflow.com/questions/35985960/c-why-is-boosthash-combine-the-best-way-to-combine-hash-values
   class StringPairHash
   {
   public:
@@ -223,23 +223,6 @@ protected:
     CallbacksContainerType,
     StringPairHash
   > parameter_callbacks_;
-
-  template<typename CallbackHandleT>
-  struct HandleCompare
-    : public std::unary_function<typename CallbackHandleT::WeakPtr, bool>
-  {
-    explicit HandleCompare(const CallbackHandleT * const base)
-    : base_(base) {}
-    bool operator()(const typename CallbackHandleT::WeakPtr & handle)
-    {
-      auto shared_handle = handle.lock();
-      if (base_ == shared_handle.get()) {
-        return true;
-      }
-      return false;
-    }
-    const CallbackHandleT * const base_;
-  };
 
   rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr event_subscription_;
 
