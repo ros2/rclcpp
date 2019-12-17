@@ -288,6 +288,7 @@ Context::clean_up()
 {
   shutdown_reason_ = "";
   rcl_context_.reset();
+  sub_contexts_.clear();
 }
 
 std::vector<Context::SharedPtr>
