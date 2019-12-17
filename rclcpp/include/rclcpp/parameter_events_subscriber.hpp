@@ -21,8 +21,17 @@
 #include <unordered_map>
 #include <vector>
 
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/parameter_events_filter.hpp"
+#include "rcl_interfaces/msg/parameter_event.hpp"
+#include "rclcpp/create_subscription.hpp"
+#include "rclcpp/node_interfaces/get_node_base_interface.hpp"
+#include "rclcpp/node_interfaces/get_node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/parameter.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/subscription.hpp"
 
 namespace rclcpp
 {
@@ -51,24 +60,21 @@ struct ParameterEventCallbackHandle
 class ParameterEventsSubscriber
 {
 public:
-  RCLCPP_PUBLIC
-  ParameterEventsSubscriber(
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-    rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
-    rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-    const rclcpp::QoS & qos = rclcpp::ParameterEventsQoS());
-
+  /// Construct a subscriber to parameter events
   template<typename NodeT>
   ParameterEventsSubscriber(
     NodeT node,
     const rclcpp::QoS & qos =
     rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)))
-  : ParameterEventsSubscriber(
-      node->get_node_base_interface(),
-      node->get_node_topics_interface(),
-      node->get_node_logging_interface(),
-      qos)
-  {}
+  {
+    node_base_ = rclcpp::node_interfaces::get_node_base_interface(node);
+    node_logging_ = rclcpp::node_interfaces::get_node_logging_interface(node);
+    auto node_topics = rclcpp::node_interfaces::get_node_topics_interface(node);
+
+    event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
+      node_topics, "/parameter_events", qos,
+      std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
+  }
 
   using ParameterEventCallbackType =
     ParameterEventCallbackHandle::ParameterEventCallbackType;
@@ -152,7 +158,7 @@ public:
   RCLCPP_PUBLIC
   static bool
   get_parameter_from_event(
-    const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+    const rcl_interfaces::msg::ParameterEvent & event,
     rclcpp::Parameter & parameter,
     const std::string parameter_name,
     const std::string node_name = "");
@@ -173,7 +179,7 @@ public:
   RCLCPP_PUBLIC
   static rclcpp::Parameter
   get_parameter_from_event(
-    const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+    const rcl_interfaces::msg::ParameterEvent & event,
     const std::string parameter_name,
     const std::string node_name = "");
 
@@ -187,12 +193,9 @@ protected:
   // Utility function for resolving node path.
   std::string resolve_path(const std::string & path);
 
-  // Node Interfaces used for logging and creating subscribers.
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
-  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_;
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
-
-  rclcpp::QoS qos_;
+  // Node Interfaces used for base and logging.
+  rclcpp::node_interfaces::NodeBaseInterface * node_base_;
+  rclcpp::node_interfaces::NodeLoggingInterface * node_logging_;
 
   // *INDENT-OFF* Uncrustify doesn't handle indented public/private labels
   // Hash function for string pair required in std::unordered_map

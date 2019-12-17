@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Intel Corporation
+// Copyright 2019 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -174,25 +174,25 @@ TEST_F(TestNode, GetParameterFromEvent)
 
   rclcpp::Parameter p;
   EXPECT_TRUE(
-    ParameterEventsSubscriber::get_parameter_from_event(multiple, p, "my_int", node_name));
+    ParameterEventsSubscriber::get_parameter_from_event(*multiple, p, "my_int", node_name));
   EXPECT_EQ(p.get_value<int>(), 1);
   // False if parameter not with correct node name
   EXPECT_FALSE(
-    ParameterEventsSubscriber::get_parameter_from_event(multiple, p, "my_int", wrong_name));
+    ParameterEventsSubscriber::get_parameter_from_event(*multiple, p, "my_int", wrong_name));
   // False if parameter not part of event
   EXPECT_FALSE(
-    ParameterEventsSubscriber::get_parameter_from_event(diff_ns_bool, p, "my_int", node_name));
+    ParameterEventsSubscriber::get_parameter_from_event(*diff_ns_bool, p, "my_int", node_name));
 
 
   EXPECT_NO_THROW(
-    ParameterEventsSubscriber::get_parameter_from_event(multiple, "my_int", node_name));
+    ParameterEventsSubscriber::get_parameter_from_event(*multiple, "my_int", node_name));
   // Throws if parameter not with correct node name
   EXPECT_THROW(
-    ParameterEventsSubscriber::get_parameter_from_event(multiple, "my_int", wrong_name),
+    ParameterEventsSubscriber::get_parameter_from_event(*multiple, "my_int", wrong_name),
     std::runtime_error);
   // Throws if parameter not part of event
   EXPECT_THROW(
-    ParameterEventsSubscriber::get_parameter_from_event(diff_ns_bool, "my_int", node_name),
+    ParameterEventsSubscriber::get_parameter_from_event(*diff_ns_bool, "my_int", node_name),
     std::runtime_error);
 }
 
@@ -217,11 +217,11 @@ TEST_F(TestNode, EventCallback)
       }
 
       rclcpp::Parameter p;
-      if (ParameterEventsSubscriber::get_parameter_from_event(event, p, "my_int", node_name)) {
+      if (ParameterEventsSubscriber::get_parameter_from_event(*event, p, "my_int", node_name)) {
         int_param = p.get_value<int>();
       }
       try {
-        p = ParameterEventsSubscriber::get_parameter_from_event(event, "my_double", node_name);
+        p = ParameterEventsSubscriber::get_parameter_from_event(*event, "my_double", node_name);
         double_param = p.get_value<double>();
       } catch (...) {
       }
@@ -234,7 +234,7 @@ TEST_F(TestNode, EventCallback)
     {
       rclcpp::Parameter p;
       if (event->node == diff_ns_name) {
-        if (ParameterEventsSubscriber::get_parameter_from_event(event, p, "my_bool",
+        if (ParameterEventsSubscriber::get_parameter_from_event(*event, p, "my_bool",
           diff_ns_name))
         {
           bool_param = p.get_value<bool>();

@@ -25,21 +25,6 @@
 namespace rclcpp
 {
 
-ParameterEventsSubscriber::ParameterEventsSubscriber(
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base,
-  rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics,
-  rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
-  const rclcpp::QoS & qos)
-: node_base_(node_base),
-  node_topics_(node_topics),
-  node_logging_(node_logging),
-  qos_(qos)
-{
-  event_subscription_ = rclcpp::create_subscription<rcl_interfaces::msg::ParameterEvent>(
-    node_topics_, "/parameter_events", qos_,
-    std::bind(&ParameterEventsSubscriber::event_callback, this, std::placeholders::_1));
-}
-
 ParameterEventCallbackHandle::SharedPtr
 ParameterEventsSubscriber::add_parameter_event_callback(
   ParameterEventCallbackType callback)
@@ -136,28 +121,35 @@ ParameterEventsSubscriber::remove_parameter_callback(
 
 bool
 ParameterEventsSubscriber::get_parameter_from_event(
-  const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+  const rcl_interfaces::msg::ParameterEvent & event,
   rclcpp::Parameter & parameter,
   const std::string parameter_name,
   const std::string node_name)
 {
-  if (event->node == node_name) {
-    rclcpp::ParameterEventsFilter filter(event, {parameter_name},
-      {rclcpp::ParameterEventsFilter::EventType::NEW,
-        rclcpp::ParameterEventsFilter::EventType::CHANGED});
-    if (!filter.get_events().empty()) {
-      const auto & events = filter.get_events();
-      auto param_msg = events.back().second;
-      parameter = rclcpp::Parameter::from_parameter_msg(*param_msg);
+  if (event.node != node_name) {
+    return false;
+  }
+
+  for (auto & new_parameter : event.new_parameters) {
+    if (new_parameter.name == parameter_name) {
+      parameter = rclcpp::Parameter::from_parameter_msg(new_parameter);
       return true;
     }
   }
+
+  for (auto & changed_parameter : event.changed_parameters) {
+    if (changed_parameter.name == parameter_name) {
+      parameter = rclcpp::Parameter::from_parameter_msg(changed_parameter);
+      return true;
+    }
+  }
+
   return false;
 }
 
 rclcpp::Parameter
 ParameterEventsSubscriber::get_parameter_from_event(
-  const rcl_interfaces::msg::ParameterEvent::SharedPtr event,
+  const rcl_interfaces::msg::ParameterEvent & event,
   const std::string parameter_name,
   const std::string node_name)
 {
@@ -181,7 +173,7 @@ ParameterEventsSubscriber::event_callback(
 
   for (auto it = parameter_callbacks_.begin(); it != parameter_callbacks_.end(); ++it) {
     rclcpp::Parameter p;
-    if (get_parameter_from_event(event, p, it->first.first, it->first.second)) {
+    if (get_parameter_from_event(*event, p, it->first.first, it->first.second)) {
       for (auto cb = it->second.begin(); cb != it->second.end(); ++cb) {
         auto shared_handle = cb->lock();
         if (nullptr != shared_handle) {
