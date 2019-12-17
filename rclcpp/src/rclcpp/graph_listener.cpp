@@ -140,7 +140,7 @@ GraphListener::run_loop()
     }
     // This lock is released when the loop continues or exits.
     std::lock_guard<std::mutex> nodes_lock(node_graph_interfaces_mutex_, std::adopt_lock);
-    // Ensure that the context doesn't goes out of scope.
+    // Ensure that the context doesn't go out of scope.
     auto parent_context = parent_context_.lock();
 
     // Resize the wait set if necessary.
