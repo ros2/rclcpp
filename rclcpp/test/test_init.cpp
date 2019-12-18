@@ -46,7 +46,7 @@ TEST(TestInit, initialize_with_unknown_ros_args) {
 
   const char * const argv[] = {"--ros-args", "unknown"};
   const int argc = static_cast<int>(sizeof(argv) / sizeof(const char *));
-  EXPECT_THROW({ rclcpp::init(argc, argv); }, rclcpp::exceptions::UnknownROSArgsError);
+  EXPECT_THROW({rclcpp::init(argc, argv);}, rclcpp::exceptions::UnknownROSArgsError);
 
   EXPECT_FALSE(rclcpp::is_initialized());
 }
