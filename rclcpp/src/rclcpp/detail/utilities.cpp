@@ -42,12 +42,17 @@ get_unparsed_ros_arguments(int argc, char const * const argv[],
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get unparsed ROS arguments");
     }
-    for (int i = 0; i < unparsed_ros_args_count; ++i) {
-      assert(unparsed_ros_args_indices[i] >= 0);
-      assert(unparsed_ros_args_indices[i] < argc);
-      unparsed_ros_arguments.push_back(argv[unparsed_ros_args_indices[i]]);
+    try {
+      for (int i = 0; i < unparsed_ros_args_count; ++i) {
+        assert(unparsed_ros_args_indices[i] >= 0);
+        assert(unparsed_ros_args_indices[i] < argc);
+        unparsed_ros_arguments.push_back(argv[unparsed_ros_args_indices[i]]);
+      }
+      allocator.deallocate(unparsed_ros_args_indices, allocator.state);
+    } catch (...) {
+      allocator.deallocate(unparsed_ros_args_indices, allocator.state);
+      throw;
     }
-    allocator.deallocate(unparsed_ros_args_indices, allocator.state);
   }
   return unparsed_ros_arguments;
 }
