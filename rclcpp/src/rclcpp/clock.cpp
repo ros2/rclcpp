@@ -138,7 +138,6 @@ Clock::create_jump_callback(
   std::weak_ptr<rcl_clock_t> weak_clock = rcl_clock_;
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
-  // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [weak_clock](JumpHandler * handler) noexcept {
     auto shared_clock = weak_clock.lock();
     if (shared_clock) {
