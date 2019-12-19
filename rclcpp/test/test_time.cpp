@@ -56,6 +56,18 @@ TEST(TestTime, clock_type_access) {
   EXPECT_EQ(RCL_STEADY_TIME, steady_clock.get_clock_type());
 }
 
+// Check that the clock may go out of the scope before the jump callback without leading in UB.
+TEST(TestTime, clock_jump_callback_destruction_order) {
+  rclcpp::JumpHandler::SharedPtr handler;
+  {
+    rclcpp::Clock ros_clock(RCL_ROS_TIME);
+    rcl_jump_threshold_t threshold;
+    threshold.min_backward.nanoseconds = -1;
+    threshold.min_forward.nanoseconds = 1;
+    handler = ros_clock.create_jump_callback([]() {}, [](const rcl_time_jump_t &) {}, threshold);
+  }
+}
+
 TEST(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
