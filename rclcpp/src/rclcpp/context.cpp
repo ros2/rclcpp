@@ -16,10 +16,13 @@
 
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "rcl/init.h"
+#include "rclcpp/detail/utilities.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 #include "rmw/impl/cpp/demangle.hpp"
@@ -91,10 +94,30 @@ Context::init(
     rcl_context_.reset();
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
   }
-  init_options_ = init_options;
+  try {
+    std::vector<std::string> unparsed_ros_arguments =
+      detail::get_unparsed_ros_arguments(argc, argv,
+        &(rcl_context_->global_arguments),
+        rcl_get_default_allocator());
+    if (!unparsed_ros_arguments.empty()) {
+      throw exceptions::UnknownROSArgsError(std::move(unparsed_ros_arguments));
+    }
 
-  std::lock_guard<std::mutex> lock(g_contexts_mutex);
-  g_contexts.push_back(this->shared_from_this());
+    init_options_ = init_options;
+
+    std::lock_guard<std::mutex> lock(g_contexts_mutex);
+    g_contexts.push_back(this->shared_from_this());
+  } catch (const std::exception & e) {
+    ret = rcl_shutdown(rcl_context_.get());
+    rcl_context_.reset();
+    if (RCL_RET_OK != ret) {
+      std::ostringstream oss;
+      oss << "While handling: " << e.what() << std::endl <<
+        "    another exception was thrown";
+      rclcpp::exceptions::throw_from_rcl_error(ret, oss.str());
+    }
+    throw;
+  }
 }
 
 bool

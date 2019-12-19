@@ -14,6 +14,7 @@
 
 #include <gtest/gtest.h>
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
 TEST(TestInit, is_initialized) {
@@ -24,6 +25,28 @@ TEST(TestInit, is_initialized) {
   EXPECT_TRUE(rclcpp::is_initialized());
 
   rclcpp::shutdown();
+
+  EXPECT_FALSE(rclcpp::is_initialized());
+}
+
+TEST(TestInit, initialize_with_ros_args) {
+  EXPECT_FALSE(rclcpp::is_initialized());
+
+  rclcpp::init(0, nullptr);
+
+  EXPECT_TRUE(rclcpp::is_initialized());
+
+  rclcpp::shutdown();
+
+  EXPECT_FALSE(rclcpp::is_initialized());
+}
+
+TEST(TestInit, initialize_with_unknown_ros_args) {
+  EXPECT_FALSE(rclcpp::is_initialized());
+
+  const char * const argv[] = {"--ros-args", "unknown"};
+  const int argc = static_cast<int>(sizeof(argv) / sizeof(const char *));
+  EXPECT_THROW({rclcpp::init(argc, argv);}, rclcpp::exceptions::UnknownROSArgsError);
 
   EXPECT_FALSE(rclcpp::is_initialized());
 }
