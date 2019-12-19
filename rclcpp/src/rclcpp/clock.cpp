@@ -46,7 +46,6 @@ rcl_clock_deleter(rcl_clock_t * rcl_clock)
 Clock::Clock(rcl_clock_type_t clock_type)
 {
   allocator_ = rcl_get_default_allocator();
-  auto clock_unique_ptr = std::make_unique<rcl_clock_t>();
   rcl_clock_ = std::shared_ptr<rcl_clock_t>(new rcl_clock_t(), rcl_clock_deleter);
   auto ret = rcl_clock_init(clock_type, rcl_clock_.get(), &allocator_);
   if (ret != RCL_RET_OK) {
