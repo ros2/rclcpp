@@ -16,6 +16,7 @@
 #define RCLCPP__CLOCK_HPP_
 
 #include <functional>
+#include <memory>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
@@ -133,8 +134,7 @@ private:
     void * user_data);
 
   /// Internal storage backed by rcl
-  rcl_clock_t rcl_clock_;
-  friend TimeSource;  /// Allow TimeSource to access the rcl_clock_ datatype.
+  std::shared_ptr<rcl_clock_t> rcl_clock_;
   rcl_allocator_t allocator_;
 };
 

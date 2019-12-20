@@ -192,7 +192,7 @@ void TimeSource::set_clock(
     enable_ros_time(clock);
   }
 
-  auto ret = rcl_set_ros_time_override(&(clock->rcl_clock_), rclcpp::Time(*msg).nanoseconds());
+  auto ret = rcl_set_ros_time_override(clock->get_clock_handle(), rclcpp::Time(*msg).nanoseconds());
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "Failed to set ros_time_override_status");
@@ -275,7 +275,7 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
 
 void TimeSource::enable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 {
-  auto ret = rcl_enable_ros_time_override(&clock->rcl_clock_);
+  auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "Failed to enable ros_time_override_status");
@@ -284,7 +284,7 @@ void TimeSource::enable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 
 void TimeSource::disable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 {
-  auto ret = rcl_disable_ros_time_override(&clock->rcl_clock_);
+  auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "Failed to enable ros_time_override_status");
