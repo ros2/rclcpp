@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "rcl/guard_condition.h"
+#include "rmw/topic_info.h"
 
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
@@ -88,6 +89,22 @@ public:
   virtual
   size_t
   count_subscribers(const std::string & topic_name) const = 0;
+
+  /// Return a vector of publisher infos publishing to a given topic.
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rmw_topic_info_t>
+  get_publishers_info_by_topic(
+    const std::string & topic_name,
+    bool no_demangle = false) const = 0;
+
+  /// Return a vector of subscription infos publishing to a given topic.
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rmw_topic_info_t>
+  get_subscriptions_info_by_topic(
+    const std::string & topic_name,
+    bool no_demangle = false) const = 0;
 
   /// Return the rcl guard condition which is triggered when the ROS graph changes.
   RCLCPP_PUBLIC
