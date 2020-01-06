@@ -71,6 +71,9 @@ GraphListener::start_if_not_started()
   if (!is_started_) {
     // Initialize the wait set before starting.
     auto parent_context = parent_context_.lock();
+    if (!parent_context) {
+      throw std::runtime_error("parent context was destroyed");
+    }
     rcl_ret_t ret = rcl_wait_set_init(
       &wait_set_,
       0,  // number_of_subscriptions
@@ -142,6 +145,11 @@ GraphListener::run_loop()
     std::lock_guard<std::mutex> nodes_lock(node_graph_interfaces_mutex_, std::adopt_lock);
     // Ensure that the context doesn't go out of scope.
     auto parent_context = parent_context_.lock();
+    if (!parent_context) {
+      // the parent context may be destroyed before this loop is stopped.
+      // in that case, just return silently.
+      return;
+    }
 
     // Resize the wait set if necessary.
     const size_t node_graph_interfaces_size = node_graph_interfaces_.size();
