@@ -146,8 +146,8 @@ GraphListener::run_loop()
     // Ensure that the context doesn't go out of scope.
     auto parent_context = parent_context_.lock();
     if (!parent_context) {
-      // the parent context may be destroyed before this loop is stopped.
-      // in that case, just return silently.
+      // The parent context may be destroyed before this loop is stopped.
+      // In that case, the loop is broken and the function just returns silently.
       return;
     }
 
