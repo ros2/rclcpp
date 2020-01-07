@@ -29,6 +29,20 @@
 
 namespace rclcpp
 {
+
+/**
+ * Use to get topic information that containing the node name, node namespace, topic type,
+ * participant's GID and its QoS profile
+ */
+struct RCLCPP_PUBLIC TopicInfo
+{
+  std::string node_name;
+  std::string node_namespace;
+  std::string topic_type;
+  uint8_t gid[RMW_GID_STORAGE_SIZE];
+  rmw_qos_profile_t qos_profile;
+};
+
 namespace node_interfaces
 {
 
@@ -150,6 +164,26 @@ public:
   virtual
   size_t
   count_graph_users() = 0;
+
+  /// Returns a list of all publishers to a topic.
+  /**
+   * Each element in the list will contain the node name, node namespace, topic type,
+   * gid and the qos profile of the publisher.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::TopicInfo>
+  get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
+
+  /// Returns a list of all subscriptions to a topic.
+  /**
+   * Each element in the list will contain the node name, node namespace, topic type,
+   * gid and the qos profile of the subscription.
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::TopicInfo>
+  get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
 };
 
 }  // namespace node_interfaces

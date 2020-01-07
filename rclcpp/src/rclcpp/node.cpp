@@ -493,3 +493,15 @@ Node::assert_liveliness() const
 {
   return node_base_->assert_liveliness();
 }
+
+std::vector<rclcpp::TopicInfo>
+Node::get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_publishers_info_by_topic(topic_name, no_mangle);
+}
+
+std::vector<rclcpp::TopicInfo>
+Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
+}

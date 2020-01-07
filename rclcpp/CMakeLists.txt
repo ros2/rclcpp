@@ -247,6 +247,7 @@ if(BUILD_TESTING)
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
+      "test_msgs"
     )
     target_link_libraries(test_node ${PROJECT_NAME})
   endif()

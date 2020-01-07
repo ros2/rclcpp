@@ -369,3 +369,103 @@ NodeGraph::count_graph_users()
 {
   return graph_users_count_.load();
 }
+
+static
+rclcpp::TopicInfo
+convert_to_topic_info(const rmw_topic_info_t * info)
+{
+  rclcpp::TopicInfo topic_info;
+  topic_info.node_name = info->node_name;
+  topic_info.node_namespace = info->node_namespace;
+  topic_info.topic_type = info->topic_type;
+  memcpy(topic_info.gid, info->gid, RMW_GID_STORAGE_SIZE);
+  memcpy(&topic_info.qos_profile, &info->qos_profile, sizeof(rmw_qos_profile_t));
+  return topic_info;
+}
+
+static
+std::vector<rclcpp::TopicInfo>
+convert_to_topic_info_list(const rmw_topic_info_array_t * info_array)
+{
+  std::vector<rclcpp::TopicInfo> topic_info_list;
+  for (size_t i = 0; i < info_array->count; ++i) {
+    rmw_topic_info_t topic_info = info_array->info_array[i];
+    auto topic_info_item = convert_to_topic_info(&topic_info);
+    topic_info_list.push_back(topic_info_item);
+  }
+  return topic_info_list;
+}
+
+std::vector<rclcpp::TopicInfo>
+NodeGraph::get_info_by_topic(
+  const std::string & topic_name,
+  bool no_mangle,
+  const std::string & type,
+  rcl_get_info_by_topic_func_t rcl_get_info_by_topic) const
+{
+  std::vector<rclcpp::TopicInfo> topic_info_list;
+
+  auto rcl_node_handle = node_base_->get_rcl_node_handle();
+  auto fqdn = rclcpp::expand_topic_or_service_name(
+    topic_name,
+    rcl_node_get_name(rcl_node_handle),
+    rcl_node_get_namespace(rcl_node_handle),
+    false);    // false = not a service
+
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rmw_topic_info_array_t info_array = rmw_get_zero_initialized_topic_info_array();
+  auto ret =
+    rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
+  if (ret != RCL_RET_OK) {
+    // *INDENT-OFF*
+    auto error_msg =
+      std::string("Failed to get information by topic for: ") + type + std::string(":");
+    if (ret == RCL_RET_UNSUPPORTED) {
+      error_msg += std::string("function not supported by RMW_IMPLEMENTATION");
+    } else {
+      error_msg += rcl_get_error_string().str;
+    }
+    rcl_reset_error();
+    if (rmw_topic_info_array_fini(&info_array, &allocator) != RMW_RET_OK) {
+      error_msg += std::string(", failed also to cleanup topic info array, leaking memory: ")
+        + rcl_get_error_string().str;
+      rcl_reset_error();
+    }
+    throw std::runtime_error(error_msg);
+    // *INDENT-ON*
+  }
+
+  topic_info_list = convert_to_topic_info_list(&info_array);
+  if (rmw_topic_info_array_fini(&info_array, &allocator) != RMW_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("rmw_topic_info_array_fini failed."));
+    // *INDENT-ON*
+  }
+
+  return topic_info_list;
+}
+
+std::vector<rclcpp::TopicInfo>
+NodeGraph::get_publishers_info_by_topic(
+  const std::string & topic_name,
+  bool no_mangle) const
+{
+  return get_info_by_topic(
+    topic_name,
+    no_mangle,
+    "publishers",
+    rcl_get_publishers_info_by_topic);
+}
+
+std::vector<rclcpp::TopicInfo>
+NodeGraph::get_subscriptions_info_by_topic(
+  const std::string & topic_name,
+  bool no_mangle) const
+{
+  return get_info_by_topic(
+    topic_name,
+    no_mangle,
+    "subscriptions",
+    rcl_get_subscriptions_info_by_topic);
+}

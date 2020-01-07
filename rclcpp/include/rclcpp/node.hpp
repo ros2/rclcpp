@@ -1072,6 +1072,54 @@ public:
   bool
   assert_liveliness() const;
 
+  /// Return a list of publishers about topic information to a given topic.
+  /**
+   * The returned parameter is a list of topic info, where each topic info will
+   * contain the node name, node namespace, topic type, participant's GID and its QoS profile.
+   *
+   * "topic_name" may be a relative, private or fully qualified topic name.
+   * A relative or private topic will be expanded using this node's namespace and name, if
+   * the "no_mangle" param is set to false.
+   *
+   * The queried topic name is not remapped.
+   *
+   * "no_mangle" defaults to false.
+   *
+   * \param[in] topic_name the topic_name on which to find the publishers.
+   * \param[in] no_mangle if false, the given topic name will be expanded
+   *    to its fully qualified name.
+   * \return a list of TopicInfo representing all the publishers on this topic.
+   * \throws InvalidTopicNameError if the given topic_name is invalid.
+   * \throws std::runtime_error if internal error happens.
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicInfo>
+  get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
+
+  /// Return a list of subscriptions about topic information to a given topic.
+  /**
+   * The returned parameter is a list of topic info, where each topic info will
+   * contain the node name, node namespace, topic type, participant's GID and its QoS profile.
+   *
+   * "topic_name" may be a relative, private or fully qualified topic name.
+   * A relative or private topic will be expanded using this node's namespace and name, if
+   * the "no_mangle" param is set to false.
+   *
+   * The queried topic name is not remapped.
+   *
+   * "no_mangle" defaults to false.
+   *
+   * \param[in] topic_name the topic_name on which to find the subscriptions.
+   * \param[in] no_mangle if false, the given topic name will be expanded
+   *    to its fully qualified name.
+   * \return a list of TopicInfo representing all the subscriptions on this topic.
+   * \throws InvalidTopicNameError if the given topic_name is invalid.
+   * \throws std::runtime_error if internal error happens.
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicInfo>
+  get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
+
 protected:
   /// Construct a sub-node, which will extend the namespace of all entities created with it.
   /**
