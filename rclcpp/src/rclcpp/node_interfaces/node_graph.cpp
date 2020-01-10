@@ -266,20 +266,20 @@ NodeGraph::count_subscribers(const std::string & topic_name) const
   return count;
 }
 
-std::vector<rmw_topic_info_t>
+std::vector<rmw_topic_endpoint_info_t>
 NodeGraph::get_publishers_info_by_topic(
   const std::string & /*topic_name*/,
   bool /*no_demangle*/) const
 {
-  return std::vector<rmw_topic_info_t>();
+  return std::vector<rmw_topic_endpoint_info_t>();
 }
 
-std::vector<rmw_topic_info_t>
+std::vector<rmw_topic_endpoint_info_t>
 NodeGraph::get_subscriptions_info_by_topic(
   const std::string & /*topic_name*/,
   bool /*no_demangle*/) const
 {
-  return std::vector<rmw_topic_info_t>();
+  return std::vector<rmw_topic_endpoint_info_t>();
 }
 
 const rcl_guard_condition_t *

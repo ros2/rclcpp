@@ -86,13 +86,13 @@ public:
   count_subscribers(const std::string & topic_name) const override;
 
   RCLCPP_PUBLIC
-  std::vector<rmw_topic_info_t>
+  std::vector<rmw_topic_endpoint_info_t>
   get_publishers_info_by_topic(
     const std::string & topic_name,
     bool no_demangle = false) const override;
 
   RCLCPP_PUBLIC
-  std::vector<rmw_topic_info_t>
+  std::vector<rmw_topic_endpoint_info_t>
   get_subscriptions_info_by_topic(
     const std::string & topic_name,
     bool no_demangle = false) const override;
