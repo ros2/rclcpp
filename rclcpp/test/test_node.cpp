@@ -48,20 +48,23 @@ protected:
  */
 TEST_F(TestNode, construction_and_destruction) {
   {
-    std::make_shared<rclcpp::Node>("my_node", "/ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    (void)node;
   }
 
   {
     ASSERT_THROW(
     {
-      std::make_shared<rclcpp::Node>("invalid_node?", "/ns");
+      auto node = std::make_shared<rclcpp::Node>("invalid_node?", "/ns");
+      (void)node;
     }, rclcpp::exceptions::InvalidNodeNameError);
   }
 
   {
     ASSERT_THROW(
     {
-      std::make_shared<rclcpp::Node>("my_node", "/invalid_ns?");
+      auto node = std::make_shared<rclcpp::Node>("my_node", "/invalid_ns?");
+      (void)node;
     }, rclcpp::exceptions::InvalidNamespaceError);
   }
 }
