@@ -15,6 +15,7 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_GRAPH_INTERFACE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_GRAPH_INTERFACE_HPP_
 
+#include <array>
 #include <chrono>
 #include <map>
 #include <string>
@@ -25,22 +26,38 @@
 
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/topic_endpoint_info.h"
 
 namespace rclcpp
 {
 
+using EndpointType = rmw_endpoint_type_t;
+
 /**
- * Use to get topic information that containing the node name, node namespace, topic type,
- * participant's GID and its QoS profile
+ * Use to get topic endpoint information that containing the node name, node namespace, topic type,
+ * endpoint type, GID of endpoint and its QoS.
  */
-struct RCLCPP_PUBLIC TopicInfo
+struct RCLCPP_PUBLIC TopicEndpointInfo
 {
   std::string node_name;
   std::string node_namespace;
   std::string topic_type;
-  uint8_t gid[RMW_GID_STORAGE_SIZE];
-  rmw_qos_profile_t qos_profile;
+  rclcpp::EndpointType endpoint_type;
+  std::array<uint8_t, RMW_GID_STORAGE_SIZE> endpoint_gid;
+  rclcpp::QoS qos;
+
+  /// Constructor which convert rmw_topic_endpoint_info_t to TopicEndpointInfo.
+  TopicEndpointInfo(const rmw_topic_endpoint_info_t & info)
+  : node_name(info.node_name),
+    node_namespace(info.node_namespace),
+    topic_type(info.topic_type),
+    endpoint_type(info.endpoint_type),
+    qos({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile)
+  {
+    std::copy(info.endpoint_gid, info.endpoint_gid+RMW_GID_STORAGE_SIZE, endpoint_gid.begin());
+  }
 };
 
 namespace node_interfaces
@@ -165,24 +182,22 @@ public:
   size_t
   count_graph_users() = 0;
 
-  /// Returns a list of all publishers to a topic.
+  /// Return a list of publishers about topic endpoint information to a given topic.
   /**
-   * Each element in the list will contain the node name, node namespace, topic type,
-   * gid and the qos profile of the publisher.
+   * \sa rclcpp::Node::get_publishers_info_by_topic
    */
   RCLCPP_PUBLIC
   virtual
-  std::vector<rclcpp::TopicInfo>
+  std::vector<rclcpp::TopicEndpointInfo>
   get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
 
-  /// Returns a list of all subscriptions to a topic.
+  /// Return a list of subscriptions about topic endpoint information to a given topic.
   /**
-   * Each element in the list will contain the node name, node namespace, topic type,
-   * gid and the qos profile of the subscription.
+   * \sa rclcpp::Node::get_subscriptions_info_by_topic
    */
   RCLCPP_PUBLIC
   virtual
-  std::vector<rclcpp::TopicInfo>
+  std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
 };
 

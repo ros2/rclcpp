@@ -30,7 +30,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rmw/topic_info_array.h"
+#include "rmw/topic_endpoint_info_array.h"
 
 namespace rclcpp
 {
@@ -119,33 +119,19 @@ public:
   count_graph_users() override;
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::TopicInfo>
+  std::vector<rclcpp::TopicEndpointInfo>
   get_publishers_info_by_topic(
     const std::string & topic_name,
     bool no_mangle = false) const override;
 
   RCLCPP_PUBLIC
-  std::vector<rclcpp::TopicInfo>
+  std::vector<rclcpp::TopicEndpointInfo>
   get_subscriptions_info_by_topic(
     const std::string & topic_name,
     bool no_mangle = false) const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeGraph)
-
-  typedef rcl_ret_t (* rcl_get_info_by_topic_func_t)(
-    const rcl_node_t * node,
-    rcutils_allocator_t * allocator,
-    const char * topic_name,
-    bool no_mangle,
-    rmw_topic_info_array_t * info_array);
-
-  std::vector<rclcpp::TopicInfo>
-  get_info_by_topic(
-    const std::string & topic_name,
-    bool no_mangle,
-    const std::string & type,
-    rcl_get_info_by_topic_func_t rcl_get_info_by_topic) const;
 
   /// Handle to the NodeBaseInterface given in the constructor.
   rclcpp::node_interfaces::NodeBaseInterface * node_base_;

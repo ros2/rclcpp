@@ -28,6 +28,12 @@
 using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::graph_listener::GraphListener;
+using rcl_get_info_by_topic_func_t = rcl_ret_t (* )(
+  const rcl_node_t *,
+  rcutils_allocator_t *,
+  const char *,
+  bool,
+  rmw_topic_endpoint_info_array_t *);
 
 NodeGraph::NodeGraph(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base),
@@ -371,41 +377,28 @@ NodeGraph::count_graph_users()
 }
 
 static
-rclcpp::TopicInfo
-convert_to_topic_info(const rmw_topic_info_t * info)
+std::vector<rclcpp::TopicEndpointInfo>
+convert_to_topic_info_list(const rmw_topic_endpoint_info_array_t & info_array)
 {
-  rclcpp::TopicInfo topic_info;
-  topic_info.node_name = info->node_name;
-  topic_info.node_namespace = info->node_namespace;
-  topic_info.topic_type = info->topic_type;
-  memcpy(topic_info.gid, info->gid, RMW_GID_STORAGE_SIZE);
-  memcpy(&topic_info.qos_profile, &info->qos_profile, sizeof(rmw_qos_profile_t));
-  return topic_info;
-}
-
-static
-std::vector<rclcpp::TopicInfo>
-convert_to_topic_info_list(const rmw_topic_info_array_t * info_array)
-{
-  std::vector<rclcpp::TopicInfo> topic_info_list;
-  for (size_t i = 0; i < info_array->count; ++i) {
-    rmw_topic_info_t topic_info = info_array->info_array[i];
-    auto topic_info_item = convert_to_topic_info(&topic_info);
-    topic_info_list.push_back(topic_info_item);
+  std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
+  for (size_t i = 0; i < info_array.count; ++i) {
+    topic_info_list.push_back(rclcpp::TopicEndpointInfo(info_array.info_array[i]));
   }
   return topic_info_list;
 }
 
-std::vector<rclcpp::TopicInfo>
-NodeGraph::get_info_by_topic(
+template <typename TypeT, typename FunctionT>
+static std::vector<rclcpp::TopicEndpointInfo>
+get_info_by_topic(
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
   const std::string & topic_name,
   bool no_mangle,
-  const std::string & type,
-  rcl_get_info_by_topic_func_t rcl_get_info_by_topic) const
+  TypeT type,
+  FunctionT rcl_get_info_by_topic)
 {
-  std::vector<rclcpp::TopicInfo> topic_info_list;
+  std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
 
-  auto rcl_node_handle = node_base_->get_rcl_node_handle();
+  auto rcl_node_handle = node_base->get_rcl_node_handle();
   auto fqdn = rclcpp::expand_topic_or_service_name(
     topic_name,
     rcl_node_get_name(rcl_node_handle),
@@ -413,11 +406,10 @@ NodeGraph::get_info_by_topic(
     false);    // false = not a service
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  rmw_topic_info_array_t info_array = rmw_get_zero_initialized_topic_info_array();
+  rmw_topic_endpoint_info_array_t info_array = rmw_get_zero_initialized_topic_endpoint_info_array();
   auto ret =
     rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
   if (ret != RCL_RET_OK) {
-    // *INDENT-OFF*
     auto error_msg =
       std::string("Failed to get information by topic for: ") + type + std::string(":");
     if (ret == RCL_RET_UNSUPPORTED) {
@@ -426,44 +418,43 @@ NodeGraph::get_info_by_topic(
       error_msg += rcl_get_error_string().str;
     }
     rcl_reset_error();
-    if (rmw_topic_info_array_fini(&info_array, &allocator) != RMW_RET_OK) {
+    if (rmw_topic_endpoint_info_array_fini(&info_array, &allocator) != RMW_RET_OK) {
       error_msg += std::string(", failed also to cleanup topic info array, leaking memory: ")
         + rcl_get_error_string().str;
       rcl_reset_error();
     }
-    throw std::runtime_error(error_msg);
-    // *INDENT-ON*
+    throw_from_rcl_error(ret, error_msg);
   }
 
-  topic_info_list = convert_to_topic_info_list(&info_array);
-  if (rmw_topic_info_array_fini(&info_array, &allocator) != RMW_RET_OK) {
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("rmw_topic_info_array_fini failed."));
-    // *INDENT-ON*
+  topic_info_list = convert_to_topic_info_list(info_array);
+  ret = rmw_topic_endpoint_info_array_fini(&info_array, &allocator);
+  if (ret != RMW_RET_OK) {
+    throw_from_rcl_error(ret, "rmw_topic_info_array_fini failed.");
   }
 
   return topic_info_list;
 }
 
-std::vector<rclcpp::TopicInfo>
+std::vector<rclcpp::TopicEndpointInfo>
 NodeGraph::get_publishers_info_by_topic(
   const std::string & topic_name,
   bool no_mangle) const
 {
-  return get_info_by_topic(
+  return get_info_by_topic<const char*, rcl_get_info_by_topic_func_t>(
+    node_base_,
     topic_name,
     no_mangle,
-    "publishers",
+    "publisher",
     rcl_get_publishers_info_by_topic);
 }
 
-std::vector<rclcpp::TopicInfo>
+std::vector<rclcpp::TopicEndpointInfo>
 NodeGraph::get_subscriptions_info_by_topic(
   const std::string & topic_name,
   bool no_mangle) const
 {
-  return get_info_by_topic(
+  return get_info_by_topic<const char*, rcl_get_info_by_topic_func_t>(
+    node_base_,
     topic_name,
     no_mangle,
     "subscriptions",
