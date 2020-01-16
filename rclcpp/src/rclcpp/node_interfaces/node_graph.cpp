@@ -28,12 +28,6 @@
 using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::graph_listener::GraphListener;
-using rcl_get_info_by_topic_func_t = rcl_ret_t (* )(
-  const rcl_node_t *,
-  rcutils_allocator_t *,
-  const char *,
-  bool,
-  rmw_topic_endpoint_info_array_t *);
 
 NodeGraph::NodeGraph(rclcpp::node_interfaces::NodeBaseInterface * node_base)
 : node_base_(node_base),
@@ -387,13 +381,12 @@ convert_to_topic_info_list(const rmw_topic_endpoint_info_array_t & info_array)
   return topic_info_list;
 }
 
-template <typename TypeT, typename FunctionT>
+template <const char * EndpointType, typename FunctionT>
 static std::vector<rclcpp::TopicEndpointInfo>
 get_info_by_topic(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
   const std::string & topic_name,
   bool no_mangle,
-  TypeT type,
   FunctionT rcl_get_info_by_topic)
 {
   std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
@@ -411,7 +404,7 @@ get_info_by_topic(
     rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
   if (ret != RCL_RET_OK) {
     auto error_msg =
-      std::string("Failed to get information by topic for: ") + type + std::string(":");
+      std::string("Failed to get information by topic for ") + EndpointType + std::string(":");
     if (ret == RCL_RET_UNSUPPORTED) {
       error_msg += std::string("function not supported by RMW_IMPLEMENTATION");
     } else {
@@ -435,28 +428,28 @@ get_info_by_topic(
   return topic_info_list;
 }
 
+static const char kPublisherEndpointTypeName[] = "publishers";
 std::vector<rclcpp::TopicEndpointInfo>
 NodeGraph::get_publishers_info_by_topic(
   const std::string & topic_name,
   bool no_mangle) const
 {
-  return get_info_by_topic<const char*, rcl_get_info_by_topic_func_t>(
+  return get_info_by_topic<kPublisherEndpointTypeName>(
     node_base_,
     topic_name,
     no_mangle,
-    "publisher",
     rcl_get_publishers_info_by_topic);
 }
 
+static const char kSubscriptionEndpointTypeName[] = "subscriptions";
 std::vector<rclcpp::TopicEndpointInfo>
 NodeGraph::get_subscriptions_info_by_topic(
   const std::string & topic_name,
   bool no_mangle) const
 {
-  return get_info_by_topic<const char*, rcl_get_info_by_topic_func_t>(
+  return get_info_by_topic<kSubscriptionEndpointTypeName>(
     node_base_,
     topic_name,
     no_mangle,
-    "subscriptions",
     rcl_get_subscriptions_info_by_topic);
 }
