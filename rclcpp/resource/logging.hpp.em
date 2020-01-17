@@ -17,6 +17,7 @@
 #ifndef RCLCPP__LOGGING_HPP_
 #define RCLCPP__LOGGING_HPP_
 
+#include <sstream>
 #include <type_traits>
 
 #include "rclcpp/logger.hpp"
