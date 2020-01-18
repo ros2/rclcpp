@@ -402,16 +402,16 @@ get_info_by_topic(
   rmw_topic_endpoint_info_array_t info_array = rmw_get_zero_initialized_topic_endpoint_info_array();
   auto ret =
     rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
-  if (ret != RCL_RET_OK) {
+  if (RCL_RET_OK != ret) {
     auto error_msg =
       std::string("Failed to get information by topic for ") + EndpointType + std::string(":");
-    if (ret == RCL_RET_UNSUPPORTED) {
+    if (RCL_RET_UNSUPPORTED == ret) {
       error_msg += std::string("function not supported by RMW_IMPLEMENTATION");
     } else {
       error_msg += rcl_get_error_string().str;
     }
     rcl_reset_error();
-    if (rmw_topic_endpoint_info_array_fini(&info_array, &allocator) != RMW_RET_OK) {
+    if (RMW_RET_OK != rmw_topic_endpoint_info_array_fini(&info_array, &allocator)) {
       error_msg += std::string(", failed also to cleanup topic info array, leaking memory: ")
         + rcl_get_error_string().str;
       rcl_reset_error();
