@@ -2552,7 +2552,7 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   EXPECT_EQ(node->get_name(), publisher_list[0].node_name);
   EXPECT_EQ(node->get_namespace(), publisher_list[0].node_namespace);
   EXPECT_EQ("test_msgs/msg/BasicTypes", publisher_list[0].topic_type);
-  EXPECT_EQ(RMW_ENDPOINT_PUBLISHER, publisher_list[0].endpoint_type);
+  EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_list[0].endpoint_type);
   auto actual_qos_profile = publisher_list[0].qos.get_rmw_qos_profile();
 
   auto assert_qos_profile = [](const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2) {
@@ -2607,13 +2607,13 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   EXPECT_EQ(node->get_name(), publisher_list[0].node_name);
   EXPECT_EQ(node->get_namespace(), publisher_list[0].node_namespace);
   EXPECT_EQ("test_msgs/msg/BasicTypes", publisher_list[0].topic_type);
-  EXPECT_EQ(RMW_ENDPOINT_PUBLISHER, publisher_list[0].endpoint_type);
+  EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_list[0].endpoint_type);
   auto publisher_qos_profile = publisher_list[0].qos.get_rmw_qos_profile();
   assert_qos_profile(qos.get_rmw_qos_profile(), publisher_qos_profile);
   EXPECT_EQ(node->get_name(), subscription_list[0].node_name);
   EXPECT_EQ(node->get_namespace(), subscription_list[0].node_namespace);
   EXPECT_EQ("test_msgs/msg/BasicTypes", subscription_list[0].topic_type);
-  EXPECT_EQ(RMW_ENDPOINT_SUBSCRIPTION, subscription_list[0].endpoint_type);
+  EXPECT_EQ(rclcpp::EndpointType::Subscription, subscription_list[0].endpoint_type);
   auto subscription_qos_profile = subscription_list[0].qos.get_rmw_qos_profile();
   assert_qos_profile(qos2.get_rmw_qos_profile(), subscription_qos_profile);
 

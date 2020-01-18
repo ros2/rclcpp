@@ -33,7 +33,12 @@
 namespace rclcpp
 {
 
-using EndpointType = rmw_endpoint_type_t;
+enum class EndpointType
+{
+  Invalid = RMW_ENDPOINT_INVALID,
+  Publisher = RMW_ENDPOINT_PUBLISHER,
+  Subscription = RMW_ENDPOINT_SUBSCRIPTION
+};
 
 /**
  * Use to get topic endpoint information that containing the node name, node namespace, topic type,
@@ -53,7 +58,7 @@ struct RCLCPP_PUBLIC TopicEndpointInfo
   : node_name(info.node_name),
     node_namespace(info.node_namespace),
     topic_type(info.topic_type),
-    endpoint_type(info.endpoint_type),
+    endpoint_type(static_cast<rclcpp::EndpointType>(info.endpoint_type)),
     qos({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile)
   {
     std::copy(info.endpoint_gid, info.endpoint_gid+RMW_GID_STORAGE_SIZE, endpoint_gid.begin());
