@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.4 (2020-01-17)
+------------------
+* Remove absolute path from installed CMake code (`#948 <https://github.com/ros2/rclcpp/issues/948>`_) (`#950 <https://github.com/ros2/rclcpp/issues/950>`_)
+* Contributors: Jacob Perron
+
 0.8.3 (2019-11-19)
 ------------------
 

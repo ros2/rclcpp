@@ -3,6 +3,9 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.8.4 (2020-01-17)
+------------------
+
 0.8.3 (2019-11-19)
 ------------------
 * issue-919 Fixed "memory leak" in action clients (`#920 <https://github.com/ros2/rclcpp/issues/920>`_)

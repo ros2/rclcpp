@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.4 (2020-01-17)
+------------------
+* Intra-process subscriber should use RMW actual qos (ros2`#913 <https://github.com/ros2/rclcpp/issues/913>`_) (`#914 <https://github.com/ros2/rclcpp/issues/914>`_) (`#965 <https://github.com/ros2/rclcpp/issues/965>`_)
+* Contributors: Todd Malsbary
+
 0.8.3 (2019-11-19)
 ------------------
 
