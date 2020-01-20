@@ -56,6 +56,12 @@ public:
   using MessageDeleter = allocator::Deleter<MessageAllocator, MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
+  using SerializedMessageAllocatorTraits =
+    allocator::AllocRebind<rclcpp::experimental::SerializedContainer,
+      AllocatorT>;
+  using SerializedMessageAllocator = typename SerializedMessageAllocatorTraits::allocator_type;
+  using SerializedMessageDeleter = allocator::Deleter<SerializedMessageAllocator,
+      rclcpp::experimental::SerializedContainer>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
@@ -70,37 +76,28 @@ public:
       *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
       options.template to_rcl_publisher_options<MessageT>(qos)),
     options_(options),
-    message_allocator_(new MessageAllocator(*options.get_allocator().get()))
+    message_allocator_(new MessageAllocator(*options.get_allocator().get())),
+    message_allocator_serialized_(new SerializedMessageAllocator(*options.get_allocator().get()))
   {
-    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
+    init_setup();
+  }
 
-    if (options_.event_callbacks.deadline_callback) {
-      this->add_event_handler(
-        options_.event_callbacks.deadline_callback,
-        RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
-    }
-    if (options_.event_callbacks.liveliness_callback) {
-      this->add_event_handler(
-        options_.event_callbacks.liveliness_callback,
-        RCL_PUBLISHER_LIVELINESS_LOST);
-    }
-    if (options_.event_callbacks.incompatible_qos_callback) {
-      this->add_event_handler(
-        options_.event_callbacks.incompatible_qos_callback,
-        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
-    } else if (options_.use_default_callbacks) {
-      // Register default callback when not specified
-      try {
-        this->add_event_handler(
-          [this](QOSOfferedIncompatibleQoSInfo & info) {
-            this->default_incompatible_qos_callback(info);
-          },
-          RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
-      } catch (UnsupportedEventTypeException & /*exc*/) {
-        // pass
-      }
-    }
-    // Setup continues in the post construction method, post_init_setup().
+  Publisher(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+    const rosidl_message_type_support_t & type_support)
+  : PublisherBase(
+      node_base,
+      topic,
+      type_support,
+      options.template to_rcl_publisher_options<MessageT>(qos)),
+    options_(options),
+    message_allocator_(new MessageAllocator(*options.get_allocator().get())),
+    message_allocator_serialized_(new SerializedMessageAllocator(*options.get_allocator().get()))
+  {
+    init_setup();
   }
 
   /// Called post construction, so that construction may continue after shared_from_this() works.
@@ -259,6 +256,43 @@ public:
   }
 
 protected:
+  void init_setup()
+  {
+    allocator::set_allocator_for_deleter(&message_deleter_, message_allocator_.get());
+
+    if (options_.event_callbacks.deadline_callback) {
+      this->add_event_handler(
+        options_.event_callbacks.deadline_callback,
+        RCL_PUBLISHER_OFFERED_DEADLINE_MISSED);
+    }
+    if (options_.event_callbacks.liveliness_callback) {
+      this->add_event_handler(
+        options_.event_callbacks.liveliness_callback,
+        RCL_PUBLISHER_LIVELINESS_LOST);
+    }
+    if (options_.event_callbacks.incompatible_qos_callback) {
+      this->add_event_handler(
+        options_.event_callbacks.incompatible_qos_callback,
+        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    } else if (options_.use_default_callbacks) {
+      // Register default callback when not specified
+      try {
+        this->add_event_handler(
+          [this](QOSOfferedIncompatibleQoSInfo & info) {
+            this->default_incompatible_qos_callback(info);
+          },
+          RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+      } catch (UnsupportedEventTypeException & /*exc*/) {
+        RCLCPP_WARN_ONCE(
+          rclcpp::get_logger(rcl_node_get_logger_name(rcl_node_handle_.get())),
+          "This rmw implementation does not support ON_OFFERED_INCOMPATIBLE_QOS "
+          "events, you will not be notified when Publishers offer an incompatible "
+          "QoS profile to Subscriptions on the same topic.");
+      }
+    }
+    // Setup continues in the post construction method, post_init_setup().
+  }
+
   void
   do_inter_process_publish(const MessageT & msg)
   {
