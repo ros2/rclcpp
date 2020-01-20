@@ -51,6 +51,7 @@ typename std::shared_ptr<SubscriptionT>
 create_subscription(
   NodeT && node,
   const std::string & topic_name,
+  const rosidl_message_type_support_t & type_support,
   const rclcpp::QoS & qos,
   CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
@@ -67,13 +68,48 @@ create_subscription(
   auto factory = rclcpp::create_subscription_factory<MessageT>(
     std::forward<CallbackT>(callback),
     options,
-    msg_mem_strat
+    msg_mem_strat,
+    type_support
   );
 
   auto sub = node_topics->create_subscription(topic_name, factory, qos);
   node_topics->add_subscription(sub, options.callback_group);
 
   return std::dynamic_pointer_cast<SubscriptionT>(sub);
+}
+
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT = std::allocator<void>,
+  typename CallbackMessageT =
+  typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+  typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>,
+  typename MessageMemoryStrategyT = rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    CallbackMessageT,
+    AllocatorT
+  >,
+  typename NodeT>
+typename std::shared_ptr<SubscriptionT>
+create_subscription(
+  NodeT && node,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
+  ),
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
+    MessageMemoryStrategyT::create_default()
+  )
+)
+{
+  const auto type_support = *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
+
+  return create_subscription<MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT,
+           MessageMemoryStrategyT>(std::forward<NodeT>(
+             node), topic_name, type_support, qos, std::forward<CallbackT>(
+             callback), options, msg_mem_strat);
 }
 
 }  // namespace rclcpp
