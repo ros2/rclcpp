@@ -43,6 +43,7 @@ std::shared_ptr<PublisherT>
 create_publisher(
   NodeT & node,
   const std::string & topic_name,
+  const rosidl_message_type_support_t & type_support,
   const rclcpp::QoS & qos,
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
     rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
@@ -56,7 +57,7 @@ create_publisher(
   // Create the publisher.
   auto pub = node_topics->create_publisher(
     topic_name,
-    rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(options),
+    rclcpp::create_publisher_factory<MessageT, AllocatorT, PublisherT>(options, type_support),
     qos
   );
 
@@ -64,6 +65,27 @@ create_publisher(
   node_topics->add_publisher(pub, options.callback_group);
 
   return std::dynamic_pointer_cast<PublisherT>(pub);
+}
+
+template<
+  typename MessageT,
+  typename AllocatorT = std::allocator<void>,
+  typename PublisherT = rclcpp::Publisher<MessageT, AllocatorT>,
+  typename NodeT>
+std::shared_ptr<PublisherT>
+create_publisher(
+  NodeT & node,
+  const std::string & topic_name,
+  const rclcpp::QoS & qos,
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options = (
+    rclcpp::PublisherOptionsWithAllocator<AllocatorT>()
+  )
+)
+{
+  const auto type_support = *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
+
+  return create_publisher<MessageT, AllocatorT, PublisherT, NodeT>(node, topic_name, type_support,
+           qos, options);
 }
 
 }  // namespace rclcpp
