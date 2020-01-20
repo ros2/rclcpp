@@ -245,6 +245,19 @@ if(BUILD_TESTING)
     "test_msgs"
   )
   target_link_libraries(test_loaned_message ${PROJECT_NAME})
+  ament_add_gtest(test_intra_process_communication test/test_intra_process_communication.cpp
+    TIMEOUT 120)
+  if(TARGET test_intra_process_communication)
+    ament_target_dependencies(test_intra_process_communication
+      "rcl"
+      "rcl_interfaces"
+      "rmw"
+      "rosidl_generator_cpp"
+      "rosidl_typesupport_cpp"
+      "test_msgs"
+    )
+  endif()
+  target_link_libraries(test_intra_process_communication ${PROJECT_NAME})
 
   ament_add_gtest(test_node test/test_node.cpp TIMEOUT 240)
   if(TARGET test_node)
