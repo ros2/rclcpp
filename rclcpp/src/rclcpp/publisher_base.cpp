@@ -44,7 +44,8 @@ PublisherBase::PublisherBase(
   const rosidl_message_type_support_t & type_support,
   const rcl_publisher_options_t & publisher_options)
 : rcl_node_handle_(node_base->get_shared_rcl_node_handle()),
-  intra_process_is_enabled_(false), intra_process_publisher_id_(0)
+  intra_process_is_enabled_(false), intra_process_publisher_id_(0),
+  intra_process_publisher_id_serialized_(0)
 {
   rcl_ret_t ret = rcl_publisher_init(
     &publisher_handle_,
@@ -105,6 +106,7 @@ PublisherBase::~PublisherBase()
     return;
   }
   ipm->remove_publisher(intra_process_publisher_id_);
+  ipm->remove_publisher(intra_process_publisher_id_serialized_);
 }
 
 const char *
@@ -238,9 +240,11 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
 void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
+  uint64_t intra_process_publisher_id_serialized,
   IntraProcessManagerSharedPtr ipm)
 {
   intra_process_publisher_id_ = intra_process_publisher_id;
+  intra_process_publisher_id_serialized_ = intra_process_publisher_id_serialized;
   weak_ipm_ = ipm;
   intra_process_is_enabled_ = true;
 }
