@@ -132,8 +132,11 @@ public:
                 "intraprocess communication allowed only with volatile durability");
       }
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
+      uint64_t intra_process_publisher_id_serialized = ipm->add_publisher(
+        this->shared_from_this(), true);
       this->setup_intra_process(
         intra_process_publisher_id,
+        intra_process_publisher_id_serialized,
         ipm);
     }
   }
@@ -170,6 +173,11 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
+    if (std::is_same<MessageT, rcl_serialized_message_t>::value) {
+      this->template publish<MessageDeleter>(std::move(msg));
+      return;
+    }
+
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(*msg);
       return;
@@ -184,34 +192,33 @@ public:
       get_subscription_count() > get_intra_process_subscription_count();
 
     if (inter_process_publish_needed) {
-      auto shared_msg = this->do_intra_process_publish_and_return_shared(std::move(msg));
+      auto shared_msg = this->do_intra_process_publish_and_return_shared(std::move(
+            msg), message_allocator_);
       this->do_inter_process_publish(*shared_msg);
     } else {
-      this->do_intra_process_publish(std::move(msg));
+      this->do_intra_process_publish(std::move(msg), message_allocator_);
     }
   }
 
   virtual void
   publish(const MessageT & msg)
   {
-    // Avoid allocating when not using intra process.
-    if (!intra_process_is_enabled_) {
-      // In this case we're not using intra process.
-      return this->do_inter_process_publish(msg);
-    }
-    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
-    // As the message is not const, a copy should be made.
-    // A shared_ptr<const MessageT> could also be constructed here.
-    auto ptr = MessageAllocatorTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocatorTraits::construct(*message_allocator_.get(), ptr, msg);
-    MessageUniquePtr unique_msg(ptr, message_deleter_);
-    this->publish(std::move(unique_msg));
+    this->do_publish_message(msg);
   }
 
-  void
-  publish(const rcl_serialized_message_t & serialized_msg)
+  /// Publish a serialized message. Non specialized version to prevent comipiling errors.
+  template<typename TDeleter, typename T>
+  void publish(std::unique_ptr<T, TDeleter> serialized_msg)
   {
-    return this->do_serialized_publish(&serialized_msg);
+    (void)serialized_msg;
+    throw std::runtime_error("not supported");
+  }
+
+  /// Publish a serialized message.
+  template<typename TDeleter>
+  void publish(std::unique_ptr<rcl_serialized_message_t, TDeleter> serialized_msg)
+  {
+    this->do_serialized_publish(serialized_msg.get());
   }
 
   /// Publish an instance of a LoanedMessage.
@@ -293,6 +300,33 @@ protected:
     // Setup continues in the post construction method, post_init_setup().
   }
 
+  template<class T = MessageT>
+  typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value>::type
+  do_publish_message(const T & msg)
+  {
+    // Avoid allocating when not using intra process.
+    if (!intra_process_is_enabled_) {
+      // In this case we're not using intra process.
+      return this->do_inter_process_publish(msg);
+    }
+    // Otherwise we have to allocate memory in a unique_ptr and pass it along.
+    // As the message is not const, a copy should be made.
+    // A shared_ptr<const MessageT> could also be constructed here.
+    auto ptr = MessageAllocatorTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocatorTraits::construct(*message_allocator_.get(), ptr, msg);
+    MessageUniquePtr unique_msg(ptr, message_deleter_);
+    this->publish(std::move(unique_msg));
+  }
+
+  template<class T = MessageT>
+  typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value>::type
+  do_publish_message(const MessageT & msg)
+  {
+    (void)msg;
+    throw std::runtime_error(
+            "publishing serialized messages is only supported for unique pointers");
+  }
+
   void
   do_inter_process_publish(const MessageT & msg)
   {
@@ -314,15 +348,24 @@ protected:
   }
 
   void
-  do_serialized_publish(const rcl_serialized_message_t * serialized_msg)
+  do_serialized_publish(rcl_serialized_message_t * serialized_msg)
   {
-    if (intra_process_is_enabled_) {
-      // TODO(Karsten1987): support serialized message passed by intraprocess
-      throw std::runtime_error("storing serialized messages in intra process is not supported yet");
+    bool inter_process_publish_needed =
+      get_subscription_count() > get_intra_process_subscription_count();
+
+    if (inter_process_publish_needed) {
+      // declare here to avoid deletion before returning method
+      auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
+      if (RCL_RET_OK != status) {
+        rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
+      }
     }
-    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
-    if (RCL_RET_OK != status) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
+
+    auto msg = std::make_unique<rclcpp::experimental::SerializedContainer>(
+      std::move(*serialized_msg));
+
+    if (intra_process_is_enabled_) {
+      do_intra_process_publish(std::move(msg), message_allocator_serialized_);
     }
   }
 
@@ -346,8 +389,11 @@ protected:
     }
   }
 
+  template<typename T, typename Deleter, typename Allocator>
   void
-  do_intra_process_publish(std::unique_ptr<MessageT, MessageDeleter> msg)
+  do_intra_process_publish(
+    std::unique_ptr<T, Deleter> msg,
+    std::shared_ptr<Allocator> & message_allocator)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -358,14 +404,21 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    ipm->template do_intra_process_publish<MessageT, AllocatorT>(
-      intra_process_publisher_id_,
+    const uint64_t intra_process_publisher_id = std::is_same<T,
+        rclcpp::experimental::SerializedContainer>::value ?
+      intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
+
+    ipm->template do_intra_process_publish<T, AllocatorT>(
+      intra_process_publisher_id,
       std::move(msg),
-      message_allocator_);
+      message_allocator);
   }
 
-  std::shared_ptr<const MessageT>
-  do_intra_process_publish_and_return_shared(std::unique_ptr<MessageT, MessageDeleter> msg)
+  template<typename T, typename Deleter, typename Allocator>
+  std::shared_ptr<const T>
+  do_intra_process_publish_and_return_shared(
+    std::unique_ptr<T, Deleter> msg,
+    std::shared_ptr<Allocator> & message_allocator)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -376,10 +429,14 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    return ipm->template do_intra_process_publish_and_return_shared<MessageT, AllocatorT>(
-      intra_process_publisher_id_,
+    const uint64_t intra_process_publisher_id = std::is_same<T,
+        rclcpp::experimental::SerializedContainer>::value ?
+      intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
+
+    return ipm->template do_intra_process_publish_and_return_shared<T, AllocatorT>(
+      intra_process_publisher_id,
       std::move(msg),
-      message_allocator_);
+      message_allocator);
   }
 
   /// Copy of original options passed during construction.
