@@ -110,11 +110,14 @@ public:
    * In addition this generates a unique intra process id for the subscription.
    *
    * \param subscription the SubscriptionIntraProcess to register.
+   * \param is_serialized true if the buffer expects serialized messages
    * \return an unsigned 64-bit integer which is the subscription's unique id.
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_subscription(rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription);
+  add_subscription(
+    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription,
+    const bool is_serialized = false);
 
   /// Unregister a subscription using the subscription's unique id.
   /**
@@ -134,11 +137,12 @@ public:
    * In addition this generates a unique intra process id for the publisher.
    *
    * \param publisher publisher to be registered with the manager.
+   * \param is_serialized true if the buffer expects serialized messages
    * \return an unsigned 64-bit integer which is the publisher's unique id.
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_publisher(rclcpp::PublisherBase::SharedPtr publisher);
+  add_publisher(rclcpp::PublisherBase::SharedPtr publisher, const bool is_serialized = false);
 
   /// Unregister a publisher using the publisher's unique id.
   /**
@@ -311,6 +315,7 @@ private:
     rmw_qos_profile_t qos;
     const char * topic_name;
     bool use_take_shared_method;
+    bool is_serialized;
   };
 
   struct PublisherInfo
@@ -320,6 +325,7 @@ private:
     rclcpp::PublisherBase::WeakPtr publisher;
     rmw_qos_profile_t qos;
     const char * topic_name;
+    bool is_serialized;
   };
 
   struct SplittedSubscriptions
