@@ -27,6 +27,7 @@
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
+#include "rclcpp/experimental/serialization.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
@@ -36,6 +37,8 @@ namespace rclcpp
 {
 namespace experimental
 {
+
+class SerializedContainer;
 
 template<
   typename MessageT,
@@ -51,6 +54,10 @@ public:
   using MessageAlloc = typename MessageAllocTraits::allocator_type;
   using ConstMessageSharedPtr = std::shared_ptr<const MessageT>;
   using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
+  using CallbackMessageAllocTraits = allocator::AllocRebind<CallbackMessageT, Alloc>;
+  using CallbackMessageAlloc = typename CallbackMessageAllocTraits::allocator_type;
+  using CallbackMessageUniquePtr = std::unique_ptr<CallbackMessageT>;
+  using CallbackMessageSharedPtr = std::shared_ptr<CallbackMessageT>;
 
   using BufferUniquePtr = typename rclcpp::experimental::buffers::IntraProcessBuffer<
     MessageT,
@@ -64,11 +71,15 @@ public:
     rclcpp::Context::SharedPtr context,
     const std::string & topic_name,
     rmw_qos_profile_t qos_profile,
-    rclcpp::IntraProcessBufferType buffer_type)
+    rclcpp::IntraProcessBufferType buffer_type,
+    std::shared_ptr<SerializationBase> serializer)
   : SubscriptionIntraProcessBase(topic_name, qos_profile),
-    any_callback_(callback)
+    any_callback_(callback), serializer_(serializer)
   {
-    if (!std::is_same<MessageT, CallbackMessageT>::value) {
+    if (!std::is_same<MessageT, CallbackMessageT>::value &&
+      !std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value &&
+      !std::is_same<CallbackMessageT, rcl_serialized_message_t>::value)
+    {
       throw std::runtime_error("SubscriptionIntraProcess wrong callback type");
     }
 
@@ -143,14 +154,40 @@ private:
   }
 
   template<typename T>
-  typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type
+  typename std::enable_if<
+    std::is_same<T, rcl_serialized_message_t>::value &&
+    !std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    void>::type
   execute_impl()
   {
-    throw std::runtime_error("Subscription intra-process can't handle serialized messages");
+    if (serializer_) {
+      rmw_message_info_t msg_info;
+      msg_info.from_intra_process = true;
+
+      ConstMessageSharedPtr msg = buffer_->consume_shared();
+      auto serialized_msg =
+        serializer_->serialize_message(reinterpret_cast<const void *>(msg.get()));
+
+      if (serialized_msg == nullptr) {
+        throw std::runtime_error("Subscription intra-process could not serialize message");
+      }
+
+      if (any_callback_.use_take_shared_method()) {
+        any_callback_.dispatch_intra_process(serialized_msg, msg_info);
+      } else {
+        throw std::runtime_error("Subscription intra-process for serialized "
+                "messages does not support unique pointers.");
+      }
+    } else {
+      throw std::runtime_error("Subscription intra-process can't handle serialized messages");
+    }
   }
 
   template<class T>
-  typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value, void>::type
+  typename std::enable_if<
+    !std::is_same<T, rcl_serialized_message_t>::value &&
+    !std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    void>::type
   execute_impl()
   {
     rmw_message_info_t msg_info;
@@ -166,8 +203,75 @@ private:
     }
   }
 
+  template<typename T>
+  typename std::enable_if<
+    std::is_same<T, rcl_serialized_message_t>::value &&
+    std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    void>::type
+  execute_impl()
+  {
+    rmw_message_info_t msg_info;
+    msg_info.from_intra_process = true;
+
+    if (any_callback_.use_take_shared_method()) {
+      ConstMessageSharedPtr msg = buffer_->consume_shared();
+      if (msg == nullptr) {
+        throw std::runtime_error("Subscription intra-process could not get serialized message");
+      }
+      any_callback_.dispatch_intra_process(msg, msg_info);
+    } else {
+      throw std::runtime_error("Subscription intra-process for serialized "
+              "messages does not support unique pointers.");
+    }
+  }
+
+  template<class T>
+  typename std::enable_if<
+    !std::is_same<T, rcl_serialized_message_t>::value &&
+    std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    void>::type
+  execute_impl()
+  {
+    if (serializer_) {
+      ConstMessageSharedPtr serialized_container = buffer_->consume_shared();
+      if (serialized_container == nullptr) {
+        throw std::runtime_error("Subscription intra-process could not get serialized message");
+      }
+
+      rmw_message_info_t msg_info;
+      msg_info.from_intra_process = true;
+
+      if (any_callback_.use_take_shared_method()) {
+        CallbackMessageSharedPtr msg = construct_unique();
+        serializer_->deserialize_message(*serialized_container,
+          reinterpret_cast<void *>(msg.get()));
+        any_callback_.dispatch_intra_process(msg, msg_info);
+      } else {
+        CallbackMessageUniquePtr msg = construct_unique();
+        serializer_->deserialize_message(*serialized_container,
+          reinterpret_cast<void *>(msg.get()));
+        any_callback_.dispatch_intra_process(std::move(msg), msg_info);
+      }
+    } else {
+      throw std::runtime_error("Subscription intra-process can't handle unserialized messages");
+    }
+  }
+
+  CallbackMessageUniquePtr construct_unique()
+  {
+    CallbackMessageUniquePtr unique_msg;
+    auto ptr = CallbackMessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    CallbackMessageAllocTraits::construct(*message_allocator_.get(), ptr);
+    unique_msg = CallbackMessageUniquePtr(ptr);
+
+    return unique_msg;
+  }
+
   AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
   BufferUniquePtr buffer_;
+  std::shared_ptr<SerializationBase> serializer_;
+  std::shared_ptr<CallbackMessageAlloc> message_allocator_ =
+    std::make_shared<CallbackMessageAlloc>();
 };
 
 }  // namespace experimental
