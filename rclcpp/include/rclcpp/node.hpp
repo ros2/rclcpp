@@ -1084,7 +1084,7 @@ public:
    * ROS topic name conventions.
    *
    * `topic_name` may be a relative, private, or fully qualified topic name.
-   * A relative or private topic will be expanded using this node's namespace and name,
+   * A relative or private topic will be expanded using this node's namespace and name.
    * The queried `topic_name` is not remapped.
    *
    * \param[in] topic_name the topic_name on which to find the publishers.
