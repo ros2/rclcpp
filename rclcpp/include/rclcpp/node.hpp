@@ -1072,10 +1072,10 @@ public:
   bool
   assert_liveliness() const;
 
-  /// Return a list of publishers about topic endpoint information to a given topic.
+  /// Return the topic endpoint information about publishers on a given topic.
   /**
    * The returned parameter is a list of topic endpoint information, where each item will contain
-   * the node name, node namespace, topic type, endpoint type, participant's GID and its QoS
+   * the node name, node namespace, topic type, endpoint type, topic endpoint's GID, and its QoS
    * profile.
    *
    * When the `no_mangle` parameter is `true`, the provided `topic_name` should be a valid topic
@@ -1089,7 +1089,7 @@ public:
    *
    * \param[in] topic_name the topic_name on which to find the publishers.
    * \param[in] no_mangle if `true`, `topic_name` needs to be a valid middleware topic name,
-   *            otherwise it should be a valid ROS topic name. Defaults to `false`.
+   *   otherwise it should be a valid ROS topic name. Defaults to `false`.
    * \return a list of TopicEndpointInfo representing all the publishers on this topic.
    * \throws InvalidTopicNameError if the given topic_name is invalid.
    * \throws std::runtime_error if internal error happens.
@@ -1098,10 +1098,10 @@ public:
   std::vector<rclcpp::TopicEndpointInfo>
   get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
 
-  /// Return a list of subscriptions about topic endpoint information to a given topic.
+  /// Return the topic endpoint information about subscriptions on a given topic.
   /**
    * The returned parameter is a list of topic endpoint information, where each item will contain
-   * the node name, node namespace, topic type, endpoint type, participant's GID and its QoS
+   * the node name, node namespace, topic type, endpoint type, topic endpoint's GID, and its QoS
    * profile.
    *
    * When the `no_mangle` parameter is `true`, the provided `topic_name` should be a valid topic
@@ -1115,7 +1115,7 @@ public:
    *
    * \param[in] topic_name the topic_name on which to find the subscriptions.
    * \param[in] no_mangle if `true`, `topic_name` needs to be a valid middleware topic name,
-   *            otherwise it should be a valid ROS topic name. Defaults to `false`.
+   *   otherwise it should be a valid ROS topic name. Defaults to `false`.
    * \return a list of TopicEndpointInfo representing all the subscriptions on this topic.
    * \throws InvalidTopicNameError if the given topic_name is invalid.
    * \throws std::runtime_error if internal error happens.

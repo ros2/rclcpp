@@ -22,13 +22,13 @@
 #include <utility>
 #include <vector>
 
+#include "rcl/graph.h"
 #include "rcl/guard_condition.h"
 
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rmw/topic_endpoint_info.h"
 
 namespace rclcpp
 {
@@ -41,8 +41,8 @@ enum class EndpointType
 };
 
 /**
- * Use to get topic endpoint information that containing the node name, node namespace, topic type,
- * endpoint type, GID of endpoint and its QoS.
+ * "Struct that contains topic endpoint information like the associated node name, node namespace,
+ * topic type, endpoint type, endpoint GID, and its QoS.
  */
 struct RCLCPP_PUBLIC TopicEndpointInfo
 {
@@ -53,15 +53,15 @@ struct RCLCPP_PUBLIC TopicEndpointInfo
   std::array<uint8_t, RMW_GID_STORAGE_SIZE> endpoint_gid;
   rclcpp::QoS qos;
 
-  /// Constructor which convert rmw_topic_endpoint_info_t to TopicEndpointInfo.
-  TopicEndpointInfo(const rmw_topic_endpoint_info_t & info)
+  /// Constructor which converts rcl_topic_endpoint_info_t to TopicEndpointInfo.
+  TopicEndpointInfo(const rcl_topic_endpoint_info_t & info)
   : node_name(info.node_name),
     node_namespace(info.node_namespace),
     topic_type(info.topic_type),
     endpoint_type(static_cast<rclcpp::EndpointType>(info.endpoint_type)),
     qos({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile)
   {
-    std::copy(info.endpoint_gid, info.endpoint_gid+RMW_GID_STORAGE_SIZE, endpoint_gid.begin());
+    std::copy(info.endpoint_gid, info.endpoint_gid + RMW_GID_STORAGE_SIZE, endpoint_gid.begin());
   }
 };
 
@@ -187,7 +187,7 @@ public:
   size_t
   count_graph_users() = 0;
 
-  /// Return a list of publishers about topic endpoint information to a given topic.
+  /// Return the topic endpoint information about publishers on a given topic.
   /**
    * \sa rclcpp::Node::get_publishers_info_by_topic
    */
@@ -196,7 +196,7 @@ public:
   std::vector<rclcpp::TopicEndpointInfo>
   get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
 
-  /// Return a list of subscriptions about topic endpoint information to a given topic.
+  /// Return the topic endpoint information about subscriptions on a given topic.
   /**
    * \sa rclcpp::Node::get_subscriptions_info_by_topic
    */

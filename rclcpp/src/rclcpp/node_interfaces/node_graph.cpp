@@ -372,7 +372,7 @@ NodeGraph::count_graph_users()
 
 static
 std::vector<rclcpp::TopicEndpointInfo>
-convert_to_topic_info_list(const rmw_topic_endpoint_info_array_t & info_array)
+convert_to_topic_info_list(const rcl_topic_endpoint_info_array_t & info_array)
 {
   std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
   for (size_t i = 0; i < info_array.count; ++i) {
@@ -399,7 +399,7 @@ get_info_by_topic(
     false);    // false = not a service
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  rmw_topic_endpoint_info_array_t info_array = rmw_get_zero_initialized_topic_endpoint_info_array();
+  rcl_topic_endpoint_info_array_t info_array = rcl_get_zero_initialized_topic_endpoint_info_array();
   auto ret =
     rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
   if (RCL_RET_OK != ret) {
@@ -411,7 +411,7 @@ get_info_by_topic(
       error_msg += rcl_get_error_string().str;
     }
     rcl_reset_error();
-    if (RMW_RET_OK != rmw_topic_endpoint_info_array_fini(&info_array, &allocator)) {
+    if (RCL_RET_OK != rcl_topic_endpoint_info_array_fini(&info_array, &allocator)) {
       error_msg += std::string(", failed also to cleanup topic info array, leaking memory: ")
         + rcl_get_error_string().str;
       rcl_reset_error();
@@ -420,9 +420,9 @@ get_info_by_topic(
   }
 
   topic_info_list = convert_to_topic_info_list(info_array);
-  ret = rmw_topic_endpoint_info_array_fini(&info_array, &allocator);
-  if (ret != RMW_RET_OK) {
-    throw_from_rcl_error(ret, "rmw_topic_info_array_fini failed.");
+  ret = rcl_topic_endpoint_info_array_fini(&info_array, &allocator);
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "rcl_topic_info_array_fini failed.");
   }
 
   return topic_info_list;
