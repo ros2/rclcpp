@@ -88,8 +88,7 @@ struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(FArgs ...))(Args ...)>>
 struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)>(FArgs ...)>>
 #elif defined _MSC_VER  // MS Visual Studio
 struct function_traits<
-  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...), FArgs ...>
->
+  std::_Binder<std::_Unforced, ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
 #else
 #error "Unsupported C++ compiler / standard library"
 #endif
@@ -106,8 +105,7 @@ struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(FArgs ...))(Args ...) co
 struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...) const>(FArgs ...)>>
 #elif defined _MSC_VER  // MS Visual Studio
 struct function_traits<
-  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...) const, FArgs ...>
->
+  std::_Binder<std::_Unforced, ReturnTypeT (ClassT::*)(Args ...) const, FArgs ...>>
 #else
 #error "Unsupported C++ compiler / standard library"
 #endif
@@ -121,7 +119,7 @@ struct function_traits<std::__bind<ReturnTypeT( &)(Args ...), FArgs ...>>
 #elif defined __GLIBCXX__  // glibc++ (GNU C++)
 struct function_traits<std::_Bind<ReturnTypeT(*(FArgs ...))(Args ...)>>
 #elif defined _MSC_VER  // MS Visual Studio
-struct function_traits<std::_Binder<std::_Unforced, ReturnTypeT(__cdecl &)(Args ...), FArgs ...>>
+struct function_traits<std::_Binder<std::_Unforced, ReturnTypeT( &)(Args ...), FArgs ...>>
 #else
 #error "Unsupported C++ compiler / standard library"
 #endif
