@@ -28,7 +28,7 @@ class TestPublisher : public ::testing::Test
 public:
   static void SetUpTestCase()
   {
-    if (!rclcpp::is_initialized()) {
+    if (!rclcpp::ok()) {
       rclcpp::init(0, nullptr);
     }
   }
