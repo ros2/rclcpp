@@ -153,8 +153,8 @@ ok(rclcpp::Context::SharedPtr context = nullptr);
  * \param[in] context Check for initialization of this Context.
  * \return true if the context is initialized, and false otherwise
  */
-RCLCPP_PUBLIC
 [[deprecated("use the function ok() instead, which has the same usage.")]]
+RCLCPP_PUBLIC
 bool
 is_initialized(rclcpp::Context::SharedPtr context = nullptr);
 
