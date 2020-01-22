@@ -154,6 +154,7 @@ ok(rclcpp::Context::SharedPtr context = nullptr);
  * \return true if the context is initialized, and false otherwise
  */
 RCLCPP_PUBLIC
+[[deprecated("use the function ok() instead, which has the same usage.")]]
 bool
 is_initialized(rclcpp::Context::SharedPtr context = nullptr);
 

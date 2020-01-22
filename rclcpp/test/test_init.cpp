@@ -17,6 +17,14 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
 
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
 TEST(TestInit, is_initialized) {
   EXPECT_FALSE(rclcpp::is_initialized());
 
@@ -50,3 +58,9 @@ TEST(TestInit, initialize_with_unknown_ros_args) {
 
   EXPECT_FALSE(rclcpp::is_initialized());
 }
+
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
