@@ -364,6 +364,18 @@ Node::count_subscribers(const std::string & topic_name) const
   return node_graph_->count_subscribers(topic_name);
 }
 
+std::vector<rclcpp::TopicEndpointInfo>
+Node::get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_publishers_info_by_topic(topic_name, no_mangle);
+}
+
+std::vector<rclcpp::TopicEndpointInfo>
+Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
+}
+
 const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
 Node::get_callback_groups() const
 {
@@ -492,16 +504,4 @@ bool
 Node::assert_liveliness() const
 {
   return node_base_->assert_liveliness();
-}
-
-std::vector<rclcpp::TopicEndpointInfo>
-Node::get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle) const
-{
-  return node_graph_->get_publishers_info_by_topic(topic_name, no_mangle);
-}
-
-std::vector<rclcpp::TopicEndpointInfo>
-Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle) const
-{
-  return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
 }
