@@ -41,7 +41,7 @@ enum class EndpointType
 };
 
 /**
- * "Struct that contains topic endpoint information like the associated node name, node namespace,
+ * Struct that contains topic endpoint information like the associated node name, node namespace,
  * topic type, endpoint type, endpoint GID, and its QoS.
  */
 struct RCLCPP_PUBLIC TopicEndpointInfo
