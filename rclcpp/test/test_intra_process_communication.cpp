@@ -115,7 +115,7 @@ protected:
 };
 
 std::chrono::milliseconds TestPublisherSubscriptionSerialized::offset = std::chrono::milliseconds(
-  2000);
+  250);
 std::array<uint32_t, 2> counts;
 
 void OnMessageSerialized(const std::shared_ptr<const rcl_serialized_message_t> msg)
@@ -184,8 +184,10 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized)
       publisher->publish(*stringMsg);
       publisher->publish(std::move(stringMsgU));
     }
-    rclcpp::spin_some(node);
-    rclcpp::sleep_for(offset);
+    for (uint32_t i = 0; i < 3; ++i) {
+      rclcpp::spin_some(node);
+      rclcpp::sleep_for(offset);
+    }
 
     rclcpp::spin_some(node);
   }
