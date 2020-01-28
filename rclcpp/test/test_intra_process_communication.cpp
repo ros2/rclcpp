@@ -44,6 +44,27 @@ void * custom_allocate(size_t size, void * state)
   return r;
 }
 
+void * custom_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state)
+{
+  static auto m_allocator = rcutils_get_default_allocator();
+
+  ++get_test_allocation_counter();
+  auto r = m_allocator.zero_allocate(number_of_elements, size_of_element, state);
+  return r;
+}
+
+void * custom_reallocate(void *pointer, size_t size, void * state)
+{
+  static auto m_allocator = rcutils_get_default_allocator();
+
+  if (pointer == nullptr) {
+    ++get_test_allocation_counter();
+  }
+
+  auto r = m_allocator.reallocate(pointer, size, state);
+  return r;
+}
+
 void custom_deallocate(void * pointer, void * state)
 {
   static auto m_allocator = rcutils_get_default_allocator();
@@ -52,7 +73,7 @@ void custom_deallocate(void * pointer, void * state)
   m_allocator.deallocate(pointer, state);
 }
 
-rcutils_uint8_array_t make_serialized_string_msg(
+rcl_serialized_message_t make_serialized_string_msg(
   const std::shared_ptr<test_msgs::msg::Strings> & stringMsg)
 {
   auto m_allocator = rcutils_get_default_allocator();
@@ -60,8 +81,8 @@ rcutils_uint8_array_t make_serialized_string_msg(
   // add custom (de)allocator to count the references to the object
   m_allocator.allocate = &custom_allocate;
   m_allocator.deallocate = &custom_deallocate;
-
-  ++get_test_allocation_counter();
+  m_allocator.reallocate = &custom_reallocate;
+  m_allocator.zero_allocate = &custom_zero_allocate;
 
   rcl_serialized_message_t msg = rmw_get_zero_initialized_serialized_message();
   auto ret = rmw_serialized_message_init(&msg, 0, &m_allocator);
@@ -197,7 +218,7 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized)
     EXPECT_EQ(counts[1], 9u);
   }
 
-  EXPECT_LE(get_test_allocation_counter(), 30);
+  EXPECT_EQ(get_test_allocation_counter(), 0);
 }
 
 TEST_P(TestPublisherSubscriptionSerialized, publish_serialized_generic)
@@ -253,7 +274,7 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized_generic)
     EXPECT_EQ(counts[1], 3u);
   }
 
-  EXPECT_LE(get_test_allocation_counter(), 30);
+  EXPECT_EQ(get_test_allocation_counter(), 0);
 }
 
 auto get_new_context()
