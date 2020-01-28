@@ -53,7 +53,7 @@ void * custom_zero_allocate(size_t number_of_elements, size_t size_of_element, v
   return r;
 }
 
-void * custom_reallocate(void *pointer, size_t size, void * state)
+void * custom_reallocate(void * pointer, size_t size, void * state)
 {
   static auto m_allocator = rcutils_get_default_allocator();
 
