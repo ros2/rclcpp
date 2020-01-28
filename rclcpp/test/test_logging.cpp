@@ -77,16 +77,33 @@ public:
   }
 };
 
+class DummyNode
+{
+public:
+  DummyNode()
+  {
+    clock_ = rclcpp::Clock::make_shared(RCL_ROS_TIME);
+  }
+  rclcpp::Clock::SharedPtr get_clock()
+  {
+    return clock_;
+  }
+
+private:
+  rclcpp::Clock::SharedPtr clock_;
+};
+
 TEST_F(TestLoggingMacros, test_logging_named) {
   for (int i : {1, 2, 3}) {
     RCLCPP_DEBUG(g_logger, "message %d", i);
   }
+  size_t expected_location = __LINE__ - 2u;
   EXPECT_EQ(3u, g_log_calls);
   EXPECT_TRUE(g_last_log_event.location != NULL);
   if (g_last_log_event.location) {
     EXPECT_STREQ("TestBody", g_last_log_event.location->function_name);
     EXPECT_THAT(g_last_log_event.location->file_name, EndsWith("test_logging.cpp"));
-    EXPECT_EQ(82u, g_last_log_event.location->line_number);
+    EXPECT_EQ(expected_location, g_last_log_event.location->line_number);
   }
   EXPECT_EQ(RCUTILS_LOG_SEVERITY_DEBUG, g_last_log_event.level);
   EXPECT_EQ("name", g_last_log_event.name);
@@ -208,6 +225,26 @@ TEST_F(TestLoggingMacros, test_throttle) {
       EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(clock, clock_ns));
     } else {
       EXPECT_EQ(6u, g_log_calls);
+    }
+  }
+  DummyNode node;
+  rcl_clock_t * node_clock = node.get_clock()->get_clock_handle();
+  ASSERT_TRUE(node_clock);
+  ASSERT_EQ(RCL_RET_OK, rcl_enable_ros_time_override(node_clock));
+  EXPECT_EQ(6u, g_log_calls);
+  EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(node_clock, RCUTILS_MS_TO_NS(10)));
+  for (uint64_t i = 0; i < 3; ++i) {
+    RCLCPP_DEBUG_THROTTLE(g_logger, *node.get_clock(), 10, "Throttling");
+    if (i == 0) {
+      EXPECT_EQ(7u, g_log_calls);
+      rcl_time_point_value_t clock_ns = node.get_clock()->now().nanoseconds() + RCUTILS_MS_TO_NS(5);
+      EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(node_clock, clock_ns));
+    } else if (i == 1) {
+      EXPECT_EQ(7u, g_log_calls);
+      rcl_time_point_value_t clock_ns = node.get_clock()->now().nanoseconds() + RCUTILS_MS_TO_NS(5);
+      EXPECT_EQ(RCL_RET_OK, rcl_set_ros_time_override(node_clock, clock_ns));
+    } else {
+      EXPECT_EQ(8u, g_log_calls);
     }
   }
 }
