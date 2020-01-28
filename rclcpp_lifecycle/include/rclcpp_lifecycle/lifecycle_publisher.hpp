@@ -116,7 +116,8 @@ public:
   void publish(std::unique_ptr<T, TDeleter> serialized_msg)
   {
     (void)serialized_msg;
-    throw std::runtime_error("not supported");
+    throw std::runtime_error(
+      "publishing unique_ptr with custom deleter only supported for serialized messages");
   }
 
   /// Publish a serialized message.

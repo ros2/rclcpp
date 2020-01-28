@@ -99,7 +99,7 @@ NodeTopics::add_subscription(
     callback_group->add_waitable(subscription_event);
   }
 
-  auto intra_process_waitables = subscription->get_intra_process_waitables();
+  const auto intra_process_waitables = subscription->get_intra_process_waitables();
   for (auto & intra_process_waitable : intra_process_waitables) {
     if (nullptr != intra_process_waitable) {
       // Add to the callback group to be notified about intra-process msgs.

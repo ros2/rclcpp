@@ -157,7 +157,8 @@ public:
       }
 
       using rclcpp::experimental::IntraProcessManager;
-      uint64_t intra_process_subscription_id, intra_process_subscription_id_serialized;
+      uint64_t intra_process_subscription_id;
+      uint64_t intra_process_subscription_id_serialized;
 
       auto context = node_base->get_context();
       auto ipm = context->get_sub_context<IntraProcessManager>();
