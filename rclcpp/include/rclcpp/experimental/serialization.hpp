@@ -15,7 +15,7 @@
 #ifndef RCLCPP__EXPERIMENTAL__SERIALIZATION_HPP_
 #define RCLCPP__EXPERIMENTAL__SERIALIZATION_HPP_
 
-#include "rmw/rmw.h"
+#include <rmw/rmw.h>
 
 #include <memory>
 #include <string>

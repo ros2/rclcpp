@@ -212,7 +212,7 @@ public:
   {
     (void)serialized_msg;
     throw std::runtime_error(
-      "publishing unique_ptr with custom deleter only supported for serialized messages");
+            "publishing unique_ptr with custom deleter only supported for serialized messages");
   }
 
   /// Publish a serialized message.
