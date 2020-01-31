@@ -15,6 +15,7 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_GRAPH_INTERFACE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_GRAPH_INTERFACE_HPP_
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <map>
@@ -54,7 +55,7 @@ struct RCLCPP_PUBLIC TopicEndpointInfo
   rclcpp::QoS qos;
 
   /// Constructor which converts rcl_topic_endpoint_info_t to TopicEndpointInfo.
-  TopicEndpointInfo(const rcl_topic_endpoint_info_t & info)
+  explicit TopicEndpointInfo(const rcl_topic_endpoint_info_t & info)
   : node_name(info.node_name),
     node_namespace(info.node_namespace),
     topic_type(info.topic_type),

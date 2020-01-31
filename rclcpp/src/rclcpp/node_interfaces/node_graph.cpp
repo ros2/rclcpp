@@ -21,8 +21,9 @@
 #include <vector>
 
 #include "rcl/graph.h"
-#include "rclcpp/exceptions.hpp"
+#include "rcl/remap.h"
 #include "rclcpp/event.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
 
 using rclcpp::node_interfaces::NodeGraph;
@@ -381,7 +382,7 @@ convert_to_topic_info_list(const rcl_topic_endpoint_info_array_t & info_array)
   return topic_info_list;
 }
 
-template <const char * EndpointType, typename FunctionT>
+template<const char * EndpointType, typename FunctionT>
 static std::vector<rclcpp::TopicEndpointInfo>
 get_info_by_topic(
   rclcpp::node_interfaces::NodeBaseInterface * node_base,
@@ -389,18 +390,51 @@ get_info_by_topic(
   bool no_mangle,
   FunctionT rcl_get_info_by_topic)
 {
-  std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
-
+  std::string fqdn;
   auto rcl_node_handle = node_base->get_rcl_node_handle();
-  auto fqdn = rclcpp::expand_topic_or_service_name(
-    topic_name,
-    rcl_node_get_name(rcl_node_handle),
-    rcl_node_get_namespace(rcl_node_handle),
-    false);    // false = not a service
+
+  if (no_mangle) {
+    fqdn = topic_name;
+  } else {
+    fqdn = rclcpp::expand_topic_or_service_name(
+      topic_name,
+      rcl_node_get_name(rcl_node_handle),
+      rcl_node_get_namespace(rcl_node_handle),
+      false);    // false = not a service
+
+    // Get the node options
+    const rcl_node_options_t * node_options = rcl_node_get_options(rcl_node_handle);
+    if (nullptr == node_options) {
+      throw std::runtime_error("Need valid node options in get_info_by_topic()");
+    }
+
+    // global before local so that local overwrites global
+    const rcl_arguments_t * global_args = nullptr;
+    if (node_options->use_global_arguments) {
+      auto context_ptr = node_base->get_context()->get_rcl_context();
+      global_args = &(rcl_node_handle->context->global_arguments);
+    }
+
+    char * remapped_topic_name = nullptr;
+    rcl_ret_t ret = rcl_remap_topic_name(
+      &(node_options->arguments),
+      global_args,
+      fqdn.c_str(),
+      rcl_node_get_name(rcl_node_handle),
+      rcl_node_get_namespace(rcl_node_handle),
+      node_options->allocator,
+      &remapped_topic_name);
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, std::string("Failed to remap topic name ") + fqdn);
+    } else if (nullptr != remapped_topic_name) {
+      fqdn = remapped_topic_name;
+      node_options->allocator.deallocate(remapped_topic_name, node_options->allocator.state);
+    }
+  }
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcl_topic_endpoint_info_array_t info_array = rcl_get_zero_initialized_topic_endpoint_info_array();
-  auto ret =
+  rcl_ret_t ret =
     rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
   if (RCL_RET_OK != ret) {
     auto error_msg =
@@ -412,14 +446,14 @@ get_info_by_topic(
     }
     rcl_reset_error();
     if (RCL_RET_OK != rcl_topic_endpoint_info_array_fini(&info_array, &allocator)) {
-      error_msg += std::string(", failed also to cleanup topic info array, leaking memory: ")
-        + rcl_get_error_string().str;
+      error_msg += std::string(", failed also to cleanup topic info array, leaking memory: ") +
+        rcl_get_error_string().str;
       rcl_reset_error();
     }
     throw_from_rcl_error(ret, error_msg);
   }
 
-  topic_info_list = convert_to_topic_info_list(info_array);
+  std::vector<rclcpp::TopicEndpointInfo> topic_info_list = convert_to_topic_info_list(info_array);
   ret = rcl_topic_endpoint_info_array_fini(&info_array, &allocator);
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "rcl_topic_info_array_fini failed.");
