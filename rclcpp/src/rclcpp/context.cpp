@@ -95,10 +95,8 @@ Context::init(
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
   }
   try {
-    std::vector<std::string> unparsed_ros_arguments =
-      detail::get_unparsed_ros_arguments(argc, argv,
-        &(rcl_context_->global_arguments),
-        rcl_get_default_allocator());
+    std::vector<std::string> unparsed_ros_arguments = detail::get_unparsed_ros_arguments(
+      argc, argv, &(rcl_context_->global_arguments), rcl_get_default_allocator());
     if (!unparsed_ros_arguments.empty()) {
       throw exceptions::UnknownROSArgsError(std::move(unparsed_ros_arguments));
     }

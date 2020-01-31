@@ -227,12 +227,10 @@ public:
       // for the buffers that do not require ownership
       auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(*allocator, *message);
 
-      this->template add_shared_msg_to_buffers<MessageT>(shared_msg,
-        sub_ids.take_shared_subscriptions);
+      this->template add_shared_msg_to_buffers<MessageT>(
+        shared_msg, sub_ids.take_shared_subscriptions);
       this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
-        std::move(message),
-        sub_ids.take_ownership_subscriptions,
-        allocator);
+        std::move(message), sub_ids.take_ownership_subscriptions, allocator);
     }
   }
 
@@ -265,8 +263,8 @@ public:
       // If there are no owning, just convert to shared.
       std::shared_ptr<MessageT> shared_msg = std::move(message);
       if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT>(shared_msg,
-          sub_ids.take_shared_subscriptions);
+        this->template add_shared_msg_to_buffers<MessageT>(
+          shared_msg, sub_ids.take_shared_subscriptions);
       }
       return shared_msg;
     } else {

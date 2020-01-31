@@ -116,10 +116,8 @@ NodeOptions::get_rcl_node_options() const
       throw_from_rcl_error(ret, "failed to parse arguments");
     }
 
-    std::vector<std::string> unparsed_ros_arguments =
-      detail::get_unparsed_ros_arguments(c_argc, c_argv.get(),
-        &(node_options_->arguments),
-        this->allocator_);
+    std::vector<std::string> unparsed_ros_arguments = detail::get_unparsed_ros_arguments(
+      c_argc, c_argv.get(), &(node_options_->arguments), this->allocator_);
     if (!unparsed_ros_arguments.empty()) {
       throw exceptions::UnknownROSArgsError(std::move(unparsed_ros_arguments));
     }
