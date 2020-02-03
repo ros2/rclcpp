@@ -687,7 +687,8 @@ TEST_F(TestNode, declare_parameter_with_cli_overrides) {
     test_resources_path / "test_parameters.yaml").string();
   // test cases with overrides
   rclcpp::NodeOptions no;
-  no.arguments({
+  no.arguments(
+  {
     "--ros-args",
     "-p", "parameter_bool:=true",
     "-p", "parameter_int:=42",

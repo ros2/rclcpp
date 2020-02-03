@@ -204,8 +204,9 @@ Duration::operator*(double scale) const
     scale,
     std::numeric_limits<rcl_duration_value_t>::max());
   long double scale_ld = static_cast<long double>(scale);
-  return Duration(static_cast<rcl_duration_value_t>(
-             static_cast<long double>(rcl_duration_.nanoseconds) * scale_ld));
+  return Duration(
+    static_cast<rcl_duration_value_t>(
+      static_cast<long double>(rcl_duration_.nanoseconds) * scale_ld));
 }
 
 rcl_duration_value_t
