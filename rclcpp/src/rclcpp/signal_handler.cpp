@@ -165,7 +165,7 @@ __safe_strerror(int errnum, char * buffer, size_t buffer_length)
 {
 #if defined(_WIN32)
   strerror_s(buffer, buffer_length, errnum);
-#elif defined(_GNU_SOURCE) && (!defined(ANDROID) || __ANDROID_API__ >= 23)
+#elif defined(_GNU_SOURCE) && (defined(__UCLIBC__) || defined(__GLIBC__)) && (!defined(ANDROID) || __ANDROID_API__ >= 23)
   /* GNU-specific */
   char * msg = strerror_r(errnum, buffer, buffer_length);
   if (msg != buffer) {
