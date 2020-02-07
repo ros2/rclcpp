@@ -407,8 +407,6 @@ get_info_by_topic(
     if (nullptr == node_options) {
       throw std::runtime_error("Need valid node options in get_info_by_topic()");
     }
-
-    // global before local so that local overwrites global
     const rcl_arguments_t * global_args = nullptr;
     if (node_options->use_global_arguments) {
       global_args = &(rcl_node_handle->context->global_arguments);
