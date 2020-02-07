@@ -411,7 +411,6 @@ get_info_by_topic(
     // global before local so that local overwrites global
     const rcl_arguments_t * global_args = nullptr;
     if (node_options->use_global_arguments) {
-      auto context_ptr = node_base->get_context()->get_rcl_context();
       global_args = &(rcl_node_handle->context->global_arguments);
     }
 
