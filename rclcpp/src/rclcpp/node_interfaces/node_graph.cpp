@@ -25,6 +25,7 @@
 #include "rclcpp/event.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
 
 using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -483,4 +484,76 @@ NodeGraph::get_subscriptions_info_by_topic(
     topic_name,
     no_mangle,
     rcl_get_subscriptions_info_by_topic);
+}
+
+std::string &
+rclcpp::TopicEndpointInfo::node_name()
+{
+  return node_name_;
+}
+
+const std::string &
+rclcpp::TopicEndpointInfo::node_name() const
+{
+  return node_name_;
+}
+
+std::string &
+rclcpp::TopicEndpointInfo::node_namespace()
+{
+  return node_namespace_;
+}
+
+const std::string &
+rclcpp::TopicEndpointInfo::node_namespace() const
+{
+  return node_namespace_;
+}
+
+std::string &
+rclcpp::TopicEndpointInfo::topic_type()
+{
+  return topic_type_;
+}
+
+const std::string &
+rclcpp::TopicEndpointInfo::topic_type() const
+{
+  return topic_type_;
+}
+
+rclcpp::EndpointType &
+rclcpp::TopicEndpointInfo::endpoint_type()
+{
+  return endpoint_type_;
+}
+
+const rclcpp::EndpointType &
+rclcpp::TopicEndpointInfo::endpoint_type() const
+{
+  return endpoint_type_;
+}
+
+std::array<uint8_t, RMW_GID_STORAGE_SIZE> &
+rclcpp::TopicEndpointInfo::endpoint_gid()
+{
+  return endpoint_gid_;
+}
+
+const std::array<uint8_t, RMW_GID_STORAGE_SIZE> &
+rclcpp::TopicEndpointInfo::endpoint_gid() const
+{
+  return endpoint_gid_;
+}
+
+rclcpp::QoS &
+rclcpp::TopicEndpointInfo::qos_profile()
+{
+  return qos_profile_;
+}
+
+const rclcpp::QoS &
+rclcpp::TopicEndpointInfo::qos_profile() const
+{
+  return qos_profile_;
 }
