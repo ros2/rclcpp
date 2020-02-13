@@ -25,6 +25,7 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/publisher_options.hpp"
 #include "rclcpp/qos.hpp"
+#include "rcutils/get_env.h"
 
 using rclcpp::exceptions::throw_from_rcl_error;
 
@@ -315,10 +316,10 @@ NodeOptions::get_domain_id_from_env() const
 {
   // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
   size_t domain_id = std::numeric_limits<size_t>::max();
-  char * ros_domain_id = nullptr;
+  const char * ros_domain_id = nullptr;
   const char * env_var = "ROS_DOMAIN_ID";
 #ifndef _WIN32
-  ros_domain_id = getenv(env_var);
+  rcutils_get_env(env_var, &ros_domain_id);
 #else
   size_t ros_domain_id_size;
   _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
