@@ -947,7 +947,7 @@ public:
   rclcpp::node_interfaces::NodeParametersInterface::SharedPtr
   get_node_parameters_interface();
 
-  /// Return the Node's internal NodeParametersInterface implementation.
+  /// Return the Node's internal NodeTimeSourceInterface implementation.
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeTimeSourceInterface::SharedPtr
   get_node_time_source_interface();
