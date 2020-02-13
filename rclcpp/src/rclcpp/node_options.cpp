@@ -309,21 +309,14 @@ NodeOptions::allocator(rcl_allocator_t allocator)
   return *this;
 }
 
-// TODO(wjwwood): reuse rcutils_get_env() to avoid code duplication.
-//   See also: https://github.com/ros2/rcl/issues/119
 size_t
 NodeOptions::get_domain_id_from_env() const
 {
   // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
-  size_t domain_id = std::numeric_limits<size_t>::max();
   const char * ros_domain_id = nullptr;
   const char * env_var = "ROS_DOMAIN_ID";
-#ifndef _WIN32
   rcutils_get_env(env_var, &ros_domain_id);
-#else
-  size_t ros_domain_id_size;
-  _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
-#endif
+
   if (ros_domain_id) {
     uint32_t number = strtoul(ros_domain_id, NULL, 0);
     if (number == (std::numeric_limits<uint32_t>::max)()) {
