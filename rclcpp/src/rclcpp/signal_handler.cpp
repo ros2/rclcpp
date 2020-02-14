@@ -30,6 +30,7 @@
 #endif
 
 #include "rclcpp/logging.hpp"
+#include "rcutils/strerror.h"
 #include "rmw/impl/cpp/demangle.hpp"
 
 using rclcpp::SignalHandler;
@@ -159,28 +160,6 @@ SignalHandler::~SignalHandler()
   }
 }
 
-RCLCPP_LOCAL
-void
-__safe_strerror(int errnum, char * buffer, size_t buffer_length)
-{
-#if defined(_WIN32)
-  strerror_s(buffer, buffer_length, errnum);
-#elif defined(_GNU_SOURCE) && (!defined(ANDROID) || __ANDROID_API__ >= 23)
-  /* GNU-specific */
-  char * msg = strerror_r(errnum, buffer, buffer_length);
-  if (msg != buffer) {
-    strncpy(buffer, msg, buffer_length);
-    buffer[buffer_length - 1] = '\0';
-  }
-#else
-  /* XSI-compliant */
-  int error_status = strerror_r(errnum, buffer, buffer_length);
-  if (error_status != 0) {
-    throw std::runtime_error("Failed to get error string for errno: " + std::to_string(errnum));
-  }
-#endif
-}
-
 SignalHandler::signal_handler_type
 SignalHandler::set_signal_handler(
   int signal_value,
@@ -197,7 +176,7 @@ SignalHandler::set_signal_handler(
 #endif
   if (signal_handler_install_failed) {
     char error_string[1024];
-    __safe_strerror(errno, error_string, sizeof(error_string));
+    rcutils_safe_strerror(error_string, sizeof(error_string));
     auto msg =
       "Failed to set SIGINT signal handler (" + std::to_string(errno) + "): " + error_string;
     throw std::runtime_error(msg);

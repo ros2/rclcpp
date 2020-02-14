@@ -25,6 +25,7 @@
   <depend>rcl</depend>
   <depend>rcl_yaml_param_parser</depend>
   <depend>rcpputils</depend>
+  <depend>rcutils</depend>
   <depend>rmw</depend>
   <depend>tracetools</depend>
 
