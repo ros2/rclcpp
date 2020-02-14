@@ -30,6 +30,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_graph_interface.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/topic_endpoint_info_array.h"
 
 namespace rclcpp
 {
@@ -116,6 +117,18 @@ public:
 
   size_t
   count_graph_users() override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_publishers_info_by_topic(
+    const std::string & topic_name,
+    bool no_mangle = false) const override;
+
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_subscriptions_info_by_topic(
+    const std::string & topic_name,
+    bool no_mangle = false) const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeGraph)

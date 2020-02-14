@@ -439,6 +439,22 @@ public:
   size_t
   count_subscribers(const std::string & topic_name) const;
 
+  /// Return the topic endpoint information about publishers on a given topic.
+  /**
+   * \sa rclcpp::Node::get_publishers_info_by_topic
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
+
+  /// Return the topic endpoint information about subscriptions on a given topic.
+  /**
+   * \sa rclcpp::Node::get_subscriptions_info_by_topic
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const;
+
   /// Return a graph event, which will be set anytime a graph change occurs.
   /* The graph Event object is a loan which must be returned.
    * The Event object is scoped and therefore to return the load just let it go
