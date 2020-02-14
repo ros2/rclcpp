@@ -32,8 +32,8 @@ add_library(${PROJECT_NAME}
 ament_target_dependencies(${PROJECT_NAME}
   "action_msgs"
   "rcl_action"
-  "rosidl_generator_c"
   "rclcpp"
+  "rosidl_generator_c"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
