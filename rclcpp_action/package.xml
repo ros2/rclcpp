@@ -9,6 +9,10 @@
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
+  <build_export_depend>rosidl_generator_c</build_export_depend>
+
+  <build_depend>rosidl_generator_c</build_depend>
+
   <depend>action_msgs</depend>
   <depend>rclcpp</depend>
   <depend>rcl_action</depend>
