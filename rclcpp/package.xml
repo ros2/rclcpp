@@ -27,7 +27,6 @@
   <depend>rcl</depend>
   <depend>rcl_yaml_param_parser</depend>
   <depend>rcpputils</depend>
-  <depend>rmw_implementation</depend>
   <depend>tracetools</depend>
 
   <exec_depend>ament_cmake</exec_depend>
