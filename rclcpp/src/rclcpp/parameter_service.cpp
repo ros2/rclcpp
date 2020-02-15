@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "rclcpp/logging.hpp"
+
 #include "./parameter_service_names.hpp"
 
 using rclcpp::ParameterService;
