@@ -377,7 +377,7 @@ std::vector<rclcpp::TopicEndpointInfo>
 convert_to_topic_info_list(const rcl_topic_endpoint_info_array_t & info_array)
 {
   std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
-  for (size_t i = 0; i < info_array.count; ++i) {
+  for (size_t i = 0; i < info_array.size; ++i) {
     topic_info_list.push_back(rclcpp::TopicEndpointInfo(info_array.info_array[i]));
   }
   return topic_info_list;
