@@ -16,6 +16,8 @@
 #define RCLCPP__CLOCK_HPP_
 
 #include <functional>
+#include <thread>
+#include <mutex>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
@@ -95,6 +97,12 @@ public:
   rcl_clock_type_t
   get_clock_type() const noexcept;
 
+  RCLCPP_PUBLIC
+  std::mutex &
+  get_clock_mutex() noexcept {
+    return clock_mutex_;
+  }
+
   // Add a callback to invoke if the jump threshold is exceeded.
   /**
    * These callback functions must remain valid as long as the
@@ -136,6 +144,7 @@ private:
   rcl_clock_t rcl_clock_;
   friend TimeSource;  /// Allow TimeSource to access the rcl_clock_ datatype.
   rcl_allocator_t allocator_;
+  std::mutex clock_mutex_;
 };
 
 }  // namespace rclcpp
