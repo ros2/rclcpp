@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "rcl/init.h"
+#include "rcl/logging.h"
 #include "rclcpp/detail/utilities.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
@@ -34,8 +35,31 @@ static std::vector<std::weak_ptr<rclcpp::Context>> g_contexts;
 
 using rclcpp::Context;
 
+static
+std::shared_ptr<std::mutex>
+get_global_logging_configure_mutex()
+{
+  static auto mutex = std::make_shared<std::mutex>();
+  return mutex;
+}
+
+static
+size_t &
+get_logging_reference_count()
+{
+  static size_t ref_count = 0;
+  return ref_count;
+}
+
 Context::Context()
-: rcl_context_(nullptr), shutdown_reason_("") {}
+: rcl_context_(nullptr),
+  shutdown_reason_(""),
+  logging_configure_mutex_(get_global_logging_configure_mutex())
+{
+  if (!logging_configure_mutex_) {
+    throw std::runtime_error("global logging configure mutex is 'nullptr'");
+  }
+}
 
 Context::~Context()
 {
@@ -94,6 +118,22 @@ Context::init(
     rcl_context_.reset();
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
   }
+
+  {
+    std::lock_guard<std::mutex> guard(*logging_configure_mutex_);
+    size_t & count = get_logging_reference_count();
+    if (0u == count) {
+      ret = rcl_logging_configure(
+        &rcl_context_->global_arguments,
+        rcl_init_options_get_allocator(init_options_.get_rcl_init_options()));
+      if (RCL_RET_OK != ret) {
+        rcl_context_.reset();
+        rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure logging");
+      }
+    }
+    ++count;
+  }
+
   try {
     std::vector<std::string> unparsed_ros_arguments = detail::get_unparsed_ros_arguments(
       argc, argv, &(rcl_context_->global_arguments), rcl_get_default_allocator());
@@ -309,6 +349,20 @@ Context::clean_up()
 {
   shutdown_reason_ = "";
   rcl_context_.reset();
+  {
+    std::lock_guard<std::mutex> guard(*logging_configure_mutex_);
+    size_t & count = get_logging_reference_count();
+    if (0u == --count) {
+      rcl_ret_t rcl_ret = rcl_logging_fini();
+      if (RCL_RET_OK != rcl_ret) {
+        RCUTILS_SAFE_FWRITE_TO_STDERR(
+          RCUTILS_STRINGIFY(__file__) ":"
+          RCUTILS_STRINGIFY(__LINE__)
+          " failed to fini logging");
+        rcl_reset_error();
+      }
+    }
+  }
   sub_contexts_.clear();
 }
 
