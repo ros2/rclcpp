@@ -16,6 +16,9 @@
 #define RCLCPP__CLOCK_HPP_
 
 #include <functional>
+#include <mutex>
+#include <shared_mutex>  // NOLINT
+#include <unordered_map>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
@@ -137,6 +140,17 @@ private:
   friend TimeSource;  /// Allow TimeSource to access the rcl_clock_ datatype.
   rcl_allocator_t allocator_;
 };
+
+// This code is an ABI-compatible version of the code that went in for
+// https://github.com/ros2/rclcpp/pull/999.  The way that this works is to have
+// a global map of pointers to mutexes, one per clock class that is created.
+// During the rclcpp::Clock constructor, it adds a new one to this map, and
+// during the rclcpp::Clock destructor, it removes it from this map.  When
+// it needs to lock it, it just looks it up in the map.  The map itself has
+// to be protected when adding a new mutex, removing one, or looking it up,
+// hence the g_clock_map_mutex.
+extern std::shared_timed_mutex g_clock_map_mutex;
+extern std::unordered_map<rclcpp::Clock *, std::mutex> g_clock_mutex_map;
 
 }  // namespace rclcpp
 
