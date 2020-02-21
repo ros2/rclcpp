@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <mutex>
+#include <shared_mutex>  // NOLINT
+#include <unordered_map>
+
 #include "rclcpp/clock.hpp"
 
 #include "rclcpp/exceptions.hpp"
@@ -20,6 +24,9 @@
 
 namespace rclcpp
 {
+
+std::shared_timed_mutex g_clock_map_mutex;
+std::unordered_map<rclcpp::Clock *, std::mutex> g_clock_mutex_map;
 
 JumpHandler::JumpHandler(
   pre_callback_t pre_callback,
@@ -37,10 +44,22 @@ Clock::Clock(rcl_clock_type_t clock_type)
   if (ret != RCL_RET_OK) {
     exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
   }
+
+  {
+    std::lock_guard<std::shared_timed_mutex> lg(g_clock_map_mutex);
+    // Add a new default-constructed mutex, keyed off of this pointer.
+    g_clock_mutex_map[this];
+  }
 }
 
 Clock::~Clock()
 {
+  {
+    std::lock_guard<std::shared_timed_mutex> lg(g_clock_map_mutex);
+    // Remove the mutex corresponding to this clock object.
+    g_clock_mutex_map.erase(this);
+  }
+
   auto ret = rcl_clock_fini(&rcl_clock_);
   if (ret != RCL_RET_OK) {
     RCUTILS_LOG_ERROR("Failed to fini rcl clock.");
@@ -118,18 +137,30 @@ Clock::create_jump_callback(
     throw std::bad_alloc{};
   }
 
-  // Try to add the jump callback to the clock
-  rcl_ret_t ret = rcl_clock_add_jump_callback(
-    &rcl_clock_, threshold, Clock::on_time_jump,
-    handler.get());
-  if (RCL_RET_OK != ret) {
-    exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+  // Lookup the per-object mutex
+  g_clock_map_mutex.lock_shared();
+  std::mutex & clock_mutex = g_clock_mutex_map.at(this);
+  g_clock_map_mutex.unlock_shared();
+  {
+    std::lock_guard<std::mutex> clock_guard(clock_mutex);
+    // Try to add the jump callback to the clock
+    rcl_ret_t ret = rcl_clock_add_jump_callback(
+      &rcl_clock_, threshold, Clock::on_time_jump,
+      handler.get());
+    if (RCL_RET_OK != ret) {
+      exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+    }
   }
 
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
   // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
+    g_clock_map_mutex.lock_shared();
+    std::mutex & clock_mutex = g_clock_mutex_map.at(this);
+    g_clock_map_mutex.unlock_shared();
+    std::lock_guard<std::mutex> clock_guard(clock_mutex);
+
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
         handler);
     delete handler;
