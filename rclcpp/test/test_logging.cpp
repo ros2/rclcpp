@@ -205,9 +205,9 @@ TEST_F(TestLoggingMacros, test_throttle) {
   RCLCPP_DEBUG_SKIPFIRST_THROTTLE(g_logger, steady_clock, 1, "Skip first throttling");
   EXPECT_EQ(1u, g_log_calls);
   for (uint64_t i = 0; i < 6; ++i) {
-    RCLCPP_DEBUG_THROTTLE(g_logger, steady_clock, 10, "Throttling");
-    RCLCPP_DEBUG_SKIPFIRST_THROTTLE(g_logger, steady_clock, 40, "Throttling");
-    std::this_thread::sleep_for(5ms);
+    RCLCPP_DEBUG_THROTTLE(g_logger, steady_clock, 100, "Throttling");
+    RCLCPP_DEBUG_SKIPFIRST_THROTTLE(g_logger, steady_clock, 400, "Throttling");
+    std::this_thread::sleep_for(50ms);
   }
   EXPECT_EQ(4u, g_log_calls);
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
