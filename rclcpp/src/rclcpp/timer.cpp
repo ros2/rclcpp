@@ -17,6 +17,7 @@
 #include <chrono>
 #include <string>
 #include <memory>
+#include <thread>
 
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/exceptions.hpp"
@@ -40,11 +41,14 @@ TimerBase::TimerBase(
   timer_handle_ = std::shared_ptr<rcl_timer_t>(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
     {
-      if (rcl_timer_fini(timer) != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Failed to clean up rcl timer handle: %s", rcl_get_error_string().str);
-        rcl_reset_error();
+      {
+        std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+        if (rcl_timer_fini(timer) != RCL_RET_OK) {
+          RCUTILS_LOG_ERROR_NAMED(
+            "rclcpp",
+            "Failed to clean up rcl timer handle: %s", rcl_get_error_string().str);
+          rcl_reset_error();
+        }
       }
       delete timer;
       // Captured shared pointers by copy, reset to make sure timer is finalized before clock
@@ -55,15 +59,18 @@ TimerBase::TimerBase(
   *timer_handle_.get() = rcl_get_zero_initialized_timer();
 
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
-  if (
-    rcl_timer_init(
-      timer_handle_.get(), clock_handle, rcl_context.get(), period.count(), nullptr,
-      rcl_get_default_allocator()) != RCL_RET_OK)
   {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string().str);
-    rcl_reset_error();
+    std::lock_guard<std::mutex> clock_guard(clock_->get_clock_mutex());
+    if (
+      rcl_timer_init(
+        timer_handle_.get(), clock_handle, rcl_context.get(), period.count(), nullptr,
+        rcl_get_default_allocator()) != RCL_RET_OK)
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rclcpp",
+        "Couldn't initialize rcl timer handle: %s\n", rcl_get_error_string().str);
+      rcl_reset_error();
+    }
   }
 }
 

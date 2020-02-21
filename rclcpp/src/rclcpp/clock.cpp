@@ -15,6 +15,7 @@
 #include "rclcpp/clock.hpp"
 
 #include <memory>
+#include <thread>
 
 #include "rclcpp/exceptions.hpp"
 
@@ -45,6 +46,7 @@ public:
 
   rcl_clock_t rcl_clock_;
   rcl_allocator_t allocator_;
+  std::mutex clock_mutex_;
 };
 
 JumpHandler::JumpHandler(
@@ -103,6 +105,12 @@ Clock::get_clock_type() const noexcept
   return impl_->rcl_clock_.type;
 }
 
+std::mutex &
+Clock::get_clock_mutex() noexcept
+{
+  return impl_->clock_mutex_;
+}
+
 void
 Clock::on_time_jump(
   const struct rcl_time_jump_t * time_jump,
@@ -132,12 +140,15 @@ Clock::create_jump_callback(
     throw std::bad_alloc{};
   }
 
+  {
+    std::lock_guard<std::mutex> clock_guard(impl_->clock_mutex_);
     // Try to add the jump callback to the clock
-  rcl_ret_t ret = rcl_clock_add_jump_callback(
-    &impl_->rcl_clock_, threshold, Clock::on_time_jump,
-    handler.get());
-  if (RCL_RET_OK != ret) {
-    exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+    rcl_ret_t ret = rcl_clock_add_jump_callback(
+      &impl_->rcl_clock_, threshold, Clock::on_time_jump,
+      handler.get());
+    if (RCL_RET_OK != ret) {
+      exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+    }
   }
 
   std::weak_ptr<Clock::Impl> weak_impl = impl_;
@@ -146,6 +157,7 @@ Clock::create_jump_callback(
   return JumpHandler::SharedPtr(handler.release(), [weak_impl](JumpHandler * handler) noexcept {
     auto shared_impl = weak_impl.lock();
     if (shared_impl) {
+      std::lock_guard<std::mutex> clock_guard(shared_impl->clock_mutex_);
       rcl_ret_t ret = rcl_clock_remove_jump_callback(&shared_impl->rcl_clock_,
           Clock::on_time_jump, handler);
       if (RCL_RET_OK != ret) {
