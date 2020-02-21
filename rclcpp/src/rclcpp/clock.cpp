@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <mutex>
+
 #include "rclcpp/clock.hpp"
 
 #include "rclcpp/exceptions.hpp"
@@ -20,6 +22,8 @@
 
 namespace rclcpp
 {
+
+std::mutex g_clock_mutex;
 
 JumpHandler::JumpHandler(
   pre_callback_t pre_callback,
@@ -118,24 +122,30 @@ Clock::create_jump_callback(
     throw std::bad_alloc{};
   }
 
-  // Try to add the jump callback to the clock
-  rcl_ret_t ret = rcl_clock_add_jump_callback(
-    &rcl_clock_, threshold, Clock::on_time_jump,
-    handler.get());
-  if (RCL_RET_OK != ret) {
-    exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+  {
+    std::lock_guard<std::mutex> clock_guard(g_clock_mutex);
+    // Try to add the jump callback to the clock
+    rcl_ret_t ret = rcl_clock_add_jump_callback(
+      &rcl_clock_, threshold, Clock::on_time_jump,
+      handler.get());
+    if (RCL_RET_OK != ret) {
+      exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+    }
   }
 
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
   // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
-    rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
-        handler);
-    delete handler;
-    handler = NULL;
-    if (RCL_RET_OK != ret) {
-      RCUTILS_LOG_ERROR("Failed to remove time jump callback");
+    {
+      std::lock_guard<std::mutex> clock_guard(g_clock_mutex);
+      rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
+          handler);
+      delete handler;
+      handler = NULL;
+      if (RCL_RET_OK != ret) {
+        RCUTILS_LOG_ERROR("Failed to remove time jump callback");
+      }
     }
   });
   // *INDENT-ON*

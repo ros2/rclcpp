@@ -16,6 +16,7 @@
 #define RCLCPP__CLOCK_HPP_
 
 #include <functional>
+#include <mutex>
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/time.hpp"
@@ -137,6 +138,8 @@ private:
   friend TimeSource;  /// Allow TimeSource to access the rcl_clock_ datatype.
   rcl_allocator_t allocator_;
 };
+
+extern std::mutex g_clock_mutex;
 
 }  // namespace rclcpp
 
