@@ -133,9 +133,10 @@ private:
     bool before_jump,
     void * user_data);
 
-  /// Internal storage backed by rcl
-  std::shared_ptr<rcl_clock_t> rcl_clock_;
-  rcl_allocator_t allocator_;
+  /// Private internal storage
+  class Impl;
+
+  std::shared_ptr<Impl> impl_;
 };
 
 }  // namespace rclcpp
