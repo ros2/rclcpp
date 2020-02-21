@@ -176,7 +176,7 @@ SignalHandler::set_signal_handler(
 #endif
   if (signal_handler_install_failed) {
     char error_string[1024];
-    rcutils_safe_strerror(error_string, sizeof(error_string));
+    rcutils_strerror(error_string, sizeof(error_string));
     auto msg =
       "Failed to set SIGINT signal handler (" + std::to_string(errno) + "): " + error_string;
     throw std::runtime_error(msg);
