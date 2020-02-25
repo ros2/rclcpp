@@ -159,7 +159,9 @@ public:
       rclcpp_service_callback_added,
       (const void *)get_service_handle().get(),
       (const void *)&any_callback_);
+#ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
+#endif
   }
 
   Service(
@@ -182,7 +184,9 @@ public:
       rclcpp_service_callback_added,
       (const void *)get_service_handle().get(),
       (const void *)&any_callback_);
+#ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
+#endif
   }
 
   Service(
@@ -207,7 +211,9 @@ public:
       rclcpp_service_callback_added,
       (const void *)get_service_handle().get(),
       (const void *)&any_callback_);
+#ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
+#endif
   }
 
   Service() = delete;

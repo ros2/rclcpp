@@ -232,6 +232,7 @@ public:
     return const_shared_ptr_callback_ || const_shared_ptr_with_info_callback_;
   }
 
+#ifndef TRACETOOLS_DISABLED
   void register_callback_for_tracing()
   {
     if (shared_ptr_callback_) {
@@ -256,6 +257,7 @@ public:
         get_symbol(unique_ptr_with_info_callback_));
     }
   }
+#endif  // TRACETOOLS_DISABLED
 
 private:
   std::shared_ptr<MessageAlloc> message_allocator_;
