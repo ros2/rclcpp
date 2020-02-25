@@ -44,6 +44,8 @@ install(TARGETS
   RUNTIME DESTINATION bin)
 
 if(BUILD_TESTING)
+  set(AMENT_CMAKE_CPPCHECK_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
+
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
