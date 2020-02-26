@@ -24,6 +24,7 @@
 #include "rclcpp/visibility_control.hpp"
 #include "rmw/types.h"
 #include "tracetools/tracetools.h"
+#include "tracetools/utils.hpp"
 
 namespace rclcpp
 {
@@ -97,6 +98,21 @@ public:
       throw std::runtime_error("unexpected request without any callback set");
     }
     TRACEPOINT(callback_end, (const void *)this);
+  }
+
+  void register_callback_for_tracing()
+  {
+    if (shared_ptr_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(shared_ptr_callback_));
+    } else if (shared_ptr_with_request_header_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(shared_ptr_with_request_header_callback_));
+    }
   }
 };
 
