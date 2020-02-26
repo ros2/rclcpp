@@ -46,6 +46,19 @@ InitOptions::InitOptions(const InitOptions & other)
   shutdown_on_sigint = other.shutdown_on_sigint;
 }
 
+bool
+InitOptions::initialize_logging() const
+{
+  return initialize_logging_;
+}
+
+InitOptions &
+InitOptions::initialize_logging(bool initialize_logging)
+{
+  initialize_logging_ = initialize_logging;
+  return *this;
+}
+
 InitOptions &
 InitOptions::operator=(const InitOptions & other)
 {

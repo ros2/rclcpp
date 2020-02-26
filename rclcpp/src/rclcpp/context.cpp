@@ -54,12 +54,8 @@ get_logging_reference_count()
 Context::Context()
 : rcl_context_(nullptr),
   shutdown_reason_(""),
-  logging_configure_mutex_(get_global_logging_configure_mutex())
-{
-  if (!logging_configure_mutex_) {
-    throw std::runtime_error("global logging configure mutex is 'nullptr'");
-  }
-}
+  logging_configure_mutex_(nullptr)
+{}
 
 Context::~Context()
 {
@@ -119,7 +115,11 @@ Context::init(
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
   }
 
-  {
+  if (init_options.initialize_logging()) {
+    logging_configure_mutex_ = get_global_logging_configure_mutex();
+    if (!logging_configure_mutex_) {
+      throw std::runtime_error("global logging configure mutex is 'nullptr'");
+    }
     std::lock_guard<std::mutex> guard(*logging_configure_mutex_);
     size_t & count = get_logging_reference_count();
     if (0u == count) {
@@ -130,6 +130,10 @@ Context::init(
         rcl_context_.reset();
         rclcpp::exceptions::throw_from_rcl_error(ret, "failed to configure logging");
       }
+    } else {
+      RCLCPP_WARN(
+        rclcpp::get_logger("rclcpp"),
+        "logging was initialized more than once");
     }
     ++count;
   }
@@ -349,7 +353,8 @@ Context::clean_up()
 {
   shutdown_reason_ = "";
   rcl_context_.reset();
-  {
+  if (logging_configure_mutex_) {
+    // logging was initialized by this context
     std::lock_guard<std::mutex> guard(*logging_configure_mutex_);
     size_t & count = get_logging_reference_count();
     if (0u == --count) {
