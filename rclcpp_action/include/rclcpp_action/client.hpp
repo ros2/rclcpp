@@ -579,7 +579,6 @@ private:
       goal_handle->set_status(status.status);
       const int8_t goal_status = goal_handle->get_status();
       if (
-        goal_status == GoalStatus::STATUS_SUCCEEDED ||
         goal_status == GoalStatus::STATUS_CANCELED ||
         goal_status == GoalStatus::STATUS_ABORTED)
       {
