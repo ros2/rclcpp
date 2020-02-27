@@ -6,7 +6,7 @@ find_package(ament_cmake_ros REQUIRED)
 find_package(action_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcl_action REQUIRED)
-find_package(rosidl_generator_cpp REQUIRED)
+find_package(rosidl_generator_c REQUIRED)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -34,7 +34,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "rcl_action"
   "rclcpp"
   "rosidl_generator_c"
-  "rosidl_generator_cpp")
+)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
@@ -61,7 +61,6 @@ ament_export_dependencies(action_msgs)
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rcl_action)
 ament_export_dependencies(rosidl_generator_c)
-ament_export_dependencies(rosidl_generator_cpp)
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
