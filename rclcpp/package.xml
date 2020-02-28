@@ -9,8 +9,6 @@
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
 
-  <build_export_depend>rmw</build_export_depend>
-
   <build_depend>builtin_interfaces</build_depend>
   <build_depend>rcl_interfaces</build_depend>
   <build_depend>rosgraph_msgs</build_depend>
@@ -27,7 +25,7 @@
   <depend>rcl</depend>
   <depend>rcl_yaml_param_parser</depend>
   <depend>rcpputils</depend>
-  <depend>rmw_implementation</depend>
+  <depend>rmw</depend>
   <depend>tracetools</depend>
 
   <exec_depend>ament_cmake</exec_depend>
