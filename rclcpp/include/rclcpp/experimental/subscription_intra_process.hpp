@@ -152,8 +152,8 @@ private:
   execute_impl()
   {
     rmw_message_info_t msg_info;
-    msg_info.from_intra_process = true;
     msg_info.publisher_gid = {0, {0}};
+    msg_info.from_intra_process = true;
 
     if (any_callback_.use_take_shared_method()) {
       ConstMessageSharedPtr msg = buffer_->consume_shared();
