@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <limits>
+#include <string>
 #include <utility>
 
 #include "rclcpp/clock.hpp"
@@ -194,7 +195,10 @@ Duration
 Time::operator-(const rclcpp::Time & rhs) const
 {
   if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
-    throw std::runtime_error("can't subtract times with different time sources");
+    throw std::runtime_error(
+            std::string("can't subtract times with different time sources [") +
+            std::to_string(rcl_time_.clock_type) + " != " +
+            std::to_string(rhs.rcl_time_.clock_type) + "]");
   }
 
   if (rclcpp::sub_will_overflow(rcl_time_.nanoseconds, rhs.rcl_time_.nanoseconds)) {
@@ -249,6 +253,36 @@ operator+(const rclcpp::Duration & lhs, const rclcpp::Time & rhs)
     throw std::underflow_error("addition leads to int64_t underflow");
   }
   return Time(lhs.nanoseconds() + rhs.nanoseconds(), rhs.get_clock_type());
+}
+
+Time &
+Time::operator+=(const rclcpp::Duration & rhs)
+{
+  if (rclcpp::add_will_overflow(rhs.nanoseconds(), this->nanoseconds())) {
+    throw std::overflow_error("addition leads to int64_t overflow");
+  }
+  if (rclcpp::add_will_underflow(rhs.nanoseconds(), this->nanoseconds())) {
+    throw std::underflow_error("addition leads to int64_t underflow");
+  }
+
+  rcl_time_.nanoseconds += rhs.nanoseconds();
+
+  return *this;
+}
+
+Time &
+Time::operator-=(const rclcpp::Duration & rhs)
+{
+  if (rclcpp::sub_will_overflow(rcl_time_.nanoseconds, rhs.nanoseconds())) {
+    throw std::overflow_error("time subtraction leads to int64_t overflow");
+  }
+  if (rclcpp::sub_will_underflow(rcl_time_.nanoseconds, rhs.nanoseconds())) {
+    throw std::underflow_error("time subtraction leads to int64_t underflow");
+  }
+
+  rcl_time_.nanoseconds -= rhs.nanoseconds();
+
+  return *this;
 }
 
 Time

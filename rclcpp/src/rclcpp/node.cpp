@@ -27,17 +27,7 @@
 #include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/node_interfaces/node_logging.hpp"
-// When compiling this file, Windows produces a deprecation warning for the
-// deprecated function prototype of NodeParameters::register_param_change_callback().
-// Other compilers do not.
-#if defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
 #include "rclcpp/node_interfaces/node_parameters.hpp"
-#if defined(_WIN32)
-# pragma warning(pop)
-#endif
 #include "rclcpp/node_interfaces/node_services.hpp"
 #include "rclcpp/node_interfaces/node_time_source.hpp"
 #include "rclcpp/node_interfaces/node_timers.hpp"
@@ -374,6 +364,18 @@ Node::count_subscribers(const std::string & topic_name) const
   return node_graph_->count_subscribers(topic_name);
 }
 
+std::vector<rclcpp::TopicEndpointInfo>
+Node::get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_publishers_info_by_topic(topic_name, no_mangle);
+}
+
+std::vector<rclcpp::TopicEndpointInfo>
+Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
+}
+
 const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
 Node::get_callback_groups() const
 {
@@ -400,8 +402,14 @@ Node::get_clock()
   return node_clock_->get_clock();
 }
 
+rclcpp::Clock::ConstSharedPtr
+Node::get_clock() const
+{
+  return node_clock_->get_clock();
+}
+
 rclcpp::Time
-Node::now()
+Node::now() const
 {
   return node_clock_->get_clock()->now();
 }

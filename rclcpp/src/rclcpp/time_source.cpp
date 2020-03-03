@@ -82,7 +82,7 @@ void TimeSource::attachNode(
   // Though this defaults to false, it can be overridden by initial parameter values for the node,
   // which may be given by the user at the node's construction or even by command-line arguments.
   rclcpp::ParameterValue use_sim_time_param;
-  const char * use_sim_time_name = "use_sim_time";
+  const std::string use_sim_time_name = "use_sim_time";
   if (!node_parameters_->has_parameter(use_sim_time_name)) {
     use_sim_time_param = node_parameters_->declare_parameter(
       use_sim_time_name,
@@ -98,12 +98,26 @@ void TimeSource::attachNode(
       create_clock_sub();
     }
   } else {
-    // TODO(wjwwood): use set_on_parameters_set_callback to catch the type mismatch,
-    //   before the use_sim_time parameter can ever be set to an invalid value
     RCLCPP_ERROR(
       logger_, "Invalid type '%s' for parameter 'use_sim_time', should be 'bool'",
       rclcpp::to_string(use_sim_time_param.get_type()).c_str());
   }
+  sim_time_cb_handler_ = node_parameters_->add_on_set_parameters_callback(
+    [use_sim_time_name](const std::vector<rclcpp::Parameter> & parameters) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      for (const auto & parameter : parameters) {
+        if (
+          parameter.get_name() == use_sim_time_name &&
+          parameter.get_type() != rclcpp::PARAMETER_BOOL)
+        {
+          result.successful = false;
+          result.reason = "'" + use_sim_time_name + "' must be a bool";
+          break;
+        }
+      }
+      return result;
+    });
 
   // TODO(tfoote) use parameters interface not subscribe to events via topic ticketed #609
   parameter_subscription_ = rclcpp::AsyncParametersClient::on_parameter_event(
@@ -122,6 +136,10 @@ void TimeSource::detachNode()
   node_services_.reset();
   node_logging_.reset();
   node_clock_.reset();
+  if (sim_time_cb_handler_ && node_parameters_) {
+    node_parameters_->remove_on_set_parameters_callback(sim_time_cb_handler_.get());
+  }
+  sim_time_cb_handler_.reset();
   node_parameters_.reset();
   disable_ros_time();
 }
@@ -174,7 +192,7 @@ void TimeSource::set_clock(
     enable_ros_time(clock);
   }
 
-  auto ret = rcl_set_ros_time_override(&(clock->rcl_clock_), rclcpp::Time(*msg).nanoseconds());
+  auto ret = rcl_set_ros_time_override(clock->get_clock_handle(), rclcpp::Time(*msg).nanoseconds());
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "Failed to set ros_time_override_status");
@@ -257,7 +275,7 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
 
 void TimeSource::enable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 {
-  auto ret = rcl_enable_ros_time_override(&clock->rcl_clock_);
+  auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "Failed to enable ros_time_override_status");
@@ -266,7 +284,7 @@ void TimeSource::enable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 
 void TimeSource::disable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
 {
-  auto ret = rcl_disable_ros_time_override(&clock->rcl_clock_);
+  auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
       ret, "Failed to enable ros_time_override_status");

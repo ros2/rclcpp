@@ -15,20 +15,120 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_GRAPH_INTERFACE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_GRAPH_INTERFACE_HPP_
 
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "rcl/graph.h"
 #include "rcl/guard_condition.h"
 
 #include "rclcpp/event.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
 {
+
+enum class EndpointType
+{
+  Invalid = RMW_ENDPOINT_INVALID,
+  Publisher = RMW_ENDPOINT_PUBLISHER,
+  Subscription = RMW_ENDPOINT_SUBSCRIPTION
+};
+
+/**
+ * Struct that contains topic endpoint information like the associated node name, node namespace,
+ * topic type, endpoint type, endpoint GID, and its QoS.
+ */
+class TopicEndpointInfo
+{
+public:
+  /// Construct a TopicEndpointInfo from a rcl_topic_endpoint_info_t.
+  RCLCPP_PUBLIC
+  explicit TopicEndpointInfo(const rcl_topic_endpoint_info_t & info)
+  : node_name_(info.node_name),
+    node_namespace_(info.node_namespace),
+    topic_type_(info.topic_type),
+    endpoint_type_(static_cast<rclcpp::EndpointType>(info.endpoint_type)),
+    qos_profile_({info.qos_profile.history, info.qos_profile.depth}, info.qos_profile)
+  {
+    std::copy(info.endpoint_gid, info.endpoint_gid + RMW_GID_STORAGE_SIZE, endpoint_gid_.begin());
+  }
+
+  /// Get a mutable reference to the node name.
+  RCLCPP_PUBLIC
+  std::string &
+  node_name();
+
+  /// Get a const reference to the node name.
+  RCLCPP_PUBLIC
+  const std::string &
+  node_name() const;
+
+  /// Get a mutable reference to the node namespace.
+  RCLCPP_PUBLIC
+  std::string &
+  node_namespace();
+
+  /// Get a const reference to the node namespace.
+  RCLCPP_PUBLIC
+  const std::string &
+  node_namespace() const;
+
+  /// Get a mutable reference to the topic type string.
+  RCLCPP_PUBLIC
+  std::string &
+  topic_type();
+
+  /// Get a const reference to the topic type string.
+  RCLCPP_PUBLIC
+  const std::string &
+  topic_type() const;
+
+  /// Get a mutable reference to the topic endpoint type.
+  RCLCPP_PUBLIC
+  rclcpp::EndpointType &
+  endpoint_type();
+
+  /// Get a const reference to the topic endpoint type.
+  RCLCPP_PUBLIC
+  const rclcpp::EndpointType &
+  endpoint_type() const;
+
+  /// Get a mutable reference to the GID of the topic endpoint.
+  RCLCPP_PUBLIC
+  std::array<uint8_t, RMW_GID_STORAGE_SIZE> &
+  endpoint_gid();
+
+  /// Get a const reference to the GID of the topic endpoint.
+  RCLCPP_PUBLIC
+  const std::array<uint8_t, RMW_GID_STORAGE_SIZE> &
+  endpoint_gid() const;
+
+  /// Get a mutable reference to the QoS profile of the topic endpoint.
+  RCLCPP_PUBLIC
+  rclcpp::QoS &
+  qos_profile();
+
+  /// Get a const reference to the QoS profile of the topic endpoint.
+  RCLCPP_PUBLIC
+  const rclcpp::QoS &
+  qos_profile() const;
+
+private:
+  std::string node_name_;
+  std::string node_namespace_;
+  std::string topic_type_;
+  rclcpp::EndpointType endpoint_type_;
+  std::array<uint8_t, RMW_GID_STORAGE_SIZE> endpoint_gid_;
+  rclcpp::QoS qos_profile_;
+};
+
 namespace node_interfaces
 {
 
@@ -150,6 +250,24 @@ public:
   virtual
   size_t
   count_graph_users() = 0;
+
+  /// Return the topic endpoint information about publishers on a given topic.
+  /**
+   * \sa rclcpp::Node::get_publishers_info_by_topic
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
+
+  /// Return the topic endpoint information about subscriptions on a given topic.
+  /**
+   * \sa rclcpp::Node::get_subscriptions_info_by_topic
+   */
+  RCLCPP_PUBLIC
+  virtual
+  std::vector<rclcpp::TopicEndpointInfo>
+  get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle = false) const = 0;
 };
 
 }  // namespace node_interfaces

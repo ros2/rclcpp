@@ -50,89 +50,89 @@ public:
   ~NodeBase();
 
   RCLCPP_PUBLIC
-  virtual
+
   const char *
-  get_name() const;
+  get_name() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   const char *
-  get_namespace() const;
+  get_namespace() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   const char *
-  get_fully_qualified_name() const;
+  get_fully_qualified_name() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   rclcpp::Context::SharedPtr
-  get_context();
+  get_context() override;
 
   RCLCPP_PUBLIC
-  virtual
+
   rcl_node_t *
-  get_rcl_node_handle();
+  get_rcl_node_handle() override;
 
   RCLCPP_PUBLIC
-  virtual
+
   const rcl_node_t *
-  get_rcl_node_handle() const;
+  get_rcl_node_handle() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   std::shared_ptr<rcl_node_t>
-  get_shared_rcl_node_handle();
+  get_shared_rcl_node_handle() override;
 
   RCLCPP_PUBLIC
-  virtual
+
   std::shared_ptr<const rcl_node_t>
-  get_shared_rcl_node_handle() const;
+  get_shared_rcl_node_handle() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   bool
-  assert_liveliness() const;
+  assert_liveliness() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   rclcpp::callback_group::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
+  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type) override;
 
   RCLCPP_PUBLIC
-  virtual
+
   rclcpp::callback_group::CallbackGroup::SharedPtr
-  get_default_callback_group();
+  get_default_callback_group() override;
 
   RCLCPP_PUBLIC
-  virtual
+
   bool
-  callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group);
+  callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group) override;
 
   RCLCPP_PUBLIC
-  virtual
+
   const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
-  get_callback_groups() const;
+  get_callback_groups() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   std::atomic_bool &
-  get_associated_with_executor_atomic();
+  get_associated_with_executor_atomic() override;
 
   RCLCPP_PUBLIC
-  virtual
+
   rcl_guard_condition_t *
-  get_notify_guard_condition();
+  get_notify_guard_condition() override;
 
   RCLCPP_PUBLIC
-  virtual
+
   std::unique_lock<std::recursive_mutex>
-  acquire_notify_guard_condition_lock() const;
+  acquire_notify_guard_condition_lock() const override;
 
   RCLCPP_PUBLIC
-  virtual
+
   bool
-  get_use_intra_process_default() const;
+  get_use_intra_process_default() const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeBase)

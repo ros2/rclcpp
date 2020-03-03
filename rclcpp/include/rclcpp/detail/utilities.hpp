@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/intra_process_manager_impl.hpp"
+#ifndef RCLCPP__DETAIL__UTILITIES_HPP_
+#define RCLCPP__DETAIL__UTILITIES_HPP_
 
-#include <memory>
+#include "rclcpp/detail/utilities.hpp"
 
-rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr
-rclcpp::intra_process_manager::create_default_impl()
+#include <string>
+#include <vector>
+
+#include "rcl/allocator.h"
+#include "rcl/arguments.h"
+
+namespace rclcpp
 {
-  return std::make_shared<IntraProcessManagerImpl<>>();
-}
+namespace detail
+{
+
+std::vector<std::string>
+get_unparsed_ros_arguments(
+  int argc, char const * const argv[],
+  rcl_arguments_t * arguments,
+  rcl_allocator_t allocator);
+
+}  // namespace detail
+}  // namespace rclcpp
+
+#endif  // RCLCPP__DETAIL__UTILITIES_HPP_

@@ -16,7 +16,6 @@
 
 #include <string>
 
-#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/exceptions.hpp"
 
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -34,36 +33,10 @@ rclcpp::PublisherBase::SharedPtr
 NodeTopics::create_publisher(
   const std::string & topic_name,
   const rclcpp::PublisherFactory & publisher_factory,
-  const rcl_publisher_options_t & publisher_options,
-  bool use_intra_process)
+  const rclcpp::QoS & qos)
 {
-  // Create the MessageT specific Publisher using the factory, but store it as PublisherBase.
-  auto publisher = publisher_factory.create_typed_publisher(
-    node_base_, topic_name, publisher_options);
-
-  // Setup intra process publishing if requested.
-  if (use_intra_process) {
-    auto context = node_base_->get_context();
-    // Get the intra process manager instance for this context.
-    auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    // Register the publisher with the intra process manager.
-    if (publisher_options.qos.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
-      throw std::invalid_argument(
-              "intraprocess communication is not allowed with keep all history qos policy");
-    }
-    if (publisher_options.qos.depth == 0) {
-      throw std::invalid_argument(
-              "intraprocess communication is not allowed with a zero qos history depth value");
-    }
-    uint64_t intra_process_publisher_id = ipm->add_publisher(publisher);
-    publisher->setup_intra_process(
-      intra_process_publisher_id,
-      ipm,
-      publisher_options);
-  }
-
-  // Return the completed publisher.
-  return publisher;
+  // Create the MessageT specific Publisher using the factory, but return it as PublisherBase.
+  return publisher_factory.create_typed_publisher(node_base_, topic_name, qos);
 }
 
 void
@@ -99,25 +72,10 @@ rclcpp::SubscriptionBase::SharedPtr
 NodeTopics::create_subscription(
   const std::string & topic_name,
   const rclcpp::SubscriptionFactory & subscription_factory,
-  const rcl_subscription_options_t & subscription_options,
-  bool use_intra_process)
+  const rclcpp::QoS & qos)
 {
-  auto subscription = subscription_factory.create_typed_subscription(
-    node_base_, topic_name, subscription_options);
-
-  // Setup intra process publishing if requested.
-  if (use_intra_process) {
-    auto context = node_base_->get_context();
-    auto ipm =
-      context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
-    uint64_t intra_process_subscription_id = ipm->add_subscription(subscription);
-    auto options_copy = subscription_options;
-    options_copy.ignore_local_publications = false;
-    subscription->setup_intra_process(intra_process_subscription_id, ipm, options_copy);
-  }
-
-  // Return the completed subscription.
-  return subscription;
+  // Create the MessageT specific Subscription using the factory, but return a SubscriptionBase.
+  return subscription_factory.create_typed_subscription(node_base_, topic_name, qos);
 }
 
 void
@@ -136,18 +94,24 @@ NodeTopics::add_subscription(
   }
 
   callback_group->add_subscription(subscription);
+
   for (auto & subscription_event : subscription->get_event_handlers()) {
     callback_group->add_waitable(subscription_event);
+  }
+
+  auto intra_process_waitable = subscription->get_intra_process_waitable();
+  if (nullptr != intra_process_waitable) {
+    // Add to the callback group to be notified about intra-process msgs.
+    callback_group->add_waitable(intra_process_waitable);
   }
 
   // Notify the executor that a new subscription was created using the parent Node.
   {
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
-    if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
-      throw std::runtime_error(
-              std::string("Failed to notify wait set on subscription creation: ") +
-              rmw_get_error_string().str
-      );
+    auto ret = rcl_trigger_guard_condition(node_base_->get_notify_guard_condition());
+    if (ret != RCL_RET_OK) {
+      using rclcpp::exceptions::throw_from_rcl_error;
+      throw_from_rcl_error(ret, "failed to notify wait set on subscription creation");
     }
   }
 }

@@ -21,9 +21,11 @@
 #include <vector>
 
 #include "rcl/graph.h"
-#include "rclcpp/exceptions.hpp"
+#include "rcl/remap.h"
 #include "rclcpp/event.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/graph_listener.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
 
 using rclcpp::node_interfaces::NodeGraph;
 using rclcpp::exceptions::throw_from_rcl_error;
@@ -368,4 +370,190 @@ size_t
 NodeGraph::count_graph_users()
 {
   return graph_users_count_.load();
+}
+
+static
+std::vector<rclcpp::TopicEndpointInfo>
+convert_to_topic_info_list(const rcl_topic_endpoint_info_array_t & info_array)
+{
+  std::vector<rclcpp::TopicEndpointInfo> topic_info_list;
+  for (size_t i = 0; i < info_array.size; ++i) {
+    topic_info_list.push_back(rclcpp::TopicEndpointInfo(info_array.info_array[i]));
+  }
+  return topic_info_list;
+}
+
+template<const char * EndpointType, typename FunctionT>
+static std::vector<rclcpp::TopicEndpointInfo>
+get_info_by_topic(
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
+  const std::string & topic_name,
+  bool no_mangle,
+  FunctionT rcl_get_info_by_topic)
+{
+  std::string fqdn;
+  auto rcl_node_handle = node_base->get_rcl_node_handle();
+
+  if (no_mangle) {
+    fqdn = topic_name;
+  } else {
+    fqdn = rclcpp::expand_topic_or_service_name(
+      topic_name,
+      rcl_node_get_name(rcl_node_handle),
+      rcl_node_get_namespace(rcl_node_handle),
+      false);    // false = not a service
+
+    // Get the node options
+    const rcl_node_options_t * node_options = rcl_node_get_options(rcl_node_handle);
+    if (nullptr == node_options) {
+      throw std::runtime_error("Need valid node options in get_info_by_topic()");
+    }
+    const rcl_arguments_t * global_args = nullptr;
+    if (node_options->use_global_arguments) {
+      global_args = &(rcl_node_handle->context->global_arguments);
+    }
+
+    char * remapped_topic_name = nullptr;
+    rcl_ret_t ret = rcl_remap_topic_name(
+      &(node_options->arguments),
+      global_args,
+      fqdn.c_str(),
+      rcl_node_get_name(rcl_node_handle),
+      rcl_node_get_namespace(rcl_node_handle),
+      node_options->allocator,
+      &remapped_topic_name);
+    if (RCL_RET_OK != ret) {
+      throw_from_rcl_error(ret, std::string("Failed to remap topic name ") + fqdn);
+    } else if (nullptr != remapped_topic_name) {
+      fqdn = remapped_topic_name;
+      node_options->allocator.deallocate(remapped_topic_name, node_options->allocator.state);
+    }
+  }
+
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcl_topic_endpoint_info_array_t info_array = rcl_get_zero_initialized_topic_endpoint_info_array();
+  rcl_ret_t ret =
+    rcl_get_info_by_topic(rcl_node_handle, &allocator, fqdn.c_str(), no_mangle, &info_array);
+  if (RCL_RET_OK != ret) {
+    auto error_msg =
+      std::string("Failed to get information by topic for ") + EndpointType + std::string(":");
+    if (RCL_RET_UNSUPPORTED == ret) {
+      error_msg += std::string("function not supported by RMW_IMPLEMENTATION");
+    } else {
+      error_msg += rcl_get_error_string().str;
+    }
+    rcl_reset_error();
+    if (RCL_RET_OK != rcl_topic_endpoint_info_array_fini(&info_array, &allocator)) {
+      error_msg += std::string(", failed also to cleanup topic info array, leaking memory: ") +
+        rcl_get_error_string().str;
+      rcl_reset_error();
+    }
+    throw_from_rcl_error(ret, error_msg);
+  }
+
+  std::vector<rclcpp::TopicEndpointInfo> topic_info_list = convert_to_topic_info_list(info_array);
+  ret = rcl_topic_endpoint_info_array_fini(&info_array, &allocator);
+  if (RCL_RET_OK != ret) {
+    throw_from_rcl_error(ret, "rcl_topic_info_array_fini failed.");
+  }
+
+  return topic_info_list;
+}
+
+static const char kPublisherEndpointTypeName[] = "publishers";
+std::vector<rclcpp::TopicEndpointInfo>
+NodeGraph::get_publishers_info_by_topic(
+  const std::string & topic_name,
+  bool no_mangle) const
+{
+  return get_info_by_topic<kPublisherEndpointTypeName>(
+    node_base_,
+    topic_name,
+    no_mangle,
+    rcl_get_publishers_info_by_topic);
+}
+
+static const char kSubscriptionEndpointTypeName[] = "subscriptions";
+std::vector<rclcpp::TopicEndpointInfo>
+NodeGraph::get_subscriptions_info_by_topic(
+  const std::string & topic_name,
+  bool no_mangle) const
+{
+  return get_info_by_topic<kSubscriptionEndpointTypeName>(
+    node_base_,
+    topic_name,
+    no_mangle,
+    rcl_get_subscriptions_info_by_topic);
+}
+
+std::string &
+rclcpp::TopicEndpointInfo::node_name()
+{
+  return node_name_;
+}
+
+const std::string &
+rclcpp::TopicEndpointInfo::node_name() const
+{
+  return node_name_;
+}
+
+std::string &
+rclcpp::TopicEndpointInfo::node_namespace()
+{
+  return node_namespace_;
+}
+
+const std::string &
+rclcpp::TopicEndpointInfo::node_namespace() const
+{
+  return node_namespace_;
+}
+
+std::string &
+rclcpp::TopicEndpointInfo::topic_type()
+{
+  return topic_type_;
+}
+
+const std::string &
+rclcpp::TopicEndpointInfo::topic_type() const
+{
+  return topic_type_;
+}
+
+rclcpp::EndpointType &
+rclcpp::TopicEndpointInfo::endpoint_type()
+{
+  return endpoint_type_;
+}
+
+const rclcpp::EndpointType &
+rclcpp::TopicEndpointInfo::endpoint_type() const
+{
+  return endpoint_type_;
+}
+
+std::array<uint8_t, RMW_GID_STORAGE_SIZE> &
+rclcpp::TopicEndpointInfo::endpoint_gid()
+{
+  return endpoint_gid_;
+}
+
+const std::array<uint8_t, RMW_GID_STORAGE_SIZE> &
+rclcpp::TopicEndpointInfo::endpoint_gid() const
+{
+  return endpoint_gid_;
+}
+
+rclcpp::QoS &
+rclcpp::TopicEndpointInfo::qos_profile()
+{
+  return qos_profile_;
+}
+
+const rclcpp::QoS &
+rclcpp::TopicEndpointInfo::qos_profile() const
+{
+  return qos_profile_;
 }

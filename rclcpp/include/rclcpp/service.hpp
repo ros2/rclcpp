@@ -33,6 +33,7 @@
 #include "rclcpp/logging.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
@@ -154,6 +155,11 @@ public:
 
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service");
     }
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
+    any_callback_.register_callback_for_tracing();
   }
 
   Service(
@@ -172,6 +178,11 @@ public:
     }
 
     service_handle_ = service_handle;
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
+    any_callback_.register_callback_for_tracing();
   }
 
   Service(
@@ -192,6 +203,11 @@ public:
     // In this case, rcl owns the service handle memory
     service_handle_ = std::shared_ptr<rcl_service_t>(new rcl_service_t);
     service_handle_->impl = service_handle->impl;
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
+    any_callback_.register_callback_for_tracing();
   }
 
   Service() = delete;
@@ -200,12 +216,12 @@ public:
   {
   }
 
-  std::shared_ptr<void> create_request()
+  std::shared_ptr<void> create_request() override
   {
     return std::shared_ptr<void>(new typename ServiceT::Request());
   }
 
-  std::shared_ptr<rmw_request_id_t> create_request_header()
+  std::shared_ptr<rmw_request_id_t> create_request_header() override
   {
     // TODO(wjwwood): This should probably use rmw_request_id's allocator.
     //                (since it is a C type)
@@ -214,7 +230,7 @@ public:
 
   void handle_request(
     std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> request)
+    std::shared_ptr<void> request) override
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
     auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);

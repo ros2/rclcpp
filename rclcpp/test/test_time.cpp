@@ -56,6 +56,18 @@ TEST(TestTime, clock_type_access) {
   EXPECT_EQ(RCL_STEADY_TIME, steady_clock.get_clock_type());
 }
 
+// Check that the clock may go out of the scope before the jump callback without leading in UB.
+TEST(TestTime, clock_jump_callback_destruction_order) {
+  rclcpp::JumpHandler::SharedPtr handler;
+  {
+    rclcpp::Clock ros_clock(RCL_ROS_TIME);
+    rcl_jump_threshold_t threshold;
+    threshold.min_backward.nanoseconds = -1;
+    threshold.min_forward.nanoseconds = 1;
+    handler = ros_clock.create_jump_callback([]() {}, [](const rcl_time_jump_t &) {}, threshold);
+  }
+}
+
 TEST(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
@@ -123,8 +135,12 @@ TEST(TestTime, operators) {
   EXPECT_TRUE(young != old);
 
   rclcpp::Duration sub = young - old;
-  EXPECT_EQ(sub.nanoseconds(), (rcl_duration_value_t)(young.nanoseconds() - old.nanoseconds()));
+  EXPECT_EQ(sub.nanoseconds(), (young.nanoseconds() - old.nanoseconds()));
   EXPECT_EQ(sub, young - old);
+
+  rclcpp::Time young_changed(young);
+  young_changed -= rclcpp::Duration(old.nanoseconds());
+  EXPECT_EQ(sub.nanoseconds(), young_changed.nanoseconds());
 
   rclcpp::Time system_time(0, 0, RCL_SYSTEM_TIME);
   rclcpp::Time steady_time(0, 0, RCL_STEADY_TIME);
@@ -230,15 +246,19 @@ TEST(TestTime, overflows) {
   EXPECT_THROW(min_time - one, std::underflow_error);
   EXPECT_THROW(max_time - min_time, std::overflow_error);
   EXPECT_THROW(min_time - max_time, std::underflow_error);
+  EXPECT_THROW(rclcpp::Time(max_time) += one, std::overflow_error);
+  EXPECT_THROW(rclcpp::Time(min_time) -= one, std::underflow_error);
   EXPECT_NO_THROW(max_time - max_time);
   EXPECT_NO_THROW(min_time - min_time);
 
   // Cross zero in both directions
   rclcpp::Time one_time(1);
   EXPECT_NO_THROW(one_time - two);
+  EXPECT_NO_THROW(rclcpp::Time(one_time) -= two);
 
   rclcpp::Time minus_one_time(-1);
   EXPECT_NO_THROW(minus_one_time + two);
+  EXPECT_NO_THROW(rclcpp::Time(minus_one_time) += two);
 
   EXPECT_NO_THROW(one_time - minus_one_time);
   EXPECT_NO_THROW(minus_one_time - one_time);

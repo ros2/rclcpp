@@ -50,9 +50,14 @@ public:
 
   /// Get a clock which will be kept up to date by the node.
   RCLCPP_PUBLIC
-  virtual
+
   rclcpp::Clock::SharedPtr
-  get_clock();
+  get_clock() override;
+
+  /// Get a clock which will be kept up to date by the node.
+  RCLCPP_PUBLIC
+  rclcpp::Clock::ConstSharedPtr
+  get_clock() const override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeClock)

@@ -40,6 +40,12 @@ public:
   virtual
   rclcpp::Clock::SharedPtr
   get_clock() = 0;
+
+  /// Get a const ROS clock which will be kept up to date by the node.
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::Clock::ConstSharedPtr
+  get_clock() const = 0;
 };
 
 }  // namespace node_interfaces

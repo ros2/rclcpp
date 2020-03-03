@@ -56,7 +56,7 @@ public:
   // It will only be interrupt by a CTRL-C (managed by the global signal handler).
   RCLCPP_PUBLIC
   void
-  spin();
+  spin() override;
 
 private:
   RCLCPP_DISABLE_COPY(SingleThreadedExecutor)

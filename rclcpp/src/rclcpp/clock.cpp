@@ -14,12 +14,40 @@
 
 #include "rclcpp/clock.hpp"
 
+#include <memory>
+#include <thread>
+
 #include "rclcpp/exceptions.hpp"
 
 #include "rcutils/logging_macros.h"
 
 namespace rclcpp
 {
+
+class Clock::Impl
+{
+public:
+  explicit Impl(rcl_clock_type_t clock_type)
+  : allocator_{rcl_get_default_allocator()}
+  {
+    rcl_ret_t ret = rcl_clock_init(clock_type, &rcl_clock_, &allocator_);
+    if (ret != RCL_RET_OK) {
+      exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
+    }
+  }
+
+  ~Impl()
+  {
+    rcl_ret_t ret = rcl_clock_fini(&rcl_clock_);
+    if (ret != RCL_RET_OK) {
+      RCUTILS_LOG_ERROR("Failed to fini rcl clock.");
+    }
+  }
+
+  rcl_clock_t rcl_clock_;
+  rcl_allocator_t allocator_;
+  std::mutex clock_mutex_;
+};
 
 JumpHandler::JumpHandler(
   pre_callback_t pre_callback,
@@ -31,28 +59,16 @@ JumpHandler::JumpHandler(
 {}
 
 Clock::Clock(rcl_clock_type_t clock_type)
-{
-  allocator_ = rcl_get_default_allocator();
-  auto ret = rcl_clock_init(clock_type, &rcl_clock_, &allocator_);
-  if (ret != RCL_RET_OK) {
-    exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
-  }
-}
+: impl_(new Clock::Impl(clock_type)) {}
 
-Clock::~Clock()
-{
-  auto ret = rcl_clock_fini(&rcl_clock_);
-  if (ret != RCL_RET_OK) {
-    RCUTILS_LOG_ERROR("Failed to fini rcl clock.");
-  }
-}
+Clock::~Clock() {}
 
 Time
 Clock::now()
 {
-  Time now(0, 0, rcl_clock_.type);
+  Time now(0, 0, impl_->rcl_clock_.type);
 
-  auto ret = rcl_clock_get_now(&rcl_clock_, &now.rcl_time_.nanoseconds);
+  auto ret = rcl_clock_get_now(&impl_->rcl_clock_, &now.rcl_time_.nanoseconds);
   if (ret != RCL_RET_OK) {
     exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
   }
@@ -63,13 +79,13 @@ Clock::now()
 bool
 Clock::ros_time_is_active()
 {
-  if (!rcl_clock_valid(&rcl_clock_)) {
+  if (!rcl_clock_valid(&impl_->rcl_clock_)) {
     RCUTILS_LOG_ERROR("ROS time not valid!");
     return false;
   }
 
   bool is_enabled = false;
-  auto ret = rcl_is_enabled_ros_time_override(&rcl_clock_, &is_enabled);
+  auto ret = rcl_is_enabled_ros_time_override(&impl_->rcl_clock_, &is_enabled);
   if (ret != RCL_RET_OK) {
     exceptions::throw_from_rcl_error(
       ret, "Failed to check ros_time_override_status");
@@ -80,13 +96,19 @@ Clock::ros_time_is_active()
 rcl_clock_t *
 Clock::get_clock_handle() noexcept
 {
-  return &rcl_clock_;
+  return &impl_->rcl_clock_;
 }
 
 rcl_clock_type_t
 Clock::get_clock_type() const noexcept
 {
-  return rcl_clock_.type;
+  return impl_->rcl_clock_.type;
+}
+
+std::mutex &
+Clock::get_clock_mutex() noexcept
+{
+  return impl_->clock_mutex_;
 }
 
 void
@@ -118,25 +140,31 @@ Clock::create_jump_callback(
     throw std::bad_alloc{};
   }
 
-  // Try to add the jump callback to the clock
-  rcl_ret_t ret = rcl_clock_add_jump_callback(
-    &rcl_clock_, threshold, Clock::on_time_jump,
-    handler.get());
-  if (RCL_RET_OK != ret) {
-    exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+  {
+    std::lock_guard<std::mutex> clock_guard(impl_->clock_mutex_);
+    // Try to add the jump callback to the clock
+    rcl_ret_t ret = rcl_clock_add_jump_callback(
+      &impl_->rcl_clock_, threshold, Clock::on_time_jump,
+      handler.get());
+    if (RCL_RET_OK != ret) {
+      exceptions::throw_from_rcl_error(ret, "Failed to add time jump callback");
+    }
   }
 
+  std::weak_ptr<Clock::Impl> weak_impl = impl_;
   // *INDENT-OFF*
   // create shared_ptr that removes the callback automatically when all copies are destructed
-  // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
-  return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
-    rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
-        handler);
-    delete handler;
-    handler = NULL;
-    if (RCL_RET_OK != ret) {
-      RCUTILS_LOG_ERROR("Failed to remove time jump callback");
+  return JumpHandler::SharedPtr(handler.release(), [weak_impl](JumpHandler * handler) noexcept {
+    auto shared_impl = weak_impl.lock();
+    if (shared_impl) {
+      std::lock_guard<std::mutex> clock_guard(shared_impl->clock_mutex_);
+      rcl_ret_t ret = rcl_clock_remove_jump_callback(&shared_impl->rcl_clock_,
+          Clock::on_time_jump, handler);
+      if (RCL_RET_OK != ret) {
+        RCUTILS_LOG_ERROR("Failed to remove time jump callback");
+      }
     }
+    delete handler;
   });
   // *INDENT-ON*
 }

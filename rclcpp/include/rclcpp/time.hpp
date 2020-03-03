@@ -99,6 +99,14 @@ public:
   operator-(const rclcpp::Duration & rhs) const;
 
   RCLCPP_PUBLIC
+  Time &
+  operator+=(const rclcpp::Duration & rhs);
+
+  RCLCPP_PUBLIC
+  Time &
+  operator-=(const rclcpp::Duration & rhs);
+
+  RCLCPP_PUBLIC
   rcl_time_point_value_t
   nanoseconds() const;
 

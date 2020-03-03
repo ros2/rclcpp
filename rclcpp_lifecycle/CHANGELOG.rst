@@ -3,6 +3,28 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.8.3 (2019-11-19)
+------------------
+
+0.8.2 (2019-11-18)
+------------------
+
+0.8.1 (2019-10-23)
+------------------
+* New Intra-Process Communication (`#778 <https://github.com/ros2/rclcpp/issues/778>`_)
+* Contributors: Alberto Soragna
+
+0.8.0 (2019-09-26)
+------------------
+* clean up publisher and subscription creation logic (`#867 <https://github.com/ros2/rclcpp/issues/867>`_)
+* reset error message before setting a new one, embed the original one (`#854 <https://github.com/ros2/rclcpp/issues/854>`_)
+* remove features and related code which were deprecated in dashing (`#852 <https://github.com/ros2/rclcpp/issues/852>`_)
+* Fix typo in deprecated warning. (`#848 <https://github.com/ros2/rclcpp/issues/848>`_)
+* Add line break after first open paren in multiline function call (`#785 <https://github.com/ros2/rclcpp/issues/785>`_)
+* Fixe error messages not printing to terminal (`#777 <https://github.com/ros2/rclcpp/issues/777>`_)
+* Add default value to options in LifecycleNode construnctor. Update API documentation. (`#775 <https://github.com/ros2/rclcpp/issues/775>`_)
+* Contributors: Dan Rose, Dirk Thomas, Esteve Fernandez, Luca Della Vedova, William Woodall, Yathartha Tuladhar
+
 0.7.5 (2019-05-30)
 ------------------
 

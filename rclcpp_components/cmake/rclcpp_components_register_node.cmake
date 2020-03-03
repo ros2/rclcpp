@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# Register an rclcpp component with the ament
+# resource index and create an executable.
 #
 # usage: rclcpp_components_register_node(
 #        <target> PLUGIN <component> EXECUTABLE <node>)
-#
-# Register an rclcpp component with the ament
-# resource index and create an executable.
 #
 # :param target: the shared library target
 # :type target: string
@@ -27,6 +27,10 @@
 #
 macro(rclcpp_components_register_node target)
   cmake_parse_arguments(ARGS "" "PLUGIN;EXECUTABLE" "" ${ARGN})
+  if(ARGS_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "rclcpp_components_register_node() called with unused "
+      "arguments: ${ARGS_UNPARSED_ARGUMENTS}")
+  endif()
   set(component ${ARGS_PLUGIN})
   set(node ${ARGS_EXECUTABLE})
   _rclcpp_components_register_package_hook()
