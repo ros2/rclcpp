@@ -217,7 +217,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
  refresh_wait_set(timeout);
   // Execute all the ready subscriptions
   for (size_t i = 0; i < wait_set_.size_of_subscriptions; ++i) {
-    if (wait_set_.size_of_subscriptions && i < exec_list.number_of_subscriptions) {
+    if (i < exec_list.number_of_subscriptions) {
       if (wait_set_.subscriptions[i]) {
         execute_subscription(exec_list.subscription[i]);
       }
@@ -225,7 +225,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   }
   // Execute all the ready timers
   for (size_t i = 0; i < wait_set_.size_of_timers; ++i) {
-    if (wait_set_.size_of_timers && i < exec_list.number_of_timers) {
+    if (i < exec_list.number_of_timers) {
       if (wait_set_.timers[i] && exec_list.timer[i]->is_ready()) {
         execute_timer(exec_list.timer[i]);
       }
@@ -233,7 +233,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   }
   // Execute all the ready services
   for (size_t i = 0; i < wait_set_.size_of_services; ++i) {
-    if (wait_set_.size_of_services && i < exec_list.number_of_services) {
+    if (i < exec_list.number_of_services) {
       if (wait_set_.services[i]) {
         execute_service(exec_list.service[i]);
       }
@@ -241,7 +241,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   }
   // Execute all the ready clients
   for (size_t i = 0; i < wait_set_.size_of_clients; ++i) {
-    if (wait_set_.size_of_clients && i < exec_list.number_of_clients) {
+    if (i < exec_list.number_of_clients) {
       if (wait_set_.clients[i]) {
         execute_client(exec_list.client[i]);
       }
@@ -249,7 +249,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   }
   // Execute all the ready waitables
   for (size_t i = 0; i < exec_list.number_of_waitables; ++i) {
-    if (exec_list.number_of_waitables && exec_list.waitable[i]->is_ready(&wait_set_)) {
+    if (exec_list.waitable[i]->is_ready(&wait_set_)) {
       exec_list.waitable[i]->execute();
     }
   }
