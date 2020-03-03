@@ -214,16 +214,12 @@ void
 StaticSingleThreadedExecutor::execute_ready_executables(
   ExecutableList & exec_list, std::chrono::nanoseconds timeout)
 {
-  refresh_wait_set(timeout);
+ refresh_wait_set(timeout);
   // Execute all the ready subscriptions
   for (size_t i = 0; i < wait_set_.size_of_subscriptions; ++i) {
     if (wait_set_.size_of_subscriptions && i < exec_list.number_of_subscriptions) {
       if (wait_set_.subscriptions[i]) {
-        if (exec_list.subscription[i]->get_intra_process_subscription_handle()) {
-          execute_intra_process_subscription(exec_list.subscription[i]);
-        } else {
-          execute_subscription(exec_list.subscription[i]);
-        }
+        execute_subscription(exec_list.subscription[i]);
       }
     }
   }
@@ -231,7 +227,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   for (size_t i = 0; i < wait_set_.size_of_timers; ++i) {
     if (wait_set_.size_of_timers && i < exec_list.number_of_timers) {
       if (wait_set_.timers[i] && exec_list.timer[i]->is_ready()) {
-          execute_timer(exec_list.timer[i]);
+        execute_timer(exec_list.timer[i]);
       }
     }
   }
@@ -239,7 +235,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   for (size_t i = 0; i < wait_set_.size_of_services; ++i) {
     if (wait_set_.size_of_services && i < exec_list.number_of_services) {
       if (wait_set_.services[i]) {
-          execute_service(exec_list.service[i]);
+        execute_service(exec_list.service[i]);
       }
     }
   }
@@ -247,7 +243,7 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   for (size_t i = 0; i < wait_set_.size_of_clients; ++i) {
     if (wait_set_.size_of_clients && i < exec_list.number_of_clients) {
       if (wait_set_.clients[i]) {
-          execute_client(exec_list.client[i]);
+        execute_client(exec_list.client[i]);
       }
     }
   }
@@ -259,10 +255,12 @@ StaticSingleThreadedExecutor::execute_ready_executables(
   }
   // Check the guard_conditions to see if anything is added to the executor
   for (size_t i = 0; i < wait_set_.size_of_guard_conditions; ++i) {
-    if (wait_set_.guard_conditions[i]) {
-      // rebuild the wait_set and ExecutableList struct
+    if (wait_set_.guard_conditions[i] &&
+        wait_set_.guard_conditions[i]!= context_->get_interrupt_guard_condition(&wait_set_) &&
+        wait_set_.guard_conditions[i]!= &interrupt_guard_condition_) {
       run_collect_entities();
       get_executable_list(exec_list);
+      break;
     }
   }
 }
