@@ -28,6 +28,7 @@
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/rate.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/executors/static_executor_entities_collector.hpp"
 
 namespace rclcpp
 {
@@ -36,10 +37,10 @@ namespace executors
 
 /// Static executor implementation
 /**
- * This executor is a static version of original single threaded executor.
- * This executor makes the assumption that system does not change during runtime.
- * This means all nodes, callbackgroups, timers, subscriptions etc. are created
- * before .spin() is called.
+ * This executor is a static version of the original single threaded executor.
+ * It's static because it doesn't reconstruct the executable list for every iteration.
+ * All nodes, callbackgroups, timers, subscriptions etc. are created before
+ * spin() is called, and modified only when an entity is added/removed to/from a node.
  *
  * To run this executor instead of SingleThreadedExecutor replace:
  * rclcpp::executors::SingleThreadedExecutor exec;
@@ -70,6 +71,39 @@ public:
   RCLCPP_PUBLIC
   void
   spin();
+
+  /// Add a node to the executor.
+  /**
+   * An executor can have zero or more nodes which provide work during `spin` functions.
+   * \param[in] node_ptr Shared pointer to the node to be added.
+   * \param[in] notify True to trigger the interrupt guard condition during this function. If
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
+   * node was added, it will wake up.
+   */
+  RCLCPP_PUBLIC
+  void
+  add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true) override;
+
+  /// Convenience function which takes Node and forwards NodeBaseInterface.
+  RCLCPP_PUBLIC
+  void
+  add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
+
+  /// Remove a node from the executor.
+  /**
+   * \param[in] node_ptr Shared pointer to the node to remove.
+   * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
+   * This is useful if the last node was removed from the executor while the executor was blocked
+   * waiting for work in another thread, because otherwise the executor would never be notified.
+   */
+  RCLCPP_PUBLIC
+  void
+  remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true) override;
+
+  /// Convenience function which takes Node and forwards NodeBaseInterface.
+  RCLCPP_PUBLIC
+  void
+  remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**
@@ -108,13 +142,13 @@ public:
     }
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
-    rclcpp::executor::ExecutableList executable_list;
-    // Collect entities and clean any invalid nodes.
-    run_collect_entities();
-    get_executable_list(executable_list);
+    entities_collector_ = std::make_shared<StaticExecutorEntitiesCollector>();
+    entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+
     while (rclcpp::ok(this->context_)) {
       // Do one set of work.
-      execute_ready_executables(executable_list, timeout_left);
+      entities_collector_->refresh_wait_set(timeout_left);
+      execute_ready_executables();
       // Check if the future is set, return SUCCESS if it is.
       status = future.wait_for(std::chrono::seconds(0));
       if (status == std::future_status::ready) {
@@ -145,62 +179,13 @@ protected:
    */
   RCLCPP_PUBLIC
   void
-  execute_ready_executables(
-    executor::ExecutableList & exec_list,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
-
-  /// Get list of TimerBase of all available timers.
-  RCLCPP_PUBLIC
-  void
-  get_timer_list(executor::ExecutableList & exec_list);
-
-  /// Get list of SubscriptionBase of all available subscriptions.
-  RCLCPP_PUBLIC
-  void
-  get_subscription_list(executor::ExecutableList & exec_list);
-
-  /// Get list of ServiceBase of all available services.
-  RCLCPP_PUBLIC
-  void
-  get_service_list(executor::ExecutableList & exec_list);
-
-  /// Get list of ClientBase of all available clients.
-  RCLCPP_PUBLIC
-  void
-  get_client_list(executor::ExecutableList & exec_list);
-
-  /// Get list of all available waitables.
-  RCLCPP_PUBLIC
-  void
-  get_waitable_list(executor::ExecutableList & exec_list);
-
-  /// Get available timers, subscribers, services, clients and waitables in ExecutableList struct.
-  /**
-   * \param[in] exec_list Structure that can hold subscriptionbases, timerbases, etc
-   * \param[in] timeout Optional timeout parameter.
-   */
-  RCLCPP_PUBLIC
-  void
-  get_executable_list(
-    executor::ExecutableList & executable_list,
-    std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
-
-  /// Function to run collect_entities() and clean any invalid nodes.
-  RCLCPP_PUBLIC
-  void run_collect_entities();
-
-  /// Function to add_handles_to_wait_set and wait for work and
-  // block until the wait set is ready or until the timeout has been exceeded.
-  RCLCPP_PUBLIC
-  void refresh_wait_set(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
-
-  /// Function to reallocate space for entities in the wait set.
-  RCLCPP_PUBLIC
-  void prepare_wait_set();
+  execute_ready_executables();
 
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
+
+  StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
 };
 
 }  // namespace executors
