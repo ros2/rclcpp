@@ -567,6 +567,26 @@ private:
     std::lock_guard<std::mutex> guard(goal_handles_mutex_);
     using GoalStatusMessage = typename ActionT::Impl::GoalStatusMessage;
     auto status_message = std::static_pointer_cast<GoalStatusMessage>(message);
+
+    // remove goal handle if its goal id not exist in the status message list,
+    // notice that goal handle will be removed while the status is terminated
+    // (STATUS_SUCCEEDED, STATUS_CANCELED, or STATUS_ABORTED)
+    // and the goal is expired in the server
+    for (auto it = goal_handles_.begin(); it != goal_handles_.end(); ) {
+      bool exist = false;
+      for (const GoalStatus & status : status_message->status_list) {
+        if (it->first == status.goal_info.goal_id.uuid) {
+          exist = true;
+          break;
+        }
+      }
+      if (!exist) {
+        it = goal_handles_.erase(it);
+      } else {
+        ++it;
+      }
+    }
+
     for (const GoalStatus & status : status_message->status_list) {
       const GoalUUID & goal_id = status.goal_info.goal_id.uuid;
       if (goal_handles_.count(goal_id) == 0) {
@@ -577,13 +597,6 @@ private:
       }
       typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id];
       goal_handle->set_status(status.status);
-      const int8_t goal_status = goal_handle->get_status();
-      if (
-        goal_status == GoalStatus::STATUS_CANCELED ||
-        goal_status == GoalStatus::STATUS_ABORTED)
-      {
-        goal_handles_.erase(goal_id);
-      }
     }
   }
 

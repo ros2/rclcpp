@@ -451,15 +451,12 @@ ServerBase::execute_check_expired_goals()
       RCLCPP_DEBUG(pimpl_->logger_, "Expired goal %s", to_string(uuid).c_str());
       pimpl_->goal_results_.erase(uuid);
       pimpl_->result_requests_.erase(uuid);
-      // Change status to GOAL_EVENT_ABORT while goal expired.
-      ret = rcl_action_update_goal_state(pimpl_->goal_handles_[uuid].get(), GOAL_EVENT_ABORT);
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
-      }
-      publish_status();
       pimpl_->goal_handles_.erase(uuid);
     }
   }
+
+  // Publish status to notify client to remove goal handle if goal expired.
+  publish_status();
 }
 
 void
