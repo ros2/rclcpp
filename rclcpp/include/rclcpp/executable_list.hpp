@@ -38,7 +38,31 @@ struct ExecutableList
   ExecutableList();
 
   RCLCPP_PUBLIC
-  virtual ~ExecutableList();
+  ~ExecutableList();
+
+  RCLCPP_PUBLIC
+  void
+  clear();
+
+  RCLCPP_PUBLIC
+  void
+  add_subscription(rclcpp::SubscriptionBase::SharedPtr);
+
+  RCLCPP_PUBLIC
+  void
+  add_timer(rclcpp::TimerBase::SharedPtr);
+
+  RCLCPP_PUBLIC
+  void
+  add_service(rclcpp::ServiceBase::SharedPtr);
+
+  RCLCPP_PUBLIC
+  void
+  add_client(rclcpp::ClientBase::SharedPtr);
+
+  RCLCPP_PUBLIC
+  void
+  add_waitable(rclcpp::Waitable::SharedPtr);
 
   // Vector containing the SubscriptionBase of all the subscriptions added to the executor.
   std::vector<rclcpp::SubscriptionBase::SharedPtr> subscription;
