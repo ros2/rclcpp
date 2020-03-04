@@ -45,6 +45,8 @@ install(TARGETS
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  # Give cppcheck hints about macro definitions coming from outside this package
+  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
 
   ament_add_gtest(test_lifecycle_node test/test_lifecycle_node.cpp)
