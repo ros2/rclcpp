@@ -104,6 +104,7 @@ public:
 protected:
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
+  rclcpp::Context::SharedPtr context_;
 };
 
 

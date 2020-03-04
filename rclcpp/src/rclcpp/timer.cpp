@@ -72,6 +72,7 @@ TimerBase::TimerBase(
       rcl_reset_error();
     }
   }
+  context_ = context;
 }
 
 TimerBase::~TimerBase()
@@ -102,6 +103,7 @@ TimerBase::reset()
   if (rcl_timer_reset(timer_handle_.get()) != RCL_RET_OK) {
     throw std::runtime_error(std::string("Couldn't reset timer: ") + rcl_get_error_string().str);
   }
+  context_->interrupt_all_wait_sets();
 }
 
 bool
