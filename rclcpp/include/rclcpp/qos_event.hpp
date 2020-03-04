@@ -18,6 +18,7 @@
 #include <functional>
 
 #include "rcl/error_handling.h"
+#include "rmw/incompatible_qos_events_statuses.h"
 
 #include "rcutils/logging_macros.h"
 
@@ -32,8 +33,8 @@ using QOSDeadlineRequestedInfo = rmw_requested_deadline_missed_status_t;
 using QOSDeadlineOfferedInfo = rmw_offered_deadline_missed_status_t;
 using QOSLivelinessChangedInfo = rmw_liveliness_changed_status_t;
 using QOSLivelinessLostInfo = rmw_liveliness_lost_status_t;
-using QOSOfferedIncompatibleQoSInfo = rmw_offered_incompatible_qos_status_t;
-using QOSRequestedIncompatibleQoSInfo = rmw_requested_incompatible_qos_status_t;
+using QOSOfferedIncompatibleQoSInfo = rmw_offered_qos_incompatible_event_status_t;
+using QOSRequestedIncompatibleQoSInfo = rmw_requested_qos_incompatible_event_status_t;
 
 using QOSDeadlineRequestedCallbackType = std::function<void (QOSDeadlineRequestedInfo &)>;
 using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInfo &)>;
