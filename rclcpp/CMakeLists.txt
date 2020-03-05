@@ -11,7 +11,7 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
-find_package(rosidl_generator_cpp REQUIRED)
+find_package(rosidl_runtime_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(tracetools REQUIRED)
@@ -117,7 +117,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "builtin_interfaces"
   "rosgraph_msgs"
   "rosidl_typesupport_cpp"
-  "rosidl_generator_cpp"
+  "rosidl_runtime_cpp"
   "tracetools"
 )
 
@@ -144,7 +144,7 @@ ament_export_dependencies(builtin_interfaces)
 ament_export_dependencies(rosgraph_msgs)
 ament_export_dependencies(rosidl_typesupport_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
-ament_export_dependencies(rosidl_generator_cpp)
+ament_export_dependencies(rosidl_runtime_cpp)
 ament_export_dependencies(rcl_yaml_param_parser)
 ament_export_dependencies(tracetools)
 
@@ -166,7 +166,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_client
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_client ${PROJECT_NAME})
@@ -177,7 +177,7 @@ if(BUILD_TESTING)
       "rcl_interfaces"
       "rmw"
       "rcl"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_create_timer ${PROJECT_NAME})
@@ -188,7 +188,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_expand_topic_or_service_name
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_expand_topic_or_service_name ${PROJECT_NAME})
@@ -198,7 +198,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_function_traits
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
   endif()
@@ -208,7 +208,7 @@ if(BUILD_TESTING)
       "rcl"
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_intra_process_manager ${PROJECT_NAME})
@@ -218,7 +218,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_ring_buffer_implementation
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_ring_buffer_implementation ${PROJECT_NAME})
@@ -228,7 +228,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_intra_process_buffer
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_intra_process_buffer ${PROJECT_NAME})
@@ -246,7 +246,7 @@ if(BUILD_TESTING)
       "rcl_interfaces"
       "rcpputils"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
       "test_msgs"
     )
@@ -285,7 +285,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_node_global_args
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_node_global_args ${PROJECT_NAME})
@@ -307,7 +307,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_parameter_events_filter
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_parameter_events_filter ${PROJECT_NAME})
@@ -317,7 +317,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_parameter
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_parameter ${PROJECT_NAME})
@@ -331,7 +331,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_publisher
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_publisher ${PROJECT_NAME})
@@ -341,7 +341,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_publisher_subscription_count_api
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_publisher_subscription_count_api ${PROJECT_NAME})
@@ -351,7 +351,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_rate
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_rate
@@ -372,7 +372,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_service
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_service ${PROJECT_NAME})
@@ -382,7 +382,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_subscription
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_subscription ${PROJECT_NAME})
@@ -392,7 +392,7 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_subscription_publisher_count_api
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
+      "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
     )
     target_link_libraries(test_subscription_publisher_count_api ${PROJECT_NAME})

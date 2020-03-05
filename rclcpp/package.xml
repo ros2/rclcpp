@@ -12,13 +12,13 @@
   <build_depend>builtin_interfaces</build_depend>
   <build_depend>rcl_interfaces</build_depend>
   <build_depend>rosgraph_msgs</build_depend>
-  <build_depend>rosidl_generator_cpp</build_depend>
+  <build_depend>rosidl_runtime_cpp</build_depend>
   <build_depend>rosidl_typesupport_c</build_depend>
   <build_depend>rosidl_typesupport_cpp</build_depend>
   <build_export_depend>builtin_interfaces</build_export_depend>
   <build_export_depend>rcl_interfaces</build_export_depend>
   <build_export_depend>rosgraph_msgs</build_export_depend>
-  <build_export_depend>rosidl_generator_cpp</build_export_depend>
+  <build_export_depend>rosidl_runtime_cpp</build_export_depend>
   <build_export_depend>rosidl_typesupport_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
 
