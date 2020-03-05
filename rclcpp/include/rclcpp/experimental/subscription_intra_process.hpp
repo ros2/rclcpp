@@ -97,7 +97,9 @@ public:
     // The callback object gets copied, so if registration is done too early/before this point
     // (e.g. in `AnySubscriptionCallback::set()`), its address won't match any address used later
     // in subsequent tracepoints.
+#ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
+#endif
   }
 
   bool
