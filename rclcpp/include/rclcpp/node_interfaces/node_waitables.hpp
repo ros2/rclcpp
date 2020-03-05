@@ -16,7 +16,6 @@
 #define RCLCPP__NODE_INTERFACES__NODE_WAITABLES_HPP_
 
 #include "rclcpp/callback_group.hpp"
-#include "rclcpp/client.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
