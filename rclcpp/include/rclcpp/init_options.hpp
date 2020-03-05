@@ -45,12 +45,12 @@ public:
   /// Return `true` if logging should be initialized.
   RCLCPP_PUBLIC
   bool
-  initialize_logging() const;
+  auto_initialize_logging() const;
 
   /// Set flag indicating if logging should be initialized or not.
   RCLCPP_PUBLIC
   InitOptions &
-  initialize_logging(bool initialize_logging);
+  auto_initialize_logging(bool initialize_logging);
 
   /// Assignment operator.
   RCLCPP_PUBLIC

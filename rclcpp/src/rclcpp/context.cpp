@@ -115,7 +115,7 @@ Context::init(
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to initialize rcl");
   }
 
-  if (init_options.initialize_logging()) {
+  if (init_options.auto_initialize_logging()) {
     logging_configure_mutex_ = get_global_logging_configure_mutex();
     if (!logging_configure_mutex_) {
       throw std::runtime_error("global logging configure mutex is 'nullptr'");
