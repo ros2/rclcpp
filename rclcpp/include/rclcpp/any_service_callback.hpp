@@ -100,9 +100,9 @@ public:
     TRACEPOINT(callback_end, (const void *)this);
   }
 
-#ifndef TRACETOOLS_DISABLED
   void register_callback_for_tracing()
   {
+#ifndef TRACETOOLS_DISABLED
     if (shared_ptr_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
@@ -114,8 +114,8 @@ public:
         (const void *)this,
         get_symbol(shared_ptr_with_request_header_callback_));
     }
-  }
 #endif  // TRACETOOLS_DISABLED
+  }
 };
 
 }  // namespace rclcpp
