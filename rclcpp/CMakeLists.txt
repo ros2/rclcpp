@@ -332,6 +332,7 @@ if(BUILD_TESTING)
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
+      "test_msgs"
     )
     target_link_libraries(test_publisher ${PROJECT_NAME})
   endif()
@@ -342,6 +343,7 @@ if(BUILD_TESTING)
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
+      "test_msgs"
     )
     target_link_libraries(test_publisher_subscription_count_api ${PROJECT_NAME})
   endif()
@@ -383,6 +385,7 @@ if(BUILD_TESTING)
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
+      "test_msgs"
     )
     target_link_libraries(test_subscription ${PROJECT_NAME})
   endif()
@@ -393,6 +396,7 @@ if(BUILD_TESTING)
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
+      "test_msgs"
     )
     target_link_libraries(test_subscription_publisher_count_api ${PROJECT_NAME})
   endif()
