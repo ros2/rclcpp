@@ -329,7 +329,6 @@ if(BUILD_TESTING)
   ament_add_gtest(test_publisher test/test_publisher.cpp)
   if(TARGET test_publisher)
     ament_target_dependencies(test_publisher
-      "rcl_interfaces"
       "rmw"
       "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"

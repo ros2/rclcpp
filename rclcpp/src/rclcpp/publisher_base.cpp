@@ -24,7 +24,6 @@
 #include <string>
 #include <vector>
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
 #include "rcutils/logging_macros.h"
 #include "rmw/impl/cpp/demangle.hpp"
 

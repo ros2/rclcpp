@@ -22,9 +22,9 @@
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
+#include "test_msgs/msg/dummy.hpp"
 
-using rcl_interfaces::msg::IntraProcessMessage;
+using test_msgs::msg::Dummy;
 
 /**
  * Parameterized test.
@@ -62,7 +62,7 @@ protected:
 
 std::chrono::milliseconds TestPublisherSubscriptionCount::offset = std::chrono::milliseconds(2000);
 
-void OnMessage(const rcl_interfaces::msg::IntraProcessMessage::SharedPtr msg)
+void OnMessage(const test_msgs::msg::Dummy::SharedPtr msg)
 {
   (void)msg;
 }
@@ -74,12 +74,12 @@ TEST_P(TestPublisherSubscriptionCount, increasing_and_decreasing_counts)
     "my_node",
     "/ns",
     parameters.node_options[0]);
-  auto publisher = node->create_publisher<IntraProcessMessage>("/topic", 10);
+  auto publisher = node->create_publisher<Dummy>("/topic", 10);
 
   EXPECT_EQ(publisher->get_subscription_count(), 0u);
   EXPECT_EQ(publisher->get_intra_process_subscription_count(), 0u);
   {
-    auto sub = node->create_subscription<IntraProcessMessage>("/topic", 10, &OnMessage);
+    auto sub = node->create_subscription<Dummy>("/topic", 10, &OnMessage);
     rclcpp::sleep_for(offset);
     EXPECT_EQ(publisher->get_subscription_count(), 1u);
     EXPECT_EQ(
@@ -91,7 +91,7 @@ TEST_P(TestPublisherSubscriptionCount, increasing_and_decreasing_counts)
         "/ns",
         parameters.node_options[1]);
       auto another_sub =
-        another_node->create_subscription<IntraProcessMessage>("/topic", 10, &OnMessage);
+        another_node->create_subscription<Dummy>("/topic", 10, &OnMessage);
 
       rclcpp::sleep_for(offset);
       EXPECT_EQ(publisher->get_subscription_count(), 2u);

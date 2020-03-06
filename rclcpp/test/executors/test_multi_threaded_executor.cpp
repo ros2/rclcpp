@@ -23,11 +23,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/executors.hpp"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 using namespace std::chrono_literals;
-
-using rcl_interfaces::msg::IntraProcessMessage;
 
 class TestMultiThreadedExecutor : public ::testing::Test
 {

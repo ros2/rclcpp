@@ -21,7 +21,7 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
+#include "test_msgs/msg/dummy.hpp"
 
 class TestPublisher : public ::testing::Test
 {
@@ -93,16 +93,16 @@ protected:
  */
 TEST_F(TestPublisher, construction_and_destruction) {
   initialize();
-  using rcl_interfaces::msg::IntraProcessMessage;
+  using test_msgs::msg::Dummy;
   {
-    auto publisher = node->create_publisher<IntraProcessMessage>("topic", 42);
+    auto publisher = node->create_publisher<Dummy>("topic", 42);
     (void)publisher;
   }
 
   {
     ASSERT_THROW(
     {
-      auto publisher = node->create_publisher<IntraProcessMessage>("invalid_topic?", 42);
+      auto publisher = node->create_publisher<Dummy>("invalid_topic?", 42);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
 }
@@ -112,33 +112,33 @@ TEST_F(TestPublisher, construction_and_destruction) {
  */
 TEST_F(TestPublisher, various_creation_signatures) {
   initialize();
-  using rcl_interfaces::msg::IntraProcessMessage;
+  using test_msgs::msg::Dummy;
   {
-    auto publisher = node->create_publisher<IntraProcessMessage>("topic", 42);
+    auto publisher = node->create_publisher<Dummy>("topic", 42);
     (void)publisher;
   }
   {
-    auto publisher = node->create_publisher<IntraProcessMessage>("topic", rclcpp::QoS(42));
-    (void)publisher;
-  }
-  {
-    auto publisher =
-      node->create_publisher<IntraProcessMessage>("topic", rclcpp::QoS(rclcpp::KeepLast(42)));
+    auto publisher = node->create_publisher<Dummy>("topic", rclcpp::QoS(42));
     (void)publisher;
   }
   {
     auto publisher =
-      node->create_publisher<IntraProcessMessage>("topic", rclcpp::QoS(rclcpp::KeepAll()));
+      node->create_publisher<Dummy>("topic", rclcpp::QoS(rclcpp::KeepLast(42)));
     (void)publisher;
   }
   {
     auto publisher =
-      node->create_publisher<IntraProcessMessage>("topic", 42, rclcpp::PublisherOptions());
+      node->create_publisher<Dummy>("topic", rclcpp::QoS(rclcpp::KeepAll()));
     (void)publisher;
   }
   {
     auto publisher =
-      rclcpp::create_publisher<IntraProcessMessage>(node, "topic", 42, rclcpp::PublisherOptions());
+      node->create_publisher<Dummy>("topic", 42, rclcpp::PublisherOptions());
+    (void)publisher;
+  }
+  {
+    auto publisher =
+      rclcpp::create_publisher<Dummy>(node, "topic", 42, rclcpp::PublisherOptions());
     (void)publisher;
   }
 }
@@ -149,10 +149,10 @@ TEST_F(TestPublisher, various_creation_signatures) {
 TEST_P(TestPublisherInvalidIntraprocessQos, test_publisher_throws) {
   initialize(rclcpp::NodeOptions().use_intra_process_comms(true));
   rclcpp::QoS qos = GetParam().qos;
-  using rcl_interfaces::msg::IntraProcessMessage;
+  using test_msgs::msg::Dummy;
   {
     ASSERT_THROW(
-      {auto publisher = node->create_publisher<IntraProcessMessage>("topic", qos);},
+      {auto publisher = node->create_publisher<Dummy>("topic", qos);},
       std::invalid_argument);
   }
 }
@@ -183,15 +183,15 @@ INSTANTIATE_TEST_CASE_P(
    Testing publisher construction and destruction for subnodes.
  */
 TEST_F(TestPublisherSub, construction_and_destruction) {
-  using rcl_interfaces::msg::IntraProcessMessage;
+  using test_msgs::msg::Dummy;
   {
-    auto publisher = subnode->create_publisher<IntraProcessMessage>("topic", 42);
+    auto publisher = subnode->create_publisher<Dummy>("topic", 42);
 
     EXPECT_STREQ(publisher->get_topic_name(), "/ns/sub_ns/topic");
   }
 
   {
-    auto publisher = subnode->create_publisher<IntraProcessMessage>("/topic", 42);
+    auto publisher = subnode->create_publisher<Dummy>("/topic", 42);
 
     EXPECT_STREQ(publisher->get_topic_name(), "/topic");
   }
@@ -199,7 +199,7 @@ TEST_F(TestPublisherSub, construction_and_destruction) {
   {
     ASSERT_THROW(
     {
-      auto publisher = subnode->create_publisher<IntraProcessMessage>("invalid_topic?", 42);
+      auto publisher = subnode->create_publisher<Dummy>("invalid_topic?", 42);
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
 }
