@@ -97,6 +97,25 @@ TimerBase::reset()
   }
 }
 
+std::chrono::nanoseconds
+TimerBase::get_period()
+{
+  return std::chrono::nanoseconds(get_period_nanoseconds());
+}
+
+void
+TimerBase::set_period(std::chrono::nanoseconds new_period, bool reset)
+{
+  int64_t old_period = get_period_nanoseconds();
+  if (rcl_timer_exchange_period(timer_handle_.get(), new_period.count(), &old_period) != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't set timer period: ") + rcl_get_error_string().str);
+  }
+  if (reset)
+  {
+    this->reset();
+  }
+}
+
 bool
 TimerBase::is_ready()
 {
@@ -127,4 +146,14 @@ std::shared_ptr<const rcl_timer_t>
 TimerBase::get_timer_handle()
 {
   return timer_handle_;
+}
+
+int64_t
+TimerBase::get_period_nanoseconds()
+{
+  int64_t period = 0;
+  if (rcl_timer_get_period(timer_handle_.get(), &period) != RCL_RET_OK) {
+    throw std::runtime_error(std::string("Couldn't get timer period: ") + rcl_get_error_string().str);
+  }
+  return period;
 }

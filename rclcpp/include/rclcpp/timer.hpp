@@ -75,6 +75,14 @@ public:
   reset();
 
   RCLCPP_PUBLIC
+  void
+  set_period(std::chrono::nanoseconds new_period, bool reset=true);
+
+  RCLCPP_PUBLIC
+  std::chrono::nanoseconds
+  get_period();
+
+  RCLCPP_PUBLIC
   virtual void
   execute_callback() = 0;
 
@@ -104,6 +112,7 @@ public:
 protected:
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
+  int64_t get_period_nanoseconds();
 };
 
 
