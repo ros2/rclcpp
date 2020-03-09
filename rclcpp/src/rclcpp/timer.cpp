@@ -107,11 +107,13 @@ void
 TimerBase::set_period(std::chrono::nanoseconds new_period, bool reset)
 {
   int64_t old_period = get_period_nanoseconds();
-  if (rcl_timer_exchange_period(timer_handle_.get(), new_period.count(), &old_period) != RCL_RET_OK) {
-    throw std::runtime_error(std::string("Couldn't set timer period: ") + rcl_get_error_string().str);
-  }
-  if (reset)
+  if (rcl_timer_exchange_period(timer_handle_.get(), new_period.count(),
+    &old_period) != RCL_RET_OK)
   {
+    throw std::runtime_error(std::string("Couldn't set timer period: ") +
+            rcl_get_error_string().str);
+  }
+  if (reset) {
     this->reset();
   }
 }
@@ -153,7 +155,8 @@ TimerBase::get_period_nanoseconds()
 {
   int64_t period = 0;
   if (rcl_timer_get_period(timer_handle_.get(), &period) != RCL_RET_OK) {
-    throw std::runtime_error(std::string("Couldn't get timer period: ") + rcl_get_error_string().str);
+    throw std::runtime_error(std::string("Couldn't get timer period: ") +
+            rcl_get_error_string().str);
   }
   return period;
 }

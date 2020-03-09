@@ -76,7 +76,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  set_period(std::chrono::nanoseconds new_period, bool reset=true);
+  set_period(std::chrono::nanoseconds new_period, bool reset = true);
 
   RCLCPP_PUBLIC
   std::chrono::nanoseconds
