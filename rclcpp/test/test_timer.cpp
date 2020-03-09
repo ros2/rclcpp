@@ -160,11 +160,10 @@ TEST_F(TestTimer, test_get_and_set_period)
 
   // Slack is needed to have the tests kind of deterministic since the timer runs
   EXPECT_EQ(timer->get_period(), 100ms);
-  timer->set_period(600s, false); // Set to 10 Minutes --> gives slack for the next check
+  timer->set_period(600s, false);  // Set to 10 Minutes --> gives slack for the next check
   EXPECT_EQ(timer->get_period(), 600s);
   EXPECT_LE(timer->time_until_trigger(), 100ms);
-  timer->set_period(6000s, true); // set to 100 Minutes --> gives slack for next check
+  timer->set_period(6000s, true);  // set to 100 Minutes --> gives slack for next check
   EXPECT_EQ(timer->get_period(), 6000s);
   EXPECT_GT(timer->time_until_trigger(), 5000s);
-
 }
