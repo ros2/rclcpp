@@ -2512,6 +2512,23 @@ TEST_F(TestNode, set_on_parameters_set_callback_set_on_parameters_set_callback) 
   }, rclcpp::exceptions::ParameterModifiedInCallbackException);
 }
 
+void expect_qos_profile_eq(
+  const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2, bool is_publisher)
+{
+  // Depth and history are skipped because they are not retrieved.
+  EXPECT_EQ(qos1.reliability, qos2.reliability);
+  EXPECT_EQ(qos1.durability, qos2.durability);
+  EXPECT_EQ(qos1.deadline.sec, qos2.deadline.sec);
+  EXPECT_EQ(qos1.deadline.nsec, qos2.deadline.nsec);
+  if (is_publisher) {
+    EXPECT_EQ(qos1.lifespan.sec, qos2.lifespan.sec);
+    EXPECT_EQ(qos1.lifespan.nsec, qos2.lifespan.nsec);
+  }
+  EXPECT_EQ(qos1.liveliness, qos2.liveliness);
+  EXPECT_EQ(qos1.liveliness_lease_duration.sec, qos2.liveliness_lease_duration.sec);
+  EXPECT_EQ(qos1.liveliness_lease_duration.nsec, qos2.liveliness_lease_duration.nsec);
+}
+
 // test that calling get_publishers_info_by_topic and get_subscriptions_info_by_topic
 TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
@@ -2554,23 +2571,10 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   EXPECT_EQ("test_msgs/msg/BasicTypes", publisher_list[0].topic_type());
   EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_list[0].endpoint_type());
   auto actual_qos_profile = publisher_list[0].qos_profile().get_rmw_qos_profile();
-
-  auto assert_qos_profile = [](const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2) {
-      // Depth and history are skipped because they are not retrieved.
-      EXPECT_EQ(qos1.reliability, qos2.reliability);
-      EXPECT_EQ(qos1.durability, qos2.durability);
-      EXPECT_EQ(memcmp(&qos1.deadline, &qos2.deadline, sizeof(struct rmw_time_t)), 0);
-      EXPECT_EQ(memcmp(&qos1.lifespan, &qos2.lifespan, sizeof(struct rmw_time_t)), 0);
-      EXPECT_EQ(qos1.liveliness, qos2.liveliness);
-      EXPECT_EQ(
-        memcmp(
-          &qos1.liveliness_lease_duration,
-          &qos2.liveliness_lease_duration,
-          sizeof(struct rmw_time_t)),
-        0);
-    };
-
-  assert_qos_profile(qos.get_rmw_qos_profile(), actual_qos_profile);
+  {
+    SCOPED_TRACE("Publisher QOS 1");
+    expect_qos_profile_eq(qos.get_rmw_qos_profile(), actual_qos_profile, true);
+  }
 
   // Add a subscription
   rclcpp::QoSInitialization qos_initialization2 =
@@ -2609,13 +2613,20 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
   EXPECT_EQ("test_msgs/msg/BasicTypes", publisher_list[0].topic_type());
   EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_list[0].endpoint_type());
   auto publisher_qos_profile = publisher_list[0].qos_profile().get_rmw_qos_profile();
-  assert_qos_profile(qos.get_rmw_qos_profile(), publisher_qos_profile);
+  {
+    SCOPED_TRACE("Publisher QOS 2");
+    expect_qos_profile_eq(qos.get_rmw_qos_profile(), publisher_qos_profile, true);
+  }
+
   EXPECT_EQ(node->get_name(), subscription_list[0].node_name());
   EXPECT_EQ(node->get_namespace(), subscription_list[0].node_namespace());
   EXPECT_EQ("test_msgs/msg/BasicTypes", subscription_list[0].topic_type());
   EXPECT_EQ(rclcpp::EndpointType::Subscription, subscription_list[0].endpoint_type());
   auto subscription_qos_profile = subscription_list[0].qos_profile().get_rmw_qos_profile();
-  assert_qos_profile(qos2.get_rmw_qos_profile(), subscription_qos_profile);
+  {
+    SCOPED_TRACE("Subscription QOS");
+    expect_qos_profile_eq(qos2.get_rmw_qos_profile(), subscription_qos_profile, false);
+  }
 
   // Error cases
   EXPECT_THROW(
