@@ -120,8 +120,8 @@ public:
     }
     if (options.event_callbacks.incompatible_qos_callback) {
       this->add_event_handler(
-          options.event_callbacks.incompatible_qos_callback,
-          RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
+        options.event_callbacks.incompatible_qos_callback,
+        RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
     }
 
     // Setup intra process publishing if requested.

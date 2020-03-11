@@ -41,7 +41,8 @@ using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInf
 using QOSLivelinessChangedCallbackType = std::function<void (QOSLivelinessChangedInfo &)>;
 using QOSLivelinessLostCallbackType = std::function<void (QOSLivelinessLostInfo &)>;
 using QOSOfferedIncompatibleQoSCallbackType = std::function<void (QOSOfferedIncompatibleQoSInfo &)>;
-using QOSRequestedIncompatibleQoSCallbackType = std::function<void (QOSRequestedIncompatibleQoSInfo &)>;
+using QOSRequestedIncompatibleQoSCallbackType =
+  std::function<void (QOSRequestedIncompatibleQoSInfo &)>;
 
 /// Contains callbacks for various types of events a Publisher can receive from the middleware.
 struct PublisherEventCallbacks
