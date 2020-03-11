@@ -37,6 +37,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 namespace rclcpp
 {
@@ -212,9 +213,16 @@ public:
     }
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
-    while (rclcpp::ok(this->context_)) {
+    if (spinning.exchange(true)) {
+      throw std::runtime_error("spin_some() called while already spinning");
+    }
+    RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+    while (rclcpp::ok(this->context_) && spinning.load()) {
       // Do one item of work.
-      spin_once(timeout_left);
+      AnyExecutable any_exec;
+      if (get_next_executable(any_exec, timeout_left)) {
+        execute_any_executable(any_exec);
+      }
       // Check if the future is set, return SUCCESS if it is.
       status = future.wait_for(std::chrono::seconds(0));
       if (status == std::future_status::ready) {
