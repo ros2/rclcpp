@@ -2,6 +2,11 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.13 (2020-03-12)
+-------------------
+* Don't specify calling convention in std::_Binder template. (`#1015 <https://github.com/ros2/rclcpp/issues/1015>`_)
+* Contributors: Jacob Perron, Sean Kelly
+
 0.7.12 (2019-12-05)
 -------------------
 
