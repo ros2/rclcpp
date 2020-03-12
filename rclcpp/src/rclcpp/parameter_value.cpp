@@ -143,12 +143,16 @@ ParameterValue::ParameterValue(const bool bool_value)
 ParameterValue::ParameterValue(const int int_value)
 {
   value_.integer_value = int_value;
+  // Allow integers to be cast to doubles
+  value_.double_value = static_cast<double>(int_value);
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
 }
 
 ParameterValue::ParameterValue(const int64_t int_value)
 {
   value_.integer_value = int_value;
+  // Allow integers to be cast to doubles
+  value_.double_value = static_cast<double>(int_value);
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER;
 }
 
@@ -189,12 +193,16 @@ ParameterValue::ParameterValue(const std::vector<bool> & bool_array_value)
 ParameterValue::ParameterValue(const std::vector<int> & int_array_value)
 {
   value_.integer_array_value.assign(int_array_value.cbegin(), int_array_value.cend());
+  // Allow integer arrays to be cast to double arrays
+  value_.double_array_value.assign(int_array_value.cbegin(), int_array_value.cend());
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
 }
 
 ParameterValue::ParameterValue(const std::vector<int64_t> & int_array_value)
 {
   value_.integer_array_value = int_array_value;
+  // Allow integer arrays to be cast to double arrays
+  value_.double_array_value.assign(int_array_value.cbegin(), int_array_value.cend());
   value_.type = rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY;
 }
 

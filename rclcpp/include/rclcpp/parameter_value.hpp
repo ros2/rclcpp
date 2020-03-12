@@ -169,7 +169,10 @@ public:
   typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, const double &>::type
   get() const
   {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
+    // Allow integers to be cast to doubles
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE &&
+      value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER)
+    {
       throw ParameterTypeException(ParameterType::PARAMETER_DOUBLE, get_type());
     }
     return value_.double_value;
@@ -228,7 +231,10 @@ public:
     type == ParameterType::PARAMETER_DOUBLE_ARRAY, const std::vector<double> &>::type
   get() const
   {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY) {
+    // Allow integer arrays to be cast to double arrays
+    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE_ARRAY &&
+      value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY)
+    {
       throw ParameterTypeException(ParameterType::PARAMETER_DOUBLE_ARRAY, get_type());
     }
     return value_.double_array_value;
