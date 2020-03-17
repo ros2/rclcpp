@@ -144,7 +144,7 @@ public:
 
   template<ParameterType type>
   constexpr
-  typename std::enable_if<type == ParameterType::PARAMETER_BOOL, const bool &>::type
+  typename std::enable_if<type == ParameterType::PARAMETER_BOOL, bool>::type
   get() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_BOOL) {
@@ -155,7 +155,7 @@ public:
 
   template<ParameterType type>
   constexpr
-  typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, const int64_t &>::type
+  typename std::enable_if<type == ParameterType::PARAMETER_INTEGER, int64_t>::type
   get() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER) {
@@ -166,7 +166,7 @@ public:
 
   template<ParameterType type>
   constexpr
-  typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, const double &>::type
+  typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, double>::type
   get() const
   {
     if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
@@ -250,7 +250,7 @@ public:
 
   template<typename type>
   constexpr
-  typename std::enable_if<std::is_same<type, bool>::value, const bool &>::type
+  typename std::enable_if<std::is_same<type, bool>::value, bool>::type
   get() const
   {
     return get<ParameterType::PARAMETER_BOOL>();
@@ -259,7 +259,7 @@ public:
   template<typename type>
   constexpr
   typename std::enable_if<
-    std::is_integral<type>::value && !std::is_same<type, bool>::value, const int64_t &>::type
+    std::is_integral<type>::value && !std::is_same<type, bool>::value, int64_t>::type
   get() const
   {
     return get<ParameterType::PARAMETER_INTEGER>();
@@ -267,7 +267,7 @@ public:
 
   template<typename type>
   constexpr
-  typename std::enable_if<std::is_floating_point<type>::value, const double &>::type
+  typename std::enable_if<std::is_floating_point<type>::value, double>::type
   get() const
   {
     return get<ParameterType::PARAMETER_DOUBLE>();
