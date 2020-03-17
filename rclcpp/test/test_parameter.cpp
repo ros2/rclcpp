@@ -118,6 +118,7 @@ TEST(TestParameter, bool_variant) {
 
 TEST(TestParameter, integer_variant) {
   const int TEST_VALUE {42};
+  const double TEST_VALUE_DOUBLE {static_cast<double>(TEST_VALUE)};
 
   // Direct instantiation
   rclcpp::Parameter integer_variant("integer_param", TEST_VALUE);
@@ -133,8 +134,10 @@ TEST(TestParameter, integer_variant) {
     integer_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, integer_variant.as_int());
 
+  // Implicit conversion to double
+  EXPECT_EQ(TEST_VALUE_DOUBLE, integer_variant.as_double());
+
   EXPECT_THROW(integer_variant.as_bool(), rclcpp::ParameterTypeException);
-  EXPECT_THROW(integer_variant.as_double(), rclcpp::ParameterTypeException);
   EXPECT_THROW(integer_variant.as_string(), rclcpp::ParameterTypeException);
   EXPECT_THROW(integer_variant.as_byte_array(), rclcpp::ParameterTypeException);
   EXPECT_THROW(integer_variant.as_bool_array(), rclcpp::ParameterTypeException);
@@ -166,6 +169,7 @@ TEST(TestParameter, integer_variant) {
 
 TEST(TestParameter, long_integer_variant) {
   const int64_t TEST_VALUE {std::numeric_limits<int64_t>::max()};
+  const double TEST_VALUE_DOUBLE {static_cast<double>(TEST_VALUE)};
 
   // Direct instantiation
   rclcpp::Parameter long_variant("long_integer_param", TEST_VALUE);
@@ -181,8 +185,10 @@ TEST(TestParameter, long_integer_variant) {
     long_variant.get_value_message().type);
   EXPECT_EQ(TEST_VALUE, long_variant.as_int());
 
+  // Implicit conversion to double
+  EXPECT_EQ(TEST_VALUE_DOUBLE, long_variant.as_double());
+
   EXPECT_THROW(long_variant.as_bool(), rclcpp::ParameterTypeException);
-  EXPECT_THROW(long_variant.as_double(), rclcpp::ParameterTypeException);
   EXPECT_THROW(long_variant.as_string(), rclcpp::ParameterTypeException);
   EXPECT_THROW(long_variant.as_byte_array(), rclcpp::ParameterTypeException);
   EXPECT_THROW(long_variant.as_bool_array(), rclcpp::ParameterTypeException);

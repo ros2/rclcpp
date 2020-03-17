@@ -169,10 +169,14 @@ public:
   typename std::enable_if<type == ParameterType::PARAMETER_DOUBLE, double>::type
   get() const
   {
-    if (value_.type != rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
-      throw ParameterTypeException(ParameterType::PARAMETER_DOUBLE, get_type());
+    // Allow integer values to be cast to double
+    if (value_.type == rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER) {
+      return static_cast<double>(value_.integer_value);
     }
-    return value_.double_value;
+    if (value_.type == rcl_interfaces::msg::ParameterType::PARAMETER_DOUBLE) {
+      return value_.double_value;
+    }
+    throw ParameterTypeException(ParameterType::PARAMETER_DOUBLE, get_type());
   }
 
   template<ParameterType type>
