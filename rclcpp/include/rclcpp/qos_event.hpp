@@ -93,7 +93,11 @@ public:
     event_handle_ = rcl_get_zero_initialized_event();
     rcl_ret_t ret = init_func(&event_handle_, parent_handle, event_type);
     if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(ret, "could not create event");
+      if (ret == RCL_RET_UNSUPPORTED) {
+        rclcpp::exceptions::throw_from_rcl_error(ret, "event type is not supported");
+      } else {
+        rclcpp::exceptions::throw_from_rcl_error(ret, "could not create event");
+      }
     }
   }
 
