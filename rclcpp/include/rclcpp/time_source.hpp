@@ -52,7 +52,8 @@ public:
     rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
-    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface);
+    rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface,
+    bool start_parameter_event_subscriber);
 
   RCLCPP_PUBLIC
   void detachNode();
