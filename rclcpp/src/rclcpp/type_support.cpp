@@ -15,7 +15,6 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
@@ -26,14 +25,6 @@
 #include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters.hpp"
 #include "rcl_interfaces/srv/set_parameters_atomically.hpp"
-
-const rosidl_message_type_support_t *
-rclcpp::type_support::get_intra_process_message_msg_type_support()
-{
-  return rosidl_typesupport_cpp::get_message_type_support_handle<
-    rcl_interfaces::msg::IntraProcessMessage
-  >();
-}
 
 const rosidl_message_type_support_t *
 rclcpp::type_support::get_parameter_event_msg_type_support()

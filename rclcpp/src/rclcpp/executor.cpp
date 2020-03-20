@@ -26,8 +26,6 @@
 #include "rclcpp/scope_exit.hpp"
 #include "rclcpp/utilities.hpp"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 #include "rcutils/logging_macros.h"
 
 using rclcpp::exceptions::throw_from_rcl_error;
