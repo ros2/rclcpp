@@ -214,7 +214,7 @@ public:
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
     if (spinning.exchange(true)) {
-      throw std::runtime_error("spin_some() called while already spinning");
+      throw std::runtime_error("spin_until_future_complete() called while already spinning");
     }
     RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
     while (rclcpp::ok(this->context_) && spinning.load()) {
