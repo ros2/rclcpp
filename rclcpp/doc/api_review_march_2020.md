@@ -32,7 +32,11 @@
 >
 > Both of the above approaches address some of the main concerns, which are: keeping `Node` and `LifecycleNode` in sync, reducing the size of the `Node` class so it is more easily maintained, documented, and so that related functions are grouped more clearly.
 
-- discourse post or issue? I could not find it quickly this morning.
+- https://github.com/ros2/rclcpp/issues/898
+- https://github.com/ros2/rclcpp/issues/509
+- https://github.com/ros2/rclcpp/issues/855
+- https://github.com/ros2/rclcpp/issues/985
+  - subnode feature is in rclcpp::Node only, complicating "node using" API designs
 - http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n4174.pdf
 - https://en.wikipedia.org/wiki/Uniform_Function_Call_Syntax#C++_proposal
   - "Many programmers are tempted to write member functions to get the benefits of the member function syntax (e.g. "dot-autocomplete" to list member functions);[6] however, this leads to excessive coupling between classes.[7]"
@@ -54,11 +58,60 @@
 
 ### Scoped Versus Non-Scoped Entities (e.g. Publishers/Subscriptions)
 
-> TDB
+> Currently, Publisher and Subscription (and similar entities) are scoped, meaning that when they are created they are added to the ROS graph as a side effect, and when they are let out of scope they remove themselves from the graph too.
+> Additionally, they necessarily have shared state with the system, for instance when you are spinning on a node, the executor shares ownership of the Subscriptions with the user.
+> Therefore, the Subscription only gets removed when both the user and executor are done with it.
+>
+> This shared ownership is accomplished with the use of shared pointers and weak pointers.
+>
+> There are a few concerns here, (a) use of shared pointers confuses users, (b) overhead of shared pointers and lack of an ability to use these classes on the stack rather than the heap, and (c) complexity of shutdown of an entity from the users perspective.
+>
+> For (a), some users are overwhelmed by the need to use a shared pointer.
+> In ROS 1 this was avoided by having a class which itself just thinly wraps a shared pointer (see: https://github.com/ros/ros_comm/blob/ac9f88c59a676ca6895e13445fc7d71f398ebe1f/clients/roscpp/include/ros/subscriber.h#L108-L111).
+> This could be achieved in ROS 2 either by doing the same with a wrapper class (at the expense of lots of repeated code), or by eliminating the need for using shared ownership.
+>
+> For (b), for some use cases, especially resource constrained / real-time / safety-critical environments, requiring these classes to be on the heap rather than the stack is at least inconvenient.
+> Additionally, there is a cost associated with using shared pointers, in the storage of shared state and in some implementation the use of locks or at least atomics for thread-safety.
+>
+> For (c), this is the most concerning drawback, because right now when a user lets their shared pointer to a, for example, Subscription go out of scope, a post condition is not that the Subscription is destroyed, nor that it has been removed from the graph.
+> In stead, the behavior is more like "at some point in the future the Subscription will be destroyed and removed from the graph, when the system is done with it".
+> This isn't a very satisfactory contract, as some users may wish to know when the Subscription has been deleted, but cannot easily know that.
+>
+> The benefit to the shared state is a safety net for users.
+> The alternative would be to document that a Subscription, again for example, cannot be deleted until the system is done with it.
+> We'd basically be pushing the responsibility onto the user to ensure the shared ownership is handled properly by the execution of their application, i.e. they create the Subscription, share a reference with the system (adding it by reference to an executor, for example), and they have to make sure the system is done with it before deleting the Subscription.
+>
+>Separately, from the above points, there is the related concern of forcing the user to keep a copy of their entities in scope, whether it be with a shared pointer or a class wrapping one.
+> There is the desire to create it and forget it in some cases.
+> The downside to this is that if/when the user wants to destroy the entity, they have no way of doing that as they have no handle or unique way to address the entity.
+>
+> One proposed solution would be to have a set of "named X" APIs, e.g. `create_named_subscription` rather than just `create_subscription`.
+> This would allow the user to address the Subscription in the future in order to obtain a new reference to it or delete it.
+
+- https://github.com/ros2/rclcpp/issues/506
+- https://github.com/ros2/rclcpp/issues/726
 
 **Notes from 2020-03-23**:
 
 - 
+
+### Allow QoS to be configured externally, like we allow remapping of topic names
+
+> Suggestion from @stonier: allow the qos setting on a topic to be changed externally at startup, similar to how we do topic remapping (e.g., do it on the command-line using appropriate syntax).
+>
+> To keep the syntax manageable, we might just allow profiles to be picked.
+
+- https://github.com/ros2/rclcpp/issues/239
+
+**Suggested Action**: Update issue, defer for now.
+
+**Notes from 2020-03-19**:
+
+- (wjwwood) it depends on the QoS setting, but many don't make sense, mostly because they can change some of the behaviors of underlying API
+- (dirk) Should developers expose a parameter instead?
+- (multiple) should be a feature that makes configuring them (after opt-in) consistent
+- (jacob) customers feedback was that this was expected, surprised it was not allowed
+- (karsten) could limit to profiles
 
 ## Init/shutdown and Context
 
@@ -147,25 +200,19 @@
 
 - No comments.
 
-### Allow QoS to be configured externally, like we allow remapping of topic names
-
-> Suggestion from @stonier: allow the qos setting on a topic to be changed externally at startup, similar to how we do topic remapping (e.g., do it on the command-line using appropriate syntax).
->
-> To keep the syntax manageable, we might just allow profiles to be picked.
-
-- https://github.com/ros2/rclcpp/issues/239
-
-**Suggested Action**: Update issue, defer for now.
-
-**Notes from 2020-03-19**:
-
-- (wjwwood) it depends on the QoS setting, but many don't make sense, mostly because they can change some of the behaviors of underlying API
-- (dirk) Should developers expose a parameter instead?
-- (multiple) should be a feature that makes configuring them (after opt-in) consistent
-- (jacob) customers feedback was that this was expected, surprised it was not allowed
-- (karsten) could limit to profiles
-
 ## Node
+
+### Do argument parsing outside of node constructor
+
+> Things that come from command line arguments should be separately passed into the node's constructor rather than passing in arguments and asking the node to do the parsing.
+
+- https://github.com/ros2/rclcpp/issues/492
+
+**Suggested Action**: ?
+
+**Notes from 2020-03-23**:
+
+- 
 
 ## Timer
 
@@ -261,6 +308,32 @@
 
 - 
 
+### Implicitly cast integer values for double parameters
+
+> If we try to pass an integer value to a double parameter from the command line or from a parameters YAML file we get a `rclcpp::ParameterTypeException`.
+> For example, passing a parameter from the command line:
+>
+>     ros2 run foo_package foo_node --ros-args -p foo_arg:=1
+>
+> results in the following error:
+>
+>     terminate called after throwing an instance of 'rclcpp::ParameterTypeException'
+>       what():  expected [double] got [integer]
+>
+> and we can fix it by explicitly making our value a floating point number:
+>
+>     ros2 run foo_package foo_node --ros-args -p foo_arg:=1.0
+>
+> But, it seems reasonable to me that if a user forgets to explicitly provide a floating point value that we should implicitly cast an integer to a float (as is done in many programming languages).
+
+- https://github.com/ros2/rclcpp/issues/979
+
+**Suggested Action**: ?
+
+**Notes from 2020-03-23**:
+
+- 
+
 ### Use `std::variant` instead of custom `ParameterValue` class
 
 > This is only possible if C++17 is available, but it would simplify our code, make our interface more standard, and allow us to use constexpr-if to simply our templated code.
@@ -316,6 +389,20 @@
 
 - https://github.com/ros2/rclcpp/issues/200
 - https://github.com/ros2/rclcpp/blob/96ebf59a6045a535730d98fff25e522807c7aa75/rclcpp/src/rclcpp/parameter_client.cpp#L412-L426
+
+**Suggested Action**: ?
+
+**Notes from 2020-03-23**:
+
+- 
+
+## Clock
+
+### Clock Jump callbacks on System or Steady time?
+
+> Currently time jump callbacks are registered via Clock::create_jump_handler(). Jump handlers are only invoked by TimeSource::set_clock(). This is only called if the clock type is RCL_ROS_TIME and ROS time is active.
+
+- https://github.com/ros2/rclcpp/issues/528
 
 **Suggested Action**: ?
 
