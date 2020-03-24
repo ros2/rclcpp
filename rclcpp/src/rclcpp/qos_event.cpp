@@ -17,6 +17,20 @@
 namespace rclcpp
 {
 
+UnsupportedEventTypeException::UnsupportedEventTypeException(
+  rcl_ret_t ret,
+  const rcl_error_state_t * error_state,
+  const std::string & prefix)
+: UnsupportedEventTypeException(exceptions::RCLErrorBase(ret, error_state), prefix)
+{}
+
+UnsupportedEventTypeException::UnsupportedEventTypeException(
+  const exceptions::RCLErrorBase & base_exc,
+  const std::string & prefix)
+: exceptions::RCLErrorBase(base_exc),
+  std::runtime_error(prefix + (prefix.empty() ? "" : ": ") + base_exc.formatted_message)
+{}
+
 QOSEventHandlerBase::~QOSEventHandlerBase()
 {
   if (rcl_event_fini(&event_handle_) != RCL_RET_OK) {

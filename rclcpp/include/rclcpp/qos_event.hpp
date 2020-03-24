@@ -60,6 +60,21 @@ struct SubscriptionEventCallbacks
   QOSRequestedIncompatibleQoSCallbackType incompatible_qos_callback;
 };
 
+class UnsupportedEventTypeException : public exceptions::RCLErrorBase, public std::runtime_error
+{
+public:
+  RCLCPP_PUBLIC
+  UnsupportedEventTypeException(
+    rcl_ret_t ret,
+    const rcl_error_state_t * error_state,
+    const std::string & prefix);
+
+  RCLCPP_PUBLIC
+  UnsupportedEventTypeException(
+    const exceptions::RCLErrorBase & base_exc,
+    const std::string & prefix);
+};
+
 class QOSEventHandlerBase : public Waitable
 {
 public:
@@ -102,9 +117,11 @@ public:
     rcl_ret_t ret = init_func(&event_handle_, parent_handle, event_type);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_UNSUPPORTED) {
-        rclcpp::exceptions::throw_from_rcl_error(ret, "event type is not supported");
+        UnsupportedEventTypeException exc(ret, rcl_get_error_state(), "Failed to initialize event");
+        rcl_reset_error();
+        throw exc;
       } else {
-        rclcpp::exceptions::throw_from_rcl_error(ret, "could not create event");
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to initialize event");
       }
     }
   }
