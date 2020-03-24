@@ -91,9 +91,18 @@
 - https://github.com/ros2/rclcpp/issues/506
 - https://github.com/ros2/rclcpp/issues/726
 
+**Suggested Action**: Consolidate to a single issue, and defer.
+
 **Notes from 2020-03-23**:
 
-- 
+- (chris) Putting ownership mechanics on user is hard.
+- (dirk) add documentation clearly outlining ownership
+- (shane) warn on unused to catch issues with immediately deleted items
+- (tfoote) debugging output for destruction so it easy to see when reviewing logs
+- (chris) possible to create API that checks for destruction
+  - (william) might lead to complex synchronization issues
+- (tfoote) could add helper classes to make scoped things non-scoped
+  - (shane) concerned that there is no longer "one good way" to do it
 
 ### Allow QoS to be configured externally, like we allow remapping of topic names
 
@@ -208,11 +217,15 @@
 
 - https://github.com/ros2/rclcpp/issues/492
 
-**Suggested Action**: ?
+**Suggested Action**: Defer until after foxy.
 
 **Notes from 2020-03-23**:
 
-- 
+- (dirk) may be related to ROS 1 heritage of argc/argv being passed to node directly
+- (shane) impacts rcl API as well, two parts "global options" as well node specific options
+- (dirk) what is the recommendation to users that want to add arguments programmatically
+  - user should be able to get non-ros argc/argv somehow (seems like you can now)
+- (jacob) the argument in NodeOptions are used for application specific argument via component loading as well
 
 ## Timer
 
@@ -257,11 +270,11 @@
 
 - https://github.com/ros2/rclcpp/issues/491
 
-**Suggested Action**: ?
+**Suggested Action**: Defer.
 
 **Notes from 2020-03-23**:
 
-- 
+- (dirk) likely new API, so possible to backport
 
 ## Service Client
 
@@ -287,11 +300,19 @@
 - https://github.com/ros2/rclcpp/issues/975
 - https://github.com/ros2/demos/blob/948b4f4869298f39cfe99d3ae517ad60a72a8909/demo_nodes_cpp/src/services/add_two_ints_client.cpp#L24-L39
 
-**Suggested Action**: ?
+**Suggested Action**: Update issue and defer. Also defer decision on reconciling rclpy's send_request.
 
 **Notes from 2020-03-23**:
 
-- 
+- (karsten/shane) async spinner helps in rclpy version, rclcpp could emulate
+- (chris) sees three options:
+  - only async (current case in rclcpp)
+  - have sync version, add lots of docs that spinning needs to happen elsewhere (current case for rclpy)
+  - reentrant spinning
+- (william) you either need async/await from language or ".then" syntax (we have this in async_send_request())
+- (chris) more error checking for recursive spinning
+- (chris) weird that rclcpp and rclpy have different API
+- (shane) thinks it is ok to have different API, but rclpy is not ideal
 
 ## Parameters
 
@@ -302,11 +323,11 @@
 - https://github.com/ros2/rclcpp/issues/475
 - https://github.com/ros2/rclcpp/tree/check_parameters
 
-**Suggested Action**: ?
+**Suggested Action**: Defer as nice to have.
 
 **Notes from 2020-03-23**:
 
-- 
+- None.
 
 ### Implicitly cast integer values for double parameters
 
@@ -328,11 +349,11 @@
 
 - https://github.com/ros2/rclcpp/issues/979
 
-**Suggested Action**: ?
+**Suggested Action**: Continue with issue.
 
 **Notes from 2020-03-23**:
 
-- 
+- (shane) says "yes please" :)
 
 ### Use `std::variant` instead of custom `ParameterValue` class
 
@@ -342,7 +363,8 @@
 
 **Notes from 2020-03-23**:
 
-- 
+- (chris) not sure churn is worth
+- (ivan) other places for std::variant, like AnySubscriptionCallback
 
 ### Cannot set name or value on `Parameter`/`ParameterValue`
 
@@ -350,11 +372,11 @@
 
 - https://github.com/ros2/rclcpp/issues/238
 
-**Suggested Action**: ?
+**Suggested Action**: Update issue, possibly close.
 
 **Notes from 2020-03-23**:
 
-- 
+- (chris/william) setting values on temporary (local) objects is not reflected in the node, so misleading
 
 ## Parameter Clients
 
@@ -365,11 +387,11 @@
 - https://github.com/ros2/rclcpp/issues/360
 - https://github.com/ros2/rclcpp/blob/96ebf59a6045a535730d98fff25e522807c7aa75/rclcpp/src/rclcpp/parameter_client.cpp#L453-L468
 
-**Suggested Action**: ?
+**Suggested Action**: Update issue, decide if it can be taken for Foxy or not.
 
 **Notes from 2020-03-23**:
 
-- 
+- (tfoote) Seems like adding a timeout is a good idea.
 
 ### Name of AsyncParametersClient inconsistent
 
@@ -379,7 +401,7 @@
 
 **Suggested Action**: Reconcile class and file name, switch to singular name?
 
-**Notes from 2020-03-23**:
+**Notes from on-line, post 2020-03-23 meeting**:
 
 - 
 
@@ -392,7 +414,7 @@
 
 **Suggested Action**: ?
 
-**Notes from 2020-03-23**:
+**Notes from on-line, post 2020-03-23 meeting**:
 
 - 
 
@@ -406,6 +428,6 @@
 
 **Suggested Action**: ?
 
-**Notes from 2020-03-23**:
+**Notes from on-line, post 2020-03-23 meeting**:
 
 - 
