@@ -16,14 +16,6 @@
 
 #include <rmw/types.h>
 
-namespace
-{
-/// Check if two rmw_time_t have the same values.
-bool equal(const rmw_time_t & left, const rmw_time_t & right)
-{
-  return left.sec == right.sec && left.nsec == right.nsec;
-}
-}  // anonymous namespace
 
 namespace rclcpp
 {
@@ -193,6 +185,15 @@ QoS::avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions)
   return *this;
 }
 
+namespace
+{
+/// Check if two rmw_time_t have the same values.
+bool operator==(const rmw_time_t & left, const rmw_time_t & right)
+{
+  return left.sec == right.sec && left.nsec == right.nsec;
+}
+}  // unnamed namespace
+
 bool operator==(const QoS & left, const QoS & right)
 {
   const auto & pl = left.get_rmw_qos_profile();
@@ -201,10 +202,10 @@ bool operator==(const QoS & left, const QoS & right)
          pl.depth == pr.depth &&
          pl.reliability == pr.reliability &&
          pl.durability == pr.durability &&
-         equal(pl.deadline, pr.deadline) &&
-         equal(pl.lifespan, pr.lifespan) &&
+         pl.deadline == pr.deadline &&
+         pl.lifespan == pr.lifespan &&
          pl.liveliness == pr.liveliness &&
-         equal(pl.liveliness_lease_duration, pr.liveliness_lease_duration) &&
+         pl.liveliness_lease_duration == pr.liveliness_lease_duration &&
          pl.avoid_ros_namespace_conventions == pr.avoid_ros_namespace_conventions;
 }
 
