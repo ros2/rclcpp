@@ -151,6 +151,10 @@ private:
   rmw_qos_profile_t rmw_qos_profile_;
 };
 
+/// Check if two QoS profiles are exactly equal in all policy values.
+bool operator==(const QoS & left, const QoS & right);
+bool operator!=(const QoS & left, const QoS & right);
+
 class RCLCPP_PUBLIC SensorDataQoS : public QoS
 {
 public:

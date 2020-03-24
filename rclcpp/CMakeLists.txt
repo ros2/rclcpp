@@ -347,6 +347,15 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_publisher_subscription_count_api ${PROJECT_NAME})
   endif()
+  ament_add_gtest(test_qos test/test_qos.cpp)
+  if(TARGET test_qos)
+    ament_target_dependencies(test_qos
+      "rmw"
+    )
+    target_link_libraries(test_qos
+      ${PROJECT_NAME}
+    )
+  endif()
   ament_add_gtest(test_rate test/test_rate.cpp)
   if(TARGET test_rate)
     ament_target_dependencies(test_rate
