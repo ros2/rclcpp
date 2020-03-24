@@ -15,14 +15,14 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_CLOCK_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_CLOCK_HPP_
 
-#include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_clock_interface.hpp"
-#include "rclcpp/node_interfaces/node_parameters_interface.hpp"
+#include "rclcpp/node_interfaces/node_graph_interface.hpp"
+#include "rclcpp/node_interfaces/node_logging_interface.hpp"
+#include "rclcpp/node_interfaces/node_services_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
-#include "rclcpp/time_source.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -50,7 +50,6 @@ public:
 
   /// Get a clock which will be kept up to date by the node.
   RCLCPP_PUBLIC
-
   rclcpp::Clock::SharedPtr
   get_clock() override;
 

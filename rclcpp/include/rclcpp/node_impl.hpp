@@ -33,8 +33,6 @@
 #include "rcl/publisher.h"
 #include "rcl/subscription.h"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/create_client.hpp"
 #include "rclcpp/create_publisher.hpp"

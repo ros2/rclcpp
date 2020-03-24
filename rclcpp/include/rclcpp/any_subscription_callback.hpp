@@ -234,6 +234,7 @@ public:
 
   void register_callback_for_tracing()
   {
+#ifndef TRACETOOLS_DISABLED
     if (shared_ptr_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
@@ -255,6 +256,7 @@ public:
         (const void *)this,
         get_symbol(unique_ptr_with_info_callback_));
     }
+#endif  // TRACETOOLS_DISABLED
   }
 
 private:

@@ -23,7 +23,6 @@
 #include "rclcpp/context.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
-#include "rclcpp/node_options.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

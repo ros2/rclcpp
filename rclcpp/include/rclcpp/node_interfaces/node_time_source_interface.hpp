@@ -15,8 +15,6 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_INTERFACE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_TIME_SOURCE_INTERFACE_HPP_
 
-#include "rclcpp/callback_group.hpp"
-#include "rclcpp/clock.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
