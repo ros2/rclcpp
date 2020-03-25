@@ -342,6 +342,7 @@ protected:
 
   RCLCPP_DISABLE_COPY(Executor)
 
+  RCLCPP_PUBLIC
   void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
