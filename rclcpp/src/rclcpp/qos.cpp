@@ -16,7 +16,6 @@
 
 #include <rmw/types.h>
 
-
 namespace rclcpp
 {
 
