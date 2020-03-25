@@ -245,7 +245,8 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
 }
 
 void
-Executor::spin_once_impl(std::chrono::nanoseconds timeout) {
+Executor::spin_once_impl(std::chrono::nanoseconds timeout)
+{
   AnyExecutable any_exec;
   if (get_next_executable(any_exec, timeout)) {
     execute_any_executable(any_exec);
