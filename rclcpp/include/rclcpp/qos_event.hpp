@@ -16,6 +16,7 @@
 #define RCLCPP__QOS_EVENT_HPP_
 
 #include <functional>
+#include <string>
 
 #include "rcl/error_handling.h"
 #include "rmw/incompatible_qos_events_statuses.h"
