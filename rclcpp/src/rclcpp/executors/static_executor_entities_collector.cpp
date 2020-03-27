@@ -34,9 +34,9 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 
 void
 StaticExecutorEntitiesCollector::init(
-       rcl_wait_set_t* p_wait_set,
-       memory_strategy::MemoryStrategy::SharedPtr& memory_strategy,
-       rcl_guard_condition_t* executor_guard_condition)
+  rcl_wait_set_t * p_wait_set,
+  memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
+  rcl_guard_condition_t * executor_guard_condition)
 {
   // Empty initialize executable list
   exec_list_ = executor::ExecutableList();
@@ -107,38 +107,38 @@ StaticExecutorEntitiesCollector::fill_executable_list()
 
       group->find_timer_ptrs_if(
         [this](const rclcpp::TimerBase::SharedPtr & timer) {
-          if(timer){
+          if (timer) {
             exec_list_.add_timer(timer);
           }
           return false;
         });
       group->find_subscription_ptrs_if(
         [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
-          if(subscription){
+          if (subscription) {
             exec_list_.add_subscription(subscription);
           }
           return false;
         });
       group->find_service_ptrs_if(
         [this](const rclcpp::ServiceBase::SharedPtr & service) {
-          if(service){
+          if (service) {
             exec_list_.add_service(service);
           }
           return false;
         });
       group->find_client_ptrs_if(
         [this](const rclcpp::ClientBase::SharedPtr & client) {
-          if(client){
+          if (client) {
             exec_list_.add_client(client);
           }
           return false;
         });
-        group->find_waitable_ptrs_if(
-          [this](const rclcpp::Waitable::SharedPtr & waitable) {
-          if(waitable){
+      group->find_waitable_ptrs_if(
+        [this](const rclcpp::Waitable::SharedPtr & waitable) {
+          if (waitable) {
             exec_list_.add_waitable(waitable);
           }
-            return false;
+          return false;
         });
     }
   }
@@ -188,8 +188,7 @@ StaticExecutorEntitiesCollector::refresh_wait_set(std::chrono::nanoseconds timeo
     RCUTILS_LOG_WARN_NAMED(
       "rclcpp",
       "empty wait set received in rcl_wait(). This should never happen.");
-  }
-  else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {
+  } else if (status != RCL_RET_OK && status != RCL_RET_TIMEOUT) {
     using rclcpp::exceptions::throw_from_rcl_error;
     throw_from_rcl_error(status, "rcl_wait() failed");
   }
@@ -240,9 +239,10 @@ StaticExecutorEntitiesCollector::remove_node(
     bool matched = (node_it->lock() == node_ptr);
     if (matched) {
       // Find and remove node and its guard condition
-      auto gc_it = std::find(guard_conditions_.begin(),
-                             guard_conditions_.end(),
-                             node_ptr->get_notify_guard_condition());
+      auto gc_it = std::find(
+        guard_conditions_.begin(),
+        guard_conditions_.end(),
+        node_ptr->get_notify_guard_condition());
 
       if (gc_it != guard_conditions_.end()) {
         guard_conditions_.erase(gc_it);
@@ -267,8 +267,9 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
   for (size_t i = 0; i < p_wait_set->size_of_guard_conditions; ++i) {
     if (p_wait_set->guard_conditions[i] != NULL) {
       // Check if the guard condition triggered belongs to a node
-      auto it = std::find(guard_conditions_.begin(), guard_conditions_.end(),
-                            p_wait_set->guard_conditions[i]);
+      auto it = std::find(
+        guard_conditions_.begin(), guard_conditions_.end(),
+        p_wait_set->guard_conditions[i]);
 
       // If it does, we are ready to re-collect entities
       if (it != guard_conditions_.end()) {

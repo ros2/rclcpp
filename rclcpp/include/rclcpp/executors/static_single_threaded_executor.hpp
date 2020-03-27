@@ -58,8 +58,7 @@ public:
 
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
-  StaticSingleThreadedExecutor(
-    const executor::ExecutorArgs & args = executor::ExecutorArgs());
+  StaticSingleThreadedExecutor(const executor::ExecutorArgs & args = executor::ExecutorArgs());
 
   /// Default destrcutor.
   RCLCPP_PUBLIC
@@ -70,7 +69,7 @@ public:
   // It will only be interrupt by a CTRL-C (managed by the global signal handler).
   RCLCPP_PUBLIC
   void
-  spin();
+  spin() override;
 
   /// Add a node to the executor.
   /**
@@ -82,7 +81,9 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true) override;
+  add_node(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify = true) override;
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
@@ -98,7 +99,9 @@ public:
    */
   RCLCPP_PUBLIC
   void
-  remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true) override;
+  remove_node(
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify = true) override;
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   RCLCPP_PUBLIC
@@ -180,7 +183,6 @@ protected:
   RCLCPP_PUBLIC
   void
   execute_ready_executables();
-
 
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)

@@ -196,8 +196,8 @@ public:
 
   void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable)
   {
-    if(waitable == nullptr){
-      throw std::runtime_error("rclcpp: Received NULL waitable.");
+    if (nullptr == waitable) {
+      throw std::runtime_error("waitable object unexpectedly nullptr");
     }
     waitable_handles_.push_back(waitable);
   }

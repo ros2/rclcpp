@@ -15,14 +15,25 @@
 #ifndef RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 #define RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
+#include <memory>
+
+#include <rcl/guard_condition.h>
+#include <rcl/wait.h>
+
+#include <rclcpp/executable_list.hpp>
+#include <rclcpp/macros.hpp>
+#include <rclcpp/memory_strategy.hpp>
+#include <rclcpp/visibility_control.hpp>
+#include <rclcpp/waitable.hpp>
+
 namespace rclcpp
 {
 namespace executors
 {
 
-class StaticExecutorEntitiesCollector :
- public rclcpp::Waitable,
- public std::enable_shared_from_this<StaticExecutorEntitiesCollector>
+class StaticExecutorEntitiesCollector
+  : public rclcpp::Waitable,
+  public std::enable_shared_from_this<StaticExecutorEntitiesCollector>
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(StaticExecutorEntitiesCollector)
@@ -36,13 +47,14 @@ public:
 
   RCLCPP_PUBLIC
   void
-  init(rcl_wait_set_t* p_wait_set,
-       memory_strategy::MemoryStrategy::SharedPtr& memory_strategy,
-       rcl_guard_condition_t* executor_guard_condition);
+  init(
+    rcl_wait_set_t * p_wait_set,
+    rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
+    rcl_guard_condition_t * executor_guard_condition);
 
   RCLCPP_PUBLIC
   void
-  execute();
+  execute() override;
 
   RCLCPP_PUBLIC
   void
@@ -142,10 +154,10 @@ private:
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
   /// Wait set for managing entities that the rmw layer waits on.
-  rcl_wait_set_t* p_wait_set_ = nullptr;
+  rcl_wait_set_t * p_wait_set_ = nullptr;
 
   /// Executable list: timers, subscribers, clients, services and waitables
-  executor::ExecutableList exec_list_;
+  rclcpp::executor::ExecutableList exec_list_;
 };
 
 }  // namespace executors

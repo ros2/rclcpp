@@ -137,4 +137,3 @@ StaticSingleThreadedExecutor::execute_ready_executables()
     }
   }
 }
-

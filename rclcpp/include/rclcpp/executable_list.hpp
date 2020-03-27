@@ -16,12 +16,9 @@
 #include <memory>
 #include <vector>
 
-#include "rclcpp/callback_group.hpp"
 #include "rclcpp/client.hpp"
-#include "rclcpp/macros.hpp"
-#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/service.hpp"
-#include "rclcpp/subscription.hpp"
+#include "rclcpp/subscription_base.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
@@ -31,13 +28,15 @@ namespace rclcpp
 namespace executor
 {
 
-/// This struct contains subscriptionbase, timerbase, etc. which can be used to run callbacks.
-struct ExecutableList
+/// This class contains subscriptionbase, timerbase, etc. which can be used to run callbacks.
+class ExecutableList
 {
+public:
   RCLCPP_PUBLIC
   ExecutableList();
 
   RCLCPP_PUBLIC
+  virtual
   ~ExecutableList();
 
   RCLCPP_PUBLIC
@@ -46,23 +45,23 @@ struct ExecutableList
 
   RCLCPP_PUBLIC
   void
-  add_subscription(rclcpp::SubscriptionBase::SharedPtr);
+  add_subscription(rclcpp::SubscriptionBase::SharedPtr subscription);
 
   RCLCPP_PUBLIC
   void
-  add_timer(rclcpp::TimerBase::SharedPtr);
+  add_timer(rclcpp::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
   void
-  add_service(rclcpp::ServiceBase::SharedPtr);
+  add_service(rclcpp::ServiceBase::SharedPtr service);
 
   RCLCPP_PUBLIC
   void
-  add_client(rclcpp::ClientBase::SharedPtr);
+  add_client(rclcpp::ClientBase::SharedPtr client);
 
   RCLCPP_PUBLIC
   void
-  add_waitable(rclcpp::Waitable::SharedPtr);
+  add_waitable(rclcpp::Waitable::SharedPtr waitable);
 
   // Vector containing the SubscriptionBase of all the subscriptions added to the executor.
   std::vector<rclcpp::SubscriptionBase::SharedPtr> subscription;
