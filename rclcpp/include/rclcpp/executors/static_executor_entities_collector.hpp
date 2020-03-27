@@ -148,7 +148,7 @@ private:
   std::list<const rcl_guard_condition_t *> guard_conditions_;
 
   /// Memory strategy: an interface for handling user-defined memory allocation strategies.
-  memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
   /// List of weak nodes registered in the static executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
