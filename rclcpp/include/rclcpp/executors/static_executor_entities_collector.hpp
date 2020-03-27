@@ -31,7 +31,7 @@ namespace rclcpp
 namespace executors
 {
 
-class StaticExecutorEntitiesCollector
+class StaticExecutorEntitiesCollector final
   : public rclcpp::Waitable,
   public std::enable_shared_from_this<StaticExecutorEntitiesCollector>
 {

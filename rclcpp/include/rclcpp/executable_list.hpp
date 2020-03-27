@@ -29,14 +29,13 @@ namespace executor
 {
 
 /// This class contains subscriptionbase, timerbase, etc. which can be used to run callbacks.
-class ExecutableList
+class ExecutableList final
 {
 public:
   RCLCPP_PUBLIC
   ExecutableList();
 
   RCLCPP_PUBLIC
-  virtual
   ~ExecutableList();
 
   RCLCPP_PUBLIC
