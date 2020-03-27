@@ -15,22 +15,23 @@
 #ifndef RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 #define RCLCPP__EXECUTORS__STATIC_SINGLE_THREADED_EXECUTOR_HPP_
 
-#include <rmw/rmw.h>
-
 #include <cassert>
 #include <cstdlib>
 #include <memory>
 #include <vector>
 #include <string>
+
+#include "rmw/rmw.h"
+
+#include "rclcpp/executable_list.hpp"
 #include "rclcpp/executor.hpp"
+#include "rclcpp/executors/static_executor_entities_collector.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/memory_strategies.hpp"
-#include "rclcpp/executable_list.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/utilities.hpp"
 #include "rclcpp/rate.hpp"
+#include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rclcpp/executors/static_executor_entities_collector.hpp"
 
 namespace rclcpp
 {
@@ -60,7 +61,8 @@ public:
 
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
-  StaticSingleThreadedExecutor(const executor::ExecutorArgs & args = executor::ExecutorArgs());
+  explicit StaticSingleThreadedExecutor(
+    const executor::ExecutorArgs & args = executor::ExecutorArgs());
 
   /// Default destrcutor.
   RCLCPP_PUBLIC

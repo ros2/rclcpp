@@ -13,6 +13,9 @@
 // limitations under the License.
 
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
+
+#include <memory>
+
 #include "rclcpp/scope_exit.hpp"
 
 using rclcpp::executors::StaticSingleThreadedExecutor;

@@ -15,16 +15,17 @@
 #ifndef RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 #define RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
+#include <list>
 #include <memory>
 
-#include <rcl/guard_condition.h>
-#include <rcl/wait.h>
+#include "rcl/guard_condition.h"
+#include "rcl/wait.h"
 
-#include <rclcpp/executable_list.hpp>
-#include <rclcpp/macros.hpp>
-#include <rclcpp/memory_strategy.hpp>
-#include <rclcpp/visibility_control.hpp>
-#include <rclcpp/waitable.hpp>
+#include "rclcpp/executable_list.hpp"
+#include "rclcpp/macros.hpp"
+#include "rclcpp/memory_strategy.hpp"
+#include "rclcpp/visibility_control.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
