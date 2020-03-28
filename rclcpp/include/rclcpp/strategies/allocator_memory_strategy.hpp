@@ -169,7 +169,6 @@ public:
             subscription_handles_.push_back(subscription->get_subscription_handle());
             return false;
           });
-
         group->find_service_ptrs_if(
           [this](const rclcpp::ServiceBase::SharedPtr & service) {
             service_handles_.push_back(service->get_service_handle());
@@ -193,6 +192,14 @@ public:
       }
     }
     return has_invalid_weak_nodes;
+  }
+
+  void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable)
+  {
+    if (nullptr == waitable) {
+      throw std::runtime_error("waitable object unexpectedly nullptr");
+    }
+    waitable_handles_.push_back(waitable);
   }
 
   bool add_handles_to_wait_set(rcl_wait_set_t * wait_set) override

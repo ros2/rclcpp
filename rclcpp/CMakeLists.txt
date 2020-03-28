@@ -40,11 +40,14 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/duration.cpp
   src/rclcpp/event.cpp
   src/rclcpp/exceptions.cpp
+  src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
   src/rclcpp/executors/multi_threaded_executor.cpp
   src/rclcpp/executors/single_threaded_executor.cpp
+  src/rclcpp/executors/static_executor_entities_collector.cpp
+  src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/graph_listener.cpp
   src/rclcpp/init_options.cpp
   src/rclcpp/intra_process_manager.cpp
