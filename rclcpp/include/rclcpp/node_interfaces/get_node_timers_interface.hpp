@@ -121,6 +121,37 @@ get_node_timers_interface_from_pointer(NodeType node_shared_pointer)
   return get_node_timers_interface_from_pointer(node_shared_pointer->get());
 }
 
+// If NodeType has a method called get_node_timers_interface() which returns a shared pointer.
+template<
+  typename NodeType,
+  typename std::enable_if<has_get_node_timers_interface<
+    typename std::remove_pointer<NodeType>::type,
+    std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
+  >::value, int>::type = 0
+>
+std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
+get_shared_node_timers_interface_from_pointer(NodeType node_pointer)
+{
+  if (!node_pointer) {
+    throw std::invalid_argument("node pointer cannot be nullptr");
+  }
+  return node_pointer->get_node_timers_interface();
+}
+
+// Forward shared_ptr's to const node pointer signatures.
+template<
+  typename NodeType,
+  typename std::enable_if<std::is_same<
+    NodeType,
+    typename std::shared_ptr<typename std::remove_pointer<NodeType>::type::element_type> *
+  >::value, int>::type = 0
+>
+std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
+get_shared_node_timers_interface_from_pointer(NodeType node_shared_pointer)
+{
+  return get_shared_node_timers_interface_from_pointer(node_shared_pointer->get());
+}
+
 }  // namespace detail
 
 /// Get the NodeTimersInterface as a pointer from a pointer to a "Node like" object.
@@ -131,7 +162,7 @@ template<
 rclcpp::node_interfaces::NodeTimersInterface *
 get_node_timers_interface(NodeType node_pointer)
 {
-  // Forward pointers to detail implmentation directly.
+  // Forward pointers to detail implementation directly.
   return detail::get_node_timers_interface_from_pointer(node_pointer);
 }
 
@@ -145,8 +176,34 @@ template<
 rclcpp::node_interfaces::NodeTimersInterface *
 get_node_timers_interface(NodeType && node_reference)
 {
-  // Forward references to detail implmentation as a pointer.
+  // Forward references to detail implementation as a pointer.
   return detail::get_node_timers_interface_from_pointer(&node_reference);
+}
+
+/// Get the NodeTimerInterface as an std::shared_ptr from a pointer to a "Node like" object.
+template<
+  typename NodeType,
+  typename std::enable_if<std::is_pointer<NodeType>::value, int>::type = 0
+>
+std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
+get_shared_node_timers_interface(NodeType node_pointer)
+{
+  // Forward pointers to detail implementation directly.
+  return detail::get_shared_node_timers_interface_from_pointer(node_pointer);
+}
+
+/// Get the NodeTimerInterface as an std::shared_ptr from a "Node like" object.
+template<
+  typename NodeType,
+  typename std::enable_if<
+    !std::is_pointer<typename std::remove_reference<NodeType>::type>::value, int
+  >::type = 0
+>
+std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface>
+get_shared_node_timers_interface(NodeType && node_reference)
+{
+  // Forward references to detail implementation as a pointer.
+  return detail::get_shared_node_timers_interface_from_pointer(&node_reference);
 }
 
 }  // namespace node_interfaces
