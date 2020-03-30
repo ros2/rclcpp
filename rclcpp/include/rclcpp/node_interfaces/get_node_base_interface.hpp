@@ -84,6 +84,9 @@ template<
 rclcpp::node_interfaces::NodeBaseInterface *
 get_node_base_interface_from_pointer(NodeType node_pointer)
 {
+  if (!node_pointer) {
+    throw std::invalid_argument("node pointer cannot be nullptr");
+  }
   return node_pointer->get_node_base_interface().get();
 }
 
@@ -98,6 +101,9 @@ template<
 rclcpp::node_interfaces::NodeBaseInterface *
 get_node_base_interface_from_pointer(NodeType node_pointer)
 {
+  if (!node_pointer) {
+    throw std::invalid_argument("node pointer cannot be nullptr");
+  }
   return node_pointer->get_node_base_interface();
 }
 

@@ -84,6 +84,9 @@ template<
 rclcpp::node_interfaces::NodeTopicsInterface *
 get_node_topics_interface_from_pointer(NodeType node_pointer)
 {
+  if (!node_pointer) {
+    throw std::invalid_argument("node pointer cannot be nullptr");
+  }
   return node_pointer->get_node_topics_interface().get();
 }
 
@@ -98,6 +101,9 @@ template<
 rclcpp::node_interfaces::NodeTopicsInterface *
 get_node_topics_interface_from_pointer(NodeType node_pointer)
 {
+  if (!node_pointer) {
+    throw std::invalid_argument("node pointer cannot be nullptr");
+  }
   return node_pointer->get_node_topics_interface();
 }
 
