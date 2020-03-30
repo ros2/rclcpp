@@ -16,6 +16,14 @@
 #define RCLCPP_ACTION__CREATE_CLIENT_HPP_
 
 #include <rclcpp/node.hpp>
+#include <rclcpp/node_interfaces/get_node_base_interface.hpp>
+#include <rclcpp/node_interfaces/get_node_graph_interface.hpp>
+#include <rclcpp/node_interfaces/get_node_logging_interface.hpp>
+#include <rclcpp/node_interfaces/get_node_waitables_interface.hpp>
+#include <rclcpp/node_interfaces/node_base_interface.hpp>
+#include <rclcpp/node_interfaces/node_graph_interface.hpp>
+#include <rclcpp/node_interfaces/node_logging_interface.hpp>
+#include <rclcpp/node_interfaces/node_waitables_interface.hpp>
 
 #include <memory>
 #include <string>
@@ -100,15 +108,15 @@ create_client(
 template<typename ActionT, typename NodeT>
 typename Client<ActionT>::SharedPtr
 create_client(
-  NodeT node,
+  NodeT & node,
   const std::string & name,
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_client<ActionT>(
-    node->get_node_base_interface(),
-    node->get_node_graph_interface(),
-    node->get_node_logging_interface(),
-    node->get_node_waitables_interface(),
+    rclcpp::node_interfaces::get_shared_node_base_interface(node),
+    rclcpp::node_interfaces::get_shared_node_graph_interface(node),
+    rclcpp::node_interfaces::get_shared_node_logging_interface(node),
+    rclcpp::node_interfaces::get_shared_node_waitables_interface(node),
     name,
     group);
 }

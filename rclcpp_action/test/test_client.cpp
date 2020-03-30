@@ -267,6 +267,16 @@ protected:
 
 TEST_F(TestClient, construction_and_destruction)
 {
+  ASSERT_THROW(
+  {
+    rclcpp::Node * null_node = nullptr;
+    rclcpp_action::create_client<ActionType>(null_node, action_name);}, std::invalid_argument);
+
+  ASSERT_THROW(
+  {
+    rclcpp::Node::SharedPtr null_node;
+    rclcpp_action::create_client<ActionType>(null_node, action_name);}, std::invalid_argument);
+
   ASSERT_NO_THROW(rclcpp_action::create_client<ActionType>(client_node, action_name).reset());
 }
 

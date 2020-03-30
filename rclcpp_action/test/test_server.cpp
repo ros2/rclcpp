@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "rclcpp_action/create_server.hpp"
@@ -80,18 +81,42 @@ protected:
 
 TEST_F(TestServer, construction_and_destruction)
 {
-  auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
+  const std::string action_name{"fibonacci"};
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
-  auto as = rclcpp_action::create_server<Fibonacci>(
-    node, "fibonacci",
-    [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+  auto handle_goal_callback = [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
       return rclcpp_action::GoalResponse::REJECT;
-    },
-    [](std::shared_ptr<GoalHandle>) {
+    };
+  auto handle_cancel_callback = [](std::shared_ptr<GoalHandle>) {
       return rclcpp_action::CancelResponse::REJECT;
-    },
-    [](std::shared_ptr<GoalHandle>) {});
+    };
+  auto handle_accepted_callback = [](std::shared_ptr<GoalHandle>) {};
+
+  ASSERT_THROW(
+  {
+    rclcpp::Node * null_node = nullptr;
+    rclcpp_action::create_server<Fibonacci>(
+      null_node, action_name,
+      handle_goal_callback,
+      handle_cancel_callback,
+      handle_accepted_callback);}, std::invalid_argument);
+
+  ASSERT_THROW(
+  {
+    rclcpp::Node::SharedPtr null_node;
+    rclcpp_action::create_server<Fibonacci>(
+      null_node,
+      action_name,
+      handle_goal_callback,
+      handle_cancel_callback,
+      handle_accepted_callback);}, std::invalid_argument);
+
+  auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, action_name,
+    handle_goal_callback,
+    handle_cancel_callback,
+    handle_accepted_callback);
   (void)as;
 }
 

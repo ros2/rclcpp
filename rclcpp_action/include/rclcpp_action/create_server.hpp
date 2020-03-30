@@ -18,6 +18,10 @@
 #include <rcl_action/action_server.h>
 
 #include <rclcpp/node.hpp>
+#include <rclcpp/node_interfaces/get_node_base_interface.hpp>
+#include <rclcpp/node_interfaces/get_node_clock_interface.hpp>
+#include <rclcpp/node_interfaces/get_node_logging_interface.hpp>
+#include <rclcpp/node_interfaces/get_node_waitables_interface.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
 #include <rclcpp/node_interfaces/node_logging_interface.hpp>
@@ -140,10 +144,10 @@ create_server(
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_server<ActionT>(
-    node->get_node_base_interface(),
-    node->get_node_clock_interface(),
-    node->get_node_logging_interface(),
-    node->get_node_waitables_interface(),
+    rclcpp::node_interfaces::get_shared_node_base_interface(node),
+    rclcpp::node_interfaces::get_shared_node_clock_interface(node),
+    rclcpp::node_interfaces::get_shared_node_logging_interface(node),
+    rclcpp::node_interfaces::get_shared_node_waitables_interface(node),
     name,
     handle_goal,
     handle_cancel,
