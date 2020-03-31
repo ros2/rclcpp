@@ -359,6 +359,16 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
+  ament_add_gtest(test_qos_event test/test_qos_event.cpp)
+  if(TARGET test_qos_event)
+    ament_target_dependencies(test_qos_event
+      "rmw"
+      "test_msgs"
+    )
+    target_link_libraries(test_qos_event
+      ${PROJECT_NAME}
+    )
+  endif()
   ament_add_gtest(test_rate test/test_rate.cpp)
   if(TARGET test_rate)
     ament_target_dependencies(test_rate
