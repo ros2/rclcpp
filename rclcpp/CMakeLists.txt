@@ -451,7 +451,9 @@ if(BUILD_TESTING)
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_executor)
     ament_target_dependencies(test_executor
-      "rcl")
+      "rcl"
+      "test_msgs"
+    )
     target_link_libraries(test_executor ${PROJECT_NAME})
   endif()
 
