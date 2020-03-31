@@ -45,15 +45,17 @@ TEST_F(TestComponentManager, get_component_resources_valid)
   auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
 
   auto resources = manager->get_component_resources("rclcpp_components");
-  EXPECT_EQ(3u, resources.size());
+  EXPECT_EQ(4u, resources.size());
 
   EXPECT_EQ("test_rclcpp_components::TestComponentFoo", resources[0].first);
   EXPECT_EQ("test_rclcpp_components::TestComponentBar", resources[1].first);
   EXPECT_EQ("test_rclcpp_components::TestComponentNoNode", resources[2].first);
+  EXPECT_EQ("test_rclcpp_components::TestComponentThrows", resources[3].first);
 
   EXPECT_TRUE(rcpputils::fs::path(resources[0].second).exists());
   EXPECT_TRUE(rcpputils::fs::path(resources[1].second).exists());
   EXPECT_TRUE(rcpputils::fs::path(resources[2].second).exists());
+  EXPECT_TRUE(rcpputils::fs::path(resources[3].second).exists());
 }
 
 TEST_F(TestComponentManager, create_component_factory_valid)
@@ -62,7 +64,7 @@ TEST_F(TestComponentManager, create_component_factory_valid)
   auto manager = std::make_shared<rclcpp_components::ComponentManager>(exec);
 
   auto resources = manager->get_component_resources("rclcpp_components");
-  EXPECT_EQ(3u, resources.size());
+  EXPECT_EQ(4u, resources.size());
 
   // Repeated loading should reuse existing class loader and not throw.
   EXPECT_NO_THROW(auto factory = manager->create_component_factory(resources[0]););
@@ -88,4 +90,9 @@ TEST_F(TestComponentManager, create_component_factory_invalid)
   auto resources = manager->get_component_resources("rclcpp_components");
   auto factory = manager->create_component_factory({"foo_class", resources[0].second});
   EXPECT_EQ(nullptr, factory);
+
+  // Test improperly formed resources file
+  EXPECT_THROW(
+    auto resources = manager->get_component_resources("invalid_rclcpp_components"),
+    rclcpp_components::ComponentManagerException);
 }

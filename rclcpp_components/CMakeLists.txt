@@ -77,11 +77,20 @@ if(BUILD_TESTING)
   set(components "${components}test_rclcpp_components::TestComponentFoo;$<TARGET_FILE:test_component>\n")
   set(components "${components}test_rclcpp_components::TestComponentBar;$<TARGET_FILE:test_component>\n")
   set(components "${components}test_rclcpp_components::TestComponentNoNode;$<TARGET_FILE:test_component>\n")
+  set(components "${components}test_rclcpp_components::TestComponentThrows;$<TARGET_FILE:test_component>\n")
+
+  # Used to catch invalid resource entry
+  set(invalid_components "test_rclcpp_components::TestComponentFoo;;$<TARGET_FILE:test_component>\n")
 
   file(GENERATE
     OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>/share/ament_index/resource_index/rclcpp_components/${PROJECT_NAME}"
     CONTENT "${components}")
+
+  file(GENERATE
+    OUTPUT
+    "${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>/share/ament_index/resource_index/rclcpp_components/invalid_${PROJECT_NAME}"
+    CONTENT "${invalid_components}")
 
   set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
   if(WIN32)
