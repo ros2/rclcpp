@@ -194,7 +194,7 @@ public:
     return has_invalid_weak_nodes;
   }
 
-  void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable)
+  void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable) override
   {
     if (nullptr == waitable) {
       throw std::runtime_error("waitable object unexpectedly nullptr");
