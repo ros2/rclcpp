@@ -95,6 +95,32 @@ TEST_F(TestServer, construction_and_destruction)
   (void)as;
 }
 
+TEST_F(TestServer, construction_and_destruction_callback_group)
+{
+  auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
+  auto group = node->create_callback_group(
+    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  const rcl_action_server_options_t & options = rcl_action_server_get_default_options();
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node->get_node_base_interface(),
+    node->get_node_clock_interface(),
+    node->get_node_logging_interface(),
+    node->get_node_waitables_interface(),
+    "fibonacci",
+    [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+      return rclcpp_action::GoalResponse::REJECT;
+    },
+    [](std::shared_ptr<GoalHandle>) {
+      return rclcpp_action::CancelResponse::REJECT;
+    },
+    [](std::shared_ptr<GoalHandle>) {},
+    options,
+    group);
+  (void)as;
+}
+
 TEST_F(TestServer, handle_goal_called)
 {
   auto node = std::make_shared<rclcpp::Node>("handle_goal_node", "/rclcpp_action/handle_goal");
