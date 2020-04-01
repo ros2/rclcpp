@@ -143,6 +143,7 @@
 #include <memory>
 
 #include "rclcpp/executors.hpp"
+#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
