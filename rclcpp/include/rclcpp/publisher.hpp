@@ -84,7 +84,11 @@ public:
         options_.event_callbacks.liveliness_callback,
         RCL_PUBLISHER_LIVELINESS_LOST);
     }
-
+    if (options_.event_callbacks.incompatible_qos_callback) {
+      this->add_event_handler(
+        options_.event_callbacks.incompatible_qos_callback,
+        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    }
     // Setup continues in the post construction method, post_init_setup().
   }
 

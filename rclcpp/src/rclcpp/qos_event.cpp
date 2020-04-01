@@ -12,10 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 #include "rclcpp/qos_event.hpp"
 
 namespace rclcpp
 {
+
+UnsupportedEventTypeException::UnsupportedEventTypeException(
+  rcl_ret_t ret,
+  const rcl_error_state_t * error_state,
+  const std::string & prefix)
+: UnsupportedEventTypeException(exceptions::RCLErrorBase(ret, error_state), prefix)
+{}
+
+UnsupportedEventTypeException::UnsupportedEventTypeException(
+  const exceptions::RCLErrorBase & base_exc,
+  const std::string & prefix)
+: exceptions::RCLErrorBase(base_exc),
+  std::runtime_error(prefix + (prefix.empty() ? "" : ": ") + base_exc.formatted_message)
+{}
 
 QOSEventHandlerBase::~QOSEventHandlerBase()
 {
