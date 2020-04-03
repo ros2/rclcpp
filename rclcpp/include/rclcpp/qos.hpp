@@ -147,6 +147,13 @@ public:
   QoS &
   avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions);
 
+  /// Determine if all policies that affect QoS compatibility are equal.
+  /*
+    Note that this method does not check if the QoS policies are compatible.
+    This is a simple check for exact equality in all policies that affect compatibility.
+  */
+  bool compatibility_policies_equal(const QoS & other) const;
+
 private:
   rmw_qos_profile_t rmw_qos_profile_;
 };

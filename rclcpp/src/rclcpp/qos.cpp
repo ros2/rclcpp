@@ -184,6 +184,21 @@ QoS::avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions)
   return *this;
 }
 
+bool QoS::compatibility_policies_equal(const QoS & other) const
+{
+  // Note that these policies do not affect QoS compatibility
+  // * History + Depth (relevant only for local behavior)
+  // * Lifespan (only relevant locally on Publishers)
+  // * avoid ros namespace conventions (this affects choice of topic names, not quality of service)
+  const auto & pl = get_rmw_qos_profile();
+  const auto & pr = other.get_rmw_qos_profile();
+  return pl.reliability == pr.reliability &&
+         pl.durability == pr.durability &&
+         pl.deadline == pr.deadline &&
+         pl.liveliness == pr.liveliness &&
+         pl.liveliness_lease_duration == pr.liveliness_lease_duration;
+}
+
 namespace
 {
 /// Check if two rmw_time_t have the same values.
