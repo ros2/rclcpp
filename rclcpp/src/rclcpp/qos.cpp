@@ -184,6 +184,15 @@ QoS::avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions)
   return *this;
 }
 
+namespace
+{
+/// Check if two rmw_time_t have the same values.
+bool operator==(const rmw_time_t & left, const rmw_time_t & right)
+{
+  return left.sec == right.sec && left.nsec == right.nsec;
+}
+}  // unnamed namespace
+
 bool QoS::compatibility_policies_equal(const QoS & other) const
 {
   // Note that these policies do not affect QoS compatibility
@@ -198,15 +207,6 @@ bool QoS::compatibility_policies_equal(const QoS & other) const
          pl.liveliness == pr.liveliness &&
          pl.liveliness_lease_duration == pr.liveliness_lease_duration;
 }
-
-namespace
-{
-/// Check if two rmw_time_t have the same values.
-bool operator==(const rmw_time_t & left, const rmw_time_t & right)
-{
-  return left.sec == right.sec && left.nsec == right.nsec;
-}
-}  // unnamed namespace
 
 bool operator==(const QoS & left, const QoS & right)
 {
