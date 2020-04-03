@@ -526,6 +526,12 @@ if(BUILD_TESTING)
     target_link_libraries(test_guard_condition ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_wait_set test/test_wait_set.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_wait_set)
+    target_link_libraries(test_wait_set ${PROJECT_NAME})
+  endif()
+
   # Install test resources
   install(
     DIRECTORY test/resources
