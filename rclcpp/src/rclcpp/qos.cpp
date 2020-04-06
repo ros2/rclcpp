@@ -184,6 +184,35 @@ QoS::avoid_ros_namespace_conventions(bool avoid_ros_namespace_conventions)
   return *this;
 }
 
+namespace
+{
+/// Check if two rmw_time_t have the same values.
+bool operator==(const rmw_time_t & left, const rmw_time_t & right)
+{
+  return left.sec == right.sec && left.nsec == right.nsec;
+}
+}  // unnamed namespace
+
+bool operator==(const QoS & left, const QoS & right)
+{
+  const auto & pl = left.get_rmw_qos_profile();
+  const auto & pr = right.get_rmw_qos_profile();
+  return pl.history == pr.history &&
+         pl.depth == pr.depth &&
+         pl.reliability == pr.reliability &&
+         pl.durability == pr.durability &&
+         pl.deadline == pr.deadline &&
+         pl.lifespan == pr.lifespan &&
+         pl.liveliness == pr.liveliness &&
+         pl.liveliness_lease_duration == pr.liveliness_lease_duration &&
+         pl.avoid_ros_namespace_conventions == pr.avoid_ros_namespace_conventions;
+}
+
+bool operator!=(const QoS & left, const QoS & right)
+{
+  return !(left == right);
+}
+
 SensorDataQoS::SensorDataQoS(const QoSInitialization & qos_initialization)
 : QoS(qos_initialization, rmw_qos_profile_sensor_data)
 {}

@@ -16,8 +16,10 @@
 #define RCLCPP__QOS_EVENT_HPP_
 
 #include <functional>
+#include <string>
 
 #include "rcl/error_handling.h"
+#include "rmw/incompatible_qos_events_statuses.h"
 
 #include "rcutils/logging_macros.h"
 
@@ -32,17 +34,23 @@ using QOSDeadlineRequestedInfo = rmw_requested_deadline_missed_status_t;
 using QOSDeadlineOfferedInfo = rmw_offered_deadline_missed_status_t;
 using QOSLivelinessChangedInfo = rmw_liveliness_changed_status_t;
 using QOSLivelinessLostInfo = rmw_liveliness_lost_status_t;
+using QOSOfferedIncompatibleQoSInfo = rmw_offered_qos_incompatible_event_status_t;
+using QOSRequestedIncompatibleQoSInfo = rmw_requested_qos_incompatible_event_status_t;
 
 using QOSDeadlineRequestedCallbackType = std::function<void (QOSDeadlineRequestedInfo &)>;
 using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInfo &)>;
 using QOSLivelinessChangedCallbackType = std::function<void (QOSLivelinessChangedInfo &)>;
 using QOSLivelinessLostCallbackType = std::function<void (QOSLivelinessLostInfo &)>;
+using QOSOfferedIncompatibleQoSCallbackType = std::function<void (QOSOfferedIncompatibleQoSInfo &)>;
+using QOSRequestedIncompatibleQoSCallbackType =
+  std::function<void (QOSRequestedIncompatibleQoSInfo &)>;
 
 /// Contains callbacks for various types of events a Publisher can receive from the middleware.
 struct PublisherEventCallbacks
 {
   QOSDeadlineOfferedCallbackType deadline_callback;
   QOSLivelinessLostCallbackType liveliness_callback;
+  QOSOfferedIncompatibleQoSCallbackType incompatible_qos_callback;
 };
 
 /// Contains callbacks for non-message events that a Subscription can receive from the middleware.
@@ -50,6 +58,22 @@ struct SubscriptionEventCallbacks
 {
   QOSDeadlineRequestedCallbackType deadline_callback;
   QOSLivelinessChangedCallbackType liveliness_callback;
+  QOSRequestedIncompatibleQoSCallbackType incompatible_qos_callback;
+};
+
+class UnsupportedEventTypeException : public exceptions::RCLErrorBase, public std::runtime_error
+{
+public:
+  RCLCPP_PUBLIC
+  UnsupportedEventTypeException(
+    rcl_ret_t ret,
+    const rcl_error_state_t * error_state,
+    const std::string & prefix);
+
+  RCLCPP_PUBLIC
+  UnsupportedEventTypeException(
+    const exceptions::RCLErrorBase & base_exc,
+    const std::string & prefix);
 };
 
 class QOSEventHandlerBase : public Waitable
@@ -94,9 +118,11 @@ public:
     rcl_ret_t ret = init_func(&event_handle_, parent_handle, event_type);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_UNSUPPORTED) {
-        rclcpp::exceptions::throw_from_rcl_error(ret, "event type is not supported");
+        UnsupportedEventTypeException exc(ret, rcl_get_error_state(), "Failed to initialize event");
+        rcl_reset_error();
+        throw exc;
       } else {
-        rclcpp::exceptions::throw_from_rcl_error(ret, "could not create event");
+        rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to initialize event");
       }
     }
   }
