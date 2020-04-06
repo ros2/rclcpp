@@ -94,7 +94,6 @@ public:
   size_t
   get_number_of_ready_guard_conditions();
 
-  // TODO(jacobperron): smart pointer?
   /// Add the Waitable to a wait set.
   /**
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
