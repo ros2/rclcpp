@@ -4,6 +4,8 @@ project(rclcpp)
 
 find_package(ament_cmake_ros REQUIRED)
 find_package(builtin_interfaces REQUIRED)
+find_package(libstatistics_collector REQUIRED)
+find_package(metrics_statistics_msgs REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rcl_yaml_param_parser REQUIRED)
@@ -116,6 +118,8 @@ add_library(${PROJECT_NAME}
   ${${PROJECT_NAME}_SRCS})
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
+  "libstatistics_collector"
+  "metrics_statistics_msgs"
   "rcl"
   "rcl_yaml_param_parser"
   "rcpputils"
@@ -143,6 +147,8 @@ install(
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 
+ament_export_dependencies(libstatistics_collector)
+ament_export_dependencies(metrics_statistics_msgs)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
