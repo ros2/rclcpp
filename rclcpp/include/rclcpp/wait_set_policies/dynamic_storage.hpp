@@ -21,8 +21,11 @@
 
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set_policies/detail/storage_policy_common.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -35,17 +38,76 @@ class DynamicStorage : public rclcpp::wait_set_policies::detail::StoragePolicyCo
 protected:
   using is_mutable = std::true_type;
 
+  using SequenceOfWeakSubscriptions = std::vector<std::weak_ptr<SubscriptionBase>>;
+  using SubscriptionsIterable = std::vector<std::shared_ptr<rclcpp::SubscriptionBase>>;
+
   using SequenceOfWeakGuardConditions = std::vector<std::weak_ptr<rclcpp::GuardCondition>>;
   using GuardConditionsIterable = std::vector<std::shared_ptr<rclcpp::GuardCondition>>;
 
+  using SequenceOfWeakTimers = std::vector<std::weak_ptr<rclcpp::TimerBase>>;
+  using TimersIterable = std::vector<std::shared_ptr<rclcpp::TimerBase>>;
+
+  struct WaitableEntry
+  {
+    void
+    reset() noexcept
+    {
+      waitable.reset();
+      associated_entity.reset();
+    }
+
+    std::shared_ptr<rclcpp::Waitable> waitable;
+    std::shared_ptr<void> associated_entity;
+  };
+  struct WeakWaitableEntry
+  {
+    WeakWaitableEntry(
+      const std::shared_ptr<rclcpp::Waitable> & waitable_in,
+      const std::shared_ptr<void> & associated_entity_in) noexcept
+    : waitable(waitable_in),
+      associated_entity(associated_entity_in)
+    {}
+
+    explicit WeakWaitableEntry(const WaitableEntry & other)
+    : waitable(other.waitable),
+      associated_entity(other.associated_entity)
+    {}
+
+    std::shared_ptr<rclcpp::Waitable>
+    lock() const
+    {
+      return waitable.lock();
+    }
+
+    bool
+    expired() const noexcept
+    {
+      return waitable.expired();
+    }
+
+    std::weak_ptr<rclcpp::Waitable> waitable;
+    std::weak_ptr<void> associated_entity;
+  };
+  using SequenceOfWeakWaitables = std::vector<WeakWaitableEntry>;
+  using WaitablesIterable = std::vector<WaitableEntry>;
+
   explicit
   DynamicStorage(
+    const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
+    const TimersIterable & timers,
+    const WaitablesIterable & waitables,
     rclcpp::Context::SharedPtr context
   )
-  : StoragePolicyCommon(guard_conditions, context),
+  : StoragePolicyCommon(subscriptions, guard_conditions, timers, waitables, context),
+    subscriptions_(subscriptions.cbegin(), subscriptions.cend()),
+    shared_subscriptions_(subscriptions_.size()),
     guard_conditions_(guard_conditions.cbegin(), guard_conditions.cend()),
-    shared_guard_conditions_(guard_conditions_.size())
+    shared_guard_conditions_(guard_conditions_.size()),
+    timers_(timers.cbegin(), timers.cend()),
+    shared_timers_(timers_.size()),
+    waitables_(waitables.cbegin(), waitables.cend()),
+    shared_waitables_(waitables_.size())
   {}
 
   ~DynamicStorage() = default;
@@ -54,32 +116,60 @@ protected:
   storage_rebuild_rcl_wait_set()
   {
     this->storage_rebuild_rcl_wait_set_with_sets(
-      guard_conditions_
+      subscriptions_,
+      guard_conditions_,
+      timers_,
+      waitables_
     );
   }
 
+  template<class EntityT, class SequenceOfEntitiesT>
+  static
   bool
-  storage_has_guard_condition(const rclcpp::GuardCondition & guard_condition)
+  storage_has_entity(const EntityT & entity, const SequenceOfEntitiesT & entities)
   {
     return std::any_of(
-      guard_conditions_.cbegin(),
-      guard_conditions_.cend(),
-      [&guard_condition](const auto & gc) { return &guard_condition == gc.lock().get(); });
+      entities.cbegin(),
+      entities.cend(),
+      [&entity](const auto & inner) { return &entity == inner.lock().get(); });
   }
 
+  template<class EntityT, class SequenceOfEntitiesT>
+  static
   auto
-  storage_find_guard_condition(const rclcpp::GuardCondition & guard_condition)
+  storage_find_entity(const EntityT & entity, const SequenceOfEntitiesT & entities)
   {
     return std::find_if(
-      guard_conditions_.begin(),
-      guard_conditions_.end(),
-      [&guard_condition](const auto & gc) { return &guard_condition == gc.lock().get(); });
+      entities.cbegin(),
+      entities.cend(),
+      [&entity](const auto & inner) { return &entity == inner.lock().get(); });
+  }
+
+  void
+  storage_add_subscription(std::shared_ptr<rclcpp::SubscriptionBase> && subscription)
+  {
+    if (this->storage_has_entity(*subscription, subscriptions_)) {
+      throw std::runtime_error("subscription already in wait set");
+    }
+    subscriptions_.push_back(std::move(subscription));
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_remove_subscription(std::shared_ptr<rclcpp::SubscriptionBase> && subscription)
+  {
+    auto it = this->storage_find_entity(*subscription, subscriptions_);
+    if (subscriptions_.cend() == it) {
+      throw std::runtime_error("subscription not in wait set");
+    }
+    subscriptions_.erase(it);
+    this->storage_flag_for_resize();
   }
 
   void
   storage_add_guard_condition(std::shared_ptr<rclcpp::GuardCondition> && guard_condition)
   {
-    if (this->storage_has_guard_condition(*guard_condition)) {
+    if (this->storage_has_entity(*guard_condition, guard_conditions_)) {
       throw std::runtime_error("guard_condition already in wait set");
     }
     guard_conditions_.push_back(std::move(guard_condition));
@@ -89,11 +179,56 @@ protected:
   void
   storage_remove_guard_condition(std::shared_ptr<rclcpp::GuardCondition> && guard_condition)
   {
-    auto it = this->storage_find_guard_condition(*guard_condition);
+    auto it = this->storage_find_entity(*guard_condition, guard_conditions_);
     if (guard_conditions_.cend() == it) {
       throw std::runtime_error("guard_condition not in wait set");
     }
     guard_conditions_.erase(it);
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_add_timer(std::shared_ptr<rclcpp::TimerBase> && timer)
+  {
+    if (this->storage_has_entity(*timer, timers_)) {
+      throw std::runtime_error("timer already in wait set");
+    }
+    timers_.push_back(std::move(timer));
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_remove_timer(std::shared_ptr<rclcpp::TimerBase> && timer)
+  {
+    auto it = this->storage_find_entity(*timer, timers_);
+    if (timers_.cend() == it) {
+      throw std::runtime_error("timer not in wait set");
+    }
+    timers_.erase(it);
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_add_waitable(
+    std::shared_ptr<rclcpp::Waitable> && waitable,
+    std::shared_ptr<void> && associated_entity)
+  {
+    if (this->storage_has_entity(*waitable, waitables_)) {
+      throw std::runtime_error("waitable already in wait set");
+    }
+    WeakWaitableEntry weak_entry(std::move(waitable), std::move(associated_entity));
+    waitables_.push_back(std::move(weak_entry));
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_remove_waitable(std::shared_ptr<rclcpp::Waitable> && waitable)
+  {
+    auto it = this->storage_find_entity(*waitable, waitables_);
+    if (waitables_.cend() == it) {
+      throw std::runtime_error("waitable not in wait set");
+    }
+    waitables_.erase(it);
     this->storage_flag_for_resize();
   }
 
@@ -113,6 +248,8 @@ protected:
       };
     // remove guard conditions which have been deleted
     guard_conditions_.erase(std::remove_if(guard_conditions_.begin(), guard_conditions_.end(), p));
+    timers_.erase(std::remove_if(timers_.begin(), timers_.end(), p));
+    waitables_.erase(std::remove_if(waitables_.begin(), waitables_.end(), p));
   }
 
   void
@@ -132,6 +269,17 @@ protected:
     };
     // Lock all the weak pointers and hold them until released.
     lock_all(guard_conditions_, shared_guard_conditions_);
+    lock_all(timers_, shared_timers_);
+
+    // We need a specialized version of this for waitables.
+    auto lock_all_waitables = [](const auto & weak_ptrs, auto & shared_ptrs) {
+      shared_ptrs.resize(weak_ptrs.size());
+      size_t index = 0;
+      for (const auto & weak_ptr : weak_ptrs) {
+        shared_ptrs[index++] = {weak_ptr.waitable.lock(), weak_ptr.associated_entity.lock()};
+      }
+    };
+    lock_all_waitables(waitables_, shared_waitables_);
   }
 
   void
@@ -148,11 +296,23 @@ protected:
       }
     };
     reset_all(shared_guard_conditions_);
+    reset_all(shared_timers_);
+    reset_all(shared_waitables_);
   }
 
   size_t ownership_reference_counter_ = 0;
+
+  SequenceOfWeakSubscriptions subscriptions_;
+  SubscriptionsIterable shared_subscriptions_;
+
   SequenceOfWeakGuardConditions guard_conditions_;
   GuardConditionsIterable shared_guard_conditions_;
+
+  SequenceOfWeakTimers timers_;
+  TimersIterable shared_timers_;
+
+  SequenceOfWeakWaitables waitables_;
+  WaitablesIterable shared_waitables_;
 };
 
 }  // namespace wait_set_policies

@@ -22,10 +22,14 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_wait_set_mask.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_result.hpp"
 #include "rclcpp/wait_result_kind.hpp"
 #include "rclcpp/wait_set_policies/detail/synchronization_policy_common.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -38,6 +42,38 @@ class SequentialSynchronization : public detail::SynchronizationPolicyCommon
 protected:
   SequentialSynchronization() = default;
   ~SequentialSynchronization() = default;
+
+  /// Add subscription without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_add_subscription(
+    std::shared_ptr<rclcpp::SubscriptionBase> && subscription,
+    const rclcpp::SubscriptionWaitSetMask & mask,
+    std::function<
+      void (std::shared_ptr<rclcpp::SubscriptionBase> &&, const rclcpp::SubscriptionWaitSetMask &)
+    > add_subscription_function)
+  {
+    // Explicitly no thread synchronization.
+    add_subscription_function(std::move(subscription), mask);
+  }
+
+  /// Remove guard condition without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_remove_subscription(
+    std::shared_ptr<rclcpp::SubscriptionBase> && subscription,
+    const rclcpp::SubscriptionWaitSetMask & mask,
+    std::function<
+      void (std::shared_ptr<rclcpp::SubscriptionBase> &&, const rclcpp::SubscriptionWaitSetMask &)
+    > remove_subscription_function)
+  {
+    // Explicitly no thread synchronization.
+    remove_subscription_function(std::move(subscription), mask);
+  }
 
   /// Add guard condition without thread-safety.
   /**
@@ -63,6 +99,61 @@ protected:
   {
     // Explicitly no thread synchronization.
     remove_guard_condition_function(std::move(guard_condition));
+  }
+
+  /// Add timer without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_add_timer(
+    std::shared_ptr<rclcpp::TimerBase> && timer,
+    std::function<void (std::shared_ptr<rclcpp::TimerBase> &&)> add_timer_function)
+  {
+    // Explicitly no thread synchronization.
+    add_timer_function(std::move(timer));
+  }
+
+  /// Remove timer without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_remove_timer(
+    std::shared_ptr<rclcpp::TimerBase> && timer,
+    std::function<void (std::shared_ptr<rclcpp::TimerBase> &&)> remove_timer_function)
+  {
+    // Explicitly no thread synchronization.
+    remove_timer_function(std::move(timer));
+  }
+
+  /// Add waitable without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_add_waitable(
+    std::shared_ptr<rclcpp::Waitable> && waitable,
+    std::shared_ptr<void> && associated_entity,
+    std::function<
+      void (std::shared_ptr<rclcpp::Waitable> &&, std::shared_ptr<void> &&)
+    > add_waitable_function)
+  {
+    // Explicitly no thread synchronization.
+    add_waitable_function(std::move(waitable), std::move(associated_entity));
+  }
+
+  /// Remove waitable without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_remove_waitable(
+    std::shared_ptr<rclcpp::Waitable> && waitable,
+    std::function<void (std::shared_ptr<rclcpp::Waitable> &&)> remove_waitable_function)
+  {
+    // Explicitly no thread synchronization.
+    remove_waitable_function(std::move(waitable));
   }
 
   /// Prune deleted entities without thread-safety.

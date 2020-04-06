@@ -15,16 +15,17 @@
 #ifndef RCLCPP__WAIT_SET_POLICIES__DETAIL__STORAGE_POLICY_COMMON_HPP_
 #define RCLCPP__WAIT_SET_POLICIES__DETAIL__STORAGE_POLICY_COMMON_HPP_
 
-#include <array>
 #include <memory>
+#include <stdexcept>
+#include <utility>
 
 #include "rcl/wait.h"
 
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -39,17 +40,19 @@ class StoragePolicyCommon
 {
 protected:
   template<
-    // class SubscriptionsIterable,
-    class GuardConditionsIterable
+    class SubscriptionsIterable,
+    class GuardConditionsIterable,
+    class TimersIterable,
     // class ServicesIterable,
     // class ClientsIterable,
-    // class TimersIterable,
-    // class EventsIterable,
-    // class WaitablesIterable
+    class WaitablesIterable
   >
   explicit
   StoragePolicyCommon(
+    const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
+    const TimersIterable & timers,
+    const WaitablesIterable & waitables,
     rclcpp::Context::SharedPtr context
   )
   : rcl_wait_set_(rcl_get_zero_initialized_wait_set()), context_(context)
@@ -58,15 +61,31 @@ protected:
     if (nullptr == context) {
       throw std::invalid_argument("context is nullptr");
     }
+    // Accumulate total contributions from waitables.
+    size_t subscriptions_from_waitables = 0;
+    size_t guard_conditions_from_waitables = 0;
+    size_t timers_from_waitables = 0;
+    size_t clients_from_waitables = 0;
+    size_t services_from_waitables = 0;
+    size_t events_from_waitables = 0;
+    for (const auto & waitable_entry : waitables) {
+      rclcpp::Waitable & waitable = *waitable_entry.waitable.get();
+      subscriptions_from_waitables += waitable.get_number_of_ready_subscriptions();
+      guard_conditions_from_waitables += waitable.get_number_of_ready_guard_conditions();
+      timers_from_waitables += waitable.get_number_of_ready_timers();
+      clients_from_waitables += waitable.get_number_of_ready_clients();
+      services_from_waitables += waitable.get_number_of_ready_services();
+      events_from_waitables += waitable.get_number_of_ready_events();
+    }
     // Initialize wait set using initial inputs.
     rcl_ret_t ret = rcl_wait_set_init(
       &rcl_wait_set_,
-      0,  // subs
-      guard_conditions.size(),
-      0,  // timers
-      0,  // clients
-      0,  // services
-      0,  // events
+      subscriptions.size() + subscriptions_from_waitables,
+      guard_conditions.size() + guard_conditions_from_waitables,
+      timers.size() + timers_from_waitables,
+      clients_from_waitables,
+      services_from_waitables,
+      events_from_waitables,
       context_->get_rcl_context().get(),
       // TODO(wjwwood): support custom allocator, maybe restrict to polymorphic allocator
       rcl_get_default_allocator());
@@ -75,7 +94,7 @@ protected:
     }
 
     // (Re)build the wait set for the first time.
-    this->storage_rebuild_rcl_wait_set_with_sets(guard_conditions);
+    this->storage_rebuild_rcl_wait_set_with_sets(subscriptions, guard_conditions, timers, waitables);
   }
 
   ~StoragePolicyCommon()
@@ -116,17 +135,19 @@ protected:
    *   - re-adding the entities.
    */
   template<
-    // class SubscriptionsIterable,
-    class GuardConditionsIterable
+    class SubscriptionsIterable,
+    class GuardConditionsIterable,
+    class TimersIterable,
     // class ServicesIterable,
     // class ClientsIterable,
-    // class TimersIterable,
-    // class EventsIterable,
-    // class WaitablesIterable
+    class WaitablesIterable
   >
   void
   storage_rebuild_rcl_wait_set_with_sets(
-    const GuardConditionsIterable & guard_conditions
+    const SubscriptionsIterable & subscriptions,
+    const GuardConditionsIterable & guard_conditions,
+    const TimersIterable & timers,
+    const WaitablesIterable & waitables
   )
   {
     bool was_resized = false;
@@ -138,14 +159,42 @@ protected:
       // loop.
       // Also, since static storage wait sets will never need resizing, so it
       // avoids completely redundant calls to this function in that case.
+      // Accumulate total contributions from waitables.
+      size_t subscriptions_from_waitables = 0;
+      size_t guard_conditions_from_waitables = 0;
+      size_t timers_from_waitables = 0;
+      size_t clients_from_waitables = 0;
+      size_t services_from_waitables = 0;
+      size_t events_from_waitables = 0;
+      for (const auto & waitable_entry : waitables) {
+        auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry.waitable);
+        if (nullptr == waitable_ptr_pair.second) {
+          // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+          if (HasStrongOwnership) {
+            // This will not happen in fixed sized storage, as it holds
+            // shared ownership the whole time and is never in need of pruning.
+            throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+          }
+          // Flag for pruning.
+          needs_pruning_ = true;
+          continue;
+        }
+        rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
+        subscriptions_from_waitables += waitable.get_number_of_ready_subscriptions();
+        guard_conditions_from_waitables += waitable.get_number_of_ready_guard_conditions();
+        timers_from_waitables += waitable.get_number_of_ready_timers();
+        clients_from_waitables += waitable.get_number_of_ready_clients();
+        services_from_waitables += waitable.get_number_of_ready_services();
+        events_from_waitables += waitable.get_number_of_ready_events();
+      }
       rcl_ret_t ret = rcl_wait_set_resize(
         &rcl_wait_set_,
-        0,  // subscriptions_size
-        guard_conditions.size(),
-        0,  // timers_size
-        0,  // clients_size
-        0,  // services_size
-        0  // events_size
+        subscriptions.size() + subscriptions_from_waitables,
+        guard_conditions.size() + guard_conditions_from_waitables,
+        timers.size() + timers_from_waitables,
+        clients_from_waitables,
+        services_from_waitables,
+        events_from_waitables
       );
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
@@ -163,6 +212,29 @@ protected:
     // clears the wait set.
     if (!was_resized) {
       rcl_ret_t ret = rcl_wait_set_clear(&rcl_wait_set_);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+    }
+
+    // Add subscriptions.
+    for (const auto & subscription : subscriptions) {
+      auto subscription_ptr_pair = get_raw_pointer_from_smart_pointer(subscription);
+      if (nullptr == subscription_ptr_pair.second) {
+        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+        if (HasStrongOwnership) {
+          // This will not happen in fixed sized storage, as it holds
+          // shared ownership the whole time and is never in need of pruning.
+          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+        }
+        // Flag for pruning.
+        needs_pruning_ = true;
+        continue;
+      }
+      rcl_ret_t ret = rcl_wait_set_add_subscription(
+        &rcl_wait_set_,
+        subscription_ptr_pair.second->get_subscription_handle().get(),
+        nullptr);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
@@ -188,6 +260,50 @@ protected:
         nullptr);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+    }
+
+    // Add timers.
+    for (const auto & timer : timers) {
+      auto timer_ptr_pair = get_raw_pointer_from_smart_pointer(timer);
+      if (nullptr == timer_ptr_pair.second) {
+        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+        if (HasStrongOwnership) {
+          // This will not happen in fixed sized storage, as it holds
+          // shared ownership the whole time and is never in need of pruning.
+          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+        }
+        // Flag for pruning.
+        needs_pruning_ = true;
+        continue;
+      }
+      rcl_ret_t ret = rcl_wait_set_add_timer(
+        &rcl_wait_set_,
+        timer_ptr_pair.second->get_timer_handle().get(),
+        nullptr);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+    }
+
+    // Add waitables.
+    for (auto & waitable_entry : waitables) {
+      auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry.waitable);
+      if (nullptr == waitable_ptr_pair.second) {
+        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+        if (HasStrongOwnership) {
+          // This will not happen in fixed sized storage, as it holds
+          // shared ownership the whole time and is never in need of pruning.
+          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+        }
+        // Flag for pruning.
+        needs_pruning_ = true;
+        continue;
+      }
+      rclcpp::Waitable & waitable = *waitable_ptr_pair.second;
+      bool successful = waitable.add_to_wait_set(&rcl_wait_set_);
+      if (!successful) {
+        throw std::runtime_error("waitable unexpectedly failed to be added to wait set");
       }
     }
   }

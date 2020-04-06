@@ -63,23 +63,21 @@ using WaitSet = rclcpp::WaitSetTemplate<
  * \sa rclcpp::WaitSetTemplate for API documentation
  */
 template<
-  // std::size_t NumberOfSubscriptions,
-  std::size_t NumberOfGuardCondtions
-  // std::size_t NumberOfTimers,
+  std::size_t NumberOfSubscriptions,
+  std::size_t NumberOfGuardCondtions,
+  std::size_t NumberOfTimers,
   // std::size_t NumberOfClients,
   // std::size_t NumberOfServices,
-  // std::size_t NumberOfEvents,
-  // std::size_t NumberOfWaitables
+  std::size_t NumberOfWaitables
 >
 using StaticWaitSet = rclcpp::WaitSetTemplate<
   rclcpp::wait_set_policies::StaticStorage<
-    // NumberOfSubscriptions,
-    NumberOfGuardCondtions
-    // NumberOfTimers,
+    NumberOfSubscriptions,
+    NumberOfGuardCondtions,
+    NumberOfTimers,
     // NumberOfClients,
     // NumberOfServices,
-    // NumberOfEvents,
-    // NumberOfWaitables
+    NumberOfWaitables
   >,
   rclcpp::wait_set_policies::SequentialSynchronization
 >;

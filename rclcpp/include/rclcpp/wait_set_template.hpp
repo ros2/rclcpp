@@ -25,8 +25,12 @@
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/scope_exit.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_wait_set_mask.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_result.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -42,18 +46,37 @@ class WaitSetTemplate final : private StoragePolicy, private SynchronizationPoli
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(WaitSetTemplate)
 
+  using typename StoragePolicy::WaitableEntry;
+
   /// Construct a wait set with optional initial waitable entities and optional custom context.
   /**
+   * For the waitables, they have additionally an "associated" entity, which
+   * you can read more about in the add and remove functions for those types
+   * in this class.
+   *
+   * \param[in] subscriptions Vector of subscriptions to be added.
    * \param[in] guard_conditions Vector of guard conditions to be added.
+   * \param[in] timers Vector of timers to be added.
+   * \param[in] waitables Vector of waitables and their associated entity to be added.
    * \param[in] context Custom context to be used, defaults to global default.
    * \throws std::invalid_argument If context is nullptr.
    */
   explicit
   WaitSetTemplate(
+    // TODO(wjwwood): support subscription wait set masks in constructor
+    const typename StoragePolicy::SubscriptionsIterable & subscriptions = {},
     const typename StoragePolicy::GuardConditionsIterable & guard_conditions = {},
+    const typename StoragePolicy::TimersIterable & timers = {},
+    const typename StoragePolicy::WaitablesIterable & waitables = {},
     rclcpp::Context::SharedPtr context =
       rclcpp::contexts::default_context::get_global_default_context())
-  : StoragePolicy(guard_conditions, context), SynchronizationPolicy()
+  : StoragePolicy(
+      subscriptions,
+      guard_conditions,
+      timers,
+      waitables,
+      context),
+    SynchronizationPolicy()
   {}
 
   /// Return the internal rcl wait set object.
@@ -68,6 +91,121 @@ public:
   {
     // this method comes from the StoragePolicy
     return this->storage_get_rcl_wait_set();
+  }
+
+  /// Add a subscription to this wait set.
+  /**
+   * \sa add_guard_condition() for details of how this method works.
+   *
+   * Additionally to the documentation for add_guard_condition, this method
+   * has a mask parameter which allows you to control which parts of the
+   * subscription is added to the wait set with this call.
+   * For example, you might want to include the actual subscription to this
+   * wait set, but add the intra-process waitable to another wait set.
+   * If intra-process is disabled, no error will occur, it will just be skipped.
+   *
+   * When introspecting after waiting, this subscription's shared pointer will
+   * be the Waitable's (intra-process or the QoS Events) "associated entity"
+   * pointer, for more easily figuring out which subscription which waitable
+   * goes with afterwards.
+   *
+   * \param[in] subscription Subscription to be added.
+   * \param[in] mask A class which controls which parts of the subscription to add.
+   * \throws std::invalid_argument if subscription is nullptr.
+   * \throws std::runtime_error if subscription has already been added.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  add_subscription(
+    std::shared_ptr<rclcpp::SubscriptionBase> subscription,
+    rclcpp::SubscriptionWaitSetMask mask = {})
+  {
+    if (nullptr == subscription) {
+      throw std::invalid_argument("subscription is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_add_subscription(
+      std::move(subscription),
+      mask,
+      [this](
+        std::shared_ptr<rclcpp::SubscriptionBase> && inner_subscription,
+        const rclcpp::SubscriptionWaitSetMask & mask)
+      {
+        // These methods comes from the StoragePolicy, and may not exist for
+        // fixed sized storage policies.
+        // It will throw if the subscription has already been added.
+        if (mask.include_subscription) {
+          auto local_subscription = inner_subscription;
+          this->storage_add_subscription(std::move(local_subscription));
+        }
+        if (mask.include_events) {
+          for (auto event : inner_subscription->get_event_handlers()) {
+            auto local_subscription = inner_subscription;
+            this->storage_add_waitable(std::move(event), std::move(local_subscription));
+          }
+        }
+        if (mask.include_intra_process_waitable) {
+          auto local_subscription = inner_subscription;
+          this->storage_add_waitable(
+            std::move(inner_subscription->get_intra_process_waitable()),
+            std::move(local_subscription));
+        }
+      });
+  }
+
+  /// Remove a subscription from this wait set.
+  /**
+   * \sa remove_guard_condition() for details of how this method works.
+   *
+   * Additionally to the documentation for add_guard_condition, this method
+   * has a mask parameter which allows you to control which parts of the
+   * subscription is added to the wait set with this call.
+   * You may remove items selectively from the wait set in a different order
+   * than they were added.
+   *
+   * \param[in] subscription Subscription to be removed.
+   * \param[in] mask A class which controls which parts of the subscription to remove.
+   * \throws std::invalid_argument if subscription is nullptr.
+   * \throws std::runtime_error if subscription is not part of the wait set.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  remove_subscription(
+    std::shared_ptr<rclcpp::SubscriptionBase> subscription,
+    rclcpp::SubscriptionWaitSetMask mask = {})
+  {
+    if (nullptr == subscription) {
+      throw std::invalid_argument("subscription is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_remove_subscription(
+      std::move(subscription),
+      mask,
+      [this](
+        std::shared_ptr<rclcpp::SubscriptionBase> && inner_subscription,
+        const rclcpp::SubscriptionWaitSetMask & mask)
+      {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the subscription is not in the wait set.
+        if (mask.include_subscription) {
+          auto local_subscription = inner_subscription;
+          this->storage_remove_subscription(std::move(local_subscription));
+        }
+        if (mask.include_events) {
+          for (auto event : inner_subscription->get_event_handlers()) {
+            auto local_subscription = inner_subscription;
+            this->storage_remove_waitable(std::move(event));
+          }
+        }
+        if (mask.include_intra_process_waitable) {
+          auto local_waitable = inner_subscription->get_intra_process_waitable();
+          if (nullptr != local_waitable) {
+            // This is the case when intra process is disabled for the subscription.
+            this->storage_remove_waitable(std::move(local_waitable));
+          }
+        }
+      });
   }
 
   /// Add a guard condition to this wait set.
@@ -149,6 +287,127 @@ public:
       });
   }
 
+  /// Add a timer to this wait set.
+  /**
+   * \sa add_guard_condition() for details of how this method works.
+   *
+   * \param[in] timer Timer to be added.
+   * \throws std::invalid_argument if timer is nullptr.
+   * \throws std::runtime_error if timer has already been added.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  add_timer(std::shared_ptr<rclcpp::TimerBase> timer)
+  {
+    if (nullptr == timer) {
+      throw std::invalid_argument("timer is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_add_timer(
+      std::move(timer),
+      [this](std::shared_ptr<rclcpp::TimerBase> && inner_timer) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the timer has already been added.
+        this->storage_add_timer(std::move(inner_timer));
+      });
+  }
+
+  /// Remove a timer from this wait set.
+  /**
+   * \sa remove_guard_condition() for details of how this method works.
+   *
+   * \param[in] timer Timer to be removed.
+   * \throws std::invalid_argument if timer is nullptr.
+   * \throws std::runtime_error if timer is not part of the wait set.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  remove_timer(std::shared_ptr<rclcpp::TimerBase> timer)
+  {
+    if (nullptr == timer) {
+      throw std::invalid_argument("timer is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_remove_timer(
+      std::move(timer),
+      [this](std::shared_ptr<rclcpp::TimerBase> && inner_timer) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the timer is not in the wait set.
+        this->storage_remove_timer(std::move(inner_timer));
+      });
+  }
+
+  /// Add a waitable to this wait set.
+  /**
+   * \sa add_guard_condition() for details of how this method works.
+   *
+   * Additionally, this function has an optional parameter which can be used to
+   * more quickly associate this waitable with an entity when it is ready, and
+   * so that the ownership maybe held in order to keep the waitable's parent in
+   * scope while waiting.
+   * If it is set to nullptr it will be ignored.
+   * The destruction of the associated entity's shared pointer will not cause
+   * the waitable to be removed, but it will cause the associated entity pointer
+   * to be nullptr when introspecting this waitable after waiting.
+   *
+   * Note that rclcpp::QOSEventHandlerBase are just a special case of
+   * rclcpp::Waitable and can be added with this function.
+   *
+   * \param[in] waitable Waitable to be added.
+   * \param[in] associated_entity Type erased shared pointer associated with the waitable.
+   *   This may be nullptr.
+   * \throws std::invalid_argument if waitable is nullptr.
+   * \throws std::runtime_error if waitable has already been added.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  add_waitable(
+    std::shared_ptr<rclcpp::Waitable> waitable,
+    std::shared_ptr<void> associated_entity = nullptr)
+  {
+    if (nullptr == waitable) {
+      throw std::invalid_argument("waitable is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_add_waitable(
+      std::move(waitable),
+      std::move(associated_entity),
+      [this](std::shared_ptr<rclcpp::Waitable> && inner_waitable) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the waitable has already been added.
+        this->storage_add_waitable(std::move(inner_waitable));
+      });
+  }
+
+  /// Remove a waitable from this wait set.
+  /**
+   * \sa remove_guard_condition() for details of how this method works.
+   *
+   * \param[in] waitable Waitable to be removed.
+   * \throws std::invalid_argument if waitable is nullptr.
+   * \throws std::runtime_error if waitable is not part of the wait set.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  remove_waitable(std::shared_ptr<rclcpp::Waitable> waitable)
+  {
+    if (nullptr == waitable) {
+      throw std::invalid_argument("waitable is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_remove_waitable(
+      std::move(waitable),
+      [this](std::shared_ptr<rclcpp::Waitable> && inner_waitable) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the waitable is not in the wait set.
+        this->storage_remove_waitable(std::move(inner_waitable));
+      });
+  }
+
   /// Remove any destroyed entities from the wait set.
   /**
    * When the storage policy does not maintain shared ownership for the life
@@ -196,8 +455,8 @@ public:
    *
    * This function will modify the internal rcl_wait_set_t, so introspecting
    * the wait set during a call to wait is never safe.
-   * You should always wait, then introspect, and then, only when done waiting,
-   * introspect again.
+   * You should always wait, then introspect, and then, only when done
+   * introspecting, wait again.
    *
    * It may be thread-safe to add and remove entities to the wait set
    * concurrently with this function, depending on the SynchronizationPolicy

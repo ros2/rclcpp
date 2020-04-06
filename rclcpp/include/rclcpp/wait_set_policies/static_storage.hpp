@@ -20,8 +20,11 @@
 
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/subscription_base.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set_policies/detail/storage_policy_common.hpp"
+#include "rclcpp/waitable.hpp"
 
 namespace rclcpp
 {
@@ -34,18 +37,23 @@ namespace wait_set_policies
  * once during construction, and deallocated once during destruction.
  */
 template<
-  // std::size_t NumberOfSubscriptions,
-  std::size_t NumberOfGuardCondtions
-  // std::size_t NumberOfTimers,
+  std::size_t NumberOfSubscriptions,
+  std::size_t NumberOfGuardCondtions,
+  std::size_t NumberOfTimers,
   // std::size_t NumberOfClients,
   // std::size_t NumberOfServices,
-  // std::size_t NumberOfEvents,
-  // std::size_t NumberOfWaitables
+  std::size_t NumberOfWaitables
 >
 class StaticStorage : public rclcpp::wait_set_policies::detail::StoragePolicyCommon<true>
 {
 protected:
   using is_mutable = std::false_type;
+
+  using ArrayOfSubscriptions = std::array<
+    std::shared_ptr<rclcpp::SubscriptionBase>,
+    NumberOfSubscriptions
+  >;
+  using SubscriptionsIterable = ArrayOfSubscriptions;
 
   using ArrayOfGuardConditions = std::array<
     std::shared_ptr<rclcpp::GuardCondition>,
@@ -53,13 +61,36 @@ protected:
   >;
   using GuardConditionsIterable = ArrayOfGuardConditions;
 
+  using ArrayOfTimers = std::array<
+    std::shared_ptr<rclcpp::TimerBase>,
+    NumberOfTimers
+  >;
+  using TimersIterable = ArrayOfTimers;
+
+  struct WaitableEntry
+  {
+    std::shared_ptr<rclcpp::Waitable> waitable;
+    std::shared_ptr<void> associated_entity;
+  };
+  using ArrayOfWaitables = std::array<
+    WaitableEntry,
+    NumberOfWaitables
+  >;
+  using WaitablesIterable = ArrayOfWaitables;
+
   explicit
   StaticStorage(
+    const ArrayOfSubscriptions & subscriptions,
     const ArrayOfGuardConditions & guard_conditions,
+    const ArrayOfTimers & timers,
+    const ArrayOfWaitables & waitables,
     rclcpp::Context::SharedPtr context
   )
-  : StoragePolicyCommon(guard_conditions, context),
-    guard_conditions_(guard_conditions)
+  : StoragePolicyCommon(subscriptions, guard_conditions, timers, waitables, context),
+    subscriptions_(subscriptions),
+    guard_conditions_(guard_conditions),
+    timers_(timers),
+    waitables_(waitables)
   {}
 
   ~StaticStorage() = default;
@@ -68,12 +99,21 @@ protected:
   storage_rebuild_rcl_wait_set()
   {
     this->storage_rebuild_rcl_wait_set_with_sets(
-      guard_conditions_
+      subscriptions_,
+      guard_conditions_,
+      timers_,
+      waitables_
     );
   }
 
+  // storage_add_subscription() explicitly not declared here
+  // storage_remove_subscription() explicitly not declared here
   // storage_add_guard_condition() explicitly not declared here
   // storage_remove_guard_condition() explicitly not declared here
+  // storage_add_timer() explicitly not declared here
+  // storage_remove_timer() explicitly not declared here
+  // storage_add_waitable() explicitly not declared here
+  // storage_remove_waitable() explicitly not declared here
   // storage_prune_deleted_entities() explicitly not declared here
 
   void
@@ -88,7 +128,10 @@ protected:
     // Explicitly do nothing.
   }
 
+  const ArrayOfSubscriptions subscriptions_;
   const ArrayOfGuardConditions guard_conditions_;
+  const ArrayOfTimers timers_;
+  const ArrayOfWaitables waitables_;
 };
 
 }  // namespace wait_set_policies

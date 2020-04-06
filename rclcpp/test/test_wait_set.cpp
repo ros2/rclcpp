@@ -38,13 +38,17 @@ TEST_F(TestWaitSet, construction_and_destruction) {
   }
 
   {
-    rclcpp::WaitSet wait_set(std::vector<rclcpp::GuardCondition::SharedPtr>{});
+    rclcpp::WaitSet wait_set(
+      std::vector<rclcpp::SubscriptionBase::SharedPtr>{},
+      std::vector<rclcpp::GuardCondition::SharedPtr>{},
+      std::vector<rclcpp::TimerBase::SharedPtr>{},
+      std::vector<rclcpp::WaitSet::WaitableEntry>{});
     (void)wait_set;
   }
 
   {
     auto gc = std::make_shared<rclcpp::GuardCondition>();
-    rclcpp::WaitSet wait_set({gc});
+    rclcpp::WaitSet wait_set({}, {gc});
     (void)wait_set;
   }
 
@@ -52,7 +56,7 @@ TEST_F(TestWaitSet, construction_and_destruction) {
     auto context = std::make_shared<rclcpp::Context>();
     context->init(0, nullptr);
     auto gc = std::make_shared<rclcpp::GuardCondition>(context);
-    rclcpp::WaitSet wait_set({gc}, context);
+    rclcpp::WaitSet wait_set({}, {gc}, {}, {}, context);
     (void)wait_set;
   }
 
@@ -60,7 +64,12 @@ TEST_F(TestWaitSet, construction_and_destruction) {
     // invalid context (nullptr)
     ASSERT_THROW(
     {
-      rclcpp::WaitSet wait_set(std::vector<rclcpp::GuardCondition::SharedPtr>{}, nullptr);
+      rclcpp::WaitSet wait_set(
+        std::vector<rclcpp::SubscriptionBase::SharedPtr>{},
+        std::vector<rclcpp::GuardCondition::SharedPtr>{},
+        std::vector<rclcpp::TimerBase::SharedPtr>{},
+        std::vector<rclcpp::WaitSet::WaitableEntry>{},
+        nullptr);
       (void)wait_set;
     }, std::invalid_argument);
   }
@@ -70,7 +79,12 @@ TEST_F(TestWaitSet, construction_and_destruction) {
     auto context = std::make_shared<rclcpp::Context>();
     ASSERT_THROW(
     {
-      rclcpp::WaitSet wait_set(std::vector<rclcpp::GuardCondition::SharedPtr>{}, context);
+      rclcpp::WaitSet wait_set(
+        std::vector<rclcpp::SubscriptionBase::SharedPtr>{},
+        std::vector<rclcpp::GuardCondition::SharedPtr>{},
+        std::vector<rclcpp::TimerBase::SharedPtr>{},
+        std::vector<rclcpp::WaitSet::WaitableEntry>{},
+        context);
       (void)wait_set;
     }, rclcpp::exceptions::RCLInvalidArgument);
   }
@@ -94,7 +108,7 @@ TEST_F(TestWaitSet, add_remove_guard_condition) {
   {
     auto gc = std::make_shared<rclcpp::GuardCondition>();
     auto gc2 = std::make_shared<rclcpp::GuardCondition>();
-    rclcpp::WaitSet wait_set({gc});
+    rclcpp::WaitSet wait_set({}, {gc});
     wait_set.add_guard_condition(gc2);
     wait_set.remove_guard_condition(gc2);
     wait_set.remove_guard_condition(gc);
@@ -104,7 +118,7 @@ TEST_F(TestWaitSet, add_remove_guard_condition) {
   {
     auto gc = std::make_shared<rclcpp::GuardCondition>();
     auto gc2 = std::make_shared<rclcpp::GuardCondition>();
-    rclcpp::WaitSet wait_set({gc});
+    rclcpp::WaitSet wait_set({}, {gc});
     wait_set.add_guard_condition(gc2);
     wait_set.remove_guard_condition(gc);
     wait_set.remove_guard_condition(gc2);
@@ -151,7 +165,7 @@ TEST_F(TestWaitSet, add_remove_guard_condition) {
   {
     auto gc = std::make_shared<rclcpp::GuardCondition>();
     auto gc2 = std::make_shared<rclcpp::GuardCondition>();
-    rclcpp::WaitSet wait_set({gc});
+    rclcpp::WaitSet wait_set({}, {gc});
     ASSERT_THROW(
     {
       wait_set.remove_guard_condition(gc2);
@@ -161,7 +175,7 @@ TEST_F(TestWaitSet, add_remove_guard_condition) {
   // double remove
   {
     auto gc = std::make_shared<rclcpp::GuardCondition>();
-    rclcpp::WaitSet wait_set({gc});
+    rclcpp::WaitSet wait_set({}, {gc});
     wait_set.remove_guard_condition(gc);
     ASSERT_THROW(
     {
