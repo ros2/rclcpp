@@ -59,7 +59,7 @@ public:
   /// Return the underlying rcl guard condition structure.
   RCLCPP_PUBLIC
   const rcl_guard_condition_t &
-  get_rcl_guard_condtion() const;
+  get_rcl_guard_condition() const;
 
   /// Notify the wait set waiting on this condition, if any, that the condition had been met.
   /**

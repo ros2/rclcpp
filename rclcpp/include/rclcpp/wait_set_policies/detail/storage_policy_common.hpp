@@ -184,7 +184,7 @@ protected:
       }
       rcl_ret_t ret = rcl_wait_set_add_guard_condition(
         &rcl_wait_set_,
-        &guard_condition_ptr_pair.second->get_rcl_guard_condtion(),
+        &guard_condition_ptr_pair.second->get_rcl_guard_condition(),
         nullptr);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);

@@ -72,7 +72,7 @@ TEST_F(TestGuardCondition, get_context) {
 TEST_F(TestGuardCondition, get_rcl_guard_condition) {
   {
     auto gc = std::make_shared<rclcpp::GuardCondition>();
-    gc->get_rcl_guard_condtion();
+    gc->get_rcl_guard_condition();
   }
 }
 
