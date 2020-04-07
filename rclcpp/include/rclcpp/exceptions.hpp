@@ -227,6 +227,10 @@ class InvalidParameterValueException : public std::runtime_error
 };
 
 /// Thrown if requested parameter type is invalid.
+/**
+ * Essentially the same as rclcpp::ParameterTypeException, but with parameter
+ * name in the error message.
+ */
 class InvalidParameterTypeException : public std::runtime_error
 {
 public:
