@@ -14,14 +14,18 @@
 
 #include <gtest/gtest.h>
 
-#include <string>
+#include <chrono>
 #include <memory>
+#include <string>
+#include <thread>
 #include <vector>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "test_msgs/msg/empty.hpp"
+
+using namespace std::chrono_literals;
 
 class TestSubscription : public ::testing::Test
 {
@@ -235,13 +239,13 @@ TEST_F(TestSubscription, callback_bind) {
   using test_msgs::msg::Empty;
   {
     // Member callback for plain class
-    SubscriptionClass subscriptionObject;
-    subscriptionObject.CreateSubscription();
+    SubscriptionClass subscription_object;
+    subscription_object.CreateSubscription();
   }
   {
     // Member callback for class inheriting from rclcpp::Node
-    SubscriptionClassNodeInheritance subscriptionObject;
-    subscriptionObject.CreateSubscription();
+    SubscriptionClassNodeInheritance subscription_object;
+    subscription_object.CreateSubscription();
   }
   {
     // Member callback for class inheriting from testing::Test
@@ -250,6 +254,43 @@ TEST_F(TestSubscription, callback_bind) {
     auto callback = std::bind(&TestSubscription::OnMessage, this, std::placeholders::_1);
     auto sub = node->create_subscription<Empty>("topic", 1, callback);
   }
+}
+
+/*
+   Testing take.
+ */
+TEST_F(TestSubscription, take) {
+  initialize();
+  using test_msgs::msg::Empty;
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>){};
+  {
+    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+    test_msgs::msg::Empty msg;
+    rmw_message_info_t msg_info;
+    EXPECT_FALSE(sub->take(msg, msg_info));
+  }
+  {
+    rclcpp::SubscriptionOptions so;
+    so.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
+    rclcpp::PublisherOptions po;
+    po.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
+    {
+      test_msgs::msg::Empty msg;
+      pub->publish(msg);
+    }
+    test_msgs::msg::Empty msg;
+    rmw_message_info_t msg_info;
+    bool message_recieved = false;
+    auto start = std::chrono::steady_clock::now();
+    do {
+      message_recieved = sub->take(msg, msg_info);
+      std::this_thread::sleep_for(100ms);
+    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_recieved);
+  }
+  // TODO(wjwwood): figure out a good way to test the intra-process exclusion behavior.
 }
 
 /*
