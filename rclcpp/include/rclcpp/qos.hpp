@@ -15,6 +15,9 @@
 #ifndef RCLCPP__QOS_HPP_
 #define RCLCPP__QOS_HPP_
 
+#include <string>
+
+#include <rmw/incompatible_qos_events_statuses.h>
 #include <rmw/qos_profiles.h>
 #include <rmw/types.h>
 
@@ -23,6 +26,8 @@
 
 namespace rclcpp
 {
+
+std::string qos_policy_name_from_kind(rmw_qos_policy_kind_t policy_kind);
 
 /// QoS initialization values, cannot be created directly, use KeepAll or KeepLast instead.
 struct RCLCPP_PUBLIC QoSInitialization

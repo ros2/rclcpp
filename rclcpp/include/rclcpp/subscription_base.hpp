@@ -208,6 +208,8 @@ protected:
     event_handlers_.emplace_back(handler);
   }
 
+  static void default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & info);
+
   RCLCPP_PUBLIC
   bool
   matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const;

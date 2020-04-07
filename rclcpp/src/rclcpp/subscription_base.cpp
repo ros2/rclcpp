@@ -195,6 +195,17 @@ SubscriptionBase::get_intra_process_waitable() const
   return ipm->get_subscription_intra_process(intra_process_subscription_id_);
 }
 
+void
+SubscriptionBase::default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & event)
+{
+  std::string policy_name = qos_policy_name_from_kind(event.last_policy_kind);
+  RCLCPP_WARN(
+    rclcpp::get_logger("rclcpp"),
+    "New publisher discovered on this topic, offering incompatible QoS. "
+    "No messages will be sent to it. "
+    "Last incompatible policy: %s", policy_name.c_str());
+}
+
 bool
 SubscriptionBase::matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const
 {

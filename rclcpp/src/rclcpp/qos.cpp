@@ -19,6 +19,26 @@
 namespace rclcpp
 {
 
+std::string qos_policy_name_from_kind(rmw_qos_policy_kind_t policy_kind)
+{
+  switch (policy_kind) {
+    case RMW_QOS_POLICY_DURABILITY:
+      return "DURABILITY_QOS_POLICY";
+    case RMW_QOS_POLICY_DEADLINE:
+      return "DEADLINE_QOS_POLICY";
+    case RMW_QOS_POLICY_LIVELINESS:
+      return "LIVELINESS_QOS_POLICY";
+    case RMW_QOS_POLICY_RELIABILITY:
+      return "RELIABILITY_QOS_POLICY";
+    case RMW_QOS_POLICY_HISTORY:
+      return "HISTORY_QOS_POLICY";
+    case RMW_QOS_POLICY_LIFESPAN:
+      return "LIFESPAN_QOS_POLICY";
+    default:
+      return "INVALID_QOS_POLICY";
+  }
+}
+
 QoSInitialization::QoSInitialization(rmw_qos_history_policy_t history_policy_arg, size_t depth_arg)
 : history_policy(history_policy_arg), depth(depth_arg)
 {}
