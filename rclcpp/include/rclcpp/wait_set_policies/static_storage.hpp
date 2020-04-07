@@ -21,6 +21,7 @@
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set_policies/detail/storage_policy_common.hpp"
@@ -49,8 +50,22 @@ class StaticStorage : public rclcpp::wait_set_policies::detail::StoragePolicyCom
 protected:
   using is_mutable = std::false_type;
 
+  class SubscriptionEntry
+  {
+  public:
+    std::shared_ptr<rclcpp::SubscriptionBase> subscription;
+    rclcpp::SubscriptionWaitSetMask mask;
+
+    /// Conversion constructor, which is intentionally not marked explicit.
+    SubscriptionEntry(
+      const std::shared_ptr<rclcpp::SubscriptionBase> & subscription_in = nullptr,
+      const rclcpp::SubscriptionWaitSetMask & mask_in = {})
+    : subscription(subscription_in),
+      mask(mask_in)
+    {}
+  };
   using ArrayOfSubscriptions = std::array<
-    std::shared_ptr<rclcpp::SubscriptionBase>,
+    SubscriptionEntry,
     NumberOfSubscriptions
   >;
   using SubscriptionsIterable = ArrayOfSubscriptions;
@@ -69,6 +84,14 @@ protected:
 
   struct WaitableEntry
   {
+    /// Conversion constructor, which is intentionally not marked explicit.
+    WaitableEntry(
+      const std::shared_ptr<rclcpp::Waitable> & waitable_in = nullptr,
+      const std::shared_ptr<void> & associated_entity_in = nullptr) noexcept
+    : waitable(waitable_in),
+      associated_entity(associated_entity_in)
+    {}
+
     std::shared_ptr<rclcpp::Waitable> waitable;
     std::shared_ptr<void> associated_entity;
   };

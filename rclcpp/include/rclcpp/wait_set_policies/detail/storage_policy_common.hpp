@@ -218,8 +218,9 @@ protected:
     }
 
     // Add subscriptions.
-    for (const auto & subscription : subscriptions) {
-      auto subscription_ptr_pair = get_raw_pointer_from_smart_pointer(subscription);
+    for (const auto & subscription_entry : subscriptions) {
+      auto subscription_ptr_pair =
+        get_raw_pointer_from_smart_pointer(subscription_entry.subscription);
       if (nullptr == subscription_ptr_pair.second) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {

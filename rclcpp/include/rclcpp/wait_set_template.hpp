@@ -46,6 +46,7 @@ class WaitSetTemplate final : private StoragePolicy, private SynchronizationPoli
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(WaitSetTemplate)
 
+  using typename StoragePolicy::SubscriptionEntry;
   using typename StoragePolicy::WaitableEntry;
 
   /// Construct a wait set with optional initial waitable entities and optional custom context.

@@ -39,7 +39,7 @@ TEST_F(TestWaitSet, construction_and_destruction) {
 
   {
     rclcpp::WaitSet wait_set(
-      std::vector<rclcpp::SubscriptionBase::SharedPtr>{},
+      std::vector<rclcpp::WaitSet::SubscriptionEntry>{},
       std::vector<rclcpp::GuardCondition::SharedPtr>{},
       std::vector<rclcpp::TimerBase::SharedPtr>{},
       std::vector<rclcpp::WaitSet::WaitableEntry>{});
@@ -65,7 +65,7 @@ TEST_F(TestWaitSet, construction_and_destruction) {
     ASSERT_THROW(
     {
       rclcpp::WaitSet wait_set(
-        std::vector<rclcpp::SubscriptionBase::SharedPtr>{},
+        std::vector<rclcpp::WaitSet::SubscriptionEntry>{},
         std::vector<rclcpp::GuardCondition::SharedPtr>{},
         std::vector<rclcpp::TimerBase::SharedPtr>{},
         std::vector<rclcpp::WaitSet::WaitableEntry>{},
@@ -80,7 +80,7 @@ TEST_F(TestWaitSet, construction_and_destruction) {
     ASSERT_THROW(
     {
       rclcpp::WaitSet wait_set(
-        std::vector<rclcpp::SubscriptionBase::SharedPtr>{},
+        std::vector<rclcpp::WaitSet::SubscriptionEntry>{},
         std::vector<rclcpp::GuardCondition::SharedPtr>{},
         std::vector<rclcpp::TimerBase::SharedPtr>{},
         std::vector<rclcpp::WaitSet::WaitableEntry>{},

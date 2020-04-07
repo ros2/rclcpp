@@ -22,6 +22,7 @@
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/subscription_base.hpp"
+#include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/wait_set_policies/detail/storage_policy_common.hpp"
@@ -38,8 +39,58 @@ class DynamicStorage : public rclcpp::wait_set_policies::detail::StoragePolicyCo
 protected:
   using is_mutable = std::true_type;
 
-  using SequenceOfWeakSubscriptions = std::vector<std::weak_ptr<SubscriptionBase>>;
-  using SubscriptionsIterable = std::vector<std::shared_ptr<rclcpp::SubscriptionBase>>;
+  class SubscriptionEntry
+  {
+  public:
+    std::shared_ptr<rclcpp::SubscriptionBase> subscription;
+    rclcpp::SubscriptionWaitSetMask mask;
+
+    /// Conversion constructor, which is intentionally not marked explicit.
+    SubscriptionEntry(
+      const std::shared_ptr<rclcpp::SubscriptionBase> & subscription_in = nullptr,
+      const rclcpp::SubscriptionWaitSetMask & mask_in = {})
+    : subscription(subscription_in),
+      mask(mask_in)
+    {}
+
+    void
+    reset() noexcept
+    {
+      subscription.reset();
+    }
+  };
+  class WeakSubscriptionEntry
+  {
+  public:
+    std::weak_ptr<rclcpp::SubscriptionBase> subscription;
+    rclcpp::SubscriptionWaitSetMask mask;
+
+    explicit WeakSubscriptionEntry(
+      const std::shared_ptr<rclcpp::SubscriptionBase> & subscription_in,
+      const rclcpp::SubscriptionWaitSetMask & mask_in) noexcept
+    : subscription(subscription_in),
+      mask(mask_in)
+    {}
+
+    explicit WeakSubscriptionEntry(const SubscriptionEntry & other)
+    : subscription(other.subscription),
+      mask(other.mask)
+    {}
+
+    std::shared_ptr<rclcpp::SubscriptionBase>
+    lock() const
+    {
+      return subscription.lock();
+    }
+
+    bool
+    expired() const noexcept
+    {
+      return subscription.expired();
+    }
+  };
+  using SequenceOfWeakSubscriptions = std::vector<WeakSubscriptionEntry>;
+  using SubscriptionsIterable = std::vector<SubscriptionEntry>;
 
   using SequenceOfWeakGuardConditions = std::vector<std::weak_ptr<rclcpp::GuardCondition>>;
   using GuardConditionsIterable = std::vector<std::shared_ptr<rclcpp::GuardCondition>>;
@@ -47,21 +98,34 @@ protected:
   using SequenceOfWeakTimers = std::vector<std::weak_ptr<rclcpp::TimerBase>>;
   using TimersIterable = std::vector<std::shared_ptr<rclcpp::TimerBase>>;
 
-  struct WaitableEntry
+  class WaitableEntry
   {
+  public:
+    std::shared_ptr<rclcpp::Waitable> waitable;
+    std::shared_ptr<void> associated_entity;
+
+    /// Conversion constructor, which is intentionally not marked explicit.
+    WaitableEntry(
+      const std::shared_ptr<rclcpp::Waitable> & waitable_in = nullptr,
+      const std::shared_ptr<void> & associated_entity_in = nullptr) noexcept
+    : waitable(waitable_in),
+      associated_entity(associated_entity_in)
+    {}
+
     void
     reset() noexcept
     {
       waitable.reset();
       associated_entity.reset();
     }
-
-    std::shared_ptr<rclcpp::Waitable> waitable;
-    std::shared_ptr<void> associated_entity;
   };
-  struct WeakWaitableEntry
+  class WeakWaitableEntry
   {
-    WeakWaitableEntry(
+  public:
+    std::weak_ptr<rclcpp::Waitable> waitable;
+    std::weak_ptr<void> associated_entity;
+
+    explicit WeakWaitableEntry(
       const std::shared_ptr<rclcpp::Waitable> & waitable_in,
       const std::shared_ptr<void> & associated_entity_in) noexcept
     : waitable(waitable_in),
@@ -84,9 +148,6 @@ protected:
     {
       return waitable.expired();
     }
-
-    std::weak_ptr<rclcpp::Waitable> waitable;
-    std::weak_ptr<void> associated_entity;
   };
   using SequenceOfWeakWaitables = std::vector<WeakWaitableEntry>;
   using WaitablesIterable = std::vector<WaitableEntry>;
@@ -151,7 +212,8 @@ protected:
     if (this->storage_has_entity(*subscription, subscriptions_)) {
       throw std::runtime_error("subscription already in wait set");
     }
-    subscriptions_.push_back(std::move(subscription));
+    WeakSubscriptionEntry weak_entry{std::move(subscription), {}};
+    subscriptions_.push_back(std::move(weak_entry));
     this->storage_flag_for_resize();
   }
 
@@ -276,7 +338,9 @@ protected:
       shared_ptrs.resize(weak_ptrs.size());
       size_t index = 0;
       for (const auto & weak_ptr : weak_ptrs) {
-        shared_ptrs[index++] = {weak_ptr.waitable.lock(), weak_ptr.associated_entity.lock()};
+        shared_ptrs[index++] = WaitableEntry{
+          weak_ptr.waitable.lock(),
+          weak_ptr.associated_entity.lock()};
       }
     };
     lock_all_waitables(waitables_, shared_waitables_);
