@@ -38,6 +38,7 @@
 #include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/subscription_base.hpp"
@@ -212,12 +213,12 @@ public:
    * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
    */
   bool
-  take(CallbackMessageT & message_out, rmw_message_info_t & message_info_out)
+  take(CallbackMessageT & message_out, rclcpp::MessageInfo & message_info_out)
   {
     rcl_ret_t ret = rcl_take(
       this->get_subscription_handle().get(),
       &message_out,
-      &message_info_out,
+      &message_info_out.get_rmw_message_info(),
       nullptr  // rmw_subscription_allocation_t is unused here
     );
     if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
@@ -225,7 +226,9 @@ public:
     } else if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
-    if (matches_any_intra_process_publishers(&message_info_out.publisher_gid)) {
+    if (
+      matches_any_intra_process_publishers(&message_info_out.get_rmw_message_info().publisher_gid))
+    {
       // In this case, the message will be delivered via intra-process and
       // we should ignore this copy of the message.
       return false;
@@ -248,9 +251,9 @@ public:
   }
 
   void handle_message(
-    std::shared_ptr<void> & message, const rmw_message_info_t & message_info) override
+    std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) override
   {
-    if (matches_any_intra_process_publishers(&message_info.publisher_gid)) {
+    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
       // In this case, the message will be delivered via intra process and
       // we should ignore this copy of the message.
       return;
@@ -261,7 +264,7 @@ public:
 
   void
   handle_loaned_message(
-    void * loaned_message, const rmw_message_info_t & message_info) override
+    void * loaned_message, const rclcpp::MessageInfo & message_info) override
   {
     auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message

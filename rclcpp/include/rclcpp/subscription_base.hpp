@@ -27,6 +27,7 @@
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -132,12 +133,12 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
+  handle_message(std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) = 0;
 
   RCLCPP_PUBLIC
   virtual
   void
-  handle_loaned_message(void * loaned_message, const rmw_message_info_t & message_info) = 0;
+  handle_loaned_message(void * loaned_message, const rclcpp::MessageInfo & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */

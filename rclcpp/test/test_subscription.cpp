@@ -266,7 +266,7 @@ TEST_F(TestSubscription, take) {
   {
     auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
     test_msgs::msg::Empty msg;
-    rmw_message_info_t msg_info;
+    rclcpp::MessageInfo msg_info;
     EXPECT_FALSE(sub->take(msg, msg_info));
   }
   {
@@ -281,7 +281,7 @@ TEST_F(TestSubscription, take) {
       pub->publish(msg);
     }
     test_msgs::msg::Empty msg;
-    rmw_message_info_t msg_info;
+    rclcpp::MessageInfo msg_info;
     bool message_recieved = false;
     auto start = std::chrono::steady_clock::now();
     do {

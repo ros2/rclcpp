@@ -25,6 +25,7 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/function_traits.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "tracetools/tracetools.h"
 #include "tracetools/utils.hpp"
@@ -43,13 +44,13 @@ class AnySubscriptionCallback
 
   using SharedPtrCallback = std::function<void (const std::shared_ptr<MessageT>)>;
   using SharedPtrWithInfoCallback =
-    std::function<void (const std::shared_ptr<MessageT>, const rmw_message_info_t &)>;
+    std::function<void (const std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>;
   using ConstSharedPtrCallback = std::function<void (const std::shared_ptr<const MessageT>)>;
   using ConstSharedPtrWithInfoCallback =
-    std::function<void (const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
+    std::function<void (const std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)>;
   using UniquePtrCallback = std::function<void (MessageUniquePtr)>;
   using UniquePtrWithInfoCallback =
-    std::function<void (MessageUniquePtr, const rmw_message_info_t &)>;
+    std::function<void (MessageUniquePtr, const rclcpp::MessageInfo &)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback_;
@@ -155,7 +156,7 @@ public:
   }
 
   void dispatch(
-    std::shared_ptr<MessageT> message, const rmw_message_info_t & message_info)
+    std::shared_ptr<MessageT> message, const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, (const void *)this, false);
     if (shared_ptr_callback_) {
@@ -181,7 +182,7 @@ public:
   }
 
   void dispatch_intra_process(
-    ConstMessageSharedPtr message, const rmw_message_info_t & message_info)
+    ConstMessageSharedPtr message, const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, (const void *)this, true);
     if (const_shared_ptr_callback_) {
@@ -204,7 +205,7 @@ public:
   }
 
   void dispatch_intra_process(
-    MessageUniquePtr message, const rmw_message_info_t & message_info)
+    MessageUniquePtr message, const rclcpp::MessageInfo & message_info)
   {
     TRACEPOINT(callback_start, (const void *)this, true);
     if (shared_ptr_callback_) {
