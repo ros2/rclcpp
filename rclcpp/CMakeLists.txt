@@ -541,6 +541,20 @@ if(BUILD_TESTING)
     target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_subscriber_topic_statistics test/topic_statistics/test_subscriber_topic_statistics.cpp)
+  if(TARGET test_subscriber_topic_statistics)
+    ament_target_dependencies(test_subscriber_topic_statistics
+      "libstatistics_collector"
+      "metrics_statistics_msgs"
+      "rcl_interfaces"
+      "rcutils"
+      "rmw"
+      "rosidl_generator_cpp"
+      "rosidl_typesupport_cpp"
+      "test_msgs")
+    target_link_libraries(test_subscriber_topic_statistics ${PROJECT_NAME})
+  endif()
+
   ament_add_gtest(test_subscription_options test/test_subscription_options.cpp)
   if(TARGET test_subscription_options)
     ament_target_dependencies(test_subscription_options "rcl")
