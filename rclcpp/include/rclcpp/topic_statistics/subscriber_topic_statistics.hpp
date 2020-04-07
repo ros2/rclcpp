@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__SUBSCRIBER_TOPIC_STATISTICS_HPP_
-#define RCLCPP__SUBSCRIBER_TOPIC_STATISTICS_HPP_
+#ifndef RCLCPP__TOPIC_STATISTICS__SUBSCRIBER_TOPIC_STATISTICS_HPP_
+#define RCLCPP__TOPIC_STATISTICS__SUBSCRIBER_TOPIC_STATISTICS_HPP_
 
-#include <vector>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "rcl/time.h"
 #include "rclcpp/time.hpp"
@@ -25,18 +27,20 @@
 
 #include "metrics_statistics_msgs/msg/metrics_message.hpp"
 
+#include "libstatistics_collector/collector/generate_statistics_message.hpp"
 #include "libstatistics_collector/topic_statistics_collector/constants.hpp"
-#include "libstatistics_collector/topic_statistics_collector/received_message_age.hpp"
 #include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
+#include "libstatistics_collector/moving_average_statistics/types.hpp"
 
 
-namespace rclcpp {
-namespace topic_statistics {
+namespace rclcpp
+{
+namespace topic_statistics
+{
 
 using libstatistics_collector::collector::GenerateStatisticMessage;
 using metrics_statistics_msgs::msg::MetricsMessage;
-using metrics_statistics_msgs::msg::StatisticDataPoint;
-using metrics_statistics_msgs::msg::StatisticDataType;
+using libstatistics_collector::moving_average_statistics::StatisticData;
 
 /**
  * Class used to collect, measure, and publish topic statistics data. Current statistics
@@ -45,14 +49,14 @@ using metrics_statistics_msgs::msg::StatisticDataType;
  * @tparam CallbackMessageT the subscribed message type
  */
 template<typename CallbackMessageT>
-class SubscriberTopicStatistics {
-
-using topic_stats_collector =
-  topic_statistics_collector::TopicStatisticsCollector<CallbackMessageT>;
-using received_message_age =
-  topic_statistics_collector::ReceivedMessageAgeCollector<CallbackMessageT>;
-using received_message_period =
-  topic_statistics_collector::ReceivedMessagePeriodCollector<CallbackMessageT>;
+class SubscriberTopicStatistics
+{
+  using topic_stats_collector =
+    libstatistics_collector::topic_statistics_collector::TopicStatisticsCollector<
+    CallbackMessageT>;
+  using received_message_period =
+    libstatistics_collector::topic_statistics_collector::ReceivedMessagePeriodCollector<
+    CallbackMessageT>;
 
 public:
   /// Construct a SubcriberTopicStatistics object.
@@ -64,16 +68,15 @@ public:
    * topic source
    * @param publisher instance constructed by the node in order to publish statistics data
    */
-  SubscriberTopicStatistics(const std::string & node_name,
+  SubscriberTopicStatistics(
+    const std::string & node_name,
     const rclcpp::Publisher<metrics_statistics_msgs::msg::MetricsMessage>::SharedPtr & publisher)
-    : node_name_(node_name),
+  : node_name_(node_name),
     publisher_(std::move(publisher))
   {
-    const auto rma = std::make_unique<received_message_age>();
-    rma->Start();
-    subscriber_statistics_collectors_.emplace_back(std::move(rma));
+    // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
 
-    const auto rmp = std::make_unique<received_message_period>();
+    auto rmp = std::make_unique<received_message_period>();
     rmp->Start();
     subscriber_statistics_collectors_.emplace_back(std::move(rmp));
 
@@ -88,7 +91,7 @@ public:
   /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
   virtual void TearDown()
   {
-    for (auto & collector: subscriber_statistics_collectors_) {
+    for (auto & collector : subscriber_statistics_collectors_) {
       collector->Stop();
     }
 
@@ -123,9 +126,22 @@ public:
   {
     (void) received_message;
 
-    for (auto & collector: subscriber_statistics_collectors_) {
+    for (auto & collector : subscriber_statistics_collectors_) {
       collector->OnMessageReceived(received_message, now_nanoseconds);
     }
+  }
+
+  /// Return a vector of all the currently collected data
+  /**
+   * @return a vector of all the collected data
+   */
+  std::vector<StatisticData> GetCurrentCollectorData() const
+  {
+    std::vector<StatisticData> data;
+    for (const auto & collector : subscriber_statistics_collectors_) {
+      data.push_back(collector->GetStatisticsResults());
+    }
+    return data;
   }
 
 private:
@@ -134,7 +150,7 @@ private:
   {
     rclcpp::Time window_end{GetCurrentNanosecondsSinceEpoch()};
 
-    for (auto & collector: subscriber_statistics_collectors_) {
+    for (auto & collector : subscriber_statistics_collectors_) {
       const auto collected_stats = collector->GetStatisticsResults();
 
       auto message = libstatistics_collector::collector::GenerateStatisticMessage(
@@ -149,13 +165,13 @@ private:
     window_start_ = window_end;
   }
 
-  ///Return the current nanoseconds (count) since epoch
+  /// Return the current nanoseconds (count) since epoch
   /**
    * Based on design discussions, using harccoded time instead of a node's clock
    * due to lifecycle issues.
    * @return the current nanoseconds (count) since epoch
    */
-  uint64_t GetCurrentNanosecondsSinceEpoch()
+  int64_t GetCurrentNanosecondsSinceEpoch()
   {
     const auto now = std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -168,11 +184,11 @@ private:
   /// Publisher, created by the node, used to publish topic statistics messages
   rclcpp::Publisher<metrics_statistics_msgs::msg::MetricsMessage>::SharedPtr publisher_{nullptr};
   /// Timer which fires the publisher
-  rclcpp::TimerBase::SharedPtr publisher_timer{nullptr};
+  rclcpp::TimerBase::SharedPtr publisher_timer_{nullptr};
   /// The start of the collection window, used in the published topic statistics message
   rclcpp::Time window_start_;
 };
 }  // namespace topic_statistics
 }  // namespace rclcpp
 
-#endif //RCLCPP__SUBSCRIBER_TOPIC_STATISTICS_HPP_
+#endif  // RCLCPP__TOPIC_STATISTICS__SUBSCRIBER_TOPIC_STATISTICS_HPP_
