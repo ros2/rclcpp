@@ -146,7 +146,7 @@ public:
    * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
    */
   bool
-  take_serialized(rmw_serialized_message_t & message_out, rclcpp::MessageInfo & message_info_out);
+  take_serialized(rcl_serialized_message_t & message_out, rclcpp::MessageInfo & message_info_out);
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */

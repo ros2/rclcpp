@@ -262,7 +262,7 @@ TEST_F(TestSubscription, callback_bind) {
 TEST_F(TestSubscription, take) {
   initialize();
   using test_msgs::msg::Empty;
-  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) { FAIL(); };
   {
     auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
     test_msgs::msg::Empty msg;
@@ -291,6 +291,42 @@ TEST_F(TestSubscription, take) {
     EXPECT_TRUE(message_recieved);
   }
   // TODO(wjwwood): figure out a good way to test the intra-process exclusion behavior.
+}
+
+/*
+   Testing take_serialized.
+ */
+TEST_F(TestSubscription, take_serialized) {
+  initialize();
+  using test_msgs::msg::Empty;
+  auto do_nothing = [](std::shared_ptr<const rcl_serialized_message_t>) { FAIL(); };
+  {
+    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
+    std::shared_ptr<rcl_serialized_message_t> msg = sub->create_serialized_message();
+    rclcpp::MessageInfo msg_info;
+    EXPECT_FALSE(sub->take_serialized(*msg, msg_info));
+  }
+  {
+    rclcpp::SubscriptionOptions so;
+    so.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing, so);
+    rclcpp::PublisherOptions po;
+    po.use_intra_process_comm = rclcpp::IntraProcessSetting::Disable;
+    auto pub = node->create_publisher<test_msgs::msg::Empty>("~/test_take", 1, po);
+    {
+      test_msgs::msg::Empty msg;
+      pub->publish(msg);
+    }
+    std::shared_ptr<rcl_serialized_message_t> msg = sub->create_serialized_message();
+    rclcpp::MessageInfo msg_info;
+    bool message_recieved = false;
+    auto start = std::chrono::steady_clock::now();
+    do {
+      message_recieved = sub->take_serialized(*msg, msg_info);
+      std::this_thread::sleep_for(100ms);
+    } while (!message_recieved && std::chrono::steady_clock::now() - start < 10s);
+    EXPECT_TRUE(message_recieved);
+  }
 }
 
 /*
