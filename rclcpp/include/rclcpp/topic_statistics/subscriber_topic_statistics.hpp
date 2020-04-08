@@ -32,6 +32,20 @@
 #include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 
+namespace
+{
+/// Return the current nanoseconds (count) since epoch
+/**
+ * For now, use hard coded time instead of a node's clock (to support sim time and playback)
+ * due to node clock lifecycle issues.
+ * @return the current nanoseconds (count) since epoch
+ */
+int64_t GetCurrentNanosecondsSinceEpoch()
+{
+  const auto now = std::chrono::system_clock::now();
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+}
+}  // namespace
 
 namespace rclcpp
 {
@@ -51,10 +65,10 @@ using libstatistics_collector::moving_average_statistics::StatisticData;
 template<typename CallbackMessageT>
 class SubscriberTopicStatistics
 {
-  using topic_stats_collector =
+  using TopicStatsCollector =
     libstatistics_collector::topic_statistics_collector::TopicStatisticsCollector<
     CallbackMessageT>;
-  using received_message_period =
+  using ReceivedMessagePeriod =
     libstatistics_collector::topic_statistics_collector::ReceivedMessagePeriodCollector<
     CallbackMessageT>;
 
@@ -76,9 +90,9 @@ public:
   {
     // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
 
-    auto rmp = std::make_unique<received_message_period>();
-    rmp->Start();
-    subscriber_statistics_collectors_.emplace_back(std::move(rmp));
+    auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
+    received_message_period->Start();
+    subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
 
     window_start_ = rclcpp::Time(GetCurrentNanosecondsSinceEpoch());
   }
@@ -86,24 +100,6 @@ public:
   virtual ~SubscriberTopicStatistics()
   {
     TearDown();
-  }
-
-  /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
-  virtual void TearDown()
-  {
-    for (auto & collector : subscriber_statistics_collectors_) {
-      collector->Stop();
-    }
-
-    subscriber_statistics_collectors_.clear();
-
-    if (publisher_timer_) {
-      publisher_timer_->cancel();
-      publisher_timer_.reset();
-    }
-    if (publisher_) {
-      publisher_.reset();
-    }
   }
 
   /// Set the timer used to publish statistics messages.
@@ -126,7 +122,7 @@ public:
   {
     (void) received_message;
 
-    for (auto & collector : subscriber_statistics_collectors_) {
+    for (const auto & collector : subscriber_statistics_collectors_) {
       collector->OnMessageReceived(received_message, now_nanoseconds);
     }
   }
@@ -145,6 +141,23 @@ public:
   }
 
 private:
+  /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
+  virtual void TearDown()
+  {
+    for (auto & collector : subscriber_statistics_collectors_) {
+      collector->Stop();
+    }
+
+    subscriber_statistics_collectors_.clear();
+
+    if (publisher_timer_) {
+      publisher_timer_->cancel();
+      publisher_timer_.reset();
+    }
+
+    publisher_.reset();
+  }
+
   /// Publish a populated MetricsStatisticsMessage
   virtual void PublishMessage()
   {
@@ -165,20 +178,8 @@ private:
     window_start_ = window_end;
   }
 
-  /// Return the current nanoseconds (count) since epoch
-  /**
-   * Based on design discussions, using harccoded time instead of a node's clock
-   * due to lifecycle issues.
-   * @return the current nanoseconds (count) since epoch
-   */
-  int64_t GetCurrentNanosecondsSinceEpoch()
-  {
-    const auto now = std::chrono::system_clock::now();
-    return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-  }
-
   /// Collection of statistics collectors
-  std::vector<std::unique_ptr<topic_stats_collector>> subscriber_statistics_collectors_{};
+  std::vector<std::unique_ptr<TopicStatsCollector>> subscriber_statistics_collectors_{};
   /// Node name used to generate topic statistics messages to be published
   const std::string node_name_;
   /// Publisher, created by the node, used to publish topic statistics messages

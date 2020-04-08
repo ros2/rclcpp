@@ -23,6 +23,8 @@
 
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/qos.hpp"
+
 #include "rclcpp/topic_statistics/subscriber_topic_statistics.hpp"
 
 #include "test_msgs/msg/empty.hpp"
@@ -33,7 +35,7 @@ namespace
 constexpr const char kTestNodeName[]{"test_sub_stats_node"};
 constexpr const char kTestSubStatsTopic[]{"/test_sub_stats_topic"};
 constexpr const char kTestTopicStatisticsTopic[]{"/test_topic_statistics_topic"};
-constexpr const uint16_t kNoSamples = 0;
+constexpr const uint64_t kNoSamples{0};
 }  // namespace
 
 using test_msgs::msg::Empty;
@@ -55,14 +57,13 @@ public:
     subscription_ = create_subscription<Empty,
         std::function<void(Empty::UniquePtr)>>(
       topic,
-      0 /*history_depth*/,
+      rclcpp::QoS(rclcpp::KeepAll()),
       callback);
   }
 
 private:
-  void ReceiveMessage(const Empty & msg) const
+  void ReceiveMessage(const Empty &) const
   {
-    (void) msg;
   }
 
   rclcpp::Subscription<Empty>::SharedPtr subscription_;
@@ -76,7 +77,7 @@ class TestSubscriberTopicStatisticsFixture : public ::testing::Test
 protected:
   void SetUp()
   {
-    rclcpp::init(0, nullptr);
+    rclcpp::init(0 /* argc */, nullptr /* argv */);
   }
 
   void TearDown()
