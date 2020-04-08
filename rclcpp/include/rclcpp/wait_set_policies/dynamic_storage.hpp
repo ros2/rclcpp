@@ -16,8 +16,9 @@
 #define RCLCPP__WAIT_SET_POLICIES__DYNAMIC_STORAGE_HPP_
 
 #include <algorithm>
-#include <array>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
@@ -41,7 +42,9 @@ protected:
 
   class SubscriptionEntry
   {
-  public:
+    // (wjwwood): indent of 'public:' is weird, I know. uncrustify is dumb.
+
+public:
     std::shared_ptr<rclcpp::SubscriptionBase> subscription;
     rclcpp::SubscriptionWaitSetMask mask;
 
@@ -61,7 +64,7 @@ protected:
   };
   class WeakSubscriptionEntry
   {
-  public:
+public:
     std::weak_ptr<rclcpp::SubscriptionBase> subscription;
     rclcpp::SubscriptionWaitSetMask mask;
 
@@ -100,7 +103,7 @@ protected:
 
   class WaitableEntry
   {
-  public:
+public:
     std::shared_ptr<rclcpp::Waitable> waitable;
     std::shared_ptr<void> associated_entity;
 
@@ -121,7 +124,7 @@ protected:
   };
   class WeakWaitableEntry
   {
-  public:
+public:
     std::weak_ptr<rclcpp::Waitable> waitable;
     std::weak_ptr<void> associated_entity;
 
@@ -192,7 +195,7 @@ protected:
     return std::any_of(
       entities.cbegin(),
       entities.cend(),
-      [&entity](const auto & inner) { return &entity == inner.lock().get(); });
+      [&entity](const auto & inner) {return &entity == inner.lock().get();});
   }
 
   template<class EntityT, class SequenceOfEntitiesT>
@@ -203,7 +206,7 @@ protected:
     return std::find_if(
       entities.cbegin(),
       entities.cend(),
-      [&entity](const auto & inner) { return &entity == inner.lock().get(); });
+      [&entity](const auto & inner) {return &entity == inner.lock().get();});
   }
 
   void
@@ -323,26 +326,26 @@ protected:
     }
     // Setup common locking function.
     auto lock_all = [](const auto & weak_ptrs, auto & shared_ptrs) {
-      shared_ptrs.resize(weak_ptrs.size());
-      size_t index = 0;
-      for (const auto & weak_ptr : weak_ptrs) {
-        shared_ptrs[index++] = weak_ptr.lock();
-      }
-    };
+        shared_ptrs.resize(weak_ptrs.size());
+        size_t index = 0;
+        for (const auto & weak_ptr : weak_ptrs) {
+          shared_ptrs[index++] = weak_ptr.lock();
+        }
+      };
     // Lock all the weak pointers and hold them until released.
     lock_all(guard_conditions_, shared_guard_conditions_);
     lock_all(timers_, shared_timers_);
 
     // We need a specialized version of this for waitables.
     auto lock_all_waitables = [](const auto & weak_ptrs, auto & shared_ptrs) {
-      shared_ptrs.resize(weak_ptrs.size());
-      size_t index = 0;
-      for (const auto & weak_ptr : weak_ptrs) {
-        shared_ptrs[index++] = WaitableEntry{
-          weak_ptr.waitable.lock(),
-          weak_ptr.associated_entity.lock()};
-      }
-    };
+        shared_ptrs.resize(weak_ptrs.size());
+        size_t index = 0;
+        for (const auto & weak_ptr : weak_ptrs) {
+          shared_ptrs[index++] = WaitableEntry{
+            weak_ptr.waitable.lock(),
+            weak_ptr.associated_entity.lock()};
+        }
+      };
     lock_all_waitables(waitables_, shared_waitables_);
   }
 
@@ -355,10 +358,10 @@ protected:
     }
     // "Unlock" all shared pointers by resetting them.
     auto reset_all = [](auto & shared_ptrs) {
-      for (auto & shared_ptr : shared_ptrs) {
-        shared_ptr.reset();
-      }
-    };
+        for (auto & shared_ptr : shared_ptrs) {
+          shared_ptr.reset();
+        }
+      };
     reset_all(shared_guard_conditions_);
     reset_all(shared_timers_);
     reset_all(shared_waitables_);

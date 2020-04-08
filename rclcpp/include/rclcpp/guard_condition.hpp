@@ -39,13 +39,13 @@ public:
    *   Shared ownership of the context is held with the guard condition until
    *   destruction.
    * \throws std::invalid_argument if the context is nullptr.
-   * \throws rclcpp::exceptions::RCLErrorBase based exceptions when underlying
+   * \throws rclcpp::exceptions::RCLError based exceptions when underlying
    *   rcl functions fail.
    */
   RCLCPP_PUBLIC
   explicit GuardCondition(
     rclcpp::Context::SharedPtr context =
-      rclcpp::contexts::default_context::get_global_default_context());
+    rclcpp::contexts::default_context::get_global_default_context());
 
   RCLCPP_PUBLIC
   virtual
@@ -66,7 +66,7 @@ public:
    * This function is thread-safe, and may be called concurrently with waiting
    * on this guard condition in a wait set.
    *
-   * \throws rclcpp::exceptions::RCLErrorBase based exceptions when underlying
+   * \throws rclcpp::exceptions::RCLError based exceptions when underlying
    *   rcl functions fail.
    */
   RCLCPP_PUBLIC

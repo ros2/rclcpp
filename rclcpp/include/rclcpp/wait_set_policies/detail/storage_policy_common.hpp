@@ -94,7 +94,11 @@ protected:
     }
 
     // (Re)build the wait set for the first time.
-    this->storage_rebuild_rcl_wait_set_with_sets(subscriptions, guard_conditions, timers, waitables);
+    this->storage_rebuild_rcl_wait_set_with_sets(
+      subscriptions,
+      guard_conditions,
+      timers,
+      waitables);
   }
 
   ~StoragePolicyCommon()

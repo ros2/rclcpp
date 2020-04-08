@@ -18,6 +18,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <utility>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/guard_condition.hpp"
@@ -52,7 +53,7 @@ protected:
     std::shared_ptr<rclcpp::SubscriptionBase> && subscription,
     const rclcpp::SubscriptionWaitSetMask & mask,
     std::function<
-      void (std::shared_ptr<rclcpp::SubscriptionBase> &&, const rclcpp::SubscriptionWaitSetMask &)
+      void(std::shared_ptr<rclcpp::SubscriptionBase>&&, const rclcpp::SubscriptionWaitSetMask &)
     > add_subscription_function)
   {
     // Explicitly no thread synchronization.
@@ -68,7 +69,7 @@ protected:
     std::shared_ptr<rclcpp::SubscriptionBase> && subscription,
     const rclcpp::SubscriptionWaitSetMask & mask,
     std::function<
-      void (std::shared_ptr<rclcpp::SubscriptionBase> &&, const rclcpp::SubscriptionWaitSetMask &)
+      void(std::shared_ptr<rclcpp::SubscriptionBase>&&, const rclcpp::SubscriptionWaitSetMask &)
     > remove_subscription_function)
   {
     // Explicitly no thread synchronization.
@@ -82,7 +83,7 @@ protected:
   void
   sync_add_guard_condition(
     std::shared_ptr<rclcpp::GuardCondition> && guard_condition,
-    std::function<void (std::shared_ptr<rclcpp::GuardCondition> &&)> add_guard_condition_function)
+    std::function<void(std::shared_ptr<rclcpp::GuardCondition>&&)> add_guard_condition_function)
   {
     // Explicitly no thread synchronization.
     add_guard_condition_function(std::move(guard_condition));
@@ -95,7 +96,7 @@ protected:
   void
   sync_remove_guard_condition(
     std::shared_ptr<rclcpp::GuardCondition> && guard_condition,
-    std::function<void (std::shared_ptr<rclcpp::GuardCondition> &&)> remove_guard_condition_function)
+    std::function<void(std::shared_ptr<rclcpp::GuardCondition>&&)> remove_guard_condition_function)
   {
     // Explicitly no thread synchronization.
     remove_guard_condition_function(std::move(guard_condition));
@@ -108,7 +109,7 @@ protected:
   void
   sync_add_timer(
     std::shared_ptr<rclcpp::TimerBase> && timer,
-    std::function<void (std::shared_ptr<rclcpp::TimerBase> &&)> add_timer_function)
+    std::function<void(std::shared_ptr<rclcpp::TimerBase>&&)> add_timer_function)
   {
     // Explicitly no thread synchronization.
     add_timer_function(std::move(timer));
@@ -121,7 +122,7 @@ protected:
   void
   sync_remove_timer(
     std::shared_ptr<rclcpp::TimerBase> && timer,
-    std::function<void (std::shared_ptr<rclcpp::TimerBase> &&)> remove_timer_function)
+    std::function<void(std::shared_ptr<rclcpp::TimerBase>&&)> remove_timer_function)
   {
     // Explicitly no thread synchronization.
     remove_timer_function(std::move(timer));
@@ -136,7 +137,7 @@ protected:
     std::shared_ptr<rclcpp::Waitable> && waitable,
     std::shared_ptr<void> && associated_entity,
     std::function<
-      void (std::shared_ptr<rclcpp::Waitable> &&, std::shared_ptr<void> &&)
+      void(std::shared_ptr<rclcpp::Waitable>&&, std::shared_ptr<void>&&)
     > add_waitable_function)
   {
     // Explicitly no thread synchronization.
@@ -150,7 +151,7 @@ protected:
   void
   sync_remove_waitable(
     std::shared_ptr<rclcpp::Waitable> && waitable,
-    std::function<void (std::shared_ptr<rclcpp::Waitable> &&)> remove_waitable_function)
+    std::function<void(std::shared_ptr<rclcpp::Waitable>&&)> remove_waitable_function)
   {
     // Explicitly no thread synchronization.
     remove_waitable_function(std::move(waitable));
@@ -161,7 +162,7 @@ protected:
    * Does not throw, but storage function may throw.
    */
   void
-  sync_prune_deleted_entities(std::function<void ()> prune_deleted_entities_function)
+  sync_prune_deleted_entities(std::function<void()> prune_deleted_entities_function)
   {
     // Explicitly no thread synchronization.
     prune_deleted_entities_function();
@@ -172,9 +173,9 @@ protected:
   WaitResultT
   sync_wait(
     std::chrono::nanoseconds time_to_wait_ns,
-    std::function<void ()> rebuild_rcl_wait_set,
+    std::function<void()> rebuild_rcl_wait_set,
     std::function<rcl_wait_set_t & ()> get_rcl_wait_set,
-    std::function<WaitResultT (WaitResultKind wait_result_kind)> create_wait_result)
+    std::function<WaitResultT(WaitResultKind wait_result_kind)> create_wait_result)
   {
     // Assumption: this function assumes that some measure has been taken to
     // ensure none of the entities being waited on by the wait set are allowed
@@ -187,7 +188,7 @@ protected:
 
     // Setup looping predicate.
     auto start = std::chrono::steady_clock::now();
-    std::function<bool ()> should_loop = this->create_loop_predicate(time_to_wait_ns, start);
+    std::function<bool()> should_loop = this->create_loop_predicate(time_to_wait_ns, start);
 
     // Wait until exit condition is met.
     do {

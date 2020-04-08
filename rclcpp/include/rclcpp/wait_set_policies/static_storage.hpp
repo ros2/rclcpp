@@ -52,7 +52,7 @@ protected:
 
   class SubscriptionEntry
   {
-  public:
+public:
     std::shared_ptr<rclcpp::SubscriptionBase> subscription;
     rclcpp::SubscriptionWaitSetMask mask;
 

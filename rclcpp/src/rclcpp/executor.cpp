@@ -314,9 +314,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   // Reduce code duplication by generalize error handling into lambda.
   auto take_message_and_do_error_handling =
     [&subscription](
-      const char * message_adjective,
-      std::function<bool ()> take_action,
-      std::function<void ()> handle_action)
+    const char * message_adjective,
+    std::function<bool()> take_action,
+    std::function<void()> handle_action)
     {
       bool taken;
       try {
@@ -353,7 +353,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
       subscription->create_serialized_message();
     take_message_and_do_error_handling(
       "serialzed ",
-      [&]() { return subscription->take_serialized(*serialized_msg.get(), message_info); },
+      [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
       [&]()
       {
         auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
@@ -383,7 +383,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
         }
         return true;
       },
-      [&]() { subscription->handle_loaned_message(loaned_msg, message_info); });
+      [&]() {subscription->handle_loaned_message(loaned_msg, message_info);});
     rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
       subscription->get_subscription_handle().get(),
       loaned_msg);
@@ -400,8 +400,8 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
     std::shared_ptr<void> message = subscription->create_message();
     take_message_and_do_error_handling(
       "",  // no message adjective
-      [&]() { return subscription->take_type_erased(message.get(), message_info); },
-      [&]() { subscription->handle_message(message, message_info); });
+      [&]() {return subscription->take_type_erased(message.get(), message_info);},
+      [&]() {subscription->handle_message(message, message_info);});
     subscription->return_message(message);
   }
 }

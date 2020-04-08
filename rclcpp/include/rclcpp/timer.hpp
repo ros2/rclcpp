@@ -64,7 +64,7 @@ public:
   /**
    * \return true if the timer has been cancelled, false otherwise
    * \throws std::runtime_error if the rcl_get_error_state returns 0
-   * \throws RCLErrorBase some child class exception based on ret
+   * \throws rclcpp::exceptions::RCLError some child class exception based on ret
    */
   RCLCPP_PUBLIC
   bool

@@ -262,7 +262,7 @@ TEST_F(TestSubscription, callback_bind) {
 TEST_F(TestSubscription, take) {
   initialize();
   using test_msgs::msg::Empty;
-  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>){};
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {};
   {
     auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
     test_msgs::msg::Empty msg;

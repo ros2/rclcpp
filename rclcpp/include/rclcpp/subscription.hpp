@@ -186,7 +186,8 @@ public:
   }
 
   /// Called after construction to continue setup that requires shared_from_this().
-  void post_init_setup(
+  void
+  post_init_setup(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rclcpp::QoS & qos,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
@@ -252,7 +253,8 @@ public:
 
   void
   handle_loaned_message(
-    void * loaned_message, const rclcpp::MessageInfo & message_info) override
+    void * loaned_message,
+    const rclcpp::MessageInfo & message_info) override
   {
     auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
@@ -263,18 +265,21 @@ public:
 
   /// Return the borrowed message.
   /** \param message message to be returned */
-  void return_message(std::shared_ptr<void> & message) override
+  void
+  return_message(std::shared_ptr<void> & message) override
   {
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     message_memory_strategy_->return_message(typed_message);
   }
 
-  void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
+  void
+  return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
   {
     message_memory_strategy_->return_serialized_message(message);
   }
 
-  bool use_take_shared_method() const
+  bool
+  use_take_shared_method() const
   {
     return any_callback_.use_take_shared_method();
   }

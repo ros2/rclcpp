@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <memory>
+#include <utility>
 
 #include "rcl/wait.h"
 
@@ -70,7 +71,7 @@ public:
     const typename StoragePolicy::TimersIterable & timers = {},
     const typename StoragePolicy::WaitablesIterable & waitables = {},
     rclcpp::Context::SharedPtr context =
-      rclcpp::contexts::default_context::get_global_default_context())
+    rclcpp::contexts::default_context::get_global_default_context())
   : StoragePolicy(
       subscriptions,
       guard_conditions,
@@ -475,7 +476,7 @@ public:
    *   when time_to_wait is < 0, or
    * \returns Empty if the wait set is empty, avoiding the possibility of
    *   waiting indefinitely on an empty wait set.
-   * \throws rclcpp::exceptions::RCLErrorBase on unhandled rcl errors
+   * \throws rclcpp::exceptions::RCLError on unhandled rcl errors
    */
   template<class Rep = int64_t, class Period = std::milli>
   RCUTILS_WARN_UNUSED

@@ -32,7 +32,7 @@ protected:
   SynchronizationPolicyCommon() = default;
   ~SynchronizationPolicyCommon() = default;
 
-  std::function<bool ()>
+  std::function<bool()>
   create_loop_predicate(
     std::chrono::nanoseconds time_to_wait_ns,
     std::chrono::steady_clock::time_point start)
@@ -40,10 +40,10 @@ protected:
     if (time_to_wait_ns >= std::chrono::nanoseconds(0)) {
       // If time_to_wait_ns is >= 0 schedule against a deadline.
       auto deadline = start + time_to_wait_ns;
-      return [deadline]() -> bool { return std::chrono::steady_clock::now() < deadline; };
+      return [deadline]() -> bool {return std::chrono::steady_clock::now() < deadline;};
     } else {
       // In the case of time_to_wait_ns < 0, just always return true to loop forever.
-      return []() -> bool { return true; };
+      return []() -> bool {return true;};
     }
   }
 
