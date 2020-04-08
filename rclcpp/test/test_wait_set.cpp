@@ -42,6 +42,8 @@ TEST_F(TestWaitSet, construction_and_destruction) {
       std::vector<rclcpp::WaitSet::SubscriptionEntry>{},
       std::vector<rclcpp::GuardCondition::SharedPtr>{},
       std::vector<rclcpp::TimerBase::SharedPtr>{},
+      std::vector<rclcpp::ClientBase::SharedPtr>{},
+      std::vector<rclcpp::ServiceBase::SharedPtr>{},
       std::vector<rclcpp::WaitSet::WaitableEntry>{});
     (void)wait_set;
   }
@@ -56,7 +58,7 @@ TEST_F(TestWaitSet, construction_and_destruction) {
     auto context = std::make_shared<rclcpp::Context>();
     context->init(0, nullptr);
     auto gc = std::make_shared<rclcpp::GuardCondition>(context);
-    rclcpp::WaitSet wait_set({}, {gc}, {}, {}, context);
+    rclcpp::WaitSet wait_set({}, {gc}, {}, {}, {}, {}, context);
     (void)wait_set;
   }
 
@@ -68,6 +70,8 @@ TEST_F(TestWaitSet, construction_and_destruction) {
         std::vector<rclcpp::WaitSet::SubscriptionEntry>{},
         std::vector<rclcpp::GuardCondition::SharedPtr>{},
         std::vector<rclcpp::TimerBase::SharedPtr>{},
+        std::vector<rclcpp::ClientBase::SharedPtr>{},
+        std::vector<rclcpp::ServiceBase::SharedPtr>{},
         std::vector<rclcpp::WaitSet::WaitableEntry>{},
         nullptr);
       (void)wait_set;
@@ -83,6 +87,8 @@ TEST_F(TestWaitSet, construction_and_destruction) {
         std::vector<rclcpp::WaitSet::SubscriptionEntry>{},
         std::vector<rclcpp::GuardCondition::SharedPtr>{},
         std::vector<rclcpp::TimerBase::SharedPtr>{},
+        std::vector<rclcpp::ClientBase::SharedPtr>{},
+        std::vector<rclcpp::ServiceBase::SharedPtr>{},
         std::vector<rclcpp::WaitSet::WaitableEntry>{},
         context);
       (void)wait_set;

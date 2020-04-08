@@ -21,11 +21,13 @@
 
 #include "rcl/wait.h"
 
+#include "rclcpp/client.hpp"
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/scope_exit.hpp"
+#include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
@@ -69,6 +71,8 @@ public:
     const typename StoragePolicy::SubscriptionsIterable & subscriptions = {},
     const typename StoragePolicy::GuardConditionsIterable & guard_conditions = {},
     const typename StoragePolicy::TimersIterable & timers = {},
+    const typename StoragePolicy::ClientsIterable & clients = {},
+    const typename StoragePolicy::ServicesIterable & services = {},
     const typename StoragePolicy::WaitablesIterable & waitables = {},
     rclcpp::Context::SharedPtr context =
     rclcpp::contexts::default_context::get_global_default_context())
@@ -76,6 +80,8 @@ public:
       subscriptions,
       guard_conditions,
       timers,
+      clients,
+      services,
       waitables,
       context),
     SynchronizationPolicy()
@@ -338,6 +344,110 @@ public:
         // fixed sized storage policies.
         // It will throw if the timer is not in the wait set.
         this->storage_remove_timer(std::move(inner_timer));
+      });
+  }
+
+  /// Add a client to this wait set.
+  /**
+   * \sa add_guard_condition() for details of how this method works.
+   *
+   * \param[in] client Client to be added.
+   * \throws std::invalid_argument if client is nullptr.
+   * \throws std::runtime_error if client has already been added.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  add_client(std::shared_ptr<rclcpp::ClientBase> client)
+  {
+    if (nullptr == client) {
+      throw std::invalid_argument("client is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_add_client(
+      std::move(client),
+      [this](std::shared_ptr<rclcpp::ClientBase> && inner_client) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the client has already been added.
+        this->storage_add_client(std::move(inner_client));
+      });
+  }
+
+  /// Remove a client from this wait set.
+  /**
+   * \sa remove_guard_condition() for details of how this method works.
+   *
+   * \param[in] client Client to be removed.
+   * \throws std::invalid_argument if client is nullptr.
+   * \throws std::runtime_error if client is not part of the wait set.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  remove_client(std::shared_ptr<rclcpp::ClientBase> client)
+  {
+    if (nullptr == client) {
+      throw std::invalid_argument("client is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_remove_client(
+      std::move(client),
+      [this](std::shared_ptr<rclcpp::ClientBase> && inner_client) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the client is not in the wait set.
+        this->storage_remove_client(std::move(inner_client));
+      });
+  }
+
+  /// Add a service to this wait set.
+  /**
+   * \sa add_guard_condition() for details of how this method works.
+   *
+   * \param[in] service Service to be added.
+   * \throws std::invalid_argument if service is nullptr.
+   * \throws std::runtime_error if service has already been added.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  add_service(std::shared_ptr<rclcpp::ServiceBase> service)
+  {
+    if (nullptr == service) {
+      throw std::invalid_argument("service is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_add_service(
+      std::move(service),
+      [this](std::shared_ptr<rclcpp::ServiceBase> && inner_service) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the service has already been added.
+        this->storage_add_service(std::move(inner_service));
+      });
+  }
+
+  /// Remove a service from this wait set.
+  /**
+   * \sa remove_guard_condition() for details of how this method works.
+   *
+   * \param[in] service Service to be removed.
+   * \throws std::invalid_argument if service is nullptr.
+   * \throws std::runtime_error if service is not part of the wait set.
+   * \throws exceptions based on the policies used.
+   */
+  void
+  remove_service(std::shared_ptr<rclcpp::ServiceBase> service)
+  {
+    if (nullptr == service) {
+      throw std::invalid_argument("service is nullptr");
+    }
+    // this method comes from the SynchronizationPolicy
+    this->sync_remove_service(
+      std::move(service),
+      [this](std::shared_ptr<rclcpp::ServiceBase> && inner_service) {
+        // This method comes from the StoragePolicy, and it may not exist for
+        // fixed sized storage policies.
+        // It will throw if the service is not in the wait set.
+        this->storage_remove_service(std::move(inner_service));
       });
   }
 

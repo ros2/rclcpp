@@ -66,8 +66,8 @@ template<
   std::size_t NumberOfSubscriptions,
   std::size_t NumberOfGuardCondtions,
   std::size_t NumberOfTimers,
-  // std::size_t NumberOfClients,
-  // std::size_t NumberOfServices,
+  std::size_t NumberOfClients,
+  std::size_t NumberOfServices,
   std::size_t NumberOfWaitables
 >
 using StaticWaitSet = rclcpp::WaitSetTemplate<
@@ -75,8 +75,8 @@ using StaticWaitSet = rclcpp::WaitSetTemplate<
     NumberOfSubscriptions,
     NumberOfGuardCondtions,
     NumberOfTimers,
-    // NumberOfClients,
-    // NumberOfServices,
+    NumberOfClients,
+    NumberOfServices,
     NumberOfWaitables
   >,
   rclcpp::wait_set_policies::SequentialSynchronization

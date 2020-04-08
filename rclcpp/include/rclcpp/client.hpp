@@ -62,6 +62,27 @@ public:
   RCLCPP_PUBLIC
   virtual ~ClientBase();
 
+  /// Take the next response for this client as a type erased pointer.
+  /**
+   * The type erased pointer allows for this method to be used in a type
+   * agnostic way along with ClientBase::create_response(),
+   * ClientBase::create_request_header(), and ClientBase::handle_response().
+   * The typed version of this can be used if the Service type is known,
+   * \sa Client::take_response().
+   *
+   * \param[out] response_out The type erased pointer to a Service Response into
+   *   which the middleware will copy the response being taken.
+   * \param[out] request_header_out The request header to be filled by the
+   *   middleware when taking, and which can be used to associte the response
+   *   to a specific request.
+   * \returns true if the response was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl function fail.
+   */
+  RCLCPP_PUBLIC
+  bool
+  take_type_erased_response(void * response_out, rmw_request_id_t & request_header_out);
+
   RCLCPP_PUBLIC
   const char *
   get_service_name() const;
@@ -169,6 +190,25 @@ public:
 
   virtual ~Client()
   {
+  }
+
+  /// Take the next response for this client.
+  /**
+   * \sa ClientBase::take_type_erased_response().
+   *
+   * \param[out] response_out The reference to a Service Response into
+   *   which the middleware will copy the response being taken.
+   * \param[out] request_header_out The request header to be filled by the
+   *   middleware when taking, and which can be used to associte the response
+   *   to a specific request.
+   * \returns true if the response was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl function fail.
+   */
+  bool
+  take_response(typename ServiceT::Response & response_out, rmw_request_id_t & request_header_out)
+  {
+    return this->take_type_erased_response(&response_out, request_header_out);
   }
 
   std::shared_ptr<void>

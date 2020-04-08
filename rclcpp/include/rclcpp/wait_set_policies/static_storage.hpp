@@ -18,8 +18,10 @@
 #include <array>
 #include <memory>
 
+#include "rclcpp/client.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
@@ -41,8 +43,8 @@ template<
   std::size_t NumberOfSubscriptions,
   std::size_t NumberOfGuardCondtions,
   std::size_t NumberOfTimers,
-  // std::size_t NumberOfClients,
-  // std::size_t NumberOfServices,
+  std::size_t NumberOfClients,
+  std::size_t NumberOfServices,
   std::size_t NumberOfWaitables
 >
 class StaticStorage : public rclcpp::wait_set_policies::detail::StoragePolicyCommon<true>
@@ -82,6 +84,18 @@ public:
   >;
   using TimersIterable = ArrayOfTimers;
 
+  using ArrayOfClients = std::array<
+    std::shared_ptr<rclcpp::ClientBase>,
+    NumberOfClients
+  >;
+  using ClientsIterable = ArrayOfClients;
+
+  using ArrayOfServices = std::array<
+    std::shared_ptr<rclcpp::ServiceBase>,
+    NumberOfServices
+  >;
+  using ServicesIterable = ArrayOfServices;
+
   struct WaitableEntry
   {
     /// Conversion constructor, which is intentionally not marked explicit.
@@ -106,13 +120,24 @@ public:
     const ArrayOfSubscriptions & subscriptions,
     const ArrayOfGuardConditions & guard_conditions,
     const ArrayOfTimers & timers,
+    const ArrayOfClients & clients,
+    const ArrayOfServices & services,
     const ArrayOfWaitables & waitables,
     rclcpp::Context::SharedPtr context
   )
-  : StoragePolicyCommon(subscriptions, guard_conditions, timers, waitables, context),
+  : StoragePolicyCommon(
+      subscriptions,
+      guard_conditions,
+      timers,
+      clients,
+      services,
+      waitables,
+      context),
     subscriptions_(subscriptions),
     guard_conditions_(guard_conditions),
     timers_(timers),
+    clients_(clients),
+    services_(services),
     waitables_(waitables)
   {}
 
@@ -125,6 +150,8 @@ public:
       subscriptions_,
       guard_conditions_,
       timers_,
+      clients_,
+      services_,
       waitables_
     );
   }
@@ -135,6 +162,10 @@ public:
   // storage_remove_guard_condition() explicitly not declared here
   // storage_add_timer() explicitly not declared here
   // storage_remove_timer() explicitly not declared here
+  // storage_add_client() explicitly not declared here
+  // storage_remove_client() explicitly not declared here
+  // storage_add_service() explicitly not declared here
+  // storage_remove_service() explicitly not declared here
   // storage_add_waitable() explicitly not declared here
   // storage_remove_waitable() explicitly not declared here
   // storage_prune_deleted_entities() explicitly not declared here
@@ -154,6 +185,8 @@ public:
   const ArrayOfSubscriptions subscriptions_;
   const ArrayOfGuardConditions guard_conditions_;
   const ArrayOfTimers timers_;
+  const ArrayOfClients clients_;
+  const ArrayOfServices services_;
   const ArrayOfWaitables waitables_;
 };
 

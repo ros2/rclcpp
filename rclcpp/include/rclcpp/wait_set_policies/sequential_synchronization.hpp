@@ -20,9 +20,11 @@
 #include <memory>
 #include <utility>
 
+#include "rclcpp/client.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
@@ -126,6 +128,58 @@ protected:
   {
     // Explicitly no thread synchronization.
     remove_timer_function(std::move(timer));
+  }
+
+  /// Add client without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_add_client(
+    std::shared_ptr<rclcpp::ClientBase> && client,
+    std::function<void(std::shared_ptr<rclcpp::ClientBase>&&)> add_client_function)
+  {
+    // Explicitly no thread synchronization.
+    add_client_function(std::move(client));
+  }
+
+  /// Remove client without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_remove_client(
+    std::shared_ptr<rclcpp::ClientBase> && client,
+    std::function<void(std::shared_ptr<rclcpp::ClientBase>&&)> remove_client_function)
+  {
+    // Explicitly no thread synchronization.
+    remove_client_function(std::move(client));
+  }
+
+  /// Add service without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_add_service(
+    std::shared_ptr<rclcpp::ServiceBase> && service,
+    std::function<void(std::shared_ptr<rclcpp::ServiceBase>&&)> add_service_function)
+  {
+    // Explicitly no thread synchronization.
+    add_service_function(std::move(service));
+  }
+
+  /// Remove service without thread-safety.
+  /**
+   * Does not throw, but storage function may throw.
+   */
+  void
+  sync_remove_service(
+    std::shared_ptr<rclcpp::ServiceBase> && service,
+    std::function<void(std::shared_ptr<rclcpp::ServiceBase>&&)> remove_service_function)
+  {
+    // Explicitly no thread synchronization.
+    remove_service_function(std::move(service));
   }
 
   /// Add waitable without thread-safety.

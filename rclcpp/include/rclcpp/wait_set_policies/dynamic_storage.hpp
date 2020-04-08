@@ -20,8 +20,10 @@
 #include <utility>
 #include <vector>
 
+#include "rclcpp/client.hpp"
 #include "rclcpp/guard_condition.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/service.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_wait_set_mask.hpp"
 #include "rclcpp/timer.hpp"
@@ -101,6 +103,12 @@ public:
   using SequenceOfWeakTimers = std::vector<std::weak_ptr<rclcpp::TimerBase>>;
   using TimersIterable = std::vector<std::shared_ptr<rclcpp::TimerBase>>;
 
+  using SequenceOfWeakClients = std::vector<std::weak_ptr<rclcpp::ClientBase>>;
+  using ClientsIterable = std::vector<std::shared_ptr<rclcpp::ClientBase>>;
+
+  using SequenceOfWeakServices = std::vector<std::weak_ptr<rclcpp::ServiceBase>>;
+  using ServicesIterable = std::vector<std::shared_ptr<rclcpp::ServiceBase>>;
+
   class WaitableEntry
   {
 public:
@@ -160,16 +168,29 @@ public:
     const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
     const TimersIterable & timers,
+    const ClientsIterable & clients,
+    const ServicesIterable & services,
     const WaitablesIterable & waitables,
     rclcpp::Context::SharedPtr context
   )
-  : StoragePolicyCommon(subscriptions, guard_conditions, timers, waitables, context),
+  : StoragePolicyCommon(
+      subscriptions,
+      guard_conditions,
+      timers,
+      clients,
+      services,
+      waitables,
+      context),
     subscriptions_(subscriptions.cbegin(), subscriptions.cend()),
     shared_subscriptions_(subscriptions_.size()),
     guard_conditions_(guard_conditions.cbegin(), guard_conditions.cend()),
     shared_guard_conditions_(guard_conditions_.size()),
     timers_(timers.cbegin(), timers.cend()),
     shared_timers_(timers_.size()),
+    clients_(clients.cbegin(), clients.cend()),
+    shared_clients_(clients_.size()),
+    services_(services.cbegin(), services.cend()),
+    shared_services_(services_.size()),
     waitables_(waitables.cbegin(), waitables.cend()),
     shared_waitables_(waitables_.size())
   {}
@@ -183,6 +204,8 @@ public:
       subscriptions_,
       guard_conditions_,
       timers_,
+      clients_,
+      services_,
       waitables_
     );
   }
@@ -274,6 +297,48 @@ public:
   }
 
   void
+  storage_add_client(std::shared_ptr<rclcpp::ClientBase> && client)
+  {
+    if (this->storage_has_entity(*client, clients_)) {
+      throw std::runtime_error("client already in wait set");
+    }
+    clients_.push_back(std::move(client));
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_remove_client(std::shared_ptr<rclcpp::ClientBase> && client)
+  {
+    auto it = this->storage_find_entity(*client, clients_);
+    if (clients_.cend() == it) {
+      throw std::runtime_error("client not in wait set");
+    }
+    clients_.erase(it);
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_add_service(std::shared_ptr<rclcpp::ServiceBase> && service)
+  {
+    if (this->storage_has_entity(*service, services_)) {
+      throw std::runtime_error("service already in wait set");
+    }
+    services_.push_back(std::move(service));
+    this->storage_flag_for_resize();
+  }
+
+  void
+  storage_remove_service(std::shared_ptr<rclcpp::ServiceBase> && service)
+  {
+    auto it = this->storage_find_entity(*service, services_);
+    if (services_.cend() == it) {
+      throw std::runtime_error("service not in wait set");
+    }
+    services_.erase(it);
+    this->storage_flag_for_resize();
+  }
+
+  void
   storage_add_waitable(
     std::shared_ptr<rclcpp::Waitable> && waitable,
     std::shared_ptr<void> && associated_entity)
@@ -314,6 +379,8 @@ public:
     // remove guard conditions which have been deleted
     guard_conditions_.erase(std::remove_if(guard_conditions_.begin(), guard_conditions_.end(), p));
     timers_.erase(std::remove_if(timers_.begin(), timers_.end(), p));
+    clients_.erase(std::remove_if(clients_.begin(), clients_.end(), p));
+    services_.erase(std::remove_if(services_.begin(), services_.end(), p));
     waitables_.erase(std::remove_if(waitables_.begin(), waitables_.end(), p));
   }
 
@@ -335,6 +402,8 @@ public:
     // Lock all the weak pointers and hold them until released.
     lock_all(guard_conditions_, shared_guard_conditions_);
     lock_all(timers_, shared_timers_);
+    lock_all(clients_, shared_clients_);
+    lock_all(services_, shared_services_);
 
     // We need a specialized version of this for waitables.
     auto lock_all_waitables = [](const auto & weak_ptrs, auto & shared_ptrs) {
@@ -364,6 +433,8 @@ public:
       };
     reset_all(shared_guard_conditions_);
     reset_all(shared_timers_);
+    reset_all(shared_clients_);
+    reset_all(shared_services_);
     reset_all(shared_waitables_);
   }
 
@@ -377,6 +448,12 @@ public:
 
   SequenceOfWeakTimers timers_;
   TimersIterable shared_timers_;
+
+  SequenceOfWeakClients clients_;
+  ClientsIterable shared_clients_;
+
+  SequenceOfWeakServices services_;
+  ServicesIterable shared_services_;
 
   SequenceOfWeakWaitables waitables_;
   WaitablesIterable shared_waitables_;

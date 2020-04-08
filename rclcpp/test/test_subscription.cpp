@@ -262,7 +262,7 @@ TEST_F(TestSubscription, callback_bind) {
 TEST_F(TestSubscription, take) {
   initialize();
   using test_msgs::msg::Empty;
-  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) { FAIL(); };
+  auto do_nothing = [](std::shared_ptr<const test_msgs::msg::Empty>) {FAIL();};
   {
     auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
     test_msgs::msg::Empty msg;
@@ -299,7 +299,7 @@ TEST_F(TestSubscription, take) {
 TEST_F(TestSubscription, take_serialized) {
   initialize();
   using test_msgs::msg::Empty;
-  auto do_nothing = [](std::shared_ptr<const rcl_serialized_message_t>) { FAIL(); };
+  auto do_nothing = [](std::shared_ptr<const rcl_serialized_message_t>) {FAIL();};
   {
     auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
     std::shared_ptr<rcl_serialized_message_t> msg = sub->create_serialized_message();

@@ -70,6 +70,21 @@ ClientBase::~ClientBase()
   client_handle_.reset();
 }
 
+bool
+ClientBase::take_type_erased_response(void * response_out, rmw_request_id_t & request_header_out)
+{
+  rcl_ret_t ret = rcl_take_response(
+    this->get_client_handle().get(),
+    &request_header_out,
+    response_out);
+  if (RCL_RET_CLIENT_TAKE_FAILED == ret) {
+    return false;
+  } else if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  return true;
+}
+
 const char *
 ClientBase::get_service_name() const
 {

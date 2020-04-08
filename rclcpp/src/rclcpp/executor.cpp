@@ -305,54 +305,56 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
 }
 
+static
+void
+take_and_do_error_handling(
+  const char * action_description,
+  const char * topic_or_service_name,
+  std::function<bool()> take_action,
+  std::function<void()> handle_action)
+{
+  bool taken;
+  try {
+    taken = take_action();
+  } catch (const rclcpp::exceptions::RCLError & rcl_error) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "executor %s '%s' unexpectedly failed: %s",
+      action_description,
+      topic_or_service_name,
+      rcl_error.what());
+  }
+  if (taken) {
+    handle_action();
+  } else {
+    // Message or Service was not taken for some reason.
+    // Note that this can be normal, if the underlying middleware needs to
+    // interrupt wait spuriously it is allowed.
+    // So in that case the executor cannot tell the difference in a
+    // spurious wake up and an entity actually having data until trying
+    // to take the data.
+    RCLCPP_DEBUG(
+      rclcpp::get_logger("rclcpp"),
+      "executor %s '%s' failed to take anything",
+      action_description,
+      topic_or_service_name);
+  }
+}
+
 void
 Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
   rclcpp::MessageInfo message_info;
   message_info.get_rmw_message_info().from_intra_process = false;
 
-  // Reduce code duplication by generalize error handling into lambda.
-  auto take_message_and_do_error_handling =
-    [&subscription](
-    const char * message_adjective,
-    std::function<bool()> take_action,
-    std::function<void()> handle_action)
-    {
-      bool taken;
-      try {
-        taken = take_action();
-      } catch (const rclcpp::exceptions::RCLError & rcl_error) {
-        RCLCPP_ERROR(
-          rclcpp::get_logger("rclcpp"),
-          "executor taking a %smessage from topic '%s' unexpectedly failed: %s",
-          message_adjective,
-          subscription->get_topic_name(),
-          rcl_error.what());
-      }
-      if (taken) {
-        handle_action();
-      } else {
-        // Message was not taken for some reason.
-        // Note that this can be normal, if the underlying middleware needs to
-        // interrupt wait spuriously it is allowed.
-        // So in that case the executor cannot tell the difference in a
-        // spurious wake up and a subscription actually having data until trying
-        // to take the data.
-        RCLCPP_DEBUG(
-          rclcpp::get_logger("rclcpp"),
-          "executor taking a %smessage from topic '%s' failed to take anything",
-          message_adjective,
-          subscription->get_topic_name());
-      }
-    };
-
   if (subscription->is_serialized()) {
     // This is the case where a copy of the serialized message is taken from
     // the middleware via inter-process communication.
     std::shared_ptr<rcl_serialized_message_t> serialized_msg =
       subscription->create_serialized_message();
-    take_message_and_do_error_handling(
-      "serialzed ",
+    take_and_do_error_handling(
+      "taking a serialized message from topic",
+      subscription->get_topic_name(),
       [&]() {return subscription->take_serialized(*serialized_msg.get(), message_info);},
       [&]()
       {
@@ -367,8 +369,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
     void * loaned_msg = nullptr;
     // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
     //   is extened to support subscriptions as well.
-    take_message_and_do_error_handling(
-      "loaned ",
+    take_and_do_error_handling(
+      "taking a loaned message from topic",
+      subscription->get_topic_name(),
       [&]()
       {
         rcl_ret_t ret = rcl_take_loaned_message(
@@ -398,8 +401,9 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
     // This case is taking a copy of the message data from the middleware via
     // inter-process communication.
     std::shared_ptr<void> message = subscription->create_message();
-    take_message_and_do_error_handling(
-      "",  // no message adjective
+    take_and_do_error_handling(
+      "taking a message from topic",
+      subscription->get_topic_name(),
       [&]() {return subscription->take_type_erased(message.get(), message_info);},
       [&]() {subscription->handle_message(message, message_info);});
     subscription->return_message(message);
@@ -417,19 +421,11 @@ Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
-  rcl_ret_t status = rcl_take_request(
-    service->get_service_handle().get(),
-    request_header.get(),
-    request.get());
-  if (status == RCL_RET_OK) {
-    service->handle_request(request_header, request);
-  } else if (status != RCL_RET_SERVICE_TAKE_FAILED) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "take request failed for server of service '%s': %s",
-      service->get_service_name(), rcl_get_error_string().str);
-    rcl_reset_error();
-  }
+  take_and_do_error_handling(
+    "taking a service server request from service",
+    service->get_service_name(),
+    [&]() {return service->take_type_erased_request(request.get(), *request_header);},
+    [&]() {service->handle_request(request_header, request);});
 }
 
 void
@@ -438,19 +434,11 @@ Executor::execute_client(
 {
   auto request_header = client->create_request_header();
   std::shared_ptr<void> response = client->create_response();
-  rcl_ret_t status = rcl_take_response(
-    client->get_client_handle().get(),
-    request_header.get(),
-    response.get());
-  if (status == RCL_RET_OK) {
-    client->handle_response(request_header, response);
-  } else if (status != RCL_RET_CLIENT_TAKE_FAILED) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "take response failed for client of service '%s': %s",
-      client->get_service_name(), rcl_get_error_string().str);
-    rcl_reset_error();
-  }
+  take_and_do_error_handling(
+    "taking a service client response from service",
+    client->get_service_name(),
+    [&]() {return client->take_type_erased_response(response.get(), *request_header);},
+    [&]() {client->handle_response(request_header, response);});
 }
 
 void

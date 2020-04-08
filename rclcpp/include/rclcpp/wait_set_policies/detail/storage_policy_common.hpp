@@ -43,8 +43,8 @@ protected:
     class SubscriptionsIterable,
     class GuardConditionsIterable,
     class TimersIterable,
-    // class ServicesIterable,
-    // class ClientsIterable,
+    class ClientsIterable,
+    class ServicesIterable,
     class WaitablesIterable
   >
   explicit
@@ -52,6 +52,8 @@ protected:
     const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
     const TimersIterable & timers,
+    const ClientsIterable & clients,
+    const ServicesIterable & services,
     const WaitablesIterable & waitables,
     rclcpp::Context::SharedPtr context
   )
@@ -83,8 +85,8 @@ protected:
       subscriptions.size() + subscriptions_from_waitables,
       guard_conditions.size() + guard_conditions_from_waitables,
       timers.size() + timers_from_waitables,
-      clients_from_waitables,
-      services_from_waitables,
+      clients.size() + clients_from_waitables,
+      services.size() + services_from_waitables,
       events_from_waitables,
       context_->get_rcl_context().get(),
       // TODO(wjwwood): support custom allocator, maybe restrict to polymorphic allocator
@@ -98,6 +100,8 @@ protected:
       subscriptions,
       guard_conditions,
       timers,
+      clients,
+      services,
       waitables);
   }
 
@@ -142,8 +146,8 @@ protected:
     class SubscriptionsIterable,
     class GuardConditionsIterable,
     class TimersIterable,
-    // class ServicesIterable,
-    // class ClientsIterable,
+    class ClientsIterable,
+    class ServicesIterable,
     class WaitablesIterable
   >
   void
@@ -151,6 +155,8 @@ protected:
     const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
     const TimersIterable & timers,
+    const ClientsIterable & clients,
+    const ServicesIterable & services,
     const WaitablesIterable & waitables
   )
   {
@@ -196,8 +202,8 @@ protected:
         subscriptions.size() + subscriptions_from_waitables,
         guard_conditions.size() + guard_conditions_from_waitables,
         timers.size() + timers_from_waitables,
-        clients_from_waitables,
-        services_from_waitables,
+        clients.size() + clients_from_waitables,
+        services.size() + services_from_waitables,
         events_from_waitables
       );
       if (RCL_RET_OK != ret) {
@@ -285,6 +291,52 @@ protected:
       rcl_ret_t ret = rcl_wait_set_add_timer(
         &rcl_wait_set_,
         timer_ptr_pair.second->get_timer_handle().get(),
+        nullptr);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+    }
+
+    // Add clients.
+    for (const auto & client : clients) {
+      auto client_ptr_pair = get_raw_pointer_from_smart_pointer(client);
+      if (nullptr == client_ptr_pair.second) {
+        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+        if (HasStrongOwnership) {
+          // This will not happen in fixed sized storage, as it holds
+          // shared ownership the whole time and is never in need of pruning.
+          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+        }
+        // Flag for pruning.
+        needs_pruning_ = true;
+        continue;
+      }
+      rcl_ret_t ret = rcl_wait_set_add_client(
+        &rcl_wait_set_,
+        client_ptr_pair.second->get_client_handle().get(),
+        nullptr);
+      if (RCL_RET_OK != ret) {
+        rclcpp::exceptions::throw_from_rcl_error(ret);
+      }
+    }
+
+    // Add services.
+    for (const auto & service : services) {
+      auto service_ptr_pair = get_raw_pointer_from_smart_pointer(service);
+      if (nullptr == service_ptr_pair.second) {
+        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+        if (HasStrongOwnership) {
+          // This will not happen in fixed sized storage, as it holds
+          // shared ownership the whole time and is never in need of pruning.
+          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+        }
+        // Flag for pruning.
+        needs_pruning_ = true;
+        continue;
+      }
+      rcl_ret_t ret = rcl_wait_set_add_service(
+        &rcl_wait_set_,
+        service_ptr_pair.second->get_service_handle().get(),
         nullptr);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
