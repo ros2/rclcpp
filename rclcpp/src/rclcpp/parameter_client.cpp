@@ -73,10 +73,10 @@ AsyncParametersClient::AsyncParametersClient(
 
   set_parameters_atomically_client_ =
     Client<rcl_interfaces::srv::SetParametersAtomically>::make_shared(
-    node_base_interface.get(),
-    node_graph_interface,
-    remote_node_name_ + "/" + parameter_service_names::set_parameters_atomically,
-    options);
+      node_base_interface.get(),
+      node_graph_interface,
+      remote_node_name_ + "/" + parameter_service_names::set_parameters_atomically,
+      options);
   auto set_parameters_atomically_base = std::dynamic_pointer_cast<ClientBase>(
     set_parameters_atomically_client_);
   node_services_interface->add_client(set_parameters_atomically_base, group);
@@ -401,12 +401,12 @@ SyncParametersClient::SyncParametersClient(
 {
   async_parameters_client_ =
     std::make_shared<AsyncParametersClient>(
-    node_base_interface,
-    node_topics_interface,
-    node_graph_interface,
-    node_services_interface,
-    remote_node_name,
-    qos_profile);
+      node_base_interface,
+      node_topics_interface,
+      node_graph_interface,
+      node_services_interface,
+      remote_node_name,
+      qos_profile);
 }
 
 std::vector<rclcpp::Parameter>

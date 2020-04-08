@@ -61,7 +61,7 @@ public:
   {
     if (!allow_modification_) {
       throw rclcpp::exceptions::ParameterModifiedInCallbackException(
-              "cannot set or declare a parameter, or change the callback from within set callback");
+        "cannot set or declare a parameter, or change the callback from within set callback");
     }
 
     allow_modification_ = false;

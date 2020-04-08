@@ -63,13 +63,13 @@ TEST_F(TestStateMachineInfo, available_transitions) {
     EXPECT_TRUE(
       transition.start_state().id() <= 4 ||
       (transition.start_state().id() >= 10 &&
-      (transition.start_state().id() <= 15)));
+        (transition.start_state().id() <= 15)));
     EXPECT_FALSE(transition.start_state().label().empty());
 
     EXPECT_TRUE(
       transition.goal_state().id() <= 4 ||
       (transition.goal_state().id() >= 10 &&
-      (transition.goal_state().id() <= 15)));
+        (transition.goal_state().id() <= 15)));
     EXPECT_FALSE(transition.goal_state().label().empty());
   }
 }

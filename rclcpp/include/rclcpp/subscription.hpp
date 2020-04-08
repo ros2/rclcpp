@@ -132,15 +132,15 @@ public:
       rmw_qos_profile_t qos_profile = get_actual_qos().get_rmw_qos_profile();
       if (qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with keep all history qos policy");
+          "intraprocess communication is not allowed with keep all history qos policy");
       }
       if (qos_profile.depth == 0) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with 0 depth qos policy");
+          "intraprocess communication is not allowed with 0 depth qos policy");
       }
       if (qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
         throw std::invalid_argument(
-                "intraprocess communication allowed only with volatile durability");
+          "intraprocess communication allowed only with volatile durability");
       }
 
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
@@ -151,12 +151,12 @@ public:
           AllocatorT,
           typename MessageUniquePtr::deleter_type
         >>(
-        callback,
-        options.get_allocator(),
-        context,
-        this->get_topic_name(),    // important to get like this, as it has the fully-qualified name
-        qos_profile,
-        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
+          callback,
+          options.get_allocator(),
+          context,
+          this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
+          qos_profile,
+          resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
         );
       TRACEPOINT(
         rclcpp_subscription_init,

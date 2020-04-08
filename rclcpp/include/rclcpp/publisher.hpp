@@ -113,15 +113,15 @@ public:
       // Register the publisher with the intra process manager.
       if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with keep all history qos policy");
+          "intraprocess communication is not allowed with keep all history qos policy");
       }
       if (qos.get_rmw_qos_profile().depth == 0) {
         throw std::invalid_argument(
-                "intraprocess communication is not allowed with a zero qos history depth value");
+          "intraprocess communication is not allowed with a zero qos history depth value");
       }
       if (qos.get_rmw_qos_profile().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
         throw std::invalid_argument(
-                "intraprocess communication allowed only with volatile durability");
+          "intraprocess communication allowed only with volatile durability");
       }
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
       this->setup_intra_process(
@@ -307,7 +307,7 @@ protected:
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
+        "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
       throw std::runtime_error("cannot publish msg which is a null pointer");
@@ -325,7 +325,7 @@ protected:
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
       throw std::runtime_error(
-              "intra process publish called after destruction of intra process manager");
+        "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
       throw std::runtime_error("cannot publish msg which is a null pointer");

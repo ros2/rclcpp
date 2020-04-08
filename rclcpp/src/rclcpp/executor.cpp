@@ -459,7 +459,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       memory_strategy_->number_of_ready_events());
     if (RCL_RET_OK != ret) {
       throw std::runtime_error(
-              std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
+        std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
     }
 
     if (!memory_strategy_->add_handles_to_wait_set(&wait_set_)) {

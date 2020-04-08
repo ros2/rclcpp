@@ -146,19 +146,19 @@ struct function_traits<FunctionT &&>: function_traits<FunctionT>
  */
 template<std::size_t Arity, typename FunctorT>
 struct arity_comparator : std::integral_constant<
-    bool, (Arity == function_traits<FunctorT>::arity)> {};
+  bool, (Arity == function_traits<FunctorT>::arity)> {};
 
 template<typename FunctorT, typename ... Args>
 struct check_arguments : std::is_same<
-    typename function_traits<FunctorT>::arguments,
-    std::tuple<Args ...>
+  typename function_traits<FunctorT>::arguments,
+  std::tuple<Args ...>
 >
 {};
 
 template<typename FunctorAT, typename FunctorBT>
 struct same_arguments : std::is_same<
-    typename function_traits<FunctorAT>::arguments,
-    typename function_traits<FunctorBT>::arguments
+  typename function_traits<FunctorAT>::arguments,
+  typename function_traits<FunctorBT>::arguments
 >
 {};
 

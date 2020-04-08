@@ -55,14 +55,14 @@ create_intra_process_buffer(
 
         auto buffer_implementation =
           std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<BufferT>>(
-          buffer_size);
+            buffer_size);
 
         // Construct the intra_process_buffer
         buffer =
           std::make_unique<rclcpp::experimental::buffers::TypedIntraProcessBuffer<MessageT, Alloc,
             Deleter, BufferT>>(
-          std::move(buffer_implementation),
-          allocator);
+            std::move(buffer_implementation),
+            allocator);
 
         break;
       }
@@ -72,14 +72,14 @@ create_intra_process_buffer(
 
         auto buffer_implementation =
           std::make_unique<rclcpp::experimental::buffers::RingBufferImplementation<BufferT>>(
-          buffer_size);
+            buffer_size);
 
         // Construct the intra_process_buffer
         buffer =
           std::make_unique<rclcpp::experimental::buffers::TypedIntraProcessBuffer<MessageT, Alloc,
             Deleter, BufferT>>(
-          std::move(buffer_implementation),
-          allocator);
+            std::move(buffer_implementation),
+            allocator);
 
         break;
       }

@@ -267,9 +267,9 @@ TEST_P(TestSubscriptionInvalidIntraprocessQos, test_subscription_throws) {
 
     ASSERT_THROW(
       {auto subscription = node->create_subscription<Empty>(
-          "topic",
-          qos,
-          callback);},
+        "topic",
+        qos,
+        callback);},
       std::invalid_argument);
   }
 }

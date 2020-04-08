@@ -246,8 +246,8 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
   }
   // Filter for only 'use_sim_time' being added or changed.
   rclcpp::ParameterEventsFilter filter(event, {"use_sim_time"},
-    {rclcpp::ParameterEventsFilter::EventType::NEW,
-      rclcpp::ParameterEventsFilter::EventType::CHANGED});
+  {rclcpp::ParameterEventsFilter::EventType::NEW,
+    rclcpp::ParameterEventsFilter::EventType::CHANGED});
   for (auto & it : filter.get_events()) {
     if (it.second->value.type != ParameterType::PARAMETER_BOOL) {
       RCLCPP_ERROR(logger_, "use_sim_time parameter cannot be set to anything but a bool");

@@ -98,14 +98,14 @@ create_server(
     };
 
   std::shared_ptr<Server<ActionT>> action_server(new Server<ActionT>(
-      node_base_interface,
-      node_clock_interface,
-      node_logging_interface,
-      name,
-      options,
-      handle_goal,
-      handle_cancel,
-      handle_accepted), deleter);
+    node_base_interface,
+    node_clock_interface,
+    node_logging_interface,
+    name,
+    options,
+    handle_goal,
+    handle_cancel,
+    handle_accepted), deleter);
 
   node_waitables_interface->add_waitable(action_server, group);
   return action_server;

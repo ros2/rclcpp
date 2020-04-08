@@ -45,8 +45,8 @@ NodeServices::add_service(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Failed to notify wait set on service creation: ") +
-              rmw_get_error_string().str
+        std::string("Failed to notify wait set on service creation: ") +
+        rmw_get_error_string().str
       );
     }
   }
@@ -72,8 +72,8 @@ NodeServices::add_client(
     auto notify_guard_condition_lock = node_base_->acquire_notify_guard_condition_lock();
     if (rcl_trigger_guard_condition(node_base_->get_notify_guard_condition()) != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Failed to notify wait set on client creation: ") +
-              rmw_get_error_string().str
+        std::string("Failed to notify wait set on client creation: ") +
+        rmw_get_error_string().str
       );
     }
   }

@@ -379,7 +379,7 @@ NodeParameters::declare_parameter(
   // Error if this parameter has already been declared and is different
   if (__lockless_has_parameter(parameters_, name)) {
     throw rclcpp::exceptions::ParameterAlreadyDeclaredException(
-            "parameter '" + name + "' has already been declared");
+      "parameter '" + name + "' has already been declared");
   }
 
   rcl_interfaces::msg::ParameterEvent parameter_event;
@@ -397,7 +397,7 @@ NodeParameters::declare_parameter(
   // If it failed to be set, then throw an exception.
   if (!result.successful) {
     throw rclcpp::exceptions::InvalidParameterValueException(
-            "parameter '" + name + "' could not be set: " + result.reason);
+      "parameter '" + name + "' could not be set: " + result.reason);
   }
 
   // Publish if events_publisher_ is not nullptr, which may be if disabled in the constructor.
@@ -420,12 +420,12 @@ NodeParameters::undeclare_parameter(const std::string & name)
   auto parameter_info = parameters_.find(name);
   if (parameter_info == parameters_.end()) {
     throw rclcpp::exceptions::ParameterNotDeclaredException(
-            "cannot undeclare parameter '" + name + "' which has not yet been declared");
+      "cannot undeclare parameter '" + name + "' which has not yet been declared");
   }
 
   if (parameter_info->second.descriptor.read_only) {
     throw rclcpp::exceptions::ParameterImmutableException(
-            "cannot undeclare parameter '" + name + "' because it is read-only");
+      "cannot undeclare parameter '" + name + "' because it is read-only");
   }
 
   parameters_.erase(parameter_info);
@@ -500,7 +500,7 @@ NodeParameters::set_parameters_atomically(const std::vector<rclcpp::Parameter> &
       } else {
         // If not, then throw the exception as documented.
         throw rclcpp::exceptions::ParameterNotDeclaredException(
-                "parameter '" + name + "' cannot be set because it was not declared");
+          "parameter '" + name + "' cannot be set because it was not declared");
       }
     }
 
@@ -792,7 +792,7 @@ NodeParameters::list_parameters(const std::vector<std::string> & prefixes, uint6
   for (auto & kv : parameters_) {
     bool get_all = (prefixes.size() == 0) &&
       ((depth == rcl_interfaces::srv::ListParameters::Request::DEPTH_RECURSIVE) ||
-      (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), *separator)) < depth));
+        (static_cast<uint64_t>(std::count(kv.first.begin(), kv.first.end(), *separator)) < depth));
     bool prefix_matches = std::any_of(
       prefixes.cbegin(), prefixes.cend(),
       [&kv, &depth, &separator](const std::string & prefix) {

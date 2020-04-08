@@ -185,8 +185,8 @@ PublisherBase::get_intra_process_subscription_count() const
     // TODO(ivanpauno): should this just return silently? Or maybe return with a warning?
     //                  Same as wjwwood comment in publisher_factory create_shared_publish_callback.
     throw std::runtime_error(
-            "intra process subscriber count called after "
-            "destruction of intra process manager");
+      "intra process subscriber count called after "
+      "destruction of intra process manager");
   }
   return ipm->get_subscription_count(intra_process_publisher_id_);
 }

@@ -75,8 +75,8 @@ public:
   using Result = typename ActionT::Result;
   using FeedbackCallback =
     std::function<void (
-        typename ClientGoalHandle<ActionT>::SharedPtr,
-        const std::shared_ptr<const Feedback>)>;
+      typename ClientGoalHandle<ActionT>::SharedPtr,
+      const std::shared_ptr<const Feedback>)>;
   using ResultCallback = std::function<void (const WrappedResult & result)>;
 
   virtual ~ClientGoalHandle();

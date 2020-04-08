@@ -295,7 +295,7 @@ void Publisher<T, Alloc>::publish(MessageUniquePtr msg)
   auto ipm = weak_ipm_.lock();
   if (!ipm) {
     throw std::runtime_error(
-            "intra process publish called after destruction of intra process manager");
+      "intra process publish called after destruction of intra process manager");
   }
   if (!msg) {
     throw std::runtime_error("cannot publish msg which is a null pointer");

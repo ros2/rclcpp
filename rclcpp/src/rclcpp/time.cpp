@@ -196,9 +196,9 @@ Time::operator-(const rclcpp::Time & rhs) const
 {
   if (rcl_time_.clock_type != rhs.rcl_time_.clock_type) {
     throw std::runtime_error(
-            std::string("can't subtract times with different time sources [") +
-            std::to_string(rcl_time_.clock_type) + " != " +
-            std::to_string(rhs.rcl_time_.clock_type) + "]");
+      std::string("can't subtract times with different time sources [") +
+      std::to_string(rcl_time_.clock_type) + " != " +
+      std::to_string(rhs.rcl_time_.clock_type) + "]");
   }
 
   if (rclcpp::sub_will_overflow(rcl_time_.nanoseconds, rhs.rcl_time_.nanoseconds)) {

@@ -127,7 +127,7 @@ ClientBase::ClientBase(
   const rosidl_action_type_support_t * type_support,
   const rcl_action_client_options_t & client_options)
 : pimpl_(new ClientBaseImpl(
-      node_base, node_graph, node_logging, action_name, type_support, client_options))
+    node_base, node_graph, node_logging, action_name, type_support, client_options))
 {
 }
 

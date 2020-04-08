@@ -50,10 +50,10 @@ extend_sub_namespace(const std::string & existing_sub_namespace, const std::stri
   // check if the new sub-namespace extension is absolute
   if (extension.front() == '/') {
     throw rclcpp::exceptions::NameValidationError(
-            "sub_namespace",
-            extension.c_str(),
-            "a sub-namespace should not have a leading /",
-            0);
+      "sub_namespace",
+      extension.c_str(),
+      "a sub-namespace should not have a leading /",
+      0);
   }
 
   std::string new_sub_namespace;
@@ -99,45 +99,45 @@ Node::Node(
   const std::string & namespace_,
   const NodeOptions & options)
 : node_base_(new rclcpp::node_interfaces::NodeBase(
-      node_name,
-      namespace_,
-      options.context(),
-      *(options.get_rcl_node_options()),
-      options.use_intra_process_comms())),
+    node_name,
+    namespace_,
+    options.context(),
+    *(options.get_rcl_node_options()),
+    options.use_intra_process_comms())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
   node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_clock_(new rclcpp::node_interfaces::NodeClock(
-      node_base_,
-      node_topics_,
-      node_graph_,
-      node_services_,
-      node_logging_
+    node_base_,
+    node_topics_,
+    node_graph_,
+    node_services_,
+    node_logging_
     )),
   node_parameters_(new rclcpp::node_interfaces::NodeParameters(
-      node_base_,
-      node_logging_,
-      node_topics_,
-      node_services_,
-      node_clock_,
-      options.parameter_overrides(),
-      options.start_parameter_services(),
-      options.start_parameter_event_publisher(),
-      options.parameter_event_qos(),
-      options.parameter_event_publisher_options(),
-      options.allow_undeclared_parameters(),
-      options.automatically_declare_parameters_from_overrides()
+    node_base_,
+    node_logging_,
+    node_topics_,
+    node_services_,
+    node_clock_,
+    options.parameter_overrides(),
+    options.start_parameter_services(),
+    options.start_parameter_event_publisher(),
+    options.parameter_event_qos(),
+    options.parameter_event_publisher_options(),
+    options.allow_undeclared_parameters(),
+    options.automatically_declare_parameters_from_overrides()
     )),
   node_time_source_(new rclcpp::node_interfaces::NodeTimeSource(
-      node_base_,
-      node_topics_,
-      node_graph_,
-      node_services_,
-      node_logging_,
-      node_clock_,
-      node_parameters_
+    node_base_,
+    node_topics_,
+    node_graph_,
+    node_services_,
+    node_logging_,
+    node_clock_,
+    node_parameters_
     )),
   node_waitables_(new rclcpp::node_interfaces::NodeWaitables(node_base_.get())),
   node_options_(options),
@@ -176,9 +176,9 @@ Node::Node(
 
   if (validation_result != RMW_NAMESPACE_VALID) {
     throw rclcpp::exceptions::InvalidNamespaceError(
-            effective_namespace_.c_str(),
-            rmw_namespace_validation_result_string(validation_result),
-            invalid_index);
+      effective_namespace_.c_str(),
+      rmw_namespace_validation_result_string(validation_result),
+      invalid_index);
   }
 }
 

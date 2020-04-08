@@ -360,8 +360,8 @@ TEST_F(TestClient, async_send_goal_with_feedback_callback_wait_for_result)
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.feedback_callback =
     [&feedback_count](
-    typename ActionGoalHandle::SharedPtr goal_handle,
-    const std::shared_ptr<const ActionFeedback> feedback) mutable
+      typename ActionGoalHandle::SharedPtr goal_handle,
+      const std::shared_ptr<const ActionFeedback> feedback) mutable
     {
       (void)goal_handle;
       (void)feedback;
@@ -394,7 +394,7 @@ TEST_F(TestClient, async_send_goal_with_result_callback_wait_for_result)
   auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
   send_goal_ops.result_callback =
     [&result_callback_received](
-    const typename ActionGoalHandle::WrappedResult & result) mutable
+      const typename ActionGoalHandle::WrappedResult & result) mutable
     {
       if (
         rclcpp_action::ResultCode::SUCCEEDED == result.code &&

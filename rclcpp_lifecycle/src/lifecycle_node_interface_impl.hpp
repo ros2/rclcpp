@@ -100,8 +100,8 @@ public:
       &node_options->allocator);
     if (ret != RCL_RET_OK) {
       throw std::runtime_error(
-              std::string("Couldn't initialize state machine for node ") +
-              node_base_interface_->get_name());
+        std::string("Couldn't initialize state machine for node ") +
+        node_base_interface_->get_name());
     }
 
     {  // change_state
@@ -161,9 +161,9 @@ public:
 
       srv_get_available_transitions_ =
         std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
-        node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_available_transitions,
-        any_cb);
+          node_base_interface_->get_shared_rcl_node_handle(),
+          &state_machine_.com_interface.srv_get_available_transitions,
+          any_cb);
       node_services_interface_->add_service(
         std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_available_transitions_),
         nullptr);
@@ -178,9 +178,9 @@ public:
 
       srv_get_transition_graph_ =
         std::make_shared<rclcpp::Service<GetAvailableTransitionsSrv>>(
-        node_base_interface_->get_shared_rcl_node_handle(),
-        &state_machine_.com_interface.srv_get_transition_graph,
-        any_cb);
+          node_base_interface_->get_shared_rcl_node_handle(),
+          &state_machine_.com_interface.srv_get_transition_graph,
+          any_cb);
       node_services_interface_->add_service(
         std::dynamic_pointer_cast<rclcpp::ServiceBase>(srv_get_transition_graph_),
         nullptr);
@@ -205,7 +205,7 @@ public:
     (void)header;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       throw std::runtime_error(
-              "Can't get state. State machine is not initialized.");
+        "Can't get state. State machine is not initialized.");
     }
 
     auto transition_id = req->transition.id;
@@ -247,7 +247,7 @@ public:
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       throw std::runtime_error(
-              "Can't get state. State machine is not initialized.");
+        "Can't get state. State machine is not initialized.");
     }
     resp->current_state.id = static_cast<uint8_t>(state_machine_.current_state->id);
     resp->current_state.label = state_machine_.current_state->label;
@@ -263,7 +263,7 @@ public:
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       throw std::runtime_error(
-              "Can't get available states. State machine is not initialized.");
+        "Can't get available states. State machine is not initialized.");
     }
     for (uint8_t i = 0; i < state_machine_.transition_map.states_size; ++i) {
       lifecycle_msgs::msg::State state;
@@ -283,7 +283,7 @@ public:
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       throw std::runtime_error(
-              "Can't get available transitions. State machine is not initialized.");
+        "Can't get available transitions. State machine is not initialized.");
     }
 
     for (uint8_t i = 0; i < state_machine_.current_state->valid_transition_size; ++i) {
@@ -309,7 +309,7 @@ public:
     (void)req;
     if (rcl_lifecycle_state_machine_is_initialized(&state_machine_) != RCL_RET_OK) {
       throw std::runtime_error(
-              "Can't get available transitions. State machine is not initialized.");
+        "Can't get available transitions. State machine is not initialized.");
     }
 
     for (uint8_t i = 0; i < state_machine_.transition_map.transitions_size; ++i) {

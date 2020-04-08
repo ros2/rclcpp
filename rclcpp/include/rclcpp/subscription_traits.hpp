@@ -88,7 +88,7 @@ template<
     std::remove_cv_t<std::remove_reference_t<CallbackT>>>::value>
 >
 struct has_message_type : extract_message_type<
-    typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>>
+  typename rclcpp::function_traits::function_traits<CallbackT>::template argument_type<0>>
 {};
 
 }  // namespace subscription_traits

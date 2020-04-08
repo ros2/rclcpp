@@ -168,7 +168,7 @@ StaticExecutorEntitiesCollector::prepare_wait_set()
 
   if (RCL_RET_OK != ret) {
     throw std::runtime_error(
-            std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
+      std::string("Couldn't resize the wait set : ") + rcl_get_error_string().str);
   }
 }
 

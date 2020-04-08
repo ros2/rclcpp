@@ -187,8 +187,8 @@ SubscriptionBase::get_intra_process_waitable() const
   auto ipm = weak_ipm_.lock();
   if (!ipm) {
     throw std::runtime_error(
-            "SubscriptionBase::get_intra_process_waitable() called "
-            "after destruction of intra process manager");
+      "SubscriptionBase::get_intra_process_waitable() called "
+      "after destruction of intra process manager");
   }
 
   // Use the id to retrieve the subscription intra-process from the intra-process manager.
@@ -204,8 +204,8 @@ SubscriptionBase::matches_any_intra_process_publishers(const rmw_gid_t * sender_
   auto ipm = weak_ipm_.lock();
   if (!ipm) {
     throw std::runtime_error(
-            "intra process publisher check called "
-            "after destruction of intra process manager");
+      "intra process publisher check called "
+      "after destruction of intra process manager");
   }
   return ipm->matches_any_publishers(sender_gid);
 }

@@ -124,8 +124,8 @@ TimerBase::time_until_trigger()
       &time_until_next_call) != RCL_RET_OK)
   {
     throw std::runtime_error(
-            std::string(
-              "Timer could not get time until next call: ") + rcl_get_error_string().str);
+      std::string(
+        "Timer could not get time until next call: ") + rcl_get_error_string().str);
   }
   return std::chrono::nanoseconds(time_until_next_call);
 }

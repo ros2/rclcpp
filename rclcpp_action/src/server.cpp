@@ -81,7 +81,7 @@ ServerBase::ServerBase(
   const rcl_action_server_options_t & options
 )
 : pimpl_(new ServerBaseImpl(
-      node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
+    node_clock->get_clock(), node_logging->get_logger().get_child("rclcpp_action")))
 {
   auto deleter = [node_base](rcl_action_server_t * ptr)
     {

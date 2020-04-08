@@ -170,7 +170,7 @@ ComponentManager::OnLoadNode(
         if (extra_argument.get_name() == "use_intra_process_comms") {
           if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_BOOL) {
             throw ComponentManagerException(
-                    "Extra component argument 'use_intra_process_comms' must be a boolean");
+              "Extra component argument 'use_intra_process_comms' must be a boolean");
           }
           options.use_intra_process_comms(extra_argument.get_value<bool>());
         }

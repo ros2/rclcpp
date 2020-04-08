@@ -34,7 +34,7 @@ make_params(std::vector<std::string> node_names)
     // Copy node names
     for (size_t n = 0; n < node_names.size(); ++n) {
       c_params->node_names[n] = static_cast<char *>(alloc.allocate(
-          sizeof(char) * (node_names[n].size() + 1), alloc.state));
+        sizeof(char) * (node_names[n].size() + 1), alloc.state));
       std::snprintf(c_params->node_names[n], node_names[n].size() + 1, "%s", node_names[n].c_str());
     }
     // zero init node params
@@ -63,13 +63,13 @@ make_node_params(rcl_params_t * c_params, size_t node_idx, std::vector<std::stri
   for (size_t p = 0; p < param_names.size(); ++p) {
     const std::string & param_name = param_names[p];
     c_node_params->parameter_names[p] = static_cast<char *>(alloc.allocate(
-        sizeof(char) * (param_name.size() + 1), alloc.state));
+      sizeof(char) * (param_name.size() + 1), alloc.state));
     std::snprintf(
       c_node_params->parameter_names[p], param_name.size() + 1, "%s", param_name.c_str());
   }
   // zero init parameter value
   c_node_params->parameter_values = static_cast<rcl_variant_t *>(alloc.allocate(
-      sizeof(rcl_variant_t) * param_names.size(), alloc.state));
+    sizeof(rcl_variant_t) * param_names.size(), alloc.state));
   for (size_t p = 0; p < param_names.size(); ++p) {
     c_node_params->parameter_values[p].bool_value = NULL;
     c_node_params->parameter_values[p].integer_value = NULL;

@@ -39,8 +39,8 @@ struct OnSetParametersCallbackHandle
 
   using OnParametersSetCallbackType =
     std::function<
-    rcl_interfaces::msg::SetParametersResult(
-      const std::vector<rclcpp::Parameter> &)>;
+      rcl_interfaces::msg::SetParametersResult(
+        const std::vector<rclcpp::Parameter> &)>;
 
   OnParametersSetCallbackType callback;
 };

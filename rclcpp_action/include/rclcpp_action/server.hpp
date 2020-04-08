@@ -272,7 +272,7 @@ public:
 
   /// Signature of a callback that accepts or rejects goal requests.
   using GoalCallback = std::function<GoalResponse(
-        const GoalUUID &, std::shared_ptr<const typename ActionT::Goal>)>;
+    const GoalUUID &, std::shared_ptr<const typename ActionT::Goal>)>;
   /// Signature of a callback that accepts or rejects requests to cancel a goal.
   using CancelCallback = std::function<CancelResponse(std::shared_ptr<ServerGoalHandle<ActionT>>)>;
   /// Signature of a callback that is used to notify when the goal has been accepted.
