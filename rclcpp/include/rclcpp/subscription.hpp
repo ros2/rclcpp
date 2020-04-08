@@ -207,6 +207,8 @@ public:
    * it has to be taken to know if it came from an intra-process publisher or
    * not, and therefore could be dropped.
    *
+   * \sa SubscriptionBase::take_type_erased()
+   *
    * \param[out] message_out The message into which take will copy the data.
    * \param[out] message_info_out The message info for the taken message.
    * \returns true if data was taken and is valid, otherwise false
@@ -215,28 +217,11 @@ public:
   bool
   take(CallbackMessageT & message_out, rclcpp::MessageInfo & message_info_out)
   {
-    rcl_ret_t ret = rcl_take(
-      this->get_subscription_handle().get(),
-      &message_out,
-      &message_info_out.get_rmw_message_info(),
-      nullptr  // rmw_subscription_allocation_t is unused here
-    );
-    if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
-      return false;
-    } else if (RCL_RET_OK != ret) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
-    if (
-      matches_any_intra_process_publishers(&message_info_out.get_rmw_message_info().publisher_gid))
-    {
-      // In this case, the message will be delivered via intra-process and
-      // we should ignore this copy of the message.
-      return false;
-    }
-    return true;
+    return this->take_type_erased(static_cast<void *>(&message_out), message_info_out);
   }
 
-  std::shared_ptr<void> create_message() override
+  std::shared_ptr<void>
+  create_message() override
   {
     /* The default message memory strategy provides a dynamically allocated message on each call to
      * create_message, though alternative memory strategies that re-use a preallocated message may be
@@ -245,13 +230,16 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  std::shared_ptr<rcl_serialized_message_t> create_serialized_message() override
+  std::shared_ptr<rcl_serialized_message_t>
+  create_serialized_message() override
   {
     return message_memory_strategy_->borrow_serialized_message();
   }
 
-  void handle_message(
-    std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) override
+  void
+  handle_message(
+    std::shared_ptr<void> & message,
+    const rclcpp::MessageInfo & message_info) override
   {
     if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
       // In this case, the message will be delivered via intra process and

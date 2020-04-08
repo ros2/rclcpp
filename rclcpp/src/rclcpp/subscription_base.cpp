@@ -133,6 +133,48 @@ SubscriptionBase::get_actual_qos() const
   return rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
 }
 
+bool
+SubscriptionBase::take_type_erased(void * message_out, rclcpp::MessageInfo & message_info_out)
+{
+  rcl_ret_t ret = rcl_take(
+    this->get_subscription_handle().get(),
+    message_out,
+    &message_info_out.get_rmw_message_info(),
+    nullptr  // rmw_subscription_allocation_t is unused here
+  );
+  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+    return false;
+  } else if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  if (
+    matches_any_intra_process_publishers(&message_info_out.get_rmw_message_info().publisher_gid))
+  {
+    // In this case, the message will be delivered via intra-process and
+    // we should ignore this copy of the message.
+    return false;
+  }
+  return true;
+}
+
+bool
+SubscriptionBase::take_serialized(
+  rmw_serialized_message_t & message_out,
+  rclcpp::MessageInfo & message_info_out)
+{
+  rcl_ret_t ret = rcl_take_serialized_message(
+    this->get_subscription_handle().get(),
+    &message_out,
+    &message_info_out.get_rmw_message_info(),
+    nullptr);
+  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+    return false;
+  } else if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  return true;
+}
+
 const rosidl_message_type_support_t &
 SubscriptionBase::get_message_type_support_handle() const
 {

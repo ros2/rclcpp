@@ -111,6 +111,43 @@ public:
   rclcpp::QoS
   get_actual_qos() const;
 
+  /// Take the next inter-process message from the subscription as a type erased poiner.
+  /**
+   * \sa Subscription::take() for details on how this function works.
+   *
+   * The only difference is that it takes a type erased pointer rather than a
+   * reference to the exact message type.
+   *
+   * This type erased version facilitates using the subscriptions in a type
+   * agnostic way using SubscriptionBase::create_message() and
+   * SubscriptionBase::handle_message().
+   *
+   * \param[out] message_out The type erased message pointer into which take
+   *   will copy the data.
+   * \param[out] message_info_out The message info for the taken message.
+   * \returns true if data was taken and is valid, otherwise false
+   * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
+   */
+  bool
+  take_type_erased(void * message_out, rclcpp::MessageInfo & message_info_out);
+
+  /// Take the next inter-process message, in its serialized form, from the subscription.
+  /**
+   * For now, if data is taken (written) into the message_out and
+   * message_info_out then true will be returned.
+   * Unlike Subscription::take(), taking data serialized is not possible via
+   * intra-process for the time being, so it will not need to de-duplicate
+   * data in any case.
+   *
+   * \param[out] message_out The serialized message data structure used to
+   *   store the taken message.
+   * \param[out] message_info_out The message info for the taken message.
+   * \returns true if data was taken and is valid, otherwise false
+   * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
+   */
+  bool
+  take_serialized(rmw_serialized_message_t & message_out, rclcpp::MessageInfo & message_info_out);
+
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
   RCLCPP_PUBLIC

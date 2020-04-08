@@ -306,82 +306,114 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
 }
 
 void
-Executor::execute_subscription(
-  rclcpp::SubscriptionBase::SharedPtr subscription)
+Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
 {
-  rmw_message_info_t message_info;
-  message_info.from_intra_process = false;
+  rclcpp::MessageInfo message_info;
+  message_info.get_rmw_message_info().from_intra_process = false;
+
+  // Reduce code duplication by generalize error handling into lambda.
+  auto take_message_and_do_error_handling =
+    [&subscription](
+      const char * message_adjective,
+      std::function<bool ()> take_action,
+      std::function<void ()> handle_action)
+    {
+      bool taken;
+      try {
+        taken = take_action();
+      } catch (const rclcpp::exceptions::RCLError & rcl_error) {
+        RCLCPP_ERROR(
+          rclcpp::get_logger("rclcpp"),
+          "executor taking a %smessage from topic '%s' unexpectedly failed: %s",
+          message_adjective,
+          subscription->get_topic_name(),
+          rcl_error.what());
+      }
+      if (taken) {
+        handle_action();
+      } else {
+        // Message was not taken for some reason.
+        // Note that this can be normal, if the underlying middleware needs to
+        // interrupt wait spuriously it is allowed.
+        // So in that case the executor cannot tell the difference in a
+        // spurious wake up and a subscription actually having data until trying
+        // to take the data.
+        RCLCPP_DEBUG(
+          rclcpp::get_logger("rclcpp"),
+          "executor taking a %smessage from topic '%s' failed to take anything",
+          message_adjective,
+          subscription->get_topic_name());
+      }
+    };
 
   if (subscription->is_serialized()) {
-    auto serialized_msg = subscription->create_serialized_message();
-    auto ret = rcl_take_serialized_message(
-      subscription->get_subscription_handle().get(),
-      serialized_msg.get(), &message_info, nullptr);
-    if (RCL_RET_OK == ret) {
-      auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
-      subscription->handle_message(void_serialized_msg, message_info);
-    } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "take_serialized failed for subscription on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string().str);
-      rcl_reset_error();
-    }
+    // This is the case where a copy of the serialized message is taken from
+    // the middleware via inter-process communication.
+    std::shared_ptr<rcl_serialized_message_t> serialized_msg =
+      subscription->create_serialized_message();
+    take_message_and_do_error_handling(
+      "serialzed ",
+      [&]() { return subscription->take_serialized(*serialized_msg.get(), message_info); },
+      [&]()
+      {
+        auto void_serialized_msg = std::static_pointer_cast<void>(serialized_msg);
+        subscription->handle_message(void_serialized_msg, message_info);
+      });
     subscription->return_serialized_message(serialized_msg);
   } else if (subscription->can_loan_messages()) {
+    // This is the case where a loaned message is taken from the middleware via
+    // inter-process communication, given to the user for their callback,
+    // and then returned.
     void * loaned_msg = nullptr;
-    auto ret = rcl_take_loaned_message(
-      subscription->get_subscription_handle().get(),
-      &loaned_msg,
-      &message_info,
-      nullptr);
-    if (RCL_RET_OK == ret) {
-      subscription->handle_loaned_message(loaned_msg, message_info);
-    } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "take_loaned failed for subscription on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string().str);
-      rcl_reset_error();
-    }
-    ret = rcl_return_loaned_message_from_subscription(
+    // TODO(wjwwood): refactor this into methods on subscription when LoanedMessage
+    //   is extened to support subscriptions as well.
+    take_message_and_do_error_handling(
+      "loaned ",
+      [&]()
+      {
+        rcl_ret_t ret = rcl_take_loaned_message(
+          subscription->get_subscription_handle().get(),
+          &loaned_msg,
+          &message_info.get_rmw_message_info(),
+          nullptr);
+        if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
+          return false;
+        } else if (RCL_RET_OK != ret) {
+          rclcpp::exceptions::throw_from_rcl_error(ret);
+        }
+        return true;
+      },
+      [&]() { subscription->handle_loaned_message(loaned_msg, message_info); });
+    rcl_ret_t ret = rcl_return_loaned_message_from_subscription(
       subscription->get_subscription_handle().get(),
       loaned_msg);
     if (RCL_RET_OK != ret) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "return_loaned_message failed for subscription on topic '%s': %s",
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "rcl_return_loaned_message_from_subscription() failed for subscription on topic '%s': %s",
         subscription->get_topic_name(), rcl_get_error_string().str);
     }
     loaned_msg = nullptr;
   } else {
+    // This case is taking a copy of the message data from the middleware via
+    // inter-process communication.
     std::shared_ptr<void> message = subscription->create_message();
-    auto ret = rcl_take(
-      subscription->get_subscription_handle().get(),
-      message.get(), &message_info, nullptr);
-    if (RCL_RET_OK == ret) {
-      subscription->handle_message(message, message_info);
-    } else if (RCL_RET_SUBSCRIPTION_TAKE_FAILED != ret) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "could not deserialize serialized message on topic '%s': %s",
-        subscription->get_topic_name(), rcl_get_error_string().str);
-      rcl_reset_error();
-    }
+    take_message_and_do_error_handling(
+      "",  // no message adjective
+      [&]() { return subscription->take_type_erased(message.get(), message_info); },
+      [&]() { subscription->handle_message(message, message_info); });
     subscription->return_message(message);
   }
 }
 
 void
-Executor::execute_timer(
-  rclcpp::TimerBase::SharedPtr timer)
+Executor::execute_timer(rclcpp::TimerBase::SharedPtr timer)
 {
   timer->execute_callback();
 }
 
 void
-Executor::execute_service(
-  rclcpp::ServiceBase::SharedPtr service)
+Executor::execute_service(rclcpp::ServiceBase::SharedPtr service)
 {
   auto request_header = service->create_request_header();
   std::shared_ptr<void> request = service->create_request();
