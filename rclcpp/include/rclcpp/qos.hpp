@@ -17,12 +17,11 @@
 
 #include <string>
 
-#include <rmw/incompatible_qos_events_statuses.h>
-#include <rmw/qos_profiles.h>
-#include <rmw/types.h>
-
 #include "rclcpp/duration.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/incompatible_qos_events_statuses.h"
+#include "rmw/qos_profiles.h"
+#include "rmw/types.h"
 
 namespace rclcpp
 {

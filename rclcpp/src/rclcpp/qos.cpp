@@ -14,7 +14,9 @@
 
 #include "rclcpp/qos.hpp"
 
-#include <rmw/types.h>
+#include <string>
+
+#include "rmw/types.h"
 
 namespace rclcpp
 {

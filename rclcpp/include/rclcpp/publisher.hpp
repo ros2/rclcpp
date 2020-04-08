@@ -96,7 +96,7 @@ public:
           RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
       } catch (UnsupportedEventTypeException & /*exc*/) {
         RCLCPP_WARN_ONCE(
-          rclcpp::get_logger("rclcpp"),
+          rclcpp::get_logger("rclcpp::Publisher"),
           "This rmw implementation does not support ON_OFFERED_INCOMPATIBLE_QOS "
           "events, you will not be notified when Publishers offer an incompatible "
           "QoS profile to Subscriptions on the same topic.");
