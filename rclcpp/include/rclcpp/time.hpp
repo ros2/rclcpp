@@ -110,14 +110,9 @@ public:
   rcl_time_point_value_t
   nanoseconds() const;
 
-// Avoid confusing max() for Windows macro
-#ifdef _WIN32
-# define NOMINMAX
-#endif
-
   RCLCPP_PUBLIC
   static Time
-  max();
+  (max)();  // Wrap in parenthesis to avoid confusion with Windows macro
 
   /// \return the seconds since epoch as a floating point number.
   /// \warning Depending on sizeof(double) there could be significant precision loss.

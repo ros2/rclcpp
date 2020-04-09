@@ -80,14 +80,9 @@ public:
   Duration
   operator-(const rclcpp::Duration & rhs) const;
 
-// Avoid confusing max() for Windows macro
-#ifdef _WIN32
-# define NOMINMAX
-#endif
-
   static
   Duration
-  max();
+  (max)();  // Wrap in parenthesis to avoid confusion with Windows macro
 
   Duration
   operator*(double scale) const;
