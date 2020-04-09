@@ -156,12 +156,16 @@ Node::declare_parameter(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
-  return this->declare_parameter(
-    name,
-    rclcpp::ParameterValue(default_value),
-    parameter_descriptor,
-    ignore_override
-  ).get<ParameterT>();
+  try {
+    return this->declare_parameter(
+      name,
+      rclcpp::ParameterValue(default_value),
+      parameter_descriptor,
+      ignore_override
+    ).get<ParameterT>();
+  } catch (const ParameterTypeException & ex) {
+    throw exceptions::InvalidParameterTypeException(name, ex.what());
+  }
 }
 
 template<typename ParameterT>

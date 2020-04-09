@@ -574,7 +574,7 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
     // default type and initial value type do not match
     EXPECT_THROW(
       {node->declare_parameter("parameter_type_mismatch", 42);},
-      rclcpp::ParameterTypeException);
+      rclcpp::exceptions::InvalidParameterTypeException);
   }
 }
 
@@ -1717,7 +1717,7 @@ TEST_F(TestNode, get_parameter_undeclared_parameters_not_allowed) {
       int value;
       node->get_parameter(name, value);
     },
-      rclcpp::ParameterTypeException);
+      rclcpp::exceptions::InvalidParameterTypeException);
   }
 }
 
@@ -1951,7 +1951,7 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
       {
         node_local->get_parameters("", actual);
       },
-        rclcpp::ParameterTypeException);
+        rclcpp::exceptions::InvalidParameterTypeException);
     }
   }
 }
