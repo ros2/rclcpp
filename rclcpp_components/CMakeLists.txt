@@ -79,7 +79,7 @@ if(BUILD_TESTING)
   set(components "${components}test_rclcpp_components::TestComponentNoNode;$<TARGET_FILE:test_component>\n")
   set(components "${components}test_rclcpp_components::TestComponentThrows;$<TARGET_FILE:test_component>\n")
 
-  # Used to catch invalid resource entry
+  # A properly formed resource only has one ';', this is used to catch an invalid resource entry
   set(invalid_components "test_rclcpp_components::TestComponentFoo;;$<TARGET_FILE:test_component>\n")
 
   file(GENERATE
