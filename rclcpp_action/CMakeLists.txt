@@ -16,6 +16,11 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# Avoid confusing max() and min() for Windows macros
+if(WIN32)
+  add_definitions(-DNOMINMAX)
+endif()
+
 include_directories(include)
 
 set(${PROJECT_NAME}_SRCS
