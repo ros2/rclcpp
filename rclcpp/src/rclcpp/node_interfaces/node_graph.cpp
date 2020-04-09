@@ -461,7 +461,7 @@ get_info_by_topic(
   return topic_info_list;
 }
 
-static const char kPublisherEndpointTypeName[] = "publishers";
+static constexpr char kPublisherEndpointTypeName[] = "publishers";
 std::vector<rclcpp::TopicEndpointInfo>
 NodeGraph::get_publishers_info_by_topic(
   const std::string & topic_name,
@@ -474,7 +474,7 @@ NodeGraph::get_publishers_info_by_topic(
     rcl_get_publishers_info_by_topic);
 }
 
-static const char kSubscriptionEndpointTypeName[] = "subscriptions";
+static constexpr char kSubscriptionEndpointTypeName[] = "subscriptions";
 std::vector<rclcpp::TopicEndpointInfo>
 NodeGraph::get_subscriptions_info_by_topic(
   const std::string & topic_name,
