@@ -559,7 +559,7 @@ public:
    * This function can either wait for a period of time, do no waiting
    * (non-blocking), or wait indefinitely, all based on the value of the
    * time_to_wait parameter.
-   * Waiting is always measured against the std::chrono::stead_clock.
+   * Waiting is always measured against the std::chrono::steady_clock.
    * If waiting indefinitely, the Timeout result is not possible.
    * There is no "cancel wait" function on this class, but if you want to wait
    * indefinitely but have a way to asynchronously interrupt this method, then
