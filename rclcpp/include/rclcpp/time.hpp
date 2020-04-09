@@ -110,6 +110,11 @@ public:
   rcl_time_point_value_t
   nanoseconds() const;
 
+// Avoid confusing max() for Windows macro
+#ifdef _WIN32
+# define NOMINMAX
+#endif
+
   RCLCPP_PUBLIC
   static Time
   max();

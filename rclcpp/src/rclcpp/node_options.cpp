@@ -97,7 +97,7 @@ NodeOptions::get_rcl_node_options() const
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
     if (!this->arguments_.empty()) {
-      if (this->arguments_.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
+      if (this->arguments_.size() > static_cast<size_t>((std::numeric_limits<int>::max)())) {
         throw_from_rcl_error(RCL_RET_INVALID_ARGUMENT, "Too many args");
       }
 
@@ -314,7 +314,7 @@ size_t
 NodeOptions::get_domain_id_from_env() const
 {
   // Determine the domain id based on the options and the ROS_DOMAIN_ID env variable.
-  size_t domain_id = std::numeric_limits<size_t>::max();
+  size_t domain_id = (std::numeric_limits<size_t>::max)();
   char * ros_domain_id = nullptr;
   const char * env_var = "ROS_DOMAIN_ID";
 #ifndef _WIN32

@@ -143,7 +143,7 @@ Duration::operator+(const rclcpp::Duration & rhs) const
   bounds_check_duration_sum(
     this->rcl_duration_.nanoseconds,
     rhs.rcl_duration_.nanoseconds,
-    std::numeric_limits<rcl_duration_value_t>::max());
+    (std::numeric_limits<rcl_duration_value_t>::max)());
   return Duration(
     rcl_duration_.nanoseconds + rhs.rcl_duration_.nanoseconds);
 }
@@ -171,7 +171,7 @@ Duration::operator-(const rclcpp::Duration & rhs) const
   bounds_check_duration_difference(
     this->rcl_duration_.nanoseconds,
     rhs.rcl_duration_.nanoseconds,
-    std::numeric_limits<rcl_duration_value_t>::max());
+    (std::numeric_limits<rcl_duration_value_t>::max)());
 
   return Duration(
     rcl_duration_.nanoseconds - rhs.rcl_duration_.nanoseconds);
@@ -202,7 +202,7 @@ Duration::operator*(double scale) const
   bounds_check_duration_scale(
     this->rcl_duration_.nanoseconds,
     scale,
-    std::numeric_limits<rcl_duration_value_t>::max());
+    (std::numeric_limits<rcl_duration_value_t>::max)());
   long double scale_ld = static_cast<long double>(scale);
   return Duration(
     static_cast<rcl_duration_value_t>(
@@ -216,9 +216,9 @@ Duration::nanoseconds() const
 }
 
 Duration
-Duration::max()
+(Duration::max)()
 {
-  return Duration(std::numeric_limits<int32_t>::max(), 999999999);
+  return Duration((std::numeric_limits<int32_t>::max)(), 999999999);
 }
 
 double

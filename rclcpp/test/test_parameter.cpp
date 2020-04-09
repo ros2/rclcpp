@@ -165,7 +165,7 @@ TEST(TestParameter, integer_variant) {
 }
 
 TEST(TestParameter, long_integer_variant) {
-  const int64_t TEST_VALUE {std::numeric_limits<int64_t>::max()};
+  const int64_t TEST_VALUE {(std::numeric_limits<int64_t>::max)()};
 
   // Direct instantiation
   rclcpp::Parameter long_variant("long_integer_param", TEST_VALUE);
@@ -452,7 +452,7 @@ TEST(TestParameter, bool_array_variant) {
 
 TEST(TestParameter, integer_array_variant) {
   const std::vector<int> TEST_VALUE
-  {42, -99, std::numeric_limits<int>::max(), std::numeric_limits<int>::lowest(), 0};
+  {42, -99, (std::numeric_limits<int>::max)(), std::numeric_limits<int>::lowest(), 0};
 
   // Direct instantiation
   rclcpp::Parameter integer_array_variant("integer_array_param", TEST_VALUE);
@@ -531,7 +531,7 @@ TEST(TestParameter, integer_array_variant) {
 
 TEST(TestParameter, long_integer_array_variant) {
   const std::vector<int64_t> TEST_VALUE
-  {42, -99, std::numeric_limits<int64_t>::max(), std::numeric_limits<int64_t>::lowest(), 0};
+  {42, -99, (std::numeric_limits<int64_t>::max)(), std::numeric_limits<int64_t>::lowest(), 0};
 
   rclcpp::Parameter long_array_variant("long_integer_array_param", TEST_VALUE);
   EXPECT_EQ("long_integer_array_param", long_array_variant.get_name());
@@ -585,7 +585,7 @@ TEST(TestParameter, long_integer_array_variant) {
 
 TEST(TestParameter, float_array_variant) {
   const std::vector<float> TEST_VALUE
-  {42.1f, -99.1f, std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest(), 0.1f};
+  {42.1f, -99.1f, (std::numeric_limits<float>::max)(), std::numeric_limits<float>::lowest(), 0.1f};
 
   // Direct instantiation
   rclcpp::Parameter float_array_variant("float_array_param", TEST_VALUE);
@@ -664,7 +664,7 @@ TEST(TestParameter, float_array_variant) {
 
 TEST(TestParameter, double_array_variant) {
   const std::vector<double> TEST_VALUE
-  {42.1, -99.1, std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(), 0.1};
+  {42.1, -99.1, (std::numeric_limits<double>::max)(), std::numeric_limits<double>::lowest(), 0.1};
 
   rclcpp::Parameter double_array_variant("double_array_param", TEST_VALUE);
   EXPECT_EQ("double_array_param", double_array_variant.get_name());

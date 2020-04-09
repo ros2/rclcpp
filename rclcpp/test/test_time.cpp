@@ -193,8 +193,8 @@ TEST(TestTime, overflow_detectors) {
   //  big_type_t::min < test_type_t::min
   //  big_type_t::max > test_type_t::max
   using big_type_t = int16_t;
-  const big_type_t min_val = std::numeric_limits<test_type_t>::min();
-  const big_type_t max_val = std::numeric_limits<test_type_t>::max();
+  const big_type_t min_val = (std::numeric_limits<test_type_t>::min)();
+  const big_type_t max_val = (std::numeric_limits<test_type_t>::max)();
   // 256 * 256 = 64K total loops, should be pretty fast on everything
   for (big_type_t y = min_val; y <= max_val; ++y) {
     for (big_type_t x = min_val; x <= max_val; ++x) {
@@ -236,8 +236,8 @@ TEST(TestTime, overflow_detectors) {
 }
 
 TEST(TestTime, overflows) {
-  rclcpp::Time max_time(std::numeric_limits<rcl_time_point_value_t>::max());
-  rclcpp::Time min_time(std::numeric_limits<rcl_time_point_value_t>::min());
+  rclcpp::Time max_time((std::numeric_limits<rcl_time_point_value_t>::max)());
+  rclcpp::Time min_time((std::numeric_limits<rcl_time_point_value_t>::min)());
   rclcpp::Duration one(1);
   rclcpp::Duration two(2);
 

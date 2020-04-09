@@ -87,8 +87,8 @@ TEST(TestDuration, chrono_overloads) {
 }
 
 TEST(TestDuration, overflows) {
-  rclcpp::Duration max(std::numeric_limits<rcl_duration_value_t>::max());
-  rclcpp::Duration min(std::numeric_limits<rcl_duration_value_t>::min());
+  rclcpp::Duration max((std::numeric_limits<rcl_duration_value_t>::max)());
+  rclcpp::Duration min((std::numeric_limits<rcl_duration_value_t>::min)());
 
   rclcpp::Duration one(1);
   rclcpp::Duration negative_one(-1);
@@ -131,8 +131,8 @@ TEST(TestDuration, negative_duration) {
 }
 
 TEST(TestDuration, maximum_duration) {
-  rclcpp::Duration max_duration = rclcpp::Duration::max();
-  rclcpp::Duration max(std::numeric_limits<int32_t>::max(), 999999999);
+  rclcpp::Duration max_duration = (rclcpp::Duration::max)();
+  rclcpp::Duration max((std::numeric_limits<int32_t>::max)(), 999999999);
 
   EXPECT_EQ(max_duration, max);
 }
