@@ -115,10 +115,12 @@ public:
   >;
   using WaitablesIterable = ArrayOfWaitables;
 
+  template<class ArrayOfExtraGuardConditions>
   explicit
   StaticStorage(
     const ArrayOfSubscriptions & subscriptions,
     const ArrayOfGuardConditions & guard_conditions,
+    const ArrayOfExtraGuardConditions & extra_guard_conditions,
     const ArrayOfTimers & timers,
     const ArrayOfClients & clients,
     const ArrayOfServices & services,
@@ -128,6 +130,7 @@ public:
   : StoragePolicyCommon(
       subscriptions,
       guard_conditions,
+      extra_guard_conditions,
       timers,
       clients,
       services,
@@ -143,12 +146,14 @@ public:
 
   ~StaticStorage() = default;
 
+  template<class ArrayOfExtraGuardConditions>
   void
-  storage_rebuild_rcl_wait_set()
+  storage_rebuild_rcl_wait_set(const ArrayOfExtraGuardConditions & extra_guard_conditions)
   {
     this->storage_rebuild_rcl_wait_set_with_sets(
       subscriptions_,
       guard_conditions_,
+      extra_guard_conditions,
       timers_,
       clients_,
       services_,

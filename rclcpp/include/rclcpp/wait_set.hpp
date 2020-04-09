@@ -25,7 +25,7 @@
 #include "rclcpp/wait_set_policies/dynamic_storage.hpp"
 #include "rclcpp/wait_set_policies/sequential_synchronization.hpp"
 #include "rclcpp/wait_set_policies/static_storage.hpp"
-// #include "rclcpp/wait_set_policies/thread_safe_synchronization.hpp"
+#include "rclcpp/wait_set_policies/thread_safe_synchronization.hpp"
 #include "rclcpp/wait_set_template.hpp"
 
 namespace rclcpp
@@ -43,8 +43,8 @@ namespace rclcpp
  * \sa rclcpp::WaitSetTemplate for API documentation
  */
 using WaitSet = rclcpp::WaitSetTemplate<
-  rclcpp::wait_set_policies::DynamicStorage,
-  rclcpp::wait_set_policies::SequentialSynchronization
+  rclcpp::wait_set_policies::SequentialSynchronization,
+  rclcpp::wait_set_policies::DynamicStorage
 >;
 
 /// WaitSet configuration which does not allow changes after construction.
@@ -71,6 +71,7 @@ template<
   std::size_t NumberOfWaitables
 >
 using StaticWaitSet = rclcpp::WaitSetTemplate<
+  rclcpp::wait_set_policies::SequentialSynchronization,
   rclcpp::wait_set_policies::StaticStorage<
     NumberOfSubscriptions,
     NumberOfGuardCondtions,
@@ -78,8 +79,7 @@ using StaticWaitSet = rclcpp::WaitSetTemplate<
     NumberOfClients,
     NumberOfServices,
     NumberOfWaitables
-  >,
-  rclcpp::wait_set_policies::SequentialSynchronization
+  >
 >;
 
 /// Like WaitSet, this configuration is dynamic, but is also thread-safe.
@@ -96,10 +96,10 @@ using StaticWaitSet = rclcpp::WaitSetTemplate<
  *
  * \sa rclcpp::WaitSetTemplate for API documentation
  */
-// using ThreadSafeWaitSet = rclcpp::WaitSetTemplate<
-//   rclcpp::wait_set_policies::DynamicStorage,
-//   rclcpp::wait_set_policies::ThreadSafeSynchronization
-// >;
+using ThreadSafeWaitSet = rclcpp::WaitSetTemplate<
+  rclcpp::wait_set_policies::ThreadSafeSynchronization,
+  rclcpp::wait_set_policies::DynamicStorage
+>;
 
 }  // namespace rclcpp
 

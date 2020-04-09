@@ -163,10 +163,12 @@ public:
   using SequenceOfWeakWaitables = std::vector<WeakWaitableEntry>;
   using WaitablesIterable = std::vector<WaitableEntry>;
 
+  template<class ArrayOfExtraGuardConditions>
   explicit
   DynamicStorage(
     const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
+    const ArrayOfExtraGuardConditions & extra_guard_conditions,
     const TimersIterable & timers,
     const ClientsIterable & clients,
     const ServicesIterable & services,
@@ -176,6 +178,7 @@ public:
   : StoragePolicyCommon(
       subscriptions,
       guard_conditions,
+      extra_guard_conditions,
       timers,
       clients,
       services,
@@ -197,12 +200,14 @@ public:
 
   ~DynamicStorage() = default;
 
+  template<class ArrayOfExtraGuardConditions>
   void
-  storage_rebuild_rcl_wait_set()
+  storage_rebuild_rcl_wait_set(const ArrayOfExtraGuardConditions & extra_guard_conditions)
   {
     this->storage_rebuild_rcl_wait_set_with_sets(
       subscriptions_,
       guard_conditions_,
+      extra_guard_conditions,
       timers_,
       clients_,
       services_,

@@ -42,6 +42,7 @@ protected:
   template<
     class SubscriptionsIterable,
     class GuardConditionsIterable,
+    class ExtraGuardConditionsIterable,
     class TimersIterable,
     class ClientsIterable,
     class ServicesIterable,
@@ -51,6 +52,7 @@ protected:
   StoragePolicyCommon(
     const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
+    const ExtraGuardConditionsIterable & extra_guard_conditions,
     const TimersIterable & timers,
     const ClientsIterable & clients,
     const ServicesIterable & services,
@@ -83,7 +85,7 @@ protected:
     rcl_ret_t ret = rcl_wait_set_init(
       &rcl_wait_set_,
       subscriptions.size() + subscriptions_from_waitables,
-      guard_conditions.size() + guard_conditions_from_waitables,
+      guard_conditions.size() + extra_guard_conditions.size() + guard_conditions_from_waitables,
       timers.size() + timers_from_waitables,
       clients.size() + clients_from_waitables,
       services.size() + services_from_waitables,
@@ -99,6 +101,7 @@ protected:
     this->storage_rebuild_rcl_wait_set_with_sets(
       subscriptions,
       guard_conditions,
+      extra_guard_conditions,
       timers,
       clients,
       services,
@@ -145,6 +148,7 @@ protected:
   template<
     class SubscriptionsIterable,
     class GuardConditionsIterable,
+    class ExtraGuardConditionsIterable,
     class TimersIterable,
     class ClientsIterable,
     class ServicesIterable,
@@ -154,6 +158,7 @@ protected:
   storage_rebuild_rcl_wait_set_with_sets(
     const SubscriptionsIterable & subscriptions,
     const GuardConditionsIterable & guard_conditions,
+    const ExtraGuardConditionsIterable & extra_guard_conditions,
     const TimersIterable & timers,
     const ClientsIterable & clients,
     const ServicesIterable & services,
@@ -200,7 +205,7 @@ protected:
       rcl_ret_t ret = rcl_wait_set_resize(
         &rcl_wait_set_,
         subscriptions.size() + subscriptions_from_waitables,
-        guard_conditions.size() + guard_conditions_from_waitables,
+        guard_conditions.size() + extra_guard_conditions.size() + guard_conditions_from_waitables,
         timers.size() + timers_from_waitables,
         clients.size() + clients_from_waitables,
         services.size() + services_from_waitables,
@@ -251,28 +256,38 @@ protected:
       }
     }
 
-    // Add guard conditions.
-    for (const auto & guard_condition : guard_conditions) {
-      auto guard_condition_ptr_pair = get_raw_pointer_from_smart_pointer(guard_condition);
-      if (nullptr == guard_condition_ptr_pair.second) {
-        // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
-        if (HasStrongOwnership) {
-          // This will not happen in fixed sized storage, as it holds
-          // shared ownership the whole time and is never in need of pruning.
-          throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+    // Setup common code to add guard_conditions.
+    auto add_guard_conditions =
+      [this](const auto & inner_guard_conditions)
+      {
+        for (const auto & guard_condition : inner_guard_conditions) {
+          auto guard_condition_ptr_pair = get_raw_pointer_from_smart_pointer(guard_condition);
+          if (nullptr == guard_condition_ptr_pair.second) {
+            // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
+            if (HasStrongOwnership) {
+              // This will not happen in fixed sized storage, as it holds
+              // shared ownership the whole time and is never in need of pruning.
+              throw std::runtime_error("unexpected condition, fixed storage policy needs pruning");
+            }
+            // Flag for pruning.
+            needs_pruning_ = true;
+            continue;
+          }
+          rcl_ret_t ret = rcl_wait_set_add_guard_condition(
+            &rcl_wait_set_,
+            &guard_condition_ptr_pair.second->get_rcl_guard_condition(),
+            nullptr);
+          if (RCL_RET_OK != ret) {
+            rclcpp::exceptions::throw_from_rcl_error(ret);
+          }
         }
-        // Flag for pruning.
-        needs_pruning_ = true;
-        continue;
-      }
-      rcl_ret_t ret = rcl_wait_set_add_guard_condition(
-        &rcl_wait_set_,
-        &guard_condition_ptr_pair.second->get_rcl_guard_condition(),
-        nullptr);
-      if (RCL_RET_OK != ret) {
-        rclcpp::exceptions::throw_from_rcl_error(ret);
-      }
-    }
+      };
+
+    // Add guard conditions.
+    add_guard_conditions(guard_conditions);
+
+    // Add extra guard conditions.
+    add_guard_conditions(extra_guard_conditions);
 
     // Add timers.
     for (const auto & timer : timers) {

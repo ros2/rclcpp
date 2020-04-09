@@ -43,8 +43,8 @@ namespace rclcpp
  * This class uses the rcl_wait_set_t as storage, but it also helps manage the
  * ownership of associated rclcpp types.
  */
-template<class StoragePolicy, class SynchronizationPolicy>
-class WaitSetTemplate final : private StoragePolicy, private SynchronizationPolicy
+template<class SynchronizationPolicy, class StoragePolicy>
+class WaitSetTemplate final : private SynchronizationPolicy, private StoragePolicy
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(WaitSetTemplate)
@@ -76,15 +76,17 @@ public:
     const typename StoragePolicy::WaitablesIterable & waitables = {},
     rclcpp::Context::SharedPtr context =
     rclcpp::contexts::default_context::get_global_default_context())
-  : StoragePolicy(
+  : SynchronizationPolicy(context),
+    StoragePolicy(
       subscriptions,
       guard_conditions,
+      // this method comes from the SynchronizationPolicy
+      this->get_extra_guard_conditions(),
       timers,
       clients,
       services,
       waitables,
-      context),
-    SynchronizationPolicy()
+      context)
   {}
 
   /// Return the internal rcl wait set object.
@@ -606,7 +608,10 @@ public:
       // this method provides the ability to rebuild the wait set, if needed
       [this]() {
         // This method comes from the StoragePolicy
-        this->storage_rebuild_rcl_wait_set();
+        this->storage_rebuild_rcl_wait_set(
+          // This method comes from the SynchronizationPolicy
+          this->get_extra_guard_conditions()
+        );
       },
       // this method provides access to the rcl wait set
       [this]() -> rcl_wait_set_t & {

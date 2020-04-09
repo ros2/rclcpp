@@ -86,6 +86,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/timer.cpp
   src/rclcpp/type_support.cpp
   src/rclcpp/utilities.cpp
+  src/rclcpp/wait_set_policies/detail/write_preferring_read_write_lock.cpp
   src/rclcpp/waitable.cpp
 )
 

@@ -43,8 +43,20 @@ namespace wait_set_policies
 class SequentialSynchronization : public detail::SynchronizationPolicyCommon
 {
 protected:
-  SequentialSynchronization() = default;
+  explicit SequentialSynchronization(rclcpp::Context::SharedPtr) {}
   ~SequentialSynchronization() = default;
+
+  /// Return any "extra" guard conditions needed to implement the synchronization policy.
+  /**
+   * Since this policy provides no thread-safety, it also needs no extra guard
+   * conditions to implement it.
+   */
+  const std::array<std::shared_ptr<rclcpp::GuardCondition>, 0> &
+  get_extra_guard_conditions()
+  {
+    static const std::array<std::shared_ptr<rclcpp::GuardCondition>, 0> empty{};
+    return empty;
+  }
 
   /// Add subscription without thread-safety.
   /**
