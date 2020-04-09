@@ -248,7 +248,7 @@ protected:
     do {
       // Rebuild the wait set.
       // This will resize the wait set if needed, due to e.g. adding or removing
-      // entities since the laster wait, but this should never occur in static
+      // entities since the last wait, but this should never occur in static
       // storage wait sets since they cannot be changed after construction.
       // This will also clear the wait set and re-add all the entities, which
       // prepares it to be waited on again.
