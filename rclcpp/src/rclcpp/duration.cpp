@@ -215,11 +215,13 @@ Duration::nanoseconds() const
   return rcl_duration_.nanoseconds;
 }
 
+/* *INDENT-OFF* */
 Duration
 (Duration::max)()
 {
   return Duration((std::numeric_limits<int32_t>::max)(), 999999999);
 }
+/* *INDENT-ON* */
 
 double
 Duration::seconds() const

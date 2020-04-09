@@ -285,8 +285,10 @@ Time::operator-=(const rclcpp::Duration & rhs)
   return *this;
 }
 
+/* *INDENT-OFF* */
 Time
 (Time::max)()
+/* *INDENT-ON* */
 {
   return Time((std::numeric_limits<int32_t>::max)(), 999999999);
 }

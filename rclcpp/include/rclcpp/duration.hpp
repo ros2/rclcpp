@@ -80,9 +80,11 @@ public:
   Duration
   operator-(const rclcpp::Duration & rhs) const;
 
+  /* *INDENT-OFF* */
   static
   Duration
   (max)();  // Wrap in parenthesis to avoid confusion with Windows macro
+  /* *INDENT-ON* */
 
   Duration
   operator*(double scale) const;

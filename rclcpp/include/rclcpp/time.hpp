@@ -110,9 +110,11 @@ public:
   rcl_time_point_value_t
   nanoseconds() const;
 
+  /* *INDENT-OFF* */
   RCLCPP_PUBLIC
   static Time
   (max)();  // Wrap in parenthesis to avoid confusion with Windows macro
+  /* *INDENT-ON* */
 
   /// \return the seconds since epoch as a floating point number.
   /// \warning Depending on sizeof(double) there could be significant precision loss.
