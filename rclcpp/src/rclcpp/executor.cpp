@@ -313,7 +313,7 @@ take_and_do_error_handling(
   std::function<bool()> take_action,
   std::function<void()> handle_action)
 {
-  bool taken;
+  bool taken = false;
   try {
     taken = take_action();
   } catch (const rclcpp::exceptions::RCLError & rcl_error) {
