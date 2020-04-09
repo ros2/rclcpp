@@ -301,7 +301,7 @@ public:
    *
    * If the type of the default value, and therefore also the type of return
    * value, differs from the initial value provided in the node options, then
-   * a rclcpp::ParameterTypeException may be thrown.
+   * a rclcpp::exceptions::InvalidParameterTypeException may be thrown.
    * To avoid this, use the declare_parameter() method which returns an
    * rclcpp::ParameterValue instead.
    *

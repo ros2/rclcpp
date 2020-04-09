@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "rcl_interfaces/msg/parameter.hpp"
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -221,8 +222,12 @@ template<typename T>
 decltype(auto)
 Parameter::get_value() const
 {
-  // use the helper to specialize for the ParameterValue and Parameter cases.
-  return detail::get_value_helper<T>(this);
+  try {
+    // use the helper to specialize for the ParameterValue and Parameter cases.
+    return detail::get_value_helper<T>(this);
+  } catch (const ParameterTypeException & ex) {
+    throw exceptions::InvalidParameterTypeException(this->name_, ex.what());
+  }
 }
 
 }  // namespace rclcpp

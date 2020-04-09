@@ -226,6 +226,25 @@ class InvalidParameterValueException : public std::runtime_error
   using std::runtime_error::runtime_error;
 };
 
+/// Thrown if requested parameter type is invalid.
+/**
+ * Essentially the same as rclcpp::ParameterTypeException, but with parameter
+ * name in the error message.
+ */
+class InvalidParameterTypeException : public std::runtime_error
+{
+public:
+  /// Construct an instance.
+  /**
+   * \param[in] name the name of the parameter.
+   * \param[in] message custom exception message.
+   */
+  RCLCPP_PUBLIC
+  InvalidParameterTypeException(const std::string & name, const std::string message)
+  : std::runtime_error("parameter '" + name + "' has invalid type: " + message)
+  {}
+};
+
 /// Thrown if parameter is already declared.
 class ParameterAlreadyDeclaredException : public std::runtime_error
 {
