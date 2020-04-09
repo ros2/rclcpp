@@ -15,9 +15,12 @@
 #ifndef RCLCPP__SUBSCRIPTION_BASE_HPP_
 #define RCLCPP__SUBSCRIPTION_BASE_HPP_
 
+#include <atomic>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+#include <utility>
 
 #include "rcl/subscription.h"
 
@@ -111,7 +114,7 @@ public:
   rclcpp::QoS
   get_actual_qos() const;
 
-  /// Take the next inter-process message from the subscription as a type erased poiner.
+  /// Take the next inter-process message from the subscription as a type erased pointer.
   /**
    * \sa Subscription::take() for details on how this function works.
    *
@@ -231,6 +234,23 @@ public:
   rclcpp::Waitable::SharedPtr
   get_intra_process_waitable() const;
 
+  /// Exchange state of whether or not a part of the subscription is used by a wait set.
+  /**
+   * Used to ensure parts of the subscription are not used with multiple wait
+   * sets simultaneously.
+   *
+   * \param[in] pointer_to_subscription_part address of a subscription part
+   * \param[in] in_use_state the new state to exchange, true means "now in use",
+   *   and false means "no longer in use".
+   * \returns the current "in use" state.
+   * \throws std::invalid_argument If pointer_to_subscription_part is nullptr.
+   * \throws std::runtime_error If the pointer given is not a pointer to one of
+   *   the parts of the subscription which can be used with a wait set.
+   */
+  RCLCPP_PUBLIC
+  bool
+  exchange_in_use_by_wait_set_state(void * pointer_to_subscription_part, bool in_use_state);
+
 protected:
   template<typename EventCallbackT>
   void
@@ -243,6 +263,7 @@ protected:
       rcl_subscription_event_init,
       get_subscription_handle().get(),
       event_type);
+    qos_events_in_use_by_wait_set_.insert(std::make_pair(handler.get(), false));
     event_handlers_.emplace_back(handler);
   }
 
@@ -267,6 +288,11 @@ private:
 
   rosidl_message_type_support_t type_support_;
   bool is_serialized_;
+
+  std::atomic<bool> subscription_in_use_by_wait_set_{false};
+  std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};
+  std::unordered_map<rclcpp::QOSEventHandlerBase *,
+    std::atomic<bool>> qos_events_in_use_by_wait_set_;
 };
 
 }  // namespace rclcpp

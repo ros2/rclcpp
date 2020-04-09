@@ -22,7 +22,7 @@ namespace detail
 {
 
 WritePreferringReadWriteLock::WritePreferringReadWriteLock(
-  std::function<void ()> enter_waiting_function)
+  std::function<void()> enter_waiting_function)
 : read_mutex_(*this), write_mutex_(*this), enter_waiting_function_(enter_waiting_function)
 {}
 

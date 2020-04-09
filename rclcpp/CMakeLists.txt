@@ -531,6 +531,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_wait_set test/test_wait_set.cpp
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_wait_set)
+    ament_target_dependencies(test_wait_set "test_msgs")
     target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 

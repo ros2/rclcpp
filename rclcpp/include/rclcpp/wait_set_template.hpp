@@ -122,7 +122,8 @@ public:
    * \param[in] subscription Subscription to be added.
    * \param[in] mask A class which controls which parts of the subscription to add.
    * \throws std::invalid_argument if subscription is nullptr.
-   * \throws std::runtime_error if subscription has already been added.
+   * \throws std::runtime_error if subscription has already been added or is
+   *   associated with another wait set.
    * \throws exceptions based on the policies used.
    */
   void
@@ -146,19 +147,39 @@ public:
         // It will throw if the subscription has already been added.
         if (mask.include_subscription) {
           auto local_subscription = inner_subscription;
+          bool already_in_use =
+          local_subscription->exchange_in_use_by_wait_set_state(local_subscription.get(), true);
+          if (already_in_use) {
+            throw std::runtime_error("subscription already associated with a wait set");
+          }
           this->storage_add_subscription(std::move(local_subscription));
         }
         if (mask.include_events) {
           for (auto event : inner_subscription->get_event_handlers()) {
             auto local_subscription = inner_subscription;
+            bool already_in_use =
+            local_subscription->exchange_in_use_by_wait_set_state(event.get(), true);
+            if (already_in_use) {
+              throw std::runtime_error("subscription event already associated with a wait set");
+            }
             this->storage_add_waitable(std::move(event), std::move(local_subscription));
           }
         }
         if (mask.include_intra_process_waitable) {
           auto local_subscription = inner_subscription;
-          this->storage_add_waitable(
-            std::move(inner_subscription->get_intra_process_waitable()),
-            std::move(local_subscription));
+          auto waitable = inner_subscription->get_intra_process_waitable();
+          if (nullptr != waitable) {
+            bool already_in_use = local_subscription->exchange_in_use_by_wait_set_state(
+              waitable.get(),
+              true);
+            if (already_in_use) {
+              throw std::runtime_error(
+                "subscription intra-process waitable already associated with a wait set");
+            }
+            this->storage_add_waitable(
+              std::move(inner_subscription->get_intra_process_waitable()),
+              std::move(local_subscription));
+          }
         }
       });
   }
@@ -200,16 +221,19 @@ public:
         // It will throw if the subscription is not in the wait set.
         if (mask.include_subscription) {
           auto local_subscription = inner_subscription;
+          local_subscription->exchange_in_use_by_wait_set_state(local_subscription.get(), false);
           this->storage_remove_subscription(std::move(local_subscription));
         }
         if (mask.include_events) {
           for (auto event : inner_subscription->get_event_handlers()) {
             auto local_subscription = inner_subscription;
+            local_subscription->exchange_in_use_by_wait_set_state(event.get(), false);
             this->storage_remove_waitable(std::move(event));
           }
         }
         if (mask.include_intra_process_waitable) {
           auto local_waitable = inner_subscription->get_intra_process_waitable();
+          inner_subscription->exchange_in_use_by_wait_set_state(local_waitable.get(), false);
           if (nullptr != local_waitable) {
             // This is the case when intra process is disabled for the subscription.
             this->storage_remove_waitable(std::move(local_waitable));
@@ -241,7 +265,8 @@ public:
    *
    * \param[in] guard_condition Guard condition to be added.
    * \throws std::invalid_argument if guard_condition is nullptr.
-   * \throws std::runtime_error if guard_condition has already been added.
+   * \throws std::runtime_error if guard_condition has already been added or is
+   *   associated with another wait set.
    * \throws exceptions based on the policies used.
    */
   void
@@ -254,6 +279,10 @@ public:
     this->sync_add_guard_condition(
       std::move(guard_condition),
       [this](std::shared_ptr<rclcpp::GuardCondition> && inner_guard_condition) {
+        bool already_in_use = inner_guard_condition->exchange_in_use_by_wait_set_state(true);
+        if (already_in_use) {
+          throw std::runtime_error("guard condition already in use by another wait set");
+        }
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the guard condition has already been added.
@@ -290,6 +319,7 @@ public:
     this->sync_remove_guard_condition(
       std::move(guard_condition),
       [this](std::shared_ptr<rclcpp::GuardCondition> && inner_guard_condition) {
+        inner_guard_condition->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the guard condition is not in the wait set.
@@ -303,7 +333,8 @@ public:
    *
    * \param[in] timer Timer to be added.
    * \throws std::invalid_argument if timer is nullptr.
-   * \throws std::runtime_error if timer has already been added.
+   * \throws std::runtime_error if timer has already been added or is
+   *   associated with another wait set.
    * \throws exceptions based on the policies used.
    */
   void
@@ -316,6 +347,10 @@ public:
     this->sync_add_timer(
       std::move(timer),
       [this](std::shared_ptr<rclcpp::TimerBase> && inner_timer) {
+        bool already_in_use = inner_timer->exchange_in_use_by_wait_set_state(true);
+        if (already_in_use) {
+          throw std::runtime_error("timer already in use by another wait set");
+        }
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the timer has already been added.
@@ -342,6 +377,7 @@ public:
     this->sync_remove_timer(
       std::move(timer),
       [this](std::shared_ptr<rclcpp::TimerBase> && inner_timer) {
+        inner_timer->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the timer is not in the wait set.
@@ -355,7 +391,8 @@ public:
    *
    * \param[in] client Client to be added.
    * \throws std::invalid_argument if client is nullptr.
-   * \throws std::runtime_error if client has already been added.
+   * \throws std::runtime_error if client has already been added or is
+   *   associated with another wait set.
    * \throws exceptions based on the policies used.
    */
   void
@@ -368,6 +405,10 @@ public:
     this->sync_add_client(
       std::move(client),
       [this](std::shared_ptr<rclcpp::ClientBase> && inner_client) {
+        bool already_in_use = inner_client->exchange_in_use_by_wait_set_state(true);
+        if (already_in_use) {
+          throw std::runtime_error("client already in use by another wait set");
+        }
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the client has already been added.
@@ -394,6 +435,7 @@ public:
     this->sync_remove_client(
       std::move(client),
       [this](std::shared_ptr<rclcpp::ClientBase> && inner_client) {
+        inner_client->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the client is not in the wait set.
@@ -407,7 +449,8 @@ public:
    *
    * \param[in] service Service to be added.
    * \throws std::invalid_argument if service is nullptr.
-   * \throws std::runtime_error if service has already been added.
+   * \throws std::runtime_error if service has already been added or is
+   *   associated with another wait set.
    * \throws exceptions based on the policies used.
    */
   void
@@ -420,6 +463,10 @@ public:
     this->sync_add_service(
       std::move(service),
       [this](std::shared_ptr<rclcpp::ServiceBase> && inner_service) {
+        bool already_in_use = inner_service->exchange_in_use_by_wait_set_state(true);
+        if (already_in_use) {
+          throw std::runtime_error("service already in use by another wait set");
+        }
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the service has already been added.
@@ -446,6 +493,7 @@ public:
     this->sync_remove_service(
       std::move(service),
       [this](std::shared_ptr<rclcpp::ServiceBase> && inner_service) {
+        inner_service->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the service is not in the wait set.
@@ -473,7 +521,8 @@ public:
    * \param[in] associated_entity Type erased shared pointer associated with the waitable.
    *   This may be nullptr.
    * \throws std::invalid_argument if waitable is nullptr.
-   * \throws std::runtime_error if waitable has already been added.
+   * \throws std::runtime_error if waitable has already been added or is
+   *   associated with another wait set.
    * \throws exceptions based on the policies used.
    */
   void
@@ -488,11 +537,18 @@ public:
     this->sync_add_waitable(
       std::move(waitable),
       std::move(associated_entity),
-      [this](std::shared_ptr<rclcpp::Waitable> && inner_waitable) {
+      [this](
+        std::shared_ptr<rclcpp::Waitable> && inner_waitable,
+        std::shared_ptr<void> && associated_entity)
+      {
+        bool already_in_use = inner_waitable->exchange_in_use_by_wait_set_state(true);
+        if (already_in_use) {
+          throw std::runtime_error("waitable already in use by another wait set");
+        }
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the waitable has already been added.
-        this->storage_add_waitable(std::move(inner_waitable));
+        this->storage_add_waitable(std::move(inner_waitable), std::move(associated_entity));
       });
   }
 
@@ -515,6 +571,7 @@ public:
     this->sync_remove_waitable(
       std::move(waitable),
       [this](std::shared_ptr<rclcpp::Waitable> && inner_waitable) {
+        inner_waitable->exchange_in_use_by_wait_set_state(false);
         // This method comes from the StoragePolicy, and it may not exist for
         // fixed sized storage policies.
         // It will throw if the waitable is not in the wait set.

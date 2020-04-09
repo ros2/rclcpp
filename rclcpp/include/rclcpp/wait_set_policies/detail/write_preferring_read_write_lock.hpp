@@ -171,7 +171,7 @@ class WritePreferringReadWriteLock final
 {
 public:
   RCLCPP_PUBLIC
-  explicit WritePreferringReadWriteLock(std::function<void ()> enter_waiting_function = nullptr);
+  explicit WritePreferringReadWriteLock(std::function<void()> enter_waiting_function = nullptr);
 
   /// Read mutex for the WritePreferringReadWriteLock.
   /**
@@ -179,14 +179,14 @@ public:
    */
   class RCLCPP_PUBLIC ReadMutex
   {
-  public:
+public:
     void
     lock();
 
     void
     unlock();
 
-  protected:
+protected:
     explicit ReadMutex(WritePreferringReadWriteLock & parent_lock);
 
     WritePreferringReadWriteLock & parent_lock_;
@@ -200,14 +200,14 @@ public:
    */
   class RCLCPP_PUBLIC WriteMutex
   {
-  public:
+public:
     void
     lock();
 
     void
     unlock();
 
-  protected:
+protected:
     explicit WriteMutex(WritePreferringReadWriteLock & parent_lock);
 
     WritePreferringReadWriteLock & parent_lock_;
@@ -233,7 +233,7 @@ protected:
   std::condition_variable condition_variable_;
   ReadMutex read_mutex_;
   WriteMutex write_mutex_;
-  std::function<void ()> enter_waiting_function_;
+  std::function<void()> enter_waiting_function_;
 };
 
 }  // namespace detail

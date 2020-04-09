@@ -192,3 +192,9 @@ ClientBase::get_rcl_node_handle() const
 {
   return node_handle_.get();
 }
+
+bool
+ClientBase::exchange_in_use_by_wait_set_state(bool in_use_state)
+{
+  return in_use_by_wait_set_.exchange(in_use_state);
+}

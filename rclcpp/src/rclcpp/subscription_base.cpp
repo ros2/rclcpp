@@ -251,3 +251,25 @@ SubscriptionBase::matches_any_intra_process_publishers(const rmw_gid_t * sender_
   }
   return ipm->matches_any_publishers(sender_gid);
 }
+
+bool
+SubscriptionBase::exchange_in_use_by_wait_set_state(
+  void * pointer_to_subscription_part,
+  bool in_use_state)
+{
+  if (nullptr == pointer_to_subscription_part) {
+    throw std::invalid_argument("pointer_to_subscription_part is unexpectedly nullptr");
+  }
+  if (this == pointer_to_subscription_part) {
+    return subscription_in_use_by_wait_set_.exchange(in_use_state);
+  }
+  if (get_intra_process_waitable().get() == pointer_to_subscription_part) {
+    return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
+  }
+  for (const auto & qos_event : event_handlers_) {
+    if (qos_event.get() == pointer_to_subscription_part) {
+      return qos_events_in_use_by_wait_set_[qos_event.get()].exchange(in_use_state);
+    }
+  }
+  throw std::runtime_error("given pointer_to_subscription_part does not match any part");
+}

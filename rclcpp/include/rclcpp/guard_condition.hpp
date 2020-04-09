@@ -15,6 +15,8 @@
 #ifndef RCLCPP__GUARD_CONDITION_HPP_
 #define RCLCPP__GUARD_CONDITION_HPP_
 
+#include <atomic>
+
 #include "rcl/guard_condition.h"
 
 #include "rclcpp/context.hpp"
@@ -73,9 +75,23 @@ public:
   void
   trigger();
 
+  /// Exchange the "in use by wait set" state for this guard condition.
+  /**
+   * This is used to ensure this guard condition is not used by multiple
+   * wait sets at the same time.
+   *
+   * \param[in] in_use_state the new state to exchange into the state, true
+   *   indicates it is now in use by a wait set, and false is that it is no
+   *   longer in use by a wait set.
+   * \returns the previous state.
+   */
+  bool
+  exchange_in_use_by_wait_set_state(bool in_use_state);
+
 protected:
   rclcpp::Context::SharedPtr context_;
   rcl_guard_condition_t rcl_guard_condition_;
+  std::atomic<bool> in_use_by_wait_set_{false};
 };
 
 }  // namespace rclcpp

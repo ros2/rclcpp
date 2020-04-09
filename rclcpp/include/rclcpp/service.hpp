@@ -15,6 +15,7 @@
 #ifndef RCLCPP__SERVICE_HPP_
 #define RCLCPP__SERVICE_HPP_
 
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -94,6 +95,19 @@ public:
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) = 0;
 
+  /// Exchange the "in use by wait set" state for this service.
+  /**
+   * This is used to ensure this service is not used by multiple
+   * wait sets at the same time.
+   *
+   * \param[in] in_use_state the new state to exchange into the state, true
+   *   indicates it is now in use by a wait set, and false is that it is no
+   *   longer in use by a wait set.
+   * \returns the previous state.
+   */
+  bool
+  exchange_in_use_by_wait_set_state(bool in_use_state);
+
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
 
@@ -109,6 +123,8 @@ protected:
 
   std::shared_ptr<rcl_service_t> service_handle_;
   bool owns_rcl_handle_ = true;
+
+  std::atomic<bool> in_use_by_wait_set_{false};
 };
 
 template<typename ServiceT>

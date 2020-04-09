@@ -17,7 +17,9 @@
 #include <memory>
 #include <vector>
 
+#include "rcl_interfaces/srv/list_parameters.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "test_msgs/msg/basic_types.hpp"
 
 class TestWaitSet : public ::testing::Test
 {
@@ -214,4 +216,65 @@ TEST_F(TestWaitSet, add_remove_guard_condition) {
   // Note this case does not fail because you cannot pass a "reset" shared pointer to gc
   // and expect it to try and find the original pointer.
   // Instead it throws due to gc being nullptr.
+}
+
+/*
+ * Testing adding each entity to two separate wait sets.
+ */
+TEST_F(TestWaitSet, add_guard_condition_to_two_different_wait_set) {
+  {
+    rclcpp::WaitSet wait_set1;
+    rclcpp::WaitSet wait_set2;
+    auto node = std::make_shared<rclcpp::Node>("add_guard_condition_to_two_different_wait_set");
+
+    auto guard_condition = std::make_shared<rclcpp::GuardCondition>();
+    wait_set1.add_guard_condition(guard_condition);
+    ASSERT_THROW(
+    {
+      wait_set2.add_guard_condition(guard_condition);
+    }, std::runtime_error);
+
+    auto do_nothing = [](const std::shared_ptr<test_msgs::msg::BasicTypes>) {};
+    auto sub = node->create_subscription<test_msgs::msg::BasicTypes>("~/test", 1, do_nothing);
+    wait_set1.add_subscription(sub);
+    ASSERT_THROW(
+    {
+      wait_set2.add_subscription(sub);
+    }, std::runtime_error);
+
+    auto timer = node->create_wall_timer(std::chrono::seconds(1), []() {});
+    wait_set1.add_timer(timer);
+    ASSERT_THROW(
+    {
+      wait_set2.add_timer(timer);
+    }, std::runtime_error);
+
+    auto client = node->create_client<rcl_interfaces::srv::ListParameters>("~/test");
+    wait_set1.add_client(client);
+    ASSERT_THROW(
+    {
+      wait_set2.add_client(client);
+    }, std::runtime_error);
+
+    auto srv_do_nothing = [](
+      const std::shared_ptr<rcl_interfaces::srv::ListParameters::Request>,
+      std::shared_ptr<rcl_interfaces::srv::ListParameters::Response>) {};
+    auto service =
+      node->create_service<rcl_interfaces::srv::ListParameters>("~/test", srv_do_nothing);
+    wait_set1.add_service(service);
+    ASSERT_THROW(
+    {
+      wait_set2.add_service(service);
+    }, std::runtime_error);
+
+    rclcpp::PublisherOptions po;
+    po.event_callbacks.deadline_callback = [](rclcpp::QOSDeadlineOfferedInfo &) {};
+    auto pub = node->create_publisher<test_msgs::msg::BasicTypes>("~/test", 1, po);
+    auto qos_event = pub->get_event_handlers()[0];
+    wait_set1.add_waitable(qos_event, pub);
+    ASSERT_THROW(
+    {
+      wait_set2.add_waitable(qos_event, pub);
+    }, std::runtime_error);
+  }
 }
