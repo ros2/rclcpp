@@ -15,8 +15,8 @@
 #ifndef RCLCPP__TYPE_SUPPORT_DECL_HPP_
 #define RCLCPP__TYPE_SUPPORT_DECL_HPP_
 
-#include "rosidl_generator_cpp/message_type_support_decl.hpp"
-#include "rosidl_generator_cpp/service_type_support_decl.hpp"
+#include "rosidl_runtime_cpp/message_type_support_decl.hpp"
+#include "rosidl_runtime_cpp/service_type_support_decl.hpp"
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 #include "rosidl_typesupport_cpp/service_type_support.hpp"
