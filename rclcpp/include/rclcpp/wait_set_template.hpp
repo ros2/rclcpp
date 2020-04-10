@@ -67,7 +67,6 @@ public:
    */
   explicit
   WaitSetTemplate(
-    // TODO(wjwwood): support subscription wait set masks in constructor
     const typename StoragePolicy::SubscriptionsIterable & subscriptions = {},
     const typename StoragePolicy::GuardConditionsIterable & guard_conditions = {},
     const typename StoragePolicy::TimersIterable & timers = {},
