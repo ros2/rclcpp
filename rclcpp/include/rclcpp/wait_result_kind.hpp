@@ -15,11 +15,13 @@
 #ifndef RCLCPP__WAIT_RESULT_KIND_HPP_
 #define RCLCPP__WAIT_RESULT_KIND_HPP_
 
+#include "rclcpp/visibility_control.hpp"
+
 namespace rclcpp
 {
 
 /// Represents the various kinds of results from waiting on a wait set.
-enum WaitResultKind
+enum RCLCPP_PUBLIC WaitResultKind
 {
   Ready,  //<! Kind used when something in the wait set was ready.
   Timeout,  //<! Kind used when the wait resulted in a timeout.

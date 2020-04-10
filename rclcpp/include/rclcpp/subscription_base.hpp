@@ -131,6 +131,7 @@ public:
    * \returns true if data was taken and is valid, otherwise false
    * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
    */
+  RCLCPP_PUBLIC
   bool
   take_type_erased(void * message_out, rclcpp::MessageInfo & message_info_out);
 
@@ -148,6 +149,7 @@ public:
    * \returns true if data was taken and is valid, otherwise false
    * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
    */
+  RCLCPP_PUBLIC
   bool
   take_serialized(rcl_serialized_message_t & message_out, rclcpp::MessageInfo & message_info_out);
 

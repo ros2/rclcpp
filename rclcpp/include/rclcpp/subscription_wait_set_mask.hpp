@@ -15,11 +15,13 @@
 #ifndef RCLCPP__SUBSCRIPTION_WAIT_SET_MASK_HPP_
 #define RCLCPP__SUBSCRIPTION_WAIT_SET_MASK_HPP_
 
+#include "rclcpp/visibility_control.hpp"
+
 namespace rclcpp
 {
 
 /// Options used to determine what parts of a subscription get added to or removed from a wait set.
-class SubscriptionWaitSetMask
+class RCLCPP_PUBLIC SubscriptionWaitSetMask
 {
 public:
   /// If true, include the actual subscription.
