@@ -28,6 +28,12 @@ namespace rclcpp
 std::shared_timed_mutex g_clock_map_mutex;
 std::unordered_map<rclcpp::Clock *, std::mutex> g_clock_mutex_map;
 
+std::mutex & get_clock_mutex(rclcpp::Clock * clock)
+{
+  std::shared_lock<std::shared_timed_mutex> lk(g_clock_map_mutex);
+  return g_clock_mutex_map.at(clock);
+}
+
 JumpHandler::JumpHandler(
   pre_callback_t pre_callback,
   post_callback_t post_callback,
@@ -138,9 +144,7 @@ Clock::create_jump_callback(
   }
 
   // Lookup the per-object mutex
-  g_clock_map_mutex.lock_shared();
-  std::mutex & clock_mutex = g_clock_mutex_map.at(this);
-  g_clock_map_mutex.unlock_shared();
+  std::mutex & clock_mutex = get_clock_mutex(this);
   {
     std::lock_guard<std::mutex> clock_guard(clock_mutex);
     // Try to add the jump callback to the clock
@@ -156,9 +160,7 @@ Clock::create_jump_callback(
   // create shared_ptr that removes the callback automatically when all copies are destructed
   // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
-    g_clock_map_mutex.lock_shared();
-    std::mutex & clock_mutex = g_clock_mutex_map.at(this);
-    g_clock_map_mutex.unlock_shared();
+    std::mutex & clock_mutex = get_clock_mutex(this);
     std::lock_guard<std::mutex> clock_guard(clock_mutex);
 
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,

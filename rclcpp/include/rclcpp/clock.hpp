@@ -152,6 +152,8 @@ private:
 extern std::shared_timed_mutex g_clock_map_mutex;
 extern std::unordered_map<rclcpp::Clock *, std::mutex> g_clock_mutex_map;
 
+std::mutex & get_clock_mutex(rclcpp::Clock * clock);
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__CLOCK_HPP_
