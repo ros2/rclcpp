@@ -54,6 +54,18 @@ struct SubscriptionOptionsBase
   /// Optional RMW implementation specific payload to be used during creation of the subscription.
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificSubscriptionPayload>
   rmw_implementation_payload = nullptr;
+
+  // Options to configure topic statistics collector in the subscription
+  struct TopicStatisticsOptions
+  {
+    // Represent the state of topic statistics collector
+    enum class TopicStatisticsState {ENABLED, DISABLED};
+
+    // Enable and disable topic statistics calculation and publication. Defaults to disabled.
+    TopicStatisticsState state = TopicStatisticsState::DISABLED;
+  };
+
+  TopicStatisticsOptions topic_stats_options;
 };
 
 /// Structure containing optional configuration for Subscriptions.
@@ -104,6 +116,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
+using TopicStatisticsState = SubscriptionOptionsBase::TopicStatisticsOptions::TopicStatisticsState;
 
 }  // namespace rclcpp
 
