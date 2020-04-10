@@ -200,22 +200,6 @@ TEST_F(TestWaitSet, add_remove_guard_condition) {
       wait_set.remove_guard_condition(gc);
     }, std::runtime_error);
   }
-
-  // remove after delete, checking weak ownership behavior
-  // {
-  //   auto gc = std::make_shared<rclcpp::GuardCondition>();
-  //   rclcpp::WaitSet wait_set;
-  //   wait_set.add_guard_condition(gc);
-  //   gc.reset();
-  //   ASSERT_THROW(
-  //   {
-  //     // gc should be missing at this point
-  //     wait_set.remove_guard_condition(gc);
-  //   }, std::runtime_error);
-  // }
-  // Note this case does not fail because you cannot pass a "reset" shared pointer to gc
-  // and expect it to try and find the original pointer.
-  // Instead it throws due to gc being nullptr.
 }
 
 /*
