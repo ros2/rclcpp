@@ -43,9 +43,7 @@ TimerBase::TimerBase(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
     {
       // Lookup the per-object mutex
-      g_clock_map_mutex.lock_shared();
-      std::mutex & clock_mutex = g_clock_mutex_map.at(this->clock_.get());
-      g_clock_map_mutex.unlock_shared();
+      std::mutex & clock_mutex = get_clock_mutex(this->clock_.get());
       {
         std::lock_guard<std::mutex> clock_guard(clock_mutex);
         if (rcl_timer_fini(timer) != RCL_RET_OK) {
@@ -65,9 +63,7 @@ TimerBase::TimerBase(
 
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
   {
-    g_clock_map_mutex.lock_shared();
-    std::mutex & clock_mutex = g_clock_mutex_map.at(this->clock_.get());
-    g_clock_map_mutex.unlock_shared();
+    std::mutex & clock_mutex = get_clock_mutex(this->clock_.get());
     std::lock_guard<std::mutex> clock_guard(clock_mutex);
     if (
       rcl_timer_init(
