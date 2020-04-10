@@ -112,6 +112,7 @@ public:
    *   longer in use by a wait set.
    * \returns the previous state.
    */
+  RCLCPP_PUBLIC
   bool
   exchange_in_use_by_wait_set_state(bool in_use_state);
 

@@ -95,7 +95,6 @@ public:
    * The state of this structure can be updated at anytime by methods like
    * wait(), add_*(), remove_*(), etc.
    */
-  RCLCPP_PUBLIC
   const rcl_wait_set_t &
   get_rcl_wait_set() const
   {
