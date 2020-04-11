@@ -23,7 +23,7 @@
 #include <rclcpp/time.hpp>
 #include <rclcpp/waitable.hpp>
 
-#include <rosidl_generator_c/action_type_support_struct.h>
+#include <rosidl_runtime_c/action_type_support_struct.h>
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
 
 #include <algorithm>
