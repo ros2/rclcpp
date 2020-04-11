@@ -16,7 +16,7 @@
 #define RCLCPP_ACTION__SERVER_HPP_
 
 #include <rcl_action/action_server.h>
-#include <rosidl_generator_c/action_type_support_struct.h>
+#include <rosidl_runtime_c/action_type_support_struct.h>
 #include <rosidl_typesupport_cpp/action_type_support.hpp>
 #include <rclcpp/node_interfaces/node_base_interface.hpp>
 #include <rclcpp/node_interfaces/node_clock_interface.hpp>
