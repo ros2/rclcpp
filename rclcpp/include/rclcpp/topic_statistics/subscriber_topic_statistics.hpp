@@ -116,15 +116,6 @@ public:
     TearDown();
   }
 
-  /// Set the timer used to publish statistics messages.
-  /**
-   * \param measurement_timer the timer to fire the publisher, created by the node
-   */
-  void SetPublisherTimer(const rclcpp::TimerBase::SharedPtr & publisher_timer)
-  {
-    publisher_timer_ = std::move(publisher_timer);
-  }
-
   /// Handle a message received by the subscription to collect statistics.
   /**
    * \param received_message the message received by the subscription
