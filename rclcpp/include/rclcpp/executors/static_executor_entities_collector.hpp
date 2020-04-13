@@ -15,6 +15,7 @@
 #ifndef RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 #define RCLCPP__EXECUTORS__STATIC_EXECUTOR_ENTITIES_COLLECTOR_HPP_
 
+#include <chrono>
 #include <list>
 #include <memory>
 

@@ -14,9 +14,12 @@
 
 #include "rclcpp/executors/static_executor_entities_collector.hpp"
 
-#include <string>
+#include <algorithm>
 #include <memory>
+#include <stdexcept>
+#include <string>
 
+#include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
 
 using rclcpp::executors::StaticExecutorEntitiesCollector;
@@ -39,7 +42,7 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 void
 StaticExecutorEntitiesCollector::init(
   rcl_wait_set_t * p_wait_set,
-  memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
+  rclcpp::memory_strategy::MemoryStrategy::SharedPtr & memory_strategy,
   rcl_guard_condition_t * executor_guard_condition)
 {
   // Empty initialize executable list
