@@ -121,7 +121,7 @@ init_and_remove_ros_arguments(
  * \param[in] argv Argument vector.
  * \returns Members of the argument vector that are not ROS arguments.
  * \throws anything throw_from_rcl_error can throw
- * \throws rclcpp::exceptions::RCLError if the parsing fails
+ * \throws rclcpp::exceptions::RCLErrorBase if the parsing fails
  */
 RCLCPP_PUBLIC
 std::vector<std::string>

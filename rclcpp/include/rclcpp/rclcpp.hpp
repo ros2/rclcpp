@@ -143,7 +143,6 @@
 #include <memory>
 
 #include "rclcpp/executors.hpp"
-#include "rclcpp/guard_condition.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/parameter.hpp"
@@ -153,7 +152,6 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rclcpp/wait_set.hpp"
 #include "rclcpp/waitable.hpp"
 
 #endif  // RCLCPP__RCLCPP_HPP_

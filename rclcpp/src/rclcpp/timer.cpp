@@ -135,9 +135,3 @@ TimerBase::get_timer_handle()
 {
   return timer_handle_;
 }
-
-bool
-TimerBase::exchange_in_use_by_wait_set_state(bool in_use_state)
-{
-  return in_use_by_wait_set_.exchange(in_use_state);
-}

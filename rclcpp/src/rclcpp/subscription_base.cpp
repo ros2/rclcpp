@@ -133,48 +133,6 @@ SubscriptionBase::get_actual_qos() const
   return rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(*qos), *qos);
 }
 
-bool
-SubscriptionBase::take_type_erased(void * message_out, rclcpp::MessageInfo & message_info_out)
-{
-  rcl_ret_t ret = rcl_take(
-    this->get_subscription_handle().get(),
-    message_out,
-    &message_info_out.get_rmw_message_info(),
-    nullptr  // rmw_subscription_allocation_t is unused here
-  );
-  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
-    return false;
-  } else if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  if (
-    matches_any_intra_process_publishers(&message_info_out.get_rmw_message_info().publisher_gid))
-  {
-    // In this case, the message will be delivered via intra-process and
-    // we should ignore this copy of the message.
-    return false;
-  }
-  return true;
-}
-
-bool
-SubscriptionBase::take_serialized(
-  rcl_serialized_message_t & message_out,
-  rclcpp::MessageInfo & message_info_out)
-{
-  rcl_ret_t ret = rcl_take_serialized_message(
-    this->get_subscription_handle().get(),
-    &message_out,
-    &message_info_out.get_rmw_message_info(),
-    nullptr);
-  if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
-    return false;
-  } else if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-  return true;
-}
-
 const rosidl_message_type_support_t &
 SubscriptionBase::get_message_type_support_handle() const
 {
@@ -250,26 +208,4 @@ SubscriptionBase::matches_any_intra_process_publishers(const rmw_gid_t * sender_
             "after destruction of intra process manager");
   }
   return ipm->matches_any_publishers(sender_gid);
-}
-
-bool
-SubscriptionBase::exchange_in_use_by_wait_set_state(
-  void * pointer_to_subscription_part,
-  bool in_use_state)
-{
-  if (nullptr == pointer_to_subscription_part) {
-    throw std::invalid_argument("pointer_to_subscription_part is unexpectedly nullptr");
-  }
-  if (this == pointer_to_subscription_part) {
-    return subscription_in_use_by_wait_set_.exchange(in_use_state);
-  }
-  if (get_intra_process_waitable().get() == pointer_to_subscription_part) {
-    return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
-  }
-  for (const auto & qos_event : event_handlers_) {
-    if (qos_event.get() == pointer_to_subscription_part) {
-      return qos_events_in_use_by_wait_set_[qos_event.get()].exchange(in_use_state);
-    }
-  }
-  throw std::runtime_error("given pointer_to_subscription_part does not match any part");
 }

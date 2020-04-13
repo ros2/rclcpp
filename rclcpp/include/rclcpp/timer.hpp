@@ -15,7 +15,6 @@
 #ifndef RCLCPP__TIMER_HPP_
 #define RCLCPP__TIMER_HPP_
 
-#include <atomic>
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -65,7 +64,7 @@ public:
   /**
    * \return true if the timer has been cancelled, false otherwise
    * \throws std::runtime_error if the rcl_get_error_state returns 0
-   * \throws rclcpp::exceptions::RCLError some child class exception based on ret
+   * \throws RCLErrorBase some child class exception based on ret
    */
   RCLCPP_PUBLIC
   bool
@@ -102,25 +101,9 @@ public:
   RCLCPP_PUBLIC
   bool is_ready();
 
-  /// Exchange the "in use by wait set" state for this timer.
-  /**
-   * This is used to ensure this timer is not used by multiple
-   * wait sets at the same time.
-   *
-   * \param[in] in_use_state the new state to exchange into the state, true
-   *   indicates it is now in use by a wait set, and false is that it is no
-   *   longer in use by a wait set.
-   * \returns the previous state.
-   */
-  RCLCPP_PUBLIC
-  bool
-  exchange_in_use_by_wait_set_state(bool in_use_state);
-
 protected:
   Clock::SharedPtr clock_;
   std::shared_ptr<rcl_timer_t> timer_handle_;
-
-  std::atomic<bool> in_use_by_wait_set_{false};
 };
 
 

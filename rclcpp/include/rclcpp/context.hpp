@@ -159,7 +159,7 @@ public:
    *
    * \param[in] reason the description of why shutdown happened
    * \return true if shutdown was successful, false if context was already shutdown
-   * \throw various exceptions derived from rclcpp::exceptions::RCLError, if rcl_shutdown fails
+   * \throw various exceptions derived from RCLErrorBase, if rcl_shutdown fails
    */
   RCLCPP_PUBLIC
   virtual

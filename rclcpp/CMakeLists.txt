@@ -49,13 +49,11 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/static_executor_entities_collector.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
   src/rclcpp/graph_listener.cpp
-  src/rclcpp/guard_condition.cpp
   src/rclcpp/init_options.cpp
   src/rclcpp/intra_process_manager.cpp
   src/rclcpp/logger.cpp
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
-  src/rclcpp/message_info.cpp
   src/rclcpp/node.cpp
   src/rclcpp/node_options.cpp
   src/rclcpp/node_interfaces/node_base.cpp
@@ -86,7 +84,6 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/timer.cpp
   src/rclcpp/type_support.cpp
   src/rclcpp/utilities.cpp
-  src/rclcpp/wait_set_policies/detail/write_preferring_read_write_lock.cpp
   src/rclcpp/waitable.cpp
 )
 
@@ -520,19 +517,6 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_multi_threaded_executor
       "rcl")
     target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
-  endif()
-
-  ament_add_gtest(test_guard_condition test/test_guard_condition.cpp
-    APPEND_LIBRARY_DIRS "${append_library_dirs}")
-  if(TARGET test_guard_condition)
-    target_link_libraries(test_guard_condition ${PROJECT_NAME})
-  endif()
-
-  ament_add_gtest(test_wait_set test/test_wait_set.cpp
-    APPEND_LIBRARY_DIRS "${append_library_dirs}")
-  if(TARGET test_wait_set)
-    ament_target_dependencies(test_wait_set "test_msgs")
-    target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 
   # Install test resources
