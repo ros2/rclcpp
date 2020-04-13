@@ -39,11 +39,9 @@ namespace
 {
 /// Return the current nanoseconds (count) since epoch.
 /**
- * For now, use hard coded time instead of a node's clock (to support sim time and playback)
- * due to node clock lifecycle issues.
  * \return the current nanoseconds (count) since epoch
  */
-int64_t GetCurrentNanosecondsSinceEpoch()
+int64_t get_current_nanoseconds_since_epoch()
 {
   const auto now = std::chrono::system_clock::now();
   return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -101,19 +99,19 @@ public:
 
     auto callback = [this]()
       {
-        this->PublishMessage();
+        this->publish_message();
       };
 
     publisher_timer_ = node.create_wall_timer(publishing_period, callback);
 
     node_name_ = node.get_name();
 
-    BringUp();
+    bring_up();
   }
 
   virtual ~SubscriberTopicStatistics()
   {
-    TearDown();
+    tear_down();
   }
 
   /// Handle a message received by the subscription to collect statistics.
@@ -121,7 +119,7 @@ public:
    * \param received_message the message received by the subscription
    * \param now_nanoseconds current time in nanoseconds
    */
-  virtual void OnMessageReceived(
+  virtual void handle_message(
     const CallbackMessageT & received_message,
     const rcl_time_point_value_t now_nanoseconds) const
   {
@@ -136,7 +134,7 @@ public:
   /**
    * \return a vector of all the collected data
    */
-  std::vector<StatisticData> GetCurrentCollectorData() const
+  std::vector<StatisticData> get_current_collector_data() const
   {
     std::vector<StatisticData> data;
     for (const auto & collector : subscriber_statistics_collectors_) {
@@ -147,17 +145,17 @@ public:
 
 private:
   /// Construct and start all collectors and set window_start_.
-  void BringUp()
+  void bring_up()
   {
     auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
     received_message_period->Start();
     subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
 
-    window_start_ = rclcpp::Time(GetCurrentNanosecondsSinceEpoch());
+    window_start_ = rclcpp::Time(get_current_nanoseconds_since_epoch());
   }
 
   /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
-  void TearDown()
+  void tear_down()
   {
     for (auto & collector : subscriber_statistics_collectors_) {
       collector->Stop();
@@ -174,9 +172,9 @@ private:
   }
 
   /// Publish a populated MetricsStatisticsMessage
-  virtual void PublishMessage()
+  virtual void publish_message()
   {
-    rclcpp::Time window_end{GetCurrentNanosecondsSinceEpoch()};
+    rclcpp::Time window_end{get_current_nanoseconds_since_epoch()};
 
     for (auto & collector : subscriber_statistics_collectors_) {
       const auto collected_stats = collector->GetStatisticsResults();

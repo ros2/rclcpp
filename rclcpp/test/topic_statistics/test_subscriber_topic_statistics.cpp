@@ -54,7 +54,7 @@ public:
   : Node(name)
   {
     auto callback = [this](Empty::UniquePtr msg) {
-        this->ReceiveMessage(*msg);
+        this->receive_message(*msg);
       };
     subscription_ = create_subscription<Empty,
         std::function<void(Empty::UniquePtr)>>(
@@ -64,7 +64,7 @@ public:
   }
 
 private:
-  void ReceiveMessage(const Empty &) const
+  void receive_message(const Empty &) const
   {
   }
 
@@ -93,14 +93,14 @@ protected:
   std::shared_ptr<EmptySubscriber> empty_subscriber;
 };
 
-TEST_F(TestSubscriberTopicStatisticsFixture, TestManualConstruction)
+TEST_F(TestSubscriberTopicStatisticsFixture, test_manual_construction)
 {
   // construct the instance
   auto sub_topic_stats = std::make_unique<SubscriberTopicStatistics<Empty>>(
     *empty_subscriber);
 
   // expect no data has been collected / no samples received
-  for (const auto & data : sub_topic_stats->GetCurrentCollectorData()) {
+  for (const auto & data : sub_topic_stats->get_current_collector_data()) {
     EXPECT_TRUE(std::isnan(data.average));
     EXPECT_TRUE(std::isnan(data.min));
     EXPECT_TRUE(std::isnan(data.max));
