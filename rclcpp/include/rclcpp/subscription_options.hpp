@@ -15,6 +15,7 @@
 #ifndef RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 #define RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
@@ -63,6 +64,12 @@ struct SubscriptionOptionsBase
 
     // Enable and disable topic statistics calculation and publication. Defaults to disabled.
     TopicStatisticsState state = TopicStatisticsState::DISABLED;
+
+    // Topic to which topic statistics get published when enabled. Defaults to /system_metrics.
+    std::string publish_topic = "system_metrics";
+
+    // Topic statistics publication period in ms. Defaults to one minute.
+    std::chrono::milliseconds publish_period{60000};
   };
 
   TopicStatisticsOptions topic_stats_options;
