@@ -208,7 +208,7 @@ protected:
     event_handlers_.emplace_back(handler);
   }
 
-  static void default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & info);
+  void default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & info) const;
 
   RCLCPP_PUBLIC
   bool

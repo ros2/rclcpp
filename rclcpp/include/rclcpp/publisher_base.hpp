@@ -208,7 +208,7 @@ protected:
     event_handlers_.emplace_back(handler);
   }
 
-  static void default_incompatible_qos_callback(QOSOfferedIncompatibleQoSInfo & info);
+  void default_incompatible_qos_callback(QOSOfferedIncompatibleQoSInfo & info) const;
 
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 

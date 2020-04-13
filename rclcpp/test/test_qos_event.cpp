@@ -175,17 +175,14 @@ TEST_F(TestQosEvent, test_default_incompatible_qos_callbacks)
   g_log_msgs_promise = &log_msgs_promise;
   auto logger_callback = [](
     const rcutils_log_location_t * /*location*/,
-    int /*level*/, const char * name, rcutils_time_point_value_t /*timestamp*/,
+    int /*level*/, const char * /*name*/, rcutils_time_point_value_t /*timestamp*/,
     const char * format, va_list * args) -> void {
-      if (name == nullptr) {
-        return;
-      }
-
       char buffer[1024];
       vsnprintf(buffer, sizeof(buffer), format, *args);
-      if (name == std::string("rclcpp::Publisher")) {
+      const std::string msg = buffer;
+      if (msg.rfind("New subscription discovered", 0) == 0) {
         *g_pub_log_msg = buffer;
-      } else if (name == std::string("rclcpp::Subscription")) {
+      } else if (msg.rfind("New publisher discovered", 0) == 0) {
         *g_sub_log_msg = buffer;
       }
 

@@ -36,6 +36,9 @@ struct SubscriptionOptionsBase
   /// Callbacks for events related to this subscription.
   SubscriptionEventCallbacks event_callbacks;
 
+  /// Whether or not to use default callbacks when user doesn't supply any in event_callbacks
+  bool use_default_callbacks = true;
+
   /// True to ignore local publications.
   bool ignore_local_publications = false;
 

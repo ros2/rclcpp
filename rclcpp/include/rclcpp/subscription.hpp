@@ -122,15 +122,17 @@ public:
       this->add_event_handler(
         options.event_callbacks.incompatible_qos_callback,
         RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
-    } else {
+    } else if (options_.use_default_callbacks) {
       // Register default callback when not specified
       try {
         this->add_event_handler(
-          QOSRequestedIncompatibleQoSCallbackType(default_incompatible_qos_callback),
+          [this](QOSRequestedIncompatibleQoSInfo & info) {
+            this->default_incompatible_qos_callback(info);
+          },
           RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
       } catch (UnsupportedEventTypeException & /*exc*/) {
         RCLCPP_WARN_ONCE(
-          rclcpp::get_logger("rclcpp::Subscription"),
+          rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
           "This rmw implementation does not support ON_REQUESTED_INCOMPATIBLE_QOS "
           "events, you will not be notified when Subscriptions request an incompatible "
           "QoS profile from Publishers on the same topic.");
