@@ -143,10 +143,8 @@ Clock::create_jump_callback(
     throw std::bad_alloc{};
   }
 
-  // Lookup the per-object mutex
-  std::mutex & clock_mutex = get_clock_mutex(this);
   {
-    std::lock_guard<std::mutex> clock_guard(clock_mutex);
+    std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this));
     // Try to add the jump callback to the clock
     rcl_ret_t ret = rcl_clock_add_jump_callback(
       &rcl_clock_, threshold, Clock::on_time_jump,
@@ -160,8 +158,7 @@ Clock::create_jump_callback(
   // create shared_ptr that removes the callback automatically when all copies are destructed
   // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
-    std::mutex & clock_mutex = get_clock_mutex(this);
-    std::lock_guard<std::mutex> clock_guard(clock_mutex);
+    std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this));
 
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
         handler);

@@ -42,10 +42,8 @@ TimerBase::TimerBase(
   timer_handle_ = std::shared_ptr<rcl_timer_t>(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
     {
-      // Lookup the per-object mutex
-      std::mutex & clock_mutex = get_clock_mutex(this->clock_.get());
       {
-        std::lock_guard<std::mutex> clock_guard(clock_mutex);
+        std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this->clock_.get()));
         if (rcl_timer_fini(timer) != RCL_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
             "rclcpp",
@@ -63,8 +61,7 @@ TimerBase::TimerBase(
 
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
   {
-    std::mutex & clock_mutex = get_clock_mutex(this->clock_.get());
-    std::lock_guard<std::mutex> clock_guard(clock_mutex);
+    std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this->clock_.get()));
     if (
       rcl_timer_init(
         timer_handle_.get(), clock_handle, rcl_context.get(), period.count(), nullptr,
