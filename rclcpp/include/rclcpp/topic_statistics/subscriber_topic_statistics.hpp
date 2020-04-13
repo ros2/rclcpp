@@ -41,7 +41,7 @@ namespace
 /**
  * For now, use hard coded time instead of a node's clock (to support sim time and playback)
  * due to node clock lifecycle issues.
- * @return the current nanoseconds (count) since epoch
+ * \return the current nanoseconds (count) since epoch
  */
 int64_t GetCurrentNanosecondsSinceEpoch()
 {
@@ -66,7 +66,7 @@ using libstatistics_collector::moving_average_statistics::StatisticData;
  * Class used to collect, measure, and publish topic statistics data. Current statistics
  * supported for subscribers are received message age and received message period.
  *
- * @tparam CallbackMessageT the subscribed message type
+ * \tparam CallbackMessageT the subscribed message type
  */
 template<typename CallbackMessageT>
 class SubscriberTopicStatistics
@@ -84,10 +84,10 @@ public:
   * This object wraps utilities, defined in libstatistics_collector, to collect,
   * measure, and publish topic statistics data.
    *
-  * @param node the node creating the subscription, used to create the publisher and timer to
+  * \param node the node creating the subscription, used to create the publisher and timer to
   * publish topic statistics.
-  * @param publishing_topic the topic to publish statistics to
-  * @param publishing_period the period at which topic statistics messages are published
+  * \param publishing_topic the topic to publish statistics to
+  * \param publishing_period the period at which topic statistics messages are published
   */
   SubscriberTopicStatistics(
     rclcpp::Node & node,
@@ -118,7 +118,7 @@ public:
 
   /// Set the timer used to publish statistics messages.
   /**
-   * @param measurement_timer the timer to fire the publisher, created by the node
+   * \param measurement_timer the timer to fire the publisher, created by the node
    */
   void SetPublisherTimer(const rclcpp::TimerBase::SharedPtr & publisher_timer)
   {
@@ -127,8 +127,8 @@ public:
 
   /// Handle a message received by the subscription to collect statistics.
   /**
-   * @param received_message the message received by the subscription
-   * @param now_nanoseconds current time in nanoseconds
+   * \param received_message the message received by the subscription
+   * \param now_nanoseconds current time in nanoseconds
    */
   virtual void OnMessageReceived(
     const CallbackMessageT & received_message,
@@ -143,7 +143,7 @@ public:
 
   /// Return a vector of all the currently collected data
   /**
-   * @return a vector of all the collected data
+   * \return a vector of all the collected data
    */
   std::vector<StatisticData> GetCurrentCollectorData() const
   {
