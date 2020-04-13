@@ -24,6 +24,7 @@
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/node.hpp"
 
 #include "rclcpp/topic_statistics/subscriber_topic_statistics.hpp"
 
@@ -41,6 +42,7 @@ constexpr const uint64_t kNoSamples{0};
 using test_msgs::msg::Empty;
 using metrics_statistics_msgs::msg::MetricsMessage;
 using rclcpp::topic_statistics::SubscriberTopicStatistics;
+using libstatistics_collector::moving_average_statistics::StatisticData;
 
 /**
  * Empty subscriber node: used to create subscriber topic statistics requirements
@@ -78,32 +80,24 @@ protected:
   void SetUp()
   {
     rclcpp::init(0 /* argc */, nullptr /* argv */);
+    empty_subscriber = std::make_shared<EmptySubscriber>(
+      kTestNodeName,
+      kTestSubStatsTopic);
   }
 
   void TearDown()
   {
     rclcpp::shutdown();
+    empty_subscriber.reset();
   }
+  std::shared_ptr<EmptySubscriber> empty_subscriber;
 };
 
 TEST_F(TestSubscriberTopicStatisticsFixture, TestManualConstruction)
 {
-  auto empty_subscriber = std::make_shared<EmptySubscriber>(
-    kTestNodeName,
-    kTestSubStatsTopic);
-
-  // manually create publisher tied to the node
-  auto topic_stats_publisher =
-    empty_subscriber->create_publisher<MetricsMessage>(
-    kTestTopicStatisticsTopic,
-    10);
-
   // construct the instance
   auto sub_topic_stats = std::make_unique<SubscriberTopicStatistics<Empty>>(
-    empty_subscriber->get_name(),
-    topic_stats_publisher);
-
-  using libstatistics_collector::moving_average_statistics::StatisticData;
+    *empty_subscriber);
 
   // expect no data has been collected / no samples received
   for (const auto & data : sub_topic_stats->GetCurrentCollectorData()) {

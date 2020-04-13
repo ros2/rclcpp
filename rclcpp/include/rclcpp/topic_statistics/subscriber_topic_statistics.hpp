@@ -20,7 +20,10 @@
 #include <utility>
 #include <vector>
 
+
+#include "rclcpp/create_publisher.hpp"
 #include "rcl/time.h"
+#include "rclcpp/node.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/timer.hpp"
@@ -34,7 +37,7 @@
 
 namespace
 {
-/// Return the current nanoseconds (count) since epoch
+/// Return the current nanoseconds (count) since epoch.
 /**
  * For now, use hard coded time instead of a node's clock (to support sim time and playback)
  * due to node clock lifecycle issues.
@@ -51,6 +54,9 @@ namespace rclcpp
 {
 namespace topic_statistics
 {
+
+constexpr const char kDefaultPublishTopicName[]{"topic_statistics"};
+constexpr const std::chrono::milliseconds kDefaultPublishingPeriod{std::chrono::minutes(1)};
 
 using libstatistics_collector::collector::GenerateStatisticMessage;
 using metrics_statistics_msgs::msg::MetricsMessage;
@@ -75,26 +81,34 @@ class SubscriberTopicStatistics
 public:
   /// Construct a SubcriberTopicStatistics object.
   /**
-   * This object wraps utilities, defined in libstatistics_collector, to collect,
-   * measure, and publish topic statistics data.
+  * This object wraps utilities, defined in libstatistics_collector, to collect,
+  * measure, and publish topic statistics data.
    *
-   * @param node_name the name of the node, which created this instance, in order to denote
-   * topic source
-   * @param publisher instance constructed by the node in order to publish statistics data
-   */
+  * @param node the node creating the subscription, used to create the publisher and timer to
+  * publish topic statistics.
+  * @param publishing_topic the topic to publish statistics to
+  * @param publishing_period the period at which topic statistics messages are published
+  */
   SubscriberTopicStatistics(
-    const std::string & node_name,
-    const rclcpp::Publisher<metrics_statistics_msgs::msg::MetricsMessage>::SharedPtr & publisher)
-  : node_name_(node_name),
-    publisher_(std::move(publisher))
+    rclcpp::Node & node,
+    const std::string & publishing_topic = kDefaultPublishTopicName,
+    const std::chrono::milliseconds & publishing_period = kDefaultPublishingPeriod)
   {
-    // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
+    publisher_ =
+      node.create_publisher<metrics_statistics_msgs::msg::MetricsMessage>(
+      publishing_topic,
+      10);
 
-    auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
-    received_message_period->Start();
-    subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
+    auto callback = [this]()
+      {
+        this->PublishMessage();
+      };
 
-    window_start_ = rclcpp::Time(GetCurrentNanosecondsSinceEpoch());
+    publisher_timer_ = node.create_wall_timer(publishing_period, callback);
+
+    node_name_ = node.get_name();
+
+    BringUp();
   }
 
   virtual ~SubscriberTopicStatistics()
@@ -141,8 +155,18 @@ public:
   }
 
 private:
+  /// Construct and start all collectors and set window_start_.
+  void BringUp()
+  {
+    auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
+    received_message_period->Start();
+    subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
+
+    window_start_ = rclcpp::Time(GetCurrentNanosecondsSinceEpoch());
+  }
+
   /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
-  virtual void TearDown()
+  void TearDown()
   {
     for (auto & collector : subscriber_statistics_collectors_) {
       collector->Stop();
@@ -181,11 +205,11 @@ private:
   /// Collection of statistics collectors
   std::vector<std::unique_ptr<TopicStatsCollector>> subscriber_statistics_collectors_{};
   /// Node name used to generate topic statistics messages to be published
-  const std::string node_name_;
+  std::string node_name_;
   /// Publisher, created by the node, used to publish topic statistics messages
-  rclcpp::Publisher<metrics_statistics_msgs::msg::MetricsMessage>::SharedPtr publisher_{nullptr};
+  rclcpp::Publisher<metrics_statistics_msgs::msg::MetricsMessage>::SharedPtr publisher_;
   /// Timer which fires the publisher
-  rclcpp::TimerBase::SharedPtr publisher_timer_{nullptr};
+  rclcpp::TimerBase::SharedPtr publisher_timer_;
   /// The start of the collection window, used in the published topic statistics message
   rclcpp::Time window_start_;
 };
