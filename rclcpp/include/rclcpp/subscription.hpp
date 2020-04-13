@@ -38,6 +38,7 @@
 #include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/subscription_base.hpp"
@@ -145,19 +146,17 @@ public:
 
       // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
       auto context = node_base->get_context();
-      auto subscription_intra_process = std::make_shared<
-        rclcpp::experimental::SubscriptionIntraProcess<
-          CallbackMessageT,
-          AllocatorT,
-          typename MessageUniquePtr::deleter_type
-        >>(
+      using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
+        CallbackMessageT,
+        AllocatorT,
+        typename MessageUniquePtr::deleter_type>;
+      auto subscription_intra_process = std::make_shared<SubscriptionIntraProcessT>(
         callback,
         options.get_allocator(),
         context,
-        this->get_topic_name(),    // important to get like this, as it has the fully-qualified name
+        this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
         qos_profile,
-        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback)
-        );
+        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback));
       TRACEPOINT(
         rclcpp_subscription_init,
         (const void *)get_subscription_handle().get(),
@@ -187,7 +186,8 @@ public:
   }
 
   /// Called after construction to continue setup that requires shared_from_this().
-  void post_init_setup(
+  void
+  post_init_setup(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const rclcpp::QoS & qos,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options)
@@ -197,19 +197,32 @@ public:
     (void)options;
   }
 
-  /// Support dynamically setting the message memory strategy.
+  /// Take the next message from the inter-process subscription.
   /**
-   * Behavior may be undefined if called while the subscription could be executing.
-   * \param[in] message_memory_strategy Shared pointer to the memory strategy to set.
+   * Data may be taken (written) into the message_out and message_info_out even
+   * if false is returned.
+   * Specifically in the case of dropping redundant intra-process data, where
+   * data is received via both intra-process and inter-process (due to the
+   * underlying middleware being unabled to avoid this duplicate delivery) and
+   * so inter-process data from those intra-process publishers is ignored, but
+   * it has to be taken to know if it came from an intra-process publisher or
+   * not, and therefore could be dropped.
+   *
+   * \sa SubscriptionBase::take_type_erased()
+   *
+   * \param[out] message_out The message into which take will copy the data.
+   * \param[out] message_info_out The message info for the taken message.
+   * \returns true if data was taken and is valid, otherwise false
+   * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
    */
-  void set_message_memory_strategy(
-    typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT,
-    AllocatorT>::SharedPtr message_memory_strategy)
+  bool
+  take(CallbackMessageT & message_out, rclcpp::MessageInfo & message_info_out)
   {
-    message_memory_strategy_ = message_memory_strategy;
+    return this->take_type_erased(static_cast<void *>(&message_out), message_info_out);
   }
 
-  std::shared_ptr<void> create_message() override
+  std::shared_ptr<void>
+  create_message() override
   {
     /* The default message memory strategy provides a dynamically allocated message on each call to
      * create_message, though alternative memory strategies that re-use a preallocated message may be
@@ -218,15 +231,18 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  std::shared_ptr<rcl_serialized_message_t> create_serialized_message() override
+  std::shared_ptr<rcl_serialized_message_t>
+  create_serialized_message() override
   {
     return message_memory_strategy_->borrow_serialized_message();
   }
 
-  void handle_message(
-    std::shared_ptr<void> & message, const rmw_message_info_t & message_info) override
+  void
+  handle_message(
+    std::shared_ptr<void> & message,
+    const rclcpp::MessageInfo & message_info) override
   {
-    if (matches_any_intra_process_publishers(&message_info.publisher_gid)) {
+    if (matches_any_intra_process_publishers(&message_info.get_rmw_message_info().publisher_gid)) {
       // In this case, the message will be delivered via intra process and
       // we should ignore this copy of the message.
       return;
@@ -237,7 +253,8 @@ public:
 
   void
   handle_loaned_message(
-    void * loaned_message, const rmw_message_info_t & message_info) override
+    void * loaned_message,
+    const rclcpp::MessageInfo & message_info) override
   {
     auto typed_message = static_cast<CallbackMessageT *>(loaned_message);
     // message is loaned, so we have to make sure that the deleter does not deallocate the message
@@ -248,18 +265,21 @@ public:
 
   /// Return the borrowed message.
   /** \param message message to be returned */
-  void return_message(std::shared_ptr<void> & message) override
+  void
+  return_message(std::shared_ptr<void> & message) override
   {
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     message_memory_strategy_->return_message(typed_message);
   }
 
-  void return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
+  void
+  return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
   {
     message_memory_strategy_->return_serialized_message(message);
   }
 
-  bool use_take_shared_method() const
+  bool
+  use_take_shared_method() const
   {
     return any_callback_.use_take_shared_method();
   }

@@ -15,6 +15,7 @@
 #ifndef RCLCPP__CLIENT_HPP_
 #define RCLCPP__CLIENT_HPP_
 
+#include <atomic>
 #include <future>
 #include <map>
 #include <memory>
@@ -62,6 +63,27 @@ public:
   RCLCPP_PUBLIC
   virtual ~ClientBase();
 
+  /// Take the next response for this client as a type erased pointer.
+  /**
+   * The type erased pointer allows for this method to be used in a type
+   * agnostic way along with ClientBase::create_response(),
+   * ClientBase::create_request_header(), and ClientBase::handle_response().
+   * The typed version of this can be used if the Service type is known,
+   * \sa Client::take_response().
+   *
+   * \param[out] response_out The type erased pointer to a Service Response into
+   *   which the middleware will copy the response being taken.
+   * \param[out] request_header_out The request header to be filled by the
+   *   middleware when taking, and which can be used to associte the response
+   *   to a specific request.
+   * \returns true if the response was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl function fail.
+   */
+  RCLCPP_PUBLIC
+  bool
+  take_type_erased_response(void * response_out, rmw_request_id_t & request_header_out);
+
   RCLCPP_PUBLIC
   const char *
   get_service_name() const;
@@ -93,6 +115,20 @@ public:
   virtual void handle_response(
     std::shared_ptr<rmw_request_id_t> request_header, std::shared_ptr<void> response) = 0;
 
+  /// Exchange the "in use by wait set" state for this client.
+  /**
+   * This is used to ensure this client is not used by multiple
+   * wait sets at the same time.
+   *
+   * \param[in] in_use_state the new state to exchange into the state, true
+   *   indicates it is now in use by a wait set, and false is that it is no
+   *   longer in use by a wait set.
+   * \returns the previous state.
+   */
+  RCLCPP_PUBLIC
+  bool
+  exchange_in_use_by_wait_set_state(bool in_use_state);
+
 protected:
   RCLCPP_DISABLE_COPY(ClientBase)
 
@@ -113,6 +149,8 @@ protected:
   std::shared_ptr<rclcpp::Context> context_;
 
   std::shared_ptr<rcl_client_t> client_handle_;
+
+  std::atomic<bool> in_use_by_wait_set_{false};
 };
 
 template<typename ServiceT>
@@ -169,6 +207,25 @@ public:
 
   virtual ~Client()
   {
+  }
+
+  /// Take the next response for this client.
+  /**
+   * \sa ClientBase::take_type_erased_response().
+   *
+   * \param[out] response_out The reference to a Service Response into
+   *   which the middleware will copy the response being taken.
+   * \param[out] request_header_out The request header to be filled by the
+   *   middleware when taking, and which can be used to associte the response
+   *   to a specific request.
+   * \returns true if the response was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl function fail.
+   */
+  bool
+  take_response(typename ServiceT::Response & response_out, rmw_request_id_t & request_header_out)
+  {
+    return this->take_type_erased_response(&response_out, request_header_out);
   }
 
   std::shared_ptr<void>
