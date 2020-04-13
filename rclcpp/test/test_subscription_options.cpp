@@ -24,7 +24,7 @@ using namespace std::chrono_literals;
 
 namespace
 {
-constexpr const char defaultPublishTopic[] = "system_metrics";
+constexpr const char defaultPublishTopic[] = "/statistics";
 }
 
 TEST(TestSubscriptionOptions, topic_statistics_options) {

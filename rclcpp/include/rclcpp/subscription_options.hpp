@@ -56,20 +56,20 @@ struct SubscriptionOptionsBase
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificSubscriptionPayload>
   rmw_implementation_payload = nullptr;
 
-  // Options to configure topic statistics collector in the subscription
+  // Options to configure topic statistics collector in the subscription.
   struct TopicStatisticsOptions
   {
-    // Represent the state of topic statistics collector
+    // Represent the state of topic statistics collector.
     enum class TopicStatisticsState {ENABLED, DISABLED};
 
     // Enable and disable topic statistics calculation and publication. Defaults to disabled.
     TopicStatisticsState state = TopicStatisticsState::DISABLED;
 
-    // Topic to which topic statistics get published when enabled. Defaults to /system_metrics.
-    std::string publish_topic = "system_metrics";
+    // Topic to which topic statistics get published when enabled. Defaults to /statistics.
+    std::string publish_topic = "/statistics";
 
     // Topic statistics publication period in ms. Defaults to one minute.
-    std::chrono::milliseconds publish_period{60000};
+    std::chrono::milliseconds publish_period{std::chrono::minutes(1)};
   };
 
   TopicStatisticsOptions topic_stats_options;
