@@ -556,6 +556,28 @@ LifecycleNode::deactivate(LifecycleNodeInterface::CallbackReturn & cb_return_cod
 }
 
 const State &
+LifecycleNode::raise_error()
+{
+  if(get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    return impl_->trigger_transition(
+        lifecycle_msgs::msg::Transition::TRANSITION_ACTIVE_ERROR);
+  else
+    return impl_->trigger_transition(
+        lifecycle_msgs::msg::Transition::TRANSITION_INACTIVE_ERROR);
+}
+
+const State &
+LifecycleNode::raise_error(LifecycleNodeInterface::CallbackReturn & cb_return_code)
+{
+  if(get_current_state().id() == lifecycle_msgs::msg::State::PRIMARY_STATE_ACTIVE)
+    return impl_->trigger_transition(
+        lifecycle_msgs::msg::Transition::TRANSITION_ACTIVE_ERROR, cb_return_code);
+  else
+    return impl_->trigger_transition(
+        lifecycle_msgs::msg::Transition::TRANSITION_INACTIVE_ERROR, cb_return_code);
+}
+
+const State &
 LifecycleNode::shutdown()
 {
   return impl_->trigger_transition(
