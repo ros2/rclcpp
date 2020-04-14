@@ -208,6 +208,9 @@ protected:
     event_handlers_.emplace_back(handler);
   }
 
+  RCLCPP_PUBLIC
+  void default_incompatible_qos_callback(QOSOfferedIncompatibleQoSInfo & info) const;
+
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();

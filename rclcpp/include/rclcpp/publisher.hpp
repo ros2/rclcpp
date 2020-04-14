@@ -88,6 +88,21 @@ public:
       this->add_event_handler(
         options_.event_callbacks.incompatible_qos_callback,
         RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    } else if (options_.use_default_callbacks) {
+      // Register default callback when not specified
+      try {
+        this->add_event_handler(
+          [this](QOSOfferedIncompatibleQoSInfo & info) {
+            this->default_incompatible_qos_callback(info);
+          },
+          RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+      } catch (UnsupportedEventTypeException & /*exc*/) {
+        RCLCPP_WARN_ONCE(
+          rclcpp::get_logger(rcl_node_get_logger_name(rcl_node_handle_.get())),
+          "This rmw implementation does not support ON_OFFERED_INCOMPATIBLE_QOS "
+          "events, you will not be notified when Publishers offer an incompatible "
+          "QoS profile to Subscriptions on the same topic.");
+      }
     }
     // Setup continues in the post construction method, post_init_setup().
   }

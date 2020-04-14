@@ -44,6 +44,9 @@ struct PublisherOptionsBase
   /// Callbacks for various events related to publishers.
   PublisherEventCallbacks event_callbacks;
 
+  /// Whether or not to use default callbacks when user doesn't supply any in event_callbacks
+  bool use_default_callbacks = true;
+
   /// Callback group in which the waitable items from the publisher should be placed.
   std::shared_ptr<rclcpp::callback_group::CallbackGroup> callback_group;
 
