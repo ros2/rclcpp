@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "component_manager.hpp"
+#include "rclcpp_components/component_manager.hpp"
 
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "ament_index_cpp/get_resource.hpp"
+#include "class_loader/class_loader.hpp"
 #include "rcpputils/filesystem_helper.hpp"
 #include "rcpputils/split.hpp"
 
@@ -29,8 +31,9 @@ namespace rclcpp_components
 {
 
 ComponentManager::ComponentManager(
-  std::weak_ptr<rclcpp::executor::Executor> executor)
-: Node("ComponentManager"),
+  std::weak_ptr<rclcpp::executor::Executor> executor,
+  std::string node_name)
+: Node(std::move(node_name)),
   executor_(executor)
 {
   loadNode_srv_ = create_service<LoadNode>(
@@ -57,13 +60,14 @@ ComponentManager::~ComponentManager()
 }
 
 std::vector<ComponentManager::ComponentResource>
-ComponentManager::get_component_resources(const std::string & package_name) const
+ComponentManager::get_component_resources(
+  const std::string & package_name, const std::string & resource_index) const
 {
   std::string content;
   std::string base_path;
   if (
     !ament_index_cpp::get_resource(
-      "rclcpp_components", package_name, content, &base_path))
+      resource_index, package_name, content, &base_path))
   {
     throw ComponentManagerException("Could not find requested resource in ament index");
   }
@@ -176,7 +180,7 @@ ComponentManager::OnLoadNode(
         }
       }
 
-      auto node_id = unique_id++;
+      auto node_id = unique_id_++;
 
       if (0 == node_id) {
         // This puts a technical limit on the number of times you can add a component.

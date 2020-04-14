@@ -21,7 +21,7 @@
 #include "composition_interfaces/srv/unload_node.hpp"
 #include "composition_interfaces/srv/list_nodes.hpp"
 
-#include "component_manager.hpp"
+#include "rclcpp_components/component_manager.hpp"
 
 using namespace std::chrono_literals;
 
