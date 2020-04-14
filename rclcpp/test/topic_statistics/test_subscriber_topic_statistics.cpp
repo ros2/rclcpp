@@ -22,14 +22,13 @@
 #include "metrics_statistics_msgs/msg/metrics_message.hpp"
 
 #include "rclcpp/create_publisher.hpp"
-#include "rclcpp/rclcpp.hpp"
-#include "rclcpp/qos.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/qos.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 #include "rclcpp/topic_statistics/subscriber_topic_statistics.hpp"
 
 #include "test_msgs/msg/empty.hpp"
-
 
 namespace
 {

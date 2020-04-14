@@ -20,20 +20,19 @@
 #include <utility>
 #include <vector>
 
-
-#include "rclcpp/create_publisher.hpp"
-#include "rcl/time.h"
-#include "rclcpp/node.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp/publisher.hpp"
-#include "rclcpp/timer.hpp"
+#include "libstatistics_collector/collector/generate_statistics_message.hpp"
+#include "libstatistics_collector/moving_average_statistics/types.hpp"
+#include "libstatistics_collector/topic_statistics_collector/constants.hpp"
+#include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
 
 #include "metrics_statistics_msgs/msg/metrics_message.hpp"
 
-#include "libstatistics_collector/collector/generate_statistics_message.hpp"
-#include "libstatistics_collector/topic_statistics_collector/constants.hpp"
-#include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
-#include "libstatistics_collector/moving_average_statistics/types.hpp"
+#include "rcl/time.h"
+#include "rclcpp/create_publisher.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/time.hpp"
+#include "rclcpp/timer.hpp"
 
 namespace
 {
