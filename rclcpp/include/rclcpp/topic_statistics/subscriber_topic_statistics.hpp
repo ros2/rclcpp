@@ -120,12 +120,12 @@ public:
    */
   virtual void handle_message(
     const CallbackMessageT & received_message,
-    const rcl_time_point_value_t now_nanoseconds) const
+    const rclcpp::Time now_nanoseconds) const
   {
     (void) received_message;
 
     for (const auto & collector : subscriber_statistics_collectors_) {
-      collector->OnMessageReceived(received_message, now_nanoseconds);
+      collector->OnMessageReceived(received_message, now_nanoseconds.nanoseconds());
     }
   }
 
