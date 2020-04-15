@@ -21,8 +21,6 @@
 #include <utility>
 #include <vector>
 
-#include "class_loader/class_loader.hpp"
-
 #include "composition_interfaces/srv/load_node.hpp"
 #include "composition_interfaces/srv/unload_node.hpp"
 #include "composition_interfaces/srv/list_nodes.hpp"
