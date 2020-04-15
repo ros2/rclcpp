@@ -32,10 +32,6 @@ macro(rclcpp_components_register_nodes target)
       "'${target}' is not a target")
   endif()
   cmake_parse_arguments(ARGS "" "RESOURCE_INDEX" "" ${ARGN})
-  if(ARGS_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "rclcpp_components_register_node() called with unused "
-      "arguments: ${ARGS_UNPARSED_ARGUMENTS}")
-  endif()
   # default to rclcpp_components if not specified otherwise
   set(resource_index "rclcpp_components")
   if(NOT "${ARGS_RESOURCE_INDEX}" STREQUAL "")
@@ -53,7 +49,7 @@ macro(rclcpp_components_register_nodes target)
   if(${ARGC} GREATER 0)
     _rclcpp_components_register_package_hook()
     set(_unique_names)
-    foreach(_arg ${ARGN})
+    foreach(_arg ${ARGS_UNPARSED_ARGUMENTS})
       if(_arg IN_LIST _unique_names)
         message(
           FATAL_ERROR
