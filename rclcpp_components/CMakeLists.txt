@@ -32,7 +32,7 @@ ament_target_dependencies(component_manager
   "rcpputils"
 )
 target_compile_definitions(component_manager
-  PRIVATE "RCLCPP_COMPONENT_BUILDING_LIBRARY")
+  PRIVATE "RCLCPP_COMPONENTS_BUILDING_LIBRARY")
 
 add_executable(
   component_container
