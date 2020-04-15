@@ -33,6 +33,12 @@ macro(rclcpp_components_register_node target)
     message(FATAL_ERROR "rclcpp_components_register_node() called with unused "
       "arguments: ${ARGS_UNPARSED_ARGUMENTS}")
   endif()
+  if("${ARGS_PLUGIN}" STREQUAL "")
+    message(FATAL_ERROR "rclcpp_components_register_node macro requires a PLUGIN argument for target ${target}")
+  endif()
+  if("${ARGS_EXECUTABLE}" STREQUAL "")
+    message(FATAL_ERROR "rclcpp_components_register_node macro requires a EXECUTABLE argument for target ${target}")
+  endif()
   # default to rclcpp_components if not specified otherwise
   set(resource_index "rclcpp_components")
   if(NOT "${ARGS_RESOURCE_INDEX}" STREQUAL "")
