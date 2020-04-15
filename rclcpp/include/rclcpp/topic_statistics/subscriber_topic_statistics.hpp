@@ -80,7 +80,7 @@ public:
   /**
   * This object wraps utilities, defined in libstatistics_collector, to collect,
   * measure, and publish topic statistics data.
-   *
+  *
   * \param node the node creating the subscription, used to create the publisher and timer to
   * publish topic statistics.
   * \param publishing_topic the topic to publish statistics to
@@ -122,8 +122,6 @@ public:
     const CallbackMessageT & received_message,
     const rclcpp::Time now_nanoseconds) const
   {
-    (void) received_message;
-
     for (const auto & collector : subscriber_statistics_collectors_) {
       collector->OnMessageReceived(received_message, now_nanoseconds.nanoseconds());
     }
