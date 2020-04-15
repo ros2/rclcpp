@@ -15,8 +15,6 @@
 # register node plugins
 list(REMOVE_DUPLICATES _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES)
 foreach(resource_index ${_RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES})
-  #message(WARNING "registered index: ${resource_index}")
-  #message(WARNING "content for index: ${_RCLCPP_COMPONENTS_${resource_index}__NODES}")
   ament_index_register_resource(
     ${resource_index} CONTENT "${_RCLCPP_COMPONENTS_${resource_index}__NODES}")
 endforeach()
