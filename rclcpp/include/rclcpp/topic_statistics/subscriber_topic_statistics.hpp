@@ -34,19 +34,6 @@
 #include "rclcpp/time.hpp"
 #include "rclcpp/timer.hpp"
 
-namespace
-{
-/// Return the current nanoseconds (count) since epoch.
-/**
- * \return the current nanoseconds (count) since epoch
- */
-int64_t get_current_nanoseconds_since_epoch()
-{
-  const auto now = std::chrono::system_clock::now();
-  return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-}
-}  // namespace
-
 namespace rclcpp
 {
 namespace topic_statistics
@@ -160,10 +147,8 @@ private:
 
     subscriber_statistics_collectors_.clear();
 
-    if (publisher_timer_) {
-      publisher_timer_->cancel();
-      publisher_timer_.reset();
-    }
+    publisher_timer_->cancel();
+    publisher_timer_.reset();
 
     publisher_.reset();
   }
@@ -186,6 +171,16 @@ private:
       publisher_->publish(message);
     }
     window_start_ = window_end;
+  }
+
+  /// Return the current nanoseconds (count) since epoch.
+  /**
+   * \return the current nanoseconds (count) since epoch
+   */
+  int64_t get_current_nanoseconds_since_epoch()
+  {
+    const auto now = std::chrono::system_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
   }
 
   /// Collection of statistics collectors
