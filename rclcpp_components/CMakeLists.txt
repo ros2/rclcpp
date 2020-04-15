@@ -21,7 +21,7 @@ include_directories(include)
 
 add_library(
   component_manager
-  STATIC
+  SHARED
   src/component_manager.cpp
 )
 ament_target_dependencies(component_manager
@@ -31,6 +31,8 @@ ament_target_dependencies(component_manager
   "rclcpp"
   "rcpputils"
 )
+target_compile_definitions(component_manager
+  PRIVATE "RCLCPP_COMPONENT_BUILDING_LIBRARY")
 
 add_executable(
   component_container

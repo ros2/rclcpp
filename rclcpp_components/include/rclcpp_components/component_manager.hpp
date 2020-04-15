@@ -23,15 +23,16 @@
 
 #include "class_loader/class_loader.hpp"
 
-#include "rclcpp/executor.hpp"
-#include "rclcpp/node_options.hpp"
-#include "rclcpp/rclcpp.hpp"
-
 #include "composition_interfaces/srv/load_node.hpp"
 #include "composition_interfaces/srv/unload_node.hpp"
 #include "composition_interfaces/srv/list_nodes.hpp"
 
+#include "rclcpp/executor.hpp"
+#include "rclcpp/node_options.hpp"
+#include "rclcpp/rclcpp.hpp"
+
 #include "rclcpp_components/node_factory.hpp"
+#include "rclcpp_components/visibility_control.hpp"
 
 namespace class_loader
 {
@@ -41,7 +42,7 @@ class ClassLoader;
 namespace rclcpp_components
 {
 
-class ComponentManagerException : public std::runtime_error
+class RCLCPP_COMPONENTS_PUBLIC_TYPE ComponentManagerException : public std::runtime_error
 {
 public:
   explicit ComponentManagerException(const std::string & error_desc)
@@ -61,34 +62,42 @@ public:
    */
   using ComponentResource = std::pair<std::string, std::string>;
 
+  RCLCPP_COMPONENTS_PUBLIC
   ComponentManager(
     std::weak_ptr<rclcpp::executor::Executor> executor,
-    std::string node_name = "ComponentManager");
+    std::string node_name = "ComponentManager",
+    const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
 
+  RCLCPP_COMPONENTS_PUBLIC
   virtual ~ComponentManager();
 
   /// Return a list of valid loadable components in a given package.
+  RCLCPP_COMPONENTS_PUBLIC
   virtual std::vector<ComponentResource>
   get_component_resources(
     const std::string & package_name,
     const std::string & resource_index = "rclcpp_components") const;
 
+  RCLCPP_COMPONENTS_PUBLIC
   virtual std::shared_ptr<rclcpp_components::NodeFactory>
   create_component_factory(const ComponentResource & resource);
 
 protected:
+  RCLCPP_COMPONENTS_PUBLIC
   virtual void
   OnLoadNode(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<LoadNode::Request> request,
     std::shared_ptr<LoadNode::Response> response);
 
+  RCLCPP_COMPONENTS_PUBLIC
   virtual void
   OnUnloadNode(
     const std::shared_ptr<rmw_request_id_t> request_header,
     const std::shared_ptr<UnloadNode::Request> request,
     std::shared_ptr<UnloadNode::Response> response);
 
+  RCLCPP_COMPONENTS_PUBLIC
   virtual void
   OnListNodes(
     const std::shared_ptr<rmw_request_id_t> request_header,

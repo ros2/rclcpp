@@ -32,8 +32,9 @@ namespace rclcpp_components
 
 ComponentManager::ComponentManager(
   std::weak_ptr<rclcpp::executor::Executor> executor,
-  std::string node_name)
-: Node(std::move(node_name)),
+  std::string node_name,
+  const rclcpp::NodeOptions & node_options)
+: Node(std::move(node_name), node_options),
   executor_(executor)
 {
   loadNode_srv_ = create_service<LoadNode>(
