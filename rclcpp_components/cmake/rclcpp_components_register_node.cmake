@@ -22,15 +22,24 @@
 # :type target: string
 # :param PLUGIN: the plugin name
 # :type PLUGIN: string
-# :type EXECUTABLE: the node's executable name
+# :param EXECUTABLE: the node's executable name
 # :type EXECUTABLE: string
+# :param RESOURCE_INDEX: the ament resource index to register the components
+# :type RESOURCE_INDEX: string
 #
 macro(rclcpp_components_register_node target)
-  cmake_parse_arguments(ARGS "" "PLUGIN;EXECUTABLE" "" ${ARGN})
+  cmake_parse_arguments(ARGS "" "PLUGIN;EXECUTABLE;RESOURCE_INDEX" "" ${ARGN})
   if(ARGS_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "rclcpp_components_register_node() called with unused "
       "arguments: ${ARGS_UNPARSED_ARGUMENTS}")
   endif()
+  # default to rclcpp_components if not specified otherwise
+  set(resource_index "rclcpp_components")
+  if(NOT "${ARGS_RESOURCE_INDEX}" STREQUAL "")
+    set(resource_index ${ARGS_RESOURCE_INDEX})
+    message(STATUS "Setting component resource index to non-default value ${resource_index}")
+  endif()
+
   set(component ${ARGS_PLUGIN})
   set(node ${ARGS_EXECUTABLE})
   _rclcpp_components_register_package_hook()
@@ -39,8 +48,10 @@ macro(rclcpp_components_register_node target)
   if(WIN32)
     set(_path "bin")
   endif()
-  set(_RCLCPP_COMPONENTS__NODES
-    "${_RCLCPP_COMPONENTS__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
+  set(_RCLCPP_COMPONENTS_${resource_index}__NODES
+    "${_RCLCPP_COMPONENTS_${resource_index}__NODES}${component};${_path}/$<TARGET_FILE_NAME:${target}>\n")
+  list(APPEND _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES ${resource_index})
+
   configure_file(${rclcpp_components_NODE_TEMPLATE}
     ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_configured_${node}.cpp.in)
   file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/rclcpp_components/node_main_${node}.cpp

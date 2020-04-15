@@ -89,7 +89,6 @@ if(BUILD_TESTING)
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_component_manager)
     target_link_libraries(test_component_manager component_manager)
-    target_include_directories(test_component_manager PRIVATE src)
   endif()
 
   ament_add_gtest(test_component_manager_api test/test_component_manager_api.cpp
@@ -97,7 +96,6 @@ if(BUILD_TESTING)
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_component_manager_api)
     target_link_libraries(test_component_manager_api component_manager)
-    target_include_directories(test_component_manager_api PRIVATE src)
   endif()
 endif()
 
