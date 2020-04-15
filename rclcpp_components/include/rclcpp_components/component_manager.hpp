@@ -40,7 +40,7 @@ class ClassLoader;
 namespace rclcpp_components
 {
 
-class RCLCPP_COMPONENTS_PUBLIC_TYPE ComponentManagerException : public std::runtime_error
+class ComponentManagerException : public std::runtime_error
 {
 public:
   explicit ComponentManagerException(const std::string & error_desc)
