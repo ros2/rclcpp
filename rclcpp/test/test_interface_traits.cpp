@@ -14,7 +14,7 @@
 
 #include <gtest/gtest.h>
 
-#include "rclcpp/node_interfaces/interface_traits.hpp"
+#include "rclcpp/node_interfaces/node_base_interface_traits.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node.hpp"
 
@@ -23,7 +23,9 @@ class MyNode
 public:
   std::shared_ptr<rclcpp::node_interfaces::NodeBaseInterface> get_node_base_interface() const
   {
-    return std::make_shared<rclcpp::node_interfaces::NodeBase>("my_node_name", "my_node_namespace", nullptr, rclcpp::NodeOptions());
+    rclcpp::NodeOptions options;
+    return std::make_shared<rclcpp::node_interfaces::NodeBase>(
+        "my_node_name", "my_node_namespace", nullptr, *options.get_rcl_node_options(), false);
   }
 };
 

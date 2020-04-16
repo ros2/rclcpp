@@ -12,66 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__NODE_INTERFACES__INTERFACE_TRAITS_HPP_
-#define RCLCPP__NODE_INTERFACES__INTERFACE_TRAITS_HPP_
+@{
+uppercase_interface_name = interface_name.upper()
+}@
+
+#ifndef RCLCPP__NODE_INTERFACES__@(uppercase_interface_name)_TRAITS_HPP_
+#define RCLCPP__NODE_INTERFACES__@(uppercase_interface_name)_TRAITS_HPP_
 
 #include <functional>
 #include <type_traits>
 
-@{
-node_interfaces = [
-  'node_base_interface',
-  'node_clock_interface',
-  'node_graph_interface',
-  'node_logging_interface',
-  'node_parameters_interface',
-  'node_services_interface',
-  'node_time_source_interface',
-  'node_timers_interface',
-  'node_topics_interface',
-  'node_waitables_interface',
-]
-
-node_interface_types = [
-  'NodeBaseInterface',
-  'NodeClockInterface',
-  'NodeGraphInterface',
-  'NodeLoggingInterface',
-  'NodeParametersInterface',
-  'NodeServicesInterface',
-  'NodeTimeSourceInterface',
-  'NodeTimersInterface',
-  'NodeTopicsInterface',
-  'NodeWaitablesInterface',
-]
-
-assert (len(node_interfaces) == len(node_interface_types))
-}@
-
-@[for interface_ in node_interfaces]@
-#include "rclcpp/node_interfaces/@(interface_).hpp"
-@[end for]@
+#include "rclcpp/node_interfaces/@(interface_name).hpp"
 
 namespace rclcpp
 {
 namespace node_interfaces
 {
 
-@[for (interface_, type_) in zip(node_interfaces, node_interface_types)]@
-using @(interface_)_getter_t = std::shared_ptr<rclcpp::node_interfaces::@(type_)>;
-
 template<class T, typename = void>
-struct has_@(interface_) : std::false_type
+struct has_@(interface_name) : std::false_type
 {};
+
+@{
+interface_typename = ''.join([part.capitalize() for part in interface_name.split('_')])
+}@
 
 template<class T>
-struct has_@(interface_)<
+struct has_@(interface_name)<
   T, typename std::enable_if<
     std::is_same<
-      @(interface_)_getter_t, decltype(std::declval<T>().get_@(interface_)())>::value>::type> : std::true_type
+      std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>,
+      decltype(std::declval<T>().get_@(interface_name)())>::value>::type> : std::true_type
 {};
 
-@[end for]@
 }  // namespace node_interfaces
 }  // namespace rclcpp
-#endif  // RCLCPP__NODE_INTERFACES__INTERFACE_TRAITS_HPP_
+
+#endif  // RCLCPP__NODE_INTERFACES__@(uppercase_interface_name)_TRAITS_HPP_

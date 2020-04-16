@@ -111,25 +111,50 @@ add_custom_command(OUTPUT include/rclcpp/logging.hpp
 list(APPEND ${PROJECT_NAME}_SRCS
   include/rclcpp/logging.hpp)
 
-# "watch" template for changes
-configure_file(
-  "resource/interface_traits.hpp.em"
-  "interface_traits.hpp.em.watch"
-  COPYONLY
-)
-set(python_code_interface_traits
-  "import em"
-  "em.invoke(['-o', 'include/rclcpp/node_interfaces/interface_traits.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/interface_traits.hpp.em'])")
-string(REPLACE ";" "$<SEMICOLON>" python_code_interface_traits "${python_code_interface_traits}")
-add_custom_command(OUTPUT include/rclcpp/node_interfaces/interface_traits.hpp
-  COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
-  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code_interface_traits}"
-  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/interface_traits.hpp.em.watch"
-  COMMENT "Expanding interfae_traits.hpp.em"
-  VERBATIM
-)
-list(APPEND ${PROJECT_NAME}_SRCS
-  include/rclcpp/node_interfaces/interface_traits.hpp)
+file(GLOB interface_files "include/rclcpp/node_interfaces/node_*_interface.hpp")
+foreach(interface_file ${interface_files})
+  get_filename_component(interface_name ${interface_file} NAME_WE)
+
+  # "watch" template for changes
+  configure_file(
+    "resource/interface_traits.hpp.em"
+    "${CMAKE_CURRENT_BINARY_DIR}/${interface_name}_traits.hpp.em.watch"
+    COPYONLY
+  )
+  set(python_${interface_name}_traits
+    "import em"
+    "em.invoke(['-D', 'interface_name = \\'${interface_name}\\'', '-o', 'include/rclcpp/node_interfaces/${interface_name}_traits.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/interface_traits.hpp.em'])")
+  string(REPLACE ";" "$<SEMICOLON>" python_${interface_name}_traits "${python_${interface_name}_traits}")
+  add_custom_command(OUTPUT include/rclcpp/node_interfaces/${interface_name}_traits.hpp
+    COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
+    COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_${interface_name}_traits}"
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${interface_name}_traits.hpp.em.watch"
+    COMMENT "Expanding interface_traits.hpp.em into ${interface_name}_traits.hpp"
+    VERBATIM
+  )
+  list(APPEND ${PROJECT_NAME}_SRCS
+    include/rclcpp/node_interfaces/${interface_name}_traits.hpp)
+
+  # # "watch" template for changes
+  # configure_file(
+  #   "resource/get_interface.hpp.em"
+  #   "get_${interface_name}.hpp.em.watch"
+  #   COPYONLY
+  # )
+  # set(python_get_${interface_name}
+  #   "import em"
+  #   "em.invoke(['-D', 'interface_name = \\'${interface_name}\\'', '-o', 'include/rclcpp/node_interfaces/get_${interface_name}.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/get_interface.hpp.em'])")
+  # string(REPLACE ";" "$<SEMICOLON>" python_get_${interface_name} "${python_get_${interface_name}}")
+  # add_custom_command(OUTPUT include/rclcpp/node_interfaces/get_${interface_name}.hpp
+  #   COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
+  #   COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_${interface_name}_traits}"
+  #   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/get_${interface_file}.hpp.em.watch"
+  #   COMMENT "Expanding get_interface.hpp.em into get_${interface_file}.hpp"
+  #   VERBATIM
+  # )
+  # list(APPEND ${PROJECT_NAME}_SRCS
+  #   include/rclcpp/node_interfaces/get_${interface_name}.hpp)
+endforeach()
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 
