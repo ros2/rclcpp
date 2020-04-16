@@ -60,8 +60,8 @@ create_timer(
   rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_timer(
-    rclcpp::node_interfaces::get_node_base_interface(node),
-    rclcpp::node_interfaces::get_node_timers_interface(node),
+    rclcpp::node_interfaces::get_node_base_interface(node).get(),
+    rclcpp::node_interfaces::get_node_timers_interface(node).get(),
     clock,
     period,
     std::forward<CallbackT>(callback),

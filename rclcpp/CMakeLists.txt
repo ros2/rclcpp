@@ -135,25 +135,25 @@ foreach(interface_file ${interface_files})
   list(APPEND ${PROJECT_NAME}_SRCS
     include/rclcpp/node_interfaces/${interface_name}_traits.hpp)
 
-  # # "watch" template for changes
-  # configure_file(
-  #   "resource/get_interface.hpp.em"
-  #   "get_${interface_name}.hpp.em.watch"
-  #   COPYONLY
-  # )
-  # set(python_get_${interface_name}
-  #   "import em"
-  #   "em.invoke(['-D', 'interface_name = \\'${interface_name}\\'', '-o', 'include/rclcpp/node_interfaces/get_${interface_name}.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/get_interface.hpp.em'])")
-  # string(REPLACE ";" "$<SEMICOLON>" python_get_${interface_name} "${python_get_${interface_name}}")
-  # add_custom_command(OUTPUT include/rclcpp/node_interfaces/get_${interface_name}.hpp
-  #   COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
-  #   COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_${interface_name}_traits}"
-  #   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/get_${interface_file}.hpp.em.watch"
-  #   COMMENT "Expanding get_interface.hpp.em into get_${interface_file}.hpp"
-  #   VERBATIM
-  # )
-  # list(APPEND ${PROJECT_NAME}_SRCS
-  #   include/rclcpp/node_interfaces/get_${interface_name}.hpp)
+  # "watch" template for changes
+  configure_file(
+    "resource/get_interface.hpp.em"
+    "get_${interface_name}.hpp.em.watch"
+    COPYONLY
+  )
+  set(python_get_${interface_name}
+    "import em"
+    "em.invoke(['-D', 'interface_name = \\'${interface_name}\\'', '-o', 'include/rclcpp/node_interfaces/get_${interface_name}.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/get_interface.hpp.em'])")
+  string(REPLACE ";" "$<SEMICOLON>" python_get_${interface_name} "${python_get_${interface_name}}")
+  add_custom_command(OUTPUT include/rclcpp/node_interfaces/get_${interface_name}.hpp
+    COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
+    COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_get_${interface_name}}"
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/get_${interface_name}.hpp.em.watch"
+    COMMENT "Expanding get_interface.hpp.em into get_${interface_file}.hpp"
+    VERBATIM
+  )
+  list(APPEND ${PROJECT_NAME}_SRCS
+    include/rclcpp/node_interfaces/get_${interface_name}.hpp)
 endforeach()
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
