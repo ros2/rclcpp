@@ -35,13 +35,13 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
-#include "rclcpp/experimental/serialized_message.hpp"
 #include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/message_info.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
@@ -177,7 +177,7 @@ public:
           this->get_topic_name(),  // important to get it by the fully-qualified name
           qos.get_rmw_qos_profile(),
           resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
-          std::make_shared<rclcpp::experimental::Serialization>(
+          std::make_shared<rclcpp::Serialization>(
             type_support_handle,
             options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
           );
@@ -192,20 +192,20 @@ public:
 
       {
         using SerializedMessageAllocatorTraits =
-          allocator::AllocRebind<rclcpp::experimental::SerializedMessage,
+          allocator::AllocRebind<rclcpp::SerializedMessage,
             AllocatorT>;
         using SerializedMessageAllocator =
           typename SerializedMessageAllocatorTraits::allocator_type;
         using SerializedMessageDeleter = allocator::Deleter<SerializedMessageAllocator,
-            rclcpp::experimental::SerializedMessage>;
+            rclcpp::SerializedMessage>;
         using SerializedMessageUniquePtr =
-          std::unique_ptr<rclcpp::experimental::SerializedMessage,
+          std::unique_ptr<rclcpp::SerializedMessage,
             SerializedMessageDeleter>;
 
         // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
         auto subscription_intra_process = std::make_shared<
           rclcpp::experimental::SubscriptionIntraProcess<
-            rclcpp::experimental::SerializedMessage,
+            rclcpp::SerializedMessage,
             AllocatorT,
             typename SerializedMessageUniquePtr::deleter_type,
             CallbackMessageT
@@ -216,7 +216,7 @@ public:
           this->get_topic_name(),    // important to get it by the fully-qualified name
           qos.get_rmw_qos_profile(),
           resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
-          std::make_shared<rclcpp::experimental::Serialization>(
+          std::make_shared<rclcpp::Serialization>(
             type_support_handle,
             options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
           );

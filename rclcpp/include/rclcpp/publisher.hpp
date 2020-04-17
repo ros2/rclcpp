@@ -57,11 +57,11 @@ public:
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
   using SerializedMessageAllocatorTraits =
-    allocator::AllocRebind<rclcpp::experimental::SerializedMessage,
+    allocator::AllocRebind<rclcpp::SerializedMessage,
       AllocatorT>;
   using SerializedMessageAllocator = typename SerializedMessageAllocatorTraits::allocator_type;
   using SerializedMessageDeleter = allocator::Deleter<SerializedMessageAllocator,
-      rclcpp::experimental::SerializedMessage>;
+      rclcpp::SerializedMessage>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
@@ -332,7 +332,7 @@ protected:
   do_publish_message(const T & msg)
   {
     // Kept for backwards compatibility. Copies compelete memory!
-    this->publish(std::make_unique<rclcpp::experimental::SerializedMessage>(msg));
+    this->publish(std::make_unique<rclcpp::SerializedMessage>(msg));
   }
 
   void
@@ -369,7 +369,7 @@ protected:
       }
     }
 
-    auto msg = std::make_unique<rclcpp::experimental::SerializedMessage>(
+    auto msg = std::make_unique<rclcpp::SerializedMessage>(
       std::move(serialized_msg));
 
     if (intra_process_is_enabled_) {
@@ -413,7 +413,7 @@ protected:
     }
 
     const uint64_t intra_process_publisher_id = std::is_same<T,
-        rclcpp::experimental::SerializedMessage>::value ?
+        rclcpp::SerializedMessage>::value ?
       intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
 
     ipm->template do_intra_process_publish<T, AllocatorT>(
@@ -438,7 +438,7 @@ protected:
     }
 
     const uint64_t intra_process_publisher_id = std::is_same<T,
-        rclcpp::experimental::SerializedMessage>::value ?
+        rclcpp::SerializedMessage>::value ?
       intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
 
     return ipm->template do_intra_process_publish_and_return_shared<T, AllocatorT>(

@@ -26,7 +26,7 @@
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "rclcpp/experimental/serialized_message.hpp"
+#include "rclcpp/serialized_message.hpp"
 
 int32_t & get_test_allocation_counter()
 {

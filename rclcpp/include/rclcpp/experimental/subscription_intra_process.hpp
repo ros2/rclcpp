@@ -27,8 +27,9 @@
 #include "rclcpp/any_subscription_callback.hpp"
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
-#include "rclcpp/experimental/serialization.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 #include "tracetools/tracetools.h"
@@ -77,7 +78,7 @@ public:
     any_callback_(callback), serializer_(serializer)
   {
     if (!std::is_same<MessageT, CallbackMessageT>::value &&
-      !std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value &&
+      !std::is_same<MessageT, rclcpp::SerializedMessage>::value &&
       !std::is_same<CallbackMessageT, rcl_serialized_message_t>::value)
     {
       throw std::runtime_error("SubscriptionIntraProcess wrong callback type");
@@ -157,7 +158,7 @@ private:
   template<typename T>
   typename std::enable_if<
     std::is_same<T, rcl_serialized_message_t>::value &&
-    !std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
+    !std::is_same<MessageT, rclcpp::SerializedMessage>::value,
     void>::type
   execute_impl()
   {
@@ -189,7 +190,7 @@ private:
   template<class T>
   typename std::enable_if<
     !std::is_same<T, rcl_serialized_message_t>::value &&
-    !std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
+    !std::is_same<MessageT, rclcpp::SerializedMessage>::value,
     void>::type
   execute_impl()
   {
@@ -210,7 +211,7 @@ private:
   template<typename T>
   typename std::enable_if<
     std::is_same<T, rcl_serialized_message_t>::value &&
-    std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
+    std::is_same<MessageT, rclcpp::SerializedMessage>::value,
     void>::type
   execute_impl()
   {
@@ -234,7 +235,7 @@ private:
   template<class T>
   typename std::enable_if<
     !std::is_same<T, rcl_serialized_message_t>::value &&
-    std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
+    std::is_same<MessageT, rclcpp::SerializedMessage>::value,
     void>::type
   execute_impl()
   {

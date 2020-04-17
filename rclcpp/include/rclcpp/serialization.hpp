@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXPERIMENTAL__SERIALIZATION_HPP_
-#define RCLCPP__EXPERIMENTAL__SERIALIZATION_HPP_
+#ifndef RCLCPP__SERIALIZATION_HPP_
+#define RCLCPP__SERIALIZATION_HPP_
 
 #include <rmw/rmw.h>
 
@@ -23,8 +23,6 @@
 #include "rcl/error_handling.h"
 
 namespace rclcpp
-{
-namespace experimental
 {
 
 /// Interface to (de)serialize a message
@@ -119,7 +117,6 @@ private:
   rcutils_allocator_t rcutils_allocator_;
 };
 
-}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__EXPERIMENTAL__SERIALIZATION_HPP_
+#endif  // RCLCPP__SERIALIZATION_HPP_
