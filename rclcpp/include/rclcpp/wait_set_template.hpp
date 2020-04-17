@@ -165,7 +165,7 @@ public:
         }
         if (mask.include_intra_process_waitable) {
           auto local_subscription = inner_subscription;
-          for(auto waitable : inner_subscription->get_intra_process_waitables()) {
+          for (auto waitable : inner_subscription->get_intra_process_waitables()) {
             if (nullptr != waitable) {
               bool already_in_use = local_subscription->exchange_in_use_by_wait_set_state(
                 waitable.get(),
@@ -231,7 +231,7 @@ public:
           }
         }
         if (mask.include_intra_process_waitable) {
-          for(auto local_waitable : inner_subscription->get_intra_process_waitables()) {
+          for (auto local_waitable : inner_subscription->get_intra_process_waitables()) {
             inner_subscription->exchange_in_use_by_wait_set_state(local_waitable.get(), false);
             if (nullptr != local_waitable) {
               // This is the case when intra process is disabled for the subscription.

@@ -281,7 +281,7 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   if (this == pointer_to_subscription_part) {
     return subscription_in_use_by_wait_set_.exchange(in_use_state);
   }
-  for(auto & waitable : get_intra_process_waitables()) {
+  for (auto & waitable : get_intra_process_waitables()) {
     if (waitable.get() == pointer_to_subscription_part) {
       return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
     }

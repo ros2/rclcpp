@@ -223,7 +223,8 @@ private:
       }
       any_callback_.dispatch_intra_process(msg, msg_info);
     } else {
-      throw std::runtime_error("Subscription intra-process for serialized "
+      throw std::runtime_error(
+              "Subscription intra-process for serialized "
               "messages does not support unique pointers.");
     }
   }
@@ -250,12 +251,14 @@ private:
 
     if (any_callback_.use_take_shared_method()) {
       CallbackMessageSharedPtr msg = construct_unique();
-      serializer_->deserialize_message(serialized_container.get(),
+      serializer_->deserialize_message(
+        serialized_container.get(),
         reinterpret_cast<void *>(msg.get()));
       any_callback_.dispatch_intra_process(msg, msg_info);
     } else {
       CallbackMessageUniquePtr msg = construct_unique();
-      serializer_->deserialize_message(serialized_container.get(),
+      serializer_->deserialize_message(
+        serialized_container.get(),
         reinterpret_cast<void *>(msg.get()));
       any_callback_.dispatch_intra_process(std::move(msg), msg_info);
     }

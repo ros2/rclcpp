@@ -177,8 +177,9 @@ public:
           this->get_topic_name(),  // important to get it by the fully-qualified name
           qos.get_rmw_qos_profile(),
           resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
-          std::make_shared<rclcpp::experimental::Serialization>(type_support_handle,
-          options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
+          std::make_shared<rclcpp::experimental::Serialization>(
+            type_support_handle,
+            options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
           );
         TRACEPOINT(
           rclcpp_subscription_init,
@@ -215,8 +216,9 @@ public:
           this->get_topic_name(),    // important to get it by the fully-qualified name
           qos.get_rmw_qos_profile(),
           resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
-          std::make_shared<rclcpp::experimental::Serialization>(type_support_handle,
-          options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
+          std::make_shared<rclcpp::experimental::Serialization>(
+            type_support_handle,
+            options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
           );
         TRACEPOINT(
           rclcpp_subscription_init,
@@ -224,11 +226,13 @@ public:
           (const void *)subscription_intra_process.get());
 
         // Add it to the intra process manager.
-        intra_process_subscription_id_serialized = ipm->add_subscription(subscription_intra_process,
-            true);
+        intra_process_subscription_id_serialized = ipm->add_subscription(
+          subscription_intra_process,
+          true);
       }
 
-      this->setup_intra_process({intra_process_subscription_id,
+      this->setup_intra_process(
+        {intra_process_subscription_id,
           intra_process_subscription_id_serialized}, ipm);
     }
 

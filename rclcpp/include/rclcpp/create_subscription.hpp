@@ -107,9 +107,10 @@ create_subscription(
   const auto type_support = *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
 
   return create_subscription<MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT,
-           MessageMemoryStrategyT>(std::forward<NodeT>(
-             node), topic_name, type_support, qos, std::forward<CallbackT>(
-             callback), options, msg_mem_strat);
+           MessageMemoryStrategyT>(
+    std::forward<NodeT>(
+      node), topic_name, type_support, qos, std::forward<CallbackT>(
+      callback), options, msg_mem_strat);
 }
 
 }  // namespace rclcpp

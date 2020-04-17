@@ -94,7 +94,8 @@ rcl_serialized_message_t make_serialized_string_msg(
     <test_msgs::msg::Strings>();
   auto error = rmw_serialize(stringMsg.get(), type, &msg);
   if (error != RMW_RET_OK) {
-    RCUTILS_LOG_ERROR_NAMED("test_intra_process_communication",
+    RCUTILS_LOG_ERROR_NAMED(
+      "test_intra_process_communication",
       "Something went wrong preparing the serialized message");
   }
 
@@ -179,14 +180,18 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized)
       parameters.node_options[0]);
     auto publisher = node->create_publisher<test_msgs::msg::Strings>("/topic", 10);
 
-    auto sub_shared = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessage);
-    auto sub_unique = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessageUniquePtr);
-    auto sub_const_shared = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessageConst);
-    auto sub_serialized = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessageSerialized);
+    auto sub_shared = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessage);
+    auto sub_unique = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessageUniquePtr);
+    auto sub_const_shared = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessageConst);
+    auto sub_serialized = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessageSerialized);
 
     rclcpp::sleep_for(offset);
 
@@ -243,14 +248,18 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized_generic)
       rclcpp::QoS(10),
       &OnMessageSerialized);
 
-    auto sub_shared = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessage);
-    auto sub_unique = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessageUniquePtr);
-    auto sub_const_shared = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessageConst);
-    auto sub_serialized = node->create_subscription<test_msgs::msg::Strings>("/topic", 10,
-        &OnMessageSerialized);
+    auto sub_shared = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessage);
+    auto sub_unique = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessageUniquePtr);
+    auto sub_const_shared = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessageConst);
+    auto sub_serialized = node->create_subscription<test_msgs::msg::Strings>(
+      "/topic", 10,
+      &OnMessageSerialized);
 
     rclcpp::sleep_for(offset);
 
