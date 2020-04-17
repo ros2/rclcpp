@@ -236,7 +236,7 @@ SubscriptionBase::get_intra_process_waitables() const
 
   std::vector<rclcpp::Waitable::SharedPtr> waitables(intra_process_subscription_ids_.size());
 
-  for (size_t i = 0; i < intra_process_subscription_ids_.size(); ++i) {
+  for (auto i = 0u; i < intra_process_subscription_ids_.size(); ++i) {
     // Use the id to retrieve the subscription intra-process from the intra-process manager.
     waitables[i] = ipm->get_subscription_intra_process(intra_process_subscription_ids_[i]);
   }
