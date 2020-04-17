@@ -125,7 +125,7 @@ class TestPublisherSubscriptionSerialized : public ::testing::TestWithParam<Test
 public:
   static void SetUpTestCase()
   {
-    if (!rclcpp::is_initialized()) {
+    if (!rclcpp::ok()) {
       rclcpp::init(0, nullptr);
     }
   }
