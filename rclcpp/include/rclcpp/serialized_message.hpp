@@ -64,7 +64,7 @@ public:
 
   ~SerializedMessage()
   {
-    if (buffer != nullptr) {
+    if (nullptr != buffer) {
       const auto fini_ret = rmw_serialized_message_fini(this);
       if (fini_ret != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
