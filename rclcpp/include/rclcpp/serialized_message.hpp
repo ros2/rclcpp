@@ -15,13 +15,13 @@
 #ifndef RCLCPP__SERIALIZED_MESSAGE_HPP_
 #define RCLCPP__SERIALIZED_MESSAGE_HPP_
 
+#include <rclcpp/exceptions.hpp>
+
 #include <cstring>
 
 #include "rcutils/logging_macros.h"
 
 #include "rmw/serialized_message.h"
-
-#include <rclcpp/exceptions.hpp>
 
 namespace rclcpp
 {
