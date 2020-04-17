@@ -207,6 +207,13 @@ public:
     this->do_publish_message(msg);
   }
 
+  template<class T = MessageT>
+  typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value>::type
+  publish(const rcl_serialized_message_t & serialized_msg)
+  {
+    this->do_publish_message<rcl_serialized_message_t>(serialized_msg);
+  }
+
   /// Publish a serialized message. Non specialized version to prevent compiling errors.
   template<typename TDeleter, typename T>
   void publish(std::unique_ptr<T, TDeleter> serialized_msg)
@@ -322,7 +329,7 @@ protected:
 
   template<class T = MessageT>
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value>::type
-  do_publish_message(const MessageT & msg)
+  do_publish_message(const T & msg)
   {
     // Kept for backwards compatibility. Copies compelete memory!
     this->publish(std::make_unique<rclcpp::experimental::SerializedMessage>(msg));
