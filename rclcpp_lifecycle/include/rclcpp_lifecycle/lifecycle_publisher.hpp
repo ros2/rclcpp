@@ -61,6 +61,17 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options)
+  : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options),
+    enabled_(false),
+    logger_(rclcpp::get_logger("LifecyclePublisher"))
+  {
+  }
+
+  LifecyclePublisher(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
     const rclcpp::PublisherOptionsWithAllocator<Alloc> & options,
     const rosidl_message_type_support_t & type_support)
   : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options, type_support),
