@@ -165,7 +165,7 @@ private:
       throw std::runtime_error("Subscription intra-process can't handle serialized messages");
     }
 
-    rmw_message_info_t msg_info;
+    rmw_message_info_t msg_info = {};
     msg_info.from_intra_process = true;
 
     ConstMessageSharedPtr msg = buffer_->consume_shared();
@@ -179,7 +179,8 @@ private:
     if (any_callback_.use_take_shared_method()) {
       any_callback_.dispatch_intra_process(serialized_msg, msg_info);
     } else {
-      throw std::runtime_error("Subscription intra-process for serialized "
+      throw std::runtime_error(
+              "Subscription intra-process for serialized "
               "messages does not support unique pointers.");
     }
   }
@@ -192,7 +193,7 @@ private:
     void>::type
   execute_impl()
   {
-    rmw_message_info_t msg_info;
+    rmw_message_info_t msg_info = {};
     msg_info.publisher_gid = {0, {0}};
     msg_info.from_intra_process = true;
 
@@ -213,7 +214,7 @@ private:
     void>::type
   execute_impl()
   {
-    rmw_message_info_t msg_info;
+    rmw_message_info_t msg_info = {};
     msg_info.from_intra_process = true;
 
     if (any_callback_.use_take_shared_method()) {
@@ -246,7 +247,7 @@ private:
       throw std::runtime_error("Subscription intra-process could not get serialized message");
     }
 
-    rmw_message_info_t msg_info;
+    rmw_message_info_t msg_info = {};
     msg_info.from_intra_process = true;
 
     if (any_callback_.use_take_shared_method()) {
