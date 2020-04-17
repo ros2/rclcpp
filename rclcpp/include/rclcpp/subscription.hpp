@@ -132,11 +132,7 @@ public:
           },
           RCL_SUBSCRIPTION_REQUESTED_INCOMPATIBLE_QOS);
       } catch (UnsupportedEventTypeException & /*exc*/) {
-        RCLCPP_WARN_ONCE(
-          rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
-          "This rmw implementation does not support ON_REQUESTED_INCOMPATIBLE_QOS "
-          "events, you will not be notified when Subscriptions request an incompatible "
-          "QoS profile from Publishers on the same topic.");
+        // pass
       }
     }
 
