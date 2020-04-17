@@ -38,19 +38,21 @@ public:
   : SerializedMessage(static_cast<const rcl_serialized_message_t>(serialized_message))
   {}
 
-  explicit SerializedMessage(const rcl_serialized_message_t & sc)
+  explicit SerializedMessage(const rcl_serialized_message_t & serialized_message)
   : rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
   {
-    const auto ret = rmw_serialized_message_init(this, sc.buffer_length, &sc.allocator);
+    const auto ret = rmw_serialized_message_init(
+      this, serialized_message.buffer_length,
+      &serialized_message.allocator);
     if (ret != RCL_RET_OK) {
       rclcpp::exceptions::throw_from_rcl_error(ret);
     }
 
     // do not call memcpy if the pointer is "static"
-    if (buffer != sc.buffer) {
-      std::memcpy(buffer, sc.buffer, sc.buffer_length);
+    if (buffer != serialized_message.buffer) {
+      std::memcpy(buffer, serialized_message.buffer, serialized_message.buffer_length);
     }
-    buffer_length = sc.buffer_length;
+    buffer_length = serialized_message.buffer_length;
   }
 
   explicit SerializedMessage(rcl_serialized_message_t && msg)
