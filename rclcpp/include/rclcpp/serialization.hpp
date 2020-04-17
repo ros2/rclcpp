@@ -69,6 +69,7 @@ public:
     }
 
     if (nullptr == message) {
+      delete serialized_message;
       throw std::runtime_error("Message is nullpointer while serialization.");
     }
 
