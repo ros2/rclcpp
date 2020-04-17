@@ -19,8 +19,6 @@
 
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 
-#include "metrics_statistics_msgs/msg/metrics_message.hpp"
-
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/qos.hpp"
@@ -28,6 +26,7 @@
 
 #include "rclcpp/topic_statistics/subscriber_topic_statistics.hpp"
 
+#include "statistics_msgs/msg/metrics_message.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 namespace
@@ -39,7 +38,7 @@ constexpr const uint64_t kNoSamples{0};
 }  // namespace
 
 using test_msgs::msg::Empty;
-using metrics_statistics_msgs::msg::MetricsMessage;
+using statistics_msgs::msg::MetricsMessage;
 using rclcpp::topic_statistics::SubscriberTopicStatistics;
 using libstatistics_collector::moving_average_statistics::StatisticData;
 

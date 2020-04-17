@@ -23,12 +23,12 @@
   <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
 
   <depend>libstatistics_collector</depend>
-  <depend>metrics_statistics_msgs</depend>
   <depend>rcl</depend>
   <depend>rcl_yaml_param_parser</depend>
   <depend>rcpputils</depend>
   <depend>rcutils</depend>
   <depend>rmw</depend>
+  <depend>statistics_msgs</depend>
   <depend>tracetools</depend>
 
   <test_depend>ament_cmake_gmock</test_depend>

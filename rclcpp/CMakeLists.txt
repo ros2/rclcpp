@@ -5,7 +5,6 @@ project(rclcpp)
 find_package(ament_cmake_ros REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(libstatistics_collector REQUIRED)
-find_package(metrics_statistics_msgs REQUIRED)
 find_package(rcl REQUIRED)
 find_package(rcl_interfaces REQUIRED)
 find_package(rcl_yaml_param_parser REQUIRED)
@@ -16,6 +15,7 @@ find_package(rosgraph_msgs REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
+find_package(statistics_msgs REQUIRED)
 find_package(tracetools REQUIRED)
 
 # Default to C++14
@@ -119,7 +119,6 @@ add_library(${PROJECT_NAME}
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
   "libstatistics_collector"
-  "metrics_statistics_msgs"
   "rcl"
   "rcl_yaml_param_parser"
   "rcpputils"
@@ -128,6 +127,7 @@ ament_target_dependencies(${PROJECT_NAME}
   "rosgraph_msgs"
   "rosidl_typesupport_cpp"
   "rosidl_runtime_cpp"
+  "statistics_msgs"
   "tracetools"
 )
 
@@ -148,7 +148,6 @@ ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 
 ament_export_dependencies(libstatistics_collector)
-ament_export_dependencies(metrics_statistics_msgs)
 ament_export_dependencies(rcl)
 ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
@@ -158,6 +157,7 @@ ament_export_dependencies(rosidl_typesupport_cpp)
 ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_runtime_cpp)
 ament_export_dependencies(rcl_yaml_param_parser)
+ament_export_dependencies(statistics_msgs)
 ament_export_dependencies(tracetools)
 
 if(BUILD_TESTING)
@@ -545,12 +545,12 @@ if(BUILD_TESTING)
   if(TARGET test_subscriber_topic_statistics)
     ament_target_dependencies(test_subscriber_topic_statistics
       "libstatistics_collector"
-      "metrics_statistics_msgs"
       "rcl_interfaces"
       "rcutils"
       "rmw"
       "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
+      "statistics_msgs"
       "test_msgs")
     target_link_libraries(test_subscriber_topic_statistics ${PROJECT_NAME})
   endif()
