@@ -14,6 +14,10 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+#include <utility>
+
+#include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/node_interfaces/node_base_interface_traits.hpp"
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/node.hpp"
@@ -25,7 +29,11 @@ public:
   {
     rclcpp::NodeOptions options;
     return std::make_shared<rclcpp::node_interfaces::NodeBase>(
-        "my_node_name", "my_node_namespace", nullptr, *options.get_rcl_node_options(), false);
+      "my_node_name",
+      "my_node_namespace",
+      rclcpp::contexts::default_context::get_global_default_context(),
+      *options.get_rcl_node_options(),
+      false);
   }
 };
 
@@ -38,16 +46,32 @@ public:
   }
 };
 
-template<class T, typename std::enable_if<rclcpp::node_interfaces::has_node_base_interface<T>::value>::type* = nullptr>
-void get_node_name(const T & nodelike) {
+template<class T, typename std::enable_if<
+    rclcpp::node_interfaces::has_node_base_interface<T>::value
+  >::type * = nullptr>
+void get_node_name(const T & nodelike)
+{
   ASSERT_STREQ("my_node_name", nodelike.get_node_base_interface()->get_name());
 }
 
-TEST(TestInterfaceTraits, has_node_base_interface) {
+class TestInterfaceTraits : public ::testing::Test
+{
+protected:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestInterfaceTraits, has_node_base_interface) {
   ASSERT_TRUE(rclcpp::node_interfaces::has_node_base_interface<MyNode>::value);
   ASSERT_FALSE(rclcpp::node_interfaces::has_node_base_interface<WrongNode>::value);
   ASSERT_TRUE(rclcpp::node_interfaces::has_node_base_interface<rclcpp::Node>::value);
 
   get_node_name(MyNode());
 }
-
