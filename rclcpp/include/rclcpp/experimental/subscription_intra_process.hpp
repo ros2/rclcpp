@@ -215,7 +215,7 @@ private:
 
     if (any_callback_.use_take_shared_method()) {
       ConstMessageSharedPtr msg = buffer_->consume_shared();
-      if (msg == nullptr) {
+      if (nullptr == msg) {
         throw std::runtime_error("Subscription intra-process could not get serialized message");
       }
       any_callback_.dispatch_intra_process(msg, msg_info);
