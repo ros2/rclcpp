@@ -128,6 +128,7 @@ install(
 
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
+ament_export_libraries(component_manager)
 ament_export_dependencies(class_loader)
 ament_export_dependencies(rclcpp)
 ament_package(CONFIG_EXTRAS rclcpp_components-extras.cmake.in)
