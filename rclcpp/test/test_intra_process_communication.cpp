@@ -14,7 +14,6 @@
 
 #include <gtest/gtest.h>
 
-#include <rcl_interfaces/msg/intra_process_message.hpp>
 #include <test_msgs/message_fixtures.hpp>
 
 #include <iostream>
