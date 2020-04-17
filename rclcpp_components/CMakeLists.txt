@@ -101,6 +101,13 @@ if(BUILD_TESTING)
   endif()
 endif()
 
+install(
+  TARGETS component_manager
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
+
 # Install executables
 install(
   TARGETS component_container component_container_mt
