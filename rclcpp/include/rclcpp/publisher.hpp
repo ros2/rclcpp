@@ -192,8 +192,9 @@ public:
       get_subscription_count() > get_intra_process_subscription_count();
 
     if (inter_process_publish_needed) {
-      auto shared_msg = this->do_intra_process_publish_and_return_shared(std::move(
-            msg), message_allocator_);
+      auto shared_msg = this->do_intra_process_publish_and_return_shared(
+        std::move(
+          msg), message_allocator_);
       this->do_inter_process_publish(*shared_msg);
     } else {
       this->do_intra_process_publish(std::move(msg), message_allocator_);
@@ -204,13 +205,6 @@ public:
   publish(const MessageT & msg)
   {
     this->do_publish_message(msg);
-  }
-
-  void
-  publish(const rcl_serialized_message_t & serialized_msg)
-  {
-    // Kept for backwards compatibility. Copies compelete memory!
-    this->publish(std::make_unique<rclcpp::experimental::SerializedMessage>(serialized_msg));
   }
 
   /// Publish a serialized message. Non specialized version to prevent compiling errors.
@@ -330,9 +324,8 @@ protected:
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value>::type
   do_publish_message(const MessageT & msg)
   {
-    (void)msg;
-    throw std::runtime_error(
-            "publishing serialized messages is only supported for unique pointers");
+    // Kept for backwards compatibility. Copies compelete memory!
+    this->publish(std::make_unique<rclcpp::experimental::SerializedMessage>(msg));
   }
 
   void

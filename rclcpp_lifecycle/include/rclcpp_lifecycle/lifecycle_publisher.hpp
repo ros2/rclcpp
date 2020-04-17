@@ -110,20 +110,6 @@ public:
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
   }
-  
-  void
-  publish(const rcl_serialized_message_t & serialized_msg)
-  {
-    if (!enabled_) {
-      RCLCPP_WARN(
-        logger_,
-        "Trying to publish message on the topic '%s', but the publisher is not activated",
-        this->get_topic_name());
-
-      return;
-    }
-    rclcpp::Publisher<MessageT, Alloc>::publish(msg); 
-  }
 
   /// Publish a serialized message. Non specialized version to prevent compiling errors.
   template<typename TDeleter, typename T>
