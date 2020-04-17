@@ -33,10 +33,19 @@ class SerializationBase
 public:
   virtual ~SerializationBase() = default;
 
+  /// Serialize a ROS2 message to a serialized stream
+  /**
+   * \param[in] message The ROS2 message which is read and serialized by rmw.
+   */
   virtual std::shared_ptr<rcl_serialized_message_t> serialize_message(const void * message) = 0;
 
+  /// Deserialize a serialized stream to a ROS message
+  /**
+   * \param[in] serialized_message The serialized message to be converted to ROS2 by rmw.
+   * \param[out] message The deserialized ROS2 message.
+   */
   virtual void deserialize_message(
-    const rcl_serialized_message_t & serialized_message,
+    const rcl_serialized_message_t * serialized_message,
     void * msg) = 0;
 };
 
@@ -61,14 +70,17 @@ public:
               std::string(rcutils_get_error_string().str));
     }
 
-    if (message) {
-      const auto error = rmw_serialize(
-        message,
-        &type_support_,
-        serialized_message);
-      if (error != RCL_RET_OK) {
-        throw std::runtime_error("Failed to serialize.");
-      }
+    if (nullptr == message) {
+      throw std::runtime_error("Message is nullpointer while serialization.");
+    }
+
+    const auto error = rmw_serialize(
+      message,
+      &type_support_,
+      serialized_message);
+    if (error != RCL_RET_OK) {
+      delete serialized_message;
+      throw std::runtime_error("Failed to serialize.");
     }
 
     auto shared_serialized_msg = std::shared_ptr<rcl_serialized_message_t>(
@@ -86,16 +98,17 @@ public:
     return shared_serialized_msg;
   }
 
-  void deserialize_message(const rcl_serialized_message_t & serialized_message, void * msg) override
+  void deserialize_message(const rcl_serialized_message_t * serialized_message, void * msg) override
   {
-    if (serialized_message.buffer_capacity == 0 ||
-      serialized_message.buffer_length == 0 ||
-      !serialized_message.buffer)
+    if (nullptr == serialized_message ||
+      serialized_message->buffer_capacity == 0 ||
+      serialized_message->buffer_length == 0 ||
+      !serialized_message->buffer)
     {
       throw std::runtime_error("Failed to deserialize nullptr serialized message.");
     }
 
-    const auto ret = rmw_deserialize(&serialized_message, &type_support_, msg);
+    const auto ret = rmw_deserialize(serialized_message, &type_support_, msg);
     if (ret != RMW_RET_OK) {
       throw std::runtime_error("Failed to deserialize serialized message.");
     }

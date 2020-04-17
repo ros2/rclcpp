@@ -27,14 +27,14 @@ namespace experimental
 {
 
 /// Object oriented version of rcl_serialized_message_t with destructor to avoid memory leaks
-class SerializedContainer : public rcl_serialized_message_t
+class SerializedMessage : public rcl_serialized_message_t
 {
 public:
-  SerializedContainer()
+  SerializedMessage()
   : rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
   {}
 
-  explicit SerializedContainer(const SerializedContainer & sc)
+  explicit SerializedMessage(const SerializedMessage & sc)
   : rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
   {
     const auto ret = rmw_serialized_message_init(this, sc.buffer_length, &sc.allocator);
@@ -49,14 +49,14 @@ public:
     buffer_length = sc.buffer_length;
   }
 
-  explicit SerializedContainer(rcl_serialized_message_t && msg)
+  explicit SerializedMessage(rcl_serialized_message_t && msg)
   : rcl_serialized_message_t(msg)
   {
     // reset buffer to prevent double free
     msg = rmw_get_zero_initialized_serialized_message();
   }
 
-  ~SerializedContainer()
+  ~SerializedMessage()
   {
     if (buffer != nullptr) {
       const auto fini_ret = rmw_serialized_message_fini(this);

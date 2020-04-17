@@ -38,7 +38,7 @@ namespace rclcpp
 namespace experimental
 {
 
-class SerializedContainer;
+class SerializedMessage;
 
 template<
   typename MessageT,
@@ -77,7 +77,7 @@ public:
     any_callback_(callback), serializer_(serializer)
   {
     if (!std::is_same<MessageT, CallbackMessageT>::value &&
-      !std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value &&
+      !std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value &&
       !std::is_same<CallbackMessageT, rcl_serialized_message_t>::value)
     {
       throw std::runtime_error("SubscriptionIntraProcess wrong callback type");
@@ -153,44 +153,46 @@ private:
     (void)ret;
   }
 
+  // convert from ROS2 message to rcl_serialized_message_t (serilizatino needed)
   template<typename T>
   typename std::enable_if<
     std::is_same<T, rcl_serialized_message_t>::value &&
-    !std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    !std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
     void>::type
   execute_impl()
   {
-    if (serializer_) {
-      rmw_message_info_t msg_info = {};
-      msg_info.from_intra_process = true;
-
-      ConstMessageSharedPtr msg = buffer_->consume_shared();
-      auto serialized_msg =
-        serializer_->serialize_message(reinterpret_cast<const void *>(msg.get()));
-
-      if (serialized_msg == nullptr) {
-        throw std::runtime_error("Subscription intra-process could not serialize message");
-      }
-
-      if (any_callback_.use_take_shared_method()) {
-        any_callback_.dispatch_intra_process(serialized_msg, msg_info);
-      } else {
-        throw std::runtime_error("Subscription intra-process for serialized "
-                "messages does not support unique pointers.");
-      }
-    } else {
+    if (nullptr == serializer_) {
       throw std::runtime_error("Subscription intra-process can't handle serialized messages");
+    }
+
+    rmw_message_info_t msg_info;
+    msg_info.from_intra_process = true;
+
+    ConstMessageSharedPtr msg = buffer_->consume_shared();
+    auto serialized_msg =
+      serializer_->serialize_message(reinterpret_cast<const void *>(msg.get()));
+
+    if (nullptr == serialized_msg) {
+      throw std::runtime_error("Subscription intra-process could not serialize message");
+    }
+
+    if (any_callback_.use_take_shared_method()) {
+      any_callback_.dispatch_intra_process(serialized_msg, msg_info);
+    } else {
+      throw std::runtime_error("Subscription intra-process for serialized "
+              "messages does not support unique pointers.");
     }
   }
 
+  // forward from ROS2 message to ROS2 message (same type)
   template<class T>
   typename std::enable_if<
     !std::is_same<T, rcl_serialized_message_t>::value &&
-    !std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    !std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
     void>::type
   execute_impl()
   {
-    rmw_message_info_t msg_info = {};
+    rmw_message_info_t msg_info;
     msg_info.publisher_gid = {0, {0}};
     msg_info.from_intra_process = true;
 
@@ -203,19 +205,20 @@ private:
     }
   }
 
+  // forward from rcl_serialized_message_t to SerializationMessage (no conversion needed)
   template<typename T>
   typename std::enable_if<
     std::is_same<T, rcl_serialized_message_t>::value &&
-    std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
     void>::type
   execute_impl()
   {
-    rmw_message_info_t msg_info {};
+    rmw_message_info_t msg_info;
     msg_info.from_intra_process = true;
 
     if (any_callback_.use_take_shared_method()) {
       ConstMessageSharedPtr msg = buffer_->consume_shared();
-      if (nullptr == msg) {
+      if (msg == nullptr) {
         throw std::runtime_error("Subscription intra-process could not get serialized message");
       }
       any_callback_.dispatch_intra_process(msg, msg_info);
@@ -225,35 +228,36 @@ private:
     }
   }
 
+  // convert from rcl_serialized_message_t to ROS2 message (deserialization needed)
   template<class T>
   typename std::enable_if<
     !std::is_same<T, rcl_serialized_message_t>::value &&
-    std::is_same<MessageT, rclcpp::experimental::SerializedContainer>::value,
+    std::is_same<MessageT, rclcpp::experimental::SerializedMessage>::value,
     void>::type
   execute_impl()
   {
-    if (serializer_) {
-      ConstMessageSharedPtr serialized_container = buffer_->consume_shared();
-      if (serialized_container == nullptr) {
-        throw std::runtime_error("Subscription intra-process could not get serialized message");
-      }
-
-      rmw_message_info_t msg_info = {};
-      msg_info.from_intra_process = true;
-
-      if (any_callback_.use_take_shared_method()) {
-        CallbackMessageSharedPtr msg = construct_unique();
-        serializer_->deserialize_message(*serialized_container,
-          reinterpret_cast<void *>(msg.get()));
-        any_callback_.dispatch_intra_process(msg, msg_info);
-      } else {
-        CallbackMessageUniquePtr msg = construct_unique();
-        serializer_->deserialize_message(*serialized_container,
-          reinterpret_cast<void *>(msg.get()));
-        any_callback_.dispatch_intra_process(std::move(msg), msg_info);
-      }
-    } else {
+    if (nullptr == serializer_) {
       throw std::runtime_error("Subscription intra-process can't handle unserialized messages");
+    }
+
+    ConstMessageSharedPtr serialized_container = buffer_->consume_shared();
+    if (nullptr == serialized_container) {
+      throw std::runtime_error("Subscription intra-process could not get serialized message");
+    }
+
+    rmw_message_info_t msg_info;
+    msg_info.from_intra_process = true;
+
+    if (any_callback_.use_take_shared_method()) {
+      CallbackMessageSharedPtr msg = construct_unique();
+      serializer_->deserialize_message(serialized_container.get(),
+        reinterpret_cast<void *>(msg.get()));
+      any_callback_.dispatch_intra_process(msg, msg_info);
+    } else {
+      CallbackMessageUniquePtr msg = construct_unique();
+      serializer_->deserialize_message(serialized_container.get(),
+        reinterpret_cast<void *>(msg.get()));
+      any_callback_.dispatch_intra_process(std::move(msg), msg_info);
     }
   }
 

@@ -57,11 +57,11 @@ public:
   using MessageUniquePtr = std::unique_ptr<MessageT, MessageDeleter>;
   using MessageSharedPtr = std::shared_ptr<const MessageT>;
   using SerializedMessageAllocatorTraits =
-    allocator::AllocRebind<rclcpp::experimental::SerializedContainer,
+    allocator::AllocRebind<rclcpp::experimental::SerializedMessage,
       AllocatorT>;
   using SerializedMessageAllocator = typename SerializedMessageAllocatorTraits::allocator_type;
   using SerializedMessageDeleter = allocator::Deleter<SerializedMessageAllocator,
-      rclcpp::experimental::SerializedContainer>;
+      rclcpp::experimental::SerializedMessage>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
@@ -206,6 +206,13 @@ public:
     this->do_publish_message(msg);
   }
 
+  void
+  publish(const rcl_serialized_message_t & serialized_msg)
+  {
+    // Kept for backwards compatibility. Copies compelete memory!
+    this->publish(std::make_unique<rclcpp::experimental::SerializedMessage>(serialized_msg));
+  }
+
   /// Publish a serialized message. Non specialized version to prevent compiling errors.
   template<typename TDeleter, typename T>
   void publish(std::unique_ptr<T, TDeleter> serialized_msg)
@@ -219,7 +226,7 @@ public:
   template<typename TDeleter>
   void publish(std::unique_ptr<rcl_serialized_message_t, TDeleter> serialized_msg)
   {
-    this->do_serialized_publish(serialized_msg.get());
+    this->do_serialized_publish(*serialized_msg);
   }
 
   /// Publish an instance of a LoanedMessage.
@@ -349,21 +356,21 @@ protected:
   }
 
   void
-  do_serialized_publish(rcl_serialized_message_t * serialized_msg)
+  do_serialized_publish(rcl_serialized_message_t serialized_msg)
   {
     bool inter_process_publish_needed =
       get_subscription_count() > get_intra_process_subscription_count();
 
     if (inter_process_publish_needed) {
       // declare here to avoid deletion before returning method
-      auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
+      auto status = rcl_publish_serialized_message(&publisher_handle_, &serialized_msg, nullptr);
       if (RCL_RET_OK != status) {
         rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
       }
     }
 
-    auto msg = std::make_unique<rclcpp::experimental::SerializedContainer>(
-      std::move(*serialized_msg));
+    auto msg = std::make_unique<rclcpp::experimental::SerializedMessage>(
+      std::move(serialized_msg));
 
     if (intra_process_is_enabled_) {
       do_intra_process_publish(std::move(msg), message_allocator_serialized_);
@@ -406,7 +413,7 @@ protected:
     }
 
     const uint64_t intra_process_publisher_id = std::is_same<T,
-        rclcpp::experimental::SerializedContainer>::value ?
+        rclcpp::experimental::SerializedMessage>::value ?
       intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
 
     ipm->template do_intra_process_publish<T, AllocatorT>(
@@ -431,7 +438,7 @@ protected:
     }
 
     const uint64_t intra_process_publisher_id = std::is_same<T,
-        rclcpp::experimental::SerializedContainer>::value ?
+        rclcpp::experimental::SerializedMessage>::value ?
       intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
 
     return ipm->template do_intra_process_publish_and_return_shared<T, AllocatorT>(

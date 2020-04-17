@@ -35,7 +35,7 @@
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/expand_topic_or_service_name.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
-#include "rclcpp/experimental/serialized_container.hpp"
+#include "rclcpp/experimental/serialized_message.hpp"
 #include "rclcpp/experimental/subscription_intra_process.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
@@ -191,20 +191,20 @@ public:
 
       {
         using SerializedMessageAllocatorTraits =
-          allocator::AllocRebind<rclcpp::experimental::SerializedContainer,
+          allocator::AllocRebind<rclcpp::experimental::SerializedMessage,
             AllocatorT>;
         using SerializedMessageAllocator =
           typename SerializedMessageAllocatorTraits::allocator_type;
         using SerializedMessageDeleter = allocator::Deleter<SerializedMessageAllocator,
-            rclcpp::experimental::SerializedContainer>;
+            rclcpp::experimental::SerializedMessage>;
         using SerializedMessageUniquePtr =
-          std::unique_ptr<rclcpp::experimental::SerializedContainer,
+          std::unique_ptr<rclcpp::experimental::SerializedMessage,
             SerializedMessageDeleter>;
 
         // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
         auto subscription_intra_process = std::make_shared<
           rclcpp::experimental::SubscriptionIntraProcess<
-            rclcpp::experimental::SerializedContainer,
+            rclcpp::experimental::SerializedMessage,
             AllocatorT,
             typename SerializedMessageUniquePtr::deleter_type,
             CallbackMessageT
