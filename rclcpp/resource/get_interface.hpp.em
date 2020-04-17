@@ -52,7 +52,7 @@ namespace detail
 template<
   typename NodeType,
   typename std::enable_if<has_@(interface_name)<
-    typename std::remove_pointer<NodeType>::type
+    typename rcpputils::remove_pointer<NodeType>::type
   >::value, int>::type = 0
 >
 std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>

@@ -41,14 +41,6 @@ struct has_@(interface_name)<
       decltype(std::declval<T>().get_@(interface_name)())>::value>::type> : std::true_type
 {};
 
-template<class T>
-struct has_@(interface_name)<
-  T, typename std::enable_if<
-    std::is_same<
-      std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>,
-      decltype(std::declval<T>()->get_@(interface_name)())>::value>::type> : std::true_type
-{};
-
 }  // namespace node_interfaces
 }  // namespace rclcpp
 
