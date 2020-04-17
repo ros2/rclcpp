@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXPERIMENTAL__SERIALIZED_CONTAINER_HPP_
-#define RCLCPP__EXPERIMENTAL__SERIALIZED_CONTAINER_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__SERIALIZED_MESSAGE_HPP_
+#define RCLCPP__EXPERIMENTAL__SERIALIZED_MESSAGE_HPP_
 
 #include <cstring>
 
@@ -87,4 +87,4 @@ public:
 }  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__EXPERIMENTAL__SERIALIZED_CONTAINER_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__SERIALIZED_MESSAGE_HPP_
