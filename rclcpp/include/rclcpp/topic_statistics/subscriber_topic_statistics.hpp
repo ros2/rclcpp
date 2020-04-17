@@ -25,7 +25,7 @@
 #include "libstatistics_collector/topic_statistics_collector/constants.hpp"
 #include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
 
-#include "metrics_statistics_msgs/msg/metrics_message.hpp"
+#include "statistics_msgs/msg/metrics_message.hpp"
 
 #include "rcl/time.h"
 #include "rclcpp/create_publisher.hpp"
@@ -43,7 +43,7 @@ constexpr const char kDefaultPublishTopicName[]{"topic_statistics"};
 constexpr const std::chrono::milliseconds kDefaultPublishingPeriod{std::chrono::minutes(1)};
 
 using libstatistics_collector::collector::GenerateStatisticMessage;
-using metrics_statistics_msgs::msg::MetricsMessage;
+using statistics_msgs::msg::MetricsMessage;
 using libstatistics_collector::moving_average_statistics::StatisticData;
 
 /**
@@ -79,7 +79,7 @@ public:
     const std::chrono::milliseconds & publishing_period = kDefaultPublishingPeriod)
   {
     publisher_ =
-      node.create_publisher<metrics_statistics_msgs::msg::MetricsMessage>(
+      node.create_publisher<statistics_msgs::msg::MetricsMessage>(
       publishing_topic,
       10);
 
@@ -188,7 +188,7 @@ private:
   /// Node name used to generate topic statistics messages to be published
   std::string node_name_;
   /// Publisher, created by the node, used to publish topic statistics messages
-  rclcpp::Publisher<metrics_statistics_msgs::msg::MetricsMessage>::SharedPtr publisher_;
+  rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher_;
   /// Timer which fires the publisher
   rclcpp::TimerBase::SharedPtr publisher_timer_;
   /// The start of the collection window, used in the published topic statistics message
