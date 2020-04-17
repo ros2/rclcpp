@@ -11,9 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 @{
 uppercase_interface_name = interface_name.upper()
+interface_typename = ''.join([part.capitalize() for part in interface_name.split('_')])
 }@
 
 #ifndef RCLCPP__NODE_INTERFACES__@(uppercase_interface_name)_TRAITS_HPP_
@@ -33,16 +33,20 @@ template<class T, typename = void>
 struct has_@(interface_name) : std::false_type
 {};
 
-@{
-interface_typename = ''.join([part.capitalize() for part in interface_name.split('_')])
-}@
-
 template<class T>
 struct has_@(interface_name)<
   T, typename std::enable_if<
     std::is_same<
       std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>,
       decltype(std::declval<T>().get_@(interface_name)())>::value>::type> : std::true_type
+{};
+
+template<class T>
+struct has_@(interface_name)<
+  T, typename std::enable_if<
+    std::is_same<
+      std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>,
+      decltype(std::declval<T>()->get_@(interface_name)())>::value>::type> : std::true_type
 {};
 
 }  // namespace node_interfaces

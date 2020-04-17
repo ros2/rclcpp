@@ -64,33 +64,18 @@ get_@(interface_name)_from_pointer(NodeType node_pointer)
 }  // namespace detail
 
 /// Get the @(interface_typename) as a shared pointer from a pointer to a "Node like" object.
-template<typename NodeType>
-std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>
-get_@(interface_name)(NodeType * node)
-{
-  // Forward pointers to detail implementation directly.
-  return detail::get_@(interface_name)_from_pointer(node);
-}
-
-/// Get the @(interface_typename) as a shared pointer from a shared pointer to a "Node like" object.
 template<
   typename NodeType,
   typename std::enable_if<
-    !std::is_same<NodeType, rclcpp::node_interfaces::@(interface_typename)>::value, int
+    rcpputils::is_pointer<NodeType>::value, int
   >::type = 0
 >
+inline
 std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>
-get_@(interface_name)(std::shared_ptr<NodeType> & node)
+get_@(interface_name)(NodeType && node)
 {
   // Forward pointers to detail implementation directly.
-  return detail::get_@(interface_name)_from_pointer(node.get());
-}
-
-/// Keep the @(interface_typename) a shared pointer.
-std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)> get_@(interface_name)(
-  std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)> & node_interface)
-{
-  return node_interface;
+  return detail::get_@(interface_name)_from_pointer(node);
 }
 
 /// Get the @(interface_typename) as a shared pointer from a "Node like" object.
@@ -100,11 +85,21 @@ template<
     !rcpputils::is_pointer<NodeType>::value, int
   >::type = 0
 >
+inline
 std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>
 get_@(interface_name)(NodeType && node)
 {
   // Forward references to detail implementation as a pointer.
   return detail::get_@(interface_name)_from_pointer(&node);
+}
+
+/// Keep the @(interface_typename) a shared pointer.
+inline
+std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>
+get_@(interface_name)(
+  std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)> & node_interface)
+{
+  return node_interface;
 }
 
 }  // namespace node_interfaces
