@@ -227,6 +227,8 @@ IntraProcessManager::can_communicate(
   }
 
   // a publisher and a subscription with different content type can't communicate
+  // if is_serialized is true, the expected message typ is rcl_serialized_message_t
+  // otherwise the templated ROS2 message type
   if (sub_info.is_serialized != pub_info.is_serialized) {
     return false;
   }
