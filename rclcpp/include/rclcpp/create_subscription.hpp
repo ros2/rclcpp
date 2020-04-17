@@ -54,12 +54,10 @@ create_subscription(
   const rosidl_message_type_support_t & type_support,
   const rclcpp::QoS & qos,
   CallbackT && callback,
-  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
-    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
-  ),
-  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options =
+    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>(),
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat =
     MessageMemoryStrategyT::create_default()
-  )
 )
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
@@ -96,12 +94,10 @@ create_subscription(
   const std::string & topic_name,
   const rclcpp::QoS & qos,
   CallbackT && callback,
-  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options = (
-    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>()
-  ),
-  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options =
+    rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>(),
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat =
     MessageMemoryStrategyT::create_default()
-  )
 )
 {
   const auto type_support = *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
