@@ -230,7 +230,7 @@ SubscriptionBase::get_intra_process_waitables() const
   auto ipm = weak_ipm_.lock();
   if (!ipm) {
     throw std::runtime_error(
-            "SubscriptionBase::get_intra_process_waitable() called "
+            "SubscriptionBase::get_intra_process_waitables() called "
             "after destruction of intra process manager");
   }
 
@@ -281,8 +281,10 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   if (this == pointer_to_subscription_part) {
     return subscription_in_use_by_wait_set_.exchange(in_use_state);
   }
-  if (get_intra_process_waitable().get() == pointer_to_subscription_part) {
-    return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
+  for(auto & waitable : get_intra_process_waitables()) {
+    if (waitable.get() == pointer_to_subscription_part) {
+      return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
+    }
   }
   for (const auto & qos_event : event_handlers_) {
     if (qos_event.get() == pointer_to_subscription_part) {

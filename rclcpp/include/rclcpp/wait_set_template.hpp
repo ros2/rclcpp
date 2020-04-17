@@ -165,18 +165,19 @@ public:
         }
         if (mask.include_intra_process_waitable) {
           auto local_subscription = inner_subscription;
-          auto waitable = inner_subscription->get_intra_process_waitable();
-          if (nullptr != waitable) {
-            bool already_in_use = local_subscription->exchange_in_use_by_wait_set_state(
-              waitable.get(),
-              true);
-            if (already_in_use) {
-              throw std::runtime_error(
-                "subscription intra-process waitable already associated with a wait set");
+          for(auto waitable : inner_subscription->get_intra_process_waitables()) {
+            if (nullptr != waitable) {
+              bool already_in_use = local_subscription->exchange_in_use_by_wait_set_state(
+                waitable.get(),
+                true);
+              if (already_in_use) {
+                throw std::runtime_error(
+                  "subscription intra-process waitable already associated with a wait set");
+              }
+              this->storage_add_waitable(
+                std::move(waitable),
+                std::move(local_subscription));
             }
-            this->storage_add_waitable(
-              std::move(inner_subscription->get_intra_process_waitable()),
-              std::move(local_subscription));
           }
         }
       });
@@ -230,11 +231,12 @@ public:
           }
         }
         if (mask.include_intra_process_waitable) {
-          auto local_waitable = inner_subscription->get_intra_process_waitable();
-          inner_subscription->exchange_in_use_by_wait_set_state(local_waitable.get(), false);
-          if (nullptr != local_waitable) {
-            // This is the case when intra process is disabled for the subscription.
-            this->storage_remove_waitable(std::move(local_waitable));
+          for(auto local_waitable : inner_subscription->get_intra_process_waitables()) {
+            inner_subscription->exchange_in_use_by_wait_set_state(local_waitable.get(), false);
+            if (nullptr != local_waitable) {
+              // This is the case when intra process is disabled for the subscription.
+              this->storage_remove_waitable(std::move(local_waitable));
+            }
           }
         }
       });
