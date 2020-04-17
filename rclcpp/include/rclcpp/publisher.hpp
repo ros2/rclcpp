@@ -448,6 +448,7 @@ protected:
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> options_;
 
   std::shared_ptr<MessageAllocator> message_allocator_;
+  std::shared_ptr<SerializedMessageAllocator> message_allocator_serialized_;
 
   MessageDeleter message_deleter_;
 };
