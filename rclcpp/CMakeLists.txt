@@ -252,7 +252,6 @@ if(BUILD_TESTING)
       "rcl"
       "rcl_interfaces"
       "rmw"
-      "rosidl_generator_cpp"
       "rosidl_typesupport_cpp"
       "test_msgs"
     )
