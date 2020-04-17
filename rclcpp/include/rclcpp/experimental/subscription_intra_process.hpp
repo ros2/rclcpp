@@ -161,7 +161,7 @@ private:
   execute_impl()
   {
     if (serializer_) {
-      rmw_message_info_t msg_info;
+      rmw_message_info_t msg_info = {};
       msg_info.from_intra_process = true;
 
       ConstMessageSharedPtr msg = buffer_->consume_shared();
@@ -190,7 +190,7 @@ private:
     void>::type
   execute_impl()
   {
-    rmw_message_info_t msg_info;
+    rmw_message_info_t msg_info = {};
     msg_info.publisher_gid = {0, {0}};
     msg_info.from_intra_process = true;
 
@@ -238,7 +238,7 @@ private:
         throw std::runtime_error("Subscription intra-process could not get serialized message");
       }
 
-      rmw_message_info_t msg_info;
+      rmw_message_info_t msg_info = {};
       msg_info.from_intra_process = true;
 
       if (any_callback_.use_take_shared_method()) {

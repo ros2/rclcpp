@@ -31,7 +31,7 @@ namespace experimental
 class SerializationBase
 {
 public:
-  virtual ~SerializationBase() {}
+  virtual ~SerializationBase() = default;
 
   virtual std::shared_ptr<rcl_serialized_message_t> serialize_message(const void * message) = 0;
 
