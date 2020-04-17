@@ -58,6 +58,9 @@ template<
 std::shared_ptr<rclcpp::node_interfaces::@(interface_typename)>
 get_@(interface_name)_from_pointer(NodeType node_pointer)
 {
+  if (!node_pointer) {
+    throw std::invalid_argument("node cannot be nullptr");
+  }
   return node_pointer->get_@(interface_name)();
 }
 
