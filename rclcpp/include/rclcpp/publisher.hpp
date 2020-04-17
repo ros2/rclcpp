@@ -193,8 +193,7 @@ public:
 
     if (inter_process_publish_needed) {
       auto shared_msg = this->do_intra_process_publish_and_return_shared(
-        std::move(
-          msg), message_allocator_);
+        std::move(msg), message_allocator_);
       this->do_inter_process_publish(*shared_msg);
     } else {
       this->do_intra_process_publish(std::move(msg), message_allocator_);
