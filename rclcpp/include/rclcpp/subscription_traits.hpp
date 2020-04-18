@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "rclcpp/function_traits.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rcl/types.h"
 
@@ -47,6 +48,15 @@ struct is_serialized_subscription_argument<rcl_serialized_message_t>: std::true_
 
 template<>
 struct is_serialized_subscription_argument<std::shared_ptr<rcl_serialized_message_t>>
+  : std::true_type
+{};
+
+template<>
+struct is_serialized_subscription_argument<rclcpp::SerializedMessage>: std::true_type
+{};
+
+template<>
+struct is_serialized_subscription_argument<std::shared_ptr<rclcpp::SerializedMessage>>
   : std::true_type
 {};
 

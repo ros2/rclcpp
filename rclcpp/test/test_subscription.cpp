@@ -232,6 +232,40 @@ TEST_F(TestSubscription, various_creation_signatures) {
 }
 
 /*
+   Testing for serialized subscriptions
+ */
+TEST_F(TestSubscription, test_is_serialized) {
+  initialize();
+  using test_msgs::msg::Empty;
+  auto cb = [](test_msgs::msg::Empty::SharedPtr) {};
+  auto cb_rcl_serialized = [](std::shared_ptr<rcl_serialized_message_t>) {};
+  auto cb_rclcpp_serialized = [](std::shared_ptr<rclcpp::SerializedMessage>) {};
+  {
+    auto sub = node->create_subscription<Empty>("topic", 1, cb);
+    EXPECT_FALSE(sub->is_serialized());
+  }
+  {
+    auto sub = rclcpp::create_subscription<Empty>(node, "topic", rclcpp::QoS(1), cb);
+    EXPECT_FALSE(sub->is_serialized());
+  }
+  {
+    auto sub = rclcpp::create_subscription<Empty>(node, "topic", rclcpp::QoS(1), cb_rcl_serialized);
+    EXPECT_TRUE(sub->is_serialized());
+  }
+  {
+    auto ts = *rosidl_typesupport_cpp::get_message_type_support_handle<Empty>();
+    auto sub = rclcpp::create_subscription<rcl_serialized_message_t>(
+      node, "topic", ts, rclcpp::QoS(1), cb_rcl_serialized);
+    EXPECT_TRUE(sub->is_serialized());
+  }
+  {
+    auto ts = *rosidl_typesupport_cpp::get_message_type_support_handle<Empty>();
+    auto sub = rclcpp::create_subscription<rclcpp::SerializedMessage>(
+      node, "topic", ts, rclcpp::QoS(1), cb_rclcpp_serialized);
+    EXPECT_TRUE(sub->is_serialized());
+  }
+}
+/*
    Testing subscriptions using std::bind.
  */
 TEST_F(TestSubscription, callback_bind) {

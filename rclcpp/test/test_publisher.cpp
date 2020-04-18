@@ -149,7 +149,6 @@ TEST_F(TestPublisher, various_creation_signatures) {
  */
 TEST_F(TestPublisher, test_is_serialized) {
   initialize();
-
   using test_msgs::msg::Empty;
   {
     auto publisher = node->create_publisher<Empty>("topic", 42);
