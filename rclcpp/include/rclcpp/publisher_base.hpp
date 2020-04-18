@@ -73,7 +73,8 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rosidl_message_type_support_t & type_support,
-    const rcl_publisher_options_t & publisher_options);
+    const rcl_publisher_options_t & publisher_options,
+    bool is_serializd = false);
 
   RCLCPP_PUBLIC
   virtual ~PublisherBase();
@@ -191,8 +192,11 @@ public:
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,
-    uint64_t intra_process_publisher_id_serialized,
     IntraProcessManagerSharedPtr ipm);
+
+  RCLCPP_PUBLIC
+  bool
+  is_serialized() const;
 
 protected:
   template<typename EventCallbackT>
@@ -223,9 +227,11 @@ protected:
   bool intra_process_is_enabled_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
-  uint64_t intra_process_publisher_id_serialized_;
 
   rmw_gid_t rmw_gid_;
+
+private:
+  bool is_serialized_;
 };
 
 }  // namespace rclcpp

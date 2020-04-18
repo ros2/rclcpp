@@ -20,6 +20,7 @@
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/serialized_message.hpp"
 
 #include "test_msgs/msg/empty.hpp"
 
@@ -140,6 +141,35 @@ TEST_F(TestPublisher, various_creation_signatures) {
     auto publisher =
       rclcpp::create_publisher<Empty>(node, "topic", 42, rclcpp::PublisherOptions());
     (void)publisher;
+  }
+}
+
+/*
+   Testing for serialized publishers.
+ */
+TEST_F(TestPublisher, test_is_serialized) {
+  initialize();
+
+  using test_msgs::msg::Empty;
+  {
+    auto publisher = node->create_publisher<Empty>("topic", 42);
+    EXPECT_FALSE(publisher->is_serialized());
+  }
+  {
+    auto publisher = rclcpp::create_publisher<Empty>(node, "topic", 42, rclcpp::PublisherOptions());
+    EXPECT_FALSE(publisher->is_serialized());
+  }
+  {
+    auto ts = *rosidl_typesupport_cpp::get_message_type_support_handle<Empty>();
+    auto publisher = rclcpp::create_publisher<rcl_serialized_message_t>(
+      node, "topic", ts, 42, rclcpp::PublisherOptions());
+    EXPECT_TRUE(publisher->is_serialized());
+  }
+  {
+    auto ts = *rosidl_typesupport_cpp::get_message_type_support_handle<Empty>();
+    auto publisher = rclcpp::create_publisher<rclcpp::SerializedMessage>(
+      node, "topic", ts, 42, rclcpp::PublisherOptions());
+    EXPECT_TRUE(publisher->is_serialized());
   }
 }
 

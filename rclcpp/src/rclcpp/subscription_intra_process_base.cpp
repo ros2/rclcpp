@@ -36,3 +36,9 @@ SubscriptionIntraProcessBase::get_actual_qos() const
 {
   return qos_profile_;
 }
+
+bool
+SubscriptionIntraProcessBase::is_serialized() const
+{
+  return is_serialized_;
+}

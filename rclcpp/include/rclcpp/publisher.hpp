@@ -69,12 +69,14 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rclcpp::QoS & qos,
-    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+    bool is_serialized = false)
   : PublisherBase(
       node_base,
       topic,
       *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
-      options.template to_rcl_publisher_options<MessageT>(qos)),
+      options.template to_rcl_publisher_options<MessageT>(qos),
+      is_serialized),
     options_(options),
     message_allocator_(new MessageAllocator(*options.get_allocator().get())),
     message_allocator_serialized_(new SerializedMessageAllocator(*options.get_allocator().get()))
@@ -87,12 +89,14 @@ public:
     const std::string & topic,
     const rclcpp::QoS & qos,
     const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
-    const rosidl_message_type_support_t & type_support)
+    const rosidl_message_type_support_t & type_support,
+    bool is_serialized = false)
   : PublisherBase(
       node_base,
       topic,
       type_support,
-      options.template to_rcl_publisher_options<MessageT>(qos)),
+      options.template to_rcl_publisher_options<MessageT>(qos),
+      is_serialized),
     options_(options),
     message_allocator_(new MessageAllocator(*options.get_allocator().get())),
     message_allocator_serialized_(new SerializedMessageAllocator(*options.get_allocator().get()))
@@ -132,12 +136,7 @@ public:
                 "intraprocess communication allowed only with volatile durability");
       }
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
-      uint64_t intra_process_publisher_id_serialized = ipm->add_publisher(
-        this->shared_from_this(), true);
-      this->setup_intra_process(
-        intra_process_publisher_id,
-        intra_process_publisher_id_serialized,
-        ipm);
+      this->setup_intra_process(intra_process_publisher_id, ipm);
     }
   }
 
@@ -229,6 +228,13 @@ public:
     this->do_serialized_publish(*serialized_msg);
   }
 
+  /// Publish a serialized message.
+  template<typename TDeleter>
+  void publish(std::unique_ptr<SerializedMessage, TDeleter> serialized_msg)
+  {
+    this->do_serialized_publish(*serialized_msg);
+  }
+
   /// Publish an instance of a LoanedMessage.
   /**
    * When publishing a loaned message, the memory for this ROS message will be deallocated
@@ -309,7 +315,7 @@ protected:
   }
 
   template<class T = MessageT>
-  typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value>::type
+  typename std::enable_if<!std::is_base_of<rcl_serialized_message_t, T>::value>::type
   do_publish_message(const T & msg)
   {
     // Avoid allocating when not using intra process.
@@ -327,7 +333,7 @@ protected:
   }
 
   template<class T = MessageT>
-  typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value>::type
+  typename std::enable_if<std::is_base_of<rcl_serialized_message_t, T>::value>::type
   do_publish_message(const T & msg)
   {
     // Kept for backwards compatibility. Copies compelete memory!
@@ -411,12 +417,8 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    const uint64_t intra_process_publisher_id = std::is_same<T,
-        rclcpp::SerializedMessage>::value ?
-      intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
-
     ipm->template do_intra_process_publish<T, AllocatorT>(
-      intra_process_publisher_id,
+      intra_process_publisher_id_,
       std::move(msg),
       message_allocator);
   }
@@ -436,12 +438,8 @@ protected:
       throw std::runtime_error("cannot publish msg which is a null pointer");
     }
 
-    const uint64_t intra_process_publisher_id = std::is_same<T,
-        rclcpp::SerializedMessage>::value ?
-      intra_process_publisher_id_serialized_ : intra_process_publisher_id_;
-
     return ipm->template do_intra_process_publish_and_return_shared<T, AllocatorT>(
-      intra_process_publisher_id,
+      intra_process_publisher_id_,
       std::move(msg),
       message_allocator);
   }

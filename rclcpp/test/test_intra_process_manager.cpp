@@ -93,6 +93,12 @@ public:
     return false;
   }
 
+  bool
+  is_serialized() const
+  {
+    return false;
+  }
+
   rclcpp::QoS qos;
   std::string topic_name;
   uint64_t intra_process_publisher_id_;
@@ -210,6 +216,12 @@ public:
   get_topic_name()
   {
     return topic_name;
+  }
+
+  bool
+  is_serialized() const
+  {
+    return false;
   }
 
   rmw_qos_profile_t qos_profile;

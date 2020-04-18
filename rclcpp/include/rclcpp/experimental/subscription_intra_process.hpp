@@ -73,13 +73,13 @@ public:
     const std::string & topic_name,
     rmw_qos_profile_t qos_profile,
     rclcpp::IntraProcessBufferType buffer_type,
-    std::shared_ptr<SerializationBase> serializer)
-  : SubscriptionIntraProcessBase(topic_name, qos_profile),
+    std::shared_ptr<SerializationBase> serializer,
+    bool is_serialized = false)
+  : SubscriptionIntraProcessBase(topic_name, qos_profile, is_serialized),
     any_callback_(callback), serializer_(serializer)
   {
     if (!std::is_same<MessageT, CallbackMessageT>::value &&
-      !std::is_same<MessageT, rclcpp::SerializedMessage>::value &&
-      !std::is_same<CallbackMessageT, rcl_serialized_message_t>::value)
+      !std::is_base_of<rcl_serialized_message_t, MessageT>::value)
     {
       throw std::runtime_error("SubscriptionIntraProcess wrong callback type");
     }

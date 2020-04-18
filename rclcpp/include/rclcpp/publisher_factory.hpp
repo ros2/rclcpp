@@ -75,9 +75,9 @@ create_publisher_factory(
       const rclcpp::QoS & qos
     ) -> std::shared_ptr<PublisherT>
     {
+      auto is_serialized = std::is_base_of<rcl_serialized_message_t, MessageT>::value;
       auto publisher = std::make_shared<PublisherT>(
-        node_base, topic_name, qos, options,
-        type_support);
+        node_base, topic_name, qos, options, type_support, is_serialized);
       // This is used for setting up things like intra process comms which
       // require this->shared_from_this() which cannot be called from
       // the constructor.

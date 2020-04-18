@@ -214,7 +214,8 @@ public:
           this->get_topic_name(),    // important to get it by the fully-qualified name
           qos.get_rmw_qos_profile(),
           resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
-          std::make_shared<rclcpp::Serialization>(type_support_handle)
+          std::make_shared<rclcpp::Serialization>(type_support_handle),
+          is_serialized()
           );
         TRACEPOINT(
           rclcpp_subscription_init,
@@ -223,8 +224,7 @@ public:
 
         // Add it to the intra process manager.
         intra_process_subscription_id_serialized = ipm->add_subscription(
-          subscription_intra_process,
-          true);
+          subscription_intra_process);
       }
 
       this->setup_intra_process(

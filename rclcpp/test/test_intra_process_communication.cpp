@@ -256,12 +256,13 @@ TEST_F(TestPublisherSubscriptionSerialized, publish_serialized)
     for (size_t i = 0; i < parameter.runs; i++) {
       auto msg0 = make_serialized_string_msg(string_msg);
 
-      std::unique_ptr<test_msgs::msg::Strings> unique_string_msg(
-          new test_msgs::msg::Strings(
-            *string_msg));
-      //auto unique_string_msg = std::make_unique<test_msgs::msg::Strings>(*string_msg);
+      auto unique_string_msg = std::make_unique<test_msgs::msg::Strings>(*string_msg);
 
-      //publisher->publish(std::make_unique<rcl_serialized_message_t>(msg0));
+      {
+        auto unique_serialized_msg = std::make_unique<rclcpp::SerializedMessage>(msg0);
+        //auto unique_rcl_msg = std::make_unique<rcl_serialized_message_t>(*unique_serialized_msg.release());
+        //publisher->publish(std::move(unique_serialized_msg));
+      }
       publisher->publish(*string_msg);
       publisher->publish(std::move(unique_string_msg));
     }

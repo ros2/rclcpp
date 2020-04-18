@@ -39,8 +39,11 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(SubscriptionIntraProcessBase)
 
   RCLCPP_PUBLIC
-  SubscriptionIntraProcessBase(const std::string & topic_name, rmw_qos_profile_t qos_profile)
-  : topic_name_(topic_name), qos_profile_(qos_profile)
+  SubscriptionIntraProcessBase(
+    const std::string & topic_name,
+    rmw_qos_profile_t qos_profile,
+    bool is_serialized)
+  : topic_name_(topic_name), qos_profile_(qos_profile), is_serialized_(is_serialized)
   {}
 
   virtual ~SubscriptionIntraProcessBase() = default;
@@ -70,6 +73,10 @@ public:
   rmw_qos_profile_t
   get_actual_qos() const;
 
+  RCLCPP_PUBLIC
+  bool
+  is_serialized() const;
+
 protected:
   std::recursive_mutex reentrant_mutex_;
   rcl_guard_condition_t gc_;
@@ -80,6 +87,7 @@ private:
 
   std::string topic_name_;
   rmw_qos_profile_t qos_profile_;
+  bool is_serialized_;
 };
 
 }  // namespace experimental

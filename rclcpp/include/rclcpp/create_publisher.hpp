@@ -85,8 +85,7 @@ create_publisher(
   const auto type_support = *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
 
   return create_publisher<MessageT, AllocatorT, PublisherT, NodeT>(
-    node, topic_name, type_support,
-    qos, options);
+    node, topic_name, type_support, qos, options);
 }
 
 }  // namespace rclcpp

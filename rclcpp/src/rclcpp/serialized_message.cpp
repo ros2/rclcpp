@@ -47,6 +47,7 @@ SerializedMessage::SerializedMessage(const SerializedMessage & serialized_messag
 SerializedMessage::SerializedMessage(const rcl_serialized_message_t & serialized_message)
 : rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
 {
+  fprintf(stderr, "copy constructor called\n");
   const auto ret = rmw_serialized_message_init(
     this, serialized_message.buffer_capacity, &serialized_message.allocator);
   if (ret != RCL_RET_OK) {
