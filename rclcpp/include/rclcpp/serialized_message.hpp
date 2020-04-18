@@ -15,13 +15,8 @@
 #ifndef RCLCPP__SERIALIZED_MESSAGE_HPP_
 #define RCLCPP__SERIALIZED_MESSAGE_HPP_
 
-#include <rclcpp/exceptions.hpp>
-
-#include <cstring>
-
-#include "rcutils/logging_macros.h"
-
-#include "rmw/serialized_message.h"
+#include "rcl/allocator.h"
+#include "rcl/types.h"
 
 namespace rclcpp
 {
@@ -30,49 +25,42 @@ namespace rclcpp
 class SerializedMessage : public rcl_serialized_message_t
 {
 public:
-  SerializedMessage()
-  : rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
-  {}
+  /// Default constructor for a SerializedMessage
+  /**
+   * Default constructs a serialized message and initalizes its
+   * capacity with 0.
+   *
+   * \param[in] allocator The allocator to be used for the initialzation.
+   */
+  explicit SerializedMessage(
+    const rcl_allocator_t & allocator = rcl_get_default_allocator());
 
-  explicit SerializedMessage(const SerializedMessage & serialized_message)
-  : SerializedMessage(static_cast<const rcl_serialized_message_t>(serialized_message))
-  {}
+  /// Default constructor for a SerializedMessage
+  /**
+   * Default constructs a serialized message and initalizes its
+   * capacity with 0.
+   *
+   * \param[in] initial_capacity The amount of memory to be allocated.
+   * \param[in] allocator The allocator to be used for the initialzation.
+   */
+  explicit SerializedMessage(
+    size_t initial_capacity,
+    const rcl_allocator_t & allocator = rcl_get_default_allocator());
 
-  explicit SerializedMessage(const rcl_serialized_message_t & serialized_message)
-  : rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
-  {
-    const auto ret = rmw_serialized_message_init(
-      this, serialized_message.buffer_length,
-      &serialized_message.allocator);
-    if (ret != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(ret);
-    }
+  /// Copy Constructor for a SerializedMessage
+  explicit SerializedMessage(const SerializedMessage & serialized_message);
 
-    // do not call memcpy if the pointer is "static"
-    if (buffer != serialized_message.buffer) {
-      std::memcpy(buffer, serialized_message.buffer, serialized_message.buffer_length);
-    }
-    buffer_length = serialized_message.buffer_length;
-  }
+  /// Copy Constructor for a SerializedMessage from a rcl_serialized_message_t
+  explicit SerializedMessage(const rcl_serialized_message_t & serialized_message);
 
-  explicit SerializedMessage(rcl_serialized_message_t && msg)
-  : rcl_serialized_message_t(msg)
-  {
-    // reset buffer to prevent double free
-    msg = rmw_get_zero_initialized_serialized_message();
-  }
+  /// Move Constructor for a SerializedMessage
+  explicit SerializedMessage(SerializedMessage && serialized_message);
 
-  ~SerializedMessage()
-  {
-    if (nullptr != buffer) {
-      const auto fini_ret = rmw_serialized_message_fini(this);
-      if (fini_ret != RCL_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rclcpp",
-          "Failed to destroy serialized message: %s", rcl_get_error_string().str);
-      }
-    }
-  }
+  /// Move Constructor for a SerializedMessage from a rcl_serialized_message_t
+  explicit SerializedMessage(rcl_serialized_message_t && serialized_message);
+
+  /// Destructor for a SerializedMessage
+  ~SerializedMessage();
 };
 
 }  // namespace rclcpp

@@ -77,6 +77,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/publisher_base.cpp
   src/rclcpp/qos.cpp
   src/rclcpp/qos_event.cpp
+  src/rclcpp/serialization.cpp
+  src/rclcpp/serialized_message.cpp
   src/rclcpp/service.cpp
   src/rclcpp/signal_handler.cpp
   src/rclcpp/subscription_base.cpp
@@ -402,6 +404,15 @@ if(BUILD_TESTING)
       test_msgs
     )
     target_link_libraries(test_serialized_message_allocator
+      ${PROJECT_NAME}
+    )
+  endif()
+  ament_add_gtest(test_serialized_message test/test_serialized_message.cpp)
+  if(TARGET test_serialized_message)
+    ament_target_dependencies(test_serialized_message
+      test_msgs
+    )
+    target_link_libraries(test_serialized_message
       ${PROJECT_NAME}
     )
   endif()

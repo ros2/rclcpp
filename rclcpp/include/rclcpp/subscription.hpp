@@ -177,9 +177,7 @@ public:
           this->get_topic_name(),  // important to get it by the fully-qualified name
           qos.get_rmw_qos_profile(),
           resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
-          std::make_shared<rclcpp::Serialization>(
-            type_support_handle,
-            options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
+          std::make_shared<rclcpp::Serialization>(type_support_handle)
           );
         TRACEPOINT(
           rclcpp_subscription_init,
@@ -216,9 +214,7 @@ public:
           this->get_topic_name(),    // important to get it by the fully-qualified name
           qos.get_rmw_qos_profile(),
           resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
-          std::make_shared<rclcpp::Serialization>(
-            type_support_handle,
-            options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
+          std::make_shared<rclcpp::Serialization>(type_support_handle)
           );
         TRACEPOINT(
           rclcpp_subscription_init,
