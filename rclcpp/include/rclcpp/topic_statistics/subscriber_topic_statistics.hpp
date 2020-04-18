@@ -20,19 +20,17 @@
 #include <utility>
 #include <vector>
 
+#include "rcl/time.h"
+#include "rclcpp/time.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/timer.hpp"
+
 #include "libstatistics_collector/collector/generate_statistics_message.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 #include "libstatistics_collector/topic_statistics_collector/constants.hpp"
 #include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
 
 #include "statistics_msgs/msg/metrics_message.hpp"
-
-#include "rcl/time.h"
-#include "rclcpp/create_publisher.hpp"
-#include "rclcpp/node.hpp"
-#include "rclcpp/publisher.hpp"
-#include "rclcpp/time.hpp"
-#include "rclcpp/timer.hpp"
 
 namespace rclcpp
 {
@@ -63,36 +61,31 @@ class SubscriberTopicStatistics
     CallbackMessageT>;
 
 public:
-  /// Construct a SubcriberTopicStatistics object.
+  /// Construct a SubscriberTopicStatistics object.
   /**
-  * This object wraps utilities, defined in libstatistics_collector, to collect,
-  * measure, and publish topic statistics data.
-  *
-  * \param node the node creating the subscription, used to create the publisher and timer to
-  * publish topic statistics.
-  * \param publishing_topic the topic to publish statistics to
-  * \param publishing_period the period at which topic statistics messages are published
-  */
+   * This object wraps utilities, defined in libstatistics_collector, to collect,
+   * measure, and publish topic statistics data.
+   *
+   * @param node_name the name of the node, which created this instance, in order to denote
+   * topic source
+   * @param publisher instance constructed by the node in order to publish statistics data
+   */
   SubscriberTopicStatistics(
-    rclcpp::Node & node,
+    const std::string & node_name,
+    const rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr & publisher)
+    : node_name_(node_name),
+      publisher_(std::move(publisher))
+  {
+    // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
+
+    bring_up();
+  }
+
+  SubscriberTopicStatistics(
     const std::string & publishing_topic = kDefaultPublishTopicName,
     const std::chrono::milliseconds & publishing_period = kDefaultPublishingPeriod)
   {
-    publisher_ =
-      node.create_publisher<statistics_msgs::msg::MetricsMessage>(
-      publishing_topic,
-      10);
 
-    auto callback = [this]()
-      {
-        this->publish_message();
-      };
-
-    publisher_timer_ = node.create_wall_timer(publishing_period, callback);
-
-    node_name_ = node.get_name();
-
-    bring_up();
   }
 
   virtual ~SubscriberTopicStatistics()
@@ -127,30 +120,13 @@ public:
     return data;
   }
 
-private:
-  /// Construct and start all collectors and set window_start_.
-  void bring_up()
+  /// Set the timer used to publish statistics messages.
+  /**
+   * @param measurement_timer the timer to fire the publisher, created by the node
+   */
+  void set_publisher_timer(const rclcpp::TimerBase::SharedPtr & publisher_timer)
   {
-    auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
-    received_message_period->Start();
-    subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
-
-    window_start_ = rclcpp::Time(get_current_nanoseconds_since_epoch());
-  }
-
-  /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
-  void tear_down()
-  {
-    for (auto & collector : subscriber_statistics_collectors_) {
-      collector->Stop();
-    }
-
-    subscriber_statistics_collectors_.clear();
-
-    publisher_timer_->cancel();
-    publisher_timer_.reset();
-
-    publisher_.reset();
+    publisher_timer_ = publisher_timer;
   }
 
   /// Publish a populated MetricsStatisticsMessage
@@ -171,6 +147,34 @@ private:
       publisher_->publish(message);
     }
     window_start_ = window_end;
+  }
+
+private:
+  /// Construct and start all collectors and set window_start_.
+  void bring_up()
+  {
+    auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
+    received_message_period->Start();
+    subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
+
+    window_start_ = rclcpp::Time(get_current_nanoseconds_since_epoch());
+  }
+
+  /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
+  void tear_down()
+  {
+    for (auto & collector : subscriber_statistics_collectors_) {
+      collector->Stop();
+    }
+
+    subscriber_statistics_collectors_.clear();
+
+    if (publisher_timer_) {
+      publisher_timer_->cancel();
+      publisher_timer_.reset();
+    }
+
+    publisher_.reset();
   }
 
   /// Return the current nanoseconds (count) since epoch.

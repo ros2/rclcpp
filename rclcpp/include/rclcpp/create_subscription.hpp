@@ -24,6 +24,7 @@
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/topic_statistics/subscriber_topic_statistics.hpp"
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
@@ -58,7 +59,9 @@ create_subscription(
   ),
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
     MessageMemoryStrategyT::create_default()
-  )
+  ),
+  std::shared_ptr<rclcpp::topic_statistics::SubscriberTopicStatistics<CallbackMessageT>>
+    subscriber_topic_stats = nullptr
 )
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
@@ -67,7 +70,8 @@ create_subscription(
   auto factory = rclcpp::create_subscription_factory<MessageT>(
     std::forward<CallbackT>(callback),
     options,
-    msg_mem_strat
+    msg_mem_strat,
+    subscriber_topic_stats
   );
 
   auto sub = node_topics->create_subscription(topic_name, factory, qos);
