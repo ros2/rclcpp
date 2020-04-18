@@ -61,7 +61,7 @@ create_subscription(
     MessageMemoryStrategyT::create_default()
   ),
   std::shared_ptr<rclcpp::topic_statistics::SubscriberTopicStatistics<CallbackMessageT>>
-    subscriber_topic_stats = nullptr
+  subscriber_topic_stats = nullptr
 )
 {
   using rclcpp::node_interfaces::get_node_topics_interface;

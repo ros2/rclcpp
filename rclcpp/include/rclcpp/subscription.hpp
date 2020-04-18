@@ -270,8 +270,9 @@ public:
     any_callback_.dispatch(typed_message, message_info);
 
     if (subscriber_topic_statistics_) {
-      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now());
-      const auto time = rclcpp::Time(nanos.count());
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now());
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
       subscriber_topic_statistics_->handle_message(*typed_message, time);
     }
   }

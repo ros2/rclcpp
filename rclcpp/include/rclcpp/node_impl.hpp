@@ -45,8 +45,6 @@
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/timer.hpp"
 
-#include "rclcpp/create_publisher.hpp"
-
 #include "statistics_msgs/msg/metrics_message.hpp"
 
 #ifndef RCLCPP__NODE_HPP_
@@ -97,21 +95,24 @@ Node::create_subscription(
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  //todo only set if the option is set
-  if (true)
-  {
+  // TODO(dabonnie): only set if the option is set, via https://github.com/ros2/rclcpp/pull/1057
+  if (true) {
+    // TODO(dabonnie): fix QoS, configurable or hardcoded?
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
-      this->create_publisher<statistics_msgs::msg::MetricsMessage>("topic_statistics", rclcpp::QoS(10));
+      this->create_publisher<statistics_msgs::msg::MetricsMessage>(
+      "topic_statistics",
+      rclcpp::QoS(10));
 
-    // todo fix name
+    // TODO(dabonnie): fix name via https://github.com/ros2/rclcpp/pull/1057
     auto sub_topic_stats = std::make_shared<
       rclcpp::topic_statistics::SubscriberTopicStatistics<CallbackMessageT>
-    >(this->get_name(), publisher);
+      >(this->get_name(), publisher);
 
-    //todo (dabonnie): fix hardcoded duration
-    auto timer = this->create_wall_timer(std::chrono::seconds{15}, [sub_topic_stats] () {
-      sub_topic_stats->publish_message();
-    });
+    // TODO(dabonnie): fix hardcoded duration via https://github.com/ros2/rclcpp/pull/1057
+    auto timer = this->create_wall_timer(
+      std::chrono::seconds{10}, [sub_topic_stats]() {
+        sub_topic_stats->publish_message();
+      });
 
     sub_topic_stats->set_publisher_timer(timer);
 
@@ -124,8 +125,8 @@ Node::create_subscription(
       msg_mem_strat,
       sub_topic_stats);
   }
-  //TODO (dabonnie): fix QoS, configurable or hardcoded?
 
+  // TODO(dabonnie): fixme
   return rclcpp::create_subscription<MessageT>(
     *this,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),

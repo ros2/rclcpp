@@ -72,11 +72,11 @@ public:
    */
   SubscriberTopicStatistics(
     const std::string & node_name,
-    const rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr & publisher)
-    : node_name_(node_name),
-      publisher_(std::move(publisher))
+    rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr & publisher)
+  : node_name_(node_name),
+    publisher_(std::move(publisher))
   {
-    // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
+    // TODO(dabonnie): ros-tooling/aws-roadmap/issues/226, received message age
     bring_up();
   }
 
