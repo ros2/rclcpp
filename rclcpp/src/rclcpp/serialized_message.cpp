@@ -73,6 +73,52 @@ SerializedMessage::SerializedMessage(rcl_serialized_message_t && serialized_mess
   serialized_message = rmw_get_zero_initialized_serialized_message();
 }
 
+SerializedMessage & SerializedMessage::operator=(const SerializedMessage & other)
+{
+  *this = static_cast<const rcl_serialized_message_t &>(other);
+
+  return *this;
+}
+
+SerializedMessage & SerializedMessage::operator=(const rcl_serialized_message_t & other)
+{
+  *this = static_cast<SerializedMessage>(rmw_get_zero_initialized_serialized_message());
+
+  const auto ret = rmw_serialized_message_init(
+    this, other.buffer_capacity, &other.allocator);
+  if (ret != RCL_RET_OK) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  // do not call memcpy if the pointer is "static"
+  if (buffer != other.buffer) {
+    std::memcpy(buffer, other.buffer, other.buffer_length);
+  }
+  buffer_length = other.buffer_length;
+
+  return *this;
+}
+
+SerializedMessage & SerializedMessage::operator=(SerializedMessage && other)
+{
+  *this = static_cast<rcl_serialized_message_t &&>(other);
+
+  return *this;
+}
+
+SerializedMessage & SerializedMessage::operator=(rcl_serialized_message_t && other)
+{
+  this->buffer = other.buffer;
+  this->buffer_capacity = other.buffer_capacity;
+  this->buffer_length = other.buffer_length;
+  this->allocator = other.allocator;
+
+  // reset original to prevent double free
+  other = rmw_get_zero_initialized_serialized_message();
+
+  return *this;
+}
+
 SerializedMessage::~SerializedMessage()
 {
   if (nullptr != buffer) {

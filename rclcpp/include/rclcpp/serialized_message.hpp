@@ -43,21 +43,29 @@ public:
    * \param[in] initial_capacity The amount of memory to be allocated.
    * \param[in] allocator The allocator to be used for the initialzation.
    */
-  explicit SerializedMessage(
+  SerializedMessage(
     size_t initial_capacity,
     const rcl_allocator_t & allocator = rcl_get_default_allocator());
 
   /// Copy Constructor for a SerializedMessage
-  explicit SerializedMessage(const SerializedMessage & serialized_message);
+  SerializedMessage(const SerializedMessage & serialized_message);
 
   /// Copy Constructor for a SerializedMessage from a rcl_serialized_message_t
-  explicit SerializedMessage(const rcl_serialized_message_t & serialized_message);
+  SerializedMessage(const rcl_serialized_message_t & serialized_message);
 
   /// Move Constructor for a SerializedMessage
-  explicit SerializedMessage(SerializedMessage && serialized_message);
+  SerializedMessage(SerializedMessage && serialized_message);
 
   /// Move Constructor for a SerializedMessage from a rcl_serialized_message_t
-  explicit SerializedMessage(rcl_serialized_message_t && serialized_message);
+  SerializedMessage(rcl_serialized_message_t && serialized_message);
+
+  SerializedMessage & operator=(const SerializedMessage & other);
+
+  SerializedMessage & operator=(const rcl_serialized_message_t & other);
+
+  SerializedMessage & operator=(SerializedMessage && other);
+
+  SerializedMessage & operator=(rcl_serialized_message_t && other);
 
   /// Destructor for a SerializedMessage
   ~SerializedMessage();
