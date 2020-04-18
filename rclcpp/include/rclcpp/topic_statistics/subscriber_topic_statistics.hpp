@@ -77,15 +77,7 @@ public:
       publisher_(std::move(publisher))
   {
     // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
-
     bring_up();
-  }
-
-  SubscriberTopicStatistics(
-    const std::string & publishing_topic = kDefaultPublishTopicName,
-    const std::chrono::milliseconds & publishing_period = kDefaultPublishingPeriod)
-  {
-
   }
 
   virtual ~SubscriberTopicStatistics()
