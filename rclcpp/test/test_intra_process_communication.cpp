@@ -114,7 +114,14 @@ std::ostream & operator<<(std::ostream & out, const TestParameters & params)
   return out;
 }
 
-class TestPublisherSubscriptionSerialized : public ::testing::TestWithParam<TestParameters>
+auto get_new_context()
+{
+  auto context = rclcpp::Context::make_shared();
+  context->init(0, nullptr);
+  return context;
+}
+
+class TestPublisherSubscriptionSerialized : public ::testing::Test
 {
 public:
   static void SetUpTestCase()
@@ -122,17 +129,70 @@ public:
     rclcpp::init(0, nullptr);
   }
 
-  //static void TearDownTestCase()
-  //{
-  //  rclcpp::shutdown();
-  //}
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 
 protected:
-  static std::chrono::milliseconds offset;
+  std::chrono::milliseconds offset_ = std::chrono::milliseconds(250);
+
+  std::vector<TestParameters> parameters_ = {
+    /*
+       Testing publisher subscription count api and internal process subscription count.
+       Two subscriptions in the same topic, both using intraprocess comm.
+     */
+    {
+      {
+        rclcpp::NodeOptions().use_intra_process_comms(false),
+        rclcpp::NodeOptions().use_intra_process_comms(true)
+      },
+      {1u, 2u},
+      1,
+      "two_subscriptions_intraprocess_comm"
+    },
+    /*
+       Testing publisher subscription count api and internal process subscription count.
+       Two subscriptions, one using intra-process comm and the other not using it.
+     */
+    {
+      {
+        rclcpp::NodeOptions().use_intra_process_comms(true),
+        rclcpp::NodeOptions().use_intra_process_comms(false)
+      },
+      {1u, 1u},
+      1,
+      "two_subscriptions_one_intraprocess_one_not"
+    },
+    /*
+       Testing publisher subscription count api and internal process subscription count.
+       Two contexts, both using intra-process.
+     */
+    {
+      {
+        rclcpp::NodeOptions().use_intra_process_comms(true),
+        rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(true)
+      },
+      {1u, 1u},
+      1,
+      "two_subscriptions_in_two_contexts_with_intraprocess_comm"
+    },
+    /*
+       Testing publisher subscription count api and internal process subscription count.
+       Two contexts, both of them not using intra-process comm.
+     */
+    {
+      {
+        rclcpp::NodeOptions().use_intra_process_comms(false),
+        rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(false)
+      },
+      {0u, 0u},
+      1,
+      "two_subscriptions_in_two_contexts_without_intraprocess_comm"
+    }
+  };
 };
 
-std::chrono::milliseconds TestPublisherSubscriptionSerialized::offset = std::chrono::milliseconds(
-  250);
 std::array<uint32_t, 2> counts;
 
 void OnMessageSerialized(const std::shared_ptr<const rcl_serialized_message_t> msg)
@@ -164,61 +224,59 @@ void OnMessage(std::shared_ptr<test_msgs::msg::Strings> msg)
   ++counts[1];
 }
 
-TEST_P(TestPublisherSubscriptionSerialized, publish_serialized)
+TEST_F(TestPublisherSubscriptionSerialized, publish_serialized)
 {
   get_test_allocation_counter() = 0;
 
-  TestParameters parameters = GetParam();
-  {
+  for (const auto & parameter : parameters_) {
     rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>(
-      "my_node",
-      "/ns",
-      parameters.node_options[0]);
+        "my_node",
+        "/ns",
+        parameter.node_options[0]);
     auto publisher = node->create_publisher<test_msgs::msg::Strings>("/topic", 10);
 
     auto sub_shared = node->create_subscription<test_msgs::msg::Strings>(
-      "/topic", 10,
-      &OnMessage);
+        "/topic", 10,
+        &OnMessage);
     auto sub_unique = node->create_subscription<test_msgs::msg::Strings>(
-      "/topic", 10,
-      &OnMessageUniquePtr);
+        "/topic", 10,
+        &OnMessageUniquePtr);
     auto sub_const_shared = node->create_subscription<test_msgs::msg::Strings>(
-      "/topic", 10,
-      &OnMessageConst);
+        "/topic", 10,
+        &OnMessageConst);
     auto sub_serialized = node->create_subscription<test_msgs::msg::Strings>(
-      "/topic", 10,
-      &OnMessageSerialized);
+        "/topic", 10,
+        &OnMessageSerialized);
 
-    rclcpp::sleep_for(offset);
+    rclcpp::sleep_for(offset_);
 
     counts.fill(0);
     auto string_msg = get_messages_strings()[3];
 
-    for (size_t i = 0; i < parameters.runs; i++) {
+    for (size_t i = 0; i < parameter.runs; i++) {
       auto msg0 = make_serialized_string_msg(string_msg);
 
-      auto unique_string_msg = std::make_unique<test_msgs::msg::Strings>(*string_msg);
+      std::unique_ptr<test_msgs::msg::Strings> unique_string_msg(
+          new test_msgs::msg::Strings(
+            *string_msg));
+      //auto unique_string_msg = std::make_unique<test_msgs::msg::Strings>(*string_msg);
 
-      {
-        auto whatever = std::make_unique<rcl_serialized_message_t>(msg0);
-      }
       //publisher->publish(std::make_unique<rcl_serialized_message_t>(msg0));
-      //publisher->publish(*string_msg);
-      //publisher->publish(std::move(unique_string_msg));
+      publisher->publish(*string_msg);
+      publisher->publish(std::move(unique_string_msg));
     }
     for (uint32_t i = 0; i < 3; ++i) {
       rclcpp::spin_some(node);
-      rclcpp::sleep_for(offset);
+      rclcpp::sleep_for(offset_);
     }
 
     rclcpp::spin_some(node);
-  }
 
-  if (parameters.runs == 1) {
-    EXPECT_EQ(counts[0], 3u);
-    EXPECT_EQ(counts[1], 9u);
+    if (parameter.runs == 1) {
+      EXPECT_EQ(counts[0], 3u);  // count serialized message callbacks
+      EXPECT_EQ(counts[1], 9u);  // count unique + shared message callbacks
+    }
   }
-
   EXPECT_EQ(get_test_allocation_counter(), 0);
 }
 
@@ -282,67 +340,7 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized)
 //  EXPECT_EQ(get_test_allocation_counter(), 0);
 //}
 
-auto get_new_context()
-{
-  auto context = rclcpp::Context::make_shared();
-  context->init(0, nullptr);
-  return context;
-}
 
-std::vector<TestParameters> parameters = {
-  /*
-     Testing publisher subscription count api and internal process subscription count.
-     Two subscriptions in the same topic, both using intraprocess comm.
-   */
-  {
-    {
-      rclcpp::NodeOptions().use_intra_process_comms(true),
-      rclcpp::NodeOptions().use_intra_process_comms(true)
-    },
-    {1u, 2u},
-    1,
-    "two_subscriptions_intraprocess_comm"
-  }
-  ///*
-  //   Testing publisher subscription count api and internal process subscription count.
-  //   Two subscriptions, one using intra-process comm and the other not using it.
-  // */
-  //{
-  //  {
-  //    rclcpp::NodeOptions().use_intra_process_comms(true),
-  //    rclcpp::NodeOptions().use_intra_process_comms(false)
-  //  },
-  //  {1u, 1u},
-  //  1,
-  //  "two_subscriptions_one_intraprocess_one_not"
-  //},
-  ///*
-  //   Testing publisher subscription count api and internal process subscription count.
-  //   Two contexts, both using intra-process.
-  // */
-  //{
-  //  {
-  //    rclcpp::NodeOptions().use_intra_process_comms(true),
-  //    rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(true)
-  //  },
-  //  {1u, 1u},
-  //  1,
-  //  "two_subscriptions_in_two_contexts_with_intraprocess_comm"
-  //},
-  ///*
-  //   Testing publisher subscription count api and internal process subscription count.
-  //   Two contexts, both of them not using intra-process comm.
-  // */
-  //{
-  //  {
-  //    rclcpp::NodeOptions().use_intra_process_comms(false),
-  //    rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(false)
-  //  },
-  //  {0u, 0u},
-  //  1,
-  //  "two_subscriptions_in_two_contexts_without_intraprocess_comm"
-  //}
-};
 
 std::vector<TestParameters> setRuns(const std::vector<TestParameters> & in, const size_t runs)
 {
@@ -353,10 +351,10 @@ std::vector<TestParameters> setRuns(const std::vector<TestParameters> & in, cons
   return out;
 }
 
-INSTANTIATE_TEST_CASE_P(
-  TestWithDifferentNodeOptions, TestPublisherSubscriptionSerialized,
-  ::testing::ValuesIn(parameters),
-  ::testing::PrintToStringParamName());
+//INSTANTIATE_TEST_CASE_P(
+//  TestWithDifferentNodeOptions, TestPublisherSubscriptionSerialized,
+//  ::testing::ValuesIn(parameters),
+//  ::testing::PrintToStringParamName());
 
 //INSTANTIATE_TEST_CASE_P(
 //  TestWithDifferentNodeOptions1000Runs, TestPublisherSubscriptionSerialized,
