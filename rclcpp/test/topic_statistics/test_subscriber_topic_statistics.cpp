@@ -93,9 +93,18 @@ protected:
 
 TEST_F(TestSubscriberTopicStatisticsFixture, test_manual_construction)
 {
+  // manually create publisher tied to the node
+  auto topic_stats_publisher =
+    empty_subscriber->create_publisher<MetricsMessage>(
+    kTestTopicStatisticsTopic,
+    10);
+
   // construct the instance
   auto sub_topic_stats = std::make_unique<SubscriberTopicStatistics<Empty>>(
-    *empty_subscriber);
+    empty_subscriber->get_name(),
+    topic_stats_publisher);
+
+  using libstatistics_collector::moving_average_statistics::StatisticData;
 
   // expect no data has been collected / no samples received
   for (const auto & data : sub_topic_stats->get_current_collector_data()) {
