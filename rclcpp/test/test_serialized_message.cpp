@@ -15,9 +15,13 @@
 #include <gtest/gtest.h>
 #include <memory>
 
+#include "rclcpp/serialization.hpp"
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "rcpputils/asserts.hpp"
+
+#include "test_msgs/message_fixtures.hpp"
 #include "test_msgs/msg/basic_types.hpp"
 
 TEST(TestSerializedMessage, empty_initialize) {
@@ -85,4 +89,49 @@ TEST(TestSerializedMessage, various_constructors) {
   EXPECT_TRUE(nullptr != from_rcl_msg.buffer);
   EXPECT_EQ(13u, from_rcl_msg.buffer_capacity);
   EXPECT_EQ(content_size, from_rcl_msg.buffer_length);
+}
+
+TEST(TestSerializedMessage, serialization) {
+  auto type_support =
+    rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::BasicTypes>();
+  rclcpp::Serialization serializer(*type_support);
+
+  auto basic_type_ros_msgs = get_messages_basic_types();
+  for (const auto & ros_msg : basic_type_ros_msgs) {
+    // convert ros msg to serialized msg
+    rclcpp::SerializedMessage serialized_msg;
+    serializer.serialize_message(ros_msg.get(), &serialized_msg);
+
+    // convert serialized msg back to ros msg
+    test_msgs::msg::BasicTypes deserialized_ros_msg;
+    serializer.deserialize_message(&serialized_msg, &deserialized_ros_msg);
+
+    EXPECT_EQ(*ros_msg, deserialized_ros_msg);
+  }
+}
+
+TEST(TestSerializedMessage, serialization_into_nullptr) {
+  auto type_support =
+    rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::BasicTypes>();
+  rclcpp::Serialization serializer(*type_support);
+
+  auto basic_type_ros_msgs = get_messages_basic_types();
+  for (const auto & ros_msg : basic_type_ros_msgs) {
+    rclcpp::SerializedMessage serialized_msg;
+    test_msgs::msg::BasicTypes deserialized_ros_msg;
+
+    EXPECT_THROW(
+      serializer.serialize_message(ros_msg.get(), nullptr),
+      rcpputils::IllegalStateException);
+    EXPECT_THROW(
+      serializer.serialize_message(nullptr, &serialized_msg),
+      rcpputils::IllegalStateException);
+
+    EXPECT_THROW(
+      serializer.deserialize_message(&serialized_msg, nullptr),
+      rcpputils::IllegalStateException);
+    EXPECT_THROW(
+      serializer.deserialize_message(nullptr, &deserialized_ros_msg),
+      rcpputils::IllegalStateException);
+  }
 }

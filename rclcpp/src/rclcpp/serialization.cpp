@@ -50,14 +50,12 @@ void
 Serialization::deserialize_message(
   const SerializedMessage * serialized_message, void * ros_message) const
 {
-  rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
+  rcpputils::check_true(serialized_message != nullptr, "Serialized message is nullpointer.");
   rcpputils::check_true(
     serialized_message->buffer_capacity != 0 &&
     serialized_message->buffer_length != 0 &&
-    !serialized_message->buffer, "Serialized message is wrongly initialized.");
-  {
-    throw std::runtime_error("Failed to deserialize nullptr serialized message.");
-  }
+    serialized_message->buffer != nullptr, "Serialized message is wrongly initialized.");
+  rcpputils::check_true(ros_message != nullptr, "ROS message is a nullpointer.");
 
   const auto ret = rmw_deserialize(serialized_message, &type_support_, ros_message);
   if (ret != RMW_RET_OK) {
