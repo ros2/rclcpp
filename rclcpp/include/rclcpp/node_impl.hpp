@@ -46,6 +46,7 @@
 #include "rclcpp/timer.hpp"
 
 #include "statistics_msgs/msg/metrics_message.hpp"
+#include <cstdlib>
 
 #ifndef RCLCPP__NODE_HPP_
 #include "node.hpp"
@@ -100,7 +101,7 @@ Node::create_subscription(
     // TODO(dabonnie): fix QoS, configurable or hardcoded?
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       this->create_publisher<statistics_msgs::msg::MetricsMessage>(
-      "topic_statistics",
+      "topic_statistics" + std::to_string(rand()), // for now make unique
       rclcpp::QoS(10));
 
     // TODO(dabonnie): fix name via https://github.com/ros2/rclcpp/pull/1057
