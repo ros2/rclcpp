@@ -157,11 +157,12 @@ private:
   // convert from ROS2 message to rcl_serialized_message_t (serilizatino needed)
   template<typename T>
   typename std::enable_if<
-    std::is_same<T, rcl_serialized_message_t>::value &&
-    !std::is_same<MessageT, rclcpp::SerializedMessage>::value,
-    void>::type
+    !std::is_base_of<rcl_serialized_message_t, MessageT>::value &&  // tx not a SerializedMessage
+    std::is_base_of<rcl_serialized_message_t, T>::value,  // rx a SerializedMessage
+  void>::type
   execute_impl()
   {
+    fprintf(stderr, "tx ROS2, rx serialized\n");
     if (nullptr == serializer_) {
       throw std::runtime_error("Subscription intra-process can't handle serialized messages");
     }
@@ -189,11 +190,12 @@ private:
   // forward from ROS2 message to ROS2 message (same type)
   template<class T>
   typename std::enable_if<
-    !std::is_same<T, rcl_serialized_message_t>::value &&
-    !std::is_same<MessageT, rclcpp::SerializedMessage>::value,
+    !std::is_base_of<rcl_serialized_message_t, MessageT>::value &&  // tx not a SerializedMessage
+    !std::is_base_of<rcl_serialized_message_t, T>::value,  // rx not a SerializedMessage
     void>::type
   execute_impl()
   {
+    fprintf(stderr, "tx ROS2, rx ROS2\n");
     rmw_message_info_t msg_info = {};
     msg_info.publisher_gid = {0, {0}};
     msg_info.from_intra_process = true;
@@ -207,14 +209,15 @@ private:
     }
   }
 
-  // forward from rcl_serialized_message_t to SerializationMessage (no conversion needed)
+  // forward from rcl_serialized_message_t to rcl_serialized_message_t (no conversion needed)
   template<typename T>
   typename std::enable_if<
-    std::is_same<T, rcl_serialized_message_t>::value &&
-    std::is_same<MessageT, rclcpp::SerializedMessage>::value,
+    std::is_base_of<rcl_serialized_message_t, MessageT>::value &&  // tx a SerializedMessage
+    std::is_base_of<rcl_serialized_message_t, T>::value,  // rx a SerializedMessage
     void>::type
   execute_impl()
   {
+    fprintf(stderr, "tx serialize, rx serialize\n");
     rmw_message_info_t msg_info = {};
     msg_info.from_intra_process = true;
 
@@ -234,11 +237,12 @@ private:
   // convert from rcl_serialized_message_t to ROS2 message (deserialization needed)
   template<class T>
   typename std::enable_if<
-    !std::is_same<T, rcl_serialized_message_t>::value &&
-    std::is_same<MessageT, rclcpp::SerializedMessage>::value,
+    std::is_base_of<rcl_serialized_message_t, MessageT>::value &&  // tx a SerializedMessage
+    !std::is_base_of<rcl_serialized_message_t, T>::value,  // rx not a SerializedMessage
     void>::type
   execute_impl()
   {
+    fprintf(stderr, "tx rcl, rx ROS2\n");
     if (nullptr == serializer_) {
       throw std::runtime_error("Subscription intra-process can't handle unserialized messages");
     }
@@ -258,6 +262,7 @@ private:
         reinterpret_cast<void *>(msg.get()));
       any_callback_.dispatch_intra_process(msg, msg_info);
     } else {
+      // construct unique might not initialize the ros message?
       CallbackMessageUniquePtr msg = construct_unique();
       serializer_->deserialize_message(
         serialized_message.get(),

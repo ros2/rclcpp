@@ -25,7 +25,6 @@
 #include <string>
 #include <utility>
 
-
 #include "rcl/error_handling.h"
 #include "rcl/subscription.h"
 

@@ -37,6 +37,7 @@ int32_t & get_test_allocation_counter()
 
 void * custom_allocate(size_t size, void * state)
 {
+  fprintf(stderr, "calling custom allocate\n");
   static auto m_allocator = rcutils_get_default_allocator();
 
   ++get_test_allocation_counter();
@@ -46,6 +47,7 @@ void * custom_allocate(size_t size, void * state)
 
 void * custom_zero_allocate(size_t number_of_elements, size_t size_of_element, void * state)
 {
+  fprintf(stderr, "calling custom zero allocate\n");
   static auto m_allocator = rcutils_get_default_allocator();
 
   ++get_test_allocation_counter();
@@ -55,6 +57,7 @@ void * custom_zero_allocate(size_t number_of_elements, size_t size_of_element, v
 
 void * custom_reallocate(void * pointer, size_t size, void * state)
 {
+  fprintf(stderr, "calling custom reallocate\n");
   static auto m_allocator = rcutils_get_default_allocator();
 
   if (pointer == nullptr) {
@@ -67,6 +70,7 @@ void * custom_reallocate(void * pointer, size_t size, void * state)
 
 void custom_deallocate(void * pointer, void * state)
 {
+  fprintf(stderr, "calling custom deallocate\n");
   static auto m_allocator = rcutils_get_default_allocator();
 
   --get_test_allocation_counter();
@@ -144,52 +148,52 @@ protected:
      */
     {
       {
-        rclcpp::NodeOptions().use_intra_process_comms(false),
-        rclcpp::NodeOptions().use_intra_process_comms(true)
+        rclcpp::NodeOptions().use_intra_process_comms(true).start_parameter_services(false).enable_rosout(false),
+        rclcpp::NodeOptions().use_intra_process_comms(true).start_parameter_services(false).enable_rosout(false)
       },
       {1u, 2u},
       1,
       "two_subscriptions_intraprocess_comm"
     },
-    /*
-       Testing publisher subscription count api and internal process subscription count.
-       Two subscriptions, one using intra-process comm and the other not using it.
-     */
-    {
-      {
-        rclcpp::NodeOptions().use_intra_process_comms(true),
-        rclcpp::NodeOptions().use_intra_process_comms(false)
-      },
-      {1u, 1u},
-      1,
-      "two_subscriptions_one_intraprocess_one_not"
-    },
-    /*
-       Testing publisher subscription count api and internal process subscription count.
-       Two contexts, both using intra-process.
-     */
-    {
-      {
-        rclcpp::NodeOptions().use_intra_process_comms(true),
-        rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(true)
-      },
-      {1u, 1u},
-      1,
-      "two_subscriptions_in_two_contexts_with_intraprocess_comm"
-    },
-    /*
-       Testing publisher subscription count api and internal process subscription count.
-       Two contexts, both of them not using intra-process comm.
-     */
-    {
-      {
-        rclcpp::NodeOptions().use_intra_process_comms(false),
-        rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(false)
-      },
-      {0u, 0u},
-      1,
-      "two_subscriptions_in_two_contexts_without_intraprocess_comm"
-    }
+    ///*
+    //   Testing publisher subscription count api and internal process subscription count.
+    //   Two subscriptions, one using intra-process comm and the other not using it.
+    // */
+    //{
+    //  {
+    //    rclcpp::NodeOptions().use_intra_process_comms(true),
+    //    rclcpp::NodeOptions().use_intra_process_comms(false)
+    //  },
+    //  {1u, 1u},
+    //  1,
+    //  "two_subscriptions_one_intraprocess_one_not"
+    //},
+    ///*
+    //   Testing publisher subscription count api and internal process subscription count.
+    //   Two contexts, both using intra-process.
+    // */
+    //{
+    //  {
+    //    rclcpp::NodeOptions().use_intra_process_comms(true),
+    //    rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(true)
+    //  },
+    //  {1u, 1u},
+    //  1,
+    //  "two_subscriptions_in_two_contexts_with_intraprocess_comm"
+    //},
+    ///*
+    //   Testing publisher subscription count api and internal process subscription count.
+    //   Two contexts, both of them not using intra-process comm.
+    // */
+    //{
+    //  {
+    //    rclcpp::NodeOptions().use_intra_process_comms(false),
+    //    rclcpp::NodeOptions().context(get_new_context()).use_intra_process_comms(false)
+    //  },
+    //  {0u, 0u},
+    //  1,
+    //  "two_subscriptions_in_two_contexts_without_intraprocess_comm"
+    //}
   };
 };
 
@@ -200,12 +204,23 @@ void OnMessageSerialized(const std::shared_ptr<const rcl_serialized_message_t> m
   EXPECT_NE(msg->buffer, nullptr);
   EXPECT_GT(msg->buffer_capacity, 0u);
 
+  static auto type_support =
+    rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Strings>();
+
+  test_msgs::msg::Strings ros_msg;
+  rclcpp::Serialization serializer(*type_support);
+  EXPECT_NO_THROW(
+    serializer.deserialize_message(
+      static_cast<const rclcpp::SerializedMessage *>(msg.get()), &ros_msg));
+  EXPECT_EQ(ros_msg.string_value.front(), '0');
+  EXPECT_EQ(ros_msg.string_value[6], '6');
+  EXPECT_EQ(ros_msg.string_value.back(), '9');
   ++counts[0];
 }
 
 void OnMessageConst(std::shared_ptr<const test_msgs::msg::Strings> msg)
 {
-  EXPECT_EQ(msg->string_value.back(), '9');
+  EXPECT_EQ(msg->string_value[6], '6');
 
   ++counts[1];
 }
@@ -219,7 +234,9 @@ void OnMessageUniquePtr(std::unique_ptr<test_msgs::msg::Strings> msg)
 
 void OnMessage(std::shared_ptr<test_msgs::msg::Strings> msg)
 {
-  EXPECT_EQ(msg->string_value.back(), '9');
+  EXPECT_EQ(msg->string_value.front(), '0');
+  EXPECT_EQ(msg->string_value[6], '6');
+  EXPECT_EQ(msg->string_value.back(), '\0');
 
   ++counts[1];
 }
@@ -235,15 +252,15 @@ TEST_F(TestPublisherSubscriptionSerialized, publish_serialized)
         parameter.node_options[0]);
     auto publisher = node->create_publisher<test_msgs::msg::Strings>("/topic", 10);
 
-    auto sub_shared = node->create_subscription<test_msgs::msg::Strings>(
-        "/topic", 10,
-        &OnMessage);
-    auto sub_unique = node->create_subscription<test_msgs::msg::Strings>(
-        "/topic", 10,
-        &OnMessageUniquePtr);
-    auto sub_const_shared = node->create_subscription<test_msgs::msg::Strings>(
-        "/topic", 10,
-        &OnMessageConst);
+    //auto sub_shared = node->create_subscription<test_msgs::msg::Strings>(
+    //    "/topic", 10,
+    //    &OnMessage);
+    //auto sub_unique = node->create_subscription<test_msgs::msg::Strings>(
+    //    "/topic", 10,
+    //    &OnMessageUniquePtr);
+    //auto sub_const_shared = node->create_subscription<test_msgs::msg::Strings>(
+    //    "/topic", 10,
+    //    &OnMessageConst);
     auto sub_serialized = node->create_subscription<test_msgs::msg::Strings>(
         "/topic", 10,
         &OnMessageSerialized);
@@ -251,7 +268,7 @@ TEST_F(TestPublisherSubscriptionSerialized, publish_serialized)
     rclcpp::sleep_for(offset_);
 
     counts.fill(0);
-    auto string_msg = get_messages_strings()[3];
+    std::shared_ptr<test_msgs::msg::Strings> string_msg = get_messages_strings()[3];
 
     for (size_t i = 0; i < parameter.runs; i++) {
       auto msg0 = make_serialized_string_msg(string_msg);
@@ -259,11 +276,10 @@ TEST_F(TestPublisherSubscriptionSerialized, publish_serialized)
       auto unique_string_msg = std::make_unique<test_msgs::msg::Strings>(*string_msg);
 
       {
-        auto unique_serialized_msg = std::make_unique<rclcpp::SerializedMessage>(msg0);
-        //auto unique_rcl_msg = std::make_unique<rcl_serialized_message_t>(*unique_serialized_msg.release());
+        auto unique_serialized_msg = std::make_unique<rclcpp::SerializedMessage>(std::move(msg0));
         //publisher->publish(std::move(unique_serialized_msg));
       }
-      publisher->publish(*string_msg);
+      //publisher->publish(*string_msg);
       publisher->publish(std::move(unique_string_msg));
     }
     for (uint32_t i = 0; i < 3; ++i) {

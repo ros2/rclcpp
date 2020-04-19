@@ -172,10 +172,10 @@ public:
   virtual void
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
-    if (std::is_same<MessageT, rcl_serialized_message_t>::value) {
-      this->template publish<MessageDeleter>(std::move(msg));
-      return;
-    }
+    //if (std::is_same<MessageT, rcl_serialized_message_t>::value) {
+    //  this->template publish<MessageDeleter>(std::move(msg));
+    //  return;
+    //}
 
     if (!intra_process_is_enabled_) {
       this->do_inter_process_publish(*msg);
@@ -206,7 +206,7 @@ public:
   }
 
   template<class T = MessageT>
-  typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value>::type
+  typename std::enable_if<!std::is_base_of<rcl_serialized_message_t, T>::value, void>::type
   publish(const rcl_serialized_message_t & serialized_msg)
   {
     this->do_publish_message<rcl_serialized_message_t>(serialized_msg);
@@ -361,7 +361,7 @@ protected:
   }
 
   void
-  do_serialized_publish(rcl_serialized_message_t serialized_msg)
+  do_serialized_publish(SerializedMessage serialized_msg)
   {
     bool inter_process_publish_needed =
       get_subscription_count() > get_intra_process_subscription_count();

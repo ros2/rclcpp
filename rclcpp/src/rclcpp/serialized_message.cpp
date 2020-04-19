@@ -109,10 +109,7 @@ SerializedMessage & SerializedMessage::operator=(SerializedMessage && other)
 
 SerializedMessage & SerializedMessage::operator=(rcl_serialized_message_t && other)
 {
-  this->buffer = other.buffer;
-  this->buffer_capacity = other.buffer_capacity;
-  this->buffer_length = other.buffer_length;
-  this->allocator = other.allocator;
+  *this = other;
 
   // reset original to prevent double free
   other = rmw_get_zero_initialized_serialized_message();
