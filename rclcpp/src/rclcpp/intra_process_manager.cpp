@@ -32,7 +32,8 @@ IntraProcessManager::~IntraProcessManager()
 {}
 
 uint64_t
-IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
+IntraProcessManager::add_publisher(
+  rclcpp::PublisherBase::SharedPtr publisher, bool is_serialized)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -41,7 +42,7 @@ IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
   publishers_[id].publisher = publisher;
   publishers_[id].topic_name = publisher->get_topic_name();
   publishers_[id].qos = publisher->get_actual_qos().get_rmw_qos_profile();
-  publishers_[id].is_serialized = publisher->is_serialized();
+  publishers_[id].is_serialized = is_serialized;
 
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[id] = SplittedSubscriptions();

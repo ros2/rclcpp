@@ -148,6 +148,15 @@ protected:
      */
     {
       {
+        rclcpp::NodeOptions().use_intra_process_comms(false).start_parameter_services(false).enable_rosout(false),
+        rclcpp::NodeOptions().use_intra_process_comms(false).start_parameter_services(false).enable_rosout(false)
+      },
+      {1u, 2u},
+      1,
+      "two_subscriptions_intraprocess_comm"
+    },
+    {
+      {
         rclcpp::NodeOptions().use_intra_process_comms(true).start_parameter_services(false).enable_rosout(false),
         rclcpp::NodeOptions().use_intra_process_comms(true).start_parameter_services(false).enable_rosout(false)
       },
@@ -252,9 +261,9 @@ TEST_F(TestPublisherSubscriptionSerialized, publish_serialized)
         parameter.node_options[0]);
     auto publisher = node->create_publisher<test_msgs::msg::Strings>("/topic", 10);
 
-    //auto sub_shared = node->create_subscription<test_msgs::msg::Strings>(
-    //    "/topic", 10,
-    //    &OnMessage);
+    auto sub_shared = node->create_subscription<test_msgs::msg::Strings>(
+        "/topic", 10,
+        &OnMessage);
     //auto sub_unique = node->create_subscription<test_msgs::msg::Strings>(
     //    "/topic", 10,
     //    &OnMessageUniquePtr);
@@ -277,10 +286,10 @@ TEST_F(TestPublisherSubscriptionSerialized, publish_serialized)
 
       {
         auto unique_serialized_msg = std::make_unique<rclcpp::SerializedMessage>(std::move(msg0));
-        //publisher->publish(std::move(unique_serialized_msg));
+        publisher->publish(std::move(unique_serialized_msg));
       }
       //publisher->publish(*string_msg);
-      publisher->publish(std::move(unique_string_msg));
+      //publisher->publish(std::move(unique_string_msg));
     }
     for (uint32_t i = 0; i < 3; ++i) {
       rclcpp::spin_some(node);

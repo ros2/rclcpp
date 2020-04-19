@@ -135,8 +135,9 @@ public:
         throw std::invalid_argument(
                 "intraprocess communication allowed only with volatile durability");
       }
-      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
-      this->setup_intra_process(intra_process_publisher_id, ipm);
+      uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this(), false);
+      uint64_t intra_process_publisher_id_serialized = ipm->add_publisher(this->shared_from_this(), true);
+      this->setup_intra_process(intra_process_publisher_id, intra_process_publisher_id_serialized, ipm);
     }
   }
 
@@ -222,11 +223,11 @@ public:
   }
 
   /// Publish a serialized message.
-  template<typename TDeleter>
-  void publish(std::unique_ptr<rcl_serialized_message_t, TDeleter> serialized_msg)
-  {
-    this->do_serialized_publish(*serialized_msg);
-  }
+  //template<typename TDeleter>
+  //void publish(std::unique_ptr<rcl_serialized_message_t, TDeleter> serialized_msg)
+  //{
+  //  this->do_serialized_publish(*serialized_msg);
+  //}
 
   /// Publish a serialized message.
   template<typename TDeleter>
@@ -361,7 +362,7 @@ protected:
   }
 
   void
-  do_serialized_publish(SerializedMessage serialized_msg)
+  do_serialized_publish(const SerializedMessage & serialized_msg)
   {
     bool inter_process_publish_needed =
       get_subscription_count() > get_intra_process_subscription_count();
@@ -374,10 +375,10 @@ protected:
       }
     }
 
-    auto msg = std::make_unique<rclcpp::SerializedMessage>(
-      std::move(serialized_msg));
-
     if (intra_process_is_enabled_) {
+      auto msg = std::make_unique<rclcpp::SerializedMessage>();
+      *msg = serialized_msg;
+
       do_intra_process_publish(std::move(msg), message_allocator_serialized_);
     }
   }

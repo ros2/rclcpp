@@ -138,7 +138,7 @@ public:
    */
   RCLCPP_PUBLIC
   uint64_t
-  add_publisher(rclcpp::PublisherBase::SharedPtr publisher);
+  add_publisher(rclcpp::PublisherBase::SharedPtr publisher, bool is_serialized = false);
 
   /// Unregister a publisher using the publisher's unique id.
   /**

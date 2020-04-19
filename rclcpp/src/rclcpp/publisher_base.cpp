@@ -241,9 +241,11 @@ PublisherBase::operator==(const rmw_gid_t * gid) const
 void
 PublisherBase::setup_intra_process(
   uint64_t intra_process_publisher_id,
+  uint64_t intra_process_publisher_id_serialized,
   IntraProcessManagerSharedPtr ipm)
 {
   intra_process_publisher_id_ = intra_process_publisher_id;
+  intra_process_publisher_id_serialized_ = intra_process_publisher_id_serialized;
   weak_ipm_ = ipm;
   intra_process_is_enabled_ = true;
 }

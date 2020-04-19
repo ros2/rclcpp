@@ -192,6 +192,7 @@ public:
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,
+    uint64_t intra_process_publisher_id_serialized,
     IntraProcessManagerSharedPtr ipm);
 
   RCLCPP_PUBLIC
@@ -227,6 +228,7 @@ protected:
   bool intra_process_is_enabled_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
+  uint64_t intra_process_publisher_id_serialized_;
 
   rmw_gid_t rmw_gid_;
 
