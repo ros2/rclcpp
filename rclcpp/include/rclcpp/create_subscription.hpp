@@ -48,7 +48,7 @@ template<
   >,
   typename NodeT>
 typename std::shared_ptr<SubscriptionT>
-create_subscription(
+create_generic_subscription(
   NodeT && node,
   const std::string & topic_name,
   const rosidl_message_type_support_t & type_support,
@@ -106,10 +106,11 @@ create_subscription(
 {
   const auto type_support = *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
 
-  return create_subscription<MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT,
-           MessageMemoryStrategyT>(
-    std::forward<NodeT>(
-      node), topic_name, type_support, qos, std::forward<CallbackT>(
+  return
+    create_generic_subscription<
+    MessageT, CallbackT, AllocatorT, CallbackMessageT, SubscriptionT, MessageMemoryStrategyT
+    >(
+    std::forward<NodeT>(node), topic_name, type_support, qos, std::forward<CallbackT>(
       callback), options, msg_mem_strat);
 }
 

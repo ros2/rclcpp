@@ -40,7 +40,7 @@ template<
   typename PublisherT = rclcpp::Publisher<MessageT, AllocatorT>,
   typename NodeT>
 std::shared_ptr<PublisherT>
-create_publisher(
+create_generic_publisher(
   NodeT & node,
   const std::string & topic_name,
   const rosidl_message_type_support_t & type_support,
@@ -84,7 +84,7 @@ create_publisher(
 {
   const auto type_support = *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
 
-  return create_publisher<MessageT, AllocatorT, PublisherT, NodeT>(
+  return create_generic_publisher<MessageT, AllocatorT, PublisherT, NodeT>(
     node, topic_name, type_support,
     qos, options);
 }
