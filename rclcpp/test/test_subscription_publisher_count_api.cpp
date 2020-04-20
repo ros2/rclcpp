@@ -48,6 +48,7 @@ public:
   {
     rclcpp::shutdown();
   }
+
 protected:
   void SetUp() {}
   void TearDown() {}
