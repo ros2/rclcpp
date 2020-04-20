@@ -44,7 +44,10 @@ public:
   {
     rclcpp::init(0, nullptr);
   }
-
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 protected:
   void SetUp() {}
   void TearDown() {}

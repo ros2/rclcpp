@@ -15,8 +15,8 @@
 #include <gtest/gtest.h>
 
 #include <iostream>
-#include <string>
 #include <memory>
+#include <string>
 
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/publisher.hpp"
@@ -51,7 +51,10 @@ public:
   {
     rclcpp::init(0, nullptr);
   }
-
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
 protected:
   void SetUp() {}
 
