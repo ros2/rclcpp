@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__TOPIC_STATISTICS__SUBSCRIBER_TOPIC_STATISTICS_HPP_
-#define RCLCPP__TOPIC_STATISTICS__SUBSCRIBER_TOPIC_STATISTICS_HPP_
+#ifndef RCLCPP__TOPIC_STATISTICS__SUBSCRIPTION_TOPIC_STATISTICS_HPP_
+#define RCLCPP__TOPIC_STATISTICS__SUBSCRIPTION_TOPIC_STATISTICS_HPP_
 
 #include <memory>
 #include <string>
@@ -37,8 +37,8 @@ namespace rclcpp
 namespace topic_statistics
 {
 
-constexpr const char kDefaultPublishTopicName[]{"topic_statistics"};
-constexpr const std::chrono::milliseconds kDefaultPublishingPeriod{std::chrono::minutes(1)};
+constexpr const char kDefaultPublishTopicName[]{"/statistics"};
+constexpr const std::chrono::milliseconds kDefaultPublishingPeriod{std::chrono::seconds(1)};
 
 using libstatistics_collector::collector::GenerateStatisticMessage;
 using statistics_msgs::msg::MetricsMessage;
@@ -51,7 +51,7 @@ using libstatistics_collector::moving_average_statistics::StatisticData;
  * \tparam CallbackMessageT the subscribed message type
  */
 template<typename CallbackMessageT>
-class SubscriberTopicStatistics
+class SubscriptionTopicStatistics
 {
   using TopicStatsCollector =
     libstatistics_collector::topic_statistics_collector::TopicStatisticsCollector<
@@ -61,28 +61,33 @@ class SubscriberTopicStatistics
     CallbackMessageT>;
 
 public:
-  /// Construct a SubscriberTopicStatistics object.
+  /// Construct a SubscriptionTopicStatistics object.
   /**
    * This object wraps utilities, defined in libstatistics_collector, to collect,
-   * measure, and publish topic statistics data.
+   * measure, and publish topic statistics data. This throws an invalid_argument
+   * if the input publisher is null.
    *
-   * @param node_name the name of the node, which created this instance, in order to denote
+   * \param node_name the name of the node, which created this instance, in order to denote
    * topic source
-   * @param publisher instance constructed by the node in order to publish statistics data.
-   * This class owns the publisher/
+   * \param publisher instance constructed by the node in order to publish statistics data.
+   * This class owns the publisher.
    */
-  SubscriberTopicStatistics(
+  SubscriptionTopicStatistics(
     const std::string & node_name,
     rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher)
   : node_name_(node_name),
     publisher_(std::move(publisher))
   {
     // TODO(dbbonnie): ros-tooling/aws-roadmap/issues/226, received message age
-    // TODO(dbbonnie) throw if publisher is null
+
+    if (nullptr == publisher_) {
+      throw std::invalid_argument("publisher pointer is nullptr");
+    }
+
     bring_up();
   }
 
-  virtual ~SubscriberTopicStatistics()
+  virtual ~SubscriptionTopicStatistics()
   {
     tear_down();
   }
@@ -101,29 +106,16 @@ public:
     }
   }
 
-  /// Return a vector of all the currently collected data
-  /**
-   * \return a vector of all the collected data
-   */
-  std::vector<StatisticData> get_current_collector_data() const
-  {
-    std::vector<StatisticData> data;
-    for (const auto & collector : subscriber_statistics_collectors_) {
-      data.push_back(collector->GetStatisticsResults());
-    }
-    return data;
-  }
-
   /// Set the timer used to publish statistics messages.
   /**
-   * @param measurement_timer the timer to fire the publisher, created by the node
+   * \param measurement_timer the timer to fire the publisher, created by the node
    */
-  void set_publisher_timer(const rclcpp::TimerBase::SharedPtr & publisher_timer)
+  void set_publisher_timer(rclcpp::TimerBase::SharedPtr publisher_timer)
   {
     publisher_timer_ = publisher_timer;
   }
 
-  /// Publish a populated MetricsStatisticsMessage
+  /// Publish a populated MetricsStatisticsMessage.
   virtual void publish_message()
   {
     rclcpp::Time window_end{get_current_nanoseconds_since_epoch()};
@@ -141,6 +133,20 @@ public:
       publisher_->publish(message);
     }
     window_start_ = window_end;
+  }
+
+protected:
+  /// Return a vector of all the currently collected data.
+  /**
+   * \return a vector of all the collected data
+   */
+  std::vector<StatisticData> get_current_collector_data() const
+  {
+    std::vector<StatisticData> data;
+    for (const auto & collector : subscriber_statistics_collectors_) {
+      data.push_back(collector->GetStatisticsResults());
+    }
+    return data;
   }
 
 private:
@@ -175,7 +181,7 @@ private:
   /**
    * \return the current nanoseconds (count) since epoch
    */
-  int64_t get_current_nanoseconds_since_epoch()
+  int64_t get_current_nanoseconds_since_epoch() const
   {
     const auto now = std::chrono::system_clock::now();
     return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
@@ -184,7 +190,7 @@ private:
   /// Collection of statistics collectors
   std::vector<std::unique_ptr<TopicStatsCollector>> subscriber_statistics_collectors_{};
   /// Node name used to generate topic statistics messages to be published
-  std::string node_name_;
+  const std::string node_name_;
   /// Publisher, created by the node, used to publish topic statistics messages
   rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher_;
   /// Timer which fires the publisher
@@ -195,4 +201,4 @@ private:
 }  // namespace topic_statistics
 }  // namespace rclcpp
 
-#endif  // RCLCPP__TOPIC_STATISTICS__SUBSCRIBER_TOPIC_STATISTICS_HPP_
+#endif  // RCLCPP__TOPIC_STATISTICS__SUBSCRIPTION_TOPIC_STATISTICS_HPP_

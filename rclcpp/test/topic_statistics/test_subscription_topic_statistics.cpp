@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 
@@ -24,7 +25,7 @@
 #include "rclcpp/qos.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "rclcpp/topic_statistics/subscriber_topic_statistics.hpp"
+#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 
 #include "statistics_msgs/msg/metrics_message.hpp"
 #include "test_msgs/msg/empty.hpp"
@@ -39,8 +40,28 @@ constexpr const uint64_t kNoSamples{0};
 
 using test_msgs::msg::Empty;
 using statistics_msgs::msg::MetricsMessage;
-using rclcpp::topic_statistics::SubscriberTopicStatistics;
+using rclcpp::topic_statistics::SubscriptionTopicStatistics;
 using libstatistics_collector::moving_average_statistics::StatisticData;
+
+template<typename CallbackMessageT>
+class TestSubscriptionTopicStatistics : public SubscriptionTopicStatistics<CallbackMessageT>
+{
+public:
+  TestSubscriptionTopicStatistics(
+    const std::string & node_name,
+    rclcpp::Publisher<statistics_msgs::msg::MetricsMessage>::SharedPtr publisher)
+  : SubscriptionTopicStatistics<CallbackMessageT>(node_name, publisher)
+  {
+  }
+
+  virtual ~TestSubscriptionTopicStatistics() = default;
+
+  /// Exposed for testing
+  std::vector<StatisticData> get_current_collector_data() const
+  {
+    return SubscriptionTopicStatistics<CallbackMessageT>::get_current_collector_data();
+  }
+};
 
 /**
  * Empty subscriber node: used to create subscriber topic statistics requirements
@@ -61,6 +82,8 @@ public:
       callback);
   }
 
+  virtual ~EmptySubscriber() = default;
+
 private:
   void receive_message(const Empty &) const
   {
@@ -72,7 +95,7 @@ private:
 /**
  * Test fixture to bring up and teardown rclcpp
  */
-class TestSubscriberTopicStatisticsFixture : public ::testing::Test
+class TestSubscriptionTopicStatisticsFixture : public ::testing::Test
 {
 protected:
   void SetUp()
@@ -91,7 +114,7 @@ protected:
   std::shared_ptr<EmptySubscriber> empty_subscriber;
 };
 
-TEST_F(TestSubscriberTopicStatisticsFixture, test_manual_construction)
+TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
 {
   // manually create publisher tied to the node
   auto topic_stats_publisher =
@@ -100,7 +123,7 @@ TEST_F(TestSubscriberTopicStatisticsFixture, test_manual_construction)
     10);
 
   // construct the instance
-  auto sub_topic_stats = std::make_unique<SubscriberTopicStatistics<Empty>>(
+  auto sub_topic_stats = std::make_unique<TestSubscriptionTopicStatistics<Empty>>(
     empty_subscriber->get_name(),
     topic_stats_publisher);
 
