@@ -15,6 +15,7 @@
 #ifndef RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 #define RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
@@ -54,6 +55,24 @@ struct SubscriptionOptionsBase
   /// Optional RMW implementation specific payload to be used during creation of the subscription.
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificSubscriptionPayload>
   rmw_implementation_payload = nullptr;
+
+  // Options to configure topic statistics collector in the subscription.
+  struct TopicStatisticsOptions
+  {
+    // Represent the state of topic statistics collector.
+    enum class TopicStatisticsState {ENABLED, DISABLED};
+
+    // Enable and disable topic statistics calculation and publication. Defaults to disabled.
+    TopicStatisticsState state = TopicStatisticsState::DISABLED;
+
+    // Topic to which topic statistics get published when enabled. Defaults to /statistics.
+    std::string publish_topic = "/statistics";
+
+    // Topic statistics publication period in ms. Defaults to one minute.
+    std::chrono::milliseconds publish_period{std::chrono::seconds(1)};
+  };
+
+  TopicStatisticsOptions topic_stats_options;
 };
 
 /// Structure containing optional configuration for Subscriptions.
@@ -104,6 +123,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
+using TopicStatisticsState = SubscriptionOptionsBase::TopicStatisticsOptions::TopicStatisticsState;
 
 }  // namespace rclcpp
 

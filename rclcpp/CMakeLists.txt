@@ -535,6 +535,12 @@ if(BUILD_TESTING)
     target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_subscription_options test/test_subscription_options.cpp)
+  if(TARGET test_subscription_options)
+    ament_target_dependencies(test_subscription_options "rcl")
+    target_link_libraries(test_subscription_options ${PROJECT_NAME})
+  endif()
+
   # Install test resources
   install(
     DIRECTORY test/resources
