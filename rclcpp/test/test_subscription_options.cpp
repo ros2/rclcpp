@@ -32,7 +32,7 @@ TEST(TestSubscriptionOptions, topic_statistics_options) {
 
   EXPECT_EQ(options.topic_stats_options.state, rclcpp::TopicStatisticsState::DISABLED);
   EXPECT_EQ(options.topic_stats_options.publish_topic, defaultPublishTopic);
-  EXPECT_EQ(options.topic_stats_options.publish_period, 1min);
+  EXPECT_EQ(options.topic_stats_options.publish_period, 1s);
 
   options.topic_stats_options.state = rclcpp::TopicStatisticsState::ENABLED;
   options.topic_stats_options.publish_topic = "topic_statistics";
