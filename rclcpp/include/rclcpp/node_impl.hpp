@@ -38,6 +38,7 @@
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
+#include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -91,6 +92,11 @@ Node::create_subscription(
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
+  // Setup topic statistics collector if enabled.
+  if (rclcpp::detail::resolve_enable_topic_statistics(options, *node_base_)) {
+    // TODO(@dabonnie, @prajakta-gokhale): https://github.com/ros2/ros2/issues/901.
+  }
+
   return rclcpp::create_subscription<MessageT>(
     *this,
     extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
