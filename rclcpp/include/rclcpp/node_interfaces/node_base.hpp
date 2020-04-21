@@ -42,8 +42,7 @@ public:
     const std::string & namespace_,
     rclcpp::Context::SharedPtr context,
     const rcl_node_options_t & rcl_node_options,
-    bool use_intra_process_default,
-    bool enable_topic_statistics_default);
+    bool use_intra_process_default);
 
   RCLCPP_PUBLIC
   virtual
@@ -134,15 +133,11 @@ public:
   bool
   get_use_intra_process_default() const override;
 
-  bool
-  get_enable_topic_statistics_default() const override;
-
 private:
   RCLCPP_DISABLE_COPY(NodeBase)
 
   rclcpp::Context::SharedPtr context_;
   bool use_intra_process_default_;
-  bool enable_topic_statistics_default_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
 

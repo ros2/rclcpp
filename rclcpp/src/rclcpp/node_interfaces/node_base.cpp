@@ -34,11 +34,9 @@ NodeBase::NodeBase(
   const std::string & namespace_,
   rclcpp::Context::SharedPtr context,
   const rcl_node_options_t & rcl_node_options,
-  bool use_intra_process_default,
-  bool enable_topic_statistics_default)
+  bool use_intra_process_default)
 : context_(context),
   use_intra_process_default_(use_intra_process_default),
-  enable_topic_statistics_default_(enable_topic_statistics_default),
   node_handle_(nullptr),
   default_callback_group_(nullptr),
   associated_with_executor_(false),
@@ -269,10 +267,4 @@ bool
 NodeBase::get_use_intra_process_default() const
 {
   return use_intra_process_default_;
-}
-
-bool
-NodeBase::get_enable_topic_statistics_default() const
-{
-  return enable_topic_statistics_default_;
 }

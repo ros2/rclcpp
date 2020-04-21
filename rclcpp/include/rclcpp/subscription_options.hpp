@@ -26,7 +26,6 @@
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
-#include "rclcpp/topic_statistics_state.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -60,8 +59,11 @@ struct SubscriptionOptionsBase
   // Options to configure topic statistics collector in the subscription.
   struct TopicStatisticsOptions
   {
+    // Represent the state of topic statistics collector.
+    enum class TopicStatisticsState {ENABLED, DISABLED};
+
     // Enable and disable topic statistics calculation and publication. Defaults to disabled.
-    TopicStatisticsState state = TopicStatisticsState::NodeDefault;
+    TopicStatisticsState state = TopicStatisticsState::DISABLED;
 
     // Topic to which topic statistics get published when enabled. Defaults to /statistics.
     std::string publish_topic = "/statistics";
@@ -121,6 +123,8 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
+using TopicStatisticsState = SubscriptionOptionsBase::TopicStatisticsOptions::TopicStatisticsState;
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__SUBSCRIPTION_OPTIONS_HPP_

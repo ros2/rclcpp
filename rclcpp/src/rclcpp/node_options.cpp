@@ -73,7 +73,6 @@ NodeOptions::operator=(const NodeOptions & other)
     this->use_global_arguments_ = other.use_global_arguments_;
     this->enable_rosout_ = other.enable_rosout_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
-    this->enable_topic_statistics_ = other.enable_topic_statistics_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->allocator_ = other.allocator_;
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
@@ -211,19 +210,6 @@ NodeOptions &
 NodeOptions::use_intra_process_comms(bool use_intra_process_comms)
 {
   this->use_intra_process_comms_ = use_intra_process_comms;
-  return *this;
-}
-
-bool
-NodeOptions::enable_topic_statistics() const
-{
-  return this->enable_topic_statistics_;
-}
-
-NodeOptions &
-NodeOptions::enable_topic_statistics(bool enable_topic_statistics)
-{
-  this->enable_topic_statistics_ = enable_topic_statistics;
   return *this;
 }
 
