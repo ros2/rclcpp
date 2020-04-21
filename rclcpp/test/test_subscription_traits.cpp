@@ -21,6 +21,7 @@
 #include "rcl/types.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_traits.hpp"
 
 #include "test_msgs/msg/empty.hpp"

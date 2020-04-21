@@ -18,11 +18,13 @@
 #include "rcl/allocator.h"
 #include "rcl/types.h"
 
+#include "rclcpp/visibility_control.hpp"
+
 namespace rclcpp
 {
 
 /// Object oriented version of rcl_serialized_message_t with destructor to avoid memory leaks
-class SerializedMessage : public rcl_serialized_message_t
+class RCLCPP_PUBLIC_TYPE SerializedMessage : public rcl_serialized_message_t
 {
 public:
   /// Default constructor for a SerializedMessage
@@ -68,7 +70,7 @@ public:
   SerializedMessage & operator=(rcl_serialized_message_t && other);
 
   /// Destructor for a SerializedMessage
-  ~SerializedMessage();
+  virtual ~SerializedMessage();
 };
 
 }  // namespace rclcpp

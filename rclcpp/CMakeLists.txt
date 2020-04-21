@@ -448,6 +448,7 @@ if(BUILD_TESTING)
       "rcl"
       "test_msgs"
     )
+    target_link_libraries(test_subscription_traits ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_find_weak_nodes test/test_find_weak_nodes.cpp)
   if(TARGET test_find_weak_nodes)

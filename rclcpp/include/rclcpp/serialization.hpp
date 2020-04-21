@@ -16,12 +16,17 @@
 #define RCLCPP__SERIALIZATION_HPP_
 
 #include <memory>
+#include <stdexcept>
 #include <string>
+
+#include "rclcpp/visibility_control.hpp"
+
+#include "rcl/types.h"
+
+#include "rosidl_runtime_c/message_type_support_struct.h"
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-#include "rcl/types.h"
-#include "rosidl_runtime_c/message_type_support_struct.h"
 
 namespace rclcpp
 {
@@ -29,7 +34,7 @@ namespace rclcpp
 class SerializedMessage;
 
 /// Interface to (de)serialize a message
-class SerializationBase
+class RCLCPP_PUBLIC_TYPE SerializationBase
 {
 protected:
   explicit SerializationBase(const rosidl_message_type_support_t * type_support);
