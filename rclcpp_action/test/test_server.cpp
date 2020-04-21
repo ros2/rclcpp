@@ -103,7 +103,7 @@ TEST_F(TestServer, construction_and_destruction_callback_group)
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options();
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
-  auto as = rclcpp_action::create_server<Fibonacci>(
+  ASSERT_NO_THROW(rclcpp_action::create_server<Fibonacci>(
     node->get_node_base_interface(),
     node->get_node_clock_interface(),
     node->get_node_logging_interface(),
@@ -117,8 +117,7 @@ TEST_F(TestServer, construction_and_destruction_callback_group)
     },
     [](std::shared_ptr<GoalHandle>) {},
     options,
-    group);
-  (void)as;
+    group));
 }
 
 TEST_F(TestServer, handle_goal_called)
