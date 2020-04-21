@@ -32,6 +32,7 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/loaned_message.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -63,11 +64,12 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rclcpp::QoS & qos,
-    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+    const rosidl_message_type_support_t & type_support)
   : PublisherBase(
       node_base,
       topic,
-      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      type_support,
       options.template to_rcl_publisher_options<MessageT>(qos)),
     options_(options),
     message_allocator_(new MessageAllocator(*options.get_allocator().get()))
@@ -102,6 +104,19 @@ public:
     }
     // Setup continues in the post construction method, post_init_setup().
   }
+
+  Publisher(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  : Publisher(
+      node_base,
+      topic,
+      qos,
+      options,
+      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>())
+  {}
 
   /// Called post construction, so that construction may continue after shared_from_this() works.
   virtual
@@ -259,24 +274,10 @@ public:
   }
 
 protected:
-  void
+  virtual void
   do_inter_process_publish(const MessageT & msg)
   {
-    auto status = rcl_publish(&publisher_handle_, &msg, nullptr);
-
-    if (RCL_RET_PUBLISHER_INVALID == status) {
-      rcl_reset_error();  // next call will reset error message if not context
-      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
-        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
-        if (nullptr != context && !rcl_context_is_valid(context)) {
-          // publisher is invalid due to context being shutdown
-          return;
-        }
-      }
-    }
-    if (RCL_RET_OK != status) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
-    }
+    generic_publisher::do_inter_process_publish(publisher_handle_, msg);
   }
 
   void
