@@ -99,10 +99,12 @@ NodeTopics::add_subscription(
     callback_group->add_waitable(subscription_event);
   }
 
-  auto intra_process_waitable = subscription->get_intra_process_waitable();
-  if (nullptr != intra_process_waitable) {
-    // Add to the callback group to be notified about intra-process msgs.
-    callback_group->add_waitable(intra_process_waitable);
+  const auto intra_process_waitables = subscription->get_intra_process_waitables();
+  for (auto & intra_process_waitable : intra_process_waitables) {
+    if (nullptr != intra_process_waitable) {
+      // Add to the callback group to be notified about intra-process msgs.
+      callback_group->add_waitable(intra_process_waitable);
+    }
   }
 
   // Notify the executor that a new subscription was created using the parent Node.

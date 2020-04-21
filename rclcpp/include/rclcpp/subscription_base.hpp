@@ -228,13 +228,13 @@ public:
   RCLCPP_PUBLIC
   void
   setup_intra_process(
-    uint64_t intra_process_subscription_id,
+    const std::vector<uint64_t> & intra_process_subscription_ids,
     IntraProcessManagerWeakPtr weak_ipm);
 
   /// Return the waitable for intra-process, or nullptr if intra-process is not setup.
   RCLCPP_PUBLIC
-  rclcpp::Waitable::SharedPtr
-  get_intra_process_waitable() const;
+  std::vector<rclcpp::Waitable::SharedPtr>
+  get_intra_process_waitables() const;
 
   /// Exchange state of whether or not a part of the subscription is used by a wait set.
   /**
@@ -286,7 +286,7 @@ protected:
 
   bool use_intra_process_;
   IntraProcessManagerWeakPtr weak_ipm_;
-  uint64_t intra_process_subscription_id_;
+  std::vector<uint64_t> intra_process_subscription_ids_;
 
 private:
   RCLCPP_DISABLE_COPY(SubscriptionBase)

@@ -68,6 +68,18 @@ public:
   {
   }
 
+  LifecyclePublisher(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<Alloc> & options,
+    const rosidl_message_type_support_t & type_support)
+  : rclcpp::Publisher<MessageT, Alloc>(node_base, topic, qos, options, type_support),
+    enabled_(false),
+    logger_(rclcpp::get_logger("LifecyclePublisher"))
+  {
+  }
+
   ~LifecyclePublisher() {}
 
   /// LifecyclePublisher publish function
@@ -108,6 +120,30 @@ public:
       return;
     }
     rclcpp::Publisher<MessageT, Alloc>::publish(msg);
+  }
+
+  /// Publish a serialized message. Non specialized version to prevent compiling errors.
+  template<typename TDeleter, typename T>
+  void publish(std::unique_ptr<T, TDeleter> serialized_msg)
+  {
+    (void)serialized_msg;
+    throw std::runtime_error(
+            "publishing unique_ptr with custom deleter only supported for serialized messages");
+  }
+
+  /// Publish a serialized message.
+  template<typename TDeleter>
+  void publish(std::unique_ptr<rcl_serialized_message_t, TDeleter> serialized_msg)
+  {
+    if (!enabled_) {
+      RCLCPP_WARN(
+        logger_,
+        "Trying to publish message on the topic '%s', but the publisher is not activated",
+        this->get_topic_name());
+
+      return;
+    }
+    this->do_serialized_publish(*serialized_msg);
   }
 
   virtual void

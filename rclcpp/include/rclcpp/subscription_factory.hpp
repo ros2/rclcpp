@@ -78,7 +78,8 @@ SubscriptionFactory
 create_subscription_factory(
   CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
+  const rosidl_message_type_support_t & type_support)
 {
   auto allocator = options.get_allocator();
 
@@ -88,7 +89,7 @@ create_subscription_factory(
 
   SubscriptionFactory factory {
     // factory function that creates a MessageT specific SubscriptionT
-    [options, msg_mem_strat, any_subscription_callback](
+    [options, msg_mem_strat, any_subscription_callback, type_support](
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
       const rclcpp::QoS & qos
@@ -99,7 +100,7 @@ create_subscription_factory(
 
       auto sub = Subscription<CallbackMessageT, AllocatorT>::make_shared(
         node_base,
-        *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+        type_support,
         topic_name,
         qos,
         any_subscription_callback,

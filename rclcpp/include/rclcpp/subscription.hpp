@@ -41,6 +41,7 @@
 #include "rclcpp/message_info.hpp"
 #include "rclcpp/message_memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_base.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
@@ -155,29 +156,84 @@ public:
                 "intraprocess communication allowed only with volatile durability");
       }
 
-      // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
-      auto context = node_base->get_context();
-      using SubscriptionIntraProcessT = rclcpp::experimental::SubscriptionIntraProcess<
-        CallbackMessageT,
-        AllocatorT,
-        typename MessageUniquePtr::deleter_type>;
-      auto subscription_intra_process = std::make_shared<SubscriptionIntraProcessT>(
-        callback,
-        options.get_allocator(),
-        context,
-        this->get_topic_name(),  // important to get like this, as it has the fully-qualified name
-        qos_profile,
-        resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback));
-      TRACEPOINT(
-        rclcpp_subscription_init,
-        (const void *)get_subscription_handle().get(),
-        (const void *)subscription_intra_process.get());
-
-      // Add it to the intra process manager.
       using rclcpp::experimental::IntraProcessManager;
+      uint64_t intra_process_subscription_id;
+      uint64_t intra_process_subscription_id_serialized;
+
+      auto context = node_base->get_context();
       auto ipm = context->get_sub_context<IntraProcessManager>();
-      uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
-      this->setup_intra_process(intra_process_subscription_id, ipm);
+
+      {
+        // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
+        auto subscription_intra_process = std::make_shared<
+          rclcpp::experimental::SubscriptionIntraProcess<
+            CallbackMessageT,
+            AllocatorT,
+            typename MessageUniquePtr::deleter_type
+          >>(
+          callback,
+          options.get_allocator(),
+          context,
+          this->get_topic_name(),  // important to get it by the fully-qualified name
+          qos.get_rmw_qos_profile(),
+          resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
+          std::make_shared<rclcpp::Serialization>(
+            type_support_handle,
+            options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
+          );
+        TRACEPOINT(
+          rclcpp_subscription_init,
+          (const void *)get_subscription_handle().get(),
+          (const void *)subscription_intra_process.get());
+
+        // Add it to the intra process manager.
+        intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
+      }
+
+      {
+        using SerializedMessageAllocatorTraits =
+          allocator::AllocRebind<rclcpp::SerializedMessage,
+            AllocatorT>;
+        using SerializedMessageAllocator =
+          typename SerializedMessageAllocatorTraits::allocator_type;
+        using SerializedMessageDeleter = allocator::Deleter<SerializedMessageAllocator,
+            rclcpp::SerializedMessage>;
+        using SerializedMessageUniquePtr =
+          std::unique_ptr<rclcpp::SerializedMessage,
+            SerializedMessageDeleter>;
+
+        // First create a SubscriptionIntraProcess which will be given to the intra-process manager.
+        auto subscription_intra_process = std::make_shared<
+          rclcpp::experimental::SubscriptionIntraProcess<
+            rclcpp::SerializedMessage,
+            AllocatorT,
+            typename SerializedMessageUniquePtr::deleter_type,
+            CallbackMessageT
+          >>(
+          callback,
+          options.get_allocator(),
+          context,
+          this->get_topic_name(),    // important to get it by the fully-qualified name
+          qos.get_rmw_qos_profile(),
+          resolve_intra_process_buffer_type(options.intra_process_buffer_type, callback),
+          std::make_shared<rclcpp::Serialization>(
+            type_support_handle,
+            options.template to_rcl_subscription_options<CallbackMessageT>(qos).allocator)
+          );
+        TRACEPOINT(
+          rclcpp_subscription_init,
+          (const void *)get_subscription_handle().get(),
+          (const void *)subscription_intra_process.get());
+
+        // Add it to the intra process manager.
+        intra_process_subscription_id_serialized = ipm->add_subscription(
+          subscription_intra_process,
+          true);
+      }
+
+      this->setup_intra_process(
+        {intra_process_subscription_id,
+          intra_process_subscription_id_serialized}, ipm);
     }
 
     TRACEPOINT(

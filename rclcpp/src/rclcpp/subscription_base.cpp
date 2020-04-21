@@ -39,7 +39,6 @@ SubscriptionBase::SubscriptionBase(
 : node_base_(node_base),
   node_handle_(node_base_->get_shared_rcl_node_handle()),
   use_intra_process_(false),
-  intra_process_subscription_id_(0),
   type_support_(type_support_handle),
   is_serialized_(is_serialized)
 {
@@ -93,7 +92,9 @@ SubscriptionBase::~SubscriptionBase()
       "Intra process manager died before than a subscription.");
     return;
   }
-  ipm->remove_subscription(intra_process_subscription_id_);
+  for (auto intra_process_subscription_id : intra_process_subscription_ids_) {
+    ipm->remove_subscription(intra_process_subscription_id);
+  }
 }
 
 const char *
@@ -204,10 +205,10 @@ SubscriptionBase::get_publisher_count() const
 
 void
 SubscriptionBase::setup_intra_process(
-  uint64_t intra_process_subscription_id,
+  const std::vector<uint64_t> & intra_process_subscription_ids,
   IntraProcessManagerWeakPtr weak_ipm)
 {
-  intra_process_subscription_id_ = intra_process_subscription_id;
+  intra_process_subscription_ids_ = intra_process_subscription_ids;
   weak_ipm_ = weak_ipm;
   use_intra_process_ = true;
 }
@@ -218,23 +219,29 @@ SubscriptionBase::can_loan_messages() const
   return rcl_subscription_can_loan_messages(subscription_handle_.get());
 }
 
-rclcpp::Waitable::SharedPtr
-SubscriptionBase::get_intra_process_waitable() const
+std::vector<rclcpp::Waitable::SharedPtr>
+SubscriptionBase::get_intra_process_waitables() const
 {
   // If not using intra process, shortcut to nullptr.
   if (!use_intra_process_) {
-    return nullptr;
+    return std::vector<rclcpp::Waitable::SharedPtr>();
   }
   // Get the intra process manager.
   auto ipm = weak_ipm_.lock();
   if (!ipm) {
     throw std::runtime_error(
-            "SubscriptionBase::get_intra_process_waitable() called "
+            "SubscriptionBase::get_intra_process_waitables() called "
             "after destruction of intra process manager");
   }
 
-  // Use the id to retrieve the subscription intra-process from the intra-process manager.
-  return ipm->get_subscription_intra_process(intra_process_subscription_id_);
+  std::vector<rclcpp::Waitable::SharedPtr> waitables(intra_process_subscription_ids_.size());
+
+  for (auto i = 0u; i < intra_process_subscription_ids_.size(); ++i) {
+    // Use the id to retrieve the subscription intra-process from the intra-process manager.
+    waitables[i] = ipm->get_subscription_intra_process(intra_process_subscription_ids_[i]);
+  }
+
+  return waitables;
 }
 
 void
@@ -274,8 +281,10 @@ SubscriptionBase::exchange_in_use_by_wait_set_state(
   if (this == pointer_to_subscription_part) {
     return subscription_in_use_by_wait_set_.exchange(in_use_state);
   }
-  if (get_intra_process_waitable().get() == pointer_to_subscription_part) {
-    return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
+  for (auto & waitable : get_intra_process_waitables()) {
+    if (waitable.get() == pointer_to_subscription_part) {
+      return intra_process_subscription_waitable_in_use_by_wait_set_.exchange(in_use_state);
+    }
   }
   for (const auto & qos_event : event_handlers_) {
     if (qos_event.get() == pointer_to_subscription_part) {

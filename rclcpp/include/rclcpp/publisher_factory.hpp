@@ -63,17 +63,21 @@ struct PublisherFactory
 /// Return a PublisherFactory with functions setup for creating a PublisherT<MessageT, AllocatorT>.
 template<typename MessageT, typename AllocatorT, typename PublisherT>
 PublisherFactory
-create_publisher_factory(const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+create_publisher_factory(
+  const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+  const rosidl_message_type_support_t & type_support)
 {
   PublisherFactory factory {
     // factory function that creates a MessageT specific PublisherT
-    [options](
+    [options, type_support](
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
       const rclcpp::QoS & qos
     ) -> std::shared_ptr<PublisherT>
     {
-      auto publisher = std::make_shared<PublisherT>(node_base, topic_name, qos, options);
+      auto publisher = std::make_shared<PublisherT>(
+        node_base, topic_name, qos, options,
+        type_support);
       // This is used for setting up things like intra process comms which
       // require this->shared_from_this() which cannot be called from
       // the constructor.

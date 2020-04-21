@@ -32,7 +32,9 @@ IntraProcessManager::~IntraProcessManager()
 {}
 
 uint64_t
-IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
+IntraProcessManager::add_publisher(
+  rclcpp::PublisherBase::SharedPtr publisher,
+  const bool is_serialized)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -41,6 +43,7 @@ IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
   publishers_[id].publisher = publisher;
   publishers_[id].topic_name = publisher->get_topic_name();
   publishers_[id].qos = publisher->get_actual_qos().get_rmw_qos_profile();
+  publishers_[id].is_serialized = is_serialized;
 
   // Initialize the subscriptions storage for this publisher.
   pub_to_subs_[id] = SplittedSubscriptions();
@@ -56,7 +59,9 @@ IntraProcessManager::add_publisher(rclcpp::PublisherBase::SharedPtr publisher)
 }
 
 uint64_t
-IntraProcessManager::add_subscription(SubscriptionIntraProcessBase::SharedPtr subscription)
+IntraProcessManager::add_subscription(
+  SubscriptionIntraProcessBase::SharedPtr subscription,
+  const bool is_serialized)
 {
   std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -66,6 +71,7 @@ IntraProcessManager::add_subscription(SubscriptionIntraProcessBase::SharedPtr su
   subscriptions_[id].topic_name = subscription->get_topic_name();
   subscriptions_[id].qos = subscription->get_actual_qos();
   subscriptions_[id].use_take_shared_method = subscription->use_take_shared_method();
+  subscriptions_[id].is_serialized = is_serialized;
 
   // adds the subscription id to all the matchable publishers
   for (auto & pair : publishers_) {
@@ -217,6 +223,13 @@ IntraProcessManager::can_communicate(
 
   // a publisher and a subscription with different durability can't communicate
   if (sub_info.qos.durability != pub_info.qos.durability) {
+    return false;
+  }
+
+  // a publisher and a subscription with different content type can't communicate
+  // if is_serialized is true, the expected message typ is rcl_serialized_message_t
+  // otherwise the templated ROS2 message type
+  if (sub_info.is_serialized != pub_info.is_serialized) {
     return false;
   }
 
