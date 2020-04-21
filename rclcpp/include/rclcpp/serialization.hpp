@@ -153,7 +153,6 @@ struct is_serialized_message_class<SerializedMessage>
   : std::true_type
 {};
 
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__SERIALIZATION_HPP_
