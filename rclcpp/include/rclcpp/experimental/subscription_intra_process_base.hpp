@@ -25,6 +25,8 @@
 
 #include "rcl/error_handling.h"
 
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 
@@ -69,6 +71,13 @@ public:
   RCLCPP_PUBLIC
   rmw_qos_profile_t
   get_actual_qos() const;
+
+  virtual bool
+  is_serialized() const = 0;
+
+  virtual void
+  provide_serialized_intra_process_message(
+    const SerializedMessage & serialized_message) = 0;
 
 protected:
   std::recursive_mutex reentrant_mutex_;

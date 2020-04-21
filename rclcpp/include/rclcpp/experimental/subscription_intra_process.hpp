@@ -28,6 +28,8 @@
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/waitable.hpp"
 #include "tracetools/tracetools.h"
@@ -72,6 +74,12 @@ public:
       throw std::runtime_error("SubscriptionIntraProcess wrong callback type");
     }
 
+    if (!allocator) {
+      message_allocator_ = std::make_shared<MessageAlloc>();
+    } else {
+      message_allocator_ = std::make_shared<MessageAlloc>(*allocator.get());
+    }
+
     // Create the intra-process buffer.
     buffer_ = rclcpp::experimental::create_intra_process_buffer<MessageT, Alloc, Deleter>(
       buffer_type,
@@ -100,6 +108,12 @@ public:
 #ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
 #endif
+  }
+
+  bool
+  is_serialized() const
+  {
+    return rclcpp::is_serialized_message_class<MessageT>::value;
   }
 
   bool
@@ -132,6 +146,20 @@ public:
   use_take_shared_method() const
   {
     return buffer_->use_take_shared_method();
+  }
+
+  void
+  provide_serialized_intra_process_message(const SerializedMessage & serialized_message)
+  {
+    rclcpp::Serialization<MessageT> serialization;
+
+    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
+    MessageAllocTraits::construct(*message_allocator_.get(), ptr);
+    auto message = MessageUniquePtr(ptr);
+
+    serialization.deserialize_message(serialized_message, *message);
+
+    provide_intra_process_message(std::move(message));
   }
 
 private:
@@ -168,6 +196,7 @@ private:
 
   AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
   BufferUniquePtr buffer_;
+  std::shared_ptr<MessageAlloc> message_allocator_;
 };
 
 }  // namespace experimental
