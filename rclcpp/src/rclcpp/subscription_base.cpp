@@ -159,7 +159,7 @@ SubscriptionBase::take_type_erased(void * message_out, rclcpp::MessageInfo & mes
 
 bool
 SubscriptionBase::take_serialized(
-  rcl_serialized_message_t & message_out,
+  rclcpp::SerializedMessage & message_out,
   rclcpp::MessageInfo & message_info_out)
 {
   rcl_ret_t ret = rcl_take_serialized_message(
