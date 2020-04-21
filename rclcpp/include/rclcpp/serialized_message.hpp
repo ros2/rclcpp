@@ -31,6 +31,7 @@ public:
   /**
    * Default constructs a serialized message and initalizes it
    * with initial capacity of 0.
+   * The allocator defaults to `rcl_get_default_allocator()`.
    *
    * \param[in] allocator The allocator to be used for the initialization.
    */
@@ -40,7 +41,8 @@ public:
   /// Default constructor for a SerializedMessage
   /**
    * Default constructs a serialized message and initalizes it
-   * with initial capacity of 0.
+   * with the provided capacity.
+   * The allocator defaults to `rcl_get_default_allocator()`.
    *
    * \param[in] initial_capacity The amount of memory to be allocated.
    * \param[in] allocator The allocator to be used for the initialization.
@@ -52,21 +54,25 @@ public:
   /// Copy Constructor for a SerializedMessage
   SerializedMessage(const SerializedMessage & serialized_message);
 
-  /// Copy Constructor for a SerializedMessage from a rcl_serialized_message_t
+  /// Constructor for a SerializedMessage from a rcl_serialized_message_t
   explicit SerializedMessage(const rcl_serialized_message_t & serialized_message);
 
   /// Move Constructor for a SerializedMessage
   SerializedMessage(SerializedMessage && serialized_message);
 
-  /// Move Constructor for a SerializedMessage from a rcl_serialized_message_t
+  /// Constructor for a SerializedMessage from a moved rcl_serialized_message_t
   explicit SerializedMessage(rcl_serialized_message_t && serialized_message);
 
+  /// Copy assignment operator
   SerializedMessage & operator=(const SerializedMessage & other);
 
+  /// Copy assignment operator from a rcl_serialized_message_t
   SerializedMessage & operator=(const rcl_serialized_message_t & other);
 
+  /// Move assignment operator
   SerializedMessage & operator=(SerializedMessage && other);
 
+  /// Move assignment operator from a rcl_serialized_message_t
   SerializedMessage & operator=(rcl_serialized_message_t && other);
 
   /// Destructor for a SerializedMessage

@@ -118,11 +118,11 @@ TEST(TestSerializedMessage, serialization) {
   for (const auto & ros_msg : basic_type_ros_msgs) {
     // convert ros msg to serialized msg
     rclcpp::SerializedMessage serialized_msg;
-    serializer.serialize_message(*ros_msg, serialized_msg);
+    serializer.serialize_message(ros_msg.get(), &serialized_msg);
 
     // convert serialized msg back to ros msg
     MessageT deserialized_ros_msg;
-    serializer.deserialize_message(serialized_msg, deserialized_ros_msg);
+    serializer.deserialize_message(&serialized_msg, &deserialized_ros_msg);
 
     EXPECT_EQ(*ros_msg, deserialized_ros_msg);
   }
@@ -135,7 +135,7 @@ void test_empty_msg_serialize()
   MessageT ros_msg;
   rclcpp::SerializedMessage serialized_msg;
 
-  serializer.serialize_message(ros_msg, serialized_msg);
+  serializer.serialize_message(&ros_msg, &serialized_msg);
 }
 
 template<typename MessageT>
@@ -145,23 +145,5 @@ void test_empty_msg_deserialize()
   MessageT ros_msg;
   rclcpp::SerializedMessage serialized_msg;
 
-  serializer.deserialize_message(serialized_msg, ros_msg);
-}
-
-TEST(TestSerializedMessage, serialization_invalid) {
-  // serialized messages (used as ROS message) should throw an exception while (de)serialization
-
-  EXPECT_THROW(
-    test_empty_msg_serialize<rclcpp::SerializedMessage>(),
-    std::runtime_error);
-  EXPECT_THROW(
-    test_empty_msg_serialize<rcl_serialized_message_t>(),
-    std::runtime_error);
-
-  EXPECT_THROW(
-    test_empty_msg_deserialize<rclcpp::SerializedMessage>(),
-    std::runtime_error);
-  EXPECT_THROW(
-    test_empty_msg_deserialize<rcl_serialized_message_t>(),
-    std::runtime_error);
+  serializer.deserialize_message(&serialized_msg, &ros_msg);
 }

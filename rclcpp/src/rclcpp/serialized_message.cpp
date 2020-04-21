@@ -35,7 +35,7 @@ SerializedMessage::SerializedMessage(
 {
   const auto ret = rmw_serialized_message_init(
     this, initial_capacity, &allocator);
-  if (ret != RCL_RET_OK) {
+  if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
@@ -49,7 +49,7 @@ SerializedMessage::SerializedMessage(const rcl_serialized_message_t & serialized
 {
   const auto ret = rmw_serialized_message_init(
     this, serialized_message.buffer_capacity, &serialized_message.allocator);
-  if (ret != RCL_RET_OK) {
+  if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
@@ -86,7 +86,7 @@ SerializedMessage & SerializedMessage::operator=(const rcl_serialized_message_t 
 
   const auto ret = rmw_serialized_message_init(
     this, other.buffer_capacity, &other.allocator);
-  if (ret != RCL_RET_OK) {
+  if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 
@@ -123,7 +123,7 @@ SerializedMessage::~SerializedMessage()
 {
   if (nullptr != buffer) {
     const auto fini_ret = rmw_serialized_message_fini(this);
-    if (fini_ret != RCL_RET_OK) {
+    if (RCL_RET_OK != fini_ret) {
       RCLCPP_ERROR(
         get_logger("rclcpp"),
         "Failed to destroy serialized message: %s", rcl_get_error_string().str);

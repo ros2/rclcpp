@@ -29,14 +29,16 @@ namespace rclcpp
 
 SerializationBase::SerializationBase(const rosidl_message_type_support_t * type_support)
 : type_support_(type_support)
-{}
+{
+  rcpputils::check_true(nullptr != type_support, "Typesupport is nullpointer.");
+}
 
 void SerializationBase::serialize_message(
   const void * ros_message, SerializedMessage * serialized_message) const
 {
-  rcpputils::check_true(type_support_ != nullptr, "Typesupport is nullpointer.");
-  rcpputils::check_true(ros_message != nullptr, "ROS message is nullpointer.");
-  rcpputils::check_true(serialized_message != nullptr, "Serialized message is nullpointer.");
+  rcpputils::check_true(nullptr != type_support_, "Typesupport is nullpointer.");
+  rcpputils::check_true(nullptr != ros_message, "ROS message is nullpointer.");
+  rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
 
   const auto ret = rmw_serialize(
     ros_message,
@@ -47,17 +49,16 @@ void SerializationBase::serialize_message(
   }
 }
 
-void
-SerializationBase::deserialize_message(
+void SerializationBase::deserialize_message(
   const SerializedMessage * serialized_message, void * ros_message) const
 {
-  rcpputils::check_true(type_support_ != nullptr, "Typesupport is nullpointer.");
-  rcpputils::check_true(serialized_message != nullptr, "Serialized message is nullpointer.");
+  rcpputils::check_true(nullptr != type_support_, "Typesupport is nullpointer.");
+  rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
   rcpputils::check_true(
-    serialized_message->buffer_capacity != 0 &&
-    serialized_message->buffer_length != 0 &&
-    serialized_message->buffer != nullptr, "Serialized message is wrongly initialized.");
-  rcpputils::check_true(ros_message != nullptr, "ROS message is a nullpointer.");
+    0 != serialized_message->buffer_capacity &&
+    0 != serialized_message->buffer_length &&
+    nullptr != serialized_message->buffer, "Serialized message is wrongly initialized.");
+  rcpputils::check_true(nullptr != ros_message, "ROS message is a nullpointer.");
 
   const auto ret = rmw_deserialize(serialized_message, type_support_, ros_message);
   if (ret != RMW_RET_OK) {

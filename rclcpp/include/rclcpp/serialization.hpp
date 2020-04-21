@@ -27,18 +27,39 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-
 namespace rclcpp
 {
 
 class SerializedMessage;
 
+namespace serialization_traits
+{
+// trait to check if type is the object oriented serialized message
+template<typename T>
+struct is_serialized_message_class : std::false_type
+{};
+
+template<>
+struct is_serialized_message_class<rcl_serialized_message_t>: std::true_type
+{};
+
+template<>
+struct is_serialized_message_class<SerializedMessage>: std::true_type
+{};
+}  // namespace serialization_traits
+
 /// Interface to (de)serialize a message
 class RCLCPP_PUBLIC_TYPE SerializationBase
 {
-protected:
+public:
+  /// Constructor of SerializationBase
+  /**
+   * \param[in] type_support handle for the message type support
+   * to be used for serialization and deserialization.
+   */
   explicit SerializationBase(const rosidl_message_type_support_t * type_support);
 
+  /// Destructor of SerializationBase
   virtual ~SerializationBase() = default;
 
   /// Serialize a ROS2 message to a serialized stream
@@ -57,6 +78,7 @@ protected:
   void deserialize_message(
     const SerializedMessage * serialized_message, void * ros_message) const;
 
+private:
   const rosidl_message_type_support_t * type_support_;
 };
 
@@ -65,98 +87,15 @@ template<typename MessageT>
 class Serialization : public SerializationBase
 {
 public:
+  /// Constructor of Serialization
   Serialization()
   : SerializationBase(rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>())
-  {}
-
-  void serialize_message(
-    const MessageT & ros_message, SerializedMessage & serialized_message) const
   {
-    SerializationBase::serialize_message(
-      reinterpret_cast<const void *>(&ros_message),
-      &serialized_message);
-  }
-
-  void deserialize_message(
-    const SerializedMessage & serialized_message, MessageT & ros_message) const
-  {
-    SerializationBase::deserialize_message(
-      &serialized_message,
-      reinterpret_cast<void *>(&ros_message));
+    static_assert(
+      !serialization_traits::is_serialized_message_class<MessageT>::value,
+      "Serialization of serialized message to serialized message is not possible.");
   }
 };
-
-template<>
-class Serialization<SerializedMessage>: public SerializationBase
-{
-public:
-  Serialization()
-  : SerializationBase(nullptr)
-  {}
-
-  void serialize_message(
-    const SerializedMessage & ros_message,
-    SerializedMessage & serialized_message) const
-  {
-    (void)ros_message;
-    (void)serialized_message;
-    throw std::runtime_error(
-            "Serialization of serialized message to serialized message is not possible.");
-  }
-
-  void deserialize_message(
-    const SerializedMessage & serialized_message,
-    SerializedMessage & ros_message) const
-  {
-    (void)ros_message;
-    (void)serialized_message;
-    throw std::runtime_error(
-            "Deserialization of serialized message to serialized message is not possible.");
-  }
-};
-
-template<>
-class Serialization<rcl_serialized_message_t>: public SerializationBase
-{
-public:
-  Serialization()
-  : SerializationBase(nullptr)
-  {}
-
-  void serialize_message(
-    rcl_serialized_message_t & ros_message,
-    const SerializedMessage & serialized_message) const
-  {
-    (void)ros_message;
-    (void)serialized_message;
-    throw std::runtime_error(
-            "Serialization of serialized message to serialized message is not possible.");
-  }
-
-  void deserialize_message(
-    const SerializedMessage & serialized_message,
-    rcl_serialized_message_t & ros_message) const
-  {
-    (void)ros_message;
-    (void)serialized_message;
-    throw std::runtime_error(
-            "Deserialization of serialized message to serialized message is not possible.");
-  }
-};
-
-// trait to check if type is the object oriented serialized message
-template<typename T>
-struct is_serialized_message_class : std::false_type
-{};
-
-template<>
-struct is_serialized_message_class<rcl_serialized_message_t>: std::false_type
-{};
-
-template<>
-struct is_serialized_message_class<SerializedMessage>
-  : std::true_type
-{};
 
 }  // namespace rclcpp
 
