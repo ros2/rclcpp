@@ -79,6 +79,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/publisher_base.cpp
   src/rclcpp/qos.cpp
   src/rclcpp/qos_event.cpp
+  src/rclcpp/serialization.cpp
+  src/rclcpp/serialized_message.cpp
   src/rclcpp/service.cpp
   src/rclcpp/signal_handler.cpp
   src/rclcpp/subscription_base.cpp
