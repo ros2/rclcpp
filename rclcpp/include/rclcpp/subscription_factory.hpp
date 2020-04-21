@@ -117,6 +117,62 @@ create_subscription_factory(
   // return the factory now that it is populated
   return factory;
 }
+/// Return a SubscriptionFactory setup to create a SubscriptionT<MessageT, AllocatorT>.
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT,
+  typename CallbackMessageT =
+  typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+  typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>,
+  typename MessageMemoryStrategyT = rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    CallbackMessageT,
+    AllocatorT
+  >>
+SubscriptionFactory
+create_generic_subscription_factory(
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
+  const rosidl_message_type_support_t & type_support)
+{
+  auto allocator = options.get_allocator();
+
+  using rclcpp::AnySubscriptionCallback;
+  AnySubscriptionCallback<CallbackMessageT, AllocatorT> any_subscription_callback(allocator);
+  any_subscription_callback.set(std::forward<CallbackT>(callback));
+
+  SubscriptionFactory factory {
+    // factory function that creates a MessageT specific SubscriptionT
+    [options, msg_mem_strat, any_subscription_callback, type_support](
+      rclcpp::node_interfaces::NodeBaseInterface * node_base,
+      const std::string & topic_name,
+      const rclcpp::QoS & qos
+    ) -> rclcpp::SubscriptionBase::SharedPtr
+    {
+      using rclcpp::Subscription;
+      using rclcpp::SubscriptionBase;
+
+      auto sub = Subscription<CallbackMessageT, AllocatorT>::make_shared(
+        node_base,
+        type_support,
+        topic_name,
+        qos,
+        any_subscription_callback,
+        options,
+        msg_mem_strat);
+      // This is used for setting up things like intra process comms which
+      // require this->shared_from_this() which cannot be called from
+      // the constructor.
+      sub->post_init_setup(node_base, qos, options);
+      auto sub_base_ptr = std::dynamic_pointer_cast<SubscriptionBase>(sub);
+      return sub_base_ptr;
+    }
+  };
+
+  // return the factory now that it is populated
+  return factory;
+}
 
 }  // namespace rclcpp
 

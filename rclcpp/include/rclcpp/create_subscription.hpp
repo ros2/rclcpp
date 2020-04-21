@@ -48,6 +48,53 @@ template<
   >,
   typename NodeT>
 typename std::shared_ptr<SubscriptionT>
+create_generic_subscription(
+  NodeT && node,
+  const std::string & topic_name,
+  const rosidl_message_type_support_t & type_support,
+  const rclcpp::QoS & qos,
+  CallbackT && callback,
+  const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options =
+  rclcpp::SubscriptionOptionsWithAllocator<AllocatorT>(),
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat =
+  MessageMemoryStrategyT::create_default()
+)
+{
+  using rclcpp::node_interfaces::get_node_topics_interface;
+  auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
+
+  auto factory = rclcpp::create_generic_subscription_factory<MessageT>(
+    std::forward<CallbackT>(callback),
+    options,
+    msg_mem_strat,
+    type_support
+  );
+
+  auto sub = node_topics->create_subscription(topic_name, factory, qos);
+  node_topics->add_subscription(sub, options.callback_group);
+
+  return std::dynamic_pointer_cast<SubscriptionT>(sub);
+}
+
+/// Create and return a subscription of the given MessageT type.
+/**
+ * The NodeT type only needs to have a method called get_node_topics_interface()
+ * which returns a shared_ptr to a NodeTopicsInterface, or be a
+ * NodeTopicsInterface pointer itself.
+ */
+template<
+  typename MessageT,
+  typename CallbackT,
+  typename AllocatorT = std::allocator<void>,
+  typename CallbackMessageT =
+  typename rclcpp::subscription_traits::has_message_type<CallbackT>::type,
+  typename SubscriptionT = rclcpp::Subscription<CallbackMessageT, AllocatorT>,
+  typename MessageMemoryStrategyT = rclcpp::message_memory_strategy::MessageMemoryStrategy<
+    CallbackMessageT,
+    AllocatorT
+  >,
+  typename NodeT>
+typename std::shared_ptr<SubscriptionT>
 create_subscription(
   NodeT && node,
   const std::string & topic_name,
