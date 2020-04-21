@@ -23,6 +23,8 @@
 #define RCLCPP_BUILDING_LIBRARY 1
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/serialization.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/qos.hpp"
 #include "rmw/types.h"
 #include "rmw/qos_profiles.h"
@@ -210,6 +212,18 @@ public:
   get_topic_name()
   {
     return topic_name;
+  }
+
+  bool
+  is_serialized() const
+  {
+    return false;
+  }
+
+  void
+  provide_serialized_intra_process_message(const rclcpp::SerializedMessage & serialized_message)
+  {
+    (void)serialized_message;
   }
 
   rmw_qos_profile_t qos_profile;
