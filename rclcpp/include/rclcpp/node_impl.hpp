@@ -46,7 +46,6 @@
 #include "rclcpp/timer.hpp"
 
 #include "statistics_msgs/msg/metrics_message.hpp"
-#include <cstdlib>
 
 #ifndef RCLCPP__NODE_HPP_
 #include "node.hpp"
@@ -96,22 +95,19 @@ Node::create_subscription(
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  // TODO(dabonnie): only set if the option is set, via https://github.com/ros2/rclcpp/pull/1057
-  if (true) {
-    // TODO(dabonnie): fix QoS, configurable or hardcoded?
+  if (options.topic_stats_options.state == rclcpp::TopicStatisticsState::ENABLED) {
+    // TODO(dabonnie): default QoS? same quos as in sub options?
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       this->create_publisher<statistics_msgs::msg::MetricsMessage>(
-      "topic_statistics" + std::to_string(rand()), // for now make unique
+      options.topic_stats_options.publish_topic,
       rclcpp::QoS(10));
 
-    // TODO(dabonnie): fix name via https://github.com/ros2/rclcpp/pull/1057
     auto sub_topic_stats = std::make_shared<
-      rclcpp::topic_statistics::SubscriberTopicStatistics<CallbackMessageT>
+      rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
       >(this->get_name(), publisher);
 
-    // TODO(dabonnie): fix hardcoded duration via https://github.com/ros2/rclcpp/pull/1057
     auto timer = this->create_wall_timer(
-      std::chrono::seconds{10}, [sub_topic_stats]() {
+      options.topic_stats_options.publish_period, [sub_topic_stats]() {
         sub_topic_stats->publish_message();
       });
 
@@ -125,16 +121,15 @@ Node::create_subscription(
       options,
       msg_mem_strat,
       sub_topic_stats);
+  } else {
+    return rclcpp::create_subscription<MessageT>(
+      *this,
+      extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+      qos,
+      std::forward<CallbackT>(callback),
+      options,
+      msg_mem_strat);
   }
-
-  // TODO(dabonnie): fixme
-  return rclcpp::create_subscription<MessageT>(
-    *this,
-    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-    qos,
-    std::forward<CallbackT>(callback),
-    options,
-    msg_mem_strat);
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

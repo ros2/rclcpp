@@ -47,7 +47,7 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
-#include "rclcpp/topic_statistics/subscriber_topic_statistics.hpp"
+#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "tracetools/tracetools.h"
 
 namespace rclcpp
@@ -76,8 +76,8 @@ public:
   using MessageDeleter = allocator::Deleter<MessageAllocator, CallbackMessageT>;
   using ConstMessageSharedPtr = std::shared_ptr<const CallbackMessageT>;
   using MessageUniquePtr = std::unique_ptr<CallbackMessageT, MessageDeleter>;
-  using SubscriberTopicStatisticsSharedPtr =
-    std::shared_ptr<rclcpp::topic_statistics::SubscriberTopicStatistics<CallbackMessageT>>;
+  using SubscriptionTopicStatisticsSharedPtr =
+    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
@@ -102,7 +102,7 @@ public:
     AnySubscriptionCallback<CallbackMessageT, AllocatorT> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
     typename MessageMemoryStrategyT::SharedPtr message_memory_strategy,
-    SubscriberTopicStatisticsSharedPtr subscriber_topic_statistics = nullptr)
+    SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics = nullptr)
   : SubscriptionBase(
       node_base,
       type_support_handle,
@@ -184,8 +184,8 @@ public:
       this->setup_intra_process(intra_process_subscription_id, ipm);
     }
 
-    if (subscriber_topic_statistics != nullptr) {
-      this->subscriber_topic_statistics_ = std::move(subscriber_topic_statistics);
+    if (subscription_topic_statistics != nullptr) {
+      this->subscription_topic_statistics_ = std::move(subscription_topic_statistics);
     }
 
     TRACEPOINT(
@@ -269,11 +269,11 @@ public:
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     any_callback_.dispatch(typed_message, message_info);
 
-    if (subscriber_topic_statistics_) {
+    if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now());
       const auto time = rclcpp::Time(nanos.time_since_epoch().count());
-      subscriber_topic_statistics_->handle_message(*typed_message, time);
+      subscription_topic_statistics_->handle_message(*typed_message, time);
     }
   }
 
@@ -323,7 +323,7 @@ private:
   typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::SharedPtr
     message_memory_strategy_;
   /// Component which computes and publishes topic statistics for this subscriber
-  SubscriberTopicStatisticsSharedPtr subscriber_topic_statistics_{nullptr};
+  SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
 };
 
 }  // namespace rclcpp

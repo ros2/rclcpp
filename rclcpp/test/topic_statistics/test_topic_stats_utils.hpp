@@ -41,7 +41,7 @@ public:
    * Reassign the promise member and return it's future. Acquires a mutex in order
    * to mutate member variables.
    *
-   * @return the promise member's future, called upon PeriodicMeasurement
+   * \return the promise member's future, called upon PeriodicMeasurement
    */
   std::shared_future<bool> GetFuture()
   {
@@ -81,7 +81,7 @@ class MetricsMessageSubscriber : public rclcpp::Node, public PromiseSetter
 {
 public:
   /**
-   * Constucts a MetricsMessageSubscriber
+   * Constructs a MetricsMessageSubscriber.
    * \param name the node name
    * \param name the topic name
    * \param number of messages to receive to trigger the PromiseSetter future
@@ -105,7 +105,7 @@ public:
 
   /**
    * Acquires a mutex in order to get the last message received member.
-   * @return the last message received
+   * \return the last message received
    */
   MetricsMessage GetLastReceivedMessage() const
   {
@@ -114,8 +114,8 @@ public:
   }
 
   /**
-   * Return the number of messages received by this subscriber
-   * @return the number of messages received by the subscriber callback
+   * Return the number of messages received by this subscriber.
+   * \return the number of messages received by the subscriber callback
    */
   int GetNumberOfMessagesReceived() const
   {
@@ -125,8 +125,8 @@ public:
 private:
   /**
    * Subscriber callback. Acquires a mutex to set the last message received and
-   * sets the promise to true
-   * @param msg
+   * sets the promise to true.
+   * \param msg
    */
   void MetricsMessageCallback(const MetricsMessage & msg)
   {
