@@ -23,6 +23,7 @@
 #include "libstatistics_collector/collector/generate_statistics_message.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 #include "libstatistics_collector/topic_statistics_collector/constants.hpp"
+#include "libstatistics_collector/topic_statistics_collector/received_message_age.hpp"
 #include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
 
 #include "rcl/time.h"
@@ -55,6 +56,9 @@ class SubscriptionTopicStatistics
 {
   using TopicStatsCollector =
     libstatistics_collector::topic_statistics_collector::TopicStatisticsCollector<
+    CallbackMessageT>;
+  using ReceivedMessageAge =
+    libstatistics_collector::topic_statistics_collector::ReceivedMessageAgeCollector<
     CallbackMessageT>;
   using ReceivedMessagePeriod =
     libstatistics_collector::topic_statistics_collector::ReceivedMessagePeriodCollector<
@@ -173,7 +177,11 @@ private:
    */
   void bring_up()
   {
-    auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
+    const auto received_message_age = std::make_unique<ReceivedMessageAge>();
+    received_message_age->Start();
+    subscriber_statistics_collectors_.emplace_back(std::move(received_message_age));
+
+    const auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
     received_message_period->Start();
     {
       std::lock_guard<std::mutex> lock(mutex_);
