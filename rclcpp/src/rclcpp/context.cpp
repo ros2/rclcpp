@@ -227,6 +227,22 @@ Context::shutdown(const std::string & reason)
       ++it;
     }
   }
+  // shutdown logger
+  if (logging_configure_mutex_) {
+    // logging was initialized by this context
+    std::lock_guard<std::mutex> guard(*logging_configure_mutex_);
+    size_t & count = get_logging_reference_count();
+    if (0u == --count) {
+      rcl_ret_t rcl_ret = rcl_logging_fini();
+      if (RCL_RET_OK != rcl_ret) {
+        RCUTILS_SAFE_FWRITE_TO_STDERR(
+          RCUTILS_STRINGIFY(__file__) ":"
+          RCUTILS_STRINGIFY(__LINE__)
+          " failed to fini logging");
+        rcl_reset_error();
+      }
+    }
+  }
   return true;
 }
 
@@ -353,21 +369,6 @@ Context::clean_up()
 {
   shutdown_reason_ = "";
   rcl_context_.reset();
-  if (logging_configure_mutex_) {
-    // logging was initialized by this context
-    std::lock_guard<std::mutex> guard(*logging_configure_mutex_);
-    size_t & count = get_logging_reference_count();
-    if (0u == --count) {
-      rcl_ret_t rcl_ret = rcl_logging_fini();
-      if (RCL_RET_OK != rcl_ret) {
-        RCUTILS_SAFE_FWRITE_TO_STDERR(
-          RCUTILS_STRINGIFY(__file__) ":"
-          RCUTILS_STRINGIFY(__LINE__)
-          " failed to fini logging");
-        rcl_reset_error();
-      }
-    }
-  }
   sub_contexts_.clear();
 }
 
