@@ -15,9 +15,12 @@
 #include <gtest/gtest.h>
 
 #include <chrono>
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "rclcpp/node.hpp"
+#include "rclcpp/node_options.hpp"
 #include "rclcpp/subscription_options.hpp"
 
 using namespace std::chrono_literals;
@@ -27,18 +30,59 @@ namespace
 constexpr const char defaultPublishTopic[] = "/statistics";
 }
 
-TEST(TestSubscriptionOptions, topic_statistics_options) {
+class TestSubscriptionOptions : public ::testing::Test
+{
+public:
+  static void SetUpTestCase()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+protected:
+  void initialize(const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions())
+  {
+    node = std::make_shared<rclcpp::Node>("test_subscription_options", node_options);
+  }
+
+  void TearDown()
+  {
+    node.reset();
+  }
+
+  rclcpp::Node::SharedPtr node;
+};
+
+TEST_F(TestSubscriptionOptions, topic_statistics_options_default_and_set) {
   auto options = rclcpp::SubscriptionOptions();
 
-  EXPECT_EQ(options.topic_stats_options.state, rclcpp::TopicStatisticsState::DISABLED);
+  EXPECT_EQ(options.topic_stats_options.state, rclcpp::TopicStatisticsState::NodeDefault);
   EXPECT_EQ(options.topic_stats_options.publish_topic, defaultPublishTopic);
   EXPECT_EQ(options.topic_stats_options.publish_period, 1s);
 
-  options.topic_stats_options.state = rclcpp::TopicStatisticsState::ENABLED;
+  options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
   options.topic_stats_options.publish_topic = "topic_statistics";
   options.topic_stats_options.publish_period = 5min;
 
-  EXPECT_EQ(options.topic_stats_options.state, rclcpp::TopicStatisticsState::ENABLED);
+  EXPECT_EQ(options.topic_stats_options.state, rclcpp::TopicStatisticsState::Enable);
   EXPECT_EQ(options.topic_stats_options.publish_topic, "topic_statistics");
   EXPECT_EQ(options.topic_stats_options.publish_period, 5min);
+}
+
+TEST_F(TestSubscriptionOptions, topic_statistics_options_node_default_mode) {
+  initialize();
+  auto subscription_options = rclcpp::SubscriptionOptions();
+
+  EXPECT_EQ(
+    subscription_options.topic_stats_options.state,
+    rclcpp::TopicStatisticsState::NodeDefault);
+  EXPECT_FALSE(
+    rclcpp::detail::resolve_enable_topic_statistics(
+      subscription_options,
+      *(node->get_node_base_interface())));
+
+  initialize(rclcpp::NodeOptions().enable_topic_statistics(true));
+  EXPECT_TRUE(
+    rclcpp::detail::resolve_enable_topic_statistics(
+      subscription_options,
+      *(node->get_node_base_interface())));
 }
