@@ -95,12 +95,11 @@ Node::create_subscription(
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  if (options.topic_stats_options.state == rclcpp::TopicStatisticsState::ENABLED) {
-    // TODO(dabonnie): default QoS? same quos as in sub options?
+  if (options.topic_stats_options.state == rclcpp::TopicStatisticsState::Enable) {
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       this->create_publisher<statistics_msgs::msg::MetricsMessage>(
       options.topic_stats_options.publish_topic,
-      rclcpp::QoS(10));
+      qos);
 
     auto sub_topic_stats = std::make_shared<
       rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>

@@ -124,7 +124,7 @@ public:
   {
     // manually enable topic statistics via options
     auto options = rclcpp::SubscriptionOptions();
-    options.topic_stats_options.state = rclcpp::TopicStatisticsState::ENABLED;
+    options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
 
     auto callback = [this](Empty::UniquePtr msg) {
         this->receive_message(*msg);
