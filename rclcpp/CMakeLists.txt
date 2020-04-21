@@ -401,6 +401,15 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
+  ament_add_gtest(test_serialized_message test/test_serialized_message.cpp)
+  if(TARGET test_serialized_message)
+    ament_target_dependencies(test_serialized_message
+      test_msgs
+    )
+    target_link_libraries(test_serialized_message
+      ${PROJECT_NAME}
+    )
+  endif()
   ament_add_gtest(test_service test/test_service.cpp)
   if(TARGET test_service)
     ament_target_dependencies(test_service
