@@ -272,7 +272,7 @@ public:
     if (subscription_topic_statistics_) {
       const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now());
-      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count(), RCL_STEADY_TIME);
       subscription_topic_statistics_->handle_message(*typed_message, time);
     }
   }
