@@ -21,6 +21,7 @@
 #include "rcl/types.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/subscription_traits.hpp"
 
 #include "test_msgs/msg/empty.hpp"
@@ -48,6 +49,16 @@ void not_serialized_shared_ptr_callback(std::shared_ptr<char> unused)
 void not_serialized_unique_ptr_callback(
   test_msgs::msg::Empty::UniquePtrWithDeleter<rclcpp::allocator::Deleter<std::allocator<void>,
   test_msgs::msg::Empty>> unused)
+{
+  (void) unused;
+}
+
+void rclcpp_serialized_callback_copy(rclcpp::SerializedMessage unused)
+{
+  (void) unused;
+}
+
+void rclcpp_serialized_callback_shared_ptr(std::shared_ptr<rclcpp::SerializedMessage> unused)
 {
   (void) unused;
 }
@@ -97,6 +108,16 @@ TEST(TestSubscriptionTraits, is_serialized_callback) {
   static_assert(
     rclcpp::subscription_traits::is_serialized_callback<decltype(cb7)>::value == false,
     "passing a fancy unique_ptr of test_msgs::msg::Empty is not a serialized callback");
+
+  auto cb8 = &rclcpp_serialized_callback_copy;
+  static_assert(
+    rclcpp::subscription_traits::is_serialized_callback<decltype(cb8)>::value == true,
+    "rclcpp::SerializedMessage in a first argument callback makes it a serialized callback");
+
+  auto cb9 = &rclcpp_serialized_callback_shared_ptr;
+  static_assert(
+    rclcpp::subscription_traits::is_serialized_callback<decltype(cb9)>::value == true,
+    "std::shared_ptr<rclcpp::SerializedMessage> in a callback makes it a serialized callback");
 }
 
 TEST(TestSubscriptionTraits, callback_messages) {

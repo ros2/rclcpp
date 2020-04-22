@@ -79,6 +79,8 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/publisher_base.cpp
   src/rclcpp/qos.cpp
   src/rclcpp/qos_event.cpp
+  src/rclcpp/serialization.cpp
+  src/rclcpp/serialized_message.cpp
   src/rclcpp/service.cpp
   src/rclcpp/signal_handler.cpp
   src/rclcpp/subscription_base.cpp
@@ -399,6 +401,15 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
+  ament_add_gtest(test_serialized_message test/test_serialized_message.cpp)
+  if(TARGET test_serialized_message)
+    ament_target_dependencies(test_serialized_message
+      test_msgs
+    )
+    target_link_libraries(test_serialized_message
+      ${PROJECT_NAME}
+    )
+  endif()
   ament_add_gtest(test_service test/test_service.cpp)
   if(TARGET test_service)
     ament_target_dependencies(test_service
@@ -437,6 +448,7 @@ if(BUILD_TESTING)
       "rcl"
       "test_msgs"
     )
+    target_link_libraries(test_subscription_traits ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_find_weak_nodes test/test_find_weak_nodes.cpp)
   if(TARGET test_find_weak_nodes)
