@@ -22,7 +22,6 @@
 
 #include "ament_index_cpp/get_resource.hpp"
 #include "class_loader/class_loader.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rcpputils/filesystem_helper.hpp"
 #include "rcpputils/split.hpp"
 

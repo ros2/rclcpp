@@ -1,4 +1,4 @@
-// Copyright 2014 Open Source Robotics Foundation, Inc.
+// Copyright 2014-2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,6 +42,14 @@ namespace executor
 {
 
 using ExecutorArgs [[deprecated("use rclcpp::ExecutorOptions instead")]] = ExecutorOptions;
+
+[[deprecated("use rclcpp::ExecutorOptions() instead")]]
+inline
+ExecutorArgs
+create_default_executor_arguments()
+{
+  return ExecutorArgs();
+}
 
 }  // namespace executor
 }  // namespace rclcpp
