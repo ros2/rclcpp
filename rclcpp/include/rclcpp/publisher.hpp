@@ -299,7 +299,7 @@ protected:
   do_inter_process_publish(const T & msg)
   {
     // for serialized messages the serialized method is needed
-    do_serialized_publish(&msg);
+    do_serialized_publish(&msg.get_rcl_serialized_message());
   }
 
   void

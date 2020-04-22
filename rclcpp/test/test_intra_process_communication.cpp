@@ -142,8 +142,8 @@ std::array<uint32_t, 2> counts;
 
 void OnMessageSerialized(const std::shared_ptr<const rclcpp::SerializedMessage> msg)
 {
-  EXPECT_NE(msg->buffer, nullptr);
-  EXPECT_GT(msg->buffer_capacity, 0u);
+  EXPECT_NE(msg->get_rcl_serialized_message().buffer, nullptr);
+  EXPECT_GT(msg->get_rcl_serialized_message().buffer_capacity, 0u);
 
   ++counts[0];
 }
