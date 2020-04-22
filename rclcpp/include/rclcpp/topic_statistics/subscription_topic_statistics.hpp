@@ -101,6 +101,7 @@ public:
     const CallbackMessageT & received_message,
     const rclcpp::Time now_nanoseconds) const
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const auto & collector : subscriber_statistics_collectors_) {
       collector->OnMessageReceived(received_message, now_nanoseconds.nanoseconds());
     }
@@ -120,6 +121,7 @@ public:
   {
     rclcpp::Time window_end{get_current_nanoseconds_since_epoch()};
 
+    std::lock_guard<std::mutex> lock(mutex_);
     for (auto & collector : subscriber_statistics_collectors_) {
       const auto collected_stats = collector->GetStatisticsResults();
 
@@ -143,6 +145,7 @@ protected:
   std::vector<StatisticData> get_current_collector_data() const
   {
     std::vector<StatisticData> data;
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const auto & collector : subscriber_statistics_collectors_) {
       data.push_back(collector->GetStatisticsResults());
     }
@@ -155,6 +158,7 @@ private:
   {
     auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
     received_message_period->Start();
+    std::lock_guard<std::mutex> lock(mutex_);
     subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
 
     window_start_ = rclcpp::Time(get_current_nanoseconds_since_epoch());
@@ -163,6 +167,7 @@ private:
   /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
   void tear_down()
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     for (auto & collector : subscriber_statistics_collectors_) {
       collector->Stop();
     }
@@ -187,6 +192,8 @@ private:
     return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
   }
 
+  /// Mutex to protect the subsequence vectors
+  mutable std::mutex mutex_;
   /// Collection of statistics collectors
   std::vector<std::unique_ptr<TopicStatsCollector>> subscriber_statistics_collectors_{};
   /// Node name used to generate topic statistics messages to be published
