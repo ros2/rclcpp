@@ -32,7 +32,6 @@
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
 #include "rclcpp/experimental/intra_process_manager.hpp"
-#include "rclcpp/generic_publisher.hpp"
 #include "rclcpp/loaned_message.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -274,10 +273,33 @@ public:
   }
 
 protected:
-  void
-  do_inter_process_publish(const MessageT & msg)
+  template<typename T = MessageT>
+  typename std::enable_if<!serialization_traits::is_serialized_message_class<T>::value, void>::type
+  do_inter_process_publish(const T & msg)
   {
-    generic_publisher::do_inter_process_publish(publisher_handle_, msg);
+    auto status = rcl_publish(&publisher_handle_, &msg, nullptr);
+
+    if (RCL_RET_PUBLISHER_INVALID == status) {
+      rcl_reset_error();  // next call will reset error message if not context
+      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
+        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
+        if (nullptr != context && !rcl_context_is_valid(context)) {
+          // publisher is invalid due to context being shutdown
+          return;
+        }
+      }
+    }
+    if (RCL_RET_OK != status) {
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
+    }
+  }
+
+  template<typename T = MessageT>
+  typename std::enable_if<serialization_traits::is_serialized_message_class<T>::value, void>::type
+  do_inter_process_publish(const T & msg)
+  {
+    // for serialized messages the serialized method is needed
+    do_serialized_publish(&msg);
   }
 
   void
