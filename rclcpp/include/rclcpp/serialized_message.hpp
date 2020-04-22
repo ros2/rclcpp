@@ -52,16 +52,16 @@ public:
     const rcl_allocator_t & allocator = rcl_get_default_allocator());
 
   /// Copy Constructor for a SerializedMessage
-  SerializedMessage(const SerializedMessage & serialized_message);
+  SerializedMessage(const SerializedMessage & other);
 
   /// Constructor for a SerializedMessage from a rcl_serialized_message_t
-  explicit SerializedMessage(const rcl_serialized_message_t & serialized_message);
+  explicit SerializedMessage(const rcl_serialized_message_t & other);
 
   /// Move Constructor for a SerializedMessage
-  SerializedMessage(SerializedMessage && serialized_message);
+  SerializedMessage(SerializedMessage && other);
 
   /// Constructor for a SerializedMessage from a moved rcl_serialized_message_t
-  explicit SerializedMessage(rcl_serialized_message_t && serialized_message);
+  explicit SerializedMessage(rcl_serialized_message_t && other);
 
   /// Copy assignment operator
   SerializedMessage & operator=(const SerializedMessage & other);
