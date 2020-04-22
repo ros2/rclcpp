@@ -62,7 +62,7 @@ public:
 
   RCLCPP_COMPONENTS_PUBLIC
   ComponentManager(
-    std::weak_ptr<rclcpp::executor::Executor> executor,
+    std::weak_ptr<rclcpp::Executor> executor,
     std::string node_name = "ComponentManager",
     const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
 
@@ -103,7 +103,7 @@ protected:
     std::shared_ptr<ListNodes::Response> response);
 
 private:
-  std::weak_ptr<rclcpp::executor::Executor> executor_;
+  std::weak_ptr<rclcpp::Executor> executor_;
 
   uint64_t unique_id_ {1};
   std::map<std::string, std::unique_ptr<class_loader::ClassLoader>> loaders_;

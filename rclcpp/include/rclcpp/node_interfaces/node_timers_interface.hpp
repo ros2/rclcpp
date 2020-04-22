@@ -41,7 +41,7 @@ public:
   void
   add_timer(
     rclcpp::TimerBase::SharedPtr timer,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
+    rclcpp::CallbackGroup::SharedPtr callback_group) = 0;
 };
 
 }  // namespace node_interfaces

@@ -84,7 +84,7 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr
 LifecycleNode::create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
     std::chrono::duration_cast<std::chrono::nanoseconds>(period),
@@ -98,7 +98,7 @@ typename rclcpp::Client<ServiceT>::SharedPtr
 LifecycleNode::create_client(
   const std::string & service_name,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   rcl_client_options_t options = rcl_client_get_default_options();
   options.qos = qos_profile;
@@ -123,7 +123,7 @@ LifecycleNode::create_service(
   const std::string & service_name,
   CallbackT && callback,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   return rclcpp::create_service<ServiceT, CallbackT>(
     node_base_, node_services_,

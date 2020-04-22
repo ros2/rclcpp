@@ -46,7 +46,7 @@ public:
   void
   add_timer(
     rclcpp::TimerBase::SharedPtr timer,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) override;
+    rclcpp::CallbackGroup::SharedPtr callback_group) override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeTimers)

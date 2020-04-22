@@ -25,11 +25,11 @@
 using rclcpp::executors::MultiThreadedExecutor;
 
 MultiThreadedExecutor::MultiThreadedExecutor(
-  const rclcpp::executor::ExecutorArgs & args,
+  const rclcpp::ExecutorOptions & options,
   size_t number_of_threads,
   bool yield_before_execute,
   std::chrono::nanoseconds next_exec_timeout)
-: executor::Executor(args),
+: rclcpp::Executor(options),
   yield_before_execute_(yield_before_execute),
   next_exec_timeout_(next_exec_timeout)
 {
@@ -74,7 +74,7 @@ void
 MultiThreadedExecutor::run(size_t)
 {
   while (rclcpp::ok(this->context_) && spinning.load()) {
-    executor::AnyExecutable any_exec;
+    rclcpp::AnyExecutable any_exec;
     {
       std::lock_guard<std::mutex> wait_lock(wait_mutex_);
       if (!rclcpp::ok(this->context_) || !spinning.load()) {

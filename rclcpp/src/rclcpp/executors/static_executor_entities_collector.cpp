@@ -46,7 +46,7 @@ StaticExecutorEntitiesCollector::init(
   rcl_guard_condition_t * executor_guard_condition)
 {
   // Empty initialize executable list
-  exec_list_ = executor::ExecutableList();
+  exec_list_ = rclcpp::experimental::ExecutableList();
   // Get executor's wait_set_ pointer
   p_wait_set_ = p_wait_set;
   // Get executor's memory strategy ptr

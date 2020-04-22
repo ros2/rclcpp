@@ -38,7 +38,7 @@ public:
   /**
    * Default values for the node options:
    *
-   *   - context = rclcpp::contexts::default_context::get_global_default_context()
+   *   - context = rclcpp::contexts::get_global_default_context()
    *   - arguments = {}
    *   - parameter_overrides = {}
    *   - use_global_arguments = true
@@ -338,7 +338,7 @@ private:
   // documentation in this class.
 
   rclcpp::Context::SharedPtr context_ {
-    rclcpp::contexts::default_context::get_global_default_context()};
+    rclcpp::contexts::get_global_default_context()};
 
   std::vector<std::string> arguments_ {};
 

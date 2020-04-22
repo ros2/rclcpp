@@ -45,7 +45,7 @@ namespace rclcpp
 /// Initialize communications via the rmw implementation and set up a global signal handler.
 /**
  * Initializes the global context which is accessible via the function
- * rclcpp::contexts::default_context::get_global_default_context().
+ * rclcpp::contexts::get_global_default_context().
  * Also, installs the global signal handlers with the function
  * rclcpp::install_signal_handlers().
  *

@@ -263,7 +263,7 @@ public:
 
   void
   get_next_subscription(
-    executor::AnyExecutable & any_exec,
+    rclcpp::AnyExecutable & any_exec,
     const WeakNodeList & weak_nodes) override
   {
     auto it = subscription_handles_.begin();
@@ -298,7 +298,7 @@ public:
 
   void
   get_next_service(
-    executor::AnyExecutable & any_exec,
+    rclcpp::AnyExecutable & any_exec,
     const WeakNodeList & weak_nodes) override
   {
     auto it = service_handles_.begin();
@@ -332,7 +332,7 @@ public:
   }
 
   void
-  get_next_client(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) override
+  get_next_client(rclcpp::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) override
   {
     auto it = client_handles_.begin();
     while (it != client_handles_.end()) {
@@ -366,7 +366,7 @@ public:
 
   void
   get_next_timer(
-    executor::AnyExecutable & any_exec,
+    rclcpp::AnyExecutable & any_exec,
     const WeakNodeList & weak_nodes) override
   {
     auto it = timer_handles_.begin();
@@ -400,7 +400,7 @@ public:
   }
 
   void
-  get_next_waitable(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) override
+  get_next_waitable(rclcpp::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) override
   {
     auto it = waitable_handles_.begin();
     while (it != waitable_handles_.end()) {

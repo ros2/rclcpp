@@ -44,7 +44,7 @@ NodeTopics::create_publisher(
 void
 NodeTopics::add_publisher(
   rclcpp::PublisherBase::SharedPtr publisher,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
   // Assign to a group.
   if (callback_group) {
@@ -83,7 +83,7 @@ NodeTopics::create_subscription(
 void
 NodeTopics::add_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
   // Assign to a group.
   if (callback_group) {

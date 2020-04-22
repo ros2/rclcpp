@@ -210,15 +210,14 @@ Node::get_logger() const
   return node_logging_->get_logger();
 }
 
-rclcpp::callback_group::CallbackGroup::SharedPtr
-Node::create_callback_group(
-  rclcpp::callback_group::CallbackGroupType group_type)
+rclcpp::CallbackGroup::SharedPtr
+Node::create_callback_group(rclcpp::CallbackGroupType group_type)
 {
   return node_base_->create_callback_group(group_type);
 }
 
 bool
-Node::group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group)
+Node::group_in_node(rclcpp::CallbackGroup::SharedPtr group)
 {
   return node_base_->callback_group_in_node(group);
 }
@@ -377,7 +376,7 @@ Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_ma
   return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
 }
 
-const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+const std::vector<rclcpp::CallbackGroup::WeakPtr> &
 Node::get_callback_groups() const
 {
   return node_base_->get_callback_groups();
