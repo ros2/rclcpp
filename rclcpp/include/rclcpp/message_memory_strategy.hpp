@@ -108,7 +108,8 @@ public:
     msg.reset();
   }
 
-  virtual void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & serialized_msg)
+  virtual void return_serialized_message(
+    std::shared_ptr<rclcpp::SerializedMessage> & serialized_msg)
   {
     serialized_msg.reset();
   }

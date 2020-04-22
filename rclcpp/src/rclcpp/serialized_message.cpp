@@ -144,4 +144,13 @@ size_t SerializedMessage::capacity() const
 {
   return serialized_message_.buffer_capacity;
 }
+
+void SerializedMessage::reserve(size_t capacity)
+{
+  auto ret = rmw_serialized_message_resize(&serialized_message_, capacity);
+  if (ret != RCL_RET_OK) {
+    throw std::runtime_error("failed to resize serialized message");
+  }
+}
+
 }  // namespace rclcpp

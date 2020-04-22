@@ -98,6 +98,13 @@ public:
    */
   size_t capacity() const;
 
+  /// Allocate memory in the data buffer
+  /**
+   * The data buffer of the underlying rcl_serialized_message_t will be resized.
+   * This might change the data layout and invalidates all pointers to the data.
+   */
+  void reserve(size_t capacity);
+
 private:
   rcl_serialized_message_t serialized_message_;
 };

@@ -164,7 +164,7 @@ SubscriptionBase::take_serialized(
 {
   rcl_ret_t ret = rcl_take_serialized_message(
     this->get_subscription_handle().get(),
-    &message_out,
+    &message_out.get_rcl_serialized_message(),
     &message_info_out.get_rmw_message_info(),
     nullptr);
   if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
