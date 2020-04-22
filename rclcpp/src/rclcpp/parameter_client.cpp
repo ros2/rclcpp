@@ -152,7 +152,7 @@ AsyncParametersClient::get_parameters(
       auto & pvalues = cb_f.get()->values;
 
       for (auto & pvalue : pvalues) {
-        auto i = &pvalue - &pvalues[0];
+        auto i = static_cast<size_t>(&pvalue - &pvalues[0]);
         rcl_interfaces::msg::Parameter parameter;
         parameter.name = request->names[i];
         parameter.value = pvalue;
@@ -191,7 +191,7 @@ AsyncParametersClient::get_parameter_types(
       std::vector<rclcpp::ParameterType> types;
       auto & pts = cb_f.get()->types;
       for (auto & pt : pts) {
-        pts.push_back(static_cast<rclcpp::ParameterType>(pt));
+        types.push_back(static_cast<rclcpp::ParameterType>(pt));
       }
       promise_result->set_value(types);
       if (callback != nullptr) {

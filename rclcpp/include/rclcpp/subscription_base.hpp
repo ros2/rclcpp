@@ -15,18 +15,23 @@
 #ifndef RCLCPP__SUBSCRIPTION_BASE_HPP_
 #define RCLCPP__SUBSCRIPTION_BASE_HPP_
 
+#include <atomic>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
+#include <utility>
 
 #include "rcl/subscription.h"
-
-#include "rcl_interfaces/msg/intra_process_message.hpp"
 
 #include "rmw/rmw.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/experimental/subscription_intra_process_base.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/message_info.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -39,14 +44,14 @@ namespace node_interfaces
 class NodeBaseInterface;
 }  // namespace node_interfaces
 
-namespace intra_process_manager
+namespace experimental
 {
 /**
  * IntraProcessManager is forward declared here, avoiding a circular inclusion between
  * `intra_process_manager.hpp` and `subscription_base.hpp`.
  */
 class IntraProcessManager;
-}
+}  // namespace experimental
 
 /// Virtual base class for subscriptions. This pattern allows us to iterate over different template
 /// specializations of Subscription, among other things.
@@ -88,10 +93,6 @@ public:
   const std::shared_ptr<rcl_subscription_t>
   get_subscription_handle() const;
 
-  RCLCPP_PUBLIC
-  virtual const std::shared_ptr<rcl_subscription_t>
-  get_intra_process_subscription_handle() const;
-
   /// Get all the QoS event handlers associated with this subscription.
   /** \return The vector of QoS event handlers. */
   RCLCPP_PUBLIC
@@ -106,11 +107,51 @@ public:
    * If the underlying setting in use can't be represented in ROS terms,
    * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
    * May throw runtime_error when an unexpected error occurs.
+   *
    * \return The actual qos settings.
    */
   RCLCPP_PUBLIC
-  rmw_qos_profile_t
+  rclcpp::QoS
   get_actual_qos() const;
+
+  /// Take the next inter-process message from the subscription as a type erased pointer.
+  /**
+   * \sa Subscription::take() for details on how this function works.
+   *
+   * The only difference is that it takes a type erased pointer rather than a
+   * reference to the exact message type.
+   *
+   * This type erased version facilitates using the subscriptions in a type
+   * agnostic way using SubscriptionBase::create_message() and
+   * SubscriptionBase::handle_message().
+   *
+   * \param[out] message_out The type erased message pointer into which take
+   *   will copy the data.
+   * \param[out] message_info_out The message info for the taken message.
+   * \returns true if data was taken and is valid, otherwise false
+   * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
+   */
+  RCLCPP_PUBLIC
+  bool
+  take_type_erased(void * message_out, rclcpp::MessageInfo & message_info_out);
+
+  /// Take the next inter-process message, in its serialized form, from the subscription.
+  /**
+   * For now, if data is taken (written) into the message_out and
+   * message_info_out then true will be returned.
+   * Unlike Subscription::take(), taking data serialized is not possible via
+   * intra-process for the time being, so it will not need to de-duplicate
+   * data in any case.
+   *
+   * \param[out] message_out The serialized message data structure used to
+   *   store the taken message.
+   * \param[out] message_info_out The message info for the taken message.
+   * \returns true if data was taken and is valid, otherwise false
+   * \throws any rcl errors from rcl_take, \sa rclcpp::exceptions::throw_from_rcl_error()
+   */
+  RCLCPP_PUBLIC
+  bool
+  take_serialized(rcl_serialized_message_t & message_out, rclcpp::MessageInfo & message_info_out);
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
@@ -134,7 +175,12 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  handle_message(std::shared_ptr<void> & message, const rmw_message_info_t & message_info) = 0;
+  handle_message(std::shared_ptr<void> & message, const rclcpp::MessageInfo & message_info) = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  handle_loaned_message(void * loaned_message, const rclcpp::MessageInfo & message_info) = 0;
 
   /// Return the message borrowed in create_message.
   /** \param[in] message Shared pointer to the returned message. */
@@ -151,13 +197,6 @@ public:
   return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
 
   RCLCPP_PUBLIC
-  virtual
-  void
-  handle_intra_process_message(
-    rcl_interfaces::msg::IntraProcessMessage & ipm,
-    const rmw_message_info_t & message_info) = 0;
-
-  RCLCPP_PUBLIC
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
@@ -171,16 +210,48 @@ public:
   size_t
   get_publisher_count() const;
 
+  /// Check if subscription instance can loan messages.
+  /**
+   * Depending on the middleware and the message type, this will return true if the middleware
+   * can allocate a ROS message instance.
+   *
+   * \return boolean flag indicating if middleware can loan messages.
+   */
+  RCLCPP_PUBLIC
+  bool
+  can_loan_messages() const;
+
   using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+    std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
 
   /// Implemenation detail.
   RCLCPP_PUBLIC
   void
   setup_intra_process(
     uint64_t intra_process_subscription_id,
-    IntraProcessManagerWeakPtr weak_ipm,
-    const rcl_subscription_options_t & intra_process_options);
+    IntraProcessManagerWeakPtr weak_ipm);
+
+  /// Return the waitable for intra-process, or nullptr if intra-process is not setup.
+  RCLCPP_PUBLIC
+  rclcpp::Waitable::SharedPtr
+  get_intra_process_waitable() const;
+
+  /// Exchange state of whether or not a part of the subscription is used by a wait set.
+  /**
+   * Used to ensure parts of the subscription are not used with multiple wait
+   * sets simultaneously.
+   *
+   * \param[in] pointer_to_subscription_part address of a subscription part
+   * \param[in] in_use_state the new state to exchange, true means "now in use",
+   *   and false means "no longer in use".
+   * \returns the current "in use" state.
+   * \throws std::invalid_argument If pointer_to_subscription_part is nullptr.
+   * \throws std::runtime_error If the pointer given is not a pointer to one of
+   *   the parts of the subscription which can be used with a wait set.
+   */
+  RCLCPP_PUBLIC
+  bool
+  exchange_in_use_by_wait_set_state(void * pointer_to_subscription_part, bool in_use_state);
 
 protected:
   template<typename EventCallbackT>
@@ -194,8 +265,18 @@ protected:
       rcl_subscription_event_init,
       get_subscription_handle().get(),
       event_type);
+    qos_events_in_use_by_wait_set_.insert(std::make_pair(handler.get(), false));
     event_handlers_.emplace_back(handler);
   }
+
+  RCLCPP_PUBLIC
+  void default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & info) const;
+
+  RCLCPP_PUBLIC
+  bool
+  matches_any_intra_process_publishers(const rmw_gid_t * sender_gid) const;
+
+  rclcpp::node_interfaces::NodeBaseInterface * const node_base_;
 
   std::shared_ptr<rcl_node_t> node_handle_;
   std::shared_ptr<rcl_subscription_t> subscription_handle_;
@@ -212,6 +293,11 @@ private:
 
   rosidl_message_type_support_t type_support_;
   bool is_serialized_;
+
+  std::atomic<bool> subscription_in_use_by_wait_set_{false};
+  std::atomic<bool> intra_process_subscription_waitable_in_use_by_wait_set_{false};
+  std::unordered_map<rclcpp::QOSEventHandlerBase *,
+    std::atomic<bool>> qos_events_in_use_by_wait_set_;
 };
 
 }  // namespace rclcpp

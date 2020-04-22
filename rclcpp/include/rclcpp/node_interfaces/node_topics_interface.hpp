@@ -22,7 +22,9 @@
 #include "rcl/publisher.h"
 #include "rcl/subscription.h"
 
+#include "rclcpp/callback_group.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/publisher_factory.hpp"
 #include "rclcpp/subscription.hpp"

@@ -121,7 +121,7 @@ init_and_remove_ros_arguments(
  * \param[in] argv Argument vector.
  * \returns Members of the argument vector that are not ROS arguments.
  * \throws anything throw_from_rcl_error can throw
- * \throws rclcpp::exceptions::RCLErrorBase if the parsing fails
+ * \throws rclcpp::exceptions::RCLError if the parsing fails
  */
 RCLCPP_PUBLIC
 std::vector<std::string>
@@ -153,6 +153,7 @@ ok(rclcpp::Context::SharedPtr context = nullptr);
  * \param[in] context Check for initialization of this Context.
  * \return true if the context is initialized, and false otherwise
  */
+[[deprecated("use the function ok() instead, which has the same usage.")]]
 RCLCPP_PUBLIC
 bool
 is_initialized(rclcpp::Context::SharedPtr context = nullptr);

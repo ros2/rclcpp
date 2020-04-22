@@ -130,7 +130,7 @@ State::id() const
   if (!state_handle_) {
     throw std::runtime_error("Error in state! Internal state_handle is NULL.");
   }
-  return state_handle_->id;
+  return static_cast<uint8_t>(state_handle_->id);
 }
 
 std::string

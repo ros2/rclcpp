@@ -161,6 +161,12 @@ public:
   virtual
   bool
   get_use_intra_process_default() const = 0;
+
+  /// Return the default preference for enabling topic statistics collection.
+  RCLCPP_PUBLIC
+  virtual
+  bool
+  get_enable_topic_statistics_default() const = 0;
 };
 
 }  // namespace node_interfaces

@@ -15,7 +15,6 @@
 #ifndef RCLCPP__NODE_INTERFACES__NODE_CLOCK_INTERFACE_HPP_
 #define RCLCPP__NODE_INTERFACES__NODE_CLOCK_INTERFACE_HPP_
 
-#include "rclcpp/callback_group.hpp"
 #include "rclcpp/clock.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -40,6 +39,12 @@ public:
   virtual
   rclcpp::Clock::SharedPtr
   get_clock() = 0;
+
+  /// Get a const ROS clock which will be kept up to date by the node.
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::Clock::ConstSharedPtr
+  get_clock() const = 0;
 };
 
 }  // namespace node_interfaces

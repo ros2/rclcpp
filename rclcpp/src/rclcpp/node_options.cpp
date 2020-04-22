@@ -20,6 +20,7 @@
 #include <vector>
 #include <utility>
 
+#include "rclcpp/detail/utilities.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/publisher_options.hpp"
@@ -70,7 +71,9 @@ NodeOptions::operator=(const NodeOptions & other)
     this->arguments_ = other.arguments_;
     this->parameter_overrides_ = other.parameter_overrides_;
     this->use_global_arguments_ = other.use_global_arguments_;
+    this->enable_rosout_ = other.enable_rosout_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
+    this->enable_topic_statistics_ = other.enable_topic_statistics_;
     this->start_parameter_services_ = other.start_parameter_services_;
     this->allocator_ = other.allocator_;
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
@@ -90,6 +93,7 @@ NodeOptions::get_rcl_node_options() const
     node_options_->allocator = this->allocator_;
     node_options_->use_global_arguments = this->use_global_arguments_;
     node_options_->domain_id = this->get_domain_id_from_env();
+    node_options_->enable_rosout = this->enable_rosout_;
 
     int c_argc = 0;
     std::unique_ptr<const char *[]> c_argv;
@@ -113,25 +117,10 @@ NodeOptions::get_rcl_node_options() const
       throw_from_rcl_error(ret, "failed to parse arguments");
     }
 
-    int unparsed_ros_args_count =
-      rcl_arguments_get_count_unparsed_ros(&(node_options_->arguments));
-    if (unparsed_ros_args_count > 0) {
-      int * unparsed_ros_args_indices = nullptr;
-      ret = rcl_arguments_get_unparsed_ros(
-        &(node_options_->arguments), this->allocator_, &unparsed_ros_args_indices);
-      if (RCL_RET_OK != ret) {
-        throw_from_rcl_error(ret, "failed to get unparsed ROS arguments");
-      }
-      try {
-        std::vector<std::string> unparsed_ros_args;
-        for (int i = 0; i < unparsed_ros_args_count; ++i) {
-          unparsed_ros_args.push_back(c_argv[unparsed_ros_args_indices[i]]);
-        }
-        throw exceptions::UnknownROSArgsError(std::move(unparsed_ros_args));
-      } catch (...) {
-        this->allocator_.deallocate(unparsed_ros_args_indices, this->allocator_.state);
-        throw;
-      }
+    std::vector<std::string> unparsed_ros_arguments = detail::get_unparsed_ros_arguments(
+      c_argc, c_argv.get(), &(node_options_->arguments), this->allocator_);
+    if (!unparsed_ros_arguments.empty()) {
+      throw exceptions::UnknownROSArgsError(std::move(unparsed_ros_arguments));
     }
   }
 
@@ -199,6 +188,20 @@ NodeOptions::use_global_arguments(bool use_global_arguments)
 }
 
 bool
+NodeOptions::enable_rosout() const
+{
+  return this->enable_rosout_;
+}
+
+NodeOptions &
+NodeOptions::enable_rosout(bool enable_rosout)
+{
+  this->node_options_.reset();  // reset node options to make it be recreated on next access.
+  this->enable_rosout_ = enable_rosout;
+  return *this;
+}
+
+bool
 NodeOptions::use_intra_process_comms() const
 {
   return this->use_intra_process_comms_;
@@ -208,6 +211,19 @@ NodeOptions &
 NodeOptions::use_intra_process_comms(bool use_intra_process_comms)
 {
   this->use_intra_process_comms_ = use_intra_process_comms;
+  return *this;
+}
+
+bool
+NodeOptions::enable_topic_statistics() const
+{
+  return this->enable_topic_statistics_;
+}
+
+NodeOptions &
+NodeOptions::enable_topic_statistics(bool enable_topic_statistics)
+{
+  this->enable_topic_statistics_ = enable_topic_statistics;
   return *this;
 }
 

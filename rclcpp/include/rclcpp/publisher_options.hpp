@@ -22,6 +22,7 @@
 #include "rcl/publisher.h"
 
 #include "rclcpp/allocator/allocator_common.hpp"
+#include "rclcpp/detail/rmw_implementation_specific_publisher_payload.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
@@ -43,8 +44,15 @@ struct PublisherOptionsBase
   /// Callbacks for various events related to publishers.
   PublisherEventCallbacks event_callbacks;
 
+  /// Whether or not to use default callbacks when user doesn't supply any in event_callbacks
+  bool use_default_callbacks = true;
+
   /// Callback group in which the waitable items from the publisher should be placed.
   std::shared_ptr<rclcpp::callback_group::CallbackGroup> callback_group;
+
+  /// Optional RMW implementation specific payload to be used during creation of the publisher.
+  std::shared_ptr<rclcpp::detail::RMWImplementationSpecificPublisherPayload>
+  rmw_implementation_payload = nullptr;
 };
 
 /// Structure containing optional configuration for Publishers.
@@ -72,8 +80,15 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
     auto message_alloc = std::make_shared<MessageAllocatorT>(*this->get_allocator().get());
     result.allocator = rclcpp::allocator::get_rcl_allocator<MessageT>(*message_alloc);
     result.qos = qos.get_rmw_qos_profile();
+
+    // Apply payload to rcl_publisher_options if necessary.
+    if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {
+      rmw_implementation_payload->modify_rmw_publisher_options(result.rmw_publisher_options);
+    }
+
     return result;
   }
+
 
   /// Get the allocator, creating one if needed.
   std::shared_ptr<Allocator>

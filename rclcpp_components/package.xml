@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rclcpp_components</name>
-  <version>0.8.0</version>
+  <version>0.8.3</version>
   <description>Package containing tools for dynamically loadable components</description>
   <maintainer email="michael@openrobotics.org">Michael Carroll</maintainer>
   <license>Apache License 2.0</license>

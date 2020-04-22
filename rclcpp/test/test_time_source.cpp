@@ -242,6 +242,12 @@ TEST_F(TestTimeSource, ROS_time_valid_sim_time) {
   EXPECT_TRUE(ros_clock2->ros_time_is_active());
 }
 
+TEST_F(TestTimeSource, ROS_invalid_sim_time) {
+  rclcpp::TimeSource ts;
+  ts.attachNode(node);
+  EXPECT_FALSE(node->set_parameter(rclcpp::Parameter("use_sim_time", "not boolean")).successful);
+}
+
 TEST_F(TestTimeSource, clock) {
   rclcpp::TimeSource ts(node);
   auto ros_clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);

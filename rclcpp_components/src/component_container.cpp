@@ -16,7 +16,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "component_manager.hpp"
+#include "rclcpp_components/component_manager.hpp"
 
 int main(int argc, char * argv[])
 {

@@ -56,6 +56,7 @@ public:
   virtual size_t number_of_guard_conditions() const = 0;
   virtual size_t number_of_waitables() const = 0;
 
+  virtual void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable) = 0;
   virtual bool add_handles_to_wait_set(rcl_wait_set_t * wait_set) = 0;
   virtual void clear_handles() = 0;
   virtual void remove_null_handles(rcl_wait_set_t * wait_set) = 0;

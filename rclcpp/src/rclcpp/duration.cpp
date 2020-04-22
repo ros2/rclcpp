@@ -55,7 +55,8 @@ Duration::Duration(const Duration & rhs)
 Duration::Duration(
   const builtin_interfaces::msg::Duration & duration_msg)
 {
-  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<uint64_t>(duration_msg.sec));
+  rcl_duration_.nanoseconds =
+    static_cast<rcl_duration_value_t>(RCL_S_TO_NS(duration_msg.sec));
   rcl_duration_.nanoseconds += duration_msg.nanosec;
 }
 
@@ -122,15 +123,15 @@ Duration::operator>(const rclcpp::Duration & rhs) const
 void
 bounds_check_duration_sum(int64_t lhsns, int64_t rhsns, uint64_t max)
 {
-  auto abs_lhs = (uint64_t)std::abs(lhsns);
-  auto abs_rhs = (uint64_t)std::abs(rhsns);
+  auto abs_lhs = static_cast<uint64_t>(std::abs(lhsns));
+  auto abs_rhs = static_cast<uint64_t>(std::abs(rhsns));
 
   if (lhsns > 0 && rhsns > 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::overflow_error("addition leads to int64_t overflow");
     }
   } else if (lhsns < 0 && rhsns < 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::underflow_error("addition leads to int64_t underflow");
     }
   }
@@ -150,15 +151,15 @@ Duration::operator+(const rclcpp::Duration & rhs) const
 void
 bounds_check_duration_difference(int64_t lhsns, int64_t rhsns, uint64_t max)
 {
-  auto abs_lhs = (uint64_t)std::abs(lhsns);
-  auto abs_rhs = (uint64_t)std::abs(rhsns);
+  auto abs_lhs = static_cast<uint64_t>(std::abs(lhsns));
+  auto abs_rhs = static_cast<uint64_t>(std::abs(rhsns));
 
   if (lhsns > 0 && rhsns < 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::overflow_error("duration subtraction leads to int64_t overflow");
     }
   } else if (lhsns < 0 && rhsns > 0) {
-    if (abs_lhs + abs_rhs > (uint64_t) max) {
+    if (abs_lhs + abs_rhs > max) {
       throw std::underflow_error("duration subtraction leads to int64_t underflow");
     }
   }
@@ -181,8 +182,9 @@ bounds_check_duration_scale(int64_t dns, double scale, uint64_t max)
 {
   auto abs_dns = static_cast<uint64_t>(std::abs(dns));
   auto abs_scale = std::abs(scale);
-
-  if (abs_scale > 1.0 && abs_dns > static_cast<uint64_t>(max / abs_scale)) {
+  if (abs_scale > 1.0 && abs_dns >
+    static_cast<uint64_t>(static_cast<long double>(max) / static_cast<long double>(abs_scale)))
+  {
     if ((dns > 0 && scale > 0) || (dns < 0 && scale < 0)) {
       throw std::overflow_error("duration scaling leads to int64_t overflow");
     } else {
@@ -201,7 +203,10 @@ Duration::operator*(double scale) const
     this->rcl_duration_.nanoseconds,
     scale,
     std::numeric_limits<rcl_duration_value_t>::max());
-  return Duration(static_cast<rcl_duration_value_t>(rcl_duration_.nanoseconds * scale));
+  long double scale_ld = static_cast<long double>(scale);
+  return Duration(
+    static_cast<rcl_duration_value_t>(
+      static_cast<long double>(rcl_duration_.nanoseconds) * scale_ld));
 }
 
 rcl_duration_value_t
@@ -228,8 +233,8 @@ Duration::to_rmw_time() const
   // reuse conversion logic from msg creation
   builtin_interfaces::msg::Duration msg = *this;
   rmw_time_t result;
-  result.sec = msg.sec;
-  result.nsec = msg.nanosec;
+  result.sec = static_cast<uint64_t>(msg.sec);
+  result.nsec = static_cast<uint64_t>(msg.nanosec);
   return result;
 }
 

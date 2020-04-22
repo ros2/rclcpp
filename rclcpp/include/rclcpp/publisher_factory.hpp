@@ -24,9 +24,10 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/publisher_base.hpp"
 #include "rclcpp/publisher_options.hpp"
-#include "rclcpp/intra_process_manager.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp

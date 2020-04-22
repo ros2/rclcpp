@@ -271,10 +271,11 @@ public:
   {
     return get_parameter_impl(
       parameter_name,
-      std::function<T()>([&parameter_name]() -> T
-      {
-        throw std::runtime_error("Parameter '" + parameter_name + "' is not set");
-      })
+      std::function<T()>(
+        [&parameter_name]() -> T
+        {
+          throw std::runtime_error("Parameter '" + parameter_name + "' is not set");
+        })
     );
   }
 

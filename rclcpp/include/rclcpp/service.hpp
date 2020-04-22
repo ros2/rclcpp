@@ -15,6 +15,7 @@
 #ifndef RCLCPP__SERVICE_HPP_
 #define RCLCPP__SERVICE_HPP_
 
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -33,6 +34,7 @@
 #include "rclcpp/logging.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+#include "tracetools/tracetools.h"
 
 namespace rclcpp
 {
@@ -43,8 +45,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(ServiceBase)
 
   RCLCPP_PUBLIC
-  explicit ServiceBase(
-    std::shared_ptr<rcl_node_t> node_handle);
+  explicit ServiceBase(std::shared_ptr<rcl_node_t> node_handle);
 
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
@@ -61,11 +62,52 @@ public:
   std::shared_ptr<const rcl_service_t>
   get_service_handle() const;
 
-  virtual std::shared_ptr<void> create_request() = 0;
-  virtual std::shared_ptr<rmw_request_id_t> create_request_header() = 0;
-  virtual void handle_request(
+  /// Take the next request from the service as a type erased pointer.
+  /**
+   * This type erased version of \sa Service::take_request() is useful when
+   * using the service in a type agnostic way with methods like
+   * ServiceBase::create_request(), ServiceBase::create_request_header(), and
+   * ServiceBase::handle_request().
+   *
+   * \param[out] request_out The type erased pointer to a service request object
+   *   into which the middleware will copy the taken request.
+   * \param[out] request_id_out The output id for the request which can be used
+   *   to associate response with this request in the future.
+   * \returns true if the request was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl calls fail.
+   */
+  RCLCPP_PUBLIC
+  bool
+  take_type_erased_request(void * request_out, rmw_request_id_t & request_id_out);
+
+  virtual
+  std::shared_ptr<void>
+  create_request() = 0;
+
+  virtual
+  std::shared_ptr<rmw_request_id_t>
+  create_request_header() = 0;
+
+  virtual
+  void
+  handle_request(
     std::shared_ptr<rmw_request_id_t> request_header,
     std::shared_ptr<void> request) = 0;
+
+  /// Exchange the "in use by wait set" state for this service.
+  /**
+   * This is used to ensure this service is not used by multiple
+   * wait sets at the same time.
+   *
+   * \param[in] in_use_state the new state to exchange into the state, true
+   *   indicates it is now in use by a wait set, and false is that it is no
+   *   longer in use by a wait set.
+   * \returns the previous state.
+   */
+  RCLCPP_PUBLIC
+  bool
+  exchange_in_use_by_wait_set_state(bool in_use_state);
 
 protected:
   RCLCPP_DISABLE_COPY(ServiceBase)
@@ -82,6 +124,8 @@ protected:
 
   std::shared_ptr<rcl_service_t> service_handle_;
   bool owns_rcl_handle_ = true;
+
+  std::atomic<bool> in_use_by_wait_set_{false};
 };
 
 template<typename ServiceT>
@@ -154,6 +198,13 @@ public:
 
       rclcpp::exceptions::throw_from_rcl_error(ret, "could not create service");
     }
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
+#ifndef TRACETOOLS_DISABLED
+    any_callback_.register_callback_for_tracing();
+#endif
   }
 
   Service(
@@ -172,6 +223,13 @@ public:
     }
 
     service_handle_ = service_handle;
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
+#ifndef TRACETOOLS_DISABLED
+    any_callback_.register_callback_for_tracing();
+#endif
   }
 
   Service(
@@ -192,6 +250,13 @@ public:
     // In this case, rcl owns the service handle memory
     service_handle_ = std::shared_ptr<rcl_service_t>(new rcl_service_t);
     service_handle_->impl = service_handle->impl;
+    TRACEPOINT(
+      rclcpp_service_callback_added,
+      (const void *)get_service_handle().get(),
+      (const void *)&any_callback_);
+#ifndef TRACETOOLS_DISABLED
+    any_callback_.register_callback_for_tracing();
+#endif
   }
 
   Service() = delete;
@@ -200,36 +265,63 @@ public:
   {
   }
 
-  std::shared_ptr<void> create_request()
+  /// Take the next request from the service.
+  /**
+   * \sa ServiceBase::take_type_erased_request().
+   *
+   * \param[out] request_out The reference to a service request object
+   *   into which the middleware will copy the taken request.
+   * \param[out] request_id_out The output id for the request which can be used
+   *   to associate response with this request in the future.
+   * \returns true if the request was taken, otherwise false.
+   * \throws rclcpp::exceptions::RCLError based exceptions if the underlying
+   *   rcl calls fail.
+   */
+  bool
+  take_request(typename ServiceT::Request & request_out, rmw_request_id_t & request_id_out)
   {
-    return std::shared_ptr<void>(new typename ServiceT::Request());
+    return this->take_type_erased_request(&request_out, request_id_out);
   }
 
-  std::shared_ptr<rmw_request_id_t> create_request_header()
+  std::shared_ptr<void>
+  create_request() override
   {
-    // TODO(wjwwood): This should probably use rmw_request_id's allocator.
-    //                (since it is a C type)
-    return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
+    return std::make_shared<typename ServiceT::Request>();
   }
 
-  void handle_request(
+  std::shared_ptr<rmw_request_id_t>
+  create_request_header() override
+  {
+    return std::make_shared<rmw_request_id_t>();
+  }
+
+  void
+  handle_request(
     std::shared_ptr<rmw_request_id_t> request_header,
-    std::shared_ptr<void> request)
+    std::shared_ptr<void> request) override
   {
     auto typed_request = std::static_pointer_cast<typename ServiceT::Request>(request);
-    auto response = std::shared_ptr<typename ServiceT::Response>(new typename ServiceT::Response);
+    auto response = std::make_shared<typename ServiceT::Response>();
     any_callback_.dispatch(request_header, typed_request, response);
-    send_response(request_header, response);
+    send_response(*request_header, *response);
   }
 
-  void send_response(
+  [[deprecated("use the send_response() which takes references instead of shared pointers")]]
+  void
+  send_response(
     std::shared_ptr<rmw_request_id_t> req_id,
     std::shared_ptr<typename ServiceT::Response> response)
   {
-    rcl_ret_t status = rcl_send_response(get_service_handle().get(), req_id.get(), response.get());
+    send_response(*req_id, *response);
+  }
 
-    if (status != RCL_RET_OK) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to send response");
+  void
+  send_response(rmw_request_id_t & req_id, typename ServiceT::Response & response)
+  {
+    rcl_ret_t ret = rcl_send_response(get_service_handle().get(), &req_id, &response);
+
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(ret, "failed to send response");
     }
   }
 

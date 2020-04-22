@@ -15,14 +15,18 @@
 #ifndef RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 #define RCLCPP__SUBSCRIPTION_OPTIONS_HPP_
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "rclcpp/callback_group.hpp"
+#include "rclcpp/detail/rmw_implementation_specific_subscription_payload.hpp"
+#include "rclcpp/intra_process_buffer_type.hpp"
 #include "rclcpp/intra_process_setting.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
+#include "rclcpp/topic_statistics_state.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 namespace rclcpp
@@ -33,12 +37,40 @@ struct SubscriptionOptionsBase
 {
   /// Callbacks for events related to this subscription.
   SubscriptionEventCallbacks event_callbacks;
+
+  /// Whether or not to use default callbacks when user doesn't supply any in event_callbacks
+  bool use_default_callbacks = true;
+
   /// True to ignore local publications.
   bool ignore_local_publications = false;
+
   /// The callback group for this subscription. NULL to use the default callback group.
   rclcpp::callback_group::CallbackGroup::SharedPtr callback_group = nullptr;
+
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
+
+  /// Setting the data-type stored in the intraprocess buffer
+  IntraProcessBufferType intra_process_buffer_type = IntraProcessBufferType::CallbackDefault;
+
+  /// Optional RMW implementation specific payload to be used during creation of the subscription.
+  std::shared_ptr<rclcpp::detail::RMWImplementationSpecificSubscriptionPayload>
+  rmw_implementation_payload = nullptr;
+
+  // Options to configure topic statistics collector in the subscription.
+  struct TopicStatisticsOptions
+  {
+    // Enable and disable topic statistics calculation and publication. Defaults to disabled.
+    TopicStatisticsState state = TopicStatisticsState::NodeDefault;
+
+    // Topic to which topic statistics get published when enabled. Defaults to /statistics.
+    std::string publish_topic = "/statistics";
+
+    // Topic statistics publication period in ms. Defaults to one minute.
+    std::chrono::milliseconds publish_period{std::chrono::seconds(1)};
+  };
+
+  TopicStatisticsOptions topic_stats_options;
 };
 
 /// Structure containing optional configuration for Subscriptions.
@@ -61,13 +93,19 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   rcl_subscription_options_t
   to_rcl_subscription_options(const rclcpp::QoS & qos) const
   {
-    rcl_subscription_options_t result;
+    rcl_subscription_options_t result = rcl_subscription_get_default_options();
     using AllocatorTraits = std::allocator_traits<Allocator>;
     using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
     auto message_alloc = std::make_shared<MessageAllocatorT>(*allocator.get());
     result.allocator = allocator::get_rcl_allocator<MessageT>(*message_alloc);
-    result.ignore_local_publications = this->ignore_local_publications;
     result.qos = qos.get_rmw_qos_profile();
+    result.rmw_subscription_options.ignore_local_publications = this->ignore_local_publications;
+
+    // Apply payload to rcl_subscription_options if necessary.
+    if (rmw_implementation_payload && rmw_implementation_payload->has_been_customized()) {
+      rmw_implementation_payload->modify_rmw_subscription_options(result.rmw_subscription_options);
+    }
+
     return result;
   }
 
@@ -83,7 +121,6 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 };
 
 using SubscriptionOptions = SubscriptionOptionsWithAllocator<std::allocator<void>>;
-
 }  // namespace rclcpp
 
 #endif  // RCLCPP__SUBSCRIPTION_OPTIONS_HPP_

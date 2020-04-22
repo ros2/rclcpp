@@ -2,6 +2,32 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.3 (2019-11-19)
+------------------
+
+0.8.2 (2019-11-18)
+------------------
+* Updated tracing logic to match changes in rclcpp's intra-process system (`#918 <https://github.com/ros2/rclcpp/issues/918>`_)
+* Fixed a bug that prevented the ``shutdown_on_sigint`` option to not work correctly (`#850 <https://github.com/ros2/rclcpp/issues/850>`_)
+* Added support for STREAM logging macros (`#926 <https://github.com/ros2/rclcpp/issues/926>`_)
+* Relaxed multithreaded test constraint (`#907 <https://github.com/ros2/rclcpp/issues/907>`_)
+* Contributors: Anas Abou Allaban, Christophe Bedard, Dirk Thomas, alexfneves
+
+0.8.1 (2019-10-23)
+------------------
+* De-flake tests for rmw_connext (`#899 <https://github.com/ros2/rclcpp/issues/899>`_)
+* rename return functions for loaned messages (`#896 <https://github.com/ros2/rclcpp/issues/896>`_)
+* Enable throttling logs (`#879 <https://github.com/ros2/rclcpp/issues/879>`_)
+* New Intra-Process Communication (`#778 <https://github.com/ros2/rclcpp/issues/778>`_)
+* Instrumentation update (`#789 <https://github.com/ros2/rclcpp/issues/789>`_)
+* Zero copy api (`#864 <https://github.com/ros2/rclcpp/issues/864>`_)
+* Drop rclcpp remove_ros_arguments_null test case. (`#894 <https://github.com/ros2/rclcpp/issues/894>`_)
+* add mechanism to pass rmw impl specific payloads during pub/sub creation (`#882 <https://github.com/ros2/rclcpp/issues/882>`_)
+* make get_actual_qos return a rclcpp::QoS (`#883 <https://github.com/ros2/rclcpp/issues/883>`_)
+* Fix Compiler Warning (`#881 <https://github.com/ros2/rclcpp/issues/881>`_)
+* Add callback handler for use_sim_time parameter `#802 <https://github.com/ros2/rclcpp/issues/802>`_ (`#875 <https://github.com/ros2/rclcpp/issues/875>`_)
+* Contributors: Alberto Soragna, Brian Marchi, Hunter L. Allen, Ingo Lütkebohle, Karsten Knese, Michael Carroll, Michel Hidalgo, William Woodall
+
 0.8.0 (2019-09-26)
 ------------------
 * clean up publisher and subscription creation logic (`#867 <https://github.com/ros2/rclcpp/issues/867>`_)

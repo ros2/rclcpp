@@ -28,7 +28,7 @@
 #include "rcl/publisher.h"
 
 #include "rclcpp/macros.hpp"
-#include "rclcpp/mapped_ring_buffer.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -41,16 +41,16 @@ namespace node_interfaces
 {
 class NodeBaseInterface;
 class NodeTopicsInterface;
-}
+}  // namespace node_interfaces
 
-namespace intra_process_manager
+namespace experimental
 {
 /**
  * IntraProcessManager is forward declared here, avoiding a circular inclusion between
  * `intra_process_manager.hpp` and `publisher_base.hpp`.
  */
 class IntraProcessManager;
-}
+}  // namespace experimental
 
 class PublisherBase : public std::enable_shared_from_this<PublisherBase>
 {
@@ -95,12 +95,6 @@ public:
   RCLCPP_PUBLIC
   const rmw_gid_t &
   get_gid() const;
-
-  /// Get the global identifier for this publisher used by intra-process communication.
-  /** \return The intra-process gid. */
-  RCLCPP_PUBLIC
-  const rmw_gid_t &
-  get_intra_process_gid() const;
 
   /// Get the rcl publisher handle.
   /** \return The rcl publisher handle. */
@@ -153,11 +147,21 @@ public:
    * If the underlying setting in use can't be represented in ROS terms,
    * it will be set to RMW_QOS_POLICY_*_UNKNOWN.
    * May throw runtime_error when an unexpected error occurs.
+   *
    * \return The actual qos settings.
    */
   RCLCPP_PUBLIC
-  rmw_qos_profile_t
+  rclcpp::QoS
   get_actual_qos() const;
+
+  /// Check if publisher instance can loan messages.
+  /**
+   * Depending on the middleware and the message type, this will return true if the middleware
+   * can allocate a ROS message instance.
+   */
+  RCLCPP_PUBLIC
+  bool
+  can_loan_messages() const;
 
   /// Compare this publisher to a gid.
   /**
@@ -180,21 +184,14 @@ public:
   operator==(const rmw_gid_t * gid) const;
 
   using IntraProcessManagerSharedPtr =
-    std::shared_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
-
-  /// Implementation utility function that creates a typed mapped ring buffer.
-  RCLCPP_PUBLIC
-  virtual
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  make_mapped_ring_buffer(size_t size) const;
+    std::shared_ptr<rclcpp::experimental::IntraProcessManager>;
 
   /// Implementation utility function used to setup intra process publishing after creation.
   RCLCPP_PUBLIC
   void
   setup_intra_process(
     uint64_t intra_process_publisher_id,
-    IntraProcessManagerSharedPtr ipm,
-    const rcl_publisher_options_t & intra_process_options);
+    IntraProcessManagerSharedPtr ipm);
 
 protected:
   template<typename EventCallbackT>
@@ -211,21 +208,22 @@ protected:
     event_handlers_.emplace_back(handler);
   }
 
+  RCLCPP_PUBLIC
+  void default_incompatible_qos_callback(QOSOfferedIncompatibleQoSInfo & info) const;
+
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
   rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
-  rcl_publisher_t intra_process_publisher_handle_ = rcl_get_zero_initialized_publisher();
 
   std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
 
   using IntraProcessManagerWeakPtr =
-    std::weak_ptr<rclcpp::intra_process_manager::IntraProcessManager>;
+    std::weak_ptr<rclcpp::experimental::IntraProcessManager>;
   bool intra_process_is_enabled_;
   IntraProcessManagerWeakPtr weak_ipm_;
   uint64_t intra_process_publisher_id_;
 
   rmw_gid_t rmw_gid_;
-  rmw_gid_t intra_process_rmw_gid_;
 };
 
 }  // namespace rclcpp

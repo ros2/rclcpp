@@ -25,7 +25,10 @@
 
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/function_traits.hpp"
+#include "rclcpp/message_info.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "tracetools/tracetools.h"
+#include "tracetools/utils.hpp"
 
 namespace rclcpp
 {
@@ -41,13 +44,13 @@ class AnySubscriptionCallback
 
   using SharedPtrCallback = std::function<void (const std::shared_ptr<MessageT>)>;
   using SharedPtrWithInfoCallback =
-    std::function<void (const std::shared_ptr<MessageT>, const rmw_message_info_t &)>;
+    std::function<void (const std::shared_ptr<MessageT>, const rclcpp::MessageInfo &)>;
   using ConstSharedPtrCallback = std::function<void (const std::shared_ptr<const MessageT>)>;
   using ConstSharedPtrWithInfoCallback =
-    std::function<void (const std::shared_ptr<const MessageT>, const rmw_message_info_t &)>;
+    std::function<void (const std::shared_ptr<const MessageT>, const rclcpp::MessageInfo &)>;
   using UniquePtrCallback = std::function<void (MessageUniquePtr)>;
   using UniquePtrWithInfoCallback =
-    std::function<void (MessageUniquePtr, const rmw_message_info_t &)>;
+    std::function<void (MessageUniquePtr, const rclcpp::MessageInfo &)>;
 
   SharedPtrCallback shared_ptr_callback_;
   SharedPtrWithInfoCallback shared_ptr_with_info_callback_;
@@ -153,8 +156,9 @@ public:
   }
 
   void dispatch(
-    std::shared_ptr<MessageT> message, const rmw_message_info_t & message_info)
+    std::shared_ptr<MessageT> message, const rclcpp::MessageInfo & message_info)
   {
+    TRACEPOINT(callback_start, (const void *)this, false);
     if (shared_ptr_callback_) {
       shared_ptr_callback_(message);
     } else if (shared_ptr_with_info_callback_) {
@@ -174,11 +178,13 @@ public:
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
+    TRACEPOINT(callback_end, (const void *)this);
   }
 
   void dispatch_intra_process(
-    ConstMessageSharedPtr message, const rmw_message_info_t & message_info)
+    ConstMessageSharedPtr message, const rclcpp::MessageInfo & message_info)
   {
+    TRACEPOINT(callback_start, (const void *)this, true);
     if (const_shared_ptr_callback_) {
       const_shared_ptr_callback_(message);
     } else if (const_shared_ptr_with_info_callback_) {
@@ -195,11 +201,13 @@ public:
         throw std::runtime_error("unexpected message without any callback set");
       }
     }
+    TRACEPOINT(callback_end, (const void *)this);
   }
 
   void dispatch_intra_process(
-    MessageUniquePtr message, const rmw_message_info_t & message_info)
+    MessageUniquePtr message, const rclcpp::MessageInfo & message_info)
   {
+    TRACEPOINT(callback_start, (const void *)this, true);
     if (shared_ptr_callback_) {
       typename std::shared_ptr<MessageT> shared_message = std::move(message);
       shared_ptr_callback_(shared_message);
@@ -217,11 +225,39 @@ public:
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
+    TRACEPOINT(callback_end, (const void *)this);
   }
 
-  bool use_take_shared_method()
+  bool use_take_shared_method() const
   {
     return const_shared_ptr_callback_ || const_shared_ptr_with_info_callback_;
+  }
+
+  void register_callback_for_tracing()
+  {
+#ifndef TRACETOOLS_DISABLED
+    if (shared_ptr_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(shared_ptr_callback_));
+    } else if (shared_ptr_with_info_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(shared_ptr_with_info_callback_));
+    } else if (unique_ptr_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(unique_ptr_callback_));
+    } else if (unique_ptr_with_info_callback_) {
+      TRACEPOINT(
+        rclcpp_callback_register,
+        (const void *)this,
+        get_symbol(unique_ptr_with_info_callback_));
+    }
+#endif  // TRACETOOLS_DISABLED
   }
 
 private:

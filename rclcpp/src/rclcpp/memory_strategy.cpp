@@ -34,9 +34,7 @@ MemoryStrategy::get_subscription_by_handle(
       }
       auto match_subscription = group->find_subscription_ptrs_if(
         [&subscriber_handle](const rclcpp::SubscriptionBase::SharedPtr & subscription) -> bool {
-          return
-          (subscription->get_subscription_handle() == subscriber_handle) ||
-          (subscription->get_intra_process_subscription_handle() == subscriber_handle);
+          return subscription->get_subscription_handle() == subscriber_handle;
         });
       if (match_subscription) {
         return match_subscription;

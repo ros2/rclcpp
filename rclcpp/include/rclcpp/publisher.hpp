@@ -28,12 +28,11 @@
 #include "rcl/error_handling.h"
 #include "rcl/publisher.h"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/allocator/allocator_deleter.hpp"
 #include "rclcpp/detail/resolve_use_intra_process.hpp"
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/experimental/intra_process_manager.hpp"
+#include "rclcpp/loaned_message.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/publisher_base.hpp"
@@ -43,6 +42,9 @@
 
 namespace rclcpp
 {
+
+template<typename MessageT, typename AllocatorT>
+class LoanedMessage;
 
 /// A publisher publishes messages of any type to a topic.
 template<typename MessageT, typename AllocatorT = std::allocator<void>>
@@ -82,7 +84,22 @@ public:
         options_.event_callbacks.liveliness_callback,
         RCL_PUBLISHER_LIVELINESS_LOST);
     }
-
+    if (options_.event_callbacks.incompatible_qos_callback) {
+      this->add_event_handler(
+        options_.event_callbacks.incompatible_qos_callback,
+        RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+    } else if (options_.use_default_callbacks) {
+      // Register default callback when not specified
+      try {
+        this->add_event_handler(
+          [this](QOSOfferedIncompatibleQoSInfo & info) {
+            this->default_incompatible_qos_callback(info);
+          },
+          RCL_PUBLISHER_OFFERED_INCOMPATIBLE_QOS);
+      } catch (UnsupportedEventTypeException & /*exc*/) {
+        // pass
+      }
+    }
     // Setup continues in the post construction method, post_init_setup().
   }
 
@@ -97,12 +114,13 @@ public:
   {
     // Topic is unused for now.
     (void)topic;
+    (void)options;
 
     // If needed, setup intra process communication.
     if (rclcpp::detail::resolve_use_intra_process(options_, *node_base)) {
       auto context = node_base->get_context();
       // Get the intra process manager instance for this context.
-      auto ipm = context->get_sub_context<rclcpp::intra_process_manager::IntraProcessManager>();
+      auto ipm = context->get_sub_context<rclcpp::experimental::IntraProcessManager>();
       // Register the publisher with the intra process manager.
       if (qos.get_rmw_qos_profile().history == RMW_QOS_POLICY_HISTORY_KEEP_ALL) {
         throw std::invalid_argument(
@@ -112,24 +130,39 @@ public:
         throw std::invalid_argument(
                 "intraprocess communication is not allowed with a zero qos history depth value");
       }
+      if (qos.get_rmw_qos_profile().durability != RMW_QOS_POLICY_DURABILITY_VOLATILE) {
+        throw std::invalid_argument(
+                "intraprocess communication allowed only with volatile durability");
+      }
       uint64_t intra_process_publisher_id = ipm->add_publisher(this->shared_from_this());
       this->setup_intra_process(
         intra_process_publisher_id,
-        ipm,
-        options.template to_rcl_publisher_options<MessageT>(qos));
+        ipm);
     }
   }
 
   virtual ~Publisher()
   {}
 
-  mapped_ring_buffer::MappedRingBufferBase::SharedPtr
-  make_mapped_ring_buffer(size_t size) const override
+  /// Borrow a loaned ROS message from the middleware.
+  /**
+   * If the middleware is capable of loaning memory for a ROS message instance,
+   * the loaned message will be directly allocated in the middleware.
+   * If not, the message allocator of this rclcpp::Publisher instance is being used.
+   *
+   * With a call to \sa `publish` the LoanedMessage instance is being returned to the middleware
+   * or free'd accordingly to the allocator.
+   * If the message is not being published but processed differently, the destructor of this
+   * class will either return the message to the middleware or deallocate it via the internal
+   * allocator.
+   * \sa rclcpp::LoanedMessage for details of the LoanedMessage class.
+   *
+   * \return LoanedMessage containing memory for a ROS message of type MessageT
+   */
+  rclcpp::LoanedMessage<MessageT, AllocatorT>
+  borrow_loaned_message()
   {
-    return mapped_ring_buffer::MappedRingBuffer<
-      MessageT,
-      typename Publisher<MessageT, AllocatorT>::MessageAllocator
-    >::make_shared(size, this->get_allocator());
+    return rclcpp::LoanedMessage<MessageT, AllocatorT>(this, this->get_allocator());
   }
 
   /// Send a message to the topic for this publisher.
@@ -141,7 +174,7 @@ public:
   publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     if (!intra_process_is_enabled_) {
-      this->do_inter_process_publish(msg.get());
+      this->do_inter_process_publish(*msg);
       return;
     }
     // If an interprocess subscription exist, then the unique_ptr is promoted
@@ -150,21 +183,14 @@ public:
     // interprocess publish, resulting in lower publish-to-subscribe latency.
     // It's not possible to do that with an unique_ptr,
     // as do_intra_process_publish takes the ownership of the message.
-    uint64_t message_seq;
     bool inter_process_publish_needed =
       get_subscription_count() > get_intra_process_subscription_count();
-    MessageSharedPtr shared_msg;
+
     if (inter_process_publish_needed) {
-      shared_msg = std::move(msg);
-      message_seq =
-        store_intra_process_message(intra_process_publisher_id_, shared_msg);
+      auto shared_msg = this->do_intra_process_publish_and_return_shared(std::move(msg));
+      this->do_inter_process_publish(*shared_msg);
     } else {
-      message_seq =
-        store_intra_process_message(intra_process_publisher_id_, std::move(msg));
-    }
-    this->do_intra_process_publish(message_seq);
-    if (inter_process_publish_needed) {
-      this->do_inter_process_publish(shared_msg.get());
+      this->do_intra_process_publish(std::move(msg));
     }
   }
 
@@ -174,7 +200,7 @@ public:
     // Avoid allocating when not using intra process.
     if (!intra_process_is_enabled_) {
       // In this case we're not using intra process.
-      return this->do_inter_process_publish(&msg);
+      return this->do_inter_process_publish(msg);
     }
     // Otherwise we have to allocate memory in a unique_ptr and pass it along.
     // As the message is not const, a copy should be made.
@@ -191,6 +217,41 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
+  /// Publish an instance of a LoanedMessage.
+  /**
+   * When publishing a loaned message, the memory for this ROS message will be deallocated
+   * after being published.
+   * The instance of the loaned message is no longer valid after this call.
+   *
+   * \param loaned_msg The LoanedMessage instance to be published.
+   */
+  void
+  publish(rclcpp::LoanedMessage<MessageT, AllocatorT> && loaned_msg)
+  {
+    if (!loaned_msg.is_valid()) {
+      throw std::runtime_error("loaned message is not valid");
+    }
+    if (intra_process_is_enabled_) {
+      // TODO(Karsten1987): support loaned message passed by intraprocess
+      throw std::runtime_error("storing loaned messages in intra process is not supported yet");
+    }
+
+    // verify that publisher supports loaned messages
+    // TODO(Karsten1987): This case separation has to be done in rclcpp
+    // otherwise we have to ensure that every middleware implements
+    // `rmw_publish_loaned_message` explicitly the same way as `rmw_publish`
+    // by taking a copy of the ros message.
+    if (this->can_loan_messages()) {
+      // we release the ownership from the rclpp::LoanedMessage instance
+      // and let the middleware clean up the memory.
+      this->do_loaned_message_publish(loaned_msg.release());
+    } else {
+      // we don't release the ownership, let the middleware copy the ros message
+      // and thus the destructor of rclcpp::LoanedMessage cleans up the memory.
+      this->do_inter_process_publish(loaned_msg.get());
+    }
+  }
+
   std::shared_ptr<MessageAllocator>
   get_allocator() const
   {
@@ -199,9 +260,10 @@ public:
 
 protected:
   void
-  do_inter_process_publish(const MessageT * msg)
+  do_inter_process_publish(const MessageT & msg)
   {
-    auto status = rcl_publish(&publisher_handle_, msg, nullptr);
+    auto status = rcl_publish(&publisher_handle_, &msg, nullptr);
+
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
       if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
@@ -231,16 +293,14 @@ protected:
   }
 
   void
-  do_intra_process_publish(uint64_t message_seq)
+  do_loaned_message_publish(MessageT * msg)
   {
-    rcl_interfaces::msg::IntraProcessMessage ipm;
-    ipm.publisher_id = intra_process_publisher_id_;
-    ipm.message_sequence = message_seq;
-    auto status = rcl_publish(&intra_process_publisher_handle_, &ipm, nullptr);
+    auto status = rcl_publish_loaned_message(&publisher_handle_, msg, nullptr);
+
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
-      if (rcl_publisher_is_valid_except_context(&intra_process_publisher_handle_)) {
-        rcl_context_t * context = rcl_publisher_get_context(&intra_process_publisher_handle_);
+      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
+        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
         if (nullptr != context && !rcl_context_is_valid(context)) {
           // publisher is invalid due to context being shutdown
           return;
@@ -248,14 +308,12 @@ protected:
       }
     }
     if (RCL_RET_OK != status) {
-      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish intra process message");
+      rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
     }
   }
 
-  uint64_t
-  store_intra_process_message(
-    uint64_t publisher_id,
-    std::shared_ptr<const MessageT> msg)
+  void
+  do_intra_process_publish(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -263,17 +321,17 @@ protected:
               "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
-      throw std::runtime_error("cannot publisher msg which is a null pointer");
+      throw std::runtime_error("cannot publish msg which is a null pointer");
     }
-    uint64_t message_seq =
-      ipm->template store_intra_process_message<MessageT, AllocatorT>(publisher_id, msg);
-    return message_seq;
+
+    ipm->template do_intra_process_publish<MessageT, AllocatorT>(
+      intra_process_publisher_id_,
+      std::move(msg),
+      message_allocator_);
   }
 
-  uint64_t
-  store_intra_process_message(
-    uint64_t publisher_id,
-    std::unique_ptr<MessageT, MessageDeleter> msg)
+  std::shared_ptr<const MessageT>
+  do_intra_process_publish_and_return_shared(std::unique_ptr<MessageT, MessageDeleter> msg)
   {
     auto ipm = weak_ipm_.lock();
     if (!ipm) {
@@ -281,13 +339,20 @@ protected:
               "intra process publish called after destruction of intra process manager");
     }
     if (!msg) {
-      throw std::runtime_error("cannot publisher msg which is a null pointer");
+      throw std::runtime_error("cannot publish msg which is a null pointer");
     }
-    uint64_t message_seq =
-      ipm->template store_intra_process_message<MessageT, AllocatorT>(publisher_id, std::move(msg));
-    return message_seq;
+
+    return ipm->template do_intra_process_publish_and_return_shared<MessageT, AllocatorT>(
+      intra_process_publisher_id_,
+      std::move(msg),
+      message_allocator_);
   }
 
+  /// Copy of original options passed during construction.
+  /**
+   * It is important to save a copy of this so that the rmw payload which it
+   * may contain is kept alive for the duration of the publisher.
+   */
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> options_;
 
   std::shared_ptr<MessageAllocator> message_allocator_;

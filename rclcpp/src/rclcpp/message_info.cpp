@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/intra_process_manager_impl.hpp"
+#include "rclcpp/message_info.hpp"
 
-#include <memory>
-
-rclcpp::intra_process_manager::IntraProcessManagerImplBase::SharedPtr
-rclcpp::intra_process_manager::create_default_impl()
+namespace rclcpp
 {
-  return std::make_shared<IntraProcessManagerImpl<>>();
+
+MessageInfo::MessageInfo(const rmw_message_info_t & rmw_message_info)
+: rmw_message_info_(rmw_message_info)
+{}
+
+MessageInfo::~MessageInfo()
+{}
+
+const rmw_message_info_t &
+MessageInfo::get_rmw_message_info() const
+{
+  return rmw_message_info_;
 }
+
+rmw_message_info_t &
+MessageInfo::get_rmw_message_info()
+{
+  return rmw_message_info_;
+}
+
+}  // namespace rclcpp

@@ -61,7 +61,7 @@ public:
     allocator_ = std::make_shared<VoidAlloc>();
   }
 
-  void add_guard_condition(const rcl_guard_condition_t * guard_condition)
+  void add_guard_condition(const rcl_guard_condition_t * guard_condition) override
   {
     for (const auto & existing_guard_condition : guard_conditions_) {
       if (existing_guard_condition == guard_condition) {
@@ -71,7 +71,7 @@ public:
     guard_conditions_.push_back(guard_condition);
   }
 
-  void remove_guard_condition(const rcl_guard_condition_t * guard_condition)
+  void remove_guard_condition(const rcl_guard_condition_t * guard_condition) override
   {
     for (auto it = guard_conditions_.begin(); it != guard_conditions_.end(); ++it) {
       if (*it == guard_condition) {
@@ -81,7 +81,7 @@ public:
     }
   }
 
-  void clear_handles()
+  void clear_handles() override
   {
     subscription_handles_.clear();
     service_handles_.clear();
@@ -90,7 +90,7 @@ public:
     waitable_handles_.clear();
   }
 
-  virtual void remove_null_handles(rcl_wait_set_t * wait_set)
+  void remove_null_handles(rcl_wait_set_t * wait_set) override
   {
     // TODO(jacobperron): Check if wait set sizes are what we expect them to be?
     //                    e.g. wait_set->size_of_clients == client_handles_.size()
@@ -150,7 +150,7 @@ public:
     );
   }
 
-  bool collect_entities(const WeakNodeList & weak_nodes)
+  bool collect_entities(const WeakNodeList & weak_nodes) override
   {
     bool has_invalid_weak_nodes = false;
     for (auto & weak_node : weak_nodes) {
@@ -167,25 +167,25 @@ public:
         group->find_subscription_ptrs_if(
           [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
             subscription_handles_.push_back(subscription->get_subscription_handle());
-            if (subscription->get_intra_process_subscription_handle()) {
-              subscription_handles_.push_back(
-                subscription->get_intra_process_subscription_handle());
-            }
             return false;
           });
-        group->find_service_ptrs_if([this](const rclcpp::ServiceBase::SharedPtr & service) {
+        group->find_service_ptrs_if(
+          [this](const rclcpp::ServiceBase::SharedPtr & service) {
             service_handles_.push_back(service->get_service_handle());
             return false;
           });
-        group->find_client_ptrs_if([this](const rclcpp::ClientBase::SharedPtr & client) {
+        group->find_client_ptrs_if(
+          [this](const rclcpp::ClientBase::SharedPtr & client) {
             client_handles_.push_back(client->get_client_handle());
             return false;
           });
-        group->find_timer_ptrs_if([this](const rclcpp::TimerBase::SharedPtr & timer) {
+        group->find_timer_ptrs_if(
+          [this](const rclcpp::TimerBase::SharedPtr & timer) {
             timer_handles_.push_back(timer->get_timer_handle());
             return false;
           });
-        group->find_waitable_ptrs_if([this](const rclcpp::Waitable::SharedPtr & waitable) {
+        group->find_waitable_ptrs_if(
+          [this](const rclcpp::Waitable::SharedPtr & waitable) {
             waitable_handles_.push_back(waitable);
             return false;
           });
@@ -194,7 +194,15 @@ public:
     return has_invalid_weak_nodes;
   }
 
-  bool add_handles_to_wait_set(rcl_wait_set_t * wait_set)
+  void add_waitable_handle(const rclcpp::Waitable::SharedPtr & waitable) override
+  {
+    if (nullptr == waitable) {
+      throw std::runtime_error("waitable object unexpectedly nullptr");
+    }
+    waitable_handles_.push_back(waitable);
+  }
+
+  bool add_handles_to_wait_set(rcl_wait_set_t * wait_set) override
   {
     for (auto subscription : subscription_handles_) {
       if (rcl_wait_set_add_subscription(wait_set, subscription.get(), NULL) != RCL_RET_OK) {
@@ -253,20 +261,15 @@ public:
     return true;
   }
 
-  virtual void
+  void
   get_next_subscription(
     executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes)
+    const WeakNodeList & weak_nodes) override
   {
     auto it = subscription_handles_.begin();
     while (it != subscription_handles_.end()) {
       auto subscription = get_subscription_by_handle(*it, weak_nodes);
       if (subscription) {
-        // Figure out if this is for intra-process or not.
-        bool is_intra_process = false;
-        if (subscription->get_intra_process_subscription_handle()) {
-          is_intra_process = subscription->get_intra_process_subscription_handle() == *it;
-        }
         // Find the group for this handle and see if it can be serviced
         auto group = get_group_by_subscription(subscription, weak_nodes);
         if (!group) {
@@ -282,11 +285,7 @@ public:
           continue;
         }
         // Otherwise it is safe to set and return the any_exec
-        if (is_intra_process) {
-          any_exec.subscription_intra_process = subscription;
-        } else {
-          any_exec.subscription = subscription;
-        }
+        any_exec.subscription = subscription;
         any_exec.callback_group = group;
         any_exec.node_base = get_node_by_group(group, weak_nodes);
         subscription_handles_.erase(it);
@@ -297,10 +296,10 @@ public:
     }
   }
 
-  virtual void
+  void
   get_next_service(
     executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes)
+    const WeakNodeList & weak_nodes) override
   {
     auto it = service_handles_.begin();
     while (it != service_handles_.end()) {
@@ -332,8 +331,8 @@ public:
     }
   }
 
-  virtual void
-  get_next_client(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
+  void
+  get_next_client(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) override
   {
     auto it = client_handles_.begin();
     while (it != client_handles_.end()) {
@@ -365,10 +364,10 @@ public:
     }
   }
 
-  virtual void
+  void
   get_next_timer(
     executor::AnyExecutable & any_exec,
-    const WeakNodeList & weak_nodes)
+    const WeakNodeList & weak_nodes) override
   {
     auto it = timer_handles_.begin();
     while (it != timer_handles_.end()) {
@@ -400,8 +399,8 @@ public:
     }
   }
 
-  virtual void
-  get_next_waitable(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes)
+  void
+  get_next_waitable(executor::AnyExecutable & any_exec, const WeakNodeList & weak_nodes) override
   {
     auto it = waitable_handles_.begin();
     while (it != waitable_handles_.end()) {
@@ -433,12 +432,12 @@ public:
     }
   }
 
-  virtual rcl_allocator_t get_allocator()
+  rcl_allocator_t get_allocator() override
   {
     return rclcpp::allocator::get_rcl_allocator<void *, VoidAlloc>(*allocator_.get());
   }
 
-  size_t number_of_ready_subscriptions() const
+  size_t number_of_ready_subscriptions() const override
   {
     size_t number_of_subscriptions = subscription_handles_.size();
     for (auto waitable : waitable_handles_) {
@@ -447,7 +446,7 @@ public:
     return number_of_subscriptions;
   }
 
-  size_t number_of_ready_services() const
+  size_t number_of_ready_services() const override
   {
     size_t number_of_services = service_handles_.size();
     for (auto waitable : waitable_handles_) {
@@ -456,7 +455,7 @@ public:
     return number_of_services;
   }
 
-  size_t number_of_ready_events() const
+  size_t number_of_ready_events() const override
   {
     size_t number_of_events = 0;
     for (auto waitable : waitable_handles_) {
@@ -465,7 +464,7 @@ public:
     return number_of_events;
   }
 
-  size_t number_of_ready_clients() const
+  size_t number_of_ready_clients() const override
   {
     size_t number_of_clients = client_handles_.size();
     for (auto waitable : waitable_handles_) {
@@ -474,7 +473,7 @@ public:
     return number_of_clients;
   }
 
-  size_t number_of_guard_conditions() const
+  size_t number_of_guard_conditions() const override
   {
     size_t number_of_guard_conditions = guard_conditions_.size();
     for (auto waitable : waitable_handles_) {
@@ -483,7 +482,7 @@ public:
     return number_of_guard_conditions;
   }
 
-  size_t number_of_ready_timers() const
+  size_t number_of_ready_timers() const override
   {
     size_t number_of_timers = timer_handles_.size();
     for (auto waitable : waitable_handles_) {
@@ -492,7 +491,7 @@ public:
     return number_of_timers;
   }
 
-  size_t number_of_waitables() const
+  size_t number_of_waitables() const override
   {
     return waitable_handles_.size();
   }

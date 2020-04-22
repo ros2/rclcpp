@@ -62,7 +62,7 @@ public:
 
   RCLCPP_PUBLIC
   void
-  spin();
+  spin() override;
 
   RCLCPP_PUBLIC
   size_t

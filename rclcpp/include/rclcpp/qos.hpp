@@ -15,14 +15,18 @@
 #ifndef RCLCPP__QOS_HPP_
 #define RCLCPP__QOS_HPP_
 
-#include <rmw/qos_profiles.h>
-#include <rmw/types.h>
+#include <string>
 
 #include "rclcpp/duration.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rmw/incompatible_qos_events_statuses.h"
+#include "rmw/qos_profiles.h"
+#include "rmw/types.h"
 
 namespace rclcpp
 {
+
+std::string qos_policy_name_from_kind(rmw_qos_policy_kind_t policy_kind);
 
 /// QoS initialization values, cannot be created directly, use KeepAll or KeepLast instead.
 struct RCLCPP_PUBLIC QoSInitialization
@@ -150,6 +154,12 @@ public:
 private:
   rmw_qos_profile_t rmw_qos_profile_;
 };
+
+/// Check if two QoS profiles are exactly equal in all policy values.
+RCLCPP_PUBLIC
+bool operator==(const QoS & left, const QoS & right);
+RCLCPP_PUBLIC
+bool operator!=(const QoS & left, const QoS & right);
 
 class RCLCPP_PUBLIC SensorDataQoS : public QoS
 {

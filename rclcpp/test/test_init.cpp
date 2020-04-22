@@ -14,7 +14,16 @@
 
 #include <gtest/gtest.h>
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/utilities.hpp"
+
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
 
 TEST(TestInit, is_initialized) {
   EXPECT_FALSE(rclcpp::is_initialized());
@@ -27,3 +36,31 @@ TEST(TestInit, is_initialized) {
 
   EXPECT_FALSE(rclcpp::is_initialized());
 }
+
+TEST(TestInit, initialize_with_ros_args) {
+  EXPECT_FALSE(rclcpp::is_initialized());
+
+  rclcpp::init(0, nullptr);
+
+  EXPECT_TRUE(rclcpp::is_initialized());
+
+  rclcpp::shutdown();
+
+  EXPECT_FALSE(rclcpp::is_initialized());
+}
+
+TEST(TestInit, initialize_with_unknown_ros_args) {
+  EXPECT_FALSE(rclcpp::is_initialized());
+
+  const char * const argv[] = {"--ros-args", "unknown"};
+  const int argc = static_cast<int>(sizeof(argv) / sizeof(const char *));
+  EXPECT_THROW({rclcpp::init(argc, argv);}, rclcpp::exceptions::UnknownROSArgsError);
+
+  EXPECT_FALSE(rclcpp::is_initialized());
+}
+
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif

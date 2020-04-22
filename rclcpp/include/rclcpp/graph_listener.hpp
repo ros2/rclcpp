@@ -165,7 +165,7 @@ private:
   void
   __shutdown(bool);
 
-  rclcpp::Context::SharedPtr parent_context_;
+  rclcpp::Context::WeakPtr parent_context_;
 
   std::thread listener_thread_;
   bool is_started_;
@@ -177,7 +177,6 @@ private:
   std::vector<rclcpp::node_interfaces::NodeGraphInterface *> node_graph_interfaces_;
 
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
-  std::shared_ptr<rcl_context_t> interrupt_guard_condition_context_;
   rcl_guard_condition_t * shutdown_guard_condition_;
   rcl_wait_set_t wait_set_ = rcl_get_zero_initialized_wait_set();
 };

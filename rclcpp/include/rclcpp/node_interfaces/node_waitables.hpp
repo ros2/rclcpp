@@ -16,7 +16,6 @@
 #define RCLCPP__NODE_INTERFACES__NODE_WAITABLES_HPP_
 
 #include "rclcpp/callback_group.hpp"
-#include "rclcpp/client.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/node_interfaces/node_waitables_interface.hpp"
@@ -42,18 +41,18 @@ public:
   ~NodeWaitables();
 
   RCLCPP_PUBLIC
-  virtual
+
   void
   add_waitable(
     rclcpp::Waitable::SharedPtr waitable_base_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group);
+    rclcpp::callback_group::CallbackGroup::SharedPtr group) override;
 
   RCLCPP_PUBLIC
-  virtual
+
   void
   remove_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept;
+    rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept override;
 
 private:
   RCLCPP_DISABLE_COPY(NodeWaitables)

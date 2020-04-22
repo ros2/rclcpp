@@ -26,6 +26,7 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "rcpputils/filesystem_helper.hpp"
+#include "test_msgs/msg/basic_types.hpp"
 
 class TestNode : public ::testing::Test
 {
@@ -48,20 +49,23 @@ protected:
  */
 TEST_F(TestNode, construction_and_destruction) {
   {
-    std::make_shared<rclcpp::Node>("my_node", "/ns");
+    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+    (void)node;
   }
 
   {
     ASSERT_THROW(
     {
-      std::make_shared<rclcpp::Node>("invalid_node?", "/ns");
+      auto node = std::make_shared<rclcpp::Node>("invalid_node?", "/ns");
+      (void)node;
     }, rclcpp::exceptions::InvalidNodeNameError);
   }
 
   {
     ASSERT_THROW(
     {
-      std::make_shared<rclcpp::Node>("my_node", "/invalid_ns?");
+      auto node = std::make_shared<rclcpp::Node>("my_node", "/invalid_ns?");
+      (void)node;
     }, rclcpp::exceptions::InvalidNamespaceError);
   }
 }
@@ -139,22 +143,6 @@ TEST_F(TestNode, subnode_get_name_and_namespace) {
     EXPECT_STREQ("/ns", subnode->get_namespace());
     EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
     EXPECT_STREQ("/ns/sub_ns", subnode->get_effective_namespace().c_str());
-  }
-  {
-    auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-    auto subnode = node->create_sub_node("sub_ns");
-    EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/ns", subnode->get_namespace());
-    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
-    EXPECT_STREQ("/ns/sub_ns", subnode->get_effective_namespace().c_str());
-  }
-  {
-    auto node = std::make_shared<rclcpp::Node>("my_node");
-    auto subnode = node->create_sub_node("sub_ns");
-    EXPECT_STREQ("my_node", subnode->get_name());
-    EXPECT_STREQ("/", subnode->get_namespace());
-    EXPECT_STREQ("sub_ns", subnode->get_sub_namespace().c_str());
-    EXPECT_STREQ("/sub_ns", subnode->get_effective_namespace().c_str());
   }
   {
     auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
@@ -586,7 +574,7 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
     // default type and initial value type do not match
     EXPECT_THROW(
       {node->declare_parameter("parameter_type_mismatch", 42);},
-      rclcpp::ParameterTypeException);
+      rclcpp::exceptions::InvalidParameterTypeException);
   }
 }
 
@@ -700,7 +688,8 @@ TEST_F(TestNode, declare_parameter_with_cli_overrides) {
     test_resources_path / "test_parameters.yaml").string();
   // test cases with overrides
   rclcpp::NodeOptions no;
-  no.arguments({
+  no.arguments(
+  {
     "--ros-args",
     "-p", "parameter_bool:=true",
     "-p", "parameter_int:=42",
@@ -1728,7 +1717,7 @@ TEST_F(TestNode, get_parameter_undeclared_parameters_not_allowed) {
       int value;
       node->get_parameter(name, value);
     },
-      rclcpp::ParameterTypeException);
+      rclcpp::exceptions::InvalidParameterTypeException);
   }
 }
 
@@ -1962,7 +1951,7 @@ TEST_F(TestNode, get_parameters_undeclared_parameters_not_allowed) {
       {
         node_local->get_parameters("", actual);
       },
-        rclcpp::ParameterTypeException);
+        rclcpp::exceptions::InvalidParameterTypeException);
     }
   }
 }
@@ -2521,4 +2510,131 @@ TEST_F(TestNode, set_on_parameters_set_callback_set_on_parameters_set_callback) 
   {
     node->set_parameter(rclcpp::Parameter("intparam", 40));
   }, rclcpp::exceptions::ParameterModifiedInCallbackException);
+}
+
+void expect_qos_profile_eq(
+  const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2, bool is_publisher)
+{
+  // Depth and history are skipped because they are not retrieved.
+  EXPECT_EQ(qos1.reliability, qos2.reliability);
+  EXPECT_EQ(qos1.durability, qos2.durability);
+  EXPECT_EQ(qos1.deadline.sec, qos2.deadline.sec);
+  EXPECT_EQ(qos1.deadline.nsec, qos2.deadline.nsec);
+  if (is_publisher) {
+    EXPECT_EQ(qos1.lifespan.sec, qos2.lifespan.sec);
+    EXPECT_EQ(qos1.lifespan.nsec, qos2.lifespan.nsec);
+  }
+  EXPECT_EQ(qos1.liveliness, qos2.liveliness);
+  EXPECT_EQ(qos1.liveliness_lease_duration.sec, qos2.liveliness_lease_duration.sec);
+  EXPECT_EQ(qos1.liveliness_lease_duration.nsec, qos2.liveliness_lease_duration.nsec);
+}
+
+// test that calling get_publishers_info_by_topic and get_subscriptions_info_by_topic
+TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  std::string topic_name = "test_topic_info";
+  std::string fq_topic_name = rclcpp::expand_topic_or_service_name(
+    topic_name, node->get_name(), node->get_namespace());
+
+  // Lists should be empty
+  EXPECT_TRUE(node->get_publishers_info_by_topic(fq_topic_name).empty());
+  EXPECT_TRUE(node->get_subscriptions_info_by_topic(fq_topic_name).empty());
+
+  // Add a publisher
+  rclcpp::QoSInitialization qos_initialization =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10
+  };
+  rmw_qos_profile_t rmw_qos_profile_default =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+    10,
+    RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT,
+    RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL,
+    {1, 12345},
+    {20, 9887665},
+    RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC,
+    {5, 23456},
+    false
+  };
+  rclcpp::QoS qos = rclcpp::QoS(qos_initialization, rmw_qos_profile_default);
+  auto publisher = node->create_publisher<test_msgs::msg::BasicTypes>(topic_name, qos);
+  // List should have one item
+  auto publisher_list = node->get_publishers_info_by_topic(fq_topic_name);
+  EXPECT_EQ(publisher_list.size(), (size_t)1);
+  // Subscription list should be empty
+  EXPECT_TRUE(node->get_subscriptions_info_by_topic(fq_topic_name).empty());
+  // Verify publisher list has the right data.
+  EXPECT_EQ(node->get_name(), publisher_list[0].node_name());
+  EXPECT_EQ(node->get_namespace(), publisher_list[0].node_namespace());
+  EXPECT_EQ("test_msgs/msg/BasicTypes", publisher_list[0].topic_type());
+  EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_list[0].endpoint_type());
+  auto actual_qos_profile = publisher_list[0].qos_profile().get_rmw_qos_profile();
+  {
+    SCOPED_TRACE("Publisher QOS 1");
+    expect_qos_profile_eq(qos.get_rmw_qos_profile(), actual_qos_profile, true);
+  }
+
+  // Add a subscription
+  rclcpp::QoSInitialization qos_initialization2 =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    0
+  };
+  rmw_qos_profile_t rmw_qos_profile_default2 =
+  {
+    RMW_QOS_POLICY_HISTORY_KEEP_LAST,
+    0,
+    RMW_QOS_POLICY_RELIABILITY_RELIABLE,
+    RMW_QOS_POLICY_DURABILITY_VOLATILE,
+    {15, 1678},
+    {29, 2345},
+    RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE,
+    {5, 23456},
+    false
+  };
+  rclcpp::QoS qos2 = rclcpp::QoS(qos_initialization2, rmw_qos_profile_default2);
+  auto callback = [](const test_msgs::msg::BasicTypes::SharedPtr msg) {
+      (void)msg;
+    };
+  auto subscriber =
+    node->create_subscription<test_msgs::msg::BasicTypes>(topic_name, qos2, callback);
+
+  // Both lists should have one item
+  publisher_list = node->get_publishers_info_by_topic(fq_topic_name);
+  auto subscription_list = node->get_subscriptions_info_by_topic(fq_topic_name);
+  EXPECT_EQ(publisher_list.size(), (size_t)1);
+  EXPECT_EQ(subscription_list.size(), (size_t)1);
+
+  // Verify publisher and subscription list has the right data.
+  EXPECT_EQ(node->get_name(), publisher_list[0].node_name());
+  EXPECT_EQ(node->get_namespace(), publisher_list[0].node_namespace());
+  EXPECT_EQ("test_msgs/msg/BasicTypes", publisher_list[0].topic_type());
+  EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_list[0].endpoint_type());
+  auto publisher_qos_profile = publisher_list[0].qos_profile().get_rmw_qos_profile();
+  {
+    SCOPED_TRACE("Publisher QOS 2");
+    expect_qos_profile_eq(qos.get_rmw_qos_profile(), publisher_qos_profile, true);
+  }
+
+  EXPECT_EQ(node->get_name(), subscription_list[0].node_name());
+  EXPECT_EQ(node->get_namespace(), subscription_list[0].node_namespace());
+  EXPECT_EQ("test_msgs/msg/BasicTypes", subscription_list[0].topic_type());
+  EXPECT_EQ(rclcpp::EndpointType::Subscription, subscription_list[0].endpoint_type());
+  auto subscription_qos_profile = subscription_list[0].qos_profile().get_rmw_qos_profile();
+  {
+    SCOPED_TRACE("Subscription QOS");
+    expect_qos_profile_eq(qos2.get_rmw_qos_profile(), subscription_qos_profile, false);
+  }
+
+  // Error cases
+  EXPECT_THROW(
+  {
+    publisher_list = node->get_publishers_info_by_topic("13");
+  }, rclcpp::exceptions::InvalidTopicNameError);
+  EXPECT_THROW(
+  {
+    subscription_list = node->get_subscriptions_info_by_topic("13");
+  }, rclcpp::exceptions::InvalidTopicNameError);
 }

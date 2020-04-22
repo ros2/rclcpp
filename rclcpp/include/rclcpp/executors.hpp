@@ -20,6 +20,7 @@
 
 #include "rclcpp/executors/multi_threaded_executor.hpp"
 #include "rclcpp/executors/single_threaded_executor.hpp"
+#include "rclcpp/executors/static_single_threaded_executor.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
@@ -70,7 +71,7 @@ rclcpp::executor::FutureReturnCode
 spin_node_until_future_complete(
   rclcpp::executor::Executor & executor,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  std::shared_future<ResponseT> & future,
+  const std::shared_future<ResponseT> & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
   // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
@@ -87,7 +88,7 @@ rclcpp::executor::FutureReturnCode
 spin_node_until_future_complete(
   rclcpp::executor::Executor & executor,
   std::shared_ptr<NodeT> node_ptr,
-  std::shared_future<ResponseT> & future,
+  const std::shared_future<ResponseT> & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
   return rclcpp::executors::spin_node_until_future_complete(
@@ -103,7 +104,7 @@ template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::mi
 rclcpp::executor::FutureReturnCode
 spin_until_future_complete(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  std::shared_future<FutureT> & future,
+  const std::shared_future<FutureT> & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
   rclcpp::executors::SingleThreadedExecutor executor;
@@ -115,7 +116,7 @@ template<typename NodeT = rclcpp::Node, typename FutureT, typename TimeRepT = in
 rclcpp::executor::FutureReturnCode
 spin_until_future_complete(
   std::shared_ptr<NodeT> node_ptr,
-  std::shared_future<FutureT> & future,
+  const std::shared_future<FutureT> & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
   return rclcpp::spin_until_future_complete(node_ptr->get_node_base_interface(), future, timeout);

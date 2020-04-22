@@ -103,7 +103,8 @@ Node::Node(
       namespace_,
       options.context(),
       *(options.get_rcl_node_options()),
-      options.use_intra_process_comms())),
+      options.use_intra_process_comms(),
+      options.enable_topic_statistics())),
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
@@ -364,6 +365,18 @@ Node::count_subscribers(const std::string & topic_name) const
   return node_graph_->count_subscribers(topic_name);
 }
 
+std::vector<rclcpp::TopicEndpointInfo>
+Node::get_publishers_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_publishers_info_by_topic(topic_name, no_mangle);
+}
+
+std::vector<rclcpp::TopicEndpointInfo>
+Node::get_subscriptions_info_by_topic(const std::string & topic_name, bool no_mangle) const
+{
+  return node_graph_->get_subscriptions_info_by_topic(topic_name, no_mangle);
+}
+
 const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
 Node::get_callback_groups() const
 {
@@ -390,8 +403,14 @@ Node::get_clock()
   return node_clock_->get_clock();
 }
 
+rclcpp::Clock::ConstSharedPtr
+Node::get_clock() const
+{
+  return node_clock_->get_clock();
+}
+
 rclcpp::Time
-Node::now()
+Node::now() const
 {
   return node_clock_->get_clock()->now();
 }

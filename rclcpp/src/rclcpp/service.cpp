@@ -34,6 +34,21 @@ ServiceBase::ServiceBase(std::shared_ptr<rcl_node_t> node_handle)
 ServiceBase::~ServiceBase()
 {}
 
+bool
+ServiceBase::take_type_erased_request(void * request_out, rmw_request_id_t & request_id_out)
+{
+  rcl_ret_t ret = rcl_take_request(
+    this->get_service_handle().get(),
+    &request_id_out,
+    request_out);
+  if (RCL_RET_CLIENT_TAKE_FAILED == ret) {
+    return false;
+  } else if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+  return true;
+}
+
 const char *
 ServiceBase::get_service_name()
 {
@@ -62,4 +77,10 @@ const rcl_node_t *
 ServiceBase::get_rcl_node_handle() const
 {
   return node_handle_.get();
+}
+
+bool
+ServiceBase::exchange_in_use_by_wait_set_state(bool in_use_state)
+{
+  return in_use_by_wait_set_.exchange(in_use_state);
 }

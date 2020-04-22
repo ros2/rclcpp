@@ -21,7 +21,7 @@ include_directories(include)
 
 add_library(
   component_manager
-  STATIC
+  SHARED
   src/component_manager.cpp
 )
 ament_target_dependencies(component_manager
@@ -31,6 +31,8 @@ ament_target_dependencies(component_manager
   "rclcpp"
   "rcpputils"
 )
+target_compile_definitions(component_manager
+  PRIVATE "RCLCPP_COMPONENTS_BUILDING_LIBRARY")
 
 add_executable(
   component_container
@@ -89,7 +91,6 @@ if(BUILD_TESTING)
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_component_manager)
     target_link_libraries(test_component_manager component_manager)
-    target_include_directories(test_component_manager PRIVATE src)
   endif()
 
   ament_add_gtest(test_component_manager_api test/test_component_manager_api.cpp
@@ -97,9 +98,15 @@ if(BUILD_TESTING)
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_component_manager_api)
     target_link_libraries(test_component_manager_api component_manager)
-    target_include_directories(test_component_manager_api PRIVATE src)
   endif()
 endif()
+
+install(
+  TARGETS component_manager
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
 
 # Install executables
 install(
@@ -121,6 +128,8 @@ install(
 
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
+ament_export_libraries(component_manager)
 ament_export_dependencies(class_loader)
+ament_export_dependencies(composition_interfaces)
 ament_export_dependencies(rclcpp)
 ament_package(CONFIG_EXTRAS rclcpp_components-extras.cmake.in)

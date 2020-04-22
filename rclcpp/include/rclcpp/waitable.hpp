@@ -15,6 +15,8 @@
 #ifndef RCLCPP__WAITABLE_HPP_
 #define RCLCPP__WAITABLE_HPP_
 
+#include <atomic>
+
 #include "rclcpp/macros.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -94,7 +96,6 @@ public:
   size_t
   get_number_of_ready_guard_conditions();
 
-  // TODO(jacobperron): smart pointer?
   /// Add the Waitable to a wait set.
   /**
    * \param[in] wait_set A handle to the wait set to add the Waitable to.
@@ -146,6 +147,23 @@ public:
   virtual
   void
   execute() = 0;
+
+  /// Exchange the "in use by wait set" state for this timer.
+  /**
+   * This is used to ensure this timer is not used by multiple
+   * wait sets at the same time.
+   *
+   * \param[in] in_use_state the new state to exchange into the state, true
+   *   indicates it is now in use by a wait set, and false is that it is no
+   *   longer in use by a wait set.
+   * \returns the previous state.
+   */
+  RCLCPP_PUBLIC
+  bool
+  exchange_in_use_by_wait_set_state(bool in_use_state);
+
+private:
+  std::atomic<bool> in_use_by_wait_set_{false};
 };  // class Waitable
 
 }  // namespace rclcpp

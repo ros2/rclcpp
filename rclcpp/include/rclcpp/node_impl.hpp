@@ -33,14 +33,12 @@
 #include "rcl/publisher.h"
 #include "rcl/subscription.h"
 
-#include "rcl_interfaces/msg/intra_process_message.hpp"
-
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/create_client.hpp"
 #include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_service.hpp"
 #include "rclcpp/create_subscription.hpp"
-#include "rclcpp/intra_process_manager.hpp"
+#include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/type_support_decl.hpp"
@@ -159,12 +157,16 @@ Node::declare_parameter(
   const rcl_interfaces::msg::ParameterDescriptor & parameter_descriptor,
   bool ignore_override)
 {
-  return this->declare_parameter(
-    name,
-    rclcpp::ParameterValue(default_value),
-    parameter_descriptor,
-    ignore_override
-  ).get<ParameterT>();
+  try {
+    return this->declare_parameter(
+      name,
+      rclcpp::ParameterValue(default_value),
+      parameter_descriptor,
+      ignore_override
+    ).get<ParameterT>();
+  } catch (const ParameterTypeException & ex) {
+    throw exceptions::InvalidParameterTypeException(name, ex.what());
+  }
 }
 
 template<typename ParameterT>

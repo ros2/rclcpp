@@ -21,6 +21,8 @@
 # :type target: string
 # :param ARGN: the unique plugin names being exported using class_loader
 # :type ARGN: list of strings
+# :param RESOURCE_INDEX: the ament resource index to register the components
+# :type RESOURCE_INDEX: string
 #
 macro(rclcpp_components_register_nodes target)
   if(NOT TARGET ${target})
@@ -28,6 +30,13 @@ macro(rclcpp_components_register_nodes target)
       FATAL_ERROR
       "rclcpp_components_register_nodes() first argument "
       "'${target}' is not a target")
+  endif()
+  cmake_parse_arguments(ARGS "" "RESOURCE_INDEX" "" ${ARGN})
+  # default to rclcpp_components if not specified otherwise
+  set(resource_index "rclcpp_components")
+  if(NOT "${ARGS_RESOURCE_INDEX}" STREQUAL "")
+    set(resource_index ${ARGS_RESOURCE_INDEX})
+    message(STATUS "Setting component resource index to non-default value ${resource_index}")
   endif()
   get_target_property(_target_type ${target} TYPE)
   if(NOT _target_type STREQUAL "SHARED_LIBRARY")
@@ -40,7 +49,7 @@ macro(rclcpp_components_register_nodes target)
   if(${ARGC} GREATER 0)
     _rclcpp_components_register_package_hook()
     set(_unique_names)
-    foreach(_arg ${ARGN})
+    foreach(_arg ${ARGS_UNPARSED_ARGUMENTS})
       if(_arg IN_LIST _unique_names)
         message(
           FATAL_ERROR
@@ -54,8 +63,9 @@ macro(rclcpp_components_register_nodes target)
       else()
         set(_path "lib")
       endif()
-      set(_RCLCPP_COMPONENTS__NODES
-        "${_RCLCPP_COMPONENTS__NODES}${_arg};${_path}/$<TARGET_FILE_NAME:${target}>\n")
+      set(_RCLCPP_COMPONENTS_${resource_index}__NODES
+        "${_RCLCPP_COMPONENTS_${resource_index}__NODES}${_arg};${_path}/$<TARGET_FILE_NAME:${target}>\n")
+      list(APPEND _RCLCPP_COMPONENTS_PACKAGE_RESOURCE_INDICES ${resource_index})
     endforeach()
   endif()
 endmacro()
