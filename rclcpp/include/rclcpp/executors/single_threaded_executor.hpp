@@ -35,25 +35,31 @@ namespace rclcpp
 namespace executors
 {
 
-/// Single-threaded executor implementation
-// This is the default executor created by rclcpp::spin.
-class SingleThreadedExecutor : public executor::Executor
+/// Single-threaded executor implementation.
+/**
+ * This is the default executor created by rclcpp::spin.
+ */
+class SingleThreadedExecutor : public rclcpp::Executor
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(SingleThreadedExecutor)
 
   /// Default constructor. See the default constructor for Executor.
   RCLCPP_PUBLIC
-  SingleThreadedExecutor(
-    const executor::ExecutorArgs & args = executor::ExecutorArgs());
+  explicit SingleThreadedExecutor(
+    const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
 
-  /// Default destrcutor.
+  /// Default destructor.
   RCLCPP_PUBLIC
   virtual ~SingleThreadedExecutor();
 
   /// Single-threaded implementation of spin.
-  // This function will block until work comes in, execute it, and keep blocking.
-  // It will only be interrupt by a CTRL-C (managed by the global signal handler).
+  /**
+   * This function will block until work comes in, execute it, and then repeat
+   * the process until canceled.
+   * It may be interrupt by a call to rclcpp::Executor::cancel() or by ctrl-c
+   * if the associated context is configured to shutdown on SIGINT.
+   */
   RCLCPP_PUBLIC
   void
   spin() override;

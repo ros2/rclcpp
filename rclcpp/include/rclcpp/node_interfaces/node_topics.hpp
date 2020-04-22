@@ -55,7 +55,7 @@ public:
   void
   add_publisher(
     rclcpp::PublisherBase::SharedPtr publisher,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) override;
+    rclcpp::CallbackGroup::SharedPtr callback_group) override;
 
   RCLCPP_PUBLIC
   rclcpp::SubscriptionBase::SharedPtr
@@ -68,7 +68,7 @@ public:
   void
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) override;
+    rclcpp::CallbackGroup::SharedPtr callback_group) override;
 
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface *

@@ -59,7 +59,7 @@ public:
   void
   add_publisher(
     rclcpp::PublisherBase::SharedPtr publisher,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
+    rclcpp::CallbackGroup::SharedPtr callback_group) = 0;
 
   RCLCPP_PUBLIC
   virtual
@@ -74,7 +74,7 @@ public:
   void
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
+    rclcpp::CallbackGroup::SharedPtr callback_group) = 0;
 
   RCLCPP_PUBLIC
   virtual

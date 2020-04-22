@@ -28,7 +28,7 @@ NodeWaitables::~NodeWaitables()
 void
 NodeWaitables::add_waitable(
   rclcpp::Waitable::SharedPtr waitable_ptr,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   if (group) {
     if (!node_base_->callback_group_in_node(group)) {
@@ -55,7 +55,7 @@ NodeWaitables::add_waitable(
 void
 NodeWaitables::remove_waitable(
   rclcpp::Waitable::SharedPtr waitable_ptr,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept
+  rclcpp::CallbackGroup::SharedPtr group) noexcept
 {
   if (group) {
     if (!node_base_->callback_group_in_node(group)) {

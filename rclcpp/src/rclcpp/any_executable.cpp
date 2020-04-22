@@ -14,7 +14,7 @@
 
 #include "rclcpp/any_executable.hpp"
 
-using rclcpp::executor::AnyExecutable;
+using rclcpp::AnyExecutable;
 
 AnyExecutable::AnyExecutable()
 : subscription(nullptr),

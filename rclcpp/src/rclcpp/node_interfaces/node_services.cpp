@@ -28,7 +28,7 @@ NodeServices::~NodeServices()
 void
 NodeServices::add_service(
   rclcpp::ServiceBase::SharedPtr service_base_ptr,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   if (group) {
     if (!node_base_->callback_group_in_node(group)) {
@@ -55,7 +55,7 @@ NodeServices::add_service(
 void
 NodeServices::add_client(
   rclcpp::ClientBase::SharedPtr client_base_ptr,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   if (group) {
     if (!node_base_->callback_group_in_node(group)) {

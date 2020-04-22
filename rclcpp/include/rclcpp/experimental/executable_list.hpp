@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RCLCPP__EXECUTABLE_LIST_HPP_
-#define RCLCPP__EXECUTABLE_LIST_HPP_
+#ifndef RCLCPP__EXPERIMENTAL__EXECUTABLE_LIST_HPP_
+#define RCLCPP__EXPERIMENTAL__EXECUTABLE_LIST_HPP_
 
 #include <memory>
 #include <vector>
@@ -27,7 +27,7 @@
 
 namespace rclcpp
 {
-namespace executor
+namespace experimental
 {
 
 /// This class contains subscriptionbase, timerbase, etc. which can be used to run callbacks.
@@ -86,7 +86,7 @@ public:
   size_t number_of_waitables;
 };
 
-}  // namespace executor
+}  // namespace experimental
 }  // namespace rclcpp
 
-#endif  // RCLCPP__EXECUTABLE_LIST_HPP_
+#endif  // RCLCPP__EXPERIMENTAL__EXECUTABLE_LIST_HPP_

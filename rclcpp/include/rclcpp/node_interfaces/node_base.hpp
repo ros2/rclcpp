@@ -96,22 +96,22 @@ public:
 
   RCLCPP_PUBLIC
 
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type) override;
+  rclcpp::CallbackGroup::SharedPtr
+  create_callback_group(rclcpp::CallbackGroupType group_type) override;
 
   RCLCPP_PUBLIC
 
-  rclcpp::callback_group::CallbackGroup::SharedPtr
+  rclcpp::CallbackGroup::SharedPtr
   get_default_callback_group() override;
 
   RCLCPP_PUBLIC
 
   bool
-  callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group) override;
+  callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group) override;
 
   RCLCPP_PUBLIC
 
-  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const override;
 
   RCLCPP_PUBLIC
@@ -146,8 +146,8 @@ private:
 
   std::shared_ptr<rcl_node_t> node_handle_;
 
-  rclcpp::callback_group::CallbackGroup::SharedPtr default_callback_group_;
-  std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> callback_groups_;
+  rclcpp::CallbackGroup::SharedPtr default_callback_group_;
+  std::vector<rclcpp::CallbackGroup::WeakPtr> callback_groups_;
 
   std::atomic_bool associated_with_executor_;
 

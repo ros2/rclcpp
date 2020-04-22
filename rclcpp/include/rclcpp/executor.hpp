@@ -30,6 +30,8 @@
 #include "rcl/wait.h"
 
 #include "rclcpp/contexts/default_context.hpp"
+#include "rclcpp/executor_options.hpp"
+#include "rclcpp/future_return_code.hpp"
 #include "rclcpp/memory_strategies.hpp"
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
@@ -41,48 +43,6 @@ namespace rclcpp
 
 // Forward declaration is used in convenience method signature.
 class Node;
-
-namespace executor
-{
-
-/// Return codes to be used with spin_until_future_complete.
-/**
- * SUCCESS: The future is complete and can be accessed with "get" without blocking.
- *          This does not indicate that the operation succeeded; "get" may still throw an exception.
- * INTERRUPTED: The future is not complete, spinning was interrupted by Ctrl-C or another error.
- * TIMEOUT: Spinning timed out.
- */
-enum class FutureReturnCode {SUCCESS, INTERRUPTED, TIMEOUT};
-
-RCLCPP_PUBLIC
-std::ostream &
-operator<<(std::ostream & os, const FutureReturnCode & future_return_code);
-
-RCLCPP_PUBLIC
-std::string
-to_string(const FutureReturnCode & future_return_code);
-
-///
-/**
- * Options to be passed to the executor constructor.
- */
-struct ExecutorArgs
-{
-  ExecutorArgs()
-  : memory_strategy(memory_strategies::create_default_strategy()),
-    context(rclcpp::contexts::default_context::get_global_default_context()),
-    max_conditions(0)
-  {}
-
-  memory_strategy::MemoryStrategy::SharedPtr memory_strategy;
-  std::shared_ptr<rclcpp::Context> context;
-  size_t max_conditions;
-};
-
-static inline ExecutorArgs create_default_executor_arguments()
-{
-  return ExecutorArgs();
-}
 
 /// Coordinate the order and timing of available communication tasks.
 /**
@@ -100,9 +60,11 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Executor)
 
   /// Default constructor.
-  // \param[in] ms The memory strategy to be used with this executor.
+  /**
+   * \param[in] options Options used to configure the executor.
+   */
   RCLCPP_PUBLIC
-  explicit Executor(const ExecutorArgs & args = ExecutorArgs());
+  explicit Executor(const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions());
 
   /// Default destructor.
   RCLCPP_PUBLIC
@@ -323,10 +285,10 @@ protected:
 
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group);
+  get_node_by_group(rclcpp::CallbackGroup::SharedPtr group);
 
   RCLCPP_PUBLIC
-  rclcpp::callback_group::CallbackGroup::SharedPtr
+  rclcpp::CallbackGroup::SharedPtr
   get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
 
   RCLCPP_PUBLIC
@@ -362,6 +324,11 @@ protected:
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
   std::list<const rcl_guard_condition_t *> guard_conditions_;
 };
+
+namespace executor
+{
+
+using Executor [[deprecated("use rclcpp::Executor instead")]] = rclcpp::Executor;
 
 }  // namespace executor
 }  // namespace rclcpp

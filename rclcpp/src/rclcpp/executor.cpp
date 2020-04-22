@@ -29,18 +29,18 @@
 #include "rcutils/logging_macros.h"
 
 using rclcpp::exceptions::throw_from_rcl_error;
-using rclcpp::executor::AnyExecutable;
-using rclcpp::executor::Executor;
-using rclcpp::executor::ExecutorArgs;
-using rclcpp::executor::FutureReturnCode;
+using rclcpp::AnyExecutable;
+using rclcpp::Executor;
+using rclcpp::ExecutorOptions;
+using rclcpp::FutureReturnCode;
 
-Executor::Executor(const ExecutorArgs & args)
+Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
-  memory_strategy_(args.memory_strategy)
+  memory_strategy_(options.memory_strategy)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
   rcl_ret_t ret = rcl_guard_condition_init(
-    &interrupt_guard_condition_, args.context->get_rcl_context().get(), guard_condition_options);
+    &interrupt_guard_condition_, options.context->get_rcl_context().get(), guard_condition_options);
   if (RCL_RET_OK != ret) {
     throw_from_rcl_error(ret, "Failed to create interrupt guard condition in Executor constructor");
   }
@@ -49,14 +49,14 @@ Executor::Executor(const ExecutorArgs & args)
   // and one for the executor's guard cond (interrupt_guard_condition_)
 
   // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(args.context->get_interrupt_guard_condition(&wait_set_));
+  memory_strategy_->add_guard_condition(options.context->get_interrupt_guard_condition(&wait_set_));
 
   // Put the executor's guard condition in
   memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
   rcl_allocator_t allocator = memory_strategy_->get_allocator();
 
   // Store the context for later use.
-  context_ = args.context;
+  context_ = options.context;
 
   ret = rcl_wait_set_init(
     &wait_set_,
@@ -503,7 +503,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr group)
+Executor::get_node_by_group(rclcpp::CallbackGroup::SharedPtr group)
 {
   if (!group) {
     return nullptr;
@@ -523,7 +523,7 @@ Executor::get_node_by_group(rclcpp::callback_group::CallbackGroup::SharedPtr gro
   return nullptr;
 }
 
-rclcpp::callback_group::CallbackGroup::SharedPtr
+rclcpp::CallbackGroup::SharedPtr
 Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 {
   for (auto & weak_node : weak_nodes_) {
@@ -545,7 +545,7 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
       }
     }
   }
-  return rclcpp::callback_group::CallbackGroup::SharedPtr();
+  return rclcpp::CallbackGroup::SharedPtr();
 }
 
 bool
@@ -625,30 +625,4 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
     success = get_next_ready_executable(any_executable);
   }
   return success;
-}
-
-std::ostream &
-rclcpp::executor::operator<<(std::ostream & os, const FutureReturnCode & future_return_code)
-{
-  return os << to_string(future_return_code);
-}
-
-std::string
-rclcpp::executor::to_string(const FutureReturnCode & future_return_code)
-{
-  using enum_type = std::underlying_type<FutureReturnCode>::type;
-  std::string prefix = "Unknown enum value (";
-  std::string ret_as_string = std::to_string(static_cast<enum_type>(future_return_code));
-  switch (future_return_code) {
-    case FutureReturnCode::SUCCESS:
-      prefix = "SUCCESS (";
-      break;
-    case FutureReturnCode::INTERRUPTED:
-      prefix = "INTERRUPTED (";
-      break;
-    case FutureReturnCode::TIMEOUT:
-      prefix = "TIMEOUT (";
-      break;
-  }
-  return prefix + ret_as_string + ")";
 }

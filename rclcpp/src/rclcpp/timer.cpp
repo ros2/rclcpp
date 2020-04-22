@@ -33,7 +33,7 @@ TimerBase::TimerBase(
 : clock_(clock), timer_handle_(nullptr)
 {
   if (nullptr == context) {
-    context = rclcpp::contexts::default_context::get_global_default_context();
+    context = rclcpp::contexts::get_global_default_context();
   }
 
   auto rcl_context = context->get_rcl_context();
