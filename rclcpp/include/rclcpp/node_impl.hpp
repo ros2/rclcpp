@@ -45,8 +45,6 @@
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/timer.hpp"
 
-#include "statistics_msgs/msg/metrics_message.hpp"
-
 #ifndef RCLCPP__NODE_HPP_
 #include "node.hpp"
 #endif
@@ -95,40 +93,14 @@ Node::create_subscription(
   const SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
 {
-  if (options.topic_stats_options.state == rclcpp::TopicStatisticsState::Enable) {
-    std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
-      this->create_publisher<statistics_msgs::msg::MetricsMessage>(
-      options.topic_stats_options.publish_topic,
-      qos);
-
-    auto sub_topic_stats = std::make_shared<
-      rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
-      >(this->get_name(), publisher);
-
-    auto timer = this->create_wall_timer(
-      options.topic_stats_options.publish_period, [sub_topic_stats]() {
-        sub_topic_stats->publish_message();
-      });
-
-    sub_topic_stats->set_publisher_timer(timer);
-
-    return rclcpp::create_subscription<MessageT>(
-      *this,
-      extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-      qos,
-      std::forward<CallbackT>(callback),
-      options,
-      msg_mem_strat,
-      sub_topic_stats);
-  } else {
-    return rclcpp::create_subscription<MessageT>(
-      *this,
-      extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
-      qos,
-      std::forward<CallbackT>(callback),
-      options,
-      msg_mem_strat);
-  }
+  return rclcpp::create_subscription<MessageT>(
+    *this,
+    extend_name_with_sub_namespace(topic_name, this->get_sub_namespace()),
+    qos,
+    std::forward<CallbackT>(callback),
+    options,
+    msg_mem_strat,
+    this->get_node_timers_interface());
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

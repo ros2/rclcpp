@@ -15,16 +15,21 @@
 #ifndef RCLCPP__CREATE_SUBSCRIPTION_HPP_
 #define RCLCPP__CREATE_SUBSCRIPTION_HPP_
 
+#include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
+
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
+#include "rclcpp/timer.hpp"
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
@@ -60,12 +65,42 @@ create_subscription(
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
     MessageMemoryStrategyT::create_default()
   ),
-  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
-  subscription_topic_stats = nullptr
+  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timer_interface = nullptr
 )
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
+
+  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
+  subscription_topic_stats = nullptr;
+
+  if (options.topic_stats_options.state == rclcpp::TopicStatisticsState::Enable) {
+    std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
+      create_publisher<statistics_msgs::msg::MetricsMessage>(
+      node,
+      options.topic_stats_options.publish_topic,
+      qos);
+
+    subscription_topic_stats = std::make_shared<
+      rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
+      >(node_topics->get_node_base_interface()->get_name(), publisher);
+
+    auto sub_call_back = [subscription_topic_stats]() {
+        subscription_topic_stats->publish_message();
+      };
+
+    auto timer = create_timer(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+        options.topic_stats_options.
+        publish_period),
+      sub_call_back,
+      options.callback_group,
+      node_topics->get_node_base_interface(),
+      node_timer_interface
+    );
+
+    subscription_topic_stats->set_publisher_timer(timer);
+  }
 
   auto factory = rclcpp::create_subscription_factory<MessageT>(
     std::forward<CallbackT>(callback),
@@ -78,6 +113,34 @@ create_subscription(
   node_topics->add_subscription(sub, options.callback_group);
 
   return std::dynamic_pointer_cast<SubscriptionT>(sub);
+}
+
+/// Convenience method to create a timer
+/**
+ *
+ * \tparam CallbackT callback template
+ * \param nanos period to exectute callback
+ * \param callback
+ * \param group
+ * \param node_base_
+ * \param node_timers_
+ * \return
+ */
+template<typename CallbackT>
+typename rclcpp::WallTimer<CallbackT>::SharedPtr
+create_timer(
+  std::chrono::nanoseconds nanos,
+  CallbackT callback,
+  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  rclcpp::node_interfaces::NodeBaseInterface * node_base_,
+  const rclcpp::node_interfaces::NodeTimersInterface::SharedPtr & node_timers_)
+{
+  auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
+    nanos,
+    std::move(callback),
+    node_base_->get_context());
+  node_timers_->add_timer(timer, group);
+  return timer;
 }
 
 }  // namespace rclcpp
