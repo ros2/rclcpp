@@ -28,11 +28,12 @@
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 
+#include "rclcpp/create_timer.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/subscription_options.hpp"
-#include "rclcpp/qos.hpp"
-#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "rclcpp/timer.hpp"
+#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
@@ -77,7 +78,10 @@ create_subscription(
   std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
   subscription_topic_stats = nullptr;
 
-  if (rclcpp::detail::resolve_enable_topic_statistics(options, *node_topics->get_node_base_interface())) {
+  if (rclcpp::detail::resolve_enable_topic_statistics(
+      options,
+      *node_topics->get_node_base_interface()))
+  {
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       create_publisher<statistics_msgs::msg::MetricsMessage>(
       node,
@@ -92,13 +96,13 @@ create_subscription(
         subscription_topic_stats->publish_message();
       };
 
-    auto timer = create_timer(
+    auto timer = create_node_timer(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
         options.topic_stats_options.publish_period),
       sub_call_back,
       options.callback_group,
       node_topics->get_node_base_interface(),
-      node_timer_interface
+      node_timer_interface.get()
     );
 
     subscription_topic_stats->set_publisher_timer(timer);
@@ -115,34 +119,6 @@ create_subscription(
   node_topics->add_subscription(sub, options.callback_group);
 
   return std::dynamic_pointer_cast<SubscriptionT>(sub);
-}
-
-/// Convenience method to create a timer
-/**
- *
- * \tparam CallbackT callback template
- * \param nanos period to exectute callback
- * \param callback
- * \param group
- * \param node_base
- * \param node_timers
- * \return
- */
-template<typename CallbackT>
-typename rclcpp::WallTimer<CallbackT>::SharedPtr
-create_timer(
-  std::chrono::nanoseconds nanos,
-  CallbackT callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  rclcpp::node_interfaces::NodeBaseInterface * node_base,
-  const std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface> & node_timers)
-{
-  auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
-    nanos,
-    std::move(callback),
-    node_base->get_context());
-  node_timers->add_timer(timer, group);
-  return timer;
 }
 
 }  // namespace rclcpp
