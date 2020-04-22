@@ -31,7 +31,7 @@ public:
     return std::make_shared<rclcpp::node_interfaces::NodeBase>(
       "my_node_name",
       "my_node_namespace",
-      rclcpp::contexts::default_context::get_global_default_context(),
+      rclcpp::contexts::get_global_default_context(),
       *options.get_rcl_node_options(),
       options.use_intra_process_comms(),
       options.enable_topic_statistics());

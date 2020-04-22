@@ -104,7 +104,7 @@ create_client(
   const std::string & name,
   rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
-  return create_client<ActionT>(
+  return rclcpp_action::create_client<ActionT>(
     node->get_node_base_interface(),
     node->get_node_graph_interface(),
     node->get_node_logging_interface(),
