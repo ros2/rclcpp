@@ -377,7 +377,7 @@ private:
         subscription->provide_intra_process_message(message);
       } else if (is_serialized_publisher) {
         // publisher provides a serialized message, while subscriber expects a ROS message
-        provide_serialized_intra_process_message(subscription_base, *message);
+        provide_intra_process_message(subscription_base, *message);
       } else {
         // publisher provides a ROS message, while subscriber expects a serialized message
         rclcpp::Serialization<MessageT> serialization;
@@ -437,7 +437,7 @@ private:
         }
       } else if (is_serialized_publisher) {
         // publisher provides a serialized message, while subscriber expects a ROS message
-        provide_serialized_intra_process_message(subscription_base, *message);
+        provide_intra_process_message(subscription_base, *message);
       } else {
         // publisher provides a ROS message, while subscriber expects a serialized message
         rclcpp::Serialization<MessageT> serialization;
@@ -455,7 +455,7 @@ private:
 
   template<typename T>
   static std::enable_if_t<!serialization_traits::is_serialized_message_class<T>::value>
-  provide_serialized_intra_process_message(
+  provide_intra_process_message(
     rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription,
     const T & serialized_message)
   {
@@ -465,11 +465,11 @@ private:
   }
 
   static void
-  provide_serialized_intra_process_message(
+  provide_intra_process_message(
     rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription,
     const SerializedMessage & serialized_message)
   {
-    subscription->provide_serialized_intra_process_message(serialized_message);
+    subscription->provide_intra_process_message(serialized_message);
   }
 
   PublisherToSubscriptionIdsMap pub_to_subs_;

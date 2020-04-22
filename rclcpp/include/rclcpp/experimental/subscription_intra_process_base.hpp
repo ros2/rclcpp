@@ -76,7 +76,7 @@ public:
   is_serialized() const = 0;
 
   virtual void
-  provide_serialized_intra_process_message(
+  provide_intra_process_message(
     const SerializedMessage & serialized_message) = 0;
 
 protected:

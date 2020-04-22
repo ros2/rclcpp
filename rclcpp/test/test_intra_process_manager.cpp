@@ -221,7 +221,7 @@ public:
   }
 
   void
-  provide_serialized_intra_process_message(const rclcpp::SerializedMessage & serialized_message)
+  provide_intra_process_message(const rclcpp::SerializedMessage & serialized_message)
   {
     (void)serialized_message;
   }

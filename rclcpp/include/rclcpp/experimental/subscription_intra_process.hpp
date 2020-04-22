@@ -149,7 +149,7 @@ public:
   }
 
   void
-  provide_serialized_intra_process_message(const SerializedMessage & serialized_message)
+  provide_intra_process_message(const SerializedMessage & serialized_message)
   {
     rclcpp::Serialization<MessageT> serialization;
 
