@@ -105,6 +105,13 @@ public:
    */
   void reserve(size_t capacity);
 
+  /// Release the underlying rcl_serialized_message_t
+  /**
+   * The memory (i.e. the data buffer) of the serialized message will no longer
+   * be managed by this instance and the memory won't be deallocated on destruction.
+   */
+  rcl_serialized_message_t release_rcl_serialized_message();
+
 private:
   rcl_serialized_message_t serialized_message_;
 };

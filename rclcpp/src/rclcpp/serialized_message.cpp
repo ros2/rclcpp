@@ -153,4 +153,11 @@ void SerializedMessage::reserve(size_t capacity)
   }
 }
 
+rcl_serialized_message_t SerializedMessage::release_rcl_serialized_message()
+{
+  auto ret = serialized_message_;
+  serialized_message_ = rmw_get_zero_initialized_serialized_message();
+
+  return ret;
+}
 }  // namespace rclcpp

@@ -217,6 +217,12 @@ public:
     return this->do_serialized_publish(&serialized_msg);
   }
 
+  void
+  publish(const SerializedMessage & serialized_msg)
+  {
+    return this->do_serialized_publish(serialized_msg.get_rcl_serialized_message());
+  }
+
   /// Publish an instance of a LoanedMessage.
   /**
    * When publishing a loaned message, the memory for this ROS message will be deallocated
