@@ -234,14 +234,14 @@ TEST_P(TestPublisherSubscriptionSerialized, publish_serialized_generic)
       "/ns",
       parameters.node_options[0]);
     // create a generic publisher
-    auto publisher = rclcpp::create_generic_publisher<rclcpp::SerializedMessage>(
+    auto publisher = rclcpp::create_publisher(
       node,
       "/topic",
       *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Strings>(),
       rclcpp::QoS(10));
 
     // create a generic subscriber
-    auto sub_gen_serialized = rclcpp::create_generic_subscription<rclcpp::SerializedMessage>(
+    auto sub_gen_serialized = rclcpp::create_subscription(
       node,
       "/topic",
       *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Strings>(),

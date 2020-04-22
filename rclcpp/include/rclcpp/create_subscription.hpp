@@ -47,7 +47,7 @@ template<
   >,
   typename NodeT>
 typename std::shared_ptr<SubscriptionT>
-create_generic_subscription(
+create_subscription(
   NodeT && node,
   const std::string & topic_name,
   const rosidl_message_type_support_t & type_support,

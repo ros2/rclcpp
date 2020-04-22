@@ -63,7 +63,7 @@ struct PublisherFactory
 /// Return a PublisherFactory with functions setup for creating a PublisherT<MessageT, AllocatorT>.
 template<typename AllocatorT, typename PublisherT>
 PublisherFactory
-create_generic_publisher_factory(
+create_publisher_factory(
   const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
   const rosidl_message_type_support_t & type_support)
 {

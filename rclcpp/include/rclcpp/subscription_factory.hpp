@@ -129,7 +129,7 @@ template<
     AllocatorT
   >>
 SubscriptionFactory
-create_generic_subscription_factory(
+create_subscription_factory(
   CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
