@@ -350,7 +350,7 @@ Executor::execute_subscription(rclcpp::SubscriptionBase::SharedPtr subscription)
   if (subscription->is_serialized()) {
     // This is the case where a copy of the serialized message is taken from
     // the middleware via inter-process communication.
-    auto serialized_msg = subscription->create_serialized_message();
+    std::shared_ptr<SerializedMessage> serialized_msg = subscription->create_serialized_message();
     take_and_do_error_handling(
       "taking a serialized message from topic",
       subscription->get_topic_name(),
