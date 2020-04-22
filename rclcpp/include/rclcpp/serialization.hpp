@@ -97,6 +97,34 @@ public:
   }
 };
 
+/// Specialized serialization for rcl_serialized_message_t (because type support is not defined)
+template<>
+class Serialization<rcl_serialized_message_t>: public SerializationBase
+{
+public:
+  /// Constructor of Serialization
+  Serialization()
+  : SerializationBase(nullptr)
+  {
+    throw std::runtime_error(
+            "Serialization of rcl_serialized_message_t to serialized message is not possible.");
+  }
+};
+
+/// Specialized serialization for SerializedMessage (because type support is not defined)
+template<>
+class Serialization<SerializedMessage>: public SerializationBase
+{
+public:
+  /// Constructor of Serialization
+  Serialization()
+  : SerializationBase(nullptr)
+  {
+    throw std::runtime_error(
+            "Serialization of SerializedMessage to serialized message is not possible.");
+  }
+};
+
 }  // namespace rclcpp
 
 #endif  // RCLCPP__SERIALIZATION_HPP_
