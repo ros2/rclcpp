@@ -47,22 +47,38 @@ protected:
 rclcpp::Node::SharedPtr TestGetNodeInterfaces::node = nullptr;
 std::shared_ptr<NodeWrapper> TestGetNodeInterfaces::wrapped_node = nullptr;
 
+TEST_F(TestGetNodeInterfaces, null_rclcpp_node_shared_ptr) {
+  rclcpp::Node::SharedPtr null_node;
+  EXPECT_THROW(
+  {
+    rclcpp::node_interfaces::get_node_topics_interface(null_node);
+  }, std::invalid_argument);
+}
+
 TEST_F(TestGetNodeInterfaces, rclcpp_node_shared_ptr) {
   auto result = rclcpp::node_interfaces::get_node_topics_interface(this->node);
   static_assert(
     std::is_same<
-      rclcpp::node_interfaces::NodeTopicsInterface *,
+      std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>,
       decltype(result)
-    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+    >::value, "expected std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>");
+}
+
+TEST_F(TestGetNodeInterfaces, null_node_shared_ptr) {
+  std::shared_ptr<NodeWrapper> null_node;
+  EXPECT_THROW(
+  {
+    rclcpp::node_interfaces::get_node_topics_interface(null_node);
+  }, std::invalid_argument);
 }
 
 TEST_F(TestGetNodeInterfaces, node_shared_ptr) {
   auto result = rclcpp::node_interfaces::get_node_topics_interface(this->wrapped_node);
   static_assert(
     std::is_same<
-      rclcpp::node_interfaces::NodeTopicsInterface *,
+      std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>,
       decltype(result)
-    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+    >::value, "expected std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>");
 }
 
 TEST_F(TestGetNodeInterfaces, rclcpp_node_reference) {
@@ -70,9 +86,9 @@ TEST_F(TestGetNodeInterfaces, rclcpp_node_reference) {
   auto result = rclcpp::node_interfaces::get_node_topics_interface(node_reference);
   static_assert(
     std::is_same<
-      rclcpp::node_interfaces::NodeTopicsInterface *,
+      std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>,
       decltype(result)
-    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+    >::value, "expected std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>");
 }
 
 TEST_F(TestGetNodeInterfaces, node_reference) {
@@ -80,9 +96,9 @@ TEST_F(TestGetNodeInterfaces, node_reference) {
   auto result = rclcpp::node_interfaces::get_node_topics_interface(wrapped_node_reference);
   static_assert(
     std::is_same<
-      rclcpp::node_interfaces::NodeTopicsInterface *,
+      std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>,
       decltype(result)
-    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+    >::value, "expected std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>");
 }
 
 TEST_F(TestGetNodeInterfaces, rclcpp_node_pointer) {
@@ -90,9 +106,17 @@ TEST_F(TestGetNodeInterfaces, rclcpp_node_pointer) {
   auto result = rclcpp::node_interfaces::get_node_topics_interface(node_pointer);
   static_assert(
     std::is_same<
-      rclcpp::node_interfaces::NodeTopicsInterface *,
+      std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>,
       decltype(result)
-    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+    >::value, "expected std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>");
+}
+
+TEST_F(TestGetNodeInterfaces, null_rclcpp_node_pointer) {
+  rclcpp::Node * null_node{nullptr};
+  EXPECT_THROW(
+  {
+    rclcpp::node_interfaces::get_node_topics_interface(null_node);
+  }, std::invalid_argument);
 }
 
 TEST_F(TestGetNodeInterfaces, node_pointer) {
@@ -100,9 +124,17 @@ TEST_F(TestGetNodeInterfaces, node_pointer) {
   auto result = rclcpp::node_interfaces::get_node_topics_interface(wrapped_node_pointer);
   static_assert(
     std::is_same<
-      rclcpp::node_interfaces::NodeTopicsInterface *,
+      std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>,
       decltype(result)
-    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+    >::value, "expected std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>");
+}
+
+TEST_F(TestGetNodeInterfaces, null_node_pointer) {
+  NodeWrapper * null_node{nullptr};
+  EXPECT_THROW(
+  {
+    rclcpp::node_interfaces::get_node_topics_interface(null_node);
+  }, std::invalid_argument);
 }
 
 TEST_F(TestGetNodeInterfaces, interface_shared_pointer) {
@@ -111,7 +143,7 @@ TEST_F(TestGetNodeInterfaces, interface_shared_pointer) {
   auto result = rclcpp::node_interfaces::get_node_topics_interface(interface_shared_ptr);
   static_assert(
     std::is_same<
-      rclcpp::node_interfaces::NodeTopicsInterface *,
+      std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>,
       decltype(result)
-    >::value, "expected rclcpp::node_interfaces::NodeTopicsInterface *");
+    >::value, "expected std::shared_ptr<rclcpp::node_interfaces::NodeTopicsInterface>");
 }
