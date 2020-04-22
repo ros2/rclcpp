@@ -50,7 +50,7 @@ using FutureReturnCode [[deprecated("use rclcpp::FutureReturnCode instead")]] = 
 [[deprecated("use rclcpp::to_string(const rclcpp::FutureReturnCode &) instead")]]
 inline
 std::string
-to_string(const FutureReturnCode & future_return_code)
+to_string(const rclcpp::FutureReturnCode & future_return_code)
 {
   return rclcpp::to_string(future_return_code);
 }

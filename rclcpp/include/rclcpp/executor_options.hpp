@@ -45,10 +45,10 @@ using ExecutorArgs [[deprecated("use rclcpp::ExecutorOptions instead")]] = Execu
 
 [[deprecated("use rclcpp::ExecutorOptions() instead")]]
 inline
-ExecutorArgs
+rclcpp::ExecutorOptions
 create_default_executor_arguments()
 {
-  return ExecutorArgs();
+  return rclcpp::ExecutorOptions();
 }
 
 }  // namespace executor
