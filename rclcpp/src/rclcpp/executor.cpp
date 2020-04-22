@@ -603,7 +603,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
       any_executable.callback_group->can_be_taken_from().store(false);
     }
   }
-  // If there is no ready executable, return a null ptr
+  // If there is no ready executable, return false
   return success;
 }
 
