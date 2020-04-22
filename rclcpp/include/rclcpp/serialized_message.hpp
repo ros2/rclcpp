@@ -24,7 +24,7 @@ namespace rclcpp
 {
 
 /// Object oriented version of rcl_serialized_message_t with destructor to avoid memory leaks
-class RCLCPP_PUBLIC_TYPE SerializedMessage : public rcl_serialized_message_t
+class RCLCPP_PUBLIC_TYPE SerializedMessage
 {
 public:
   /// Default constructor for a SerializedMessage
@@ -52,16 +52,16 @@ public:
     const rcl_allocator_t & allocator = rcl_get_default_allocator());
 
   /// Copy Constructor for a SerializedMessage
-  SerializedMessage(const SerializedMessage & serialized_message);
+  SerializedMessage(const SerializedMessage & other);
 
   /// Constructor for a SerializedMessage from a rcl_serialized_message_t
-  explicit SerializedMessage(const rcl_serialized_message_t & serialized_message);
+  explicit SerializedMessage(const rcl_serialized_message_t & other);
 
   /// Move Constructor for a SerializedMessage
-  SerializedMessage(SerializedMessage && serialized_message);
+  SerializedMessage(SerializedMessage && other);
 
   /// Constructor for a SerializedMessage from a moved rcl_serialized_message_t
-  explicit SerializedMessage(rcl_serialized_message_t && serialized_message);
+  explicit SerializedMessage(rcl_serialized_message_t && other);
 
   /// Copy assignment operator
   SerializedMessage & operator=(const SerializedMessage & other);
@@ -77,6 +77,29 @@ public:
 
   /// Destructor for a SerializedMessage
   virtual ~SerializedMessage();
+
+  /// Get the underlying rcl_serialized_t handle
+  rcl_serialized_message_t & get_rcl_serialized_message();
+
+  // Get a const handle to the underlying rcl_serialized_message_t
+  const rcl_serialized_message_t & get_rcl_serialized_message() const;
+
+  /// Get the size of the serialized data buffer
+  /**
+   * Note, this is different from the actual amount of allocated memory.
+   * This can be obtained via a call to `capacity`.
+   */
+  size_t size() const;
+
+  /// Get the size of allocated memory for the data buffer
+  /**
+   * Note, this is different from the amount of content in the buffer.
+   * This can be obtained via a call to `size`.
+   */
+  size_t capacity() const;
+
+private:
+  rcl_serialized_message_t serialized_message_;
 };
 
 }  // namespace rclcpp

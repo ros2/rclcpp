@@ -24,6 +24,21 @@
 namespace rclcpp
 {
 
+inline void copy_rcl_message(const rcl_serialized_message_t & from, rcl_serialized_message_t & to)
+{
+  const auto ret = rmw_serialized_message_init(
+    &to, from.buffer_capacity, &from.allocator);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+
+  // do not call memcpy if the pointer is "static"
+  if (to.buffer != from.buffer) {
+    std::memcpy(to.buffer, from.buffer, from.buffer_length);
+  }
+  to.buffer_length = from.buffer_length;
+}
+
 /// Object oriented version of rcl_serialized_message_t with destructor to avoid memory leaks
 SerializedMessage::SerializedMessage(const rcl_allocator_t & allocator)
 : SerializedMessage(0u, allocator)
@@ -31,87 +46,66 @@ SerializedMessage::SerializedMessage(const rcl_allocator_t & allocator)
 
 SerializedMessage::SerializedMessage(
   size_t initial_capacity, const rcl_allocator_t & allocator)
-: rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
+: serialized_message_(rmw_get_zero_initialized_serialized_message())
 {
   const auto ret = rmw_serialized_message_init(
-    this, initial_capacity, &allocator);
+    &serialized_message_, initial_capacity, &allocator);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
   }
 }
 
-SerializedMessage::SerializedMessage(const SerializedMessage & serialized_message)
-: SerializedMessage(static_cast<const rcl_serialized_message_t &>(serialized_message))
+SerializedMessage::SerializedMessage(const SerializedMessage & other)
+: SerializedMessage(other.serialized_message_)
 {}
 
-SerializedMessage::SerializedMessage(const rcl_serialized_message_t & serialized_message)
-: rcl_serialized_message_t(rmw_get_zero_initialized_serialized_message())
+SerializedMessage::SerializedMessage(const rcl_serialized_message_t & other)
+: serialized_message_(rmw_get_zero_initialized_serialized_message())
 {
-  const auto ret = rmw_serialized_message_init(
-    this, serialized_message.buffer_capacity, &serialized_message.allocator);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-
-  // do not call memcpy if the pointer is "static"
-  if (buffer != serialized_message.buffer) {
-    std::memcpy(buffer, serialized_message.buffer, serialized_message.buffer_length);
-  }
-  buffer_length = serialized_message.buffer_length;
+  copy_rcl_message(other, serialized_message_);
 }
 
-SerializedMessage::SerializedMessage(SerializedMessage && serialized_message)
-: SerializedMessage(
-    std::forward<rcl_serialized_message_t>(
-      static_cast<rcl_serialized_message_t &&>(serialized_message)))
-{}
+SerializedMessage::SerializedMessage(SerializedMessage && other)
+: SerializedMessage(other.serialized_message_)
+{
+  other.serialized_message_ = rmw_get_zero_initialized_serialized_message();
+}
 
-SerializedMessage::SerializedMessage(rcl_serialized_message_t && serialized_message)
-: rcl_serialized_message_t(serialized_message)
+SerializedMessage::SerializedMessage(rcl_serialized_message_t && other)
+: serialized_message_(other)
 {
   // reset buffer to prevent double free
-  serialized_message = rmw_get_zero_initialized_serialized_message();
+  other = rmw_get_zero_initialized_serialized_message();
 }
 
 SerializedMessage & SerializedMessage::operator=(const SerializedMessage & other)
 {
-  *this = static_cast<const rcl_serialized_message_t &>(other);
+  serialized_message_ = rmw_get_zero_initialized_serialized_message();
+  copy_rcl_message(other.serialized_message_, serialized_message_);
 
   return *this;
 }
 
 SerializedMessage & SerializedMessage::operator=(const rcl_serialized_message_t & other)
 {
-  *this = static_cast<SerializedMessage>(rmw_get_zero_initialized_serialized_message());
-
-  const auto ret = rmw_serialized_message_init(
-    this, other.buffer_capacity, &other.allocator);
-  if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret);
-  }
-
-  // do not call memcpy if the pointer is "static"
-  if (buffer != other.buffer) {
-    std::memcpy(buffer, other.buffer, other.buffer_length);
-  }
-  buffer_length = other.buffer_length;
+  serialized_message_ = rmw_get_zero_initialized_serialized_message();
+  copy_rcl_message(other, serialized_message_);
 
   return *this;
 }
 
 SerializedMessage & SerializedMessage::operator=(SerializedMessage && other)
 {
-  *this = static_cast<rcl_serialized_message_t &&>(other);
+  *this = other.serialized_message_;
+  other.serialized_message_ = rmw_get_zero_initialized_serialized_message();
 
   return *this;
 }
 
 SerializedMessage & SerializedMessage::operator=(rcl_serialized_message_t && other)
 {
-  this->buffer = other.buffer;
-  this->buffer_capacity = other.buffer_length;
-  this->buffer_length = other.buffer_length;
-  this->allocator = other.allocator;
+  serialized_message_ = rmw_get_zero_initialized_serialized_message();
+  serialized_message_ = other;
 
   // reset original to prevent double free
   other = rmw_get_zero_initialized_serialized_message();
@@ -121,8 +115,8 @@ SerializedMessage & SerializedMessage::operator=(rcl_serialized_message_t && oth
 
 SerializedMessage::~SerializedMessage()
 {
-  if (nullptr != buffer) {
-    const auto fini_ret = rmw_serialized_message_fini(this);
+  if (nullptr != serialized_message_.buffer) {
+    const auto fini_ret = rmw_serialized_message_fini(&serialized_message_);
     if (RCL_RET_OK != fini_ret) {
       RCLCPP_ERROR(
         get_logger("rclcpp"),
@@ -131,4 +125,23 @@ SerializedMessage::~SerializedMessage()
   }
 }
 
+rcl_serialized_message_t & SerializedMessage::get_rcl_serialized_message()
+{
+  return serialized_message_;
+}
+
+const rcl_serialized_message_t & SerializedMessage::get_rcl_serialized_message() const
+{
+  return serialized_message_;
+}
+
+size_t SerializedMessage::size() const
+{
+  return serialized_message_.buffer_length;
+}
+
+size_t SerializedMessage::capacity() const
+{
+  return serialized_message_.buffer_capacity;
+}
 }  // namespace rclcpp
