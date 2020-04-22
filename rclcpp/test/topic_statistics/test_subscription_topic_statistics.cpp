@@ -18,6 +18,7 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -95,11 +96,6 @@ public:
   }
 
   virtual ~EmptyPublisher() = default;
-
-  size_t get_number_published()
-  {
-    return number_published_.load();
-  }
 
 private:
   void publish_message()
@@ -203,7 +199,8 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_single_empty_stats_m
   // create a listener for topic statistics messages
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_single_empty_stats_message_listener",
-    "/statistics");
+    "/statistics",
+    2);
 
   rclcpp::executors::SingleThreadedExecutor ex;
   ex.add_node(empty_publisher);
@@ -216,31 +213,51 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_single_empty_stats_m
     kTestDuration);
 
   // compare message counts, sample count should be the same as published and received count
-  EXPECT_EQ(1, statistics_listener->GetNumberOfMessagesReceived());
+  EXPECT_EQ(2, statistics_listener->GetNumberOfMessagesReceived());
 
   // check the received message and the data types
-  const auto received_message = statistics_listener->GetLastReceivedMessage();
-  for (const auto & stats_point : received_message.statistics) {
-    const auto type = stats_point.data_type;
-    switch (type) {
-      case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
-        EXPECT_LT(0, stats_point.data) << "unexpected sample count";
-        break;
-      case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
-        EXPECT_LT(0, stats_point.data) << "unexpected avg";
-        break;
-      case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
-        EXPECT_LT(0, stats_point.data) << "unexpected min";
-        break;
-      case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
-        EXPECT_LT(0, stats_point.data) << "unexpected max";
-        break;
-      case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
-        EXPECT_LT(0, stats_point.data) << "unexpected stddev";
-        break;
-      default:
-        FAIL() << "received unknown statistics type: " << std::dec <<
-          static_cast<unsigned int>(type);
+  const auto received_messages = statistics_listener->GetReceivedMessages();
+
+  EXPECT_EQ(2u, received_messages.size());
+
+  std::set<std::string> received_metrics;
+  for (const auto & msg : received_messages) {
+    received_metrics.insert(msg.metrics_source);
+  }
+  EXPECT_TRUE(received_metrics.find("message_age") != received_metrics.end());
+  EXPECT_TRUE(received_metrics.find("message_period") != received_metrics.end());
+
+  // Check the collected statistics for message period.
+  // Message age statistics will not be calculated because Empty messages
+  // don't have a `header` with timestamp.
+
+  // TODO(prajakta-gokhale): Change Empty message type to something with a `header`,
+  // and have below assertions work for all collectors.
+  for (const auto & msg : received_messages) {
+    if (msg.metrics_source == "message_period") {
+      for (const auto & stats_point : msg.statistics) {
+        const auto type = stats_point.data_type;
+        switch (type) {
+          case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
+            EXPECT_LT(0, stats_point.data) << "unexpected sample count";
+            break;
+          case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
+            EXPECT_LT(0, stats_point.data) << "unexpected avg";
+            break;
+          case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
+            EXPECT_LT(0, stats_point.data) << "unexpected min";
+            break;
+          case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
+            EXPECT_LT(0, stats_point.data) << "unexpected max";
+            break;
+          case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
+            EXPECT_LT(0, stats_point.data) << "unexpected stddev";
+            break;
+          default:
+            FAIL() << "received unknown statistics type: " << std::dec <<
+              static_cast<unsigned int>(type);
+        }
+      }
     }
   }
 }

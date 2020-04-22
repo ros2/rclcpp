@@ -177,11 +177,11 @@ private:
    */
   void bring_up()
   {
-    const auto received_message_age = std::make_unique<ReceivedMessageAge>();
+    auto received_message_age = std::make_unique<ReceivedMessageAge>();
     received_message_age->Start();
     subscriber_statistics_collectors_.emplace_back(std::move(received_message_age));
 
-    const auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
+    auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
     received_message_period->Start();
     {
       std::lock_guard<std::mutex> lock(mutex_);
