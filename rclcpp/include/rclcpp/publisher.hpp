@@ -220,7 +220,7 @@ public:
   void
   publish(const SerializedMessage & serialized_msg)
   {
-    return this->do_serialized_publish(serialized_msg.get_rcl_serialized_message());
+    return this->do_serialized_publish(&serialized_msg.get_rcl_serialized_message());
   }
 
   /// Publish an instance of a LoanedMessage.
