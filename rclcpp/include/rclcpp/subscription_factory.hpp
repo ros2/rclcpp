@@ -119,7 +119,6 @@ create_subscription_factory(
 }
 /// Return a SubscriptionFactory setup to create a SubscriptionT<MessageT, AllocatorT>.
 template<
-  typename MessageT,
   typename CallbackT,
   typename AllocatorT,
   typename CallbackMessageT =

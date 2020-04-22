@@ -36,7 +36,6 @@ namespace rclcpp
  * NodeTopicsInterface pointer itself.
  */
 template<
-  typename MessageT,
   typename CallbackT,
   typename AllocatorT = std::allocator<void>,
   typename CallbackMessageT =
@@ -63,7 +62,7 @@ create_generic_subscription(
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
 
-  auto factory = rclcpp::create_generic_subscription_factory<MessageT>(
+  auto factory = rclcpp::create_subscription_factory(
     std::forward<CallbackT>(callback),
     options,
     msg_mem_strat,

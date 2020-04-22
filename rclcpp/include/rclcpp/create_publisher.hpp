@@ -35,7 +35,7 @@ namespace rclcpp
  * which returns a shared_ptr to a NodeTopicsInterface.
  */
 template<
-  typename MessageT,
+  typename MessageT = SerializedMessage,
   typename AllocatorT = std::allocator<void>,
   typename PublisherT = rclcpp::Publisher<MessageT, AllocatorT>,
   typename NodeT>
@@ -57,7 +57,7 @@ create_generic_publisher(
   // Create the publisher.
   auto pub = node_topics->create_publisher(
     topic_name,
-    rclcpp::create_generic_publisher_factory<MessageT, AllocatorT, PublisherT>(
+    rclcpp::create_publisher_factory<AllocatorT, PublisherT>(
       options,
       type_support),
     qos
