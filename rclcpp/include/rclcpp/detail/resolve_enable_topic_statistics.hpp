@@ -42,7 +42,6 @@ resolve_enable_topic_statistics(const OptionsT & options, const NodeBaseT & node
       break;
     default:
       throw std::runtime_error("Unrecognized EnableTopicStatistics value");
-      break;
   }
 
   return topic_stats_enabled;

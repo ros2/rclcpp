@@ -15,15 +15,25 @@
 #ifndef RCLCPP__CREATE_SUBSCRIPTION_HPP_
 #define RCLCPP__CREATE_SUBSCRIPTION_HPP_
 
+#include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
+
+#include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
+
+#include "rclcpp/create_timer.hpp"
+#include "rclcpp/qos.hpp"
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/subscription_options.hpp"
-#include "rclcpp/qos.hpp"
+#include "rclcpp/timer.hpp"
+#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "rmw/qos_profiles.h"
 
 namespace rclcpp
@@ -64,10 +74,46 @@ create_subscription(
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
 
+  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
+  subscription_topic_stats = nullptr;
+
+  if (rclcpp::detail::resolve_enable_topic_statistics(
+      options,
+      *node_topics->get_node_base_interface()))
+  {
+    std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
+      create_publisher<statistics_msgs::msg::MetricsMessage>(
+      node,
+      options.topic_stats_options.publish_topic,
+      qos);
+
+    subscription_topic_stats = std::make_shared<
+      rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>
+      >(node_topics->get_node_base_interface()->get_name(), publisher);
+
+    auto sub_call_back = [subscription_topic_stats]() {
+        subscription_topic_stats->publish_message();
+      };
+
+    auto node_timer_interface = node_topics->get_node_timers_interface();
+
+    auto timer = create_wall_timer(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+        options.topic_stats_options.publish_period),
+      sub_call_back,
+      options.callback_group,
+      node_topics->get_node_base_interface(),
+      node_timer_interface
+    );
+
+    subscription_topic_stats->set_publisher_timer(timer);
+  }
+
   auto factory = rclcpp::create_subscription_factory<MessageT>(
     std::forward<CallbackT>(callback),
     options,
-    msg_mem_strat
+    msg_mem_strat,
+    subscription_topic_stats
   );
 
   auto sub = node_topics->create_subscription(topic_name, factory, qos);

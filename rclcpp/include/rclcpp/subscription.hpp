@@ -18,13 +18,13 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
-
 
 #include "rcl/error_handling.h"
 #include "rcl/subscription.h"
@@ -47,6 +47,7 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
+#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "tracetools/tracetools.h"
 
 namespace rclcpp
@@ -75,6 +76,8 @@ public:
   using MessageDeleter = allocator::Deleter<MessageAllocator, CallbackMessageT>;
   using ConstMessageSharedPtr = std::shared_ptr<const CallbackMessageT>;
   using MessageUniquePtr = std::unique_ptr<CallbackMessageT, MessageDeleter>;
+  using SubscriptionTopicStatisticsSharedPtr =
+    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
@@ -98,7 +101,8 @@ public:
     const rclcpp::QoS & qos,
     AnySubscriptionCallback<CallbackMessageT, AllocatorT> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy)
+    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy,
+    SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics = nullptr)
   : SubscriptionBase(
       node_base,
       type_support_handle,
@@ -178,6 +182,10 @@ public:
       auto ipm = context->get_sub_context<IntraProcessManager>();
       uint64_t intra_process_subscription_id = ipm->add_subscription(subscription_intra_process);
       this->setup_intra_process(intra_process_subscription_id, ipm);
+    }
+
+    if (subscription_topic_statistics != nullptr) {
+      this->subscription_topic_statistics_ = std::move(subscription_topic_statistics);
     }
 
     TRACEPOINT(
@@ -260,6 +268,13 @@ public:
     }
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     any_callback_.dispatch(typed_message, message_info);
+
+    if (subscription_topic_statistics_) {
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now());
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count(), RCL_STEADY_TIME);
+      subscription_topic_statistics_->handle_message(*typed_message, time);
+    }
   }
 
   void
@@ -307,6 +322,8 @@ private:
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
   typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::SharedPtr
     message_memory_strategy_;
+  /// Component which computes and publishes topic statistics for this subscriber
+  SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
 };
 
 }  // namespace rclcpp

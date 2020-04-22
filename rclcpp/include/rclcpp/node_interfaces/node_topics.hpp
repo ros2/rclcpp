@@ -22,6 +22,7 @@
 
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/publisher_factory.hpp"
@@ -39,7 +40,9 @@ public:
   RCLCPP_SMART_PTR_ALIASES_ONLY(NodeTopicsInterface)
 
   RCLCPP_PUBLIC
-  explicit NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base);
+  NodeTopics(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    rclcpp::node_interfaces::NodeTimersInterface * node_timers);
 
   RCLCPP_PUBLIC
   ~NodeTopics() override;
@@ -74,10 +77,15 @@ public:
   rclcpp::node_interfaces::NodeBaseInterface *
   get_node_base_interface() const override;
 
+  RCLCPP_PUBLIC
+  rclcpp::node_interfaces::NodeTimersInterface *
+  get_node_timers_interface() const override;
+
 private:
   RCLCPP_DISABLE_COPY(NodeTopics)
 
   rclcpp::node_interfaces::NodeBaseInterface * node_base_;
+  rclcpp::node_interfaces::NodeTimersInterface * node_timers_;
 };
 
 }  // namespace node_interfaces
