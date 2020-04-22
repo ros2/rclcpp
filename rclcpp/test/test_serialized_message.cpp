@@ -30,16 +30,14 @@
 
 TEST(TestSerializedMessage, empty_initialize) {
   rclcpp::SerializedMessage serialized_message;
-  EXPECT_TRUE(serialized_message.buffer == nullptr);
-  EXPECT_EQ(0u, serialized_message.buffer_length);
-  EXPECT_EQ(0u, serialized_message.buffer_capacity);
+  EXPECT_EQ(0u, serialized_message.size());
+  EXPECT_EQ(0u, serialized_message.capacity());
 }
 
 TEST(TestSerializedMessage, initialize_with_capacity) {
   rclcpp::SerializedMessage serialized_message(13);
-  EXPECT_TRUE(serialized_message.buffer != nullptr);
-  EXPECT_EQ(0u, serialized_message.buffer_length);
-  EXPECT_EQ(13u, serialized_message.buffer_capacity);
+  EXPECT_EQ(0u, serialized_message.size());
+  EXPECT_EQ(13u, serialized_message.capacity());
 }
 
 TEST(TestSerializedMessage, various_constructors) {
@@ -48,65 +46,72 @@ TEST(TestSerializedMessage, various_constructors) {
 
   rclcpp::SerializedMessage serialized_message(content_size);
   // manually copy some content
-  std::memcpy(serialized_message.buffer, content.c_str(), content.size());
-  serialized_message.buffer[content.size()] = '\0';
-  serialized_message.buffer_length = content_size;
-  EXPECT_STREQ(content.c_str(), reinterpret_cast<char *>(serialized_message.buffer));
-  EXPECT_EQ(content_size, serialized_message.buffer_capacity);
+  auto rcl_handle = serialized_message.get();
+  std::memcpy(rcl_handle->buffer, content.c_str(), content.size());
+  rcl_handle->buffer[content.size()] = '\0';
+  rcl_handle->buffer_length = content_size;
+  EXPECT_STREQ(content.c_str(), reinterpret_cast<char *>(rcl_handle->buffer));
+  EXPECT_EQ(content_size, serialized_message.capacity());
 
   // Copy Constructor
   rclcpp::SerializedMessage other_serialized_message(serialized_message);
-  EXPECT_EQ(content_size, other_serialized_message.buffer_capacity);
-  EXPECT_EQ(content_size, other_serialized_message.buffer_length);
+  EXPECT_EQ(content_size, other_serialized_message.capacity());
+  EXPECT_EQ(content_size, other_serialized_message.size());
+  auto other_rcl_handle = other_serialized_message.get();
   EXPECT_STREQ(
-    reinterpret_cast<char *>(serialized_message.buffer),
-    reinterpret_cast<char *>(other_serialized_message.buffer));
+    reinterpret_cast<char *>(rcl_handle->buffer),
+    reinterpret_cast<char *>(other_rcl_handle->buffer));
 
   // Move Constructor
   rclcpp::SerializedMessage yet_another_serialized_message(std::move(other_serialized_message));
-  EXPECT_TRUE(other_serialized_message.buffer == nullptr);
-  EXPECT_EQ(0u, other_serialized_message.buffer_capacity);
-  EXPECT_EQ(0u, other_serialized_message.buffer_length);
+  auto yet_another_rcl_handle = yet_another_serialized_message.get();
+  EXPECT_TRUE(nullptr == other_rcl_handle->buffer);
+  EXPECT_EQ(0u, other_serialized_message.capacity());
+  EXPECT_EQ(0u, other_serialized_message.size());
+  EXPECT_TRUE(nullptr != yet_another_rcl_handle->buffer);
+  EXPECT_EQ(content_size, yet_another_serialized_message.size());
+  EXPECT_EQ(content_size, yet_another_serialized_message.capacity());
+}
+
+TEST(TestSerializedMessage, various_constructors_from_rcl) {
+  const std::string content = "Hello World";
+  const auto content_size = content.size() + 1;  // accounting for null terminator
 
   auto default_allocator = rcl_get_default_allocator();
+
   auto rcl_serialized_msg = rmw_get_zero_initialized_serialized_message();
-  auto yet_another_rcl_serialized_msg = rmw_get_zero_initialized_serialized_message();
   auto ret = rmw_serialized_message_init(&rcl_serialized_msg, 13, &default_allocator);
   ASSERT_EQ(RCL_RET_OK, ret);
-  ret = rmw_serialized_message_init(&yet_another_rcl_serialized_msg, 13, &default_allocator);
-  ASSERT_EQ(RCL_RET_OK, ret);
-
   // manually copy some content
   std::memcpy(rcl_serialized_msg.buffer, content.c_str(), content.size());
   rcl_serialized_msg.buffer[content.size()] = '\0';
   rcl_serialized_msg.buffer_length = content_size;
   EXPECT_EQ(13u, rcl_serialized_msg.buffer_capacity);
-  std::memcpy(yet_another_rcl_serialized_msg.buffer, content.c_str(), content.size());
-  yet_another_rcl_serialized_msg.buffer[content.size()] = '\0';
-  yet_another_rcl_serialized_msg.buffer_length = content_size;
-  EXPECT_EQ(13u, yet_another_rcl_serialized_msg.buffer_capacity);
 
   // Copy Constructor from rcl_serialized_message_t
-  rclcpp::SerializedMessage from_rcl_msg(rcl_serialized_msg);
-  EXPECT_EQ(13u, from_rcl_msg.buffer_capacity);
-  EXPECT_EQ(content_size, from_rcl_msg.buffer_length);
+  rclcpp::SerializedMessage serialized_message(rcl_serialized_msg);
+  EXPECT_EQ(13u, serialized_message.capacity());
+  EXPECT_EQ(content_size, serialized_message.size());
 
   // Move Constructor from rcl_serialized_message_t
-  rclcpp::SerializedMessage yet_another_moved_serialized_message(std::move(
-      yet_another_rcl_serialized_msg));
-  EXPECT_TRUE(yet_another_rcl_serialized_msg.buffer == nullptr);
-  EXPECT_EQ(0u, yet_another_rcl_serialized_msg.buffer_capacity);
-  EXPECT_EQ(0u, yet_another_rcl_serialized_msg.buffer_length);
+  rclcpp::SerializedMessage another_serialized_message(std::move(rcl_serialized_msg));
+  EXPECT_TRUE(nullptr == rcl_serialized_msg.buffer);
+  EXPECT_EQ(0u, rcl_serialized_msg.buffer_capacity);
+  EXPECT_EQ(0u, rcl_serialized_msg.buffer_length);
+  EXPECT_EQ(13u, another_serialized_message.capacity());
+  EXPECT_EQ(content_size, another_serialized_message.size());
 
   // Verify that despite being fini'd, the copy is real
   ret = rmw_serialized_message_fini(&rcl_serialized_msg);
-  ASSERT_EQ(RCL_RET_OK, ret);
+  ASSERT_EQ(RCUTILS_RET_INVALID_ARGUMENT, ret);  // Buffer is null, because it was moved
   EXPECT_EQ(nullptr, rcl_serialized_msg.buffer);
   EXPECT_EQ(0u, rcl_serialized_msg.buffer_capacity);
   EXPECT_EQ(0u, rcl_serialized_msg.buffer_length);
-  EXPECT_TRUE(nullptr != from_rcl_msg.buffer);
-  EXPECT_EQ(13u, from_rcl_msg.buffer_capacity);
-  EXPECT_EQ(content_size, from_rcl_msg.buffer_length);
+  EXPECT_EQ(13u, serialized_message.capacity());
+  EXPECT_EQ(content_size, serialized_message.size());
+
+  auto rcl_handle = serialized_message.get();
+  EXPECT_TRUE(nullptr != rcl_handle->buffer);
 }
 
 TEST(TestSerializedMessage, serialization) {
