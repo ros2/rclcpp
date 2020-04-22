@@ -274,7 +274,7 @@ public:
   }
 
 protected:
-  virtual void
+  void
   do_inter_process_publish(const MessageT & msg)
   {
     generic_publisher::do_inter_process_publish(publisher_handle_, msg);
