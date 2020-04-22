@@ -41,9 +41,9 @@
 #include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
 #include "rclcpp/parameter.hpp"
 #include "rclcpp/qos.hpp"
+#include "rclcpp/timer.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
-#include "rclcpp/timer.hpp"
 
 #ifndef RCLCPP__NODE_HPP_
 #include "node.hpp"

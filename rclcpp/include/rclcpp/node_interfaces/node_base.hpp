@@ -43,7 +43,7 @@ public:
     rclcpp::Context::SharedPtr context,
     const rcl_node_options_t & rcl_node_options,
     bool use_intra_process_default,
-    bool enable_topic_statistics_default = false);
+    bool enable_topic_statistics_default);
 
   RCLCPP_PUBLIC
   virtual

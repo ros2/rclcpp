@@ -21,9 +21,12 @@
 #include <string>
 #include <utility>
 
+#include "rclcpp/detail/resolve_enable_topic_statistics.hpp"
+
+#include "rclcpp/node_interfaces/get_node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/get_node_topics_interface.hpp"
-#include "rclcpp/node_interfaces/node_topics_interface.hpp"
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
+#include "rclcpp/node_interfaces/node_topics_interface.hpp"
 
 #include "rclcpp/subscription_factory.hpp"
 #include "rclcpp/subscription_options.hpp"
@@ -74,7 +77,7 @@ create_subscription(
   std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
   subscription_topic_stats = nullptr;
 
-  if (options.topic_stats_options.state == rclcpp::TopicStatisticsState::Enable) {
+  if (rclcpp::detail::resolve_enable_topic_statistics(options, *node_topics->get_node_base_interface())) {
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       create_publisher<statistics_msgs::msg::MetricsMessage>(
       node,
@@ -91,8 +94,7 @@ create_subscription(
 
     auto timer = create_timer(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
-        options.topic_stats_options.
-        publish_period),
+        options.topic_stats_options.publish_period),
       sub_call_back,
       options.callback_group,
       node_topics->get_node_base_interface(),
@@ -122,8 +124,8 @@ create_subscription(
  * \param nanos period to exectute callback
  * \param callback
  * \param group
- * \param node_base_
- * \param node_timers_
+ * \param node_base
+ * \param node_timers
  * \return
  */
 template<typename CallbackT>
@@ -132,14 +134,14 @@ create_timer(
   std::chrono::nanoseconds nanos,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
-  rclcpp::node_interfaces::NodeBaseInterface * node_base_,
-  const rclcpp::node_interfaces::NodeTimersInterface::SharedPtr & node_timers_)
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
+  const std::shared_ptr<rclcpp::node_interfaces::NodeTimersInterface> & node_timers)
 {
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
     nanos,
     std::move(callback),
-    node_base_->get_context());
-  node_timers_->add_timer(timer, group);
+    node_base->get_context());
+  node_timers->add_timer(timer, group);
   return timer;
 }
 
