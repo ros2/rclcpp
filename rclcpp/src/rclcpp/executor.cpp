@@ -34,48 +34,9 @@ using rclcpp::Executor;
 using rclcpp::ExecutorOptions;
 using rclcpp::FutureReturnCode;
 
-Executor::Executor(const rclcpp::ExecutorOptions & options)
-: spinning(false),
-  memory_strategy_(options.memory_strategy)
+Executor::Executor(const ExecutorOptions & options)
+: spinning(false), interrupt_guard_condition_(options.context)
 {
-  rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
-  rcl_ret_t ret = rcl_guard_condition_init(
-    &interrupt_guard_condition_, options.context->get_rcl_context().get(), guard_condition_options);
-  if (RCL_RET_OK != ret) {
-    throw_from_rcl_error(ret, "Failed to create interrupt guard condition in Executor constructor");
-  }
-
-  // The number of guard conditions is always at least 2: 1 for the ctrl-c guard cond,
-  // and one for the executor's guard cond (interrupt_guard_condition_)
-
-  // Put the global ctrl-c guard condition in
-  memory_strategy_->add_guard_condition(options.context->get_interrupt_guard_condition(&wait_set_));
-
-  // Put the executor's guard condition in
-  memory_strategy_->add_guard_condition(&interrupt_guard_condition_);
-  rcl_allocator_t allocator = memory_strategy_->get_allocator();
-
-  // Store the context for later use.
-  context_ = options.context;
-
-  ret = rcl_wait_set_init(
-    &wait_set_,
-    0, 2, 0, 0, 0, 0,
-    context_->get_rcl_context().get(),
-    allocator);
-  if (RCL_RET_OK != ret) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rclcpp",
-      "failed to create wait set: %s", rcl_get_error_string().str);
-    rcl_reset_error();
-    if (rcl_guard_condition_fini(&interrupt_guard_condition_) != RCL_RET_OK) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rclcpp",
-        "failed to destroy guard condition: %s", rcl_get_error_string().str);
-      rcl_reset_error();
-    }
-    throw std::runtime_error("Failed to create wait set in Executor constructor");
-  }
 }
 
 Executor::~Executor()
@@ -207,12 +168,6 @@ Executor::spin_node_some(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr n
 }
 
 void
-Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
-{
-  this->spin_node_some(node->get_node_base_interface());
-}
-
-void
 Executor::spin_some(std::chrono::nanoseconds max_duration)
 {
   auto start = std::chrono::steady_clock::now();
@@ -264,15 +219,6 @@ Executor::cancel()
   if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(rcl_get_error_string().str);
   }
-}
-
-void
-Executor::set_memory_strategy(rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy)
-{
-  if (memory_strategy == nullptr) {
-    throw std::runtime_error("Received NULL memory strategy in executor.");
-  }
-  memory_strategy_ = memory_strategy;
 }
 
 void

@@ -73,8 +73,8 @@ public:
     const typename StoragePolicy::ClientsIterable & clients = {},
     const typename StoragePolicy::ServicesIterable & services = {},
     const typename StoragePolicy::WaitablesIterable & waitables = {},
-    rclcpp::Context::SharedPtr context =
-    rclcpp::contexts::get_global_default_context())
+    rclcpp::Context::SharedPtr context = (
+      rclcpp::contexts::get_global_default_context()))
   : SynchronizationPolicy(context),
     StoragePolicy(
       subscriptions,
@@ -249,7 +249,7 @@ public:
    *
    * Except in the case of a fixed sized storage, where changes to the wait set
    * cannot occur after construction, in which case it holds shared ownership
-   * at all times until the wait set is destroy, but this method also does not
+   * at all times until the wait set is destroyed, but this method also does not
    * exist on a fixed sized wait set.
    *
    * This function may be thread-safe depending on the SynchronizationPolicy

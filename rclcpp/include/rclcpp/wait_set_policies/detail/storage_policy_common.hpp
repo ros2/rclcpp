@@ -59,7 +59,9 @@ protected:
     const WaitablesIterable & waitables,
     rclcpp::Context::SharedPtr context
   )
-  : rcl_wait_set_(rcl_get_zero_initialized_wait_set()), context_(context)
+  : rcl_wait_set_(rcl_get_zero_initialized_wait_set()),
+    context_(context),
+    previous_size_of_extra_guard_conditions_(extra_guard_conditions.size())
   {
     // Check context is not nullptr.
     if (nullptr == context) {
@@ -166,6 +168,11 @@ protected:
   )
   {
     bool was_resized = false;
+    // Check if the extra_guard_conditions has changed.
+    if (previous_size_of_extra_guard_conditions_ != extra_guard_conditions.size()) {
+      previous_size_of_extra_guard_conditions_ = extra_guard_conditions.size();
+      needs_resize_ = true;
+    }
     // Resize the wait set, but only if it needs to be.
     if (needs_resize_) {
       // Resizing with rcl_wait_set_resize() is a no-op if nothing has changed,
@@ -235,7 +242,7 @@ protected:
     // Add subscriptions.
     for (const auto & subscription_entry : subscriptions) {
       auto subscription_ptr_pair =
-        get_raw_pointer_from_smart_pointer(subscription_entry.subscription);
+        get_raw_pointer_from_smart_pointer(subscription_entry);
       if (nullptr == subscription_ptr_pair.second) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
@@ -250,7 +257,7 @@ protected:
       rcl_ret_t ret = rcl_wait_set_add_subscription(
         &rcl_wait_set_,
         subscription_ptr_pair.second->get_subscription_handle().get(),
-        nullptr);
+        &subscription_entry.rcl_wait_set_index);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
@@ -276,7 +283,7 @@ protected:
           rcl_ret_t ret = rcl_wait_set_add_guard_condition(
             &rcl_wait_set_,
             &guard_condition_ptr_pair.second->get_rcl_guard_condition(),
-            nullptr);
+            &guard_condition.rcl_wait_set_index);
           if (RCL_RET_OK != ret) {
             rclcpp::exceptions::throw_from_rcl_error(ret);
           }
@@ -306,7 +313,7 @@ protected:
       rcl_ret_t ret = rcl_wait_set_add_timer(
         &rcl_wait_set_,
         timer_ptr_pair.second->get_timer_handle().get(),
-        nullptr);
+        &timer.rcl_wait_set_index);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
@@ -329,7 +336,7 @@ protected:
       rcl_ret_t ret = rcl_wait_set_add_client(
         &rcl_wait_set_,
         client_ptr_pair.second->get_client_handle().get(),
-        nullptr);
+        &clients.rcl_wait_set_index);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
@@ -352,7 +359,7 @@ protected:
       rcl_ret_t ret = rcl_wait_set_add_service(
         &rcl_wait_set_,
         service_ptr_pair.second->get_service_handle().get(),
-        nullptr);
+        &service.rcl_wait_set_index);
       if (RCL_RET_OK != ret) {
         rclcpp::exceptions::throw_from_rcl_error(ret);
       }
@@ -360,7 +367,7 @@ protected:
 
     // Add waitables.
     for (auto & waitable_entry : waitables) {
-      auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry.waitable);
+      auto waitable_ptr_pair = get_raw_pointer_from_smart_pointer(waitable_entry);
       if (nullptr == waitable_ptr_pair.second) {
         // In this case it was probably stored as a weak_ptr, but is now locking to nullptr.
         if (HasStrongOwnership) {
@@ -403,6 +410,7 @@ protected:
 
   bool needs_pruning_ = false;
   bool needs_resize_ = false;
+  size_t previous_size_of_extra_guard_conditions_ = 0;
 };
 
 }  // namespace detail
