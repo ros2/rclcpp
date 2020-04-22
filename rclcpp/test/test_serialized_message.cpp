@@ -46,29 +46,29 @@ TEST(TestSerializedMessage, various_constructors) {
 
   rclcpp::SerializedMessage serialized_message(content_size);
   // manually copy some content
-  auto rcl_handle = serialized_message.get();
-  std::memcpy(rcl_handle->buffer, content.c_str(), content.size());
-  rcl_handle->buffer[content.size()] = '\0';
-  rcl_handle->buffer_length = content_size;
-  EXPECT_STREQ(content.c_str(), reinterpret_cast<char *>(rcl_handle->buffer));
+  auto & rcl_handle = serialized_message.get_rcl_serialized_message();
+  std::memcpy(rcl_handle.buffer, content.c_str(), content.size());
+  rcl_handle.buffer[content.size()] = '\0';
+  rcl_handle.buffer_length = content_size;
+  EXPECT_STREQ(content.c_str(), reinterpret_cast<char *>(rcl_handle.buffer));
   EXPECT_EQ(content_size, serialized_message.capacity());
 
   // Copy Constructor
   rclcpp::SerializedMessage other_serialized_message(serialized_message);
   EXPECT_EQ(content_size, other_serialized_message.capacity());
   EXPECT_EQ(content_size, other_serialized_message.size());
-  auto other_rcl_handle = other_serialized_message.get();
+  auto & other_rcl_handle = other_serialized_message.get_rcl_serialized_message();
   EXPECT_STREQ(
-    reinterpret_cast<char *>(rcl_handle->buffer),
-    reinterpret_cast<char *>(other_rcl_handle->buffer));
+    reinterpret_cast<char *>(rcl_handle.buffer),
+    reinterpret_cast<char *>(other_rcl_handle.buffer));
 
   // Move Constructor
   rclcpp::SerializedMessage yet_another_serialized_message(std::move(other_serialized_message));
-  auto yet_another_rcl_handle = yet_another_serialized_message.get();
-  EXPECT_TRUE(nullptr == other_rcl_handle->buffer);
+  auto & yet_another_rcl_handle = yet_another_serialized_message.get_rcl_serialized_message();
+  EXPECT_TRUE(nullptr == other_rcl_handle.buffer);
   EXPECT_EQ(0u, other_serialized_message.capacity());
   EXPECT_EQ(0u, other_serialized_message.size());
-  EXPECT_TRUE(nullptr != yet_another_rcl_handle->buffer);
+  EXPECT_TRUE(nullptr != yet_another_rcl_handle.buffer);
   EXPECT_EQ(content_size, yet_another_serialized_message.size());
   EXPECT_EQ(content_size, yet_another_serialized_message.capacity());
 }
@@ -110,8 +110,8 @@ TEST(TestSerializedMessage, various_constructors_from_rcl) {
   EXPECT_EQ(13u, serialized_message.capacity());
   EXPECT_EQ(content_size, serialized_message.size());
 
-  auto rcl_handle = serialized_message.get();
-  EXPECT_TRUE(nullptr != rcl_handle->buffer);
+  auto rcl_handle = serialized_message.get_rcl_serialized_message();
+  EXPECT_TRUE(nullptr != rcl_handle.buffer);
 }
 
 TEST(TestSerializedMessage, serialization) {

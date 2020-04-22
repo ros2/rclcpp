@@ -43,7 +43,7 @@ void SerializationBase::serialize_message(
   const auto ret = rmw_serialize(
     ros_message,
     type_support_,
-    serialized_message->get());
+    &serialized_message->get_rcl_serialized_message());
   if (ret != RMW_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to serialize ROS message.");
   }
@@ -59,7 +59,8 @@ void SerializationBase::deserialize_message(
     "Serialized message is wrongly initialized.");
   rcpputils::check_true(nullptr != ros_message, "ROS message is a nullpointer.");
 
-  const auto ret = rmw_deserialize(serialized_message->get(), type_support_, ros_message);
+  const auto ret = rmw_deserialize(
+    &serialized_message->get_rcl_serialized_message(), type_support_, ros_message);
   if (ret != RMW_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "Failed to deserialize ROS message.");
   }

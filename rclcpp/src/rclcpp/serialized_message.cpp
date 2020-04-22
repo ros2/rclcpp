@@ -125,14 +125,14 @@ SerializedMessage::~SerializedMessage()
   }
 }
 
-rcl_serialized_message_t * SerializedMessage::get()
+rcl_serialized_message_t & SerializedMessage::get_rcl_serialized_message()
 {
-  return &serialized_message_;
+  return serialized_message_;
 }
 
-const rcl_serialized_message_t * SerializedMessage::get() const
+const rcl_serialized_message_t & SerializedMessage::get_rcl_serialized_message() const
 {
-  return &serialized_message_;
+  return serialized_message_;
 }
 
 size_t SerializedMessage::size() const

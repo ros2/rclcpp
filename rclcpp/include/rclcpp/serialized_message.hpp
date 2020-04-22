@@ -79,10 +79,10 @@ public:
   virtual ~SerializedMessage();
 
   /// Get the underlying rcl_serialized_t handle
-  rcl_serialized_message_t * get();
+  rcl_serialized_message_t & get_rcl_serialized_message();
 
   // Get a const handle to the underlying rcl_serialized_message_t
-  const rcl_serialized_message_t * get() const;
+  const rcl_serialized_message_t & get_rcl_serialized_message() const;
 
   /// Get the size of the serialized data buffer
   /**
