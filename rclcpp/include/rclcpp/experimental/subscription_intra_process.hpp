@@ -157,7 +157,7 @@ public:
     MessageAllocTraits::construct(*message_allocator_.get(), ptr);
     auto message = MessageUniquePtr(ptr);
 
-    serialization.deserialize_message(serialized_message, *message);
+    serialization.deserialize_message(&serialized_message, reinterpret_cast<void *>(message.get()));
 
     provide_intra_process_message(std::move(message));
   }

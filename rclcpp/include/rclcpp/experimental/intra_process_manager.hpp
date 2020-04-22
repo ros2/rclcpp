@@ -386,7 +386,8 @@ private:
           >(subscription_base);
 
         auto serialized_message = std::make_unique<SerializedMessage>();
-        serialization.serialize_message(*message, *serialized_message);
+        serialization.serialize_message(
+          reinterpret_cast<const void *>(message.get()), serialized_message.get());
 
         subscription->provide_intra_process_message(std::move(serialized_message));
       }
@@ -446,7 +447,8 @@ private:
           >(subscription_base);
 
         auto serialized_message = std::make_unique<SerializedMessage>();
-        serialization.serialize_message(*message, *serialized_message);
+        serialization.serialize_message(
+          reinterpret_cast<const void *>(message.get()), serialized_message.get());
 
         subscription->provide_intra_process_message(std::move(serialized_message));
       }
