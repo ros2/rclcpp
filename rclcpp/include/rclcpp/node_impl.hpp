@@ -111,7 +111,7 @@ Node::create_wall_timer(
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group)
 {
-  return create_node_timer(
+  return rclcpp::create_wall_timer(
     period,
     std::move(callback),
     group,

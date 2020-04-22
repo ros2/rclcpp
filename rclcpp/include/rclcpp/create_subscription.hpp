@@ -74,8 +74,6 @@ create_subscription(
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
 
-  auto node_timer_interface = node_topics->get_node_timers_interface();
-
   std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
   subscription_topic_stats = nullptr;
 
@@ -97,7 +95,9 @@ create_subscription(
         subscription_topic_stats->publish_message();
       };
 
-    auto timer = create_node_timer(
+    auto node_timer_interface = node_topics->get_node_timers_interface();
+
+    auto timer = create_wall_timer(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
         options.topic_stats_options.publish_period),
       sub_call_back,

@@ -87,7 +87,7 @@ create_timer(
  */
 template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr
-create_node_timer(
+create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
   rclcpp::callback_group::CallbackGroup::SharedPtr group,
