@@ -113,7 +113,7 @@ public:
   bool
   is_serialized() const
   {
-    return rclcpp::is_serialized_message_class<MessageT>::value;
+    return serialization_traits::is_serialized_message_class<MessageT>::value;
   }
 
   bool

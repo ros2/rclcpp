@@ -358,7 +358,8 @@ private:
     std::shared_ptr<const MessageT> message,
     std::vector<uint64_t> subscription_ids)
   {
-    constexpr bool is_serialized_publisher = rclcpp::is_serialized_message_class<MessageT>::value;
+    constexpr bool is_serialized_publisher =
+      serialization_traits::is_serialized_message_class<MessageT>::value;
 
     for (auto id : subscription_ids) {
       auto subscription_it = subscriptions_.find(id);
@@ -405,7 +406,8 @@ private:
     using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
     using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
 
-    constexpr bool is_serialized_publisher = rclcpp::is_serialized_message_class<MessageT>::value;
+    constexpr bool is_serialized_publisher =
+      serialization_traits::is_serialized_message_class<MessageT>::value;
 
     for (auto it = subscription_ids.begin(); it != subscription_ids.end(); it++) {
       auto subscription_it = subscriptions_.find(*it);
@@ -452,7 +454,7 @@ private:
   }
 
   template<typename T>
-  static std::enable_if_t<!rclcpp::is_serialized_message_class<T>::value>
+  static std::enable_if_t<!serialization_traits::is_serialized_message_class<T>::value>
   provide_serialized_intra_process_message(
     rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription,
     const T & serialized_message)
