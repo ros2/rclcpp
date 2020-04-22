@@ -108,7 +108,7 @@ Node::Node(
   node_graph_(new rclcpp::node_interfaces::NodeGraph(node_base_.get())),
   node_logging_(new rclcpp::node_interfaces::NodeLogging(node_base_.get())),
   node_timers_(new rclcpp::node_interfaces::NodeTimers(node_base_.get())),
-  node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get())),
+  node_topics_(new rclcpp::node_interfaces::NodeTopics(node_base_.get(), node_timers_.get())),
   node_services_(new rclcpp::node_interfaces::NodeServices(node_base_.get())),
   node_clock_(new rclcpp::node_interfaces::NodeClock(
       node_base_,

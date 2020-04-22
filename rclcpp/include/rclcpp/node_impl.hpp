@@ -100,8 +100,7 @@ Node::create_subscription(
     qos,
     std::forward<CallbackT>(callback),
     options,
-    msg_mem_strat,
-    this->get_node_timers_interface());
+    msg_mem_strat);
 }
 
 template<typename DurationRepT, typename DurationT, typename CallbackT>

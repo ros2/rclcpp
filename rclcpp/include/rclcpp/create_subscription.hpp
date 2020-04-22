@@ -68,12 +68,13 @@ create_subscription(
   ),
   typename MessageMemoryStrategyT::SharedPtr msg_mem_strat = (
     MessageMemoryStrategyT::create_default()
-  ),
-  rclcpp::node_interfaces::NodeTimersInterface::SharedPtr node_timer_interface = nullptr
+  )
 )
 {
   using rclcpp::node_interfaces::get_node_topics_interface;
   auto node_topics = get_node_topics_interface(std::forward<NodeT>(node));
+
+  auto node_timer_interface = node_topics->get_node_timers_interface();
 
   std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
   subscription_topic_stats = nullptr;
@@ -102,7 +103,7 @@ create_subscription(
       sub_call_back,
       options.callback_group,
       node_topics->get_node_base_interface(),
-      node_timer_interface.get()
+      node_timer_interface
     );
 
     subscription_topic_stats->set_publisher_timer(timer);
