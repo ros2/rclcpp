@@ -229,6 +229,7 @@ if(BUILD_TESTING)
     test/msg/MessageWithHeader.msg
     DEPENDENCIES builtin_interfaces
     LIBRARY_NAME ${PROJECT_NAME}
+    SKIP_INSTALL
   )
 
   ament_add_gtest(test_client test/test_client.cpp)
