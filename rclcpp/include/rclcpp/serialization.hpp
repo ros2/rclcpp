@@ -40,10 +40,6 @@ struct is_serialized_message_class : std::false_type
 {};
 
 template<>
-struct is_serialized_message_class<rcl_serialized_message_t>: std::true_type
-{};
-
-template<>
 struct is_serialized_message_class<SerializedMessage>: std::true_type
 {};
 }  // namespace serialization_traits
