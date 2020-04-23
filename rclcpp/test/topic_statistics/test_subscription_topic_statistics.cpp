@@ -225,9 +225,6 @@ protected:
     empty_subscriber = std::make_shared<EmptySubscriber>(
       kTestSubNodeName,
       kTestSubStatsTopic);
-    imu_subscriber = std::make_shared<ImuSubscriber>(
-      kTestSubNodeName,
-      kTestSubStatsTopic);
   }
 
   void TearDown()
@@ -236,7 +233,6 @@ protected:
     empty_subscriber.reset();
   }
   std::shared_ptr<EmptySubscriber> empty_subscriber;
-  std::shared_ptr<ImuSubscriber> imu_subscriber;
 };
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
@@ -351,6 +347,10 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
     "test_receive_stats_for_message_with_header",
     "/statistics",
     2);
+
+  auto imu_subscriber = std::make_shared<ImuSubscriber>(
+    kTestSubNodeName,
+    kTestSubStatsTopic);
 
   rclcpp::executors::SingleThreadedExecutor ex;
   ex.add_node(imu_publisher);
