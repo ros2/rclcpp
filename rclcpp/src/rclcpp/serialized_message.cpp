@@ -144,4 +144,20 @@ size_t SerializedMessage::capacity() const
 {
   return serialized_message_.buffer_capacity;
 }
+
+void SerializedMessage::reserve(size_t capacity)
+{
+  auto ret = rmw_serialized_message_resize(&serialized_message_, capacity);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+}
+
+rcl_serialized_message_t SerializedMessage::release_rcl_serialized_message()
+{
+  auto ret = serialized_message_;
+  serialized_message_ = rmw_get_zero_initialized_serialized_message();
+
+  return ret;
+}
 }  // namespace rclcpp
