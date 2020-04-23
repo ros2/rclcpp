@@ -17,13 +17,14 @@ find_package(composition_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
 
-include_directories(include)
-
 add_library(
   component_manager
   SHARED
   src/component_manager.cpp
 )
+target_include_directories(component_manager PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
 ament_target_dependencies(component_manager
   "ament_index_cpp"
   "class_loader"
@@ -68,6 +69,7 @@ if(BUILD_TESTING)
 
   set(components "")
   add_library(test_component SHARED test/components/test_component.cpp)
+  target_include_directories(test_component PUBLIC include)
   ament_target_dependencies(test_component
     "class_loader"
     "rclcpp")
@@ -102,7 +104,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  TARGETS component_manager
+  TARGETS component_manager EXPORT component_manager
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -129,6 +131,8 @@ install(
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(component_manager)
+ament_export_targets(component_manager)
+ament_export_dependencies(ament_index_cpp)
 ament_export_dependencies(class_loader)
 ament_export_dependencies(composition_interfaces)
 ament_export_dependencies(rclcpp)
