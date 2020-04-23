@@ -36,7 +36,7 @@
 #include "statistics_msgs/msg/statistic_data_point.hpp"
 #include "statistics_msgs/msg/statistic_data_type.hpp"
 
-#include "sensor_msgs/msg/imu.hpp"
+#include "test_msgs/msg/message_with_header.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 #include "test_topic_stats_utils.hpp"
@@ -51,7 +51,7 @@ constexpr const uint64_t kNoSamples{0};
 constexpr const std::chrono::seconds kTestDuration{10};
 }  // namespace
 
-using sensor_msgs::msg::Imu;
+using test_msgs::msg::MessageWithHeader;
 using test_msgs::msg::Empty;
 using rclcpp::topic_statistics::SubscriptionTopicStatistics;
 using statistics_msgs::msg::MetricsMessage;
@@ -113,38 +113,38 @@ private:
 };
 
 /**
- * IMU message publisher node: used to publish IMU messages with `header` value set
+ * MessageWithHeader publisher node: used to publish MessageWithHeader with `header` value set
  */
-class ImuPublisher : public rclcpp::Node
+class DummyPublisher : public rclcpp::Node
 {
 public:
-  ImuPublisher(
+  DummyPublisher(
     const std::string & name, const std::string & topic,
     const std::chrono::milliseconds & publish_period = std::chrono::milliseconds{100})
   : Node(name)
   {
-    publisher_ = create_publisher<Imu>(topic, 10);
+    publisher_ = create_publisher<MessageWithHeader>(topic, 10);
     publish_timer_ = this->create_wall_timer(
       publish_period, [this]() {
         this->publish_message();
       });
   }
 
-  virtual ~ImuPublisher() = default;
+  virtual ~DummyPublisher() = default;
 
 private:
   void publish_message()
   {
     ++number_published_;
-    auto msg = Imu{};
+    auto msg = MessageWithHeader{};
     auto now = this->now();
-    auto nanos = now.nanoseconds() - 1000*1000;
+    auto nanos = now.nanoseconds() - 1000 * 1000;
     msg.header.stamp.sec = static_cast<std::int32_t>(RCL_NS_TO_S(nanos));
     msg.header.stamp.nanosec = static_cast<std::uint32_t>(nanos % (1000 * 1000 * 1000));
     publisher_->publish(msg);
   }
 
-  rclcpp::Publisher<Imu>::SharedPtr publisher_;
+  rclcpp::Publisher<MessageWithHeader>::SharedPtr publisher_;
   std::atomic<size_t> number_published_{0};
   rclcpp::TimerBase::SharedPtr publish_timer_;
 };
@@ -182,35 +182,35 @@ private:
 };
 
 /**
- * IMU subscriber node: used to create subscriber topic statistics requirements
+ * MessageWithHeader subscriber node: used to create subscriber topic statistics requirements
  */
-class ImuSubscriber : public rclcpp::Node
+class DummySubscriber : public rclcpp::Node
 {
 public:
-  ImuSubscriber(const std::string & name, const std::string & topic)
+  DummySubscriber(const std::string & name, const std::string & topic)
   : Node(name)
   {
     // manually enable topic statistics via options
     auto options = rclcpp::SubscriptionOptions();
     options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
 
-    auto callback = [this](Imu::UniquePtr msg) {
+    auto callback = [this](MessageWithHeader::UniquePtr msg) {
         this->receive_message(*msg);
       };
-    subscription_ = create_subscription<Imu,
-        std::function<void(Imu::UniquePtr)>>(
+    subscription_ = create_subscription<MessageWithHeader,
+        std::function<void(MessageWithHeader::UniquePtr)>>(
       topic,
       rclcpp::QoS(rclcpp::KeepAll()),
       callback,
       options);
   }
-  virtual ~ImuSubscriber() = default;
+  virtual ~DummySubscriber() = default;
 
 private:
-  void receive_message(const Imu &) const
+  void receive_message(const MessageWithHeader &) const
   {
   }
-  rclcpp::Subscription<Imu>::SharedPtr subscription_;
+  rclcpp::Subscription<MessageWithHeader>::SharedPtr subscription_;
 };
 
 /**
@@ -258,7 +258,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
   }
 }
 
-TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_single_empty_stats_message)
+TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no_header)
 {
   // create an empty publisher
   auto empty_publisher = std::make_shared<EmptyPublisher>(
@@ -335,8 +335,8 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_single_empty_stats_m
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_with_header)
 {
-  // create an empty publisher
-  auto imu_publisher = std::make_shared<ImuPublisher>(
+  // create a MessageWithHeader publisher
+  auto dummy_publisher = std::make_shared<DummyPublisher>(
     kTestPubNodeName,
     kTestSubStatsTopic);
   // empty_subscriber has a topic statistics instance as part of its subscription
@@ -348,14 +348,14 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
     "/statistics",
     2);
 
-  auto imu_subscriber = std::make_shared<ImuSubscriber>(
+  auto dummy_subscriber = std::make_shared<DummySubscriber>(
     kTestSubNodeName,
     kTestSubStatsTopic);
 
   rclcpp::executors::SingleThreadedExecutor ex;
-  ex.add_node(imu_publisher);
+  ex.add_node(dummy_publisher);
   ex.add_node(statistics_listener);
-  ex.add_node(imu_subscriber);
+  ex.add_node(dummy_subscriber);
 
   // spin and get future
   ex.spin_until_future_complete(

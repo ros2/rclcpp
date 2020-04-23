@@ -217,7 +217,6 @@ if(BUILD_TESTING)
 
   find_package(rmw_implementation_cmake REQUIRED)
 
-  find_package(sensor_msgs REQUIRED)
   find_package(test_msgs REQUIRED)
 
   include(cmake/rclcpp_add_build_failure_test.cmake)
@@ -615,13 +614,11 @@ if(BUILD_TESTING)
   if(TARGET test_subscription_topic_statistics)
     ament_target_dependencies(test_subscription_topic_statistics
       "libstatistics_collector"
-      "rcl"
       "rcl_interfaces"
       "rcutils"
       "rmw"
       "rosidl_runtime_cpp"
       "rosidl_typesupport_cpp"
-      "sensor_msgs"
       "statistics_msgs"
       "test_msgs")
     target_link_libraries(test_subscription_topic_statistics ${PROJECT_NAME})
