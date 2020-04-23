@@ -250,7 +250,7 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  std::shared_ptr<rclcpp::SerializedMessage>
+  std::shared_ptr<rcl_serialized_message_t>
   create_serialized_message() override
   {
     return message_memory_strategy_->borrow_serialized_message();
@@ -299,7 +299,7 @@ public:
   }
 
   void
-  return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override
+  return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
   {
     message_memory_strategy_->return_serialized_message(message);
   }
