@@ -94,7 +94,7 @@ public:
 
   /// Handle a message received by the subscription to collect statistics.
   /**
-   * - This method acquires a lock to prevent race conditions to collectors list.
+   * This method acquires a lock to prevent race conditions to collectors list.
    *
    * \param received_message the message received by the subscription
    * \param now_nanoseconds current time in nanoseconds
@@ -120,7 +120,7 @@ public:
 
   /// Publish a populated MetricsStatisticsMessage.
   /**
-   * - This method acquires a lock to prevent race conditions to collectors list.
+   * This method acquires a lock to prevent race conditions to collectors list.
    */
   virtual void publish_message()
   {
@@ -152,7 +152,7 @@ public:
 protected:
   /// Return a vector of all the currently collected data.
   /**
-   * - This method acquires a lock to prevent race conditions to collectors list.
+   * This method acquires a lock to prevent race conditions to collectors list.
    *
    * \return a vector of all the collected data
    */
@@ -169,7 +169,7 @@ protected:
 private:
   /// Construct and start all collectors and set window_start_.
   /**
-   * - This method acquires a lock to prevent race conditions to collectors list.
+   * This method acquires a lock to prevent race conditions to collectors list.
    */
   void bring_up()
   {
@@ -185,7 +185,7 @@ private:
 
   /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
   /**
-   * - This method acquires a lock to prevent race conditions to collectors list.
+   * This method acquires a lock to prevent race conditions to collectors list.
    */
   void tear_down()
   {
