@@ -113,10 +113,10 @@ private:
 /**
  * MessageWithHeader publisher node: used to publish MessageWithHeader with `header` value set
  */
-class DummyPublisher : public rclcpp::Node
+class MessageWithHeaderPublisher : public rclcpp::Node
 {
 public:
-  DummyPublisher(
+  MessageWithHeaderPublisher(
     const std::string & name, const std::string & topic,
     const std::chrono::milliseconds & publish_period = std::chrono::milliseconds{100})
   : Node(name)
@@ -128,7 +128,7 @@ public:
       });
   }
 
-  virtual ~DummyPublisher() = default;
+  virtual ~MessageWithHeaderPublisher() = default;
 
 private:
   void publish_message()
@@ -180,10 +180,10 @@ private:
 /**
  * MessageWithHeader subscriber node: used to create subscriber topic statistics requirements
  */
-class DummySubscriber : public rclcpp::Node
+class MessageWithHeaderSubscriber : public rclcpp::Node
 {
 public:
-  DummySubscriber(const std::string & name, const std::string & topic)
+  MessageWithHeaderSubscriber(const std::string & name, const std::string & topic)
   : Node(name)
   {
     // manually enable topic statistics via options
@@ -200,7 +200,7 @@ public:
       callback,
       options);
   }
-  virtual ~DummySubscriber() = default;
+  virtual ~MessageWithHeaderSubscriber() = default;
 
 private:
   void receive_message(const MessageWithHeader &) const
@@ -297,31 +297,31 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   // Check the collected statistics for message period.
   // Message age statistics will not be calculated because Empty messages
   // don't have a `header` with timestamp.
-
   for (const auto & msg : received_messages) {
-    if (msg.metrics_source == "message_period") {
-      for (const auto & stats_point : msg.statistics) {
-        const auto type = stats_point.data_type;
-        switch (type) {
-          case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
-            EXPECT_LT(0, stats_point.data) << "unexpected sample count";
-            break;
-          case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
-            EXPECT_LT(0, stats_point.data) << "unexpected avg";
-            break;
-          case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
-            EXPECT_LT(0, stats_point.data) << "unexpected min";
-            break;
-          case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
-            EXPECT_LT(0, stats_point.data) << "unexpected max";
-            break;
-          case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
-            EXPECT_LT(0, stats_point.data) << "unexpected stddev";
-            break;
-          default:
-            FAIL() << "received unknown statistics type: " << std::dec <<
-              static_cast<unsigned int>(type);
-        }
+    if (msg.metrics_source != "message_period") {
+      continue;
+    }
+    for (const auto & stats_point : msg.statistics) {
+      const auto type = stats_point.data_type;
+      switch (type) {
+        case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
+          EXPECT_LT(0, stats_point.data) << "unexpected sample count";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
+          EXPECT_LT(0, stats_point.data) << "unexpected avg";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
+          EXPECT_LT(0, stats_point.data) << "unexpected min";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
+          EXPECT_LT(0, stats_point.data) << "unexpected max";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
+          EXPECT_LT(0, stats_point.data) << "unexpected stddev";
+          break;
+        default:
+          FAIL() << "received unknown statistics type: " << std::dec <<
+            static_cast<unsigned int>(type);
       }
     }
   }
@@ -330,7 +330,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_with_header)
 {
   // create a MessageWithHeader publisher
-  auto dummy_publisher = std::make_shared<DummyPublisher>(
+  auto msg_with_header_publisher = std::make_shared<MessageWithHeaderPublisher>(
     kTestPubNodeName,
     kTestSubStatsTopic);
   // empty_subscriber has a topic statistics instance as part of its subscription
@@ -342,14 +342,14 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
     "/statistics",
     2);
 
-  auto dummy_subscriber = std::make_shared<DummySubscriber>(
+  auto msg_with_header_subscriber = std::make_shared<MessageWithHeaderSubscriber>(
     kTestSubNodeName,
     kTestSubStatsTopic);
 
   rclcpp::executors::SingleThreadedExecutor ex;
-  ex.add_node(dummy_publisher);
+  ex.add_node(msg_with_header_publisher);
   ex.add_node(statistics_listener);
-  ex.add_node(dummy_subscriber);
+  ex.add_node(msg_with_header_subscriber);
 
   // spin and get future
   ex.spin_until_future_complete(
@@ -372,7 +372,6 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   EXPECT_TRUE(received_metrics.find("message_period") != received_metrics.end());
 
   // Check the collected statistics for message period.
-
   for (const auto & msg : received_messages) {
     for (const auto & stats_point : msg.statistics) {
       const auto type = stats_point.data_type;
