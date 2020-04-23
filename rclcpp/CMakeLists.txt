@@ -619,7 +619,9 @@ if(BUILD_TESTING)
     target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_subscription_topic_statistics test/topic_statistics/test_subscription_topic_statistics.cpp)
+  ament_add_gtest(test_subscription_topic_statistics test/topic_statistics/test_subscription_topic_statistics.cpp
+    APPEND_LIBRARY_DIRS "${CMAKE_CURRENT_BINARY_DIR}"
+  )
   if(TARGET test_subscription_topic_statistics)
     ament_target_dependencies(test_subscription_topic_statistics
       "builtin_interfaces"
