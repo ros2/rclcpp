@@ -90,7 +90,7 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr
 create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  rclcpp::CallbackGroup::SharedPtr group,
   node_interfaces::NodeBaseInterface * node_base,
   node_interfaces::NodeTimersInterface * node_timers)
 {
