@@ -49,7 +49,7 @@ protected:
     request->goal_id.uuid = uuid;
     auto future = client->async_send_request(request);
     if (
-      rclcpp::executor::FutureReturnCode::SUCCESS !=
+      rclcpp::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
     {
       throw std::runtime_error("send goal future didn't complete succesfully");
@@ -69,7 +69,7 @@ protected:
     request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
     if (
-      rclcpp::executor::FutureReturnCode::SUCCESS !=
+      rclcpp::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
     {
       throw std::runtime_error("cancel goal future didn't complete succesfully");
@@ -132,7 +132,7 @@ TEST_F(TestServer, handle_goal_called)
 
   auto future = client->async_send_request(request);
   ASSERT_EQ(
-    rclcpp::executor::FutureReturnCode::SUCCESS,
+    rclcpp::FutureReturnCode::SUCCESS,
     rclcpp::spin_until_future_complete(node, future));
 
   ASSERT_EQ(uuid, received_uuid);
@@ -744,7 +744,7 @@ TEST_F(TestServer, get_result)
 
   // Wait for the result request to be received
   ASSERT_EQ(
-    rclcpp::executor::FutureReturnCode::SUCCESS,
+    rclcpp::FutureReturnCode::SUCCESS,
     rclcpp::spin_until_future_complete(node, future));
 
   auto response = future.get();

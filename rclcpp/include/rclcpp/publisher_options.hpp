@@ -30,10 +30,7 @@
 namespace rclcpp
 {
 
-namespace callback_group
-{
 class CallbackGroup;
-}  // namespace callback_group
 
 /// Non-templated part of PublisherOptionsWithAllocator<Allocator>.
 struct PublisherOptionsBase
@@ -48,7 +45,7 @@ struct PublisherOptionsBase
   bool use_default_callbacks = true;
 
   /// Callback group in which the waitable items from the publisher should be placed.
-  std::shared_ptr<rclcpp::callback_group::CallbackGroup> callback_group;
+  std::shared_ptr<rclcpp::CallbackGroup> callback_group;
 
   /// Optional RMW implementation specific payload to be used during creation of the publisher.
   std::shared_ptr<rclcpp::detail::RMWImplementationSpecificPublisherPayload>

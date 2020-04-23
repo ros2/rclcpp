@@ -135,12 +135,12 @@ public:
 
   /// Create and return a callback group.
   RCLCPP_PUBLIC
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
+  rclcpp::CallbackGroup::SharedPtr
+  create_callback_group(rclcpp::CallbackGroupType group_type);
 
   /// Return the list of callback groups in the node.
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
   /// Create and return a Publisher.
@@ -227,7 +227,7 @@ public:
   create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Client. */
   template<typename ServiceT>
@@ -235,7 +235,7 @@ public:
   create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /* Create and return a Service. */
   template<typename ServiceT, typename CallbackT>
@@ -244,7 +244,7 @@ public:
     const std::string & service_name,
     CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Declare and initialize a parameter, return the effective value.
   /**
@@ -1142,7 +1142,7 @@ private:
 
   RCLCPP_PUBLIC
   bool
-  group_in_node(callback_group::CallbackGroup::SharedPtr group);
+  group_in_node(CallbackGroup::SharedPtr group);
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;

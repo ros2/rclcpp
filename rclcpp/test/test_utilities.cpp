@@ -52,8 +52,8 @@ TEST(TestUtilities, init_with_args) {
 }
 
 TEST(TestUtilities, multi_init) {
-  auto context1 = std::make_shared<rclcpp::contexts::default_context::DefaultContext>();
-  auto context2 = std::make_shared<rclcpp::contexts::default_context::DefaultContext>();
+  auto context1 = std::make_shared<rclcpp::contexts::DefaultContext>();
+  auto context2 = std::make_shared<rclcpp::contexts::DefaultContext>();
 
   EXPECT_FALSE(rclcpp::ok(context1));
   EXPECT_FALSE(rclcpp::ok(context2));

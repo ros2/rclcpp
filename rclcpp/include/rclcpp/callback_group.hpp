@@ -40,9 +40,6 @@ class NodeTopics;
 class NodeWaitables;
 }  // namespace node_interfaces
 
-namespace callback_group
-{
-
 enum class CallbackGroupType
 {
   MutuallyExclusive,
@@ -161,6 +158,12 @@ private:
     return typename TypeT::SharedPtr();
   }
 };
+
+namespace callback_group
+{
+
+using CallbackGroupType [[deprecated("use rclcpp::CallbackGroupType instead")]] = CallbackGroupType;
+using CallbackGroup [[deprecated("use rclcpp::CallbackGroup instead")]] = CallbackGroup;
 
 }  // namespace callback_group
 }  // namespace rclcpp

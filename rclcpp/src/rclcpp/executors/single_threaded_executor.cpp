@@ -18,8 +18,8 @@
 
 using rclcpp::executors::SingleThreadedExecutor;
 
-SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::executor::ExecutorArgs & args)
-: executor::Executor(args) {}
+SingleThreadedExecutor::SingleThreadedExecutor(const rclcpp::ExecutorOptions & options)
+: rclcpp::Executor(options) {}
 
 SingleThreadedExecutor::~SingleThreadedExecutor() {}
 
@@ -31,7 +31,7 @@ SingleThreadedExecutor::spin()
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   while (rclcpp::ok(this->context_) && spinning.load()) {
-    rclcpp::executor::AnyExecutable any_executable;
+    rclcpp::AnyExecutable any_executable;
     if (get_next_executable(any_executable)) {
       execute_any_executable(any_executable);
     }
