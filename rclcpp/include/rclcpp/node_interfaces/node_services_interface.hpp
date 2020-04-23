@@ -41,14 +41,14 @@ public:
   void
   add_client(
     rclcpp::ClientBase::SharedPtr client_base_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
+    rclcpp::CallbackGroup::SharedPtr group) = 0;
 
   RCLCPP_PUBLIC
   virtual
   void
   add_service(
     rclcpp::ServiceBase::SharedPtr service_base_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
+    rclcpp::CallbackGroup::SharedPtr group) = 0;
 };
 
 }  // namespace node_interfaces

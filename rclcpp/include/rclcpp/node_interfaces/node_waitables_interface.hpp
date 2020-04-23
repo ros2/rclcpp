@@ -40,7 +40,7 @@ public:
   void
   add_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
+    rclcpp::CallbackGroup::SharedPtr group) = 0;
 
   /// \note this function should not throw because it may be called in destructors
   RCLCPP_PUBLIC
@@ -48,7 +48,7 @@ public:
   void
   remove_waitable(
     rclcpp::Waitable::SharedPtr waitable_ptr,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group) noexcept = 0;
+    rclcpp::CallbackGroup::SharedPtr group) noexcept = 0;
 };
 
 }  // namespace node_interfaces

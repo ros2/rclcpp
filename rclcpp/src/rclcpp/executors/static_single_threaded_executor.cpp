@@ -19,11 +19,11 @@
 #include "rclcpp/scope_exit.hpp"
 
 using rclcpp::executors::StaticSingleThreadedExecutor;
-using rclcpp::executor::ExecutableList;
+using rclcpp::experimental::ExecutableList;
 
 StaticSingleThreadedExecutor::StaticSingleThreadedExecutor(
-  const rclcpp::executor::ExecutorArgs & args)
-: executor::Executor(args)
+  const rclcpp::ExecutorOptions & options)
+: rclcpp::Executor(options)
 {
   entities_collector_ = std::make_shared<StaticExecutorEntitiesCollector>();
 }

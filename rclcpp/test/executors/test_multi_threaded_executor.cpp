@@ -51,14 +51,14 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   bool yield_before_execute = true;
 
   rclcpp::executors::MultiThreadedExecutor executor(
-    rclcpp::executor::create_default_executor_arguments(), 2u, yield_before_execute);
+    rclcpp::ExecutorOptions(), 2u, yield_before_execute);
 
   ASSERT_GT(executor.get_number_of_threads(), 1u);
 
   std::shared_ptr<rclcpp::Node> node =
     std::make_shared<rclcpp::Node>("test_multi_threaded_executor_timer_over_take");
 
-  auto cbg = node->create_callback_group(rclcpp::callback_group::CallbackGroupType::Reentrant);
+  auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   rclcpp::Clock system_clock(RCL_STEADY_TIME);
   std::mutex last_mutex;

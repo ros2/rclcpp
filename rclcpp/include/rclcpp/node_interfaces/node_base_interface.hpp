@@ -111,25 +111,25 @@ public:
   /// Create and return a callback group.
   RCLCPP_PUBLIC
   virtual
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type) = 0;
+  rclcpp::CallbackGroup::SharedPtr
+  create_callback_group(rclcpp::CallbackGroupType group_type) = 0;
 
   /// Return the default callback group.
   RCLCPP_PUBLIC
   virtual
-  rclcpp::callback_group::CallbackGroup::SharedPtr
+  rclcpp::CallbackGroup::SharedPtr
   get_default_callback_group() = 0;
 
   /// Return true if the given callback group is associated with this node.
   RCLCPP_PUBLIC
   virtual
   bool
-  callback_group_in_node(rclcpp::callback_group::CallbackGroup::SharedPtr group) = 0;
+  callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group) = 0;
 
   /// Return list of callback groups associated with this node.
   RCLCPP_PUBLIC
   virtual
-  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const = 0;
 
   /// Return the atomic bool which is used to ensure only one executor is used.

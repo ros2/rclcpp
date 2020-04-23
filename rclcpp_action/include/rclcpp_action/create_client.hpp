@@ -46,11 +46,11 @@ create_client(
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_interface,
   rclcpp::node_interfaces::NodeWaitablesInterface::SharedPtr node_waitables_interface,
   const std::string & name,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
     node_waitables_interface;
-  std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
+  std::weak_ptr<rclcpp::CallbackGroup> weak_group = group;
   bool group_is_null = (nullptr == group.get());
 
   auto deleter = [weak_node, weak_group, group_is_null](Client<ActionT> * ptr)
@@ -102,9 +102,9 @@ typename Client<ActionT>::SharedPtr
 create_client(
   NodeT node,
   const std::string & name,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
-  return create_client<ActionT>(
+  return rclcpp_action::create_client<ActionT>(
     node->get_node_base_interface(),
     node->get_node_graph_interface(),
     node->get_node_logging_interface(),

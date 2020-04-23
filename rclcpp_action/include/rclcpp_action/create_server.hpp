@@ -65,11 +65,11 @@ create_server(
   typename Server<ActionT>::CancelCallback handle_cancel,
   typename Server<ActionT>::AcceptedCallback handle_accepted,
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options(),
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   std::weak_ptr<rclcpp::node_interfaces::NodeWaitablesInterface> weak_node =
     node_waitables_interface;
-  std::weak_ptr<rclcpp::callback_group::CallbackGroup> weak_group = group;
+  std::weak_ptr<rclcpp::CallbackGroup> weak_group = group;
   bool group_is_null = (nullptr == group.get());
 
   auto deleter = [weak_node, weak_group, group_is_null](Server<ActionT> * ptr)
@@ -137,7 +137,7 @@ create_server(
   typename Server<ActionT>::CancelCallback handle_cancel,
   typename Server<ActionT>::AcceptedCallback handle_accepted,
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options(),
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_server<ActionT>(
     node->get_node_base_interface(),

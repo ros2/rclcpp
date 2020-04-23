@@ -59,7 +59,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
     EXPECT_EQ(result.get()->error_message, "");
     EXPECT_EQ(result.get()->full_node_name, "/test_component_foo");
@@ -73,7 +73,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
     EXPECT_EQ(result.get()->error_message, "");
     EXPECT_EQ(result.get()->full_node_name, "/test_component_bar");
@@ -89,7 +89,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
     EXPECT_EQ(result.get()->error_message, "");
     EXPECT_EQ(result.get()->full_node_name, "/test_component_baz");
@@ -106,7 +106,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
     EXPECT_EQ(result.get()->error_message, "");
     EXPECT_EQ(result.get()->full_node_name, "/ns/test_component_bing");
@@ -121,7 +121,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, false);
     EXPECT_EQ(result.get()->error_message, "Failed to find class with the requested plugin name.");
     EXPECT_EQ(result.get()->full_node_name, "");
@@ -136,7 +136,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, false);
     EXPECT_EQ(result.get()->error_message, "Could not find requested resource in ament index");
     EXPECT_EQ(result.get()->full_node_name, "");
@@ -166,7 +166,7 @@ TEST_F(TestComponentManager, components_api)
       auto request = std::make_shared<composition_interfaces::srv::ListNodes::Request>();
       auto result = client->async_send_request(request);
       auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-      EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+      EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       auto node_names = result.get()->full_node_names;
       auto unique_ids = result.get()->unique_ids;
 
@@ -197,7 +197,7 @@ TEST_F(TestComponentManager, components_api)
 
       auto result = client->async_send_request(request);
       auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-      EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+      EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       EXPECT_EQ(result.get()->success, true);
       EXPECT_EQ(result.get()->error_message, "");
     }
@@ -208,7 +208,7 @@ TEST_F(TestComponentManager, components_api)
 
       auto result = client->async_send_request(request);
       auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-      EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+      EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       EXPECT_EQ(result.get()->success, false);
       EXPECT_EQ(result.get()->error_message, "No node found with unique_id: 1");
     }
@@ -226,7 +226,7 @@ TEST_F(TestComponentManager, components_api)
       auto request = std::make_shared<composition_interfaces::srv::ListNodes::Request>();
       auto result = client->async_send_request(request);
       auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-      EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+      EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
       auto node_names = result.get()->full_node_names;
       auto unique_ids = result.get()->unique_ids;
 

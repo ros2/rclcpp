@@ -39,7 +39,7 @@ create_timer(
   rclcpp::Clock::SharedPtr clock,
   rclcpp::Duration period,
   CallbackT && callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
     clock,
@@ -59,7 +59,7 @@ create_timer(
   rclcpp::Clock::SharedPtr clock,
   rclcpp::Duration period,
   CallbackT && callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_timer(
     rclcpp::node_interfaces::get_node_base_interface(node),
@@ -90,7 +90,7 @@ typename rclcpp::WallTimer<CallbackT>::SharedPtr
 create_wall_timer(
   std::chrono::duration<DurationRepT, DurationT> period,
   CallbackT callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group,
+  rclcpp::CallbackGroup::SharedPtr group,
   node_interfaces::NodeBaseInterface * node_base,
   node_interfaces::NodeTimersInterface * node_timers)
 {

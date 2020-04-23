@@ -74,7 +74,7 @@ public:
     const typename StoragePolicy::ServicesIterable & services = {},
     const typename StoragePolicy::WaitablesIterable & waitables = {},
     rclcpp::Context::SharedPtr context =
-    rclcpp::contexts::default_context::get_global_default_context())
+    rclcpp::contexts::get_global_default_context())
   : SynchronizationPolicy(context),
     StoragePolicy(
       subscriptions,

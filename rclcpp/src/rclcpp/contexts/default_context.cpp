@@ -14,13 +14,13 @@
 
 #include "rclcpp/contexts/default_context.hpp"
 
-using rclcpp::contexts::default_context::DefaultContext;
+using rclcpp::contexts::DefaultContext;
 
 DefaultContext::DefaultContext()
 {}
 
 DefaultContext::SharedPtr
-rclcpp::contexts::default_context::get_global_default_context()
+rclcpp::contexts::get_global_default_context()
 {
   static DefaultContext::SharedPtr default_context = DefaultContext::make_shared();
   return default_context;

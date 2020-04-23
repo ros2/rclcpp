@@ -31,7 +31,7 @@ AsyncParametersClient::AsyncParametersClient(
   const rclcpp::node_interfaces::NodeServicesInterface::SharedPtr node_services_interface,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 : node_topics_interface_(node_topics_interface)
 {
   if (remote_node_name != "") {
@@ -103,7 +103,7 @@ AsyncParametersClient::AsyncParametersClient(
   const rclcpp::Node::SharedPtr node,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 : AsyncParametersClient(
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
@@ -118,7 +118,7 @@ AsyncParametersClient::AsyncParametersClient(
   rclcpp::Node * node,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group)
+  rclcpp::CallbackGroup::SharedPtr group)
 : AsyncParametersClient(
     node->get_node_base_interface(),
     node->get_node_topics_interface(),
@@ -349,7 +349,7 @@ SyncParametersClient::SyncParametersClient(
 {}
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::executor::Executor::SharedPtr executor,
+  rclcpp::Executor::SharedPtr executor,
   rclcpp::Node::SharedPtr node,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
@@ -375,7 +375,7 @@ SyncParametersClient::SyncParametersClient(
 {}
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::executor::Executor::SharedPtr executor,
+  rclcpp::Executor::SharedPtr executor,
   rclcpp::Node * node,
   const std::string & remote_node_name,
   const rmw_qos_profile_t & qos_profile)
@@ -390,7 +390,7 @@ SyncParametersClient::SyncParametersClient(
 {}
 
 SyncParametersClient::SyncParametersClient(
-  rclcpp::executor::Executor::SharedPtr executor,
+  rclcpp::Executor::SharedPtr executor,
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
   const rclcpp::node_interfaces::NodeTopicsInterface::SharedPtr node_topics_interface,
   const rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_interface,
@@ -417,7 +417,7 @@ SyncParametersClient::get_parameters(const std::vector<std::string> & parameter_
   if (
     spin_node_until_future_complete(
       *executor_, node_base_interface_,
-      f) == rclcpp::executor::FutureReturnCode::SUCCESS)
+      f) == rclcpp::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -443,7 +443,7 @@ SyncParametersClient::get_parameter_types(const std::vector<std::string> & param
   if (
     spin_node_until_future_complete(
       *executor_, node_base_interface_,
-      f) == rclcpp::executor::FutureReturnCode::SUCCESS)
+      f) == rclcpp::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -460,7 +460,7 @@ SyncParametersClient::set_parameters(
   if (
     spin_node_until_future_complete(
       *executor_, node_base_interface_,
-      f) == rclcpp::executor::FutureReturnCode::SUCCESS)
+      f) == rclcpp::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -477,7 +477,7 @@ SyncParametersClient::set_parameters_atomically(
   if (
     spin_node_until_future_complete(
       *executor_, node_base_interface_,
-      f) == rclcpp::executor::FutureReturnCode::SUCCESS)
+      f) == rclcpp::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }
@@ -496,7 +496,7 @@ SyncParametersClient::list_parameters(
   if (
     spin_node_until_future_complete(
       *executor_, node_base_interface_,
-      f) == rclcpp::executor::FutureReturnCode::SUCCESS)
+      f) == rclcpp::FutureReturnCode::SUCCESS)
   {
     return f.get();
   }

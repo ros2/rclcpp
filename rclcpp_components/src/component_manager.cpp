@@ -31,7 +31,7 @@ namespace rclcpp_components
 {
 
 ComponentManager::ComponentManager(
-  std::weak_ptr<rclcpp::executor::Executor> executor,
+  std::weak_ptr<rclcpp::Executor> executor,
   std::string node_name,
   const rclcpp::NodeOptions & node_options)
 : Node(std::move(node_name), node_options),

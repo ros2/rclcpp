@@ -81,7 +81,7 @@
  *   - rclcpp/executors/multi_threaded_executor.hpp
  * - CallbackGroups (mechanism for enforcing concurrency rules for callbacks):
  *   - rclcpp::Node::create_callback_group()
- *   - rclcpp::callback_group::CallbackGroup
+ *   - rclcpp::CallbackGroup
  *   - rclcpp/callback_group.hpp
  *
  * Additionally, there are some methods for introspecting the ROS graph:

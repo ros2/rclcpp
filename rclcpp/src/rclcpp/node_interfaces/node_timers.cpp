@@ -28,7 +28,7 @@ NodeTimers::~NodeTimers()
 void
 NodeTimers::add_timer(
   rclcpp::TimerBase::SharedPtr timer,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
   if (callback_group) {
     if (!node_base_->callback_group_in_node(callback_group)) {

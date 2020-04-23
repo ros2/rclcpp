@@ -16,8 +16,8 @@
 
 #include <vector>
 
-using rclcpp::callback_group::CallbackGroup;
-using rclcpp::callback_group::CallbackGroupType;
+using rclcpp::CallbackGroup;
+using rclcpp::CallbackGroupType;
 
 CallbackGroup::CallbackGroup(CallbackGroupType group_type)
 : type_(group_type), can_be_taken_from_(true)

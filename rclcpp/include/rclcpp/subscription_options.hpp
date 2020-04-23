@@ -45,7 +45,7 @@ struct SubscriptionOptionsBase
   bool ignore_local_publications = false;
 
   /// The callback group for this subscription. NULL to use the default callback group.
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group = nullptr;
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
 
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
