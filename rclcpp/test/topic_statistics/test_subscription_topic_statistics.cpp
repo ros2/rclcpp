@@ -134,10 +134,8 @@ private:
   void publish_message()
   {
     auto msg = MessageWithHeader{};
-    auto now = this->now();
-    auto nanos = now.nanoseconds() - 1000 * 1000;
-    msg.header.stamp.sec = static_cast<std::int32_t>(RCL_NS_TO_S(nanos));
-    msg.header.stamp.nanosec = static_cast<std::uint32_t>(nanos % (1000 * 1000 * 1000));
+    // Subtract 1 sec from current time so the received message age is always > 0
+    msg.header.stamp = this->now() - rclcpp::Duration{1, 0};
     publisher_->publish(msg);
   }
 
@@ -158,8 +156,8 @@ public:
     auto options = rclcpp::SubscriptionOptions();
     options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
 
-    auto callback = [this](Empty::UniquePtr msg) {
-        this->receive_message(*msg);
+    auto callback = [](Empty::UniquePtr msg) {
+        (void) msg;
       };
     subscription_ = create_subscription<Empty,
         std::function<void(Empty::UniquePtr)>>(
@@ -171,9 +169,6 @@ public:
   virtual ~EmptySubscriber() = default;
 
 private:
-  void receive_message(const Empty &) const
-  {
-  }
   rclcpp::Subscription<Empty>::SharedPtr subscription_;
 };
 
@@ -190,8 +185,8 @@ public:
     auto options = rclcpp::SubscriptionOptions();
     options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
 
-    auto callback = [this](MessageWithHeader::UniquePtr msg) {
-        this->receive_message(*msg);
+    auto callback = [](MessageWithHeader::UniquePtr msg) {
+        (void) msg;
       };
     subscription_ = create_subscription<MessageWithHeader,
         std::function<void(MessageWithHeader::UniquePtr)>>(
@@ -203,9 +198,6 @@ public:
   virtual ~MessageWithHeaderSubscriber() = default;
 
 private:
-  void receive_message(const MessageWithHeader &) const
-  {
-  }
   rclcpp::Subscription<MessageWithHeader>::SharedPtr subscription_;
 };
 
@@ -233,18 +225,18 @@ protected:
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
 {
-  // manually create publisher tied to the node
+  // Manually create publisher tied to the node
   auto topic_stats_publisher =
     empty_subscriber->create_publisher<MetricsMessage>(
     kTestTopicStatisticsTopic,
     10);
 
-  // construct a separate instance
+  // Construct a separate instance
   auto sub_topic_stats = std::make_unique<TestSubscriptionTopicStatistics<Empty>>(
     empty_subscriber->get_name(),
     topic_stats_publisher);
 
-  // expect no data has been collected / no samples received
+  // Expect no data has been collected / no samples received
   for (const auto & data : sub_topic_stats->get_current_collector_data()) {
     EXPECT_TRUE(std::isnan(data.average));
     EXPECT_TRUE(std::isnan(data.min));
@@ -256,14 +248,14 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no_header)
 {
-  // create an empty publisher
+  // Create an empty publisher
   auto empty_publisher = std::make_shared<EmptyPublisher>(
     kTestPubNodeName,
     kTestSubStatsTopic);
   // empty_subscriber has a topic statistics instance as part of its subscription
   // this will listen to and generate statistics for the empty message
 
-  // create a listener for topic statistics messages
+  // Create a listener for topic statistics messages
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_single_empty_stats_message_listener",
     "/statistics",
@@ -274,15 +266,15 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   ex.add_node(statistics_listener);
   ex.add_node(empty_subscriber);
 
-  // spin and get future
+  // Spin and get future
   ex.spin_until_future_complete(
     statistics_listener->GetFuture(),
     kTestDuration);
 
-  // compare message counts, sample count should be the same as published and received count
+  // Compare message counts, sample count should be the same as published and received count
   EXPECT_EQ(2, statistics_listener->GetNumberOfMessagesReceived());
 
-  // check the received message and the data types
+  // Check the received message and the data types
   const auto received_messages = statistics_listener->GetReceivedMessages();
 
   EXPECT_EQ(2u, received_messages.size());
@@ -329,14 +321,14 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_with_header)
 {
-  // create a MessageWithHeader publisher
+  // Create a MessageWithHeader publisher
   auto msg_with_header_publisher = std::make_shared<MessageWithHeaderPublisher>(
     kTestPubNodeName,
     kTestSubStatsTopic);
   // empty_subscriber has a topic statistics instance as part of its subscription
   // this will listen to and generate statistics for the empty message
 
-  // create a listener for topic statistics messages
+  // Create a listener for topic statistics messages
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_stats_for_message_with_header",
     "/statistics",
@@ -351,15 +343,15 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   ex.add_node(statistics_listener);
   ex.add_node(msg_with_header_subscriber);
 
-  // spin and get future
+  // Spin and get future
   ex.spin_until_future_complete(
     statistics_listener->GetFuture(),
     kTestDuration);
 
-  // compare message counts, sample count should be the same as published and received count
+  // Compare message counts, sample count should be the same as published and received count
   EXPECT_EQ(2, statistics_listener->GetNumberOfMessagesReceived());
 
-  // check the received message and the data types
+  // Check the received message and the data types
   const auto received_messages = statistics_listener->GetReceivedMessages();
 
   EXPECT_EQ(2u, received_messages.size());
