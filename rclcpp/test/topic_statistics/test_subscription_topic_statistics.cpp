@@ -102,13 +102,11 @@ public:
 private:
   void publish_message()
   {
-    ++number_published_;
     auto msg = Empty{};
     publisher_->publish(msg);
   }
 
   rclcpp::Publisher<Empty>::SharedPtr publisher_;
-  std::atomic<size_t> number_published_{0};
   rclcpp::TimerBase::SharedPtr publish_timer_;
 };
 
@@ -135,7 +133,6 @@ public:
 private:
   void publish_message()
   {
-    ++number_published_;
     auto msg = MessageWithHeader{};
     auto now = this->now();
     auto nanos = now.nanoseconds() - 1000 * 1000;
@@ -145,7 +142,6 @@ private:
   }
 
   rclcpp::Publisher<MessageWithHeader>::SharedPtr publisher_;
-  std::atomic<size_t> number_published_{0};
   rclcpp::TimerBase::SharedPtr publish_timer_;
 };
 
@@ -302,8 +298,6 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   // Message age statistics will not be calculated because Empty messages
   // don't have a `header` with timestamp.
 
-  // TODO(prajakta-gokhale): Change Empty message type to something with a `header`,
-  // and have below assertions work for all collectors.
   for (const auto & msg : received_messages) {
     if (msg.metrics_source == "message_period") {
       for (const auto & stats_point : msg.statistics) {
