@@ -43,15 +43,6 @@ struct is_serialized_subscription_argument : std::false_type
 {};
 
 template<>
-struct is_serialized_subscription_argument<rcl_serialized_message_t>: std::true_type
-{};
-
-template<>
-struct is_serialized_subscription_argument<std::shared_ptr<rcl_serialized_message_t>>
-  : std::true_type
-{};
-
-template<>
 struct is_serialized_subscription_argument<SerializedMessage>: std::true_type
 {};
 
