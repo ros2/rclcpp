@@ -25,6 +25,7 @@
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 
 #include "rclcpp/create_publisher.hpp"
+#include "rclcpp/msg/message_with_header.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -36,7 +37,6 @@
 #include "statistics_msgs/msg/statistic_data_point.hpp"
 #include "statistics_msgs/msg/statistic_data_type.hpp"
 
-#include "test_msgs/msg/message_with_header.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 #include "test_topic_stats_utils.hpp"
@@ -51,7 +51,7 @@ constexpr const uint64_t kNoSamples{0};
 constexpr const std::chrono::seconds kTestDuration{10};
 }  // namespace
 
-using test_msgs::msg::MessageWithHeader;
+using rclcpp::msg::MessageWithHeader;
 using test_msgs::msg::Empty;
 using rclcpp::topic_statistics::SubscriptionTopicStatistics;
 using statistics_msgs::msg::MetricsMessage;
