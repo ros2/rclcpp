@@ -25,7 +25,6 @@
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 
 #include "rclcpp/create_publisher.hpp"
-#include "rclcpp/clock.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -138,11 +137,13 @@ private:
   {
     ++number_published_;
     auto msg = Imu{};
-    msg.header.stamp = clock_.now();
+    auto now = this->now();
+    auto nanos = now.nanoseconds() - 1000*1000;
+    msg.header.stamp.sec = static_cast<std::int32_t>(RCL_NS_TO_S(nanos));
+    msg.header.stamp.nanosec = static_cast<std::uint32_t>(nanos % (1000 * 1000 * 1000));
     publisher_->publish(msg);
   }
 
-  rclcpp::Clock clock_;
   rclcpp::Publisher<Imu>::SharedPtr publisher_;
   std::atomic<size_t> number_published_{0};
   rclcpp::TimerBase::SharedPtr publish_timer_;
@@ -386,16 +387,16 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
           EXPECT_LT(0, stats_point.data) << "unexpected sample count";
           break;
         case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
-          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected avg";
+          EXPECT_LT(0, stats_point.data) << "unexpected avg";
           break;
         case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
-          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected min";
+          EXPECT_LT(0, stats_point.data) << "unexpected min";
           break;
         case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
-          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected max";
+          EXPECT_LT(0, stats_point.data) << "unexpected max";
           break;
         case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
-          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected stddev";
+          EXPECT_LE(0, stats_point.data) << "unexpected stddev";
           break;
         default:
           FAIL() << "received unknown statistics type: " << std::dec <<
