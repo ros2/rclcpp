@@ -33,6 +33,7 @@
 #include "rclcpp/message_info.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/qos_event.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 
@@ -151,7 +152,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  take_serialized(rcl_serialized_message_t & message_out, rclcpp::MessageInfo & message_info_out);
+  take_serialized(rclcpp::SerializedMessage & message_out, rclcpp::MessageInfo & message_info_out);
 
   /// Borrow a new message.
   /** \return Shared pointer to the fresh message. */
@@ -164,7 +165,7 @@ public:
   /** \return Shared pointer to a rcl_message_serialized_t. */
   RCLCPP_PUBLIC
   virtual
-  std::shared_ptr<rcl_serialized_message_t>
+  std::shared_ptr<rclcpp::SerializedMessage>
   create_serialized_message() = 0;
 
   /// Check if we need to handle the message, and execute the callback if we do.
@@ -194,7 +195,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   void
-  return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) = 0;
+  return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) = 0;
 
   RCLCPP_PUBLIC
   const rosidl_message_type_support_t &
