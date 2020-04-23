@@ -46,7 +46,6 @@ constexpr const char kTestSubNodeName[]{"test_sub_stats_node"};
 constexpr const char kTestSubStatsTopic[]{"/test_sub_stats_topic"};
 constexpr const char kTestTopicStatisticsTopic[]{"/test_topic_statistics_topic"};
 constexpr const uint64_t kNoSamples{0};
-constexpr const std::chrono::milliseconds kTestStatsPublishPeriod{5000};
 constexpr const std::chrono::seconds kTestDuration{10};
 }  // namespace
 
