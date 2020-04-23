@@ -634,7 +634,6 @@ if(BUILD_TESTING)
     target_link_libraries(test_subscription_topic_statistics ${PROJECT_NAME})
   endif()
 
-
   ament_add_gtest(test_subscription_options test/test_subscription_options.cpp)
   if(TARGET test_subscription_options)
     ament_target_dependencies(test_subscription_options "rcl")
