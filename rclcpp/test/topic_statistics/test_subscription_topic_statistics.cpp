@@ -25,6 +25,7 @@
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 
 #include "rclcpp/create_publisher.hpp"
+#include "rclcpp/clock.hpp"
 #include "rclcpp/node.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -36,6 +37,7 @@
 #include "statistics_msgs/msg/statistic_data_point.hpp"
 #include "statistics_msgs/msg/statistic_data_type.hpp"
 
+#include "sensor_msgs/msg/imu.hpp"
 #include "test_msgs/msg/empty.hpp"
 
 #include "test_topic_stats_utils.hpp"
@@ -50,6 +52,7 @@ constexpr const uint64_t kNoSamples{0};
 constexpr const std::chrono::seconds kTestDuration{10};
 }  // namespace
 
+using sensor_msgs::msg::Imu;
 using test_msgs::msg::Empty;
 using rclcpp::topic_statistics::SubscriptionTopicStatistics;
 using statistics_msgs::msg::MetricsMessage;
@@ -111,6 +114,41 @@ private:
 };
 
 /**
+ * IMU message publisher node: used to publish IMU messages with `header` value set
+ */
+class ImuPublisher : public rclcpp::Node
+{
+public:
+  ImuPublisher(
+    const std::string & name, const std::string & topic,
+    const std::chrono::milliseconds & publish_period = std::chrono::milliseconds{100})
+  : Node(name)
+  {
+    publisher_ = create_publisher<Imu>(topic, 10);
+    publish_timer_ = this->create_wall_timer(
+      publish_period, [this]() {
+        this->publish_message();
+      });
+  }
+
+  virtual ~ImuPublisher() = default;
+
+private:
+  void publish_message()
+  {
+    ++number_published_;
+    auto msg = Imu{};
+    msg.header.stamp = clock_.now();
+    publisher_->publish(msg);
+  }
+
+  rclcpp::Clock clock_;
+  rclcpp::Publisher<Imu>::SharedPtr publisher_;
+  std::atomic<size_t> number_published_{0};
+  rclcpp::TimerBase::SharedPtr publish_timer_;
+};
+
+/**
  * Empty subscriber node: used to create subscriber topic statistics requirements
  */
 class EmptySubscriber : public rclcpp::Node
@@ -143,6 +181,38 @@ private:
 };
 
 /**
+ * IMU subscriber node: used to create subscriber topic statistics requirements
+ */
+class ImuSubscriber : public rclcpp::Node
+{
+public:
+  ImuSubscriber(const std::string & name, const std::string & topic)
+  : Node(name)
+  {
+    // manually enable topic statistics via options
+    auto options = rclcpp::SubscriptionOptions();
+    options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
+
+    auto callback = [this](Imu::UniquePtr msg) {
+        this->receive_message(*msg);
+      };
+    subscription_ = create_subscription<Imu,
+        std::function<void(Imu::UniquePtr)>>(
+      topic,
+      rclcpp::QoS(rclcpp::KeepAll()),
+      callback,
+      options);
+  }
+  virtual ~ImuSubscriber() = default;
+
+private:
+  void receive_message(const Imu &) const
+  {
+  }
+  rclcpp::Subscription<Imu>::SharedPtr subscription_;
+};
+
+/**
  * Test fixture to bring up and teardown rclcpp
  */
 class TestSubscriptionTopicStatisticsFixture : public ::testing::Test
@@ -154,6 +224,9 @@ protected:
     empty_subscriber = std::make_shared<EmptySubscriber>(
       kTestSubNodeName,
       kTestSubStatsTopic);
+    imu_subscriber = std::make_shared<ImuSubscriber>(
+      kTestSubNodeName,
+      kTestSubStatsTopic);
   }
 
   void TearDown()
@@ -162,6 +235,7 @@ protected:
     empty_subscriber.reset();
   }
   std::shared_ptr<EmptySubscriber> empty_subscriber;
+  std::shared_ptr<ImuSubscriber> imu_subscriber;
 };
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
@@ -257,6 +331,75 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_single_empty_stats_m
             FAIL() << "received unknown statistics type: " << std::dec <<
               static_cast<unsigned int>(type);
         }
+      }
+    }
+  }
+}
+
+TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_with_header)
+{
+  // create an empty publisher
+  auto imu_publisher = std::make_shared<ImuPublisher>(
+    kTestPubNodeName,
+    kTestSubStatsTopic);
+  // empty_subscriber has a topic statistics instance as part of its subscription
+  // this will listen to and generate statistics for the empty message
+
+  // create a listener for topic statistics messages
+  auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
+    "test_receive_stats_for_message_with_header",
+    "/statistics",
+    2);
+
+  rclcpp::executors::SingleThreadedExecutor ex;
+  ex.add_node(imu_publisher);
+  ex.add_node(statistics_listener);
+  ex.add_node(imu_subscriber);
+
+  // spin and get future
+  ex.spin_until_future_complete(
+    statistics_listener->GetFuture(),
+    kTestDuration);
+
+  // compare message counts, sample count should be the same as published and received count
+  EXPECT_EQ(2, statistics_listener->GetNumberOfMessagesReceived());
+
+  // check the received message and the data types
+  const auto received_messages = statistics_listener->GetReceivedMessages();
+
+  EXPECT_EQ(2u, received_messages.size());
+
+  std::set<std::string> received_metrics;
+  for (const auto & msg : received_messages) {
+    received_metrics.insert(msg.metrics_source);
+  }
+  EXPECT_TRUE(received_metrics.find("message_age") != received_metrics.end());
+  EXPECT_TRUE(received_metrics.find("message_period") != received_metrics.end());
+
+  // Check the collected statistics for message period.
+
+  for (const auto & msg : received_messages) {
+    for (const auto & stats_point : msg.statistics) {
+      const auto type = stats_point.data_type;
+      switch (type) {
+        case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
+          EXPECT_LT(0, stats_point.data) << "unexpected sample count";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
+          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected avg";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
+          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected min";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
+          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected max";
+          break;
+        case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
+          EXPECT_NE(std::nan(""), stats_point.data) << "unexpected stddev";
+          break;
+        default:
+          FAIL() << "received unknown statistics type: " << std::dec <<
+            static_cast<unsigned int>(type);
       }
     }
   }
