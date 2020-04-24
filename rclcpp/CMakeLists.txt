@@ -12,6 +12,7 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
@@ -222,6 +223,14 @@ if(BUILD_TESTING)
   include(cmake/rclcpp_add_build_failure_test.cmake)
 
   add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/test/resources")
+
+  rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
+    test/msg/Header.msg
+    test/msg/MessageWithHeader.msg
+    DEPENDENCIES builtin_interfaces
+    LIBRARY_NAME ${PROJECT_NAME}
+    SKIP_INSTALL
+  )
 
   ament_add_gtest(test_client test/test_client.cpp)
   if(TARGET test_client)
@@ -610,9 +619,12 @@ if(BUILD_TESTING)
     target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_subscription_topic_statistics test/topic_statistics/test_subscription_topic_statistics.cpp)
+  ament_add_gtest(test_subscription_topic_statistics test/topic_statistics/test_subscription_topic_statistics.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  )
   if(TARGET test_subscription_topic_statistics)
     ament_target_dependencies(test_subscription_topic_statistics
+      "builtin_interfaces"
       "libstatistics_collector"
       "rcl_interfaces"
       "rcutils"
@@ -621,6 +633,7 @@ if(BUILD_TESTING)
       "rosidl_typesupport_cpp"
       "statistics_msgs"
       "test_msgs")
+    rosidl_target_interfaces(test_subscription_topic_statistics ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
     target_link_libraries(test_subscription_topic_statistics ${PROJECT_NAME})
   endif()
 
