@@ -110,12 +110,11 @@ NodeParameters::NodeParameters(
 
       // Enforce wildcard matching precedence
       // TODO(cottsay) implement further wildcard matching
-      const char * node_matching_names[] = {"/**", combined_name_.c_str()};
-      const size_t node_matching_names_count = sizeof(node_matching_names) / sizeof(char *);
-      for (size_t index = 0U; index < node_matching_names_count; ++index) {
-        if (initial_map.count(node_matching_names[index]) > 0) {
+      const std::vector<std::string> node_matching_names{"/**", combined_name_};
+      for (const auto & node_name : node_matching_names) {
+        if (initial_map.count(node_name) > 0) {
           // Combine parameter yaml files, overwriting values in older ones
-          for (auto & param : initial_map.at(node_matching_names[index])) {
+          for (auto & param : initial_map.at(node_name)) {
             parameter_overrides_[param.get_name()] =
               rclcpp::ParameterValue(param.get_value_message());
           }
