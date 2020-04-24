@@ -114,7 +114,7 @@ NodeParameters::NodeParameters(
       for (const auto & node_name : node_matching_names) {
         if (initial_map.count(node_name) > 0) {
           // Combine parameter yaml files, overwriting values in older ones
-          for (auto & param : initial_map.at(node_name)) {
+          for (const rclcpp::Parameter & param : initial_map.at(node_name)) {
             parameter_overrides_[param.get_name()] =
               rclcpp::ParameterValue(param.get_value_message());
           }
