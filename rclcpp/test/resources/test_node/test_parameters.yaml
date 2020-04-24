@@ -1,4 +1,8 @@
 /**:
   ros__parameters:
-    parameter_int: 21
+    parameter_bool: true
+    parameter_int: 42
     parameter_string_array: [baz, baz, baz]
+test_declare_parameter_node:
+  ros__parameters:
+    parameter_int: 21
