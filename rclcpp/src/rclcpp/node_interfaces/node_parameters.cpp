@@ -107,11 +107,15 @@ NodeParameters::NodeParameters(
           rcl_yaml_node_struct_fini(params);
         });
       rclcpp::ParameterMap initial_map = rclcpp::parameter_map_from(params);
-      for (auto iter = initial_map.begin(); initial_map.end() != iter; iter++) {
-        // TODO(cottsay) implement further wildcard matching
-        if (iter->first == "/**" || iter->first == combined_name_) {
+
+      // Enforce wildcard matching precedence
+      // TODO(cottsay) implement further wildcard matching
+      const char * node_matching_names[] = {"/**", combined_name_.c_str()};
+      const size_t node_matching_names_count = sizeof(node_matching_names) / sizeof(char *);
+      for (size_t index = 0U; index < node_matching_names_count; ++index) {
+        if (initial_map.count(node_matching_names[index]) > 0) {
           // Combine parameter yaml files, overwriting values in older ones
-          for (auto & param : iter->second) {
+          for (auto & param : initial_map.at(node_matching_names[index])) {
             parameter_overrides_[param.get_name()] =
               rclcpp::ParameterValue(param.get_value_message());
           }
