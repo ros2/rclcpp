@@ -619,10 +619,6 @@ if(BUILD_TESTING)
     target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 
-  set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
-  if(WIN32)
-    set(append_library_dirs "${append_library_dirs}/$<CONFIG>")
-  endif()
   ament_add_gtest(test_subscription_topic_statistics test/topic_statistics/test_subscription_topic_statistics.cpp
     APPEND_LIBRARY_DIRS "${append_library_dirs}"
   )
