@@ -23,6 +23,7 @@
 #include "rclcpp/allocator/allocator_common.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/macros.hpp"
+#include "rclcpp/serialized_message.hpp"
 #include "rclcpp/visibility_control.hpp"
 
 #include "rcutils/logging_macros.h"
