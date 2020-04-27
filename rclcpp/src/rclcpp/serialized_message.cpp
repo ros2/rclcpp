@@ -66,7 +66,7 @@ SerializedMessage::SerializedMessage(const rcl_serialized_message_t & other)
 }
 
 SerializedMessage::SerializedMessage(SerializedMessage && other)
-: SerializedMessage(other.serialized_message_)
+: SerializedMessage(static_cast<rcl_serialized_message_t &&>(other.serialized_message_))
 {
   other.serialized_message_ = rmw_get_zero_initialized_serialized_message();
 }

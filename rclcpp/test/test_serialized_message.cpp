@@ -52,6 +52,7 @@ TEST(TestSerializedMessage, various_constructors) {
   rcl_handle.buffer_length = content_size;
   EXPECT_STREQ(content.c_str(), reinterpret_cast<char *>(rcl_handle.buffer));
   EXPECT_EQ(content_size, serialized_message.capacity());
+  EXPECT_EQ(content_size, serialized_message.size());
 
   // Copy Constructor
   rclcpp::SerializedMessage other_serialized_message(serialized_message);
