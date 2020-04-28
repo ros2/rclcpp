@@ -55,8 +55,11 @@ void SerializationBase::deserialize_message(
   rcpputils::check_true(nullptr != type_support_, "Typesupport is nullpointer.");
   rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
   rcpputils::check_true(
-    0 != serialized_message->capacity() && 0 != serialized_message->size(),
-    "Serialized message is wrongly initialized.");
+    0u != serialized_message->capacity(),
+    "Wrongly initialized. Serializaed message has a capacity of zero.");
+  rcpputils::check_true(
+    0u != serialized_message->size(),
+    "Wrongly initialized. Serialized message has a size of zero.");
   rcpputils::check_true(nullptr != ros_message, "ROS message is a nullpointer.");
 
   const auto ret = rmw_deserialize(
