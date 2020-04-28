@@ -56,7 +56,7 @@ void SerializationBase::deserialize_message(
   rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
   rcpputils::check_true(
     0u != serialized_message->capacity(),
-    "Wrongly initialized. Serializaed message has a capacity of zero.");
+    "Wrongly initialized. Serialized message has a capacity of zero.");
   rcpputils::check_true(
     0u != serialized_message->size(),
     "Wrongly initialized. Serialized message has a size of zero.");
