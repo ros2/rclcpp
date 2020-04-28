@@ -52,6 +52,7 @@ TEST(TestSerializedMessage, various_constructors) {
   rcl_handle.buffer_length = content_size;
   EXPECT_STREQ(content.c_str(), reinterpret_cast<char *>(rcl_handle.buffer));
   EXPECT_EQ(content_size, serialized_message.capacity());
+  EXPECT_EQ(content_size, serialized_message.size());
 
   // Copy Constructor
   rclcpp::SerializedMessage other_serialized_message(serialized_message);
@@ -158,9 +159,9 @@ TEST(TestSerializedMessage, serialization) {
   }
 }
 
-template<typename MessageT>
-void test_empty_msg_serialize()
+void serialize_default_ros_msg()
 {
+  using MessageT = test_msgs::msg::BasicTypes;
   rclcpp::Serialization<MessageT> serializer;
   MessageT ros_msg;
   rclcpp::SerializedMessage serialized_msg;
@@ -168,12 +169,40 @@ void test_empty_msg_serialize()
   serializer.serialize_message(&ros_msg, &serialized_msg);
 }
 
-template<typename MessageT>
-void test_empty_msg_deserialize()
+void serialize_default_ros_msg_into_nullptr()
 {
+  using MessageT = test_msgs::msg::BasicTypes;
+  rclcpp::Serialization<MessageT> serializer;
+  MessageT ros_msg;
+
+  serializer.serialize_message(&ros_msg, nullptr);
+}
+
+void deserialize_default_serialized_message()
+{
+  using MessageT = test_msgs::msg::BasicTypes;
   rclcpp::Serialization<MessageT> serializer;
   MessageT ros_msg;
   rclcpp::SerializedMessage serialized_msg;
 
   serializer.deserialize_message(&serialized_msg, &ros_msg);
+}
+
+void deserialize_nullptr()
+{
+  using MessageT = test_msgs::msg::BasicTypes;
+  rclcpp::Serialization<MessageT> serializer;
+  MessageT ros_msg;
+  rclcpp::SerializedMessage serialized_msg;
+
+  serializer.deserialize_message(&serialized_msg, &ros_msg);
+}
+
+TEST(TestSerializedMessage, serialization_empty_messages)
+{
+  EXPECT_NO_THROW(serialize_default_ros_msg());
+  EXPECT_THROW(serialize_default_ros_msg_into_nullptr(), rcpputils::IllegalStateException);
+  EXPECT_THROW(serialize_default_ros_msg_into_nullptr(), rcpputils::IllegalStateException);
+  EXPECT_THROW(deserialize_default_serialized_message(), rcpputils::IllegalStateException);
+  EXPECT_THROW(deserialize_nullptr(), rcpputils::IllegalStateException);
 }
