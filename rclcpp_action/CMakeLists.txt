@@ -103,6 +103,16 @@ if(BUILD_TESTING)
       ${PROJECT_NAME}
     )
   endif()
+
+  ament_add_gtest(test_types test/test_types.cpp)
+  if(TARGET test_types)
+    ament_target_dependencies(test_types
+      "test_msgs"
+    )
+    target_link_libraries(test_types
+      ${PROJECT_NAME}
+    )
+  endif()
 endif()
 
 ament_package()
