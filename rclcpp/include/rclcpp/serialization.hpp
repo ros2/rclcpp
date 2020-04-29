@@ -48,6 +48,32 @@ struct is_serialized_message_class<SerializedMessage>: std::true_type
 {};
 }  // namespace serialization_traits
 
+namespace serialization
+{
+template<typename MessageT>
+inline const rosidl_message_type_support_t *
+get_type_support_handle_impl()
+{
+  return rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>();
+}
+
+// no message type support for rclcpp::SerializedMessage
+template<>
+inline const rosidl_message_type_support_t *
+get_type_support_handle_impl<SerializedMessage>()
+{
+  return nullptr;
+}
+
+// no message type support for rcl_serialized_message_t
+template<>
+inline const rosidl_message_type_support_t *
+get_type_support_handle_impl<rcl_serialized_message_t>()
+{
+  return nullptr;
+}
+}  // namespace serialization
+
 /// Interface to (de)serialize a message
 class RCLCPP_PUBLIC_TYPE SerializationBase
 {
@@ -78,6 +104,13 @@ public:
   void deserialize_message(
     const SerializedMessage * serialized_message, void * ros_message) const;
 
+  /// Get the message type support for the serialized message
+  /**
+   * \return The message type support.
+   */
+  virtual const rosidl_message_type_support_t *
+  get_type_support_handle() const = 0;
+
 private:
   const rosidl_message_type_support_t * type_support_;
 };
@@ -89,39 +122,13 @@ class Serialization : public SerializationBase
 public:
   /// Constructor of Serialization
   Serialization()
-  : SerializationBase(rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>())
-  {
-    static_assert(
-      !serialization_traits::is_serialized_message_class<MessageT>::value,
-      "Serialization of serialized message to serialized message is not possible.");
-  }
-};
+  : SerializationBase(get_type_support_handle())
+  {}
 
-/// Specialized serialization for rcl_serialized_message_t (because type support is not defined)
-template<>
-class Serialization<rcl_serialized_message_t>: public SerializationBase
-{
-public:
-  /// Constructor of Serialization
-  Serialization()
-  : SerializationBase(nullptr)
+  const rosidl_message_type_support_t *
+  get_type_support_handle() const override
   {
-    throw std::runtime_error(
-            "Serialization of rcl_serialized_message_t to serialized message is not possible.");
-  }
-};
-
-/// Specialized serialization for SerializedMessage (because type support is not defined)
-template<>
-class Serialization<SerializedMessage>: public SerializationBase
-{
-public:
-  /// Constructor of Serialization
-  Serialization()
-  : SerializationBase(nullptr)
-  {
-    throw std::runtime_error(
-            "Serialization of SerializedMessage to serialized message is not possible.");
+    return serialization::get_type_support_handle_impl<MessageT>();
   }
 };
 
