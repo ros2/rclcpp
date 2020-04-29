@@ -129,10 +129,9 @@ public:
   }
 
   void
-  provide_intra_process_message(ConstMessageSharedPtr message)
+  provide_intra_process_message(std::shared_ptr<const void> message)
   {
-    buffer_->add_shared(std::move(message));
-    trigger_guard_condition();
+    provide_intra_process_message_impl(std::static_pointer_cast<const MessageT>(message));
   }
 
   void
@@ -148,18 +147,22 @@ public:
     return buffer_->use_take_shared_method();
   }
 
-  void
-  provide_intra_process_message(const SerializedMessage & serialized_message)
+  std::shared_ptr<void>
+  create_shared_message(const void * message_to_copy)
   {
-    rclcpp::Serialization<MessageT> serialization;
+    if (nullptr != message_to_copy) {
+      return std::allocate_shared<MessageT, MessageAlloc>(
+        *message_allocator_,
+        *reinterpret_cast<const MessageT *>(message_to_copy));
+    }
 
-    auto ptr = MessageAllocTraits::allocate(*message_allocator_.get(), 1);
-    MessageAllocTraits::construct(*message_allocator_.get(), ptr);
-    auto message = MessageUniquePtr(ptr);
+    return std::allocate_shared<MessageT, MessageAlloc>(*message_allocator_);
+  }
 
-    serialization.deserialize_message(&serialized_message, reinterpret_cast<void *>(message.get()));
-
-    provide_intra_process_message(std::move(message));
+  std::unique_ptr<SerializationBase>
+  get_serialization()
+  {
+    return std::make_unique<Serialization<MessageT>>();
   }
 
 private:
@@ -168,6 +171,13 @@ private:
   {
     rcl_ret_t ret = rcl_trigger_guard_condition(&gc_);
     (void)ret;
+  }
+
+  void
+  provide_intra_process_message_impl(ConstMessageSharedPtr message)
+  {
+    buffer_->add_shared(std::move(message));
+    trigger_guard_condition();
   }
 
   template<typename T>
