@@ -99,7 +99,7 @@ TEST_F(TestServer, construction_and_destruction_callback_group)
 {
   auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
   auto group = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   const rcl_action_server_options_t & options = rcl_action_server_get_default_options();
 
   using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;

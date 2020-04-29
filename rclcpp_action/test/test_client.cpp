@@ -273,7 +273,7 @@ TEST_F(TestClient, construction_and_destruction)
 TEST_F(TestClient, construction_and_destruction_callback_group)
 {
   auto group = client_node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   ASSERT_NO_THROW(
     rclcpp_action::create_client<ActionType>(
       client_node->get_node_base_interface(),
