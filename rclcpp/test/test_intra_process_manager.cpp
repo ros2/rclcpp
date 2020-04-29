@@ -220,11 +220,14 @@ public:
     return false;
   }
 
-  void
-  provide_intra_process_message(const rclcpp::SerializedMessage & serialized_message)
-  {
-    (void)serialized_message;
-  }
+  virtual void
+  provide_intra_process_message(std::shared_ptr<const void> message) = 0;
+
+  virtual std::shared_ptr<void>
+  create_shared_message(const void * message_to_copy = nullptr) = 0;
+
+  virtual std::unique_ptr<SerializationBase>
+  get_serialization() = 0;
 
   rmw_qos_profile_t qos_profile;
   const char * topic_name;
@@ -243,15 +246,30 @@ public:
   }
 
   void
-  provide_intra_process_message(std::shared_ptr<const MessageT> msg)
+  provide_intra_process_message(std::shared_ptr<const void> message)
   {
-    buffer->add(msg);
+    buffer->add(std::static_pointer_cast<const MessageT>(message));
   }
 
   void
   provide_intra_process_message(std::unique_ptr<MessageT> msg)
   {
     buffer->add(std::move(msg));
+  }
+
+  virtual std::shared_ptr<void>
+  create_shared_message(const void * message_to_copy = nullptr)
+  {
+    if (nullptr != message_to_copy) {
+      return std::make_shared<MessageT>(*reinterpret_cast<const MessageT *>(message_to_copy));
+    }
+    return std::make_shared<MessageT>();
+  }
+
+  virtual std::unique_ptr<SerializationBase>
+  get_serialization()
+  {
+    return std::make_unique<Serialization<MessageT>>();
   }
 
   std::uintptr_t
