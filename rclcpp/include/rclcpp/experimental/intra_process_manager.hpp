@@ -189,7 +189,6 @@ public:
   {
     constexpr bool is_serialized_publisher =
       serialization_traits::is_serialized_message_class<MessageT>::value;
-
     using Indicies = SplittedSubscriptionsIndicies<is_serialized_publisher>;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
@@ -372,6 +371,7 @@ private:
     const std::vector<uint64_t> & take_ownership_subscriptions,
     const std::vector<uint64_t> & take_shared_subscriptions)
   {
+    // subsriber and publisher have same message types
     using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
     using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
 
@@ -384,9 +384,9 @@ private:
       take_shared_subscriptions.size() <= 1)
     {
       // There is at maximum 1 buffer that does not require ownership.
-      // So we this case is equivalent to all the buffers requiring ownership
+      // So this case is equivalent to all the buffers requiring ownership
 
-      // Merge the two vector of ids into a unique one
+      // Merge the two vectors of ids into a unique one
       std::vector<uint64_t> concatenated_vector(take_shared_subscriptions);
       concatenated_vector.insert(
         concatenated_vector.end(),
@@ -418,6 +418,7 @@ private:
     const std::vector<uint64_t> & take_ownership_subscriptions,
     const std::vector<uint64_t> & take_shared_subscriptions)
   {
+    // subsriber and publisher have different message types
     // get first subscription
     const auto subscription_id =
       take_ownership_subscriptions.empty() ?
@@ -474,6 +475,7 @@ private:
     const std::vector<uint64_t> & take_ownership_subscriptions,
     const std::vector<uint64_t> & take_shared_subscriptions)
   {
+    // subsriber and publisher have same message types
     using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
     using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
 
@@ -563,7 +565,7 @@ private:
     }
   }
 
-  /// method for unknown allocator using subscription for allocation
+  /// Method for unknown allocator using subscription for allocation
   void
   add_owned_msg_to_buffers(
     std::shared_ptr<const void> message,
@@ -591,10 +593,8 @@ private:
 
   /// Convert received message to message type of subscriber
   /**
-   * Method for ros message for serialization to rclcpp::SerializedMessage.
+   * Method to serialize a ros message to rclcpp::SerializedMessage.
    * The publisher has a template type while the subscribers is serialized.
-   *
-   * In addition this generates a unique intra process id for the publisher.
    *
    * \param message the ros message from publisher.
    * \param subscription a subscriber used for creating the serialized message.
@@ -622,8 +622,6 @@ private:
   /**
    * Overloaded method for rclcpp::SerializedMessage for deserialization.
    * The publisher is serialized while the subscribers have a templated message type.
-   *
-   * In addition this generates a unique intra process id for the publisher.
    *
    * \param serialized_message the serialized message from publisher.
    * \param subscription a subscriber used for creating ros message and serialization.
