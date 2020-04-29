@@ -566,7 +566,7 @@ private:
   /// method for unknown allocator using subscription for allocation
   void
   add_owned_msg_to_buffers(
-    std::shared_ptr<void> message,
+    std::shared_ptr<const void> message,
     std::vector<uint64_t> subscription_ids)
   {
     for (auto it = subscription_ids.begin(); it != subscription_ids.end(); it++) {
