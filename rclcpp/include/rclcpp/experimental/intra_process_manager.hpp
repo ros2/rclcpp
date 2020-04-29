@@ -41,6 +41,8 @@
 #include "rclcpp/serialized_message.hpp"
 #include "rclcpp/visibility_control.hpp"
 
+#include "rcpputils/asserts.hpp"
+
 namespace rclcpp
 {
 
@@ -185,8 +187,21 @@ public:
     std::unique_ptr<MessageT, Deleter> message,
     std::shared_ptr<typename allocator::AllocRebind<MessageT, Alloc>::allocator_type> allocator)
   {
-    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
-    using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
+    constexpr bool is_serialized_publisher =
+      serialization_traits::is_serialized_message_class<MessageT>::value;
+
+    constexpr auto index_ownership_same = SplittedSubscriptions::get_index(
+      false,
+      is_serialized_publisher);
+    constexpr auto index_shared_same = SplittedSubscriptions::get_index(
+      true,
+      is_serialized_publisher);
+    constexpr auto index_ownership_other = SplittedSubscriptions::get_index(
+      false,
+      !is_serialized_publisher);
+    constexpr auto index_shared_other = SplittedSubscriptions::get_index(
+      true,
+      !is_serialized_publisher);
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -200,40 +215,22 @@ public:
     }
     const auto & sub_ids = publisher_it->second;
 
-    if (sub_ids.take_ownership_subscriptions.empty()) {
-      // None of the buffers require ownership, so we promote the pointer
-      std::shared_ptr<MessageT> msg = std::move(message);
-
-      this->template add_shared_msg_to_buffers<MessageT>(msg, sub_ids.take_shared_subscriptions);
-    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
-      sub_ids.take_shared_subscriptions.size() <= 1)
+    // check if (de)serialization is needed
+    if (sub_ids.take_subscriptions[index_ownership_other].size() +
+      sub_ids.take_subscriptions[index_shared_other].size() > 0)
     {
-      // There is at maximum 1 buffer that does not require ownership.
-      // So we this case is equivalent to all the buffers requiring ownership
-
-      // Merge the two vector of ids into a unique one
-      std::vector<uint64_t> concatenated_vector(sub_ids.take_shared_subscriptions);
-      concatenated_vector.insert(
-        concatenated_vector.end(),
-        sub_ids.take_ownership_subscriptions.begin(),
-        sub_ids.take_ownership_subscriptions.end());
-
-      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
-        std::move(message),
-        concatenated_vector,
-        allocator);
-    } else if (!sub_ids.take_ownership_subscriptions.empty() && // NOLINT
-      sub_ids.take_shared_subscriptions.size() > 1)
-    {
-      // Construct a new shared pointer from the message
-      // for the buffers that do not require ownership
-      auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(*allocator, *message);
-
-      this->template add_shared_msg_to_buffers<MessageT>(
-        shared_msg, sub_ids.take_shared_subscriptions);
-      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
-        std::move(message), sub_ids.take_ownership_subscriptions, allocator);
+      do_intra_process_publish_other_type<MessageT>(
+        message.get(),
+        sub_ids.take_subscriptions[index_ownership_other],
+        sub_ids.take_subscriptions[index_shared_other]
+      );
     }
+
+    do_intra_process_publish_same_type<MessageT, Alloc, Deleter>(
+      std::move(message), allocator,
+      sub_ids.take_subscriptions[index_ownership_same],
+      sub_ids.take_subscriptions[index_shared_same]
+    );
   }
 
   template<
@@ -246,8 +243,21 @@ public:
     std::unique_ptr<MessageT, Deleter> message,
     std::shared_ptr<typename allocator::AllocRebind<MessageT, Alloc>::allocator_type> allocator)
   {
-    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
-    using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
+    constexpr bool is_serialized_publisher =
+      serialization_traits::is_serialized_message_class<MessageT>::value;
+
+    constexpr auto index_ownership_same = SplittedSubscriptions::get_index(
+      false,
+      is_serialized_publisher);
+    constexpr auto index_shared_same = SplittedSubscriptions::get_index(
+      true,
+      is_serialized_publisher);
+    constexpr auto index_ownership_other = SplittedSubscriptions::get_index(
+      false,
+      !is_serialized_publisher);
+    constexpr auto index_shared_other = SplittedSubscriptions::get_index(
+      true,
+      !is_serialized_publisher);
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -261,33 +271,22 @@ public:
     }
     const auto & sub_ids = publisher_it->second;
 
-    if (sub_ids.take_ownership_subscriptions.empty()) {
-      // If there are no owning, just convert to shared.
-      std::shared_ptr<MessageT> shared_msg = std::move(message);
-      if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT>(
-          shared_msg, sub_ids.take_shared_subscriptions);
-      }
-      return shared_msg;
-    } else {
-      // Construct a new shared pointer from the message for the buffers that
-      // do not require ownership and to return.
-      auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(*allocator, *message);
-
-      if (!sub_ids.take_shared_subscriptions.empty()) {
-        this->template add_shared_msg_to_buffers<MessageT>(
-          shared_msg,
-          sub_ids.take_shared_subscriptions);
-      }
-      if (!sub_ids.take_ownership_subscriptions.empty()) {
-        this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
-          std::move(message),
-          sub_ids.take_ownership_subscriptions,
-          allocator);
-      }
-
-      return shared_msg;
+    // check if (de)serialization is needed
+    if (sub_ids.take_subscriptions[index_ownership_other].size() +
+      sub_ids.take_subscriptions[index_shared_other].size() > 0)
+    {
+      do_intra_process_publish_other_type<MessageT>(
+        message.get(),
+        sub_ids.take_subscriptions[index_ownership_other],
+        sub_ids.take_subscriptions[index_shared_other]
+      );
     }
+
+    return do_intra_process_publish_and_return_shared_same_type<MessageT, Alloc, Deleter>(
+      std::move(message), allocator,
+      sub_ids.take_subscriptions[index_ownership_same],
+      sub_ids.take_subscriptions[index_shared_same]
+    );
   }
 
   /// Return true if the given rmw_gid_t matches any stored Publishers.
@@ -326,8 +325,22 @@ private:
 
   struct SplittedSubscriptions
   {
-    std::vector<uint64_t> take_shared_subscriptions;
-    std::vector<uint64_t> take_ownership_subscriptions;
+    enum
+    {
+      IndexSharedTyped = 0, IndexSharedSerialized = 1,
+      IndexOwnershipTyped = 2, IndexOwnershipSerialized = 3,
+      IndexNum = 4
+    };
+
+    /// get the index for "take_subscriptions" depending on shared/serialized
+    constexpr static auto
+    get_index(const bool is_shared, const bool is_serialized)
+    {
+      return (is_serialized ? IndexSharedTyped : IndexSharedSerialized) +
+             (is_shared ? IndexSharedTyped : IndexOwnershipTyped);
+    }
+
+    std::vector<uint64_t> take_subscriptions[IndexNum];
   };
 
   using SubscriptionMap =
@@ -346,11 +359,158 @@ private:
 
   RCLCPP_PUBLIC
   void
-  insert_sub_id_for_pub(uint64_t sub_id, uint64_t pub_id, bool use_take_shared_method);
+  insert_sub_id_for_pub(
+    uint64_t sub_id, uint64_t pub_id, bool use_take_shared_method,
+    bool is_serialized_subscriber);
 
   RCLCPP_PUBLIC
   bool
   can_communicate(PublisherInfo pub_info, SubscriptionInfo sub_info) const;
+
+  template<
+    typename MessageT,
+    typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
+  void
+  do_intra_process_publish_same_type(
+    std::unique_ptr<MessageT, Deleter> message,
+    std::shared_ptr<typename allocator::AllocRebind<MessageT, Alloc>::allocator_type> allocator,
+    const std::vector<uint64_t> & take_ownership_subscriptions,
+    const std::vector<uint64_t> & take_shared_subscriptions)
+  {
+    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+    using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
+
+    if (take_ownership_subscriptions.empty()) {
+      // None of the buffers require ownership, so we promote the pointer
+      std::shared_ptr<MessageT> msg = std::move(message);
+
+      this->template add_shared_msg_to_buffers<MessageT>(msg, take_shared_subscriptions);
+    } else if (!take_ownership_subscriptions.empty() && // NOLINT
+      take_shared_subscriptions.size() <= 1)
+    {
+      // There is at maximum 1 buffer that does not require ownership.
+      // So we this case is equivalent to all the buffers requiring ownership
+
+      // Merge the two vector of ids into a unique one
+      std::vector<uint64_t> concatenated_vector(take_shared_subscriptions);
+      concatenated_vector.insert(
+        concatenated_vector.end(),
+        take_ownership_subscriptions.begin(),
+        take_ownership_subscriptions.end());
+
+      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+        std::move(message),
+        concatenated_vector,
+        allocator);
+    } else if (!take_ownership_subscriptions.empty() && // NOLINT
+      take_shared_subscriptions.size() > 1)
+    {
+      // Construct a new shared pointer from the message
+      // for the buffers that do not require ownership
+      auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(*allocator, *message);
+
+      this->template add_shared_msg_to_buffers<MessageT>(
+        shared_msg, take_shared_subscriptions);
+      this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+        std::move(message), take_ownership_subscriptions, allocator);
+    }
+  }
+
+  template<typename MessageT>
+  void
+  do_intra_process_publish_other_type(
+    const MessageT * unsupported_message,
+    const std::vector<uint64_t> & take_ownership_subscriptions,
+    const std::vector<uint64_t> & take_shared_subscriptions)
+  {
+    // get first subscription
+    const auto subscription_id =
+      take_ownership_subscriptions.empty() ?
+      take_shared_subscriptions.front() :
+      take_ownership_subscriptions.front();
+
+    auto subscription_it = subscriptions_.find(subscription_id);
+    if (subscription_it == subscriptions_.end()) {
+      throw std::runtime_error("subscription has unexpectedly gone out of scope");
+    }
+    auto subscription_base = subscription_it->second.subscription;
+
+    // convert published message to the supported type
+    auto message = convert_message(unsupported_message, subscription_base);
+
+    if (take_ownership_subscriptions.empty()) {
+      // None of the buffers require ownership, so we promote the pointer
+      this->template add_shared_msg_to_buffers<void>(std::move(message), take_shared_subscriptions);
+    } else if (!take_ownership_subscriptions.empty() && // NOLINT
+      take_shared_subscriptions.size() <= 1)
+    {
+      // There is at maximum 1 buffer that does not require ownership.
+      // So we this case is equivalent to all the buffers requiring ownership
+
+      // Merge the two vector of ids into a unique one
+      std::vector<uint64_t> concatenated_vector(take_shared_subscriptions);
+      concatenated_vector.insert(
+        concatenated_vector.end(),
+        take_ownership_subscriptions.begin(),
+        take_ownership_subscriptions.end());
+
+      add_owned_msg_to_buffers(std::move(message), concatenated_vector);
+    } else if (!take_ownership_subscriptions.empty() && // NOLINT
+      take_shared_subscriptions.size() > 1)
+    {
+      // Construct a new shared pointer from the message
+      // for the buffers that do not require ownership
+      auto shared_msg = subscription_base->create_shared_message(message.get());
+
+      this->template add_shared_msg_to_buffers<void>(
+        shared_msg, take_shared_subscriptions);
+      add_owned_msg_to_buffers(std::move(message), take_ownership_subscriptions);
+    }
+  }
+
+  template<
+    typename MessageT,
+    typename Alloc = std::allocator<void>,
+    typename Deleter = std::default_delete<MessageT>>
+  std::shared_ptr<const MessageT>
+  do_intra_process_publish_and_return_shared_same_type(
+    std::unique_ptr<MessageT, Deleter> message,
+    std::shared_ptr<typename allocator::AllocRebind<MessageT, Alloc>::allocator_type> allocator,
+    const std::vector<uint64_t> & take_ownership_subscriptions,
+    const std::vector<uint64_t> & take_shared_subscriptions)
+  {
+    using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
+    using MessageAllocatorT = typename MessageAllocTraits::allocator_type;
+
+    if (take_ownership_subscriptions.empty()) {
+      // If there are no owning, just convert to shared.
+      std::shared_ptr<MessageT> shared_msg = std::move(message);
+      if (!take_shared_subscriptions.empty()) {
+        this->template add_shared_msg_to_buffers<MessageT>(
+          shared_msg, take_shared_subscriptions);
+      }
+      return shared_msg;
+    } else {
+      // Construct a new shared pointer from the message for the buffers that
+      // do not require ownership and to return.
+      auto shared_msg = std::allocate_shared<MessageT, MessageAllocatorT>(*allocator, *message);
+
+      if (!take_shared_subscriptions.empty()) {
+        this->template add_shared_msg_to_buffers<MessageT>(
+          shared_msg,
+          take_shared_subscriptions);
+      }
+      if (!take_ownership_subscriptions.empty()) {
+        this->template add_owned_msg_to_buffers<MessageT, Alloc, Deleter>(
+          std::move(message),
+          take_ownership_subscriptions,
+          allocator);
+      }
+
+      return shared_msg;
+    }
+  }
 
   template<typename MessageT>
   void
@@ -358,9 +518,6 @@ private:
     std::shared_ptr<const MessageT> message,
     std::vector<uint64_t> subscription_ids)
   {
-    constexpr bool is_serialized_publisher =
-      serialization_traits::is_serialized_message_class<MessageT>::value;
-
     for (auto id : subscription_ids) {
       auto subscription_it = subscriptions_.find(id);
       if (subscription_it == subscriptions_.end()) {
@@ -368,29 +525,7 @@ private:
       }
       auto subscription_base = subscription_it->second.subscription;
 
-      // same message type, so it can just be passed through
-      if (subscription_base->is_serialized() == is_serialized_publisher) {
-        auto subscription = std::static_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<MessageT>
-          >(subscription_base);
-
-        subscription->provide_intra_process_message(message);
-      } else if (is_serialized_publisher) {
-        // publisher provides a serialized message, while subscriber expects a ROS message
-        provide_intra_process_message(subscription_base, *message);
-      } else {
-        // publisher provides a ROS message, while subscriber expects a serialized message
-        rclcpp::Serialization<MessageT> serialization;
-        auto subscription = std::static_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<SerializedMessage>
-          >(subscription_base);
-
-        auto serialized_message = std::make_unique<SerializedMessage>();
-        serialization.serialize_message(
-          reinterpret_cast<const void *>(message.get()), serialized_message.get());
-
-        subscription->provide_intra_process_message(std::move(serialized_message));
-      }
+      subscription_base->provide_intra_process_message(message);
     }
   }
 
@@ -407,9 +542,6 @@ private:
     using MessageAllocTraits = allocator::AllocRebind<MessageT, Alloc>;
     using MessageUniquePtr = std::unique_ptr<MessageT, Deleter>;
 
-    constexpr bool is_serialized_publisher =
-      serialization_traits::is_serialized_message_class<MessageT>::value;
-
     for (auto it = subscription_ids.begin(); it != subscription_ids.end(); it++) {
       auto subscription_it = subscriptions_.find(*it);
       if (subscription_it == subscriptions_.end()) {
@@ -417,61 +549,106 @@ private:
       }
       auto subscription_base = subscription_it->second.subscription;
 
-      // same message type, so it can just be passed through
-      if (subscription_base->is_serialized() == is_serialized_publisher) {
-        auto subscription = std::static_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<MessageT>
-          >(subscription_base);
+      auto subscription = std::static_pointer_cast<
+        rclcpp::experimental::SubscriptionIntraProcess<MessageT>
+        >(subscription_base);
 
-        if (std::next(it) == subscription_ids.end()) {
-          // If this is the last subscription, give up ownership
-          subscription->provide_intra_process_message(std::move(message));
-        } else {
-          // Copy the message since we have additional subscriptions to serve
-          MessageUniquePtr copy_message;
-          Deleter deleter = message.get_deleter();
-          auto ptr = MessageAllocTraits::allocate(*allocator.get(), 1);
-          MessageAllocTraits::construct(*allocator.get(), ptr, *message);
-          copy_message = MessageUniquePtr(ptr, deleter);
-
-          subscription->provide_intra_process_message(std::move(copy_message));
-        }
-      } else if (is_serialized_publisher) {
-        // publisher provides a serialized message, while subscriber expects a ROS message
-        provide_intra_process_message(subscription_base, *message);
+      if (std::next(it) == subscription_ids.end()) {
+        // If this is the last subscription, give up ownership
+        subscription->provide_intra_process_message(std::move(message));
       } else {
-        // publisher provides a ROS message, while subscriber expects a serialized message
-        rclcpp::Serialization<MessageT> serialization;
-        auto subscription = std::static_pointer_cast<
-          rclcpp::experimental::SubscriptionIntraProcess<SerializedMessage>
-          >(subscription_base);
+        // Copy the message since we have additional subscriptions to serve
+        MessageUniquePtr copy_message;
+        Deleter deleter = message.get_deleter();
+        auto ptr = MessageAllocTraits::allocate(*allocator.get(), 1);
+        MessageAllocTraits::construct(*allocator.get(), ptr, *message);
+        copy_message = MessageUniquePtr(ptr, deleter);
 
-        auto serialized_message = std::make_unique<SerializedMessage>();
-        serialization.serialize_message(
-          reinterpret_cast<const void *>(message.get()), serialized_message.get());
-
-        subscription->provide_intra_process_message(std::move(serialized_message));
+        subscription->provide_intra_process_message(std::move(copy_message));
       }
     }
   }
 
-  template<typename T>
-  static std::enable_if_t<!serialization_traits::is_serialized_message_class<T>::value>
-  provide_intra_process_message(
-    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription,
-    const T & serialized_message)
+  /// method for unknown allocator using subscription for allocation
+  void
+  add_owned_msg_to_buffers(
+    std::shared_ptr<void> message,
+    std::vector<uint64_t> subscription_ids)
   {
-    (void)subscription;
-    (void)serialized_message;
-    // prevent call if actual message type does not match
+    for (auto it = subscription_ids.begin(); it != subscription_ids.end(); it++) {
+      auto subscription_it = subscriptions_.find(*it);
+      if (subscription_it == subscriptions_.end()) {
+        throw std::runtime_error("subscription has unexpectedly gone out of scope");
+      }
+      auto subscription_base = subscription_it->second.subscription;
+
+      if (std::next(it) == subscription_ids.end()) {
+        // If this is the last subscription, give up ownership
+        subscription_base->provide_intra_process_message(std::move(message));
+      } else {
+        // Copy the message since we have additional subscriptions to serve
+        std::shared_ptr<void> copy_message =
+          subscription_base->create_shared_message(message.get());
+
+        subscription_base->provide_intra_process_message(std::move(copy_message));
+      }
+    }
   }
 
-  static void
-  provide_intra_process_message(
-    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr & subscription,
-    const SerializedMessage & serialized_message)
+  /// Convert received message to message type of subscriber
+  /**
+   * Method for ros message for serialization to rclcpp::SerializedMessage.
+   * The publisher has a template type while the subscribers is serialized.
+   *
+   * In addition this generates a unique intra process id for the publisher.
+   *
+   * \param message the ros message from publisher.
+   * \param subscription a subscriber used for creating the serialized message.
+   * \return a shared pointer (containing rclcpp::SerializedMessage) with deleter.
+   */
+  template<typename MessageT>
+  std::shared_ptr<void> convert_message(
+    const MessageT * message,
+    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription)
   {
-    subscription->provide_intra_process_message(serialized_message);
+    // serialize
+    auto serialized_message = subscription->create_shared_message();
+    rclcpp::Serialization<MessageT> serialization;
+
+    rcpputils::check_true(nullptr != serialized_message, "Serialized message is nullpointer.");
+
+    serialization.serialize_message(
+      message,
+      reinterpret_cast<SerializedMessage *>(serialized_message.get()));
+
+    return serialized_message;
+  }
+
+  /// Convert received message to message type of subscriber
+  /**
+   * Overloaded method for rclcpp::SerializedMessage for deserialization.
+   * The publisher is serialized while the subscribers have a templated message type.
+   *
+   * In addition this generates a unique intra process id for the publisher.
+   *
+   * \param serialized_message the serialized message from publisher.
+   * \param subscription a subscriber used for creating ros message and serialization.
+   * \return a shared pointer (containing a ros message) with deleter.
+   */
+  std::shared_ptr<void> convert_message(
+    const SerializedMessage * serialized_message,
+    rclcpp::experimental::SubscriptionIntraProcessBase::SharedPtr subscription)
+  {
+    // deserialize
+    auto converted_message = subscription->create_shared_message();
+    auto serialization = subscription->get_serialization();
+
+    rcpputils::check_true(nullptr != converted_message, "Converted message is nullpointer.");
+    rcpputils::check_true(nullptr != serialization, "Serialization is nullpointer.");
+
+    serialization->deserialize_message(serialized_message, converted_message.get());
+
+    return converted_message;
   }
 
   PublisherToSubscriptionIdsMap pub_to_subs_;
