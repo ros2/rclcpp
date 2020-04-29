@@ -190,18 +190,7 @@ public:
     constexpr bool is_serialized_publisher =
       serialization_traits::is_serialized_message_class<MessageT>::value;
 
-    constexpr auto index_ownership_same = SplittedSubscriptions::get_index(
-      false,
-      is_serialized_publisher);
-    constexpr auto index_shared_same = SplittedSubscriptions::get_index(
-      true,
-      is_serialized_publisher);
-    constexpr auto index_ownership_other = SplittedSubscriptions::get_index(
-      false,
-      !is_serialized_publisher);
-    constexpr auto index_shared_other = SplittedSubscriptions::get_index(
-      true,
-      !is_serialized_publisher);
+    using Indicies = SplittedSubscriptionsIndicies<is_serialized_publisher>;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -216,20 +205,20 @@ public:
     const auto & sub_ids = publisher_it->second;
 
     // check if (de)serialization is needed
-    if (sub_ids.take_subscriptions[index_ownership_other].size() +
-      sub_ids.take_subscriptions[index_shared_other].size() > 0)
+    if (sub_ids.take_subscriptions[Indicies::ownership_other].size() +
+      sub_ids.take_subscriptions[Indicies::shared_other].size() > 0)
     {
       do_intra_process_publish_other_type<MessageT>(
         message.get(),
-        sub_ids.take_subscriptions[index_ownership_other],
-        sub_ids.take_subscriptions[index_shared_other]
+        sub_ids.take_subscriptions[Indicies::ownership_other],
+        sub_ids.take_subscriptions[Indicies::shared_other]
       );
     }
 
     do_intra_process_publish_same_type<MessageT, Alloc, Deleter>(
       std::move(message), allocator,
-      sub_ids.take_subscriptions[index_ownership_same],
-      sub_ids.take_subscriptions[index_shared_same]
+      sub_ids.take_subscriptions[Indicies::ownership_same],
+      sub_ids.take_subscriptions[Indicies::shared_same]
     );
   }
 
@@ -245,19 +234,7 @@ public:
   {
     constexpr bool is_serialized_publisher =
       serialization_traits::is_serialized_message_class<MessageT>::value;
-
-    constexpr auto index_ownership_same = SplittedSubscriptions::get_index(
-      false,
-      is_serialized_publisher);
-    constexpr auto index_shared_same = SplittedSubscriptions::get_index(
-      true,
-      is_serialized_publisher);
-    constexpr auto index_ownership_other = SplittedSubscriptions::get_index(
-      false,
-      !is_serialized_publisher);
-    constexpr auto index_shared_other = SplittedSubscriptions::get_index(
-      true,
-      !is_serialized_publisher);
+    using Indicies = SplittedSubscriptionsIndicies<is_serialized_publisher>;
 
     std::shared_lock<std::shared_timed_mutex> lock(mutex_);
 
@@ -272,20 +249,20 @@ public:
     const auto & sub_ids = publisher_it->second;
 
     // check if (de)serialization is needed
-    if (sub_ids.take_subscriptions[index_ownership_other].size() +
-      sub_ids.take_subscriptions[index_shared_other].size() > 0)
+    if (sub_ids.take_subscriptions[Indicies::ownership_other].size() +
+      sub_ids.take_subscriptions[Indicies::shared_other].size() > 0)
     {
       do_intra_process_publish_other_type<MessageT>(
         message.get(),
-        sub_ids.take_subscriptions[index_ownership_other],
-        sub_ids.take_subscriptions[index_shared_other]
+        sub_ids.take_subscriptions[Indicies::ownership_other],
+        sub_ids.take_subscriptions[Indicies::shared_other]
       );
     }
 
     return do_intra_process_publish_and_return_shared_same_type<MessageT, Alloc, Deleter>(
       std::move(message), allocator,
-      sub_ids.take_subscriptions[index_ownership_same],
-      sub_ids.take_subscriptions[index_shared_same]
+      sub_ids.take_subscriptions[Indicies::ownership_same],
+      sub_ids.take_subscriptions[Indicies::shared_same]
     );
   }
 
@@ -341,6 +318,23 @@ private:
     }
 
     std::vector<uint64_t> take_subscriptions[IndexNum];
+  };
+
+  template<bool is_serialized>
+  struct SplittedSubscriptionsIndicies
+  {
+    constexpr static auto ownership_same = SplittedSubscriptions::get_index(
+      false,
+      is_serialized);
+    constexpr static auto shared_same = SplittedSubscriptions::get_index(
+      true,
+      is_serialized);
+    constexpr static auto ownership_other = SplittedSubscriptions::get_index(
+      false,
+      !is_serialized);
+    constexpr static auto shared_other = SplittedSubscriptions::get_index(
+      true,
+      !is_serialized);
   };
 
   using SubscriptionMap =
