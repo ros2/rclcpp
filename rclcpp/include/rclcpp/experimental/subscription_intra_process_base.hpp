@@ -72,12 +72,21 @@ public:
   rmw_qos_profile_t
   get_actual_qos() const;
 
+  RCLCPP_PUBLIC
   virtual bool
   is_serialized() const = 0;
 
+  RCLCPP_PUBLIC
   virtual void
-  provide_intra_process_message(
-    const SerializedMessage & serialized_message) = 0;
+  provide_intra_process_message(std::shared_ptr<const void> message) = 0;
+
+  RCLCPP_PUBLIC
+  virtual std::shared_ptr<void>
+  create_shared_message(const void * message_to_copy = nullptr) = 0;
+
+  RCLCPP_PUBLIC
+  virtual std::unique_ptr<SerializationBase>
+  get_serialization() = 0;
 
 protected:
   std::recursive_mutex reentrant_mutex_;
