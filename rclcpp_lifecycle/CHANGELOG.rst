@@ -3,6 +3,19 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.9.0 (2020-04-29)
+------------------
+* Export targets in addition to include directories / libraries (`#1096 <https://github.com/ros2/rclcpp/issues/1096>`_)
+* Deprecate redundant namespaces (`#1083 <https://github.com/ros2/rclcpp/issues/1083>`_)
+* Integrate topic statistics (`#1072 <https://github.com/ros2/rclcpp/issues/1072>`_)
+* Reflect changes in rclcpp API (`#1079 <https://github.com/ros2/rclcpp/issues/1079>`_)
+* Fix unknown macro errors reported by cppcheck 1.90 (`#1000 <https://github.com/ros2/rclcpp/issues/1000>`_)
+* Rremoved rmw_implementation from package.xml (`#991 <https://github.com/ros2/rclcpp/issues/991>`_)
+* Implement functions to get publisher and subcription informations like QoS policies from topic name (`#960 <https://github.com/ros2/rclcpp/issues/960>`_)
+* Create node clock calls const (`#922 <https://github.com/ros2/rclcpp/issues/922>`_)
+* Type conversions fixes (`#901 <https://github.com/ros2/rclcpp/issues/901>`_)
+* Contributors: Alejandro Hernández Cordero, Barry Xu, Devin Bonnie, Dirk Thomas, Jacob Perron, Monika Idzik, Prajakta Gokhale, Steven Macenski, William Woodall
+
 0.8.3 (2019-11-19)
 ------------------
 
