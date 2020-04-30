@@ -54,6 +54,7 @@ Clock::Clock(rcl_clock_type_t clock_type)
   {
     std::lock_guard<std::shared_timed_mutex> lg(g_clock_map_mutex);
     // Add a new default-constructed mutex, keyed off of this pointer.
+    fprintf(stderr, "Adding clock mutex for %p\n", this);
     g_clock_mutex_map[this];
   }
 }
@@ -64,6 +65,7 @@ Clock::~Clock()
     std::lock_guard<std::shared_timed_mutex> lg(g_clock_map_mutex);
     // Remove the mutex corresponding to this clock object.
     g_clock_mutex_map.erase(this);
+    fprintf(stderr, "Removed clock mutex for %p\n", this);
   }
 
   auto ret = rcl_clock_fini(&rcl_clock_);
@@ -144,6 +146,7 @@ Clock::create_jump_callback(
   }
 
   {
+    fprintf(stderr, "create_jump_callback() getting clock mutex for %p\n", this);
     std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this));
     // Try to add the jump callback to the clock
     rcl_ret_t ret = rcl_clock_add_jump_callback(
@@ -158,6 +161,7 @@ Clock::create_jump_callback(
   // create shared_ptr that removes the callback automatically when all copies are destructed
   // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
+    fprintf(stderr, "create_jump_callback release lambda getting clock mutex for %p\n", this);
     std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this));
 
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,

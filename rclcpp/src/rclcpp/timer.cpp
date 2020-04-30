@@ -43,6 +43,7 @@ TimerBase::TimerBase(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
     {
       {
+        fprintf(stderr, "TimerBase handle lambda getting clock mutex for %p\n", static_cast<void *>(this->clock_.get()));
         std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this->clock_.get()));
         if (rcl_timer_fini(timer) != RCL_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
@@ -61,6 +62,7 @@ TimerBase::TimerBase(
 
   rcl_clock_t * clock_handle = clock_->get_clock_handle();
   {
+    fprintf(stderr, "TimerBase constructor getting clock mutex for %p\n", static_cast<void *>(this->clock_.get()));
     std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this->clock_.get()));
     if (
       rcl_timer_init(
