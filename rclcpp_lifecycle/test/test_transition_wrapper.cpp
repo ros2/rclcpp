@@ -28,6 +28,19 @@ protected:
   }
 };
 
+class TransitionDerived : public rclcpp_lifecycle::Transition
+{
+public:
+  TransitionDerived(
+    uint8_t id, const std::string & label,
+    rclcpp_lifecycle::State && start, rclcpp_lifecycle::State && goal)
+  : Transition(id, label, std::move(start), std::move(goal)) {}
+  void expose_reset()
+  {
+    reset();
+  }
+};
+
 TEST_F(TestTransitionWrapper, empty_transition) {
   auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "my_transition");
   EXPECT_NO_THROW(a.reset());
@@ -75,7 +88,15 @@ TEST_F(TestTransitionWrapper, copy_constructor) {
 }
 
 TEST_F(TestTransitionWrapper, assignment_operator) {
-  auto a = std::make_shared<rclcpp_lifecycle::Transition>(1, "one");
+  rclcpp_lifecycle::State start_state(1, "start_state");
+  rclcpp_lifecycle::State goal_state(2, "goal_state");
+  auto a = std::make_shared<rclcpp_lifecycle::Transition>(
+    1, "one", std::move(start_state),
+    std::move(goal_state));
+  *a = *a;
+  EXPECT_EQ(1, a->id());
+  EXPECT_STREQ("one", a->label().c_str());
+
   auto b = std::make_shared<rclcpp_lifecycle::Transition>(2, "two");
   *b = *a;
 
@@ -83,4 +104,25 @@ TEST_F(TestTransitionWrapper, assignment_operator) {
 
   EXPECT_EQ(1, b->id());
   EXPECT_STREQ("one", b->label().c_str());
+  EXPECT_STREQ("start_state", b->start_state().label().c_str());
+  EXPECT_STREQ("goal_state", b->goal_state().label().c_str());
+  EXPECT_EQ(1, b->start_state().id());
+  EXPECT_EQ(2, b->goal_state().id());
+}
+
+TEST_F(TestTransitionWrapper, exceptions) {
+  rcl_lifecycle_transition_t * null_handle = nullptr;
+  EXPECT_THROW((void)rclcpp_lifecycle::Transition(null_handle), std::runtime_error);
+
+  rclcpp_lifecycle::State start_state(1, "start_state");
+  rclcpp_lifecycle::State goal_state(2, "goal_state");
+  auto a = std::make_shared<TransitionDerived>(
+    1, "one", std::move(start_state),
+    std::move(goal_state));
+
+  a->expose_reset();
+  EXPECT_THROW(a->start_state(), std::runtime_error);
+  EXPECT_THROW(a->goal_state(), std::runtime_error);
+  EXPECT_THROW(a->id(), std::runtime_error);
+  EXPECT_THROW(a->label(), std::runtime_error);
 }
