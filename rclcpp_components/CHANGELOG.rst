@@ -2,6 +2,18 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.0 (2020-04-29)
+------------------
+* Added rclcpp_components Doxyfile (`#1091 <https://github.com/ros2/rclcpp/issues/1091>`_)
+* Deprecate redundant namespaces (`#1083 <https://github.com/ros2/rclcpp/issues/1083>`_)
+* Export targets in addition to include directories / libraries (`#1088 <https://github.com/ros2/rclcpp/issues/1088>`_)
+* Export component manager (`#1070 <https://github.com/ros2/rclcpp/issues/1070>`_)
+* Install the component_manager library (`#1068 <https://github.com/ros2/rclcpp/issues/1068>`_)
+* Make Component Manager public (`#1065 <https://github.com/ros2/rclcpp/issues/1065>`_)
+* Remove absolute path from installed CMake code (`#948 <https://github.com/ros2/rclcpp/issues/948>`_)
+* Fix function docblock, check for unparsed arguments (`#945 <https://github.com/ros2/rclcpp/issues/945>`_)
+* Contributors: Alejandro Hernández Cordero, DensoADAS, Dirk Thomas, Jacob Perron, Karsten Knese, Michael Carroll, William Woodall
+
 0.8.3 (2019-11-19)
 ------------------
 
