@@ -28,6 +28,17 @@ protected:
   }
 };
 
+class StateDerived : public rclcpp_lifecycle::State
+{
+public:
+  StateDerived(uint8_t id, const std::string & label)
+  : State(id, label) {}
+  void expose_reset()
+  {
+    reset();
+  }
+};
+
 TEST_F(TestStateWrapper, wrapper) {
   {
     rclcpp_lifecycle::State state(1, "my_state");
@@ -95,6 +106,10 @@ TEST_F(TestStateWrapper, copy_constructor) {
 
 TEST_F(TestStateWrapper, assignment_operator) {
   auto a = std::make_shared<rclcpp_lifecycle::State>(1, "one");
+  *a = *a;
+  EXPECT_EQ(1, a->id());
+  EXPECT_STREQ("one", a->label().c_str());
+
   auto b = std::make_shared<rclcpp_lifecycle::State>(2, "two");
   *b = *a;
 
@@ -165,4 +180,17 @@ TEST_F(TestStateWrapper, assignment_operator4) {
   owning_state2.reset();
 
   delete lc_state1;
+}
+
+TEST_F(TestStateWrapper, exceptions) {
+  EXPECT_THROW((void)rclcpp_lifecycle::State(0, ""), std::runtime_error);
+
+  const rcl_lifecycle_state_t * null_handle = nullptr;
+  EXPECT_THROW((void)rclcpp_lifecycle::State(null_handle), std::runtime_error);
+
+  auto reset_state = std::make_shared<StateDerived>(1, "one");
+  reset_state->expose_reset();
+
+  EXPECT_THROW(reset_state->id(), std::runtime_error);
+  EXPECT_THROW(reset_state->label(), std::runtime_error);
 }
