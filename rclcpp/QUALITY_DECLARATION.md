@@ -21,9 +21,9 @@ The current version can be found in its [package.xml](package.xml), and its chan
 
 All symbols in the installed headers are considered part of the public API.
 
-All installed headers are in the `include` directory of the package, headers in any other folders are not installed and considered private.
-Headers under the folder `experimental` are not considered part of the public API as they have not yet been stabilized.
-Headers under the folder `detail` are not considered part of the public API and are subject to change without notice.
+Except for the exclusions listed below, all installed headers are in the `include` directory of the package, headers in any other folders are not installed and considered private.
+Headers under the folder `experimental` are not considered part of the public API as they have not yet been stabilized. These symbols are namespaced `rclcpp::experimental`.
+Headers under the folder `detail` are not considered part of the public API and are subject to change without notice. These symbols are namespaced `rclcpp::detail`.
 
 ### API Stability Policy [1.iv]
 
@@ -51,11 +51,11 @@ This package uses DCO as its confirmation of contributor origin policy. More inf
 
 ### Peer Review Policy [2.iii]
 
-All pull request will be peer-reviewed, check [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#change-control-process) for additional information.
+All pull requests will be peer-reviewed, check [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#change-control-process) for additional information.
 
 ### Continuous Integration [2.iv]
 
-All pull request must pass CI on all [tier 1 platforms](https://www.ros.org/reps/rep-2000.html#support-tiers)
+All pull requests must pass CI on all [tier 1 platforms](https://www.ros.org/reps/rep-2000.html#support-tiers)
 
 Currently nightly results can be seen here:
 
@@ -72,11 +72,11 @@ All pull requests must resolve related documentation changes before merging.
 
 ### Feature Documentation [3.i]
 
-`rclcpp` has a [feature list](http://docs.ros2.org/eloquent/api/rclcpp/) and each item in the list links to the corresponding feature documentation. There is documentation for all of the features, and new features require documentation before being added.
+`rclcpp` has a [feature list](http://docs.ros2.org/latest/api/rclcpp/) and each item in the list links to the corresponding feature documentation. There is documentation for all of the features, and new features require documentation before being added.
 
 ### Public API Documentation [3.ii]
 
-The API is publicly available in the [ROS 2 API documentation](http://docs.ros2.org/eloquent/api/rclcpp/).
+The API is publicly available in the [ROS 2 API documentation](http://docs.ros2.org/latest/api/rclcpp/).
 
 ### License [3.iii]
 
@@ -100,7 +100,7 @@ New features are required to have tests before being added.
 Currently nightly test results can be seen here:
 
 * [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rclcpp/)
-* [linux-arm64_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rclcpp/)
+* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rclcpp/)
 * [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/testReport/rclcpp/)
 * [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/testReport/rclcpp/)
 
@@ -123,16 +123,15 @@ Changes are required to make a best effort to keep or increase coverage before b
 
 ### Performance [4.iv]
 
-`rclcpp` follows the recommendations for performance testing of C code in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#performance), and opts to do performance analysis on each release rather than each change.
 It is not yet defined if this package requires performance testing and how addresses this topic.
 
 ### Linters and Static Analysis [4.v]
 
-`rclcpp` uses and passes all the ROS2 standard linters and static analysis tools for a C package as described in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#linters-and-static-analysis). Passing implies there are no linter/static errors when testing against CI of supported platforms.
+`rclcpp` uses and passes all the ROS2 standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#linters-and-static-analysis). Passing implies there are no linter/static errors when testing against CI of supported platforms.
 
 Currently nightly test results can be seen here:
 * [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/testReport/rclcpp/)
-* [linux-arm64_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rclcpp/)
+* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rclcpp/)
 * [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/testReport/rclcpp/)
 * [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/testReport/rclcpp/)
 
@@ -163,7 +162,7 @@ It also has several test dependencies, which do not affect the resulting quality
 
 Currently nightly build status can be seen here:
 * [linux-aarch64_release](https://ci.ros2.org/view/nightly/job/nightly_linux-aarch64_release/lastBuild/rclcpp/)
-* [linux-arm64_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/rclcpp/)
+* [linux_release](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/rclcpp/)
 * [mac_osx_release](https://ci.ros2.org/view/nightly/job/nightly_osx_release/lastBuild/rclcpp/)
 * [windows_release](https://ci.ros2.org/view/nightly/job/nightly_win_rel/lastBuild/rclcpp/)
 
