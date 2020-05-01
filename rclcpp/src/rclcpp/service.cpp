@@ -41,7 +41,7 @@ ServiceBase::take_type_erased_request(void * request_out, rmw_request_id_t & req
     this->get_service_handle().get(),
     &request_id_out,
     request_out);
-  if (RCL_RET_CLIENT_TAKE_FAILED == ret) {
+  if (RCL_RET_SERVICE_TAKE_FAILED == ret) {
     return false;
   } else if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret);
