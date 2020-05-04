@@ -83,18 +83,22 @@ public:
   bool
   operator!=(const Parameter & rhs) const;
 
+  /// Get the type of the parameter
   RCLCPP_PUBLIC
   ParameterType
   get_type() const;
 
+  /// Get the type name of the parameter
   RCLCPP_PUBLIC
   std::string
   get_type_name() const;
 
+  /// Get the name of the parameter
   RCLCPP_PUBLIC
   const std::string &
   get_name() const;
 
+  /// Get value of parameter as a parameter message.
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ParameterValue
   get_value_message() const;
@@ -117,50 +121,62 @@ public:
   decltype(auto)
   get_value() const;
 
+  /// Get value of parameter as boolean.
   RCLCPP_PUBLIC
   bool
   as_bool() const;
 
+  /// Get value of parameter as integer.
   RCLCPP_PUBLIC
   int64_t
   as_int() const;
 
+  /// Get value of parameter as double.
   RCLCPP_PUBLIC
   double
   as_double() const;
 
+  /// Get value of parameter as string.
   RCLCPP_PUBLIC
   const std::string &
   as_string() const;
 
+  /// Get value of parameter as byte array (vector<uint8_t>).
   RCLCPP_PUBLIC
   const std::vector<uint8_t> &
   as_byte_array() const;
 
+  /// Get value of parameter as bool array (vector<bool>).
   RCLCPP_PUBLIC
   const std::vector<bool> &
   as_bool_array() const;
 
+  /// Get value of parameter as integer array (vector<int64_t>).
   RCLCPP_PUBLIC
   const std::vector<int64_t> &
   as_integer_array() const;
 
+  /// Get value of parameter as double array (vector<double>).
   RCLCPP_PUBLIC
   const std::vector<double> &
   as_double_array() const;
 
+  /// Get value of parameter as string array (vector<std::string>).
   RCLCPP_PUBLIC
   const std::vector<std::string> &
   as_string_array() const;
 
+  /// Convert a parameter message in a Parameter class object.
   RCLCPP_PUBLIC
   static Parameter
   from_parameter_msg(const rcl_interfaces::msg::Parameter & parameter);
 
+  /// Convert the class in a parameter message.
   RCLCPP_PUBLIC
   rcl_interfaces::msg::Parameter
   to_parameter_msg() const;
 
+  /// Get value of parameter as a string.
   RCLCPP_PUBLIC
   std::string
   value_to_string() const;

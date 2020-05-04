@@ -89,6 +89,7 @@ public:
   bool
   ros_time_is_active();
 
+  /// Return the rcl_clock_t clock handle
   RCLCPP_PUBLIC
   rcl_clock_t *
   get_clock_handle() noexcept;
@@ -97,6 +98,7 @@ public:
   rcl_clock_type_t
   get_clock_type() const noexcept;
 
+  /// Get the clock's mutex
   RCLCPP_PUBLIC
   std::mutex &
   get_clock_mutex() noexcept;

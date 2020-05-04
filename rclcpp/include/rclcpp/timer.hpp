@@ -48,15 +48,26 @@ class TimerBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(TimerBase)
 
+  /// TimerBase constructor
+  /**
+   * \param clock A clock to use for time and sleeping
+   * \param period The interval at which the timer fires
+   * \param context node context
+   */
   RCLCPP_PUBLIC
   explicit TimerBase(
     Clock::SharedPtr clock,
     std::chrono::nanoseconds period,
     rclcpp::Context::SharedPtr context);
 
+  /// TimerBase destructor
   RCLCPP_PUBLIC
   ~TimerBase();
 
+  /// Cancel the timer.
+  /**
+   * \throws std::runtime_error if the rcl_timer_cancel returns a failure
+   */
   RCLCPP_PUBLIC
   void
   cancel();
@@ -71,10 +82,15 @@ public:
   bool
   is_canceled();
 
+  /// Reset the timer.
+  /**
+   * \throws std::runtime_error if the rcl_timer_reset returns a failure
+   */
   RCLCPP_PUBLIC
   void
   reset();
 
+  /// Handles the function to execute when the timer is emit a trigger.
   RCLCPP_PUBLIC
   virtual void
   execute_callback() = 0;
@@ -169,6 +185,10 @@ public:
     cancel();
   }
 
+  /// Handles the function to execute when the timer is emit a trigger.
+  /**
+   * \throws std::runtime_error if the rcl_timer_call returns a failure (except cancel).
+   */
   void
   execute_callback() override
   {
@@ -209,6 +229,8 @@ public:
     callback_(*this);
   }
 
+  /// Is the clock steady (i.e. is the time between ticks constant?)
+  /** \return True if the clock used by this timer is steady. */
   bool
   is_steady() override
   {
@@ -233,6 +255,12 @@ class WallTimer : public GenericTimer<FunctorT>
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(WallTimer)
 
+  /// Wall timer constructor
+  /**
+   * \param period The interval at which the timer fires
+   * \param callback The callback function to execute every interval
+   * \param context node context
+   */
   WallTimer(
     std::chrono::nanoseconds period,
     FunctorT && callback,

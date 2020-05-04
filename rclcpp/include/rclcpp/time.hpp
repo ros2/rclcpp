@@ -31,96 +31,149 @@ class Clock;
 class Time
 {
 public:
+  /// Time constructor
+  /**
+   * \param seconds since time epoch
+   * \param nanoseconds since time epoch
+   * \param clock_type clock type
+   */
   RCLCPP_PUBLIC
   Time(int32_t seconds, uint32_t nanoseconds, rcl_clock_type_t clock_type = RCL_SYSTEM_TIME);
 
+  /// Time constructor
+  /**
+   * \param nanoseconds since time epoch
+   * \param clock_type clock type
+   */
   RCLCPP_PUBLIC
   explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
 
+  /// Copy constructor
   RCLCPP_PUBLIC
   Time(const Time & rhs);
 
+  /// Time constructor
+  /**
+   * \param time_msg builtin_interfaces time message to copy
+   * \param clock_type clock type
+   */
   RCLCPP_PUBLIC
   Time(
     const builtin_interfaces::msg::Time & time_msg,
     rcl_clock_type_t ros_time = RCL_ROS_TIME);
 
+  /// Time constructor
+  /**
+   * \param time_point rcl_time_point_t structure to copy
+   * \param clock_type clock type
+   */
   RCLCPP_PUBLIC
   explicit Time(const rcl_time_point_t & time_point);
 
+  /// Time destructor
   RCLCPP_PUBLIC
   virtual ~Time();
 
+  /// Return a builtin_interfaces::msg::Time object based
   RCLCPP_PUBLIC
   operator builtin_interfaces::msg::Time() const;
 
+  /// Copy assign operator
   RCLCPP_PUBLIC
   Time &
   operator=(const Time & rhs);
 
+  /// Copy assign operator from a builtin_interfaces::msg::Time
   RCLCPP_PUBLIC
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
 
+  /// Equal operator.
   RCLCPP_PUBLIC
   bool
   operator==(const rclcpp::Time & rhs) const;
 
+  /// Not equal operator.
   RCLCPP_PUBLIC
   bool
   operator!=(const rclcpp::Time & rhs) const;
 
+  /// Less than operator.
   RCLCPP_PUBLIC
   bool
   operator<(const rclcpp::Time & rhs) const;
 
+  /// Less or equal than operator.
   RCLCPP_PUBLIC
   bool
   operator<=(const rclcpp::Time & rhs) const;
 
+  /// Greater or equal than operator.
   RCLCPP_PUBLIC
   bool
   operator>=(const rclcpp::Time & rhs) const;
 
+  /// Greater than operator.
   RCLCPP_PUBLIC
   bool
   operator>(const rclcpp::Time & rhs) const;
 
+  /// Addition operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time
   operator+(const rclcpp::Duration & rhs) const;
 
+  /// Subtraction operator.
   RCLCPP_PUBLIC
   Duration
   operator-(const rclcpp::Time & rhs) const;
 
+  /// Subtraction operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time
   operator-(const rclcpp::Duration & rhs) const;
 
+  /// Addition assigment operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time &
   operator+=(const rclcpp::Duration & rhs);
 
+  /// Subtraction assigment operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time &
   operator-=(const rclcpp::Duration & rhs);
 
+  /// Get the nanoseconds since epoch
+  /**
+   * \return the nanoseconds since epoch as a floating point number.
+   */
   RCLCPP_PUBLIC
   rcl_time_point_value_t
   nanoseconds() const;
 
+  /// Get the maximum time value
+  /**
+   * \return the maximum time value
+   */
   RCLCPP_PUBLIC
   static Time
   max();
 
-  /// \return the seconds since epoch as a floating point number.
-  /// \warning Depending on sizeof(double) there could be significant precision loss.
-  /// When an exact time is required use nanoseconds() instead.
+  /// Get the seconds since epoch
+  /**
+   * \warning Depending on sizeof(double) there could be significant precision loss.
+   * When an exact time is required use nanoseconds() instead.
+   *
+   * \return the seconds since epoch as a floating point number.
+   */
   RCLCPP_PUBLIC
   double
   seconds() const;
 
+  /// Get the clock type
+  /**
+   * \return the clock type
+   */
   RCLCPP_PUBLIC
   rcl_clock_type_t
   get_clock_type() const;

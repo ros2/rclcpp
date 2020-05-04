@@ -50,14 +50,26 @@ public:
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
 
+  /// Return the name of the node.
+  /** \return The name of the node. */
   RCLCPP_PUBLIC
   const char *
   get_service_name();
 
+  /// Return the rcl_client_t client handle in a std::shared_ptr.
+  /**
+   * This handle remains valid after the Client is destroyed.
+   * The actual rcl client is not finalized until it is out of scope everywhere.
+   */
   RCLCPP_PUBLIC
   std::shared_ptr<rcl_service_t>
   get_service_handle();
 
+  /// Return the rcl_client_t client handle in a std::shared_ptr.
+  /**
+   * This handle remains valid after the Client is destroyed.
+   * The actual rcl client is not finalized until it is out of scope everywhere.
+   */
   RCLCPP_PUBLIC
   std::shared_ptr<const rcl_service_t>
   get_service_handle() const;
