@@ -40,6 +40,7 @@ class ClassLoader;
 namespace rclcpp_components
 {
 
+/// Thrown when an error happens in the component Manager class.
 class ComponentManagerException : public std::runtime_error
 {
 public:
@@ -47,6 +48,7 @@ public:
   : std::runtime_error(error_desc) {}
 };
 
+/// ComponentManager handles the services to load, unload, and get the list of loaded components.
 class ComponentManager : public rclcpp::Node
 {
 public:
@@ -60,27 +62,60 @@ public:
    */
   using ComponentResource = std::pair<std::string, std::string>;
 
+  /// Default constructor
+  /**
+   * Initializes the component manager. It creates the services: load node, unload node
+   * and list nodes.
+   *
+   * \param executor the executor which will spin the node.
+   * \param node_name the name of the node that the data originates from.
+   * \param node_options additional options to control creation of the node.
+   */
   RCLCPP_COMPONENTS_PUBLIC
   ComponentManager(
     std::weak_ptr<rclcpp::Executor> executor,
     std::string node_name = "ComponentManager",
     const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
 
+  /// Default destructor
   RCLCPP_COMPONENTS_PUBLIC
   virtual ~ComponentManager();
 
-  /// Return a list of valid loadable components in a given package.
+  /// Get the component resource
+  /*
+   * \param package_name name of the package
+   * \param resource_index name of the executable
+   * \throws ComponentManagerException if the resource was not found or a invalid resource entry
+   * \return a list of component resources
+   */
   RCLCPP_COMPONENTS_PUBLIC
   virtual std::vector<ComponentResource>
   get_component_resources(
     const std::string & package_name,
     const std::string & resource_index = "rclcpp_components") const;
 
+  /// Create the component factory
+  /*
+   * \param resource list of component resources
+   */
   RCLCPP_COMPONENTS_PUBLIC
   virtual std::shared_ptr<rclcpp_components::NodeFactory>
   create_component_factory(const ComponentResource & resource);
 
 protected:
+  // Service to load a new node in the component
+  /*
+   * This function allows to add parameters, remap rules, a specific node, name a namespace
+   * and/or additional arguments.
+   *
+   * \param request_header unused
+   * \param request information with the node to load
+   * \param response
+   * \throws std::overflow_error if node_id suffers an overflow. Very unlikely to happen at 1 kHz
+   *   (very optimistic rate). it would take 585 years.
+   * \throws ComponentManagerException In the case that the component constructor throws an
+   *   exception, rethrow into the following catch block.
+   */
   RCLCPP_COMPONENTS_PUBLIC
   virtual void
   OnLoadNode(
@@ -88,6 +123,13 @@ protected:
     const std::shared_ptr<LoadNode::Request> request,
     std::shared_ptr<LoadNode::Response> response);
 
+  // Service to unload a node in the component
+  /*
+   * \param request_header unused
+   * \param request unique identifier to remove from the component
+   * \param response true on the success field if the node unload was succefully, otherwise false
+   *   and the error_message field contains the error.
+   */
   RCLCPP_COMPONENTS_PUBLIC
   virtual void
   OnUnloadNode(
@@ -95,6 +137,14 @@ protected:
     const std::shared_ptr<UnloadNode::Request> request,
     std::shared_ptr<UnloadNode::Response> response);
 
+  // Service to get the list of nodes in the component
+  /*
+   * Return a two list: one with the unique identifiers and other with full name of the nodes.
+   *
+   * \param request_header unused
+   * \param request unused
+   * \param response list with the unique ids and full node names
+   */
   RCLCPP_COMPONENTS_PUBLIC
   virtual void
   OnListNodes(
