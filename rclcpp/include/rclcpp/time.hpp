@@ -33,8 +33,12 @@ class Time
 public:
   /// Time constructor
   /**
-   * \param seconds since time epoch
-   * \param nanoseconds since time epoch
+   * Initializes the time values for seconds and nanoseconds individually.
+   * Large values for nanoseconds are wrapped automatically with the remainder added to seconds.
+   * Both inputs must be integers.
+   *
+   * \param seconds part of the time in seconds since time epoch
+   * \param nanoseconds part of the time in nanoseconds since time epoch
    * \param clock_type clock type
    */
   RCLCPP_PUBLIC
@@ -78,82 +82,69 @@ public:
   RCLCPP_PUBLIC
   operator builtin_interfaces::msg::Time() const;
 
-  /// Copy assign operator
   RCLCPP_PUBLIC
   Time &
   operator=(const Time & rhs);
 
-  /// Copy assign operator from a builtin_interfaces::msg::Time
   RCLCPP_PUBLIC
   Time &
   operator=(const builtin_interfaces::msg::Time & time_msg);
 
-  /// Equal operator.
   RCLCPP_PUBLIC
   bool
   operator==(const rclcpp::Time & rhs) const;
 
-  /// Not equal operator.
   RCLCPP_PUBLIC
   bool
   operator!=(const rclcpp::Time & rhs) const;
 
-  /// Less than operator.
   RCLCPP_PUBLIC
   bool
   operator<(const rclcpp::Time & rhs) const;
 
-  /// Less or equal than operator.
   RCLCPP_PUBLIC
   bool
   operator<=(const rclcpp::Time & rhs) const;
 
-  /// Greater or equal than operator.
   RCLCPP_PUBLIC
   bool
   operator>=(const rclcpp::Time & rhs) const;
 
-  /// Greater than operator.
   RCLCPP_PUBLIC
   bool
   operator>(const rclcpp::Time & rhs) const;
 
-  /// Addition operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time
   operator+(const rclcpp::Duration & rhs) const;
 
-  /// Subtraction operator.
   RCLCPP_PUBLIC
   Duration
   operator-(const rclcpp::Time & rhs) const;
 
-  /// Subtraction operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time
   operator-(const rclcpp::Duration & rhs) const;
 
-  /// Addition assigment operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time &
   operator+=(const rclcpp::Duration & rhs);
 
-  /// Subtraction assigment operator with a rclcpp::Duration.
   RCLCPP_PUBLIC
   Time &
   operator-=(const rclcpp::Duration & rhs);
 
   /// Get the nanoseconds since epoch
   /**
-   * \return the nanoseconds since epoch as a floating point number.
+   * \return the nanoseconds since epoch as a rcl_time_point_value_t structure.
    */
   RCLCPP_PUBLIC
   rcl_time_point_value_t
   nanoseconds() const;
 
-  /// Get the maximum time value
+  /// Get the maximum representable value.
   /**
-   * \return the maximum time value
+   * \return the maximum representable value
    */
   RCLCPP_PUBLIC
   static Time

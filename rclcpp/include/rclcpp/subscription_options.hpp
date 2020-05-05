@@ -90,7 +90,7 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
 
   /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
   /**
-   * \param qos QoS profile.
+   * \param qos QoS profile for subcription.
    * \return rcl_subscription_options_t structure based on the rclcpp::QoS
    */
   template<typename MessageT>

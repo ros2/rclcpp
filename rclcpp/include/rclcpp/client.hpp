@@ -84,8 +84,8 @@ public:
   bool
   take_type_erased_response(void * response_out, rmw_request_id_t & request_header_out);
 
-  /// Return the name of the node.
-  /** \return The name of the node. */
+  /// Return the name of the service.
+  /** \return The name of the service. */
   RCLCPP_PUBLIC
   const char *
   get_service_name() const;

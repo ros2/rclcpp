@@ -243,7 +243,7 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /* Create and return a Service.
+  /// Create and return a Service.
   /**
    * \param[in] service_name The topic to service on.
    * \param[in] callback User-defined callback function.

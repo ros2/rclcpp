@@ -109,6 +109,9 @@ public:
   get_parameter_value() const;
 
   /// Get value of parameter using rclcpp::ParameterType as template argument.
+  /**
+   * \throws rclcpp::exceptions::InvalidParameterTypeException if the type doesn't match
+   */
   template<ParameterType ParamT>
   decltype(auto)
   get_value() const
@@ -122,46 +125,73 @@ public:
   get_value() const;
 
   /// Get value of parameter as boolean.
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   bool
   as_bool() const;
 
   /// Get value of parameter as integer.
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   int64_t
   as_int() const;
 
   /// Get value of parameter as double.
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   double
   as_double() const;
 
   /// Get value of parameter as string.
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   const std::string &
   as_string() const;
 
   /// Get value of parameter as byte array (vector<uint8_t>).
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   const std::vector<uint8_t> &
   as_byte_array() const;
 
   /// Get value of parameter as bool array (vector<bool>).
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   const std::vector<bool> &
   as_bool_array() const;
 
   /// Get value of parameter as integer array (vector<int64_t>).
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   const std::vector<int64_t> &
   as_integer_array() const;
 
   /// Get value of parameter as double array (vector<double>).
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   const std::vector<double> &
   as_double_array() const;
 
   /// Get value of parameter as string array (vector<std::string>).
+  /**
+   * \throws rclcpp::ParameterTypeException if the type doesn't match
+   */
   RCLCPP_PUBLIC
   const std::vector<std::string> &
   as_string_array() const;

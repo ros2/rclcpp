@@ -81,15 +81,13 @@ public:
     rclcpp::node_interfaces::NodeClockInterface::SharedPtr node_clock_interface,
     rclcpp::node_interfaces::NodeParametersInterface::SharedPtr node_parameters_interface);
 
-  /// Detach the node from the tiem source
+  /// Detach the node from the time source
   RCLCPP_PUBLIC
   void detachNode();
 
   /// Attach a clock to the time source to be updated
   /**
-   * The time source must be a RCL_ROS_TIME otherwise throws an exception
-   *
-   * \throws std::invalid_argument if node is nullptr
+   * \throws std::invalid_argument the time source must be a RCL_ROS_TIME otherwise throws an exception
    */
   RCLCPP_PUBLIC
   void attachClock(rclcpp::Clock::SharedPtr clock);
@@ -98,7 +96,7 @@ public:
   RCLCPP_PUBLIC
   void detachClock(rclcpp::Clock::SharedPtr clock);
 
-  /// TimeSource Destuctor
+  /// TimeSource Destructor
   RCLCPP_PUBLIC
   ~TimeSource();
 

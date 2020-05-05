@@ -90,7 +90,7 @@ public:
   void
   reset();
 
-  /// Handles the function to execute when the timer is emit a trigger.
+  /// Call the callback function when the timer signal is emitted.
   RCLCPP_PUBLIC
   virtual void
   execute_callback() = 0;
@@ -185,10 +185,6 @@ public:
     cancel();
   }
 
-  /// Handles the function to execute when the timer is emit a trigger.
-  /**
-   * \throws std::runtime_error if the rcl_timer_call returns a failure (except cancel).
-   */
   void
   execute_callback() override
   {

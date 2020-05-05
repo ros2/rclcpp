@@ -31,10 +31,10 @@ public:
    * Initializes the time values for seconds and nanoseconds individually.
    * Large values for nsecs are wrapped automatically with the remainder added to secs.
    * Both inputs must be integers.
-   * Durations can be negative.
+   * Seconds can be negative.
    *
    * \param seconds time in seconds
-   * \param nanoseconds time in seconds
+   * \param nanoseconds time in nanoseconds
    */
   Duration(int32_t seconds, uint32_t nanoseconds);
 
@@ -61,60 +61,48 @@ public:
    */
   explicit Duration(const rcl_duration_t & duration);
 
-  /// Copy constructor.
   Duration(const Duration & rhs);
 
-  /// Duration destructor.
   virtual ~Duration() = default;
 
-  /// Return a builtin_interfaces::msg::Duration object based
   operator builtin_interfaces::msg::Duration() const;
 
   // cppcheck-suppress operatorEq // this is a false positive from cppcheck
   Duration &
   operator=(const Duration & rhs);
 
-  /// Copy assign operator from a builtin_interfaces::msg::Duration.
   Duration &
   operator=(const builtin_interfaces::msg::Duration & Duration_msg);
 
-  /// Equal operator.
   bool
   operator==(const rclcpp::Duration & rhs) const;
 
-  /// Less than operator.
   bool
   operator<(const rclcpp::Duration & rhs) const;
 
-  /// Less or equal than operator.
   bool
   operator<=(const rclcpp::Duration & rhs) const;
 
-  /// Greater or equal than operator.
   bool
   operator>=(const rclcpp::Duration & rhs) const;
 
-  /// Greater than operator.
   bool
   operator>(const rclcpp::Duration & rhs) const;
 
-  /// Addition operator.
   Duration
   operator+(const rclcpp::Duration & rhs) const;
 
-  /// Subtraction operator.
   Duration
   operator-(const rclcpp::Duration & rhs) const;
 
-  /// Get the maximum duration value.
+  /// Get the maximum representable value.
   /**
-   * \return the maximum duration value
+   * \return the maximum representable value
    */
   static
   Duration
   max();
 
-  /// Multiplication operator.
   Duration
   operator*(double scale) const;
 
