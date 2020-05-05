@@ -126,7 +126,7 @@ public:
   static Duration
   from_seconds(double seconds);
 
-  /// Convert Duration in to std::chrono.
+  /// Convert Duration into a std::chrono::Duration.
   template<class DurationT>
   DurationT
   to_chrono() const
