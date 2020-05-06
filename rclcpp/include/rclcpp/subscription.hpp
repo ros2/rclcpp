@@ -90,9 +90,14 @@ public:
    * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
+   * \param[in] qos QoS profile for Subcription.
    * \param[in] callback User defined callback to call when a message is received.
    * \param[in] options options for the subscription.
    * \param[in] message_memory_strategy The memory strategy to be used for managing message memory.
+   * \param[in] subscription_topic_statistics pointer to a topic statistics subcription.
+   * \throws std::invalid_argument if the QoS is uncompatible with intra-process (if one
+   *   of the following conditions are true: qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+   *   qos_profile.depth == 0 or qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE).
    */
   Subscription(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,

@@ -186,8 +186,8 @@ public:
   /// Create and return a Subscription.
   /**
    * \param[in] topic_name The topic to subscribe on.
+   * \param[in] qos QoS profile for Subcription.
    * \param[in] callback The user-defined callback function to receive a message
-   * \param[in] qos_history_depth The depth of the subscription's incoming message queue.
    * \param[in] options Additional options for the creation of the Subscription.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
    * \return Shared pointer to the created subscription.
@@ -229,7 +229,13 @@ public:
     CallbackT callback,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /* Create and return a Client. */
+  /// Create and return a Client.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created client.
+   */
   template<typename ServiceT>
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
@@ -237,7 +243,14 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /* Create and return a Service. */
+  /// Create and return a Service.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] callback User-defined callback function.
+   * \param[in] rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created service.
+   */
   template<typename ServiceT, typename CallbackT>
   typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(

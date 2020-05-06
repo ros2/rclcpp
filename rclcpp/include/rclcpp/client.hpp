@@ -84,22 +84,42 @@ public:
   bool
   take_type_erased_response(void * response_out, rmw_request_id_t & request_header_out);
 
+  /// Return the name of the service.
+  /** \return The name of the service. */
   RCLCPP_PUBLIC
   const char *
   get_service_name() const;
 
+  /// Return the rcl_client_t client handle in a std::shared_ptr.
+  /**
+   * This handle remains valid after the Client is destroyed.
+   * The actual rcl client is not finalized until it is out of scope everywhere.
+   */
   RCLCPP_PUBLIC
   std::shared_ptr<rcl_client_t>
   get_client_handle();
 
+  /// Return the rcl_client_t client handle in a std::shared_ptr.
+  /**
+   * This handle remains valid after the Client is destroyed.
+   * The actual rcl client is not finalized until it is out of scope everywhere.
+   */
   RCLCPP_PUBLIC
   std::shared_ptr<const rcl_client_t>
   get_client_handle() const;
 
+  /// Return if the service is ready.
+  /**
+   * \return `true` if the service is ready, `false` otherwise
+   */
   RCLCPP_PUBLIC
   bool
   service_is_ready() const;
 
+  /// Wait for a service to be ready.
+  /**
+   * \param timeout maximum time to wait
+   */
   template<typename RepT = int64_t, typename RatioT = std::milli>
   bool
   wait_for_service(

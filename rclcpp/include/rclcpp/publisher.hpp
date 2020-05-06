@@ -59,6 +59,17 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(Publisher<MessageT, AllocatorT>)
 
+  /// Default constructor.
+  /**
+   * The constructor for a Publisher is almost never called directly.
+   * Instead, subscriptions should be instantiated through the function
+   * rclcpp::create_publisher().
+   *
+   * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
+   * \param[in] topic Name of the topic to publish to.
+   * \param[in] qos QoS profile for Subcription.
+   * \param[in] options options for the subscription.
+   */
   Publisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
