@@ -128,6 +128,7 @@
  *   - rclcpp/context.hpp
  *   - rclcpp/contexts/default_context.hpp
  * - Various utilities:
+ *   - rclcpp/duration.hpp
  *   - rclcpp/function_traits.hpp
  *   - rclcpp/macros.hpp
  *   - rclcpp/scope_exit.hpp

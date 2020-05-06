@@ -50,14 +50,26 @@ public:
   RCLCPP_PUBLIC
   virtual ~ServiceBase();
 
+  /// Return the name of the service.
+  /** \return The name of the service. */
   RCLCPP_PUBLIC
   const char *
   get_service_name();
 
+  /// Return the rcl_service_t service handle in a std::shared_ptr.
+  /**
+   * This handle remains valid after the Service is destroyed.
+   * The actual rcl service is not finalized until it is out of scope everywhere.
+   */
   RCLCPP_PUBLIC
   std::shared_ptr<rcl_service_t>
   get_service_handle();
 
+  /// Return the rcl_service_t service handle in a std::shared_ptr.
+  /**
+   * This handle remains valid after the Service is destroyed.
+   * The actual rcl service is not finalized until it is out of scope everywhere.
+   */
   RCLCPP_PUBLIC
   std::shared_ptr<const rcl_service_t>
   get_service_handle() const;
