@@ -87,6 +87,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 
         if (diff < PERIOD - TOLERANCE) {
           executor.cancel();
+          // Using `ASSERT_GT` instead of `FAIL` here, so the numbers are logged.
           ASSERT_GT(diff, PERIOD - TOLERANCE);
         }
       }
