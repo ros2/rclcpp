@@ -1,15 +1,8 @@
 # `rclcpp_lifecycle`
 
-Package containing a prototype for lifecycle implementation. Visit the [design document](https://design.ros2.org/articles/node_lifecycle.html) for more information about this package.
+Package containing a prototype for lifecycle implementation.
 
-- [Lifecycle states](include/rclcpp_lifecycle/state.hpp) Define the State class
-- [Lifecycle transitions](include/rclcpp_lifecycle/transition.hpp) Define the Transition class
-- [Lifecycle publisher](include/rclcpp_lifecycle/publisher.hpp) A managed node can then deactivate or activate the publishing.
-- [Lifecycle node](include/rclcpp_lifecycle/lifecycle_node.hpp) LifecycleNode for creating lifecycle components
-
-Some useful internal abstractions and utilities:
-- Macros for controlling symbol visibility on the library
- - [rclcpp_lifecycle/visibility_control.h](include/rclcpp_lifecycle/visibility_control.h)
+Visit the [rclcpp_lifecycle API documentation](http://docs.ros2.org/latest/api/rclcpp_lifecycle/) for a complete list of its main components and features. The design [design document](https://design.ros2.org/articles/node_lifecycle.html) is also available for more information about this package.
 
 ## Quality Declaration
 

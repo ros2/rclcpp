@@ -12,6 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/** \mainpage rclcpp_lifecycle: Package containing a prototype for lifecycle implementation.
+ *
+ * - Lifecycle states: Define the State class.
+ *   - rclcpp_lifecycle/state.hpp
+ * - Lifecycle transitions Define the Transition class.
+ *   - rclcpp_lifecycle/transition.hpp
+ * - Lifecycle publisher A managed node can then deactivate or activate the publishing.
+ *   - rclcpp_lifecycle/publisher.hpp
+ * - Lifecycle node: LifecycleNode for creating lifecycle components.
+ *   - rclcpp_lifecycle/lifecycle_node.hpp
+ *
+ * Some useful internal abstractions and utilities:
+ * - Macros for controlling symbol visibility on the library
+ *   - rclcpp_lifecycle/visibility_control.h
+ */
+
 #ifndef RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 #define RCLCPP_LIFECYCLE__LIFECYCLE_NODE_HPP_
 

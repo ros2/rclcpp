@@ -12,6 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/** \mainpage rclcpp_components: Package containing tools for dynamically loadable components.
+ *
+ * - ComponentManager: Node to manage components. It has the services to load, unload and list
+ *   current components.
+ *   - rclcpp_components/component_manager.hpp)
+ * - Node factory: The NodeFactory interface is used by the class loader to instantiate components.
+ *   - rclcpp_components/node_factory.hpp)
+ *   - It allows for classes not derived from `rclcpp::Node` to be used as components.
+ *   - It allows derived constructors to be called when components are loaded.
+ *
+ * Some useful abstractions and utilities:
+ * - [RCLCPP_COMPONENTS_REGISTER_NODE: Register a component that can be dynamically loaded
+ *   at runtime.
+ *   - (include/rclcpp_components/register_node_macro.hpp)
+ *
+ * Some useful internal abstractions and utilities:
+ * - Macros for controlling symbol visibility on the library
+ *   - rclcpp_components/visibility_control.h
+ *
+ * Package containing CMake tools for register components:
+ * - `rclcpp_components_register_node` Register an rclcpp component with the ament resource index
+ *    and create an executable.
+ * - `rclcpp_components_register_nodes` Register an rclcpp component with the ament resource index.
+ *    The passed library can contain multiple nodes each registered via macro.
+ */
+
 #ifndef RCLCPP_COMPONENTS__COMPONENT_MANAGER_HPP__
 #define RCLCPP_COMPONENTS__COMPONENT_MANAGER_HPP__
 
