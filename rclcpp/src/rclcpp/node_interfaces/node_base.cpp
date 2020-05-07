@@ -202,12 +202,6 @@ NodeBase::get_shared_rcl_node_handle() const
   return node_handle_;
 }
 
-bool
-NodeBase::assert_liveliness() const
-{
-  return RCL_RET_OK == rcl_node_assert_liveliness(get_rcl_node_handle());
-}
-
 rclcpp::CallbackGroup::SharedPtr
 NodeBase::create_callback_group(rclcpp::CallbackGroupType group_type)
 {

@@ -499,9 +499,3 @@ Node::get_node_options() const
 {
   return this->node_options_;
 }
-
-bool
-Node::assert_liveliness() const
-{
-  return node_base_->assert_liveliness();
-}

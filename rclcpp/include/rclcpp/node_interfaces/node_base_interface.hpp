@@ -102,12 +102,6 @@ public:
   std::shared_ptr<const rcl_node_t>
   get_shared_rcl_node_handle() const = 0;
 
-  /// Manually assert that this Node is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE).
-  RCLCPP_PUBLIC
-  virtual
-  bool
-  assert_liveliness() const = 0;
-
   /// Create and return a callback group.
   RCLCPP_PUBLIC
   virtual
