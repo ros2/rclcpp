@@ -3,6 +3,13 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Added rclcpp lifecycle Doxyfile (`#1089 <https://github.com/ros2/rclcpp/issues/1089>`_)
+* Added Quality declaration: rclcpp, rclpp_action, rclcpp_components andrclcpp_lifecycle (`#1100 <https://github.com/ros2/rclcpp/issues/1100>`_)
+* Increasing test coverage of rclcpp_lifecycle (`#1045 <https://github.com/ros2/rclcpp/issues/1045>`_)
+* Contributors: Alejandro Hernández Cordero, brawner
+
 0.9.0 (2020-04-29)
 ------------------
 * Export targets in addition to include directories / libraries (`#1096 <https://github.com/ros2/rclcpp/issues/1096>`_)

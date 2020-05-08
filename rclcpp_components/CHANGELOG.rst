@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added Quality declaration: rclcpp, rclpp_action, rclcpp_components andrclcpp_lifecycle (`#1100 <https://github.com/ros2/rclcpp/issues/1100>`_)
+* Contributors: Alejandro Hernández Cordero
+
 0.9.0 (2020-04-29)
 ------------------
 * Added rclcpp_components Doxyfile (`#1091 <https://github.com/ros2/rclcpp/issues/1091>`_)
