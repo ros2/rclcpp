@@ -3,6 +3,11 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Added Quality declaration: rclcpp, rclpp_action, rclcpp_components andrclcpp_lifecycle (`#1100 <https://github.com/ros2/rclcpp/issues/1100>`_)
+* Contributors: Alejandro Hernández Cordero
+
 0.9.0 (2020-04-29)
 ------------------
 * Increasing test coverage of rclcpp_action (`#1043 <https://github.com/ros2/rclcpp/issues/1043>`_)
