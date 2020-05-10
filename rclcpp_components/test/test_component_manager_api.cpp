@@ -153,7 +153,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
     EXPECT_EQ(result.get()->error_message, "");
     EXPECT_EQ(result.get()->full_node_name, "/test_component_remap");
@@ -172,7 +172,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, true);
     EXPECT_EQ(result.get()->error_message, "");
     std::cout << result.get()->full_node_name << std::endl;
@@ -193,7 +193,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, false);
     EXPECT_EQ(
       result.get()->error_message,
@@ -211,7 +211,7 @@ TEST_F(TestComponentManager, components_api)
 
     auto result = client->async_send_request(request);
     auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::executor::FutureReturnCode::SUCCESS);
+    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
     EXPECT_EQ(result.get()->success, false);
     EXPECT_EQ(
       result.get()->error_message,
@@ -219,7 +219,6 @@ TEST_F(TestComponentManager, components_api)
     EXPECT_EQ(result.get()->full_node_name, "");
     EXPECT_EQ(result.get()->unique_id, 0u);
   }
-
 
   auto node_names = node->get_node_names();
 
