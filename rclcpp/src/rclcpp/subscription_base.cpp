@@ -24,6 +24,7 @@
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/qos_event.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -238,7 +239,8 @@ SubscriptionBase::get_intra_process_waitable() const
 }
 
 void
-SubscriptionBase::default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & event) const
+SubscriptionBase::default_incompatible_qos_callback(
+  rclcpp::QOSRequestedIncompatibleQoSInfo & event) const
 {
   std::string policy_name = qos_policy_name_from_kind(event.last_policy_kind);
   RCLCPP_WARN(
