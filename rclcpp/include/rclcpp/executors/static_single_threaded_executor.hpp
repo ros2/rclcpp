@@ -191,6 +191,54 @@ public:
     return rclcpp::FutureReturnCode::INTERRUPTED;
   }
 
+  template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
+  rclcpp::FutureReturnCode
+  spin_until_future_complete(
+    std::future<ResponseT> & future,
+    std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
+  {
+    std::future_status status = future.wait_for(std::chrono::seconds(0));
+    if (status == std::future_status::ready) {
+      return rclcpp::FutureReturnCode::SUCCESS;
+    }
+
+    auto end_time = std::chrono::steady_clock::now();
+    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      timeout);
+    if (timeout_ns > std::chrono::nanoseconds::zero()) {
+      end_time += timeout_ns;
+    }
+    std::chrono::nanoseconds timeout_left = timeout_ns;
+
+    entities_collector_ = std::make_shared<StaticExecutorEntitiesCollector>();
+    entities_collector_->init(&wait_set_, memory_strategy_, &interrupt_guard_condition_);
+
+    while (rclcpp::ok(this->context_)) {
+      // Do one set of work.
+      entities_collector_->refresh_wait_set(timeout_left);
+      execute_ready_executables();
+      // Check if the future is set, return SUCCESS if it is.
+      status = future.wait_for(std::chrono::seconds(0));
+      if (status == std::future_status::ready) {
+        return rclcpp::FutureReturnCode::SUCCESS;
+      }
+      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
+      if (timeout_ns < std::chrono::nanoseconds::zero()) {
+        continue;
+      }
+      // Otherwise check if we still have time to wait, return TIMEOUT if not.
+      auto now = std::chrono::steady_clock::now();
+      if (now >= end_time) {
+        return rclcpp::FutureReturnCode::TIMEOUT;
+      }
+      // Subtract the elapsed time from the original timeout.
+      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
+    }
+
+    // The future did not complete before ok() returned false, return INTERRUPTED.
+    return rclcpp::FutureReturnCode::INTERRUPTED;
+  }
+
 protected:
   /// Check which executables in ExecutableList struct are ready from wait_set and execute them.
   /**
