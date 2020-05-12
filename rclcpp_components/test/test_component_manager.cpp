@@ -88,4 +88,9 @@ TEST_F(TestComponentManager, create_component_factory_invalid)
   auto resources = manager->get_component_resources("rclcpp_components");
   auto factory = manager->create_component_factory({"foo_class", resources[0].second});
   EXPECT_EQ(nullptr, factory);
+
+  // Test improperly formed resources file
+  EXPECT_THROW(
+    auto resources = manager->get_component_resources("invalid_rclcpp_components"),
+    rclcpp_components::ComponentManagerException);
 }
