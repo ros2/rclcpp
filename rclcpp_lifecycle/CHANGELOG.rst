@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+1.0.0 (2020-05-12)
+------------------
+* Avoid callback_group deprecation (`#1108 <https://github.com/ros2/rclcpp/issues/1108>`_)
+* Contributors: Karsten Knese
+
 0.9.1 (2020-05-08)
 ------------------
 * Added rclcpp lifecycle Doxyfile (`#1089 <https://github.com/ros2/rclcpp/issues/1089>`_)
