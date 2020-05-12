@@ -2591,7 +2591,7 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
     RMW_QOS_POLICY_DURABILITY_VOLATILE,
     {15, 1678},
     {29, 2345},
-    RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE,
+    RMW_QOS_POLICY_LIVELINESS_AUTOMATIC,
     {5, 23456},
     false
   };
