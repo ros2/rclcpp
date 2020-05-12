@@ -2,6 +2,19 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.0 (2020-05-12)
+------------------
+* Increasing test coverage of rclcpp_components (`#1044 <https://github.com/ros2/rclcpp/issues/1044>`_)
+  * Increasing test coverage of rclcpp_components
+  Signed-off-by: Stephen Brawner <brawner@gmail.com>
+  * PR fixup
+  Signed-off-by: Stephen Brawner <brawner@gmail.com>
+  * Fixup
+  Signed-off-by: Stephen Brawner <brawner@gmail.com>
+  * Removing throws test for now
+  Signed-off-by: Stephen Brawner <brawner@gmail.com>
+* Contributors: brawner
+
 0.9.1 (2020-05-08)
 ------------------
 * Added Quality declaration: rclcpp, rclpp_action, rclcpp_components andrclcpp_lifecycle (`#1100 <https://github.com/ros2/rclcpp/issues/1100>`_)
