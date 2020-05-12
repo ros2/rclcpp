@@ -77,11 +77,10 @@ public:
     std::string node_name = "ComponentManager",
     const rclcpp::NodeOptions & node_options = rclcpp::NodeOptions());
 
-  /// Default destructor
   RCLCPP_COMPONENTS_PUBLIC
   virtual ~ComponentManager();
 
-  /// Get the component resource
+  /// Return a list of valid loadable components in a given package.
   /*
    * \param package_name name of the package
    * \param resource_index name of the executable
@@ -94,16 +93,17 @@ public:
     const std::string & package_name,
     const std::string & resource_index = "rclcpp_components") const;
 
-  /// Create the component factory
+  /// Instantiate a component from a dynamic library.
   /*
-   * \param resource list of component resources
+   * \param resource a component resource (class name + library path)
+   * \return a NodeFactory interface
    */
   RCLCPP_COMPONENTS_PUBLIC
   virtual std::shared_ptr<rclcpp_components::NodeFactory>
   create_component_factory(const ComponentResource & resource);
 
 protected:
-  // Service to load a new node in the component
+  /// Service callback to load a new node in the component
   /*
    * This function allows to add parameters, remap rules, a specific node, name a namespace
    * and/or additional arguments.
@@ -123,7 +123,7 @@ protected:
     const std::shared_ptr<LoadNode::Request> request,
     std::shared_ptr<LoadNode::Response> response);
 
-  // Service to unload a node in the component
+  /// Service callback to unload a node in the component
   /*
    * \param request_header unused
    * \param request unique identifier to remove from the component
@@ -137,7 +137,7 @@ protected:
     const std::shared_ptr<UnloadNode::Request> request,
     std::shared_ptr<UnloadNode::Response> response);
 
-  // Service to get the list of nodes in the component
+  /// Service callback to get the list of nodes in the component
   /*
    * Return a two list: one with the unique identifiers and other with full name of the nodes.
    *
