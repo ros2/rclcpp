@@ -202,24 +202,6 @@ TEST_F(TestComponentManager, components_api)
     EXPECT_EQ(result.get()->unique_id, 0u);
   }
 
-  {
-    // Node constructor throws exception
-    auto request = std::make_shared<composition_interfaces::srv::LoadNode::Request>();
-    request->package_name = "rclcpp_components";
-    request->plugin_name = "test_rclcpp_components::TestComponentThrows";
-    request->node_name = "test_component_throws";
-
-    auto result = client->async_send_request(request);
-    auto ret = exec->spin_until_future_complete(result, 5s);  // Wait for the result.
-    EXPECT_EQ(ret, rclcpp::FutureReturnCode::SUCCESS);
-    EXPECT_EQ(result.get()->success, false);
-    EXPECT_EQ(
-      result.get()->error_message,
-      "Component constructor threw an exception");
-    EXPECT_EQ(result.get()->full_node_name, "");
-    EXPECT_EQ(result.get()->unique_id, 0u);
-  }
-
   auto node_names = node->get_node_names();
 
   auto find_in_nodes = [node_names](std::string name) {

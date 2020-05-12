@@ -55,17 +55,6 @@ private:
   rclcpp::Node node_;
 };
 
-/// Example that throws in constructor
-class TestComponentThrows : public rclcpp::Node
-{
-public:
-  explicit TestComponentThrows(rclcpp::NodeOptions options)
-  : rclcpp::Node("test_component_throws", options)
-  {
-    throw std::invalid_argument("Exception in constructor");
-  }
-};
-
 }  // namespace test_rclcpp_components
 
 #include "rclcpp_components/register_node_macro.hpp"
@@ -76,4 +65,3 @@ public:
 RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::TestComponentFoo)
 RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::TestComponentBar)
 RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::TestComponentNoNode)
-RCLCPP_COMPONENTS_REGISTER_NODE(test_rclcpp_components::TestComponentThrows)
