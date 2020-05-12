@@ -12,7 +12,6 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 find_package(rosgraph_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(rosidl_runtime_cpp REQUIRED)
 find_package(rosidl_typesupport_c REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
@@ -217,6 +216,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(rmw_implementation_cmake REQUIRED)
+  find_package(rosidl_default_generators REQUIRED)
 
   find_package(test_msgs REQUIRED)
 
