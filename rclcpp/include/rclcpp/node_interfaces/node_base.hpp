@@ -91,11 +91,6 @@ public:
 
   RCLCPP_PUBLIC
 
-  bool
-  assert_liveliness() const override;
-
-  RCLCPP_PUBLIC
-
   rclcpp::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::CallbackGroupType group_type) override;
 
