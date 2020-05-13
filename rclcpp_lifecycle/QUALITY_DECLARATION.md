@@ -1,4 +1,4 @@
-This document is a declaration of software quality for the `rclcpp_lifecycle` package, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/rep-2004/rep-2004.rst).
+This document is a declaration of software quality for the `rclcpp_lifecycle` package, based on the guidelines in [REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 # `rclcpp_lifecycle` Quality Declaration
 
@@ -135,16 +135,39 @@ Currently nightly test results can be seen here:
 
 ## Dependencies [5]
 
+Below are evaluations of each of `rclcpp_lifecycle`'s run-time and build-time dependencies that have been determined to influence the quality.
+
+It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
+
+It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
+
 ### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]
 
 `rclcpp_lifecycle` has the following runtime ROS dependencies:
-  - lifecycle_msgs
-  - rclcpp
-  - rcl_lifecycle
-  - rosidl_typesupport_cpp
 
-It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
-It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
+#### `lifecycle_msgs`
+
+The `lifecycle_msgs` package contains message and service definitions for managing lifecycle nodes.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/QUALITY_DECLARATION.md).
+
+#### `rclcpp`
+
+The `rclcpp` package provides the ROS client library in C++.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
+
+#### `rcl_lifecycle`
+
+The `rcl_lifecycle` package provides functionality for ROS 2 lifecycle nodes in C.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl_lifecycle/QUALITY_DECLARATION.md).
+
+#### `rosidl_typesupport_cpp`
+
+The `rosidl_typesupport_cpp` package generates the type support for C++ messages.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rosidl_typesupport/blob/master/rosidl_typesupport_cpp/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
