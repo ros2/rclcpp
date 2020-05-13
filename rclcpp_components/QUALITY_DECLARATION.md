@@ -1,4 +1,4 @@
-This document is a declaration of software quality for the `rclcpp_components` package, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/rep-2004/rep-2004.rst).
+This document is a declaration of software quality for the `rclcpp_components` package, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/master/rep-2004.rst).
 
 # `rclcpp_components` Quality Declaration
 
@@ -137,16 +137,38 @@ Currently nightly test results can be seen here:
 
 ## Dependencies [5]
 
-### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]
-
-`rclcpp_components` has the following runtime ROS dependencies:
-  - ament_index_cpp
-  - class_loader
-  - composition_interfaces
-  - rclcpp
+Below are evaluations of each of `rclcpp_components`'s run-time and build-time dependencies that have been determined to influence the quality.
 
 It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
 It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
+
+### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]
+
+`rclcpp_components` has the following runtime ROS dependencies:
+
+#### `ament_index_cpp`
+
+The `ament_index_cpp` package provides a C++ API to access the ament resource index.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ament/ament_index/blob/master/ament_index_cpp/QUALITY_DECLARATION.md).
+
+#### `class_loader`
+
+The `class_loader` package provides a ROS-independent package for loading plugins during runtime
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros/class_loader/blob/ros2/QUALITY_DECLARATION.md).
+
+#### `composition_interfaces`
+
+The `composition_interfaces` package contains message and service definitions for managing composable nodes in a container process.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/composition_interfaces/QUALITY_DECLARATION.md).
+
+#### `rclcpp`
+
+The `rclcpp` package provides the ROS client library in C++.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 

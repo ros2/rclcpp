@@ -1,4 +1,4 @@
-This document is a declaration of software quality for the `rclcpp` package, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/rep-2004/rep-2004.rst).
+This document is a declaration of software quality for the `rclcpp` package, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/master/rep-2004.rst).
 
 # `rclcpp` Quality Declaration
 
@@ -137,20 +137,63 @@ Currently nightly test results can be seen here:
 
 ## Dependencies [5]
 
-### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]
-
-`rclcpp` has the following runtime ROS dependencies:
-  - libstatistics_collector
-  - rcl
-  - rcl_yaml_param_parser
-  - rcpputils
-  - rcutils
-  - rmw
-  - statistics_msgs
-  - tracetools
+Below are evaluations of each of `rclcpp`'s run-time and build-time dependencies that have been determined to influence the quality.
 
 It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
 It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
+
+
+### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]
+
+`rclcpp` has the following runtime ROS dependencies:
+
+#### `libstatistics_collector`
+
+The `libstatistics_collector` package provides a lightweight aggregation utilities to collect statistics and measure message metrics.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros-tooling/libstatistics_collector/tree/master/Quality_Declaration.md).
+
+#### `rcl`
+
+`rcl` is the ROS 2 client library in C.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl/QUALITY_DECLARATION.md).
+
+#### `rcl_yaml_param_parser`
+
+The `rcl_yaml_param_parser` package provides an API that is used to parse YAML configuration files which may be used to configure ROS and specific nodes.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl/tree/master/rcl_yaml_param_parser/QUALITY_DECLARATION.md).
+
+#### `rcpputils`
+
+The `rcpputils` package provides an API which contains common utilities and data structures needed when programming in C++.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+
+#### `rcutils`
+
+The `rcutils` package provides an API which contains common utilities and data structures needed when programming in C.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+
+#### `rmw`
+
+`rmw` is the ROS 2 middleware library.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/master/rmw/QUALITY_DECLARATION.md).
+
+#### `statistics_msgs`
+
+The `statistics_msgs` package contains ROS 2 message definitions for reporting statistics for topics and system resources.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/statistics_msgs/QUALITY_DECLARATION.md).
+
+#### `tracetools`
+
+The `tracetools` package provides utilities for instrumenting the code in `rcl` so that it may be traced for debugging and performance analysis.
+
+It is **Quality Level 4**, see its [Quality Declaration document](https://gitlab.com/micro-ROS/ros_tracing/ros2_tracing/-/blob/master/tracetools/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
