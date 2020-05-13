@@ -140,8 +140,8 @@ Currently nightly test results can be seen here:
 Below are evaluations of each of `rclcpp`'s run-time and build-time dependencies that have been determined to influence the quality.
 
 It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
-It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
 
+It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
 
 ### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]
 
@@ -149,13 +149,13 @@ It also has several test dependencies, which do not affect the resulting quality
 
 #### `libstatistics_collector`
 
-The `libstatistics_collector` package provides a lightweight aggregation utilities to collect statistics and measure message metrics.
+The `libstatistics_collector` package provides lightweight aggregation utilities to collect statistics and measure message metrics.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros-tooling/libstatistics_collector/tree/master/Quality_Declaration.md).
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros-tooling/libstatistics_collector/tree/master/QUALITY_DECLARATION.md).
 
 #### `rcl`
 
-`rcl` is the ROS 2 client library in C.
+`rcl` a library to support implementation of language specific ROS 2 Client Libraries.
 
 It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl/QUALITY_DECLARATION.md).
 
@@ -167,13 +167,13 @@ It is **Quality Level 4**, see its [Quality Declaration document](https://github
 
 #### `rcpputils`
 
-The `rcpputils` package provides an API which contains common utilities and data structures needed when programming in C++.
+The `rcpputils` package provides an API which contains common utilities and data structures useful when programming in C++.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
+It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/master/QUALITY_DECLARATION.md).
 
 #### `rcutils`
 
-The `rcutils` package provides an API which contains common utilities and data structures needed when programming in C.
+The `rcutils` package provides an API which contains common utilities and data structures useful when programming in C.
 
 It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md).
 

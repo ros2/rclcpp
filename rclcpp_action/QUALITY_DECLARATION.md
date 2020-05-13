@@ -138,6 +138,7 @@ Currently nightly test results can be seen here:
 Below are evaluations of each of `rclcpp_action`'s run-time and build-time dependencies that have been determined to influence the quality.
 
 It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
+
 It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
 
 ### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]

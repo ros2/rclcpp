@@ -138,6 +138,7 @@ Currently nightly test results can be seen here:
 Below are evaluations of each of `rclcpp_lifecycle`'s run-time and build-time dependencies that have been determined to influence the quality.
 
 It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
+
 It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
 
 ### Direct and Optional Runtime ROS Dependencies [5.i]/[5.ii]
@@ -146,7 +147,7 @@ It also has several test dependencies, which do not affect the resulting quality
 
 #### `lifecycle_msgs`
 
-The `lifecycle_msgs` package contains some lifecycle related message and service definitions.
+The `lifecycle_msgs` package contains message and service definitions for managing lifecycle nodes.
 
 It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/lifecycle_msgs/QUALITY_DECLARATION.md).
 
@@ -158,7 +159,7 @@ It is **Quality Level 4**, see its [Quality Declaration document](https://github
 
 #### `rcl_lifecycle`
 
-The `rcl_lifecycle` package provides a C-based lifecycle implementation.
+The `rcl_lifecycle` package provides functionality for ROS 2 lifecycle nodes in C.
 
 It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl_lifecycle/QUALITY_DECLARATION.md).
 
