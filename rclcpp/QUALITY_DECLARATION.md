@@ -1,4 +1,4 @@
-This document is a declaration of software quality for the `rclcpp` package, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/master/rep-2004.rst).
+This document is a declaration of software quality for the `rclcpp` package, based on the guidelines in [REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 # `rclcpp` Quality Declaration
 
