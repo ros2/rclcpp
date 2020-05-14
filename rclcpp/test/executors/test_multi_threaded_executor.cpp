@@ -34,9 +34,9 @@ protected:
   }
 };
 
-constexpr double PERIOD = 1.0f;
-constexpr double TOLERANCE = 0.25f;
 constexpr std::chrono::milliseconds PERIOD_MS = 1000ms;
+constexpr double PERIOD = PERIOD_MS.count() / 1000.0;
+constexpr double TOLERANCE = PERIOD / 4.0;
 
 /*
    Test that timers are not taken multiple times when using reentrant callback groups.
@@ -88,7 +88,6 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 
         if (diff < PERIOD - TOLERANCE) {
           executor.cancel();
-          // Using `ASSERT_GT` instead of `FAIL` here, so the numbers are logged.
           ASSERT_GT(diff, PERIOD - TOLERANCE);
         }
       }
