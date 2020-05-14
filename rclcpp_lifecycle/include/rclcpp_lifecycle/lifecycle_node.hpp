@@ -23,8 +23,7 @@
  *   supervisory process, they are: create, configure, cleanup, activate, deactivate, shutdown and
  *   destroy.
  *   - rclcpp_lifecycle/transition.hpp
- * - Lifecycle publisher creates a publisher that allows enabled and disabled the publication of
- *   messages.
+ * - Lifecycle publisher creates a publisher that allows enabling and disabling message publication.
  *   - rclcpp_lifecycle/publisher.hpp
  * - Lifecycle node: An optional interface class for life cycle node implementations.
  *   - rclcpp_lifecycle/lifecycle_node.hpp
@@ -538,7 +537,7 @@ public:
     rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
-  /// /// Get a clock as a non-const shared pointer which is managed by the node.
+  /// Get a clock as a non-const shared pointer which is managed by the node.
   /**
    * \sa rclcpp::node_interfaces::NodeClock::get_clock
    */
