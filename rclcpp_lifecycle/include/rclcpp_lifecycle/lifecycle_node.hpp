@@ -23,7 +23,8 @@
  *   supervisory process, they are: create, configure, cleanup, activate, deactivate, shutdown and
  *   destroy.
  *   - rclcpp_lifecycle/transition.hpp
- * - Lifecycle publisher A managed node can then deactivate or activate the publishing.
+ * - Lifecycle publisher creates a publisher that allows enabled and disabled the publication of
+ *   messages.
  *   - rclcpp_lifecycle/publisher.hpp
  * - Lifecycle node: An optional interface class for life cycle node implementations.
  *   - rclcpp_lifecycle/lifecycle_node.hpp
@@ -537,8 +538,7 @@ public:
     rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
-
-  /// Get a clock which will be kept up to date by the node.
+  /// /// Get a clock as a non-const shared pointer which is managed by the node.
   /**
    * \sa rclcpp::node_interfaces::NodeClock::get_clock
    */
@@ -546,7 +546,7 @@ public:
   rclcpp::Clock::SharedPtr
   get_clock();
 
-  /// Get a clock which will be kept up to date by the node.
+  /// Get a clock as a const shared pointer which is managed by the node.
   /**
    * \sa rclcpp::node_interfaces::NodeClock::get_clock
    */
@@ -677,7 +677,7 @@ public:
   std::vector<Transition>
   get_available_transitions();
 
-  /// trigger the specified transition.
+  /// Trigger the specified transition.
   /*
    * \return the new state after this transition
    */
@@ -685,7 +685,7 @@ public:
   const State &
   trigger_transition(const Transition & transition);
 
-  /// trigger the specified transition and get the callback return code.
+  /// Trigger the specified transition and get the callback return code.
   /*
    * \param[out] cb_return_code transition callback return code
    * \return the new state after this transition
@@ -695,7 +695,7 @@ public:
   trigger_transition(
     const Transition & transition, LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  /// trigger the specified transition based on an id.
+  /// Trigger the specified transition based on an id.
   /*
    * \return the new state after this transition
    */
@@ -703,7 +703,7 @@ public:
   const State &
   trigger_transition(uint8_t transition_id);
 
-  /// trigger the specified transition based on an id and get the callback return code.
+  /// Trigger the specified transition based on an id and get the callback return code.
   /*
    * \param[out] cb_return_code transition callback return code
    * \return the new state after this transition
@@ -713,7 +713,7 @@ public:
   trigger_transition(
     uint8_t transition_id, LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  /// trigger the configure transition
+  /// Trigger the configure transition
   /*
    * \param[out] cb_return_code transition callback return code.
    * \return the new state after this transition
@@ -722,7 +722,7 @@ public:
   const State &
   configure();
 
-  /// trigger the configure transition and get the callback return code.
+  /// Trigger the configure transition and get the callback return code.
   /*
    * \param[out] cb_return_code transition callback return code
    * \return the new state after this transition
@@ -731,7 +731,7 @@ public:
   const State &
   configure(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  /// trigger the cleanup transition.
+  /// Trigger the cleanup transition.
   /*
    * \return the new state after this transition
    */
@@ -739,7 +739,7 @@ public:
   const State &
   cleanup();
 
-  /// trigger the cleanup transition and get the callback return code.
+  /// Trigger the cleanup transition and get the callback return code.
   /*
    * \param[out] cb_return_code transition callback return code
    * \return the new state after this transition
@@ -748,7 +748,7 @@ public:
   const State &
   cleanup(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  /// trigger the activate transition.
+  /// Trigger the activate transition.
   /*
    * \return the new state after this transition
    */
@@ -756,7 +756,7 @@ public:
   const State &
   activate();
 
-  /// trigger the activate transition and get the callback return code.
+  /// Trigger the activate transition and get the callback return code.
   /*
    * \param[out] cb_return_code transition callback return code
    * \return the new state after this transition
@@ -765,7 +765,7 @@ public:
   const State &
   activate(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  /// trigger the deactivate transition
+  /// Trigger the deactivate transition
   /*
    * \return the new state after this transition
    */
@@ -773,7 +773,7 @@ public:
   const State &
   deactivate();
 
-  /// trigger the deactivate transition and get the callback return code.
+  /// Trigger the deactivate transition and get the callback return code.
   /*
    * \param[out] cb_return_code transition callback return code
    * \return the new state after this transition
@@ -782,7 +782,7 @@ public:
   const State &
   deactivate(LifecycleNodeInterface::CallbackReturn & cb_return_code);
 
-  /// trigger the shutdown transition
+  /// Trigger the shutdown transition
   /*
    * \return the new state after this transition
    */
@@ -790,7 +790,7 @@ public:
   const State &
   shutdown();
 
-  /// trigger the shutdown transition and get the callback return code.
+  /// Trigger the shutdown transition and get the callback return code.
   /*
    * \param[out] cb_return_code transition callback return code
    * \return the new state after this transition

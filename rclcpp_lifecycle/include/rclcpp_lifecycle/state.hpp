@@ -27,7 +27,7 @@ typedef struct rcl_lifecycle_state_t rcl_lifecycle_state_t;
 namespace rclcpp_lifecycle
 {
 
-/// The State class abstract the Lifecycle's states.
+/// Abstract class for the Lifecycle's states.
 /**
  * There are 4 primary states: Unconfigured, Inactive, Active and Finalized.
  */
