@@ -158,7 +158,7 @@ public:
   /// Get the namespace of the node
   /**
    * \return The namespace of the node.
-   */.
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   const char *
   get_namespace() const;
