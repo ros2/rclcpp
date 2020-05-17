@@ -189,7 +189,7 @@ public:
   {
     _abort();
     auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
-    response->status = action_msgs::msg::GoalStatus::STATUS_PREEMPTED;
+    response->status = 7;  // action_msgs::msg::GoalStatus::STATUS_PREEMPTED;
     response->result = *result_msg;
     on_terminal_state_(uuid_, response);
   }

@@ -582,7 +582,7 @@ private:
         goal_status == GoalStatus::STATUS_SUCCEEDED ||
         goal_status == GoalStatus::STATUS_CANCELED ||
         goal_status == GoalStatus::STATUS_ABORTED ||
-        goal_status == GoalStatus::STATUS_PREEMPTED)
+        goal_status == 7)  // GoalStatus::STATUS_PREEMPTED)
       {
         goal_handles_.erase(goal_id);
       }

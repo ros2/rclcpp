@@ -725,7 +725,8 @@ TEST_F(TestServer, publish_status_preemped)
     rclcpp::spin_until_future_complete(node, future));
 
   auto response = future.get();
-  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_PREEMPTED, response->status);
+  //  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_PREEMPTED, response->status);
+  EXPECT_EQ(7, response->status);
   EXPECT_EQ(result->sequence, response->result.sequence);
 
   ASSERT_LT(0u, received_msgs.size());
