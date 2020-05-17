@@ -662,6 +662,79 @@ TEST_F(TestServer, publish_status_aborted)
   EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.goal_id.uuid);
 }
 
+TEST_F(TestServer, publish_status_preemped)
+{
+  auto node = std::make_shared<rclcpp::Node>("status_preempted", "/rclcpp_action/status_preempted");
+  const GoalUUID uuid{{1, 2, 3, 40, 5, 6, 70, 8, 9, 1, 11, 120, 13, 140, 15, 160}};
+
+  auto handle_goal = [](
+    const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>)
+    {
+      return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    };
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+
+  auto handle_cancel = [](std::shared_ptr<GoalHandle>)
+    {
+      return rclcpp_action::CancelResponse::REJECT;
+    };
+
+  std::shared_ptr<GoalHandle> received_handle;
+  auto handle_accepted = [&received_handle](std::shared_ptr<GoalHandle> handle)
+    {
+      received_handle = handle;
+    };
+
+  auto as = rclcpp_action::create_server<Fibonacci>(
+    node, "fibonacci",
+    handle_goal,
+    handle_cancel,
+    handle_accepted);
+  (void)as;
+
+  // Subscribe to status messages
+  std::vector<action_msgs::msg::GoalStatusArray::SharedPtr> received_msgs;
+  auto subscriber = node->create_subscription<action_msgs::msg::GoalStatusArray>(
+    "fibonacci/_action/status", 10,
+    [&received_msgs](action_msgs::msg::GoalStatusArray::SharedPtr list)
+    {
+      received_msgs.push_back(list);
+    });
+
+  send_goal_request(node, uuid);
+
+  // Send result request
+  auto result_client = node->create_client<Fibonacci::Impl::GetResultService>(
+    "fibonacci/_action/get_result");
+  if (!result_client->wait_for_service(std::chrono::seconds(20))) {
+    throw std::runtime_error("get result service didn't become available");
+  }
+  auto request = std::make_shared<Fibonacci::Impl::GetResultService::Request>();
+  request->goal_id.uuid = uuid;
+  auto future = result_client->async_send_request(request);
+
+  // Send a result
+  auto result = std::make_shared<Fibonacci::Result>();
+  result->sequence = {5, 8, 13, 21};
+  received_handle->preempt(result);
+
+  // Wait for the result request to be received
+  ASSERT_EQ(
+    rclcpp::FutureReturnCode::SUCCESS,
+    rclcpp::spin_until_future_complete(node, future));
+
+  auto response = future.get();
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_PREEMPTED, response->status);
+  EXPECT_EQ(result->sequence, response->result.sequence);
+
+  ASSERT_LT(0u, received_msgs.size());
+  auto & msg = received_msgs.back();
+  ASSERT_EQ(1u, msg->status_list.size());
+  EXPECT_EQ(action_msgs::msg::GoalStatus::STATUS_ABORTED, msg->status_list.at(0).status);
+  EXPECT_EQ(uuid, msg->status_list.at(0).goal_info.goal_id.uuid);
+}
+
 TEST_F(TestServer, publish_feedback)
 {
   auto node = std::make_shared<rclcpp::Node>("pub_feedback", "/rclcpp_action/pub_feedback");

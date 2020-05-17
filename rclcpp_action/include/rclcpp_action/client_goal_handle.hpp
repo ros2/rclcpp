@@ -37,7 +37,8 @@ enum class ResultCode : int8_t
   UNKNOWN = action_msgs::msg::GoalStatus::STATUS_UNKNOWN,
   SUCCEEDED = action_msgs::msg::GoalStatus::STATUS_SUCCEEDED,
   CANCELED = action_msgs::msg::GoalStatus::STATUS_CANCELED,
-  ABORTED = action_msgs::msg::GoalStatus::STATUS_ABORTED
+  ABORTED = action_msgs::msg::GoalStatus::STATUS_ABORTED,
+  PREEMPTED = 7  // action_msgs::msg::GoalStatus::STATUS_PREEMPTED
 };
 
 
@@ -65,7 +66,7 @@ public:
   {
     /// The unique identifier of the goal
     GoalUUID goal_id;
-    /// A status to indicate if the goal was canceled, aborted, or suceeded
+    /// A status to indicate if the goal was canceled, aborted, preempted, or succeeded
     ResultCode code;
     /// User defined fields sent back with an action
     typename ActionT::Result::SharedPtr result;
