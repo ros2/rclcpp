@@ -27,7 +27,7 @@
 >
 > For (b), we would be changing how we recommend all code be written (not a trivial thing to do at all), because example code like `auto pub = node->create_publsiher(...);` would be come `auto pub = create_publisher(node, ...);`.
 > This has some distinct advantages, however, in that it allows us to write these functions, like `create_publisher(node, ...)`, so that the node argument can be any class that meets the criteria of the function.
-> That not only means that when we add a feature it automatically works with `Node` and `LifecycleNode` without adding anything to them, it also means that use defined `Node`-like classes will also work, even if they do not inherit from or provide the complete interface for `rclcpp::Node`.
+> That not only means that when we add a feature it automatically works with `Node` and `LifecycleNode` without adding anything to them, it also means that user defined `Node`-like classes will also work, even if they do not inherit from or provide the complete interface for `rclcpp::Node`.
 > Another major downside of this approach is discoverability of the API when using auto-completion in text editors, as `node-><tab>` will often give you a list of methods to explore, but with the new calling convention, there's not way to get an auto complete for code who's first argument is a `Node`-like class.
 >
 > Both of the above approaches address some of the main concerns, which are: keeping `Node` and `LifecycleNode` in sync, reducing the size of the `Node` class so it is more easily maintained, documented, and so that related functions are grouped more clearly.
@@ -403,20 +403,22 @@
 
 **Notes from on-line, post 2020-03-23 meeting**:
 
-- 
+- (tfoote) +1 for homogenizing to singular
 
 ### `SyncParametersClient::get_parameters` doesn't allow you to detect error cases
 
-> E.g. https://github.com/ros2/rclcpp/blob/249b7d80d8f677edcda05052f598de84f4c2181c/rclcpp/src/rclcpp/parameter_client.cpp#L246-L257 return an empty vector if something goes wrong which is also a valid response.
+> E.g. https://github.com/ros2/rclcpp/blob/249b7d80d8f677edcda05052f598de84f4c2181c/rclcpp/src/rclcpp/parameter_client.cpp#L246-L257 returns an empty vector if something goes wrong which is also a valid response.
 
 - https://github.com/ros2/rclcpp/issues/200
 - https://github.com/ros2/rclcpp/blob/96ebf59a6045a535730d98fff25e522807c7aa75/rclcpp/src/rclcpp/parameter_client.cpp#L412-L426
 
-**Suggested Action**: ?
+**Suggested Action**: Throw an exception to indicate if something went wrong and document other expected conditions of the API.
 
 **Notes from on-line, post 2020-03-23 meeting**:
 
-- 
+- (tfoote) An empty list is not a valid response unless you passed in an empty list. The return should have the same length as the request in the same order. Any parameters that are not set should return a ParameterVariant with type PARAMETER_NOT_SET. to indicate that it was polled and determined to not be set. Suggested action improve documentation of the API to clarify a short or incomplete.
+- (jacobperron) I think throwing an exception is also a valid action, making it clear that an error occurred.
+- (wjwwood) Using exceptions to indicate an exceptional case (something went wrong) seems reasonable to me too.
 
 ## Clock
 
@@ -426,8 +428,10 @@
 
 - https://github.com/ros2/rclcpp/issues/528
 
-**Suggested Action**: ?
+**Suggested Action**: Document that time jumping is only detected with ROS time, consider a warning.
 
 **Notes from on-line, post 2020-03-23 meeting**:
 
-- 
+- (tfoote) There should be no jumps in steady time. If there's a big change in system time, it doesn't necessarily mean that time jumped, just that you might have been sleeping for a long time. Most ntp systems adjust the slew rate these days instead of jumping but still that's an external process and I don't know of any APIs to introspect the state of the clock. I'm not sure that we have a way to detect jumps in time for system or steady time. To that end I think that we should be clear that we only provide callbacks when simulation time starts or stops, or simulation time jumps. We should also strongly recommend that operators not actively adjust their system clocks while running ROS nodes.
+- (jacobperron) I agree with Tully, if we don't have a way to detect system time jumps then I think we should just document that this only works with ROS time. In addition to documentation, we could log an info or warning message if the user registers jump callback with steady or system time, but it may be unnecessarily noisy.
+
