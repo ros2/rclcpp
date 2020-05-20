@@ -839,6 +839,7 @@ public:
 
   /// Register a callback to be called anytime a parameter is about to be changed.
   /**
+   * \deprecated Use add_on_set_parameters_callback instead.
    * With this method, only one callback can be set at a time. The callback that was previously
    * set by this method is returned or `nullptr` if no callback was previously set.
    *
@@ -851,6 +852,7 @@ public:
    * \return The previous callback that was registered, if there was one,
    *   otherwise nullptr.
    */
+  [[deprecate("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
   RCLCPP_PUBLIC
   OnParametersSetCallbackType
   set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
