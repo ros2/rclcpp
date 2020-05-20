@@ -279,12 +279,12 @@ protected:
   void
   do_inter_process_publish(const MessageT & msg)
   {
-    auto status = rcl_publish(&publisher_handle_, &msg, nullptr);
+    auto status = rcl_publish(publisher_handle_.get(), &msg, nullptr);
 
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
-      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
-        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
+      if (rcl_publisher_is_valid_except_context(publisher_handle_.get())) {
+        rcl_context_t * context = rcl_publisher_get_context(publisher_handle_.get());
         if (nullptr != context && !rcl_context_is_valid(context)) {
           // publisher is invalid due to context being shutdown
           return;
@@ -303,7 +303,7 @@ protected:
       // TODO(Karsten1987): support serialized message passed by intraprocess
       throw std::runtime_error("storing serialized messages in intra process is not supported yet");
     }
-    auto status = rcl_publish_serialized_message(&publisher_handle_, serialized_msg, nullptr);
+    auto status = rcl_publish_serialized_message(publisher_handle_.get(), serialized_msg, nullptr);
     if (RCL_RET_OK != status) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish serialized message");
     }
@@ -312,12 +312,12 @@ protected:
   void
   do_loaned_message_publish(MessageT * msg)
   {
-    auto status = rcl_publish_loaned_message(&publisher_handle_, msg, nullptr);
+    auto status = rcl_publish_loaned_message(publisher_handle_.get(), msg, nullptr);
 
     if (RCL_RET_PUBLISHER_INVALID == status) {
       rcl_reset_error();  // next call will reset error message if not context
-      if (rcl_publisher_is_valid_except_context(&publisher_handle_)) {
-        rcl_context_t * context = rcl_publisher_get_context(&publisher_handle_);
+      if (rcl_publisher_is_valid_except_context(publisher_handle_.get())) {
+        rcl_context_t * context = rcl_publisher_get_context(publisher_handle_.get());
         if (nullptr != context && !rcl_context_is_valid(context)) {
           // publisher is invalid due to context being shutdown
           return;
