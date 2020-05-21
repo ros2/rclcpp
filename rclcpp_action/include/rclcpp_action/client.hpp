@@ -387,6 +387,8 @@ public:
         }
       });
 
+    // TODO(jacobperron): Encapsulate into it's own function and
+    //                    consider exposing an option to disable this cleanup
     // To prevent the list from growing out of control, forget about any goals
     // with no more user references
     {
