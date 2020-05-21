@@ -193,8 +193,10 @@ public:
 
   /// Register a callback for when parameters are being set, return an existing one.
   /**
+   * \deprecated Use add_on_set_parameters_callback instead.
    * \sa rclcpp::Node::set_on_parameters_set_callback
    */
+  [[deprecate("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
   RCLCPP_PUBLIC
   virtual
   OnParametersSetCallbackType
