@@ -150,6 +150,9 @@ private:
   mutable std::recursive_mutex notify_guard_condition_mutex_;
   rcl_guard_condition_t notify_guard_condition_ = rcl_get_zero_initialized_guard_condition();
   bool notify_guard_condition_is_valid_;
+
+  // Keep shared ownership of the global logging mutex.
+  std::shared_ptr<std::recursive_mutex> logging_mutex_;
 };
 
 }  // namespace node_interfaces

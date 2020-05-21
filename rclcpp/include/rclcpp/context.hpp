@@ -338,8 +338,8 @@ private:
   rclcpp::InitOptions init_options_;
   std::string shutdown_reason_;
 
-  // Keep shared ownership of global logging configure mutex.
-  std::shared_ptr<std::mutex> logging_configure_mutex_;
+  // Keep shared ownership of the global logging mutex.
+  std::shared_ptr<std::recursive_mutex> logging_mutex_;
 
   std::unordered_map<std::type_index, std::shared_ptr<void>> sub_contexts_;
   // This mutex is recursive so that the constructor of a sub context may

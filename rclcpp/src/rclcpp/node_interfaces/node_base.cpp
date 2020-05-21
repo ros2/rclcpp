@@ -25,6 +25,8 @@
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
 
+#include "../logging_mutex.hpp"
+
 using rclcpp::exceptions::throw_from_rcl_error;
 
 using rclcpp::node_interfaces::NodeBase;
@@ -65,10 +67,17 @@ NodeBase::NodeBase(
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
 
-  ret = rcl_node_init(
-    rcl_node.get(),
-    node_name.c_str(), namespace_.c_str(),
-    context_->get_rcl_context().get(), &rcl_node_options);
+  logging_mutex_ = get_global_logging_mutex();
+  {
+    std::lock_guard<std::recursive_mutex> guard(*logging_mutex_);
+    // TODO(ivanpauno): Instead of mutually excluding rcl_node_init with the global logger mutex,
+    // rcl_logging_rosout_init_publisher_for_node could be decoupled from there and be called
+    // here directly.
+    ret = rcl_node_init(
+      rcl_node.get(),
+      node_name.c_str(), namespace_.c_str(),
+      context_->get_rcl_context().get(), &rcl_node_options);
+  }
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
@@ -123,7 +132,11 @@ NodeBase::NodeBase(
 
   node_handle_.reset(
     rcl_node.release(),
-    [](rcl_node_t * node) -> void {
+    [logging_mutex = logging_mutex_](rcl_node_t * node) -> void {
+      std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+      // TODO(ivanpauno): Instead of mutually excluding rcl_node_fini with the global logger mutex,
+      // rcl_logging_rosout_fini_publisher_for_node could be decoupled from there and be called
+      // here directly.
       if (rcl_node_fini(node) != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
