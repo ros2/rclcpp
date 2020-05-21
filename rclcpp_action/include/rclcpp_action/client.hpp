@@ -331,7 +331,9 @@ public:
    * If the goal is accepted by an action server, the returned future is set to a `ClientGoalHandle`.
    * If the goal is rejected by an action server, then the future is set to a `nullptr`.
    *
-   * The goal handle is used to monitor the status of the goal and get the final result.
+   * The returned goal handle is used to monitor the status of the goal and get the final result.
+   * It is valid as long as you hold a reference to the shared pointer or until the
+   * rclcpp_action::Client is destroyed at which point the goal status will become UNKNOWN.
    *
    * \param[in] goal The goal request.
    * \param[in] options Options for sending the goal request. Contains references to callbacks for
