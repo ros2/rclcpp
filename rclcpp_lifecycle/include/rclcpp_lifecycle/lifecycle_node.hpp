@@ -447,13 +447,33 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  using OnSetParametersCallbackHandle =
+    rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnParametersSetCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 
+  /// Add a callback for when parameters are being set.
+  /**
+   * \sa rclcpp::Node::add_on_set_parameters_callback
+   */
+  RCLCPP_LIFECYLE_PUBLIC
+  rclcpp_lifecycle::lifecycleNode::OnSetParametersCallbackHandle::SharedPtr
+  add_on_set_parameters_callback(OnParametersSetCallbackType callback);
+
+  /// Remove a callback registered with `add_on_set_parameters_callback`.
+  /**
+   * \sa rclcpp::Node::remove_on_set_parameters_callback
+   */
+  RCLCPP_LIFECYLE_PUBLIC
+  void
+  remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
+
   /// Register a callback to be called anytime a parameter is about to be changed.
   /**
+   * \deprecated Use add_on_set_parameters_callback instead.
    * \sa rclcpp::Node::set_on_parameters_set_callback
    */
+  [[deprecate("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType
   set_on_parameters_set_callback(

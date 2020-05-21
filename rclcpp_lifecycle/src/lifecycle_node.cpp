@@ -255,6 +255,18 @@ LifecycleNode::list_parameters(
   return node_parameters_->list_parameters(prefixes, depth);
 }
 
+rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
+LifecycleNode::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
+{
+  return node_parameters_->add_on_set_parameters_callback(callback);
+}
+
+void
+Node::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const callback)
+{
+  return node_parameters_->remove_on_set_parameters_callback(callback);
+}
+
 rclcpp::Node::OnParametersSetCallbackType
 LifecycleNode::set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback)
 {
