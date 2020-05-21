@@ -320,6 +320,11 @@ public:
     return sub_context;
   }
 
+  /// Return the global logging configure mutex.
+  RCLCPP_PUBLIC
+  std::shared_ptr<std::mutex>
+  get_rcl_logging_configure_mutex();
+
 protected:
   // Called by constructor and destructor to clean up by finalizing the
   // shutdown rcl context and preparing for a new init cycle.

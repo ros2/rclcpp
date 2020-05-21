@@ -65,10 +65,13 @@ NodeBase::NodeBase(
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
 
-  ret = rcl_node_init(
-    rcl_node.get(),
-    node_name.c_str(), namespace_.c_str(),
-    context_->get_rcl_context().get(), &rcl_node_options);
+  {
+    std::lock_guard<std::mutex> guard(*(context_->get_rcl_logging_configure_mutex()));
+    ret = rcl_node_init(
+      rcl_node.get(),
+      node_name.c_str(), namespace_.c_str(),
+      context_->get_rcl_context().get(), &rcl_node_options);
+  }
   if (ret != RCL_RET_OK) {
     // Finalize the interrupt guard condition.
     finalize_notify_guard_condition();
@@ -123,8 +126,14 @@ NodeBase::NodeBase(
 
   node_handle_.reset(
     rcl_node.release(),
-    [](rcl_node_t * node) -> void {
-      if (rcl_node_fini(node) != RCL_RET_OK) {
+    [this](rcl_node_t * node) -> void {
+      rcl_ret_t ret;
+      {
+        std::lock_guard<std::mutex> guard(
+          *(this->context_->get_rcl_logging_configure_mutex()));
+        ret = rcl_node_fini(node);
+      }
+      if (ret != RCL_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rclcpp",
           "Error in destruction of rcl node handle: %s", rcl_get_error_string().str);

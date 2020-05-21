@@ -364,6 +364,12 @@ Context::interrupt_all_wait_sets()
   }
 }
 
+std::shared_ptr<std::mutex>
+Context::get_rcl_logging_configure_mutex()
+{
+  return logging_configure_mutex_;
+}
+
 void
 Context::clean_up()
 {
