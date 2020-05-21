@@ -91,6 +91,8 @@ public:
 
   /// Get a future to the goal result.
   /**
+   * \deprecated Use rclcpp_action::Client::async_get_result() instead.
+   *
    * This method should not be called if the `ignore_result` flag was set when
    * sending the original goal request (see Client::async_send_goal).
    *
@@ -99,6 +101,7 @@ public:
    * \throws exceptions::UnawareGoalHandleError If the the goal handle is unaware of the result.
    * \return A future to the result.
    */
+  [[deprecated("use rclcpp_action::Client::async_get_result() instead")]]
   std::shared_future<WrappedResult>
   async_result();
 
@@ -133,6 +136,19 @@ private:
   call_feedback_callback(
     typename ClientGoalHandle<ActionT>::SharedPtr shared_this,
     typename std::shared_ptr<const Feedback> feedback_message);
+
+  /// Get a future to the goal result.
+  /**
+   * This method should not be called if the `ignore_result` flag was set when
+   * sending the original goal request (see Client::async_send_goal).
+   *
+   * `is_result_aware()` can be used to check if it is safe to call this method.
+   *
+   * \throws exceptions::UnawareGoalHandleError If the the goal handle is unaware of the result.
+   * \return A future to the result.
+   */
+  std::shared_future<WrappedResult>
+  async_get_result();
 
   /// Returns the previous value of awareness
   bool
