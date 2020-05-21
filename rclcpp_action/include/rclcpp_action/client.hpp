@@ -342,20 +342,6 @@ public:
   std::shared_future<typename GoalHandle::SharedPtr>
   async_send_goal(const Goal & goal, const SendGoalOptions & options = SendGoalOptions())
   {
-    // To prevent the list from growing out of control, forget about any goals
-    // with no more user references
-    {
-      std::lock_guard<std::mutex> guard(goal_handles_mutex_);
-      auto goal_handle_it = goal_handles_.begin();
-      while (goal_handle_it != goal_handles_.end()) {
-        if (!goal_handle_it->second.lock()) {
-          goal_handle_it = goal_handles_.erase(goal_handle_it);
-        } else {
-          ++goal_handle_it;
-        }
-      }
-    }
-
     // Put promise in the heap to move it around.
     auto promise = std::make_shared<std::promise<typename GoalHandle::SharedPtr>>();
     std::shared_future<typename GoalHandle::SharedPtr> future(promise->get_future());
@@ -400,6 +386,21 @@ public:
           }
         }
       });
+
+    // To prevent the list from growing out of control, forget about any goals
+    // with no more user references
+    {
+      std::lock_guard<std::mutex> guard(goal_handles_mutex_);
+      auto goal_handle_it = goal_handles_.begin();
+      while (goal_handle_it != goal_handles_.end()) {
+        if (!goal_handle_it->second.lock()) {
+          goal_handle_it = goal_handles_.erase(goal_handle_it);
+        } else {
+          ++goal_handle_it;
+        }
+      }
+    }
+
     return future;
   }
 
