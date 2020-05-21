@@ -23,6 +23,7 @@
 #include "libstatistics_collector/collector/generate_statistics_message.hpp"
 #include "libstatistics_collector/moving_average_statistics/types.hpp"
 #include "libstatistics_collector/topic_statistics_collector/constants.hpp"
+#include "libstatistics_collector/topic_statistics_collector/received_message_age.hpp"
 #include "libstatistics_collector/topic_statistics_collector/received_message_period.hpp"
 
 #include "rcl/time.h"
@@ -55,6 +56,9 @@ class SubscriptionTopicStatistics
 {
   using TopicStatsCollector =
     libstatistics_collector::topic_statistics_collector::TopicStatisticsCollector<
+    CallbackMessageT>;
+  using ReceivedMessageAge =
+    libstatistics_collector::topic_statistics_collector::ReceivedMessageAgeCollector<
     CallbackMessageT>;
   using ReceivedMessagePeriod =
     libstatistics_collector::topic_statistics_collector::ReceivedMessagePeriodCollector<
@@ -94,6 +98,8 @@ public:
 
   /// Handle a message received by the subscription to collect statistics.
   /**
+   * This method acquires a lock to prevent race conditions to collectors list.
+   *
    * \param received_message the message received by the subscription
    * \param now_nanoseconds current time in nanoseconds
    */
@@ -101,6 +107,7 @@ public:
     const CallbackMessageT & received_message,
     const rclcpp::Time now_nanoseconds) const
   {
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const auto & collector : subscriber_statistics_collectors_) {
       collector->OnMessageReceived(received_message, now_nanoseconds.nanoseconds());
     }
@@ -116,21 +123,32 @@ public:
   }
 
   /// Publish a populated MetricsStatisticsMessage.
+  /**
+   * This method acquires a lock to prevent race conditions to collectors list.
+   */
   virtual void publish_message()
   {
+    std::vector<MetricsMessage> msgs;
     rclcpp::Time window_end{get_current_nanoseconds_since_epoch()};
 
-    for (auto & collector : subscriber_statistics_collectors_) {
-      const auto collected_stats = collector->GetStatisticsResults();
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      for (auto & collector : subscriber_statistics_collectors_) {
+        const auto collected_stats = collector->GetStatisticsResults();
 
-      auto message = libstatistics_collector::collector::GenerateStatisticMessage(
-        node_name_,
-        collector->GetMetricName(),
-        collector->GetMetricUnit(),
-        window_start_,
-        window_end,
-        collected_stats);
-      publisher_->publish(message);
+        auto message = libstatistics_collector::collector::GenerateStatisticMessage(
+          node_name_,
+          collector->GetMetricName(),
+          collector->GetMetricUnit(),
+          window_start_,
+          window_end,
+          collected_stats);
+        msgs.push_back(message);
+      }
+    }
+
+    for (auto & msg : msgs) {
+      publisher_->publish(msg);
     }
     window_start_ = window_end;
   }
@@ -138,11 +156,14 @@ public:
 protected:
   /// Return a vector of all the currently collected data.
   /**
+   * This method acquires a lock to prevent race conditions to collectors list.
+   *
    * \return a vector of all the collected data
    */
   std::vector<StatisticData> get_current_collector_data() const
   {
     std::vector<StatisticData> data;
+    std::lock_guard<std::mutex> lock(mutex_);
     for (const auto & collector : subscriber_statistics_collectors_) {
       data.push_back(collector->GetStatisticsResults());
     }
@@ -151,23 +172,39 @@ protected:
 
 private:
   /// Construct and start all collectors and set window_start_.
+  /**
+   * This method acquires a lock to prevent race conditions to collectors list.
+   */
   void bring_up()
   {
+    auto received_message_age = std::make_unique<ReceivedMessageAge>();
+    received_message_age->Start();
+    subscriber_statistics_collectors_.emplace_back(std::move(received_message_age));
+
     auto received_message_period = std::make_unique<ReceivedMessagePeriod>();
     received_message_period->Start();
-    subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      subscriber_statistics_collectors_.emplace_back(std::move(received_message_period));
+    }
 
     window_start_ = rclcpp::Time(get_current_nanoseconds_since_epoch());
   }
 
   /// Stop all collectors, clear measurements, stop publishing timer, and reset publisher.
+  /**
+   * This method acquires a lock to prevent race conditions to collectors list.
+   */
   void tear_down()
   {
-    for (auto & collector : subscriber_statistics_collectors_) {
-      collector->Stop();
-    }
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      for (auto & collector : subscriber_statistics_collectors_) {
+        collector->Stop();
+      }
 
-    subscriber_statistics_collectors_.clear();
+      subscriber_statistics_collectors_.clear();
+    }
 
     if (publisher_timer_) {
       publisher_timer_->cancel();
@@ -187,6 +224,8 @@ private:
     return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
   }
 
+  /// Mutex to protect the subsequence vectors
+  mutable std::mutex mutex_;
   /// Collection of statistics collectors
   std::vector<std::unique_ptr<TopicStatsCollector>> subscriber_statistics_collectors_{};
   /// Node name used to generate topic statistics messages to be published

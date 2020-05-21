@@ -299,10 +299,10 @@ TEST_F(TestSubscription, take) {
 TEST_F(TestSubscription, take_serialized) {
   initialize();
   using test_msgs::msg::Empty;
-  auto do_nothing = [](std::shared_ptr<const rcl_serialized_message_t>) {FAIL();};
+  auto do_nothing = [](std::shared_ptr<const rclcpp::SerializedMessage>) {FAIL();};
   {
     auto sub = node->create_subscription<test_msgs::msg::Empty>("~/test_take", 1, do_nothing);
-    std::shared_ptr<rcl_serialized_message_t> msg = sub->create_serialized_message();
+    std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
     rclcpp::MessageInfo msg_info;
     EXPECT_FALSE(sub->take_serialized(*msg, msg_info));
   }
@@ -317,7 +317,7 @@ TEST_F(TestSubscription, take_serialized) {
       test_msgs::msg::Empty msg;
       pub->publish(msg);
     }
-    std::shared_ptr<rcl_serialized_message_t> msg = sub->create_serialized_message();
+    std::shared_ptr<rclcpp::SerializedMessage> msg = sub->create_serialized_message();
     rclcpp::MessageInfo msg_info;
     bool message_recieved = false;
     auto start = std::chrono::steady_clock::now();

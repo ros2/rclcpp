@@ -18,13 +18,13 @@
 #include <rmw/error_handling.h>
 #include <rmw/rmw.h>
 
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
-
 
 #include "rcl/error_handling.h"
 #include "rcl/subscription.h"
@@ -47,6 +47,7 @@
 #include "rclcpp/type_support_decl.hpp"
 #include "rclcpp/visibility_control.hpp"
 #include "rclcpp/waitable.hpp"
+#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 #include "tracetools/tracetools.h"
 
 namespace rclcpp
@@ -75,6 +76,8 @@ public:
   using MessageDeleter = allocator::Deleter<MessageAllocator, CallbackMessageT>;
   using ConstMessageSharedPtr = std::shared_ptr<const CallbackMessageT>;
   using MessageUniquePtr = std::unique_ptr<CallbackMessageT, MessageDeleter>;
+  using SubscriptionTopicStatisticsSharedPtr =
+    std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>;
 
   RCLCPP_SMART_PTR_DEFINITIONS(Subscription)
 
@@ -87,9 +90,14 @@ public:
    * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
+   * \param[in] qos QoS profile for Subcription.
    * \param[in] callback User defined callback to call when a message is received.
    * \param[in] options options for the subscription.
    * \param[in] message_memory_strategy The memory strategy to be used for managing message memory.
+   * \param[in] subscription_topic_statistics pointer to a topic statistics subcription.
+   * \throws std::invalid_argument if the QoS is uncompatible with intra-process (if one
+   *   of the following conditions are true: qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL,
+   *   qos_profile.depth == 0 or qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE).
    */
   Subscription(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
@@ -98,7 +106,8 @@ public:
     const rclcpp::QoS & qos,
     AnySubscriptionCallback<CallbackMessageT, AllocatorT> callback,
     const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy)
+    typename MessageMemoryStrategyT::SharedPtr message_memory_strategy,
+    SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics = nullptr)
   : SubscriptionBase(
       node_base,
       type_support_handle,
@@ -180,6 +189,10 @@ public:
       this->setup_intra_process(intra_process_subscription_id, ipm);
     }
 
+    if (subscription_topic_statistics != nullptr) {
+      this->subscription_topic_statistics_ = std::move(subscription_topic_statistics);
+    }
+
     TRACEPOINT(
       rclcpp_subscription_init,
       (const void *)get_subscription_handle().get(),
@@ -242,7 +255,7 @@ public:
     return message_memory_strategy_->borrow_message();
   }
 
-  std::shared_ptr<rcl_serialized_message_t>
+  std::shared_ptr<rclcpp::SerializedMessage>
   create_serialized_message() override
   {
     return message_memory_strategy_->borrow_serialized_message();
@@ -260,6 +273,13 @@ public:
     }
     auto typed_message = std::static_pointer_cast<CallbackMessageT>(message);
     any_callback_.dispatch(typed_message, message_info);
+
+    if (subscription_topic_statistics_) {
+      const auto nanos = std::chrono::time_point_cast<std::chrono::nanoseconds>(
+        std::chrono::system_clock::now());
+      const auto time = rclcpp::Time(nanos.time_since_epoch().count());
+      subscription_topic_statistics_->handle_message(*typed_message, time);
+    }
   }
 
   void
@@ -284,7 +304,7 @@ public:
   }
 
   void
-  return_serialized_message(std::shared_ptr<rcl_serialized_message_t> & message) override
+  return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override
   {
     message_memory_strategy_->return_serialized_message(message);
   }
@@ -307,6 +327,8 @@ private:
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> options_;
   typename message_memory_strategy::MessageMemoryStrategy<CallbackMessageT, AllocatorT>::SharedPtr
     message_memory_strategy_;
+  /// Component which computes and publishes topic statistics for this subscriber
+  SubscriptionTopicStatisticsSharedPtr subscription_topic_statistics_{nullptr};
 };
 
 }  // namespace rclcpp

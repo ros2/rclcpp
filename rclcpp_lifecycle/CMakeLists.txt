@@ -16,8 +16,6 @@ find_package(rcl_lifecycle REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(lifecycle_msgs REQUIRED)
 
-include_directories(include)
-
 ### CPP High level library
 add_library(rclcpp_lifecycle
   src/lifecycle_node.cpp
@@ -25,6 +23,10 @@ add_library(rclcpp_lifecycle
   src/state.cpp
   src/transition.cpp
 )
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
 # specific order: dependents before dependencies
 ament_target_dependencies(rclcpp_lifecycle
   "rclcpp"
@@ -38,7 +40,7 @@ ament_target_dependencies(rclcpp_lifecycle
 target_compile_definitions(rclcpp_lifecycle PRIVATE "RCLCPP_LIFECYCLE_BUILDING_DLL")
 
 install(TARGETS
-  rclcpp_lifecycle
+  rclcpp_lifecycle EXPORT rclcpp_lifecycle
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
@@ -56,6 +58,14 @@ if(BUILD_TESTING)
       "rclcpp"
     )
     target_link_libraries(test_lifecycle_node ${PROJECT_NAME})
+  endif()
+  ament_add_gtest(test_lifecycle_service_client test/test_lifecycle_service_client.cpp)
+  if(TARGET test_lifecycle_service_client)
+    ament_target_dependencies(test_lifecycle_service_client
+      "rcl_lifecycle"
+      "rclcpp"
+    )
+    target_link_libraries(test_lifecycle_service_client ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_state_machine_info test/test_state_machine_info.cpp)
   if(TARGET test_state_machine_info)
@@ -102,6 +112,7 @@ endif()
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
 ament_export_dependencies(rclcpp)
 ament_export_dependencies(rcl_lifecycle)
 ament_export_dependencies(lifecycle_msgs)

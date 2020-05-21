@@ -25,6 +25,7 @@
 #include "rclcpp/callback_group.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/publisher.hpp"
 #include "rclcpp/publisher_factory.hpp"
 #include "rclcpp/subscription.hpp"
@@ -59,7 +60,7 @@ public:
   void
   add_publisher(
     rclcpp::PublisherBase::SharedPtr publisher,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
+    rclcpp::CallbackGroup::SharedPtr callback_group) = 0;
 
   RCLCPP_PUBLIC
   virtual
@@ -74,12 +75,17 @@ public:
   void
   add_subscription(
     rclcpp::SubscriptionBase::SharedPtr subscription,
-    rclcpp::callback_group::CallbackGroup::SharedPtr callback_group) = 0;
+    rclcpp::CallbackGroup::SharedPtr callback_group) = 0;
 
   RCLCPP_PUBLIC
   virtual
   rclcpp::node_interfaces::NodeBaseInterface *
   get_node_base_interface() const = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  rclcpp::node_interfaces::NodeTimersInterface *
+  get_node_timers_interface() const = 0;
 };
 
 }  // namespace node_interfaces

@@ -34,6 +34,10 @@ protected:
   }
 };
 
+constexpr std::chrono::milliseconds PERIOD_MS = 1000ms;
+constexpr double PERIOD = PERIOD_MS.count() / 1000.0;
+constexpr double TOLERANCE = PERIOD / 4.0;
+
 /*
    Test that timers are not taken multiple times when using reentrant callback groups.
  */
@@ -51,14 +55,14 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
   bool yield_before_execute = true;
 
   rclcpp::executors::MultiThreadedExecutor executor(
-    rclcpp::executor::create_default_executor_arguments(), 2u, yield_before_execute);
+    rclcpp::ExecutorOptions(), 2u, yield_before_execute);
 
   ASSERT_GT(executor.get_number_of_threads(), 1u);
 
   std::shared_ptr<rclcpp::Node> node =
     std::make_shared<rclcpp::Node>("test_multi_threaded_executor_timer_over_take");
 
-  auto cbg = node->create_callback_group(rclcpp::callback_group::CallbackGroupType::Reentrant);
+  auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   rclcpp::Clock system_clock(RCL_STEADY_TIME);
   std::mutex last_mutex;
@@ -70,9 +74,6 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
       // While this tolerance is a little wide, if the bug occurs, the next step will
       // happen almost instantly. The purpose of this test is not to measure the jitter
       // in timers, just assert that a reasonable amount of time has passed.
-      const double PERIOD = 0.1f;
-      const double TOLERANCE = 0.025f;
-
       rclcpp::Time now = system_clock.now();
       timer_count++;
 
@@ -92,7 +93,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
       }
     };
 
-  auto timer = node->create_wall_timer(100ms, timer_callback, cbg);
+  auto timer = node->create_wall_timer(PERIOD_MS, timer_callback, cbg);
   executor.add_node(node);
   executor.spin();
 }

@@ -42,6 +42,16 @@ public:
   RCLCPP_PUBLIC
   InitOptions(const InitOptions & other);
 
+  /// Return `true` if logging should be initialized when `rclcpp::Context::init` is called.
+  RCLCPP_PUBLIC
+  bool
+  auto_initialize_logging() const;
+
+  /// Set flag indicating if logging should be initialized or not.
+  RCLCPP_PUBLIC
+  InitOptions &
+  auto_initialize_logging(bool initialize_logging);
+
   /// Assignment operator.
   RCLCPP_PUBLIC
   InitOptions &
@@ -62,6 +72,7 @@ protected:
 
 private:
   std::unique_ptr<rcl_init_options_t> init_options_;
+  bool initialize_logging_{true};
 };
 
 }  // namespace rclcpp

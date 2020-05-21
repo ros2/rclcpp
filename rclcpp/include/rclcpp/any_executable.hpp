@@ -29,8 +29,6 @@
 
 namespace rclcpp
 {
-namespace executor
-{
 
 struct AnyExecutable
 {
@@ -47,9 +45,14 @@ struct AnyExecutable
   rclcpp::ClientBase::SharedPtr client;
   rclcpp::Waitable::SharedPtr waitable;
   // These are used to keep the scope on the containing items
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group;
+  rclcpp::CallbackGroup::SharedPtr callback_group;
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base;
 };
+
+namespace executor
+{
+
+using AnyExecutable [[deprecated("use rclcpp::AnyExecutable instead")]] = AnyExecutable;
 
 }  // namespace executor
 }  // namespace rclcpp

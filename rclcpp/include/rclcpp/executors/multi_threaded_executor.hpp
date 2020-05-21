@@ -32,7 +32,7 @@ namespace rclcpp
 namespace executors
 {
 
-class MultiThreadedExecutor : public executor::Executor
+class MultiThreadedExecutor : public rclcpp::Executor
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(MultiThreadedExecutor)
@@ -45,14 +45,14 @@ public:
    * This is useful for reproducing some bugs related to taking work more than
    * once.
    *
-   * \param args common arguments for all executors
+   * \param options common options for all executors
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found instead
    * \param yield_before_execute if true std::this_thread::yield() is called
    */
   RCLCPP_PUBLIC
   MultiThreadedExecutor(
-    const executor::ExecutorArgs & args = executor::ExecutorArgs(),
+    const rclcpp::ExecutorOptions & options = rclcpp::ExecutorOptions(),
     size_t number_of_threads = 0,
     bool yield_before_execute = false,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));

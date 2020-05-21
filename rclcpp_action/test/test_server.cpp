@@ -49,7 +49,7 @@ protected:
     request->goal_id.uuid = uuid;
     auto future = client->async_send_request(request);
     if (
-      rclcpp::executor::FutureReturnCode::SUCCESS !=
+      rclcpp::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
     {
       throw std::runtime_error("send goal future didn't complete succesfully");
@@ -69,7 +69,7 @@ protected:
     request->goal_info.goal_id.uuid = uuid;
     auto future = cancel_client->async_send_request(request);
     if (
-      rclcpp::executor::FutureReturnCode::SUCCESS !=
+      rclcpp::FutureReturnCode::SUCCESS !=
       rclcpp::spin_until_future_complete(node, future))
     {
       throw std::runtime_error("cancel goal future didn't complete succesfully");
@@ -93,6 +93,32 @@ TEST_F(TestServer, construction_and_destruction)
     },
     [](std::shared_ptr<GoalHandle>) {});
   (void)as;
+}
+
+TEST_F(TestServer, construction_and_destruction_callback_group)
+{
+  auto node = std::make_shared<rclcpp::Node>("construct_node", "/rclcpp_action/construct");
+  auto group = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
+  const rcl_action_server_options_t & options = rcl_action_server_get_default_options();
+
+  using GoalHandle = rclcpp_action::ServerGoalHandle<Fibonacci>;
+  ASSERT_NO_THROW(
+    rclcpp_action::create_server<Fibonacci>(
+      node->get_node_base_interface(),
+      node->get_node_clock_interface(),
+      node->get_node_logging_interface(),
+      node->get_node_waitables_interface(),
+      "fibonacci",
+      [](const GoalUUID &, std::shared_ptr<const Fibonacci::Goal>) {
+        return rclcpp_action::GoalResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {
+        return rclcpp_action::CancelResponse::REJECT;
+      },
+      [](std::shared_ptr<GoalHandle>) {},
+      options,
+      group));
 }
 
 TEST_F(TestServer, handle_goal_called)
@@ -132,7 +158,7 @@ TEST_F(TestServer, handle_goal_called)
 
   auto future = client->async_send_request(request);
   ASSERT_EQ(
-    rclcpp::executor::FutureReturnCode::SUCCESS,
+    rclcpp::FutureReturnCode::SUCCESS,
     rclcpp::spin_until_future_complete(node, future));
 
   ASSERT_EQ(uuid, received_uuid);
@@ -744,7 +770,7 @@ TEST_F(TestServer, get_result)
 
   // Wait for the result request to be received
   ASSERT_EQ(
-    rclcpp::executor::FutureReturnCode::SUCCESS,
+    rclcpp::FutureReturnCode::SUCCESS,
     rclcpp::spin_until_future_complete(node, future));
 
   auto response = future.get();

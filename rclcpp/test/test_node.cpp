@@ -691,7 +691,7 @@ TEST_F(TestNode, declare_parameter_with_cli_overrides) {
   no.arguments(
   {
     "--ros-args",
-    "-p", "parameter_bool:=true",
+    "-p", "parameter_bool:=false",
     "-p", "parameter_int:=42",
     "-p", "parameter_double:=0.42",
     "-p", "parameter_string:=foo",
@@ -702,7 +702,8 @@ TEST_F(TestNode, declare_parameter_with_cli_overrides) {
     "-p", "parameter_string_array:=[foo, bar]"
   });
 
-  auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node"_unq, no);
+  // To match parameters YAML file content, use a well-known node name for this test only.
+  auto node = std::make_shared<rclcpp::Node>("test_declare_parameter_node", no);
   {
     rclcpp::ParameterValue value = node->declare_parameter("parameter_bool");
     EXPECT_EQ(value.get_type(), rclcpp::PARAMETER_BOOL);
@@ -2590,7 +2591,7 @@ TEST_F(TestNode, get_publishers_subscriptions_info_by_topic) {
     RMW_QOS_POLICY_DURABILITY_VOLATILE,
     {15, 1678},
     {29, 2345},
-    RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE,
+    RMW_QOS_POLICY_LIVELINESS_AUTOMATIC,
     {5, 23456},
     false
   };

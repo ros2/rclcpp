@@ -35,6 +35,7 @@
 #include "rclcpp/logging.hpp"
 #include "rclcpp/macros.hpp"
 #include "rclcpp/node.hpp"
+#include "rclcpp/qos_event.hpp"
 
 using rclcpp::PublisherBase;
 
@@ -246,7 +247,8 @@ PublisherBase::setup_intra_process(
 }
 
 void
-PublisherBase::default_incompatible_qos_callback(QOSOfferedIncompatibleQoSInfo & event) const
+PublisherBase::default_incompatible_qos_callback(
+  rclcpp::QOSOfferedIncompatibleQoSInfo & event) const
 {
   std::string policy_name = qos_policy_name_from_kind(event.last_policy_kind);
   RCLCPP_WARN(

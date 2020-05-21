@@ -16,8 +16,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-include_directories(include)
-
 set(${PROJECT_NAME}_SRCS
   src/client.cpp
   src/qos.cpp
@@ -28,6 +26,11 @@ set(${PROJECT_NAME}_SRCS
 
 add_library(${PROJECT_NAME}
   ${${PROJECT_NAME}_SRCS})
+
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
 
 ament_target_dependencies(${PROJECT_NAME}
   "action_msgs"
@@ -47,6 +50,7 @@ install(
 
 install(
   TARGETS ${PROJECT_NAME}
+  EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -55,6 +59,7 @@ install(
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
 
 ament_export_dependencies(ament_cmake)
 ament_export_dependencies(action_msgs)
@@ -95,6 +100,16 @@ if(BUILD_TESTING)
       "test_msgs"
     )
     target_link_libraries(test_traits
+      ${PROJECT_NAME}
+    )
+  endif()
+
+  ament_add_gtest(test_types test/test_types.cpp)
+  if(TARGET test_types)
+    ament_target_dependencies(test_types
+      "test_msgs"
+    )
+    target_link_libraries(test_types
       ${PROJECT_NAME}
     )
   endif()

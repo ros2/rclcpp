@@ -67,9 +67,9 @@ using rclcpp::executors::SingleThreadedExecutor;
  * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
  */
 template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
-rclcpp::executor::FutureReturnCode
+rclcpp::FutureReturnCode
 spin_node_until_future_complete(
-  rclcpp::executor::Executor & executor,
+  rclcpp::Executor & executor,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   const std::shared_future<ResponseT> & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
@@ -84,9 +84,9 @@ spin_node_until_future_complete(
 
 template<typename NodeT = rclcpp::Node, typename ResponseT, typename TimeRepT = int64_t,
   typename TimeT = std::milli>
-rclcpp::executor::FutureReturnCode
+rclcpp::FutureReturnCode
 spin_node_until_future_complete(
-  rclcpp::executor::Executor & executor,
+  rclcpp::Executor & executor,
   std::shared_ptr<NodeT> node_ptr,
   const std::shared_future<ResponseT> & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
@@ -101,7 +101,7 @@ spin_node_until_future_complete(
 }  // namespace executors
 
 template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
-rclcpp::executor::FutureReturnCode
+rclcpp::FutureReturnCode
 spin_until_future_complete(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   const std::shared_future<FutureT> & future,
@@ -113,7 +113,7 @@ spin_until_future_complete(
 
 template<typename NodeT = rclcpp::Node, typename FutureT, typename TimeRepT = int64_t,
   typename TimeT = std::milli>
-rclcpp::executor::FutureReturnCode
+rclcpp::FutureReturnCode
 spin_until_future_complete(
   std::shared_ptr<NodeT> node_ptr,
   const std::shared_future<FutureT> & future,

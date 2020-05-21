@@ -65,7 +65,7 @@ TEST(TestQoS, equality_liveliness) {
   EXPECT_NE(a, b);
   b.liveliness_lease_duration(duration);
   EXPECT_EQ(a, b);
-  a.liveliness(RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE);
+  a.liveliness(RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC);
   EXPECT_NE(a, b);
 }
 

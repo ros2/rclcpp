@@ -32,6 +32,7 @@
 #include "rclcpp/subscription_options.hpp"
 #include "rclcpp/subscription_traits.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/topic_statistics/subscription_topic_statistics.hpp"
 
 namespace rclcpp
 {
@@ -78,7 +79,10 @@ SubscriptionFactory
 create_subscription_factory(
   CallbackT && callback,
   const rclcpp::SubscriptionOptionsWithAllocator<AllocatorT> & options,
-  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat)
+  typename MessageMemoryStrategyT::SharedPtr msg_mem_strat,
+  std::shared_ptr<rclcpp::topic_statistics::SubscriptionTopicStatistics<CallbackMessageT>>
+  subscription_topic_stats = nullptr
+)
 {
   auto allocator = options.get_allocator();
 
@@ -88,7 +92,7 @@ create_subscription_factory(
 
   SubscriptionFactory factory {
     // factory function that creates a MessageT specific SubscriptionT
-    [options, msg_mem_strat, any_subscription_callback](
+    [options, msg_mem_strat, any_subscription_callback, subscription_topic_stats](
       rclcpp::node_interfaces::NodeBaseInterface * node_base,
       const std::string & topic_name,
       const rclcpp::QoS & qos
@@ -104,7 +108,8 @@ create_subscription_factory(
         qos,
         any_subscription_callback,
         options,
-        msg_mem_strat);
+        msg_mem_strat,
+        subscription_topic_stats);
       // This is used for setting up things like intra process comms which
       // require this->shared_from_this() which cannot be called from
       // the constructor.

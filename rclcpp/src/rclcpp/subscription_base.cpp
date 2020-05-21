@@ -24,6 +24,7 @@
 #include "rclcpp/experimental/intra_process_manager.hpp"
 #include "rclcpp/logging.hpp"
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
+#include "rclcpp/qos_event.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -159,12 +160,12 @@ SubscriptionBase::take_type_erased(void * message_out, rclcpp::MessageInfo & mes
 
 bool
 SubscriptionBase::take_serialized(
-  rcl_serialized_message_t & message_out,
+  rclcpp::SerializedMessage & message_out,
   rclcpp::MessageInfo & message_info_out)
 {
   rcl_ret_t ret = rcl_take_serialized_message(
     this->get_subscription_handle().get(),
-    &message_out,
+    &message_out.get_rcl_serialized_message(),
     &message_info_out.get_rmw_message_info(),
     nullptr);
   if (RCL_RET_SUBSCRIPTION_TAKE_FAILED == ret) {
@@ -238,7 +239,8 @@ SubscriptionBase::get_intra_process_waitable() const
 }
 
 void
-SubscriptionBase::default_incompatible_qos_callback(QOSRequestedIncompatibleQoSInfo & event) const
+SubscriptionBase::default_incompatible_qos_callback(
+  rclcpp::QOSRequestedIncompatibleQoSInfo & event) const
 {
   std::string policy_name = qos_policy_name_from_kind(event.last_policy_kind);
   RCLCPP_WARN(

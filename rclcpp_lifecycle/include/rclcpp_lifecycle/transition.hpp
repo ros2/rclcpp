@@ -28,24 +28,48 @@ typedef struct rcl_lifecycle_transition_t rcl_lifecycle_transition_t;
 namespace rclcpp_lifecycle
 {
 
+/// The Transition class abstract the Lifecycle's states.
+/**
+ * There are 7 transitions exposed to a supervisory process, they are: create, configure,
+ * cleanup, activate, deactivate, shutdown and destroy.
+ */
 class Transition
 {
 public:
   RCLCPP_LIFECYCLE_PUBLIC
   Transition() = delete;
 
+  /// Transition constructor.
+  /**
+   * \param[in] id of the transition
+   * \param[in] label of the transition
+   * \param[in] allocator a valid allocator used to initialized the state.
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   explicit Transition(
     uint8_t id,
     const std::string & label = "",
     rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
+  /// Transition constructor.
+  /**
+   * \param[in] id of the transition
+   * \param[in] label of the transition
+   * \param[in] start state of the transition
+   * \param[in] goal state of the transition
+   * \param[in] allocator a valid allocator used to initialized the state.
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   Transition(
     uint8_t id, const std::string & label,
     State && start, State && goal,
     rcutils_allocator_t allocator = rcutils_get_default_allocator());
 
+  /// Transition constructor.
+  /**
+   * \param[in] rcl_lifecycle_transition_handle structure with the transition details
+   * \param[in] allocator a valid allocator used to initialized the state.
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   explicit Transition(
     const rcl_lifecycle_transition_t * rcl_lifecycle_transition_handle,
@@ -60,18 +84,34 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   Transition & operator=(const Transition & rhs);
 
+  /// Return the id.
+  /**
+   * \return id of the state
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   uint8_t
   id() const;
 
+  /// Return the label.
+  /**
+   * \return label of the transition
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   std::string
   label() const;
 
+  /// Return the start state of the transition.
+  /**
+   * \return start state of the transition.
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   State
   start_state() const;
 
+  /// Return the goal state of the transition.
+  /**
+   * \return goal state of the transition.
+   */
   RCLCPP_LIFECYCLE_PUBLIC
   State
   goal_state() const;

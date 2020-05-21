@@ -17,13 +17,14 @@ find_package(composition_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rcpputils REQUIRED)
 
-include_directories(include)
-
 add_library(
   component_manager
   SHARED
   src/component_manager.cpp
 )
+target_include_directories(component_manager PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
 ament_target_dependencies(component_manager
   "ament_index_cpp"
   "class_loader"
@@ -68,6 +69,7 @@ if(BUILD_TESTING)
 
   set(components "")
   add_library(test_component SHARED test/components/test_component.cpp)
+  target_include_directories(test_component PUBLIC include)
   ament_target_dependencies(test_component
     "class_loader"
     "rclcpp")
@@ -76,10 +78,18 @@ if(BUILD_TESTING)
   set(components "${components}test_rclcpp_components::TestComponentBar;$<TARGET_FILE:test_component>\n")
   set(components "${components}test_rclcpp_components::TestComponentNoNode;$<TARGET_FILE:test_component>\n")
 
+  # A properly formed resource only has one ';', this is used to catch an invalid resource entry
+  set(invalid_components "test_rclcpp_components::TestComponentFoo;;$<TARGET_FILE:test_component>\n")
+
   file(GENERATE
     OUTPUT
     "${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>/share/ament_index/resource_index/rclcpp_components/${PROJECT_NAME}"
     CONTENT "${components}")
+
+  file(GENERATE
+    OUTPUT
+    "${CMAKE_CURRENT_BINARY_DIR}/test_ament_index/$<CONFIG>/share/ament_index/resource_index/rclcpp_components/invalid_${PROJECT_NAME}"
+    CONTENT "${invalid_components}")
 
   set(append_library_dirs "${CMAKE_CURRENT_BINARY_DIR}")
   if(WIN32)
@@ -102,7 +112,7 @@ if(BUILD_TESTING)
 endif()
 
 install(
-  TARGETS component_manager
+  TARGETS component_manager EXPORT component_manager
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -129,6 +139,8 @@ install(
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(component_manager)
+ament_export_targets(component_manager)
+ament_export_dependencies(ament_index_cpp)
 ament_export_dependencies(class_loader)
 ament_export_dependencies(composition_interfaces)
 ament_export_dependencies(rclcpp)

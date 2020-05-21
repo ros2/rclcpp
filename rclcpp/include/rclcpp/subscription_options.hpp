@@ -45,7 +45,7 @@ struct SubscriptionOptionsBase
   bool ignore_local_publications = false;
 
   /// The callback group for this subscription. NULL to use the default callback group.
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group = nullptr;
+  rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
 
   /// Setting to explicitly set intraprocess communications.
   IntraProcessSetting use_intra_process_comm = IntraProcessSetting::NodeDefault;
@@ -89,6 +89,10 @@ struct SubscriptionOptionsWithAllocator : public SubscriptionOptionsBase
   {}
 
   /// Convert this class, with a rclcpp::QoS, into an rcl_subscription_options_t.
+  /**
+   * \param qos QoS profile for subcription.
+   * \return rcl_subscription_options_t structure based on the rclcpp::QoS
+   */
   template<typename MessageT>
   rcl_subscription_options_t
   to_rcl_subscription_options(const rclcpp::QoS & qos) const

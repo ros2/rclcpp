@@ -270,6 +270,21 @@ TEST_F(TestClient, construction_and_destruction)
   ASSERT_NO_THROW(rclcpp_action::create_client<ActionType>(client_node, action_name).reset());
 }
 
+TEST_F(TestClient, construction_and_destruction_callback_group)
+{
+  auto group = client_node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
+  ASSERT_NO_THROW(
+    rclcpp_action::create_client<ActionType>(
+      client_node->get_node_base_interface(),
+      client_node->get_node_graph_interface(),
+      client_node->get_node_logging_interface(),
+      client_node->get_node_waitables_interface(),
+      action_name,
+      group
+    ).reset());
+}
+
 TEST_F(TestClient, async_send_goal_no_callbacks)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);

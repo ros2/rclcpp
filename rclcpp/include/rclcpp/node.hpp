@@ -135,12 +135,12 @@ public:
 
   /// Create and return a callback group.
   RCLCPP_PUBLIC
-  rclcpp::callback_group::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::callback_group::CallbackGroupType group_type);
+  rclcpp::CallbackGroup::SharedPtr
+  create_callback_group(rclcpp::CallbackGroupType group_type);
 
   /// Return the list of callback groups in the node.
   RCLCPP_PUBLIC
-  const std::vector<rclcpp::callback_group::CallbackGroup::WeakPtr> &
+  const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const;
 
   /// Create and return a Publisher.
@@ -186,8 +186,8 @@ public:
   /// Create and return a Subscription.
   /**
    * \param[in] topic_name The topic to subscribe on.
+   * \param[in] qos QoS profile for Subcription.
    * \param[in] callback The user-defined callback function to receive a message
-   * \param[in] qos_history_depth The depth of the subscription's incoming message queue.
    * \param[in] options Additional options for the creation of the Subscription.
    * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
    * \return Shared pointer to the created subscription.
@@ -227,24 +227,37 @@ public:
   create_wall_timer(
     std::chrono::duration<DurationRepT, DurationT> period,
     CallbackT callback,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /* Create and return a Client. */
+  /// Create and return a Client.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created client.
+   */
   template<typename ServiceT>
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
     const std::string & service_name,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
-  /* Create and return a Service. */
+  /// Create and return a Service.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] callback User-defined callback function.
+   * \param[in] rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created service.
+   */
   template<typename ServiceT, typename CallbackT>
   typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(
     const std::string & service_name,
     CallbackT && callback,
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
-    rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
   /// Declare and initialize a parameter, return the effective value.
   /**
@@ -1111,19 +1124,6 @@ public:
   const rclcpp::NodeOptions &
   get_node_options() const;
 
-  /// Manually assert that this Node is alive (for RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE).
-  /**
-   * If the rmw Liveliness policy is set to RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE, the creator
-   * of this node may manually call `assert_liveliness` at some point in time to signal to the rest
-   * of the system that this Node is still alive.
-   *
-   * \return `true` if the liveliness was asserted successfully, otherwise `false`
-   */
-  RCLCPP_PUBLIC
-  RCUTILS_WARN_UNUSED
-  bool
-  assert_liveliness() const;
-
 protected:
   /// Construct a sub-node, which will extend the namespace of all entities created with it.
   /**
@@ -1142,7 +1142,7 @@ private:
 
   RCLCPP_PUBLIC
   bool
-  group_in_node(callback_group::CallbackGroup::SharedPtr group);
+  group_in_node(CallbackGroup::SharedPtr group);
 
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;

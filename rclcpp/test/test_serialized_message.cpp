@@ -52,6 +52,7 @@ TEST(TestSerializedMessage, various_constructors) {
   rcl_handle.buffer_length = content_size;
   EXPECT_STREQ(content.c_str(), reinterpret_cast<char *>(rcl_handle.buffer));
   EXPECT_EQ(content_size, serialized_message.capacity());
+  EXPECT_EQ(content_size, serialized_message.size());
 
   // Copy Constructor
   rclcpp::SerializedMessage other_serialized_message(serialized_message);
@@ -114,6 +115,31 @@ TEST(TestSerializedMessage, various_constructors_from_rcl) {
   EXPECT_TRUE(nullptr != rcl_handle.buffer);
 }
 
+TEST(TestSerializedMessage, release) {
+  const std::string content = "Hello World";
+  const auto content_size = content.size() + 1;  // accounting for null terminator
+
+  rcl_serialized_message_t released_handle = rmw_get_zero_initialized_serialized_message();
+  {
+    rclcpp::SerializedMessage serialized_msg(13);
+    // manually copy some content
+    auto & rcl_serialized_msg = serialized_msg.get_rcl_serialized_message();
+    std::memcpy(rcl_serialized_msg.buffer, content.c_str(), content.size());
+    rcl_serialized_msg.buffer[content.size()] = '\0';
+    rcl_serialized_msg.buffer_length = content_size;
+    EXPECT_EQ(13u, serialized_msg.capacity());
+
+    released_handle = serialized_msg.release_rcl_serialized_message();
+    // scope exit of serialized_msg
+  }
+
+  EXPECT_TRUE(nullptr != released_handle.buffer);
+  EXPECT_EQ(13u, released_handle.buffer_capacity);
+  EXPECT_EQ(content_size, released_handle.buffer_length);
+  // cleanup memory manually
+  EXPECT_EQ(RCL_RET_OK, rmw_serialized_message_fini(&released_handle));
+}
+
 TEST(TestSerializedMessage, serialization) {
   using MessageT = test_msgs::msg::BasicTypes;
 
@@ -133,9 +159,9 @@ TEST(TestSerializedMessage, serialization) {
   }
 }
 
-template<typename MessageT>
-void test_empty_msg_serialize()
+void serialize_default_ros_msg()
 {
+  using MessageT = test_msgs::msg::BasicTypes;
   rclcpp::Serialization<MessageT> serializer;
   MessageT ros_msg;
   rclcpp::SerializedMessage serialized_msg;
@@ -143,12 +169,40 @@ void test_empty_msg_serialize()
   serializer.serialize_message(&ros_msg, &serialized_msg);
 }
 
-template<typename MessageT>
-void test_empty_msg_deserialize()
+void serialize_default_ros_msg_into_nullptr()
 {
+  using MessageT = test_msgs::msg::BasicTypes;
+  rclcpp::Serialization<MessageT> serializer;
+  MessageT ros_msg;
+
+  serializer.serialize_message(&ros_msg, nullptr);
+}
+
+void deserialize_default_serialized_message()
+{
+  using MessageT = test_msgs::msg::BasicTypes;
   rclcpp::Serialization<MessageT> serializer;
   MessageT ros_msg;
   rclcpp::SerializedMessage serialized_msg;
 
   serializer.deserialize_message(&serialized_msg, &ros_msg);
+}
+
+void deserialize_nullptr()
+{
+  using MessageT = test_msgs::msg::BasicTypes;
+  rclcpp::Serialization<MessageT> serializer;
+  MessageT ros_msg;
+  rclcpp::SerializedMessage serialized_msg;
+
+  serializer.deserialize_message(&serialized_msg, &ros_msg);
+}
+
+TEST(TestSerializedMessage, serialization_empty_messages)
+{
+  EXPECT_NO_THROW(serialize_default_ros_msg());
+  EXPECT_THROW(serialize_default_ros_msg_into_nullptr(), rcpputils::IllegalStateException);
+  EXPECT_THROW(serialize_default_ros_msg_into_nullptr(), rcpputils::IllegalStateException);
+  EXPECT_THROW(deserialize_default_serialized_message(), rcpputils::IllegalStateException);
+  EXPECT_THROW(deserialize_nullptr(), rcpputils::IllegalStateException);
 }

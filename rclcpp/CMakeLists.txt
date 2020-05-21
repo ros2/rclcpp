@@ -26,8 +26,6 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-include_directories(include)
-
 set(${PROJECT_NAME}_SRCS
   src/rclcpp/any_executable.cpp
   src/rclcpp/callback_group.cpp
@@ -41,7 +39,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/detail/utilities.cpp
   src/rclcpp/duration.cpp
   src/rclcpp/event.cpp
-  src/rclcpp/exceptions.cpp
+  src/rclcpp/exceptions/exceptions.cpp
   src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
@@ -50,6 +48,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/executors/single_threaded_executor.cpp
   src/rclcpp/executors/static_executor_entities_collector.cpp
   src/rclcpp/executors/static_single_threaded_executor.cpp
+  src/rclcpp/future_return_code.cpp
   src/rclcpp/graph_listener.cpp
   src/rclcpp/guard_condition.cpp
   src/rclcpp/init_options.cpp
@@ -101,23 +100,71 @@ configure_file(
   COPYONLY
 )
 # generate header with logging macros
-set(python_code
+set(python_code_logging
   "import em"
   "em.invoke(['-o', 'include/rclcpp/logging.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/logging.hpp.em'])")
-string(REPLACE ";" "$<SEMICOLON>" python_code "${python_code}")
+string(REPLACE ";" "$<SEMICOLON>" python_code_logging "${python_code_logging}")
 add_custom_command(OUTPUT include/rclcpp/logging.hpp
   COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp"
-  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code}"
+  COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_code_logging}"
   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/logging.hpp.em.watch"
   COMMENT "Expanding logging.hpp.em"
   VERBATIM
 )
 list(APPEND ${PROJECT_NAME}_SRCS
   include/rclcpp/logging.hpp)
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+
+file(GLOB interface_files "include/rclcpp/node_interfaces/node_*_interface.hpp")
+foreach(interface_file ${interface_files})
+  get_filename_component(interface_name ${interface_file} NAME_WE)
+
+  # "watch" template for changes
+  configure_file(
+    "resource/interface_traits.hpp.em"
+    "${CMAKE_CURRENT_BINARY_DIR}/${interface_name}_traits.hpp.em.watch"
+    COPYONLY
+  )
+  set(python_${interface_name}_traits
+    "import em"
+    "em.invoke(['-D', 'interface_name = \\'${interface_name}\\'', '-o', 'include/rclcpp/node_interfaces/${interface_name}_traits.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/interface_traits.hpp.em'])")
+  string(REPLACE ";" "$<SEMICOLON>" python_${interface_name}_traits "${python_${interface_name}_traits}")
+  add_custom_command(OUTPUT include/rclcpp/node_interfaces/${interface_name}_traits.hpp
+    COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
+    COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_${interface_name}_traits}"
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${interface_name}_traits.hpp.em.watch"
+    COMMENT "Expanding interface_traits.hpp.em into ${interface_name}_traits.hpp"
+    VERBATIM
+  )
+  list(APPEND ${PROJECT_NAME}_SRCS
+    include/rclcpp/node_interfaces/${interface_name}_traits.hpp)
+
+  # "watch" template for changes
+  configure_file(
+    "resource/get_interface.hpp.em"
+    "get_${interface_name}.hpp.em.watch"
+    COPYONLY
+  )
+  set(python_get_${interface_name}
+    "import em"
+    "em.invoke(['-D', 'interface_name = \\'${interface_name}\\'', '-o', 'include/rclcpp/node_interfaces/get_${interface_name}.hpp', '${CMAKE_CURRENT_SOURCE_DIR}/resource/get_interface.hpp.em'])")
+  string(REPLACE ";" "$<SEMICOLON>" python_get_${interface_name} "${python_get_${interface_name}}")
+  add_custom_command(OUTPUT include/rclcpp/node_interfaces/get_${interface_name}.hpp
+    COMMAND ${CMAKE_COMMAND} -E make_directory "include/rclcpp/node_interfaces"
+    COMMAND ${PYTHON_EXECUTABLE} ARGS -c "${python_get_${interface_name}}"
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/get_${interface_name}.hpp.em.watch"
+    COMMENT "Expanding get_interface.hpp.em into get_${interface_file}.hpp"
+    VERBATIM
+  )
+  list(APPEND ${PROJECT_NAME}_SRCS
+    include/rclcpp/node_interfaces/get_${interface_name}.hpp)
+endforeach()
 
 add_library(${PROJECT_NAME}
   ${${PROJECT_NAME}_SRCS})
+target_include_directories(${PROJECT_NAME} PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
   "libstatistics_collector"
@@ -139,7 +186,7 @@ target_compile_definitions(${PROJECT_NAME}
   PRIVATE "RCLCPP_BUILDING_LIBRARY")
 
 install(
-  TARGETS ${PROJECT_NAME}
+  TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
@@ -148,6 +195,7 @@ install(
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
+ament_export_targets(${PROJECT_NAME})
 
 ament_export_dependencies(libstatistics_collector)
 ament_export_dependencies(rcl)
@@ -168,12 +216,21 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 
   find_package(rmw_implementation_cmake REQUIRED)
+  find_package(rosidl_default_generators REQUIRED)
 
   find_package(test_msgs REQUIRED)
 
   include(cmake/rclcpp_add_build_failure_test.cmake)
 
   add_definitions(-DTEST_RESOURCES_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/test/resources")
+
+  rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
+    test/msg/Header.msg
+    test/msg/MessageWithHeader.msg
+    DEPENDENCIES builtin_interfaces
+    LIBRARY_NAME ${PROJECT_NAME}
+    SKIP_INSTALL
+  )
 
   ament_add_gtest(test_client test/test_client.cpp)
   if(TARGET test_client)
@@ -209,6 +266,7 @@ if(BUILD_TESTING)
   endif()
   ament_add_gtest(test_function_traits test/test_function_traits.cpp)
   if(TARGET test_function_traits)
+    target_include_directories(test_function_traits PUBLIC include)
     ament_target_dependencies(test_function_traits
       "rcl_interfaces"
       "rmw"
@@ -532,6 +590,14 @@ if(BUILD_TESTING)
     target_link_libraries(test_init ${PROJECT_NAME})
   endif()
 
+  ament_add_gtest(test_interface_traits test/test_interface_traits.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}")
+  if(TARGET test_interface_traits)
+    ament_target_dependencies(test_interface_traits
+      "rcl")
+    target_link_libraries(test_interface_traits ${PROJECT_NAME})
+  endif()
+
   ament_add_gtest(test_multi_threaded_executor test/executors/test_multi_threaded_executor.cpp
     APPEND_LIBRARY_DIRS "${append_library_dirs}")
   if(TARGET test_multi_threaded_executor)
@@ -553,9 +619,12 @@ if(BUILD_TESTING)
     target_link_libraries(test_wait_set ${PROJECT_NAME})
   endif()
 
-  ament_add_gtest(test_subscription_topic_statistics test/topic_statistics/test_subscription_topic_statistics.cpp)
+  ament_add_gtest(test_subscription_topic_statistics test/topic_statistics/test_subscription_topic_statistics.cpp
+    APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  )
   if(TARGET test_subscription_topic_statistics)
     ament_target_dependencies(test_subscription_topic_statistics
+      "builtin_interfaces"
       "libstatistics_collector"
       "rcl_interfaces"
       "rcutils"
@@ -564,6 +633,7 @@ if(BUILD_TESTING)
       "rosidl_typesupport_cpp"
       "statistics_msgs"
       "test_msgs")
+    rosidl_target_interfaces(test_subscription_topic_statistics ${PROJECT_NAME}_test_msgs "rosidl_typesupport_cpp")
     target_link_libraries(test_subscription_topic_statistics ${PROJECT_NAME})
   endif()
 

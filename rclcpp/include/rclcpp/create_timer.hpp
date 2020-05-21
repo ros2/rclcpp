@@ -15,6 +15,8 @@
 #ifndef RCLCPP__CREATE_TIMER_HPP_
 #define RCLCPP__CREATE_TIMER_HPP_
 
+#include <chrono>
+#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -32,12 +34,12 @@ namespace rclcpp
 template<typename CallbackT>
 typename rclcpp::TimerBase::SharedPtr
 create_timer(
-  node_interfaces::NodeBaseInterface * node_base,
-  node_interfaces::NodeTimersInterface * node_timers,
+  std::shared_ptr<node_interfaces::NodeBaseInterface> node_base,
+  std::shared_ptr<node_interfaces::NodeTimersInterface> node_timers,
   rclcpp::Clock::SharedPtr clock,
   rclcpp::Duration period,
   CallbackT && callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   auto timer = rclcpp::GenericTimer<CallbackT>::make_shared(
     clock,
@@ -57,7 +59,7 @@ create_timer(
   rclcpp::Clock::SharedPtr clock,
   rclcpp::Duration period,
   CallbackT && callback,
-  rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr)
+  rclcpp::CallbackGroup::SharedPtr group = nullptr)
 {
   return create_timer(
     rclcpp::node_interfaces::get_node_base_interface(node),
@@ -66,6 +68,46 @@ create_timer(
     period,
     std::forward<CallbackT>(callback),
     group);
+}
+
+/// Convenience method to create a timer with node resources.
+/**
+ *
+ * \tparam DurationRepT
+ * \tparam DurationT
+ * \tparam CallbackT
+ * \param period period to exectute callback
+ * \param callback callback to execute via the timer period
+ * \param group
+ * \param node_base
+ * \param node_timers
+ * \return
+ * \throws std::invalid argument if either node_base or node_timers
+ * are null
+ */
+template<typename DurationRepT, typename DurationT, typename CallbackT>
+typename rclcpp::WallTimer<CallbackT>::SharedPtr
+create_wall_timer(
+  std::chrono::duration<DurationRepT, DurationT> period,
+  CallbackT callback,
+  rclcpp::CallbackGroup::SharedPtr group,
+  node_interfaces::NodeBaseInterface * node_base,
+  node_interfaces::NodeTimersInterface * node_timers)
+{
+  if (node_base == nullptr) {
+    throw std::invalid_argument{"input node_base cannot be null"};
+  }
+
+  if (node_timers == nullptr) {
+    throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
+    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
+    std::move(callback),
+    node_base->get_context());
+  node_timers->add_timer(timer, group);
+  return timer;
 }
 
 }  // namespace rclcpp

@@ -22,8 +22,10 @@ using rclcpp::exceptions::throw_from_rcl_error;
 
 using rclcpp::node_interfaces::NodeTopics;
 
-NodeTopics::NodeTopics(rclcpp::node_interfaces::NodeBaseInterface * node_base)
-: node_base_(node_base)
+NodeTopics::NodeTopics(
+  rclcpp::node_interfaces::NodeBaseInterface * node_base,
+  rclcpp::node_interfaces::NodeTimersInterface * node_timers)
+: node_base_(node_base), node_timers_(node_timers)
 {}
 
 NodeTopics::~NodeTopics()
@@ -42,7 +44,7 @@ NodeTopics::create_publisher(
 void
 NodeTopics::add_publisher(
   rclcpp::PublisherBase::SharedPtr publisher,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
   // Assign to a group.
   if (callback_group) {
@@ -81,7 +83,7 @@ NodeTopics::create_subscription(
 void
 NodeTopics::add_subscription(
   rclcpp::SubscriptionBase::SharedPtr subscription,
-  rclcpp::callback_group::CallbackGroup::SharedPtr callback_group)
+  rclcpp::CallbackGroup::SharedPtr callback_group)
 {
   // Assign to a group.
   if (callback_group) {
@@ -120,4 +122,10 @@ rclcpp::node_interfaces::NodeBaseInterface *
 NodeTopics::get_node_base_interface() const
 {
   return node_base_;
+}
+
+rclcpp::node_interfaces::NodeTimersInterface *
+NodeTopics::get_node_timers_interface() const
+{
+  return node_timers_;
 }

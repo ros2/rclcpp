@@ -66,50 +66,51 @@ SerializedMessage::SerializedMessage(const rcl_serialized_message_t & other)
 }
 
 SerializedMessage::SerializedMessage(SerializedMessage && other)
-: SerializedMessage(other.serialized_message_)
-{
-  other.serialized_message_ = rmw_get_zero_initialized_serialized_message();
-}
+: serialized_message_(
+    std::exchange(other.serialized_message_, rmw_get_zero_initialized_serialized_message()))
+{}
 
 SerializedMessage::SerializedMessage(rcl_serialized_message_t && other)
-: serialized_message_(other)
-{
-  // reset buffer to prevent double free
-  other = rmw_get_zero_initialized_serialized_message();
-}
+: serialized_message_(
+    std::exchange(other, rmw_get_zero_initialized_serialized_message()))
+{}
 
 SerializedMessage & SerializedMessage::operator=(const SerializedMessage & other)
 {
-  serialized_message_ = rmw_get_zero_initialized_serialized_message();
-  copy_rcl_message(other.serialized_message_, serialized_message_);
+  if (this != &other) {
+    serialized_message_ = rmw_get_zero_initialized_serialized_message();
+    copy_rcl_message(other.serialized_message_, serialized_message_);
+  }
 
   return *this;
 }
 
 SerializedMessage & SerializedMessage::operator=(const rcl_serialized_message_t & other)
 {
-  serialized_message_ = rmw_get_zero_initialized_serialized_message();
-  copy_rcl_message(other, serialized_message_);
+  if (&serialized_message_ != &other) {
+    serialized_message_ = rmw_get_zero_initialized_serialized_message();
+    copy_rcl_message(other, serialized_message_);
+  }
 
   return *this;
 }
 
 SerializedMessage & SerializedMessage::operator=(SerializedMessage && other)
 {
-  *this = other.serialized_message_;
-  other.serialized_message_ = rmw_get_zero_initialized_serialized_message();
+  if (this != &other) {
+    serialized_message_ =
+      std::exchange(other.serialized_message_, rmw_get_zero_initialized_serialized_message());
+  }
 
   return *this;
 }
 
 SerializedMessage & SerializedMessage::operator=(rcl_serialized_message_t && other)
 {
-  serialized_message_ = rmw_get_zero_initialized_serialized_message();
-  serialized_message_ = other;
-
-  // reset original to prevent double free
-  other = rmw_get_zero_initialized_serialized_message();
-
+  if (&serialized_message_ != &other) {
+    serialized_message_ =
+      std::exchange(other, rmw_get_zero_initialized_serialized_message());
+  }
   return *this;
 }
 
@@ -143,5 +144,21 @@ size_t SerializedMessage::size() const
 size_t SerializedMessage::capacity() const
 {
   return serialized_message_.buffer_capacity;
+}
+
+void SerializedMessage::reserve(size_t capacity)
+{
+  auto ret = rmw_serialized_message_resize(&serialized_message_, capacity);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret);
+  }
+}
+
+rcl_serialized_message_t SerializedMessage::release_rcl_serialized_message()
+{
+  auto ret = serialized_message_;
+  serialized_message_ = rmw_get_zero_initialized_serialized_message();
+
+  return ret;
 }
 }  // namespace rclcpp
