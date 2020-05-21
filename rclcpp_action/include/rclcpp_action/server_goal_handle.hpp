@@ -174,6 +174,26 @@ public:
     on_terminal_state_(uuid_, response);
   }
 
+  /// Indicate that a goal was preempted and has been aborted.
+  /**
+   * Only call this if the goal was executing and has to be preempted.
+   * This is a terminal state, no more methods should be called on a goal handle after this is
+   * called.
+   *
+   * \throws rclcpp::exceptions::RCLError If the goal is in any state besides executing.
+   *
+   * \param[in] result_msg the final result to send to clients.
+   */
+  void
+  preempt(typename ActionT::Result::SharedPtr result_msg)
+  {
+    _abort();
+    auto response = std::make_shared<typename ActionT::Impl::GetResultService::Response>();
+    response->status = 7;  // action_msgs::msg::GoalStatus::STATUS_PREEMPTED;
+    response->result = *result_msg;
+    on_terminal_state_(uuid_, response);
+  }
+
   /// Indicate that a goal has succeeded.
   /**
    * Only call this if the goal is executing and has reached the desired final state.
