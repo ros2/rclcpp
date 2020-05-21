@@ -304,7 +304,6 @@ TEST_F(TestClient, async_send_goal_no_callbacks)
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_ACCEPTED, goal_handle->get_status());
   EXPECT_FALSE(goal_handle->is_feedback_aware());
   EXPECT_FALSE(goal_handle->is_result_aware());
-  EXPECT_THROW(goal_handle->async_result(), rclcpp_action::exceptions::UnawareGoalHandleError);
 }
 
 TEST_F(TestClient, async_send_goal_no_callbacks_wait_for_result)

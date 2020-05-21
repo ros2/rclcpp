@@ -411,7 +411,7 @@ public:
       goal_handle->set_result_callback(result_callback);
     }
     this->make_result_aware(goal_handle);
-    return goal_handle->async_result();
+    return goal_handle->async_get_result();
   }
 
   /// Asynchronously request a goal be canceled.
