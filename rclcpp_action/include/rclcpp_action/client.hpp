@@ -396,6 +396,9 @@ public:
       auto goal_handle_it = goal_handles_.begin();
       while (goal_handle_it != goal_handles_.end()) {
         if (!goal_handle_it->second.lock()) {
+          RCLCPP_DEBUG(
+            this->get_logger(),
+            "Dropping weak reference to goal handle during send_goal()");
           goal_handle_it = goal_handles_.erase(goal_handle_it);
         } else {
           ++goal_handle_it;
@@ -569,6 +572,9 @@ private:
     typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id].lock();
     // Forget about the goal if there are no more user references
     if (!goal_handle) {
+      RCLCPP_DEBUG(
+        this->get_logger(),
+        "Dropping weak reference to goal handle during feedback callback");
       goal_handles_.erase(goal_id);
       return;
     }
@@ -603,6 +609,9 @@ private:
       typename GoalHandle::SharedPtr goal_handle = goal_handles_[goal_id].lock();
       // Forget about the goal if there are no more user references
       if (!goal_handle) {
+        RCLCPP_DEBUG(
+          this->get_logger(),
+          "Dropping weak reference to goal handle during status callback");
         goal_handles_.erase(goal_id);
         continue;
       }
