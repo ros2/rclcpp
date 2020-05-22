@@ -46,6 +46,16 @@ class AsyncParametersClient
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AsyncParametersClient)
 
+  /// Create an async parameters client.
+  /**
+   * \param node_base_interface[in] The node base interface of the corresponding node.
+   * \param node_topics_interface[in] Node topic base interface.
+   * \param node_graph_interface[in] The node graph interface of the corresponding node.
+   * \param node_services_interface[in] Node service interface.
+   * \param remote_node_name[in] (optional) name of the remote node
+   * \param qos_profile[in] (optional) The rmw qos profile to use to subscribe
+   * \param group[in] (optional)  The async parameter client will be added to this callback group.
+   */
   RCLCPP_PUBLIC
   AsyncParametersClient(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
@@ -56,6 +66,13 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
+  /// Constructor
+  /**
+   * \param node[in] The  async paramters client will be added to this node.
+   * \param remote_node_name[in] (optional) name of the remote node
+   * \param qos_profile[in] (optional) The rmw qos profile to use to subscribe
+   * \param group[in] (optional)  The async parameter client will be added to this callback group.
+   */
   RCLCPP_PUBLIC
   AsyncParametersClient(
     const rclcpp::Node::SharedPtr node,
@@ -63,6 +80,13 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters,
     rclcpp::CallbackGroup::SharedPtr group = nullptr);
 
+  /// Constructor
+  /**
+   * \param node[in] The  async paramters client will be added to this node.
+   * \param remote_node_name[in] (optional) name of the remote node
+   * \param qos_profile[in] (optional) The rmw qos profile to use to subscribe
+   * \param group[in] (optional)  The async parameter client will be added to this callback group.
+   */
   RCLCPP_PUBLIC
   AsyncParametersClient(
     rclcpp::Node * node,
@@ -159,10 +183,26 @@ public:
       options);
   }
 
+  /// Return if the parameter services are ready.
+  /**
+   * This method checks the following services:
+   *  - get parameter
+   *  - get parameter
+   *  - set parameters
+   *  - list parameters
+   *  - describe parameters
+   *
+   * \return `true` if the service is ready, `false` otherwise
+   */
   RCLCPP_PUBLIC
   bool
   service_is_ready() const;
 
+  /// Wait for the services to be ready.
+  /**
+   * \param timeout maximum time to wait
+   * \return `true` if the services are ready and the timeout is not over, `false` otherwise
+   */
   template<typename RepT = int64_t, typename RatioT = std::milli>
   bool
   wait_for_service(

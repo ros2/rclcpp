@@ -88,6 +88,9 @@ public:
   add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
+  /**
+   * \see rclcpp::Executor::add_node
+   */
   RCLCPP_PUBLIC
   virtual void
   add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
@@ -104,6 +107,9 @@ public:
   remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
+  /**
+   * \see rclcpp::Executor::remove_node
+   */
   RCLCPP_PUBLIC
   virtual void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
@@ -232,7 +238,10 @@ public:
   }
 
   /// Cancel any running spin* function, causing it to return.
-  /* This function can be called asynchonously from any thread. */
+  /**
+   * This function can be called asynchonously from any thread.
+   * \throws std::runtime_error if there is an issue triggering the guard condition
+   */
   RCLCPP_PUBLIC
   void
   cancel();
@@ -242,6 +251,7 @@ public:
    * Switching the memory strategy while the executor is spinning in another threading could have
    * unintended consequences.
    * \param[in] memory_strategy Shared pointer to the memory strategy to set.
+   * \throws std::runtime_error if memory_strategy is null
    */
   RCLCPP_PUBLIC
   void
@@ -255,8 +265,10 @@ protected:
     std::chrono::nanoseconds timeout);
 
   /// Find the next available executable and do the work associated with it.
-  /** \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
+  /**
+   * \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
    * service, client).
+   * \throws std::runtime_error if there is an issue triggering the guard condition
    */
   RCLCPP_PUBLIC
   void
@@ -279,6 +291,9 @@ protected:
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
+  /**
+   * \throws std::runtime_error if the wait set can be cleared
+   */
   RCLCPP_PUBLIC
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));

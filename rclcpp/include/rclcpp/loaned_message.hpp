@@ -52,8 +52,9 @@ public:
    * However, this user code is ought to be usable even when dynamically linked against
    * a middleware which doesn't support message loaning in which case the allocator will be used.
    *
-   * \param pub rclcpp::Publisher instance to which the memory belongs
-   * \param allocator Allocator instance in case middleware can not allocate messages
+   * \param[in] pub rclcpp::Publisher instance to which the memory belongs
+   * \param[in] allocator Allocator instance in case middleware can not allocate messages
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   LoanedMessage(
     const rclcpp::PublisherBase & pub,
@@ -98,8 +99,9 @@ public:
    * However, this user code is ought to be usable even when dynamically linked against
    * a middleware which doesn't support message loaning in which case the allocator will be used.
    *
-   * \param pub rclcpp::Publisher instance to which the memory belongs
-   * \param allocator Allocator instance in case middleware can not allocate messages
+   * \param[in] pub rclcpp::Publisher instance to which the memory belongs
+   * \param[in] allocator Allocator instance in case middleware can not allocate messages
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   LoanedMessage(
     const rclcpp::PublisherBase * pub,

@@ -100,6 +100,9 @@ public:
    * \param[in] argv argument array which may contain arguments intended for ROS
    * \param[in] init_options initialization options for rclcpp and underlying layers
    * \throw ContextAlreadyInitialized if called if init is called more than once
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   * \throws std::runtime_error if the global logging configure mutex is NULL
+   * \throws exceptions::UnknownROSArgsError if there are unknown ROS arguments
    */
   RCLCPP_PUBLIC
   virtual
@@ -260,6 +263,7 @@ public:
    * \param[in] wait_set Pointer to the rcl_wait_set_t that will be using the
    *   resulting guard condition.
    * \return Pointer to the guard condition.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   RCLCPP_PUBLIC
   rcl_guard_condition_t *
@@ -279,6 +283,8 @@ public:
    *
    * \param[in] wait_set Pointer to the rcl_wait_set_t that was using the
    *   resulting guard condition.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   * \throws std::runtime_error if a nonexistent wait set is trying to release sigint guard condition.
    */
   RCLCPP_PUBLIC
   void

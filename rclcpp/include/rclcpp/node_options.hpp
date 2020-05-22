@@ -77,6 +77,9 @@ public:
    * This data structure is created lazily, on the first call to this function.
    * Repeated calls will not regenerate it unless one of the input settings
    * changed, like arguments, use_global_arguments, or the rcl allocator.
+   *
+   * \return a const rcl_node_options_t structure used by the node
+   * \throws exceptions::UnknownROSArgsError if there are unknown ROS arguments
    */
   RCLCPP_PUBLIC
   const rcl_node_options_t *

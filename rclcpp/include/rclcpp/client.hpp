@@ -119,6 +119,7 @@ public:
   /// Wait for a service to be ready.
   /**
    * \param timeout maximum time to wait
+   * \return `true` if the service is ready and the timeout is not over, `false` otherwise
    */
   template<typename RepT = int64_t, typename RatioT = std::milli>
   bool
@@ -194,6 +195,17 @@ public:
 
   RCLCPP_SMART_PTR_DEFINITIONS(Client)
 
+  /// Default constructor.
+  /**
+   * The constructor for a Client is almost never called directly.
+   * Instead, clients should be instantiated through the function
+   * rclcpp::create_client().
+   *
+   * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
+   * \param[in] node_graph The node graph interface of the corresponding node.
+   * \param[in] service_name Name of the topic to publish to.
+   * \param[in] client_options options for the subscription.
+   */
   Client(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph,
@@ -248,12 +260,20 @@ public:
     return this->take_type_erased_response(&response_out, request_header_out);
   }
 
+  /// Create a shared pointer with the response type
+  /**
+   * \return shared pointer with the response type
+   */
   std::shared_ptr<void>
   create_response() override
   {
     return std::shared_ptr<void>(new typename ServiceT::Response());
   }
 
+  /// Create a shared pointer with a rmw_request_id_t
+  /**
+   * \return shared pointer with a rmw_request_id_t
+   */
   std::shared_ptr<rmw_request_id_t>
   create_request_header() override
   {
@@ -262,6 +282,10 @@ public:
     return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
+  /// Create a shared pointer with a rmw_request_id_t
+  /**
+   *
+   */
   void
   handle_response(
     std::shared_ptr<rmw_request_id_t> request_header,

@@ -78,6 +78,7 @@ public:
   /**
    * \param[in] node_name Name of the node.
    * \param[in] options Additional options to control creation of the node.
+   * \throws InvalidNamespaceError if the namespace is invalid
    */
   RCLCPP_PUBLIC
   explicit Node(
@@ -89,6 +90,7 @@ public:
    * \param[in] node_name Name of the node.
    * \param[in] namespace_ Namespace of the node.
    * \param[in] options Additional options to control creation of the node.
+   * \throws InvalidNamespaceError if the namespace is invalid
    */
   RCLCPP_PUBLIC
   explicit Node(
@@ -122,6 +124,7 @@ public:
   /// Get the fully-qualified name of the node.
   /**
    * The fully-qualified name includes the local namespace and name of the node.
+   * \return fully-qualified name of the node.
    */
   RCLCPP_PUBLIC
   const char *
@@ -685,6 +688,7 @@ public:
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the
    *   parameter has not been declared and undeclared parameters are not
    *   allowed.
+   * \throws std::runtime_error if the number os described parameters is more than one
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ParameterDescriptor
@@ -707,6 +711,7 @@ public:
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if any of the
    *   parameters have not been declared and undeclared parameters are not
    *   allowed.
+   * \throws std::runtime_error if the number os described parameters is more than one
    */
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
@@ -864,18 +869,40 @@ public:
   std::vector<std::string>
   get_node_names() const;
 
+  /// Return a map of existing topic names to list of topic types.
+  /**
+   * \return a map of existing topic names to list of topic types.
+   * \throws std::runtime_error anything that rcl_error can throw
+   */
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types() const;
 
+  /// Return a map of existing service names to list of service types.
+  /**
+   * \return a map of existing service names to list of service types.
+   * \throws std::runtime_error anything that rcl_error can throw
+   */
   RCLCPP_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
 
+  /// Return the number of publishers that are advertised on a given topic.
+  /**
+   * \param[in] topic_name the topic_name on which to count the publishers.
+   * \return number of publishers that are advertised on a given topic.
+   * \throws std::runtime_error if publishers could not be counted
+   */
   RCLCPP_PUBLIC
   size_t
   count_publishers(const std::string & topic_name) const;
 
+  /// Return the number of subscribers who have created a subscription for a given topic.
+  /**
+   * \param[in] topic_name the topic_name on which to count the subscribers.
+   * \return number of subscribers who have created a subscription for a given topic.
+   * \throws std::runtime_error if publishers could not be counted
+   */
   RCLCPP_PUBLIC
   size_t
   count_subscribers(const std::string & topic_name) const;
@@ -945,6 +972,9 @@ public:
   /**
    * The given Event must be acquire through the get_graph_event() method.
    *
+   * \param[in] event pointer to an Event to wait for
+   * \param[in] timeout nanoseconds to wait for the Event to change the state
+   *
    * \throws InvalidEventError if the given event is nullptr
    * \throws EventNotRegisteredError if the given event was not acquired with
    *   get_graph_event().
@@ -955,14 +985,26 @@ public:
     rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout);
 
+  /// Get a clock as a non-const shared pointer which is managed by the node.
+  /**
+   * \sa rclcpp::node_interfaces::NodeClock::get_clock
+   */
   RCLCPP_PUBLIC
   rclcpp::Clock::SharedPtr
   get_clock();
 
-  RCLCPP_PUBLIC
+  /// Get a clock as a const shared pointer which is managed by the node.
+  /**
+   * \sa rclcpp::node_interfaces::NodeClock::get_clock
+   */
+   CLCPP_PUBLIC
   rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 
+  /// Returns current time from the time source specified by clock_type.
+  /**
+   * \sa rclcpp::Clock::now
+   */
   RCLCPP_PUBLIC
   Time
   now() const;

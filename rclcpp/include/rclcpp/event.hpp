@@ -29,17 +29,33 @@ class Event
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Event)
 
+  /// Default construct
+  /**
+   * Set the default value to false
+   */
   RCLCPP_PUBLIC
   Event();
 
+  /// Set the Event state value to true
+  /**
+   * \return The state value before the call.
+   */
   RCLCPP_PUBLIC
   bool
   set();
 
+  /// Get the state value of the Event
+  /**
+   * \return the Event state value
+   */
   RCLCPP_PUBLIC
   bool
   check();
 
+  /// Get the state value of the Event and set to false
+  /**
+   * \return the Event state value
+   */
   RCLCPP_PUBLIC
   bool
   check_and_clear();
