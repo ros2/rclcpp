@@ -1527,7 +1527,6 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     node->declare_parameter(name2, true);
     node->declare_parameter<std::string>(name3, "blue");
 
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto on_set_parameters =
       [&name2](const std::vector<rclcpp::Parameter> & ps) {
         rcl_interfaces::msg::SetParametersResult result;
@@ -2330,6 +2329,14 @@ TEST_F(TestNode, get_parameter_types_undeclared_parameters_allowed) {
   }
 }
 
+// suppress deprecated function test warnings
+#if !defined(_WIN32) 
+# pragma GCC diagnostic push 
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations" 
+#else  // !defined(_WIN32) 
+# pragma warning(push) 
+# pragma warning(disable: 4996) 
+#endif
 // test that it is possible to call get_parameter within the set_callback
 TEST_F(TestNode, set_on_parameters_set_callback_get_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_set_callback_get_parameter_node"_unq);
@@ -2513,6 +2520,12 @@ TEST_F(TestNode, set_on_parameters_set_callback_set_on_parameters_set_callback) 
     node->set_parameter(rclcpp::Parameter("intparam", 40));
   }, rclcpp::exceptions::ParameterModifiedInCallbackException);
 }
+// remove warning suppression
+#if !defined(_WIN32) 
+# pragma GCC diagnostic pop 
+#else  // !defined(_WIN32) 
+# pragma warning(pop) 
+#endif
 
 void expect_qos_profile_eq(
   const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2, bool is_publisher)
