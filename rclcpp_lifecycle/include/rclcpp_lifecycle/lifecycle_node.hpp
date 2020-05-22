@@ -457,7 +457,7 @@ public:
    * \sa rclcpp::Node::add_on_set_parameters_callback
    */
   RCLCPP_LIFECYCLE_PUBLIC
-  rclcpp_lifecycle::lifecycleNode::OnSetParametersCallbackHandle::SharedPtr
+  rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback);
 
   /// Remove a callback registered with `add_on_set_parameters_callback`.
