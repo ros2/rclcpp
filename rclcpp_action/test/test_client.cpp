@@ -274,6 +274,7 @@ TEST_F(TestClient, construction_and_destruction_callback_group)
 {
   auto group = client_node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive);
+  const rcl_action_client_options_t & options = rcl_action_client_get_default_options();
   ASSERT_NO_THROW(
     rclcpp_action::create_client<ActionType>(
       client_node->get_node_base_interface(),
@@ -281,7 +282,8 @@ TEST_F(TestClient, construction_and_destruction_callback_group)
       client_node->get_node_logging_interface(),
       client_node->get_node_waitables_interface(),
       action_name,
-      group
+      group,
+      options
     ).reset());
 }
 
