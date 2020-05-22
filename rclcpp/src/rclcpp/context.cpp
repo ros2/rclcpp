@@ -40,6 +40,14 @@ static std::mutex g_contexts_mutex;
 /// Weak list of context to be shutdown by the signal handler.
 static std::vector<std::weak_ptr<rclcpp::Context>> g_contexts;
 
+/// Count of contexts that wanted to initialize the logging system.
+size_t &
+get_logging_reference_count()
+{
+  static size_t ref_count = 0;
+  return ref_count;
+}
+
 using rclcpp::Context;
 
 extern "C"
@@ -51,27 +59,19 @@ rclcpp_logging_output_handler(
   int severity, const char * name, rcutils_time_point_value_t timestamp,
   const char * format, va_list * args)
 {
-  std::shared_ptr<std::recursive_mutex> logging_mutex;
   try {
+    std::shared_ptr<std::recursive_mutex> logging_mutex;
     logging_mutex = get_global_logging_mutex();
+    std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
+    return rcl_logging_multiple_output_handler(
+      location, severity, name, timestamp, format, args);
   } catch (std::exception & ex) {
     RCUTILS_SAFE_FWRITE_TO_STDERR(ex.what());
-    return;
+  } catch (...) {
+    RCUTILS_SAFE_FWRITE_TO_STDERR("failed to take global rclcpp logging mutex\n");
   }
-
-  std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
-  return rcl_logging_multiple_output_handler(
-    location, severity, name, timestamp, format, args);
 }
 }  // extern "C"
-
-static
-size_t &
-get_logging_reference_count()
-{
-  static size_t ref_count = 0;
-  return ref_count;
-}
 
 Context::Context()
 : rcl_context_(nullptr),
