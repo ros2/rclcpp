@@ -71,7 +71,7 @@ struct PublisherOptionsWithAllocator : public PublisherOptionsBase
   rcl_publisher_options_t
   to_rcl_publisher_options(const rclcpp::QoS & qos) const
   {
-    rcl_publisher_options_t result;
+    rcl_publisher_options_t result = rcl_publisher_get_default_options();
     using AllocatorTraits = std::allocator_traits<Allocator>;
     using MessageAllocatorT = typename AllocatorTraits::template rebind_alloc<MessageT>;
     auto message_alloc = std::make_shared<MessageAllocatorT>(*this->get_allocator().get());
