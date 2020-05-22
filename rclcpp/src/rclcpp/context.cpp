@@ -44,6 +44,7 @@ using rclcpp::Context;
 
 extern "C"
 {
+static
 void
 rclcpp_logging_output_handler(
   const rcutils_log_location_t * location,
