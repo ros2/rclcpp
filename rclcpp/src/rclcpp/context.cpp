@@ -51,7 +51,7 @@ rclcpp_logging_output_handler(
   int severity, const char * name, rcutils_time_point_value_t timestamp,
   const char * format, va_list * args)
 {
-  std::shared_ptr<std::recursive_mutex> logging_mutex = nullptr;
+  std::shared_ptr<std::recursive_mutex> logging_mutex;
   try {
     logging_mutex = get_global_logging_mutex();
   } catch (std::exception & ex) {
