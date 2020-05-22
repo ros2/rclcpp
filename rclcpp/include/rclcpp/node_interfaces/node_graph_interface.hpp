@@ -167,7 +167,7 @@ public:
 
   /// Return a map of existing service names to list of service types for a specific node.
   /**
-   * This function only consider services - not clients.
+   * This function only considers services - not clients.
    *
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
