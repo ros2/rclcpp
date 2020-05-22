@@ -18,6 +18,8 @@
 #include <memory>
 #include <mutex>
 
+#include "rclcpp/visibility_control.hpp"
+
 /// Global logging mutex
 /**
  * This mutex is locked in the following situations:
@@ -30,6 +32,7 @@
 // A shared pointer to the mutex is used, so that objects that need to use
 // it at destruction time can hold it alive.
 // In that way, a destruction ordering problem between static objects is avoided.
+RCLCPP_LOCAL
 std::shared_ptr<std::recursive_mutex>
 get_global_logging_mutex();
 
