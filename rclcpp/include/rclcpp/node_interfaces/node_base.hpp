@@ -50,82 +50,66 @@ public:
   ~NodeBase();
 
   RCLCPP_PUBLIC
-
   const char *
   get_name() const override;
 
   RCLCPP_PUBLIC
-
   const char *
   get_namespace() const override;
 
   RCLCPP_PUBLIC
-
   const char *
   get_fully_qualified_name() const override;
 
   RCLCPP_PUBLIC
-
   rclcpp::Context::SharedPtr
   get_context() override;
 
   RCLCPP_PUBLIC
-
   rcl_node_t *
   get_rcl_node_handle() override;
 
   RCLCPP_PUBLIC
-
   const rcl_node_t *
   get_rcl_node_handle() const override;
 
   RCLCPP_PUBLIC
-
   std::shared_ptr<rcl_node_t>
   get_shared_rcl_node_handle() override;
 
   RCLCPP_PUBLIC
-
   std::shared_ptr<const rcl_node_t>
   get_shared_rcl_node_handle() const override;
 
   RCLCPP_PUBLIC
-
   rclcpp::CallbackGroup::SharedPtr
   create_callback_group(rclcpp::CallbackGroupType group_type) override;
 
   RCLCPP_PUBLIC
-
   rclcpp::CallbackGroup::SharedPtr
   get_default_callback_group() override;
 
   RCLCPP_PUBLIC
-
   bool
   callback_group_in_node(rclcpp::CallbackGroup::SharedPtr group) override;
 
   RCLCPP_PUBLIC
-
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const override;
 
   RCLCPP_PUBLIC
-
   std::atomic_bool &
   get_associated_with_executor_atomic() override;
 
   RCLCPP_PUBLIC
-
   rcl_guard_condition_t *
   get_notify_guard_condition() override;
 
   RCLCPP_PUBLIC
-
   std::unique_lock<std::recursive_mutex>
   acquire_notify_guard_condition_lock() const override;
 
   RCLCPP_PUBLIC
-
   bool
   get_use_intra_process_default() const override;
 
