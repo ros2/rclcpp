@@ -147,6 +147,17 @@ NodeGraph::get_service_names_and_types_by_node(
     node_name.c_str(),
     namespace_.c_str(),
     &service_names_and_types);
+  if (ret != RCL_RET_OK) {
+    auto error_msg = std::string("failed to get service names and types by node: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+      error_msg +=
+        std::string(", failed also to cleanup service names and types, leaking memory: ") +
+        rcl_get_error_string().str;
+    }
+    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+  }
 
   std::map<std::string, std::vector<std::string>> services_and_types;
   for (size_t i = 0; i < service_names_and_types.names.size; ++i) {
