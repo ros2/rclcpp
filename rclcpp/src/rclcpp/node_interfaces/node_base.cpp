@@ -67,9 +67,9 @@ NodeBase::NodeBase(
   // Create the rcl node and store it in a shared_ptr with a custom destructor.
   std::unique_ptr<rcl_node_t> rcl_node(new rcl_node_t(rcl_get_zero_initialized_node()));
 
-  logging_mutex_ = get_global_logging_mutex();
+  std::shared_ptr<std::recursive_mutex> logging_mutex = get_global_logging_mutex();
   {
-    std::lock_guard<std::recursive_mutex> guard(*logging_mutex_);
+    std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
     // TODO(ivanpauno): Instead of mutually excluding rcl_node_init with the global logger mutex,
     // rcl_logging_rosout_init_publisher_for_node could be decoupled from there and be called
     // here directly.
@@ -132,7 +132,7 @@ NodeBase::NodeBase(
 
   node_handle_.reset(
     rcl_node.release(),
-    [logging_mutex = logging_mutex_](rcl_node_t * node) -> void {
+    [logging_mutex](rcl_node_t * node) -> void {
       std::lock_guard<std::recursive_mutex> guard(*logging_mutex);
       // TODO(ivanpauno): Instead of mutually excluding rcl_node_fini with the global logger mutex,
       // rcl_logging_rosout_fini_publisher_for_node could be decoupled from there and be called
