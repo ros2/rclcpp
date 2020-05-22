@@ -262,7 +262,7 @@ LifecycleNode::add_on_set_parameters_callback(OnParametersSetCallbackType callba
 }
 
 void
-Node::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const callback)
+LifecycleNode::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const callback)
 {
   return node_parameters_->remove_on_set_parameters_callback(callback);
 }
