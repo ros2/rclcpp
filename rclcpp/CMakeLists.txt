@@ -54,6 +54,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/init_options.cpp
   src/rclcpp/intra_process_manager.cpp
   src/rclcpp/logger.cpp
+  src/rclcpp/logging_mutex.cpp
   src/rclcpp/memory_strategies.cpp
   src/rclcpp/memory_strategy.cpp
   src/rclcpp/message_info.cpp
