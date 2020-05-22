@@ -42,7 +42,6 @@ public:
 
   /// Add a timer to the node.
   RCLCPP_PUBLIC
-
   void
   add_timer(
     rclcpp::TimerBase::SharedPtr timer,
