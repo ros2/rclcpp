@@ -134,6 +134,39 @@ NodeGraph::get_service_names_and_types() const
   return services_and_types;
 }
 
+std::map<std::string, std::vector<std::string>>
+NodeGraph::get_service_names_and_types_by_node(
+  const std::string & node_name,
+  const std::string & namespace_) const
+{
+  rcl_names_and_types_t service_names_and_types {};
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  rcl_ret_t ret = rcl_get_service_names_and_types_by_node(
+    node_base_->get_rcl_node_handle(),
+    &allocator,
+    node_name.c_str(),
+    namespace_.c_str(),
+    &service_names_and_types);
+
+  std::map<std::string, std::vector<std::string>> services_and_types;
+  for (size_t i = 0; i < service_names_and_types.names.size; ++i) {
+    std::string service_name = service_names_and_types.names.data[i];
+    for (size_t j = 0; j < service_names_and_types.types[i].size; ++j) {
+      services_and_types[service_name].emplace_back(service_names_and_types.types[i].data[j]);
+    }
+  }
+
+  ret = rcl_names_and_types_fini(&service_names_and_types);
+  if (ret != RCL_RET_OK) {
+    // *INDENT-OFF*
+    throw std::runtime_error(
+      std::string("could not destroy service names and types: ") + rcl_get_error_string().str);
+    // *INDENT-ON*
+  }
+
+  return services_and_types;
+}
+
 std::vector<std::string>
 NodeGraph::get_node_names() const
 {
