@@ -42,14 +42,12 @@ public:
   ~NodeServices();
 
   RCLCPP_PUBLIC
-
   void
   add_client(
     rclcpp::ClientBase::SharedPtr client_base_ptr,
     rclcpp::CallbackGroup::SharedPtr group) override;
 
   RCLCPP_PUBLIC
-
   void
   add_service(
     rclcpp::ServiceBase::SharedPtr service_base_ptr,
