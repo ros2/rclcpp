@@ -35,20 +35,90 @@
 
 #include "./logging_mutex.hpp"
 
-/// Mutex to protect initialized contexts.
-static std::mutex g_contexts_mutex;
-/// Weak list of context to be shutdown by the signal handler.
-static std::vector<std::weak_ptr<rclcpp::Context>> g_contexts;
+using rclcpp::Context;
+
+namespace rclcpp
+{
+/// Class to manage vector of weak pointers to all created contexts
+struct WeakContextsWrapper
+{
+public:
+  RCLCPP_SMART_PTR_DEFINITIONS(WeakContextsWrapper)
+
+  void
+  add_context(const Context::SharedPtr & context)
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    weak_contexts_.push_back(context);
+  }
+
+  void
+  remove_context(const Context * context)
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    weak_contexts_.erase(
+      std::remove_if(
+        weak_contexts_.begin(),
+        weak_contexts_.end(),
+        [context](const Context::WeakPtr weak_context) {
+          auto locked_context = weak_context.lock();
+          if (!locked_context) {
+            // take advantage and removed expired contexts
+            return true;
+          } else {
+            return locked_context.get() == context;
+          }
+        }
+      ),
+      weak_contexts_.end());
+  }
+
+  std::vector<Context::SharedPtr>
+  get_contexts()
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    std::vector<Context::SharedPtr> shared_contexts;
+    for (auto it = weak_contexts_.begin(); it != weak_contexts_.end(); /* noop */) {
+      auto context_ptr = it->lock();
+      if (!context_ptr) {
+        // remove invalid weak context pointers
+        it = weak_contexts_.erase(it);
+      } else {
+        ++it;
+        shared_contexts.push_back(context_ptr);
+      }
+    }
+    return shared_contexts;
+  }
+
+private:
+  std::vector<std::weak_ptr<rclcpp::Context>> weak_contexts_;
+  std::mutex mutex_;
+};
+}  // namespace rclcpp
+
+using rclcpp::WeakContextsWrapper;
+
+/// Global vector of weak pointers to all contexts
+static
+WeakContextsWrapper::SharedPtr
+get_weak_contexts()
+{
+  static WeakContextsWrapper::SharedPtr weak_contexts = WeakContextsWrapper::make_shared();
+  if (!weak_contexts) {
+    throw std::runtime_error("weak contexts vector is not valid");
+  }
+  return weak_contexts;
+}
 
 /// Count of contexts that wanted to initialize the logging system.
+static
 size_t &
 get_logging_reference_count()
 {
   static size_t ref_count = 0;
   return ref_count;
 }
-
-using rclcpp::Context;
 
 extern "C"
 {
@@ -168,8 +238,8 @@ Context::init(
 
     init_options_ = init_options;
 
-    std::lock_guard<std::mutex> lock(g_contexts_mutex);
-    g_contexts.push_back(this->shared_from_this());
+    weak_contexts_ = get_weak_contexts();
+    weak_contexts_->add_context(this->shared_from_this());
   } catch (const std::exception & e) {
     ret = rcl_shutdown(rcl_context_.get());
     rcl_context_.reset();
@@ -238,16 +308,7 @@ Context::shutdown(const std::string & reason)
   this->interrupt_all_sleep_for();
   this->interrupt_all_wait_sets();
   // remove self from the global contexts
-  std::lock_guard<std::mutex> context_lock(g_contexts_mutex);
-  for (auto it = g_contexts.begin(); it != g_contexts.end(); ) {
-    auto shared_context = it->lock();
-    if (shared_context.get() == this) {
-      it = g_contexts.erase(it);
-      break;
-    } else {
-      ++it;
-    }
-  }
+  weak_contexts_->remove_context(this);
   // shutdown logger
   if (logging_mutex_) {
     // logging was initialized by this context
@@ -396,17 +457,6 @@ Context::clean_up()
 std::vector<Context::SharedPtr>
 rclcpp::get_contexts()
 {
-  std::lock_guard<std::mutex> lock(g_contexts_mutex);
-  std::vector<Context::SharedPtr> shared_contexts;
-  for (auto it = g_contexts.begin(); it != g_contexts.end(); /* noop */) {
-    auto context_ptr = it->lock();
-    if (!context_ptr) {
-      // remove invalid weak context pointers
-      it = g_contexts.erase(it);
-    } else {
-      ++it;
-      shared_contexts.push_back(context_ptr);
-    }
-  }
-  return shared_contexts;
+  WeakContextsWrapper::SharedPtr weak_contexts = get_weak_contexts();
+  return weak_contexts->get_contexts();
 }
