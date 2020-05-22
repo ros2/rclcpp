@@ -67,6 +67,7 @@ rclcpp_logging_output_handler(
       location, severity, name, timestamp, format, args);
   } catch (std::exception & ex) {
     RCUTILS_SAFE_FWRITE_TO_STDERR(ex.what());
+    RCUTILS_SAFE_FWRITE_TO_STDERR("\n");
   } catch (...) {
     RCUTILS_SAFE_FWRITE_TO_STDERR("failed to take global rclcpp logging mutex\n");
   }
