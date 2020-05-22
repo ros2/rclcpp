@@ -139,7 +139,7 @@ NodeGraph::get_service_names_and_types_by_node(
   const std::string & node_name,
   const std::string & namespace_) const
 {
-  rcl_names_and_types_t service_names_and_types {};
+  rcl_names_and_types_t service_names_and_types = rcl_get_zero_initialized_names_and_types();
   rcl_allocator_t allocator = rcl_get_default_allocator();
   rcl_ret_t ret = rcl_get_service_names_and_types_by_node(
     node_base_->get_rcl_node_handle(),
