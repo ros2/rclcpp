@@ -66,7 +66,7 @@ public:
    * \param[in] node_base NodeBaseInterface pointer used in parts of the setup.
    * \param[in] type_support_handle rosidl type support struct, for the Message type of the topic.
    * \param[in] topic_name Name of the topic to subscribe to.
-   * \param[in] subscription_options options for the subscription.
+   * \param[in] subscription_options Options for the subscription.
    * \param[in] is_serialized is true if the message will be delivered still serialized
    */
   RCLCPP_PUBLIC

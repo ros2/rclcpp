@@ -37,7 +37,7 @@ namespace rclcpp_action
  * \param[in] name The action name.
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
- * \param[in] options options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
  */
 template<typename ActionT>
 typename Client<ActionT>::SharedPtr
@@ -99,7 +99,7 @@ create_client(
  * \param[in] name The action name.
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.
- * \param[in] options options to pass to the underlying `rcl_action_client_t`.
+ * \param[in] options Options to pass to the underlying `rcl_action_client_t`.
  */
 template<typename ActionT, typename NodeT>
 typename Client<ActionT>::SharedPtr

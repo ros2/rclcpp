@@ -92,7 +92,7 @@ public:
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] qos QoS profile for Subcription.
    * \param[in] callback User defined callback to call when a message is received.
-   * \param[in] options options for the subscription.
+   * \param[in] options Options for the subscription.
    * \param[in] message_memory_strategy The memory strategy to be used for managing message memory.
    * \param[in] subscription_topic_statistics pointer to a topic statistics subcription.
    * \throws std::invalid_argument if the QoS is uncompatible with intra-process (if one

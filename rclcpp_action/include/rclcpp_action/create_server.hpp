@@ -49,7 +49,7 @@ namespace rclcpp_action
  *  The return from this callback only indicates if the server will try to cancel a goal.
  *  It does not indicate if the goal was actually canceled.
  * \param[in] handle_accepted A callback that is called to give the user a handle to the goal.
- * \param[in] options options to pass to the underlying `rcl_action_server_t`.
+ * \param[in] options Options to pass to the underlying `rcl_action_server_t`.
  * \param group[in] The action server will be added to this callback group.
  *   If `nullptr`, then the action server is added to the default callback group.
  */
@@ -124,7 +124,7 @@ create_server(
  *  The return from this callback only indicates if the server will try to cancel a goal.
  *  It does not indicate if the goal was actually canceled.
  * \param[in] handle_accepted A callback that is called to give the user a handle to the goal.
- * \param[in] options options to pass to the underlying `rcl_action_server_t`.
+ * \param[in] options Options to pass to the underlying `rcl_action_server_t`.
  * \param group[in] The action server will be added to this callback group.
  *   If `nullptr`, then the action server is added to the default callback group.
  */

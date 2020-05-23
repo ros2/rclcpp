@@ -68,7 +68,7 @@ public:
    * \param[in] node_base NodeBaseInterface pointer that is used in part of the setup.
    * \param[in] topic Name of the topic to publish to.
    * \param[in] qos QoS profile for Subcription.
-   * \param[in] options options for the subscription.
+   * \param[in] options Options for the subscription.
    */
   Publisher(
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
