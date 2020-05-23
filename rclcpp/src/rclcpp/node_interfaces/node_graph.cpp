@@ -70,8 +70,9 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
     if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
       error_msg += std::string(", failed also to cleanup topic names and types, leaking memory: ") +
         rcl_get_error_string().str;
+      rcl_reset_error();
     }
-    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+    throw std::runtime_error(error_msg);
   }
 
   std::map<std::string, std::vector<std::string>> topics_and_types;
@@ -111,8 +112,9 @@ NodeGraph::get_service_names_and_types() const
       error_msg +=
         std::string(", failed also to cleanup service names and types, leaking memory: ") +
         rcl_get_error_string().str;
+      rcl_reset_error();
     }
-    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+    throw std::runtime_error(error_msg);
   }
 
   std::map<std::string, std::vector<std::string>> services_and_types;
@@ -155,8 +157,9 @@ NodeGraph::get_service_names_and_types_by_node(
       error_msg +=
         std::string(", failed also to cleanup service names and types, leaking memory: ") +
         rcl_get_error_string().str;
+      rcl_reset_error();
     }
-    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+    throw std::runtime_error(error_msg);
   }
 
   std::map<std::string, std::vector<std::string>> services_and_types;
