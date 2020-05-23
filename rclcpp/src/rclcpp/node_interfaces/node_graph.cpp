@@ -169,10 +169,7 @@ NodeGraph::get_service_names_and_types_by_node(
 
   ret = rcl_names_and_types_fini(&service_names_and_types);
   if (ret != RCL_RET_OK) {
-    // *INDENT-OFF*
-    throw std::runtime_error(
-      std::string("could not destroy service names and types: ") + rcl_get_error_string().str);
-    // *INDENT-ON*
+    throw_from_rcl_error(ret, "could not destroy service names and types");
   }
 
   return services_and_types;
