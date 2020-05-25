@@ -59,6 +59,7 @@ public:
    * the process until canceled.
    * It may be interrupt by a call to rclcpp::Executor::cancel() or by ctrl-c
    * if the associated context is configured to shutdown on SIGINT.
+   * \throws std::runtime_error when spin() called while already spinning
    */
   RCLCPP_PUBLIC
   void

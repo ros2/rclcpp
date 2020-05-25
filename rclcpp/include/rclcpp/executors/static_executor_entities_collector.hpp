@@ -47,6 +47,9 @@ public:
   // Destructor
   ~StaticExecutorEntitiesCollector();
 
+  /**
+   * \throws std::runtime_error if memory strategy is null
+   */
   RCLCPP_PUBLIC
   void
   init(
@@ -67,16 +70,26 @@ public:
   fill_executable_list();
 
   /// Function to reallocate space for entities in the wait set.
+  /**
+   * \throws std::runtime_error if wait set couldn't be cleared or resized.
+   */
   RCLCPP_PUBLIC
   void
   prepare_wait_set();
 
   /// Function to add_handles_to_wait_set and wait for work and
-  // block until the wait set is ready or until the timeout has been exceeded.
+  /**
+   * block until the wait set is ready or until the timeout has been exceeded.
+   * \throws std::runtime_error if wait set couldn't be cleared or filled.
+   * \throws any rcl errors from rcl_wait, \sa rclcpp::exceptions::throw_from_rcl_error()
+   */
   RCLCPP_PUBLIC
   void
   refresh_wait_set(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
+  /**
+   * \throws std::runtime_error if it couldn't add guard condition to wait set
+   */
   RCLCPP_PUBLIC
   bool
   add_to_wait_set(rcl_wait_set_t * wait_set) override;
@@ -85,11 +98,19 @@ public:
   size_t
   get_number_of_ready_guard_conditions() override;
 
+  /**
+   * \sa rclcpp::Executor::add_node()
+   * \throw std::runtime_error if node was already added
+   */
   RCLCPP_PUBLIC
   void
   add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
+  /**
+   * \sa rclcpp::Executor::remove_node()
+   * \throw std::runtime_error if no guard condition is associated with node.
+   */
   RCLCPP_PUBLIC
   bool
   remove_node(
@@ -105,42 +126,87 @@ public:
   bool
   is_ready(rcl_wait_set_t * wait_set) override;
 
+  /// Return number of timers
+  /**
+   * \return number of timers
+   */
   RCLCPP_PUBLIC
   size_t
   get_number_of_timers() {return exec_list_.number_of_timers;}
 
+  /// Return number of subscriptions
+  /**
+   * \return number of subscriptions
+   */
   RCLCPP_PUBLIC
   size_t
   get_number_of_subscriptions() {return exec_list_.number_of_subscriptions;}
 
+  /// Return number of services
+  /**
+   * \return number of services
+   */
   RCLCPP_PUBLIC
   size_t
   get_number_of_services() {return exec_list_.number_of_services;}
 
+  /// Return number of clients
+  /**
+   * \return number of clients
+   */
   RCLCPP_PUBLIC
   size_t
   get_number_of_clients() {return exec_list_.number_of_clients;}
 
+  /// Return number of waitables
+  /**
+   * \return number of waitables
+   */
   RCLCPP_PUBLIC
   size_t
   get_number_of_waitables() {return exec_list_.number_of_waitables;}
 
+  /** Return a SubscritionBase Sharedptr by index.
+   * \param[in] i The index of the SubscritionBase
+   * \return a SubscritionBase shared pointer
+   * \throws std::out_of_range if the argument is higher than the size of the structrue.
+   */
   RCLCPP_PUBLIC
   rclcpp::SubscriptionBase::SharedPtr
   get_subscription(size_t i) {return exec_list_.subscription[i];}
 
+  /** Return a TimerBase Sharedptr by index.
+   * \param[in] i The index of the TimerBase
+   * \return a TimerBase shared pointer
+   * \throws std::out_of_range if the argument is higher than the size.
+   */
   RCLCPP_PUBLIC
   rclcpp::TimerBase::SharedPtr
   get_timer(size_t i) {return exec_list_.timer[i];}
 
+  /** Return a ServiceBase Sharedptr by index.
+   * \param[in] i The index of the ServiceBase
+   * \return a ServiceBase shared pointer
+   * \throws std::out_of_range if the argument is higher than the size.
+   */
   RCLCPP_PUBLIC
   rclcpp::ServiceBase::SharedPtr
   get_service(size_t i) {return exec_list_.service[i];}
 
+  /** Return a ClientBase Sharedptr by index
+   * \param[in] i The index of the ClientBase
+   * \return a ClientBase shared pointer
+   * \throws std::out_of_range if the argument is higher than the size.
+   */
   RCLCPP_PUBLIC
   rclcpp::ClientBase::SharedPtr
   get_client(size_t i) {return exec_list_.client[i];}
 
+  /** Return a Waitable Sharedptr by index
+   * \param[in] i The index of the Waitable
+   * \return a Waitable shared pointer
+   * \throws std::out_of_range if the argument is higher than the size.
+   */
   RCLCPP_PUBLIC
   rclcpp::Waitable::SharedPtr
   get_waitable(size_t i) {return exec_list_.waitable[i];}

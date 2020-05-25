@@ -69,8 +69,11 @@ public:
   virtual ~StaticSingleThreadedExecutor();
 
   /// Static executor implementation of spin.
-  // This function will block until work comes in, execute it, and keep blocking.
-  // It will only be interrupt by a CTRL-C (managed by the global signal handler).
+  /**
+   * This function will block until work comes in, execute it, and keep blocking.
+   * It will only be interrupt by a CTRL-C (managed by the global signal handler).
+   * \throws std::runtime_error when spin() called while already spinning
+   */
   RCLCPP_PUBLIC
   void
   spin() override;
@@ -82,6 +85,8 @@ public:
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
    * node was added, it will wake up.
+   * \throw std::runtime_error if node was already added or if rcl_trigger_guard_condition
+   * return an error
    */
   RCLCPP_PUBLIC
   void
@@ -90,6 +95,10 @@ public:
     bool notify = true) override;
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
+  /**
+   * \throw std::runtime_error if node was already added or if rcl_trigger_guard_condition
+   * returns an error
+   */
   RCLCPP_PUBLIC
   void
   add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
@@ -100,6 +109,7 @@ public:
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
    * waiting for work in another thread, because otherwise the executor would never be notified.
+   * \throw std::runtime_error if rcl_trigger_guard_condition returns an error
    */
   RCLCPP_PUBLIC
   void
@@ -108,6 +118,9 @@ public:
     bool notify = true) override;
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
+  /**
+   * \throw std::runtime_error if rcl_trigger_guard_condition returns an error
+   */
   RCLCPP_PUBLIC
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;

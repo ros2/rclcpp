@@ -643,7 +643,8 @@ public:
    *   when time_to_wait is < 0, or
    * \returns Empty if the wait set is empty, avoiding the possibility of
    *   waiting indefinitely on an empty wait set.
-   * \throws rclcpp::exceptions::RCLError on unhandled rcl errors
+   * \throws rclcpp::exceptions::RCLError on unhandled rcl errors or,
+   * \throws std::runtime_error if unknown WaitResultKind
    */
   template<class Rep = int64_t, class Period = std::milli>
   RCUTILS_WARN_UNUSED

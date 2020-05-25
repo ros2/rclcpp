@@ -60,6 +60,10 @@ public:
   RCLCPP_PUBLIC
   virtual ~MultiThreadedExecutor();
 
+  /**
+   * \sa rclcpp::Executor:spin() for more details
+   * \throws std::runtime_error when spin() called while already spinning
+   */
   RCLCPP_PUBLIC
   void
   spin() override;
