@@ -455,7 +455,7 @@ public:
    * \deprecated Use add_on_set_parameters_callback instead.
    * \sa rclcpp::Node::set_on_parameters_set_callback
    */
-  [[deprecate("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
+  [[deprecated("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType
   set_on_parameters_set_callback(
