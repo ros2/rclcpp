@@ -862,9 +862,9 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 43)).successful);
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
   }
   {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
@@ -1361,6 +1361,7 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     auto rets = node->set_parameters(
     {
@@ -1376,7 +1377,6 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 2);
     EXPECT_EQ(node->get_parameter(name2).get_value<bool>(), true);  // old value
     EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "red");
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
   }
   {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
@@ -1538,6 +1538,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     auto ret = node->set_parameters_atomically(
     {
@@ -1550,7 +1551,6 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 1);
     EXPECT_EQ(node->get_parameter(name2).get_value<bool>(), true);
     EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "blue");
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
   }
   {
     // setting type of rclcpp::PARAMETER_NOT_SET, when already not set, does not undeclare
@@ -1649,6 +1649,7 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
         return result;
       };
     auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     auto ret = node->set_parameters_atomically(
     {
@@ -1661,7 +1662,6 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     EXPECT_EQ(node->get_parameter(name1).get_value<int>(), 42);
     EXPECT_FALSE(node->has_parameter(name2));  // important! name2 remains undeclared
     EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "test");
-    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
   }
 }
 
