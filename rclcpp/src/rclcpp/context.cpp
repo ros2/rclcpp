@@ -40,7 +40,7 @@ using rclcpp::Context;
 namespace rclcpp
 {
 /// Class to manage vector of weak pointers to all created contexts
-struct WeakContextsWrapper
+class WeakContextsWrapper
 {
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(WeakContextsWrapper)
@@ -65,9 +65,8 @@ public:
           if (!locked_context) {
             // take advantage and removed expired contexts
             return true;
-          } else {
-            return locked_context.get() == context;
           }
+          return locked_context.get() == context;
         }
       ),
       weak_contexts_.end());
