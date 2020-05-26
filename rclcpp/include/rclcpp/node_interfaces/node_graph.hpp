@@ -57,64 +57,58 @@ public:
   ~NodeGraph();
 
   RCLCPP_PUBLIC
-
   std::map<std::string, std::vector<std::string>>
   get_topic_names_and_types(bool no_demangle = false) const override;
 
   RCLCPP_PUBLIC
-
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const override;
 
   RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const override;
 
+  RCLCPP_PUBLIC
   std::vector<std::string>
   get_node_names() const override;
 
   RCLCPP_PUBLIC
-
   std::vector<std::pair<std::string, std::string>>
   get_node_names_and_namespaces() const override;
 
   RCLCPP_PUBLIC
-
   size_t
   count_publishers(const std::string & topic_name) const override;
 
   RCLCPP_PUBLIC
-
   size_t
   count_subscribers(const std::string & topic_name) const override;
 
   RCLCPP_PUBLIC
-
   const rcl_guard_condition_t *
   get_graph_guard_condition() const override;
 
   RCLCPP_PUBLIC
-
   void
   notify_graph_change() override;
 
   RCLCPP_PUBLIC
-
   void
   notify_shutdown() override;
 
   RCLCPP_PUBLIC
-
   rclcpp::Event::SharedPtr
   get_graph_event() override;
 
   RCLCPP_PUBLIC
-
   void
   wait_for_graph_change(
     rclcpp::Event::SharedPtr event,
     std::chrono::nanoseconds timeout) override;
 
   RCLCPP_PUBLIC
-
   size_t
   count_graph_users() override;
 

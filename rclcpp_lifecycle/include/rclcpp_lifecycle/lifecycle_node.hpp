@@ -485,6 +485,19 @@ public:
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
 
+  /// Return a map of existing service names to list of service types for a specific node.
+  /**
+   * This function only considers services - not clients.
+   *
+   * \param[in] node_name name of the node
+   * \param[in] namespace_ namespace of the node
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const;
+
   /// Return the number of publishers that are advertised on a given topic.
   /**
    * \sa rclcpp::Node::count_publishers

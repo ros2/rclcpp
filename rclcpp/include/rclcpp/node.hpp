@@ -875,6 +875,12 @@ public:
   get_service_names_and_types() const;
 
   RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const;
+
+  RCLCPP_PUBLIC
   size_t
   count_publishers(const std::string & topic_name) const;
 
