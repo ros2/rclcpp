@@ -852,7 +852,7 @@ public:
    * \return The previous callback that was registered, if there was one,
    *   otherwise nullptr.
    */
-  [[deprecate("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
+  [[deprecated("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
   RCLCPP_PUBLIC
   OnParametersSetCallbackType
   set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
