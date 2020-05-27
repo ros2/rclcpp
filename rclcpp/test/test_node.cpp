@@ -349,7 +349,6 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
   }
   {
     // parameter rejected throws
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto name = "parameter"_unq;
     auto on_set_parameters =
       [&name](const std::vector<rclcpp::Parameter> & parameters) {
@@ -366,7 +365,8 @@ TEST_F(TestNode, declare_parameter_with_no_initial_values) {
         }
         return result;
       };
-    EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});   // always reset
     EXPECT_THROW(
       {node->declare_parameter<std::string>(name, "not an int");},
       rclcpp::exceptions::InvalidParameterValueException);
@@ -546,7 +546,6 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
   }
   {
     // parameter rejected throws, with initial value
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto name = std::string("parameter_rejected");
     auto on_set_parameters =
       [&name](const std::vector<rclcpp::Parameter> & parameters) {
@@ -565,7 +564,8 @@ TEST_F(TestNode, declare_parameter_with_overrides) {
         }
         return result;
       };
-    EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
     EXPECT_THROW(
       {node->declare_parameter<int>(name, 43);},
       rclcpp::exceptions::InvalidParameterValueException);
@@ -659,7 +659,6 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
   }
   {
     // parameter rejected throws
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto name = "parameter"_unq;
     auto on_set_parameters =
       [&name](const std::vector<rclcpp::Parameter> & parameters) {
@@ -676,7 +675,8 @@ TEST_F(TestNode, declare_parameters_with_no_initial_values) {
         }
         return result;
       };
-    EXPECT_EQ(node->set_on_parameters_set_callback(on_set_parameters), nullptr);
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
     EXPECT_THROW(
       {node->declare_parameters<std::string>("", {{name, "not an int"}});},
       rclcpp::exceptions::InvalidParameterValueException);
@@ -854,7 +854,6 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
     auto name = "parameter"_unq;
     node->declare_parameter(name, 42);
 
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto on_set_parameters =
       [](const std::vector<rclcpp::Parameter> &) {
         rcl_interfaces::msg::SetParametersResult result;
@@ -862,7 +861,8 @@ TEST_F(TestNode, set_parameter_undeclared_parameters_not_allowed) {
         result.reason = "no parameter may not be set right now";
         return result;
       };
-    node->set_on_parameters_set_callback(on_set_parameters);
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     EXPECT_FALSE(node->set_parameter(rclcpp::Parameter(name, 43)).successful);
   }
@@ -1350,7 +1350,6 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
     node->declare_parameter(name2, true);
     node->declare_parameter<std::string>(name3, "blue");
 
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto on_set_parameters =
       [&name2](const std::vector<rclcpp::Parameter> & ps) {
         rcl_interfaces::msg::SetParametersResult result;
@@ -1361,7 +1360,8 @@ TEST_F(TestNode, set_parameters_undeclared_parameters_not_allowed) {
         }
         return result;
       };
-    node->set_on_parameters_set_callback(on_set_parameters);
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     auto rets = node->set_parameters(
     {
@@ -1527,7 +1527,6 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
     node->declare_parameter(name2, true);
     node->declare_parameter<std::string>(name3, "blue");
 
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto on_set_parameters =
       [&name2](const std::vector<rclcpp::Parameter> & ps) {
         rcl_interfaces::msg::SetParametersResult result;
@@ -1538,7 +1537,8 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_not_allowed) {
         }
         return result;
       };
-    node->set_on_parameters_set_callback(on_set_parameters);
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     auto ret = node->set_parameters_atomically(
     {
@@ -1638,7 +1638,6 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
     EXPECT_TRUE(node->has_parameter(name3));
     EXPECT_EQ(node->get_parameter(name3).get_value<std::string>(), "test");
 
-    RCLCPP_SCOPE_EXIT({node->set_on_parameters_set_callback(nullptr);});    // always reset
     auto on_set_parameters =
       [&name3](const std::vector<rclcpp::Parameter> & ps) {
         rcl_interfaces::msg::SetParametersResult result;
@@ -1649,7 +1648,8 @@ TEST_F(TestNode, set_parameters_atomically_undeclared_parameters_allowed) {
         }
         return result;
       };
-    node->set_on_parameters_set_callback(on_set_parameters);
+    auto handler = node->add_on_set_parameters_callback(on_set_parameters);
+    RCLCPP_SCOPE_EXIT({node->remove_on_set_parameters_callback(handler.get());});    // always reset
 
     auto ret = node->set_parameters_atomically(
     {
@@ -2329,6 +2329,15 @@ TEST_F(TestNode, get_parameter_types_undeclared_parameters_allowed) {
   }
 }
 
+// suppress deprecated function test warnings
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
 // test that it is possible to call get_parameter within the set_callback
 TEST_F(TestNode, set_on_parameters_set_callback_get_parameter) {
   auto node = std::make_shared<rclcpp::Node>("test_set_callback_get_parameter_node"_unq);
@@ -2512,6 +2521,13 @@ TEST_F(TestNode, set_on_parameters_set_callback_set_on_parameters_set_callback) 
     node->set_parameter(rclcpp::Parameter("intparam", 40));
   }, rclcpp::exceptions::ParameterModifiedInCallbackException);
 }
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 
 void expect_qos_profile_eq(
   const rmw_qos_profile_t & qos1, const rmw_qos_profile_t & qos2, bool is_publisher)
