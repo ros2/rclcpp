@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <gtest/gtest.h>
+#include <signal.h>
 
 #include <algorithm>
 #include <limits>
@@ -44,6 +45,10 @@ protected:
     rclcpp::init(0, nullptr);
   }
 };
+
+TEST(TestTime, force_segfault) {
+    raise(SIGSEGV);
+}
 
 TEST(TestTime, clock_type_access) {
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
