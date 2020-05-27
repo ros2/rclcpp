@@ -261,10 +261,11 @@ protected:
     const EventCallbackT & callback,
     const rcl_subscription_event_type_t event_type)
   {
-    auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
+    auto handler = std::make_shared<QOSEventHandler<EventCallbackT,
+        std::shared_ptr<rcl_subscription_t>>>(
       callback,
       rcl_subscription_event_init,
-      get_subscription_handle().get(),
+      get_subscription_handle(),
       event_type);
     qos_events_in_use_by_wait_set_.insert(std::make_pair(handler.get(), false));
     event_handlers_.emplace_back(handler);
