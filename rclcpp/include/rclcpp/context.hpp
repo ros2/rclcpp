@@ -44,6 +44,9 @@ public:
   : std::runtime_error("context is already initialized") {}
 };
 
+/// Forward declare WeakContextsWrapper
+class WeakContextsWrapper;
+
 /// Context which encapsulates shared state between nodes and other similar entities.
 /**
  * A context also represents the lifecycle between init and shutdown of rclcpp.
@@ -358,6 +361,9 @@ private:
   std::mutex interrupt_guard_cond_handles_mutex_;
   /// Guard conditions for interrupting of associated wait sets on interrupt_all_wait_sets().
   std::unordered_map<rcl_wait_set_t *, rcl_guard_condition_t> interrupt_guard_cond_handles_;
+
+  /// Keep shared ownership of global vector of weak contexts
+  std::shared_ptr<WeakContextsWrapper> weak_contexts_;
 };
 
 /// Return a copy of the list of context shared pointers.
