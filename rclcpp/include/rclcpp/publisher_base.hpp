@@ -200,10 +200,11 @@ protected:
     const EventCallbackT & callback,
     const rcl_publisher_event_type_t event_type)
   {
-    auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
+    auto handler = std::make_shared<QOSEventHandler<EventCallbackT,
+        std::shared_ptr<rcl_publisher_t>>>(
       callback,
       rcl_publisher_event_init,
-      publisher_handle_.get(),
+      publisher_handle_,
       event_type);
     event_handlers_.emplace_back(handler);
   }
