@@ -30,6 +30,9 @@ class Waitable
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(Waitable)
 
+  RCLCPP_PUBLIC
+  virtual ~Waitable() = default;
+
   /// Get the number of ready subscriptions
   /**
    * Returns a value of 0 by default.
