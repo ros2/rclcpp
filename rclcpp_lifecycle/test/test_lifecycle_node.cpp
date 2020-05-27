@@ -428,8 +428,7 @@ TEST_F(TestDefaultStateMachine, check_parameters) {
     };
 
   // Hold callback handle. Callback is valid during the lifetime of this object.
-  auto callback_handle =
-    test_node->add_on_set_parameters_callback(callback);
+  auto callback_handle = test_node->add_on_set_parameters_callback(callback);
   rclcpp::Parameter bool_parameter(bool_name, rclcpp::ParameterValue(false));
   EXPECT_TRUE(test_node->set_parameter(bool_parameter).successful);
   EXPECT_EQ(parameters_set, 1u);
