@@ -2,6 +2,14 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.1.0 (2020-05-26)
+------------------
+* Improve documentation (`#1106 <https://github.com/ros2/rclcpp/issues/1106>`_)
+* Fixed rep links and added more details to dependencies in quality declaration (`#1116 <https://github.com/ros2/rclcpp/issues/1116>`_)
+* Added dockblock to ComponentManager class (`#1102 <https://github.com/ros2/rclcpp/issues/1102>`_)
+* Update quality declaration to reflect version 1.0 (`#1115 <https://github.com/ros2/rclcpp/issues/1115>`_)
+* Contributors: Alejandro Hernández Cordero, Stephen Brawner
+
 1.0.0 (2020-05-12)
 ------------------
 * Increasing test coverage of rclcpp_components (`#1044 <https://github.com/ros2/rclcpp/issues/1044>`_)
