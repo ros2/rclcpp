@@ -277,7 +277,7 @@ public:
    * If `ignore_override` is `true`, the parameter override will be ignored.
    *
    * This method, if successful, will result in any callback registered with
-   * set_on_parameters_set_callback to be called.
+   * add_on_set_parameters_callback to be called.
    * If that callback prevents the initial value for the parameter from being
    * set then rclcpp::exceptions::InvalidParameterValueException is thrown.
    *
@@ -359,7 +359,7 @@ public:
    * by the function call will be ignored.
    *
    * This method, if successful, will result in any callback registered with
-   * set_on_parameters_set_callback to be called, once for each parameter.
+   * add_on_set_parameters_callback to be called, once for each parameter.
    * If that callback prevents the initial value for any parameter from being
    * set then rclcpp::exceptions::InvalidParameterValueException is thrown.
    *
@@ -401,7 +401,7 @@ public:
   /// Undeclare a previously declared parameter.
   /**
    * This method will not cause a callback registered with
-   * set_on_parameters_set_callback to be called.
+   * add_on_set_parameters_callback to be called.
    *
    * \param[in] name The name of the parameter to be undeclared.
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the parameter
@@ -435,7 +435,7 @@ public:
    * Parameter overrides are ignored by set_parameter.
    *
    * This method will result in any callback registered with
-   * set_on_parameters_set_callback to be called.
+   * add_on_set_parameters_callback to be called.
    * If the callback prevents the parameter from being set, then it will be
    * reflected in the SetParametersResult that is returned, but no exception
    * will be thrown.
@@ -476,7 +476,7 @@ public:
    * corresponding SetParametersResult in the vector returned by this function.
    *
    * This method will result in any callback registered with
-   * set_on_parameters_set_callback to be called, once for each parameter.
+   * add_on_set_parameters_callback to be called, once for each parameter.
    * If the callback prevents the parameter from being set, then, as mentioned
    * before, it will be reflected in the corresponding SetParametersResult
    * that is returned, but no exception will be thrown.
@@ -507,7 +507,7 @@ public:
    * If the exception is thrown then none of the parameters will have been set.
    *
    * This method will result in any callback registered with
-   * set_on_parameters_set_callback to be called, just one time.
+   * add_on_set_parameters_callback to be called, just one time.
    * If the callback prevents the parameters from being set, then it will be
    * reflected in the SetParametersResult which is returned, but no exception
    * will be thrown.
@@ -787,7 +787,7 @@ public:
    * of the {get,list,describe}_parameter() methods), but may *not* modify
    * other parameters (by calling any of the {set,declare}_parameter() methods)
    * or modify the registered callback itself (by calling the
-   * set_on_parameters_set_callback() method).  If a callback tries to do any
+   * add_on_set_parameters_callback() method).  If a callback tries to do any
    * of the latter things,
    * rclcpp::exceptions::ParameterModifiedInCallbackException will be thrown.
    *
@@ -839,6 +839,7 @@ public:
 
   /// Register a callback to be called anytime a parameter is about to be changed.
   /**
+   * \deprecated Use add_on_set_parameters_callback instead.
    * With this method, only one callback can be set at a time. The callback that was previously
    * set by this method is returned or `nullptr` if no callback was previously set.
    *
@@ -851,6 +852,7 @@ public:
    * \return The previous callback that was registered, if there was one,
    *   otherwise nullptr.
    */
+  [[deprecated("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
   RCLCPP_PUBLIC
   OnParametersSetCallbackType
   set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);

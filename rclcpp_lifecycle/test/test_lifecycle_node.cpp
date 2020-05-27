@@ -427,7 +427,7 @@ TEST_F(TestDefaultStateMachine, check_parameters) {
       return result;
     };
 
-  test_node->set_on_parameters_set_callback(callback);
+  test_node->add_on_set_parameters_callback(callback);
   rclcpp::Parameter bool_parameter(bool_name, rclcpp::ParameterValue(false));
   EXPECT_TRUE(test_node->set_parameter(bool_parameter).successful);
   EXPECT_EQ(parameters_set, 1u);
