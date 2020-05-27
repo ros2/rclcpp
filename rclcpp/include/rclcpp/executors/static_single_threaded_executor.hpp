@@ -71,7 +71,7 @@ public:
   /// Static executor implementation of spin.
   /**
    * This function will block until work comes in, execute it, and keep blocking.
-   * It will only be interrupt by a CTRL-C (managed by the global signal handler).
+   * It will only be interrupted by a CTRL-C (managed by the global signal handler).
    * \throws std::runtime_error when spin() called while already spinning
    */
   RCLCPP_PUBLIC

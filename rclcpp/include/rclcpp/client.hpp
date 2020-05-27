@@ -282,9 +282,10 @@ public:
     return std::shared_ptr<rmw_request_id_t>(new rmw_request_id_t);
   }
 
-  /// Create a shared pointer with a rmw_request_id_t
+  /// Handle a server response
   /**
-   *
+    * \param[in] request_header used to check if the secuence number is valid
+    * \param[in] response message with the server response
    */
   void
   handle_response(

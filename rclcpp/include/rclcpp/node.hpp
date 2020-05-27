@@ -688,7 +688,7 @@ public:
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if the
    *   parameter has not been declared and undeclared parameters are not
    *   allowed.
-   * \throws std::runtime_error if the number os described parameters is more than one
+   * \throws std::runtime_error if the number of described parameters is more than one
    */
   RCLCPP_PUBLIC
   rcl_interfaces::msg::ParameterDescriptor
@@ -711,7 +711,7 @@ public:
    * \throws rclcpp::exceptions::ParameterNotDeclaredException if any of the
    *   parameters have not been declared and undeclared parameters are not
    *   allowed.
-   * \throws std::runtime_error if the number os described parameters is more than one
+   * \throws std::runtime_error if the number of described parameters is more than one
    */
   RCLCPP_PUBLIC
   std::vector<rcl_interfaces::msg::ParameterDescriptor>
@@ -997,7 +997,7 @@ public:
   /**
    * \sa rclcpp::node_interfaces::NodeClock::get_clock
    */
-   CLCPP_PUBLIC
+  RCLCPP_PUBLIC
   rclcpp::Clock::ConstSharedPtr
   get_clock() const;
 

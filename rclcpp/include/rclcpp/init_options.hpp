@@ -33,7 +33,7 @@ public:
   /// Constructor
   /**
    * It allows you to specify the allocator used within the init options.
-   * |param[in] allocator used allocate memory within the init options
+   * \param[in] allocator used allocate memory within the init options
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   RCLCPP_PUBLIC
@@ -42,7 +42,7 @@ public:
   /// Constructor which is initialized by an existing init_options.
   /**
    * Initialized by an existing init_options.
-   * |param[in] init_options rcl_init_options_t to initialized
+   * \param[in] init_options rcl_init_options_t to initialized
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   RCLCPP_PUBLIC
@@ -73,7 +73,6 @@ public:
 
   /// Return the rcl init options.
   /**
-   * Return the rcl init options.
    * \return the rcl init options.
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */

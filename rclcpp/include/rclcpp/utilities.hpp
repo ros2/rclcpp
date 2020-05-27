@@ -136,7 +136,7 @@ remove_ros_arguments(int argc, char const * const argv[]);
  * If nullptr is given for the context, then the global context is used, i.e.
  * the context initialized by rclcpp::init().
  *
- * \param[in] context Optional Check for shutdown of this Context.
+ * \param[in] context Optional check for shutdown of this Context.
  * \return true if shutdown has been called, false otherwise
  */
 RCLCPP_PUBLIC
@@ -150,7 +150,7 @@ ok(rclcpp::Context::SharedPtr context = nullptr);
  *
  * Deprecated, as it is no longer different from rcl_ok().
  *
- * \param[in] context Optional Check for initialization of this Context.
+ * \param[in] context Optional check for initialization of this Context.
  * \return true if the context is initialized, and false otherwise
  */
 [[deprecated("use the function ok() instead, which has the same usage.")]]
