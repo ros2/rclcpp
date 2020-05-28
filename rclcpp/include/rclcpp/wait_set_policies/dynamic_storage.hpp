@@ -52,9 +52,9 @@ public:
 
     /// Conversion constructor, which is intentionally not marked explicit.
     SubscriptionEntry(
-      const std::shared_ptr<rclcpp::SubscriptionBase> & subscription_in = nullptr,
+      std::shared_ptr<rclcpp::SubscriptionBase> subscription_in = nullptr,
       const rclcpp::SubscriptionWaitSetMask & mask_in = {})
-    : subscription(subscription_in),
+    : subscription(std::move(subscription_in)),
       mask(mask_in)
     {}
 
@@ -117,10 +117,10 @@ public:
 
     /// Conversion constructor, which is intentionally not marked explicit.
     WaitableEntry(
-      const std::shared_ptr<rclcpp::Waitable> & waitable_in = nullptr,
-      const std::shared_ptr<void> & associated_entity_in = nullptr) noexcept
-    : waitable(waitable_in),
-      associated_entity(associated_entity_in)
+      std::shared_ptr<rclcpp::Waitable> waitable_in = nullptr,
+      std::shared_ptr<void> associated_entity_in = nullptr) noexcept
+    : waitable(std::move(waitable_in)),
+      associated_entity(std::move(associated_entity_in))
     {}
 
     void
