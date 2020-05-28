@@ -109,7 +109,7 @@ SubscriptionBase::get_subscription_handle()
   return subscription_handle_;
 }
 
-const std::shared_ptr<rcl_subscription_t>
+std::shared_ptr<const rcl_subscription_t>
 SubscriptionBase::get_subscription_handle() const
 {
   return subscription_handle_;

@@ -91,7 +91,7 @@ public:
   get_subscription_handle();
 
   RCLCPP_PUBLIC
-  const std::shared_ptr<rcl_subscription_t>
+  std::shared_ptr<const rcl_subscription_t>
   get_subscription_handle() const;
 
   /// Get all the QoS event handlers associated with this subscription.
