@@ -17,6 +17,7 @@
 
 #include <array>
 #include <memory>
+#include <utility>
 
 #include "rclcpp/client.hpp"
 #include "rclcpp/guard_condition.hpp"
