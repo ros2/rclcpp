@@ -30,6 +30,9 @@ public:
   MessageInfo() = default;
 
   /// Conversion constructor, which is intentionally not marked as explicit.
+  /**
+   * \param[in] rmw_message_info message info to initialize the class
+   */
   // cppcheck-suppress noExplicitConstructor
   MessageInfo(const rmw_message_info_t & rmw_message_info);  // NOLINT(runtime/explicit)
 

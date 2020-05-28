@@ -87,6 +87,7 @@ public:
 
   /// Attach a clock to the time source to be updated
   /**
+   * \param[in] clock to attach to the time source
    * \throws std::invalid_argument the time source must be a RCL_ROS_TIME otherwise throws an exception
    */
   RCLCPP_PUBLIC

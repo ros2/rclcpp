@@ -58,6 +58,7 @@ public:
   /**
    * \param[in] wait_set A reference to the wait set, which this class
    *   will keep for the duration of its lifetime.
+   * \return a WaitResult from a "ready" result.
    */
   static
   WaitResult
@@ -90,6 +91,10 @@ public:
   }
 
   /// Return the rcl wait set.
+  /**
+   * \return const rcl wait set.
+   * \throws std::runtime_error if the class cannot access wait set when the result was not ready
+   */
   const WaitSetT &
   get_wait_set() const
   {
@@ -102,6 +107,10 @@ public:
   }
 
   /// Return the rcl wait set.
+  /**
+   * \return rcl wait set.
+   * \throws std::runtime_error if the class cannot access wait set when the result was not ready
+   */
   WaitSetT &
   get_wait_set()
   {

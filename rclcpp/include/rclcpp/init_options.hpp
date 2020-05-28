@@ -30,11 +30,21 @@ public:
   /// If true, the context will be shutdown on SIGINT by the signal handler (if it was installed).
   bool shutdown_on_sigint = true;
 
-  /// Constructor which allows you to specify the allocator used within the init options.
+  /// Constructor
+  /**
+   * It allows you to specify the allocator used within the init options.
+   * \param[in] allocator used allocate memory within the init options
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   */
   RCLCPP_PUBLIC
   explicit InitOptions(rcl_allocator_t allocator = rcl_get_default_allocator());
 
   /// Constructor which is initialized by an existing init_options.
+  /**
+   * Initialized by an existing init_options.
+   * \param[in] init_options rcl_init_options_t to initialized
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   */
   RCLCPP_PUBLIC
   explicit InitOptions(const rcl_init_options_t & init_options);
 
@@ -62,6 +72,10 @@ public:
   ~InitOptions();
 
   /// Return the rcl init options.
+  /**
+   * \return the rcl init options.
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
+   */
   RCLCPP_PUBLIC
   const rcl_init_options_t *
   get_rcl_init_options() const;

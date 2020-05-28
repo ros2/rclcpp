@@ -75,6 +75,7 @@ public:
    * topic source
    * \param publisher instance constructed by the node in order to publish statistics data.
    * This class owns the publisher.
+   * \throws std::invalid_argument if publisher pointer is nullptr
    */
   SubscriptionTopicStatistics(
     const std::string & node_name,

@@ -49,6 +49,8 @@ namespace rclcpp
  * \throws InvalidServiceNameError if name is invalid and is_service is true
  * \throws std::bad_alloc if memory cannot be allocated
  * \throws RCLError if an unexpect error occurs
+ * \throws std::runtime_error if the topic name is unexpectedly valid or,
+ *    if the rcl name is invalid or if the rcl namespace is invalid
  */
 RCLCPP_PUBLIC
 std::string
