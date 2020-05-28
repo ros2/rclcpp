@@ -321,9 +321,11 @@ rclcpp::Event::SharedPtr
 NodeGraph::get_graph_event()
 {
   auto event = rclcpp::Event::make_shared();
-  std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
-  graph_events_.push_back(event);
-  graph_users_count_++;
+  {
+    std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
+    graph_events_.push_back(event);
+    graph_users_count_++;
+  }
   // on first call, add node to graph_listener_
   if (should_add_to_graph_listener_.exchange(false)) {
     graph_listener_->add_node(this);
