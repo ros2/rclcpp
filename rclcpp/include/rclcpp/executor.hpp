@@ -188,59 +188,10 @@ public:
    *   code.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
    */
-  template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
+  template<typename FutureResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   FutureReturnCode
   spin_until_future_complete(
-    const std::shared_future<ResponseT> & future,
-    std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
-  {
-    // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
-    // inside a callback executed by an executor.
-
-    // Check the future before entering the while loop.
-    // If the future is already complete, don't try to spin.
-    std::future_status status = future.wait_for(std::chrono::seconds(0));
-    if (status == std::future_status::ready) {
-      return FutureReturnCode::SUCCESS;
-    }
-
-    auto end_time = std::chrono::steady_clock::now();
-    std::chrono::nanoseconds timeout_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      timeout);
-    if (timeout_ns > std::chrono::nanoseconds::zero()) {
-      end_time += timeout_ns;
-    }
-    std::chrono::nanoseconds timeout_left = timeout_ns;
-
-    while (rclcpp::ok(this->context_)) {
-      // Do one item of work.
-      spin_once(timeout_left);
-      // Check if the future is set, return SUCCESS if it is.
-      status = future.wait_for(std::chrono::seconds(0));
-      if (status == std::future_status::ready) {
-        return FutureReturnCode::SUCCESS;
-      }
-      // If the original timeout is < 0, then this is blocking, never TIMEOUT.
-      if (timeout_ns < std::chrono::nanoseconds::zero()) {
-        continue;
-      }
-      // Otherwise check if we still have time to wait, return TIMEOUT if not.
-      auto now = std::chrono::steady_clock::now();
-      if (now >= end_time) {
-        return FutureReturnCode::TIMEOUT;
-      }
-      // Subtract the elapsed time from the original timeout.
-      timeout_left = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - now);
-    }
-
-    // The future did not complete before ok() returned false, return INTERRUPTED.
-    return FutureReturnCode::INTERRUPTED;
-  }
-
-  template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
-  FutureReturnCode
-  spin_until_future_complete(
-    const std::future<ResponseT> & future,
+    const FutureResponseT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
     // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
