@@ -73,6 +73,8 @@ public:
    * This function is thread-safe.
    *
    * \throws GraphListenerShutdownError if the GraphListener is shutdown
+   * \throws std::runtime if the parent context was destroyed
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   RCLCPP_PUBLIC
   virtual

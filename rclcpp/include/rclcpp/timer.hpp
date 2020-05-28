@@ -100,7 +100,10 @@ public:
   get_timer_handle();
 
   /// Check how long the timer has until its next scheduled callback.
-  /** \return A std::chrono::duration representing the relative time until the next callback. */
+  /**
+   * \return A std::chrono::duration representing the relative time until the next callback.
+   * \throws std::runtime_error if the rcl_timer_get_time_until_next_call returns a failure
+   */
   RCLCPP_PUBLIC
   std::chrono::nanoseconds
   time_until_trigger();
@@ -114,6 +117,7 @@ public:
    * This function expects its caller to immediately trigger the callback after this function,
    * since it maintains the last time the callback was triggered.
    * \return True if the timer needs to trigger.
+   * \throws std::runtime_error if it failed to check timer
    */
   RCLCPP_PUBLIC
   bool is_ready();
@@ -185,6 +189,10 @@ public:
     cancel();
   }
 
+  /**
+   * \sa rclcpp::TimerBase::execute_callback
+   * \throws std::runtime_error if it failed to notify timer that callback occurred
+   */
   void
   execute_callback() override
   {
