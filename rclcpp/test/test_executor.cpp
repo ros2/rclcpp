@@ -75,17 +75,19 @@ TEST_F(TestExecutors, testSpinUntilFutureComplete) {
   rclcpp::FutureReturnCode ret;
 
   // test success
-  future = std::async([]() {
-    return;
-  });
+  future = std::async(
+    []() {
+      return;
+    });
   ret = executor.spin_until_future_complete(future, 1s);
   EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
 
   // test timeout
-  future = std::async([]() {
-    std::this_thread::sleep_for(20ms);
-    return;
-  });
+  future = std::async(
+    []() {
+      std::this_thread::sleep_for(20ms);
+      return;
+    });
   ret = executor.spin_until_future_complete(future, 10ms);
   EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, ret);
 }
@@ -97,17 +99,19 @@ TEST_F(TestExecutors, testSpinUntilFutureCompleteSharedFuture) {
   rclcpp::FutureReturnCode ret;
 
   // test success
-  future = std::async([]() {
-    return;
-  });
+  future = std::async(
+    []() {
+      return;
+    });
   ret = executor.spin_until_future_complete(future.share(), 1s);
   EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
 
   // test timeout
-  future = std::async([]() {
-    std::this_thread::sleep_for(20ms);
-    return;
-  });
+  future = std::async(
+    []() {
+      std::this_thread::sleep_for(20ms);
+      return;
+    });
   ret = executor.spin_until_future_complete(future.share(), 10ms);
   EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, ret);
 }
