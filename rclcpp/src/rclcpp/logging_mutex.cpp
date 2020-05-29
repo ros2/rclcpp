@@ -17,6 +17,8 @@
 
 #include "rcutils/macros.h"
 
+#include "./logging_mutex.hpp"
+
 std::shared_ptr<std::recursive_mutex>
 get_global_logging_mutex()
 {
