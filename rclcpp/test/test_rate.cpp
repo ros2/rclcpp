@@ -22,9 +22,9 @@
    Basic tests for the Rate and WallRate classes.
  */
 TEST(TestRate, rate_basics) {
-  auto period = std::chrono::milliseconds(100);
-  auto offset = std::chrono::milliseconds(50);
-  auto epsilon = std::chrono::milliseconds(1);
+  auto period = std::chrono::milliseconds(1000);
+  auto offset = std::chrono::milliseconds(500);
+  auto epsilon = std::chrono::milliseconds(100);
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::system_clock::now();
@@ -33,7 +33,7 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::system_clock::now();
   auto delta = one - start;
-  EXPECT_LT(period, delta);
+  EXPECT_LT(period, delta + epsilon);
   EXPECT_GT(period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset);
@@ -49,7 +49,7 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(r.sleep());
   auto three = std::chrono::system_clock::now();
   delta = three - two_offset;
-  EXPECT_LT(period, delta);
+  EXPECT_LT(period, delta + epsilon);
   EXPECT_GT(period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset + period);
