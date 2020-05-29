@@ -66,12 +66,12 @@ using rclcpp::executors::SingleThreadedExecutor;
  *   If the time spent inside the blocking loop exceeds this timeout, return a `TIMEOUT` return code.
  * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
  */
-template<typename FutureResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
+template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
 rclcpp::FutureReturnCode
 spin_node_until_future_complete(
   rclcpp::Executor & executor,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  const FutureResponseT & future,
+  const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
   // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
@@ -82,13 +82,13 @@ spin_node_until_future_complete(
   return retcode;
 }
 
-template<typename NodeT = rclcpp::Node, typename FutureResponseT, typename TimeRepT = int64_t,
+template<typename NodeT = rclcpp::Node, typename FutureT, typename TimeRepT = int64_t,
   typename TimeT = std::milli>
 rclcpp::FutureReturnCode
 spin_node_until_future_complete(
   rclcpp::Executor & executor,
   std::shared_ptr<NodeT> node_ptr,
-  const FutureResponseT & future,
+  const FutureT & future,
   std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
 {
   return rclcpp::executors::spin_node_until_future_complete(

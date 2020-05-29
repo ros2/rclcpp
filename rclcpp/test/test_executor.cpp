@@ -85,10 +85,10 @@ TEST_F(TestExecutors, testSpinUntilFutureComplete) {
   // test timeout
   future = std::async(
     []() {
-      std::this_thread::sleep_for(20ms);
+      std::this_thread::sleep_for(1s);
       return;
     });
-  ret = executor.spin_until_future_complete(future, 10ms);
+  ret = executor.spin_until_future_complete(future, 100ms);
   EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, ret);
 }
 
@@ -109,9 +109,9 @@ TEST_F(TestExecutors, testSpinUntilFutureCompleteSharedFuture) {
   // test timeout
   future = std::async(
     []() {
-      std::this_thread::sleep_for(20ms);
+      std::this_thread::sleep_for(1s);
       return;
     });
-  ret = executor.spin_until_future_complete(future.share(), 10ms);
+  ret = executor.spin_until_future_complete(future.share(), 100ms);
   EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, ret);
 }
