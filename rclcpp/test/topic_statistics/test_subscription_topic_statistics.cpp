@@ -210,21 +210,20 @@ protected:
   void SetUp()
   {
     rclcpp::init(0 /* argc */, nullptr /* argv */);
-    empty_subscriber = std::make_shared<EmptySubscriber>(
-      kTestSubNodeName,
-      kTestSubStatsTopic);
   }
 
   void TearDown()
   {
     rclcpp::shutdown();
-    empty_subscriber.reset();
   }
-  std::shared_ptr<EmptySubscriber> empty_subscriber;
 };
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
 {
+  auto empty_subscriber = std::make_shared<EmptySubscriber>(
+      kTestSubNodeName,
+      kTestSubStatsTopic);
+
   // Manually create publisher tied to the node
   auto topic_stats_publisher =
     empty_subscriber->create_publisher<MetricsMessage>(
@@ -260,6 +259,10 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
     "test_receive_single_empty_stats_message_listener",
     "/statistics",
     2);
+
+  auto empty_subscriber = std::make_shared<EmptySubscriber>(
+      kTestSubNodeName,
+      kTestSubStatsTopic);
 
   rclcpp::executors::SingleThreadedExecutor ex;
   ex.add_node(empty_publisher);
