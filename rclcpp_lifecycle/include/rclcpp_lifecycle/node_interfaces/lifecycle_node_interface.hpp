@@ -100,6 +100,10 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   virtual CallbackReturn
   on_error(const State & previous_state);
+
+  RCLCPP_LIFECYCLE_PUBLIC
+  virtual
+  ~LifecycleNodeInterface() {}
 };
 
 }  // namespace node_interfaces
