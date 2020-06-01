@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -222,6 +223,30 @@ protected:
   }
   std::shared_ptr<EmptySubscriber> empty_subscriber;
 };
+
+TEST(TestSubscriptionTopicStatistics, test_invalid_publish_period)
+{
+  rclcpp::init(0 /* argc */, nullptr /* argv */);
+
+  auto node = std::make_shared<rclcpp::Node>("test_period_node");
+
+  auto options = rclcpp::SubscriptionOptions();
+  options.topic_stats_options.state = rclcpp::TopicStatisticsState::Enable;
+  options.topic_stats_options.publish_period = std::chrono::milliseconds(0);
+
+  auto callback = [](Empty::UniquePtr msg) {
+      (void) msg;
+    };
+
+  ASSERT_THROW(
+    (node->create_subscription<Empty, std::function<void(Empty::UniquePtr)>>(
+      "should_throw_invalid_arg",
+      rclcpp::QoS(rclcpp::KeepAll()),
+      callback,
+      options)), std::invalid_argument);
+
+  rclcpp::shutdown();
+}
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
 {

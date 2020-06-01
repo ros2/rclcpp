@@ -18,6 +18,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -81,6 +82,10 @@ create_subscription(
       options,
       *node_topics->get_node_base_interface()))
   {
+    if (options.topic_stats_options.publish_period <= std::chrono::milliseconds(0)) {
+      throw std::invalid_argument("topic statistics publish period must be greater than 0");
+    }
+
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       create_publisher<statistics_msgs::msg::MetricsMessage>(
       node,

@@ -66,7 +66,7 @@ struct SubscriptionOptionsBase
     // Topic to which topic statistics get published when enabled. Defaults to /statistics.
     std::string publish_topic = "/statistics";
 
-    // Topic statistics publication period in ms. Defaults to one minute.
+    // Topic statistics publication period in ms. Defaults to one second.
     std::chrono::milliseconds publish_period{std::chrono::seconds(1)};
   };
 
