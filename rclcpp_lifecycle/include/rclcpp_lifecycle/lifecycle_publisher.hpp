@@ -36,7 +36,7 @@ namespace rclcpp_lifecycle
 class LifecyclePublisherInterface
 {
 public:
-  virtual ~LifecyclePublisherInterface() {};
+  virtual ~LifecyclePublisherInterface() {}
   virtual void on_activate() = 0;
   virtual void on_deactivate() = 0;
   virtual bool is_activated() = 0;
