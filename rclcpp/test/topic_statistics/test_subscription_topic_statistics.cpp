@@ -46,6 +46,7 @@ namespace
 constexpr const char kTestPubNodeName[]{"test_pub_stats_node"};
 constexpr const char kTestSubNodeName[]{"test_sub_stats_node"};
 constexpr const char kTestSubStatsTopic[]{"/test_sub_stats_topic"};
+constexpr const char kTestSubStatsEmptyTopic[]{"/test_sub_stats_empty_topic"};
 constexpr const char kTestTopicStatisticsTopic[]{"/test_topic_statistics_topic"};
 constexpr const uint64_t kNoSamples{0};
 constexpr const std::chrono::seconds kTestDuration{10};
@@ -210,21 +211,20 @@ protected:
   void SetUp()
   {
     rclcpp::init(0 /* argc */, nullptr /* argv */);
-    empty_subscriber = std::make_shared<EmptySubscriber>(
-      kTestSubNodeName,
-      kTestSubStatsTopic);
   }
 
   void TearDown()
   {
     rclcpp::shutdown();
-    empty_subscriber.reset();
   }
-  std::shared_ptr<EmptySubscriber> empty_subscriber;
 };
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
 {
+  auto empty_subscriber = std::make_shared<EmptySubscriber>(
+    kTestSubNodeName,
+    kTestSubStatsEmptyTopic);
+
   // Manually create publisher tied to the node
   auto topic_stats_publisher =
     empty_subscriber->create_publisher<MetricsMessage>(
@@ -251,7 +251,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   // Create an empty publisher
   auto empty_publisher = std::make_shared<EmptyPublisher>(
     kTestPubNodeName,
-    kTestSubStatsTopic);
+    kTestSubStatsEmptyTopic);
   // empty_subscriber has a topic statistics instance as part of its subscription
   // this will listen to and generate statistics for the empty message
 
@@ -260,6 +260,10 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
     "test_receive_single_empty_stats_message_listener",
     "/statistics",
     2);
+
+  auto empty_subscriber = std::make_shared<EmptySubscriber>(
+    kTestSubNodeName,
+    kTestSubStatsEmptyTopic);
 
   rclcpp::executors::SingleThreadedExecutor ex;
   ex.add_node(empty_publisher);
