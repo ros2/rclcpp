@@ -45,6 +45,7 @@ namespace rclcpp
   * The NodeT type only needs to have a method called get_node_topics_interface()
   * which returns a shared_ptr to a NodeTopicsInterface, or be a
   * NodeTopicsInterface pointer itself.
+  *
   * @tparam MessageT
   * @tparam CallbackT
   * @tparam AllocatorT
@@ -59,7 +60,7 @@ namespace rclcpp
   * @param options
   * @param msg_mem_strat
   * @return the created subscription
-  * @throws std::invalid argument if topic statistics is enabled and the publish period is
+  * @throws std::invalid_argument if topic statistics is enabled and the publish period is
   * less than or equal to zero.
   */
 template<
