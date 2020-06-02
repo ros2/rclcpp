@@ -3,6 +3,12 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Forthcoming
+-----------
+* Added missing virtual destructors. (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)
+* Add Security Vulnerability Policy pointing to REP-2006. (`#1130 <https://github.com/ros2/rclcpp/issues/1130>`_)
+* Contributors: Chris Lalancette, Ivan Santiago Paunovic
+
 1.1.0 (2020-05-26)
 ------------------
 * Action client holds weak pointers to goal handles (`#1122 <https://github.com/ros2/rclcpp/issues/1122>`_)
