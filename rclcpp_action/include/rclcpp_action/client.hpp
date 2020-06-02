@@ -130,7 +130,7 @@ protected:
     rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging,
     const std::string & action_name,
     const rosidl_action_type_support_t * type_support,
-    const rcl_action_client_options_t & options = rcl_action_client_get_default_options());
+    const rcl_action_client_options_t & options);
 
   /// Wait for action_server_is_ready() to become true, or until the given timeout is reached.
   RCLCPP_ACTION_PUBLIC
