@@ -3,8 +3,8 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Forthcoming
------------
+2.0.0 (2020-06-01)
+------------------
 * Added missing virtual destructors. (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)
 * Add Security Vulnerability Policy pointing to REP-2006. (`#1130 <https://github.com/ros2/rclcpp/issues/1130>`_)
 * Fixed ``test_lifecycle_node.cpp:check_parameters`` (`#1136 <https://github.com/ros2/rclcpp/issues/1136>`_)
