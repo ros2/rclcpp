@@ -42,27 +42,27 @@ namespace rclcpp
 
 /// Create and return a subscription of the given MessageT type.
 /**
-  * The NodeT type only needs to have a method called get_node_topics_interface()
-  * which returns a shared_ptr to a NodeTopicsInterface, or be a
-  * NodeTopicsInterface pointer itself.
-  *
-  * \tparam MessageT
-  * \tparam CallbackT
-  * \tparam AllocatorT
-  * \tparam CallbackMessageT
-  * \tparam SubscriptionT
-  * \tparam MessageMemoryStrategyT
-  * \tparam NodeT
-  * \param node
-  * \param topic_name
-  * \param qos
-  * \param callback
-  * \param options
-  * \param msg_mem_strat
-  * \return the created subscription
-  * \throws std::invalid_argument if topic statistics is enabled and the publish period is
-  * less than or equal to zero.
-  */
+ * The NodeT type only needs to have a method called get_node_topics_interface()
+ * which returns a shared_ptr to a NodeTopicsInterface, or be a
+ * NodeTopicsInterface pointer itself.
+ *
+ * \tparam MessageT
+ * \tparam CallbackT
+ * \tparam AllocatorT
+ * \tparam CallbackMessageT
+ * \tparam SubscriptionT
+ * \tparam MessageMemoryStrategyT
+ * \tparam NodeT
+ * \param node
+ * \param topic_name
+ * \param qos
+ * \param callback
+ * \param options
+ * \param msg_mem_strat
+ * \return the created subscription
+ * \throws std::invalid_argument if topic statistics is enabled and the publish period is
+ * less than or equal to zero.
+ */
 template<
   typename MessageT,
   typename CallbackT,
