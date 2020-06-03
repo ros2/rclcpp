@@ -43,7 +43,6 @@ NodeBase::NodeBase(
   enable_topic_statistics_default_(enable_topic_statistics_default),
   node_handle_(nullptr),
   default_callback_group_(nullptr),
-  associated_with_executor_(false),
   notify_guard_condition_is_valid_(false)
 {
   // Setup the guard condition that is notified when changes occur in the graph.
@@ -216,11 +215,14 @@ NodeBase::get_shared_rcl_node_handle() const
 }
 
 rclcpp::CallbackGroup::SharedPtr
-NodeBase::create_callback_group(rclcpp::CallbackGroupType group_type)
+NodeBase::create_callback_group(
+  rclcpp::CallbackGroupType group_type,
+  rclcpp::RealTimeClass real_time_class)
 {
   using rclcpp::CallbackGroup;
   using rclcpp::CallbackGroupType;
-  auto group = CallbackGroup::SharedPtr(new CallbackGroup(group_type));
+  using rclcpp::RealTimeClass;
+  auto group = CallbackGroup::SharedPtr(new CallbackGroup(group_type, real_time_class));
   callback_groups_.push_back(group);
   return group;
 }
@@ -248,12 +250,6 @@ const std::vector<rclcpp::CallbackGroup::WeakPtr> &
 NodeBase::get_callback_groups() const
 {
   return callback_groups_;
-}
-
-std::atomic_bool &
-NodeBase::get_associated_with_executor_atomic()
-{
-  return associated_with_executor_;
 }
 
 rcl_guard_condition_t *

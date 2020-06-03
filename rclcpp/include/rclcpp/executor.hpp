@@ -25,6 +25,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
@@ -75,6 +76,21 @@ public:
   // It is up to the implementation of Executor to implement spin.
   virtual void
   spin() = 0;
+
+  /// Add a callback group to an executor.
+  RCLCPP_PUBLIC
+  virtual void
+  add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
+
+  /// Remove a callback group from the executor.
+  RCLCPP_PUBLIC
+  virtual void
+  remove_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    bool notify = true);
+
 
   /// Add a node to the executor.
   /**
@@ -330,6 +346,10 @@ protected:
   get_node_by_group(rclcpp::CallbackGroup::SharedPtr group);
 
   RCLCPP_PUBLIC
+  bool
+  has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+
+  RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
   get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
 
@@ -367,8 +387,15 @@ protected:
   void
   spin_once_impl(std::chrono::nanoseconds timeout);
 
-  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
-  std::list<const rcl_guard_condition_t *> guard_conditions_;
+  typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+      const rcl_guard_condition_t *,
+      std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>> WeakNodesToGuardConditionsMap;
+  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+
+  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+      std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
 };
 
 namespace executor

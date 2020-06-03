@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
@@ -82,19 +83,19 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
 
 Executor::~Executor()
 {
-  // Disassocate all nodes
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (node) {
-      std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
-      has_executor.store(false);
+  // Disassocate all callback groups and thus nodes.
+  for (auto & pair : weak_groups_to_nodes_) {
+    auto group = pair.first.lock();
+    if (group) {
+      remove_callback_group(group, false);
     }
   }
-  weak_nodes_.clear();
-  for (auto & guard_condition : guard_conditions_) {
+  weak_groups_to_nodes_.clear();
+  for (const auto & pair : weak_nodes_to_guard_conditions_) {
+    auto & guard_condition = pair.second;
     memory_strategy_->remove_guard_condition(guard_condition);
   }
-  guard_conditions_.clear();
+  weak_nodes_to_guard_conditions_.clear();
 
   // Finalize the wait set.
   if (rcl_wait_set_fini(&wait_set_) != RCL_RET_OK) {
@@ -116,32 +117,82 @@ Executor::~Executor()
 }
 
 void
+Executor::add_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  bool notify)
+{
+  // If the callback_group already has an executor
+  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+  if (has_executor.exchange(true)) {
+    throw std::runtime_error("Callback group has already been added to an executor.");
+  }
+
+  bool is_new_node = !has_node(node_ptr);
+
+  rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
+  auto insert_info = weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
+  bool was_inserted = insert_info.second;
+  if (!was_inserted) {
+    throw std::runtime_error("Callback group was already added to executor.");
+  }
+  if (is_new_node) {
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
+    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
+    if (notify) {
+      // Interrupt waiting to handle new node
+      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+        throw std::runtime_error(rcl_get_error_string().str);
+      }
+    }
+    // Add the node's notify condition to the guard condition handles
+    std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
+    memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
+  }
+}
+
+void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
-  // If the node already has an executor
-  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
-  if (has_executor.exchange(true)) {
-    throw std::runtime_error("Node has already been added to an executor.");
-  }
-  // Check to ensure node not already added
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (node == node_ptr) {
-      // TODO(jacquelinekay): Use a different error here?
-      throw std::runtime_error("Cannot add node to executor, node already added.");
+  for (auto & weak_group : node_ptr->get_callback_groups()) {
+    auto group_ptr = weak_group.lock();
+    if (group_ptr != nullptr) {
+      add_callback_group(group_ptr, node_ptr, notify);
     }
   }
-  weak_nodes_.push_back(node_ptr);
-  guard_conditions_.push_back(node_ptr->get_notify_guard_condition());
-  if (notify) {
-    // Interrupt waiting to handle new node
-    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-      throw std::runtime_error(rcl_get_error_string().str);
+}
+
+void
+Executor::remove_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  bool notify)
+{
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr;
+  rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
+  auto iter = weak_groups_to_nodes_.find(weak_group_ptr);
+  if (iter != weak_groups_to_nodes_.end()) {
+    node_ptr = iter->second.lock();
+    if (node_ptr == nullptr) {
+      throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
+    weak_groups_to_nodes_.erase(iter);
   }
-  // Add the node's notify condition to the guard condition handles
-  std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
-  memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
+  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+  has_executor.store(false);
+
+  // If the node was matched and removed, interrupt waiting.
+  if (!has_node(node_ptr)) {
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
+    weak_nodes_to_guard_conditions_.erase(node_weak_ptr);
+    
+    if (notify) {
+      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+        throw std::runtime_error(rcl_get_error_string().str);
+      }
+    }
+    std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
+    memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
+  }
 }
 
 void
@@ -153,34 +204,13 @@ Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 void
 Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
-  bool node_removed = false;
-  {
-    auto node_it = weak_nodes_.begin();
-    auto gc_it = guard_conditions_.begin();
-    while (node_it != weak_nodes_.end()) {
-      bool matched = (node_it->lock() == node_ptr);
-      if (matched) {
-        node_it = weak_nodes_.erase(node_it);
-        gc_it = guard_conditions_.erase(gc_it);
-        node_removed = true;
-      } else {
-        ++node_it;
-        ++gc_it;
-      }
+  for (auto & key_value_pair : weak_groups_to_nodes_) {
+    auto weak_node_ptr = key_value_pair.second;
+    auto shared_node_ptr = weak_node_ptr.lock();
+    if (shared_node_ptr == node_ptr) {
+      remove_callback_group(key_value_pair.first.lock(), notify);
     }
   }
-  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
-  has_executor.store(false);
-  if (notify) {
-    // If the node was matched and removed, interrupt waiting
-    if (node_removed) {
-      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
-        throw std::runtime_error(rcl_get_error_string().str);
-      }
-    }
-  }
-  std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
-  memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
 }
 
 void
@@ -475,20 +505,15 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
     // Collect the subscriptions and timers to be waited on
     memory_strategy_->clear_handles();
-    bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
+    bool has_invalid_weak_groups_or_nodes = memory_strategy_->collect_entities(weak_groups_to_nodes_);
 
-    // Clean up any invalid nodes, if they were detected
-    if (has_invalid_weak_nodes) {
-      auto node_it = weak_nodes_.begin();
-      auto gc_it = guard_conditions_.begin();
-      while (node_it != weak_nodes_.end()) {
-        if (node_it->expired()) {
-          node_it = weak_nodes_.erase(node_it);
-          memory_strategy_->remove_guard_condition(*gc_it);
-          gc_it = guard_conditions_.erase(gc_it);
-        } else {
-          ++node_it;
-          ++gc_it;
+    if (has_invalid_weak_groups_or_nodes) {
+      for (auto pair : weak_groups_to_nodes_) {
+        auto weak_group_ptr = pair.first;
+        auto weak_node_ptr = pair.second;
+        if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
+          weak_groups_to_nodes_.erase(weak_group_ptr);
+          weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
         }
       }
     }
@@ -512,6 +537,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       throw std::runtime_error("Couldn't fill wait set");
     }
   }
+
   rcl_ret_t status =
     rcl_wait(&wait_set_, std::chrono::duration_cast<std::chrono::nanoseconds>(timeout).count());
   if (status == RCL_RET_WAIT_SET_EMPTY) {
@@ -534,44 +560,34 @@ Executor::get_node_by_group(rclcpp::CallbackGroup::SharedPtr group)
   if (!group) {
     return nullptr;
   }
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (!node) {
-      continue;
-    }
-    for (auto & weak_group : node->get_callback_groups()) {
-      auto callback_group = weak_group.lock();
-      if (callback_group == group) {
-        return node;
-      }
-    }
+
+  rclcpp::CallbackGroup::WeakPtr weak_group_ptr(group);
+  const auto finder = weak_groups_to_nodes_.find(weak_group_ptr);
+  if (finder != weak_groups_to_nodes_.end()) {
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr = finder->second.lock();
+    return node_ptr;
   }
+
   return nullptr;
 }
 
 rclcpp::CallbackGroup::SharedPtr
 Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 {
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (!node) {
+  for (const auto & pair : weak_groups_to_nodes_) {
+    auto group = pair.first.lock();
+    if (!group) {
       continue;
     }
-    for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
-      if (!group) {
-        continue;
-      }
-      auto timer_ref = group->find_timer_ptrs_if(
-        [timer](const rclcpp::TimerBase::SharedPtr & timer_ptr) -> bool {
-          return timer_ptr == timer;
-        });
-      if (timer_ref) {
-        return group;
-      }
+    auto timer_ref = group->find_timer_ptrs_if(
+      [timer](const rclcpp::TimerBase::SharedPtr & timer_ptr) -> bool {
+        return timer_ptr == timer;
+      });
+    if (timer_ref) {
+      return group;
     }
   }
-  return rclcpp::CallbackGroup::SharedPtr();
+  return nullptr;
 }
 
 bool
@@ -579,53 +595,59 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
   bool success = false;
   // Check the timers to see if there are any that are ready
-  memory_strategy_->get_next_timer(any_executable, weak_nodes_);
+  memory_strategy_->get_next_timer(any_executable, weak_groups_to_nodes_);
   if (any_executable.timer) {
     success = true;
   }
   if (!success) {
     // Check the subscriptions to see if there are any that are ready
-    memory_strategy_->get_next_subscription(any_executable, weak_nodes_);
+    memory_strategy_->get_next_subscription(any_executable, weak_groups_to_nodes_);
     if (any_executable.subscription) {
       success = true;
     }
   }
   if (!success) {
     // Check the services to see if there are any that are ready
-    memory_strategy_->get_next_service(any_executable, weak_nodes_);
+    memory_strategy_->get_next_service(any_executable, weak_groups_to_nodes_);
     if (any_executable.service) {
       success = true;
     }
   }
   if (!success) {
     // Check the clients to see if there are any that are ready
-    memory_strategy_->get_next_client(any_executable, weak_nodes_);
+    memory_strategy_->get_next_client(any_executable, weak_groups_to_nodes_);
     if (any_executable.client) {
       success = true;
     }
   }
   if (!success) {
     // Check the waitables to see if there are any that are ready
-    memory_strategy_->get_next_waitable(any_executable, weak_nodes_);
+    memory_strategy_->get_next_waitable(any_executable, weak_groups_to_nodes_);
     if (any_executable.waitable) {
       success = true;
     }
   }
-  // At this point any_exec should be valid with either a valid subscription
+  // At this point any_executable should be valid with either a valid subscription
   // or a valid timer, or it should be a null shared_ptr
   if (success) {
+    rclcpp::CallbackGroup::WeakPtr weak_group_ptr = any_executable.callback_group;
+    auto iter = weak_groups_to_nodes_.find(weak_group_ptr);
+    if (iter == weak_groups_to_nodes_.end()) {
+      success = false;
+    }
+  }
+
+  if (success) {
     // If it is valid, check to see if the group is mutually exclusive or
-    // not, then mark it accordingly
-    using callback_group::CallbackGroupType;
-    if (
-      any_executable.callback_group &&
-      any_executable.callback_group->type() == CallbackGroupType::MutuallyExclusive)
+    // not, then mark it accordingly ..Check if the callback_group belongs to this executor
+    if (any_executable.callback_group && any_executable.callback_group->type() == \
+      callback_group::CallbackGroupType::MutuallyExclusive)
     {
       // It should not have been taken otherwise
       assert(any_executable.callback_group->can_be_taken_from().load());
       // Set to false to indicate something is being run from this group
-      // This is reset to true either when the any_exec is executed or when the
-      // any_exec is destructued
+      // This is reset to true either when the any_executable is executed or when the
+      // any_executable is destructued
       any_executable.callback_group->can_be_taken_from().store(false);
     }
   }
@@ -651,4 +673,15 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
     success = get_next_ready_executable(any_executable);
   }
   return success;
+}
+
+// Returns true iff the weak_groups_to_nodes_ map has node_ptr as the value in any of its entry.
+bool
+Executor::has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const
+{
+  return std::find_if(weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
+           [&](const WeakCallbackGroupsToNodesMap::value_type & other) -> bool {
+             auto other_ptr = other.second.lock();
+             return other_ptr == node_ptr;
+           }) == weak_groups_to_nodes_.end();
 }
