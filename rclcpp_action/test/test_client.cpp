@@ -289,8 +289,8 @@ protected:
 
   void TearDown() override
   {
-    TearDownServer();
     TestClient::TearDown();
+    TearDownServer();
   }
 };
 
