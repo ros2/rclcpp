@@ -86,7 +86,7 @@ create_server(
           // Was added to default group
           shared_node->remove_waitable(fake_shared_ptr, nullptr);
         } else {
-          // Was added to a specfic group
+          // Was added to a specific group
           auto shared_group = weak_group.lock();
           if (shared_group) {
             shared_node->remove_waitable(fake_shared_ptr, shared_group);
