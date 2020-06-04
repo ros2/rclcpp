@@ -156,6 +156,21 @@ public:
   NodeOptions &
   use_global_arguments(bool use_global_arguments);
 
+  /// Return the domain_id.
+  RCLCPP_PUBLIC
+  size_t
+  domain_id() const;
+
+  /// Set the domain id, return this for parameter idiom.
+  /**
+   * If set, this domain_id will be used in node.
+   *
+   * This can be used to override ROS_DOMAIN_ID environment variable.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  domain_id(size_t domain_id);
+
   /// Return the enable_rosout flag.
   RCLCPP_PUBLIC
   bool
@@ -348,6 +363,8 @@ private:
   std::vector<rclcpp::Parameter> parameter_overrides_ {};
 
   bool use_global_arguments_ {true};
+
+  size_t domain_id_ {get_domain_id_from_env()};
 
   bool enable_rosout_ {true};
 

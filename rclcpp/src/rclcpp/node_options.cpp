@@ -71,6 +71,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->arguments_ = other.arguments_;
     this->parameter_overrides_ = other.parameter_overrides_;
     this->use_global_arguments_ = other.use_global_arguments_;
+    this->domain_id_ = other.domain_id_;
     this->enable_rosout_ = other.enable_rosout_;
     this->use_intra_process_comms_ = other.use_intra_process_comms_;
     this->enable_topic_statistics_ = other.enable_topic_statistics_;
@@ -92,7 +93,7 @@ NodeOptions::get_rcl_node_options() const
     *node_options_ = rcl_node_get_default_options();
     node_options_->allocator = this->allocator_;
     node_options_->use_global_arguments = this->use_global_arguments_;
-    node_options_->domain_id = this->get_domain_id_from_env();
+    node_options_->domain_id = this->domain_id_;
     node_options_->enable_rosout = this->enable_rosout_;
 
     int c_argc = 0;
@@ -184,6 +185,20 @@ NodeOptions::use_global_arguments(bool use_global_arguments)
 {
   this->node_options_.reset();  // reset node options to make it be recreated on next access.
   this->use_global_arguments_ = use_global_arguments;
+  return *this;
+}
+
+size_t
+NodeOptions::domain_id() const
+{
+  return this->domain_id_;
+}
+
+NodeOptions &
+NodeOptions::domain_id(size_t domain_id)
+{
+  this->node_options_.reset();  // reset node options to make it be recreated on next access.
+  this->domain_id_ = domain_id;
   return *this;
 }
 
