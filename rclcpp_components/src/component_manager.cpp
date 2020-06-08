@@ -196,6 +196,11 @@ ComponentManager::OnLoadNode(
 
       try {
         node_wrappers_[node_id] = factory->create_node_instance(options);
+      } catch (const std::exception &ex) {
+        // In the case that the component constructor throws an exception,
+        // rethrow into the following catch block.
+        throw ComponentManagerException(
+                "Component constructor threw an exception: " + std::string(ex.what()));
       } catch (...) {
         // In the case that the component constructor throws an exception,
         // rethrow into the following catch block.
