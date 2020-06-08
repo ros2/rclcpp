@@ -2,7 +2,7 @@ This document is a declaration of software quality for the `rclcpp_action` packa
 
 # `rclcpp_action` Quality Declaration
 
-The package `rclcpp_action` claims to be in the **Quality Level 4** category.
+The package `rclcpp_action` claims to be in the **Quality Level 2** category.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories) of the ROS2 developer guide.
 
@@ -118,6 +118,8 @@ This includes:
 - no lines are manually skipped in coverage calculations
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
+
+Current coverage statistics can be viewed (85%) [here](https://ci.ros2.org/job/ci_linux_coverage/lastBuild/cobertura/src_ros2_rclcpp_rclcpp_action_src/). Current coverage statistics need to be improved to reach a higher quality level.
 
 ### Performance [4.iv]
 

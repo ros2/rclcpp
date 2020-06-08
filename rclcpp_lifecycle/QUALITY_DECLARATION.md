@@ -70,11 +70,11 @@ All pull requests must resolve related documentation changes before merging.
 
 ### Feature Documentation [3.i]
 
-`rclcpp_lifecycle` does not have a documented feature list.
+`rclcpp_lifecycle` has a [feature list](http://docs.ros2.org/latest/api/rclcpp_lyfecycle/) and each item in the list links to the corresponding feature documentation. There is documentation for all of the features, and new features require documentation before being added.
 
 ### Public API Documentation [3.ii]
 
-`rclcpp_lifecycle` does not cover a public API documentation.
+The API is publicly available in the [ROS 2 API documentation](http://docs.ros2.org/latest/api/rclcpp_lyfecycle/).
 
 ### License [3.iii]
 
@@ -118,6 +118,8 @@ This includes:
 - no lines are manually skipped in coverage calculations
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
+
+Current coverage statistics can be viewed (87%) [here](https://ci.ros2.org/job/ci_linux_coverage/lastBuild/cobertura/src_ros2_rclcpp_rclcpp_lifecycle_src/). Current coverage statistics need to be improved to reach a higher quality level.
 
 ### Performance [4.iv]
 

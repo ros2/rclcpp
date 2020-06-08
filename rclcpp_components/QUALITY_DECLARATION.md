@@ -2,7 +2,7 @@ This document is a declaration of software quality for the `rclcpp_components` p
 
 # `rclcpp_components` Quality Declaration
 
-The package `rclcpp_components` claims to be in the **Quality Level 4** category.
+The package `rclcpp_components` claims to be in the **Quality Level 2** category.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories) of the ROS2 developer guide.
 
@@ -70,11 +70,9 @@ All pull requests must resolve related documentation changes before merging.
 
 ### Feature Documentation [3.i]
 
-`rclcpp_components` does not have a documented feature list.
+`rclcpp_components` has a [feature list](http://docs.ros2.org/latest/api/rclcpp_components/) and each item in the list links to the corresponding feature documentation. There is documentation for all of the features, and new features require documentation before being added.
 
 ### Public API Documentation [3.ii]
-
-`rclcpp_components` does not cover a public API documentation.
 
 The API is publicly available in the [ROS 2 API documentation](http://docs.ros2.org/latest/api/rclcpp_components/).
 
@@ -120,6 +118,8 @@ This includes:
 - no lines are manually skipped in coverage calculations
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
+
+Current coverage statistics can be viewed (95%) [here](https://ci.ros2.org/job/ci_linux_coverage/lastBuild/cobertura/src_ros2_rclcpp_rclcpp_components_src/). Current coverage statistics need to be improved to reach a higher quality level.
 
 ### Performance [4.iv]
 
