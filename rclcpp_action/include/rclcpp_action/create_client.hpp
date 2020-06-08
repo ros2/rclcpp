@@ -59,20 +59,19 @@ create_client(
         return;
       }
       auto shared_node = weak_node.lock();
-      if (!shared_node) {
-        return;
-      }
-      // API expects a shared pointer, give it one with a deleter that does nothing.
-      std::shared_ptr<Client<ActionT>> fake_shared_ptr(ptr, [](Client<ActionT> *) {});
+      if (shared_node) {
+        // API expects a shared pointer, give it one with a deleter that does nothing.
+        std::shared_ptr<Client<ActionT>> fake_shared_ptr(ptr, [](Client<ActionT> *) {});
 
-      if (group_is_null) {
-        // Was added to default group
-        shared_node->remove_waitable(fake_shared_ptr, nullptr);
-      } else {
-        // Was added to a specfic group
-        auto shared_group = weak_group.lock();
-        if (shared_group) {
-          shared_node->remove_waitable(fake_shared_ptr, shared_group);
+        if (group_is_null) {
+          // Was added to default group
+          shared_node->remove_waitable(fake_shared_ptr, nullptr);
+        } else {
+          // Was added to a specific group
+          auto shared_group = weak_group.lock();
+          if (shared_group) {
+            shared_node->remove_waitable(fake_shared_ptr, shared_group);
+          }
         }
       }
       delete ptr;
