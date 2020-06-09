@@ -191,7 +191,7 @@ It is **Quality Level 4**, see its [Quality Declaration document](https://github
 
 #### `tracetools`
 
-The `tracetools` package provides utilities for instrumenting the code in `rcl` so that it may be traced for debugging and performance analysis.
+The `tracetools` package provides utilities for instrumenting the code in `rclcpp` so that it may be traced for debugging and performance analysis.
 
 It is **Quality Level 4**, see its [Quality Declaration document](https://gitlab.com/micro-ROS/ros_tracing/ros2_tracing/-/blob/master/tracetools/QUALITY_DECLARATION.md).
 
