@@ -188,10 +188,10 @@ public:
    *   code.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
    */
-  template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
+  template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   FutureReturnCode
   spin_until_future_complete(
-    const std::shared_future<ResponseT> & future,
+    const FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
     // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
