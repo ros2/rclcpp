@@ -143,10 +143,10 @@ public:
    *  exec.add_node(node);
    *  exec.spin_until_future_complete(future);
    */
-  template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
+  template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   rclcpp::FutureReturnCode
   spin_until_future_complete(
-    std::shared_future<ResponseT> & future,
+    FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
     std::future_status status = future.wait_for(std::chrono::seconds(0));
