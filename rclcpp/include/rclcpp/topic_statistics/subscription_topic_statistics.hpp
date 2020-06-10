@@ -116,7 +116,7 @@ public:
 
   /// Set the timer used to publish statistics messages.
   /**
-   * \param measurement_timer the timer to fire the publisher, created by the node
+   * \param publisher_timer the timer to fire the publisher, created by the node
    */
   void set_publisher_timer(rclcpp::TimerBase::SharedPtr publisher_timer)
   {

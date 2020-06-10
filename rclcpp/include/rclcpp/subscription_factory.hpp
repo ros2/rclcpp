@@ -68,7 +68,7 @@ struct SubscriptionFactory
  * \param[in] callback The user-defined callback function to receive a message
  * \param[in] options Additional options for the creation of the Subscription.
  * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
- * \param[in] subscription_topic_Optinal stats callback for topic_statistics
+ * \param[in] subscription_topic_stats Optional stats callback for topic_statistics
  */
 template<
   typename MessageT,
