@@ -74,11 +74,12 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface * node_base,
     const std::string & topic,
     const rclcpp::QoS & qos,
-    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options,
+    const rosidl_message_type_support_t & type_support)
   : PublisherBase(
       node_base,
       topic,
-      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
+      type_support,
       options.template to_rcl_publisher_options<MessageT>(qos)),
     options_(options),
     message_allocator_(new MessageAllocator(*options.get_allocator().get()))
@@ -113,6 +114,19 @@ public:
     }
     // Setup continues in the post construction method, post_init_setup().
   }
+
+  Publisher(
+    rclcpp::node_interfaces::NodeBaseInterface * node_base,
+    const std::string & topic,
+    const rclcpp::QoS & qos,
+    const rclcpp::PublisherOptionsWithAllocator<AllocatorT> & options)
+  : Publisher(
+      node_base,
+      topic,
+      qos,
+      options,
+      *rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>())
+  {}
 
   /// Called post construction, so that construction may continue after shared_from_this() works.
   virtual
@@ -276,8 +290,9 @@ public:
   }
 
 protected:
-  void
-  do_inter_process_publish(const MessageT & msg)
+  template<typename T = MessageT>
+  typename std::enable_if<!serialization_traits::is_serialized_message_class<T>::value, void>::type
+  do_inter_process_publish(const T & msg)
   {
     auto status = rcl_publish(publisher_handle_.get(), &msg, nullptr);
 
@@ -294,6 +309,14 @@ protected:
     if (RCL_RET_OK != status) {
       rclcpp::exceptions::throw_from_rcl_error(status, "failed to publish message");
     }
+  }
+
+  template<typename T = MessageT>
+  typename std::enable_if<serialization_traits::is_serialized_message_class<T>::value, void>::type
+  do_inter_process_publish(const T & msg)
+  {
+    // for serialized messages the serialized method is needed
+    do_serialized_publish(&msg.get_rcl_serialized_message());
   }
 
   void
