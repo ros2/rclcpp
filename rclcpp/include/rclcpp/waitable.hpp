@@ -119,7 +119,7 @@ public:
   RCLCPP_PUBLIC
   virtual
   bool
-  is_ready(rcl_wait_set_t *) = 0;
+  is_ready(rcl_wait_set_t * wait_set) = 0;
 
   /// Execute any entities of the Waitable that are ready.
   /**

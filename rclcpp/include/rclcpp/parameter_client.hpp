@@ -46,6 +46,15 @@ class AsyncParametersClient
 public:
   RCLCPP_SMART_PTR_DEFINITIONS(AsyncParametersClient)
 
+  /// Create an async parameters client.
+  /**
+   * \param[in] node_base_interface The node base interface of the corresponding node.
+   * \param[in] node_topics_interface Node topic base interface.
+   * \param[in] node_graph_interface The node graph interface of the corresponding node.
+   * \param[in] node_services_interface Node service interface.
+   * \param[in] remote_node_name (optional) name of the remote node
+   * \param[in] qos_profile (optional) The rmw qos profile to use to subscribe
+   */
   RCLCPP_PUBLIC
   AsyncParametersClient(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_interface,
@@ -55,12 +64,24 @@ public:
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
+  /// Constructor
+  /**
+   * \param[in] node The async paramters client will be added to this node.
+   * \param[in] remote_node_name (optional) name of the remote node
+   * \param[in] qos_profile (optional) The rmw qos profile to use to subscribe
+   */
   RCLCPP_PUBLIC
   AsyncParametersClient(
     const rclcpp::Node::SharedPtr node,
     const std::string & remote_node_name = "",
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_parameters);
 
+  /// Constructor
+  /**
+   * \param[in] node The  async paramters client will be added to this node.
+   * \param[in] remote_node_name (optional) name of the remote node
+   * \param[in] qos_profile (optional) The rmw qos profile to use to subscribe
+   */
   RCLCPP_PUBLIC
   AsyncParametersClient(
     rclcpp::Node * node,

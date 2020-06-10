@@ -105,9 +105,9 @@ public:
    *
    * Function is only applicable if the clock_type is `RCL_ROS_TIME`
    *
-   * \param pre_callback. Must be non-throwing
-   * \param post_callback. Must be non-throwing.
-   * \param threshold. Callbacks will be triggered if the time jump is greater
+   * \param pre_callback Must be non-throwing
+   * \param post_callback Must be non-throwing.
+   * \param threshold Callbacks will be triggered if the time jump is greater
    * then the threshold.
    * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    * \throws std::bad_alloc if the allocation of the JumpHandler fails.
