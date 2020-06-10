@@ -48,7 +48,7 @@ public:
   /// Time constructor
   /**
    * \param nanoseconds since time epoch
-   * \param clock_type clock type
+   * \param clock clock type
    */
   RCLCPP_PUBLIC
   explicit Time(int64_t nanoseconds = 0, rcl_clock_type_t clock = RCL_SYSTEM_TIME);
@@ -60,7 +60,7 @@ public:
   /// Time constructor
   /**
    * \param time_msg builtin_interfaces time message to copy
-   * \param clock_type clock type
+   * \param ros_time clock type
    * \throws std::runtime_error if seconds are negative
    */
   RCLCPP_PUBLIC
@@ -71,7 +71,6 @@ public:
   /// Time constructor
   /**
    * \param time_point rcl_time_point_t structure to copy
-   * \param clock_type clock type
    */
   RCLCPP_PUBLIC
   explicit Time(const rcl_time_point_t & time_point);
