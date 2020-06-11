@@ -99,4 +99,44 @@ InitOptions::get_rcl_init_options() const
   return init_options_.get();
 }
 
+bool
+InitOptions::use_default_domain_id()
+{
+  // Try to get the ROS_DOMAIN_ID environment variable.
+  const char * ros_domain_id = NULL;
+  const char * env_var = "ROS_DOMAIN_ID";
+  const char * get_env_error_str = NULL;
+  get_env_error_str = rcutils_get_env(env_var, &ros_domain_id);
+  if (NULL != get_env_error_str) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"),
+      "failed to get env var %s with %s", env_var, get_env_error_str);
+    return false;
+  }
+  if (ros_domain_id) {
+    unsigned long number = strtoul(ros_domain_id, NULL, 0);
+    if (number == (std::numeric_limits<uint32_t>::max)()) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"),
+        "failed to interpret %s as integral number", env_var);
+      return false;
+    }
+    init_options_->domain_id = (size_t) number;
+  }
+
+  return true;
+}
+
+void
+InitOptions::set_domain_id(size_t domain_id)
+{
+  init_options_->domain_id = domain_id;
+}
+
+size_t
+InitOptions::get_domain_id() const
+{
+  return init_options_->domain_id;
+}
+
 }  // namespace rclcpp

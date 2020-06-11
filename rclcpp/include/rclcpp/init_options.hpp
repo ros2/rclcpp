@@ -16,9 +16,11 @@
 #define RCLCPP__INIT_OPTIONS_HPP_
 
 #include <memory>
+#include <limits>
 
 #include "rcl/init_options.h"
 #include "rclcpp/visibility_control.hpp"
+#include "rcutils/get_env.h"
 
 namespace rclcpp
 {
@@ -80,6 +82,21 @@ public:
   const rcl_init_options_t *
   get_rcl_init_options() const;
 
+  /// Retrieve the ROS_DOMAIN_ID environment variable.
+  RCLCPP_PUBLIC
+  bool
+  use_default_domain_id();
+
+  /// Set domain id.
+  RCLCPP_PUBLIC
+  void
+  set_domain_id(size_t domain_id);
+
+  /// Return the domain id.
+  RCLCPP_PUBLIC
+  size_t
+  get_domain_id() const;
+
 protected:
   void
   finalize_init_options();
@@ -87,6 +104,7 @@ protected:
 private:
   std::unique_ptr<rcl_init_options_t> init_options_;
   bool initialize_logging_{true};
+  size_t domain_id_{std::numeric_limits<size_t>::max()};
 };
 
 }  // namespace rclcpp
