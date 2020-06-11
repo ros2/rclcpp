@@ -35,6 +35,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 namespace rclcpp
 {
@@ -244,9 +245,14 @@ public:
     }
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
-    while (rclcpp::ok(this->context_)) {
+    if (spinning.exchange(true)) {
+      throw std::runtime_error("spin_until_future_complete() called while already spinning");
+    }
+    RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+    while (rclcpp::ok(this->context_) && spinning.load()) {
       // Do one item of work.
-      spin_once(timeout_left);
+      spin_once_impl(timeout_left);
+
       // Check if the future is set, return SUCCESS if it is.
       status = future.wait_for(std::chrono::seconds(0));
       if (status == std::future_status::ready) {
@@ -359,6 +365,10 @@ protected:
 
 private:
   RCLCPP_DISABLE_COPY(Executor)
+
+  RCLCPP_PUBLIC
+  void
+  spin_once_impl(std::chrono::nanoseconds timeout);
 
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
   std::list<const rcl_guard_condition_t *> guard_conditions_;
