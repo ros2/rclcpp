@@ -234,7 +234,7 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   // non-blocking call to pre-load all available work
   wait_for_work(std::chrono::milliseconds::zero());
-  while (spinning.load() && max_duration_not_elapsed()) {
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
