@@ -234,7 +234,7 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
     throw std::runtime_error("spin_some() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-  while (spinning.load() && max_duration_not_elapsed()) {
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
     if (get_next_executable(any_exec, std::chrono::milliseconds::zero())) {
       execute_any_executable(any_exec);
