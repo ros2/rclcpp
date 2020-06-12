@@ -22,8 +22,8 @@
 
 #include "statistics_msgs/msg/metrics_message.hpp"
 
-#ifndef TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
-#define TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
+#ifndef RCLCPP__TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
+#define RCLCPP__TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
 
 namespace rclcpp
 {
@@ -149,4 +149,4 @@ private:
 }  // namespace topic_statistics
 }  // namespace rclcpp
 
-#endif  // TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
+#endif  // RCLCPP__TOPIC_STATISTICS__TEST_TOPIC_STATS_UTILS_HPP_
