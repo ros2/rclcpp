@@ -119,7 +119,6 @@ TEST_F(TestExecutors, testSpinUntilFutureCompleteSharedFuture) {
 class TestWaitable : public rclcpp::Waitable
 {
 public:
-
   TestWaitable()
   {
     rcl_guard_condition_options_t guard_condition_options =
@@ -168,6 +167,7 @@ public:
   {
     return count_;
   }
+
 private:
   size_t count_ = 0;
   rcl_guard_condition_t gc_;
