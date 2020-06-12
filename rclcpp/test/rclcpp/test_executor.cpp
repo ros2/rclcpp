@@ -115,3 +115,85 @@ TEST_F(TestExecutors, testSpinUntilFutureCompleteSharedFuture) {
   ret = executor.spin_until_future_complete(future.share(), 100ms);
   EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, ret);
 }
+
+class TestWaitable : public rclcpp::Waitable
+{
+public:
+
+  TestWaitable()
+  {
+    rcl_guard_condition_options_t guard_condition_options =
+      rcl_guard_condition_get_default_options();
+
+    gc_ = rcl_get_zero_initialized_guard_condition();
+    rcl_ret_t ret = rcl_guard_condition_init(
+      &gc_,
+      rclcpp::contexts::get_global_default_context()->get_rcl_context().get(),
+      guard_condition_options);
+    if (RCL_RET_OK != ret) {
+      rclcpp::exceptions::throw_from_rcl_error(ret);
+    }
+  }
+
+  bool
+  add_to_wait_set(rcl_wait_set_t * wait_set) override
+  {
+    rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, &gc_, NULL);
+    if (RCL_RET_OK != ret) {
+      return false;
+    }
+    ret = rcl_trigger_guard_condition(&gc_);
+    return RCL_RET_OK == ret;
+  }
+
+  bool
+  is_ready(rcl_wait_set_t * wait_set) override
+  {
+    (void)wait_set;
+    return true;
+  }
+
+  void
+  execute() override
+  {
+    count_++;
+    std::this_thread::sleep_for(100ms);
+  }
+
+  size_t
+  get_number_of_ready_guard_conditions() override {return 1;}
+
+  size_t
+  get_count()
+  {
+    return count_;
+  }
+private:
+  size_t count_ = 0;
+  rcl_guard_condition_t gc_;
+};
+
+TEST_F(TestExecutors, testSpinAllvsSpinSome) {
+  {
+    rclcpp::executors::SingleThreadedExecutor executor;
+    auto waitable_interfaces = node->get_node_waitables_interface();
+    auto my_waitable = std::make_shared<TestWaitable>();
+    waitable_interfaces->add_waitable(my_waitable, nullptr);
+    executor.add_node(node);
+    executor.spin_all(1s);
+    executor.remove_node(node);
+    EXPECT_GT(my_waitable->get_count(), 1u);
+    waitable_interfaces->remove_waitable(my_waitable, nullptr);
+  }
+  {
+    rclcpp::executors::SingleThreadedExecutor executor;
+    auto waitable_interfaces = node->get_node_waitables_interface();
+    auto my_waitable = std::make_shared<TestWaitable>();
+    waitable_interfaces->add_waitable(my_waitable, nullptr);
+    executor.add_node(node);
+    executor.spin_some(1s);
+    executor.remove_node(node);
+    EXPECT_EQ(my_waitable->get_count(), 1u);
+    waitable_interfaces->remove_waitable(my_waitable, nullptr);
+  }
+}
