@@ -182,7 +182,7 @@ public:
    * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
    * to block (which may have unintended consequences).
    *
-   * To ensure all available queued work is executed, this function have to check if there is
+   * To ensure all available queued work is executed, this function has to check if there is
    * available work repeatedly.
    * Thus, if the time that waitables take to be executed is longer than the period on which new waitables
    * become ready, this will execute work repeatedly until `max_duration` has elapsed.
