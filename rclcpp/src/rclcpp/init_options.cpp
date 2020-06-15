@@ -99,7 +99,7 @@ InitOptions::get_rcl_init_options() const
   return init_options_.get();
 }
 
-bool
+void
 InitOptions::use_default_domain_id()
 {
   // Try to get the ROS_DOMAIN_ID environment variable.
@@ -111,7 +111,6 @@ InitOptions::use_default_domain_id()
     RCLCPP_ERROR(
       rclcpp::get_logger("rclcpp"),
       "failed to get env var %s with %s", env_var, get_env_error_str);
-    return false;
   }
   if (ros_domain_id) {
     unsigned long number = strtoul(ros_domain_id, NULL, 0);
@@ -119,24 +118,36 @@ InitOptions::use_default_domain_id()
       RCLCPP_ERROR(
         rclcpp::get_logger("rclcpp"),
         "failed to interpret %s as integral number", env_var);
-      return false;
     }
-    init_options_->domain_id = (size_t) number;
+    rcl_ret_t ret = rcl_init_options_set_domain_id(init_options_.get(), (size_t) number);
+    if (RCL_RET_OK != ret) {
+      RCLCPP_ERROR(
+        rclcpp::get_logger("rclcpp"), "failed to set domain id (%d).", number);
+    }
   }
-
-  return true;
 }
 
 void
 InitOptions::set_domain_id(size_t domain_id)
 {
-  init_options_->domain_id = domain_id;
+  rcl_ret_t ret = rcl_init_options_set_domain_id(init_options_.get(), domain_id);
+  if (RCL_RET_OK != ret) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"), "failed to set domain id (%d).", domain_id);
+  }
 }
 
 size_t
 InitOptions::get_domain_id() const
 {
-  return init_options_->domain_id;
+  size_t domain_id;
+  rcl_ret_t ret = rcl_init_options_get_domain_id(init_options_.get(), &domain_id);
+  if (RCL_RET_OK != ret) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp"), "failed to get domain id.");
+  }
+
+  return domain_id;
 }
 
 }  // namespace rclcpp

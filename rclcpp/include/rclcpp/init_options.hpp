@@ -84,7 +84,7 @@ public:
 
   /// Retrieve the ROS_DOMAIN_ID environment variable.
   RCLCPP_PUBLIC
-  bool
+  void
   use_default_domain_id();
 
   /// Set domain id.
@@ -104,7 +104,6 @@ protected:
 private:
   std::unique_ptr<rcl_init_options_t> init_options_;
   bool initialize_logging_{true};
-  size_t domain_id_{std::numeric_limits<size_t>::max()};
 };
 
 }  // namespace rclcpp
