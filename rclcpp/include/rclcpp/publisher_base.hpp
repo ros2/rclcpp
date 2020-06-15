@@ -99,13 +99,13 @@ public:
   /// Get the rcl publisher handle.
   /** \return The rcl publisher handle. */
   RCLCPP_PUBLIC
-  rcl_publisher_t *
+  std::shared_ptr<rcl_publisher_t>
   get_publisher_handle();
 
   /// Get the rcl publisher handle.
   /** \return The rcl publisher handle. */
   RCLCPP_PUBLIC
-  const rcl_publisher_t *
+  std::shared_ptr<const rcl_publisher_t>
   get_publisher_handle() const;
 
   /// Get all the QoS event handlers associated with this publisher.
@@ -200,10 +200,11 @@ protected:
     const EventCallbackT & callback,
     const rcl_publisher_event_type_t event_type)
   {
-    auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
+    auto handler = std::make_shared<QOSEventHandler<EventCallbackT,
+        std::shared_ptr<rcl_publisher_t>>>(
       callback,
       rcl_publisher_event_init,
-      &publisher_handle_,
+      publisher_handle_,
       event_type);
     event_handlers_.emplace_back(handler);
   }
@@ -213,7 +214,7 @@ protected:
 
   std::shared_ptr<rcl_node_t> rcl_node_handle_;
 
-  rcl_publisher_t publisher_handle_ = rcl_get_zero_initialized_publisher();
+  std::shared_ptr<rcl_publisher_t> publisher_handle_;
 
   std::vector<std::shared_ptr<rclcpp::QOSEventHandlerBase>> event_handlers_;
 

@@ -23,6 +23,10 @@ namespace rclcpp
 namespace memory_strategies
 {
 
+/// Create a MemoryStrategy sharedPtr
+/**
+ * \return a MemoryStrategy sharedPtr
+ */
 RCLCPP_PUBLIC
 memory_strategy::MemoryStrategy::SharedPtr
 create_default_strategy();

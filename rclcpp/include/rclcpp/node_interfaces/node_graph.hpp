@@ -65,6 +65,12 @@ public:
   get_service_names_and_types() const override;
 
   RCLCPP_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const override;
+
+  RCLCPP_PUBLIC
   std::vector<std::string>
   get_node_names() const override;
 

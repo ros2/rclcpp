@@ -52,8 +52,9 @@ public:
    * However, this user code is ought to be usable even when dynamically linked against
    * a middleware which doesn't support message loaning in which case the allocator will be used.
    *
-   * \param pub rclcpp::Publisher instance to which the memory belongs
-   * \param allocator Allocator instance in case middleware can not allocate messages
+   * \param[in] pub rclcpp::Publisher instance to which the memory belongs
+   * \param[in] allocator Allocator instance in case middleware can not allocate messages
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   LoanedMessage(
     const rclcpp::PublisherBase & pub,
@@ -65,7 +66,7 @@ public:
     if (pub_.can_loan_messages()) {
       void * message_ptr = nullptr;
       auto ret = rcl_borrow_loaned_message(
-        pub_.get_publisher_handle(),
+        pub_.get_publisher_handle().get(),
         rosidl_typesupport_cpp::get_message_type_support_handle<MessageT>(),
         &message_ptr);
       if (RCL_RET_OK != ret) {
@@ -98,8 +99,9 @@ public:
    * However, this user code is ought to be usable even when dynamically linked against
    * a middleware which doesn't support message loaning in which case the allocator will be used.
    *
-   * \param pub rclcpp::Publisher instance to which the memory belongs
-   * \param allocator Allocator instance in case middleware can not allocate messages
+   * \param[in] pub rclcpp::Publisher instance to which the memory belongs
+   * \param[in] allocator Allocator instance in case middleware can not allocate messages
+   * \throws anything rclcpp::exceptions::throw_from_rcl_error can throw.
    */
   LoanedMessage(
     const rclcpp::PublisherBase * pub,
@@ -137,7 +139,7 @@ public:
     if (pub_.can_loan_messages()) {
       // return allocated memory to the middleware
       auto ret =
-        rcl_return_loaned_message_from_publisher(pub_.get_publisher_handle(), message_);
+        rcl_return_loaned_message_from_publisher(pub_.get_publisher_handle().get(), message_);
       if (ret != RCL_RET_OK) {
         RCLCPP_ERROR(
           error_logger, "rcl_deallocate_loaned_message failed: %s", rcl_get_error_string().str);

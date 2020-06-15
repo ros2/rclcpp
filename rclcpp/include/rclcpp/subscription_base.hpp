@@ -91,7 +91,7 @@ public:
   get_subscription_handle();
 
   RCLCPP_PUBLIC
-  const std::shared_ptr<rcl_subscription_t>
+  std::shared_ptr<const rcl_subscription_t>
   get_subscription_handle() const;
 
   /// Get all the QoS event handlers associated with this subscription.
@@ -110,6 +110,7 @@ public:
    * May throw runtime_error when an unexpected error occurs.
    *
    * \return The actual qos settings.
+   * \throws std::runtime_error if failed to get qos settings
    */
   RCLCPP_PUBLIC
   rclcpp::QoS
@@ -201,6 +202,10 @@ public:
   const rosidl_message_type_support_t &
   get_message_type_support_handle() const;
 
+  /// Return if the subscription is serialized
+  /**
+   * \return `true` if the subscription is serialized, `false` otherwise
+   */
   RCLCPP_PUBLIC
   bool
   is_serialized() const;
@@ -232,7 +237,11 @@ public:
     uint64_t intra_process_subscription_id,
     IntraProcessManagerWeakPtr weak_ipm);
 
-  /// Return the waitable for intra-process, or nullptr if intra-process is not setup.
+  /// Return the waitable for intra-process
+  /**
+   * \return the waitable sharedpointer for intra-process, or nullptr if intra-process is not setup.
+   * \throws std::runtime_error if the intra process manager is destroyed
+   */
   RCLCPP_PUBLIC
   rclcpp::Waitable::SharedPtr
   get_intra_process_waitable() const;
@@ -261,10 +270,11 @@ protected:
     const EventCallbackT & callback,
     const rcl_subscription_event_type_t event_type)
   {
-    auto handler = std::make_shared<QOSEventHandler<EventCallbackT>>(
+    auto handler = std::make_shared<QOSEventHandler<EventCallbackT,
+        std::shared_ptr<rcl_subscription_t>>>(
       callback,
       rcl_subscription_event_init,
-      get_subscription_handle().get(),
+      get_subscription_handle(),
       event_type);
     qos_events_in_use_by_wait_set_.insert(std::make_pair(handler.get(), false));
     event_handlers_.emplace_back(handler);

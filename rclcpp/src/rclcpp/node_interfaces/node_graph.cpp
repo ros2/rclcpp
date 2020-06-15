@@ -70,8 +70,9 @@ NodeGraph::get_topic_names_and_types(bool no_demangle) const
     if (rcl_names_and_types_fini(&topic_names_and_types) != RCL_RET_OK) {
       error_msg += std::string(", failed also to cleanup topic names and types, leaking memory: ") +
         rcl_get_error_string().str;
+      rcl_reset_error();
     }
-    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+    throw std::runtime_error(error_msg);
   }
 
   std::map<std::string, std::vector<std::string>> topics_and_types;
@@ -111,8 +112,9 @@ NodeGraph::get_service_names_and_types() const
       error_msg +=
         std::string(", failed also to cleanup service names and types, leaking memory: ") +
         rcl_get_error_string().str;
+      rcl_reset_error();
     }
-    throw std::runtime_error(error_msg + rcl_get_error_string().str);
+    throw std::runtime_error(error_msg);
   }
 
   std::map<std::string, std::vector<std::string>> services_and_types;
@@ -129,6 +131,48 @@ NodeGraph::get_service_names_and_types() const
     throw std::runtime_error(
       std::string("could not destroy service names and types: ") + rcl_get_error_string().str);
     // *INDENT-ON*
+  }
+
+  return services_and_types;
+}
+
+std::map<std::string, std::vector<std::string>>
+NodeGraph::get_service_names_and_types_by_node(
+  const std::string & node_name,
+  const std::string & namespace_) const
+{
+  rcl_names_and_types_t service_names_and_types = rcl_get_zero_initialized_names_and_types();
+  rcl_allocator_t allocator = rcl_get_default_allocator();
+  rcl_ret_t ret = rcl_get_service_names_and_types_by_node(
+    node_base_->get_rcl_node_handle(),
+    &allocator,
+    node_name.c_str(),
+    namespace_.c_str(),
+    &service_names_and_types);
+  if (ret != RCL_RET_OK) {
+    auto error_msg = std::string("failed to get service names and types by node: ") +
+      rcl_get_error_string().str;
+    rcl_reset_error();
+    if (rcl_names_and_types_fini(&service_names_and_types) != RCL_RET_OK) {
+      error_msg +=
+        std::string(", failed also to cleanup service names and types, leaking memory: ") +
+        rcl_get_error_string().str;
+      rcl_reset_error();
+    }
+    throw std::runtime_error(error_msg);
+  }
+
+  std::map<std::string, std::vector<std::string>> services_and_types;
+  for (size_t i = 0; i < service_names_and_types.names.size; ++i) {
+    std::string service_name = service_names_and_types.names.data[i];
+    for (size_t j = 0; j < service_names_and_types.types[i].size; ++j) {
+      services_and_types[service_name].emplace_back(service_names_and_types.types[i].data[j]);
+    }
+  }
+
+  ret = rcl_names_and_types_fini(&service_names_and_types);
+  if (ret != RCL_RET_OK) {
+    throw_from_rcl_error(ret, "could not destroy service names and types");
   }
 
   return services_and_types;
@@ -324,9 +368,11 @@ rclcpp::Event::SharedPtr
 NodeGraph::get_graph_event()
 {
   auto event = rclcpp::Event::make_shared();
-  std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
-  graph_events_.push_back(event);
-  graph_users_count_++;
+  {
+    std::lock_guard<std::mutex> graph_changed_lock(graph_mutex_);
+    graph_events_.push_back(event);
+    graph_users_count_++;
+  }
   // on first call, add node to graph_listener_
   if (should_add_to_graph_listener_.exchange(false)) {
     graph_listener_->add_node(this);

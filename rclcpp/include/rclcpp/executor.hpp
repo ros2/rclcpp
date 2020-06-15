@@ -37,6 +37,7 @@
 #include "rclcpp/node_interfaces/node_base_interface.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp/visibility_control.hpp"
+#include "rclcpp/scope_exit.hpp"
 
 namespace rclcpp
 {
@@ -88,6 +89,9 @@ public:
   add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
+  /**
+   * \see rclcpp::Executor::add_node
+   */
   RCLCPP_PUBLIC
   virtual void
   add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
@@ -104,6 +108,9 @@ public:
   remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
+  /**
+   * \see rclcpp::Executor::remove_node
+   */
   RCLCPP_PUBLIC
   virtual void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true);
@@ -182,10 +189,10 @@ public:
    *   code.
    * \return The return code, one of `SUCCESS`, `INTERRUPTED`, or `TIMEOUT`.
    */
-  template<typename ResponseT, typename TimeRepT = int64_t, typename TimeT = std::milli>
+  template<typename FutureT, typename TimeRepT = int64_t, typename TimeT = std::milli>
   FutureReturnCode
   spin_until_future_complete(
-    const std::shared_future<ResponseT> & future,
+    const FutureT & future,
     std::chrono::duration<TimeRepT, TimeT> timeout = std::chrono::duration<TimeRepT, TimeT>(-1))
   {
     // TODO(wjwwood): does not work recursively; can't call spin_node_until_future_complete
@@ -206,9 +213,14 @@ public:
     }
     std::chrono::nanoseconds timeout_left = timeout_ns;
 
-    while (rclcpp::ok(this->context_)) {
+    if (spinning.exchange(true)) {
+      throw std::runtime_error("spin_until_future_complete() called while already spinning");
+    }
+    RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
+    while (rclcpp::ok(this->context_) && spinning.load()) {
       // Do one item of work.
-      spin_once(timeout_left);
+      spin_once_impl(timeout_left);
+
       // Check if the future is set, return SUCCESS if it is.
       status = future.wait_for(std::chrono::seconds(0));
       if (status == std::future_status::ready) {
@@ -232,7 +244,10 @@ public:
   }
 
   /// Cancel any running spin* function, causing it to return.
-  /* This function can be called asynchonously from any thread. */
+  /**
+   * This function can be called asynchonously from any thread.
+   * \throws std::runtime_error if there is an issue triggering the guard condition
+   */
   RCLCPP_PUBLIC
   void
   cancel();
@@ -242,6 +257,7 @@ public:
    * Switching the memory strategy while the executor is spinning in another threading could have
    * unintended consequences.
    * \param[in] memory_strategy Shared pointer to the memory strategy to set.
+   * \throws std::runtime_error if memory_strategy is null
    */
   RCLCPP_PUBLIC
   void
@@ -255,8 +271,10 @@ protected:
     std::chrono::nanoseconds timeout);
 
   /// Find the next available executable and do the work associated with it.
-  /** \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
+  /**
+   * \param[in] any_exec Union structure that can hold any executable type (timer, subscription,
    * service, client).
+   * \throws std::runtime_error if there is an issue triggering the guard condition
    */
   RCLCPP_PUBLIC
   void
@@ -279,6 +297,9 @@ protected:
   static void
   execute_client(rclcpp::ClientBase::SharedPtr client);
 
+  /**
+   * \throws std::runtime_error if the wait set can be cleared
+   */
   RCLCPP_PUBLIC
   void
   wait_for_work(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
@@ -320,6 +341,10 @@ protected:
   std::shared_ptr<rclcpp::Context> context_;
 
   RCLCPP_DISABLE_COPY(Executor)
+
+  RCLCPP_PUBLIC
+  void
+  spin_once_impl(std::chrono::nanoseconds timeout);
 
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
   std::list<const rcl_guard_condition_t *> guard_conditions_;

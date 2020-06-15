@@ -102,11 +102,11 @@ protected:
   size_t wait_set_event_index_;
 };
 
-template<typename EventCallbackT>
+template<typename EventCallbackT, typename ParentHandleT>
 class QOSEventHandler : public QOSEventHandlerBase
 {
 public:
-  template<typename InitFuncT, typename ParentHandleT, typename EventTypeEnum>
+  template<typename InitFuncT, typename EventTypeEnum>
   QOSEventHandler(
     const EventCallbackT & callback,
     InitFuncT init_func,
@@ -114,8 +114,9 @@ public:
     EventTypeEnum event_type)
   : event_callback_(callback)
   {
+    parent_handle_ = parent_handle;
     event_handle_ = rcl_get_zero_initialized_event();
-    rcl_ret_t ret = init_func(&event_handle_, parent_handle, event_type);
+    rcl_ret_t ret = init_func(&event_handle_, parent_handle.get(), event_type);
     if (ret != RCL_RET_OK) {
       if (ret == RCL_RET_UNSUPPORTED) {
         UnsupportedEventTypeException exc(ret, rcl_get_error_state(), "Failed to initialize event");
@@ -148,6 +149,7 @@ private:
   using EventCallbackInfoT = typename std::remove_reference<typename
       rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
 
+  ParentHandleT parent_handle_;
   EventCallbackT event_callback_;
 };
 

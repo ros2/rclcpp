@@ -3,6 +3,21 @@ Changelog for package rclcpp_action
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.0.0 (2020-06-01)
+------------------
+* Added missing virtual destructors. (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)
+* Add Security Vulnerability Policy pointing to REP-2006. (`#1130 <https://github.com/ros2/rclcpp/issues/1130>`_)
+* Contributors: Chris Lalancette, Ivan Santiago Paunovic
+
+1.1.0 (2020-05-26)
+------------------
+* Action client holds weak pointers to goal handles (`#1122 <https://github.com/ros2/rclcpp/issues/1122>`_)
+* Deprecate ClientGoalHandle::async_result() (`#1120 <https://github.com/ros2/rclcpp/issues/1120>`_)
+* Improve documentation (`#1106 <https://github.com/ros2/rclcpp/issues/1106>`_)
+* Fixed rep links and added more details to dependencies in quality declaration (`#1116 <https://github.com/ros2/rclcpp/issues/1116>`_)
+* Update quality declaration to reflect version 1.0 (`#1115 <https://github.com/ros2/rclcpp/issues/1115>`_)
+* Contributors: Alejandro Hernández Cordero, Jacob Perron, Stephen Brawner
+
 1.0.0 (2020-05-12)
 ------------------
 

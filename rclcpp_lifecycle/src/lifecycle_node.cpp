@@ -255,11 +255,40 @@ LifecycleNode::list_parameters(
   return node_parameters_->list_parameters(prefixes, depth);
 }
 
+rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr
+LifecycleNode::add_on_set_parameters_callback(OnParametersSetCallbackType callback)
+{
+  return node_parameters_->add_on_set_parameters_callback(callback);
+}
+
+void
+LifecycleNode::remove_on_set_parameters_callback(
+  const OnSetParametersCallbackHandle * const callback)
+{
+  node_parameters_->remove_on_set_parameters_callback(callback);
+}
+
+// suppress deprecated function warning
+#if !defined(_WIN32)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#else  // !defined(_WIN32)
+# pragma warning(push)
+# pragma warning(disable: 4996)
+#endif
+
 rclcpp::Node::OnParametersSetCallbackType
 LifecycleNode::set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback)
 {
   return node_parameters_->set_on_parameters_set_callback(callback);
 }
+
+// remove warning suppression
+#if !defined(_WIN32)
+# pragma GCC diagnostic pop
+#else  // !defined(_WIN32)
+# pragma warning(pop)
+#endif
 
 std::vector<std::string>
 LifecycleNode::get_node_names() const
@@ -277,6 +306,15 @@ std::map<std::string, std::vector<std::string>>
 LifecycleNode::get_service_names_and_types() const
 {
   return node_graph_->get_service_names_and_types();
+}
+
+std::map<std::string, std::vector<std::string>>
+LifecycleNode::get_service_names_and_types_by_node(
+  const std::string & node_name,
+  const std::string & namespace_) const
+{
+  return node_graph_->get_service_names_and_types_by_node(
+    node_name, namespace_);
 }
 
 size_t

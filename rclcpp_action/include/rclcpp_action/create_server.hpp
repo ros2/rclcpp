@@ -39,18 +39,18 @@ namespace rclcpp_action
  *
  * \sa Server::Server() for more information.
  *
- * \param node_base_interface[in] The node base interface of the corresponding node.
- * \param node_clock_interface[in] The node clock interface of the corresponding node.
- * \param node_logging_interface[in] The node logging interface of the corresponding node.
- * \param node_waitables_interface[in] The node waitables interface of the corresponding node.
- * \param name[in] The action name.
+ * \param[in] node_base_interface The node base interface of the corresponding node.
+ * \param[in] node_clock_interface The node clock interface of the corresponding node.
+ * \param[in] node_logging_interface The node logging interface of the corresponding node.
+ * \param[in] node_waitables_interface The node waitables interface of the corresponding node.
+ * \param[in] name The action name.
  * \param[in] handle_goal A callback that decides if a goal should be accepted or rejected.
  * \param[in] handle_cancel A callback that decides if a goal should be attempted to be canceled.
  *  The return from this callback only indicates if the server will try to cancel a goal.
  *  It does not indicate if the goal was actually canceled.
  * \param[in] handle_accepted A callback that is called to give the user a handle to the goal.
  * \param[in] options Options to pass to the underlying `rcl_action_server_t`.
- * \param group[in] The action server will be added to this callback group.
+ * \param[in] group The action server will be added to this callback group.
  *   If `nullptr`, then the action server is added to the default callback group.
  */
 template<typename ActionT>
@@ -78,20 +78,19 @@ create_server(
         return;
       }
       auto shared_node = weak_node.lock();
-      if (!shared_node) {
-        return;
-      }
-      // API expects a shared pointer, give it one with a deleter that does nothing.
-      std::shared_ptr<Server<ActionT>> fake_shared_ptr(ptr, [](Server<ActionT> *) {});
+      if (shared_node) {
+        // API expects a shared pointer, give it one with a deleter that does nothing.
+        std::shared_ptr<Server<ActionT>> fake_shared_ptr(ptr, [](Server<ActionT> *) {});
 
-      if (group_is_null) {
-        // Was added to default group
-        shared_node->remove_waitable(fake_shared_ptr, nullptr);
-      } else {
-        // Was added to a specfic group
-        auto shared_group = weak_group.lock();
-        if (shared_group) {
-          shared_node->remove_waitable(fake_shared_ptr, shared_group);
+        if (group_is_null) {
+          // Was added to default group
+          shared_node->remove_waitable(fake_shared_ptr, nullptr);
+        } else {
+          // Was added to a specific group
+          auto shared_group = weak_group.lock();
+          if (shared_group) {
+            shared_node->remove_waitable(fake_shared_ptr, shared_group);
+          }
         }
       }
       delete ptr;
@@ -117,15 +116,15 @@ create_server(
  *
  * \sa Server::Server() for more information.
  *
- * \param node[in] The action server will be added to this node.
- * \param name[in] The action name.
+ * \param[in] node] The action server will be added to this node.
+ * \param[in] name The action name.
  * \param[in] handle_goal A callback that decides if a goal should be accepted or rejected.
  * \param[in] handle_cancel A callback that decides if a goal should be attempted to be canceled.
  *  The return from this callback only indicates if the server will try to cancel a goal.
  *  It does not indicate if the goal was actually canceled.
  * \param[in] handle_accepted A callback that is called to give the user a handle to the goal.
  * \param[in] options Options to pass to the underlying `rcl_action_server_t`.
- * \param group[in] The action server will be added to this callback group.
+ * \param[in] group The action server will be added to this callback group.
  *   If `nullptr`, then the action server is added to the default callback group.
  */
 template<typename ActionT, typename NodeT>

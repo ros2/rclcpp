@@ -31,6 +31,7 @@ class RateBase
 public:
   RCLCPP_SMART_PTR_DEFINITIONS_NOT_COPYABLE(RateBase)
 
+  virtual ~RateBase() {}
   virtual bool sleep() = 0;
   virtual bool is_steady() const = 0;
   virtual void reset() = 0;

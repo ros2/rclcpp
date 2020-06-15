@@ -156,6 +156,17 @@ public:
       std::shared_ptr<typename ServiceT::Response>)>;
   RCLCPP_SMART_PTR_DEFINITIONS(Service)
 
+  /// Default constructor.
+  /**
+   * The constructor for a Service is almost never called directly.
+   * Instead, services should be instantiated through the function
+   * rclcpp::create_service().
+   *
+   * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
+   * \param[in] service_name Name of the topic to publish to.
+   * \param[in] any_callback User defined callback to call when a client request is received.
+   * \param[in] service_options options for the subscription.
+   */
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
     const std::string & service_name,
@@ -219,6 +230,16 @@ public:
 #endif
   }
 
+  /// Default constructor.
+  /**
+   * The constructor for a Service is almost never called directly.
+   * Instead, services should be instantiated through the function
+   * rclcpp::create_service().
+   *
+   * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
+   * \param[in] service_handle service handle.
+   * \param[in] any_callback User defined callback to call when a client request is received.
+   */
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
     std::shared_ptr<rcl_service_t> service_handle,
@@ -244,6 +265,16 @@ public:
 #endif
   }
 
+  /// Default constructor.
+  /**
+   * The constructor for a Service is almost never called directly.
+   * Instead, services should be instantiated through the function
+   * rclcpp::create_service().
+   *
+   * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
+   * \param[in] service_handle service handle.
+   * \param[in] any_callback User defined callback to call when a client request is received.
+   */
   Service(
     std::shared_ptr<rcl_node_t> node_handle,
     rcl_service_t * service_handle,

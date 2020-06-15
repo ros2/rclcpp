@@ -61,6 +61,8 @@ public:
    * \param[in] subscriptions Vector of subscriptions to be added.
    * \param[in] guard_conditions Vector of guard conditions to be added.
    * \param[in] timers Vector of timers to be added.
+   * \param[in] clients Vector of clients and their associated entity to be added.
+   * \param[in] services Vector of services and their associated entity to be added.
    * \param[in] waitables Vector of waitables and their associated entity to be added.
    * \param[in] context Custom context to be used, defaults to global default.
    * \throws std::invalid_argument If context is nullptr.
@@ -643,7 +645,8 @@ public:
    *   when time_to_wait is < 0, or
    * \returns Empty if the wait set is empty, avoiding the possibility of
    *   waiting indefinitely on an empty wait set.
-   * \throws rclcpp::exceptions::RCLError on unhandled rcl errors
+   * \throws rclcpp::exceptions::RCLError on unhandled rcl errors or,
+   * \throws std::runtime_error if unknown WaitResultKind
    */
   template<class Rep = int64_t, class Period = std::milli>
   RCUTILS_WARN_UNUSED

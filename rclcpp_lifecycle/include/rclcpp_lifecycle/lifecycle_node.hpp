@@ -124,7 +124,6 @@ public:
   /// Create a new lifecycle node with the specified name.
   /**
    * \param[in] node_name Name of the node.
-   * \param[in] namespace_ Namespace of the node.
    * \param[in] options Additional options to control creation of the node.
    */
   RCLCPP_LIFECYCLE_PUBLIC
@@ -447,13 +446,35 @@ public:
   rcl_interfaces::msg::ListParametersResult
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const;
 
+  using OnSetParametersCallbackHandle =
+    rclcpp::node_interfaces::OnSetParametersCallbackHandle;
   using OnParametersSetCallbackType =
     rclcpp::node_interfaces::NodeParametersInterface::OnParametersSetCallbackType;
 
+  /// Add a callback for when parameters are being set.
+  /**
+   * \sa rclcpp::Node::add_on_set_parameters_callback
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle::SharedPtr
+  add_on_set_parameters_callback(
+    rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback);
+
+  /// Remove a callback registered with `add_on_set_parameters_callback`.
+  /**
+   * \sa rclcpp::Node::remove_on_set_parameters_callback
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  void
+  remove_on_set_parameters_callback(
+    const rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle * const handler);
+
   /// Register a callback to be called anytime a parameter is about to be changed.
   /**
+   * \deprecated Use add_on_set_parameters_callback instead.
    * \sa rclcpp::Node::set_on_parameters_set_callback
    */
+  [[deprecated("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
   RCLCPP_LIFECYCLE_PUBLIC
   rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType
   set_on_parameters_set_callback(
@@ -482,6 +503,19 @@ public:
   RCLCPP_LIFECYCLE_PUBLIC
   std::map<std::string, std::vector<std::string>>
   get_service_names_and_types() const;
+
+  /// Return a map of existing service names to list of service types for a specific node.
+  /**
+   * This function only considers services - not clients.
+   *
+   * \param[in] node_name name of the node
+   * \param[in] namespace_ namespace of the node
+   */
+  RCLCPP_LIFECYCLE_PUBLIC
+  std::map<std::string, std::vector<std::string>>
+  get_service_names_and_types_by_node(
+    const std::string & node_name,
+    const std::string & namespace_) const;
 
   /// Return the number of publishers that are advertised on a given topic.
   /**

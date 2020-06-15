@@ -3,6 +3,23 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+2.0.0 (2020-06-01)
+------------------
+* Added missing virtual destructors. (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)
+* Add Security Vulnerability Policy pointing to REP-2006. (`#1130 <https://github.com/ros2/rclcpp/issues/1130>`_)
+* Fixed ``test_lifecycle_node.cpp:check_parameters`` (`#1136 <https://github.com/ros2/rclcpp/issues/1136>`_)
+* Contributors: Chris Lalancette, Ivan Santiago Paunovic
+
+1.1.0 (2020-05-26)
+------------------
+* Deprecate set_on_parameters_set_callback (`#1123 <https://github.com/ros2/rclcpp/issues/1123>`_)
+* Add missing parameter callback functions to lifecycle node (`#1134 <https://github.com/ros2/rclcpp/issues/1134>`_)
+* Expose get_service_names_and_types_by_node from rcl in rclcpp (`#1131 <https://github.com/ros2/rclcpp/issues/1131>`_)
+* Improve documentation (`#1106 <https://github.com/ros2/rclcpp/issues/1106>`_)
+* Fixed rep links and added more details to dependencies in quality declaration (`#1116 <https://github.com/ros2/rclcpp/issues/1116>`_)
+* Update quality declaration to reflect version 1.0 (`#1115 <https://github.com/ros2/rclcpp/issues/1115>`_)
+* Contributors: Alejandro Hernández Cordero, Claire Wang, Dirk Thomas, Stephen Brawner
+
 1.0.0 (2020-05-12)
 ------------------
 * Avoid callback_group deprecation (`#1108 <https://github.com/ros2/rclcpp/issues/1108>`_)

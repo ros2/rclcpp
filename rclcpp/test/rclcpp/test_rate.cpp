@@ -22,9 +22,9 @@
    Basic tests for the Rate and WallRate classes.
  */
 TEST(TestRate, rate_basics) {
-  auto period = std::chrono::milliseconds(100);
-  auto offset = std::chrono::milliseconds(50);
-  auto epsilon = std::chrono::milliseconds(1);
+  auto period = std::chrono::milliseconds(1000);
+  auto offset = std::chrono::milliseconds(500);
+  auto epsilon = std::chrono::milliseconds(100);
   double overrun_ratio = 1.5;
 
   auto start = std::chrono::system_clock::now();
@@ -33,15 +33,15 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::system_clock::now();
   auto delta = one - start;
-  ASSERT_TRUE(period < delta);
-  ASSERT_TRUE(period * overrun_ratio > delta);
+  EXPECT_LT(period, delta + epsilon);
+  EXPECT_GT(period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset);
   ASSERT_TRUE(r.sleep());
   auto two = std::chrono::system_clock::now();
   delta = two - start;
-  ASSERT_TRUE(2 * period < delta);
-  ASSERT_TRUE(2 * period * overrun_ratio > delta);
+  EXPECT_LT(2 * period, delta);
+  EXPECT_GT(2 * period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset);
   auto two_offset = std::chrono::system_clock::now();
@@ -49,8 +49,8 @@ TEST(TestRate, rate_basics) {
   ASSERT_TRUE(r.sleep());
   auto three = std::chrono::system_clock::now();
   delta = three - two_offset;
-  ASSERT_TRUE(period < delta);
-  ASSERT_TRUE(period * overrun_ratio > delta);
+  EXPECT_LT(period, delta + epsilon);
+  EXPECT_GT(period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset + period);
   auto four = std::chrono::system_clock::now();
@@ -72,15 +72,15 @@ TEST(TestRate, wall_rate_basics) {
   ASSERT_TRUE(r.sleep());
   auto one = std::chrono::steady_clock::now();
   auto delta = one - start;
-  ASSERT_TRUE(period < delta);
-  ASSERT_TRUE(period * overrun_ratio > delta);
+  EXPECT_LT(period, delta);
+  EXPECT_GT(period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset);
   ASSERT_TRUE(r.sleep());
   auto two = std::chrono::steady_clock::now();
   delta = two - start;
-  ASSERT_TRUE(2 * period < delta + epsilon);
-  ASSERT_TRUE(2 * period * overrun_ratio > delta);
+  EXPECT_LT(2 * period, delta + epsilon);
+  EXPECT_GT(2 * period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset);
   auto two_offset = std::chrono::steady_clock::now();
@@ -88,13 +88,13 @@ TEST(TestRate, wall_rate_basics) {
   ASSERT_TRUE(r.sleep());
   auto three = std::chrono::steady_clock::now();
   delta = three - two_offset;
-  ASSERT_TRUE(period < delta);
-  ASSERT_TRUE(period * overrun_ratio > delta);
+  EXPECT_LT(period, delta);
+  EXPECT_GT(period * overrun_ratio, delta);
 
   rclcpp::sleep_for(offset + period);
   auto four = std::chrono::steady_clock::now();
   ASSERT_FALSE(r.sleep());
   auto five = std::chrono::steady_clock::now();
   delta = five - four;
-  ASSERT_TRUE(epsilon > delta);
+  EXPECT_GT(epsilon, delta);
 }

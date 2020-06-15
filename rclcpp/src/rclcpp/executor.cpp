@@ -234,7 +234,7 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
   // non-blocking call to pre-load all available work
   wait_for_work(std::chrono::milliseconds::zero());
-  while (spinning.load() && max_duration_not_elapsed()) {
+  while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
@@ -245,16 +245,22 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
 }
 
 void
+Executor::spin_once_impl(std::chrono::nanoseconds timeout)
+{
+  AnyExecutable any_exec;
+  if (get_next_executable(any_exec, timeout)) {
+    execute_any_executable(any_exec);
+  }
+}
+
+void
 Executor::spin_once(std::chrono::nanoseconds timeout)
 {
   if (spinning.exchange(true)) {
     throw std::runtime_error("spin_once() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-  AnyExecutable any_exec;
-  if (get_next_executable(any_exec, timeout)) {
-    execute_any_executable(any_exec);
-  }
+  spin_once_impl(timeout);
 }
 
 void

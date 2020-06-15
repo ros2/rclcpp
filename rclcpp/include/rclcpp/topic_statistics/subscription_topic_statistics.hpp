@@ -75,6 +75,7 @@ public:
    * topic source
    * \param publisher instance constructed by the node in order to publish statistics data.
    * This class owns the publisher.
+   * \throws std::invalid_argument if publisher pointer is nullptr
    */
   SubscriptionTopicStatistics(
     const std::string & node_name,
@@ -115,7 +116,7 @@ public:
 
   /// Set the timer used to publish statistics messages.
   /**
-   * \param measurement_timer the timer to fire the publisher, created by the node
+   * \param publisher_timer the timer to fire the publisher, created by the node
    */
   void set_publisher_timer(rclcpp::TimerBase::SharedPtr publisher_timer)
   {

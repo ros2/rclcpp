@@ -94,7 +94,7 @@ public:
    * \param[in] callback User defined callback to call when a message is received.
    * \param[in] options Options for the subscription.
    * \param[in] message_memory_strategy The memory strategy to be used for managing message memory.
-   * \param[in] subscription_topic_statistics pointer to a topic statistics subcription.
+   * \param[in] subscription_topic_statistics Optional pointer to a topic statistics subcription.
    * \throws std::invalid_argument if the QoS is uncompatible with intra-process (if one
    *   of the following conditions are true: qos_profile.history == RMW_QOS_POLICY_HISTORY_KEEP_ALL,
    *   qos_profile.depth == 0 or qos_profile.durability != RMW_QOS_POLICY_DURABILITY_VOLATILE).
@@ -295,7 +295,9 @@ public:
   }
 
   /// Return the borrowed message.
-  /** \param message message to be returned */
+  /**
+   * \param[inout] message message to be returned
+   */
   void
   return_message(std::shared_ptr<void> & message) override
   {
@@ -303,6 +305,10 @@ public:
     message_memory_strategy_->return_message(typed_message);
   }
 
+  /// Return the borrowed serialized message.
+  /**
+   * \param[inout] message serialized message to be returned
+   */
   void
   return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> & message) override
   {
