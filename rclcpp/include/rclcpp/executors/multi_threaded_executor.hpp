@@ -78,6 +78,17 @@ protected:
   void
   run(size_t this_thread_number);
 
+  /**
+   * After executing an executable, this function determines
+   * if it should wake the wait in rcl_wait so that the executor
+   * can process any pending executable
+   *
+   * \return wake_after_execute_ flag
+   */
+  RCLCPP_PUBLIC
+  bool
+  set_wake_after_execute_flag();
+
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 

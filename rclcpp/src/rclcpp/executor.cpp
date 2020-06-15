@@ -38,6 +38,7 @@ using rclcpp::FutureReturnCode;
 
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
+  wake_after_execute_(false),
   memory_strategy_(options.memory_strategy)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
@@ -325,9 +326,13 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
   // Reset the callback_group, regardless of type
   any_exec.callback_group->can_be_taken_from().store(true);
+
+  // Check whether triggering a guard condition is necessary
+  // (will depend on the type of executor and callback groups)
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available.
-  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+  if (set_wake_after_execute_flag() &&
+      rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(rcl_get_error_string().str);
   }
 }

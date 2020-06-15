@@ -70,6 +70,43 @@ MultiThreadedExecutor::get_number_of_threads()
   return number_of_threads_;
 }
 
+// Iterate through all the callback groups of
+// all nodes in the executor and verify
+// there is a non-empty callback group
+// that is "Mutually Exclusive". If there is,
+// then set trigger guard condition to true
+// so that it avoids a thread getting stuck
+// in rcl_wait.
+bool
+MultiThreadedExecutor::set_wake_after_execute_flag()
+{
+  // Initialize as false in the case
+  // it is true and the executor has
+  // zero nodes, nodes with empty
+  // callback groups, or nodes with
+  // all reentrant callback groups
+  wake_after_execute_.store(false);
+  for (auto & weak_node : weak_nodes_) {
+    auto node = weak_node.lock();
+    if (!node) {
+      continue;
+    }
+    for (auto & weak_group : node->get_callback_groups()) {
+      auto callback_group = weak_group.lock();
+
+      // Skip over callback groups that are empty
+      if(!callback_group || callback_group->size() == 0) {
+        continue;
+      }
+      if (callback_group->type() == rclcpp::callback_group::CallbackGroupType::MutuallyExclusive) {
+        wake_after_execute_.store(true);
+        break;
+      }
+    }
+  }
+  return wake_after_execute_.load();
+}
+
 void
 MultiThreadedExecutor::run(size_t)
 {

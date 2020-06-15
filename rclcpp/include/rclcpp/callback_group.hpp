@@ -94,6 +94,20 @@ public:
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
 
+   /**
+   * Returns size of callback group which includes
+   * subscriptions, timers, clients, services, and
+   * waitable
+   *
+   * \return size of callback group
+   */
+  size_t
+  size() const
+  {
+    return subscription_ptrs_.size() + timer_ptrs_.size() +
+           client_ptrs_.size() + service_ptrs_.size() + waitable_ptrs_.size();
+  }
+
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
