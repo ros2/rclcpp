@@ -160,7 +160,7 @@ public:
   void
   spin_node_some(std::shared_ptr<rclcpp::Node> node);
 
-  /// Complete all available queued work without blocking.
+  /// Collect work once and execute all available work, optionally within a duration.
   /**
    * This function can be overridden. The default implementation is suitable for a
    * single-threaded model of execution.
@@ -174,6 +174,23 @@ public:
   RCLCPP_PUBLIC
   virtual void
   spin_some(std::chrono::nanoseconds max_duration = std::chrono::nanoseconds(0));
+
+  /// Collect and execute work repeatedly within a duration or until no more work is available.
+  /**
+   * This function can be overridden. The default implementation is suitable for a
+   * single-threaded model of execution.
+   * Adding subscriptions, timers, services, etc. with blocking callbacks will cause this function
+   * to block (which may have unintended consequences).
+   * If the time that waitables take to be executed is longer than the period on which new waitables
+   * become ready, this method will execute work repeatedly until `max_duration` has elapsed.
+   *
+   * \param[in] max_duration The maximum amount of time to spend executing work. Must be positive.
+   * Note that spin_all() may take longer than this time as it only returns once max_duration has
+   * been exceeded.
+   */
+  RCLCPP_PUBLIC
+  virtual void
+  spin_all(std::chrono::nanoseconds max_duration);
 
   RCLCPP_PUBLIC
   virtual void
@@ -269,6 +286,10 @@ protected:
   spin_node_once_nanoseconds(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node,
     std::chrono::nanoseconds timeout);
+
+  RCLCPP_PUBLIC
+  void
+  spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive);
 
   /// Find the next available executable and do the work associated with it.
   /**

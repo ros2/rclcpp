@@ -28,6 +28,8 @@
 
 #include "rcutils/logging_macros.h"
 
+using namespace std::chrono_literals;
+
 using rclcpp::exceptions::throw_from_rcl_error;
 using rclcpp::AnyExecutable;
 using rclcpp::Executor;
@@ -212,8 +214,21 @@ Executor::spin_node_some(std::shared_ptr<rclcpp::Node> node)
   this->spin_node_some(node->get_node_base_interface());
 }
 
+void Executor::spin_some(std::chrono::nanoseconds max_duration)
+{
+  return this->spin_some_impl(max_duration, false);
+}
+
+void Executor::spin_all(std::chrono::nanoseconds max_duration)
+{
+  if (max_duration <= 0ns) {
+    throw std::invalid_argument("max_duration must be positive");
+  }
+  return this->spin_some_impl(max_duration, true);
+}
+
 void
-Executor::spin_some(std::chrono::nanoseconds max_duration)
+Executor::spin_some_impl(std::chrono::nanoseconds max_duration, bool exhaustive)
 {
   auto start = std::chrono::steady_clock::now();
   auto max_duration_not_elapsed = [max_duration, start]() {
@@ -232,14 +247,20 @@ Executor::spin_some(std::chrono::nanoseconds max_duration)
     throw std::runtime_error("spin_some() called while already spinning");
   }
   RCLCPP_SCOPE_EXIT(this->spinning.store(false); );
-  // non-blocking call to pre-load all available work
-  wait_for_work(std::chrono::milliseconds::zero());
+  bool work_available = false;
   while (rclcpp::ok(context_) && spinning.load() && max_duration_not_elapsed()) {
     AnyExecutable any_exec;
+    if (!work_available) {
+      wait_for_work(std::chrono::milliseconds::zero());
+    }
     if (get_next_ready_executable(any_exec)) {
       execute_any_executable(any_exec);
+      work_available = true;
     } else {
-      break;
+      if (!work_available || !exhaustive) {
+        break;
+      }
+      work_available = false;
     }
   }
 }
