@@ -43,7 +43,7 @@ TimerBase::TimerBase(
     new rcl_timer_t, [ = ](rcl_timer_t * timer) mutable
     {
       {
-        std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this->clock_.get()));
+        std::lock_guard<std::mutex> clock_guard(get_clock_mutex(clock.get()));
         if (rcl_timer_fini(timer) != RCL_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
             "rclcpp",
