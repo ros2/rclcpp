@@ -16,6 +16,11 @@
 #include <shared_mutex>  // NOLINT
 #include <unordered_map>
 
+#include <cstdio>
+#include <cstdlib>
+#include <execinfo.h>
+#include <cxxabi.h>
+
 #include "rclcpp/clock.hpp"
 
 #include "rclcpp/exceptions.hpp"
@@ -28,10 +33,88 @@ namespace rclcpp
 std::shared_timed_mutex g_clock_map_mutex;
 std::unordered_map<rclcpp::Clock *, std::mutex> g_clock_mutex_map;
 
+/** Print a demangled stack backtrace of the caller function to FILE* out. */
+void print_backtrace(FILE *out = stderr, unsigned int max_frames = 63)
+{
+  fprintf(out, "stack trace:\n");
+
+  // storage array for stack trace address data
+  void* addrlist[max_frames+1];
+
+  // retrieve current stack addresses
+  int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
+
+  if (addrlen == 0) {
+    fprintf(out, "  <empty, possibly corrupt>\n");
+    return;
+  }
+
+  // resolve addresses into strings containing "filename(function+address)",
+  // this array must be free()-ed
+  char** symbollist = backtrace_symbols(addrlist, addrlen);
+
+  // allocate string which will be filled with the demangled function name
+  size_t funcnamesize = 256;
+  char* funcname = (char*)malloc(funcnamesize);
+
+  // iterate over the returned symbol lines. skip the first, it is the
+  // address of this function.
+  for (int i = 1; i < addrlen; i++) {
+    char *begin_name = 0, *begin_offset = 0, *end_offset = 0;
+
+    // find parentheses and +address offset surrounding the mangled name:
+    // ./module(function+0x15c) [0x8048a6d]
+    for (char *p = symbollist[i]; *p; ++p) {
+      if (*p == '(') {
+        begin_name = p;
+      } else if (*p == '+') {
+        begin_offset = p;
+      } else if (*p == ')' && begin_offset) {
+        end_offset = p;
+        break;
+      }
+    }
+
+    if (begin_name && begin_offset && end_offset && begin_name < begin_offset) {
+      *begin_name++ = '\0';
+      *begin_offset++ = '\0';
+      *end_offset = '\0';
+
+      // mangled name is now in [begin_name, begin_offset) and caller
+      // offset in [begin_offset, end_offset). now apply
+      // __cxa_demangle():
+
+      int status;
+      char* ret = abi::__cxa_demangle(begin_name, funcname, &funcnamesize, &status);
+      if (status == 0) {
+        funcname = ret; // use possibly realloc()-ed string
+        fprintf(out, "  %s : %s+%s\n", symbollist[i], funcname, begin_offset);
+      }
+      else {
+        // demangling failed. Output function name as a C function with
+        // no arguments.
+        fprintf(out, "  %s : %s()+%s\n", symbollist[i], begin_name, begin_offset);
+      }
+    }
+    else {
+      // couldn't parse the line? print the whole line.
+      fprintf(out, "  %s\n", symbollist[i]);
+    }
+  }
+
+  free(funcname);
+  free(symbollist);
+}
+
 std::mutex & get_clock_mutex(rclcpp::Clock * clock)
 {
   std::shared_lock<std::shared_timed_mutex> lk(g_clock_map_mutex);
-  return g_clock_mutex_map.at(clock);
+  try {
+    return g_clock_mutex_map.at(clock);
+  } catch (const std::out_of_range &) {
+    print_backtrace();
+    throw;
+  }
 }
 
 JumpHandler::JumpHandler(
@@ -54,7 +137,7 @@ Clock::Clock(rcl_clock_type_t clock_type)
   {
     std::lock_guard<std::shared_timed_mutex> lg(g_clock_map_mutex);
     // Add a new default-constructed mutex, keyed off of this pointer.
-    fprintf(stderr, "Adding clock mutex for %p\n", this);
+    fprintf(stderr, "Adding clock mutex for %p\n", static_cast<void *>(this));
     g_clock_mutex_map[this];
   }
 }
@@ -65,7 +148,7 @@ Clock::~Clock()
     std::lock_guard<std::shared_timed_mutex> lg(g_clock_map_mutex);
     // Remove the mutex corresponding to this clock object.
     g_clock_mutex_map.erase(this);
-    fprintf(stderr, "Removed clock mutex for %p\n", this);
+    fprintf(stderr, "Removed clock mutex for %p\n", static_cast<void *>(this));
   }
 
   auto ret = rcl_clock_fini(&rcl_clock_);
@@ -146,7 +229,7 @@ Clock::create_jump_callback(
   }
 
   {
-    fprintf(stderr, "create_jump_callback() getting clock mutex for %p\n", this);
+    fprintf(stderr, "create_jump_callback() getting clock mutex for %p\n", static_cast<void *>(this));
     std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this));
     // Try to add the jump callback to the clock
     rcl_ret_t ret = rcl_clock_add_jump_callback(
@@ -161,7 +244,7 @@ Clock::create_jump_callback(
   // create shared_ptr that removes the callback automatically when all copies are destructed
   // TODO(dorezyuk) UB, if the clock leaves scope before the JumpHandler
   return JumpHandler::SharedPtr(handler.release(), [this](JumpHandler * handler) noexcept {
-    fprintf(stderr, "create_jump_callback release lambda getting clock mutex for %p\n", this);
+    fprintf(stderr, "create_jump_callback release lambda getting clock mutex for %p\n", static_cast<void *>(this));
     std::lock_guard<std::mutex> clock_guard(get_clock_mutex(this));
 
     rcl_ret_t ret = rcl_clock_remove_jump_callback(&rcl_clock_, Clock::on_time_jump,
