@@ -76,7 +76,7 @@ create_timer(
  * \tparam DurationRepT
  * \tparam DurationT
  * \tparam CallbackT
- * \param period period to exectute callback
+ * \param period period to execute callback
  * \param callback callback to execute via the timer period
  * \param group
  * \param node_base
@@ -100,6 +100,26 @@ create_wall_timer(
 
   if (node_timers == nullptr) {
     throw std::invalid_argument{"input node_timers cannot be null"};
+  }
+
+  if (period < std::chrono::duration<DurationRepT, DurationT>::zero()) {
+    throw std::invalid_argument{"timer period cannot be negative"};
+  }
+
+  // If period is greater than nanoseconds::max(), the duration_cast to nanoseconds will overflow
+  // a signed integer, which is undefined behavior. Checking whether any std::chrono::duration is
+  // greater than nanoseconds::max() is a difficult general problem. This is a more conservative
+  // version of Howard Hinnant's (the <chrono> guy>) response here:
+  // https://stackoverflow.com/a/44637334/2089061
+  // However, this doesn't solve the issue for all possible duration types of period.
+  // Follow-up issue: https://github.com/ros2/rclcpp/issues/1177
+  constexpr auto ns_max_as_double =
+    std::chrono::duration_cast<
+    std::chrono::duration<double, std::chrono::nanoseconds::period>
+    >(std::chrono::nanoseconds::max() - std::chrono::duration<DurationRepT, DurationT>(1));
+  if (period > ns_max_as_double) {
+    throw std::invalid_argument{
+            "timer period cannot be greater than std::chrono::nanoseconds::max()"};
   }
 
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
