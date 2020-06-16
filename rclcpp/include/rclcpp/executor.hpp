@@ -185,7 +185,7 @@ public:
    * become ready, this method will execute work repeatedly until `max_duration` has elapsed.
    *
    * \param[in] max_duration The maximum amount of time to spend executing work. Must be positive.
-   * Note that spin_some() may take longer than this time as it only returns once max_duration has
+   * Note that spin_all() may take longer than this time as it only returns once max_duration has
    * been exceeded.
    */
   RCLCPP_PUBLIC
