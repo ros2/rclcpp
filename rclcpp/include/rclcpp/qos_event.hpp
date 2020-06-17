@@ -34,6 +34,7 @@ using QOSDeadlineRequestedInfo = rmw_requested_deadline_missed_status_t;
 using QOSDeadlineOfferedInfo = rmw_offered_deadline_missed_status_t;
 using QOSLivelinessChangedInfo = rmw_liveliness_changed_status_t;
 using QOSLivelinessLostInfo = rmw_liveliness_lost_status_t;
+using QOSMessageLostInfo = rmw_message_lost_status_t;
 using QOSOfferedIncompatibleQoSInfo = rmw_offered_qos_incompatible_event_status_t;
 using QOSRequestedIncompatibleQoSInfo = rmw_requested_qos_incompatible_event_status_t;
 
@@ -41,6 +42,7 @@ using QOSDeadlineRequestedCallbackType = std::function<void (QOSDeadlineRequeste
 using QOSDeadlineOfferedCallbackType = std::function<void (QOSDeadlineOfferedInfo &)>;
 using QOSLivelinessChangedCallbackType = std::function<void (QOSLivelinessChangedInfo &)>;
 using QOSLivelinessLostCallbackType = std::function<void (QOSLivelinessLostInfo &)>;
+using QOSMessageLostCallbackType = std::function<void (QOSMessageLostInfo &)>;
 using QOSOfferedIncompatibleQoSCallbackType = std::function<void (QOSOfferedIncompatibleQoSInfo &)>;
 using QOSRequestedIncompatibleQoSCallbackType =
   std::function<void (QOSRequestedIncompatibleQoSInfo &)>;
@@ -59,6 +61,7 @@ struct SubscriptionEventCallbacks
   QOSDeadlineRequestedCallbackType deadline_callback;
   QOSLivelinessChangedCallbackType liveliness_callback;
   QOSRequestedIncompatibleQoSCallbackType incompatible_qos_callback;
+  QOSMessageLostCallbackType message_lost_callback;
 };
 
 class UnsupportedEventTypeException : public exceptions::RCLErrorBase, public std::runtime_error
