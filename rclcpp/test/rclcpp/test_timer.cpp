@@ -160,30 +160,36 @@ TEST_F(TestTimer, test_bad_arguments) {
 
   auto steady_clock = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
 
+  // Negative period
   EXPECT_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
       steady_clock, -1ms, std::forward<decltype(callback)>(callback), context),
     rclcpp::exceptions::RCLInvalidArgument);
 
+  // Very negative period
   constexpr auto nanoseconds_min = std::chrono::nanoseconds::min();
   EXPECT_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
       steady_clock, nanoseconds_min, std::forward<decltype(callback)>(callback), context),
     rclcpp::exceptions::RCLInvalidArgument);
 
+  // nanoseconds max, should be ok
   constexpr auto nanoseconds_max = std::chrono::nanoseconds::max();
   EXPECT_NO_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
       steady_clock, nanoseconds_max, std::forward<decltype(callback)>(callback), context));
 
+  // 0 duration period, should be ok
   EXPECT_NO_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
       steady_clock, 0ms, std::forward<decltype(callback)>(callback), context));
 
+  // context is null, which resorts to default
   EXPECT_NO_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
       steady_clock, 1ms, std::forward<decltype(callback)>(callback), nullptr));
 
+  // Clock is unitialized
   auto unitialized_clock = std::make_shared<rclcpp::Clock>(RCL_CLOCK_UNINITIALIZED);
   EXPECT_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
