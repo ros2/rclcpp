@@ -2,6 +2,9 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.0.0 (2020-06-01)
 ------------------
 * Added missing virtual destructors. (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)
