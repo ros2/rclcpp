@@ -14,10 +14,12 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
 #include <string>
 
 #include "rclcpp/logger.hpp"
 #include "rclcpp/logging.hpp"
+#include "rclcpp/node.hpp"
 
 TEST(TestLogger, factory_functions) {
   rclcpp::Logger logger = rclcpp::get_logger("test_logger");
@@ -32,4 +34,16 @@ TEST(TestLogger, hierarchy) {
   EXPECT_STREQ("test_logger.child", sublogger.get_name());
   rclcpp::Logger subsublogger = sublogger.get_child("grandchild");
   EXPECT_STREQ("test_logger.child.grandchild", subsublogger.get_name());
+}
+
+TEST(TestLogger, get_node_logger) {
+  rclcpp::init(0, nullptr);
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  auto node_base = rclcpp::node_interfaces::get_node_base_interface(node);
+  auto logger = rclcpp::get_node_logger(node_base->get_rcl_node_handle());
+  EXPECT_STREQ(logger.get_name(), "ns.my_node");
+
+  logger = rclcpp::get_node_logger(nullptr);
+  EXPECT_STREQ(logger.get_name(), "rclcpp");
+  rclcpp::shutdown();
 }
