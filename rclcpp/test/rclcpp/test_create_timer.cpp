@@ -18,10 +18,10 @@
 #include <chrono>
 #include <memory>
 
+#include "node_interfaces/node_wrapper.hpp"
 #include "rclcpp/create_timer.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/node.hpp"
-#include "node_interfaces/node_wrapper.hpp"
 
 using namespace std::chrono_literals;
 
@@ -59,5 +59,60 @@ TEST(TestCreateTimer, call_with_node_wrapper_compiles)
     node.get_node_clock_interface()->get_clock(),
     rclcpp::Duration(0ms),
     []() {});
+  rclcpp::shutdown();
+}
+
+TEST(TestCreateTimer, call_wall_timer_with_bad_arguments)
+{
+  rclcpp::init(0, nullptr);
+  NodeWrapper node("test_create_wall_timers_with_bad_arguments");
+  auto callback = []() {};
+  rclcpp::CallbackGroup::SharedPtr group = nullptr;
+  auto node_interface =
+    rclcpp::node_interfaces::get_node_base_interface(node).get();
+  auto timers_interface =
+    rclcpp::node_interfaces::get_node_timers_interface(node).get();
+
+  // Negative period
+  EXPECT_THROW(
+    rclcpp::create_wall_timer(-1ms, callback, group, node_interface, timers_interface),
+    std::invalid_argument);
+
+  // Very negative period
+  constexpr auto nanoseconds_min = std::chrono::nanoseconds::min();
+  EXPECT_THROW(
+    rclcpp::create_wall_timer(
+      nanoseconds_min, callback, group, node_interface, timers_interface),
+    std::invalid_argument);
+
+  // Period must be less than nanoseconds::max()
+  constexpr auto nanoseconds_max = std::chrono::nanoseconds::min();
+  EXPECT_THROW(
+    rclcpp::create_wall_timer(
+      nanoseconds_max, callback, group, node_interface, timers_interface),
+    std::invalid_argument);
+
+  EXPECT_NO_THROW(
+    rclcpp::create_wall_timer(
+      nanoseconds_max - 1us, callback, group, node_interface, timers_interface));
+
+  EXPECT_NO_THROW(
+    rclcpp::create_wall_timer(0ms, callback, group, node_interface, timers_interface));
+
+  // Period must be less than nanoseconds::max()
+  constexpr auto hours_max = std::chrono::hours::max();
+  EXPECT_THROW(
+    rclcpp::create_wall_timer(hours_max, callback, group, node_interface, timers_interface),
+    std::invalid_argument);
+
+  // node_interface is null
+  EXPECT_THROW(
+    rclcpp::create_wall_timer(1ms, callback, group, nullptr, timers_interface),
+    std::invalid_argument);
+
+  // timers_interface is null
+  EXPECT_THROW(
+    rclcpp::create_wall_timer(1ms, callback, group, node_interface, nullptr),
+    std::invalid_argument);
   rclcpp::shutdown();
 }

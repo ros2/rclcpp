@@ -76,14 +76,14 @@ create_timer(
  * \tparam DurationRepT
  * \tparam DurationT
  * \tparam CallbackT
- * \param period period to exectute callback
+ * \param period period to execute callback. This duration must be 0 <= period < nanoseconds::max()
  * \param callback callback to execute via the timer period
  * \param group
  * \param node_base
  * \param node_timers
  * \return
  * \throws std::invalid argument if either node_base or node_timers
- * are null
+ * are null, or period is negative or too large
  */
 template<typename DurationRepT, typename DurationT, typename CallbackT>
 typename rclcpp::WallTimer<CallbackT>::SharedPtr
@@ -102,10 +102,38 @@ create_wall_timer(
     throw std::invalid_argument{"input node_timers cannot be null"};
   }
 
+  if (period < std::chrono::duration<DurationRepT, DurationT>::zero()) {
+    throw std::invalid_argument{"timer period cannot be negative"};
+  }
+
+  // Casting to a double representation might lose precision and allow the check below to succeed
+  // but the actual cast to nanoseconds fail. Using 1 DurationT worth of nanoseconds less than max.
+  constexpr auto maximum_safe_cast_ns =
+    std::chrono::nanoseconds::max() - std::chrono::duration<DurationRepT, DurationT>(1);
+
+  // If period is greater than nanoseconds::max(), the duration_cast to nanoseconds will overflow
+  // a signed integer, which is undefined behavior. Checking whether any std::chrono::duration is
+  // greater than nanoseconds::max() is a difficult general problem. This is a more conservative
+  // version of Howard Hinnant's (the <chrono> guy>) response here:
+  // https://stackoverflow.com/a/44637334/2089061
+  // However, this doesn't solve the issue for all possible duration types of period.
+  // Follow-up issue: https://github.com/ros2/rclcpp/issues/1177
+  constexpr auto ns_max_as_double =
+    std::chrono::duration_cast<std::chrono::duration<double, std::chrono::nanoseconds::period>>(
+    maximum_safe_cast_ns);
+  if (period > ns_max_as_double) {
+    throw std::invalid_argument{
+            "timer period must be less than std::chrono::nanoseconds::max()"};
+  }
+
+  const auto period_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(period);
+  if (period_ns < std::chrono::nanoseconds::zero()) {
+    throw std::runtime_error{
+            "Casting timer period to nanoseconds resulted in integer overflow."};
+  }
+
   auto timer = rclcpp::WallTimer<CallbackT>::make_shared(
-    std::chrono::duration_cast<std::chrono::nanoseconds>(period),
-    std::move(callback),
-    node_base->get_context());
+    period_ns, std::move(callback), node_base->get_context());
   node_timers->add_timer(timer, group);
   return timer;
 }
