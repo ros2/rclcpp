@@ -18,6 +18,7 @@
 #include <chrono>
 #include <exception>
 #include <memory>
+#include <utility>
 
 #include "rcl/timer.h"
 
@@ -150,4 +151,42 @@ TEST_F(TestTimer, test_run_cancel_timer)
   executor->spin();
   EXPECT_TRUE(has_timer_run.load());
   EXPECT_TRUE(timer->is_canceled());
+}
+
+TEST_F(TestTimer, test_bad_arguments) {
+  auto callback = []() {};
+  auto node_base = rclcpp::node_interfaces::get_node_base_interface(test_node);
+  auto context = node_base->get_context();
+
+  auto steady_clock = std::make_shared<rclcpp::Clock>(RCL_STEADY_TIME);
+
+  EXPECT_THROW(
+    rclcpp::GenericTimer<decltype(callback)>(
+      steady_clock, -1ms, std::forward<decltype(callback)>(callback), context),
+    rclcpp::exceptions::RCLInvalidArgument);
+
+  constexpr auto nanoseconds_min = std::chrono::nanoseconds::min();
+  EXPECT_THROW(
+    rclcpp::GenericTimer<decltype(callback)>(
+      steady_clock, nanoseconds_min, std::forward<decltype(callback)>(callback), context),
+    rclcpp::exceptions::RCLInvalidArgument);
+
+  constexpr auto nanoseconds_max = std::chrono::nanoseconds::max();
+  EXPECT_NO_THROW(
+    rclcpp::GenericTimer<decltype(callback)>(
+      steady_clock, nanoseconds_max, std::forward<decltype(callback)>(callback), context));
+
+  EXPECT_NO_THROW(
+    rclcpp::GenericTimer<decltype(callback)>(
+      steady_clock, 0ms, std::forward<decltype(callback)>(callback), context));
+
+  EXPECT_NO_THROW(
+    rclcpp::GenericTimer<decltype(callback)>(
+      steady_clock, 1ms, std::forward<decltype(callback)>(callback), nullptr));
+
+  auto unitialized_clock = std::make_shared<rclcpp::Clock>(RCL_CLOCK_UNINITIALIZED);
+  EXPECT_THROW(
+    rclcpp::GenericTimer<decltype(callback)>(
+      unitialized_clock, 1us, std::forward<decltype(callback)>(callback), context),
+    rclcpp::exceptions::RCLError);
 }
