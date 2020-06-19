@@ -278,8 +278,8 @@ TEST(TestTime, overflow_detectors) {
   // 256 * 256 = 64K total loops, should be pretty fast on everything
   for (big_type_t y = min_val; y <= max_val; ++y) {
     for (big_type_t x = min_val; x <= max_val; ++x) {
-      const big_type_t sum = x + y;
-      const big_type_t diff = x - y;
+      const big_type_t sum = static_cast<big_type_t>(x + y);
+      const big_type_t diff = static_cast<big_type_t>(x - y);
 
       const bool add_will_overflow =
         rclcpp::add_will_overflow(test_type_t(x), test_type_t(y));
