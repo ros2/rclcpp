@@ -32,10 +32,6 @@ class TestDuration : public ::testing::Test
 {
 };
 
-// TEST(TestDuration, conversions) {
-// TODO(tfoote) Implement conversion methods
-// }
-
 TEST(TestDuration, operators) {
   rclcpp::Duration old(1, 0);
   rclcpp::Duration young(2, 0);
@@ -138,6 +134,7 @@ TEST(TestDuration, maximum_duration) {
 }
 
 static const int64_t HALF_SEC_IN_NS = 500 * 1000 * 1000;
+static const int64_t ONE_SEC_IN_NS = 1000 * 1000 * 1000;
 static const int64_t ONE_AND_HALF_SEC_IN_NS = 3 * HALF_SEC_IN_NS;
 
 TEST(TestDuration, from_seconds) {
@@ -152,4 +149,90 @@ TEST(TestDuration, std_chrono_constructors) {
   EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration(0s));
   EXPECT_EQ(rclcpp::Duration(1, HALF_SEC_IN_NS), rclcpp::Duration(1.5s));
   EXPECT_EQ(rclcpp::Duration(-1, 0), rclcpp::Duration(-1s));
+}
+
+TEST(TestDuration, conversions) {
+  {
+    const rclcpp::Duration duration(HALF_SEC_IN_NS);
+    const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
+    EXPECT_EQ(duration_msg.sec, 0);
+    EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
+    EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), HALF_SEC_IN_NS);
+
+    const auto rmw_time = duration.to_rmw_time();
+    EXPECT_EQ(rmw_time.sec, 0u);
+    EXPECT_EQ(rmw_time.nsec, static_cast<uint64_t>(HALF_SEC_IN_NS));
+
+    const auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
+    EXPECT_EQ(chrono_duration.count(), HALF_SEC_IN_NS);
+  }
+
+  {
+    const rclcpp::Duration duration(ONE_SEC_IN_NS);
+    const auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
+    EXPECT_EQ(duration_msg.sec, 1);
+    EXPECT_EQ(duration_msg.nanosec, 0u);
+    EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), ONE_SEC_IN_NS);
+
+    const auto rmw_time = duration.to_rmw_time();
+    EXPECT_EQ(rmw_time.sec, 1u);
+    EXPECT_EQ(rmw_time.nsec, 0u);
+
+    const auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
+    EXPECT_EQ(chrono_duration.count(), ONE_SEC_IN_NS);
+  }
+
+  {
+    const rclcpp::Duration duration(ONE_AND_HALF_SEC_IN_NS);
+    auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
+    EXPECT_EQ(duration_msg.sec, 1);
+    EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
+    EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), ONE_AND_HALF_SEC_IN_NS);
+
+    auto rmw_time = duration.to_rmw_time();
+    EXPECT_EQ(rmw_time.sec, 1u);
+    EXPECT_EQ(rmw_time.nsec, static_cast<uint64_t>(HALF_SEC_IN_NS));
+
+    auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
+    EXPECT_EQ(chrono_duration.count(), ONE_AND_HALF_SEC_IN_NS);
+  }
+
+  {
+    rclcpp::Duration duration(-HALF_SEC_IN_NS);
+    auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
+    EXPECT_EQ(duration_msg.sec, -1);
+    EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
+    EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), -HALF_SEC_IN_NS);
+
+    EXPECT_THROW(duration.to_rmw_time(), std::overflow_error);
+
+    auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
+    EXPECT_EQ(chrono_duration.count(), -HALF_SEC_IN_NS);
+  }
+
+  {
+    rclcpp::Duration duration(-ONE_SEC_IN_NS);
+    auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
+    EXPECT_EQ(duration_msg.sec, -1);
+    EXPECT_EQ(duration_msg.nanosec, 0u);
+    EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), -ONE_SEC_IN_NS);
+
+    EXPECT_THROW(duration.to_rmw_time(), std::overflow_error);
+
+    auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
+    EXPECT_EQ(chrono_duration.count(), -ONE_SEC_IN_NS);
+  }
+
+  {
+    rclcpp::Duration duration(-ONE_AND_HALF_SEC_IN_NS);
+    auto duration_msg = static_cast<builtin_interfaces::msg::Duration>(duration);
+    EXPECT_EQ(duration_msg.sec, -2);
+    EXPECT_EQ(duration_msg.nanosec, HALF_SEC_IN_NS);
+    EXPECT_EQ(rclcpp::Duration(duration_msg).nanoseconds(), -ONE_AND_HALF_SEC_IN_NS);
+
+    EXPECT_THROW(duration.to_rmw_time(), std::overflow_error);
+
+    auto chrono_duration = duration.to_chrono<std::chrono::nanoseconds>();
+    EXPECT_EQ(chrono_duration.count(), -ONE_AND_HALF_SEC_IN_NS);
+  }
 }
