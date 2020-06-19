@@ -25,40 +25,44 @@
 #include "test_msgs/srv/empty.hpp"
 #include "test_msgs/srv/empty.h"
 
-TEST(TestAnyServiceCallback, set_and_dispatch_throw) {
-  rclcpp::AnyServiceCallback<test_msgs::srv::Empty> cb;
-  auto request_header = std::make_shared<rmw_request_id_t>();
-  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
-  auto response = std::make_shared<test_msgs::srv::Empty::Response>();
+class TestAnyServiceCallback : public ::testing::Test
+{
+public:
+  void SetUp()
+  {
+    request_header_ = std::make_shared<rmw_request_id_t>();
+    request_ = std::make_shared<test_msgs::srv::Empty::Request>();
+    response_ = std::make_shared<test_msgs::srv::Empty::Response>();
+  }
 
-  EXPECT_THROW(cb.dispatch(request_header, request, response), std::runtime_error);
+protected:
+  rclcpp::AnyServiceCallback<test_msgs::srv::Empty> any_service_callback_;
+  std::shared_ptr<rmw_request_id_t> request_header_;
+  std::shared_ptr<test_msgs::srv::Empty::Request> request_;
+  std::shared_ptr<test_msgs::srv::Empty::Response> response_;
+};
+
+TEST_F(TestAnyServiceCallback, no_set_and_dispatch_throw) {
+  EXPECT_THROW(
+    any_service_callback_.dispatch(request_header_, request_, response_),
+    std::runtime_error);
 }
 
-TEST(TestAnyServiceCallback, set_and_dispatch_no_header) {
-  rclcpp::AnyServiceCallback<test_msgs::srv::Empty> cb;
-  auto request_header = std::make_shared<rmw_request_id_t>();
-  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
-  auto response = std::make_shared<test_msgs::srv::Empty::Response>();
-
+TEST_F(TestAnyServiceCallback, set_and_dispatch_no_header) {
   int callback_calls = 0;
   auto callback = [&callback_calls](const std::shared_ptr<test_msgs::srv::Empty::Request>,
       std::shared_ptr<test_msgs::srv::Empty::Response>) {
       callback_calls++;
     };
 
-  cb.set(std::forward<decltype(callback)>(callback));
+  any_service_callback_.set(callback);
   EXPECT_NO_THROW(
-    cb.dispatch(request_header, request, response));
+    any_service_callback_.dispatch(request_header_, request_, response_));
   EXPECT_EQ(callback_calls, 1);
 }
 
 
-TEST(TestAnyServiceCallback, set_and_dispatch_header) {
-  rclcpp::AnyServiceCallback<test_msgs::srv::Empty> cb;
-  auto request_header = std::make_shared<rmw_request_id_t>();
-  auto request = std::make_shared<test_msgs::srv::Empty::Request>();
-  auto response = std::make_shared<test_msgs::srv::Empty::Response>();
-
+TEST_F(TestAnyServiceCallback, set_and_dispatch_header) {
   int callback_with_header_calls = 0;
   auto callback_with_header =
     [&callback_with_header_calls](const std::shared_ptr<rmw_request_id_t>,
@@ -67,8 +71,8 @@ TEST(TestAnyServiceCallback, set_and_dispatch_header) {
       callback_with_header_calls++;
     };
 
-  cb.set(std::forward<decltype(callback_with_header)>(callback_with_header));
+  any_service_callback_.set(callback_with_header);
   EXPECT_NO_THROW(
-    cb.dispatch(request_header, request, response));
+    any_service_callback_.dispatch(request_header_, request_, response_));
   EXPECT_EQ(callback_with_header_calls, 1);
 }

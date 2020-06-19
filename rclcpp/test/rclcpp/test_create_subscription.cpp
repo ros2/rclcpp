@@ -24,8 +24,21 @@
 
 using namespace std::chrono_literals;
 
-TEST(TestCreateSubscription, create) {
-  rclcpp::init(0, nullptr);
+class TestCreateSubscription : public ::testing::Test
+{
+public:
+  void SetUp() override
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown() override
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestCreateSubscription, create) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
@@ -35,11 +48,9 @@ TEST(TestCreateSubscription, create) {
 
   ASSERT_NE(nullptr, subscription);
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
-  rclcpp::shutdown();
 }
 
-TEST(TestCreateSubscription, create_with_statistics) {
-  rclcpp::init(0, nullptr);
+TEST_F(TestCreateSubscription, create_with_statistics) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
@@ -53,5 +64,4 @@ TEST(TestCreateSubscription, create_with_statistics) {
 
   ASSERT_NE(nullptr, subscription);
   EXPECT_STREQ("/ns/topic_name", subscription->get_topic_name());
-  rclcpp::shutdown();
 }

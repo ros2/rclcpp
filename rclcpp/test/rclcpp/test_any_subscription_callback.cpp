@@ -22,190 +22,184 @@
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/msg/empty.h"
 
-TEST(TestAnySubscriptionCallback, unset_dispatch_throw) {
-  auto allocator = std::make_shared<std::allocator<void>>();
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>> cb(allocator);
+class TestAnySubscriptionCallback : public ::testing::Test
+{
+public:
+  TestAnySubscriptionCallback()
+  : any_subscription_callback_(allocator_) {}
+  void SetUp()
+  {
+    msg_shared_ptr_ = std::make_shared<test_msgs::msg::Empty>();
+    msg_const_shared_ptr_ = std::make_shared<const test_msgs::msg::Empty>();
+    msg_unique_ptr_ = std::make_unique<test_msgs::msg::Empty>();
+  }
 
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
-  auto const_msg = std::make_shared<const test_msgs::msg::Empty>();
-  auto unique_msg = std::make_unique<test_msgs::msg::Empty>();
-  rclcpp::MessageInfo info;
+protected:
+  std::shared_ptr<std::allocator<void>> allocator_;
+  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>>
+  any_subscription_callback_;
 
-  EXPECT_THROW(cb.dispatch(msg, info), std::runtime_error);
-  EXPECT_THROW(cb.dispatch_intra_process(const_msg, info), std::runtime_error);
-  EXPECT_THROW(cb.dispatch_intra_process(std::move(unique_msg), info), std::runtime_error);
+  std::shared_ptr<test_msgs::msg::Empty> msg_shared_ptr_;
+  std::shared_ptr<const test_msgs::msg::Empty> msg_const_shared_ptr_;
+  std::unique_ptr<test_msgs::msg::Empty> msg_unique_ptr_;
+  rclcpp::MessageInfo message_info_;
+};
+
+TEST_F(TestAnySubscriptionCallback, construct_destruct) {
 }
 
-TEST(TestAnySubscriptionCallback, set_dispatch_shared_ptr) {
-  auto allocator = std::make_shared<std::allocator<void>>();
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>> cb(allocator);
+TEST_F(TestAnySubscriptionCallback, unset_dispatch_throw) {
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_),
+    std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(msg_const_shared_ptr_, message_info_),
+    std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(std::move(msg_unique_ptr_), message_info_),
+    std::runtime_error);
+}
 
+TEST_F(TestAnySubscriptionCallback, set_dispatch_shared_ptr) {
   int callback_count = 0;
   auto shared_ptr_callback = [&callback_count](
     const std::shared_ptr<test_msgs::msg::Empty>) {
       callback_count++;
     };
 
-  cb.set(std::forward<decltype(shared_ptr_callback)>(shared_ptr_callback));
-
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
-  auto const_msg = std::make_shared<const test_msgs::msg::Empty>();
-  auto unique_msg = std::make_unique<test_msgs::msg::Empty>();
-  rclcpp::MessageInfo info;
-
-  EXPECT_NO_THROW(cb.dispatch(msg, info));
+  any_subscription_callback_.set(shared_ptr_callback);
+  EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);
 
   // Can't convert ConstSharedPtr to SharedPtr
-  EXPECT_THROW(cb.dispatch_intra_process(const_msg, info), std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(msg_const_shared_ptr_, message_info_),
+    std::runtime_error);
   EXPECT_EQ(callback_count, 1);
 
   // Promotes Unique into SharedPtr
-  EXPECT_NO_THROW(cb.dispatch_intra_process(std::move(unique_msg), info));
+  EXPECT_NO_THROW(
+    any_subscription_callback_.dispatch_intra_process(std::move(msg_unique_ptr_), message_info_));
   EXPECT_EQ(callback_count, 2);
 }
 
-TEST(TestAnySubscriptionCallback, set_dispatch_shared_ptr_w_info) {
-  auto allocator = std::make_shared<std::allocator<void>>();
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>> cb(allocator);
-
+TEST_F(TestAnySubscriptionCallback, set_dispatch_shared_ptr_w_info) {
   int callback_count = 0;
   auto shared_ptr_w_info_callback = [&callback_count](
     const std::shared_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &) {
       callback_count++;
     };
 
-  cb.set(std::forward<decltype(shared_ptr_w_info_callback)>(shared_ptr_w_info_callback));
+  any_subscription_callback_.set(shared_ptr_w_info_callback);
 
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
-  auto const_msg = std::make_shared<const test_msgs::msg::Empty>();
-  auto unique_msg = std::make_unique<test_msgs::msg::Empty>();
-  rclcpp::MessageInfo info;
-
-  EXPECT_NO_THROW(cb.dispatch(msg, info));
+  EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);
 
   // Can't convert ConstSharedPtr to SharedPtr
-  EXPECT_THROW(cb.dispatch_intra_process(const_msg, info), std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(msg_const_shared_ptr_, message_info_),
+    std::runtime_error);
   EXPECT_EQ(callback_count, 1);
 
   // Promotes Unique into SharedPtr
-  EXPECT_NO_THROW(cb.dispatch_intra_process(std::move(unique_msg), info));
+  EXPECT_NO_THROW(
+    any_subscription_callback_.dispatch_intra_process(std::move(msg_unique_ptr_), message_info_));
   EXPECT_EQ(callback_count, 2);
 }
 
-TEST(TestAnySubscriptionCallback, set_dispatch_const_shared_ptr) {
-  auto allocator = std::make_shared<std::allocator<void>>();
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>> cb(allocator);
-
+TEST_F(TestAnySubscriptionCallback, set_dispatch_const_shared_ptr) {
   int callback_count = 0;
   auto const_shared_ptr_callback = [&callback_count](
     std::shared_ptr<const test_msgs::msg::Empty>) {
       callback_count++;
     };
 
-  cb.set(std::forward<decltype(const_shared_ptr_callback)>(const_shared_ptr_callback));
-
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
-  auto const_msg = std::make_shared<const test_msgs::msg::Empty>();
-  auto unique_msg = std::make_unique<test_msgs::msg::Empty>();
-  rclcpp::MessageInfo info;
+  any_subscription_callback_.set(const_shared_ptr_callback);
 
   // Ok to promote shared_ptr to ConstSharedPtr
-  EXPECT_NO_THROW(cb.dispatch(msg, info));
+  EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);
 
-  EXPECT_NO_THROW(cb.dispatch_intra_process(const_msg, info));
+  EXPECT_NO_THROW(
+    any_subscription_callback_.dispatch_intra_process(msg_const_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 2);
 
   // Not allowed to convert unique_ptr to const shared_ptr
-  EXPECT_THROW(cb.dispatch_intra_process(std::move(unique_msg), info), std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(std::move(msg_unique_ptr_), message_info_),
+    std::runtime_error);
   EXPECT_EQ(callback_count, 2);
 }
 
-TEST(TestAnySubscriptionCallback, set_dispatch_const_shared_ptr_w_info) {
-  auto allocator = std::make_shared<std::allocator<void>>();
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>> cb(allocator);
-
+TEST_F(TestAnySubscriptionCallback, set_dispatch_const_shared_ptr_w_info) {
   int callback_count = 0;
   auto const_shared_ptr_callback = [&callback_count](
     std::shared_ptr<const test_msgs::msg::Empty>, const rclcpp::MessageInfo &) {
       callback_count++;
     };
 
-  cb.set(std::forward<decltype(const_shared_ptr_callback)>(const_shared_ptr_callback));
-
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
-  auto const_msg = std::make_shared<const test_msgs::msg::Empty>();
-  auto unique_msg = std::make_unique<test_msgs::msg::Empty>();
-  rclcpp::MessageInfo info;
+  any_subscription_callback_.set(
+    std::move(const_shared_ptr_callback));
 
   // Ok to promote shared_ptr to ConstSharedPtr
-  EXPECT_NO_THROW(cb.dispatch(msg, info));
+  EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);
 
-  EXPECT_NO_THROW(cb.dispatch_intra_process(const_msg, info));
+  EXPECT_NO_THROW(
+    any_subscription_callback_.dispatch_intra_process(msg_const_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 2);
 
   // Not allowed to convert unique_ptr to const shared_ptr
-  EXPECT_THROW(cb.dispatch_intra_process(std::move(unique_msg), info), std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(std::move(msg_unique_ptr_), message_info_),
+    std::runtime_error);
   EXPECT_EQ(callback_count, 2);
 }
 
-TEST(TestAnySubscriptionCallback, set_dispatch_unique_ptr) {
-  auto allocator = std::make_shared<std::allocator<void>>();
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>> cb(allocator);
-
+TEST_F(TestAnySubscriptionCallback, set_dispatch_unique_ptr) {
   int callback_count = 0;
   auto unique_ptr_callback = [&callback_count](
     std::unique_ptr<test_msgs::msg::Empty>) {
       callback_count++;
     };
 
-  cb.set(std::forward<decltype(unique_ptr_callback)>(unique_ptr_callback));
-
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
-  auto const_msg = std::make_shared<const test_msgs::msg::Empty>();
-  auto unique_msg = std::make_unique<test_msgs::msg::Empty>();
-  rclcpp::MessageInfo info;
+  any_subscription_callback_.set(unique_ptr_callback);
 
   // Message is copied into unique_ptr
-  EXPECT_NO_THROW(cb.dispatch(msg, info));
+  EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);
 
-  EXPECT_THROW(cb.dispatch_intra_process(const_msg, info), std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(msg_const_shared_ptr_, message_info_),
+    std::runtime_error);
   EXPECT_EQ(callback_count, 1);
 
   // Unique_ptr is_moved
-  EXPECT_NO_THROW(cb.dispatch_intra_process(std::move(unique_msg), info));
+  EXPECT_NO_THROW(
+    any_subscription_callback_.dispatch_intra_process(std::move(msg_unique_ptr_), message_info_));
   EXPECT_EQ(callback_count, 2);
 }
 
-TEST(TestAnySubscriptionCallback, set_dispatch_unique_ptr_w_info) {
-  auto allocator = std::make_shared<std::allocator<void>>();
-  rclcpp::AnySubscriptionCallback<test_msgs::msg::Empty, std::allocator<void>> cb(allocator);
-
+TEST_F(TestAnySubscriptionCallback, set_dispatch_unique_ptr_w_info) {
   int callback_count = 0;
   auto unique_ptr_callback = [&callback_count](
     std::unique_ptr<test_msgs::msg::Empty>, const rclcpp::MessageInfo &) {
       callback_count++;
     };
 
-  cb.set(std::forward<decltype(unique_ptr_callback)>(unique_ptr_callback));
-
-  auto msg = std::make_shared<test_msgs::msg::Empty>();
-  auto const_msg = std::make_shared<const test_msgs::msg::Empty>();
-  auto unique_msg = std::make_unique<test_msgs::msg::Empty>();
-  rclcpp::MessageInfo info;
+  any_subscription_callback_.set(unique_ptr_callback);
 
   // Message is copied into unique_ptr
-  EXPECT_NO_THROW(cb.dispatch(msg, info));
+  EXPECT_NO_THROW(any_subscription_callback_.dispatch(msg_shared_ptr_, message_info_));
   EXPECT_EQ(callback_count, 1);
 
-  EXPECT_THROW(cb.dispatch_intra_process(const_msg, info), std::runtime_error);
+  EXPECT_THROW(
+    any_subscription_callback_.dispatch_intra_process(msg_const_shared_ptr_, message_info_),
+    std::runtime_error);
   EXPECT_EQ(callback_count, 1);
 
   // Unique_ptr is_moved
-  EXPECT_NO_THROW(cb.dispatch_intra_process(std::move(unique_msg), info));
+  EXPECT_NO_THROW(
+    any_subscription_callback_.dispatch_intra_process(std::move(msg_unique_ptr_), message_info_));
   EXPECT_EQ(callback_count, 2);
 }
