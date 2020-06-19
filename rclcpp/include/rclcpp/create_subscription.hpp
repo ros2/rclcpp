@@ -29,6 +29,7 @@
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 
+#include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_timer.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/subscription_factory.hpp"
