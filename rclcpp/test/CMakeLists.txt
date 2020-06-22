@@ -17,6 +17,20 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   SKIP_INSTALL
 )
 
+ament_add_gtest(test_any_service_callback rclcpp/test_any_service_callback.cpp)
+if(TARGET test_any_service_callback)
+  ament_target_dependencies(test_any_service_callback
+    "test_msgs"
+  )
+  target_link_libraries(test_any_service_callback ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_any_subscription_callback rclcpp/test_any_subscription_callback.cpp)
+if(TARGET test_any_subscription_callback)
+  ament_target_dependencies(test_any_subscription_callback
+    "test_msgs"
+  )
+  target_link_libraries(test_any_subscription_callback ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_client rclcpp/test_client.cpp)
 if(TARGET test_client)
   ament_target_dependencies(test_client
@@ -38,6 +52,13 @@ if(TARGET test_create_timer)
   )
   target_link_libraries(test_create_timer ${PROJECT_NAME})
   target_include_directories(test_create_timer PRIVATE rclcpp/)
+endif()
+ament_add_gtest(test_create_subscription rclcpp/test_create_subscription.cpp)
+if(TARGET test_create_subscription)
+  target_link_libraries(test_create_subscription ${PROJECT_NAME})
+  ament_target_dependencies(test_create_subscription
+    "test_msgs"
+  )
 endif()
 ament_add_gtest(test_expand_topic_or_service_name rclcpp/test_expand_topic_or_service_name.cpp)
 if(TARGET test_expand_topic_or_service_name)
