@@ -162,37 +162,33 @@ TEST_F(TestTimer, test_bad_arguments) {
 
   // Negative period
   EXPECT_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(
-      steady_clock, -1ms, std::forward<decltype(callback)>(callback), context),
+    rclcpp::GenericTimer<decltype(callback)>(steady_clock, -1ms, std::move(callback), context),
     rclcpp::exceptions::RCLInvalidArgument);
 
   // Very negative period
   constexpr auto nanoseconds_min = std::chrono::nanoseconds::min();
   EXPECT_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
-      steady_clock, nanoseconds_min, std::forward<decltype(callback)>(callback), context),
+      steady_clock, nanoseconds_min, std::move(callback), context),
     rclcpp::exceptions::RCLInvalidArgument);
 
   // nanoseconds max, should be ok
   constexpr auto nanoseconds_max = std::chrono::nanoseconds::max();
   EXPECT_NO_THROW(
     rclcpp::GenericTimer<decltype(callback)>(
-      steady_clock, nanoseconds_max, std::forward<decltype(callback)>(callback), context));
+      steady_clock, nanoseconds_max, std::move(callback), context));
 
   // 0 duration period, should be ok
   EXPECT_NO_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(
-      steady_clock, 0ms, std::forward<decltype(callback)>(callback), context));
+    rclcpp::GenericTimer<decltype(callback)>(steady_clock, 0ms, std::move(callback), context));
 
   // context is null, which resorts to default
   EXPECT_NO_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(
-      steady_clock, 1ms, std::forward<decltype(callback)>(callback), nullptr));
+    rclcpp::GenericTimer<decltype(callback)>(steady_clock, 1ms, std::move(callback), nullptr));
 
   // Clock is unitialized
   auto unitialized_clock = std::make_shared<rclcpp::Clock>(RCL_CLOCK_UNINITIALIZED);
   EXPECT_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(
-      unitialized_clock, 1us, std::forward<decltype(callback)>(callback), context),
+    rclcpp::GenericTimer<decltype(callback)>(unitialized_clock, 1us, std::move(callback), context),
     rclcpp::exceptions::RCLError);
 }
