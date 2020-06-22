@@ -154,7 +154,6 @@ TEST_F(TestTimer, test_run_cancel_timer)
 }
 
 TEST_F(TestTimer, test_bad_arguments) {
-  auto callback = []() {};
   auto node_base = rclcpp::node_interfaces::get_node_base_interface(test_node);
   auto context = node_base->get_context();
 
@@ -162,33 +161,33 @@ TEST_F(TestTimer, test_bad_arguments) {
 
   // Negative period
   EXPECT_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(steady_clock, -1ms, std::move(callback), context),
+    rclcpp::GenericTimer<void (*)()>(steady_clock, -1ms, []() {}, context),
     rclcpp::exceptions::RCLInvalidArgument);
 
   // Very negative period
   constexpr auto nanoseconds_min = std::chrono::nanoseconds::min();
   EXPECT_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(
-      steady_clock, nanoseconds_min, std::move(callback), context),
+    rclcpp::GenericTimer<void (*)()>(
+      steady_clock, nanoseconds_min, []() {}, context),
     rclcpp::exceptions::RCLInvalidArgument);
 
   // nanoseconds max, should be ok
   constexpr auto nanoseconds_max = std::chrono::nanoseconds::max();
   EXPECT_NO_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(
-      steady_clock, nanoseconds_max, std::move(callback), context));
+    rclcpp::GenericTimer<void (*)()>(
+      steady_clock, nanoseconds_max, []() {}, context));
 
   // 0 duration period, should be ok
   EXPECT_NO_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(steady_clock, 0ms, std::move(callback), context));
+    rclcpp::GenericTimer<void (*)()>(steady_clock, 0ms, []() {}, context));
 
   // context is null, which resorts to default
   EXPECT_NO_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(steady_clock, 1ms, std::move(callback), nullptr));
+    rclcpp::GenericTimer<void (*)()>(steady_clock, 1ms, []() {}, nullptr));
 
   // Clock is unitialized
   auto unitialized_clock = std::make_shared<rclcpp::Clock>(RCL_CLOCK_UNINITIALIZED);
   EXPECT_THROW(
-    rclcpp::GenericTimer<decltype(callback)>(unitialized_clock, 1us, std::move(callback), context),
+    rclcpp::GenericTimer<void (*)()>(unitialized_clock, 1us, []() {}, context),
     rclcpp::exceptions::RCLError);
 }
