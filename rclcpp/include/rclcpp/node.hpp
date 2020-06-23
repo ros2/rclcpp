@@ -235,7 +235,7 @@ public:
   /// Create and return a Client.
   /**
    * \param[in] service_name The topic to service on.
-   * \param[in] rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
    * \param[in] group Callback group to call the service.
    * \return Shared pointer to the created client.
    */
@@ -250,7 +250,7 @@ public:
   /**
    * \param[in] service_name The topic to service on.
    * \param[in] callback User-defined callback function.
-   * \param[in] rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
    * \param[in] group Callback group to call the service.
    * \return Shared pointer to the created service.
    */
@@ -891,7 +891,8 @@ public:
 
   /// Return the number of publishers that are advertised on a given topic.
   /**
-   * \param[in] topic_name the topic_name on which to count the publishers.
+   * \param[in] node_name the node_name on which to count the publishers.
+   * \param[in] namespace_ the namespace of the node associated with the name
    * \return number of publishers that are advertised on a given topic.
    * \throws std::runtime_error if publishers could not be counted
    */

@@ -237,7 +237,7 @@ public:
    * rclcpp::create_service().
    *
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
-   * \param[in] service_name Name of the topic to publish to.
+   * \param[in] service_handle service handle.
    * \param[in] any_callback User defined callback to call when a client request is received.
    */
   Service(
@@ -272,7 +272,7 @@ public:
    * rclcpp::create_service().
    *
    * \param[in] node_handle NodeBaseInterface pointer that is used in part of the setup.
-   * \param[in] service_name Name of the topic to publish to.
+   * \param[in] service_handle service handle.
    * \param[in] any_callback User defined callback to call when a client request is received.
    */
   Service(
