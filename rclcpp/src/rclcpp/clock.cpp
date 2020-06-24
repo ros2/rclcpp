@@ -35,7 +35,7 @@ Clock::Clock(rcl_clock_type_t clock_type)
   allocator_ = rcl_get_default_allocator();
   auto ret = rcl_clock_init(clock_type, &rcl_clock_, &allocator_);
   if (ret != RCL_RET_OK) {
-    exceptions::throw_from_rcl_error(ret, "could not get current time stamp");
+    exceptions::throw_from_rcl_error(ret, "failed to initialize rcl clock");
   }
 }
 
