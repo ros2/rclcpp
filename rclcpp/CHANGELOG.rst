@@ -2,6 +2,17 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.1 (2020-06-23)
+------------------
+* Add create_publisher include to create_subscription (`#1180 <https://github.com/ros2/rclcpp/issues/1180>`_) (`#1192 <https://github.com/ros2/rclcpp/issues/1192>`_)
+* Fix get_node_time_source_interface() docstring (`#988 <https://github.com/ros2/rclcpp/issues/988>`_) (`#1185 <https://github.com/ros2/rclcpp/issues/1185>`_)
+* Fixed doxygen warnings (`#1163 <https://github.com/ros2/rclcpp/issues/1163>`_) (`#1191 <https://github.com/ros2/rclcpp/issues/1191>`_)
+* Check if context is valid when looping in spin_some (`#1167 <https://github.com/ros2/rclcpp/issues/1167>`_)
+* Fix spin_until_future_complete: check spinning value (`#1023 <https://github.com/ros2/rclcpp/issues/1023>`_)
+  Make Executor::spin_once_impl private before backporting, to avoid API compatibility issues
+* Add check for invalid topic statistics publish period (`#1151 <https://github.com/ros2/rclcpp/issues/1151>`_) (`#1172 <https://github.com/ros2/rclcpp/issues/1172>`_)
+* Contributors: Alejandro Hernández Cordero, Devin Bonnie, DongheeYe, Ivan Santiago Paunovic, Jacob Perron, Stephen Brawner
+
 2.0.0 (2020-06-01)
 ------------------
 * Added missing virtual destructors. (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)

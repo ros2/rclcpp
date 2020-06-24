@@ -2,10 +2,13 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.1 (2020-06-23)
+------------------
+
 2.0.0 (2020-06-01)
 ------------------
-* Added missing virtual destructors. (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)
-* Add Security Vulnerability Policy pointing to REP-2006. (`#1130 <https://github.com/ros2/rclcpp/issues/1130>`_)
+* Added missing virtual destructors (`#1149 <https://github.com/ros2/rclcpp/issues/1149>`_)
+* Add Security Vulnerability Policy pointing to REP-2006 (`#1130 <https://github.com/ros2/rclcpp/issues/1130>`_)
 * Contributors: Chris Lalancette, Ivan Santiago Paunovic
 
 1.1.0 (2020-05-26)
