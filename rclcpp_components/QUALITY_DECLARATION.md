@@ -171,6 +171,12 @@ The `rclcpp` package provides the ROS client library in C++.
 
 It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
 
+#### `rcpputils`
+
+The `rcpputils` package provides an API which contains common utilities and data structures useful when programming in C++.
+
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rcpputils/blob/master/QUALITY_DECLARATION.md).
+
 ### Direct Runtime non-ROS Dependency [5.iii]
 
 `rclcpp_components` has no run-time or build-time dependencies that need to be considered for this declaration.
