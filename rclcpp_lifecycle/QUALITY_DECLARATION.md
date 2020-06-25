@@ -171,6 +171,12 @@ The `rosidl_typesupport_cpp` package generates the type support for C++ messages
 
 It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rosidl_typesupport/blob/master/rosidl_typesupport_cpp/QUALITY_DECLARATION.md).
 
+#### `rmw`
+
+`rmw` is the ROS 2 middleware library.
+
+It is **Quality Level 2**, see its [Quality Declaration document](https://github.com/ros2/rmw/blob/master/rmw/QUALITY_DECLARATION.md).
+
 ### Direct Runtime non-ROS Dependency [5.iii]
 
 `rclcpp_lifecycle` has no run-time or build-time dependencies that need to be considered for this declaration.
