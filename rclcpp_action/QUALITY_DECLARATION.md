@@ -1,8 +1,8 @@
 This document is a declaration of software quality for the `rclcpp_action` package, based on the guidelines in [REP-2004](https://www.ros.org/reps/rep-2004.html).
 
-# `rclcpp_action` Quality Declaration
+# rclcpp_action Quality Declaration
 
-The package `rclcpp_action` claims to be in the **Quality Level 2** category.
+The package `rclcpp_action` claims to be in the **Quality Level 3** category.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Quality Categories in REP-2004](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-quality-categories) of the ROS2 developer guide.
 
@@ -10,7 +10,7 @@ Below are the rationales, notes, and caveats for this claim, organized by each r
 
 ### Version Scheme [1.i]
 
-`rclcpp_action` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#versioning)
+`rclcpp_action` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#versioning).
 
 ### Version Stability [1.ii]
 
@@ -80,13 +80,13 @@ The API is publicly available in the [ROS 2 API documentation](http://docs.ros2.
 
 The license for `rclcpp_action` is Apache 2.0, and a summary is in each source file, the type is declared in the [`package.xml`](./package.xml) manifest file, and a full copy of the license is in the [`LICENSE`](../LICENSE) file.
 
-There is an automated test which runs a linter that ensures each file has a license statement. [Here](http://build.ros2.org/view/Epr/job/Epr__rclcpp_action__ubuntu_bionic_amd64/lastBuild/testReport/rclcpp_action/) can be found a list with the latest results of the various linters being run on the package.
+There is an automated test which runs a linter that ensures each file has a license statement. [Here](http://build.ros2.org/view/Fpr/job/Fpr__rclcpp__ubuntu_focal_amd64/lastStableBuild/testReport/rclcpp_action/) can be found a list with the latest results of the various linters being run on the package.
 
 ### Copyright Statements [3.iv]
 
 The copyright holders each provide a statement of copyright in each source code file in `rclcpp_action`.
 
-There is an automated test which runs a linter that ensures each file has at least one copyright statement. Latest linter result report can be seen [here](http://build.ros2.org/view/Epr/job/Epr__rclcpp_action__ubuntu_bionic_amd64/lastBuild/testReport/rclcpp_action/copyright/).
+There is an automated test which runs a linter that ensures each file has at least one copyright statement. Latest linter result report can be seen [here](http://build.ros2.org/view/Fpr/job/Fpr__rclcpp__ubuntu_focal_amd64/lastStableBuild/testReport/rclcpp_action/copyright/).
 
 ## Testing [4]
 
@@ -151,19 +151,19 @@ It also has several test dependencies, which do not affect the resulting quality
 
 `action_msgs` provides messages and services for ROS 2 actions.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl_interfaces/blob/master/action_msgs/QUALITY_DECLARATION.md).
 
 #### `rclcpp`
 
 The `rclcpp` package provides the ROS client library in C++.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rclcpp/blob/master/rclcpp/QUALITY_DECLARATION.md).
 
 #### `rcl_action`
 
 The `rcl_action` package provides C-based ROS action implementation.
 
-It is **Quality Level 4**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl_action/QUALITY_DECLARATION.md).
+It is **Quality Level 3**, see its [Quality Declaration document](https://github.com/ros2/rcl/blob/master/rcl_action/QUALITY_DECLARATION.md).
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
