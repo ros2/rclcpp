@@ -66,14 +66,14 @@ Duration::Duration(const rcl_duration_t & duration)
 Duration::operator builtin_interfaces::msg::Duration() const
 {
   builtin_interfaces::msg::Duration msg_duration;
-  constexpr rcl_duration_value_t kRemainder = RCL_S_TO_NS(1);
-  const auto result = std::div(rcl_duration_.nanoseconds, kRemainder);
+  constexpr rcl_duration_value_t kDivisor = RCL_S_TO_NS(1);
+  const auto result = std::div(rcl_duration_.nanoseconds, kDivisor);
   if (result.rem >= 0) {
     msg_duration.sec = static_cast<std::int32_t>(result.quot);
     msg_duration.nanosec = static_cast<std::uint32_t>(result.rem);
   } else {
     msg_duration.sec = static_cast<std::int32_t>(result.quot - 1);
-    msg_duration.nanosec = static_cast<std::uint32_t>(kRemainder + result.rem);
+    msg_duration.nanosec = static_cast<std::uint32_t>(kDivisor + result.rem);
   }
   return msg_duration;
 }
@@ -84,8 +84,7 @@ Duration::operator=(const Duration & rhs) = default;
 Duration &
 Duration::operator=(const builtin_interfaces::msg::Duration & duration_msg)
 {
-  rcl_duration_.nanoseconds = RCL_S_TO_NS(static_cast<rcl_duration_value_t>(duration_msg.sec));
-  rcl_duration_.nanoseconds += static_cast<rcl_duration_value_t>(duration_msg.nanosec);
+  *this = Duration(duration_msg);
   return *this;
 }
 

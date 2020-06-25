@@ -67,9 +67,9 @@ Time::Time(const Time & rhs) = default;
 
 Time::Time(
   const builtin_interfaces::msg::Time & time_msg,
-  rcl_clock_type_t ros_time)
+  rcl_clock_type_t clock_type)
+: rcl_time_(init_time_point(clock_type))
 {
-  rcl_time_ = init_time_point(ros_time);
   if (time_msg.sec < 0) {
     throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
   }
@@ -109,16 +109,7 @@ Time::operator=(const Time & rhs) = default;
 Time &
 Time::operator=(const builtin_interfaces::msg::Time & time_msg)
 {
-  if (time_msg.sec < 0) {
-    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
-  }
-
-
-  rcl_clock_type_t ros_time = RCL_ROS_TIME;
-  rcl_time_ = init_time_point(ros_time);  // TODO(tfoote) hard coded ROS here
-
-  rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(time_msg.sec));
-  rcl_time_.nanoseconds += time_msg.nanosec;
+  *this = Time(time_msg);
   return *this;
 }
 
