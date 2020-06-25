@@ -25,6 +25,14 @@ if(TARGET test_allocator_memory_strategy)
   )
   target_link_libraries(test_allocator_memory_strategy ${PROJECT_NAME})
 endif()
+ament_add_gtest(test_message_pool_memory_strategy rclcpp/strategies/test_message_pool_memory_strategy.cpp)
+if(TARGET test_message_pool_memory_strategy)
+  ament_target_dependencies(test_message_pool_memory_strategy
+    "rcl"
+    "test_msgs"
+  )
+  target_link_libraries(test_message_pool_memory_strategy ${PROJECT_NAME})
+endif()
 ament_add_gtest(test_any_service_callback rclcpp/test_any_service_callback.cpp)
 if(TARGET test_any_service_callback)
   ament_target_dependencies(test_any_service_callback
@@ -125,6 +133,18 @@ ament_target_dependencies(test_loaned_message
   "test_msgs"
 )
 target_link_libraries(test_loaned_message ${PROJECT_NAME})
+
+ament_add_gtest(test_memory_strategy rclcpp/test_memory_strategy.cpp)
+ament_target_dependencies(test_memory_strategy
+  "test_msgs"
+)
+target_link_libraries(test_memory_strategy ${PROJECT_NAME})
+
+ament_add_gtest(test_message_memory_strategy rclcpp/test_message_memory_strategy.cpp)
+ament_target_dependencies(test_message_memory_strategy
+  "test_msgs"
+)
+target_link_libraries(test_message_memory_strategy ${PROJECT_NAME})
 
 ament_add_gtest(test_node rclcpp/test_node.cpp TIMEOUT 240)
 if(TARGET test_node)
