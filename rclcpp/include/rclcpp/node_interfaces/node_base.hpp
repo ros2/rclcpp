@@ -83,9 +83,7 @@ public:
 
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::CallbackGroupType group_type,
-    rclcpp::RealTimeClass real_time_class =
-    rclcpp::RealTimeClass::BestEffort) override;
+  create_callback_group(rclcpp::CallbackGroupType group_type) override;
 
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr

@@ -142,9 +142,7 @@ public:
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
   create_callback_group(
-    rclcpp::CallbackGroupType group_type,
-    rclcpp::RealTimeClass real_time_class =
-    rclcpp::RealTimeClass::BestEffort);
+    rclcpp::CallbackGroupType group_type);
 
   /// Return the list of callback groups in the node.
   RCLCPP_PUBLIC

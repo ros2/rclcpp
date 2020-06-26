@@ -107,9 +107,7 @@ public:
   virtual
   rclcpp::CallbackGroup::SharedPtr
   create_callback_group(
-    rclcpp::CallbackGroupType group_type,
-    rclcpp::RealTimeClass real_time_class =
-    rclcpp::RealTimeClass::BestEffort) = 0;
+    rclcpp::CallbackGroupType group_type) = 0;
 
   /// Return the default callback group.
   RCLCPP_PUBLIC
