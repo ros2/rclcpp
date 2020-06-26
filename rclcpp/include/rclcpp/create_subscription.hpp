@@ -18,6 +18,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -28,6 +29,7 @@
 #include "rclcpp/node_interfaces/node_timers_interface.hpp"
 #include "rclcpp/node_interfaces/node_topics_interface.hpp"
 
+#include "rclcpp/create_publisher.hpp"
 #include "rclcpp/create_timer.hpp"
 #include "rclcpp/qos.hpp"
 #include "rclcpp/subscription_factory.hpp"
@@ -44,6 +46,23 @@ namespace rclcpp
  * The NodeT type only needs to have a method called get_node_topics_interface()
  * which returns a shared_ptr to a NodeTopicsInterface, or be a
  * NodeTopicsInterface pointer itself.
+ *
+ * \tparam MessageT
+ * \tparam CallbackT
+ * \tparam AllocatorT
+ * \tparam CallbackMessageT
+ * \tparam SubscriptionT
+ * \tparam MessageMemoryStrategyT
+ * \tparam NodeT
+ * \param node
+ * \param topic_name
+ * \param qos
+ * \param callback
+ * \param options
+ * \param msg_mem_strat
+ * \return the created subscription
+ * \throws std::invalid_argument if topic statistics is enabled and the publish period is
+ * less than or equal to zero.
  */
 template<
   typename MessageT,
@@ -81,6 +100,13 @@ create_subscription(
       options,
       *node_topics->get_node_base_interface()))
   {
+    if (options.topic_stats_options.publish_period <= std::chrono::milliseconds(0)) {
+      throw std::invalid_argument(
+              "topic_stats_options.publish_period must be greater than 0, specified value of " +
+              std::to_string(options.topic_stats_options.publish_period.count()) +
+              " ms");
+    }
+
     std::shared_ptr<Publisher<statistics_msgs::msg::MetricsMessage>> publisher =
       create_publisher<statistics_msgs::msg::MetricsMessage>(
       node,

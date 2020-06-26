@@ -296,7 +296,7 @@ public:
    * \param[in] name the name of an action.
    *  The same name and type must be used by both the action client and action server to
    *  communicate.
-   * \param[in] options options to pass to the underlying `rcl_action_server_t`.
+   * \param[in] options Options to pass to the underlying `rcl_action_server_t`.
    * \param[in] handle_goal a callback that decides if a goal should be accepted or rejected.
    * \param[in] handle_cancel a callback that decides if a goal should be attemted to be canceled.
    *  The return from this callback only indicates if the server will try to cancel a goal.

@@ -60,7 +60,7 @@ public:
 
   /// Serialize a ROS2 message to a serialized stream
   /**
-   * \param[in] message The ROS2 message which is read and serialized by rmw.
+   * \param[in] ros_message The ROS2 message which is read and serialized by rmw.
    * \param[out] serialized_message The serialized message.
    */
   void serialize_message(
@@ -69,7 +69,7 @@ public:
   /// Deserialize a serialized stream to a ROS message
   /**
    * \param[in] serialized_message The serialized message to be converted to ROS2 by rmw.
-   * \param[out] message The deserialized ROS2 message.
+   * \param[out] ros_message The deserialized ROS2 message.
    */
   void deserialize_message(
     const SerializedMessage * serialized_message, void * ros_message) const;

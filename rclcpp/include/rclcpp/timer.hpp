@@ -166,6 +166,7 @@ public:
    * \param[in] clock The clock providing the current time.
    * \param[in] period The interval at which the timer fires.
    * \param[in] callback User-specified callback function.
+   * \param[in] context custom context to be used.
    */
   explicit GenericTimer(
     Clock::SharedPtr clock, std::chrono::nanoseconds period, FunctorT && callback,

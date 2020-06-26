@@ -92,7 +92,7 @@ public:
    * \param[in] topic_name Name of the topic to subscribe to.
    * \param[in] qos QoS profile for Subcription.
    * \param[in] callback User defined callback to call when a message is received.
-   * \param[in] options options for the subscription.
+   * \param[in] options Options for the subscription.
    * \param[in] message_memory_strategy The memory strategy to be used for managing message memory.
    * \param[in] subscription_topic_statistics Optional pointer to a topic statistics subcription.
    * \throws std::invalid_argument if the QoS is uncompatible with intra-process (if one
@@ -143,6 +143,11 @@ public:
       } catch (UnsupportedEventTypeException & /*exc*/) {
         // pass
       }
+    }
+    if (options.event_callbacks.message_lost_callback) {
+      this->add_event_handler(
+        options.event_callbacks.message_lost_callback,
+        RCL_SUBSCRIPTION_MESSAGE_LOST);
     }
 
     // Setup intra process publishing if requested.

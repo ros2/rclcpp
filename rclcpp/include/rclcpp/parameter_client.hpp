@@ -48,13 +48,13 @@ public:
 
   /// Create an async parameters client.
   /**
-   * \param node_base_interface[in] The node base interface of the corresponding node.
-   * \param node_topics_interface[in] Node topic base interface.
-   * \param node_graph_interface[in] The node graph interface of the corresponding node.
-   * \param node_services_interface[in] Node service interface.
-   * \param remote_node_name[in] (optional) name of the remote node
-   * \param qos_profile[in] (optional) The rmw qos profile to use to subscribe
-   * \param group[in] (optional)  The async parameter client will be added to this callback group.
+   * \param[in] node_base_interface The node base interface of the corresponding node.
+   * \param[in] node_topics_interface Node topic base interface.
+   * \param[in] node_graph_interface The node graph interface of the corresponding node.
+   * \param[in] node_services_interface Node service interface.
+   * \param[in] remote_node_name (optional) name of the remote node
+   * \param[in] qos_profile (optional) The rmw qos profile to use to subscribe
+   * \param[in] group (optional) The async parameter client will be added to this callback group.
    */
   RCLCPP_PUBLIC
   AsyncParametersClient(
@@ -68,10 +68,10 @@ public:
 
   /// Constructor
   /**
-   * \param node[in] The  async paramters client will be added to this node.
-   * \param remote_node_name[in] (optional) name of the remote node
-   * \param qos_profile[in] (optional) The rmw qos profile to use to subscribe
-   * \param group[in] (optional)  The async parameter client will be added to this callback group.
+   * \param[in] node The async paramters client will be added to this node.
+   * \param[in] remote_node_name (optional) name of the remote node
+   * \param[in] qos_profile (optional) The rmw qos profile to use to subscribe
+   * \param[in] group (optional) The async parameter client will be added to this callback group.
    */
   RCLCPP_PUBLIC
   AsyncParametersClient(
@@ -82,10 +82,10 @@ public:
 
   /// Constructor
   /**
-   * \param node[in] The  async paramters client will be added to this node.
-   * \param remote_node_name[in] (optional) name of the remote node
-   * \param qos_profile[in] (optional) The rmw qos profile to use to subscribe
-   * \param group[in] (optional)  The async parameter client will be added to this callback group.
+   * \param[in] node The  async paramters client will be added to this node.
+   * \param[in] remote_node_name (optional) name of the remote node
+   * \param[in] qos_profile (optional) The rmw qos profile to use to subscribe
+   * \param[in] group (optional) The async parameter client will be added to this callback group.
    */
   RCLCPP_PUBLIC
   AsyncParametersClient(
