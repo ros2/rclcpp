@@ -1,0 +1,33 @@
+# All settings not listed here will use the Doxygen default values.
+
+PROJECT_NAME           = "rclcpp_components"
+PROJECT_NUMBER         = master
+PROJECT_BRIEF          = "Package containing tools for dynamically loadable components"
+
+# Use these lines to include the generated logging.hpp (update install path if needed)
+# Otherwise just generate for the local (non-generated header files)
+INPUT                  = ./include
+
+RECURSIVE              = YES
+OUTPUT_DIRECTORY       = doc_output
+
+EXTRACT_ALL            = YES
+SORT_MEMBER_DOCS       = NO
+
+GENERATE_LATEX         = NO
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = RCLCPP_COMPONENTS_PUBLIC=
+
+# Tag files that do not exist will produce a warning and cross-project linking will not work.
+TAGFILES += "../../../../doxygen_tag_files/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/"
+# Consider changing "latest" to the version you want to reference (e.g. beta1 or 1.0.0)
+TAGFILES += "../../../../doxygen_tag_files/class_loader.tag=http://docs.ros2.org/latest/api/class_loader/"
+TAGFILES += "../../../../doxygen_tag_files/rclcpp.tag=http://docs.ros2.org/latest/api/rclcpp/"
+TAGFILES += "../../../../doxygen_tag_files/rcl.tag=http://docs.ros2.org/latest/api/rcl/"
+TAGFILES += "../../../../doxygen_tag_files/rcutils.tag=http://docs.ros2.org/latest/api/rcutils/"
+TAGFILES += "../../../../doxygen_tag_files/rmw.tag=http://docs.ros2.org/latest/api/rmw/"
+# Uncomment to generate tag files for cross-project linking.
+GENERATE_TAGFILE = "../../../../doxygen_tag_files/rclcpp_components.tag"
