@@ -874,18 +874,6 @@ NodeParameters::add_on_set_parameters_callback(OnParametersSetCallbackType callb
   return handle;
 }
 
-NodeParameters::OnParametersSetCallbackType
-NodeParameters::set_on_parameters_set_callback(OnParametersSetCallbackType callback)
-{
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-  ParameterMutationRecursionGuard guard(parameter_modification_enabled_);
-
-  auto existing_callback = on_parameters_set_callback_;
-  on_parameters_set_callback_ = callback;
-  return existing_callback;
-}
-
 const std::map<std::string, rclcpp::ParameterValue> &
 NodeParameters::get_parameter_overrides() const
 {

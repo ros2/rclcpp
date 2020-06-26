@@ -328,28 +328,6 @@ Node::remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * co
   return node_parameters_->remove_on_set_parameters_callback(callback);
 }
 
-// suppress deprecated function warning
-#if !defined(_WIN32)
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else  // !defined(_WIN32)
-# pragma warning(push)
-# pragma warning(disable: 4996)
-#endif
-
-rclcpp::Node::OnParametersSetCallbackType
-Node::set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback)
-{
-  return node_parameters_->set_on_parameters_set_callback(callback);
-}
-
-// remove warning suppression
-#if !defined(_WIN32)
-# pragma GCC diagnostic pop
-#else  // !defined(_WIN32)
-# pragma warning(pop)
-#endif
-
 std::vector<std::string>
 Node::get_node_names() const
 {

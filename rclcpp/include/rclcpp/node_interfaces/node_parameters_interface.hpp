@@ -191,17 +191,6 @@ public:
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler) = 0;
 
-  /// Register a callback for when parameters are being set, return an existing one.
-  /**
-   * \deprecated Use add_on_set_parameters_callback instead.
-   * \sa rclcpp::Node::set_on_parameters_set_callback
-   */
-  [[deprecated("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
-  RCLCPP_PUBLIC
-  virtual
-  OnParametersSetCallbackType
-  set_on_parameters_set_callback(OnParametersSetCallbackType callback) = 0;
-
   /// Return the initial parameter values used by the NodeParameters to override default values.
   RCLCPP_PUBLIC
   virtual
