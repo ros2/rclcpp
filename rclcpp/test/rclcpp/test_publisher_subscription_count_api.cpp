@@ -98,8 +98,9 @@ struct UseCustomContext
 struct PrintTestDescription
 {
   template<typename T>
-  static std::string GetName(int)
+  static std::string GetName(int i)
   {
+    static_cast<void>(i);
     return T::description;
   }
 };
