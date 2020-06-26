@@ -152,11 +152,24 @@ Executor::add_callback_group(
 }
 
 void
+Executor::add_callback_groups(
+  std::vector<rclcpp::CallbackGroup::SharedPtr> group_ptrs,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  bool notify)
+  {
+    for_each(group_ptrs.begin(), group_ptrs.end(),
+    [node_ptr, notify, this](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    {
+        add_callback_group(group_ptr, node_ptr, notify);
+    });
+  }
+
+void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
-    if (group_ptr != nullptr) {
+    if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load()) {
       add_callback_group(group_ptr, node_ptr, notify);
     }
   }
