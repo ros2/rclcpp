@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <chrono>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -220,21 +221,31 @@ private:
 
   void TearDown() override
   {
-    rclcpp::shutdown();
+    {
+      std::lock_guard<std::mutex> guard(shutdown_mutex_);
+      rclcpp::shutdown();
+    }
     spinner_.join();
   }
 
   void spin()
   {
-    while (rclcpp::ok()) {
-      rclcpp::spin_some(lifecycle_node_->get_node_base_interface());
-      rclcpp::spin_some(lifecycle_client_);
+    while (true) {
+      {
+        std::lock_guard<std::mutex> guard(shutdown_mutex_);
+        if (!rclcpp::ok()) {
+          break;
+        }
+        rclcpp::spin_some(lifecycle_node_->get_node_base_interface());
+        rclcpp::spin_some(lifecycle_client_);
+      }
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
 
   std::shared_ptr<EmptyLifecycleNode> lifecycle_node_;
   std::shared_ptr<LifecycleServiceClient> lifecycle_client_;
+  std::mutex shutdown_mutex_;
   std::thread spinner_;
 };
 
