@@ -70,23 +70,23 @@ All pull requests must resolve related documentation changes before merging.
 
 ### Feature Documentation [3.i]
 
-`rclcpp_lifecycle` has a [feature list](http://docs.ros2.org/latest/api/rclcpp_lyfecycle/) and each item in the list links to the corresponding feature documentation. There is documentation for all of the features, and new features require documentation before being added.
+`rclcpp_lifecycle` has a [feature list](http://docs.ros2.org/latest/api/rclcpp_lifecycle/index.html) and each item in the list links to the corresponding feature documentation. There is documentation for all of the features, and new features require documentation before being added.
 
 ### Public API Documentation [3.ii]
 
-The API is publicly available in the [ROS 2 API documentation](http://docs.ros2.org/latest/api/rclcpp_lyfecycle/).
+The API is publicly available in its [ROS 2 API documentation](http://docs.ros2.org/latest/api/rclcpp_lyfecycle/).
 
 ### License [3.iii]
 
 The license for `rclcpp_lifecycle` is Apache 2.0, and a summary is in each source file, the type is declared in the [`package.xml`](./package.xml) manifest file, and a full copy of the license is in the [`LICENSE`](../LICENSE) file.
 
-There is an automated test which runs a linter that ensures each file has a license statement. [Here](http://build.ros2.org/view/Fpr/job/Fpr__rclcpp__ubuntu_focal_amd64/lastStableBuild/testReport/rclcpp_lifecycle/) can be found a list with the latest results of the various linters being run on the package.
+There is an automated test which runs a linter that ensures each file has a license statement. [Here](http://build.ros2.org/view/Fpr/job/Fpr__rclcpp__ubuntu_focal_amd64/lastSuccessfulBuild/testReport/rclcpp_lifecycle/) can be found a list with the latest results of the various linters being run on the package.
 
 ### Copyright Statements [3.iv]
 
 The copyright holders each provide a statement of copyright in each source code file in `rclcpp_lifecycle`.
 
-There is an automated test which runs a linter that ensures each file has at least one copyright statement. Latest linter result report can be seen [here](http://build.ros2.org/view/Fpr/job/Fpr__rclcpp__ubuntu_focal_amd64/lastStableBuild/testReport/rclcpp_lifecycle/copyright/).
+There is an automated test which runs a linter that ensures each file has at least one copyright statement. Latest linter result report can be seen [here](http://build.ros2.org/view/Fpr/job/Fpr__rclcpp__ubuntu_focal_amd64/lastSuccessfulBuild/testReport/rclcpp_lifecycle/copyright/).
 
 ## Testing [4]
 
