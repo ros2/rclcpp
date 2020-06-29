@@ -159,7 +159,7 @@ __lockless_has_parameter(
 // see https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
 RCLCPP_LOCAL
 bool
-__are_doubles_equal(double x, double y, size_t ulp = 100)
+__are_doubles_equal(double x, double y, double ulp = 100.0)
 {
   return std::abs(x - y) <= std::numeric_limits<double>::epsilon() * std::abs(x + y) * ulp;
 }
