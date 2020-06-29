@@ -842,26 +842,6 @@ public:
   void
   remove_on_set_parameters_callback(const OnSetParametersCallbackHandle * const handler);
 
-  /// Register a callback to be called anytime a parameter is about to be changed.
-  /**
-   * \deprecated Use add_on_set_parameters_callback instead.
-   * With this method, only one callback can be set at a time. The callback that was previously
-   * set by this method is returned or `nullptr` if no callback was previously set.
-   *
-   * The callbacks added with `add_on_set_parameters_callback` are stored in a different place.
-   * `remove_on_set_parameters_callback` can't be used with the callbacks registered with this
-   * method. For removing it, use `set_on_parameters_set_callback(nullptr)`.
-   *
-   * \param[in] callback The callback to be called when the value for a
-   *   parameter is about to be set.
-   * \return The previous callback that was registered, if there was one,
-   *   otherwise nullptr.
-   */
-  [[deprecated("use add_on_set_parameters_callback(OnParametersSetCallbackType callback) instead")]]
-  RCLCPP_PUBLIC
-  OnParametersSetCallbackType
-  set_on_parameters_set_callback(rclcpp::Node::OnParametersSetCallbackType callback);
-
   /// Get the fully-qualified names of all available nodes.
   /**
    * The fully-qualified name includes the local namespace and name of the node.
