@@ -62,17 +62,13 @@ Time::Time(int64_t nanoseconds, rcl_clock_type_t clock_type)
   rcl_time_.nanoseconds = nanoseconds;
 }
 
-Time::Time(const Time & rhs)
-: rcl_time_(rhs.rcl_time_)
-{
-  rcl_time_.nanoseconds = rhs.rcl_time_.nanoseconds;
-}
+Time::Time(const Time & rhs) = default;
 
 Time::Time(
   const builtin_interfaces::msg::Time & time_msg,
-  rcl_clock_type_t ros_time)
+  rcl_clock_type_t clock_type)
+: rcl_time_(init_time_point(clock_type))
 {
-  rcl_time_ = init_time_point(ros_time);
   if (time_msg.sec < 0) {
     throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
   }
@@ -94,31 +90,25 @@ Time::~Time()
 Time::operator builtin_interfaces::msg::Time() const
 {
   builtin_interfaces::msg::Time msg_time;
-  msg_time.sec = static_cast<std::int32_t>(RCL_NS_TO_S(rcl_time_.nanoseconds));
-  msg_time.nanosec = static_cast<std::uint32_t>(rcl_time_.nanoseconds % (1000 * 1000 * 1000));
+  constexpr rcl_time_point_value_t kRemainder = RCL_S_TO_NS(1);
+  const auto result = std::div(rcl_time_.nanoseconds, kRemainder);
+  if (result.rem >= 0) {
+    msg_time.sec = static_cast<std::int32_t>(result.quot);
+    msg_time.nanosec = static_cast<std::uint32_t>(result.rem);
+  } else {
+    msg_time.sec = static_cast<std::int32_t>(result.quot - 1);
+    msg_time.nanosec = static_cast<std::uint32_t>(kRemainder + result.rem);
+  }
   return msg_time;
 }
 
 Time &
-Time::operator=(const Time & rhs)
-{
-  rcl_time_ = rhs.rcl_time_;
-  return *this;
-}
+Time::operator=(const Time & rhs) = default;
 
 Time &
 Time::operator=(const builtin_interfaces::msg::Time & time_msg)
 {
-  if (time_msg.sec < 0) {
-    throw std::runtime_error("cannot store a negative time point in rclcpp::Time");
-  }
-
-
-  rcl_clock_type_t ros_time = RCL_ROS_TIME;
-  rcl_time_ = init_time_point(ros_time);  // TODO(tfoote) hard coded ROS here
-
-  rcl_time_.nanoseconds = RCL_S_TO_NS(static_cast<int64_t>(time_msg.sec));
-  rcl_time_.nanoseconds += time_msg.nanosec;
+  *this = Time(time_msg);
   return *this;
 }
 

@@ -86,7 +86,7 @@ TEST_F(TestMultiThreadedExecutor, timer_over_take) {
 
       {
         std::lock_guard<std::mutex> lock(last_mutex);
-        double diff = std::abs((now - last).nanoseconds()) / 1.0e9;
+        double diff = static_cast<double>(std::abs((now - last).nanoseconds())) / 1.0e9;
         last = now;
 
         if (diff < PERIOD - TOLERANCE || diff > PERIOD + TOLERANCE) {
