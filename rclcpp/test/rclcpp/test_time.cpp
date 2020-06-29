@@ -45,7 +45,7 @@ protected:
   }
 };
 
-TEST(TestTime, clock_type_access) {
+TEST_F(TestTime, clock_type_access) {
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
   EXPECT_EQ(RCL_ROS_TIME, ros_clock.get_clock_type());
 
@@ -57,7 +57,7 @@ TEST(TestTime, clock_type_access) {
 }
 
 // Check that the clock may go out of the scope before the jump callback without leading in UB.
-TEST(TestTime, clock_jump_callback_destruction_order) {
+TEST_F(TestTime, clock_jump_callback_destruction_order) {
   rclcpp::JumpHandler::SharedPtr handler;
   {
     rclcpp::Clock ros_clock(RCL_ROS_TIME);
@@ -68,7 +68,7 @@ TEST(TestTime, clock_jump_callback_destruction_order) {
   }
 }
 
-TEST(TestTime, time_sources) {
+TEST_F(TestTime, time_sources) {
   using builtin_interfaces::msg::Time;
   rclcpp::Clock ros_clock(RCL_ROS_TIME);
   Time ros_now = ros_clock.now();
@@ -86,44 +86,124 @@ TEST(TestTime, time_sources) {
   EXPECT_NE(0u, steady_now.nanosec);
 }
 
-TEST(TestTime, conversions) {
+static const int64_t HALF_SEC_IN_NS = 500 * 1000 * 1000;
+static const int64_t ONE_SEC_IN_NS = 1000 * 1000 * 1000;
+static const int64_t ONE_AND_HALF_SEC_IN_NS = 3 * HALF_SEC_IN_NS;
+
+TEST_F(TestTime, conversions) {
   rclcpp::Clock system_clock(RCL_SYSTEM_TIME);
 
-  rclcpp::Time now = system_clock.now();
-  builtin_interfaces::msg::Time now_msg = now;
-
-  rclcpp::Time now_again = now_msg;
-  EXPECT_EQ(now.nanoseconds(), now_again.nanoseconds());
-
-  builtin_interfaces::msg::Time msg;
-  msg.sec = 12345;
-  msg.nanosec = 67890;
-
-  rclcpp::Time time = msg;
-  EXPECT_EQ(
-    RCL_S_TO_NS(static_cast<int64_t>(msg.sec)) + static_cast<int64_t>(msg.nanosec),
-    time.nanoseconds());
-  EXPECT_EQ(static_cast<int64_t>(msg.sec), RCL_NS_TO_S(time.nanoseconds()));
-
-  builtin_interfaces::msg::Time negative_time_msg;
-  negative_time_msg.sec = -1;
-  negative_time_msg.nanosec = 1;
-
-  EXPECT_ANY_THROW(
   {
-    rclcpp::Time negative_time = negative_time_msg;
-  });
+    rclcpp::Time now = system_clock.now();
+    builtin_interfaces::msg::Time now_msg = now;
 
-  EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
+    rclcpp::Time now_again = now_msg;
+    EXPECT_EQ(now.nanoseconds(), now_again.nanoseconds());
+  }
 
-  EXPECT_ANY_THROW(
   {
-    rclcpp::Time assignment(1, 2);
-    assignment = negative_time_msg;
-  });
+    rclcpp::Time positive_time = rclcpp::Time(12345, 67890u);
+
+    builtin_interfaces::msg::Time msg = positive_time;
+    EXPECT_EQ(msg.sec, 12345);
+    EXPECT_EQ(msg.nanosec, 67890u);
+
+    rclcpp::Time time = msg;
+    EXPECT_EQ(time.nanoseconds(), positive_time.nanoseconds());
+    EXPECT_EQ(
+      RCL_S_TO_NS(static_cast<int64_t>(msg.sec)) + static_cast<int64_t>(msg.nanosec),
+      time.nanoseconds());
+    EXPECT_EQ(static_cast<int64_t>(msg.sec), RCL_NS_TO_S(time.nanoseconds()));
+  }
+
+  // throw on construction/assignment of negative times
+  {
+    builtin_interfaces::msg::Time negative_time_msg;
+    negative_time_msg.sec = -1;
+    negative_time_msg.nanosec = 1;
+
+    EXPECT_ANY_THROW(
+    {
+      rclcpp::Time negative_time = negative_time_msg;
+    });
+
+    EXPECT_ANY_THROW(rclcpp::Time(-1, 1));
+
+    EXPECT_ANY_THROW(
+    {
+      rclcpp::Time assignment(1, 2);
+      assignment = negative_time_msg;
+    });
+  }
+
+  {
+    const rclcpp::Time time(HALF_SEC_IN_NS);
+    const auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
+    EXPECT_EQ(time_msg.sec, 0);
+    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
+    EXPECT_EQ(rclcpp::Time(time_msg).nanoseconds(), HALF_SEC_IN_NS);
+  }
+
+  {
+    const rclcpp::Time time(ONE_SEC_IN_NS);
+    const auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
+    EXPECT_EQ(time_msg.sec, 1);
+    EXPECT_EQ(time_msg.nanosec, 0u);
+    EXPECT_EQ(rclcpp::Time(time_msg).nanoseconds(), ONE_SEC_IN_NS);
+  }
+
+  {
+    const rclcpp::Time time(ONE_AND_HALF_SEC_IN_NS);
+    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
+    EXPECT_EQ(time_msg.sec, 1);
+    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
+    EXPECT_EQ(rclcpp::Time(time_msg).nanoseconds(), ONE_AND_HALF_SEC_IN_NS);
+  }
+
+  {
+    // Can rclcpp::Time be negative or not? The following constructor works:
+    rclcpp::Time time(-HALF_SEC_IN_NS);
+    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
+    EXPECT_EQ(time_msg.sec, -1);
+    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
+
+    // The opposite conversion throws...
+    EXPECT_ANY_THROW(
+    {
+      rclcpp::Time negative_time(time_msg);
+    });
+  }
+
+  {
+    // Can rclcpp::Time be negative or not? The following constructor works:
+    rclcpp::Time time(-ONE_SEC_IN_NS);
+    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
+    EXPECT_EQ(time_msg.sec, -1);
+    EXPECT_EQ(time_msg.nanosec, 0u);
+
+    // The opposite conversion throws...
+    EXPECT_ANY_THROW(
+    {
+      rclcpp::Time negative_time(time_msg);
+    });
+  }
+
+  {
+    // Can rclcpp::Time be negative or not? The following constructor works:
+    rclcpp::Time time(-ONE_AND_HALF_SEC_IN_NS);
+    auto time_msg = static_cast<builtin_interfaces::msg::Time>(time);
+    EXPECT_EQ(time_msg.sec, -2);
+    EXPECT_EQ(time_msg.nanosec, HALF_SEC_IN_NS);
+
+    // The opposite conversion throws...
+    EXPECT_ANY_THROW(
+    {
+      rclcpp::Time negative_time(time_msg);
+    });
+  }
 }
 
-TEST(TestTime, operators) {
+TEST_F(TestTime, operators) {
   rclcpp::Time old(1, 0);
   rclcpp::Time young(2, 0);
 
@@ -178,7 +258,7 @@ TEST(TestTime, operators) {
   }
 }
 
-TEST(TestTime, overflow_detectors) {
+TEST_F(TestTime, overflow_detectors) {
   /////////////////////////////////////////////////////////////////////////////
   // Test logical_eq call first:
   EXPECT_TRUE(logical_eq(false, false));
@@ -198,8 +278,8 @@ TEST(TestTime, overflow_detectors) {
   // 256 * 256 = 64K total loops, should be pretty fast on everything
   for (big_type_t y = min_val; y <= max_val; ++y) {
     for (big_type_t x = min_val; x <= max_val; ++x) {
-      const big_type_t sum = x + y;
-      const big_type_t diff = x - y;
+      const big_type_t sum = static_cast<big_type_t>(x + y);
+      const big_type_t diff = static_cast<big_type_t>(x - y);
 
       const bool add_will_overflow =
         rclcpp::add_will_overflow(test_type_t(x), test_type_t(y));
@@ -235,7 +315,7 @@ TEST(TestTime, overflow_detectors) {
   EXPECT_TRUE(rclcpp::sub_will_underflow<int64_t>(INT64_MIN, 1));
 }
 
-TEST(TestTime, overflows) {
+TEST_F(TestTime, overflows) {
   rclcpp::Time max_time(std::numeric_limits<rcl_time_point_value_t>::max());
   rclcpp::Time min_time(std::numeric_limits<rcl_time_point_value_t>::min());
   rclcpp::Duration one(1);
@@ -267,7 +347,7 @@ TEST(TestTime, overflows) {
   EXPECT_NO_THROW(one_time - two_time);
 }
 
-TEST(TestTime, seconds) {
+TEST_F(TestTime, seconds) {
   EXPECT_DOUBLE_EQ(0.0, rclcpp::Time(0, 0).seconds());
   EXPECT_DOUBLE_EQ(4.5, rclcpp::Time(4, 500000000).seconds());
   EXPECT_DOUBLE_EQ(2.5, rclcpp::Time(0, 2500000000).seconds());

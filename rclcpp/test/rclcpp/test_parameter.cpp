@@ -32,7 +32,7 @@ protected:
   }
 };
 
-TEST(TestParameter, not_set_variant) {
+TEST_F(TestParameter, not_set_variant) {
   // Direct instantiation
   rclcpp::Parameter not_set_variant;
   EXPECT_EQ(rclcpp::PARAMETER_NOT_SET, not_set_variant.get_type());
@@ -58,7 +58,7 @@ TEST(TestParameter, not_set_variant) {
     rclcpp::Parameter::from_parameter_msg(not_set_param).get_type());
 }
 
-TEST(TestParameter, bool_variant) {
+TEST_F(TestParameter, bool_variant) {
   // Direct instantiation
   rclcpp::Parameter bool_variant_true("bool_param", true);
   EXPECT_EQ("bool_param", bool_variant_true.get_name());
@@ -116,7 +116,7 @@ TEST(TestParameter, bool_variant) {
     bool_variant_false.get_value_message().type);
 }
 
-TEST(TestParameter, integer_variant) {
+TEST_F(TestParameter, integer_variant) {
   const int TEST_VALUE {42};
 
   // Direct instantiation
@@ -164,7 +164,7 @@ TEST(TestParameter, integer_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, long_integer_variant) {
+TEST_F(TestParameter, long_integer_variant) {
   const int64_t TEST_VALUE {std::numeric_limits<int64_t>::max()};
 
   // Direct instantiation
@@ -212,7 +212,7 @@ TEST(TestParameter, long_integer_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, float_variant) {
+TEST_F(TestParameter, float_variant) {
   const float TEST_VALUE {42.0f};
 
   // Direct instantiation
@@ -260,7 +260,7 @@ TEST(TestParameter, float_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, double_variant) {
+TEST_F(TestParameter, double_variant) {
   const double TEST_VALUE {-42.1};
 
   // Direct instantiation
@@ -308,7 +308,7 @@ TEST(TestParameter, double_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, string_variant) {
+TEST_F(TestParameter, string_variant) {
   const std::string TEST_VALUE {"ROS2"};
 
   // Direct instantiation
@@ -354,7 +354,7 @@ TEST(TestParameter, string_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, byte_array_variant) {
+TEST_F(TestParameter, byte_array_variant) {
   const std::vector<uint8_t> TEST_VALUE {0x52, 0x4f, 0x53, 0x32};
 
   // Direct instantiation
@@ -402,7 +402,7 @@ TEST(TestParameter, byte_array_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, bool_array_variant) {
+TEST_F(TestParameter, bool_array_variant) {
   const std::vector<bool> TEST_VALUE {false, true, true, false, false, true};
 
   // Direct instantiation
@@ -450,7 +450,7 @@ TEST(TestParameter, bool_array_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, integer_array_variant) {
+TEST_F(TestParameter, integer_array_variant) {
   const std::vector<int> TEST_VALUE
   {42, -99, std::numeric_limits<int>::max(), std::numeric_limits<int>::lowest(), 0};
 
@@ -529,7 +529,7 @@ TEST(TestParameter, integer_array_variant) {
     rcl_interfaces::msg::ParameterType::PARAMETER_INTEGER_ARRAY);
 }
 
-TEST(TestParameter, long_integer_array_variant) {
+TEST_F(TestParameter, long_integer_array_variant) {
   const std::vector<int64_t> TEST_VALUE
   {42, -99, std::numeric_limits<int64_t>::max(), std::numeric_limits<int64_t>::lowest(), 0};
 
@@ -583,7 +583,7 @@ TEST(TestParameter, long_integer_array_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, float_array_variant) {
+TEST_F(TestParameter, float_array_variant) {
   const std::vector<float> TEST_VALUE
   {42.1f, -99.1f, std::numeric_limits<float>::max(), std::numeric_limits<float>::lowest(), 0.1f};
 
@@ -662,7 +662,7 @@ TEST(TestParameter, float_array_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, double_array_variant) {
+TEST_F(TestParameter, double_array_variant) {
   const std::vector<double> TEST_VALUE
   {42.1, -99.1, std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest(), 0.1};
 
@@ -716,7 +716,7 @@ TEST(TestParameter, double_array_variant) {
     from_msg.get_value_message().type);
 }
 
-TEST(TestParameter, string_array_variant) {
+TEST_F(TestParameter, string_array_variant) {
   const std::vector<std::string> TEST_VALUE {"R", "O", "S2"};
 
   // Direct instantiation
