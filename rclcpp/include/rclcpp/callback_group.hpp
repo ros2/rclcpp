@@ -94,12 +94,12 @@ public:
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
 
-   /**
-   * Returns size of callback group which includes
-   * subscriptions, timers, clients, services, and
-   * waitable
+  /// Return the total number of entities in the callback group.
+  /**
+   * The size of the callback group includes subscriptions, timers,
+   * clients, services, and waitables.
    *
-   * \return size of callback group
+   * \return size of the callback group
    */
   size_t
   size() const
