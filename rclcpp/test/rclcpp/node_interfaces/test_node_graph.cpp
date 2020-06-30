@@ -24,9 +24,22 @@
 #include "rclcpp/rclcpp.hpp"
 #include "test_msgs/msg/empty.hpp"
 
-TEST(TestNodeGraph, construct_from_node)
+class TestNodeGraph : public ::testing::Test
 {
-  rclcpp::init(0, nullptr);
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNodeGraph, construct_from_node)
+{
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
@@ -49,37 +62,30 @@ TEST(TestNodeGraph, construct_from_node)
 
   EXPECT_EQ(0u, node_graph->count_publishers("not_a_topic"));
   EXPECT_EQ(0u, node_graph->count_subscribers("not_a_topic"));
-
-  rclcpp::shutdown();
 }
 
-TEST(TestNodeGraph, get_topic_names_and_types)
+TEST_F(TestNodeGraph, get_topic_names_and_types)
 {
-  rclcpp::init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>("node2", "ns");
   const auto * node_graph =
     dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node->get_node_graph_interface().get());
   ASSERT_NE(nullptr, node_graph);
   auto topic_names_and_types = node_graph->get_topic_names_and_types();
   EXPECT_LT(0u, topic_names_and_types.size());
-  rclcpp::shutdown();
 }
 
-TEST(TestNodeGraph, get_service_names_and_types)
+TEST_F(TestNodeGraph, get_service_names_and_types)
 {
-  rclcpp::init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>("node2", "ns");
   const auto * node_graph =
     dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node->get_node_graph_interface().get());
   ASSERT_NE(nullptr, node_graph);
   auto service_names_and_types = node_graph->get_service_names_and_types();
   EXPECT_LT(0u, service_names_and_types.size());
-  rclcpp::shutdown();
 }
 
-TEST(TestNodeGraph, get_service_names_and_types_by_node)
+TEST_F(TestNodeGraph, get_service_names_and_types_by_node)
 {
-  rclcpp::init(0, nullptr);
   auto node1 = std::make_shared<rclcpp::Node>("node1", "ns");
   auto node2 = std::make_shared<rclcpp::Node>("node2", "ns");
   const auto * node_graph =
@@ -92,12 +98,10 @@ TEST(TestNodeGraph, get_service_names_and_types_by_node)
   auto service_names_and_types1 = node_graph->get_service_names_and_types_by_node("node1", "/ns");
   auto service_names_and_types2 = node_graph->get_service_names_and_types_by_node("node2", "/ns");
   EXPECT_EQ(service_names_and_types1.size(), service_names_and_types2.size());
-  rclcpp::shutdown();
 }
 
-TEST(TestNodeGraph, get_node_names_and_namespaces)
+TEST_F(TestNodeGraph, get_node_names_and_namespaces)
 {
-  rclcpp::init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   const auto * node_graph =
     dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node->get_node_graph_interface().get());
@@ -105,24 +109,20 @@ TEST(TestNodeGraph, get_node_names_and_namespaces)
 
   auto names_and_namespaces = node_graph->get_node_names_and_namespaces();
   EXPECT_EQ(1u, names_and_namespaces.size());
-  rclcpp::shutdown();
 }
 
-TEST(TestNodeGraph, notify_shutdown)
+TEST_F(TestNodeGraph, notify_shutdown)
 {
-  rclcpp::init(0, nullptr);
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
   auto * node_graph =
     dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node->get_node_graph_interface().get());
   ASSERT_NE(nullptr, node_graph);
 
   EXPECT_NO_THROW(node_graph->notify_shutdown());
-  rclcpp::shutdown();
 }
 
-TEST(TestNodeGraph, wait_for_graph_change)
+TEST_F(TestNodeGraph, wait_for_graph_change)
 {
-  rclcpp::init(0, nullptr);
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
   auto * node_graph =
     dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node->get_node_graph_interface().get());
@@ -137,27 +137,29 @@ TEST(TestNodeGraph, wait_for_graph_change)
   EXPECT_THROW(
     node_graph->wait_for_graph_change(event, std::chrono::milliseconds(0)),
     rclcpp::exceptions::EventNotRegisteredError);
-  rclcpp::shutdown();
 }
 
-TEST(TestNodeGraph, get_info_by_topic)
+TEST_F(TestNodeGraph, get_info_by_topic)
 {
-  rclcpp::init(0, nullptr);
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
-  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 1);
-
+  rclcpp::QoS publisher_qos(1);
+  auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", publisher_qos);
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+
+  rclcpp::QoS subscriber_qos(10);
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>(
-    "topic", rclcpp::QoS(10), std::move(callback));
+    "topic", subscriber_qos, std::move(callback));
+
   const auto * node_graph =
     dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node->get_node_graph_interface().get());
   ASSERT_NE(nullptr, node_graph);
 
   auto publishers = node_graph->get_publishers_info_by_topic("topic", false);
+  ASSERT_EQ(1u, publishers.size());
+
   auto publisher_endpoint_info = publishers[0];
   const auto const_publisher_endpoint_info = publisher_endpoint_info;
-  ASSERT_EQ(1u, publishers.size());
   EXPECT_STREQ("node", publisher_endpoint_info.node_name().c_str());
   EXPECT_STREQ("node", const_publisher_endpoint_info.node_name().c_str());
   EXPECT_STREQ("/ns", publisher_endpoint_info.node_namespace().c_str());
@@ -167,6 +169,12 @@ TEST(TestNodeGraph, get_info_by_topic)
   EXPECT_EQ(rclcpp::EndpointType::Publisher, publisher_endpoint_info.endpoint_type());
   EXPECT_EQ(rclcpp::EndpointType::Publisher, const_publisher_endpoint_info.endpoint_type());
 
+  rclcpp::QoS actual_qos = publisher_endpoint_info.qos_profile();
+  EXPECT_EQ(0u, actual_qos.get_rmw_qos_profile().depth);
+
+  rclcpp::QoS const_actual_qos = const_publisher_endpoint_info.qos_profile();
+  EXPECT_EQ(0u, const_actual_qos.get_rmw_qos_profile().depth);
+
   auto endpoint_gid = publisher_endpoint_info.endpoint_gid();
   auto const_endpoint_gid = const_publisher_endpoint_info.endpoint_gid();
   bool endpoint_gid_is_all_zeros = true;
@@ -175,5 +183,4 @@ TEST(TestNodeGraph, get_info_by_topic)
     EXPECT_EQ(endpoint_gid[i], const_endpoint_gid[i]);
   }
   EXPECT_FALSE(endpoint_gid_is_all_zeros);
-  rclcpp::shutdown();
 }

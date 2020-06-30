@@ -19,9 +19,22 @@
 #include "rclcpp/node_interfaces/node_clock.hpp"
 #include "rclcpp/node.hpp"
 
-TEST(TestNodeClock, construct_from_node)
+class TestNodeClock : public ::testing::Test
 {
-  rclcpp::init(0, nullptr);
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNodeClock, construct_from_node)
+{
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
@@ -33,5 +46,4 @@ TEST(TestNodeClock, construct_from_node)
 
   const auto * const_node_clock = node_clock;
   EXPECT_NE(nullptr, const_node_clock->get_clock());
-  rclcpp::shutdown();
 }

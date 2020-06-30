@@ -33,9 +33,22 @@ public:
   bool is_steady() override {return false;}
 };
 
-TEST(TestNodeTimers, add_timer)
+class TestNodeTimers : public ::testing::Test
 {
-  rclcpp::init(0, nullptr);
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNodeTimers, add_timer)
+{
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
@@ -43,14 +56,16 @@ TEST(TestNodeTimers, add_timer)
   auto node_timers =
     dynamic_cast<rclcpp::node_interfaces::NodeTimers *>(node->get_node_timers_interface().get());
   ASSERT_NE(nullptr, node_timers);
+  auto timer = std::make_shared<TestTimer>(node.get());
+  auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_NO_THROW(node_timers->add_timer(timer, callback_group));
 
-  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns");
+  // Check that adding timer from node to callback group in different_node throws exception.
+  std::shared_ptr<rclcpp::Node> different_node = std::make_shared<rclcpp::Node>("node2", "ns");
 
-  auto callback_group = node2->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  auto service = std::make_shared<TestTimer>(node.get());
+  auto callback_group_in_different_node =
+    different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   EXPECT_THROW(
-    node_timers->add_timer(service, callback_group),
+    node_timers->add_timer(timer, callback_group_in_different_node),
     std::runtime_error);
-
-  rclcpp::shutdown();
 }

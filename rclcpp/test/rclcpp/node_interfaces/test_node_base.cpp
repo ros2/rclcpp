@@ -22,9 +22,22 @@
 #include "rclcpp/node_interfaces/node_base.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-TEST(TestNodeBase, construct_from_node)
+class TestNodeBase : public ::testing::Test
 {
-  rclcpp::init(0, nullptr);
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNodeBase, construct_from_node)
+{
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
@@ -36,8 +49,7 @@ TEST(TestNodeBase, construct_from_node)
   EXPECT_STREQ("node", node_base->get_name());
   EXPECT_STREQ("/ns", node_base->get_namespace());
 
-  std::string expected_fully_qualified_name = "/ns/node";
-  EXPECT_STREQ(expected_fully_qualified_name.c_str(), node_base->get_fully_qualified_name());
+  EXPECT_STREQ("/ns/node", node_base->get_fully_qualified_name());
   EXPECT_NE(nullptr, node_base->get_context());
   EXPECT_NE(nullptr, node_base->get_rcl_node_handle());
   EXPECT_NE(nullptr, node_base->get_shared_rcl_node_handle());
@@ -45,5 +57,4 @@ TEST(TestNodeBase, construct_from_node)
   const auto * const_node_base = node_base;
   EXPECT_NE(nullptr, const_node_base->get_rcl_node_handle());
   EXPECT_NE(nullptr, const_node_base->get_shared_rcl_node_handle());
-  rclcpp::shutdown();
 }

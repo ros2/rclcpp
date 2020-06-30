@@ -30,9 +30,22 @@ public:
   void execute() override {}
 };
 
-TEST(TestNodeWaitables, add_remove_waitable)
+class TestNodeWaitables : public ::testing::Test
 {
-  rclcpp::init(0, nullptr);
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNodeWaitables, add_remove_waitable)
+{
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   auto * node_waitables =
@@ -52,5 +65,4 @@ TEST(TestNodeWaitables, add_remove_waitable)
     std::runtime_error);
   EXPECT_NO_THROW(node_waitables->remove_waitable(waitable, callback_group1));
   EXPECT_NO_THROW(node_waitables->remove_waitable(waitable, callback_group2));
-  rclcpp::shutdown();
 }

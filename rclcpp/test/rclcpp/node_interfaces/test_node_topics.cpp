@@ -16,6 +16,7 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 
 #include "rcl/node_options.h"
 #include "rclcpp/node.hpp"
@@ -23,24 +24,34 @@
 #include "rclcpp/rclcpp.hpp"
 #include "test_msgs/msg/empty.hpp"
 
-static const rosidl_message_type_support_t empty_type_support =
-  *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Empty>();
+namespace
+{
 
-static const rcl_publisher_options_t publisher_options =
-  rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>().template
-  to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+const rosidl_message_type_support_t EmptyTypeSupport()
+{
+  return *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Empty>();
+}
 
-static const rcl_subscription_options_t subscription_options =
-  rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>>().template
-  to_rcl_subscription_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+const rcl_publisher_options_t PublisherOptions()
+{
+  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>().template
+         to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+}
 
+const rcl_subscription_options_t SubscriptionOptions()
+{
+  return rclcpp::SubscriptionOptionsWithAllocator<std::allocator<void>>().template
+         to_rcl_subscription_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+}
+
+}  // namespace
 
 class TestPublisher : public rclcpp::PublisherBase
 {
 public:
   explicit TestPublisher(rclcpp::Node * node)
   : rclcpp::PublisherBase(
-      node->get_node_base_interface().get(), "topic", empty_type_support, publisher_options) {}
+      node->get_node_base_interface().get(), "topic", EmptyTypeSupport(), PublisherOptions()) {}
 };
 
 class TestSubscription : public rclcpp::SubscriptionBase
@@ -48,7 +59,7 @@ class TestSubscription : public rclcpp::SubscriptionBase
 public:
   explicit TestSubscription(rclcpp::Node * node)
   : rclcpp::SubscriptionBase(
-      node->get_node_base_interface().get(), empty_type_support, "topic", subscription_options) {}
+      node->get_node_base_interface().get(), EmptyTypeSupport(), "topic", SubscriptionOptions()) {}
   std::shared_ptr<void> create_message() override {return nullptr;}
 
   std::shared_ptr<rclcpp::SerializedMessage>
@@ -60,10 +71,22 @@ public:
   void return_serialized_message(std::shared_ptr<rclcpp::SerializedMessage> &) override {}
 };
 
-
-TEST(TestNodeTopics, add_publisher)
+class TestNodeTopics : public ::testing::Test
 {
-  rclcpp::init(0, nullptr);
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNodeTopics, add_publisher)
+{
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
@@ -71,33 +94,36 @@ TEST(TestNodeTopics, add_publisher)
   auto * node_topics =
     dynamic_cast<rclcpp::node_interfaces::NodeTopics *>(node->get_node_topics_interface().get());
   ASSERT_NE(nullptr, node_topics);
-
-  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns");
-
-  auto callback_group = node2->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   auto publisher = std::make_shared<TestPublisher>(node.get());
-  EXPECT_THROW(
-    node_topics->add_publisher(publisher, callback_group),
-    std::runtime_error);
+  auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_NO_THROW(node_topics->add_publisher(publisher, callback_group));
 
-  rclcpp::shutdown();
+  // Check that adding publisher from node to a callback group in different_node throws exception.
+  std::shared_ptr<rclcpp::Node> different_node = std::make_shared<rclcpp::Node>("node2", "ns");
+
+  auto callback_group_in_different_node =
+    different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_THROW(
+    node_topics->add_publisher(publisher, callback_group_in_different_node),
+    std::runtime_error);
 }
 
-TEST(TestNodeTopics, add_subscription)
+TEST_F(TestNodeTopics, add_subscription)
 {
-  rclcpp::init(0, nullptr);
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
   auto * node_topics =
     dynamic_cast<rclcpp::node_interfaces::NodeTopics *>(node->get_node_topics_interface().get());
   ASSERT_NE(nullptr, node_topics);
-
-  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns");
-
-  auto callback_group = node2->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   auto subscription = std::make_shared<TestSubscription>(node.get());
-  EXPECT_THROW(
-    node_topics->add_subscription(subscription, callback_group),
-    std::runtime_error);
+  auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_NO_THROW(node_topics->add_subscription(subscription, callback_group));
 
-  rclcpp::shutdown();
+  // Check that adding subscription from node to callback group in different_node throws exception.
+  std::shared_ptr<rclcpp::Node> different_node = std::make_shared<rclcpp::Node>("node2", "ns");
+
+  auto callback_group_in_different_node =
+    different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_THROW(
+    node_topics->add_subscription(subscription, callback_group_in_different_node),
+    std::runtime_error);
 }

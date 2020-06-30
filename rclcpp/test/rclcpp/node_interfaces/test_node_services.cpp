@@ -45,9 +45,22 @@ public:
     std::shared_ptr<rmw_request_id_t>, std::shared_ptr<void>) override {}
 };
 
-TEST(TestNodeService, add_service)
+class TestNodeService : public ::testing::Test
 {
-  rclcpp::init(0, nullptr);
+public:
+  void SetUp()
+  {
+    rclcpp::init(0, nullptr);
+  }
+
+  void TearDown()
+  {
+    rclcpp::shutdown();
+  }
+};
+
+TEST_F(TestNodeService, add_service)
+{
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
@@ -57,20 +70,23 @@ TEST(TestNodeService, add_service)
     node->get_node_services_interface().get());
   ASSERT_NE(nullptr, node_services);
 
-  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns");
-
-  auto callback_group = node2->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   auto service = std::make_shared<TestService>(node.get());
-  EXPECT_THROW(
-    node_services->add_service(service, callback_group),
-    std::runtime_error);
+  auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_NO_THROW(
+    node_services->add_service(service, callback_group));
 
-  rclcpp::shutdown();
+  // Check that adding a service from node to a callback group of different_node throws exception.
+  std::shared_ptr<rclcpp::Node> different_node = std::make_shared<rclcpp::Node>("node2", "ns");
+
+  auto callback_group_in_different_node =
+    different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_THROW(
+    node_services->add_service(service, callback_group_in_different_node),
+    std::runtime_error);
 }
 
-TEST(TestNodeService, add_client)
+TEST_F(TestNodeService, add_client)
 {
-  rclcpp::init(0, nullptr);
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
   // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
@@ -80,13 +96,16 @@ TEST(TestNodeService, add_client)
     node->get_node_services_interface().get());
   ASSERT_NE(nullptr, node_services);
 
-  std::shared_ptr<rclcpp::Node> node2 = std::make_shared<rclcpp::Node>("node2", "ns");
-
-  auto callback_group = node2->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   auto client = std::make_shared<TestClient>(node.get());
-  EXPECT_THROW(
-    node_services->add_client(client, callback_group),
-    std::runtime_error);
+  auto callback_group = node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_NO_THROW(node_services->add_client(client, callback_group));
 
-  rclcpp::shutdown();
+  // Check that adding a client from node to a callback group of different_node throws exception.
+  std::shared_ptr<rclcpp::Node> different_node = std::make_shared<rclcpp::Node>("node2", "ns");
+
+  auto callback_group_in_different_node =
+    different_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  EXPECT_THROW(
+    node_services->add_client(client, callback_group_in_different_node),
+    std::runtime_error);
 }
