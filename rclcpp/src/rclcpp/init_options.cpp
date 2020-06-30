@@ -125,7 +125,7 @@ InitOptions::get_domain_id() const
   size_t domain_id;
   rcl_ret_t ret = rcl_init_options_get_domain_id(init_options_.get(), &domain_id);
   if (RCL_RET_OK != ret) {
-    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get domain id to rcl init options");
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get domain id from rcl init options");
   }
 
   return domain_id;

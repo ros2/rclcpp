@@ -16,11 +16,9 @@
 #define RCLCPP__INIT_OPTIONS_HPP_
 
 #include <memory>
-#include <limits>
 
 #include "rcl/init_options.h"
 #include "rclcpp/visibility_control.hpp"
-#include "rcutils/get_env.h"
 
 namespace rclcpp
 {
@@ -82,17 +80,17 @@ public:
   const rcl_init_options_t *
   get_rcl_init_options() const;
 
-  /// Retrieve the ROS_DOMAIN_ID environment variable.
+  /// Retrieve default domain id and set.
   RCLCPP_PUBLIC
   void
   use_default_domain_id();
 
-  /// Set domain id.
+  /// Set the domain id.
   RCLCPP_PUBLIC
   void
   set_domain_id(size_t domain_id);
 
-  /// Return the domain id.
+  /// Return domain id.
   RCLCPP_PUBLIC
   size_t
   get_domain_id() const;
