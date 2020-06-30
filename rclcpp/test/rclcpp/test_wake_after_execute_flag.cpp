@@ -57,7 +57,7 @@ TEST_F(TestWakeAfterExecuteFlag, set_wake_after_execute_flag_multi_threaded) {
     printf("Timer executed!");
 
     if(timer_count > 0){
-      ASSERT_EQ(executor.get_wake_after_executor_flag(), true);
+      ASSERT_EQ(executor.get_wake_after_execute_flag(), true);
     }
 
     timer_count++;
@@ -87,7 +87,7 @@ TEST_F(TestWakeAfterExecuteFlag, set_wake_after_execute_flag_single_threaded) {
     printf("Timer executed!");
 
     if(timer_count > 0){
-      ASSERT_EQ(executor.get_wake_after_executor_flag(), false);
+      ASSERT_EQ(executor.get_wake_after_execute_flag(), false);
     }
 
     timer_count++;

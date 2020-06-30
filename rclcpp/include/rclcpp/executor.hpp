@@ -287,7 +287,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  get_wake_after_executor_flag() {return wake_after_execute_.load();}
+  get_wake_after_execute_flag() {return wake_after_execute_.load();}
 
 protected:
   RCLCPP_PUBLIC
