@@ -340,8 +340,9 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   // Check whether triggering a guard condition is necessary
   // (will depend on the type of executor and callback groups)
   // Wake the wait, because it may need to be recalculated or work that
-  // was previously blocked is now available.
-  if (get_wake_after_execute_flag() &&
+  // was previously blocked is now available
+  if ((memory_strategy_->exec_has_been_added_or_removed().exchange(false) ||
+      get_wake_after_execute_flag()) &&
       rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
     throw std::runtime_error(rcl_get_error_string().str);
   }

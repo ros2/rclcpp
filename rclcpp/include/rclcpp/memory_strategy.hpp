@@ -93,6 +93,9 @@ public:
   virtual rcl_allocator_t
   get_allocator() = 0;
 
+  virtual std::atomic_bool &
+  exec_has_been_added_or_removed() {return exec_has_been_added_or_removed_;}
+
   static rclcpp::SubscriptionBase::SharedPtr
   get_subscription_by_handle(
     std::shared_ptr<const rcl_subscription_t> subscriber_handle,
@@ -142,6 +145,9 @@ public:
   get_group_by_waitable(
     rclcpp::Waitable::SharedPtr waitable,
     const WeakNodeList & weak_nodes);
+
+protected:
+  std::atomic_bool exec_has_been_added_or_removed_;
 };
 
 }  // namespace memory_strategy
