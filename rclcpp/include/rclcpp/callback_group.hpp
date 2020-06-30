@@ -101,6 +101,7 @@ public:
    *
    * \return size of the callback group
    */
+  RCLCPP_PUBLIC
   size_t
   size() const
   {
