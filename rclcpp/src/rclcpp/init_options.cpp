@@ -102,29 +102,12 @@ InitOptions::get_rcl_init_options() const
 void
 InitOptions::use_default_domain_id()
 {
-  // Try to get the ROS_DOMAIN_ID environment variable.
-  const char * ros_domain_id = NULL;
-  const char * env_var = "ROS_DOMAIN_ID";
-  const char * get_env_error_str = NULL;
-  get_env_error_str = rcutils_get_env(env_var, &ros_domain_id);
-  if (NULL != get_env_error_str) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp"),
-      "failed to get env var %s with %s", env_var, get_env_error_str);
+  size_t domain_id;
+  rcl_ret_t ret = rcl_get_default_domain_id(&domain_id);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get default domain id");
   }
-  if (ros_domain_id) {
-    unsigned long number = strtoul(ros_domain_id, NULL, 0);
-    if (number == (std::numeric_limits<uint32_t>::max)()) {
-      RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"),
-        "failed to interpret %s as integral number", env_var);
-    }
-    rcl_ret_t ret = rcl_init_options_set_domain_id(init_options_.get(), (size_t) number);
-    if (RCL_RET_OK != ret) {
-      RCLCPP_ERROR(
-        rclcpp::get_logger("rclcpp"), "failed to set domain id (%d).", number);
-    }
-  }
+  set_domain_id(domain_id);
 }
 
 void
@@ -132,8 +115,7 @@ InitOptions::set_domain_id(size_t domain_id)
 {
   rcl_ret_t ret = rcl_init_options_set_domain_id(init_options_.get(), domain_id);
   if (RCL_RET_OK != ret) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp"), "failed to set domain id (%d).", domain_id);
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set domain id to rcl init options");
   }
 }
 
@@ -143,8 +125,7 @@ InitOptions::get_domain_id() const
   size_t domain_id;
   rcl_ret_t ret = rcl_init_options_get_domain_id(init_options_.get(), &domain_id);
   if (RCL_RET_OK != ret) {
-    RCLCPP_ERROR(
-      rclcpp::get_logger("rclcpp"), "failed to get domain id.");
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get domain id to rcl init options");
   }
 
   return domain_id;
