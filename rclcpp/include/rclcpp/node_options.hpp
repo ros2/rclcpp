@@ -327,11 +327,6 @@ public:
   NodeOptions &
   allocator(rcl_allocator_t allocator);
 
-protected:
-  /// Retrieve the ROS_DOMAIN_ID environment variable and populate options.
-  size_t
-  get_domain_id_from_env() const;
-
 private:
   // This is mutable to allow for a const accessor which lazily creates the node options instance.
   /// Underlying rcl_node_options structure.
