@@ -136,6 +136,52 @@ ament_add_gtest(test_node_interfaces__get_node_interfaces
 if(TARGET test_node_interfaces__get_node_interfaces)
   target_link_libraries(test_node_interfaces__get_node_interfaces ${PROJECT_NAME})
 endif()
+ament_add_gtest(test_node_interfaces__node_base
+  rclcpp/node_interfaces/test_node_base.cpp)
+if(TARGET test_node_interfaces__node_base)
+  target_link_libraries(test_node_interfaces__node_base ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_node_interfaces__node_clock
+  rclcpp/node_interfaces/test_node_clock.cpp)
+if(TARGET test_node_interfaces__node_clock)
+  target_link_libraries(test_node_interfaces__node_clock ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_node_interfaces__node_graph
+  rclcpp/node_interfaces/test_node_graph.cpp)
+if(TARGET test_node_interfaces__node_graph)
+  ament_target_dependencies(
+    test_node_interfaces__node_graph
+    "test_msgs")
+  target_link_libraries(test_node_interfaces__node_graph ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_node_interfaces__node_parameters
+  rclcpp/node_interfaces/test_node_parameters.cpp)
+if(TARGET test_node_interfaces__node_parameters)
+  target_link_libraries(test_node_interfaces__node_parameters ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_node_interfaces__node_services
+  rclcpp/node_interfaces/test_node_services.cpp)
+if(TARGET test_node_interfaces__node_services)
+  target_link_libraries(test_node_interfaces__node_services ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_node_interfaces__node_timers
+  rclcpp/node_interfaces/test_node_timers.cpp)
+if(TARGET test_node_interfaces__node_timers)
+  target_link_libraries(test_node_interfaces__node_timers ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_node_interfaces__node_topics
+  rclcpp/node_interfaces/test_node_topics.cpp)
+if(TARGET test_node_interfaces__node_topics)
+  ament_target_dependencies(
+    test_node_interfaces__node_topics
+    "test_msgs")
+  target_link_libraries(test_node_interfaces__node_topics ${PROJECT_NAME})
+endif()
+ament_add_gtest(test_node_interfaces__node_waitables
+  rclcpp/node_interfaces/test_node_waitables.cpp)
+if(TARGET test_node_interfaces__node_waitables)
+  target_link_libraries(test_node_interfaces__node_waitables ${PROJECT_NAME})
+endif()
 
 # TODO(wjwwood): reenable these build failure tests when I can get Jenkins to ignore their output
 # rclcpp_add_build_failure_test(build_failure__get_node_topics_interface_const_ref_rclcpp_node
