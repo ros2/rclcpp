@@ -142,11 +142,11 @@ TEST_F(TestNodeGraph, wait_for_graph_change)
 TEST_F(TestNodeGraph, get_info_by_topic)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
-  rclcpp::QoS publisher_qos(1);
+  const rclcpp::QoS publisher_qos(1);
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", publisher_qos);
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
 
-  rclcpp::QoS subscriber_qos(10);
+  const rclcpp::QoS subscriber_qos(10);
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>(
     "topic", subscriber_qos, std::move(callback));

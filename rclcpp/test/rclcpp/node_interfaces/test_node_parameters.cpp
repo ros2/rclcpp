@@ -71,9 +71,7 @@ TEST_F(TestNodeParameters, list_parameters)
   EXPECT_EQ(number_of_parameters + 1u, list_result2.names.size());
 
   EXPECT_NE(
-    std::find_if(
-      list_result2.names.begin(), list_result2.names.end(),
-      [parameter_name](const std::string & s) {return parameter_name.compare(s) == 0;}),
+    std::find(list_result2.names.begin(), list_result2.names.end(), parameter_name),
     list_result2.names.end());
 }
 
