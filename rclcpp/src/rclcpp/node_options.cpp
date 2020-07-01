@@ -79,6 +79,7 @@ NodeOptions::operator=(const NodeOptions & other)
     this->allow_undeclared_parameters_ = other.allow_undeclared_parameters_;
     this->automatically_declare_parameters_from_overrides_ =
       other.automatically_declare_parameters_from_overrides_;
+    this->node_options_.reset();
   }
   return *this;
 }
