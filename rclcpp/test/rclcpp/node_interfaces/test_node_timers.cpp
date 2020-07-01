@@ -51,8 +51,8 @@ TEST_F(TestNodeTimers, add_timer)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
-  // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
-  // reports these functions uncovered otherwise.
+  // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
+  // the proper type is being tested and covered.
   auto node_timers =
     dynamic_cast<rclcpp::node_interfaces::NodeTimers *>(node->get_node_timers_interface().get());
   ASSERT_NE(nullptr, node_timers);

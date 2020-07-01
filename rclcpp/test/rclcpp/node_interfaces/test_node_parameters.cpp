@@ -46,8 +46,8 @@ TEST_F(TestNodeParameters, list_parameters)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
-  // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
-  // reports these functions uncovered otherwise.
+  // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
+  // the proper type is being tested and covered.
   auto * node_parameters =
     dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
     node->get_node_parameters_interface().get());

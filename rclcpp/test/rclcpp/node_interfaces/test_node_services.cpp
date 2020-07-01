@@ -63,8 +63,8 @@ TEST_F(TestNodeService, add_service)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
-  // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
-  // reports these functions uncovered otherwise.
+  // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
+  // the proper type is being tested and covered.
   auto * node_services =
     dynamic_cast<rclcpp::node_interfaces::NodeServices *>(
     node->get_node_services_interface().get());
@@ -89,8 +89,8 @@ TEST_F(TestNodeService, add_client)
 {
   std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns");
 
-  // This dynamic cast is not necessary for the unittest itself, but the coverage utility lcov
-  // reports these functions uncovered otherwise.
+  // This dynamic cast is not necessary for the unittest itself, but instead is used to ensure
+  // the proper type is being tested and covered.
   auto * node_services =
     dynamic_cast<rclcpp::node_interfaces::NodeServices *>(
     node->get_node_services_interface().get());
