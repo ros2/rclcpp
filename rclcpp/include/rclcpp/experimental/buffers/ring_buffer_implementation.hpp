@@ -57,7 +57,7 @@ public:
 
   void enqueue(BufferT request)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
 
     write_index_ = next(write_index_);
     ring_buffer_[write_index_] = std::move(request);
@@ -71,7 +71,7 @@ public:
 
   BufferT dequeue()
   {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
 
     if (!has_data()) {
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Calling dequeue on empty intra-process buffer");
@@ -88,16 +88,19 @@ public:
 
   inline size_t next(size_t val)
   {
+    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
     return (val + 1) % capacity_;
   }
 
   inline bool has_data() const
   {
+    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
     return size_ != 0;
   }
 
-  inline bool is_full()
+  inline bool is_full() const
   {
+    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
     return size_ == capacity_;
   }
 
@@ -112,7 +115,7 @@ private:
   size_t read_index_;
   size_t size_;
 
-  std::mutex mutex_;
+  mutable std::recursive_mutex recursive_mutex_;
 };
 
 }  // namespace buffers
