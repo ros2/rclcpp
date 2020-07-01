@@ -138,13 +138,6 @@ static const int64_t HALF_SEC_IN_NS = 500 * 1000 * 1000;
 static const int64_t ONE_SEC_IN_NS = 1000 * 1000 * 1000;
 static const int64_t ONE_AND_HALF_SEC_IN_NS = 3 * HALF_SEC_IN_NS;
 
-TEST_F(TestDuration, from_seconds) {
-  EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration::from_seconds(0.0));
-  EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration::from_seconds(0));
-  EXPECT_EQ(rclcpp::Duration(1, HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(1.5));
-  EXPECT_EQ(rclcpp::Duration(-ONE_AND_HALF_SEC_IN_NS), rclcpp::Duration::from_seconds(-1.5));
-}
-
 TEST_F(TestDuration, std_chrono_constructors) {
   EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration(0.0s));
   EXPECT_EQ(rclcpp::Duration(0), rclcpp::Duration(0s));
