@@ -369,6 +369,9 @@ protected:
   /// boolean to control whether guard condition is triggered after executing
   std::atomic_bool wake_after_execute_;
 
+  // a callback group was added in the node or an item was removed or added to the callbacks.
+  std::atomic_bool exec_added_or_removed_;
+
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();
 

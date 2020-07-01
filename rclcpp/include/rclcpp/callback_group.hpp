@@ -110,9 +110,10 @@ public:
   }
 
   RCLCPP_PUBLIC
-  void executable_has_been_added_or_removed(std::function<void()> exec_has_been_added_or_removed)
+  void
+  set_executor_function(std::function<void()> call_executor_function)
   {
-    exec_has_been_added_or_removed_ = exec_has_been_added_or_removed;
+    call_executor_function_ = call_executor_function;
   }
 
   RCLCPP_PUBLIC
@@ -163,7 +164,7 @@ protected:
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
-  std::function<void()> exec_has_been_added_or_removed_;
+  std::function<void()> call_executor_function_;
 
 private:
   template<typename TypeT, typename Function>

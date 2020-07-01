@@ -161,6 +161,11 @@ public:
   virtual
   bool
   get_enable_topic_statistics_default() const = 0;
+
+  RCLCPP_PUBLIC
+  virtual
+  void
+  set_executor_function(std::function<void()> call_executor_function) = 0;
 };
 
 }  // namespace node_interfaces

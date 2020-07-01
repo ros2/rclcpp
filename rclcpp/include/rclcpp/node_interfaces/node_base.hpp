@@ -116,6 +116,13 @@ public:
   bool
   get_enable_topic_statistics_default() const override;
 
+  RCLCPP_PUBLIC
+  void
+  set_executor_function(std::function<void()> call_executor_function) override
+  {
+    call_executor_function_ = call_executor_function;
+  }
+
 private:
   RCLCPP_DISABLE_COPY(NodeBase)
 
@@ -129,6 +136,7 @@ private:
   std::vector<rclcpp::CallbackGroup::WeakPtr> callback_groups_;
 
   std::atomic_bool associated_with_executor_;
+  std::function<void()> call_executor_function_;
 
   /// Guard condition for notifying the Executor of changes to this node.
   mutable std::recursive_mutex notify_guard_condition_mutex_;
