@@ -110,12 +110,14 @@ public:
   }
 
   RCLCPP_PUBLIC
-  std::atomic_bool &
-  can_be_taken_from();
+  void executable_has_been_added_or_removed(std::function<void()> exec_has_been_added_or_removed)
+  {
+    exec_has_been_added_or_removed_ = exec_has_been_added_or_removed;
+  }
 
   RCLCPP_PUBLIC
   std::atomic_bool &
-  exec_has_been_added_or_removed();
+  can_be_taken_from();
 
   RCLCPP_PUBLIC
   const CallbackGroupType &
@@ -161,7 +163,7 @@ protected:
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
-  std::atomic_bool exec_has_been_added_or_removed_;
+  std::function<void()> exec_has_been_added_or_removed_;
 
 private:
   template<typename TypeT, typename Function>

@@ -93,13 +93,8 @@ MultiThreadedExecutor::set_wake_after_execute_flag()
     }
     for (auto & weak_group : node->get_callback_groups()) {
       auto callback_group = weak_group.lock();
-      if(!callback_group){
-        continue;
-      }
-      // reset the add/remove item from callbacks
-      callback_group->exec_has_been_added_or_removed().store(false);
       // Skip over callback groups that are empty
-      if(callback_group->size() == 0) {
+      if(!callback_group || callback_group->size() == 0) {
         continue;
       }
       if (callback_group->type() == rclcpp::callback_group::CallbackGroupType::MutuallyExclusive) {

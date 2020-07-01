@@ -30,12 +30,6 @@ CallbackGroup::can_be_taken_from()
   return can_be_taken_from_;
 }
 
-std::atomic_bool &
-CallbackGroup::exec_has_been_added_or_removed()
-{
-  return exec_has_been_added_or_removed_;
-}
-
 const CallbackGroupType &
 CallbackGroup::type() const
 {
@@ -54,7 +48,7 @@ CallbackGroup::add_subscription(
       subscription_ptrs_.end(),
       [](rclcpp::SubscriptionBase::WeakPtr x) {return x.expired();}),
     subscription_ptrs_.end());
-  exec_has_been_added_or_removed_.store(true);
+  exec_has_been_added_or_removed_();
 }
 
 void
@@ -68,7 +62,7 @@ CallbackGroup::add_timer(const rclcpp::TimerBase::SharedPtr timer_ptr)
       timer_ptrs_.end(),
       [](rclcpp::TimerBase::WeakPtr x) {return x.expired();}),
     timer_ptrs_.end());
-  exec_has_been_added_or_removed_.store(true);
+  exec_has_been_added_or_removed_();
 }
 
 void
@@ -82,7 +76,7 @@ CallbackGroup::add_service(const rclcpp::ServiceBase::SharedPtr service_ptr)
       service_ptrs_.end(),
       [](rclcpp::ServiceBase::WeakPtr x) {return x.expired();}),
     service_ptrs_.end());
-  exec_has_been_added_or_removed_.store(true);
+  exec_has_been_added_or_removed_();
 }
 
 void
@@ -96,7 +90,7 @@ CallbackGroup::add_client(const rclcpp::ClientBase::SharedPtr client_ptr)
       client_ptrs_.end(),
       [](rclcpp::ClientBase::WeakPtr x) {return x.expired();}),
     client_ptrs_.end());
-  exec_has_been_added_or_removed_.store(true);
+  exec_has_been_added_or_removed_();
 }
 
 void
@@ -110,7 +104,7 @@ CallbackGroup::add_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr)
       waitable_ptrs_.end(),
       [](rclcpp::Waitable::WeakPtr x) {return x.expired();}),
     waitable_ptrs_.end());
-  exec_has_been_added_or_removed_.store(true);
+  exec_has_been_added_or_removed_();
 }
 
 void
@@ -124,5 +118,5 @@ CallbackGroup::remove_waitable(const rclcpp::Waitable::SharedPtr waitable_ptr) n
       break;
     }
   }
-  exec_has_been_added_or_removed_.store(true);
+  exec_has_been_added_or_removed_();
 }

@@ -164,9 +164,6 @@ public:
         if (!group || !group->can_be_taken_from().load()) {
           continue;
         }
-        if(group->exec_has_been_added_or_removed().exchange(false)){
-          exec_has_been_added_or_removed_.store(true);
-        }
         group->find_subscription_ptrs_if(
           [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
             subscription_handles_.push_back(subscription->get_subscription_handle());
