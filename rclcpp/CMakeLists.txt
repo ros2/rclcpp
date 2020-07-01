@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 
 project(rclcpp)
 
+find_package(Threads REQUIRED)
+
 find_package(ament_cmake_ros REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(libstatistics_collector REQUIRED)
@@ -170,6 +172,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
   "$<INSTALL_INTERFACE:include>")
+target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
 # specific order: dependents before dependencies
 ament_target_dependencies(${PROJECT_NAME}
   "libstatistics_collector"
