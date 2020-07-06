@@ -26,7 +26,7 @@
 
 using namespace std::chrono_literals;
 
-class TestTimerCount: public ::testing::Test
+class TestTimerCount : public ::testing::Test
 {
 protected:
   static void SetUpTestCase()
@@ -72,7 +72,7 @@ TEST_F(TestTimerCount, timer_call_count_multi_threaded) {
     };
 
   auto timer_ = node->create_wall_timer(
-      2s, timer_callback, cbg);
+    2s, timer_callback, cbg);
 
   executor.add_node(node);
   executor.spin();
@@ -109,7 +109,7 @@ TEST_F(TestTimerCount, timer_call_count_single_threaded) {
     };
 
   auto timer_ = node->create_wall_timer(
-      2s, timer_callback);
+    2s, timer_callback);
 
   executor.add_node(node);
   executor.spin();
