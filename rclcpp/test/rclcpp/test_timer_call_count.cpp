@@ -21,7 +21,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/exceptions.hpp"
 #include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/executor.hpp"
 
@@ -44,7 +43,6 @@ constexpr double TIME_ELAPSED = 12.0;
  */
 
 TEST_F(TestTimerCount, timer_call_count_multi_threaded) {
-
   rclcpp::executors::MultiThreadedExecutor executor;
 
   std::shared_ptr<rclcpp::Node> node =
@@ -84,7 +82,6 @@ TEST_F(TestTimerCount, timer_call_count_multi_threaded) {
    Test timer wait mutex with singlethreaded executor
  */
 TEST_F(TestTimerCount, timer_call_count_single_threaded) {
-
   rclcpp::executors::SingleThreadedExecutor executor;
 
   std::shared_ptr<rclcpp::Node> node =
