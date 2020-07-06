@@ -280,10 +280,15 @@ public:
   void
   set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
+  /// Returns true if guard condition should be triggered after executing executable.
   /**
-   * Returns wake_after_execute_ flag
+   * After a thread executes an executable, the thread triggers the guard condition
+   * to wake any thread sleeping so that it can check for pending executables.
+   * If this is not done, a thread can find itself sleeping indefinitely. This will
+   * only be true when there is at least one non-empty mutually exclusive callback group.
    *
-   * \return wake_after_execute_ flag
+   * \return wake_after_execute_ flag, returns true if the guard condition should be
+   * triggered after a thread executes an executable.
    */
   RCLCPP_PUBLIC
   bool
