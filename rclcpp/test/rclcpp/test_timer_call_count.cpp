@@ -36,7 +36,7 @@ protected:
 };
 
 constexpr int EXECUTION_COUNT = 5;
-constexpr double TIME_ELAPSED = 12.0;
+constexpr long int TIME_ELAPSED = 12.0;
 /*
    Test timer wait mutex with multithreaded executor.
    After 5 call
@@ -62,7 +62,7 @@ TEST_F(TestTimerCount, timer_call_count_multi_threaded) {
 
       {
         std::lock_guard<std::mutex> lock(last_mutex);
-        double diff = std::abs((now - initial).nanoseconds()) / 1.0e9;
+        long int diff = std::abs((now - initial).nanoseconds()) / 1.0e9;
 
         if (diff > TIME_ELAPSED) {
           executor.cancel();
@@ -99,7 +99,7 @@ TEST_F(TestTimerCount, timer_call_count_single_threaded) {
 
       {
         std::lock_guard<std::mutex> lock(last_mutex);
-        double diff = std::abs((now - initial).nanoseconds()) / 1.0e9;
+        long int diff = std::abs((now - initial).nanoseconds()) / 1.0e9;
 
         if (diff > TIME_ELAPSED) {
           executor.cancel();
