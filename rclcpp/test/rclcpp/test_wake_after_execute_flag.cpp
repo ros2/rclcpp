@@ -44,20 +44,15 @@ TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_multi_threade
 
   std::shared_ptr<rclcpp::Node> node =
     std::make_shared<rclcpp::Node>("test_wake_after_execute_flag_multi_threaded");
-
   auto cbg = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-
   std::atomic_int timer_count {0};
 
   auto timer_callback = [&executor, &timer_count]() {
     printf("Timer executed!");
-
     if(timer_count > 0){
       ASSERT_EQ(executor.get_wake_after_execute_flag(), true);
     }
-
     timer_count++;
-
     if(timer_count > EXECUTION_COUNT){
       executor.cancel();
     }
@@ -65,7 +60,6 @@ TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_multi_threade
 
   auto timer_ = node->create_wall_timer(
       2s, timer_callback, cbg);
-
   executor.add_node(node);
   executor.spin();
 }
@@ -75,18 +69,14 @@ TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_single_thread
 
   std::shared_ptr<rclcpp::Node> node =
     std::make_shared<rclcpp::Node>("test_wake_after_execute_flag_single_threaded");
-
   std::atomic_int timer_count {0};
 
   auto timer_callback = [&executor, &timer_count]() {
     printf("Timer executed!");
-
     if(timer_count > 0){
       ASSERT_EQ(executor.get_wake_after_execute_flag(), false);
     }
-
     timer_count++;
-
     if(timer_count > EXECUTION_COUNT){
       executor.cancel();
     }
@@ -94,7 +84,6 @@ TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_single_thread
 
   auto timer_ = node->create_wall_timer(
       2s, timer_callback);
-
   executor.add_node(node);
   executor.spin();
 }
