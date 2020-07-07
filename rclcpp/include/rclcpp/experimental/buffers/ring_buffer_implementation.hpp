@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -57,13 +58,13 @@ public:
 
   void enqueue(BufferT request)
   {
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
+    std::lock_guard<std::shared_timed_mutex> lock(mutex_);
 
-    write_index_ = next(write_index_);
+    write_index_ = next_(write_index_);
     ring_buffer_[write_index_] = std::move(request);
 
-    if (is_full()) {
-      read_index_ = next(read_index_);
+    if (is_full_()) {
+      read_index_ = next_(read_index_);
     } else {
       size_++;
     }
@@ -71,15 +72,15 @@ public:
 
   BufferT dequeue()
   {
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
+    std::unique_lock<std::shared_timed_mutex> lock(mutex_);
 
-    if (!has_data()) {
+    if (!has_data_()) {
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Calling dequeue on empty intra-process buffer");
       throw std::runtime_error("Calling dequeue on empty intra-process buffer");
     }
 
     auto request = std::move(ring_buffer_[read_index_]);
-    read_index_ = next(read_index_);
+    read_index_ = next_(read_index_);
 
     size_--;
 
@@ -88,25 +89,40 @@ public:
 
   inline size_t next(size_t val)
   {
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-    return (val + 1) % capacity_;
+    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+    return next_(val);
   }
 
   inline bool has_data() const
   {
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-    return size_ != 0;
+    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+    return has_data_();
   }
 
   inline bool is_full() const
   {
-    std::lock_guard<std::recursive_mutex> lock(recursive_mutex_);
-    return size_ == capacity_;
+    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+    return is_full_();
   }
 
   void clear() {}
 
 private:
+  inline size_t next_(size_t val)
+  {
+    return (val + 1) % capacity_;
+  }
+
+  inline bool has_data_() const
+  {
+    return size_ != 0;
+  }
+
+  inline bool is_full_() const
+  {
+    return size_ == capacity_;
+  }
+
   size_t capacity_;
 
   std::vector<BufferT> ring_buffer_;
@@ -115,7 +131,7 @@ private:
   size_t read_index_;
   size_t size_;
 
-  mutable std::recursive_mutex recursive_mutex_;
+  mutable std::shared_timed_mutex mutex_;
 };
 
 }  // namespace buffers
