@@ -315,16 +315,21 @@ protected:
   void
   execute_any_executable(AnyExecutable & any_exec);
 
+  /// Wake after executing when the executor is multi-threaded and has
+  /// at least one non-empty mutually exclusive group
   /**
    * After executing an executable, this function determines
    * if it should wake the wait in rcl_wait so that the executor
-   * can process any pending executable
+   * can process any pending executable. This only has to be done
+   * when the executor is multi-threaded and has at least one
+   * non-empty mutually exclusive callback group.
    *
-   * \return wake_after_execute_ flag
+   * \return true if there is a non-empty mutually exclusive
+   * callback group in a multithreaded executor and false otherwise
    */
   RCLCPP_PUBLIC
   virtual bool
-  set_wake_after_execute_flag() {return wake_after_execute_.load();}
+  determine_wake_after_execute() {return false;}
 
   RCLCPP_PUBLIC
   static void

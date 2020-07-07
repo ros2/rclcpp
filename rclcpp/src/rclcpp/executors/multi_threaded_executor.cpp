@@ -78,7 +78,7 @@ MultiThreadedExecutor::get_number_of_threads()
 // so that it avoids a thread getting stuck
 // in rcl_wait.
 bool
-MultiThreadedExecutor::set_wake_after_execute_flag()
+MultiThreadedExecutor::determine_wake_after_execute()
 {
   // Initialize as false in the case
   // it is true and the executor has

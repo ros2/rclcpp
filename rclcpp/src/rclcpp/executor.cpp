@@ -154,7 +154,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
 
   // Check whether triggering a guard condition is necessary
   // (will depend on the type of executor and callback groups)
-  set_wake_after_execute_flag();
+  determine_wake_after_execute();
 
   // Add the node's notify condition to the guard condition handles
   std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
@@ -199,7 +199,7 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
 
   // Check whether triggering a guard condition is necessary
   // (will depend on the type of executor and callback groups)
-  set_wake_after_execute_flag();
+  determine_wake_after_execute();
 
   std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
   memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
@@ -353,7 +353,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   // if it was, check whether we should trigger
   // guard condition after waking up
   if(exec_added_or_removed_.exchange(false)) {
-    set_wake_after_execute_flag();
+    determine_wake_after_execute();
   }
 
   // Check whether triggering a guard condition is necessary

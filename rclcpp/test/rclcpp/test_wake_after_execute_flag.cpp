@@ -42,8 +42,7 @@ constexpr int EXECUTION_COUNT = 5;
 /*
    Test guard condition trigger is set when a node is added and resetted when it is removed
  */
-TEST_F(TestWakeAfterExecuteFlag, set_wake_after_execute_flag_multi_threaded) {
-
+TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_multi_threaded) {
   rclcpp::executors::MultiThreadedExecutor executor;
 
   std::shared_ptr<rclcpp::Node> node =
@@ -74,8 +73,7 @@ TEST_F(TestWakeAfterExecuteFlag, set_wake_after_execute_flag_multi_threaded) {
   executor.spin();
 }
 
-TEST_F(TestWakeAfterExecuteFlag, set_wake_after_execute_flag_single_threaded) {
-
+TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_single_threaded) {
   rclcpp::executors::SingleThreadedExecutor executor;
 
   std::shared_ptr<rclcpp::Node> node =
