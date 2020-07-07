@@ -48,18 +48,18 @@ TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_multi_threade
   std::atomic_int timer_count {0};
 
   auto timer_callback = [&executor, &timer_count]() {
-    printf("Timer executed!");
-    if(timer_count > 0){
-      ASSERT_EQ(executor.get_wake_after_execute_flag(), true);
-    }
-    timer_count++;
-    if(timer_count > EXECUTION_COUNT){
-      executor.cancel();
-    }
-  };
+      printf("Timer executed!");
+      if (timer_count > 0) {
+        ASSERT_EQ(executor.get_wake_after_execute_flag(), true);
+      }
+      timer_count++;
+      if (timer_count > EXECUTION_COUNT) {
+        executor.cancel();
+      }
+    };
 
   auto timer_ = node->create_wall_timer(
-      2s, timer_callback, cbg);
+    2s, timer_callback, cbg);
   executor.add_node(node);
   executor.spin();
 }
@@ -72,18 +72,18 @@ TEST_F(TestWakeAfterExecuteFlag, determine_wake_after_execute_flag_single_thread
   std::atomic_int timer_count {0};
 
   auto timer_callback = [&executor, &timer_count]() {
-    printf("Timer executed!");
-    if(timer_count > 0){
-      ASSERT_EQ(executor.get_wake_after_execute_flag(), false);
-    }
-    timer_count++;
-    if(timer_count > EXECUTION_COUNT){
-      executor.cancel();
-    }
-  };
+      printf("Timer executed!");
+      if (timer_count > 0) {
+        ASSERT_EQ(executor.get_wake_after_execute_flag(), false);
+      }
+      timer_count++;
+      if (timer_count > EXECUTION_COUNT) {
+        executor.cancel();
+      }
+    };
 
   auto timer_ = node->create_wall_timer(
-      2s, timer_callback);
+    2s, timer_callback);
   executor.add_node(node);
   executor.spin();
 }
