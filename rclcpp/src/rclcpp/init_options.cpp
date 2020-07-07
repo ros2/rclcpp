@@ -102,7 +102,7 @@ InitOptions::get_rcl_init_options() const
 void
 InitOptions::use_default_domain_id()
 {
-  size_t domain_id;
+  size_t domain_id = RCL_DEFAULT_DOMAIN_ID;
   rcl_ret_t ret = rcl_get_default_domain_id(&domain_id);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get default domain id");
