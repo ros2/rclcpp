@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
-
 #include <chrono>
-#include <string>
+#include <gtest/gtest.h>
 #include <memory>
+#include <string>
 
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/exceptions.hpp"
-#include "rclcpp/node.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/executors.hpp"
 #include "rclcpp/executor.hpp"
+#include "rclcpp/node.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 using namespace std::chrono_literals;
 
@@ -35,7 +33,6 @@ protected:
     rclcpp::init(0, nullptr);
   }
 };
-
 
 constexpr int EXECUTION_COUNT = 5;
 
