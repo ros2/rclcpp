@@ -222,7 +222,7 @@ NodeBase::create_callback_group(rclcpp::CallbackGroupType group_type)
   using rclcpp::CallbackGroupType;
   auto group = CallbackGroup::SharedPtr(new CallbackGroup(group_type));
   callback_groups_.push_back(group);
-  if(call_executor_function_ != nullptr){
+  if (call_executor_function_ != nullptr) {
     call_executor_function_();
   }
   return group;

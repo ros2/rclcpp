@@ -133,14 +133,16 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       throw std::runtime_error("Cannot add node to executor, node already added.");
     }
   }
-  node_ptr->set_executor_function([this]
+  node_ptr->set_executor_function(
+    [this]
     {this->exec_added_or_removed_.store(true);});
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto callback_group = weak_group.lock();
     if (!callback_group) {
       continue;
     }
-    callback_group->set_executor_function([this]
+    callback_group->set_executor_function(
+      [this]
       {this->exec_added_or_removed_.store(true);});
   }
   weak_nodes_.push_back(node_ptr);
@@ -352,7 +354,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   // an exec was added or removed from callback groups
   // if it was, check whether we should trigger
   // guard condition after waking up
-  if(exec_added_or_removed_.exchange(false)) {
+  if (exec_added_or_removed_.exchange(false)) {
     determine_wake_after_execute();
   }
 
@@ -361,7 +363,8 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   // Wake the wait, because it may need to be recalculated or work that
   // was previously blocked is now available
   if (get_wake_after_execute_flag() &&
-      rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+    rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK)
+  {
     throw std::runtime_error(rcl_get_error_string().str);
   }
 }

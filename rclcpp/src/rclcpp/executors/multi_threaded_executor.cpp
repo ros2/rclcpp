@@ -94,7 +94,7 @@ MultiThreadedExecutor::determine_wake_after_execute()
     for (auto & weak_group : node->get_callback_groups()) {
       auto callback_group = weak_group.lock();
       // Skip over callback groups that are empty
-      if(!callback_group || callback_group->size() == 0) {
+      if (!callback_group || callback_group->size() == 0) {
         continue;
       }
       if (callback_group->type() == rclcpp::callback_group::CallbackGroupType::MutuallyExclusive) {
