@@ -2,6 +2,12 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.0.2 (2020-07-07)
+------------------
+* Link against thread library where necessary (`#1210 <https://github.com/ros2/rclcpp/issues/1210>`_) (`#1214 <https://github.com/ros2/rclcpp/issues/1214>`_)
+* Fix exception message on rcl_clock_init (`#1182 <https://github.com/ros2/rclcpp/issues/1182>`_) (`#1193 <https://github.com/ros2/rclcpp/issues/1193>`_)
+* Contributors: Dirk Thomas, tomoya
+
 2.0.1 (2020-06-23)
 ------------------
 * Add create_publisher include to create_subscription (`#1180 <https://github.com/ros2/rclcpp/issues/1180>`_) (`#1192 <https://github.com/ros2/rclcpp/issues/1192>`_)
