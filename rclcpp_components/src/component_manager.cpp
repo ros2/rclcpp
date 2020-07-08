@@ -179,6 +179,17 @@ ComponentManager::OnLoadNode(
           }
           options.use_intra_process_comms(extra_argument.get_value<bool>());
         }
+
+        // --params-file support
+        if (extra_argument.get_name() == "--params-file") {
+          if (extra_argument.get_type() != rclcpp::ParameterType::PARAMETER_STRING) {
+            throw ComponentManagerException(
+                    "Extra component argument '--params-file' must be a string");
+          }
+          remap_rules.push_back("--params-file");
+          remap_rules.push_back(extra_argument.as_string());
+          options.arguments(remap_rules);
+        }
       }
 
       auto node_id = unique_id_++;
