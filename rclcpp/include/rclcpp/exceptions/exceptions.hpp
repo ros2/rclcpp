@@ -100,6 +100,14 @@ public:
   {}
 };
 
+class UnimplementedError : public std::runtime_error
+{
+public:
+  UnimplementedError()
+  : std::runtime_error("This code is unimplemented.") {}
+  explicit UnimplementedError(const std::string & msg)
+  : std::runtime_error(msg) {}
+};
 /// Throw a C++ std::exception which was created based on an rcl error.
 /**
  * Passing nullptr for reset_error is safe and will avoid calling any function
