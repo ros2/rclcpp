@@ -107,6 +107,10 @@ public:
   std::atomic_bool &
   get_associated_with_executor_atomic();
 
+  RCLCPP_PUBLIC
+  std::atomic_bool &
+  allow_executor_to_add(){return allow_executor_to_add_;}
+
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)
 
@@ -148,6 +152,7 @@ protected:
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
+  std::atomic_bool allow_executor_to_add_;
 
 private:
   template<typename TypeT, typename Function>

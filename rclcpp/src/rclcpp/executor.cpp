@@ -122,6 +122,10 @@ Executor::add_callback_group(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
+  if(!group_ptr->allow_executor_to_add().load()){
+    return;
+  }
+
   // If the callback_group already has an executor
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
   if (has_executor.exchange(true)) {

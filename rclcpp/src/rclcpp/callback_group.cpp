@@ -21,7 +21,7 @@ using rclcpp::CallbackGroupType;
 
 CallbackGroup::CallbackGroup(CallbackGroupType group_type)
 : type_(group_type), associated_with_executor_(false),
-  can_be_taken_from_(true)
+  can_be_taken_from_(true), allow_executor_to_add_(true)
 {}
 
 
