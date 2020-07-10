@@ -65,7 +65,12 @@ struct SubscriptionFactory
   SetupIntraProcessFunction setup_intra_process;
 };
 
-/// Return a SubscriptionFactory with functions for creating a SubscriptionT<MessageT, Alloc>.
+/// Return a SubscriptionFactory setup to create a SubscriptionT<MessageT, AllocatorT>.
+/**
+ * \param[in] callback The user-defined callback function to receive a message
+ * \param[in] options Additional options for the creation of the Subscription.
+ * \param[in] msg_mem_strat The message memory strategy to use for allocating messages.
+ */
 template<
   typename MessageT,
   typename CallbackT,

@@ -48,6 +48,7 @@ public:
    * \param number_of_threads number of threads to have in the thread pool,
    *   the default 0 will use the number of cpu cores found instead
    * \param yield_before_execute if true std::this_thread::yield() is called
+   * \param timeout maximum time to wait
    */
   RCLCPP_PUBLIC
   MultiThreadedExecutor(

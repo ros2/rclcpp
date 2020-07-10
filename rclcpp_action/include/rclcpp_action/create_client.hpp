@@ -30,10 +30,10 @@ namespace rclcpp_action
  * This function is equivalent to \sa create_client()` however is using the individual
  * node interfaces to create the client.
  *
- * \param node_base_interface[in] The node base interface of the corresponding node.
- * \param node_graph_interface[in] The node graph interface of the corresponding node.
- * \param node_logging_interface[in] The node logging interface of the corresponding node.
- * \param node_waitables_interface[in] The node waitables interface of the corresponding node.
+ * \param[in] node_base_interface The node base interface of the corresponding node.
+ * \param[in] node_graph_interface The node graph interface of the corresponding node.
+ * \param[in] node_logging_interface The node logging interface of the corresponding node.
+ * \param[in] node_waitables_interface The node waitables interface of the corresponding node.
  * \param[in] name The action name.
  * \param[in] group The action client will be added to this callback group.
  *   If `nullptr`, then the action client is added to the default callback group.

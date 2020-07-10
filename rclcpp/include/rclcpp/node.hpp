@@ -337,7 +337,13 @@ public:
     CallbackT callback,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  /* Create and return a Client. */
+  /// Create and return a Client.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created client.
+   */
   template<typename ServiceT>
   typename rclcpp::Client<ServiceT>::SharedPtr
   create_client(
@@ -345,7 +351,14 @@ public:
     const rmw_qos_profile_t & qos_profile = rmw_qos_profile_services_default,
     rclcpp::callback_group::CallbackGroup::SharedPtr group = nullptr);
 
-  /* Create and return a Service. */
+  /// Create and return a Service.
+  /**
+   * \param[in] service_name The topic to service on.
+   * \param[in] callback User-defined callback function.
+   * \param[in] qos_profile rmw_qos_profile_t Quality of service profile for client.
+   * \param[in] group Callback group to call the service.
+   * \return Shared pointer to the created service.
+   */
   template<typename ServiceT, typename CallbackT>
   typename rclcpp::Service<ServiceT>::SharedPtr
   create_service(
