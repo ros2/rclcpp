@@ -94,6 +94,14 @@ public:
 
   /// Add callback groups to an executor.
   RCLCPP_PUBLIC
+  virtual void
+  add_callback_groups(
+    std::map<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
+    std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups,
+    bool notify = true);
+
+  /// Add callback groups to an executor.
+  RCLCPP_PUBLIC
   virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_callback_groups();
 

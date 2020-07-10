@@ -179,6 +179,17 @@ Executor::add_callback_groups(
   }
 
 void
+Executor::add_callback_groups(
+  std::map<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
+  std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups,
+  bool notify)
+  {
+    for (auto const& element : node_to_groups) {
+      add_callback_groups(element.second, element.first, notify);
+    }
+  }
+
+void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   for (auto & weak_group : node_ptr->get_callback_groups()) {
