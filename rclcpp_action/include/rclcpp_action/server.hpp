@@ -124,6 +124,10 @@ public:
   void
   execute() override;
 
+  RCLCPP_ACTION_PUBLIC
+  void
+  take_data() override;
+
   // End Waitables API
   // -----------------
 

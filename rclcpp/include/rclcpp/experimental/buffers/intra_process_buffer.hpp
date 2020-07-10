@@ -40,6 +40,7 @@ public:
 
   virtual void clear() = 0;
 
+  virtual bool is_ready() const = 0;
   virtual bool has_data() const = 0;
   virtual bool use_take_shared_method() const = 0;
 };
@@ -60,6 +61,7 @@ public:
 
   virtual void add_shared(MessageSharedPtr msg) = 0;
   virtual void add_unique(MessageUniquePtr msg) = 0;
+  virtual void take_data() = 0;
 
   virtual MessageSharedPtr consume_shared() = 0;
   virtual MessageUniquePtr consume_unique() = 0;
@@ -112,6 +114,11 @@ public:
     buffer_->enqueue(std::move(msg));
   }
 
+  void take_data() override
+  {
+    buffer_->take_data();
+  }
+
   MessageSharedPtr consume_shared() override
   {
     return consume_shared_impl<BufferT>();
@@ -120,6 +127,11 @@ public:
   MessageUniquePtr consume_unique() override
   {
     return consume_unique_impl<BufferT>();
+  }
+
+  bool is_ready() const override
+  {
+    return buffer_->is_ready();
   }
 
   bool has_data() const override

@@ -28,6 +28,7 @@ public:
   bool add_to_wait_set(rcl_wait_set_t *) override {return false;}
   bool is_ready(rcl_wait_set_t *) override {return false;}
   void execute() override {}
+  void take_data() override {}
 };
 
 class TestNodeWaitables : public ::testing::Test

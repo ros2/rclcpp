@@ -159,6 +159,12 @@ public:
     std::this_thread::sleep_for(100ms);
   }
 
+  void
+  take_data() override
+  {
+      throw std::runtime_error("Test executor should not be called");
+  }
+
   size_t
   get_number_of_ready_guard_conditions() override {return 1;}
 

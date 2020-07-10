@@ -59,6 +59,9 @@ public:
   virtual void
   execute() = 0;
 
+  virtual void
+  take_data() = 0;
+
   virtual bool
   use_take_shared_method() const = 0;
 

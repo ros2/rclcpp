@@ -151,6 +151,12 @@ public:
   void
   execute() = 0;
 
+  RCLCPP_PUBLIC
+  virtual
+  void
+  take_data() = 0;
+
+
   /// Exchange the "in use by wait set" state for this timer.
   /**
    * This is used to ensure this timer is not used by multiple

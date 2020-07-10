@@ -30,9 +30,11 @@ public:
 
   virtual BufferT dequeue() = 0;
   virtual void enqueue(BufferT request) = 0;
+  virtual void take_data() = 0;
 
   virtual void clear() = 0;
   virtual bool has_data() const = 0;
+  virtual bool is_ready() const = 0;
 };
 
 }  // namespace buffers

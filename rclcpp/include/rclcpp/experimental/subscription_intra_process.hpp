@@ -106,7 +106,13 @@ public:
   is_ready(rcl_wait_set_t * wait_set)
   {
     (void)wait_set;
-    return buffer_->has_data();
+    return buffer_->is_ready();
+  }
+
+  void
+  take_data()
+  {
+    return buffer_->take_data();
   }
 
   void execute()
