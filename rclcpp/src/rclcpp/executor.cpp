@@ -116,6 +116,16 @@ Executor::~Executor()
   context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
 }
 
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  Executor::get_callback_groups()
+  {
+    std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+    for (auto const& group_node_ptr : weak_groups_to_nodes_) {
+      groups.push_back(group_node_ptr.first);
+    }
+    return groups;
+  }
+
 void
 Executor::add_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr,
