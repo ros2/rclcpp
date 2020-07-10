@@ -321,7 +321,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     execute_client(any_exec.client);
   }
   if (any_exec.waitable) {
-    std::lock_guard<std::mutex> lock(waitable_mutex_);
+    std::lock_guard<std::mutex> memlock(memory_strategy_mutex_);
     any_exec.waitable->execute();
   }
   // Reset the callback_group, regardless of type
@@ -527,7 +527,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
   // check the null handles in the wait set and remove them from the handles in memory strategy
   // for callback-based entities
   {
-    std::lock_guard<std::mutex> lock(waitable_mutex_);
+    std::lock_guard<std::mutex> lock(memory_strategy_mutex_);
     memory_strategy_->remove_null_handles(&wait_set_);
   }
 }
@@ -581,6 +581,7 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
+  std::lock_guard<std::mutex> memlock(memory_strategy_mutex_);
   bool success = false;
   // Check the timers to see if there are any that are ready
   memory_strategy_->get_next_timer(any_executable, weak_nodes_);
@@ -610,7 +611,6 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   }
   if (!success) {
     // Check the waitables to see if there are any that are ready
-    std::lock_guard<std::mutex> lock(waitable_mutex_);
     memory_strategy_->get_next_waitable(any_executable, weak_nodes_);
     if (any_executable.waitable) {
       success = true;

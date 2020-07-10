@@ -355,9 +355,6 @@ protected:
   // Mutex to protect the subsequent memory_strategy_.
   std::mutex memory_strategy_mutex_;
 
-  // Mutex to protect the waitable on take data
-  std::mutex waitable_mutex_;
-
   /// The memory strategy: an interface for handling user-defined memory allocation strategies.
   memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
