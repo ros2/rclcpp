@@ -146,6 +146,7 @@ public:
   /**
    * A topic is considered to exist when at least one publisher or subscriber
    * exists for it, whether they be local or remote to this process.
+   * The returned names are the actual names used and do not have remap rules applied.
    *
    * \param[in] no_demangle if true, topic names and types are not demangled
    */
@@ -159,6 +160,7 @@ public:
    * A service is considered to exist when at least one service server or
    * service client exists for it, whether they be local or remote to this
    * process.
+   * The returned names are the actual names used and do not have remap rules applied.
    */
   RCLCPP_PUBLIC
   virtual
@@ -168,6 +170,7 @@ public:
   /// Return a map of existing service names to list of service types for a specific node.
   /**
    * This function only considers services - not clients.
+   * The returned names are the actual names used and do not have remap rules applied.
    *
    * \param[in] node_name name of the node
    * \param[in] namespace_ namespace of the node
@@ -180,24 +183,36 @@ public:
     const std::string & namespace_) const = 0;
 
   /// Return a vector of existing node names (string).
+  /*
+   * The returned names are the actual names used and do not have remap rules applied.
+   */
   RCLCPP_PUBLIC
   virtual
   std::vector<std::string>
   get_node_names() const = 0;
 
   /// Return a vector of existing node names and namespaces (pair of string).
+  /*
+   * The returned names are the actual names used and do not have remap rules applied.
+   */
   RCLCPP_PUBLIC
   virtual
   std::vector<std::pair<std::string, std::string>>
   get_node_names_and_namespaces() const = 0;
 
   /// Return the number of publishers that are advertised on a given topic.
+  /*
+   * \param[in] topic_name the actual topic name used; it will not be automatically remapped.
+   */
   RCLCPP_PUBLIC
   virtual
   size_t
   count_publishers(const std::string & topic_name) const = 0;
 
   /// Return the number of subscribers who have created a subscription for a given topic.
+  /*
+   * \param[in] topic_name the actual topic name used; it will not be automatically remapped.
+   */
   RCLCPP_PUBLIC
   virtual
   size_t
@@ -267,6 +282,7 @@ public:
 
   /// Return the topic endpoint information about publishers on a given topic.
   /**
+   * \param[in] topic_name the actual topic name used; it will not be automatically remapped.
    * \sa rclcpp::Node::get_publishers_info_by_topic
    */
   RCLCPP_PUBLIC
@@ -276,6 +292,7 @@ public:
 
   /// Return the topic endpoint information about subscriptions on a given topic.
   /**
+   * \param[in] topic_name the actual topic name used; it will not be automatically remapped.
    * \sa rclcpp::Node::get_subscriptions_info_by_topic
    */
   RCLCPP_PUBLIC
