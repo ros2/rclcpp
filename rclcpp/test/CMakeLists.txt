@@ -82,6 +82,13 @@ if(TARGET test_create_subscription)
     "test_msgs"
   )
 endif()
+ament_add_gtest(test_add_callback_groups_to_executor rclcpp/test_add_callback_groups_to_executor.cpp)
+if(TARGET test_add_callback_groups_to_executor)
+  target_link_libraries(test_add_callback_groups_to_executor ${PROJECT_NAME})
+  ament_target_dependencies(test_add_callback_groups_to_executor
+    "test_msgs"
+  )
+endif()
 ament_add_gtest(test_expand_topic_or_service_name rclcpp/test_expand_topic_or_service_name.cpp)
 if(TARGET test_expand_topic_or_service_name)
   ament_target_dependencies(test_expand_topic_or_service_name
