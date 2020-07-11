@@ -3,6 +3,11 @@ Changelog for package rclcpp_lifecycle
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+0.7.14 (2020-07-10)
+-------------------
+* Fixed doxygen warnings. (`#1208 <https://github.com/ros2/rclcpp/issues/1208>`_)
+* Contributors: Alejandro Hernández Cordero
+
 0.7.13 (2020-03-12)
 -------------------
 

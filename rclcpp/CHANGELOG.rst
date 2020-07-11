@@ -2,6 +2,15 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.14 (2020-07-10)
+-------------------
+* Fixed doxygen warnings. (`#1208 <https://github.com/ros2/rclcpp/issues/1208>`_)
+* Check if context is valid when looping in spin_some. (`#1167 <https://github.com/ros2/rclcpp/issues/1167>`_)
+* Fix spin_until_future_complete: check spinning value. (`#1023 <https://github.com/ros2/rclcpp/issues/1023>`_)
+* Fix exception on rcl_clock_init. (`#1195 <https://github.com/ros2/rclcpp/issues/1195>`_)
+* Fix lock-order-inversion (potential deadlock). (`#1138 <https://github.com/ros2/rclcpp/issues/1138>`_)
+* Contributors: Alejandro Hernández Cordero, DongheeYe, Ivan Santiago Paunovic, tomoya
+
 0.7.13 (2020-03-12)
 -------------------
 * Don't specify calling convention in std::_Binder template. (`#1015 <https://github.com/ros2/rclcpp/issues/1015>`_)

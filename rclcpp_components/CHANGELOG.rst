@@ -2,6 +2,11 @@
 Changelog for package rclcpp_components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.14 (2020-07-10)
+-------------------
+* Added rclcpp_components Doxyfile. (`#1201 <https://github.com/ros2/rclcpp/issues/1201>`_)
+* Contributors: Alejandro Hernández Cordero
+
 0.7.13 (2020-03-12)
 -------------------
 * Remove absolute path from installed CMake code.  (`#949 <https://github.com/ros2/rclcpp/issues/949>`_)
