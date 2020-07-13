@@ -3,7 +3,6 @@ find_package(ament_cmake_gtest REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-find_package(osrf_testing_tools_cpp REQUIRED)
 find_package(test_msgs REQUIRED)
 
 include(cmake/rclcpp_add_build_failure_test.cmake)
