@@ -90,6 +90,10 @@ public:
       throw std::runtime_error("SubscriptionIntraProcess init error initializing guard condition");
     }
 
+    // Initialize the messages
+    shared_msg_ = NULL;
+    unique_msg_ = NULL;
+
     TRACEPOINT(
       rclcpp_subscription_callback_added,
       (const void *)this,
@@ -107,6 +111,15 @@ public:
   {
     (void)wait_set;
     return buffer_->has_data();
+  }
+
+  void take_data()
+  {
+    if (any_callback_.use_take_shared_method()) {
+      shared_msg_ = buffer_->consume_shared();
+    } else {
+      unique_msg_ = buffer_->consume_unique();
+    }
   }
 
   void execute()
@@ -158,16 +171,19 @@ private:
     msg_info.from_intra_process = true;
 
     if (any_callback_.use_take_shared_method()) {
-      ConstMessageSharedPtr msg = buffer_->consume_shared();
-      any_callback_.dispatch_intra_process(msg, msg_info);
+      any_callback_.dispatch_intra_process(shared_msg_, msg_info);
+      shared_msg_ = NULL;
     } else {
-      MessageUniquePtr msg = buffer_->consume_unique();
-      any_callback_.dispatch_intra_process(std::move(msg), msg_info);
+      any_callback_.dispatch_intra_process(std::move(unique_msg_), msg_info);
+      unique_msg_ = NULL;
     }
   }
 
   AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
   BufferUniquePtr buffer_;
+
+  ConstMessageSharedPtr shared_msg_;
+  MessageUniquePtr unique_msg_;
 };
 
 }  // namespace experimental

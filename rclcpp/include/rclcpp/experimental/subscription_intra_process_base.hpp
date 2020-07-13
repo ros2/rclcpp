@@ -57,6 +57,9 @@ public:
   is_ready(rcl_wait_set_t * wait_set) = 0;
 
   virtual void
+  take_data() = 0;
+
+  virtual void
   execute() = 0;
 
   virtual bool

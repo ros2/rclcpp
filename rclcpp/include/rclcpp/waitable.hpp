@@ -125,6 +125,12 @@ public:
   bool
   is_ready(rcl_wait_set_t * wait_set) = 0;
 
+  /// Take the data so that it can be consumed with `execute`
+  RCLCPP_PUBLIC
+  virtual
+  void
+  take_data() = 0;
+
   /// Execute any entities of the Waitable that are ready.
   /**
    * Before calling this method, the Waitable should be added to a wait set,
