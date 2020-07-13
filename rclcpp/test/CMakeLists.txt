@@ -20,7 +20,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
 ament_add_gtest(test_allocator_memory_strategy rclcpp/strategies/test_allocator_memory_strategy.cpp)
 if(TARGET test_allocator_memory_strategy)
   ament_target_dependencies(test_allocator_memory_strategy
-    "osrf_testing_tools_cpp"
     "rcl"
     "test_msgs"
   )
