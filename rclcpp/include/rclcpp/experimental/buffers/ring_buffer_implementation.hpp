@@ -62,7 +62,7 @@ public:
   /// Add a new element to store in the ring buffer
   /**
    * This member function is thread-safe.
-   * 
+   *
    * \param request the element to be stored in the ring buffer
    */
   void enqueue(BufferT request)
@@ -82,7 +82,7 @@ public:
   /// Remove the oldest element from ring buffer
   /**
    * This member function is thread-safe.
-   * 
+   *
    * \return the element that is being removed from the ring buffer
    */
   BufferT dequeue()
@@ -105,7 +105,7 @@ public:
   /// Get the next index value for the ring buffer
   /**
    * This member function is thread-safe.
-   * 
+   *
    * \param val the current index value
    * \return the next index value
    */
@@ -118,7 +118,7 @@ public:
   /// Get if the ring buffer has at least one element stored
   /**
    * This member function is not thread-safe.
-   * 
+   *
    * \return `true` if there is data and `false` otherwise
    */
   inline bool has_data() const
@@ -127,10 +127,10 @@ public:
     return has_data_();
   }
 
-  /// Get if the size of the buffer is equal to its capacity 
+  /// Get if the size of the buffer is equal to its capacity
   /**
    * This member function is thread-safe.
-   * 
+   *
    * \return `true` if the size of the buffer is equal is capacity
    * and `false` otherwise
    */
@@ -146,7 +146,7 @@ private:
   /// Get the next index value for the ring buffer
   /**
    * This member function is not thread-safe.
-   * 
+   *
    * \param val the current index value
    * \return the next index value
    */
@@ -158,7 +158,7 @@ private:
   /// Get if the ring buffer has at least one element stored
   /**
    * This member function is not thread-safe.
-   * 
+   *
    * \return `true` if there is data and `false` otherwise
    */
   inline bool has_data_() const
@@ -166,10 +166,10 @@ private:
     return size_ != 0;
   }
 
-  /// Get if the size of the buffer is equal to its capacity 
+  /// Get if the size of the buffer is equal to its capacity
   /**
    * This member function is not thread-safe.
-   * 
+   *
    * \return `true` if the size of the buffer is equal is capacity
    * and `false` otherwise
    */
