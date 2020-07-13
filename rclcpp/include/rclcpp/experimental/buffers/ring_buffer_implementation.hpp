@@ -117,7 +117,7 @@ public:
 
   /// Get if the ring buffer has at least one element stored
   /**
-   * This member function is not thread-safe.
+   * This member function is thread-safe.
    *
    * \return `true` if there is data and `false` otherwise
    */
