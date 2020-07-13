@@ -45,6 +45,7 @@ public:
   StaticExecutorEntitiesCollector() = default;
 
   // Destructor
+  RCLCPP_PUBLIC
   ~StaticExecutorEntitiesCollector();
 
   /// Initialize StaticExecutorEntitiesCollector
