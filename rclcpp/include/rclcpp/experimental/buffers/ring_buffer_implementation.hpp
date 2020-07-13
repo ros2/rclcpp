@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <shared_mutex>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -58,7 +57,7 @@ public:
 
   void enqueue(BufferT request)
   {
-    std::lock_guard<std::shared_timed_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
 
     write_index_ = next_(write_index_);
     ring_buffer_[write_index_] = std::move(request);
@@ -72,7 +71,7 @@ public:
 
   BufferT dequeue()
   {
-    std::unique_lock<std::shared_timed_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
 
     if (!has_data_()) {
       RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Calling dequeue on empty intra-process buffer");
@@ -89,19 +88,19 @@ public:
 
   inline size_t next(size_t val)
   {
-    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     return next_(val);
   }
 
   inline bool has_data() const
   {
-    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     return has_data_();
   }
 
   inline bool is_full() const
   {
-    std::shared_lock<std::shared_timed_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     return is_full_();
   }
 
@@ -131,7 +130,7 @@ private:
   size_t read_index_;
   size_t size_;
 
-  mutable std::shared_timed_mutex mutex_;
+  mutable std::mutex mutex_;
 };
 
 }  // namespace buffers
