@@ -37,6 +37,10 @@ namespace experimental
 namespace buffers
 {
 
+/// Store elements in a fixed-size, FIFO buffer
+/**
+ * All public member functions are thread-safe.
+ */
 template<typename BufferT>
 class RingBufferImplementation : public BufferImplementationBase<BufferT>
 {
@@ -55,6 +59,12 @@ public:
 
   virtual ~RingBufferImplementation() {}
 
+  /// Add a new element to store in the ring buffer
+  /**
+   * This member function is thread-safe.
+   * 
+   * \param request the element to be stored in the ring buffer
+   */
   void enqueue(BufferT request)
   {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -69,6 +79,12 @@ public:
     }
   }
 
+  /// Remove the oldest element from ring buffer
+  /**
+   * This member function is thread-safe.
+   * 
+   * \return the element that is being removed from the ring buffer
+   */
   BufferT dequeue()
   {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -86,18 +102,38 @@ public:
     return request;
   }
 
+  /// Get the next index value for the ring buffer
+  /**
+   * This member function is thread-safe.
+   * 
+   * \param val the current index value
+   * \return the next index value
+   */
   inline size_t next(size_t val)
   {
     std::lock_guard<std::mutex> lock(mutex_);
     return next_(val);
   }
 
+  /// Get if the ring buffer has at least one element stored
+  /**
+   * This member function is not thread-safe.
+   * 
+   * \return `true` if there is data and `false` otherwise
+   */
   inline bool has_data() const
   {
     std::lock_guard<std::mutex> lock(mutex_);
     return has_data_();
   }
 
+  /// Get if the size of the buffer is equal to its capacity 
+  /**
+   * This member function is thread-safe.
+   * 
+   * \return `true` if the size of the buffer is equal is capacity
+   * and `false` otherwise
+   */
   inline bool is_full() const
   {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -107,16 +143,36 @@ public:
   void clear() {}
 
 private:
+  /// Get the next index value for the ring buffer
+  /**
+   * This member function is not thread-safe.
+   * 
+   * \param val the current index value
+   * \return the next index value
+   */
   inline size_t next_(size_t val)
   {
     return (val + 1) % capacity_;
   }
 
+  /// Get if the ring buffer has at least one element stored
+  /**
+   * This member function is not thread-safe.
+   * 
+   * \return `true` if there is data and `false` otherwise
+   */
   inline bool has_data_() const
   {
     return size_ != 0;
   }
 
+  /// Get if the size of the buffer is equal to its capacity 
+  /**
+   * This member function is not thread-safe.
+   * 
+   * \return `true` if the size of the buffer is equal is capacity
+   * and `false` otherwise
+   */
   inline bool is_full_() const
   {
     return size_ == capacity_;
