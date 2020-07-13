@@ -507,7 +507,7 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
     execute_client(any_exec.client);
   }
   if (any_exec.waitable) {
-    any_exec.waitable->execute();
+    any_exec.waitable->execute(any_exec.data);
   }
   // Reset the callback_group, regardless of type
   any_exec.callback_group->can_be_taken_from().store(true);
@@ -830,6 +830,7 @@ Executor::get_next_ready_executable_from_map(
     // Check the waitables to see if there are any that are ready
     memory_strategy_->get_next_waitable(any_executable, weak_groups_to_nodes);
     if (any_executable.waitable) {
+      any_executable.waitable->take_data(any_executable.data);
       success = true;
     }
   }

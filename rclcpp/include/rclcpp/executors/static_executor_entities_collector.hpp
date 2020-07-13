@@ -72,9 +72,15 @@ public:
   void
   fini();
 
+  /// Execute the waitable.
   RCLCPP_PUBLIC
   void
-  execute() override;
+  execute(std::shared_ptr<void> & data) override;
+
+  /// Prepare the waitable for execution.
+  RCLCPP_PUBLIC
+  void
+  take_data(std::shared_ptr<void> & data) override;
 
   /// Function to add_handles_to_wait_set and wait for work and
   /**

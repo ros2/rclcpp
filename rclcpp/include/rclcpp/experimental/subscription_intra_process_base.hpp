@@ -57,7 +57,10 @@ public:
   is_ready(rcl_wait_set_t * wait_set) = 0;
 
   virtual void
-  execute() = 0;
+  take_data(std::shared_ptr<void> & data) = 0;
+
+  virtual void
+  execute(std::shared_ptr<void> & data) = 0;
 
   virtual bool
   use_take_shared_method() const = 0;

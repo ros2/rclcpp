@@ -489,7 +489,10 @@ TEST_F(TestPublisher, default_incompatible_qos_callback) {
 TEST_F(TestPublisher, run_event_handlers) {
   initialize();
   auto publisher = node->create_publisher<test_msgs::msg::Empty>("topic", 10);
+
   for (const auto & handler : publisher->get_event_handlers()) {
-    EXPECT_NO_THROW(handler->execute());
+    std::shared_ptr<void> data;
+    handler->take_data(data);
+    EXPECT_NO_THROW(handler->execute(data));
   }
 }

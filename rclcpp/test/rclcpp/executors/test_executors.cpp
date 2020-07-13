@@ -437,8 +437,15 @@ public:
   }
 
   void
-  execute() override
+  take_data(std::shared_ptr<void> & data) override
   {
+    (void) data;
+  }
+
+  void
+  execute(std::shared_ptr<void> & data) override
+  {
+    (void) data;
     count_++;
     std::this_thread::sleep_for(1ms);
   }

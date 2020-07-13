@@ -18,6 +18,7 @@
 #include <rmw/rmw.h>
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -115,13 +116,34 @@ public:
   bool
   is_ready(rcl_wait_set_t * wait_set)
   {
-    (void)wait_set;
+    (void) wait_set;
     return buffer_->has_data();
   }
 
-  void execute()
+  void take_data(std::shared_ptr<void> & data)
   {
-    execute_impl<CallbackMessageT>();
+    if (data) {
+      throw std::runtime_error("'data' is not empty");
+    }
+
+    ConstMessageSharedPtr shared_msg;
+    MessageUniquePtr unique_msg;
+
+    if (any_callback_.use_take_shared_method()) {
+      shared_msg = buffer_->consume_shared();
+    } else {
+      unique_msg = buffer_->consume_unique();
+    }
+    data = std::static_pointer_cast<void>(
+      std::make_shared<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
+        std::pair<ConstMessageSharedPtr, MessageUniquePtr>(
+          shared_msg, std::move(unique_msg)))
+    );
+  }
+
+  void execute(std::shared_ptr<void> & data)
+  {
+    execute_impl<CallbackMessageT>(data);
   }
 
   void
@@ -154,26 +176,34 @@ private:
 
   template<typename T>
   typename std::enable_if<std::is_same<T, rcl_serialized_message_t>::value, void>::type
-  execute_impl()
+  execute_impl(std::shared_ptr<void> & data)
   {
     throw std::runtime_error("Subscription intra-process can't handle serialized messages");
   }
 
   template<class T>
   typename std::enable_if<!std::is_same<T, rcl_serialized_message_t>::value, void>::type
-  execute_impl()
+  execute_impl(std::shared_ptr<void> & data)
   {
+    if (!data) {
+      throw std::runtime_error("'data' is empty");
+    }
+
     rmw_message_info_t msg_info;
     msg_info.publisher_gid = {0, {0}};
     msg_info.from_intra_process = true;
 
+    auto shared_ptr = std::static_pointer_cast<std::pair<ConstMessageSharedPtr, MessageUniquePtr>>(
+      data);
+
     if (any_callback_.use_take_shared_method()) {
-      ConstMessageSharedPtr msg = buffer_->consume_shared();
-      any_callback_.dispatch_intra_process(msg, msg_info);
+      ConstMessageSharedPtr shared_msg = (*shared_ptr).first;
+      any_callback_.dispatch_intra_process(shared_msg, msg_info);
     } else {
-      MessageUniquePtr msg = buffer_->consume_unique();
-      any_callback_.dispatch_intra_process(std::move(msg), msg_info);
+      MessageUniquePtr unique_msg = std::move((*shared_ptr).second);
+      any_callback_.dispatch_intra_process(std::move(unique_msg), msg_info);
     }
+    shared_ptr.reset();
   }
 
   AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
