@@ -20,7 +20,7 @@
 
 #include "gtest/gtest.h"
 
-#include "osrf_testing_tools_cpp/scope_exit.hpp"
+#include "rclcpp/scope_exit.hpp"
 #include "rclcpp/strategies/allocator_memory_strategy.hpp"
 #include "test_msgs/msg/empty.hpp"
 #include "test_msgs/srv/empty.hpp"
@@ -120,7 +120,7 @@ protected:
   //
 
   std::shared_ptr<rclcpp::Node> create_node_with_subscription(
-    const std::string & name, bool with_exclusive_callback_group = false)
+    const std::string & name, bool with_exclusive_callback_group)
   {
     auto subscription_callback = [](const test_msgs::msg::Empty::SharedPtr) {};
     const rclcpp::QoS qos(10);
@@ -206,26 +206,6 @@ protected:
       node_with_timer->create_wall_timer(
         std::chrono::milliseconds(1), timer_callback, callback_group));
     return node_with_timer;
-  }
-
-  std::shared_ptr<rclcpp::Node> create_node_with_waitable(
-    const std::string & name, bool with_exclusive_callback_group = false)
-  {
-    auto node = std::make_shared<rclcpp::Node>(name, "ns");
-    rclcpp::Waitable::SharedPtr waitable = std::make_shared<TestWaitable>();
-
-    rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
-
-    if (with_exclusive_callback_group) {
-      callback_group =
-        node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-
-      callback_groups_.push_back(callback_group);
-    }
-
-    waitables_.push_back(waitable);
-    node->get_node_waitables_interface()->add_waitable(waitable, callback_group);
-    return node;
   }
 
   size_t number_of_ready_subscriptions_in_addition_to_basic_node() const
@@ -330,7 +310,7 @@ protected:
              "Calling rcl_wait_set_init() with expected sufficient capacities failed";
     }
 
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    RCLCPP_SCOPE_EXIT(
     {
       EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));
     });
@@ -358,7 +338,7 @@ protected:
              "Calling rcl_wait_set_init() with expected insufficient capacities failed";
     }
 
-    OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+    RCLCPP_SCOPE_EXIT(
     {
       EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set_no_capacity));
     });
@@ -518,7 +498,7 @@ TEST_F(TestAllocatorMemoryStrategy, add_handles_to_wait_set_guard_condition) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_guard_condition_init(&guard_condition, rcl_context, guard_condition_options));
-  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  RCLCPP_SCOPE_EXIT(
   {
     EXPECT_EQ(RCL_RET_OK, rcl_guard_condition_fini(&guard_condition));
   });
