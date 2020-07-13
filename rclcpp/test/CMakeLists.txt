@@ -450,6 +450,12 @@ if(TARGET test_interface_traits)
   target_link_libraries(test_interface_traits ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_static_single_threaded_executor rclcpp/executors/test_static_single_threaded_executor.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_static_single_threaded_executor)
+  target_link_libraries(test_static_single_threaded_executor ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_multi_threaded_executor rclcpp/executors/test_multi_threaded_executor.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_multi_threaded_executor)
