@@ -171,8 +171,8 @@ Executor::add_callback_groups(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
   {
-    for_each(group_ptrs.begin(), group_ptrs.end(),
-    [node_ptr, notify, this](rclcpp::CallbackGroup::SharedPtr group_ptr)
+    std::for_each(group_ptrs.begin(), group_ptrs.end(),
+            [node_ptr, notify, this](rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
         add_callback_group(group_ptr, node_ptr, notify);
     });
@@ -184,9 +184,11 @@ Executor::add_callback_groups(
   std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups,
   bool notify)
   {
-    for (auto const& element : node_to_groups) {
-      add_callback_groups(element.second, element.first, notify);
-    }
+    std::for_each(node_to_groups.begin(), node_to_groups.end(),
+            [notify, this](std::pair<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
+                                      std::vector<rclcpp::CallbackGroup::SharedPtr>> element){
+                add_callback_groups(element.second, element.first, notify);
+    });
   }
 
 void
