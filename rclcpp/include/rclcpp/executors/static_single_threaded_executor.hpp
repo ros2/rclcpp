@@ -204,16 +204,6 @@ public:
   /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
   RCLCPP_PUBLIC
   void
-  spin_all(std::chrono::nanoseconds) override
-  {
-    throw rclcpp::exceptions::UnimplementedError(
-            "spin_all is not implemented for StaticSingleThreadedExecutor, use spin or "
-            "spin_until_future_complete");
-  }
-
-  /// Not yet implemented, see https://github.com/ros2/rclcpp/issues/1219 for tracking
-  RCLCPP_PUBLIC
-  void
   spin_once(std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1)) override
   {
     (void)timeout;
