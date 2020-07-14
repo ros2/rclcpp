@@ -127,11 +127,12 @@ TEST_F(TestStaticExecutorEntitiesCollector, init_bad_arguments) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
+  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
 
-  // Check memory strotegy is nullptr
+  // Check memory strategy is nullptr
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy = nullptr;
   EXPECT_THROW(
     entities_collector_->init(&wait_set, memory_strategy, &rcl_guard_condition),
@@ -151,6 +152,8 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_basic_node) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
+  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
   rcl_guard_condition_t rcl_guard_condition = guard_condition.get_rcl_guard_condition();
@@ -195,6 +198,7 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_out_of_scope) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
+  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
 
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
   rclcpp::GuardCondition guard_condition(shared_context);
@@ -251,6 +255,8 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   EXPECT_EQ(
     RCL_RET_OK,
     rcl_wait_set_init(&wait_set, 100, 100, 100, 100, 100, 100, context, allocator));
+  RCLCPP_SCOPE_EXIT({EXPECT_EQ(RCL_RET_OK, rcl_wait_set_fini(&wait_set));});
+
   auto memory_strategy = rclcpp::memory_strategies::create_default_strategy();
 
   rclcpp::GuardCondition guard_condition(shared_context);
