@@ -117,6 +117,11 @@ public:
   /// \internal
   RCLCPP_ACTION_PUBLIC
   void
+  take_data() override;
+
+  /// \internal
+  RCLCPP_ACTION_PUBLIC
+  void
   execute() override;
 
   // End Waitables API

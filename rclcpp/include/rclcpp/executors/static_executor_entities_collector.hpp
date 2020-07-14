@@ -68,6 +68,10 @@ public:
 
   RCLCPP_PUBLIC
   void
+  take_data() {}
+
+  RCLCPP_PUBLIC
+  void
   fill_memory_strategy();
 
   RCLCPP_PUBLIC

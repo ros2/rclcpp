@@ -148,6 +148,12 @@ public:
     event_callback_(callback_info);
   }
 
+  void
+  take_data() override
+  {
+      throw std::runtime_error("Test executor should not be called");
+  }
+
 private:
   using EventCallbackInfoT = typename std::remove_reference<typename
       rclcpp::function_traits::function_traits<EventCallbackT>::template argument_type<0>>::type;
