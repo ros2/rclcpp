@@ -47,11 +47,15 @@ public:
     node = std::make_shared<rclcpp::Node>("node", "ns");
 
     callback_count = 0;
-    publisher = node->create_publisher<std_msgs::msg::Empty>("topic", rclcpp::QoS(10));
+    std::stringstream topic_name;
+    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+    topic_name << "topic_" << test_info->test_case_name() << "_" << test_info->name();
+
+    publisher = node->create_publisher<std_msgs::msg::Empty>(topic_name.str(), rclcpp::QoS(10));
     auto callback = [this](std_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
     subscription =
       node->create_subscription<std_msgs::msg::Empty>(
-      "topic", rclcpp::QoS(10), std::move(callback));
+      topic_name.str(), rclcpp::QoS(10), std::move(callback));
   }
 
   void TearDown()
@@ -78,7 +82,32 @@ using ExecutorTypes =
   rclcpp::executors::MultiThreadedExecutor,
   rclcpp::executors::StaticSingleThreadedExecutor>;
 
-TYPED_TEST_CASE(TestExecutors, ExecutorTypes);
+class ExecutorTypeNames
+{
+public:
+  template<typename T>
+  static std::string GetName(int idx)
+  {
+    (void)idx;
+    if (std::is_same<T, rclcpp::executors::SingleThreadedExecutor>()) {
+      return "SingleThreadedExecutor";
+    }
+
+    if (std::is_same<T, rclcpp::executors::MultiThreadedExecutor>()) {
+      return "MultiThreadedExecutor";
+    }
+
+    if (std::is_same<T, rclcpp::executors::StaticSingleThreadedExecutor>()) {
+      return "StaticSingleThreadedExecutor";
+    }
+
+    return "";
+  }
+};
+
+// TYPED_TEST_CASE is deprecated as of gtest 1.9, use TYPED_TEST_SUITE when gtest dependency
+// is updated.
+TYPED_TEST_CASE(TestExecutors, ExecutorTypes, ExecutorTypeNames);
 
 // StaticSingleThreadedExecutor is not included in these tests for now, due to:
 // https://github.com/ros2/rclcpp/issues/1219
@@ -86,7 +115,7 @@ using StandardExecutors =
   ::testing::Types<
   rclcpp::executors::SingleThreadedExecutor,
   rclcpp::executors::MultiThreadedExecutor>;
-TYPED_TEST_CASE(TestExecutorsSpinVariants, StandardExecutors);
+TYPED_TEST_CASE(TestExecutorsSpinVariants, StandardExecutors, ExecutorTypeNames);
 
 // Make sure that executors detach from nodes when destructing
 TYPED_TEST(TestExecutors, detachOnDestruction) {
@@ -115,7 +144,7 @@ TYPED_TEST(TestExecutorsSpinVariants, addTemporaryNode) {
   spinner.join();
 }
 
-// Make sure that the executor can automatically remove expired nodes correctly
+// Check executor throws properly if the same node is added a second time
 TYPED_TEST(TestExecutors, addNodeTwoExecutors) {
   using ExecutorType = TypeParam;
   ExecutorType executor1;
@@ -134,8 +163,15 @@ TYPED_TEST(TestExecutors, spinWithTimer) {
   executor.add_node(this->node);
 
   std::thread spinner([&]() {executor.spin();});
-  std::this_thread::sleep_for(50ms);
+
+  auto start = std::chrono::steady_clock::now();
+  while (!timer_completed && (std::chrono::steady_clock::now() - start) < 1s) {
+    std::this_thread::sleep_for(1ms);
+  }
+
   EXPECT_TRUE(timer_completed);
+
+  // Shutdown needs to be called before join, so that executor.spin() returns.
   rclcpp::shutdown();
   spinner.join();
 }
@@ -145,11 +181,21 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
   ExecutorType executor;
   executor.add_node(this->node);
 
+  bool timer_completed = false;
+  auto timer = this->node->create_wall_timer(1ms, [&]() {timer_completed = true;});
+
   std::thread spinner([&]() {executor.spin();});
   // Sleep for a short time to verify executor.spin() is going, and didn't throw.
-  std::this_thread::sleep_for(50ms);
 
+  auto start = std::chrono::steady_clock::now();
+  while (!timer_completed && (std::chrono::steady_clock::now() - start) < 1s) {
+    std::this_thread::sleep_for(1ms);
+  }
+
+  EXPECT_TRUE(timer_completed);
   EXPECT_THROW(executor.spin(), std::runtime_error);
+
+  // Shutdown needs to be called before join, so that executor.spin() returns.
   rclcpp::shutdown();
   spinner.join();
 }
@@ -159,14 +205,11 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
   executor.add_node(this->node);
-  std::future<void> future;
 
   // test success of an immediately finishing future
-  future = std::async(
-    std::launch::async,
-    []() {
-      return;
-    });
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
 
   bool spin_exited = false;
 
@@ -176,7 +219,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
       spin_exited = true;
     });
 
-  // Do some work for longer than the future needs.
+  // Do some work even though future is already complete to just prevent potential blocked waiting
   for (int i = 0; i < 100; ++i) {
     this->publisher->publish(std_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
@@ -194,14 +237,11 @@ TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
   executor.add_node(this->node);
-  std::future<void> future;
 
   // test success of an immediately finishing future
-  future = std::async(
-    std::launch::async,
-    []() {
-      return;
-    });
+  std::promise<bool> promise;
+  std::future<bool> future = promise.get_future();
+  promise.set_value(true);
 
   bool spin_exited = false;
 
@@ -212,7 +252,7 @@ TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
       spin_exited = true;
     });
 
-  // Do some work for longer than the future needs.
+  // Do some work even though future is already complete to just prevent potential blocked waiting
   for (int i = 0; i < 100; ++i) {
     this->publisher->publish(std_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
@@ -224,7 +264,6 @@ TYPED_TEST(TestExecutors, testSpinUntilSharedFutureComplete) {
   EXPECT_TRUE(spin_exited);
   spinner.join();
 }
-
 
 // For a longer running future that should require several iterations of spin_once
 TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteNoTimeout) {
@@ -280,13 +319,13 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteWithTimeout) {
 
   // Short timeout
   std::thread spinner([&]() {
-      auto ret = executor.spin_until_future_complete(future, 10ms);
+      auto ret = executor.spin_until_future_complete(future, 1ms);
       EXPECT_EQ(rclcpp::FutureReturnCode::TIMEOUT, ret);
       spin_exited = true;
     });
 
   // Do some work for longer than timeout needs.
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < 100; ++i) {
     this->publisher->publish(std_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
     if (spin_exited) {
@@ -307,13 +346,18 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureCompleteInterrupted) {
   ExecutorType executor;
   executor.add_node(this->node);
 
-  // This needs to be longer than it takes to reach the shutdown call below.
-  // This timeout blocks the test finishing, so it shouldn't be too long.
+  bool spin_exited = false;
+
+  // This needs to block longer than it takes to get to the shutdown call below and for
+  // spin_until_future_complete to return
   std::future<void> future = std::async(
     std::launch::async,
-    []() {std::this_thread::sleep_for(20ms);});
-
-  bool spin_exited = false;
+    [&spin_exited]() {
+      auto start = std::chrono::steady_clock::now();
+      while (!spin_exited && (std::chrono::steady_clock::now() - start) < 1s) {
+        std::this_thread::sleep_for(1ms);
+      }
+    });
 
   // Long timeout
   std::thread spinner([&spin_exited, &executor, &future]() {
@@ -400,25 +444,33 @@ TYPED_TEST(TestExecutorsSpinVariants, spinAll) {
   waitable_interfaces->add_waitable(my_waitable, nullptr);
   executor.add_node(this->node);
 
-  // Long timeout, this determines the duration of the test, so not making it too long.
-  // Just long enough for multiple waitables to execute.
+  // Long timeout, but should not block test if spin_all works as expected as we cancel the
+  // executor.
   bool spin_exited = false;
   std::thread spinner([&spin_exited, &executor, this]() {
-      executor.spin_all(20ms);
+      executor.spin_all(1s);
       executor.remove_node(this->node);
       spin_exited = true;
     });
 
-  // Do some work for longer the test waitable needs
-  for (int i = 0; i < 100; ++i) {
+  // Do some work until sufficient calls to the waitable occur
+  auto start = std::chrono::steady_clock::now();
+  while (
+    my_waitable->get_count() <= 1 &&
+    !spin_exited &&
+    (std::chrono::steady_clock::now() - start < 1s))
+  {
     this->publisher->publish(std_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
-    if (spin_exited) {
-      break;
-    }
   }
 
-  EXPECT_GT(my_waitable->get_count(), 1u);
+  executor.cancel();
+  start = std::chrono::steady_clock::now();
+  while (!spin_exited && (std::chrono::steady_clock::now() - start) < 1s) {
+    std::this_thread::sleep_for(1ms);
+  }
+
+  EXPECT_LT(1u, my_waitable->get_count());
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
   ASSERT_TRUE(spin_exited);
   spinner.join();
@@ -441,17 +493,23 @@ TYPED_TEST(TestExecutorsSpinVariants, spinSome) {
       spin_exited = true;
     });
 
-  // Do some work for longer the test waitable needs
-  for (int i = 0; i < 10; ++i) {
+  // Do some work until sufficient calls to the waitable occur, but keep going until either
+  // count becomes too large, spin exits, or the 1 second timeout completes.
+  auto start = std::chrono::steady_clock::now();
+  while (
+    my_waitable->get_count() <= 1 &&
+    !spin_exited &&
+    (std::chrono::steady_clock::now() - start < 1s))
+  {
     this->publisher->publish(std_msgs::msg::Empty());
     std::this_thread::sleep_for(1ms);
-    if (spin_exited) {
-      break;
-    }
   }
 
-  EXPECT_EQ(my_waitable->get_count(), 1u);
+  EXPECT_EQ(1u, my_waitable->get_count());
   waitable_interfaces->remove_waitable(my_waitable, nullptr);
-  ASSERT_TRUE(spin_exited);
+  EXPECT_TRUE(spin_exited);
+  // Cancel if it hasn't exited already.
+  executor.cancel();
+
   spinner.join();
 }
