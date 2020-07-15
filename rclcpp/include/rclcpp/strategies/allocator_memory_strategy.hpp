@@ -160,37 +160,34 @@ public:
         has_invalid_weak_groups_or_nodes = true;
         continue;
       }
-      for (auto & weak_group : node->get_callback_groups()) {
-        auto group = weak_group.lock();
-        if (!group || !group->can_be_taken_from().load()) {
-          continue;
-        }
-        group->find_subscription_ptrs_if(
-          [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
-            subscription_handles_.push_back(subscription->get_subscription_handle());
-            return false;
-          });
-        group->find_service_ptrs_if(
-          [this](const rclcpp::ServiceBase::SharedPtr & service) {
-            service_handles_.push_back(service->get_service_handle());
-            return false;
-          });
-        group->find_client_ptrs_if(
-          [this](const rclcpp::ClientBase::SharedPtr & client) {
-            client_handles_.push_back(client->get_client_handle());
-            return false;
-          });
-        group->find_timer_ptrs_if(
-          [this](const rclcpp::TimerBase::SharedPtr & timer) {
-            timer_handles_.push_back(timer->get_timer_handle());
-            return false;
-          });
-        group->find_waitable_ptrs_if(
-          [this](const rclcpp::Waitable::SharedPtr & waitable) {
-            waitable_handles_.push_back(waitable);
-            return false;
-          });
+      if (!group || !group->can_be_taken_from().load()) {
+        continue;
       }
+      group->find_subscription_ptrs_if(
+        [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
+          subscription_handles_.push_back(subscription->get_subscription_handle());
+          return false;
+        });
+      group->find_service_ptrs_if(
+        [this](const rclcpp::ServiceBase::SharedPtr & service) {
+          service_handles_.push_back(service->get_service_handle());
+          return false;
+        });
+      group->find_client_ptrs_if(
+        [this](const rclcpp::ClientBase::SharedPtr & client) {
+          client_handles_.push_back(client->get_client_handle());
+          return false;
+        });
+      group->find_timer_ptrs_if(
+        [this](const rclcpp::TimerBase::SharedPtr & timer) {
+          timer_handles_.push_back(timer->get_timer_handle());
+          return false;
+        });
+      group->find_waitable_ptrs_if(
+        [this](const rclcpp::Waitable::SharedPtr & waitable) {
+          waitable_handles_.push_back(waitable);
+          return false;
+        });
     }
 
     return has_invalid_weak_groups_or_nodes;
