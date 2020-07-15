@@ -466,6 +466,15 @@ if(TARGET test_multi_threaded_executor)
   target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_static_executor_entities_collector rclcpp/executors/test_static_executor_entities_collector.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_static_executor_entities_collector)
+  ament_target_dependencies(test_static_executor_entities_collector
+    "rcl"
+    "test_msgs")
+  target_link_libraries(test_static_executor_entities_collector ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_guard_condition rclcpp/test_guard_condition.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_guard_condition)
