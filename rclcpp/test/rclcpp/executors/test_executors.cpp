@@ -131,6 +131,8 @@ TYPED_TEST(TestExecutors, detachOnDestruction) {
 }
 
 // Make sure that the executor can automatically remove expired nodes correctly
+// Currently fails for StaticSingleThreadedExecutor so it is being skipped, see:
+// https://github.com/ros2/rclcpp/issues/1231
 TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   using ExecutorType = TypeParam;
   ExecutorType executor;
@@ -142,7 +144,7 @@ TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   }
 
   // Sleep for a short time to verify executor.spin() is going, and didn't throw.
-  std::thread spinner([&]() {executor.spin();});
+  std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
 
   std::this_thread::sleep_for(50ms);
   rclcpp::shutdown();
