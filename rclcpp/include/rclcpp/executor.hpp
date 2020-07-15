@@ -77,6 +77,14 @@ public:
   virtual void
   spin() = 0;
 
+  // Check weak_nodes_ to find any callback group that is not owned
+  // by an executor and add it to the list of callbackgroups for
+  // collect entities. Also exchange to false so it is not
+  // allowed to add to another executor
+  RCLCPP_PUBLIC
+  virtual void
+  add_allowable_unassigned_callback_groups();
+
   /// Add a callback group to an executor.
   RCLCPP_PUBLIC
   virtual void
@@ -417,6 +425,8 @@ protected:
       rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
       std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
+
+  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 };
 
 namespace executor

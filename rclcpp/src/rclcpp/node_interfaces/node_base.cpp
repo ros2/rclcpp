@@ -43,6 +43,7 @@ NodeBase::NodeBase(
   enable_topic_statistics_default_(enable_topic_statistics_default),
   node_handle_(nullptr),
   default_callback_group_(nullptr),
+  associated_with_executor_(false),
   notify_guard_condition_is_valid_(false)
 {
   // Setup the guard condition that is notified when changes occur in the graph.
@@ -248,6 +249,12 @@ const std::vector<rclcpp::CallbackGroup::WeakPtr> &
 NodeBase::get_callback_groups() const
 {
   return callback_groups_;
+}
+
+std::atomic_bool &
+NodeBase::get_associated_with_executor_atomic()
+{
+  return associated_with_executor_;
 }
 
 rcl_guard_condition_t *

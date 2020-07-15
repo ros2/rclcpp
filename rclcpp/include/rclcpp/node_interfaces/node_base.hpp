@@ -97,6 +97,10 @@ public:
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const override;
 
+    RCLCPP_PUBLIC
+  std::atomic_bool &
+  get_associated_with_executor_atomic() override;
+
   RCLCPP_PUBLIC
   rcl_guard_condition_t *
   get_notify_guard_condition() override;
@@ -123,6 +127,8 @@ private:
 
   rclcpp::CallbackGroup::SharedPtr default_callback_group_;
   std::vector<rclcpp::CallbackGroup::WeakPtr> callback_groups_;
+
+  std::atomic_bool associated_with_executor_;
 
   /// Guard condition for notifying the Executor of changes to this node.
   mutable std::recursive_mutex notify_guard_condition_mutex_;

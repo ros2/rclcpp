@@ -127,6 +127,12 @@ public:
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const = 0;
 
+  /// Return the atomic bool which is used to ensure only one executor is used.
+  RCLCPP_PUBLIC
+  virtual
+  std::atomic_bool &
+  get_associated_with_executor_atomic() = 0;
+
   /// Return guard condition that should be notified when the internal node state changes.
   /**
    * For example, this should be notified when a publisher is added or removed.
