@@ -396,14 +396,6 @@ if(TARGET test_duration)
   target_link_libraries(test_duration ${PROJECT_NAME})
 endif()
 
-ament_add_gtest(test_executor rclcpp/test_executor.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
-if(TARGET test_executor)
-  ament_target_dependencies(test_executor
-    "rcl")
-  target_link_libraries(test_executor ${PROJECT_NAME})
-endif()
-
 ament_add_gtest(test_logger rclcpp/test_logger.cpp)
 target_link_libraries(test_logger ${PROJECT_NAME})
 
@@ -456,6 +448,14 @@ if(TARGET test_interface_traits)
   ament_target_dependencies(test_interface_traits
     "rcl")
   target_link_libraries(test_interface_traits ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(test_executors rclcpp/executors/test_executors.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_executors)
+  ament_target_dependencies(test_executors
+    "rcl")
+  target_link_libraries(test_executors ${PROJECT_NAME})
 endif()
 
 ament_add_gtest(test_static_single_threaded_executor rclcpp/executors/test_static_single_threaded_executor.cpp
