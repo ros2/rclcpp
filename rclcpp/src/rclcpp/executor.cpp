@@ -38,6 +38,8 @@ using rclcpp::FutureReturnCode;
 
 Executor::Executor(const rclcpp::ExecutorOptions & options)
 : spinning(false),
+  wake_after_execute_(false),
+  exec_added_or_removed_(false),
   memory_strategy_(options.memory_strategy)
 {
   rcl_guard_condition_options_t guard_condition_options = rcl_guard_condition_get_default_options();
@@ -131,6 +133,18 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       throw std::runtime_error("Cannot add node to executor, node already added.");
     }
   }
+  node_ptr->set_executor_function(
+    [this]
+    {this->exec_added_or_removed_.store(true);});
+  for (auto & weak_group : node_ptr->get_callback_groups()) {
+    auto callback_group = weak_group.lock();
+    if (!callback_group) {
+      continue;
+    }
+    callback_group->set_executor_function(
+      [this]
+      {this->exec_added_or_removed_.store(true);});
+  }
   weak_nodes_.push_back(node_ptr);
   guard_conditions_.push_back(node_ptr->get_notify_guard_condition());
   if (notify) {
@@ -139,6 +153,11 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       throw std::runtime_error(rcl_get_error_string().str);
     }
   }
+
+  // Check whether triggering a guard condition is necessary
+  // (will depend on the type of executor and callback groups)
+  determine_wake_after_execute();
+
   // Add the node's notify condition to the guard condition handles
   std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
   memory_strategy_->add_guard_condition(node_ptr->get_notify_guard_condition());
@@ -179,6 +198,11 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
       }
     }
   }
+
+  // Check whether triggering a guard condition is necessary
+  // (will depend on the type of executor and callback groups)
+  determine_wake_after_execute();
+
   std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
   memory_strategy_->remove_guard_condition(node_ptr->get_notify_guard_condition());
 }
@@ -325,9 +349,22 @@ Executor::execute_any_executable(AnyExecutable & any_exec)
   }
   // Reset the callback_group, regardless of type
   any_exec.callback_group->can_be_taken_from().store(true);
+
+  // check whether callback groups were added or removed or
+  // an exec was added or removed from callback groups
+  // if it was, check whether we should trigger
+  // guard condition after waking up
+  if (exec_added_or_removed_.exchange(false)) {
+    determine_wake_after_execute();
+  }
+
+  // Check whether triggering a guard condition is necessary
+  // (will depend on the type of executor and callback groups)
   // Wake the wait, because it may need to be recalculated or work that
-  // was previously blocked is now available.
-  if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+  // was previously blocked is now available
+  if (get_wake_after_execute_flag() &&
+    rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK)
+  {
     throw std::runtime_error(rcl_get_error_string().str);
   }
 }

@@ -94,6 +94,28 @@ public:
     return _find_ptrs_if_impl<rclcpp::Waitable, Function>(func, waitable_ptrs_);
   }
 
+  /// Return the total number of entities in the callback group.
+  /**
+   * The size of the callback group includes subscriptions, timers,
+   * clients, services, and waitables.
+   *
+   * \return size of the callback group
+   */
+  RCLCPP_PUBLIC
+  size_t
+  size() const
+  {
+    return subscription_ptrs_.size() + timer_ptrs_.size() +
+           client_ptrs_.size() + service_ptrs_.size() + waitable_ptrs_.size();
+  }
+
+  RCLCPP_PUBLIC
+  void
+  set_executor_function(std::function<void()> call_executor_function)
+  {
+    call_executor_function_ = call_executor_function;
+  }
+
   RCLCPP_PUBLIC
   std::atomic_bool &
   can_be_taken_from();
@@ -142,6 +164,7 @@ protected:
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
+  std::function<void()> call_executor_function_;
 
 private:
   template<typename TypeT, typename Function>

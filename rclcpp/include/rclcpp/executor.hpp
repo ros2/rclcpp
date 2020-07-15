@@ -280,6 +280,20 @@ public:
   void
   set_memory_strategy(memory_strategy::MemoryStrategy::SharedPtr memory_strategy);
 
+  /// Returns true if guard condition should be triggered after executing executable.
+  /**
+   * After a thread executes an executable, the thread triggers the guard condition
+   * to wake any thread sleeping so that it can check for pending executables.
+   * If this is not done, a thread can find itself sleeping indefinitely. This will
+   * only be true when there is at least one non-empty mutually exclusive callback group.
+   *
+   * \return wake_after_execute_ flag, returns true if the guard condition should be
+   * triggered after a thread executes an executable.
+   */
+  RCLCPP_PUBLIC
+  bool
+  get_wake_after_execute_flag() {return wake_after_execute_.load();}
+
 protected:
   RCLCPP_PUBLIC
   void
@@ -300,6 +314,22 @@ protected:
   RCLCPP_PUBLIC
   void
   execute_any_executable(AnyExecutable & any_exec);
+
+  /// Wake after executing when the executor is multi-threaded and has
+  /// at least one non-empty mutually exclusive group
+  /**
+   * After executing an executable, this function determines
+   * if it should wake the wait in rcl_wait so that the executor
+   * can process any pending executable. This only has to be done
+   * when the executor is multi-threaded and has at least one
+   * non-empty mutually exclusive callback group.
+   *
+   * \return true if there is a non-empty mutually exclusive
+   * callback group in a multithreaded executor and false otherwise
+   */
+  RCLCPP_PUBLIC
+  virtual bool
+  determine_wake_after_execute() {return false;}
 
   RCLCPP_PUBLIC
   static void
@@ -345,6 +375,12 @@ protected:
 
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
+
+  /// boolean to control whether guard condition is triggered after executing
+  std::atomic_bool wake_after_execute_;
+
+  // a callback group was added in the node or an item was removed or added to the callbacks.
+  std::atomic_bool exec_added_or_removed_;
 
   /// Guard condition for signaling the rmw layer to wake up for special events.
   rcl_guard_condition_t interrupt_guard_condition_ = rcl_get_zero_initialized_guard_condition();

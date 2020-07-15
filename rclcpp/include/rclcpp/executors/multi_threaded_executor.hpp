@@ -78,6 +78,22 @@ protected:
   void
   run(size_t this_thread_number);
 
+  /// Wake after executing when the executor is multi-threaded and has
+  /// at least one non-empty mutually exclusive group
+  /**
+   * After executing an executable, this function determines
+   * if it should wake the wait in rcl_wait so that the executor
+   * can process any pending executable. This only has to be done
+   * when the executor is multi-threaded and has at least one
+   * non-empty mutually exclusive callback group.
+   *
+   * \return true if there is a non-empty mutually exclusive
+   * callback group in a multithreaded executor and false otherwise
+   */
+  RCLCPP_PUBLIC
+  bool
+  determine_wake_after_execute();
+
 private:
   RCLCPP_DISABLE_COPY(MultiThreadedExecutor)
 

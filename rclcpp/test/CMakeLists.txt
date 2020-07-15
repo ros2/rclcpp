@@ -472,6 +472,12 @@ if(TARGET test_multi_threaded_executor)
   target_link_libraries(test_multi_threaded_executor ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_wake_after_execute_flag rclcpp/test_wake_after_execute_flag.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+if(TARGET test_wake_after_execute_flag)
+  target_link_libraries(test_wake_after_execute_flag ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_guard_condition rclcpp/test_guard_condition.cpp
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_guard_condition)
