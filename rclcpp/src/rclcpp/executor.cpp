@@ -92,6 +92,15 @@ Executor::~Executor()
     }
   }
   weak_groups_to_nodes_.clear();
+  std::for_each(weak_nodes_.begin(), weak_nodes_.end(), []
+  (rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr) {
+    auto shared_node_ptr = weak_node_ptr.lock();
+    if(shared_node_ptr) {
+      std::atomic_bool & has_executor = shared_node_ptr->get_associated_with_executor_atomic();
+      has_executor.store(false);
+    }
+  });
+  weak_nodes_.clear();
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & guard_condition = pair.second;
     memory_strategy_->remove_guard_condition(guard_condition);
@@ -266,11 +275,30 @@ Executor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 void
 Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
-  for (auto & key_value_pair : weak_groups_to_nodes_) {
+  std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
+  std::for_each(weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
+  [&found_group_ptrs, node_ptr] (std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
     auto weak_node_ptr = key_value_pair.second;
     auto shared_node_ptr = weak_node_ptr.lock();
+    auto group_ptr = key_value_pair.first.lock();
     if (shared_node_ptr == node_ptr) {
-      remove_callback_group(key_value_pair.first.lock(), notify);
+      found_group_ptrs.push_back(group_ptr);
+    }
+  });
+  std::for_each(found_group_ptrs.begin(), found_group_ptrs.end(), [this, notify]
+  (rclcpp::CallbackGroup::SharedPtr group_ptr) {
+    remove_callback_group(group_ptr, notify);
+  });
+  auto node_it = weak_nodes_.begin();
+  while (node_it != weak_nodes_.end()) {
+    bool matched = (node_it->lock() == node_ptr);
+    if (matched) {
+      std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+      has_executor.store(false);
+      node_it = weak_nodes_.erase(node_it);
+    } else {
+      ++node_it;
     }
   }
 }
@@ -581,7 +609,9 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
         auto weak_node_ptr = pair.second;
         if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
           weak_groups_to_nodes_.erase(weak_group_ptr);
+          auto node_guard_pair = weak_nodes_to_guard_conditions_.find(weak_node_ptr);
           weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
+          memory_strategy_->remove_guard_condition(node_guard_pair->second);
         }
       }
     }
