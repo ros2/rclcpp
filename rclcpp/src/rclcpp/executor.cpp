@@ -87,7 +87,8 @@ Executor::~Executor()
   for (auto & pair : weak_groups_to_nodes_) {
     auto group = pair.first.lock();
     if (group) {
-      remove_callback_group(group, false);
+      std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
+      has_executor.store(false);
     }
   }
   weak_groups_to_nodes_.clear();
