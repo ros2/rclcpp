@@ -18,9 +18,14 @@
 #include <rmw/rmw.h>
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
+
+#include <iostream>
+#include <sstream>
 
 #include "rcl/error_handling.h"
 
@@ -90,10 +95,6 @@ public:
       throw std::runtime_error("SubscriptionIntraProcess init error initializing guard condition");
     }
 
-    // Initialize the messages
-    shared_msg_ = NULL;
-    unique_msg_ = NULL;
-
     TRACEPOINT(
       rclcpp_subscription_callback_added,
       (const void *)this,
@@ -118,7 +119,9 @@ public:
     if (any_callback_.use_take_shared_method()) {
       shared_msg_ = buffer_->consume_shared();
     } else {
-      unique_msg_ = buffer_->consume_unique();
+      msg_map_.insert(std::pair<std::thread::id, MessageUniquePtr>(
+          std::this_thread::get_id(),
+          buffer_->consume_unique()));
     }
   }
 
@@ -172,10 +175,12 @@ private:
 
     if (any_callback_.use_take_shared_method()) {
       any_callback_.dispatch_intra_process(shared_msg_, msg_info);
-      shared_msg_ = NULL;
+      shared_msg_.reset();
     } else {
-      any_callback_.dispatch_intra_process(std::move(unique_msg_), msg_info);
-      unique_msg_ = NULL;
+      std::thread::id thread_id = std::this_thread::get_id();
+      MessageUniquePtr unique_msg = std::move(msg_map_[thread_id]);
+      any_callback_.dispatch_intra_process(std::move(unique_msg), msg_info);
+      msg_map_.erase(thread_id);
     }
   }
 
@@ -183,7 +188,7 @@ private:
   BufferUniquePtr buffer_;
 
   ConstMessageSharedPtr shared_msg_;
-  MessageUniquePtr unique_msg_;
+  std::map<std::thread::id, MessageUniquePtr> msg_map_;
 };
 
 }  // namespace experimental
