@@ -222,6 +222,7 @@ public:
 
   bool is_ready(rcl_wait_set_t *) override {return true;}
 
+  void take_data() override {}
   void execute() override {}
 };
 

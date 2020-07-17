@@ -46,6 +46,8 @@ public:
     return test_waitable_result;
   }
 
+  void take_data() override {}
+
   void execute() override {}
 };
 

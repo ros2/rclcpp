@@ -418,6 +418,9 @@ public:
     std::this_thread::sleep_for(1ms);
   }
 
+  void
+  take_data() override {}
+
   size_t
   get_number_of_ready_guard_conditions() override {return 1;}
 
