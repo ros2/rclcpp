@@ -509,9 +509,9 @@ if(TARGET test_subscription_options)
   target_link_libraries(test_subscription_options ${PROJECT_NAME})
 endif()
 
-ament_add_gtest(test_gtest_macros utils/test_gtest_macros.cpp)
-if(TARGET test_gtest_macros)
-  target_link_libraries(test_gtest_macros ${PROJECT_NAME})
+ament_add_gtest(test_rclcpp_gtest_macros utils/test_rclcpp_gtest_macros.cpp)
+if(TARGET test_rclcpp_gtest_macros)
+  target_link_libraries(test_rclcpp_gtest_macros ${PROJECT_NAME})
 endif()
 
 # Install test resources

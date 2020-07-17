@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef UTILS__GTEST_MACROS_HPP_
-#define UTILS__GTEST_MACROS_HPP_
+#ifndef UTILS__RCLCPP_GTEST_MACROS_HPP_
+#define UTILS__RCLCPP_GTEST_MACROS_HPP_
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <cstring>
 #include <type_traits>
@@ -123,7 +123,7 @@ template<typename T,
 /**
  * \def CHECK_THROW_EQ_IMPL
  * \brief Implemented check if statement throws expected exception. don't use directly, use
- * EXPECT_THROW_EQ or ASSERT_THROW_EQ instead.
+ * RCLCPP_EXPECT_THROW_EQ or RCLCPP_ASSERT_THROW_EQ instead.
  */
 #define CHECK_THROW_EQ_IMPL(throwing_statement, expected_exception, assertion_result) \
   do { \
@@ -150,7 +150,7 @@ template<typename T,
   } while (0)
 
 /**
- * \def EXPECT_THROW_EQ
+ * \def RCLCPP_EXPECT_THROW_EQ
  * \brief Check if a statement throws the expected exception type and that the exceptions matches
  *   the expected exception.
  *
@@ -159,7 +159,7 @@ template<typename T,
  *
  * See test_gtest_macros.cpp for examples
  */
-#define EXPECT_THROW_EQ(throwing_statement, expected_exception) \
+#define RCLCPP_EXPECT_THROW_EQ(throwing_statement, expected_exception) \
   do { \
     ::testing::AssertionResult \
     is_the_result_of_the_throwing_expression_equal_to_the_expected_throwable = \
@@ -172,7 +172,7 @@ template<typename T,
   } while (0)
 
 /**
- * \def ASSERT_THROW_EQ
+ * \def RCLCPP_ASSERT_THROW_EQ
  * \brief Assert that a statement throws the expected exception type and that the exceptions
  * matches the expected exception.
  *
@@ -180,7 +180,7 @@ template<typename T,
  *
  * Like other gtest ASSERT_ macros, this will halt the test on failure and return.
  */
-#define ASSERT_THROW_EQ(throwing_statement, expected_exception) \
+#define RCLCPP_ASSERT_THROW_EQ(throwing_statement, expected_exception) \
   do { \
     ::testing::AssertionResult \
     is_the_result_of_the_throwing_expression_equal_to_the_expected_throwable = \
@@ -192,4 +192,4 @@ template<typename T,
     ASSERT_TRUE(is_the_result_of_the_throwing_expression_equal_to_the_expected_throwable); \
   } while (0)
 
-#endif  // UTILS__GTEST_MACROS_HPP_
+#endif  // UTILS__RCLCPP_GTEST_MACROS_HPP_
