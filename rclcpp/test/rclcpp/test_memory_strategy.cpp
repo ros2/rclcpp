@@ -71,6 +71,7 @@ private:
 };
 
 TEST_F(TestMemoryStrategy, construct_destruct) {
+  EXPECT_NE(nullptr, memory_strategy());
 }
 
 TEST_F(TestMemoryStrategy, get_subscription_by_handle) {

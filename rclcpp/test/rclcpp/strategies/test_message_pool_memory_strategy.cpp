@@ -18,6 +18,7 @@
 
 #include "rclcpp/strategies/message_pool_memory_strategy.hpp"
 #include "test_msgs/msg/empty.hpp"
+#include "../../utils/gtest_macros.hpp"
 
 using rclcpp::strategies::message_pool_memory_strategy::MessagePoolMemoryStrategy;
 
@@ -35,6 +36,10 @@ protected:
 };
 
 TEST_F(TestMessagePoolMemoryStrategy, construct_destruct) {
+  ASSERT_NE(nullptr, message_memory_strategy_);
+  EXPECT_NE(nullptr, message_memory_strategy_->message_allocator_);
+  EXPECT_NE(nullptr, message_memory_strategy_->serialized_message_allocator_);
+  EXPECT_NE(nullptr, message_memory_strategy_->buffer_allocator_);
 }
 
 TEST_F(TestMessagePoolMemoryStrategy, borrow_return) {
@@ -49,7 +54,9 @@ TEST_F(TestMessagePoolMemoryStrategy, borrow_too_many) {
   ASSERT_NE(nullptr, message);
 
   // Size is 1, borrowing second time should fail
-  EXPECT_THROW(message_memory_strategy_->borrow_message(), std::runtime_error);
+  EXPECT_THROW_EQ(
+    message_memory_strategy_->borrow_message(),
+    std::runtime_error("Tried to access message that was still in use! Abort."));
   EXPECT_NO_THROW(message_memory_strategy_->return_message(message));
 }
 
@@ -59,6 +66,8 @@ TEST_F(TestMessagePoolMemoryStrategy, return_unrecognized) {
 
   auto unrecognized = std::make_shared<test_msgs::msg::Empty>();
   // Unrecognized does not belong to pool
-  EXPECT_THROW(message_memory_strategy_->return_message(unrecognized), std::runtime_error);
+  EXPECT_THROW_EQ(
+    message_memory_strategy_->return_message(unrecognized),
+    std::runtime_error("Unrecognized message ptr in return_message."));
   EXPECT_NO_THROW(message_memory_strategy_->return_message(message));
 }
