@@ -14,9 +14,11 @@
 
 #include <algorithm>
 #include <memory>
+#include <map>
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 #include "rcl/allocator.h"
 #include "rcl/error_handling.h"
