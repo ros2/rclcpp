@@ -139,7 +139,7 @@ public:
   static rclcpp::CallbackGroup::SharedPtr
   get_group_by_timer(
     rclcpp::TimerBase::SharedPtr timer,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);    
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   static rclcpp::CallbackGroup::SharedPtr
   get_group_by_waitable(

@@ -97,7 +97,7 @@ public:
   const std::vector<rclcpp::CallbackGroup::WeakPtr> &
   get_callback_groups() const override;
 
-    RCLCPP_PUBLIC
+  RCLCPP_PUBLIC
   std::atomic_bool &
   get_associated_with_executor_atomic() override;
 

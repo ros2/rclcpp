@@ -109,7 +109,7 @@ public:
 
   RCLCPP_PUBLIC
   std::atomic_bool &
-  allow_executor_to_add(){return allow_executor_to_add_;}
+  allow_executor_to_add() {return allow_executor_to_add_;}
 
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)

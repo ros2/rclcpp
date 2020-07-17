@@ -92,14 +92,15 @@ Executor::~Executor()
     }
   }
   weak_groups_to_nodes_.clear();
-  std::for_each(weak_nodes_.begin(), weak_nodes_.end(), []
-  (rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr) {
-    auto shared_node_ptr = weak_node_ptr.lock();
-    if(shared_node_ptr) {
-      std::atomic_bool & has_executor = shared_node_ptr->get_associated_with_executor_atomic();
-      has_executor.store(false);
-    }
-  });
+  std::for_each(
+    weak_nodes_.begin(), weak_nodes_.end(), []
+      (rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr) {
+      auto shared_node_ptr = weak_node_ptr.lock();
+      if (shared_node_ptr) {
+        std::atomic_bool & has_executor = shared_node_ptr->get_associated_with_executor_atomic();
+        has_executor.store(false);
+      }
+    });
   weak_nodes_.clear();
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & guard_condition = pair.second;
@@ -126,32 +127,34 @@ Executor::~Executor()
   context_->release_interrupt_guard_condition(&wait_set_, std::nothrow);
 }
 
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  Executor::get_callback_groups()
-  {
-    std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
-    for (auto const& group_node_ptr : weak_groups_to_nodes_) {
-      groups.push_back(group_node_ptr.first);
-    }
-    return groups;
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+Executor::get_callback_groups()
+{
+  std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  for (auto const & group_node_ptr : weak_groups_to_nodes_) {
+    groups.push_back(group_node_ptr.first);
   }
+  return groups;
+}
 
 void
 Executor::add_allowable_unassigned_callback_groups()
 {
-   for (auto & weak_node : weak_nodes_) {
+  for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();
     if (node) {
       auto group_ptrs = node->get_callback_groups();
-      std::for_each(group_ptrs.begin(), group_ptrs.end(),
-              [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
-      {
-        auto shared_group_ptr = group_ptr.lock();
-        if (shared_group_ptr && shared_group_ptr->allow_executor_to_add() &&
-            !shared_group_ptr->get_associated_with_executor_atomic().load()) {
-              add_callback_group(shared_group_ptr, node);
-        }
-      });
+      std::for_each(
+        group_ptrs.begin(), group_ptrs.end(),
+        [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
+        {
+          auto shared_group_ptr = group_ptr.lock();
+          if (shared_group_ptr && shared_group_ptr->allow_executor_to_add() &&
+          !shared_group_ptr->get_associated_with_executor_atomic().load())
+          {
+            add_callback_group(shared_group_ptr, node);
+          }
+        });
     }
   }
 }
@@ -195,26 +198,28 @@ Executor::add_callback_groups(
   std::vector<rclcpp::CallbackGroup::SharedPtr> group_ptrs,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
-  {
-    std::for_each(group_ptrs.begin(), group_ptrs.end(),
-            [node_ptr, notify, this](rclcpp::CallbackGroup::SharedPtr group_ptr)
+{
+  std::for_each(
+    group_ptrs.begin(), group_ptrs.end(),
+    [node_ptr, notify, this](rclcpp::CallbackGroup::SharedPtr group_ptr)
     {
-        add_callback_group(group_ptr, node_ptr, notify);
+      add_callback_group(group_ptr, node_ptr, notify);
     });
-  }
+}
 
 void
 Executor::add_callback_groups(
   std::map<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
   std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups,
   bool notify)
-  {
-    std::for_each(node_to_groups.begin(), node_to_groups.end(),
-            [notify, this](std::pair<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
-                                      std::vector<rclcpp::CallbackGroup::SharedPtr>> element){
-                add_callback_groups(element.second, element.first, notify);
+{
+  std::for_each(
+    node_to_groups.begin(), node_to_groups.end(),
+    [notify, this](std::pair<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
+    std::vector<rclcpp::CallbackGroup::SharedPtr>> element) {
+      add_callback_groups(element.second, element.first, notify);
     });
-  }
+}
 
 void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
@@ -255,7 +260,6 @@ Executor::remove_callback_group(
   if (!has_node(node_ptr)) {
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
     weak_nodes_to_guard_conditions_.erase(node_weak_ptr);
-    
     if (notify) {
       if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
         throw std::runtime_error(rcl_get_error_string().str);
@@ -276,20 +280,22 @@ void
 Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
-  std::for_each(weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
-  [&found_group_ptrs, node_ptr] (std::pair<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
-    auto weak_node_ptr = key_value_pair.second;
-    auto shared_node_ptr = weak_node_ptr.lock();
-    auto group_ptr = key_value_pair.first.lock();
-    if (shared_node_ptr == node_ptr) {
-      found_group_ptrs.push_back(group_ptr);
-    }
-  });
-  std::for_each(found_group_ptrs.begin(), found_group_ptrs.end(), [this, notify]
-  (rclcpp::CallbackGroup::SharedPtr group_ptr) {
-    remove_callback_group(group_ptr, notify);
-  });
+  std::for_each(
+    weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
+    [&found_group_ptrs, node_ptr](std::pair<rclcpp::CallbackGroup::WeakPtr,
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
+      auto weak_node_ptr = key_value_pair.second;
+      auto shared_node_ptr = weak_node_ptr.lock();
+      auto group_ptr = key_value_pair.first.lock();
+      if (shared_node_ptr == node_ptr) {
+        found_group_ptrs.push_back(group_ptr);
+      }
+    });
+  std::for_each(
+    found_group_ptrs.begin(), found_group_ptrs.end(), [this, notify]
+      (rclcpp::CallbackGroup::SharedPtr group_ptr) {
+      remove_callback_group(group_ptr, notify);
+    });
   auto node_it = weak_nodes_.begin();
   while (node_it != weak_nodes_.end()) {
     bool matched = (node_it->lock() == node_ptr);
@@ -601,7 +607,8 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 
     // Collect the subscriptions and timers to be waited on
     memory_strategy_->clear_handles();
-    bool has_invalid_weak_groups_or_nodes = memory_strategy_->collect_entities(weak_groups_to_nodes_);
+    bool has_invalid_weak_groups_or_nodes =
+      memory_strategy_->collect_entities(weak_groups_to_nodes_);
 
     if (has_invalid_weak_groups_or_nodes) {
       for (auto pair : weak_groups_to_nodes_) {
@@ -777,9 +784,10 @@ Executor::get_next_executable(AnyExecutable & any_executable, std::chrono::nanos
 bool
 Executor::has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const
 {
-  return std::find_if(weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
-           [&](const WeakCallbackGroupsToNodesMap::value_type & other) -> bool {
-             auto other_ptr = other.second.lock();
-             return other_ptr == node_ptr;
-           }) != weak_groups_to_nodes_.end();
+  return std::find_if(
+    weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
+    [&](const WeakCallbackGroupsToNodesMap::value_type & other) -> bool {
+      auto other_ptr = other.second.lock();
+      return other_ptr == node_ptr;
+    }) != weak_groups_to_nodes_.end();
 }
