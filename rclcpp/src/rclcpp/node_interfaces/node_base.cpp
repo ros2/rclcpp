@@ -216,8 +216,7 @@ NodeBase::get_shared_rcl_node_handle() const
 }
 
 rclcpp::CallbackGroup::SharedPtr
-NodeBase::create_callback_group(
-  rclcpp::CallbackGroupType group_type)
+NodeBase::create_callback_group(rclcpp::CallbackGroupType group_type)
 {
   using rclcpp::CallbackGroup;
   using rclcpp::CallbackGroupType;
