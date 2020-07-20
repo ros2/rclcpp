@@ -78,6 +78,13 @@ public:
   void
   spin() override;
 
+  RCLCPP_PUBLIC
+  void
+  add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify) override;
+
   /// Add a node to the executor.
   /**
    * An executor can have zero or more nodes which provide work during `spin` functions.

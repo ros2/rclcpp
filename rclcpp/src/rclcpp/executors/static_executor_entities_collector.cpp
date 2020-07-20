@@ -77,7 +77,7 @@ void
 StaticExecutorEntitiesCollector::fill_memory_strategy()
 {
   memory_strategy_->clear_handles();
-  bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_nodes_);
+  bool has_invalid_weak_nodes = memory_strategy_->collect_entities(weak_groups_to_nodes_);
 
   // Clean up any invalid nodes, if they were detected
   if (has_invalid_weak_nodes) {
@@ -234,6 +234,20 @@ StaticExecutorEntitiesCollector::add_node(
 
   weak_nodes_.push_back(node_ptr);
   guard_conditions_.push_back(node_ptr->get_notify_guard_condition());
+}
+
+void
+StaticExecutorEntitiesCollector::add_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
+{
+  rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
+  auto insert_info = weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
+  group_ptr->allow_executor_to_add().store(false);
+  bool was_inserted = insert_info.second;
+  if (!was_inserted) {
+    throw std::runtime_error("Callback group was already added to executor.");
+  }
 }
 
 bool

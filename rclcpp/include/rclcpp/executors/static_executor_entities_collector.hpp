@@ -103,6 +103,12 @@ public:
   size_t
   get_number_of_ready_guard_conditions() override;
 
+  RCLCPP_PUBLIC
+  void
+  add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+
   /**
    * \sa rclcpp::Executor::add_node()
    * \throw std::runtime_error if node was already added
@@ -222,6 +228,11 @@ private:
 
   /// Memory strategy: an interface for handling user-defined memory allocation strategies.
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
+
+  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+      std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
 
   /// List of weak nodes registered in the static executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;

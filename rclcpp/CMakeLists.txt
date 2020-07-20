@@ -46,7 +46,7 @@ set(${PROJECT_NAME}_SRCS
   src/rclcpp/duration.cpp
   src/rclcpp/event.cpp
   src/rclcpp/exceptions/exceptions.cpp
-#  src/rclcpp/executable_list.cpp
+  src/rclcpp/executable_list.cpp
   src/rclcpp/executor.cpp
   src/rclcpp/executors.cpp
   src/rclcpp/expand_topic_or_service_name.cpp
