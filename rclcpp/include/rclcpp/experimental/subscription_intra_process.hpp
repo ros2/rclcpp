@@ -119,9 +119,9 @@ public:
     if (any_callback_.use_take_shared_method()) {
       shared_msg_ = buffer_->consume_shared();
     } else {
-      msg_map_.insert(std::pair<std::thread::id, MessageUniquePtr>(
+      unique_msg_map_.insert(std::pair<std::thread::id, MessageUniquePtr>(
           std::this_thread::get_id(),
-          buffer_->consume_unique()));
+          std::move(buffer_->consume_unique())));
     }
   }
 
@@ -178,9 +178,9 @@ private:
       shared_msg_.reset();
     } else {
       std::thread::id thread_id = std::this_thread::get_id();
-      MessageUniquePtr unique_msg = std::move(msg_map_[thread_id]);
-      any_callback_.dispatch_intra_process(std::move(unique_msg), msg_info);
-      msg_map_.erase(thread_id);
+      any_callback_.dispatch_intra_process(
+        std::move(unique_msg_map_[thread_id]), msg_info);
+      unique_msg_map_.erase(thread_id);
     }
   }
 
@@ -188,7 +188,7 @@ private:
   BufferUniquePtr buffer_;
 
   ConstMessageSharedPtr shared_msg_;
-  std::map<std::thread::id, MessageUniquePtr> msg_map_;
+  std::map<std::thread::id, MessageUniquePtr> unique_msg_map_;
 };
 
 }  // namespace experimental
