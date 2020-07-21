@@ -24,7 +24,9 @@
 #include "test_msgs/srv/empty.hpp"
 
 using rclcpp::memory_strategy::MemoryStrategy;
-using WeakNodeList = std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>;
+typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
 
 /**
  * Mock Waitable class
@@ -75,13 +77,18 @@ TEST_F(TestMemoryStrategy, construct_destruct) {
 }
 
 TEST_F(TestMemoryStrategy, get_subscription_by_handle) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   std::shared_ptr<const rcl_subscription_t> subscription_handle;
   rclcpp::SubscriptionBase::SharedPtr found_subscription = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -97,29 +104,34 @@ TEST_F(TestMemoryStrategy, get_subscription_by_handle) {
 
         EXPECT_EQ(
           subscription,
-          memory_strategy()->get_subscription_by_handle(subscription_handle, nodes));
+          memory_strategy()->get_subscription_by_handle(subscription_handle, weak_groups_to_nodes));
       }  // subscription goes out of scope
       EXPECT_EQ(
         nullptr,
-        memory_strategy()->get_subscription_by_handle(subscription_handle, nodes));
+        memory_strategy()->get_subscription_by_handle(subscription_handle, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_subscription_by_handle(subscription_handle, nodes));
+      memory_strategy()->get_subscription_by_handle(subscription_handle, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_subscription_by_handle(subscription_handle, nodes));
+    memory_strategy()->get_subscription_by_handle(subscription_handle, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_service_by_handle) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   std::shared_ptr<const rcl_service_t> service_handle;
   rclcpp::ServiceBase::SharedPtr found_service = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -137,29 +149,34 @@ TEST_F(TestMemoryStrategy, get_service_by_handle) {
 
         EXPECT_EQ(
           service,
-          memory_strategy()->get_service_by_handle(service_handle, nodes));
+          memory_strategy()->get_service_by_handle(service_handle, weak_groups_to_nodes));
       }  // service goes out of scope
       EXPECT_EQ(
         nullptr,
-        memory_strategy()->get_service_by_handle(service_handle, nodes));
+        memory_strategy()->get_service_by_handle(service_handle, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_service_by_handle(service_handle, nodes));
+      memory_strategy()->get_service_by_handle(service_handle, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_service_by_handle(service_handle, nodes));
+    memory_strategy()->get_service_by_handle(service_handle, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_client_by_handle) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   std::shared_ptr<const rcl_client_t> client_handle;
   rclcpp::ClientBase::SharedPtr found_client = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -171,29 +188,34 @@ TEST_F(TestMemoryStrategy, get_client_by_handle) {
 
         EXPECT_EQ(
           client,
-          memory_strategy()->get_client_by_handle(client_handle, nodes));
+          memory_strategy()->get_client_by_handle(client_handle, weak_groups_to_nodes));
       }  // client goes out of scope
       EXPECT_EQ(
         nullptr,
-        memory_strategy()->get_client_by_handle(client_handle, nodes));
+        memory_strategy()->get_client_by_handle(client_handle, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_client_by_handle(client_handle, nodes));
+      memory_strategy()->get_client_by_handle(client_handle, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_client_by_handle(client_handle, nodes));
+    memory_strategy()->get_client_by_handle(client_handle, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_timer_by_handle) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   std::shared_ptr<const rcl_timer_t> timer_handle;
   rclcpp::TimerBase::SharedPtr found_timer = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -206,53 +228,63 @@ TEST_F(TestMemoryStrategy, get_timer_by_handle) {
 
         EXPECT_EQ(
           timer,
-          memory_strategy()->get_timer_by_handle(timer_handle, nodes));
+          memory_strategy()->get_timer_by_handle(timer_handle, weak_groups_to_nodes));
       }  // timer goes out of scope
       EXPECT_EQ(
         nullptr,
-        memory_strategy()->get_timer_by_handle(timer_handle, nodes));
+        memory_strategy()->get_timer_by_handle(timer_handle, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_timer_by_handle(timer_handle, nodes));
+      memory_strategy()->get_timer_by_handle(timer_handle, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_timer_by_handle(timer_handle, nodes));
+    memory_strategy()->get_timer_by_handle(timer_handle, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_node_by_group) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
     auto node_handle = node->get_node_base_interface();
-    nodes.push_back(node_handle);
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node_handle->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node_handle] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node_handle));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_node_by_group(nullptr, nodes));
+      memory_strategy()->get_node_by_group(nullptr, weak_groups_to_nodes));
 
     callback_group =
       node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 
     EXPECT_EQ(
       node_handle,
-      memory_strategy()->get_node_by_group(callback_group, nodes));
+      memory_strategy()->get_node_by_group(callback_group, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_node_by_group(callback_group, nodes));
+    memory_strategy()->get_node_by_group(callback_group, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_group_by_subscription) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   rclcpp::SubscriptionBase::SharedPtr subscription = nullptr;
   rclcpp::CallbackGroup::SharedPtr callback_group = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       // This group is just used to test that a callback group that is held as a weak pointer
       // by node, doesn't confuse get_group_by_subscription() when it goes out of scope
@@ -276,24 +308,29 @@ TEST_F(TestMemoryStrategy, get_group_by_subscription) {
 
       EXPECT_EQ(
         callback_group,
-        memory_strategy()->get_group_by_subscription(subscription, nodes));
+        memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       callback_group,
-      memory_strategy()->get_group_by_subscription(subscription, nodes));
+      memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_group_by_subscription(subscription, nodes));
+    memory_strategy()->get_group_by_subscription(subscription, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_group_by_service) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   rclcpp::ServiceBase::SharedPtr service = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -308,24 +345,29 @@ TEST_F(TestMemoryStrategy, get_group_by_service) {
 
       EXPECT_EQ(
         callback_group,
-        memory_strategy()->get_group_by_service(service, nodes));
+        memory_strategy()->get_group_by_service(service, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_group_by_service(service, nodes));
+      memory_strategy()->get_group_by_service(service, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_group_by_service(service, nodes));
+    memory_strategy()->get_group_by_service(service, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_group_by_client) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   rclcpp::ClientBase::SharedPtr client = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -335,24 +377,29 @@ TEST_F(TestMemoryStrategy, get_group_by_client) {
 
       EXPECT_EQ(
         callback_group,
-        memory_strategy()->get_group_by_client(client, nodes));
+        memory_strategy()->get_group_by_client(client, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_group_by_client(client, nodes));
+      memory_strategy()->get_group_by_client(client, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_group_by_client(client, nodes));
+    memory_strategy()->get_group_by_client(client, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_group_by_timer) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   rclcpp::TimerBase::SharedPtr timer = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       auto callback_group =
         node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -362,24 +409,29 @@ TEST_F(TestMemoryStrategy, get_group_by_timer) {
 
       EXPECT_EQ(
         callback_group,
-        memory_strategy()->get_group_by_timer(timer, nodes));
+        memory_strategy()->get_group_by_timer(timer, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_group_by_timer(timer, nodes));
+      memory_strategy()->get_group_by_timer(timer, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_group_by_timer(timer, nodes));
+    memory_strategy()->get_group_by_timer(timer, weak_groups_to_nodes));
 }
 
 TEST_F(TestMemoryStrategy, get_group_by_waitable) {
-  WeakNodeList nodes;
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   rclcpp::Waitable::SharedPtr waitable = nullptr;
   {
     auto node = std::make_shared<rclcpp::Node>("node", "ns");
-    nodes.push_back(node->get_node_base_interface());
-    memory_strategy()->collect_entities(nodes);
+    auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
+    std::for_each(callback_groups.begin(), callback_groups.end(), 
+      [&weak_groups_to_nodes, &node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node->get_node_base_interface()));
+      });
+    memory_strategy()->collect_entities(weak_groups_to_nodes);
     {
       waitable = std::make_shared<TestWaitable>();
       auto callback_group =
@@ -388,13 +440,13 @@ TEST_F(TestMemoryStrategy, get_group_by_waitable) {
 
       EXPECT_EQ(
         callback_group,
-        memory_strategy()->get_group_by_waitable(waitable, nodes));
+        memory_strategy()->get_group_by_waitable(waitable, weak_groups_to_nodes));
     }  // callback_group goes out of scope
     EXPECT_EQ(
       nullptr,
-      memory_strategy()->get_group_by_waitable(waitable, nodes));
+      memory_strategy()->get_group_by_waitable(waitable, weak_groups_to_nodes));
   }  // Node goes out of scope
   EXPECT_EQ(
     nullptr,
-    memory_strategy()->get_group_by_waitable(waitable, nodes));
+    memory_strategy()->get_group_by_waitable(waitable, weak_groups_to_nodes));
 }
