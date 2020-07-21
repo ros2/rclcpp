@@ -344,18 +344,20 @@ protected:
     std::function<rclcpp::AnyExecutable(WeakCallbackGroupsToNodesMap)> get_next_entity_func)
   {
     auto basic_node = std::make_shared<rclcpp::Node>("basic_node", "ns");
+    auto basic_node_base = basic_node->get_node_base_interface();
+    auto node_base = node_with_entity->get_node_base_interface();
     WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
-    auto callback_groups = basic_node->get_node_base_interface()->get_callback_groups(); 
+    auto callback_groups = basic_node_base->get_callback_groups(); 
     std::for_each(callback_groups.begin(), callback_groups.end(), 
-      [&weak_groups_to_nodes, &basic_node] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      [&weak_groups_to_nodes, &basic_node_base] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
       weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, basic_node->get_node_base_interface()));
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, basic_node_base));
       });
-    callback_groups = node_with_entity->get_node_base_interface()->get_callback_groups(); 
+    callback_groups = node_base->get_callback_groups(); 
     std::for_each(callback_groups.begin(), callback_groups.end(), 
-      [&weak_groups_to_nodes, &node_with_entity] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
+      [&weak_groups_to_nodes, &node_base] (rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
       weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node_with_entity->get_node_base_interface()));
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(weak_group_ptr, node_base));
       });
     allocator_memory_strategy()->collect_entities(weak_groups_to_nodes);
 
@@ -367,7 +369,7 @@ protected:
       callback_group->can_be_taken_from() = false;
     }
 
-    rclcpp::AnyExecutable result = get_next_entity_func(nodes);
+    rclcpp::AnyExecutable result = get_next_entity_func(weak_groups_to_nodes);
 
     if (nullptr != result.node_base) {
       return ::testing::AssertionFailure() <<
@@ -576,7 +578,7 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_subscription) {
 
   auto get_next_entity = [this](const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) {
       rclcpp::AnyExecutable result;
-      allocator_memory_strategy()->get_next_subscription(result, nodes);
+      allocator_memory_strategy()->get_next_subscription(result, weak_groups_to_nodes);
       return result;
     };
 
@@ -589,7 +591,7 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_service) {
 
   auto get_next_entity = [this](const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) {
       rclcpp::AnyExecutable result;
-      allocator_memory_strategy()->get_next_service(result, nodes);
+      allocator_memory_strategy()->get_next_service(result, weak_groups_to_nodes);
       return result;
     };
 
