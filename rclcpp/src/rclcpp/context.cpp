@@ -317,7 +317,9 @@ Context::shutdown(const std::string & reason)
       rcl_ret_t rcl_ret = rcl_logging_fini();
       if (RCL_RET_OK != rcl_ret) {
         RCUTILS_SAFE_FWRITE_TO_STDERR(
+          // cppcheck-suppress unknownMacro
           RCUTILS_STRINGIFY(__file__) ":"
+          // cppcheck-suppress unknownMacro
           RCUTILS_STRINGIFY(__LINE__)
           " failed to fini logging");
         rcl_reset_error();
