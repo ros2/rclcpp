@@ -606,7 +606,6 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   }
   if (!success) {
     // Check the waitables to see if there are any that are ready
-    std::unique_lock<std::mutex> lock(memory_strategy_mutex_);
     memory_strategy_->get_next_waitable(any_executable, weak_nodes_);
     if (any_executable.waitable) {
       any_executable.waitable->take_data();
