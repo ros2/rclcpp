@@ -248,36 +248,66 @@ StaticExecutorEntitiesCollector::add_callback_group(
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");
   }
+  if(!has_node(node_ptr)) {
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
+    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();   
+  }
+}
+
+bool
+  StaticExecutorEntitiesCollector::remove_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr)
+{
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr;
+  rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
+  auto iter = weak_groups_to_nodes_.find(weak_group_ptr);
+  if (iter != weak_groups_to_nodes_.end()) {
+    node_ptr = iter->second.lock();
+    if (node_ptr == nullptr) {
+      throw std::runtime_error("Node must not be deleted before its callback group(s).");
+    }
+    weak_groups_to_nodes_.erase(iter);
+  }
+  // If the node was matched and removed, interrupt waiting.
+  if (!has_node(node_ptr)) {
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
+    weak_nodes_to_guard_conditions_.erase(node_weak_ptr);
+    return true;
+  }
+  return false;
 }
 
 bool
 StaticExecutorEntitiesCollector::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
+  std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
+  std::for_each(
+    weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
+    [&found_group_ptrs, node_ptr](std::pair<rclcpp::CallbackGroup::WeakPtr,
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
+      auto weak_node_ptr = key_value_pair.second;
+      auto shared_node_ptr = weak_node_ptr.lock();
+      auto group_ptr = key_value_pair.first.lock();
+      if (shared_node_ptr == node_ptr) {
+        found_group_ptrs.push_back(group_ptr);
+      }
+    });
+  std::for_each(
+    found_group_ptrs.begin(), found_group_ptrs.end(), [this]
+      (rclcpp::CallbackGroup::SharedPtr group_ptr) {
+      remove_callback_group(group_ptr);
+    });
   auto node_it = weak_nodes_.begin();
-
   while (node_it != weak_nodes_.end()) {
     bool matched = (node_it->lock() == node_ptr);
     if (matched) {
-      // Find and remove node and its guard condition
-      auto gc_it = std::find(
-        guard_conditions_.begin(),
-        guard_conditions_.end(),
-        node_ptr->get_notify_guard_condition());
-
-      if (gc_it != guard_conditions_.end()) {
-        guard_conditions_.erase(gc_it);
-        weak_nodes_.erase(node_it);
-        return true;
-      }
-
-      throw std::runtime_error("Didn't find guard condition associated with node.");
-
+      weak_nodes_.erase(node_it);        
+      return true;
     } else {
       ++node_it;
     }
   }
-
   return false;
 }
 
@@ -300,4 +330,16 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
   }
   // None of the guard conditions triggered belong to a registered node
   return false;
+}
+
+// Returns true iff the weak_groups_to_nodes_ map has node_ptr as the value in any of its entry.
+bool
+StaticExecutorEntitiesCollector::has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const
+{
+  return std::find_if(
+    weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
+    [&](const WeakCallbackGroupsToNodesMap::value_type & other) -> bool {
+      auto other_ptr = other.second.lock();
+      return other_ptr == node_ptr;
+    }) != weak_groups_to_nodes_.end();
 }

@@ -109,6 +109,10 @@ public:
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
+  RCLCPP_PUBLIC
+  bool
+  remove_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr);
   /**
    * \sa rclcpp::Executor::add_node()
    * \throw std::runtime_error if node was already added
@@ -226,6 +230,10 @@ private:
   /// Nodes guard conditions which trigger this waitable
   std::list<const rcl_guard_condition_t *> guard_conditions_;
 
+  bool
+  has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+
+
   /// Memory strategy: an interface for handling user-defined memory allocation strategies.
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
@@ -233,6 +241,12 @@ private:
       rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
       std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
+
+  typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+      const rcl_guard_condition_t *,
+      std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
+    WeakNodesToGuardConditionsMap;
+  WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
 
   /// List of weak nodes registered in the static executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;

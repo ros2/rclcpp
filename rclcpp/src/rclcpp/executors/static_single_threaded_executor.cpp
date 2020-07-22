@@ -80,16 +80,13 @@ StaticSingleThreadedExecutor::add_node(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
-
   if (notify) {
     // Interrupt waiting to handle new node
     if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
       throw std::runtime_error(rcl_get_error_string().str);
     }
   }
-
   entities_collector_->add_node(node_ptr);
-
   std::for_each(
     node_ptr->get_callback_groups().begin(), node_ptr->get_callback_groups().end(), 
     [this, node_ptr, notify] (rclcpp::CallbackGroup::WeakPtr weak_group){
@@ -104,6 +101,25 @@ void
 StaticSingleThreadedExecutor::add_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
   this->add_node(node_ptr->get_node_base_interface(), notify);
+}
+
+void
+StaticSingleThreadedExecutor::remove_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr, bool notify)
+{
+  bool node_removed = entities_collector_->remove_callback_group(group_ptr);
+
+  if (notify) {
+    // If the node was matched and removed, interrupt waiting
+    if (node_removed) {
+      if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+        throw std::runtime_error(rcl_get_error_string().str);
+      }
+    }
+  }
+
+  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+  has_executor.store(false);  
 }
 
 void
