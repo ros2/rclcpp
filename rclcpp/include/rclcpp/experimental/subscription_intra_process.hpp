@@ -116,12 +116,13 @@ public:
 
   void take_data()
   {
+    std::thread::id thread_id = std::this_thread::get_id();
     if (any_callback_.use_take_shared_method()) {
-      shared_msg_ = buffer_->consume_shared();
+      std::lock_guard<std::mutex> lock(shared_map_mutex_);
+      shared_msg_map_[thread_id] = buffer_->consume_shared();
     } else {
-      unique_msg_map_.insert(std::pair<std::thread::id, MessageUniquePtr>(
-          std::this_thread::get_id(),
-          std::move(buffer_->consume_unique())));
+      std::lock_guard<std::mutex> lock(unique_map_mutex_);
+      unique_msg_map_[thread_id] = buffer_->consume_unique();
     }
   }
 
@@ -173,22 +174,33 @@ private:
     msg_info.publisher_gid = {0, {0}};
     msg_info.from_intra_process = true;
 
+    std::thread::id thread_id = std::this_thread::get_id();
     if (any_callback_.use_take_shared_method()) {
-      any_callback_.dispatch_intra_process(shared_msg_, msg_info);
-      shared_msg_.reset();
+      ConstMessageSharedPtr shared_msg = shared_msg_map_[thread_id];
+      any_callback_.dispatch_intra_process(shared_msg, msg_info);
+      shared_msg.reset();
+      {
+        std::lock_guard<std::mutex> lock(shared_map_mutex_);
+        shared_msg_map_.erase(thread_id);
+      }
     } else {
-      std::thread::id thread_id = std::this_thread::get_id();
-      any_callback_.dispatch_intra_process(
-        std::move(unique_msg_map_[thread_id]), msg_info);
-      unique_msg_map_.erase(thread_id);
+      MessageUniquePtr unique_msg;
+      {
+        std::lock_guard<std::mutex> lock(unique_map_mutex_);
+        unique_msg = std::move(unique_msg_map_[thread_id]);
+        unique_msg_map_.erase(thread_id);
+      }
+      any_callback_.dispatch_intra_process(std::move(unique_msg), msg_info);
     }
   }
 
   AnySubscriptionCallback<CallbackMessageT, Alloc> any_callback_;
   BufferUniquePtr buffer_;
 
-  ConstMessageSharedPtr shared_msg_;
+  std::mutex unique_map_mutex_;
+  std::mutex shared_map_mutex_;
   std::map<std::thread::id, MessageUniquePtr> unique_msg_map_;
+  std::map<std::thread::id, ConstMessageSharedPtr> shared_msg_map_;
 };
 
 }  // namespace experimental
