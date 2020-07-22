@@ -151,7 +151,7 @@ public:
   void
   take_data() override
   {
-      throw std::runtime_error("Test executor should not be called");
+    throw std::runtime_error("Test executor should not be called");
   }
 
 private:
