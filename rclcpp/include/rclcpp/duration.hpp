@@ -78,6 +78,9 @@ public:
   operator==(const rclcpp::Duration & rhs) const;
 
   bool
+  operator!=(const rclcpp::Duration & rhs) const;
+
+  bool
   operator<(const rclcpp::Duration & rhs) const;
 
   bool

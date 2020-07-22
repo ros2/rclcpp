@@ -41,6 +41,7 @@ TEST_F(TestDuration, operators) {
   EXPECT_TRUE(old <= young);
   EXPECT_TRUE(young >= old);
   EXPECT_FALSE(young == old);
+  EXPECT_TRUE(young != old);
 
   rclcpp::Duration add = old + young;
   EXPECT_EQ(add.nanoseconds(), old.nanoseconds() + young.nanoseconds());
