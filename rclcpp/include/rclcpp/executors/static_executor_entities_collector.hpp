@@ -227,9 +227,6 @@ public:
   get_waitable(size_t i) {return exec_list_.waitable[i];}
 
 private:
-  /// Nodes guard conditions which trigger this waitable
-  std::list<const rcl_guard_condition_t *> guard_conditions_;
-
   bool
   has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 

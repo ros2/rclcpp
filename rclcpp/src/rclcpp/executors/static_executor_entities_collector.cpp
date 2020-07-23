@@ -36,7 +36,8 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
   }
   exec_list_.clear();
   weak_nodes_.clear();
-  guard_conditions_.clear();
+  weak_groups_to_nodes_.clear();
+  weak_nodes_to_guard_conditions_.clear();
 }
 
 void
@@ -56,8 +57,7 @@ StaticExecutorEntitiesCollector::init(
   memory_strategy_ = memory_strategy;
 
   // Add executor's guard condition
-  guard_conditions_.push_back(executor_guard_condition);
-
+  memory_strategy_->add_guard_condition(executor_guard_condition);
   // Get memory strategy and executable list. Prepare wait_set_
   execute();
 }
@@ -205,7 +205,8 @@ bool
 StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
 {
   // Add waitable guard conditions (one for each registered node) into the wait set.
-  for (const auto & gc : guard_conditions_) {
+  for (const auto & pair : weak_nodes_to_guard_conditions_) {
+    auto & gc = pair.second;
     rcl_ret_t ret = rcl_wait_set_add_guard_condition(wait_set, gc, NULL);
     if (ret != RCL_RET_OK) {
       throw std::runtime_error("Executor waitable: couldn't add guard condition to wait set");
@@ -216,7 +217,7 @@ StaticExecutorEntitiesCollector::add_to_wait_set(rcl_wait_set_t * wait_set)
 
 size_t StaticExecutorEntitiesCollector::get_number_of_ready_guard_conditions()
 {
-  return guard_conditions_.size();
+  return weak_nodes_to_guard_conditions_.size();
 }
 
 void
@@ -233,7 +234,6 @@ StaticExecutorEntitiesCollector::add_node(
   }
 
   weak_nodes_.push_back(node_ptr);
-  guard_conditions_.push_back(node_ptr->get_notify_guard_condition());
 }
 
 void
@@ -317,13 +317,12 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
   // Check wait_set guard_conditions for added/removed entities to/from a node
   for (size_t i = 0; i < p_wait_set->size_of_guard_conditions; ++i) {
     if (p_wait_set->guard_conditions[i] != NULL) {
-      // Check if the guard condition triggered belongs to a node
-      auto it = std::find(
-        guard_conditions_.begin(), guard_conditions_.end(),
-        p_wait_set->guard_conditions[i]);
-
-      // If it does, we are ready to re-collect entities
-      if (it != guard_conditions_.end()) {
+      auto found_guard_condition = std::find_if(weak_nodes_to_guard_conditions_.begin(), weak_nodes_to_guard_conditions_.end(), 
+      [&] (std::pair<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+      const rcl_guard_condition_t *> pair) -> bool {
+          return pair.second == p_wait_set->guard_conditions[i];
+      });
+      if(found_guard_condition != weak_nodes_to_guard_conditions_.end()) {
         return true;
       }
     }
