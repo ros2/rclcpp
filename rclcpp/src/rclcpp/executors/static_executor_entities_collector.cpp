@@ -26,6 +26,14 @@ using rclcpp::executors::StaticExecutorEntitiesCollector;
 
 StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
 {
+  // Disassocate all callback groups and thus nodes.
+  for (auto & pair : weak_groups_to_nodes_) {
+    auto group = pair.first.lock();
+    if (group) {
+      std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
+      has_executor.store(false);
+    }
+  }
   // Disassociate all nodes
   for (auto & weak_node : weak_nodes_) {
     auto node = weak_node.lock();

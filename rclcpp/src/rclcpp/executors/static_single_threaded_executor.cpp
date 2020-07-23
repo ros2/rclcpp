@@ -107,11 +107,11 @@ void
 StaticSingleThreadedExecutor::remove_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr, bool notify)
 {
-  bool node_removed = entities_collector_->remove_callback_group(group_ptr);
+  bool callback_group_removed = entities_collector_->remove_callback_group(group_ptr);
 
   if (notify) {
     // If the node was matched and removed, interrupt waiting
-    if (node_removed) {
+    if (callback_group_removed) {
       if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
         throw std::runtime_error(rcl_get_error_string().str);
       }
@@ -128,6 +128,14 @@ StaticSingleThreadedExecutor::remove_node(
 {
   bool node_removed = entities_collector_->remove_node(node_ptr);
 
+  auto group_ptrs = node_ptr->get_callback_groups();
+  std::for_each(group_ptrs.begin(), group_ptrs.end(), 
+  [notify, this] (rclcpp::CallbackGroup::WeakPtr group_ptr) {
+    auto shared_group_ptr = group_ptr.lock();
+    if(shared_group_ptr) {
+      remove_callback_group(shared_group_ptr, notify);
+    }
+  });
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
