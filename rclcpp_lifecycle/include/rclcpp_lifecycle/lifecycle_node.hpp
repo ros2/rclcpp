@@ -42,6 +42,8 @@
 #include <utility>
 #include <vector>
 
+#include "rcutils/macros.h"
+
 #include "rcl/error_handling.h"
 #include "rcl/node.h"
 
@@ -456,6 +458,7 @@ public:
    * \sa rclcpp::Node::add_on_set_parameters_callback
    */
   RCLCPP_LIFECYCLE_PUBLIC
+  RCUTILS_WARN_UNUSED
   rclcpp_lifecycle::LifecycleNode::OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(
     rclcpp_lifecycle::LifecycleNode::OnParametersSetCallbackType callback);

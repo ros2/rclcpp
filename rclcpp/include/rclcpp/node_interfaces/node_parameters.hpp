@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 
+#include "rcutils/macros.h"
+
 #include "rcl_interfaces/msg/list_parameters_result.hpp"
 #include "rcl_interfaces/msg/parameter_descriptor.hpp"
 #include "rcl_interfaces/msg/parameter_event.hpp"
@@ -160,6 +162,7 @@ public:
   list_parameters(const std::vector<std::string> & prefixes, uint64_t depth) const override;
 
   RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback) override;
 
