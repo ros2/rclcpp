@@ -26,6 +26,8 @@
 #include <utility>
 #include <vector>
 
+#include "rcutils/macros.h"
+
 #include "rcl/error_handling.h"
 #include "rcl/node.h"
 
@@ -794,6 +796,7 @@ public:
    * \throws std::bad_alloc if the allocation of the OnSetParametersCallbackHandle fails.
    */
   RCLCPP_PUBLIC
+  RCUTILS_WARN_UNUSED
   OnSetParametersCallbackHandle::SharedPtr
   add_on_set_parameters_callback(OnParametersSetCallbackType callback);
 
