@@ -793,6 +793,10 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_client_out_of_scope) {
     auto client = node->create_client<test_msgs::srv::Empty>(
       "service", rmw_qos_profile_services_default, callback_group);
 
+    weak_groups_to_nodes.insert(std::pair<rclcpp::CallbackGroup::WeakPtr,
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>(
+      rclcpp::CallbackGroup::WeakPtr(callback_group), node->get_node_base_interface()));
+
     allocator_memory_strategy()->collect_entities(weak_groups_to_nodes);
   }
   EXPECT_EQ(1u, allocator_memory_strategy()->number_of_ready_clients());
