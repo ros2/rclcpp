@@ -309,7 +309,7 @@ private:
     };
 
     /// get the index for "take_subscriptions" depending on shared/serialized
-    constexpr static auto
+    constexpr static size_t
     get_index(const bool is_shared, const bool is_serialized)
     {
       return (is_serialized ? IndexSharedTyped : IndexSharedSerialized) +
