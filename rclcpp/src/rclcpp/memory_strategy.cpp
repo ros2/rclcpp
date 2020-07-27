@@ -126,7 +126,8 @@ MemoryStrategy::get_group_by_subscription(
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
-    if (!group) {
+    auto node = pair.second.lock();
+    if (!group || !node) {
       continue;
     }
     auto match_sub = group->find_subscription_ptrs_if(
@@ -147,7 +148,8 @@ MemoryStrategy::get_group_by_service(
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
-    if (!group) {
+    auto node = pair.second.lock();
+    if (!group || !node) {
       continue;
     }
     auto service_ref = group->find_service_ptrs_if(
@@ -168,7 +170,8 @@ MemoryStrategy::get_group_by_client(
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
-    if (!group) {
+    auto node = pair.second.lock();
+    if (!group || !node) {
       continue;
     }
     auto client_ref = group->find_client_ptrs_if(
@@ -189,7 +192,8 @@ MemoryStrategy::get_group_by_timer(
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
-    if (!group) {
+    auto node = pair.second.lock();
+    if (!group || !node) {
       continue;
     }
     auto timer_ref = group->find_timer_ptrs_if(
@@ -210,7 +214,8 @@ MemoryStrategy::get_group_by_waitable(
 {
   for (const auto & pair : weak_groups_to_nodes) {
     auto group = pair.first.lock();
-    if (!group) {
+    auto node = pair.second.lock();
+    if (!group || !node) {
       continue;
     }
     auto waitable_ref = group->find_waitable_ptrs_if(
