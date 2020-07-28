@@ -178,7 +178,7 @@ TEST_F(TestNodeGraph, get_info_by_topic)
       EXPECT_EQ(0u, actual_qos.get_rmw_qos_profile().depth);
       break;
     default:
-      EXPECT_TRUE(false) << "unexpected history";
+      ADD_FAILURE() << "unexpected history";
   }
 
   rclcpp::QoS const_actual_qos = const_publisher_endpoint_info.qos_profile();
@@ -190,7 +190,7 @@ TEST_F(TestNodeGraph, get_info_by_topic)
       EXPECT_EQ(0u, const_actual_qos.get_rmw_qos_profile().depth);
       break;
     default:
-      EXPECT_TRUE(false) << "unexpected history";
+      ADD_FAILURE() << "unexpected history";
   }
 
   auto endpoint_gid = publisher_endpoint_info.endpoint_gid();
