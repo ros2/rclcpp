@@ -393,8 +393,7 @@ TEST_F(TestLifecycleServiceClient, declare_parameter_with_no_initial_values)
 TEST_F(TestLifecycleServiceClient, wait_for_graph_change)
 {
   auto node = std::make_shared<LifecycleServiceClient>("client_wait_for_graph_change");
-  auto * node_graph =
-    dynamic_cast<rclcpp::node_interfaces::NodeGraph *>(node->get_node_graph_interface().get());
+  std::shared_ptr<rclcpp::node_interfaces::NodeGraphInterface> node_graph = node->get_node_graph_interface();
   ASSERT_NE(nullptr, node_graph);
 
   EXPECT_NO_THROW(node_graph->notify_graph_change());
