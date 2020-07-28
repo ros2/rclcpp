@@ -95,6 +95,9 @@ TEST_F(TestNodeGraph, get_service_names_and_types_by_node)
   EXPECT_THROW(
     node_graph->get_service_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
     std::runtime_error);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
   auto service_names_and_types1 = node_graph->get_service_names_and_types_by_node("node1", "/ns");
   auto service_names_and_types2 = node_graph->get_service_names_and_types_by_node("node2", "/ns");
   EXPECT_EQ(service_names_and_types1.size(), service_names_and_types2.size());
