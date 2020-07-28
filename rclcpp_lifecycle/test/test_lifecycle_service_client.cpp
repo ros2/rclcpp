@@ -380,8 +380,7 @@ TEST_F(TestLifecycleServiceClient, declare_parameter_with_no_initial_values)
   auto node1 = std::make_shared<LifecycleServiceClient>("client1");
 
   auto on_set_parameters =
-    [](const std::vector<rclcpp::Parameter> & parameters) {
-      (void)parameters;
+    [](const std::vector<rclcpp::Parameter> &) {
       rcl_interfaces::msg::SetParametersResult result;
       result.successful = true;
       return result;
