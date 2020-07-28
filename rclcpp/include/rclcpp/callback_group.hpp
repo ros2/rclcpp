@@ -57,7 +57,7 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup)
 
   RCLCPP_PUBLIC
-  explicit CallbackGroup(CallbackGroupType group_type);
+  explicit CallbackGroup(CallbackGroupType group_type, bool allow_executor_to_add = true);
 
   template<typename Function>
   rclcpp::SubscriptionBase::SharedPtr

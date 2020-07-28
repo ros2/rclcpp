@@ -234,7 +234,9 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   weak_nodes_.push_back(node_ptr);
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
-    if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load()) {
+    if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
+      group_ptr->allow_executor_to_add())
+    {
       add_callback_group(group_ptr, node_ptr, notify);
     }
   }

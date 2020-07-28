@@ -19,10 +19,10 @@
 using rclcpp::CallbackGroup;
 using rclcpp::CallbackGroupType;
 
-CallbackGroup::CallbackGroup(CallbackGroupType group_type)
+CallbackGroup::CallbackGroup(CallbackGroupType group_type, bool allow_executor_to_add)
 : type_(group_type), associated_with_executor_(false),
-  can_be_taken_from_(true), allow_executor_to_add_(true)
-{}
+  can_be_taken_from_(true)
+{allow_executor_to_add_.store(allow_executor_to_add);}
 
 
 std::atomic_bool &
