@@ -17,6 +17,7 @@
 
 #include <chrono>
 #include <list>
+#include <map>
 #include <memory>
 
 #include "rcl/guard_condition.h"

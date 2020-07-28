@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include <list>
+#include <map>
 #include <memory>
 #include <utility>
 

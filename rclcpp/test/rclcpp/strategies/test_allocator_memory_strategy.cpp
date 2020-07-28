@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>

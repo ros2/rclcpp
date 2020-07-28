@@ -624,10 +624,11 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
           memory_strategy_->remove_guard_condition(node_guard_pair->second);
         }
       }
-      std::for_each(invalid_group_ptrs.begin(), invalid_group_ptrs.end(),
-      [this](rclcpp::CallbackGroup::WeakPtr group_ptr){
-        weak_groups_to_nodes_.erase(group_ptr);
-      });
+      std::for_each(
+        invalid_group_ptrs.begin(), invalid_group_ptrs.end(),
+        [this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
+          weak_groups_to_nodes_.erase(group_ptr);
+        });
     }
     // clear wait set
     if (rcl_wait_set_clear(&wait_set_) != RCL_RET_OK) {

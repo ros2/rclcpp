@@ -18,6 +18,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "rclcpp/memory_strategy.hpp"
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
@@ -256,15 +258,15 @@ StaticExecutorEntitiesCollector::add_callback_group(
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");
   }
-  if(!has_node(node_ptr)) {
+  if (!has_node(node_ptr)) {
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
-    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();   
+    weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
   }
 }
 
 bool
-  StaticExecutorEntitiesCollector::remove_callback_group(
-    rclcpp::CallbackGroup::SharedPtr group_ptr)
+StaticExecutorEntitiesCollector::remove_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr)
 {
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr;
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
@@ -310,7 +312,7 @@ StaticExecutorEntitiesCollector::remove_node(
   while (node_it != weak_nodes_.end()) {
     bool matched = (node_it->lock() == node_ptr);
     if (matched) {
-      weak_nodes_.erase(node_it);        
+      weak_nodes_.erase(node_it);
       return true;
     } else {
       ++node_it;
@@ -325,12 +327,13 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
   // Check wait_set guard_conditions for added/removed entities to/from a node
   for (size_t i = 0; i < p_wait_set->size_of_guard_conditions; ++i) {
     if (p_wait_set->guard_conditions[i] != NULL) {
-      auto found_guard_condition = std::find_if(weak_nodes_to_guard_conditions_.begin(), weak_nodes_to_guard_conditions_.end(), 
-      [&] (std::pair<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      const rcl_guard_condition_t *> pair) -> bool {
+      auto found_guard_condition = std::find_if(
+        weak_nodes_to_guard_conditions_.begin(), weak_nodes_to_guard_conditions_.end(),
+        [&](std::pair<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+        const rcl_guard_condition_t *> pair) -> bool {
           return pair.second == p_wait_set->guard_conditions[i];
-      });
-      if(found_guard_condition != weak_nodes_to_guard_conditions_.end()) {
+        });
+      if (found_guard_condition != weak_nodes_to_guard_conditions_.end()) {
         return true;
       }
     }
@@ -341,7 +344,8 @@ StaticExecutorEntitiesCollector::is_ready(rcl_wait_set_t * p_wait_set)
 
 // Returns true iff the weak_groups_to_nodes_ map has node_ptr as the value in any of its entry.
 bool
-StaticExecutorEntitiesCollector::has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const
+StaticExecutorEntitiesCollector::has_node(
+  const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const
 {
   return std::find_if(
     weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),

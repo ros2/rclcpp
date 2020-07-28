@@ -55,20 +55,21 @@ StaticSingleThreadedExecutor::add_callback_group(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
-   // If the node already has an executor
+  // If the node already has an executor
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
 
   if (notify &&
-      node_ptr->get_associated_with_executor_atomic().exchange(true)) {
+    node_ptr->get_associated_with_executor_atomic().exchange(true))
+  {
     // Interrupt waiting to handle new node
     if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
       throw std::runtime_error(rcl_get_error_string().str);
     }
   }
-  entities_collector_->add_callback_group(group_ptr, node_ptr);   
+  entities_collector_->add_callback_group(group_ptr, node_ptr);
 }
 
 void
@@ -88,12 +89,12 @@ StaticSingleThreadedExecutor::add_node(
   }
   entities_collector_->add_node(node_ptr);
   std::for_each(
-    node_ptr->get_callback_groups().begin(), node_ptr->get_callback_groups().end(), 
-    [this, node_ptr, notify] (rclcpp::CallbackGroup::WeakPtr weak_group){
+    node_ptr->get_callback_groups().begin(), node_ptr->get_callback_groups().end(),
+    [this, node_ptr, notify](rclcpp::CallbackGroup::WeakPtr weak_group) {
       auto group_ptr = weak_group.lock();
       if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load()) {
         add_callback_group(group_ptr, node_ptr, notify);
-      } 
+      }
     });
 }
 
@@ -119,7 +120,7 @@ StaticSingleThreadedExecutor::remove_callback_group(
   }
 
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
-  has_executor.store(false);  
+  has_executor.store(false);
 }
 
 void
@@ -129,13 +130,14 @@ StaticSingleThreadedExecutor::remove_node(
   bool node_removed = entities_collector_->remove_node(node_ptr);
 
   auto group_ptrs = node_ptr->get_callback_groups();
-  std::for_each(group_ptrs.begin(), group_ptrs.end(), 
-  [notify, this] (rclcpp::CallbackGroup::WeakPtr group_ptr) {
-    auto shared_group_ptr = group_ptr.lock();
-    if(shared_group_ptr) {
-      remove_callback_group(shared_group_ptr, notify);
-    }
-  });
+  std::for_each(
+    group_ptrs.begin(), group_ptrs.end(),
+    [notify, this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
+      auto shared_group_ptr = group_ptr.lock();
+      if (shared_group_ptr) {
+        remove_callback_group(shared_group_ptr, notify);
+      }
+    });
   if (notify) {
     // If the node was matched and removed, interrupt waiting
     if (node_removed) {
