@@ -244,3 +244,39 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
   executor.add_node(node->get_node_base_interface());
   ASSERT_EQ(executor.get_callback_groups().size(), 3u);
 }
+
+/*
+ * Test callback groups from one node to many executors.
+ */
+TEST_F(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_executors)
+{
+  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
+  auto timer_callback = []() {};
+  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
+    2s, timer_callback, cb_grp);
+  rclcpp::executors::MultiThreadedExecutor timer_executor;
+  rclcpp::executors::MultiThreadedExecutor sub_executor;
+  timer_executor.add_callback_group(cb_grp, node->get_node_base_interface());
+  const rclcpp::QoS qos(10);
+  auto options = rclcpp::SubscriptionOptions();
+  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
+  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
+    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  options.callback_group = cb_grp2;
+  auto subscription =
+    node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
+  sub_executor.add_callback_group(cb_grp2, node->get_node_base_interface());
+  ASSERT_EQ(sub_executor.get_callback_groups().size(), 1u);
+  ASSERT_EQ(timer_executor.get_callback_groups().size(), 1u);
+  auto timer2_callback = []() {};
+  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
+    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::TimerBase::SharedPtr timer2 = node->create_wall_timer(
+    2s, timer2_callback, cb_grp3);
+  sub_executor.add_node(node);
+  ASSERT_EQ(sub_executor.get_callback_groups().size(), 2u);
+  timer_executor.add_callback_group(cb_grp3, node->get_node_base_interface());
+  ASSERT_EQ(timer_executor.get_callback_groups().size(), 2u);
+}
