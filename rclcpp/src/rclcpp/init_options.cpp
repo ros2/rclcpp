@@ -33,7 +33,6 @@ InitOptions::InitOptions(rcl_allocator_t allocator)
 InitOptions::InitOptions(const rcl_init_options_t & init_options)
 : init_options_(new rcl_init_options_t)
 {
-  std::lock_guard<std::recursive_mutex> init_options_lock(init_options_mutex_);
   *init_options_ = rcl_get_zero_initialized_init_options();
   rcl_ret_t ret = rcl_init_options_copy(&init_options, init_options_.get());
   if (RCL_RET_OK != ret) {
