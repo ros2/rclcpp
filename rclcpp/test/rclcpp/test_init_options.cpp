@@ -81,7 +81,7 @@ TEST(TestInitOptions, test_domain_id) {
   options.use_default_domain_id();
   EXPECT_EQ(RCL_DEFAULT_DOMAIN_ID, options.get_domain_id());
   options.set_domain_id(42);
-  EXPECT_EQ(42, options.get_domain_id());
+  EXPECT_EQ((size_t)42, options.get_domain_id());
   options.use_default_domain_id();
   EXPECT_EQ(RCL_DEFAULT_DOMAIN_ID, options.get_domain_id());
 }

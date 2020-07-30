@@ -101,8 +101,10 @@ protected:
   finalize_init_options();
 
 private:
-  // This mutex needs to be recursive for assignment operator
-  mutable std::recursive_mutex init_options_mutex_;
+  void
+  finalize_init_options_impl();
+
+  mutable std::mutex init_options_mutex_;
   std::unique_ptr<rcl_init_options_t> init_options_;
   bool initialize_logging_{true};
 };

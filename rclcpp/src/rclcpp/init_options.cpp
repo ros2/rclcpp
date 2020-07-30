@@ -64,8 +64,8 @@ InitOptions &
 InitOptions::operator=(const InitOptions & other)
 {
   if (this != &other) {
-    std::lock_guard<std::recursive_mutex> init_options_lock(init_options_mutex_);
-    this->finalize_init_options();
+    std::lock_guard<std::mutex> init_options_lock(init_options_mutex_);
+    this->finalize_init_options_impl();
     rcl_ret_t ret = rcl_init_options_copy(other.get_rcl_init_options(), init_options_.get());
     if (RCL_RET_OK != ret) {
       rclcpp::exceptions::throw_from_rcl_error(ret, "failed to copy rcl init options");
@@ -84,7 +84,13 @@ InitOptions::~InitOptions()
 void
 InitOptions::finalize_init_options()
 {
-  std::lock_guard<std::recursive_mutex> init_options_lock(init_options_mutex_);
+  std::lock_guard<std::mutex> init_options_lock(init_options_mutex_);
+  this->finalize_init_options_impl();
+}
+
+void
+InitOptions::finalize_init_options_impl()
+{
   if (init_options_) {
     rcl_ret_t ret = rcl_init_options_fini(init_options_.get());
     if (RCL_RET_OK != ret) {
@@ -100,7 +106,7 @@ InitOptions::finalize_init_options()
 const rcl_init_options_t *
 InitOptions::get_rcl_init_options() const
 {
-  std::lock_guard<std::recursive_mutex> init_options_lock(init_options_mutex_);
+  std::lock_guard<std::mutex> init_options_lock(init_options_mutex_);
   return init_options_.get();
 }
 
@@ -118,7 +124,7 @@ InitOptions::use_default_domain_id()
 void
 InitOptions::set_domain_id(size_t domain_id)
 {
-  std::lock_guard<std::recursive_mutex> init_options_lock(init_options_mutex_);
+  std::lock_guard<std::mutex> init_options_lock(init_options_mutex_);
   rcl_ret_t ret = rcl_init_options_set_domain_id(init_options_.get(), domain_id);
   if (RCL_RET_OK != ret) {
     rclcpp::exceptions::throw_from_rcl_error(ret, "failed to set domain id to rcl init options");
@@ -128,7 +134,7 @@ InitOptions::set_domain_id(size_t domain_id)
 size_t
 InitOptions::get_domain_id() const
 {
-  std::lock_guard<std::recursive_mutex> init_options_lock(init_options_mutex_);
+  std::lock_guard<std::mutex> init_options_lock(init_options_mutex_);
   size_t domain_id;
   rcl_ret_t ret = rcl_init_options_get_domain_id(init_options_.get(), &domain_id);
   if (RCL_RET_OK != ret) {
