@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "rcl/node_options.h"
+#include "rcl/logging_rosout.h"
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/parameter.hpp"
@@ -256,6 +257,19 @@ public:
   NodeOptions &
   parameter_event_qos(const rclcpp::QoS & parameter_event_qos);
 
+  /// Return a reference to the rosout_qos QoS.
+  RCLCPP_PUBLIC
+  const rclcpp::QoS &
+  rosout_qos() const;
+
+  /// Set the rosout_qos QoS.
+  /**
+   * The QoS settings to be used for the publisher on /rosout topic, if enabled.
+   */
+  RCLCPP_PUBLIC
+  NodeOptions &
+  rosout_qos(const rclcpp::QoS & rosout_qos);
+
   /// Return a reference to the parameter_event_publisher_options.
   RCLCPP_PUBLIC
   const rclcpp::PublisherOptionsBase &
@@ -357,6 +371,8 @@ private:
   rclcpp::QoS parameter_event_qos_ = rclcpp::ParameterEventsQoS(
     rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
   );
+
+  rclcpp::QoS rosout_qos_ = rclcpp::QoS(rcl_qos_profile_rosout_default);
 
   rclcpp::PublisherOptionsBase parameter_event_publisher_options_ = rclcpp::PublisherOptionsBase();
 

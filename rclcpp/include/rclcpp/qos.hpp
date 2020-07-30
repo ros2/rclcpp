@@ -65,6 +65,11 @@ public:
     const QoSInitialization & qos_initialization,
     const rmw_qos_profile_t & initial_profile = rmw_qos_profile_default);
 
+  /// Constructor which allows you to construct a Rosout QoS by giving the only required settings.
+  explicit
+  QoS(
+    const rmw_qos_profile_t & initial_profile = rmw_qos_profile_default);
+
   /// Conversion constructor to ease construction in the common case of just specifying depth.
   /**
    * Convenience constructor, equivalent to QoS(KeepLast(history_depth)).

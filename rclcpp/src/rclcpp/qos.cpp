@@ -76,6 +76,11 @@ QoS::QoS(
   rmw_qos_profile_.depth = qos_initialization.depth;
 }
 
+QoS::QoS(
+  const rmw_qos_profile_t & initial_profile)
+: rmw_qos_profile_(initial_profile)
+{}
+
 QoS::QoS(size_t history_depth)
 : QoS(KeepLast(history_depth))
 {}

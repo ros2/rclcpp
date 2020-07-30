@@ -566,6 +566,12 @@ if(TARGET test_rclcpp_gtest_macros)
   target_link_libraries(test_rclcpp_gtest_macros ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_rosout_qos rclcpp/test_rosout_qos.cpp)
+if(TARGET test_rosout_qos)
+  ament_target_dependencies(test_rosout_qos "rcl")
+  target_link_libraries(test_rosout_qos ${PROJECT_NAME})
+endif()
+
 # Install test resources
 install(
   DIRECTORY resources
