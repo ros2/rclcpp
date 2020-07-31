@@ -17,7 +17,17 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   SKIP_INSTALL
 )
 
-ament_add_gtest(test_allocator_memory_strategy rclcpp/strategies/test_allocator_memory_strategy.cpp)
+set(GTEST_TIMEOUT_ARGS "")
+# TODO(brawner) remove when destroying Node for Connext is resolved. See:
+# https://github.com/ros2/rclcpp/issues/1250
+if(rmw_implementation STREQUAL "rmw_connext_dynamic_cpp" OR rmw_implementation STREQUAL "rmw_connext_cpp")
+  message(STATUS "Increasing test_allocator_memory_strategy test timeout.")
+  set(GTEST_TIMEOUT_ARGS "TIMEOUT 180")
+endif()
+ament_add_gtest(
+  test_allocator_memory_strategy
+  rclcpp/strategies/test_allocator_memory_strategy.cpp
+  ${GTEST_TIMEOUT_ARGS})
 if(TARGET test_allocator_memory_strategy)
   ament_target_dependencies(test_allocator_memory_strategy
     "rcl"
@@ -470,8 +480,18 @@ if(TARGET test_interface_traits)
   target_link_libraries(test_interface_traits ${PROJECT_NAME})
 endif()
 
-ament_add_gtest(test_executors rclcpp/executors/test_executors.cpp
-  APPEND_LIBRARY_DIRS "${append_library_dirs}")
+set(GTEST_TIMEOUT_ARGS "")
+# TODO(brawner) remove when destroying Node for Connext is resolved. See:
+# https://github.com/ros2/rclcpp/issues/1250
+if(rmw_implementation STREQUAL "rmw_connext_dynamic_cpp" OR rmw_implementation STREQUAL "rmw_connext_cpp")
+  message(STATUS "Increasing test_allocator_memory_strategy test timeout.")
+  set(GTEST_TIMEOUT_ARGS "TIMEOUT 180")
+endif()
+ament_add_gtest(
+  test_executors
+  rclcpp/executors/test_executors.cpp
+  APPEND_LIBRARY_DIRS "${append_library_dirs}"
+  ${GTEST_TIMEOUT_ARGS})
 if(TARGET test_executors)
   ament_target_dependencies(test_executors
     "rcl")
