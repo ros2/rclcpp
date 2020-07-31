@@ -227,7 +227,7 @@ public:
 
 TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
   auto node = std::make_shared<rclcpp::Node>("node", "ns");
-  const auto expected_number_of_entities = get_number_of_default_entities(node);
+  auto expected_number_of_entities = get_number_of_default_entities(node);
   EXPECT_NE(nullptr, expected_number_of_entities);
 
   // Create 1 of each entity type
@@ -244,6 +244,10 @@ TEST_F(TestStaticExecutorEntitiesCollector, add_remove_node_with_entities) {
       test_msgs::srv::Empty::Response::SharedPtr) {});
   auto client = node->create_client<test_msgs::srv::Empty>("service");
   auto waitable = std::make_shared<TestWaitable>();
+
+  // Adding a subscription with rmw_connext_cpp adds another waitable, so we need to get the
+  // current number of waitables just before adding the new waitable.
+  expected_number_of_entities->waitables = get_number_of_default_entities(node)->waitables;
   node->get_node_waitables_interface()->add_waitable(waitable, nullptr);
 
   entities_collector_->add_node(node->get_node_base_interface());
