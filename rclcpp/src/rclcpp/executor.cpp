@@ -151,7 +151,7 @@ Executor::add_allowable_unassigned_callback_groups()
         [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
         {
           auto shared_group_ptr = group_ptr.lock();
-          if (shared_group_ptr && shared_group_ptr->allow_executor_to_add() &&
+          if (shared_group_ptr && shared_group_ptr->allow_executor_to_add().load() &&
           !shared_group_ptr->get_associated_with_executor_atomic().load())
           {
             add_callback_group(shared_group_ptr, node);
@@ -175,7 +175,6 @@ Executor::add_callback_group(
   bool is_new_node = !has_node(node_ptr);
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
   auto insert_info = weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
-  group_ptr->allow_executor_to_add().store(false);
   bool was_inserted = insert_info.second;
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");
@@ -235,7 +234,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
-      group_ptr->allow_executor_to_add())
+      group_ptr->allow_executor_to_add().load())
     {
       add_callback_group(group_ptr, node_ptr, notify);
     }
