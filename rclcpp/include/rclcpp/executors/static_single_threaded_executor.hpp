@@ -78,6 +78,16 @@ public:
   void
   spin() override;
 
+  /// Add a callback group to an executor.
+  /**
+   * If the callback group or node has been associated to an executor, throw
+   * an exception. Otherwise, add to the `entities_collector`
+   * \param[in] group_ptr a shared ptr that points to a callback group
+   * \param[in] node_ptr a shared pointer that points to a node base interface
+   * \param[in] notify True to trigger the interrupt guard condition during this function. If
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
+   * callback group was added, it will wake up.
+   */
   RCLCPP_PUBLIC
   void
   add_callback_group(
@@ -85,6 +95,15 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     bool notify) override;
 
+  /// Remove callback group from the executor
+  /**
+   * Remove callback group from `entities_collector_` and unassociate it
+   * with the executor.
+   * \param[in] group_ptr a shared ptr that points to a callback group
+   * \param[in] notify True to trigger the interrupt guard condition during this function. If
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
+   * callback group was added, it will wake up.
+   */
   RCLCPP_PUBLIC
   void
   remove_callback_group(
