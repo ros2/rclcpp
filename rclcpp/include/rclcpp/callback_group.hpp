@@ -102,10 +102,32 @@ public:
   const CallbackGroupType &
   type() const;
 
+  /// Return executor association atomic boolean
+  /**
+   * When a callback group is added to the executor,
+   * we want to make sure that another executor
+   * does not add this callback group.
+   * When the callback group is removed from the executor,
+   * this atomic boolean is set to false.
+   * \return atomic boolean for association with executor
+   */
   RCLCPP_PUBLIC
   std::atomic_bool &
   get_associated_with_executor_atomic();
 
+  /// A boolean that determines whether a callback group
+  /// can be added (i.e., in an 'allowable' state)
+  /**
+   * When a callback group is created, the user needs
+   * to determine if a callback group can be added
+   * automatically when a node is added to the executor.
+   * Boolean is checked when a node is added to an
+   * executor and before memory strategy collects entities
+   * to add any callback group that was added after a node
+   * is added to an executor
+   * \return boolean that allows an executor to automatically
+   * add a callback group
+   */
   RCLCPP_PUBLIC
   std::atomic_bool &
   allow_executor_to_add() {return allow_executor_to_add_;}
