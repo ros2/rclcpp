@@ -104,12 +104,29 @@ public:
   size_t
   get_number_of_ready_guard_conditions() override;
 
+  /// Add a callback group to an executor.
+  /**
+   * Add callback group to `weak_groups_to_nodes` and `weak_nodes_to_guard_conditions`.
+   * 'allow_executor_to_add' is set to false so it is not added by another executor.
+   * \param[in] group_ptr a shared ptr that points to a callback group
+   * \param[in] node_ptr a shared pointer that points to a node base interface
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
+   * callback group was added, it will wake up.
+   */
   RCLCPP_PUBLIC
   void
   add_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
+  /// Remove callback group from the executor
+  /**
+   * Remove callback group from `weak_groups_to_nodes` and `weak_nodes_to_guard_conditions`.
+   * \param[in] group_ptr a shared ptr that points to a callback group
+   * \param[in] notify True to trigger the interrupt guard condition during this function. If
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
+   * callback group was added, it will wake up.
+   */
   RCLCPP_PUBLIC
   bool
   remove_callback_group(

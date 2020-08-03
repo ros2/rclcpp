@@ -81,7 +81,7 @@ public:
   /// Add a callback group to an executor.
   /**
    * If the callback group or node has been associated to an executor, throw
-   * an exception. Otherwise, add to the `entities_collector`
+   * an exception. Otherwise, add to `entities_collector`
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
