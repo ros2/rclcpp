@@ -17,7 +17,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}_test_msgs
   SKIP_INSTALL
 )
 
-ament_add_gtest(test_allocator_memory_strategy rclcpp/strategies/test_allocator_memory_strategy.cpp)
+ament_add_gtest(test_allocator_memory_strategy rclcpp/strategies/test_allocator_memory_strategy.cpp TIMEOUT 90)
 if(TARGET test_allocator_memory_strategy)
   ament_target_dependencies(test_allocator_memory_strategy
     "rcl"
@@ -470,7 +470,7 @@ if(TARGET test_interface_traits)
   target_link_libraries(test_interface_traits ${PROJECT_NAME})
 endif()
 
-ament_add_gtest(test_executors rclcpp/executors/test_executors.cpp
+ament_add_gtest(test_executors rclcpp/executors/test_executors.cpp TIMEOUT 90
   APPEND_LIBRARY_DIRS "${append_library_dirs}")
 if(TARGET test_executors)
   ament_target_dependencies(test_executors

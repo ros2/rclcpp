@@ -74,7 +74,7 @@ if(BUILD_TESTING)
   set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rclcpp_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
 
-  ament_add_gtest(test_client test/test_client.cpp TIMEOUT 120)
+  ament_add_gtest(test_client test/test_client.cpp TIMEOUT 180)
   if(TARGET test_client)
     ament_target_dependencies(test_client
       "test_msgs"
