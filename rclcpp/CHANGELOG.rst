@@ -2,6 +2,13 @@
 Changelog for package rclcpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.1.0 (2020-08-03)
+------------------
+* Warn about unused result of add_on_set_parameters_callback (`#1238 <https://github.com/ros2/rclcpp/issues/1238>`_) (`#1244 <https://github.com/ros2/rclcpp/issues/1244>`_)
+* Add missing RCLCPP_PUBLIC to ~StaticExecutorEntitiesCollector (`#1227 <https://github.com/ros2/rclcpp/issues/1227>`_) (`#1228 <https://github.com/ros2/rclcpp/issues/1228>`_)
+* Remove recreation of entities_collector (`#1217 <https://github.com/ros2/rclcpp/issues/1217>`_) (`#1224 <https://github.com/ros2/rclcpp/issues/1224>`_)
+* Contributors: Jacob Perron, brawner
+
 2.0.2 (2020-07-07)
 ------------------
 * Link against thread library where necessary (`#1210 <https://github.com/ros2/rclcpp/issues/1210>`_) (`#1214 <https://github.com/ros2/rclcpp/issues/1214>`_)
