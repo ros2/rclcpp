@@ -253,7 +253,6 @@ StaticExecutorEntitiesCollector::add_callback_group(
 {
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr = group_ptr;
   auto insert_info = weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
-  group_ptr->allow_executor_to_add().store(false);
   bool was_inserted = insert_info.second;
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");

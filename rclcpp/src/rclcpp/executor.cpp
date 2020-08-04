@@ -151,7 +151,7 @@ Executor::add_allowable_unassigned_callback_groups()
         [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
         {
           auto shared_group_ptr = group_ptr.lock();
-          if (shared_group_ptr && shared_group_ptr->allow_executor_to_add().load() &&
+          if (shared_group_ptr && shared_group_ptr->allow_executor_to_add() &&
           !shared_group_ptr->get_associated_with_executor_atomic().load())
           {
             add_callback_group(shared_group_ptr, node);
@@ -234,7 +234,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
-      group_ptr->allow_executor_to_add().load())
+      group_ptr->allow_executor_to_add())
     {
       add_callback_group(group_ptr, node_ptr, notify);
     }
