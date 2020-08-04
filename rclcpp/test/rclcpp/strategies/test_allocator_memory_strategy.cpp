@@ -317,9 +317,9 @@ protected:
             weak_group_ptr,
             basic_node->get_node_base_interface()));
       });
-    callback_groups = node_with_entity1->get_node_base_interface()->get_callback_groups();
+    auto callback_groups1 = node_with_entity1->get_node_base_interface()->get_callback_groups();
     std::for_each(
-      callback_groups.begin(), callback_groups.end(),
+      callback_groups1.begin(), callback_groups1.end(),
       [&weak_groups_to_nodes,
       &node_with_entity1](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
         weak_groups_to_nodes.insert(
@@ -338,9 +338,9 @@ protected:
 
     auto basic_node2 = std::make_shared<rclcpp::Node>("basic_node2", "ns");
     WeakCallbackGroupsToNodesMap weak_groups_to_uncollected_nodes;
-    callback_groups = basic_node2->get_node_base_interface()->get_callback_groups();
+    auto callback_groups2 = basic_node2->get_node_base_interface()->get_callback_groups();
     std::for_each(
-      callback_groups.begin(), callback_groups.end(),
+      callback_groups2.begin(), callback_groups2.end(),
       [&weak_groups_to_uncollected_nodes,
       &basic_node2](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
         weak_groups_to_uncollected_nodes.insert(
@@ -349,9 +349,9 @@ protected:
             weak_group_ptr,
             basic_node2->get_node_base_interface()));
       });
-    callback_groups = node_with_entity2->get_node_base_interface()->get_callback_groups();
+    auto callback_groups3 = node_with_entity2->get_node_base_interface()->get_callback_groups();
     std::for_each(
-      callback_groups.begin(), callback_groups.end(),
+      callback_groups3.begin(), callback_groups3.end(),
       [&weak_groups_to_uncollected_nodes,
       &node_with_entity2](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
         weak_groups_to_uncollected_nodes.insert(
