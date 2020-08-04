@@ -45,38 +45,9 @@ TEST(TestInitOptions, test_construction) {
   }
 }
 
-TEST(TestInitOptions, test_initialize_logging) {
-  {
-    auto options = rclcpp::InitOptions();
-    EXPECT_TRUE(options.auto_initialize_logging());
-    const rcl_init_options_t * rcl_options = options.get_rcl_init_options();
-    ASSERT_TRUE(rcl_options != nullptr);
-    ASSERT_TRUE(rcl_options->impl != nullptr);
-  }
-
-  {
-    auto options = rclcpp::InitOptions().auto_initialize_logging(true);
-    EXPECT_TRUE(options.auto_initialize_logging());
-    const rcl_init_options_t * rcl_options = options.get_rcl_init_options();
-    ASSERT_TRUE(rcl_options != nullptr);
-    ASSERT_TRUE(rcl_options->impl != nullptr);
-  }
-
-  {
-    auto options = rclcpp::InitOptions().auto_initialize_logging(false);
-    EXPECT_FALSE(options.auto_initialize_logging());
-    const rcl_init_options_t * rcl_options = options.get_rcl_init_options();
-    ASSERT_TRUE(rcl_options != nullptr);
-    ASSERT_TRUE(rcl_options->impl != nullptr);
-  }
-}
-
 TEST(TestInitOptions, test_domain_id) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   auto options = rclcpp::InitOptions(allocator);
-  const rcl_init_options_t * rcl_options = options.get_rcl_init_options();
-  ASSERT_TRUE(rcl_options != nullptr);
-  ASSERT_TRUE(rcl_options->impl != nullptr);
 
   options.use_default_domain_id();
   EXPECT_EQ(RCL_DEFAULT_DOMAIN_ID, options.get_domain_id());
