@@ -413,7 +413,7 @@ TEST_F(TestAllocatorMemoryStrategy, add_remove_waitables) {
 TEST_F(TestAllocatorMemoryStrategy, number_of_entities_with_subscription) {
   RclWaitSetSizes expected_sizes = {};
   expected_sizes.size_of_subscriptions = 1;
-  if (strcmp("rmw_connext_cpp", rmw_get_implementation_identifier()) == 0) {
+  if (std::string("rmw_connext_cpp") == rmw_get_implementation_identifier()) {
     // For connext, a subscription will also add an event and waitable
     expected_sizes.size_of_events += 1;
     expected_sizes.size_of_waitables += 1;
@@ -761,6 +761,7 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_waitable_out_of_scope) {
   auto node = create_node_with_disabled_callback_groups("node");
   nodes.push_back(node->get_node_base_interface());
 
+  // Force waitable to go out of scope and cleanup after collecting entities.
   {
     auto callback_group =
       node->create_callback_group(
@@ -769,7 +770,6 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_waitable_out_of_scope) {
     auto waitable = std::make_shared<TestWaitable>();
     node->get_node_waitables_interface()->add_waitable(waitable, callback_group);
     allocator_memory_strategy()->add_waitable_handle(waitable);
-    waitable.reset();
   }
   // Since all callback groups have been locked, except the one we added, this should only be 1
   EXPECT_EQ(1u, allocator_memory_strategy()->number_of_waitables());
