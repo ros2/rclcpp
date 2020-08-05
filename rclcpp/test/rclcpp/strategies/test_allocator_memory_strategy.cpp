@@ -760,8 +760,9 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_waitable_mutually_exclusive) {
 TEST_F(TestAllocatorMemoryStrategy, get_next_subscription_out_of_scope) {
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   auto node = create_node_with_disabled_callback_groups("node");
-  auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
-  std::for_each(callback_groups.begin(), callback_groups.end(), 
+  auto callback_groups = node->get_node_base_interface()->get_callback_groups();
+  std::for_each(
+    callback_groups.begin(), callback_groups.end(),
     [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
       weak_groups_to_nodes.insert(
         std::pair<rclcpp::CallbackGroup::WeakPtr,
@@ -798,8 +799,9 @@ TEST_F(TestAllocatorMemoryStrategy, get_next_subscription_out_of_scope) {
 TEST_F(TestAllocatorMemoryStrategy, get_next_service_out_of_scope) {
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
   auto node = create_node_with_disabled_callback_groups("node");
-  auto callback_groups = node->get_node_base_interface()->get_callback_groups(); 
-  std::for_each(callback_groups.begin(), callback_groups.end(), 
+  auto callback_groups = node->get_node_base_interface()->get_callback_groups();
+  std::for_each(
+    callback_groups.begin(), callback_groups.end(),
     [&weak_groups_to_nodes, &node](rclcpp::CallbackGroup::WeakPtr weak_group_ptr) {
       weak_groups_to_nodes.insert(
         std::pair<rclcpp::CallbackGroup::WeakPtr,
