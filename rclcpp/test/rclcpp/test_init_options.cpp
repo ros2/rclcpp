@@ -48,11 +48,13 @@ TEST(TestInitOptions, test_construction) {
 TEST(TestInitOptions, test_domain_id) {
   rcl_allocator_t allocator = rcl_get_default_allocator();
   auto options = rclcpp::InitOptions(allocator);
+  size_t domain_id = RCL_DEFAULT_DOMAIN_ID;
+  EXPECT_EQ(RCL_RET_OK, rcl_get_default_domain_id(&domain_id));
 
   options.use_default_domain_id();
-  EXPECT_EQ(RCL_DEFAULT_DOMAIN_ID, options.get_domain_id());
+  EXPECT_EQ(domain_id, options.get_domain_id());
   options.set_domain_id(42);
   EXPECT_EQ((size_t)42, options.get_domain_id());
   options.use_default_domain_id();
-  EXPECT_EQ(RCL_DEFAULT_DOMAIN_ID, options.get_domain_id());
+  EXPECT_EQ(domain_id, options.get_domain_id());
 }
