@@ -16,6 +16,7 @@
 #define RCLCPP__INIT_OPTIONS_HPP_
 
 #include <memory>
+#include <mutex>
 
 #include "rcl/init_options.h"
 #include "rclcpp/visibility_control.hpp"
@@ -80,11 +81,30 @@ public:
   const rcl_init_options_t *
   get_rcl_init_options() const;
 
+  /// Retrieve default domain id and set.
+  RCLCPP_PUBLIC
+  void
+  use_default_domain_id();
+
+  /// Set the domain id.
+  RCLCPP_PUBLIC
+  void
+  set_domain_id(size_t domain_id);
+
+  /// Return domain id.
+  RCLCPP_PUBLIC
+  size_t
+  get_domain_id() const;
+
 protected:
   void
   finalize_init_options();
 
 private:
+  void
+  finalize_init_options_impl();
+
+  mutable std::mutex init_options_mutex_;
   std::unique_ptr<rcl_init_options_t> init_options_;
   bool initialize_logging_{true};
 };
