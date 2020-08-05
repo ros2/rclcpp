@@ -74,7 +74,6 @@ public:
    * \param[in] group (optional) The async parameter client will be added to this callback group.
    */
   template<typename NodeT>
-  RCLCPP_PUBLIC
   AsyncParametersClient(
     const std::shared_ptr<NodeT> node,
     const std::string & remote_node_name = "",
@@ -98,7 +97,6 @@ public:
    * \param[in] group (optional) The async parameter client will be added to this callback group.
    */
   template<typename NodeT>
-  RCLCPP_PUBLIC
   AsyncParametersClient(
     NodeT * node,
     const std::string & remote_node_name = "",
@@ -258,7 +256,6 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(SyncParametersClient)
 
   template<typename NodeT>
-  RCLCPP_PUBLIC
   explicit SyncParametersClient(
     std::shared_ptr<NodeT> node,
     const std::string & remote_node_name = "",
@@ -271,7 +268,6 @@ public:
   {}
 
   template<typename NodeT>
-  RCLCPP_PUBLIC
   SyncParametersClient(
     rclcpp::Executor::SharedPtr executor,
     std::shared_ptr<NodeT> node,
@@ -288,7 +284,6 @@ public:
   {}
 
   template<typename NodeT>
-  RCLCPP_PUBLIC
   SyncParametersClient(
     NodeT * node,
     const std::string & remote_node_name = "",
