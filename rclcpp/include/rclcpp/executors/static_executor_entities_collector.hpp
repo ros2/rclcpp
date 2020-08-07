@@ -107,7 +107,7 @@ public:
   /// Add a callback group to an executor.
   /**
    * Add callback group to `weak_groups_to_nodes` and `weak_nodes_to_guard_conditions`.
-   * 'allow_executor_to_add' is set to false so it is not added by another executor.
+   * 'automatically_add_to_executor_with_node' is set to false so it is not added by another executor.
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new

@@ -211,9 +211,11 @@ Node::get_logger() const
 }
 
 rclcpp::CallbackGroup::SharedPtr
-Node::create_callback_group(rclcpp::CallbackGroupType group_type, bool allow_executor_to_add)
+Node::create_callback_group(
+  rclcpp::CallbackGroupType group_type,
+  bool automatically_add_to_executor_with_node)
 {
-  return node_base_->create_callback_group(group_type, allow_executor_to_add);
+  return node_base_->create_callback_group(group_type, automatically_add_to_executor_with_node);
 }
 
 bool

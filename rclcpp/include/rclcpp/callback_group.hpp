@@ -57,7 +57,9 @@ public:
   RCLCPP_SMART_PTR_DEFINITIONS(CallbackGroup)
 
   RCLCPP_PUBLIC
-  explicit CallbackGroup(CallbackGroupType group_type, const bool allow_executor_to_add = true);
+  explicit CallbackGroup(
+    CallbackGroupType group_type,
+    bool automatically_add_to_executor_with_node = true);
 
   template<typename Function>
   rclcpp::SubscriptionBase::SharedPtr
@@ -130,7 +132,7 @@ public:
    */
   RCLCPP_PUBLIC
   const bool &
-  allow_executor_to_add() const {return allow_executor_to_add_;}
+  automatically_add_to_executor_with_node() const {return automatically_add_to_executor_with_node_;}
 
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)
@@ -173,7 +175,7 @@ protected:
   std::vector<rclcpp::ClientBase::WeakPtr> client_ptrs_;
   std::vector<rclcpp::Waitable::WeakPtr> waitable_ptrs_;
   std::atomic_bool can_be_taken_from_;
-  const bool allow_executor_to_add_;
+  const bool automatically_add_to_executor_with_node_;
 
 private:
   template<typename TypeT, typename Function>

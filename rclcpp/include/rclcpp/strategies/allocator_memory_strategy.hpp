@@ -150,7 +150,7 @@ public:
     );
   }
 
-  bool collect_entities(const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+  bool collect_entities(const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
     bool has_invalid_weak_groups_or_nodes = false;
     for (const auto & pair : weak_groups_to_nodes) {

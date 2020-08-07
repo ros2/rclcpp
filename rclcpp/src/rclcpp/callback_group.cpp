@@ -19,10 +19,12 @@
 using rclcpp::CallbackGroup;
 using rclcpp::CallbackGroupType;
 
-CallbackGroup::CallbackGroup(CallbackGroupType group_type, const bool allow_executor_to_add)
+CallbackGroup::CallbackGroup(
+  CallbackGroupType group_type,
+  bool automatically_add_to_executor_with_node)
 : type_(group_type), associated_with_executor_(false),
   can_be_taken_from_(true),
-  allow_executor_to_add_(allow_executor_to_add)
+  automatically_add_to_executor_with_node_(automatically_add_to_executor_with_node)
 {}
 
 

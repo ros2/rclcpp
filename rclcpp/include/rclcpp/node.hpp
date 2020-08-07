@@ -143,7 +143,7 @@ public:
   rclcpp::CallbackGroup::SharedPtr
   create_callback_group(
     rclcpp::CallbackGroupType group_type,
-    bool allow_executor_to_add = true);
+    bool automatically_add_to_executor_with_node = true);
 
   /// Return the list of callback groups in the node.
   RCLCPP_PUBLIC
