@@ -176,11 +176,11 @@ public:
   {
     TRACEPOINT(
       rclcpp_timer_callback_added,
-      (const void *)get_timer_handle().get(),
-      (const void *)&callback_);
+      static_cast<const void *>(get_timer_handle().get()),
+      static_cast<const void *>(&callback_));
     TRACEPOINT(
       rclcpp_callback_register,
-      (const void *)&callback_,
+      static_cast<const void *>(&callback_),
       get_symbol(callback_));
   }
 
@@ -205,9 +205,9 @@ public:
     if (ret != RCL_RET_OK) {
       throw std::runtime_error("Failed to notify timer that callback occurred");
     }
-    TRACEPOINT(callback_start, (const void *)&callback_, false);
+    TRACEPOINT(callback_start, static_cast<const void *>(&callback_), false);
     execute_callback_delegate<>();
-    TRACEPOINT(callback_end, (const void *)&callback_);
+    TRACEPOINT(callback_end, static_cast<const void *>(&callback_));
   }
 
   // void specialization

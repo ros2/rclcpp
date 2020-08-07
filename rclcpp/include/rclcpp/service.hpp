@@ -223,8 +223,8 @@ public:
     }
     TRACEPOINT(
       rclcpp_service_callback_added,
-      (const void *)get_service_handle().get(),
-      (const void *)&any_callback_);
+      static_cast<const void *>(get_service_handle().get()),
+      static_cast<const void *>(&any_callback_));
 #ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
 #endif
@@ -258,8 +258,8 @@ public:
     service_handle_ = service_handle;
     TRACEPOINT(
       rclcpp_service_callback_added,
-      (const void *)get_service_handle().get(),
-      (const void *)&any_callback_);
+      static_cast<const void *>(get_service_handle().get()),
+      static_cast<const void *>(&any_callback_));
 #ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
 #endif
@@ -295,8 +295,8 @@ public:
     service_handle_->impl = service_handle->impl;
     TRACEPOINT(
       rclcpp_service_callback_added,
-      (const void *)get_service_handle().get(),
-      (const void *)&any_callback_);
+      static_cast<const void *>(get_service_handle().get()),
+      static_cast<const void *>(&any_callback_));
 #ifndef TRACETOOLS_DISABLED
     any_callback_.register_callback_for_tracing();
 #endif
