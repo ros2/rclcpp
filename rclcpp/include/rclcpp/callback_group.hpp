@@ -162,7 +162,7 @@ public:
    * add a callback group
    */
   RCLCPP_PUBLIC
-  const bool &
+  bool
   automatically_add_to_executor_with_node() const {return automatically_add_to_executor_with_node_;}
 
 protected:
