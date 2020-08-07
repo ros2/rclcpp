@@ -189,7 +189,7 @@ public:
   /// Add a node to the executor.
   /**
    * An executor can have zero or more nodes which provide work during `spin` functions.
-   * If a node is already associated with an executor, the executor throws an exception.
+   * If a node is already associated with an executor, this method throws an exception.
    * The node is added to `weak_nodes_` which will be iterated before `collect_entities`
    * from the memory strategy to find any callback groups that are not associated to
    * an executor and are in an `allowable` state. All callback groups found in the node
