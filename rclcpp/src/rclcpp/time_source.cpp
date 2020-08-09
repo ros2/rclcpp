@@ -192,6 +192,7 @@ void TimeSource::set_clock(
     enable_ros_time(clock);
   }
 
+  std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
   auto ret = rcl_set_ros_time_override(clock->get_clock_handle(), rclcpp::Time(*msg).nanoseconds());
   if (ret != RCL_RET_OK) {
     rclcpp::exceptions::throw_from_rcl_error(
