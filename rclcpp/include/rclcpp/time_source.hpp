@@ -148,8 +148,6 @@ private:
   void disable_ros_time();
 
   // Internal helper functions used inside iterators
-  static void enable_ros_time(rclcpp::Clock::SharedPtr clock);
-  static void disable_ros_time(rclcpp::Clock::SharedPtr clock);
   static void set_clock(
     const builtin_interfaces::msg::Time::SharedPtr msg,
     bool set_ros_time_enabled,
