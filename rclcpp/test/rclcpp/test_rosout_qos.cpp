@@ -144,7 +144,7 @@ TEST_F(TestRosoutQoS, test_rcl_node_init) {
 
   rcl_node_options_t default_options = rcl_node_get_default_options();
 
-  // First do a node options with default rosout qos profile.
+  // First execute `rcl_node_init` use the default rosout qos configuration.
   {
     rcl_node_t node = rcl_get_zero_initialized_node();
     ret = rcl_node_init(&node, "node", "/ns", &context, &default_options);
@@ -157,7 +157,7 @@ TEST_F(TestRosoutQoS, test_rcl_node_init) {
     EXPECT_EQ(RCL_RET_OK, ret);
   }
 
-  // Then do a node options with custom rosout qos profile.
+  // Then execute `rcl_node_init` use the custom rosout qos configuration.
   {
     static const rmw_qos_profile_t custom_rosout_qos_profile =
     {
