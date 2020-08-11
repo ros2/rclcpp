@@ -145,8 +145,8 @@ public:
    * This function returns a vector of weak pointers that point to callback groups that were
    * associated with the executor. The callback groups associated might have been added with
    * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
-   * a callback group that is not associated to an executor and is in an 'allowable' state
-   * from a node that has been added to an executor.
+   * automatically added when it was not associated to an executor and allows an executor
+   * to automatically add it if the node that it belongs to is associated with the executor.
    *
    * \return a vector of weak pointers that point to callback groups that are associated with
    * the executor
@@ -197,7 +197,7 @@ public:
 
   /// Remove a node from the executor.
   /**
-   * All the callback groups associated with this node will be removed from the executor
+   * All the callback groups associated with the executor will be removed from the executor
    * by calling `remove_callback_group`. The executor will also stop adding callback groups
    * from the node.
    * \param[in] node_ptr Shared pointer to the node to remove.
