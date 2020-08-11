@@ -44,3 +44,20 @@ TEST(TestInitOptions, test_construction) {
     ASSERT_TRUE(rcl_options_copy->impl != nullptr);
   }
 }
+
+TEST(TestInitOptions, test_initialize_logging) {
+  {
+    auto options = rclcpp::InitOptions();
+    EXPECT_TRUE(options.auto_initialize_logging());
+  }
+
+  {
+    auto options = rclcpp::InitOptions().auto_initialize_logging(true);
+    EXPECT_TRUE(options.auto_initialize_logging());
+  }
+
+  {
+    auto options = rclcpp::InitOptions().auto_initialize_logging(false);
+    EXPECT_FALSE(options.auto_initialize_logging());
+  }
+}
