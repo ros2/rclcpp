@@ -81,12 +81,14 @@ StaticSingleThreadedExecutor::add_node(
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
+
   if (notify) {
     // Interrupt waiting to handle new node
     if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
       throw std::runtime_error(rcl_get_error_string().str);
     }
   }
+
   entities_collector_->add_node(node_ptr);
   std::for_each(
     node_ptr->get_callback_groups().begin(), node_ptr->get_callback_groups().end(),

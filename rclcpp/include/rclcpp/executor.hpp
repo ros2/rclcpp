@@ -80,7 +80,7 @@ public:
   /// Add a callback group to an executor.
   /**
    * An executor can have zero or more callback groups which provide work during `spin` functions.
-   * When a callback group is added to an executor, the executor checks to see if it is already
+   * When an executor attempts to add a callback group, the executor checks to see if it is already
    * associated with another executor. If it is, than an exception is thrown. Otherwise, the
    * callback group is added to the executor.
    *
@@ -176,9 +176,10 @@ public:
    * If a node is already associated with an executor, this method throws an exception.
    * Nodes that are added through this function will add any callback groups that can
    * be automatically (i.e., 'allowable') added and have not been associated with any other executor
-   * to the executor. All callback groups found in the node the moment it was added to the
-   * executor that are not associated to an executor and in an 'allowable' state will be added
-   * to the executor through `add_callback_group`.
+   * to the executor; this can happen before or after a node is added to an executor.
+   *  All callback groups found in the node the moment it was added to the
+   * executor that are not associated to an executor and in an 'allowable' state (i.e. can be
+   * automatiically added) will be added to the executor through `add_callback_group`.
    * \param[in] node_ptr Shared pointer to the node to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
@@ -460,14 +461,13 @@ protected:
   /// and is not already associated with an executor from nodes
   /// that are associated with executor
   /**
-   * If a node was explicitly added to the callback group, the executor, before
-   * collecting entities, verifies if any callback group from nodes added to the executor
-   * is not associated to an executor and can be automatically added by an executor.
-   * This takes care of any callback group that has been added to a node but not explicitly
-   * added to the executor such as the default callback group. It is important to note that in order
-   * for the callback groups to be automatically added to an executor through this function,
-   * the node of the callback groups needs to be added through the `add_node` function
-   * provided by the executor.
+   * The executor, before collecting entities, verifies if any callback group from
+   * nodes associated with the executor is not associated to an executor
+   * and can be automatically added by an executor. This takes care of any callback group that
+   * has been added to a node but not explicitly added to the executor such as the default
+   * callback group. It is important to note that in order for the callback groups to be
+   * automatically added to an executor through this function, the node of the callback groups needs to be
+   * added through the `add_node` function provided by the executor.
    */
   RCLCPP_PUBLIC
   virtual void
