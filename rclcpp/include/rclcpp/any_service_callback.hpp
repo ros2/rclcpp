@@ -88,7 +88,7 @@ public:
     std::shared_ptr<typename ServiceT::Request> request,
     std::shared_ptr<typename ServiceT::Response> response)
   {
-    TRACEPOINT(callback_start, (const void *)this, false);
+    TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     if (shared_ptr_callback_ != nullptr) {
       (void)request_header;
       shared_ptr_callback_(request, response);
@@ -97,7 +97,7 @@ public:
     } else {
       throw std::runtime_error("unexpected request without any callback set");
     }
-    TRACEPOINT(callback_end, (const void *)this);
+    TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   void register_callback_for_tracing()
@@ -106,12 +106,12 @@ public:
     if (shared_ptr_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
-        (const void *)this,
+        static_cast<const void *>(this),
         get_symbol(shared_ptr_callback_));
     } else if (shared_ptr_with_request_header_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
-        (const void *)this,
+        static_cast<const void *>(this),
         get_symbol(shared_ptr_with_request_header_callback_));
     }
 #endif  // TRACETOOLS_DISABLED

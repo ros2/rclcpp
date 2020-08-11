@@ -158,7 +158,7 @@ public:
   void dispatch(
     std::shared_ptr<MessageT> message, const rclcpp::MessageInfo & message_info)
   {
-    TRACEPOINT(callback_start, (const void *)this, false);
+    TRACEPOINT(callback_start, static_cast<const void *>(this), false);
     if (shared_ptr_callback_) {
       shared_ptr_callback_(message);
     } else if (shared_ptr_with_info_callback_) {
@@ -178,13 +178,13 @@ public:
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
-    TRACEPOINT(callback_end, (const void *)this);
+    TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   void dispatch_intra_process(
     ConstMessageSharedPtr message, const rclcpp::MessageInfo & message_info)
   {
-    TRACEPOINT(callback_start, (const void *)this, true);
+    TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     if (const_shared_ptr_callback_) {
       const_shared_ptr_callback_(message);
     } else if (const_shared_ptr_with_info_callback_) {
@@ -201,13 +201,13 @@ public:
         throw std::runtime_error("unexpected message without any callback set");
       }
     }
-    TRACEPOINT(callback_end, (const void *)this);
+    TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   void dispatch_intra_process(
     MessageUniquePtr message, const rclcpp::MessageInfo & message_info)
   {
-    TRACEPOINT(callback_start, (const void *)this, true);
+    TRACEPOINT(callback_start, static_cast<const void *>(this), true);
     if (shared_ptr_callback_) {
       typename std::shared_ptr<MessageT> shared_message = std::move(message);
       shared_ptr_callback_(shared_message);
@@ -225,7 +225,7 @@ public:
     } else {
       throw std::runtime_error("unexpected message without any callback set");
     }
-    TRACEPOINT(callback_end, (const void *)this);
+    TRACEPOINT(callback_end, static_cast<const void *>(this));
   }
 
   bool use_take_shared_method() const
@@ -239,22 +239,22 @@ public:
     if (shared_ptr_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
-        (const void *)this,
+        static_cast<const void *>(this),
         get_symbol(shared_ptr_callback_));
     } else if (shared_ptr_with_info_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
-        (const void *)this,
+        static_cast<const void *>(this),
         get_symbol(shared_ptr_with_info_callback_));
     } else if (unique_ptr_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
-        (const void *)this,
+        static_cast<const void *>(this),
         get_symbol(unique_ptr_callback_));
     } else if (unique_ptr_with_info_callback_) {
       TRACEPOINT(
         rclcpp_callback_register,
-        (const void *)this,
+        static_cast<const void *>(this),
         get_symbol(unique_ptr_with_info_callback_));
     }
 #endif  // TRACETOOLS_DISABLED
