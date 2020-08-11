@@ -432,9 +432,10 @@ protected:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(rclcpp::CallbackGroup::SharedPtr group);
 
+  /// Checks whether any callback group from the node is associated with the executor
   /**
-   * Checks in `weak_groups_to_nodes` whether `node_ptr` has been added to the
-   * data structure and returns true. Otherwise, it returns false.
+   * Checks if there is a calllback group that belongs to the node that
+   * is associated with the executor.
    * \param[in] node_ptr a shared pointer that points to a node base interface
    */
   RCLCPP_PUBLIC
