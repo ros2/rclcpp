@@ -93,7 +93,8 @@ public:
   virtual void
   add_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify = true);
 
   /// Add vector of callback groups to an executor.
   /**
@@ -103,6 +104,7 @@ public:
    * will be passed individually to the `add_callback_group(group_ptr, node_ptr, notify)`.
    * This is a helper function that allows a user to pass a vector of callback groups and one
    * node base interface in one call.
+   *
    * \param[in] group_ptrs a vector of shared ptrs that point to callback groups
    * \param[in] node_ptr a shared pointer that points to a node base interface
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
@@ -113,7 +115,8 @@ public:
   virtual void
   add_callback_groups(
     std::vector<rclcpp::CallbackGroup::SharedPtr> group_ptrs,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify = true);
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify = true);
 
 
   /// Add map of callback groups and nodes to an executor.
@@ -123,6 +126,7 @@ public:
    * that will call the `add_callback_group(group_vector, node_ptr, notify)` for each key.
    * This is a helper function that allows a user to pass multiple nodes with callback groups in
    * one call.
+   *
    * \param[in] node_to_groups a map data structure that maps a node shared ptr to a vector of
    * callback group shared pointers.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
@@ -136,13 +140,14 @@ public:
     std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups,
     bool notify = true);
 
-  /// Get callback groups that belong to executor
+  /// Get callback groups that belong to executor.
   /**
    * This function returns a vector of weak pointers that point to callback groups that were
    * associated with the executor. The callback groups associated might have been added with
    * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
    * a callback group that is not associated to an executor and is in an 'allowable' state
    * from a node that has been added to an executor.
+   *
    * \return a vector of weak pointers that point to callback groups that are associated with
    * the executor
    */
