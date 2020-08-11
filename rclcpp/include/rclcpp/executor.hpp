@@ -82,9 +82,7 @@ public:
    * An executor can have zero or more callback groups which provide work during `spin` functions.
    * When a callback group is added to an executor, the executor checks to see if it is already
    * associated with another executor. If it is, than an exception is thrown. Otherwise, the
-   * callback group is added to the `weak_groups_to_nodes` map data structure. If the node of
-   * the callback group is new (i.e., this is the first callback group from this node that
-   * is being added to the executor), the node is added to the `weak_nodes_to_guard_conditions`.
+   * callback group is added to the executor.
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
@@ -154,10 +152,7 @@ public:
 
   /// Remove a callback group from the executor.
   /**
-   * The callback group is removed from the map `weak_groups_to_nodes` and unassociated
-   * with the executor. If the node that is associated with the callback group removed
-   * no longer has any callback groups associated with the executor, the guard
-   * condition is removed from `weak_nodes_to_guard_conditions`.
+   * The callback group is removed from and disassociated with the executor.
    * \param[in] group_ptr Shared pointer to the callback group to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a
@@ -173,11 +168,11 @@ public:
   /**
    * An executor can have zero or more nodes which provide work during `spin` functions.
    * If a node is already associated with an executor, this method throws an exception.
-   * The node is added to `weak_nodes_` which will be iterated before `collect_entities`
-   * from the memory strategy to find any callback groups that are not associated to
-   * an executor and are in an `allowable` state. All callback groups found in the node
-   * the moment it was added to the executor that are not associated to an executor and
-   * in an 'allowable' state will be added to the executor through `add_callback_group`.
+   * Nodes that are added through this function will add any callback groups that can
+   * be automatically (i.e., 'allowable') added and have not been associated with any other executor
+   * to the executor. All callback groups found in the node the moment it was added to the
+   * executor that are not associated to an executor and in an 'allowable' state will be added
+   * to the executor through `add_callback_group`.
    * \param[in] node_ptr Shared pointer to the node to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
@@ -198,8 +193,8 @@ public:
   /// Remove a node from the executor.
   /**
    * All the callback groups associated with this node will be removed from the executor
-   * by calling `remove_callback_group`. In addition, if the node shared pointer is found
-   * in the `weak_nodes_`, it will be removed from there as well.
+   * by calling `remove_callback_group`. The executor will also stop adding callback groups
+   * from the node.
    * \param[in] node_ptr Shared pointer to the node to remove.
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
@@ -459,7 +454,7 @@ protected:
   // to the executor.
   /**
    * If a node was explicitly added to the callback group, the executor, before
-   * collecting entities, verifies if any callback group from the nodes in `weak_nodes`
+   * collecting entities, verifies if any callback group from nodes added to the executor
    * is not associated to an executor and is in an 'allowable state'. This takes care of
    * any callback group that has been added to a node but not explicitly added to the
    * executor such as the default callback group. It is important to node that in order
