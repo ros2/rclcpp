@@ -158,6 +158,7 @@ public:
   /// Remove a callback group from the executor.
   /**
    * The callback group is removed from and disassociated with the executor.
+   *
    * \param[in] group_ptr Shared pointer to the callback group to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a
