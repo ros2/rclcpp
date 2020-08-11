@@ -139,6 +139,11 @@ public:
   rclcpp::InitOptions
   get_init_options();
 
+  /// Return actual domain id.
+  RCLCPP_PUBLIC
+  size_t
+  get_domain_id() const;
+
   /// Return the shutdown reason, or empty string if not shutdown.
   /**
    * This function is thread-safe.

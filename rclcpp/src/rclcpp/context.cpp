@@ -275,6 +275,17 @@ Context::get_init_options()
   return init_options_;
 }
 
+size_t
+Context::get_domain_id() const
+{
+  size_t domain_id;
+  rcl_ret_t ret = rcl_context_get_domain_id(rcl_context_.get(), &domain_id);
+  if (RCL_RET_OK != ret) {
+    rclcpp::exceptions::throw_from_rcl_error(ret, "failed to get domain id from context");
+  }
+  return domain_id;
+}
+
 std::string
 Context::shutdown_reason()
 {
