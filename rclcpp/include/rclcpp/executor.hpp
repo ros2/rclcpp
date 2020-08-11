@@ -83,6 +83,7 @@ public:
    * When a callback group is added to an executor, the executor checks to see if it is already
    * associated with another executor. If it is, than an exception is thrown. Otherwise, the
    * callback group is added to the executor.
+   *
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
