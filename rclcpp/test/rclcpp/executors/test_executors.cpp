@@ -41,28 +41,38 @@ template<typename T>
 class TestExecutors : public ::testing::Test
 {
 public:
-  void SetUp()
+  static void SetUpTestCase()
   {
     rclcpp::init(0, nullptr);
-    node = std::make_shared<rclcpp::Node>("node", "ns");
+  }
+
+  static void TearDownTestCase()
+  {
+    rclcpp::shutdown();
+  }
+
+  void SetUp()
+  {
+    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+    std::stringstream test_name;
+    test_name << test_info->test_case_name() << "_" << test_info->name();
+    node = std::make_shared<rclcpp::Node>("node", test_name.str());
 
     callback_count = 0;
-    std::stringstream topic_name;
-    const auto test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-    topic_name << "topic_" << test_info->test_case_name() << "_" << test_info->name();
 
-    publisher = node->create_publisher<std_msgs::msg::Empty>(topic_name.str(), rclcpp::QoS(10));
+    const std::string topic_name = std::string("topic_") + test_name.str();
+    publisher = node->create_publisher<std_msgs::msg::Empty>(topic_name, rclcpp::QoS(10));
     auto callback = [this](std_msgs::msg::Empty::SharedPtr) {this->callback_count++;};
     subscription =
       node->create_subscription<std_msgs::msg::Empty>(
-      topic_name.str(), rclcpp::QoS(10), std::move(callback));
+      topic_name, rclcpp::QoS(10), std::move(callback));
   }
 
   void TearDown()
   {
-    if (rclcpp::ok()) {
-      rclcpp::shutdown();
-    }
+    publisher.reset();
+    subscription.reset();
+    node.reset();
   }
 
   rclcpp::Node::SharedPtr node;
@@ -147,7 +157,7 @@ TYPED_TEST(TestExecutorsStable, addTemporaryNode) {
   std::thread spinner([&]() {EXPECT_NO_THROW(executor.spin());});
 
   std::this_thread::sleep_for(50ms);
-  rclcpp::shutdown();
+  executor.cancel();
   spinner.join();
 }
 
@@ -158,6 +168,7 @@ TYPED_TEST(TestExecutors, addNodeTwoExecutors) {
   ExecutorType executor2;
   EXPECT_NO_THROW(executor1.add_node(this->node));
   EXPECT_THROW(executor2.add_node(this->node), std::runtime_error);
+  executor1.remove_node(this->node, true);
 }
 
 // Check simple spin example
@@ -172,15 +183,15 @@ TYPED_TEST(TestExecutors, spinWithTimer) {
   std::thread spinner([&]() {executor.spin();});
 
   auto start = std::chrono::steady_clock::now();
-  while (!timer_completed && (std::chrono::steady_clock::now() - start) < 1s) {
+  while (!timer_completed && (std::chrono::steady_clock::now() - start) < 10s) {
     std::this_thread::sleep_for(1ms);
   }
 
   EXPECT_TRUE(timer_completed);
-
-  // Shutdown needs to be called before join, so that executor.spin() returns.
-  rclcpp::shutdown();
+  // Cancel needs to be called before join, so that executor.spin() returns.
+  executor.cancel();
   spinner.join();
+  executor.remove_node(this->node, true);
 }
 
 TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
@@ -195,7 +206,7 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
   // Sleep for a short time to verify executor.spin() is going, and didn't throw.
 
   auto start = std::chrono::steady_clock::now();
-  while (!timer_completed && (std::chrono::steady_clock::now() - start) < 1s) {
+  while (!timer_completed && (std::chrono::steady_clock::now() - start) < 10s) {
     std::this_thread::sleep_for(1ms);
   }
 
@@ -203,8 +214,9 @@ TYPED_TEST(TestExecutors, spinWhileAlreadySpinning) {
   EXPECT_THROW(executor.spin(), std::runtime_error);
 
   // Shutdown needs to be called before join, so that executor.spin() returns.
-  rclcpp::shutdown();
+  executor.cancel();
   spinner.join();
+  executor.remove_node(this->node, true);
 }
 
 // Check executor exits immediately if future is complete.
@@ -223,7 +235,7 @@ TYPED_TEST(TestExecutors, testSpinUntilFutureComplete) {
   auto start = std::chrono::steady_clock::now();
   auto shared_future = future.share();
   auto ret = executor.spin_until_future_complete(shared_future, 1s);
-
+  executor.remove_node(this->node, true);
   // Check it didn't reach timeout
   EXPECT_GT(500ms, (std::chrono::steady_clock::now() - start));
   EXPECT_EQ(rclcpp::FutureReturnCode::SUCCESS, ret);
@@ -299,7 +311,7 @@ TYPED_TEST(TestExecutorsStable, spinSome) {
   bool spin_exited = false;
   std::thread spinner([&spin_exited, &executor, this]() {
       executor.spin_some(1s);
-      executor.remove_node(this->node);
+      executor.remove_node(this->node, true);
       spin_exited = true;
     });
 
