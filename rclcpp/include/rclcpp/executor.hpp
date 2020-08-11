@@ -118,7 +118,6 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     bool notify = true);
 
-
   /// Add map of callback groups and nodes to an executor.
   /**
    * An executor can have zero or more callback groups which provide work during `spin` functions.
