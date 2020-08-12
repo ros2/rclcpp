@@ -19,6 +19,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <thread>
 #include <type_traits>
@@ -198,6 +199,15 @@ public:
   void
   execute_callback() override
   {
+    // TODO(ivanpauno): Delete this workaround.
+    // The issue is that the multithreaded executor might schedule the timer
+    // more than once in different threads.
+    // Making `execute_callback` mutually exclusive and rechecking if the timer is ready
+    // avoids the issue.
+    std::lock_guard<std::mutex> lock(execution_mutex_);
+    if (!is_ready()) {
+      return;
+    }
     rcl_ret_t ret = rcl_timer_call(timer_handle_.get());
     if (ret == RCL_RET_TIMER_CANCELED) {
       return;
@@ -247,6 +257,7 @@ protected:
   RCLCPP_DISABLE_COPY(GenericTimer)
 
   FunctorT callback_;
+  std::mutex execution_mutex_;
 };
 
 template<
