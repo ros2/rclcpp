@@ -2,8 +2,8 @@
 :code:`MultiThreadedExecutor` Redesign
 ======================================
 
-The :code:`MultiThreadedExecutor` may attempt to execute different types of executables multiple times. 
-This occurs because one executable object can be identified as ready in two threads and both threads will attempt to execute it. 
+:code:`MultiThreadedExecutor` may attempt to execute one executable object multiple times. 
+This occurs because an executable object can be identified as ready in multiple threads before it has been executed, and each of these threads will then try to execute it.
 To fix this, a general solution should do the following:
 
 * Work for all the types of executable objects: timers, subscriptions, services, clients, and waitables
