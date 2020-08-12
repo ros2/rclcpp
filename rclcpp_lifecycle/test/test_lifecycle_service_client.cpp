@@ -357,7 +357,6 @@ TEST_F(TestLifecycleServiceClient, lifecycle_transitions) {
   EXPECT_EQ(transitions.size(), 0u);
 }
 
-
 TEST_F(TestLifecycleServiceClient, get_service_names_and_types_by_node)
 {
   auto node1 = std::make_shared<LifecycleServiceClient>("client1");
