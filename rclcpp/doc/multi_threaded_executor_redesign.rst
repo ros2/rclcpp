@@ -5,8 +5,9 @@
 The :code:`MultiThreadedExecutor` may attempt to execute different types of executables multiple times. 
 This occurs because one executable object can be identified as ready in two threads and both threads will attempt to execute it. 
 To fix this, a general solution should do the following:
- * Work for all the types of executable objects: timers, subscriptions, services, clients, and waitables
- * Avoid spurious wake ups (which can be costly)
+
+* Work for all the types of executable objects: timers, subscriptions, services, clients, and waitables
+* Avoid spurious wake ups (which can be costly)
 
 Summary of discussion so far
 ----------------------------
@@ -55,6 +56,7 @@ Broadly speaking, two approaches were discussed:
 
 Ideas
 -----------------------
- * Add a preparation method to get the event after :code:`take_data`
- * Take a lambda that can be executed later
- * Store conditions in the waitset (like DDS)
+
+* Add a preparation method to get the event after :code:`take_data`
+* Take a lambda that can be executed later
+* Store conditions in the waitset (like DDS)
