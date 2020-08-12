@@ -33,6 +33,7 @@
 #include "lifecycle_msgs/srv/get_available_transitions.hpp"
 #include "lifecycle_msgs/srv/get_state.hpp"
 
+#include "rclcpp/node_interfaces/node_graph.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_lifecycle/lifecycle_node.hpp"
 
@@ -354,4 +355,52 @@ TEST_F(TestLifecycleServiceClient, lifecycle_transitions) {
     lifecycle_msgs::msg::State::PRIMARY_STATE_FINALIZED);
   transitions = lifecycle_client()->get_available_transitions();
   EXPECT_EQ(transitions.size(), 0u);
+}
+
+TEST_F(TestLifecycleServiceClient, get_service_names_and_types_by_node)
+{
+  auto node1 = std::make_shared<LifecycleServiceClient>("client1");
+  auto node2 = std::make_shared<LifecycleServiceClient>("client2");
+
+  auto node_graph = node1->get_node_graph_interface();
+  ASSERT_NE(nullptr, node_graph);
+
+  EXPECT_THROW(
+    node_graph->get_service_names_and_types_by_node("not_a_node", "not_absolute_namespace"),
+    std::runtime_error);
+  auto service_names_and_types1 = node_graph->get_service_names_and_types_by_node("client1", "/");
+  auto service_names_and_types2 = node_graph->get_service_names_and_types_by_node("client2", "/");
+  EXPECT_EQ(service_names_and_types1.size(), service_names_and_types2.size());
+}
+
+TEST_F(TestLifecycleServiceClient, declare_parameter_with_no_initial_values)
+{
+  auto node1 = std::make_shared<LifecycleServiceClient>("client1");
+
+  auto on_set_parameters =
+    [](const std::vector<rclcpp::Parameter> &) {
+      rcl_interfaces::msg::SetParametersResult result;
+      result.successful = true;
+      return result;
+    };
+
+  auto handler = node1->add_on_set_parameters_callback(on_set_parameters);
+  RCLCPP_SCOPE_EXIT({node1->remove_on_set_parameters_callback(handler.get());});    // always reset
+}
+
+TEST_F(TestLifecycleServiceClient, wait_for_graph_change)
+{
+  auto node = std::make_shared<LifecycleServiceClient>("client_wait_for_graph_change");
+  auto node_graph = node->get_node_graph_interface();
+  ASSERT_NE(nullptr, node_graph);
+
+  EXPECT_NO_THROW(node_graph->notify_graph_change());
+  EXPECT_THROW(
+    node_graph->wait_for_graph_change(nullptr, std::chrono::milliseconds(1)),
+    rclcpp::exceptions::InvalidEventError);
+
+  auto event = std::make_shared<rclcpp::Event>();
+  EXPECT_THROW(
+    node_graph->wait_for_graph_change(event, std::chrono::milliseconds(0)),
+    rclcpp::exceptions::EventNotRegisteredError);
 }
