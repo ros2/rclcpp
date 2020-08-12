@@ -35,6 +35,15 @@ public:
   virtual bool has_data() const = 0;
 };
 
+/// Thrown when trying to dequeue data from an emty buffer
+class BufferEmptyError : public std::runtime_error
+{
+public:
+  BufferEmptyError()
+  : std::runtime_error("trying to dequeue from an empty buffer") {}
+};
+
+
 }  // namespace buffers
 }  // namespace experimental
 }  // namespace rclcpp

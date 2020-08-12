@@ -25,6 +25,7 @@
 #include "rcl/error_handling.h"
 
 #include "rclcpp/any_subscription_callback.hpp"
+#include "rclcpp/experimental/buffers/buffer_implementation_base.hpp"
 #include "rclcpp/experimental/buffers/intra_process_buffer.hpp"
 #include "rclcpp/experimental/create_intra_process_buffer.hpp"
 #include "rclcpp/experimental/subscription_intra_process_base.hpp"
@@ -159,10 +160,20 @@ private:
 
     if (any_callback_.use_take_shared_method()) {
       ConstMessageSharedPtr msg = buffer_->consume_shared();
-      any_callback_.dispatch_intra_process(msg, msg_info);
+      try {
+        any_callback_.dispatch_intra_process(msg, msg_info);
+      } catch (buffers::BufferEmptyError & e) {
+        // Ignore this error.
+        // The multithreaded executor might have scheduled this waitable for execution more than
+        // once.
+      }
     } else {
       MessageUniquePtr msg = buffer_->consume_unique();
-      any_callback_.dispatch_intra_process(std::move(msg), msg_info);
+      try {
+        any_callback_.dispatch_intra_process(std::move(msg), msg_info);
+      } catch (buffers::BufferEmptyError & e) {
+        // ignore
+      }
     }
   }
 

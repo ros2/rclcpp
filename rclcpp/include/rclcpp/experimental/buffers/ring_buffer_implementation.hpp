@@ -84,14 +84,14 @@ public:
    * This member function is thread-safe.
    *
    * \return the element that is being removed from the ring buffer
+   * \throw BufferEmptyError if the buffer is empty
    */
   BufferT dequeue()
   {
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!has_data_()) {
-      RCLCPP_ERROR(rclcpp::get_logger("rclcpp"), "Calling dequeue on empty intra-process buffer");
-      throw std::runtime_error("Calling dequeue on empty intra-process buffer");
+      throw BufferEmptyError();
     }
 
     auto request = std::move(ring_buffer_[read_index_]);
