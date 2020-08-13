@@ -185,11 +185,21 @@ void TimeSource::set_clock(
   const builtin_interfaces::msg::Time::SharedPtr msg, bool set_ros_time_enabled,
   std::shared_ptr<rclcpp::Clock> clock)
 {
+  std::lock_guard<std::mutex> clock_guard(clock->get_clock_mutex());
+
   // Do change
   if (!set_ros_time_enabled && clock->ros_time_is_active()) {
-    disable_ros_time(clock);
+    auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "Failed to disable ros_time_override_status");
+    }
   } else if (set_ros_time_enabled && !clock->ros_time_is_active()) {
-    enable_ros_time(clock);
+    auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
+    if (ret != RCL_RET_OK) {
+      rclcpp::exceptions::throw_from_rcl_error(
+        ret, "Failed to enable ros_time_override_status");
+    }
   }
 
   auto ret = rcl_set_ros_time_override(clock->get_clock_handle(), rclcpp::Time(*msg).nanoseconds());
@@ -270,24 +280,6 @@ void TimeSource::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::S
     (void) it;  // if there is a match it's already matched, don't bother reading it.
     // If the parameter is deleted mark it as unset but dont' change state.
     parameter_state_ = UNSET;
-  }
-}
-
-void TimeSource::enable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
-{
-  auto ret = rcl_enable_ros_time_override(clock->get_clock_handle());
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "Failed to enable ros_time_override_status");
-  }
-}
-
-void TimeSource::disable_ros_time(std::shared_ptr<rclcpp::Clock> clock)
-{
-  auto ret = rcl_disable_ros_time_override(clock->get_clock_handle());
-  if (ret != RCL_RET_OK) {
-    rclcpp::exceptions::throw_from_rcl_error(
-      ret, "Failed to enable ros_time_override_status");
   }
 }
 
