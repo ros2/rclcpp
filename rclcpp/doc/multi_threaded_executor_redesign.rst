@@ -29,7 +29,7 @@ Broadly speaking, two approaches were discussed:
 
    :Advantages: 
      * simplicity
-     * doesn't extend interface in a way that doesn't generalize well for all other types of executable objects (i.e., timers)
+     * extends interface in a way that generalizes well for all other types of executable objects (i.e., timers)
    :Disadvantages: 
      * spurious wake up calls
      * needs to be documented well so every class that executes :code:`AnyExecutable` objects is thread-safe and doesn't hide a race condition
