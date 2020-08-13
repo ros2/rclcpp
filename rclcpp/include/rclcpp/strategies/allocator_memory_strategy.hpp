@@ -263,7 +263,7 @@ public:
   void
   get_next_subscription(
     rclcpp::AnyExecutable & any_exec,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
     auto it = subscription_handles_.begin();
     while (it != subscription_handles_.end()) {
@@ -298,7 +298,7 @@ public:
   void
   get_next_service(
     rclcpp::AnyExecutable & any_exec,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
     auto it = service_handles_.begin();
     while (it != service_handles_.end()) {
@@ -333,7 +333,7 @@ public:
   virtual void
   get_next_client(
     rclcpp::AnyExecutable & any_exec,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
     auto it = client_handles_.begin();
     while (it != client_handles_.end()) {
@@ -368,7 +368,7 @@ public:
   void
   get_next_timer(
     rclcpp::AnyExecutable & any_exec,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
     auto it = timer_handles_.begin();
     while (it != timer_handles_.end()) {
@@ -403,7 +403,7 @@ public:
   void
   get_next_waitable(
     rclcpp::AnyExecutable & any_exec,
-    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes)
+    const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override
   {
     auto it = waitable_handles_.begin();
     while (it != waitable_handles_.end()) {

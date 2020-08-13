@@ -108,7 +108,7 @@ public:
   void
   remove_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
-    bool notify = true);
+    bool notify = true) override;
 
   /// Add a node to the executor.
   /**

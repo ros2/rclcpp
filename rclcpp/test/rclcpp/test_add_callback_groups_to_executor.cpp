@@ -47,8 +47,8 @@ protected:
 TEST_F(TestAddCallbackGroupsToExecutor, add_callback_groups) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
   rclcpp::executors::MultiThreadedExecutor executor;
@@ -58,8 +58,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_callback_groups) {
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   options.callback_group = cb_grp2;
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
@@ -73,8 +73,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_callback_groups) {
 TEST_F(TestAddCallbackGroupsToExecutor, remove_callback_groups) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
   rclcpp::executors::MultiThreadedExecutor executor;
@@ -82,8 +82,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, remove_callback_groups) {
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   options.callback_group = cb_grp2;
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
@@ -101,20 +101,20 @@ TEST_F(TestAddCallbackGroupsToExecutor, remove_callback_groups) {
 TEST_F(TestAddCallbackGroupsToExecutor, add_vector_of_callback_groups) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
   rclcpp::executors::MultiThreadedExecutor executor;
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   options.callback_group = cb_grp2;
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
-  std::vector<rclcpp::callback_group::CallbackGroup::SharedPtr> cb_grps;
+  std::vector<rclcpp::CallbackGroup::SharedPtr> cb_grps;
   cb_grps.push_back(cb_grp);
   cb_grps.push_back(cb_grp2);
   executor.add_callback_groups(cb_grps, node->get_node_base_interface());
@@ -127,8 +127,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_vector_of_callback_groups) {
 TEST_F(TestAddCallbackGroupsToExecutor, add_map_of_callback_groups) {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
   rclcpp::executors::MultiThreadedExecutor executor;
@@ -136,13 +136,13 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_map_of_callback_groups) {
   auto options = rclcpp::SubscriptionOptions();
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
   auto node2 = std::make_shared<rclcpp::Node>("my_node2", "/ns");
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node2->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node2->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   options.callback_group = cb_grp2;
   auto subscription =
     node2->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
-  std::vector<rclcpp::callback_group::CallbackGroup::SharedPtr> cb_grps;
-  std::vector<rclcpp::callback_group::CallbackGroup::SharedPtr> cb_grps2;
+  std::vector<rclcpp::CallbackGroup::SharedPtr> cb_grps;
+  std::vector<rclcpp::CallbackGroup::SharedPtr> cb_grps2;
   cb_grps.push_back(cb_grp);
   cb_grps2.push_back(cb_grp2);
   std::map<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
@@ -166,8 +166,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_duplicate_callback_groups)
   rclcpp::executors::MultiThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
   executor.add_callback_group(cb_grp, node->get_node_base_interface());
@@ -193,17 +193,17 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_to_ex
       }
       timer_count++;
     };
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
   auto timer2_callback = []() {};
   rclcpp::TimerBase::SharedPtr timer2_ = node->create_wall_timer(
     2s, timer2_callback, cb_grp2);
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, true);
+  rclcpp::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, true);
   auto timer3_callback = []() {};
   rclcpp::TimerBase::SharedPtr timer3_ = node->create_wall_timer(
     2s, timer3_callback, cb_grp3);
@@ -217,8 +217,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
 {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
   rclcpp::executors::MultiThreadedExecutor executor;
@@ -228,8 +228,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
   options.callback_group = cb_grp2;
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
@@ -237,8 +237,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
   ASSERT_EQ(executor.get_callback_groups().size(), 2u);
 
   auto timer2_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::TimerBase::SharedPtr timer2_ = node->create_wall_timer(
     2s, timer2_callback, cb_grp3);
   executor.add_node(node->get_node_base_interface());
@@ -252,8 +252,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_execu
 {
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   auto timer_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
     2s, timer_callback, cb_grp);
   rclcpp::executors::MultiThreadedExecutor timer_executor;
@@ -262,8 +262,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_execu
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
   auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
   options.callback_group = cb_grp2;
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
@@ -271,8 +271,8 @@ TEST_F(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_execu
   ASSERT_EQ(sub_executor.get_callback_groups().size(), 1u);
   ASSERT_EQ(timer_executor.get_callback_groups().size(), 1u);
   auto timer2_callback = []() {};
-  rclcpp::callback_group::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
-    rclcpp::callback_group::CallbackGroupType::MutuallyExclusive, false);
+  rclcpp::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
+    rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::TimerBase::SharedPtr timer2 = node->create_wall_timer(
     2s, timer2_callback, cb_grp3);
   sub_executor.add_node(node);

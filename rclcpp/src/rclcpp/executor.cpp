@@ -755,7 +755,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
     // If it is valid, check to see if the group is mutually exclusive or
     // not, then mark it accordingly ..Check if the callback_group belongs to this executor
     if (any_executable.callback_group && any_executable.callback_group->type() == \
-      callback_group::CallbackGroupType::MutuallyExclusive)
+      CallbackGroupType::MutuallyExclusive)
     {
       // It should not have been taken otherwise
       assert(any_executable.callback_group->can_be_taken_from().load());
