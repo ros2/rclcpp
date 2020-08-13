@@ -330,7 +330,7 @@ public:
     }
   }
 
-  virtual void
+  void
   get_next_client(
     rclcpp::AnyExecutable & any_exec,
     const WeakCallbackGroupsToNodesMap & weak_groups_to_nodes) override

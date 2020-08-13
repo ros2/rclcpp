@@ -110,54 +110,49 @@ StaticExecutorEntitiesCollector::fill_executable_list()
 {
   exec_list_.clear();
 
-  for (auto & weak_node : weak_nodes_) {
-    auto node = weak_node.lock();
-    if (!node) {
+  add_allowable_unassigned_callback_groups();
+
+  for (const auto & pair : weak_groups_to_nodes_) {
+    auto group = pair.first.lock();
+    auto node = pair.second.lock();
+    if (!node || !group || !group->can_be_taken_from().load()) {
       continue;
     }
-    // Check in all the callback groups
-    for (auto & weak_group : node->get_callback_groups()) {
-      auto group = weak_group.lock();
-      if (!group || !group->can_be_taken_from().load()) {
-        continue;
-      }
-
-      group->find_timer_ptrs_if(
-        [this](const rclcpp::TimerBase::SharedPtr & timer) {
-          if (timer) {
-            exec_list_.add_timer(timer);
-          }
-          return false;
-        });
-      group->find_subscription_ptrs_if(
-        [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
-          if (subscription) {
-            exec_list_.add_subscription(subscription);
-          }
-          return false;
-        });
-      group->find_service_ptrs_if(
-        [this](const rclcpp::ServiceBase::SharedPtr & service) {
-          if (service) {
-            exec_list_.add_service(service);
-          }
-          return false;
-        });
-      group->find_client_ptrs_if(
-        [this](const rclcpp::ClientBase::SharedPtr & client) {
-          if (client) {
-            exec_list_.add_client(client);
-          }
-          return false;
-        });
-      group->find_waitable_ptrs_if(
-        [this](const rclcpp::Waitable::SharedPtr & waitable) {
-          if (waitable) {
-            exec_list_.add_waitable(waitable);
-          }
-          return false;
-        });
-    }
+    group->find_timer_ptrs_if(
+      [this](const rclcpp::TimerBase::SharedPtr & timer) {
+        if (timer) {
+          exec_list_.add_timer(timer);
+        }
+        return false;
+      });
+    group->find_subscription_ptrs_if(
+      [this](const rclcpp::SubscriptionBase::SharedPtr & subscription) {
+        if (subscription) {
+          exec_list_.add_subscription(subscription);
+        }
+        return false;
+      });
+    group->find_service_ptrs_if(
+      [this](const rclcpp::ServiceBase::SharedPtr & service) {
+        if (service) {
+          exec_list_.add_service(service);
+        }
+        return false;
+      });
+    group->find_client_ptrs_if(
+      [this](const rclcpp::ClientBase::SharedPtr & client) {
+        if (client) {
+          exec_list_.add_client(client);
+        }
+        return false;
+      });
+    group->find_waitable_ptrs_if(
+      [this](const rclcpp::Waitable::SharedPtr & waitable) {
+        if (waitable) {
+          exec_list_.add_waitable(waitable);
+        }
+        return false;
+      });
   }
 
   // Add the executor's waitable to the executable list
@@ -276,6 +271,8 @@ StaticExecutorEntitiesCollector::remove_callback_group(
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
     weak_groups_to_nodes_.erase(iter);
+  } else {
+    throw std::runtime_error("Callback group needs to be associated with executor.");
   }
   // If the node was matched and removed, interrupt waiting.
   if (!has_node(node_ptr)) {
@@ -352,4 +349,26 @@ StaticExecutorEntitiesCollector::has_node(
       auto other_ptr = other.second.lock();
       return other_ptr == node_ptr;
     }) != weak_groups_to_nodes_.end();
+}
+
+void
+StaticExecutorEntitiesCollector::add_allowable_unassigned_callback_groups()
+{
+  for (auto & weak_node : weak_nodes_) {
+    auto node = weak_node.lock();
+    if (node) {
+      auto group_ptrs = node->get_callback_groups();
+      std::for_each(
+        group_ptrs.begin(), group_ptrs.end(),
+        [this, node](rclcpp::CallbackGroup::WeakPtr group_ptr)
+        {
+          auto shared_group_ptr = group_ptr.lock();
+          if (shared_group_ptr && shared_group_ptr->automatically_add_to_executor_with_node() &&
+          !shared_group_ptr->get_associated_with_executor_atomic().load())
+          {
+            add_callback_group(shared_group_ptr, node);
+          }
+        });
+    }
+  }
 }

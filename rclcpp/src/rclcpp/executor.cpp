@@ -255,6 +255,8 @@ Executor::remove_callback_group(
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
     weak_groups_to_nodes_.erase(iter);
+  } else {
+    throw std::runtime_error("Callback group needs to be associated with executor.");
   }
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);

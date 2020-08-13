@@ -15,6 +15,7 @@
 #include "rclcpp/executors/static_single_threaded_executor.hpp"
 
 #include <memory>
+#include <vector>
 
 #include "rclcpp/scope_exit.hpp"
 
@@ -55,10 +56,10 @@ StaticSingleThreadedExecutor::add_callback_group(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
-  // If the node already has an executor
+  // If the group already has an executor
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
   if (has_executor.exchange(true)) {
-    throw std::runtime_error("Node has already been added to an executor.");
+    throw std::runtime_error("Callback group has already been added to an executor.");
   }
 
   if (notify &&
@@ -70,6 +71,8 @@ StaticSingleThreadedExecutor::add_callback_group(
     }
   }
   entities_collector_->add_callback_group(group_ptr, node_ptr);
+
+  associated_callback_groups_.push_back(rclcpp::CallbackGroup::WeakPtr(group_ptr));
 }
 
 void
@@ -110,19 +113,33 @@ void
 StaticSingleThreadedExecutor::remove_callback_group(
   rclcpp::CallbackGroup::SharedPtr group_ptr, bool notify)
 {
-  bool callback_group_removed = entities_collector_->remove_callback_group(group_ptr);
+  bool node_removed = entities_collector_->remove_callback_group(group_ptr);
 
   if (notify) {
     // If the node was matched and removed, interrupt waiting
-    if (callback_group_removed) {
+    if (node_removed) {
       if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
         throw std::runtime_error(rcl_get_error_string().str);
       }
     }
   }
-
+  auto group_iter = std::find_if(
+    associated_callback_groups_.begin(), associated_callback_groups_.end(),
+    [&](const rclcpp::CallbackGroup::WeakPtr & weak_group_ptr) -> bool {
+      auto shared_group_ptr = weak_group_ptr.lock();
+      return shared_group_ptr == group_ptr;
+    });
+  if (group_iter != associated_callback_groups_.end()) {
+    associated_callback_groups_.erase(group_iter);
+  }
   std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+StaticSingleThreadedExecutor::get_callback_groups()
+{
+  return associated_callback_groups_;
 }
 
 void

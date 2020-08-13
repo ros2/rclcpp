@@ -93,7 +93,7 @@ public:
   add_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    bool notify) override;
+    bool notify = true) override;
 
   /// Remove callback group from the executor
   /**
@@ -109,6 +109,21 @@ public:
   remove_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     bool notify = true) override;
+
+  /// Get callback groups that belong to executor.
+  /**
+   * This function returns a vector of weak pointers that point to callback groups that were
+   * associated with the executor. The callback groups associated might have been added with
+   * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
+   * automatically added when it was not associated to an executor and allows an executor
+   * to automatically add it if the node that it belongs to is associated with the executor.
+   *
+   * \return a vector of weak pointers that point to callback groups that are associated with
+   * the executor
+   */
+  RCLCPP_PUBLIC
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_callback_groups() override;
 
   /// Add a node to the executor.
   /**
@@ -268,6 +283,8 @@ private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
 
   StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
+
+  std::vector<rclcpp::CallbackGroup::WeakPtr> associated_callback_groups_;
 };
 
 }  // namespace executors

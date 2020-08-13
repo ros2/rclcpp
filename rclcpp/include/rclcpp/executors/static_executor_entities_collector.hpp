@@ -248,6 +248,20 @@ private:
   bool
   has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
+  /// Add all callback groups that can be automatically added by any executor
+  /// and is not already associated with an executor from nodes
+  /// that are associated with executor
+  /**
+   * The executor, before collecting entities, verifies if any callback group from
+   * nodes associated with the executor is not associated to an executor
+   * and can be automatically added by an executor. This takes care of any callback group that
+   * has been added to a node but not explicitly added to the executor such as the default
+   * callback group. It is important to note that in order for the callback groups to be
+   * automatically added to an executor through this function, the node of the callback groups needs to be
+   * added through the `add_node` function provided by the executor.
+   */
+  void
+  add_allowable_unassigned_callback_groups();
 
   /// Memory strategy: an interface for handling user-defined memory allocation strategies.
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
