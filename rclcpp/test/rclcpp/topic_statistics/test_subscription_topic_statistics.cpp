@@ -284,7 +284,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_single_empty_stats_message_listener",
     "/statistics",
-    2);
+    4);
 
   auto empty_subscriber = std::make_shared<EmptySubscriber>(
     kTestSubNodeName,
@@ -301,12 +301,12 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
     kTestDuration);
 
   // Compare message counts, sample count should be the same as published and received count
-  EXPECT_EQ(2, statistics_listener->GetNumberOfMessagesReceived());
+  EXPECT_EQ(4, statistics_listener->GetNumberOfMessagesReceived());
 
   // Check the received message and the data types
   const auto received_messages = statistics_listener->GetReceivedMessages();
 
-  EXPECT_EQ(2u, received_messages.size());
+  EXPECT_EQ(4u, received_messages.size());
 
   std::set<std::string> received_metrics;
   for (const auto & msg : received_messages) {
@@ -318,10 +318,27 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   // Check the collected statistics for message period.
   // Message age statistics will not be calculated because Empty messages
   // don't have a `header` with timestamp.
+  bool any_samples = false;
   for (const auto & msg : received_messages) {
     if (msg.metrics_source != "message_period") {
       continue;
     }
+    // skip messages without samples
+    bool has_samples = false;
+    for (const auto & stats_point : msg.statistics) {
+      const auto type = stats_point.data_type;
+      if (
+        StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT == type &&
+        stats_point.data > 0)
+      {
+        has_samples = true;
+        break;
+      }
+    }
+    if (!has_samples) {
+      continue;
+    }
+    any_samples = true;
     for (const auto & stats_point : msg.statistics) {
       const auto type = stats_point.data_type;
       switch (type) {
@@ -346,6 +363,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
       }
     }
   }
+  EXPECT_TRUE(any_samples) << "All received metrics messages had zero samples";
 }
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_with_header)
@@ -361,7 +379,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_stats_for_message_with_header",
     "/statistics",
-    2);
+    4);
 
   auto msg_with_header_subscriber = std::make_shared<MessageWithHeaderSubscriber>(
     kTestSubNodeName,
@@ -378,12 +396,12 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
     kTestDuration);
 
   // Compare message counts, sample count should be the same as published and received count
-  EXPECT_EQ(2, statistics_listener->GetNumberOfMessagesReceived());
+  EXPECT_EQ(4, statistics_listener->GetNumberOfMessagesReceived());
 
   // Check the received message and the data types
   const auto received_messages = statistics_listener->GetReceivedMessages();
 
-  EXPECT_EQ(2u, received_messages.size());
+  EXPECT_EQ(4u, received_messages.size());
 
   std::set<std::string> received_metrics;
   for (const auto & msg : received_messages) {
@@ -393,7 +411,24 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   EXPECT_TRUE(received_metrics.find("message_period") != received_metrics.end());
 
   // Check the collected statistics for message period.
+  bool any_samples = false;
   for (const auto & msg : received_messages) {
+    // skip messages without samples
+    bool has_samples = false;
+    for (const auto & stats_point : msg.statistics) {
+      const auto type = stats_point.data_type;
+      if (
+        StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT == type &&
+        stats_point.data > 0)
+      {
+        has_samples = true;
+        break;
+      }
+    }
+    if (!has_samples) {
+      continue;
+    }
+    any_samples = true;
     for (const auto & stats_point : msg.statistics) {
       const auto type = stats_point.data_type;
       switch (type) {
@@ -418,4 +453,5 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
       }
     }
   }
+  EXPECT_TRUE(any_samples) << "All received metrics messages had zero samples";
 }
