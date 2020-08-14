@@ -80,13 +80,7 @@ public:
 
   /// Add a callback group to an executor.
   /**
-   * If the callback group or node has been associated to an executor, throw
-   * an exception. Otherwise, add to `entities_collector_`
-   * \param[in] group_ptr a shared ptr that points to a callback group
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * callback group was added, it will wake up.
+   * \sa rclcpp::Executor::add_callback_group
    */
   RCLCPP_PUBLIC
   void
@@ -97,12 +91,7 @@ public:
 
   /// Remove callback group from the executor
   /**
-   * Remove callback group from `entities_collector_` and unassociate it
-   * with the executor.
-   * \param[in] group_ptr a shared ptr that points to a callback group
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * callback group was added, it will wake up.
+   * \sa rclcpp::Executor::remove_callback_group
    */
   RCLCPP_PUBLIC
   void
@@ -112,14 +101,7 @@ public:
 
   /// Get callback groups that belong to executor.
   /**
-   * This function returns a vector of weak pointers that point to callback groups that were
-   * associated with the executor. The callback groups associated might have been added with
-   * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
-   * automatically added when it was not associated to an executor and allows an executor
-   * to automatically add it if the node that it belongs to is associated with the executor.
-   *
-   * \return a vector of weak pointers that point to callback groups that are associated with
-   * the executor
+   * \sa rclcpp::Executor::get_callback_groups
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
@@ -127,13 +109,7 @@ public:
 
   /// Add a node to the executor.
   /**
-   * An executor can have zero or more nodes which provide work during `spin` functions.
-   * \param[in] node_ptr Shared pointer to the node to be added.
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * node was added, it will wake up.
-   * \throw std::runtime_error if node was already added or if rcl_trigger_guard_condition
-   * return an error
+   * \sa rclcpp::Executor::add_node
    */
   RCLCPP_PUBLIC
   void
@@ -143,8 +119,7 @@ public:
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   /**
-   * \throw std::runtime_error if node was already added or if rcl_trigger_guard_condition
-   * returns an error
+   * \sa rclcpp::StaticSingleThreadedExecutor::add_node
    */
   RCLCPP_PUBLIC
   void
@@ -152,11 +127,7 @@ public:
 
   /// Remove a node from the executor.
   /**
-   * \param[in] node_ptr Shared pointer to the node to remove.
-   * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
-   * This is useful if the last node was removed from the executor while the executor was blocked
-   * waiting for work in another thread, because otherwise the executor would never be notified.
-   * \throw std::runtime_error if rcl_trigger_guard_condition returns an error
+   * \sa rclcpp::Executor::remove_node
    */
   RCLCPP_PUBLIC
   void
@@ -166,7 +137,7 @@ public:
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   /**
-   * \throw std::runtime_error if rcl_trigger_guard_condition returns an error
+   * \sa rclcpp::StaticSingleThreadedExecutor::remove_node
    */
   RCLCPP_PUBLIC
   void

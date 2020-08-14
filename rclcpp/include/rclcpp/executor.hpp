@@ -81,8 +81,9 @@ public:
   /**
    * An executor can have zero or more callback groups which provide work during `spin` functions.
    * When an executor attempts to add a callback group, the executor checks to see if it is already
-   * associated with another executor. If it is, than an exception is thrown. Otherwise, the
-   * callback group is added to the executor.
+   * associated with another executor.
+   * If it is, than an exception is thrown.
+   * Otherwise, the callback group is added to the executor.
    *
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
@@ -122,10 +123,11 @@ public:
   /// Get callback groups that belong to executor.
   /**
    * This function returns a vector of weak pointers that point to callback groups that were
-   * associated with the executor. The callback groups associated might have been added with
-   * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
-   * automatically added when it was not associated to an executor and allows an executor
-   * to automatically add it if the node that it belongs to is associated with the executor.
+   * associated with the executor.
+   * The callback groups associated with this executor may have been added with
+   * `add_callback_groups`, or added when a node was added to the executor with `add_node`, or
+   * automatically added when it created by a node already associated with this executor and the
+   * automatically_add_to_executor_with_node parameter was true.
    *
    * \return a vector of weak pointers that point to callback groups that are associated with
    * the executor
@@ -151,7 +153,7 @@ public:
 
   /// Remove a callback group from the executor.
   /**
-   * The callback group is removed from and disassociated with the executor.
+   * The callback group is removed from the executor.
    * If the callback group removed was the last callback group from the node
    * that is associated with the executor, the interrupt guard condition
    * is triggered and node's guard condition is removed from the executor
@@ -170,14 +172,17 @@ public:
 
   /// Add a node to the executor.
   /**
-   * An executor can have zero or more nodes which provide work during `spin` functions.
+   * Nodes have associated callback groups, and this method adds any of those callback groups
+   * to this executor which have their automatically_add_to_executor_with_node parameter true.
+   * The node is also associated with the executor so that future callback groups which are
+   * created on the node with the automatically_add_to_executor_with_node parameter set to true
+   * are also automatically associated with this executor.
+   *
+   * Callback groups with the automatically_add_to_executor_with_node parameter set to false must
+   * be manually added to an executor using the add_callback_group method.
+   *
    * If a node is already associated with an executor, this method throws an exception.
-   * Nodes that are added through this function will add any callback groups that can
-   * be automatically (i.e., 'allowable') added and have not been associated with any other executor
-   * to the executor; this can happen before or after a node is added to an executor.
-   *  All callback groups found in the node the moment it was added to the
-   * executor that are not associated to an executor and in an 'allowable' state (i.e. can be
-   * automatiically added) will be added to the executor through `add_callback_group`.
+   *
    * \param[in] node_ptr Shared pointer to the node to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
@@ -197,9 +202,12 @@ public:
 
   /// Remove a node from the executor.
   /**
-   * All the callback groups associated with the executor will be removed from the executor
-   * by calling `remove_callback_group`. The executor will also stop adding callback groups
-   * from the node.
+   * Any callback groups automatically added when this node was added with add_node are
+   * automatically removed, and the node is no longer associated with this executor.
+   *
+   * This also means that future callback groups created by the given node are no longer
+   * automatically added to this executor.
+   *
    * \param[in] node_ptr Shared pointer to the node to remove.
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
@@ -431,11 +439,10 @@ protected:
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
   get_node_by_group(rclcpp::CallbackGroup::SharedPtr group);
 
-  /// Checks whether any callback group from the node is associated with the executor
+  /// Return true if the node has been added to this executor.
   /**
-   * Checks if there is a calllback group that belongs to the node that
-   * is associated with the executor.
    * \param[in] node_ptr a shared pointer that points to a node base interface
+   * \return true if the node is associated with the executor, otherwise false
    */
   RCLCPP_PUBLIC
   bool
@@ -504,17 +511,16 @@ protected:
     AnyExecutable & any_executable,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
 
-  /// Add all callback groups that can be automatically added by any executor
-  /// and is not already associated with an executor from nodes
-  /// that are associated with executor
+  /// Add all callback groups that can be automatically added from associated nodes.
   /**
    * The executor, before collecting entities, verifies if any callback group from
-   * nodes associated with the executor is not associated to an executor
-   * and can be automatically added by an executor. This takes care of any callback group that
-   * has been added to a node but not explicitly added to the executor such as the default
-   * callback group. It is important to note that in order for the callback groups to be
-   * automatically added to an executor through this function, the node of the callback groups needs to be
-   * added through the `add_node` function provided by the executor.
+   * nodes associated with the executor, which is not already associated to an executor,
+   * can be automatically added to this executor.
+   * This takes care of any callback group that has been added to a node but not explicitly added
+   * to the executor.
+   * It is important to note that in order for the callback groups to be automatically added to an
+   * executor through this function, the node of the callback groups needs to have been added
+   * through the `add_node` method.
    */
   RCLCPP_PUBLIC
   virtual void
