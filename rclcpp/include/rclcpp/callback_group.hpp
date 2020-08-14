@@ -161,7 +161,7 @@ public:
    */
   RCLCPP_PUBLIC
   bool
-  automatically_add_to_executor_with_node() const {return automatically_add_to_executor_with_node_;}
+  automatically_add_to_executor_with_node() const;
 
 protected:
   RCLCPP_DISABLE_COPY(CallbackGroup)

@@ -46,6 +46,12 @@ CallbackGroup::get_associated_with_executor_atomic()
   return associated_with_executor_;
 }
 
+bool
+CallbackGroup::automatically_add_to_executor_with_node() const
+{
+  return automatically_add_to_executor_with_node_;
+}
+
 void
 CallbackGroup::add_subscription(
   const rclcpp::SubscriptionBase::SharedPtr subscription_ptr)
