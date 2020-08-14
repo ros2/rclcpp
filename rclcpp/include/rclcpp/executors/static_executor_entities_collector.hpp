@@ -106,12 +106,13 @@ public:
 
   /// Add a callback group to an executor.
   /**
-   * Add callback group to `weak_groups_to_nodes` and `weak_nodes_to_guard_conditions`.
-   * 'automatically_add_to_executor_with_node' is set to false so it is not added by another executor.
+   * An executor can have zero or more callback groups which provide work during `spin` functions.
+   * When an executor attempts to add a callback group, the executor checks to see if it is already
+   * associated with another executor. If it is, than an exception is thrown. Otherwise, the
+   * callback group is added to the executor.
+   *
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * callback group was added, it will wake up.
    */
   RCLCPP_PUBLIC
   void
@@ -119,13 +120,18 @@ public:
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
-  /// Remove callback group from the executor
+  /// Remove a callback group from the executor.
   /**
-   * Remove callback group from `weak_groups_to_nodes` and `weak_nodes_to_guard_conditions`.
-   * \param[in] group_ptr a shared ptr that points to a callback group
+   * The callback group is removed from and disassociated with the executor.
+   * If the callback group removed was the last callback group from the node
+   * that is associated with the executor, the interrupt guard condition
+   * is triggered and node's guard condition is removed from the executor
+   *
+   * \param[in] group_ptr Shared pointer to the callback group to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * callback group was added, it will wake up.
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a
+   * callback group was removed, it will wake up.
+   * \throw std::runtime_error if the callback group is not associated with the executor
    */
   RCLCPP_PUBLIC
   bool

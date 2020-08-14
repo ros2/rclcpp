@@ -160,43 +160,6 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_vector_of_callback_groups) {
 }
 
 /*
- * Test adding map of callback groups and different nodes.
- */
-TYPED_TEST(TestAddCallbackGroupsToExecutor, add_map_of_callback_groups) {
-  auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
-  auto timer_callback = []() {};
-  rclcpp::CallbackGroup::SharedPtr cb_grp = node->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-  rclcpp::TimerBase::SharedPtr timer_ = node->create_wall_timer(
-    2s, timer_callback, cb_grp);
-  rclcpp::executors::MultiThreadedExecutor executor;
-  const rclcpp::QoS qos(10);
-  auto options = rclcpp::SubscriptionOptions();
-  auto callback = [](const test_msgs::msg::Empty::SharedPtr) {};
-  auto node2 = std::make_shared<rclcpp::Node>("my_node2", "/ns");
-  rclcpp::CallbackGroup::SharedPtr cb_grp2 = node2->create_callback_group(
-    rclcpp::CallbackGroupType::MutuallyExclusive);
-  options.callback_group = cb_grp2;
-  auto subscription =
-    node2->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
-  std::vector<rclcpp::CallbackGroup::SharedPtr> cb_grps;
-  std::vector<rclcpp::CallbackGroup::SharedPtr> cb_grps2;
-  cb_grps.push_back(cb_grp);
-  cb_grps2.push_back(cb_grp2);
-  std::map<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
-    std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups;
-  node_to_groups.insert(
-    std::pair<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
-    std::vector<rclcpp::CallbackGroup::SharedPtr>>(node->get_node_base_interface(), cb_grps));
-  node_to_groups.insert(
-    std::pair<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
-    std::vector<rclcpp::CallbackGroup::SharedPtr>>(node2->get_node_base_interface(), cb_grps2));
-  executor.add_callback_groups(node_to_groups);
-
-  ASSERT_EQ(executor.get_callback_groups().size(), 2u);
-}
-
-/*
  * Test adding duplicate callback groups to executor.
  */
 TYPED_TEST(TestAddCallbackGroupsToExecutor, add_duplicate_callback_groups)

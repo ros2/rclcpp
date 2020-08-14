@@ -209,20 +209,6 @@ Executor::add_callback_groups(
 }
 
 void
-Executor::add_callback_groups(
-  std::map<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
-  std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups,
-  bool notify)
-{
-  std::for_each(
-    node_to_groups.begin(), node_to_groups.end(),
-    [notify, this](std::pair<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
-    std::vector<rclcpp::CallbackGroup::SharedPtr>> element) {
-      add_callback_groups(element.second, element.first, notify);
-    });
-}
-
-void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   // If the node already has an executor

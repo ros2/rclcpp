@@ -119,27 +119,6 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     bool notify = true);
 
-  /// Add map of callback groups and nodes to an executor.
-  /**
-   * An executor can have zero or more callback groups which provide work during `spin` functions.
-   * You can pass a map data structure that maps a node shared pointer to a vector of callback groups
-   * that will call the `add_callback_group(group_vector, node_ptr, notify)` for each key.
-   * This is a helper function that allows a user to pass multiple nodes with callback groups in
-   * one call.
-   *
-   * \param[in] node_to_groups a map data structure that maps a node shared ptr to a vector of
-   * callback group shared pointers.
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * callback group was added, it will wake up.
-   */
-  RCLCPP_PUBLIC
-  virtual void
-  add_callback_groups(
-    std::map<rclcpp::node_interfaces::NodeBaseInterface::SharedPtr,
-    std::vector<rclcpp::CallbackGroup::SharedPtr>> node_to_groups,
-    bool notify = true);
-
   /// Get callback groups that belong to executor.
   /**
    * This function returns a vector of weak pointers that point to callback groups that were
@@ -158,11 +137,15 @@ public:
   /// Remove a callback group from the executor.
   /**
    * The callback group is removed from and disassociated with the executor.
+   * If the callback group removed was the last callback group from the node
+   * that is associated with the executor, the interrupt guard condition
+   * is triggered and node's guard condition is removed from the executor
    *
    * \param[in] group_ptr Shared pointer to the callback group to be added.
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a
    * callback group was removed, it will wake up.
+   * \throw std::runtime_error if the callback group is not associated with the executor
    */
   RCLCPP_PUBLIC
   virtual void
