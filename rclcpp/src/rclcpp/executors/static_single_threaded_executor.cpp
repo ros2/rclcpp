@@ -56,22 +56,29 @@ StaticSingleThreadedExecutor::add_callback_group(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
-  // If the group already has an executor
-  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
-  if (has_executor.exchange(true)) {
-    throw std::runtime_error("Callback group has already been added to an executor.");
-  }
-
-  if (notify &&
-    node_ptr->get_associated_with_executor_atomic().exchange(true))
-  {
+  bool is_new_node = entities_collector_->add_callback_group(group_ptr, node_ptr);
+  if(is_new_node && notify) {
     // Interrupt waiting to handle new node
     if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
       throw std::runtime_error(rcl_get_error_string().str);
     }
   }
-  entities_collector_->add_callback_group(group_ptr, node_ptr);
+  associated_callback_groups_.push_back(rclcpp::CallbackGroup::WeakPtr(group_ptr));
+}
 
+void
+StaticSingleThreadedExecutor::add_callback_group(
+  rclcpp::CallbackGroup::SharedPtr group_ptr,
+  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+  bool notify)
+{
+  bool is_new_node = entities_collector_->add_callback_group(group_ptr, node_ptr);
+  if(is_new_node && notify) {
+    // Interrupt waiting to handle new node
+    if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
+      throw std::runtime_error(rcl_get_error_string().str);
+    }
+  }
   associated_callback_groups_.push_back(rclcpp::CallbackGroup::WeakPtr(group_ptr));
 }
 
@@ -81,7 +88,7 @@ StaticSingleThreadedExecutor::add_node(
 {
   // If the node already has an executor
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
-  if (has_executor.exchange(true)) {
+  if (has_executor.load()) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
 

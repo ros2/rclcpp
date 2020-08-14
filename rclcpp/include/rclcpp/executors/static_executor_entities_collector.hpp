@@ -33,6 +33,9 @@ namespace rclcpp
 {
 namespace executors
 {
+typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
 
 class StaticExecutorEntitiesCollector final
   : public rclcpp::Waitable,
@@ -115,8 +118,24 @@ public:
    * \param[in] node_ptr a shared pointer that points to a node base interface
    */
   RCLCPP_PUBLIC
-  void
+  bool
   add_callback_group(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
+
+  /// Add a callback group to an executor.
+  /**
+   * An executor can have zero or more callback groups which provide work during `spin` functions.
+   * When an executor attempts to add a callback group, the executor checks to see if it is already
+   * associated with another executor. If it is, than an exception is thrown. Otherwise, the
+   * callback group is added to the executor.
+   *
+   * \param[in] group_ptr a shared ptr that points to a callback group
+   * \param[in] node_ptr a shared pointer that points to a node base interface
+   */
+  RCLCPP_PUBLIC
+  bool
+  add_callback_groups_from_node_associated_with_executor(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
@@ -137,6 +156,25 @@ public:
   bool
   remove_callback_group(
     rclcpp::CallbackGroup::SharedPtr group_ptr);
+
+  /// Remove a callback group from the executor.
+  /**
+   * The callback group is removed from and disassociated with the executor.
+   * If the callback group removed was the last callback group from the node
+   * that is associated with the executor, the interrupt guard condition
+   * is triggered and node's guard condition is removed from the executor
+   *
+   * \param[in] group_ptr Shared pointer to the callback group to be added.
+   * \param[in] notify True to trigger the interrupt guard condition during this function. If
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a
+   * callback group was removed, it will wake up.
+   * \throw std::runtime_error if the callback group is not associated with the executor
+   */
+  RCLCPP_PUBLIC
+  bool
+  remove_callback_group_from_node_associated_with_executor(
+    rclcpp::CallbackGroup::SharedPtr group_ptr);
+
   /**
    * \sa rclcpp::Executor::add_node()
    * \throw std::runtime_error if node was already added
@@ -264,7 +302,15 @@ public:
    * \return boolean whether a node belongs the collector
    */
   bool
-  has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+  has_node_from_callback_groups_associated_with_executor(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+
+  /// Returns true if the node belongs to the collector
+  /** Returns true if the node belongs to the collector
+   * \param[in] group_ptr a node base interface shared pointer
+   * \return boolean whether a node belongs the collector
+   */
+  bool
+  has_node_associated_with_executor(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
 private:
   /// Add all callback groups that can be automatically added by any executor
@@ -279,25 +325,27 @@ private:
    * automatically added to an executor through this function, the node of the callback groups needs to be
    * added through the `add_node` function provided by the executor.
    */
+  RCLCPP_PUBLIC
   void
   add_allowable_unassigned_callback_groups();
+
+  RCLCPP_PUBLIC
+  void
+  fill_executable_list_from_map(WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
 
   /// Memory strategy: an interface for handling user-defined memory allocation strategies.
   rclcpp::memory_strategy::MemoryStrategy::SharedPtr memory_strategy_;
 
-  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
+  // maps callback groups to nodes.
+  WeakCallbackGroupsToNodesMap weak_groups_associated_with_executor_to_nodes_;
+  // maps callback groups to nodes.
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
 
   typedef std::map<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
       const rcl_guard_condition_t *,
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
-
-  /// List of weak nodes registered in the static executor
-  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
   /// Wait set for managing entities that the rmw layer waits on.
   rcl_wait_set_t * p_wait_set_ = nullptr;

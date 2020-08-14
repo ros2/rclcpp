@@ -279,12 +279,20 @@ protected:
   void
   execute_ready_executables();
 
+  RCLCPP_PUBLIC
+  virtual void
+  add_callback_groups_from_node_associated_with_executor(
+    rclcpp::CallbackGroup::SharedPtr group_ptr,
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    bool notify = true) override;
+
 private:
   RCLCPP_DISABLE_COPY(StaticSingleThreadedExecutor)
 
   StaticExecutorEntitiesCollector::SharedPtr entities_collector_;
 
   std::vector<rclcpp::CallbackGroup::WeakPtr> associated_callback_groups_;
+  std::vector<rclcpp::CallbackGroup::WeakPtr> callback_groups_with_associated_nodes_;
 };
 
 }  // namespace executors
