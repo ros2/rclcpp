@@ -243,7 +243,7 @@ Executor::add_callback_groups_from_node_associated_with_executor(
 
 void
 Executor::add_callback_groups(
-  std::vector<rclcpp::CallbackGroup::SharedPtr> group_ptrs,
+  const std::vector<rclcpp::CallbackGroup::SharedPtr> & group_ptrs,
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
   bool notify)
 {
