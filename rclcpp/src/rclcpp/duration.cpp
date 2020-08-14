@@ -95,6 +95,12 @@ Duration::operator==(const rclcpp::Duration & rhs) const
 }
 
 bool
+Duration::operator!=(const rclcpp::Duration & rhs) const
+{
+  return rcl_duration_.nanoseconds != rhs.rcl_duration_.nanoseconds;
+}
+
+bool
 Duration::operator<(const rclcpp::Duration & rhs) const
 {
   return rcl_duration_.nanoseconds < rhs.rcl_duration_.nanoseconds;
