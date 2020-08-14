@@ -244,10 +244,23 @@ public:
   rclcpp::Waitable::SharedPtr
   get_waitable(size_t i) {return exec_list_.waitable[i];}
 
-private:
+  /// Returns true if the callback group belongs to the collector
+  /** Returns true if the callback group belongs to the collector
+   * \param[in] group_ptr a callback group shared pointer
+   * \return boolean whether a callback group belongs the collector
+   */
+  bool
+  has_callback_group(const rclcpp::CallbackGroup::SharedPtr group_ptr) const;
+
+  /// Returns true if the node belongs to the collector
+  /** Returns true if the node belongs to the collector
+   * \param[in] group_ptr a node base interface shared pointer
+   * \return boolean whether a node belongs the collector
+   */
   bool
   has_node(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
+private:
   /// Add all callback groups that can be automatically added by any executor
   /// and is not already associated with an executor from nodes
   /// that are associated with executor

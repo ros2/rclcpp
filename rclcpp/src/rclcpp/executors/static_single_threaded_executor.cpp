@@ -153,7 +153,7 @@ StaticSingleThreadedExecutor::remove_node(
     group_ptrs.begin(), group_ptrs.end(),
     [notify, this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
       auto shared_group_ptr = group_ptr.lock();
-      if (shared_group_ptr) {
+      if (shared_group_ptr && entities_collector_->has_callback_group(shared_group_ptr)) {
         remove_callback_group(shared_group_ptr, notify);
       }
     });

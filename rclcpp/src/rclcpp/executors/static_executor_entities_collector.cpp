@@ -351,6 +351,18 @@ StaticExecutorEntitiesCollector::has_node(
     }) != weak_groups_to_nodes_.end();
 }
 
+bool
+StaticExecutorEntitiesCollector::has_callback_group(
+  const rclcpp::CallbackGroup::SharedPtr group_ptr) const
+{
+  return std::find_if(
+    weak_groups_to_nodes_.begin(), weak_groups_to_nodes_.end(),
+    [&](const WeakCallbackGroupsToNodesMap::value_type & other) -> bool {
+      auto other_ptr = other.first.lock();
+      return other_ptr == group_ptr;
+    }) != weak_groups_to_nodes_.end();
+}
+
 void
 StaticExecutorEntitiesCollector::add_allowable_unassigned_callback_groups()
 {
