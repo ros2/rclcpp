@@ -143,6 +143,41 @@ public:
   void
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
+  RCLCPP_PUBLIC
+  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_all_callback_groups() override;
+
+  /// Get callback groups that belong to executor.
+  /**
+   * This function returns a vector of weak pointers that point to callback groups that were
+   * associated with the executor.
+   * The callback groups associated with this executor may have been added with
+   * `add_callback_groups`, or added when a node was added to the executor with `add_node`, or
+   * automatically added when it created by a node already associated with this executor and the
+   * automatically_add_to_executor_with_node parameter was true.
+   *
+   * \return a vector of weak pointers that point to callback groups that are associated with
+   * the executor
+   */
+  RCLCPP_PUBLIC
+  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_callback_groups_associated_with_executor() override;
+
+  /// Get callback groups that belong to executor.
+  /**
+   * This function returns a vector of weak pointers that point to callback groups that were
+   * associated with the executor. The callback groups associated might have been added with
+   * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
+   * automatically added when it was not associated to an executor and allows an executor
+   * to automatically add it if the node that it belongs to is associated with the executor.
+   *
+   * \return a vector of weak pointers that point to callback groups that are associated with
+   * the executor
+   */
+  RCLCPP_PUBLIC
+  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_callback_groups_from_nodes_associated_with_executor() override;
+
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**
    * \param[in] future The future to wait on. If this function returns SUCCESS, the future can be

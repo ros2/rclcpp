@@ -120,6 +120,10 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     bool notify = true);
 
+  RCLCPP_PUBLIC
+  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_all_callback_groups();
+
   /// Get callback groups that belong to executor.
   /**
    * This function returns a vector of weak pointers that point to callback groups that were
@@ -134,7 +138,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_associated_with_executor()
+  get_callback_groups_associated_with_executor();
 
   /// Get callback groups that belong to executor.
   /**
@@ -149,7 +153,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_from_nodes_associated_with_executor()
+  get_callback_groups_from_nodes_associated_with_executor();
 
   /// Remove a callback group from the executor.
   /**

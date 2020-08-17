@@ -491,3 +491,36 @@ StaticExecutorEntitiesCollector::add_allowable_unassigned_callback_groups()
     }
   }
 }
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+StaticExecutorEntitiesCollector::get_all_callback_groups()
+{
+  std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  return groups;
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+StaticExecutorEntitiesCollector::get_callback_groups_associated_with_executor()
+{
+  std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  return groups;
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+StaticExecutorEntitiesCollector::get_callback_groups_from_nodes_associated_with_executor()
+{
+  std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
+  for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
+    groups.push_back(group_node_ptr.first);
+  }
+  return groups;
+}

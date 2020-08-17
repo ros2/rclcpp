@@ -116,6 +116,24 @@ StaticSingleThreadedExecutor::remove_node(
   }
 }
 
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+StaticSingleThreadedExecutor::get_all_callback_groups()
+{
+  return entities_collector_->get_all_callback_groups();
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+StaticSingleThreadedExecutor::get_callback_groups_associated_with_executor()
+{
+  return entities_collector_->get_callback_groups_associated_with_executor();
+}
+
+std::vector<rclcpp::CallbackGroup::WeakPtr>
+StaticSingleThreadedExecutor::get_callback_groups_from_nodes_associated_with_executor()
+{
+  return entities_collector_->get_callback_groups_from_nodes_associated_with_executor();
+}
+
 void
 StaticSingleThreadedExecutor::remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify)
 {
