@@ -571,6 +571,8 @@ protected:
 
   // maps callback groups to nodes.
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
+  
+  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 };
 
 namespace executor

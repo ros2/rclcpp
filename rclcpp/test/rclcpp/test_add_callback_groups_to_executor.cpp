@@ -90,7 +90,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups) {
     2s, timer_callback, cb_grp);
   ExecutorType executor;
   executor.add_callback_group(cb_grp, node->get_node_base_interface());
-  ASSERT_EQ(executor.get_callback_groups().size(), 1u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
 
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
@@ -101,7 +101,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups) {
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
-  ASSERT_EQ(executor.get_callback_groups().size(), 2u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 2u);
 }
 
 /*
@@ -128,9 +128,9 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, remove_callback_groups) {
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
 
   executor.remove_callback_group(cb_grp);
-  ASSERT_EQ(executor.get_callback_groups().size(), 1u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
   executor.remove_callback_group(cb_grp2);
-  ASSERT_EQ(executor.get_callback_groups().size(), 0u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 0u);
 }
 
 /*
@@ -156,7 +156,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_vector_of_callback_groups) {
   cb_grps.push_back(cb_grp);
   cb_grps.push_back(cb_grp2);
   executor.add_callback_groups(cb_grps, node->get_node_base_interface());
-  ASSERT_EQ(executor.get_callback_groups().size(), 2u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 2u);
 }
 
 /*
@@ -185,11 +185,11 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups_after_add_node_t
   rclcpp::executors::MultiThreadedExecutor executor;
   auto node = std::make_shared<rclcpp::Node>("my_node", "/ns");
   executor.add_node(node->get_node_base_interface());
-  ASSERT_EQ(executor.get_callback_groups().size(), 1u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
   std::atomic_int timer_count {0};
   auto timer_callback = [&executor, &timer_count]() {
       if (timer_count > 0) {
-        ASSERT_EQ(executor.get_callback_groups().size(), 3u);
+        ASSERT_EQ(executor.get_all_callback_groups().size(), 3u);
         executor.cancel();
       }
       timer_count++;
@@ -224,7 +224,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
     2s, timer_callback, cb_grp);
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_callback_group(cb_grp, node->get_node_base_interface());
-  ASSERT_EQ(executor.get_callback_groups().size(), 1u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
 
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
@@ -235,7 +235,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
-  ASSERT_EQ(executor.get_callback_groups().size(), 2u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 2u);
 
   auto timer2_callback = []() {};
   rclcpp::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
@@ -243,7 +243,7 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_unallowable_callback_groups)
   rclcpp::TimerBase::SharedPtr timer2_ = node->create_wall_timer(
     2s, timer2_callback, cb_grp3);
   executor.add_node(node->get_node_base_interface());
-  ASSERT_EQ(executor.get_callback_groups().size(), 3u);
+  ASSERT_EQ(executor.get_all_callback_groups().size(), 3u);
 }
 
 /*
@@ -269,17 +269,17 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, one_node_many_callback_groups_many_e
   auto subscription =
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
   sub_executor.add_callback_group(cb_grp2, node->get_node_base_interface());
-  ASSERT_EQ(sub_executor.get_callback_groups().size(), 1u);
-  ASSERT_EQ(timer_executor.get_callback_groups().size(), 1u);
+  ASSERT_EQ(sub_executor.get_all_callback_groups().size(), 1u);
+  ASSERT_EQ(timer_executor.get_all_callback_groups().size(), 1u);
   auto timer2_callback = []() {};
   rclcpp::CallbackGroup::SharedPtr cb_grp3 = node->create_callback_group(
     rclcpp::CallbackGroupType::MutuallyExclusive, false);
   rclcpp::TimerBase::SharedPtr timer2 = node->create_wall_timer(
     2s, timer2_callback, cb_grp3);
   sub_executor.add_node(node);
-  ASSERT_EQ(sub_executor.get_callback_groups().size(), 2u);
+  ASSERT_EQ(sub_executor.get_all_callback_groups().size(), 2u);
   timer_executor.add_callback_group(cb_grp3, node->get_node_base_interface());
-  ASSERT_EQ(timer_executor.get_callback_groups().size(), 2u);
+  ASSERT_EQ(timer_executor.get_all_callback_groups().size(), 2u);
 }
 
 /*

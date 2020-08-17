@@ -97,12 +97,6 @@ StaticSingleThreadedExecutor::remove_callback_group(
   }
 }
 
-std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticSingleThreadedExecutor::get_callback_groups()
-{
-  return associated_callback_groups_;
-}
-
 void
 StaticSingleThreadedExecutor::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)

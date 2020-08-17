@@ -99,14 +99,6 @@ public:
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     bool notify = true) override;
 
-  /// Get callback groups that belong to executor.
-  /**
-   * \sa rclcpp::Executor::get_callback_groups
-   */
-  RCLCPP_PUBLIC
-  std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups() override;
-
   /// Add a node to the executor.
   /**
    * \sa rclcpp::Executor::add_node

@@ -323,14 +323,6 @@ public:
   rclcpp::Waitable::SharedPtr
   get_waitable(size_t i) {return exec_list_.waitable[i];}
 
-  /// Returns true if the callback group belongs to the collector
-  /** Returns true if the callback group belongs to the collector
-   * \param[in] group_ptr a callback group shared pointer
-   * \return boolean whether a callback group belongs the collector
-   */
-  bool
-  has_callback_group(const rclcpp::CallbackGroup::SharedPtr group_ptr) const;
-
   /// Returns true if the node belongs to the collector
   /** Returns true if the node belongs to the collector
    * \param[in] group_ptr a node base interface shared pointer
@@ -381,6 +373,9 @@ private:
       std::owner_less<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr>>
     WeakNodesToGuardConditionsMap;
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
+
+  /// List of weak nodes registered in the static executor
+  std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 
   /// Wait set for managing entities that the rmw layer waits on.
   rcl_wait_set_t * p_wait_set_ = nullptr;

@@ -108,6 +108,16 @@ Executor::~Executor()
     }
   }
   weak_groups_to_nodes_associated_with_executor_.clear();
+  std::for_each(
+    weak_nodes_.begin(), weak_nodes_.end(), []
+      (rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr) {
+      auto shared_node_ptr = weak_node_ptr.lock();
+      if (shared_node_ptr) {
+        std::atomic_bool & has_executor = shared_node_ptr->get_associated_with_executor_atomic();
+        has_executor.store(false);
+      }
+    });
+  weak_nodes_.clear();
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & guard_condition = pair.second;
     memory_strategy_->remove_guard_condition(guard_condition);
@@ -169,8 +179,8 @@ Executor::get_callback_groups_from_nodes_associated_with_executor()
 void
 Executor::add_allowable_unassigned_callback_groups()
 {
-  for (auto & other : weak_groups_to_nodes_associated_with_executor_) {
-    auto node = other.second.lock();
+  for (auto & weak_node : weak_nodes_) {
+    auto node = weak_node.lock();
     if (node) {
       auto group_ptrs = node->get_callback_groups();
       std::for_each(
@@ -276,12 +286,13 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
+  weak_nodes_.push_back(node_ptr);
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
       group_ptr->automatically_add_to_executor_with_node())
     {
-      add_callback_groups_from_node_associated_with_executor((group_ptr, node_ptr, notify);
+      add_callback_groups_from_node_associated_with_executor(group_ptr, node_ptr, notify);
     }
   }
 }
@@ -381,6 +392,15 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
       (rclcpp::CallbackGroup::SharedPtr group_ptr) {
       remove_callback_group_from_node_associated_with_executor(group_ptr, notify);
     });
+  auto node_it = weak_nodes_.begin();
+  while (node_it != weak_nodes_.end()) {
+    bool matched = (node_it->lock() == node_ptr);
+    if (matched) {
+      node_it = weak_nodes_.erase(node_it);
+    } else {
+      ++node_it;
+    }
+  }
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
 }
@@ -776,9 +796,9 @@ Executor::get_node_by_group(rclcpp::CallbackGroup::SharedPtr group)
     return node_ptr;
   }
 
-  finder = weak_groups_to_nodes_associated_with_executor_.find(weak_group_ptr);
-  if (finder != weak_groups_to_nodes_associated_with_executor_.end()) {
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr = finder->second.lock();
+  const auto finder2 = weak_groups_to_nodes_associated_with_executor_.find(weak_group_ptr);
+  if (finder2 != weak_groups_to_nodes_associated_with_executor_.end()) {
+    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr = finder2->second.lock();
     return node_ptr;
   }
 
@@ -867,7 +887,7 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
     if (
       (weak_groups_associated_with_executor_to_nodes_.find(weak_group_ptr) ==
       weak_groups_associated_with_executor_to_nodes_.end()) &&
-      weak_groups_to_nodes_associated_with_executor_.find(weak_group_ptr) ==
+      (weak_groups_to_nodes_associated_with_executor_.find(weak_group_ptr) ==
       weak_groups_to_nodes_associated_with_executor_.end())) {
       success = false;
     }
@@ -927,10 +947,14 @@ Executor::has_node_from_callback_groups_associated_with_executor(const rclcpp::n
 bool
 Executor::has_node_associated_with_executor(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const
 {
-  return std::find_if(
-    weak_groups_to_nodes_associated_with_executor_.begin(), weak_groups_to_nodes_associated_with_executor_.end(),
-    [&](const WeakCallbackGroupsToNodesMap::value_type & other) -> bool {
-      auto other_ptr = other.second.lock();
-      return other_ptr == node_ptr;
-    }) != weak_groups_to_nodes_associated_with_executor_.end();
+  auto node_it = weak_nodes_.begin();
+  while (node_it != weak_nodes_.end()) {
+    bool matched = (node_it->lock() == node_ptr);
+    if (matched) {
+      return true;
+    } else {
+      ++node_it;
+    }
+  }
+  return false;
 }
