@@ -1,0 +1,28 @@
+/**:
+  ros__parameters:
+    full_wild: "full_wild" 
+
+/*:
+  node:
+    ros__parameters:
+      namespace_wild: "namespace_wild" 
+
+ns:
+  "*":
+    ros__parameters:
+      node_wild_in_ns: "node_wild_in_ns" 
+
+ns:
+  node:
+    ros__parameters:
+      explicit_in_ns: "explicit_in_ns" 
+
+ns:
+  nodeX:
+    ros__parameters:
+      should_not_appear: "incorrect_node_name" 
+
+nsX:
+  node:
+    ros__parameters:
+      should_not_appear: "incorrect_namespace" 

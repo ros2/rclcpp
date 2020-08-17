@@ -31,6 +31,8 @@
 #include "../../mocking_utils/patch.hpp"
 #include "../../utils/rclcpp_gtest_macros.hpp"
 
+#include "rcpputils/filesystem_helper.hpp"
+
 class TestNodeParameters : public ::testing::Test
 {
 public:
@@ -47,6 +49,7 @@ public:
       dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
       node->get_node_parameters_interface().get());
     ASSERT_NE(nullptr, node_parameters);
+    test_resources_path /= "test_node_parameters";
   }
 
   void TearDown()
@@ -57,6 +60,8 @@ public:
 protected:
   std::shared_ptr<rclcpp::Node> node;
   rclcpp::node_interfaces::NodeParameters * node_parameters;
+
+  rcpputils::fs::path test_resources_path{TEST_RESOURCES_DIRECTORY};
 };
 
 TEST_F(TestNodeParameters, construct_destruct_rcl_errors) {
@@ -198,4 +203,29 @@ TEST_F(TestNodeParameters, add_remove_parameters_callback) {
   RCLCPP_EXPECT_THROW_EQ(
     node_parameters->remove_on_set_parameters_callback(handle.get()),
     std::runtime_error("Callback doesn't exist"));
+}
+
+TEST_F(TestNodeParameters, wildcard_with_namespace)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "wildcards.yaml").string()
+  });
+
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", "ns", opts);
+
+  auto * node_parameters =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters);
+
+  const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+  EXPECT_EQ(4u, parameter_overrides.size());
+  EXPECT_EQ(parameter_overrides.at("full_wild").get<std::string>(), "full_wild");
+  EXPECT_EQ(parameter_overrides.at("namespace_wild").get<std::string>(), "namespace_wild");
+  EXPECT_EQ(parameter_overrides.at("node_wild_in_ns").get<std::string>(), "node_wild_in_ns");
+  EXPECT_EQ(parameter_overrides.at("explicit_in_ns").get<std::string>(), "explicit_in_ns");
+  EXPECT_EQ(parameter_overrides.count("should_not_appear"), 0u);
 }
