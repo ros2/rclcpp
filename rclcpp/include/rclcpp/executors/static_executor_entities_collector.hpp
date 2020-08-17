@@ -180,7 +180,7 @@ public:
    * \throw std::runtime_error if node was already added
    */
   RCLCPP_PUBLIC
-  void
+  bool
   add_node(
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 

@@ -287,12 +287,11 @@ Executor::remove_callback_group(
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
     weak_groups_associated_with_executor_to_nodes_.erase(iter);
+    std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+    has_executor.store(false);
   } else {
     throw std::runtime_error("Callback group needs to be associated with executor.");
   }
-  std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
-  has_executor.store(false);
-
   // If the node was matched and removed, interrupt waiting.
   if (!has_node_from_callback_groups_associated_with_executor(node_ptr) &&
       !has_node_associated_with_executor(node_ptr)) {
@@ -369,7 +368,6 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
       (rclcpp::CallbackGroup::SharedPtr group_ptr) {
       remove_callback_group_from_node_associated_with_executor(group_ptr, notify);
     });
-
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
 }

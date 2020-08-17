@@ -258,10 +258,11 @@ size_t StaticExecutorEntitiesCollector::get_number_of_ready_guard_conditions()
   return weak_nodes_to_guard_conditions_.size();
 }
 
-void
+bool
 StaticExecutorEntitiesCollector::add_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
+  bool is_new_node = false;
   // If the node already has an executor
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   if (has_executor.exchange(true)) {
@@ -272,9 +273,11 @@ StaticExecutorEntitiesCollector::add_node(
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
       group_ptr->automatically_add_to_executor_with_node())
     {
-      add_callback_groups_from_node_associated_with_executor((group_ptr, node_ptr);
+      is_new_node = (add_callback_groups_from_node_associated_with_executor(group_ptr, node_ptr)
+      || is_new_node;
     }
   }
+  return is_new_node;
 }
 
 bool
@@ -340,6 +343,8 @@ StaticExecutorEntitiesCollector::remove_callback_group(
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
     weak_groups_associated_with_executor_to_nodes_.erase(iter);
+    std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
+    has_executor.store(false);
   } else {
     throw std::runtime_error("Callback group needs to be associated with executor.");
   }
@@ -400,6 +405,8 @@ StaticExecutorEntitiesCollector::remove_node(
       (rclcpp::CallbackGroup::SharedPtr group_ptr) {
       remove_callback_group_from_node_associated_with_executor(group_ptr);
     });
+  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+  has_executor.store(false);
   if(!found_group_ptrs.empty()) {
     return true;
   } else {
