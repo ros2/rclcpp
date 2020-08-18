@@ -333,8 +333,8 @@ public:
   has_node_from_callback_groups_associated_with_executor(
     const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
-  /// Returns true if the node belongs to the collector
-  /** Returns true if the node belongs to the collector
+  /// Return true if the node belongs to the collector
+  /**
    * \param[in] group_ptr a node base interface shared pointer
    * \return boolean whether a node belongs the collector
    */

@@ -86,7 +86,7 @@ public:
    * An executor can have zero or more callback groups which provide work during `spin` functions.
    * When an executor attempts to add a callback group, the executor checks to see if it is already
    * associated with another executor.
-   * If it is, than an exception is thrown.
+   * If it is, then an exception is thrown.
    * Otherwise, the callback group is added to the executor.
    *
    * \param[in] group_ptr a shared ptr that points to a callback group
