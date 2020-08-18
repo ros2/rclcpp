@@ -704,27 +704,6 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     // Collect the subscriptions and timers to be waited on
     memory_strategy_->clear_handles();
     bool has_invalid_weak_groups_or_nodes =
-      memory_strategy_->collect_entities(weak_groups_to_nodes_associated_with_executor_);
-
-    if (has_invalid_weak_groups_or_nodes) {
-      std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-      for (auto pair : weak_groups_to_nodes_associated_with_executor_) {
-        auto weak_group_ptr = pair.first;
-        auto weak_node_ptr = pair.second;
-        if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
-          invalid_group_ptrs.push_back(weak_group_ptr);
-          auto node_guard_pair = weak_nodes_to_guard_conditions_.find(weak_node_ptr);
-          weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
-          memory_strategy_->remove_guard_condition(node_guard_pair->second);
-        }
-      }
-      std::for_each(
-        invalid_group_ptrs.begin(), invalid_group_ptrs.end(),
-        [this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
-          weak_groups_to_nodes_associated_with_executor_.erase(group_ptr);
-        });
-    }
-    has_invalid_weak_groups_or_nodes =
       memory_strategy_->collect_entities(weak_groups_associated_with_executor_to_nodes_);
 
     if (has_invalid_weak_groups_or_nodes) {
@@ -743,6 +722,27 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
         invalid_group_ptrs.begin(), invalid_group_ptrs.end(),
         [this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
           weak_groups_associated_with_executor_to_nodes_.erase(group_ptr);
+        });
+    }
+    has_invalid_weak_groups_or_nodes =
+      memory_strategy_->collect_entities(weak_groups_to_nodes_associated_with_executor_);
+
+    if (has_invalid_weak_groups_or_nodes) {
+      std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
+      for (auto pair : weak_groups_to_nodes_associated_with_executor_) {
+        auto weak_group_ptr = pair.first;
+        auto weak_node_ptr = pair.second;
+        if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
+          invalid_group_ptrs.push_back(weak_group_ptr);
+          auto node_guard_pair = weak_nodes_to_guard_conditions_.find(weak_node_ptr);
+          weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
+          memory_strategy_->remove_guard_condition(node_guard_pair->second);
+        }
+      }
+      std::for_each(
+        invalid_group_ptrs.begin(), invalid_group_ptrs.end(),
+        [this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
+          weak_groups_to_nodes_associated_with_executor_.erase(group_ptr);
         });
     }
     // clear wait set
@@ -841,41 +841,56 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
+  std::for_each(
+  weak_groups_to_nodes_associated_with_executor_.begin(), weak_groups_to_nodes_associated_with_executor_.end(),
+  [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
+  rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
+    weak_groups_to_nodes.insert(key_value_pair);
+  });
+  std::for_each(
+  weak_groups_associated_with_executor_to_nodes_.begin(), weak_groups_associated_with_executor_to_nodes_.end(),
+  [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
+  rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
+    weak_groups_to_nodes.insert(key_value_pair);
+  });
+  bool success = get_next_ready_executable_from_map(any_executable, weak_groups_to_nodes);
+  return success;
+}
+
+bool
+Executor::get_next_ready_executable_from_map(AnyExecutable & any_executable, WeakCallbackGroupsToNodesMap weak_groups_to_nodes)
+{
   bool success = false;
   // Check the timers to see if there are any that are ready
-  memory_strategy_->get_next_timer(any_executable, weak_groups_associated_with_executor_to_nodes_);
-  memory_strategy_->get_next_timer(any_executable, weak_groups_to_nodes_associated_with_executor_);
+  memory_strategy_->get_next_timer(any_executable, weak_groups_to_nodes);
   if (any_executable.timer) {
     success = true;
   }
   if (!success) {
     // Check the subscriptions to see if there are any that are ready
-    memory_strategy_->get_next_subscription(any_executable, weak_groups_associated_with_executor_to_nodes_);
-    memory_strategy_->get_next_subscription(any_executable, weak_groups_to_nodes_associated_with_executor_);
+    memory_strategy_->get_next_subscription(any_executable, weak_groups_to_nodes);
     if (any_executable.subscription) {
       success = true;
     }
   }
   if (!success) {
     // Check the services to see if there are any that are ready
-    memory_strategy_->get_next_service(any_executable, weak_groups_associated_with_executor_to_nodes_);
-    memory_strategy_->get_next_service(any_executable, weak_groups_to_nodes_associated_with_executor_);
+    memory_strategy_->get_next_service(any_executable, weak_groups_to_nodes);
     if (any_executable.service) {
       success = true;
     }
   }
   if (!success) {
     // Check the clients to see if there are any that are ready
-    memory_strategy_->get_next_client(any_executable, weak_groups_associated_with_executor_to_nodes_);
-    memory_strategy_->get_next_client(any_executable, weak_groups_to_nodes_associated_with_executor_);
+    memory_strategy_->get_next_client(any_executable, weak_groups_to_nodes);
     if (any_executable.client) {
       success = true;
     }
   }
   if (!success) {
     // Check the waitables to see if there are any that are ready
-    memory_strategy_->get_next_waitable(any_executable, weak_groups_associated_with_executor_to_nodes_);
-    memory_strategy_->get_next_waitable(any_executable, weak_groups_to_nodes_associated_with_executor_);
+    memory_strategy_->get_next_waitable(any_executable, weak_groups_to_nodes);
     if (any_executable.waitable) {
       success = true;
     }
@@ -884,11 +899,8 @@ Executor::get_next_ready_executable(AnyExecutable & any_executable)
   // or a valid timer, or it should be a null shared_ptr
   if (success) {
     rclcpp::CallbackGroup::WeakPtr weak_group_ptr = any_executable.callback_group;
-    if (
-      (weak_groups_associated_with_executor_to_nodes_.find(weak_group_ptr) ==
-      weak_groups_associated_with_executor_to_nodes_.end()) &&
-      (weak_groups_to_nodes_associated_with_executor_.find(weak_group_ptr) ==
-      weak_groups_to_nodes_associated_with_executor_.end())) {
+    auto iter = weak_groups_to_nodes.find(weak_group_ptr);
+    if (iter == weak_groups_to_nodes.end()) {
       success = false;
     }
   }

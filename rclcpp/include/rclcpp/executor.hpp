@@ -43,6 +43,10 @@
 namespace rclcpp
 {
 
+typedef std::map<rclcpp::CallbackGroup::WeakPtr,
+    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
+    std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
+
 // Forward declaration is used in convenience method signature.
 class Node;
 
@@ -511,6 +515,10 @@ protected:
 
   RCLCPP_PUBLIC
   bool
+  get_next_ready_executable_from_map(AnyExecutable & any_executable, WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
+
+  RCLCPP_PUBLIC
+  bool
   get_next_executable(
     AnyExecutable & any_executable,
     std::chrono::nanoseconds timeout = std::chrono::nanoseconds(-1));
@@ -561,10 +569,6 @@ protected:
 
   /// maps nodes to guard conditions
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
-
-  typedef std::map<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr,
-      std::owner_less<rclcpp::CallbackGroup::WeakPtr>> WeakCallbackGroupsToNodesMap;
 
   // maps callback groups to nodes.
   WeakCallbackGroupsToNodesMap weak_groups_associated_with_executor_to_nodes_;
