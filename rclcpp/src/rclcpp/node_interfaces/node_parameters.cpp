@@ -110,7 +110,12 @@ NodeParameters::NodeParameters(
 
       // Enforce wildcard matching precedence
       // TODO(cottsay) implement further wildcard matching
-      const std::vector<std::string> node_matching_names{"/**", combined_name_};
+      const std::vector<std::string> node_matching_names{
+        "/**",
+        "/*/" + std::string(node_base->get_name()),
+        std::string(node_base->get_namespace()) + "/*",
+        combined_name_};
+
       for (const auto & node_name : node_matching_names) {
         if (initial_map.count(node_name) > 0) {
           // Combine parameter yaml files, overwriting values in older ones
