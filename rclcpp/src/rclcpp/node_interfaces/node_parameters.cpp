@@ -110,10 +110,11 @@ NodeParameters::NodeParameters(
 
       // Enforce wildcard matching precedence
       // TODO(cottsay) implement further wildcard matching
+      auto ns = std::string(node_base->get_namespace());
       const std::vector<std::string> node_matching_names{
         "/**",
         "/*/" + std::string(node_base->get_name()),
-        std::string(node_base->get_namespace()) + "/*",
+        (ns == "/" ? "" : ns) + "/*",
         combined_name_};
 
       for (const auto & node_name : node_matching_names) {

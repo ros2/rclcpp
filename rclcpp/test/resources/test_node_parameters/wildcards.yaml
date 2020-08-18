@@ -17,6 +17,14 @@ ns:
     ros__parameters:
       explicit_in_ns: "explicit_in_ns" 
 
+"*":
+  ros__parameters:
+    node_wild_no_ns: "node_wild_no_ns" 
+
+node:
+  ros__parameters:
+    explicit_no_ns: "explicit_no_ns" 
+
 ns:
   nodeX:
     ros__parameters:

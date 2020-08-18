@@ -229,3 +229,28 @@ TEST_F(TestNodeParameters, wildcard_with_namespace)
   EXPECT_EQ(parameter_overrides.at("explicit_in_ns").get<std::string>(), "explicit_in_ns");
   EXPECT_EQ(parameter_overrides.count("should_not_appear"), 0u);
 }
+
+TEST_F(TestNodeParameters, wildcard_no_namespace)
+{
+  rclcpp::NodeOptions opts;
+  opts.arguments(
+  {
+    "--ros-args",
+    "--params-file", (test_resources_path / "wildcards.yaml").string()
+  });
+
+  std::shared_ptr<rclcpp::Node> node = std::make_shared<rclcpp::Node>("node", opts);
+
+  auto * node_parameters =
+    dynamic_cast<rclcpp::node_interfaces::NodeParameters *>(
+    node->get_node_parameters_interface().get());
+  ASSERT_NE(nullptr, node_parameters);
+
+  const auto & parameter_overrides = node_parameters->get_parameter_overrides();
+  EXPECT_EQ(4u, parameter_overrides.size());
+  EXPECT_EQ(parameter_overrides.at("full_wild").get<std::string>(), "full_wild");
+  EXPECT_EQ(parameter_overrides.at("namespace_wild").get<std::string>(), "namespace_wild");
+  EXPECT_EQ(parameter_overrides.at("node_wild_no_ns").get<std::string>(), "node_wild_no_ns");
+  EXPECT_EQ(parameter_overrides.at("explicit_no_ns").get<std::string>(), "explicit_no_ns");
+  EXPECT_EQ(parameter_overrides.count("should_not_appear"), 0u);
+}
