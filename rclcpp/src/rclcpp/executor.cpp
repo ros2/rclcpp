@@ -708,14 +708,30 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     // allowed to add to another executor
     add_allowable_unassigned_callback_groups();
 
+    WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
+    std::for_each(
+      weak_groups_to_nodes_associated_with_executor_.begin(),
+      weak_groups_to_nodes_associated_with_executor_.end(),
+      [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
+        weak_groups_to_nodes.insert(key_value_pair);
+      });
+    std::for_each(
+      weak_groups_associated_with_executor_to_nodes_.begin(),
+      weak_groups_associated_with_executor_to_nodes_.end(),
+      [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
+      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
+        weak_groups_to_nodes.insert(key_value_pair);
+      });
+
     // Collect the subscriptions and timers to be waited on
     memory_strategy_->clear_handles();
     bool has_invalid_weak_groups_or_nodes =
-      memory_strategy_->collect_entities(weak_groups_associated_with_executor_to_nodes_);
+      memory_strategy_->collect_entities(weak_groups_to_nodes);
 
     if (has_invalid_weak_groups_or_nodes) {
       std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-      for (auto pair : weak_groups_associated_with_executor_to_nodes_) {
+      for (auto pair : weak_groups_to_nodes) {
         auto weak_group_ptr = pair.first;
         auto weak_node_ptr = pair.second;
         if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
@@ -728,30 +744,19 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
       std::for_each(
         invalid_group_ptrs.begin(), invalid_group_ptrs.end(),
         [this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
-          weak_groups_associated_with_executor_to_nodes_.erase(group_ptr);
+          if (weak_groups_to_nodes_associated_with_executor_.find(group_ptr) !=
+          weak_groups_to_nodes_associated_with_executor_.end())
+          {
+            weak_groups_to_nodes_associated_with_executor_.erase(group_ptr);
+          }
+          if (weak_groups_associated_with_executor_to_nodes_.find(group_ptr) !=
+          weak_groups_associated_with_executor_to_nodes_.end())
+          {
+            weak_groups_associated_with_executor_to_nodes_.erase(group_ptr);
+          }
         });
     }
-    has_invalid_weak_groups_or_nodes =
-      memory_strategy_->collect_entities(weak_groups_to_nodes_associated_with_executor_);
 
-    if (has_invalid_weak_groups_or_nodes) {
-      std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-      for (auto pair : weak_groups_to_nodes_associated_with_executor_) {
-        auto weak_group_ptr = pair.first;
-        auto weak_node_ptr = pair.second;
-        if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
-          invalid_group_ptrs.push_back(weak_group_ptr);
-          auto node_guard_pair = weak_nodes_to_guard_conditions_.find(weak_node_ptr);
-          weak_nodes_to_guard_conditions_.erase(weak_node_ptr);
-          memory_strategy_->remove_guard_condition(node_guard_pair->second);
-        }
-      }
-      std::for_each(
-        invalid_group_ptrs.begin(), invalid_group_ptrs.end(),
-        [this](rclcpp::CallbackGroup::WeakPtr group_ptr) {
-          weak_groups_to_nodes_associated_with_executor_.erase(group_ptr);
-        });
-    }
     // clear wait set
     if (rcl_wait_set_clear(&wait_set_) != RCL_RET_OK) {
       throw std::runtime_error("Couldn't clear wait set");
@@ -790,25 +795,19 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
 }
 
 rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-Executor::get_node_by_group(rclcpp::CallbackGroup::SharedPtr group)
+Executor::get_node_by_group(
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes,
+  rclcpp::CallbackGroup::SharedPtr group)
 {
   if (!group) {
     return nullptr;
   }
-
   rclcpp::CallbackGroup::WeakPtr weak_group_ptr(group);
-  const auto finder = weak_groups_associated_with_executor_to_nodes_.find(weak_group_ptr);
-  if (finder != weak_groups_associated_with_executor_to_nodes_.end()) {
+  const auto finder = weak_groups_to_nodes.find(weak_group_ptr);
+  if (finder != weak_groups_to_nodes.end()) {
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr = finder->second.lock();
     return node_ptr;
   }
-
-  const auto finder2 = weak_groups_to_nodes_associated_with_executor_.find(weak_group_ptr);
-  if (finder2 != weak_groups_to_nodes_associated_with_executor_.end()) {
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr = finder2->second.lock();
-    return node_ptr;
-  }
-
   return nullptr;
 }
 
@@ -973,14 +972,11 @@ bool
 Executor::has_node_associated_with_executor(
   const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const
 {
-  auto node_it = weak_nodes_.begin();
-  while (node_it != weak_nodes_.end()) {
-    bool matched = (node_it->lock() == node_ptr);
-    if (matched) {
-      return true;
-    } else {
-      ++node_it;
-    }
-  }
-  return false;
+  return std::find_if(
+    weak_groups_to_nodes_associated_with_executor_.begin(),
+    weak_groups_to_nodes_associated_with_executor_.end(),
+    [&](const WeakCallbackGroupsToNodesMap::value_type & other) -> bool {
+      auto other_ptr = other.second.lock();
+      return other_ptr == node_ptr;
+    }) != weak_groups_to_nodes_associated_with_executor_.end();
 }

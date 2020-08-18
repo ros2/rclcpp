@@ -445,7 +445,9 @@ protected:
 
   RCLCPP_PUBLIC
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr
-  get_node_by_group(rclcpp::CallbackGroup::SharedPtr group);
+  get_node_by_group(
+    WeakCallbackGroupsToNodesMap weak_groups_to_nodes,
+    rclcpp::CallbackGroup::SharedPtr group);
 
   /// Return true if the node has been added to this executor.
   /**
