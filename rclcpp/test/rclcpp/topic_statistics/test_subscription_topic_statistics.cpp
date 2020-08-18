@@ -49,8 +49,13 @@ constexpr const char kTestSubNodeName[]{"test_sub_stats_node"};
 constexpr const char kTestSubStatsTopic[]{"/test_sub_stats_topic"};
 constexpr const char kTestSubStatsEmptyTopic[]{"/test_sub_stats_empty_topic"};
 constexpr const char kTestTopicStatisticsTopic[]{"/test_topic_statistics_topic"};
+constexpr const char kMessageAgeSourceLabel[]{"message_age"};
+constexpr const char kMessagePeriodSourceLabel[]{"message_period"};
 constexpr const uint64_t kNoSamples{0};
 constexpr const std::chrono::seconds kTestDuration{10};
+constexpr const uint64_t kNumExpectedMessages{8};
+constexpr const uint64_t kNumExpectedMessageAgeMessages{kNumExpectedMessages / 2};
+constexpr const uint64_t kNumExpectedMessagePeriodMessages{kNumExpectedMessages / 2};
 }  // namespace
 
 using rclcpp::msg::MessageWithHeader;
@@ -61,6 +66,10 @@ using statistics_msgs::msg::StatisticDataPoint;
 using statistics_msgs::msg::StatisticDataType;
 using libstatistics_collector::moving_average_statistics::StatisticData;
 
+/**
+ * Wrapper class to test and expose parts of the SubscriptionTopicStatistics<T> class.
+ * @tparam CallbackMessageT
+ */
 template<typename CallbackMessageT>
 class TestSubscriptionTopicStatistics : public SubscriptionTopicStatistics<CallbackMessageT>
 {
@@ -136,7 +145,7 @@ private:
   void publish_message()
   {
     auto msg = MessageWithHeader{};
-    // Subtract 1 sec from current time so the received message age is always > 0
+    // Subtract 1 sec from current time so the received message age calculation is always > 0
     msg.header.stamp = this->now() - rclcpp::Duration{1, 0};
     publisher_->publish(msg);
   }
@@ -220,6 +229,9 @@ protected:
   }
 };
 
+/**
+ * Test an invalid argument is thrown for a bad input publish period.
+ */
 TEST(TestSubscriptionTopicStatistics, test_invalid_publish_period)
 {
   rclcpp::init(0 /* argc */, nullptr /* argv */);
@@ -244,6 +256,10 @@ TEST(TestSubscriptionTopicStatistics, test_invalid_publish_period)
   rclcpp::shutdown();
 }
 
+/**
+ * Test that we can manually construct the subscription topic statistics utility class
+ * without any errors and defaults to empty measurements.
+ */
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
 {
   auto empty_subscriber = std::make_shared<EmptySubscriber>(
@@ -271,6 +287,10 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_manual_construction)
   }
 }
 
+/**
+ * Publish messages that do not have a header timestamp, test that all statistics messages
+ * were received, and verify the statistics message contents.
+ */
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no_header)
 {
   // Create an empty publisher
@@ -284,7 +304,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_single_empty_stats_message_listener",
     "/statistics",
-    4);
+    kNumExpectedMessages);
 
   auto empty_subscriber = std::make_shared<EmptySubscriber>(
     kTestSubNodeName,
@@ -301,26 +321,37 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
     kTestDuration);
 
   // Compare message counts, sample count should be the same as published and received count
-  EXPECT_EQ(4, statistics_listener->GetNumberOfMessagesReceived());
+  EXPECT_EQ((int)kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
 
-  // Check the received message and the data types
+  // Check the received message total count
   const auto received_messages = statistics_listener->GetReceivedMessages();
+  EXPECT_EQ(kNumExpectedMessages, received_messages.size());
 
-  EXPECT_EQ(4u, received_messages.size());
+  // check the type of statistics that were received and their counts
+  uint64_t message_age_count{0};
+  uint64_t message_period_count{0};
 
   std::set<std::string> received_metrics;
   for (const auto & msg : received_messages) {
-    received_metrics.insert(msg.metrics_source);
+    if (msg.metrics_source == "message_age")
+    {
+      message_age_count++;
+    }
+    if (msg.metrics_source == "message_period")
+    {
+      message_period_count++;
+    }
   }
-  EXPECT_TRUE(received_metrics.find("message_age") != received_metrics.end());
-  EXPECT_TRUE(received_metrics.find("message_period") != received_metrics.end());
+  EXPECT_EQ(kNumExpectedMessageAgeMessages, message_age_count);
+  EXPECT_EQ(kNumExpectedMessagePeriodMessages, message_period_count);
 
   // Check the collected statistics for message period.
   // Message age statistics will not be calculated because Empty messages
-  // don't have a `header` with timestamp.
+  // don't have a `header` with timestamp. This means that we expect to receive a `message_age`
+  // and `message_period` message for each empty message published.
   bool any_samples = false;
   for (const auto & msg : received_messages) {
-    if (msg.metrics_source != "message_period") {
+    if (msg.metrics_source != kMessagePeriodSourceLabel) {
       continue;
     }
     // skip messages without samples
@@ -379,7 +410,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   auto statistics_listener = std::make_shared<rclcpp::topic_statistics::MetricsMessageSubscriber>(
     "test_receive_stats_for_message_with_header",
     "/statistics",
-    4);
+    kNumExpectedMessages);
 
   auto msg_with_header_subscriber = std::make_shared<MessageWithHeaderSubscriber>(
     kTestSubNodeName,
@@ -396,19 +427,29 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
     kTestDuration);
 
   // Compare message counts, sample count should be the same as published and received count
-  EXPECT_EQ(4, statistics_listener->GetNumberOfMessagesReceived());
+  EXPECT_EQ((int)kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
 
-  // Check the received message and the data types
+  // Check the received message total count
   const auto received_messages = statistics_listener->GetReceivedMessages();
+  EXPECT_EQ(kNumExpectedMessages, received_messages.size());
 
-  EXPECT_EQ(4u, received_messages.size());
+  // check the type of statistics that were received and their counts
+  uint64_t message_age_count{0};
+  uint64_t message_period_count{0};
 
   std::set<std::string> received_metrics;
   for (const auto & msg : received_messages) {
-    received_metrics.insert(msg.metrics_source);
+    if (msg.metrics_source == kMessageAgeSourceLabel)
+    {
+      message_age_count++;
+    }
+    if (msg.metrics_source == kMessagePeriodSourceLabel)
+    {
+      message_period_count++;
+    }
   }
-  EXPECT_TRUE(received_metrics.find("message_age") != received_metrics.end());
-  EXPECT_TRUE(received_metrics.find("message_period") != received_metrics.end());
+  EXPECT_EQ(kNumExpectedMessageAgeMessages, message_age_count);
+  EXPECT_EQ(kNumExpectedMessagePeriodMessages, message_period_count);
 
   // Check the collected statistics for message period.
   bool any_samples = false;
