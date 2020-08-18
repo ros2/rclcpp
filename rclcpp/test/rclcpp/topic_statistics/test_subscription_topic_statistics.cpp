@@ -18,6 +18,7 @@
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <random>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -137,6 +138,7 @@ public:
       publish_period, [this]() {
         this->publish_message();
       });
+    uniform_dist_ = std::uniform_int_distribution<uint32_t>{1000000, 100000000};
   }
 
   virtual ~MessageWithHeaderPublisher() = default;
@@ -144,14 +146,19 @@ public:
 private:
   void publish_message()
   {
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+    uint32_t d = uniform_dist_(gen);
     auto msg = MessageWithHeader{};
-    // Subtract 1 sec from current time so the received message age calculation is always > 0
-    msg.header.stamp = this->now() - rclcpp::Duration{1, 0};
+    // Subtract ~1 second (add some noise for a non-zero standard deviation)
+    // so the received message age calculation is always > 0
+    msg.header.stamp = this->now() - rclcpp::Duration{1, d};
     publisher_->publish(msg);
   }
 
   rclcpp::Publisher<MessageWithHeader>::SharedPtr publisher_;
   rclcpp::TimerBase::SharedPtr publish_timer_;
+  std::uniform_int_distribution<uint32_t> uniform_dist_;
 };
 
 /**
@@ -228,6 +235,63 @@ protected:
     rclcpp::shutdown();
   }
 };
+
+/**
+ * Check if a received statistics message is empty (no data was observed)
+ * @param message_to_check
+ */
+void CheckIfStatisticsMessageIsEmpty(const MetricsMessage & message_to_check)
+{
+  for (const auto & stats_point : message_to_check.statistics) {
+    const auto type = stats_point.data_type;
+    switch (type) {
+      case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
+        EXPECT_EQ(kNoSamples, stats_point.data) << "unexpected sample count" << stats_point.data;
+        break;
+      case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
+      case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
+      case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
+      case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
+        EXPECT_TRUE(std::isnan(stats_point.data)) << "unexpected value" << stats_point.data <<
+          " for type:" << type;
+        break;
+      default:
+        FAIL() << "received unknown statistics type: " << std::dec <<
+          static_cast<unsigned int>(type);
+    }
+  }
+}
+
+/**
+ * Check if a received statistics message observed data and contains some calculation
+ * @param message_to_check
+ */
+void CheckIfStatisticsMessageIsPopulated(const MetricsMessage & message_to_check)
+{
+  for (const auto & stats_point : message_to_check.statistics) {
+    const auto type = stats_point.data_type;
+    switch (type) {
+      case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
+        EXPECT_LT(0, stats_point.data) << "unexpected sample count " << stats_point.data;
+        break;
+      case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
+        EXPECT_LT(0, stats_point.data) << "unexpected avg " << stats_point.data;
+        break;
+      case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
+        EXPECT_LT(0, stats_point.data) << "unexpected mi n" << stats_point.data;
+        break;
+      case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
+        EXPECT_LT(0, stats_point.data) << "unexpected max " << stats_point.data;
+        break;
+      case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
+        EXPECT_LT(0, stats_point.data) << "unexpected stddev " << stats_point.data;
+        break;
+      default:
+        FAIL() << "received unknown statistics type: " << std::dec <<
+          static_cast<unsigned int>(type);
+    }
+  }
+}
 
 /**
  * Test an invalid argument is thrown for a bad input publish period.
@@ -333,12 +397,10 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
 
   std::set<std::string> received_metrics;
   for (const auto & msg : received_messages) {
-    if (msg.metrics_source == "message_age")
-    {
+    if (msg.metrics_source == "message_age") {
       message_age_count++;
     }
-    if (msg.metrics_source == "message_period")
-    {
+    if (msg.metrics_source == "message_period") {
       message_period_count++;
     }
   }
@@ -349,52 +411,13 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   // Message age statistics will not be calculated because Empty messages
   // don't have a `header` with timestamp. This means that we expect to receive a `message_age`
   // and `message_period` message for each empty message published.
-  bool any_samples = false;
   for (const auto & msg : received_messages) {
-    if (msg.metrics_source != kMessagePeriodSourceLabel) {
-      continue;
-    }
-    // skip messages without samples
-    bool has_samples = false;
-    for (const auto & stats_point : msg.statistics) {
-      const auto type = stats_point.data_type;
-      if (
-        StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT == type &&
-        stats_point.data > 0)
-      {
-        has_samples = true;
-        break;
-      }
-    }
-    if (!has_samples) {
-      continue;
-    }
-    any_samples = true;
-    for (const auto & stats_point : msg.statistics) {
-      const auto type = stats_point.data_type;
-      switch (type) {
-        case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
-          EXPECT_LT(0, stats_point.data) << "unexpected sample count";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
-          EXPECT_LT(0, stats_point.data) << "unexpected avg";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
-          EXPECT_LT(0, stats_point.data) << "unexpected min";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
-          EXPECT_LT(0, stats_point.data) << "unexpected max";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
-          EXPECT_LT(0, stats_point.data) << "unexpected stddev";
-          break;
-        default:
-          FAIL() << "received unknown statistics type: " << std::dec <<
-            static_cast<unsigned int>(type);
-      }
+    if (msg.metrics_source == kMessageAgeSourceLabel) {
+      CheckIfStatisticsMessageIsEmpty(msg);
+    } else if (msg.metrics_source == kMessagePeriodSourceLabel) {
+      CheckIfStatisticsMessageIsPopulated(msg);
     }
   }
-  EXPECT_TRUE(any_samples) << "All received metrics messages had zero samples";
 }
 
 TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_with_header)
@@ -439,60 +462,17 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
 
   std::set<std::string> received_metrics;
   for (const auto & msg : received_messages) {
-    if (msg.metrics_source == kMessageAgeSourceLabel)
-    {
+    if (msg.metrics_source == kMessageAgeSourceLabel) {
       message_age_count++;
     }
-    if (msg.metrics_source == kMessagePeriodSourceLabel)
-    {
+    if (msg.metrics_source == kMessagePeriodSourceLabel) {
       message_period_count++;
     }
   }
   EXPECT_EQ(kNumExpectedMessageAgeMessages, message_age_count);
   EXPECT_EQ(kNumExpectedMessagePeriodMessages, message_period_count);
 
-  // Check the collected statistics for message period.
-  bool any_samples = false;
   for (const auto & msg : received_messages) {
-    // skip messages without samples
-    bool has_samples = false;
-    for (const auto & stats_point : msg.statistics) {
-      const auto type = stats_point.data_type;
-      if (
-        StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT == type &&
-        stats_point.data > 0)
-      {
-        has_samples = true;
-        break;
-      }
-    }
-    if (!has_samples) {
-      continue;
-    }
-    any_samples = true;
-    for (const auto & stats_point : msg.statistics) {
-      const auto type = stats_point.data_type;
-      switch (type) {
-        case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
-          EXPECT_LT(0, stats_point.data) << "unexpected sample count";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
-          EXPECT_LT(0, stats_point.data) << "unexpected avg";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
-          EXPECT_LT(0, stats_point.data) << "unexpected min";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_MAXIMUM:
-          EXPECT_LT(0, stats_point.data) << "unexpected max";
-          break;
-        case StatisticDataType::STATISTICS_DATA_TYPE_STDDEV:
-          EXPECT_LE(0, stats_point.data) << "unexpected stddev";
-          break;
-        default:
-          FAIL() << "received unknown statistics type: " << std::dec <<
-            static_cast<unsigned int>(type);
-      }
-    }
+    CheckIfStatisticsMessageIsPopulated(msg);
   }
-  EXPECT_TRUE(any_samples) << "All received metrics messages had zero samples";
 }
