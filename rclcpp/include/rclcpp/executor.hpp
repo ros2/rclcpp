@@ -454,7 +454,8 @@ protected:
    */
   RCLCPP_PUBLIC
   bool
-  has_node_from_callback_groups_associated_with_executor(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+  has_node_from_callback_groups_associated_with_executor(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
   /// Checks whether any callback group from the node is associated with the executor
   /**
@@ -464,7 +465,8 @@ protected:
    */
   RCLCPP_PUBLIC
   bool
-  has_node_associated_with_executor(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+  has_node_associated_with_executor(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
@@ -515,7 +517,8 @@ protected:
 
   RCLCPP_PUBLIC
   bool
-  get_next_ready_executable_from_map(AnyExecutable & any_executable, WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
+  get_next_ready_executable_from_map(
+    AnyExecutable & any_executable, WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
 
   RCLCPP_PUBLIC
   bool
@@ -570,12 +573,13 @@ protected:
   /// maps nodes to guard conditions
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
 
-  // maps callback groups to nodes.
+  /// maps callback groups to nodes
   WeakCallbackGroupsToNodesMap weak_groups_associated_with_executor_to_nodes_;
 
-  // maps callback groups to nodes.
+  /// maps callback groups to nodes
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
-  
+
+  /// nodes that associated with the executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 };
 

@@ -136,7 +136,7 @@ public:
   remove_node(std::shared_ptr<rclcpp::Node> node_ptr, bool notify = true) override;
 
   RCLCPP_PUBLIC
-  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_all_callback_groups() override;
 
   /// Get callback groups that belong to executor.
@@ -152,7 +152,7 @@ public:
    * the executor
    */
   RCLCPP_PUBLIC
-  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_callback_groups_associated_with_executor() override;
 
   /// Get callback groups that belong to executor.
@@ -167,7 +167,7 @@ public:
    * the executor
    */
   RCLCPP_PUBLIC
-  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_callback_groups_from_nodes_associated_with_executor() override;
 
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.

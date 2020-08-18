@@ -19,6 +19,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <vector>
 
 #include "rcl/guard_condition.h"
 #include "rcl/wait.h"
@@ -194,7 +195,7 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr);
 
   RCLCPP_PUBLIC
-  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_all_callback_groups();
 
   /// Get callback groups that belong to executor.
@@ -210,7 +211,7 @@ public:
    * the executor
    */
   RCLCPP_PUBLIC
-  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_callback_groups_associated_with_executor();
 
   /// Get callback groups that belong to executor.
@@ -225,7 +226,7 @@ public:
    * the executor
    */
   RCLCPP_PUBLIC
-  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_callback_groups_from_nodes_associated_with_executor();
 
   /// Complete all available queued work without blocking.
@@ -329,7 +330,8 @@ public:
    * \return boolean whether a node belongs the collector
    */
   bool
-  has_node_from_callback_groups_associated_with_executor(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+  has_node_from_callback_groups_associated_with_executor(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
   /// Returns true if the node belongs to the collector
   /** Returns true if the node belongs to the collector
@@ -337,7 +339,8 @@ public:
    * \return boolean whether a node belongs the collector
    */
   bool
-  has_node_associated_with_executor(const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+  has_node_associated_with_executor(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
 
 private:
   /// Add all callback groups that can be automatically added by any executor
