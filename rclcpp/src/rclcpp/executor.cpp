@@ -290,7 +290,6 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
   if (has_executor.exchange(true)) {
     throw std::runtime_error("Node has already been added to an executor.");
   }
-  weak_nodes_.push_back(node_ptr);
   for (auto & weak_group : node_ptr->get_callback_groups()) {
     auto group_ptr = weak_group.lock();
     if (group_ptr != nullptr && !group_ptr->get_associated_with_executor_atomic().load() &&
@@ -299,6 +298,7 @@ Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_pt
       add_callback_groups_from_node_associated_with_executor(group_ptr, node_ptr, notify);
     }
   }
+  weak_nodes_.push_back(node_ptr);
 }
 
 void
