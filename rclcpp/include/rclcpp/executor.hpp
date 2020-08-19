@@ -102,28 +102,6 @@ public:
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     bool notify = true);
 
-  /// Add vector of callback groups to an executor.
-  /**
-   * An executor can have zero or more callback groups which provide work during `spin` functions.
-   * You can pass a vector of shared pointers that point to callback groups and a shared pointer
-   * to the node base interface that owns the callback groups. Each callback group in the vector
-   * will be passed individually to the `add_callback_group(group_ptr, node_ptr, notify)`.
-   * This is a helper function that allows a user to pass a vector of callback groups and one
-   * node base interface in one call.
-   *
-   * \param[in] group_ptrs a vector of shared ptrs that point to callback groups
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * callback group was added, it will wake up.
-   */
-  RCLCPP_PUBLIC
-  virtual void
-  add_callback_groups(
-    const std::vector<rclcpp::CallbackGroup::SharedPtr> & group_ptrs,
-    rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-    bool notify = true);
-
   RCLCPP_PUBLIC
   virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_all_callback_groups();

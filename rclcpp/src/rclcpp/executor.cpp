@@ -274,20 +274,6 @@ Executor::add_callback_groups_from_node_associated_with_executor(
 }
 
 void
-Executor::add_callback_groups(
-  const std::vector<rclcpp::CallbackGroup::SharedPtr> & group_ptrs,
-  rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
-  bool notify)
-{
-  std::for_each(
-    group_ptrs.begin(), group_ptrs.end(),
-    [node_ptr, notify, this](rclcpp::CallbackGroup::SharedPtr group_ptr)
-    {
-      add_callback_group(group_ptr, node_ptr, notify);
-    });
-}
-
-void
 Executor::add_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   // If the node already has an executor
