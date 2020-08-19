@@ -246,7 +246,7 @@ void CheckIfStatisticsMessageIsEmpty(const MetricsMessage & message_to_check)
     const auto type = stats_point.data_type;
     switch (type) {
       case StatisticDataType::STATISTICS_DATA_TYPE_SAMPLE_COUNT:
-        EXPECT_EQ(kNoSamples, stats_point.data) << "unexpected sample count" << stats_point.data;
+        EXPECT_EQ(0, stats_point.data) << "unexpected sample count" << stats_point.data;
         break;
       case StatisticDataType::STATISTICS_DATA_TYPE_AVERAGE:
       case StatisticDataType::STATISTICS_DATA_TYPE_MINIMUM:
