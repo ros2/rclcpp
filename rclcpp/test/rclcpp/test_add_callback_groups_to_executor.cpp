@@ -91,6 +91,8 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups) {
   ExecutorType executor;
   executor.add_callback_group(cb_grp, node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 1u);
+  ASSERT_EQ(executor.get_callback_groups_associated_with_executor().size(), 1u);
+  ASSERT_EQ(executor.get_callback_groups_from_nodes_associated_with_executor().size(), 0u);
 
   const rclcpp::QoS qos(10);
   auto options = rclcpp::SubscriptionOptions();
@@ -102,6 +104,24 @@ TYPED_TEST(TestAddCallbackGroupsToExecutor, add_callback_groups) {
     node->create_subscription<test_msgs::msg::Empty>("topic_name", qos, callback, options);
   executor.add_callback_group(cb_grp2, node->get_node_base_interface());
   ASSERT_EQ(executor.get_all_callback_groups().size(), 2u);
+  ASSERT_EQ(executor.get_callback_groups_associated_with_executor().size(), 2u);
+  ASSERT_EQ(executor.get_callback_groups_from_nodes_associated_with_executor().size(), 0u);
+
+  executor.add_node(node);
+  ASSERT_EQ(executor.get_callback_groups_associated_with_executor().size(), 2u);
+  ASSERT_EQ(executor.get_callback_groups_from_nodes_associated_with_executor().size(), 1u);
+
+  executor.remove_node(node);
+  ASSERT_EQ(executor.get_callback_groups_associated_with_executor().size(), 2u);
+  ASSERT_EQ(executor.get_callback_groups_from_nodes_associated_with_executor().size(), 0u);
+
+  executor.remove_callback_group(cb_grp);
+  ASSERT_EQ(executor.get_callback_groups_associated_with_executor().size(), 1u);
+  ASSERT_EQ(executor.get_callback_groups_from_nodes_associated_with_executor().size(), 0u);
+
+  executor.remove_callback_group(cb_grp2);
+  ASSERT_EQ(executor.get_callback_groups_associated_with_executor().size(), 0u);
+  ASSERT_EQ(executor.get_callback_groups_from_nodes_associated_with_executor().size(), 0u);
 }
 
 /*

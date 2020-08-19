@@ -575,11 +575,14 @@ protected:
   /// maps nodes to guard conditions
   WeakNodesToGuardConditionsMap weak_nodes_to_guard_conditions_;
 
-  /// maps callback groups to nodes
+  /// maps callback groups associated to nodes
   WeakCallbackGroupsToNodesMap weak_groups_associated_with_executor_to_nodes_;
 
-  /// maps callback groups to nodes
+  /// maps callback groups to nodes associated with executor
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_associated_with_executor_;
+
+  /// maps all callback groups to nodes
+  WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
 
   /// nodes that associated with the executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;

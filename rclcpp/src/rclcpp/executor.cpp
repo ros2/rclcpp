@@ -118,6 +118,7 @@ Executor::~Executor()
       }
     });
   weak_nodes_.clear();
+  weak_groups_to_nodes_.clear();
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & guard_condition = pair.second;
     memory_strategy_->remove_guard_condition(guard_condition);
@@ -218,6 +219,8 @@ Executor::add_callback_group(
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");
   }
+  // Also add to the map that contains all callback groups
+  weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
   if (is_new_node) {
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
     weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
@@ -253,6 +256,8 @@ Executor::add_callback_groups_from_node_associated_with_executor(
   if (!was_inserted) {
     throw std::runtime_error("Callback group was already added to executor.");
   }
+  // Also add to the map that contains all callback groups
+  weak_groups_to_nodes_.insert(std::make_pair(weak_group_ptr, node_ptr));
   if (is_new_node) {
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr node_weak_ptr(node_ptr);
     weak_nodes_to_guard_conditions_[node_weak_ptr] = node_ptr->get_notify_guard_condition();
@@ -315,6 +320,7 @@ Executor::remove_callback_group(
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
     weak_groups_associated_with_executor_to_nodes_.erase(iter);
+    weak_groups_to_nodes_.erase(group_ptr);
     std::atomic_bool & has_executor = group_ptr->get_associated_with_executor_atomic();
     has_executor.store(false);
   } else {
@@ -350,6 +356,7 @@ Executor::remove_callback_group_from_node_associated_with_executor(
       throw std::runtime_error("Node must not be deleted before its callback group(s).");
     }
     weak_groups_to_nodes_associated_with_executor_.erase(iter);
+    weak_groups_to_nodes_.erase(group_ptr);
   } else {
     throw std::runtime_error("Callback group needs to be associated with executor.");
   }
@@ -708,30 +715,14 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
     // allowed to add to another executor
     add_allowable_unassigned_callback_groups();
 
-    WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
-    std::for_each(
-      weak_groups_to_nodes_associated_with_executor_.begin(),
-      weak_groups_to_nodes_associated_with_executor_.end(),
-      [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
-        weak_groups_to_nodes.insert(key_value_pair);
-      });
-    std::for_each(
-      weak_groups_associated_with_executor_to_nodes_.begin(),
-      weak_groups_associated_with_executor_to_nodes_.end(),
-      [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
-      rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
-        weak_groups_to_nodes.insert(key_value_pair);
-      });
-
     // Collect the subscriptions and timers to be waited on
     memory_strategy_->clear_handles();
     bool has_invalid_weak_groups_or_nodes =
-      memory_strategy_->collect_entities(weak_groups_to_nodes);
+      memory_strategy_->collect_entities(weak_groups_to_nodes_);
 
     if (has_invalid_weak_groups_or_nodes) {
       std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-      for (auto pair : weak_groups_to_nodes) {
+      for (auto pair : weak_groups_to_nodes_) {
         auto weak_group_ptr = pair.first;
         auto weak_node_ptr = pair.second;
         if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
@@ -754,6 +745,7 @@ Executor::wait_for_work(std::chrono::nanoseconds timeout)
           {
             weak_groups_associated_with_executor_to_nodes_.erase(group_ptr);
           }
+          weak_groups_to_nodes_.erase(group_ptr);
         });
     }
 
@@ -847,22 +839,7 @@ Executor::get_group_by_timer(rclcpp::TimerBase::SharedPtr timer)
 bool
 Executor::get_next_ready_executable(AnyExecutable & any_executable)
 {
-  WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
-  std::for_each(
-    weak_groups_to_nodes_associated_with_executor_.begin(),
-    weak_groups_to_nodes_associated_with_executor_.end(),
-    [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
-      weak_groups_to_nodes.insert(key_value_pair);
-    });
-  std::for_each(
-    weak_groups_associated_with_executor_to_nodes_.begin(),
-    weak_groups_associated_with_executor_to_nodes_.end(),
-    [&weak_groups_to_nodes](std::pair<rclcpp::CallbackGroup::WeakPtr,
-    rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
-      weak_groups_to_nodes.insert(key_value_pair);
-    });
-  bool success = get_next_ready_executable_from_map(any_executable, weak_groups_to_nodes);
+  bool success = get_next_ready_executable_from_map(any_executable, weak_groups_to_nodes_);
   return success;
 }
 
