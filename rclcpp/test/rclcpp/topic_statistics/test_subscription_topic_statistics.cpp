@@ -385,7 +385,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
     kTestDuration);
 
   // Compare message counts, sample count should be the same as published and received count
-  EXPECT_EQ((int)kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
+  EXPECT_EQ(kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
 
   // Check the received message total count
   const auto received_messages = statistics_listener->GetReceivedMessages();
@@ -450,7 +450,7 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
     kTestDuration);
 
   // Compare message counts, sample count should be the same as published and received count
-  EXPECT_EQ((int)kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
+  EXPECT_EQ(kNumExpectedMessages, statistics_listener->GetNumberOfMessagesReceived());
 
   // Check the received message total count
   const auto received_messages = statistics_listener->GetReceivedMessages();

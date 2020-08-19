@@ -90,7 +90,7 @@ public:
   MetricsMessageSubscriber(
     const std::string & name,
     const std::string & topic_name,
-    const int number_of_messages_to_receive = 2)
+    const uint64_t number_of_messages_to_receive = 2)
   : rclcpp::Node(name),
     number_of_messages_to_receive_(number_of_messages_to_receive)
   {
@@ -118,7 +118,7 @@ public:
    * Return the number of messages received by this subscriber.
    * \return the number of messages received by the subscriber callback
    */
-  int GetNumberOfMessagesReceived() const
+  uint64_t GetNumberOfMessagesReceived() const
   {
     return num_messages_received_;
   }
@@ -142,8 +142,8 @@ private:
   std::vector<MetricsMessage> received_messages_;
   rclcpp::Subscription<MetricsMessage>::SharedPtr subscription_;
   mutable std::mutex mutex_;
-  std::atomic<int> num_messages_received_{0};
-  const int number_of_messages_to_receive_;
+  std::atomic<uint64_t> num_messages_received_{0};
+  const uint64_t number_of_messages_to_receive_;
 };
 
 }  // namespace topic_statistics
