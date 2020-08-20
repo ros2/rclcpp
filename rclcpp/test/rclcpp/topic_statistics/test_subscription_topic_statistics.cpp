@@ -69,7 +69,7 @@ using libstatistics_collector::moving_average_statistics::StatisticData;
 
 /**
  * Wrapper class to test and expose parts of the SubscriptionTopicStatistics<T> class.
- * @tparam CallbackMessageT
+ * \tparam CallbackMessageT
  */
 template<typename CallbackMessageT>
 class TestSubscriptionTopicStatistics : public SubscriptionTopicStatistics<CallbackMessageT>
@@ -238,9 +238,9 @@ protected:
 
 /**
  * Check if a received statistics message is empty (no data was observed)
- * @param message_to_check
+ * \param message_to_check
  */
-void CheckIfStatisticsMessageIsEmpty(const MetricsMessage & message_to_check)
+void check_if_statistics_message_is_empty(const MetricsMessage & message_to_check)
 {
   for (const auto & stats_point : message_to_check.statistics) {
     const auto type = stats_point.data_type;
@@ -264,9 +264,9 @@ void CheckIfStatisticsMessageIsEmpty(const MetricsMessage & message_to_check)
 
 /**
  * Check if a received statistics message observed data and contains some calculation
- * @param message_to_check
+ * \param message_to_check
  */
-void CheckIfStatisticsMessageIsPopulated(const MetricsMessage & message_to_check)
+void check_if_statistic_message_is_populated(const MetricsMessage & message_to_check)
 {
   for (const auto & stats_point : message_to_check.statistics) {
     const auto type = stats_point.data_type;
@@ -413,9 +413,9 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_no
   // and `message_period` message for each empty message published.
   for (const auto & msg : received_messages) {
     if (msg.metrics_source == kMessageAgeSourceLabel) {
-      CheckIfStatisticsMessageIsEmpty(msg);
+      check_if_statistics_message_is_empty(msg);
     } else if (msg.metrics_source == kMessagePeriodSourceLabel) {
-      CheckIfStatisticsMessageIsPopulated(msg);
+      check_if_statistic_message_is_populated(msg);
     }
   }
 }
@@ -473,6 +473,6 @@ TEST_F(TestSubscriptionTopicStatisticsFixture, test_receive_stats_for_message_wi
   EXPECT_EQ(kNumExpectedMessagePeriodMessages, message_period_count);
 
   for (const auto & msg : received_messages) {
-    CheckIfStatisticsMessageIsPopulated(msg);
+    check_if_statistic_message_is_populated(msg);
   }
 }
