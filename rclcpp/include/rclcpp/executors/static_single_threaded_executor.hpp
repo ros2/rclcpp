@@ -129,7 +129,7 @@ public:
 
   /// Convenience function which takes Node and forwards NodeBaseInterface.
   /**
-   * \sa rclcpp::StaticSingleThreadedExecutor::remove_node
+   * \sa rclcpp::Executor::remove_node
    */
   RCLCPP_PUBLIC
   void
@@ -141,15 +141,7 @@ public:
 
   /// Get callback groups that belong to executor.
   /**
-   * This function returns a vector of weak pointers that point to callback groups that were
-   * associated with the executor.
-   * The callback groups associated with this executor may have been added with
-   * `add_callback_groups`, or added when a node was added to the executor with `add_node`, or
-   * automatically added when it created by a node already associated with this executor and the
-   * automatically_add_to_executor_with_node parameter was true.
-   *
-   * \return a vector of weak pointers that point to callback groups that are associated with
-   * the executor
+   * \sa rclcpp::Executor::get_callback_groups_associated_with_executor()
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
@@ -157,14 +149,7 @@ public:
 
   /// Get callback groups that belong to executor.
   /**
-   * This function returns a vector of weak pointers that point to callback groups that were
-   * associated with the executor. The callback groups associated might have been added with
-   * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
-   * automatically added when it was not associated to an executor and allows an executor
-   * to automatically add it if the node that it belongs to is associated with the executor.
-   *
-   * \return a vector of weak pointers that point to callback groups that are associated with
-   * the executor
+   * \sa rclcpp::Executor::get_callback_groups_from_nodes_associated_with_executor()
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>

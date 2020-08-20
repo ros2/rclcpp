@@ -85,15 +85,20 @@ public:
   /**
    * An executor can have zero or more callback groups which provide work during `spin` functions.
    * When an executor attempts to add a callback group, the executor checks to see if it is already
-   * associated with another executor.
-   * If it is, then an exception is thrown.
+   * associated with another executor. If it is, then an exception is thrown.
    * Otherwise, the callback group is added to the executor.
+   *
+   * Callback groups added through this function do not associate the node with the executor which
+   * means any callback group created will not be associated with this executor unless the node was
+   * added to the executor through rclcpp::Executor::add_node or the callback groups are manually
+   * added with rclcpp::Executor::add_callback_group.
    *
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
    * callback group was added, it will wake up.
+   * \throw std::runtime_error if the callback group is associated to an executor
    */
   RCLCPP_PUBLIC
   virtual void
@@ -101,10 +106,6 @@ public:
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
     bool notify = true);
-
-  RCLCPP_PUBLIC
-  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_all_callback_groups();
 
   /// Get callback groups that belong to executor.
   /**
@@ -120,17 +121,31 @@ public:
    */
   RCLCPP_PUBLIC
   virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
+  get_all_callback_groups();
+
+  /// Get callback groups that belong to executor.
+  /**
+   * This function returns a vector of weak pointers that point to callback groups that were
+   * associated with the executor.
+   * The callback groups associated with this executor have been added with
+   * `add_callback_groups`.
+   *
+   * \return a vector of weak pointers that point to callback groups that are associated with
+   * the executor
+   */
+  RCLCPP_PUBLIC
+  virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
   get_callback_groups_associated_with_executor();
 
   /// Get callback groups that belong to executor.
   /**
    * This function returns a vector of weak pointers that point to callback groups that were
-   * associated with the executor. The callback groups associated might have been added with
-   * `add_callback_groups`, added when a node is added to the executor with `add_node`, or
+   * added from a node that is associated with the executor. The callback groups  are added when a
+   * node is added to the executor with `add_node`, or
    * automatically added when it was not associated to an executor and allows an executor
    * to automatically add it if the node that it belongs to is associated with the executor.
    *
-   * \return a vector of weak pointers that point to callback groups that are associated with
+   * \return a vector of weak pointers that point to callback groups from a node associated with
    * the executor
    */
   RCLCPP_PUBLIC
@@ -139,16 +154,12 @@ public:
 
   /// Remove a callback group from the executor.
   /**
-   * The callback group is removed from the executor.
-   * If the callback group removed was the last callback group from the node
-   * that is associated with the executor, the interrupt guard condition
-   * is triggered and node's guard condition is removed from the executor
+   * Removes callback groups that associated with the executor, i.e. added with
+   * rclcpp::Executor::add_callback_group
    *
-   * \param[in] group_ptr Shared pointer to the callback group to be added.
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a
-   * callback group was removed, it will wake up.
-   * \throw std::runtime_error if the callback group is not associated with the executor
+   * This function only removes callback groups that were manually added with
+   * rclcpp::Executor::add_callback_group. To remove callback groups that were added with a node
+   * that was associated with the executor, use rclcpp::Executor::remove_node instead.
    */
   RCLCPP_PUBLIC
   virtual void
@@ -165,7 +176,7 @@ public:
    * are also automatically associated with this executor.
    *
    * Callback groups with the automatically_add_to_executor_with_node parameter set to false must
-   * be manually added to an executor using the add_callback_group method.
+   * be manually added to an executor using the rclcpp::Executor::add_callback_group method.
    *
    * If a node is already associated with an executor, this method throws an exception.
    *
@@ -188,8 +199,9 @@ public:
 
   /// Remove a node from the executor.
   /**
-   * Any callback groups automatically added when this node was added with add_node are
-   * automatically removed, and the node is no longer associated with this executor.
+   * Any callback groups automatically added when this node was added with
+   * rclcpp::Executor::add_node are automatically removed, and the node is no longer associated
+   * with this executor.
    *
    * This also means that future callback groups created by the given node are no longer
    * automatically added to this executor.
@@ -198,6 +210,7 @@ public:
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
    * waiting for work in another thread, because otherwise the executor would never be notified.
+   * \throw std::runtime_error verifies node is associated with an executor
    */
   RCLCPP_PUBLIC
   virtual void
@@ -434,42 +447,24 @@ protected:
    */
   RCLCPP_PUBLIC
   bool
-  has_node_from_callback_groups_associated_with_executor(
-    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
-
-  /// Checks whether any callback group from the node is associated with the executor
-  /**
-   * Checks if there is a calllback group that belongs to the node that
-   * is associated with the executor.
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   */
-  RCLCPP_PUBLIC
-  bool
-  has_node_associated_with_executor(
-    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr) const;
+  has_node(
+    const rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    WeakCallbackGroupsToNodesMap weak_groups_to_nodes) const;
 
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
   get_group_by_timer(rclcpp::TimerBase::SharedPtr timer);
 
-  /// Add a callback group to an executor.
+  /// Add a callback group to an executor
   /**
-   * An executor can have zero or more callback groups which provide work during `spin` functions.
-   * When an executor attempts to add a callback group, the executor checks to see if it is already
-   * associated with another executor. If it is, than an exception is thrown. Otherwise, the
-   * callback group is added to the executor.
-   *
-   * \param[in] group_ptr a shared ptr that points to a callback group
-   * \param[in] node_ptr a shared pointer that points to a node base interface
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
-   * callback group was added, it will wake up.
+   * \see rclcpp::Executor::add_callback_group
    */
   RCLCPP_PUBLIC
   virtual void
-  add_callback_groups_from_node_associated_with_executor(
+  add_callback_group_to_map(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
     rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr,
+    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
     bool notify = true);
 
   /// Remove a callback group from the executor.
@@ -487,8 +482,9 @@ protected:
    */
   RCLCPP_PUBLIC
   virtual void
-  remove_callback_group_from_node_associated_with_executor(
+  remove_callback_group_from_map(
     rclcpp::CallbackGroup::SharedPtr group_ptr,
+    WeakCallbackGroupsToNodesMap & weak_groups_to_nodes,
     bool notify = true);
 
   RCLCPP_PUBLIC
@@ -519,7 +515,7 @@ protected:
    */
   RCLCPP_PUBLIC
   virtual void
-  add_allowable_unassigned_callback_groups();
+  add_callback_groups_from_nodes_associated_to_executor();
 
   /// Spinning state, used to prevent multi threaded calls to spin and to cancel blocking spins.
   std::atomic_bool spinning;
@@ -562,7 +558,7 @@ protected:
   /// maps all callback groups to nodes
   WeakCallbackGroupsToNodesMap weak_groups_to_nodes_;
 
-  /// nodes that associated with the executor
+  /// nodes that are associated with the executor
   std::list<rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> weak_nodes_;
 };
 
