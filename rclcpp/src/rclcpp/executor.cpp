@@ -158,7 +158,7 @@ Executor::get_all_callback_groups()
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-Executor::get_callback_groups_associated_with_executor()
+Executor::get_manually_added_callback_groups()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
   for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
@@ -168,7 +168,7 @@ Executor::get_callback_groups_associated_with_executor()
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-Executor::get_callback_groups_from_nodes_associated_with_executor()
+Executor::get_automatically_added_callback_groups_from_nodes()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
   for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
@@ -337,6 +337,19 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
   if (!node_ptr->get_associated_with_executor_atomic().load()) {
     throw std::runtime_error("Node needs to be associated with an executor.");
   }
+  bool matched = false;
+  auto node_it = weak_nodes_.begin();
+  while (node_it != weak_nodes_.end()) {
+    matched = (node_it->lock() == node_ptr);
+    if (matched) {
+      node_it = weak_nodes_.erase(node_it);
+    } else {
+      ++node_it;
+    }
+  }
+  if (!matched) {
+    throw std::runtime_error("Node needs to be associated with this executor.");
+  }
   std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
   std::for_each(
     weak_groups_to_nodes_associated_with_executor_.begin(),
@@ -358,15 +371,6 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
         weak_groups_to_nodes_associated_with_executor_,
         notify);
     });
-  auto node_it = weak_nodes_.begin();
-  while (node_it != weak_nodes_.end()) {
-    bool matched = (node_it->lock() == node_ptr);
-    if (matched) {
-      node_it = weak_nodes_.erase(node_it);
-    } else {
-      ++node_it;
-    }
-  }
   std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
   has_executor.store(false);
 }

@@ -88,10 +88,8 @@ public:
    * associated with another executor. If it is, then an exception is thrown.
    * Otherwise, the callback group is added to the executor.
    *
-   * Callback groups added through this function do not associate the node with the executor which
-   * means any callback group created will not be associated with this executor unless the node was
-   * added to the executor through rclcpp::Executor::add_node or the callback groups are manually
-   * added with rclcpp::Executor::add_callback_group.
+   * Adding a callback group with this method does not associate its node with this executor
+   * in any way
    *
    * \param[in] group_ptr a shared ptr that points to a callback group
    * \param[in] node_ptr a shared pointer that points to a node base interface
@@ -135,7 +133,7 @@ public:
    */
   RCLCPP_PUBLIC
   virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_associated_with_executor();
+  get_manually_added_callback_groups();
 
   /// Get callback groups that belong to executor.
   /**
@@ -150,16 +148,11 @@ public:
    */
   RCLCPP_PUBLIC
   virtual std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_from_nodes_associated_with_executor();
+  get_automatically_added_callback_groups_from_nodes();
 
   /// Remove a callback group from the executor.
   /**
-   * Removes callback groups that associated with the executor, i.e. added with
-   * rclcpp::Executor::add_callback_group
-   *
-   * This function only removes callback groups that were manually added with
-   * rclcpp::Executor::add_callback_group. To remove callback groups that were added with a node
-   * that was associated with the executor, use rclcpp::Executor::remove_node instead.
+   * \see rclcpp::Executor::remove_callback_group_from_map
    */
   RCLCPP_PUBLIC
   virtual void
@@ -184,6 +177,7 @@ public:
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a new
    * node was added, it will wake up.
+   * \throw std::runtime_error if a node is already associated to an executor
    */
   RCLCPP_PUBLIC
   virtual void
@@ -210,7 +204,8 @@ public:
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
    * waiting for work in another thread, because otherwise the executor would never be notified.
-   * \throw std::runtime_error verifies node is associated with an executor
+   * \throw std::runtime_error verifies node is associated with an executor.
+   * \throw std::runtime_error verifies it has been associated with this executor.
    */
   RCLCPP_PUBLIC
   virtual void
@@ -478,6 +473,7 @@ protected:
    * \param[in] notify True to trigger the interrupt guard condition during this function. If
    * the executor is blocked at the rmw layer while waiting for work and it is notified that a
    * callback group was removed, it will wake up.
+   * \throw std::runtime_error if node is deleted before callback group
    * \throw std::runtime_error if the callback group is not associated with the executor
    */
   RCLCPP_PUBLIC

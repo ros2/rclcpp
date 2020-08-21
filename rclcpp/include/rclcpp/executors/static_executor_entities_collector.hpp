@@ -173,19 +173,19 @@ public:
 
   /// Get callback groups that belong to executor.
   /**
-   * \see rclcpp::Executor::get_callback_groups_associated_with_executor()
+   * \see rclcpp::Executor::get_manually_added_callback_groups()
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_associated_with_executor();
+  get_manually_added_callback_groups();
 
   /// Get callback groups that belong to executor.
   /**
-   * \see rclcpp::Executor::get_callback_groups_from_nodes_associated_with_executor()
+   * \see rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_from_nodes_associated_with_executor();
+  get_automatically_added_callback_groups_from_nodes();
 
   /// Complete all available queued work without blocking.
   /**

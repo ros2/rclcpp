@@ -141,19 +141,19 @@ public:
 
   /// Get callback groups that belong to executor.
   /**
-   * \sa rclcpp::Executor::get_callback_groups_associated_with_executor()
+   * \sa rclcpp::Executor::get_manually_added_callback_groups()
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_associated_with_executor() override;
+  get_manually_added_callback_groups() override;
 
   /// Get callback groups that belong to executor.
   /**
-   * \sa rclcpp::Executor::get_callback_groups_from_nodes_associated_with_executor()
+   * \sa rclcpp::Executor::get_automatically_added_callback_groups_from_nodes()
    */
   RCLCPP_PUBLIC
   std::vector<rclcpp::CallbackGroup::WeakPtr>
-  get_callback_groups_from_nodes_associated_with_executor() override;
+  get_automatically_added_callback_groups_from_nodes() override;
 
   /// Spin (blocking) until the future is complete, it times out waiting, or rclcpp is interrupted.
   /**

@@ -117,15 +117,15 @@ StaticSingleThreadedExecutor::get_all_callback_groups()
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticSingleThreadedExecutor::get_callback_groups_associated_with_executor()
+StaticSingleThreadedExecutor::get_manually_added_callback_groups()
 {
-  return entities_collector_->get_callback_groups_associated_with_executor();
+  return entities_collector_->get_manually_added_callback_groups();
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticSingleThreadedExecutor::get_callback_groups_from_nodes_associated_with_executor()
+StaticSingleThreadedExecutor::get_automatically_added_callback_groups_from_nodes()
 {
-  return entities_collector_->get_callback_groups_from_nodes_associated_with_executor();
+  return entities_collector_->get_automatically_added_callback_groups_from_nodes();
 }
 
 void

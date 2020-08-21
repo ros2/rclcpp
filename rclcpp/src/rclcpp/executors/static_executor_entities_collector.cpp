@@ -478,7 +478,7 @@ StaticExecutorEntitiesCollector::get_all_callback_groups()
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticExecutorEntitiesCollector::get_callback_groups_associated_with_executor()
+StaticExecutorEntitiesCollector::get_manually_added_callback_groups()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
   for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
@@ -488,7 +488,7 @@ StaticExecutorEntitiesCollector::get_callback_groups_associated_with_executor()
 }
 
 std::vector<rclcpp::CallbackGroup::WeakPtr>
-StaticExecutorEntitiesCollector::get_callback_groups_from_nodes_associated_with_executor()
+StaticExecutorEntitiesCollector::get_automatically_added_callback_groups_from_nodes()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
   for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
