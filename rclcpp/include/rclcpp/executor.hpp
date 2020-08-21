@@ -152,11 +152,22 @@ public:
 
   /// Remove a callback group from the executor.
   /**
+   * The callback group is removed from and disassociated with the executor.
+   * If the callback group removed was the last callback group from the node
+   * that is associated with the executor, the interrupt guard condition
+   * is triggered and node's guard condition is removed from the executor.
+   *
    * This function only removes a callback group that was manually added with
    * rclcpp::Executor::add_callback_group.
    * To remove callback groups that were added from a node using
    * rclcpp::Executor::add_node, use rclcpp::Executor::remove_node instead.
-   * \see rclcpp::Executor::remove_callback_group_from_map for more details
+   *
+   * \param[in] group_ptr Shared pointer to the callback group to be added.
+   * \param[in] notify True to trigger the interrupt guard condition during this function. If
+   * the executor is blocked at the rmw layer while waiting for work and it is notified that a
+   * callback group was removed, it will wake up.
+   * \throw std::runtime_error if node is deleted before callback group
+   * \throw std::runtime_error if the callback group is not associated with the executor
    */
   RCLCPP_PUBLIC
   virtual void
@@ -468,17 +479,7 @@ protected:
 
   /// Remove a callback group from the executor.
   /**
-   * The callback group is removed from and disassociated with the executor.
-   * If the callback group removed was the last callback group from the node
-   * that is associated with the executor, the interrupt guard condition
-   * is triggered and node's guard condition is removed from the executor
-   *
-   * \param[in] group_ptr Shared pointer to the callback group to be added.
-   * \param[in] notify True to trigger the interrupt guard condition during this function. If
-   * the executor is blocked at the rmw layer while waiting for work and it is notified that a
-   * callback group was removed, it will wake up.
-   * \throw std::runtime_error if node is deleted before callback group
-   * \throw std::runtime_error if the callback group is not associated with the executor
+   * \see rclcpp::Executor::remove_callback_group
    */
   RCLCPP_PUBLIC
   virtual void

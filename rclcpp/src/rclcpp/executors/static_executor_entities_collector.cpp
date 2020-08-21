@@ -38,13 +38,8 @@ StaticExecutorEntitiesCollector::~StaticExecutorEntitiesCollector()
   }
   for (auto & pair : weak_groups_to_nodes_associated_with_executor_) {
     auto group = pair.first.lock();
-    auto node = pair.second.lock();
     if (group) {
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
-      has_executor.store(false);
-    }
-    if (node) {
-      std::atomic_bool & has_executor = node->get_associated_with_executor_atomic();
       has_executor.store(false);
     }
   }
@@ -368,6 +363,23 @@ bool
 StaticExecutorEntitiesCollector::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr)
 {
+  if (!node_ptr->get_associated_with_executor_atomic().load()) {
+    return false;
+  }
+  bool node_found = false;
+  auto node_it = weak_nodes_.begin();
+  while (node_it != weak_nodes_.end()) {
+    bool matched = (node_it->lock() == node_ptr);
+    if (matched) {
+      weak_nodes_.erase(node_it);
+      node_found = true;
+      break;
+    }
+    ++node_it;
+  }
+  if (!node_found) {
+    return false;
+  }
   std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
   std::for_each(
     weak_groups_to_nodes_associated_with_executor_.begin(),
@@ -388,19 +400,9 @@ StaticExecutorEntitiesCollector::remove_node(
         group_ptr,
         weak_groups_to_nodes_associated_with_executor_);
     });
-  auto node_it = weak_nodes_.begin();
-  while (node_it != weak_nodes_.end()) {
-    bool matched = (node_it->lock() == node_ptr);
-    if (matched) {
-      std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
-      has_executor.store(false);
-      weak_nodes_.erase(node_it);
-      return true;
-    } else {
-      ++node_it;
-    }
-  }
-  return false;
+  std::atomic_bool & has_executor = node_ptr->get_associated_with_executor_atomic();
+  has_executor.store(false);
+  return true;
 }
 
 bool

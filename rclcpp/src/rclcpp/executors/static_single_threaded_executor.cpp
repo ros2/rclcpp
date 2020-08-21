@@ -102,8 +102,11 @@ StaticSingleThreadedExecutor::remove_node(
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_ptr, bool notify)
 {
   bool node_removed = entities_collector_->remove_node(node_ptr);
+  if (!node_removed) {
+    throw std::runtime_error("Node needs to be associated with this executor.");
+  }
   // If the node was matched and removed, interrupt waiting
-  if (notify && node_removed) {
+  if (notify) {
     if (rcl_trigger_guard_condition(&interrupt_guard_condition_) != RCL_RET_OK) {
       throw std::runtime_error(rcl_get_error_string().str);
     }
