@@ -91,7 +91,7 @@ public:
   /**
    * block until the wait set is ready or until the timeout has been exceeded.
    * \throws std::runtime_error if wait set couldn't be cleared or filled.
-   * \throws any rcl errors from rcl_wait, \sa rclcpp::exceptions::throw_from_rcl_error()
+   * \throws any rcl errors from rcl_wait, \see rclcpp::exceptions::throw_from_rcl_error()
    */
   RCLCPP_PUBLIC
   void
@@ -150,7 +150,7 @@ public:
     WeakCallbackGroupsToNodesMap & weak_groups_to_nodes);
 
   /**
-   * \sa rclcpp::Executor::add_node()
+   * \see rclcpp::Executor::add_node()
    * \throw std::runtime_error if node was already added
    */
   RCLCPP_PUBLIC

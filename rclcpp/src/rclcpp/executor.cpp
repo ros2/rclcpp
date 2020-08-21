@@ -85,29 +85,15 @@ Executor::Executor(const rclcpp::ExecutorOptions & options)
 
 Executor::~Executor()
 {
-  // Disassocate all callback groups and thus nodes.
-  for (auto & pair : weak_groups_associated_with_executor_to_nodes_) {
+  // Disassocate all callback groups.
+  for (auto & pair : weak_groups_to_nodes_) {
     auto group = pair.first.lock();
     if (group) {
       std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
       has_executor.store(false);
     }
   }
-  weak_groups_associated_with_executor_to_nodes_.clear();
-  // Disassocate all callback groups and thus nodes.
-  for (auto & pair : weak_groups_to_nodes_associated_with_executor_) {
-    auto shared_node_ptr = pair.second.lock();
-    auto group = pair.first.lock();
-    if (shared_node_ptr) {
-      std::atomic_bool & has_executor = shared_node_ptr->get_associated_with_executor_atomic();
-      has_executor.store(false);
-    }
-    if (group) {
-      std::atomic_bool & has_executor = group->get_associated_with_executor_atomic();
-      has_executor.store(false);
-    }
-  }
-  weak_groups_to_nodes_associated_with_executor_.clear();
+  // Disassocate all nodes.
   std::for_each(
     weak_nodes_.begin(), weak_nodes_.end(), []
       (rclcpp::node_interfaces::NodeBaseInterface::WeakPtr weak_node_ptr) {
@@ -118,6 +104,8 @@ Executor::~Executor()
       }
     });
   weak_nodes_.clear();
+  weak_groups_associated_with_executor_to_nodes_.clear();
+  weak_groups_to_nodes_associated_with_executor_.clear();
   weak_groups_to_nodes_.clear();
   for (const auto & pair : weak_nodes_to_guard_conditions_) {
     auto & guard_condition = pair.second;
