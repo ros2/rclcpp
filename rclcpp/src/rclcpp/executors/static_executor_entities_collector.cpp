@@ -105,9 +105,9 @@ StaticExecutorEntitiesCollector::fill_memory_strategy()
   // Clean up any invalid nodes, if they were detected
   if (has_invalid_weak_groups_or_nodes) {
     std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-    for (auto pair : weak_groups_to_nodes_associated_with_executor_) {
-      auto weak_group_ptr = pair.first;
-      auto weak_node_ptr = pair.second;
+    for (auto & pair : weak_groups_to_nodes_associated_with_executor_) {
+      auto & weak_group_ptr = pair.first;
+      auto & weak_node_ptr = pair.second;
       if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
         invalid_group_ptrs.push_back(weak_group_ptr);
       }
@@ -123,9 +123,9 @@ StaticExecutorEntitiesCollector::fill_memory_strategy()
   // Clean up any invalid nodes, if they were detected
   if (has_invalid_weak_groups_or_nodes) {
     std::vector<rclcpp::CallbackGroup::WeakPtr> invalid_group_ptrs;
-    for (auto pair : weak_groups_associated_with_executor_to_nodes_) {
-      auto weak_group_ptr = pair.first;
-      auto weak_node_ptr = pair.second;
+    for (auto & pair : weak_groups_associated_with_executor_to_nodes_) {
+      auto & weak_group_ptr = pair.first;
+      auto & weak_node_ptr = pair.second;
       if (weak_group_ptr.expired() || weak_node_ptr.expired()) {
         invalid_group_ptrs.push_back(weak_group_ptr);
       }
@@ -374,7 +374,7 @@ StaticExecutorEntitiesCollector::remove_node(
     weak_groups_to_nodes_associated_with_executor_.end(),
     [&found_group_ptrs, node_ptr](std::pair<rclcpp::CallbackGroup::WeakPtr,
     rclcpp::node_interfaces::NodeBaseInterface::WeakPtr> key_value_pair) {
-      auto weak_node_ptr = key_value_pair.second;
+      auto & weak_node_ptr = key_value_pair.second;
       auto shared_node_ptr = weak_node_ptr.lock();
       auto group_ptr = key_value_pair.first.lock();
       if (shared_node_ptr == node_ptr) {

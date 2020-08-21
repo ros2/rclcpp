@@ -136,7 +136,7 @@ std::vector<rclcpp::CallbackGroup::WeakPtr>
 Executor::get_all_callback_groups()
 {
   std::vector<rclcpp::CallbackGroup::WeakPtr> groups;
-  for (auto const & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
+  for (const auto & group_node_ptr : weak_groups_associated_with_executor_to_nodes_) {
     groups.push_back(group_node_ptr.first);
   }
   for (auto const & group_node_ptr : weak_groups_to_nodes_associated_with_executor_) {
