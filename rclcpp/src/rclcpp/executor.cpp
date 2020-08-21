@@ -325,17 +325,19 @@ Executor::remove_node(rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node
   if (!node_ptr->get_associated_with_executor_atomic().load()) {
     throw std::runtime_error("Node needs to be associated with an executor.");
   }
-  bool matched = false;
+
+  bool found_node = false;
   auto node_it = weak_nodes_.begin();
   while (node_it != weak_nodes_.end()) {
-    matched = (node_it->lock() == node_ptr);
+    bool matched = (node_it->lock() == node_ptr);
     if (matched) {
+      found_node = true;
       node_it = weak_nodes_.erase(node_it);
     } else {
       ++node_it;
     }
   }
-  if (!matched) {
+  if (!found_node) {
     throw std::runtime_error("Node needs to be associated with this executor.");
   }
   std::vector<rclcpp::CallbackGroup::SharedPtr> found_group_ptrs;
