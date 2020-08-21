@@ -495,7 +495,8 @@ protected:
   RCLCPP_PUBLIC
   bool
   get_next_ready_executable_from_map(
-    AnyExecutable & any_executable, WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
+    AnyExecutable & any_executable,
+    WeakCallbackGroupsToNodesMap weak_groups_to_nodes);
 
   RCLCPP_PUBLIC
   bool
