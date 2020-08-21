@@ -85,7 +85,7 @@ public:
   /**
    * An executor can have zero or more callback groups which provide work during `spin` functions.
    * When an executor attempts to add a callback group, the executor checks to see if it is already
-   * associated with another executor. If it is, then an exception is thrown.
+   * associated with another executor, and if it has been, then an exception is thrown.
    * Otherwise, the callback group is added to the executor.
    *
    * Adding a callback group with this method does not associate its node with this executor
@@ -110,7 +110,7 @@ public:
    * This function returns a vector of weak pointers that point to callback groups that were
    * associated with the executor.
    * The callback groups associated with this executor may have been added with
-   * `add_callback_groups`, or added when a node was added to the executor with `add_node`, or
+   * `add_callback_group`, or added when a node was added to the executor with `add_node`, or
    * automatically added when it created by a node already associated with this executor and the
    * automatically_add_to_executor_with_node parameter was true.
    *
@@ -126,7 +126,7 @@ public:
    * This function returns a vector of weak pointers that point to callback groups that were
    * associated with the executor.
    * The callback groups associated with this executor have been added with
-   * `add_callback_groups`.
+   * `add_callback_group`.
    *
    * \return a vector of weak pointers that point to callback groups that are associated with
    * the executor
@@ -138,10 +138,10 @@ public:
   /// Get callback groups that belong to executor.
   /**
    * This function returns a vector of weak pointers that point to callback groups that were
-   * added from a node that is associated with the executor. The callback groups  are added when a
-   * node is added to the executor with `add_node`, or
-   * automatically added when it was not associated to an executor and allows an executor
-   * to automatically add it if the node that it belongs to is associated with the executor.
+   * added from a node that is associated with the executor.
+   * The callback groups are added when a node is added to the executor with `add_node`, or
+   * automatically if they are created in the future by that node and have the
+   * automatically_add_to_executor_with_node argument set to true.
    *
    * \return a vector of weak pointers that point to callback groups from a node associated with
    * the executor
@@ -152,7 +152,11 @@ public:
 
   /// Remove a callback group from the executor.
   /**
-   * \see rclcpp::Executor::remove_callback_group_from_map
+   * This function only removes a callback group that was manually added with
+   * rclcpp::Executor::add_callback_group.
+   * To remove callback groups that were added from a node using
+   * rclcpp::Executor::add_node, use rclcpp::Executor::remove_node instead.
+   * \see rclcpp::Executor::remove_callback_group_from_map for more details
    */
   RCLCPP_PUBLIC
   virtual void
