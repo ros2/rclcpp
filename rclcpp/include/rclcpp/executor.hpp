@@ -219,8 +219,8 @@ public:
    * \param[in] notify True to trigger the interrupt guard condition and wake up the executor.
    * This is useful if the last node was removed from the executor while the executor was blocked
    * waiting for work in another thread, because otherwise the executor would never be notified.
-   * \throw std::runtime_error verifies node is associated with an executor.
-   * \throw std::runtime_error verifies it has been associated with this executor.
+   * \throw std::runtime_error if the node is not associated with an executor.
+   * \throw std::runtime_error if the node is not associated with this executor.
    */
   RCLCPP_PUBLIC
   virtual void
