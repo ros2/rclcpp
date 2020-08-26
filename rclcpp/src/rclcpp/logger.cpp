@@ -14,8 +14,8 @@
 
 #include <string>
 
+#include "rclcpp/exceptions.hpp"
 #include "rclcpp/logger.hpp"
-
 #include "rclcpp/logging.hpp"
 
 namespace rclcpp
@@ -42,6 +42,19 @@ get_node_logger(const rcl_node_t * node)
     return logger;
   }
   return rclcpp::get_logger(logger_name);
+}
+
+void
+Logger::set_level(Level level)
+{
+  if (rcutils_logging_set_logger_level(
+      get_name(),
+      static_cast<RCUTILS_LOG_SEVERITY>(level)) != RCUTILS_RET_OK)
+  {
+    exceptions::throw_from_rcl_error(
+      RCL_RET_ERROR, "Couldn't set logger level",
+      rcutils_get_error_state(), rcutils_reset_error);
+  }
 }
 
 }  // namespace rclcpp

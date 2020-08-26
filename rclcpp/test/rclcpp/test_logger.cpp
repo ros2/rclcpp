@@ -44,6 +44,63 @@ TEST(TestLogger, get_node_logger) {
   EXPECT_STREQ(logger.get_name(), "ns.my_node");
 
   logger = rclcpp::get_node_logger(nullptr);
+  rcl_reset_error();
   EXPECT_STREQ(logger.get_name(), "rclcpp");
   rclcpp::shutdown();
+}
+
+struct LogEvent
+{
+  bool console_output_handler_called;
+  std::string message;
+};
+LogEvent g_last_log_event;
+
+TEST(TestLogger, set_level) {
+  ASSERT_EQ(RCUTILS_RET_OK, rcutils_logging_initialize());
+
+  rclcpp::Logger logger = rclcpp::get_logger("test_logger");
+  EXPECT_THROW(
+  {
+    logger.set_level(static_cast<rclcpp::Logger::Level>(99999));
+  }, rclcpp::exceptions::RCLError);
+
+  auto rcutils_logging_console_output_handler = [](
+    const rcutils_log_location_t *,
+    int, const char *, rcutils_time_point_value_t,
+    const char * format, va_list * args) -> void
+    {
+      g_last_log_event.console_output_handler_called = true;
+      char buffer[1024];
+      vsnprintf(buffer, sizeof(buffer), format, *args);
+      g_last_log_event.message = buffer;
+    };
+
+  rcutils_logging_output_handler_t previous_output_handler = rcutils_logging_get_output_handler();
+  rcutils_logging_set_output_handler(rcutils_logging_console_output_handler);
+
+  RCLCPP_DEBUG(logger, std::string("message %s"), "debug");
+  EXPECT_FALSE(g_last_log_event.console_output_handler_called);
+  RCLCPP_INFO(logger, std::string("message %s"), "info");
+  EXPECT_TRUE(g_last_log_event.console_output_handler_called);
+  EXPECT_EQ("message info", g_last_log_event.message);
+
+  g_last_log_event.console_output_handler_called = false;
+  logger.set_level(rclcpp::Logger::Level::Debug);
+  RCLCPP_DEBUG(logger, std::string("message %s"), "debug");
+  EXPECT_TRUE(g_last_log_event.console_output_handler_called);
+  EXPECT_EQ("message debug", g_last_log_event.message);
+  RCLCPP_INFO(logger, std::string("message %s"), "info");
+  EXPECT_EQ("message info", g_last_log_event.message);
+
+  g_last_log_event.console_output_handler_called = false;
+  logger.set_level(rclcpp::Logger::Level::Info);
+  RCLCPP_DEBUG(logger, std::string("message %s"), "debug");
+  EXPECT_FALSE(g_last_log_event.console_output_handler_called);
+  RCLCPP_INFO(logger, std::string("message %s"), "info");
+  EXPECT_TRUE(g_last_log_event.console_output_handler_called);
+  EXPECT_EQ("message info", g_last_log_event.message);
+  rcutils_logging_set_output_handler(previous_output_handler);
+
+  EXPECT_EQ(RCUTILS_RET_OK, rcutils_logging_shutdown());
 }
