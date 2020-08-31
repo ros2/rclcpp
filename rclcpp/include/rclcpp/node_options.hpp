@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "rcl/node_options.h"
-#include "rcl/logging_rosout.h"
 #include "rclcpp/context.hpp"
 #include "rclcpp/contexts/default_context.hpp"
 #include "rclcpp/parameter.hpp"
@@ -372,7 +371,9 @@ private:
     rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
   );
 
-  rclcpp::QoS rosout_qos_ = rclcpp::QoS(rcl_qos_profile_rosout_default);
+  rclcpp::QoS rosout_qos_ = rclcpp::RosoutQoS(
+    rclcpp::QoSInitialization::from_rmw(rcl_qos_profile_rosout_default)
+  );
 
   rclcpp::PublisherOptionsBase parameter_event_publisher_options_ = rclcpp::PublisherOptionsBase();
 

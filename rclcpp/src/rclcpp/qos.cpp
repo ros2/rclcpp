@@ -76,11 +76,6 @@ QoS::QoS(
   rmw_qos_profile_.depth = qos_initialization.depth;
 }
 
-QoS::QoS(
-  const rmw_qos_profile_t & initial_profile)
-: rmw_qos_profile_(initial_profile)
-{}
-
 QoS::QoS(size_t history_depth)
 : QoS(KeepLast(history_depth))
 {}
@@ -254,6 +249,10 @@ ServicesQoS::ServicesQoS(const QoSInitialization & qos_initialization)
 
 ParameterEventsQoS::ParameterEventsQoS(const QoSInitialization & qos_initialization)
 : QoS(qos_initialization, rmw_qos_profile_parameter_events)
+{}
+
+RosoutQoS::RosoutQoS(const QoSInitialization & rosout_initialization)
+: QoS(rosout_initialization, rcl_qos_profile_rosout_default)
 {}
 
 SystemDefaultsQoS::SystemDefaultsQoS(const QoSInitialization & qos_initialization)
