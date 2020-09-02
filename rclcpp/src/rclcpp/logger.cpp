@@ -47,10 +47,15 @@ get_node_logger(const rcl_node_t * node)
 void
 Logger::set_level(Level level)
 {
-  if (rcutils_logging_set_logger_level(
-      get_name(),
-      static_cast<RCUTILS_LOG_SEVERITY>(level)) != RCUTILS_RET_OK)
-  {
+  rcutils_ret_t rcutils_ret = rcutils_logging_set_logger_level(
+    get_name(),
+    static_cast<RCUTILS_LOG_SEVERITY>(level));
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    if (rcutils_ret == RCUTILS_RET_INVALID_ARGUMENT) {
+      exceptions::throw_from_rcl_error(
+        RCL_RET_INVALID_ARGUMENT, "Invalid parameter",
+        rcutils_get_error_state(), rcutils_reset_error);
+    }
     exceptions::throw_from_rcl_error(
       RCL_RET_ERROR, "Couldn't set logger level",
       rcutils_get_error_state(), rcutils_reset_error);

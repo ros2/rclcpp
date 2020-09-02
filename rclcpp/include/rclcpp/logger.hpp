@@ -152,10 +152,11 @@ public:
     return Logger(*name_ + "." + suffix);
   }
 
-  /// Set level for current logger by its internal name.
+  /// Set level for current logger.
   /**
    * \param[in] level the logger's level
-   * \throws rclcpp::exceptions::RCLError if calling rcutils_logging_set_logger_level() fails.
+   * \throws rclcpp::exceptions::RCLInvalidArgument if level is invalid.
+   * \throws rclcpp::exceptions::RCLError if other error happens.
    */
   RCLCPP_PUBLIC
   void
