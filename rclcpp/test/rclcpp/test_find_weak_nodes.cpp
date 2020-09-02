@@ -36,22 +36,24 @@ TEST_F(TestFindWeakNodes, allocator_strategy_with_weak_nodes) {
     rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
   auto existing_node = rclcpp::Node::make_shared("existing_node");
   auto dead_node = rclcpp::Node::make_shared("dead_node");
-  rclcpp::memory_strategy::MemoryStrategy::WeakNodeList weak_nodes;
-  weak_nodes.push_back(existing_node->get_node_base_interface());
-  weak_nodes.push_back(dead_node->get_node_base_interface());
+  auto existing_group = existing_node->get_node_base_interface()->get_default_callback_group();
+  auto dead_group = dead_node->get_node_base_interface()->get_default_callback_group();
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
+  weak_groups_to_nodes[existing_group] = existing_node->get_node_base_interface();
+  weak_groups_to_nodes[dead_group] = dead_node->get_node_base_interface();
 
   // AND
   // Delete dead_node, creating a dangling pointer in weak_nodes
   dead_node.reset();
-  ASSERT_FALSE(weak_nodes.front().expired());
-  ASSERT_TRUE(weak_nodes.back().expired());
+  ASSERT_FALSE(weak_groups_to_nodes[existing_group].expired());
+  ASSERT_TRUE(weak_groups_to_nodes[dead_group].expired());
 
   // WHEN
-  bool has_invalid_weak_nodes = memory_strategy->collect_entities(weak_nodes);
+  bool has_invalid_weak_groups_or_nodes = memory_strategy->collect_entities(weak_groups_to_nodes);
 
   // THEN
   // The result of finding dangling node pointers should be true
-  ASSERT_TRUE(has_invalid_weak_nodes);
+  ASSERT_TRUE(has_invalid_weak_groups_or_nodes);
 
   // Prevent memory leak due to the order of destruction
   memory_strategy->clear_handles();
@@ -64,18 +66,20 @@ TEST_F(TestFindWeakNodes, allocator_strategy_no_weak_nodes) {
     rclcpp::memory_strategies::allocator_memory_strategy::AllocatorMemoryStrategy<>>();
   auto existing_node1 = rclcpp::Node::make_shared("existing_node1");
   auto existing_node2 = rclcpp::Node::make_shared("existing_node2");
-  rclcpp::memory_strategy::MemoryStrategy::WeakNodeList weak_nodes;
-  weak_nodes.push_back(existing_node1->get_node_base_interface());
-  weak_nodes.push_back(existing_node2->get_node_base_interface());
-  ASSERT_FALSE(weak_nodes.front().expired());
-  ASSERT_FALSE(weak_nodes.back().expired());
+  auto existing_group1 = existing_node1->get_node_base_interface()->get_default_callback_group();
+  auto existing_group2 = existing_node2->get_node_base_interface()->get_default_callback_group();
+  rclcpp::memory_strategy::MemoryStrategy::WeakCallbackGroupsToNodesMap weak_groups_to_nodes;
+  weak_groups_to_nodes[existing_group1] = existing_node1->get_node_base_interface();
+  weak_groups_to_nodes[existing_group2] = existing_node2->get_node_base_interface();
+  ASSERT_FALSE(weak_groups_to_nodes[existing_group1].expired());
+  ASSERT_FALSE(weak_groups_to_nodes[existing_group2].expired());
 
   // WHEN
-  bool has_invalid_weak_nodes = memory_strategy->collect_entities(weak_nodes);
+  bool has_invalid_weak_groups_or_nodes = memory_strategy->collect_entities(weak_groups_to_nodes);
 
   // THEN
   // The result of finding dangling node pointers should be false
-  ASSERT_FALSE(has_invalid_weak_nodes);
+  ASSERT_FALSE(has_invalid_weak_groups_or_nodes);
 
   // Prevent memory leak due to the order of destruction
   memory_strategy->clear_handles();

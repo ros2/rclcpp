@@ -83,7 +83,9 @@ public:
 
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::CallbackGroupType group_type) override;
+  create_callback_group(
+    rclcpp::CallbackGroupType group_type,
+    bool automatically_add_to_executor_with_node = true) override;
 
   RCLCPP_PUBLIC
   rclcpp::CallbackGroup::SharedPtr

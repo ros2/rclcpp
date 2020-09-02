@@ -106,7 +106,9 @@ public:
   RCLCPP_PUBLIC
   virtual
   rclcpp::CallbackGroup::SharedPtr
-  create_callback_group(rclcpp::CallbackGroupType group_type) = 0;
+  create_callback_group(
+    rclcpp::CallbackGroupType group_type,
+    bool automatically_add_to_executor_with_node = true) = 0;
 
   /// Return the default callback group.
   RCLCPP_PUBLIC
