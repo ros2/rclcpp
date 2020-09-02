@@ -245,7 +245,7 @@ SubscriptionBase::default_incompatible_qos_callback(
   std::string policy_name = qos_policy_name_from_kind(event.last_policy_kind);
   RCLCPP_WARN(
     rclcpp::get_logger(rcl_node_get_logger_name(node_handle_.get())),
-    "New publisher discovered on topic %s, offering incompatible QoS. "
+    "New publisher discovered on topic '%s', offering incompatible QoS. "
     "No messages will be sent to it. "
     "Last incompatible policy: %s",
     get_topic_name(),
