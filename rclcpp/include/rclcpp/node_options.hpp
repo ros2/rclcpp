@@ -371,9 +371,7 @@ private:
     rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_parameter_events)
   );
 
-  rclcpp::QoS rosout_qos_ = rclcpp::RosoutQoS(
-    rclcpp::QoSInitialization::from_rmw(rcl_qos_profile_rosout_default)
-  );
+  rclcpp::QoS rosout_qos_ = rclcpp::RosoutQoS();
 
   rclcpp::PublisherOptionsBase parameter_event_publisher_options_ = rclcpp::PublisherOptionsBase();
 
