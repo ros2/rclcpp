@@ -58,10 +58,15 @@ TEST(TestRosoutQoS, test_rosout_qos_with_default_value) {
   rclcpp::QoS rosout_qos_profile = rclcpp::NodeOptions().rosout_qos();
   rmw_qos_profile_t rmw_qos_profile = rosout_qos_profile.get_rmw_qos_profile();
   EXPECT_EQ(rcl_qos_profile_rosout_default, rmw_qos_profile);
+
+  rclcpp::NodeOptions node_options;
+  rosout_qos_profile = rclcpp::RosoutQoS();
+  node_options.rosout_qos(rosout_qos_profile);
+  EXPECT_EQ(rcl_qos_profile_rosout_default, node_options.get_rcl_node_options()->rosout_qos);
 }
 
 /*
-   Test `rosout_qos` function with user-defined value.
+   Test `rosout_qos` function with custom value.
  */
 TEST(TestRosoutQoS, test_rosout_qos_with_custom_value) {
   rmw_time_t life_span;
@@ -75,42 +80,11 @@ TEST(TestRosoutQoS, test_rosout_qos_with_custom_value) {
   EXPECT_EQ((size_t)1000, rmw_qos_profile.depth);
   EXPECT_EQ(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL, rmw_qos_profile.durability);
   EXPECT_EQ(life_span, rmw_qos_profile.lifespan);
-}
 
-/*
-   Test the RosoutQoS's constructor.
- */
-TEST(TestRosoutQoS, test_rosout_qos_constructor) {
-  rclcpp::QoS rosout_qos = rclcpp::RosoutQoS(
-    rclcpp::QoSInitialization::from_rmw(rcl_qos_profile_rosout_default)
+  rmw_qos_profile.depth = 10;
+  rclcpp::QoS rosout_qos_custom = rclcpp::RosoutQoS(
+    rclcpp::QoSInitialization::from_rmw(rmw_qos_profile)
   );
-
-  rmw_qos_profile_t rmw_qos_profile = rosout_qos.get_rmw_qos_profile();
-  EXPECT_EQ(rcl_qos_profile_rosout_default, rmw_qos_profile);
-}
-
-/*
-   Test `get_rcl_node_options` function.
- */
-TEST(TestRosoutQoS, test_get_rcl_node_options) {
-  rclcpp::NodeOptions node_options;
-  rmw_qos_profile_t rosout_qos_profile = rcl_qos_profile_rosout_default;
-
-  {
-    rclcpp::QoS rosout_qos_default = rclcpp::RosoutQoS(
-      rclcpp::QoSInitialization::from_rmw(rosout_qos_profile)
-    );
-    node_options.rosout_qos(rosout_qos_default);
-    EXPECT_EQ(rcl_qos_profile_rosout_default, node_options.get_rcl_node_options()->rosout_qos);
-  }
-
-  {
-    rosout_qos_profile.depth = 10;
-    rosout_qos_profile.durability = RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT;
-    rclcpp::QoS rosout_qos_custom = rclcpp::RosoutQoS(
-      rclcpp::QoSInitialization::from_rmw(rosout_qos_profile)
-    );
-    node_options.rosout_qos(rosout_qos_custom);
-    EXPECT_NE(rcl_qos_profile_rosout_default, node_options.get_rcl_node_options()->rosout_qos);
-  }
+  options.rosout_qos(rosout_qos_custom);
+  EXPECT_NE(rcl_qos_profile_rosout_default, options.get_rcl_node_options()->rosout_qos);
 }
