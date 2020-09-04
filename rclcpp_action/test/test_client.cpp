@@ -20,6 +20,7 @@
 
 #include <rcl_action/names.h>
 #include <rcl_action/default_qos.h>
+#include <rcl_action/wait.h>
 
 #include <rclcpp/clock.hpp>
 #include <rclcpp/exceptions.hpp>
@@ -45,6 +46,8 @@
 #include "rclcpp_action/client.hpp"
 #include "rclcpp_action/qos.hpp"
 #include "rclcpp_action/types.hpp"
+
+#include "./mocking_utils/patch.hpp"
 
 using namespace std::chrono_literals;
 
@@ -326,11 +329,34 @@ TEST_F(TestClient, construction_and_destruction_callback_group)
     ).reset());
 }
 
+TEST_F(TestClient, construction_and_destruction_rcl_errors)
+{
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_client_fini, RCL_RET_ERROR);
+    // It just logs an error message and continues
+    EXPECT_NO_THROW(
+      rclcpp_action::create_client<ActionType>(client_node, action_name).reset());
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_client_init, RCL_RET_ERROR);
+    EXPECT_THROW(
+      rclcpp_action::create_client<ActionType>(client_node, action_name).reset(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_client_wait_set_get_num_entities, RCL_RET_ERROR);
+    EXPECT_THROW(
+      rclcpp_action::create_client<ActionType>(client_node, action_name),
+      rclcpp::exceptions::RCLError);
+  }
+}
+
 TEST_F(TestClient, wait_for_action_server)
 {
   auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
-  EXPECT_FALSE(action_client->wait_for_action_server(0ms));
-  EXPECT_FALSE(action_client->wait_for_action_server(100ms));
   auto future = std::async(
     std::launch::async, [&action_client]() {
       return action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT);
@@ -341,6 +367,51 @@ TEST_F(TestClient, wait_for_action_server)
 
   client_node.reset();  // Drop node before action client
   EXPECT_THROW(action_client->wait_for_action_server(0ms), rclcpp::exceptions::InvalidNodeError);
+}
+
+TEST_F(TestClient, wait_for_action_server_rcl_errors)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  SetUpServer();
+  auto future = std::async(
+    std::launch::async, [&action_client]() {
+      return action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT);
+    });
+  EXPECT_TRUE(future.get());
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_server_is_available, RCL_RET_NODE_INVALID);
+    EXPECT_THROW(action_client->action_server_is_ready(), rclcpp::exceptions::RCLError);
+
+    auto mock_context_is_valid = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_context_is_valid, false);
+    EXPECT_FALSE(action_client->action_server_is_ready());
+  }
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_server_is_available, RCL_RET_ERROR);
+    EXPECT_THROW(action_client->action_server_is_ready(), rclcpp::exceptions::RCLError);
+  }
+  TearDownServer();
+}
+
+TEST_F(TestClient, is_ready) {
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  rcl_wait_set_t wait_set = rcl_get_zero_initialized_wait_set();
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  auto rcl_context = client_node->get_node_base_interface()->get_context()->get_rcl_context().get();
+  ASSERT_EQ(
+    RCL_RET_OK,
+    rcl_wait_set_init(&wait_set, 10, 10, 10, 10, 10, 10, rcl_context, allocator));
+  ASSERT_TRUE(action_client->add_to_wait_set(&wait_set));
+  EXPECT_TRUE(action_client->is_ready(&wait_set));
+
+  {
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_client_wait_set_get_entities_ready, RCL_RET_ERROR);
+    EXPECT_THROW(action_client->is_ready(&wait_set), rclcpp::exceptions::RCLError);
+  }
+  client_node.reset();  // Drop node before action client
 }
 
 TEST_F(TestClientAgainstServer, async_send_goal_no_callbacks)
@@ -785,4 +856,119 @@ TEST_F(TestClientAgainstServer, async_cancel_some_goals_with_callback)
   ASSERT_EQ(1ul, cancel_response->goals_canceling.size());
   EXPECT_EQ(goal_handle0->get_goal_id(), cancel_response->goals_canceling[0].goal_id.uuid);
   EXPECT_EQ(rclcpp_action::GoalStatus::STATUS_CANCELED, goal_handle0->get_status());
+}
+
+TEST_F(TestClientAgainstServer, send_rcl_errors)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
+  send_goal_ops.result_callback =
+    [](
+    const typename ActionGoalHandle::WrappedResult &) mutable {};
+  send_goal_ops.feedback_callback =
+    [](typename ActionGoalHandle::SharedPtr,
+      const std::shared_ptr<const ActionFeedback>) mutable {};
+
+  {
+    ActionGoal goal;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_send_goal_request, RCL_RET_ERROR);
+    EXPECT_THROW(
+      action_client->async_send_goal(goal, send_goal_ops),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    ActionGoal goal;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_send_result_request, RCL_RET_ERROR);
+    auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+    dual_spin_until_future_complete(future_goal_handle);
+    EXPECT_THROW(
+      future_goal_handle.get(),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    ActionGoal goal;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_send_cancel_request, RCL_RET_ERROR);
+    auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+    dual_spin_until_future_complete(future_goal_handle);
+    auto goal_handle = future_goal_handle.get();
+    EXPECT_THROW(
+      action_client->async_cancel_goals_before(goal_handle->get_goal_stamp()),
+      rclcpp::exceptions::RCLError);
+  }
+}
+
+TEST_F(TestClientAgainstServer, execute_rcl_errors)
+{
+  auto action_client = rclcpp_action::create_client<ActionType>(client_node, action_name);
+  ASSERT_TRUE(action_client->wait_for_action_server(WAIT_FOR_SERVER_TIMEOUT));
+
+  auto send_goal_ops = rclcpp_action::Client<ActionType>::SendGoalOptions();
+  send_goal_ops.result_callback =
+    [](
+    const typename ActionGoalHandle::WrappedResult &) mutable {};
+  send_goal_ops.feedback_callback =
+    [](typename ActionGoalHandle::SharedPtr,
+      const std::shared_ptr<const ActionFeedback>) mutable {};
+
+  {
+    ActionGoal goal;
+    goal.order = 5;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_take_feedback, RCL_RET_ERROR);
+
+    auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+    dual_spin_until_future_complete(future_goal_handle);
+    auto goal_handle = future_goal_handle.get();
+    auto future_result = action_client->async_get_result(goal_handle);
+    EXPECT_THROW(
+      dual_spin_until_future_complete(future_result),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    ActionGoal goal;
+    goal.order = 5;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_take_goal_response, RCL_RET_ERROR);
+
+    auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+    EXPECT_THROW(
+      dual_spin_until_future_complete(future_goal_handle),
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    ActionGoal goal;
+    goal.order = 5;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_take_result_response, RCL_RET_ERROR);
+
+    auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+    dual_spin_until_future_complete(future_goal_handle);
+    auto goal_handle = future_goal_handle.get();
+    EXPECT_THROW(
+    {
+      auto future_result = action_client->async_get_result(goal_handle);
+      dual_spin_until_future_complete(future_result);
+    },
+      rclcpp::exceptions::RCLError);
+  }
+  {
+    ActionGoal goal;
+    goal.order = 5;
+    auto mock = mocking_utils::patch_and_return(
+      "lib:rclcpp_action", rcl_action_take_cancel_response, RCL_RET_ERROR);
+
+    auto future_goal_handle = action_client->async_send_goal(goal, send_goal_ops);
+    dual_spin_until_future_complete(future_goal_handle);
+    auto goal_handle = future_goal_handle.get();
+    auto future_cancel_some =
+      action_client->async_cancel_goals_before(goal_handle->get_goal_stamp());
+    EXPECT_THROW(
+      dual_spin_until_future_complete(future_cancel_some),
+      rclcpp::exceptions::RCLError);
+  }
 }

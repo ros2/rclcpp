@@ -81,6 +81,7 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_client
       ${PROJECT_NAME}
+      mimick
     )
   endif()
 
@@ -91,6 +92,18 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_server
       ${PROJECT_NAME}
+      mimick
+    )
+  endif()
+
+  ament_add_gtest(test_server_goal_handle test/test_server_goal_handle.cpp)
+  if(TARGET test_server_goal_handle)
+    ament_target_dependencies(test_server_goal_handle
+      "test_msgs"
+    )
+    target_link_libraries(test_server_goal_handle
+      ${PROJECT_NAME}
+      mimick
     )
   endif()
 
