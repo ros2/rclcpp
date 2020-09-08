@@ -237,15 +237,23 @@ TEST_F(TestPublisher, basic_getters) {
     // TODO(blast545): get default rmw qos options to compare here
     EXPECT_NE(800u, publisher_queue_size);
 
-    const rmw_gid_t & publisher_rmw_gid_t = publisher->get_gid();
-    EXPECT_NE(nullptr, publisher_rmw_gid_t.implementation_identifier);
+    const rmw_gid_t & publisher_rmw_gid = publisher->get_gid();
+    EXPECT_NE(nullptr, publisher_rmw_gid.implementation_identifier);
 
     std::shared_ptr<rcl_publisher_t> publisher_handle = publisher->get_publisher_handle();
     EXPECT_NE(nullptr, publisher_handle);
+
+    EXPECT_TRUE(publisher->assert_liveliness());
   }
   {
     const TestPublisherBase publisher = TestPublisherBase(node.get());
     std::shared_ptr<const rcl_publisher_t> publisher_handle = publisher.get_publisher_handle();
     EXPECT_NE(nullptr, publisher_handle);
+
+    const rmw_gid_t & publisher_rmw_gid = publisher.get_gid();
+    EXPECT_NE(nullptr, publisher_rmw_gid.implementation_identifier);
+
+    // Test == operator of publisher with rmw_gid_t
+    EXPECT_EQ(publisher, publisher_rmw_gid);
   }
 }
