@@ -203,3 +203,49 @@ TEST_F(TestPublisherSub, construction_and_destruction) {
     }, rclcpp::exceptions::InvalidTopicNameError);
   }
 }
+
+// Auxiliar class used to test getter for const PublisherBase
+const rosidl_message_type_support_t EmptyTypeSupport()
+{
+  return *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Empty>();
+}
+
+const rcl_publisher_options_t PublisherOptions()
+{
+  return rclcpp::PublisherOptionsWithAllocator<std::allocator<void>>().template
+         to_rcl_publisher_options<test_msgs::msg::Empty>(rclcpp::QoS(10));
+}
+
+class TestPublisherBase : public rclcpp::PublisherBase
+{
+public:
+  explicit TestPublisherBase(rclcpp::Node * node)
+  : rclcpp::PublisherBase(
+      node->get_node_base_interface().get(), "topic", EmptyTypeSupport(), PublisherOptions()) {}
+};
+
+/*
+   Testing some publisher getters
+ */
+TEST_F(TestPublisher, basic_getters) {
+  initialize();
+  using test_msgs::msg::Empty;
+  {
+    auto publisher = node->create_publisher<Empty>("topic", 42);
+
+    size_t publisher_queue_size = publisher->get_queue_size();
+    // TODO(blast545): get default rmw qos options to compare here
+    EXPECT_NE(800u, publisher_queue_size);
+
+    const rmw_gid_t & publisher_rmw_gid_t = publisher->get_gid();
+    EXPECT_NE(nullptr, publisher_rmw_gid_t.implementation_identifier);
+
+    std::shared_ptr<rcl_publisher_t> publisher_handle = publisher->get_publisher_handle();
+    EXPECT_NE(nullptr, publisher_handle);
+  }
+  {
+    const TestPublisherBase publisher = TestPublisherBase(node.get());
+    std::shared_ptr<const rcl_publisher_t> publisher_handle = publisher.get_publisher_handle();
+    EXPECT_NE(nullptr, publisher_handle);
+  }
+}
