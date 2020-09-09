@@ -1,4 +1,4 @@
-// Copyright 2018 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ public:
   : rclcpp_action::ServerGoalHandle<test_msgs::action::Fibonacci>(
       rcl_handle, uuid, goal, on_terminal_state, on_executing, publish_feedback) {}
 
-  bool cancel() {return try_canceling();}
+  bool try_cancel() {return try_canceling();}
 
   void cancel_goal() {_cancel_goal();}
 };
@@ -84,7 +84,7 @@ TEST_F(TestServerGoalHandle, construct_destruct) {
 
 TEST_F(TestServerGoalHandle, cancel) {
   handle_->execute();
-  EXPECT_TRUE(handle_->cancel());
+  EXPECT_TRUE(handle_->try_cancel());
   EXPECT_FALSE(handle_->is_canceling());
   EXPECT_FALSE(handle_->is_active());
   EXPECT_FALSE(handle_->is_executing());
@@ -92,7 +92,7 @@ TEST_F(TestServerGoalHandle, cancel) {
   {
     auto mock_get_status = mocking_utils::patch_and_return(
       "lib:rclcpp_action", rcl_action_goal_handle_get_status, RCL_RET_ERROR);
-    EXPECT_FALSE(handle_->cancel());
+    EXPECT_FALSE(handle_->try_cancel());
   }
 
   {
@@ -100,7 +100,7 @@ TEST_F(TestServerGoalHandle, cancel) {
       "lib:rclcpp_action", rcl_action_update_goal_state, RCL_RET_ERROR);
     auto mock_is_cancelable = mocking_utils::patch_and_return(
       "lib:rclcpp_action", rcl_action_goal_handle_is_cancelable, true);
-    EXPECT_FALSE(handle_->cancel());
+    EXPECT_FALSE(handle_->try_cancel());
     EXPECT_THROW(handle_->cancel_goal(), rclcpp::exceptions::RCLError);
 
     test_msgs::action::Fibonacci::Result::SharedPtr result =
