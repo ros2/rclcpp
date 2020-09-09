@@ -495,7 +495,7 @@ TEST_F(TestDefaultStateMachine, test_graph) {
 
   ASSERT_NE(names.end(), std::find(names.begin(), names.end(), std::string("/testnode")));
 
-  // parameter_events, rosout, /testnode/transition_event
+  // Other topics may exist for an rclcpp::Node, but just checking the lifecycle one exists
   auto topic_names_and_types = test_node->get_topic_names_and_types();
   ASSERT_NE(
     topic_names_and_types.end(),
