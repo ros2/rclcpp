@@ -57,7 +57,16 @@ if(BUILD_TESTING)
       "rcl_lifecycle"
       "rclcpp"
     )
-    target_link_libraries(test_lifecycle_node ${PROJECT_NAME})
+    target_link_libraries(test_lifecycle_node ${PROJECT_NAME} mimick)
+  endif()
+  ament_add_gtest(test_lifecycle_publisher test/test_lifecycle_publisher.cpp)
+  if(TARGET test_lifecycle_publisher)
+    ament_target_dependencies(test_lifecycle_publisher
+      "rcl_lifecycle"
+      "rclcpp"
+      "test_msgs"
+    )
+    target_link_libraries(test_lifecycle_publisher ${PROJECT_NAME})
   endif()
   ament_add_gtest(test_lifecycle_service_client test/test_lifecycle_service_client.cpp)
   if(TARGET test_lifecycle_service_client)
@@ -65,7 +74,7 @@ if(BUILD_TESTING)
       "rcl_lifecycle"
       "rclcpp"
     )
-    target_link_libraries(test_lifecycle_service_client ${PROJECT_NAME})
+    target_link_libraries(test_lifecycle_service_client ${PROJECT_NAME} mimick)
   endif()
   ament_add_gtest(test_state_machine_info test/test_state_machine_info.cpp)
   if(TARGET test_state_machine_info)
@@ -104,8 +113,12 @@ if(BUILD_TESTING)
     ament_target_dependencies(test_transition_wrapper
       "rcl_lifecycle"
       "rclcpp"
+      "rcutils"
     )
-    target_link_libraries(test_transition_wrapper ${PROJECT_NAME})
+    target_link_libraries(test_transition_wrapper ${PROJECT_NAME} mimick)
+    target_compile_definitions(test_transition_wrapper
+      PUBLIC RCUTILS_ENABLE_FAULT_INJECTION
+    )
   endif()
 endif()
 
