@@ -366,6 +366,7 @@ if(TARGET test_service)
     "rmw"
     "rosidl_runtime_cpp"
     "rosidl_typesupport_cpp"
+    "test_msgs"
   )
   target_link_libraries(test_service ${PROJECT_NAME})
 endif()
