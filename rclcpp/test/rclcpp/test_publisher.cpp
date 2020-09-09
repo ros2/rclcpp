@@ -231,11 +231,13 @@ TEST_F(TestPublisher, basic_getters) {
   initialize();
   using test_msgs::msg::Empty;
   {
-    auto publisher = node->create_publisher<Empty>("topic", 42);
+    using rclcpp::QoS;
+    using rclcpp::KeepLast;
+    const size_t qos_depth_size = 10u;
+    auto publisher = node->create_publisher<Empty>("topic", QoS(KeepLast(qos_depth_size)));
 
     size_t publisher_queue_size = publisher->get_queue_size();
-    // TODO(blast545): get default rmw qos options to compare here
-    EXPECT_NE(800u, publisher_queue_size);
+    EXPECT_EQ(qos_depth_size, publisher_queue_size);
 
     const rmw_gid_t & publisher_rmw_gid = publisher->get_gid();
     EXPECT_NE(nullptr, publisher_rmw_gid.implementation_identifier);
