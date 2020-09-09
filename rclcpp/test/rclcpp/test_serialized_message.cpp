@@ -180,8 +180,7 @@ TEST(TestSerializedMessage, assignment_operators) {
   ASSERT_EQ(RCL_RET_OK, ret);
 
   // manually copy some content
-  std::memcpy(rcl_serialized_msg.buffer, content.c_str(), content.size());
-  rcl_serialized_msg.buffer[content.size()] = '\0';
+  std::memcpy(rcl_serialized_msg.buffer, content.c_str(), content_size);
   rcl_serialized_msg.buffer_length = content_size;
   EXPECT_EQ(13u, rcl_serialized_msg.buffer_capacity);
   rclcpp::SerializedMessage serialized_message_to_assign(rcl_serialized_msg);
