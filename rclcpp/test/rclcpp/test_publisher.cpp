@@ -204,7 +204,7 @@ TEST_F(TestPublisherSub, construction_and_destruction) {
   }
 }
 
-// Auxiliar class used to test getter for const PublisherBase
+// Auxiliary class used to test getter for const PublisherBase
 const rosidl_message_type_support_t EmptyTypeSupport()
 {
   return *rosidl_typesupport_cpp::get_message_type_support_handle<test_msgs::msg::Empty>();
