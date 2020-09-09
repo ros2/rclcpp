@@ -492,31 +492,51 @@ TEST_F(TestDefaultStateMachine, test_getters) {
 TEST_F(TestDefaultStateMachine, test_graph) {
   auto test_node = std::make_shared<EmptyLifecycleNode>("testnode");
   auto names = test_node->get_node_names();
-  EXPECT_EQ(names.size(), 1u);
-  EXPECT_STREQ(names[0].c_str(), "/testnode");
+
+  EXPECT_NE(names.end(), std::find(names.begin(), names.end(), std::string("/testnode")));
 
   // parameter_events, rosout, /testnode/transition_event
   auto topic_names_and_types = test_node->get_topic_names_and_types();
-  EXPECT_EQ(topic_names_and_types.size(), 3u);
+  EXPECT_NE(
+    topic_names_and_types.end(),
+    topic_names_and_types.find(std::string("/testnode/transition_event")));
   EXPECT_STREQ(
     topic_names_and_types["/testnode/transition_event"][0].c_str(),
     "lifecycle_msgs/msg/TransitionEvent");
 
   auto service_names_and_types = test_node->get_service_names_and_types();
-  EXPECT_EQ(service_names_and_types.size(), 11u);
   // These are specific to lifecycle nodes, other services are provided by rclcpp::Node
+  EXPECT_NE(
+    service_names_and_types.end(),
+    service_names_and_types.find(std::string("/testnode/change_state")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/change_state"][0].c_str(),
     "lifecycle_msgs/srv/ChangeState");
+
+  EXPECT_NE(
+    service_names_and_types.end(),
+    service_names_and_types.find(std::string("/testnode/get_available_states")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_available_states"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableStates");
+
+  EXPECT_NE(
+    service_names_and_types.end(),
+    service_names_and_types.find(std::string("/testnode/get_available_transitions")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_available_transitions"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableTransitions");
+
+  EXPECT_NE(
+    service_names_and_types.end(),
+    service_names_and_types.find(std::string("/testnode/get_state")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_state"][0].c_str(),
     "lifecycle_msgs/srv/GetState");
+
+  EXPECT_NE(
+    service_names_and_types.end(),
+    service_names_and_types.find(std::string("/testnode/get_transition_graph")));
   EXPECT_STREQ(
     service_names_and_types["/testnode/get_transition_graph"][0].c_str(),
     "lifecycle_msgs/srv/GetAvailableTransitions");
