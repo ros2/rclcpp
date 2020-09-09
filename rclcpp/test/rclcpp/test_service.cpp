@@ -21,6 +21,8 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "rcl_interfaces/srv/list_parameters.hpp"
+#include "test_msgs/srv/empty.hpp"
+#include "test_msgs/srv/empty.h"
 
 class TestService : public ::testing::Test
 {
@@ -103,5 +105,41 @@ TEST_F(TestServiceSub, construction_and_destruction) {
     {
       auto service = node->create_service<ListParameters>("invalid_service?", callback);
     }, rclcpp::exceptions::InvalidServiceNameError);
+  }
+}
+
+/* Testing basic getters */
+TEST_F(TestService, basic_public_getters) {
+  using rcl_interfaces::srv::ListParameters;
+  auto callback =
+    [](const ListParameters::Request::SharedPtr, ListParameters::Response::SharedPtr) {
+    };
+  auto service = node->create_service<ListParameters>("service", callback);
+  EXPECT_STREQ(service->get_service_name(), "/ns/service");
+  std::shared_ptr<rcl_service_t> service_handle = service->get_service_handle();
+  EXPECT_NE(nullptr, service_handle);
+
+  {
+    // Create a extern defined const service
+    auto node_handle_int = rclcpp::Node::make_shared("base_node");
+    rcl_service_t service_handle = rcl_get_zero_initialized_service();
+    rcl_service_options_t service_options = rcl_service_get_default_options();
+    const rosidl_service_type_support_t * ts =
+      rosidl_typesupport_cpp::get_service_type_support_handle<test_msgs::srv::Empty>();
+    rcl_ret_t ret = rcl_service_init(
+      &service_handle,
+      node_handle_int->get_node_base_interface()->get_rcl_node_handle(),
+      ts, "base_node_service", &service_options);
+    if (ret != RCL_RET_OK) {
+      FAIL();
+      return;
+    }
+    rclcpp::AnyServiceCallback<test_msgs::srv::Empty> cb;
+    const rclcpp::Service<test_msgs::srv::Empty> base(
+      node_handle_int->get_node_base_interface()->get_shared_rcl_node_handle(),
+      &service_handle, cb);
+    // Use get_service_handle specific to const service
+    std::shared_ptr<const rcl_service_t> const_service_handle = base.get_service_handle();
+    EXPECT_NE(nullptr, const_service_handle);
   }
 }
