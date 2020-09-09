@@ -149,7 +149,9 @@ TEST(TestSerializedMessage, reserve) {
   EXPECT_EQ(15u, serialized_msg.capacity());
 
   // Use invalid value throws exception
-  EXPECT_ANY_THROW(serialized_msg.reserve(-1));
+  EXPECT_THROW(
+    {serialized_msg.reserve(-1);},
+    rclcpp::exceptions::RCLBadAlloc);
 }
 
 TEST(TestSerializedMessage, serialization) {
@@ -231,7 +233,9 @@ TEST(TestSerializedMessage, failed_init_throws) {
   EXPECT_EQ(13u, serialized_msg.capacity());
 
   // Constructor with invalid size throws exception
-  EXPECT_ANY_THROW(rclcpp::SerializedMessage serialized_msg_fail(-1););
+  EXPECT_THROW(
+    {rclcpp::SerializedMessage serialized_msg_fail(-1);},
+    rclcpp::exceptions::RCLBadAlloc);
 
   // Constructor copy with rmw_serialized bad msg throws
   auto default_allocator = rcl_get_default_allocator();
@@ -240,7 +244,9 @@ TEST(TestSerializedMessage, failed_init_throws) {
   ASSERT_EQ(RCL_RET_OK, ret);
   EXPECT_EQ(13u, rcl_serialized_msg.buffer_capacity);
   rcl_serialized_msg.buffer_capacity = -1;
-  EXPECT_ANY_THROW(rclcpp::SerializedMessage serialized_msg_fail_2(rcl_serialized_msg););
+  EXPECT_THROW(
+    {rclcpp::SerializedMessage serialized_msg_fail_2(rcl_serialized_msg);},
+    rclcpp::exceptions::RCLBadAlloc);
 
   rcl_serialized_msg.buffer_capacity = 13;
   EXPECT_EQ(RCL_RET_OK, rmw_serialized_message_fini(&rcl_serialized_msg));
