@@ -140,6 +140,20 @@ TEST(TestSerializedMessage, release) {
   EXPECT_EQ(RCL_RET_OK, rmw_serialized_message_fini(&released_handle));
 }
 
+TEST(TestSerializedMessage, reserve) {
+  rclcpp::SerializedMessage serialized_msg(13);
+  EXPECT_EQ(13u, serialized_msg.capacity());
+
+  // Resize using reserve method
+  serialized_msg.reserve(15);
+  EXPECT_EQ(15u, serialized_msg.capacity());
+
+  // Use invalid value throws exception
+  EXPECT_THROW(
+    {serialized_msg.reserve(-1);},
+    rclcpp::exceptions::RCLBadAlloc);
+}
+
 TEST(TestSerializedMessage, serialization) {
   using MessageT = test_msgs::msg::BasicTypes;
 
@@ -157,6 +171,85 @@ TEST(TestSerializedMessage, serialization) {
 
     EXPECT_EQ(*ros_msg, deserialized_ros_msg);
   }
+}
+
+TEST(TestSerializedMessage, assignment_operators) {
+  const std::string content = "Hello World";
+  const auto content_size = content.size() + 1;  // accounting for null terminator
+  auto default_allocator = rcl_get_default_allocator();
+  auto rcl_serialized_msg = rmw_get_zero_initialized_serialized_message();
+  auto ret = rmw_serialized_message_init(&rcl_serialized_msg, 13, &default_allocator);
+  ASSERT_EQ(RCL_RET_OK, ret);
+
+  // manually copy some content
+  std::memcpy(rcl_serialized_msg.buffer, content.c_str(), content_size);
+  rcl_serialized_msg.buffer_length = content_size;
+  EXPECT_EQ(13u, rcl_serialized_msg.buffer_capacity);
+  rclcpp::SerializedMessage serialized_message_to_assign(rcl_serialized_msg);
+  EXPECT_EQ(13u, serialized_message_to_assign.capacity());
+  EXPECT_EQ(content_size, serialized_message_to_assign.size());
+
+  // Test copy assignment with = operator, on another rclcpp::SerializedMessage
+  rclcpp::SerializedMessage serialized_msg_copy(2);
+  EXPECT_EQ(2u, serialized_msg_copy.capacity());
+  EXPECT_EQ(0u, serialized_msg_copy.size());
+  serialized_msg_copy = serialized_message_to_assign;
+  EXPECT_EQ(13u, serialized_msg_copy.capacity());
+  EXPECT_EQ(content_size, serialized_msg_copy.size());
+
+  // Test copy assignment with = operator, with a rcl_serialized_message_t
+  rclcpp::SerializedMessage serialized_msg_copy_rcl(2);
+  EXPECT_EQ(2u, serialized_msg_copy_rcl.capacity());
+  EXPECT_EQ(0u, serialized_msg_copy_rcl.size());
+  serialized_msg_copy_rcl = rcl_serialized_msg;
+  EXPECT_EQ(13u, serialized_msg_copy_rcl.capacity());
+  EXPECT_EQ(content_size, serialized_msg_copy_rcl.size());
+
+  // Test move assignment with = operator
+  rclcpp::SerializedMessage serialized_msg_move(2);
+  EXPECT_EQ(2u, serialized_msg_move.capacity());
+  EXPECT_EQ(0u, serialized_msg_move.size());
+  serialized_msg_move = std::move(serialized_message_to_assign);
+  EXPECT_EQ(13u, serialized_msg_move.capacity());
+  EXPECT_EQ(content_size, serialized_msg_move.size());
+  EXPECT_EQ(0u, serialized_message_to_assign.capacity());
+  EXPECT_EQ(0u, serialized_message_to_assign.size());
+
+  // Test move assignment with = operator, with a rcl_serialized_message_t
+  rclcpp::SerializedMessage serialized_msg_move_rcl(2);
+  EXPECT_EQ(2u, serialized_msg_move_rcl.capacity());
+  EXPECT_EQ(0u, serialized_msg_move_rcl.size());
+  serialized_msg_move_rcl = std::move(rcl_serialized_msg);
+  EXPECT_EQ(13u, serialized_msg_move_rcl.capacity());
+  EXPECT_EQ(content_size, serialized_msg_move_rcl.size());
+  EXPECT_EQ(0u, rcl_serialized_msg.buffer_capacity);
+
+  // Error because it was moved
+  EXPECT_EQ(RCUTILS_RET_INVALID_ARGUMENT, rmw_serialized_message_fini(&rcl_serialized_msg));
+}
+
+TEST(TestSerializedMessage, failed_init_throws) {
+  rclcpp::SerializedMessage serialized_msg(13);
+  EXPECT_EQ(13u, serialized_msg.capacity());
+
+  // Constructor with invalid size throws exception
+  EXPECT_THROW(
+    {rclcpp::SerializedMessage serialized_msg_fail(-1);},
+    rclcpp::exceptions::RCLBadAlloc);
+
+  // Constructor copy with rmw_serialized bad msg throws
+  auto default_allocator = rcl_get_default_allocator();
+  auto rcl_serialized_msg = rmw_get_zero_initialized_serialized_message();
+  auto ret = rmw_serialized_message_init(&rcl_serialized_msg, 13, &default_allocator);
+  ASSERT_EQ(RCL_RET_OK, ret);
+  EXPECT_EQ(13u, rcl_serialized_msg.buffer_capacity);
+  rcl_serialized_msg.buffer_capacity = -1;
+  EXPECT_THROW(
+    {rclcpp::SerializedMessage serialized_msg_fail_2(rcl_serialized_msg);},
+    rclcpp::exceptions::RCLBadAlloc);
+
+  rcl_serialized_msg.buffer_capacity = 13;
+  EXPECT_EQ(RCL_RET_OK, rmw_serialized_message_fini(&rcl_serialized_msg));
 }
 
 void serialize_default_ros_msg()
