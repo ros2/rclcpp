@@ -21,6 +21,7 @@
 #include "rcl_lifecycle/rcl_lifecycle.h"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 
 #include "rcutils/allocator.h"
 
@@ -82,7 +83,13 @@ State::State(const State & rhs)
 
 State::~State()
 {
-  reset();
+  try {
+    reset();
+  } catch (...) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp_lifecycle"),
+      "Resetting rclcpp_lifecycle::State threw during destruction, leaking memory");
+  }
 }
 
 State &

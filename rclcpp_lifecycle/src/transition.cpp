@@ -21,6 +21,7 @@
 #include "rcl_lifecycle/rcl_lifecycle.h"
 
 #include "rclcpp/exceptions.hpp"
+#include "rclcpp/logging.hpp"
 
 #include "rcutils/allocator.h"
 
@@ -118,7 +119,13 @@ Transition::Transition(const Transition & rhs)
 
 Transition::~Transition()
 {
-  reset();
+  try {
+    reset();
+  } catch (...) {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("rclcpp_lifecycle"),
+      "Resetting rclcpp_lifecycle::Transition threw during destructor, leaking memory");
+  }
 }
 
 Transition &
