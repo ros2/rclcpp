@@ -262,7 +262,7 @@ public:
   using GoalHandle = ClientGoalHandle<ActionT>;
   using WrappedResult = typename GoalHandle::WrappedResult;
   using GoalResponseCallback =
-    std::function<void (std::shared_future<typename GoalHandle::SharedPtr>)>;
+    std::function<void (typename GoalHandle::SharedPtr)>;
   using FeedbackCallback = typename GoalHandle::FeedbackCallback;
   using ResultCallback = typename GoalHandle::ResultCallback;
   using CancelRequest = typename ActionT::Impl::CancelGoalService::Request;
@@ -360,7 +360,7 @@ public:
         if (!goal_response->accepted) {
           promise->set_value(nullptr);
           if (options.goal_response_callback) {
-            options.goal_response_callback(future);
+            options.goal_response_callback(nullptr);
           }
           return;
         }
@@ -370,6 +370,10 @@ public:
         // Do not use std::make_shared as friendship cannot be forwarded.
         std::shared_ptr<GoalHandle> goal_handle(
           new GoalHandle(goal_info, options.feedback_callback, options.result_callback));
+
+        if (options.goal_response_callback) {
+          options.goal_response_callback(goal_handle);
+        }
 
         if (options.result_callback) {
           try {
@@ -386,9 +390,6 @@ public:
         }
 
         promise->set_value(goal_handle);
-        if (options.goal_response_callback) {
-          options.goal_response_callback(future);
-        }
       });
 
     // TODO(jacobperron): Encapsulate into it's own function and
