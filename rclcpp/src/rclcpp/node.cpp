@@ -218,12 +218,6 @@ Node::create_callback_group(
   return node_base_->create_callback_group(group_type, automatically_add_to_executor_with_node);
 }
 
-bool
-Node::group_in_node(rclcpp::CallbackGroup::SharedPtr group)
-{
-  return node_base_->callback_group_in_node(group);
-}
-
 const rclcpp::ParameterValue &
 Node::declare_parameter(
   const std::string & name,

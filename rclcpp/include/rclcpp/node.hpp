@@ -1182,10 +1182,6 @@ protected:
 private:
   RCLCPP_DISABLE_COPY(Node)
 
-  RCLCPP_PUBLIC
-  bool
-  group_in_node(CallbackGroup::SharedPtr group);
-
   rclcpp::node_interfaces::NodeBaseInterface::SharedPtr node_base_;
   rclcpp::node_interfaces::NodeGraphInterface::SharedPtr node_graph_;
   rclcpp::node_interfaces::NodeLoggingInterface::SharedPtr node_logging_;
