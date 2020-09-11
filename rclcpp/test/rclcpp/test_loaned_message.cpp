@@ -81,6 +81,8 @@ TEST_F(TestLoanedMessage, release) {
 
   ASSERT_EQ(42.0f, msg->float64_value);
 
+  msg->~MessageT();
+  pub->get_allocator()->deallocate(msg, 1);
   SUCCEED();
 }
 
